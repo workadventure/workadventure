@@ -1,6 +1,7 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import type { Translation } from "../i18n-types";
 
-const camera: NonNullable<Translation["camera"]> = {
+const camera: DeepPartial<Translation["camera"]> = {
     enable: {
         title: "Encender la cámara y el micrófono",
         start: "¡Allá vamos!",
@@ -21,6 +22,7 @@ const camera: NonNullable<Translation["camera"]> = {
     my: {
         silentZone: "Zona silenciosa",
     },
+    disable: "Apaga tu cámara",
 };
 
 export default camera;

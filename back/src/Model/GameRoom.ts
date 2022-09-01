@@ -37,6 +37,7 @@ import {
     ENABLE_FEATURE_MAP_EDITOR,
     JITSI_ISS,
     JITSI_URL,
+    PUBLIC_MAP_STORAGE_URL,
     SECRET_JITSI_KEY,
 } from "../Enum/EnvironmentVariable";
 import { LocalUrlError } from "../Services/LocalUrlError";
@@ -44,17 +45,19 @@ import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { MapBbbData, MapJitsiData } from "../Messages/JsonMessages/MapDetailsData";
-import { mapStorageClient } from "../Services/MapStorageClient";
 import { MapEditorMessagesHandler } from "./MapEditorMessagesHandler";
 import { MapLoadingError } from "../Services/MapLoadingError";
+import { MucManager } from "../Services/MucManager";
+import { BrothersFinder } from "./BrothersFinder";
+import { getMapStorageClient } from "../Services/MapStorageClient";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
 
-export class GameRoom {
+export class GameRoom implements BrothersFinder {
     // Users, sorted by ID
     private readonly users = new Map<number, User>();
-    private readonly usersByUuid = new Map<string, User>();
+    private readonly usersByUuid = new Map<string, Set<User>>();
     private readonly groups: Map<number, Group> = new Map<number, Group>();
     private readonly admins = new Set<Admin>();
 
@@ -70,6 +73,7 @@ export class GameRoom {
     private constructor(
         public readonly roomUrl: string,
         private mapUrl: string,
+        private roomGroup: string | null,
         private readonly connectCallback: ConnectCallback,
         private readonly disconnectCallback: DisconnectCallback,
         private readonly minDistance: number,
@@ -113,6 +117,7 @@ export class GameRoom {
         const gameRoom = new GameRoom(
             roomUrl,
             mapDetails.mapUrl,
+            mapDetails.group,
             connectCallback,
             disconnectCallback,
             minDistance,
@@ -127,13 +132,19 @@ export class GameRoom {
         );
 
         if (ENABLE_FEATURE_MAP_EDITOR) {
-            mapStorageClient.ping(new PingMessage(), (err, res) => {
+            getMapStorageClient().ping(new PingMessage(), (err, res) => {
                 console.log(`==================================`);
                 console.log(err);
                 console.log(JSON.stringify(res));
             });
         }
 
+        gameRoom
+            .getMucManager()
+            .then((mucManager) => {
+                mucManager.init().catch((err) => console.error(err));
+            })
+            .catch((err) => console.error(err));
         return gameRoom;
     }
 
@@ -142,31 +153,31 @@ export class GameRoom {
     }
 
     public getUserByUuid(uuid: string): User | undefined {
-        return this.usersByUuid.get(uuid);
+        const users = this.usersByUuid.get(uuid);
+        if (users === undefined) {
+            return undefined;
+        }
+        const [user] = users;
+        return user;
     }
     public getUserById(id: number): User | undefined {
         return this.users.get(id);
     }
-    public getUsersByUuid(uuid: string): User[] {
-        const userList: User[] = [];
-        for (const user of this.users.values()) {
-            if (user.uuid === uuid) {
-                userList.push(user);
-            }
-        }
-        return userList;
+    public getUsersByUuid(uuid: string): Set<User> {
+        return this.usersByUuid.get(uuid) ?? new Set();
     }
 
-    public join(socket: UserSocket, joinRoomMessage: JoinRoomMessage): User {
+    public async join(socket: UserSocket, joinRoomMessage: JoinRoomMessage): Promise<User> {
         const positionMessage = joinRoomMessage.getPositionmessage();
         if (positionMessage === undefined) {
             throw new Error("Missing position message");
         }
         const position = ProtobufUtils.toPointInterface(positionMessage);
 
-        const user = new User(
+        const user = await User.create(
             this.nextUserId,
             joinRoomMessage.getUseruuid(),
+            joinRoomMessage.getIslogged(),
             joinRoomMessage.getIpaddress(),
             position,
             this.positionNotifier,
@@ -176,6 +187,9 @@ export class GameRoom {
             joinRoomMessage.getVisitcardurl(),
             joinRoomMessage.getName(),
             ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.getCharacterlayerList()),
+            this.roomUrl,
+            this.roomGroup ?? undefined,
+            this,
             joinRoomMessage.getCompanion(),
             undefined,
             undefined,
@@ -183,7 +197,12 @@ export class GameRoom {
         );
         this.nextUserId++;
         this.users.set(user.id, user);
-        this.usersByUuid.set(user.uuid, user);
+        let set = this.usersByUuid.get(user.uuid);
+        if (set === undefined) {
+            set = new Set<User>();
+            this.usersByUuid.set(user.uuid, set);
+        }
+        set.add(user);
         this.updateUserGroup(user);
 
         // Notify admins
@@ -586,16 +605,24 @@ export class GameRoom {
         if (!ADMIN_API_URL) {
             const roomUrlObj = new URL(roomUrl);
 
-            const match = /\/_\/[^/]+\/(.+)/.exec(roomUrlObj.pathname);
-            if (!match) {
-                console.error("Unexpected room URL", roomUrl);
-                throw new Error('Unexpected room URL "' + roomUrl + '"');
+            let mapUrl = "";
+            let canEdit = false;
+            const match = /\/~\/(.+)/.exec(roomUrlObj.pathname);
+            if (match) {
+                mapUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
+                canEdit = true;
+            } else {
+                const match = /\/_\/[^/]+\/(.+)/.exec(roomUrlObj.pathname);
+                if (!match) {
+                    console.error("Unexpected room URL", roomUrl);
+                    throw new Error('Unexpected room URL "' + roomUrl + '"');
+                }
+
+                mapUrl = roomUrlObj.protocol + "//" + match[1];
             }
-
-            const mapUrl = roomUrlObj.protocol + "//" + match[1];
-
             return {
                 mapUrl,
+                canEdit,
                 authenticationMandatory: null,
                 group: null,
                 mucRooms: null,
@@ -621,9 +648,9 @@ export class GameRoom {
      * @throws LocalUrlError if the map we are trying to load is hosted on a local network
      * @throws Error
      */
-    private getMap(): Promise<ITiledMap> {
+    private getMap(canLoadLocalUrl = false): Promise<ITiledMap> {
         if (!this.mapPromise) {
-            this.mapPromise = mapFetcher.fetchMap(this.mapUrl);
+            this.mapPromise = mapFetcher.fetchMap(this.mapUrl, canLoadLocalUrl);
         }
 
         return this.mapPromise;
@@ -636,11 +663,11 @@ export class GameRoom {
         if (!this.variableManagerPromise) {
             this.variableManagerLastLoad = new Date();
             this.variableManagerPromise = this.getMap()
-                .then((map) => {
-                    const variablesManager = new VariablesManager(this.roomUrl, map);
+                .then(async (map) => {
+                    const variablesManager = await VariablesManager.create(this.roomUrl, map);
                     return variablesManager.init();
                 })
-                .catch((e) => {
+                .catch(async (e) => {
                     if (e instanceof LocalUrlError) {
                         // If we are trying to load a local URL, we are probably in test mode.
                         // In this case, let's bypass the server-side checks completely.
@@ -655,7 +682,7 @@ export class GameRoom {
                             }
                         }, 1000);
 
-                        const variablesManager = new VariablesManager(this.roomUrl, null);
+                        const variablesManager = await VariablesManager.create(this.roomUrl, null);
                         return variablesManager.init();
                     } else {
                         // An error occurred while loading the map
@@ -672,7 +699,7 @@ export class GameRoom {
                             }
                         }, 1000);
 
-                        const variablesManager = new VariablesManager(this.roomUrl, null);
+                        const variablesManager = await VariablesManager.create(this.roomUrl, null);
                         return variablesManager.init();
                     }
                 });
@@ -824,5 +851,65 @@ export class GameRoom {
 
     public getMapEditorMessagesHandler(): MapEditorMessagesHandler {
         return this.mapEditorMessagesHandler;
+    }
+
+    /**
+     * Returns the list of users in this room that share the same UUID
+     */
+    public getBrothers(user: User): Array<User> {
+        const family = this.usersByUuid.get(user.uuid);
+        if (family === undefined) {
+            return [];
+        }
+        return [...family].filter((theUser) => theUser !== user);
+    }
+
+    private mucManagerPromise: Promise<MucManager> | undefined;
+    private mucManagerLastLoad: Date | undefined;
+
+    private getMucManager(): Promise<MucManager> {
+        const lastMapUrl = this.mapUrl;
+        if (!this.mucManagerPromise) {
+            // For localhost maps
+            this.mapUrl = this.mapUrl.replace("http://maps.workadventure.localhost", "http://maps:80");
+            this.mucManagerLastLoad = new Date();
+            this.mucManagerPromise = this.getMap(true)
+                .then((map) => {
+                    return new MucManager(this.roomUrl, map);
+                })
+                .catch((e) => {
+                    if (e instanceof LocalUrlError) {
+                        // If we are trying to load a local URL, we are probably in test mode.
+                        // In this case, let's bypass the server-side checks completely.
+
+                        // Note: we run this message inside a setTimeout so that the room listeners can have time to connect.
+                        setTimeout(() => {
+                            for (const roomListener of this.roomListeners) {
+                                emitErrorOnRoomSocket(
+                                    roomListener,
+                                    "You are loading a local map. If you use the scripting API in this map, please be aware that server-side checks and muc persistence is disabled."
+                                );
+                            }
+                        }, 1000);
+                    } else {
+                        // An error occurred while loading the map
+                        // Right now, let's bypass the error. In the future, we should make sure the user is aware of that
+                        // and that he/she will act on it to fix the problem.
+
+                        // Note: we run this message inside a setTimeout so that the room listeners can have time to connect.
+                        setTimeout(() => {
+                            for (const roomListener of this.roomListeners) {
+                                emitErrorOnRoomSocket(
+                                    roomListener,
+                                    "Your map does not seem accessible from the WorkAdventure servers. Is it behind a firewall or a proxy? Your map should be accessible from the WorkAdventure servers. If you use the scripting API in this map, please be aware that server-side checks and muc persistence is disabled."
+                                );
+                            }
+                        }, 1000);
+                    }
+                    return new MucManager(this.roomUrl, null);
+                });
+        }
+        this.mapUrl = lastMapUrl;
+        return this.mucManagerPromise;
     }
 }

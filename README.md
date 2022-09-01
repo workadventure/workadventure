@@ -50,6 +50,15 @@ Note: on some OSes, you will need to add this line to your `/etc/hosts` file:
 127.0.0.1 workadventure.localhost
 ```
 
+You can also start WorkAdventure + a test OpenID connect server using:
+
+```console
+$ docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml up
+```
+
+(Test user is "User1" and his password is "pwd")
+
+
 ### Troubleshooting
 
 #### MacOS users

@@ -1,9 +1,8 @@
-import { ITiledMapRectangleObject } from "../../Game/GameMap";
+import { ITiledMapRectangleObject } from "@workadventure/map-editor-types";
 
 export enum AreaPreviewEvent {
     Clicked = "Clicked",
     DoubleClicked = "DoubleClicked",
-    Updated = "Updated",
 }
 
 export class AreaPreview extends Phaser.GameObjects.Container {
@@ -33,7 +32,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         return this;
     }
 
-    public updateArea(config: ITiledMapRectangleObject, sendUpdate = true): void {
+    public updatePreview(config: ITiledMapRectangleObject): void {
         this.config = {
             ...this.config,
             ...config,
@@ -41,9 +40,6 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         this.setPosition(config.x + config.width * 0.5, config.y + config.height * 0.5);
         this.preview.displayWidth = config.width;
         this.preview.displayHeight = config.height;
-        if (sendUpdate) {
-            this.emit(AreaPreviewEvent.Updated, this.config);
-        }
     }
 
     private createPreview(config: ITiledMapRectangleObject): Phaser.GameObjects.Rectangle {
@@ -67,5 +63,9 @@ export class AreaPreview extends Phaser.GameObjects.Container {
 
     public getName(): string {
         return this.config.name;
+    }
+
+    public getId(): number {
+        return this.config.id;
     }
 }

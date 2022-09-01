@@ -1,17 +1,19 @@
 import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
-import { PlayerAnimationDirections, PlayerAnimationTypes } from "../Player/Animation";
+import { PlayerAnimationTypes } from "../Player/Animation";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
 import { Writable, writable } from "svelte/store";
 import type { PictureStore } from "../../Stores/PictureStore";
 import type CancelablePromise from "cancelable-promise";
+import { PositionMessage_Direction } from "../../Messages/ts-proto-generated/protos/messages";
+import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 
 export interface CompanionStatus {
     x: number;
     y: number;
     name: string;
     moving: boolean;
-    direction: PlayerAnimationDirections;
+    direction: PositionMessage_Direction;
 }
 
 export class Companion extends Container {
@@ -20,10 +22,10 @@ export class Companion extends Container {
     private delta: number;
     private invisible: boolean;
     private updateListener: (time: number, delta: number) => void;
-    private target: { x: number; y: number; direction: PlayerAnimationDirections };
+    private target: { x: number; y: number; direction: PositionMessage_Direction };
 
     private companionName: string;
-    private direction: PlayerAnimationDirections;
+    private direction: PositionMessage_Direction;
     private animationType: PlayerAnimationTypes;
     private readonly _pictureStore: Writable<string | undefined>;
     private texturePromise: CancelablePromise<string | void> | undefined;
@@ -35,9 +37,9 @@ export class Companion extends Container {
 
         this.delta = 0;
         this.invisible = true;
-        this.target = { x, y, direction: PlayerAnimationDirections.Down };
+        this.target = { x, y, direction: PositionMessage_Direction.DOWN };
 
-        this.direction = PlayerAnimationDirections.Down;
+        this.direction = PositionMessage_Direction.DOWN;
         this.animationType = PlayerAnimationTypes.Idle;
 
         this.companionName = name;
@@ -69,7 +71,7 @@ export class Companion extends Container {
         this.scene.add.existing(this);
     }
 
-    public setTarget(x: number, y: number, direction: PlayerAnimationDirections) {
+    public setTarget(x: number, y: number, direction: PositionMessage_Direction) {
         this.target = { x, y: y + 4, direction };
     }
 
@@ -106,15 +108,15 @@ export class Companion extends Container {
 
             if (Math.abs(xDist) > Math.abs(yDist)) {
                 if (xDist < 0) {
-                    this.direction = PlayerAnimationDirections.Left;
+                    this.direction = PositionMessage_Direction.LEFT;
                 } else {
-                    this.direction = PlayerAnimationDirections.Right;
+                    this.direction = PositionMessage_Direction.RIGHT;
                 }
             } else {
                 if (yDist < 0) {
-                    this.direction = PlayerAnimationDirections.Up;
+                    this.direction = PositionMessage_Direction.UP;
                 } else {
-                    this.direction = PlayerAnimationDirections.Down;
+                    this.direction = PositionMessage_Direction.DOWN;
                 }
             }
         }
@@ -151,11 +153,12 @@ export class Companion extends Container {
         });
     }
 
-    private playAnimation(direction: PlayerAnimationDirections, type: PlayerAnimationTypes): void {
+    private playAnimation(direction: PositionMessage_Direction, type: PlayerAnimationTypes): void {
         if (this.invisible) return;
 
+        const directionStr = ProtobufClientUtils.toDirectionString(direction);
         for (const [resource, sprite] of this.sprites.entries()) {
-            sprite.play(`${resource}-${direction}-${type}`, true);
+            sprite.play(`${resource}-${directionStr}-${type}`, true);
         }
     }
 
@@ -175,49 +178,49 @@ export class Companion extends Container {
     private getAnimations(resource: string): Phaser.Types.Animations.Animation[] {
         return [
             {
-                key: `${resource}-${PlayerAnimationDirections.Down}-${PlayerAnimationTypes.Idle}`,
+                key: `${resource}-down-${PlayerAnimationTypes.Idle}`,
                 frames: this.scene.anims.generateFrameNumbers(resource, { frames: [1] }),
                 frameRate: 10,
                 repeat: 1,
             },
             {
-                key: `${resource}-${PlayerAnimationDirections.Left}-${PlayerAnimationTypes.Idle}`,
+                key: `${resource}-left-${PlayerAnimationTypes.Idle}`,
                 frames: this.scene.anims.generateFrameNumbers(resource, { frames: [4] }),
                 frameRate: 10,
                 repeat: 1,
             },
             {
-                key: `${resource}-${PlayerAnimationDirections.Right}-${PlayerAnimationTypes.Idle}`,
+                key: `${resource}-right-${PlayerAnimationTypes.Idle}`,
                 frames: this.scene.anims.generateFrameNumbers(resource, { frames: [7] }),
                 frameRate: 10,
                 repeat: 1,
             },
             {
-                key: `${resource}-${PlayerAnimationDirections.Up}-${PlayerAnimationTypes.Idle}`,
+                key: `${resource}-up-${PlayerAnimationTypes.Idle}`,
                 frames: this.scene.anims.generateFrameNumbers(resource, { frames: [10] }),
                 frameRate: 10,
                 repeat: 1,
             },
             {
-                key: `${resource}-${PlayerAnimationDirections.Down}-${PlayerAnimationTypes.Walk}`,
+                key: `${resource}-down-${PlayerAnimationTypes.Walk}`,
                 frames: this.scene.anims.generateFrameNumbers(resource, { frames: [0, 1, 2] }),
                 frameRate: 15,
                 repeat: -1,
             },
             {
-                key: `${resource}-${PlayerAnimationDirections.Left}-${PlayerAnimationTypes.Walk}`,
+                key: `${resource}-left-${PlayerAnimationTypes.Walk}`,
                 frames: this.scene.anims.generateFrameNumbers(resource, { frames: [3, 4, 5] }),
                 frameRate: 15,
                 repeat: -1,
             },
             {
-                key: `${resource}-${PlayerAnimationDirections.Right}-${PlayerAnimationTypes.Walk}`,
+                key: `${resource}-right-${PlayerAnimationTypes.Walk}`,
                 frames: this.scene.anims.generateFrameNumbers(resource, { frames: [6, 7, 8] }),
                 frameRate: 15,
                 repeat: -1,
             },
             {
-                key: `${resource}-${PlayerAnimationDirections.Up}-${PlayerAnimationTypes.Walk}`,
+                key: `${resource}-up-${PlayerAnimationTypes.Walk}`,
                 frames: this.scene.anims.generateFrameNumbers(resource, { frames: [9, 10, 11] }),
                 frameRate: 15,
                 repeat: -1,

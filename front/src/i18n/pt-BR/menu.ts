@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import { DeepPartial } from "../../Utils/DeepPartial";
+import type { Translation } from "../i18n-types";
 
-const menu: BaseTranslation = {
+const menu: DeepPartial<Translation["menu"]> = {
     title: "Menu",
     icon: {
         open: {
@@ -9,8 +10,8 @@ const menu: BaseTranslation = {
             register: "Registro",
             chat: "Abrir bate-papo",
             userlist: "Lista de usuários",
-            openEmoji: "Open emoji selected popup",
-            closeEmoji: "Close emoji menu",
+            openEmoji: "Abrir pop-up de emoji selecionado",
+            closeEmoji: "Fechar menu de emojis",
         },
     },
     visitCard: {
@@ -27,21 +28,6 @@ const menu: BaseTranslation = {
         logout: "Sair",
     },
     settings: {
-        gameQuality: {
-            title: "Qualidade do jogo",
-            short: {
-                high: "Alto (120 fps)",
-                medium: "Médio (60 fps)",
-                small: "Baixo (40 fps)",
-                minimum: "Mínimo (20 fps)",
-            },
-            long: {
-                high: "Alta qualidade de vídeo (120 fps)",
-                medium: "Média qualidade de vídeo (60 fps, recomendado)",
-                small: "Baixa qualidade de vídeo (40 fps)",
-                minimum: "Mínima qualidade de vídeo (20 fps)",
-            },
-        },
         videoQuality: {
             title: "Qualidade de vídeo",
             short: {
@@ -93,6 +79,8 @@ const menu: BaseTranslation = {
     globalAudio: {
         uploadInfo: "Enviar um arquivo",
         error: "Nenhum arquivo selecionado. Você precisa fazer o upload de um arquivo antes de enviá-lo.",
+        errorUpload:
+            "Erro no upload do arquivo. Verifique seu arquivo e tente novamente. Se o problema persistir, entre em contato com o administrador.",
     },
     contact: {
         gettingStarted: {

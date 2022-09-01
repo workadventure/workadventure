@@ -20,7 +20,7 @@ class UrlManager {
         //@deprecated jwt url will be replace by "?token=<private access token>"
         else if (url === "/jwt") {
             return GameConnexionTypes.jwt;
-        } else if (url.includes("_/") || url.includes("*/") || url.includes("@/")) {
+        } else if (url.includes("_/") || url.includes("*/") || url.includes("@/") || url.includes("~/")) {
             return GameConnexionTypes.room;
         }
         //@deprecated register url will be replace by "?token=<private access token>"
@@ -83,6 +83,10 @@ class UrlManager {
 
     pushStartLayerNameToUrl(startLayerName: string): void {
         window.location.hash = startLayerName;
+    }
+
+    getPlayUri(): string {
+        return document.location.toString();
     }
 }
 

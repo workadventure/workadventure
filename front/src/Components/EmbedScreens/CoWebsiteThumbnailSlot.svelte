@@ -13,6 +13,7 @@
     import jitsiIcon from "../images/jitsi.png";
     import meetingIcon from "../images/meeting.svg";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import LL from "../../i18n/i18n-svelte";
 
     export let index: number;
     export let coWebsite: CoWebsite;
@@ -24,17 +25,22 @@
     let isJitsi: boolean = coWebsite instanceof JitsiCoWebsite;
     let isBBB: boolean = coWebsite instanceof BBBCoWebsite;
     let isMeeting: boolean = isJitsi || isBBB;
+    let cowebsiteName = "";
+
     const mainState = coWebsiteManager.getMainStateSubscriber();
 
     onMount(() => {
         if (isJitsi) {
             icon.src = jitsiIcon;
+            cowebsiteName = "Jitsi meeting";
         } else if (isBBB) {
             icon.src = meetingIcon;
+            cowebsiteName = "BigBlueButton meeting";
         } else {
             icon.src = `${ICON_URL}/icon?url=${
                 coWebsite.getUrl().hostname
             }&size=64..96..256&fallback_icon_color=14304c`;
+            cowebsiteName = coWebsite.getUrl().hostname;
         }
         icon.alt = coWebsite.getUrl().hostname;
         icon.onload = () => {
@@ -43,9 +49,7 @@
     });
 
     async function onClick() {
-        if (vertical) {
-            coWebsiteManager.goToMain(coWebsite);
-        } else if ($mainCoWebsite) {
+        if ($mainCoWebsite) {
             if ($mainCoWebsite.getId() === coWebsite.getId()) {
                 if (coWebsiteManager.getMainState() === iframeStates.closed) {
                     coWebsiteManager.displayMain();
@@ -55,7 +59,11 @@
                     coWebsiteManager.hideMain();
                 }
             } else {
-                if (coWebsiteManager.getMainState() === iframeStates.closed) {
+                if (vertical) {
+                    coWebsiteManager.hideMain();
+                    coWebsiteManager.goToMain(coWebsite);
+                    coWebsiteManager.displayMain();
+                } else if (coWebsiteManager.getMainState() === iframeStates.closed) {
                     coWebsiteManager.goToMain(coWebsite);
                     coWebsiteManager.displayMain();
                 } else {
@@ -204,8 +212,8 @@
     </svg>
 
     <!-- TODO use trigger message property -->
-    <div class="cowebsite-hover" class:hide={!isMeeting} style="width: max-content;">
-        <p>Open / Close meeting</p>
+    <div class="cowebsite-hover" style="width: max-content;">
+        <p>{$LL.cowebsite.open()} / {$LL.cowebsite.close()} <b>{cowebsiteName}</b></p>
     </div>
 </div>
 
@@ -257,6 +265,8 @@
             }
 
             .cowebsite-hover {
+                display: block;
+                width: max-content !important;
                 top: -4px;
                 left: 55px;
             }
@@ -367,10 +377,6 @@
 
             p {
                 margin-bottom: 0;
-            }
-
-            &.hide {
-                display: none;
             }
         }
     }

@@ -1,5 +1,9 @@
 <!-- https://lihautan.com/notes/svelte-lazy-load/ -->
 <script>
+    import { createEventDispatcher } from "svelte";
+
+    const dispatch = createEventDispatcher();
+
     export let when = false;
     export let component;
 
@@ -11,6 +15,14 @@
 
     function load() {
         loading = component();
+        dispatch("onload");
+        loading
+            .then(() => {
+                dispatch("loaded");
+            })
+            .catch(() => {
+                dispatch("error");
+            });
     }
 </script>
 

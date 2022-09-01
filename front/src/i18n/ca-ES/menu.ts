@@ -1,6 +1,7 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import type { Translation } from "../i18n-types";
 
-const menu: NonNullable<Translation["menu"]> = {
+const menu: DeepPartial<Translation["menu"]> = {
     title: "Menú",
     icon: {
         open: {
@@ -9,8 +10,8 @@ const menu: NonNullable<Translation["menu"]> = {
             register: "Registre",
             chat: "Obrir chat",
             userlist: "Lista de utilizadores",
-            openEmoji: "Open emoji selected popup",
-            closeEmoji: "Close emoji menu",
+            openEmoji: "Obre la finestra emergent de l'emoji seleccionat",
+            closeEmoji: "Tanca el menú d'emojis",
         },
     },
     visitCard: {
@@ -27,21 +28,6 @@ const menu: NonNullable<Translation["menu"]> = {
         logout: "Tancar sessió",
     },
     settings: {
-        gameQuality: {
-            title: "Qualitat del joc",
-            short: {
-                high: "Alta (120 fps)",
-                medium: "Mitjana (60 fps)",
-                small: "Reduïda (40 fps)",
-                minimum: "Mínima (20 fps)",
-            },
-            long: {
-                high: "Vídeo de qualitat alta (120 fps)",
-                medium: "Vídeo de qualitat mitjana (60 fps, recomenat)",
-                small: "Vídeo de qualitat reduïda (40 fps)",
-                minimum: "Vídeo de qualitat mínima (20 fps)",
-            },
-        },
         videoQuality: {
             title: "Qualitat del vídeo",
             short: {
@@ -93,6 +79,8 @@ const menu: NonNullable<Translation["menu"]> = {
     globalAudio: {
         uploadInfo: "Pujar un arxiu",
         error: "Cap arxiu seleccionat. Teniu que pujar un arxiu abans d'enviar-lo.",
+        errorUpload:
+            "Error en carregar el fitxer. Comproveu el vostre fitxer i torneu-ho a provar. Si el problema persisteix, poseu-vos en contacte amb l'administrador.",
     },
     contact: {
         gettingStarted: {

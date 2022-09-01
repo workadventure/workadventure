@@ -9,12 +9,13 @@ import {
     ServerToClientMessage,
     SubMessage,
 } from "../../Messages/generated/messages_pb";
-import { ClientDuplexStream } from "grpc";
+import { ClientDuplexStream } from "@grpc/grpc-js";
 import { Zone } from "../../Model/Zone";
 import { compressors } from "hyper-express";
 import { WokaDetail } from "../../Messages/JsonMessages/PlayerTextures";
 import { PusherRoom } from "../../Model/PusherRoom";
 import { XmppClient } from "../../Services/XmppClient";
+import { MucRoomDefinitionInterface } from "../../Messages/JsonMessages/MucRoomDefinitionInterface";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
@@ -24,6 +25,7 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable 
     //userId: number;   // A temporary (autoincremented) identifier for this user
     userUuid: string; // A unique identifier for this user
     userIdentifier: string;
+    isLogged: boolean;
     IPAddress: string; // IP address
     name: string;
     characterLayers: WokaDetail[];
@@ -54,6 +56,6 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable 
     xmppClient: XmppClient | undefined;
     jabberId: string;
     jabberPassword: string;
-    mucRooms: Array<Array<string>>;
     activatedInviteUser: boolean | undefined;
+    mucRooms: Array<MucRoomDefinitionInterface>;
 }

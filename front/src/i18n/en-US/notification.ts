@@ -1,8 +1,9 @@
-import type { Translation } from "../i18n-types";
+import type { BaseTranslation } from "../i18n-types";
 
-const notification: NonNullable<Translation["notification"]> = {
+const notification: BaseTranslation = {
     discussion: "wants to discuss with you",
-    message: "sends you a message",
+    message: "sends a message",
+    forum: "on the forum",
 };
 
 export default notification;

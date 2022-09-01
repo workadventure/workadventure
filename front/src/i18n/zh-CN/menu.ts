@@ -1,6 +1,7 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import type { Translation } from "../i18n-types";
 
-const menu: NonNullable<Translation["menu"]> = {
+const menu: DeepPartial<Translation["menu"]> = {
     title: "菜单",
     icon: {
         open: {
@@ -9,8 +10,8 @@ const menu: NonNullable<Translation["menu"]> = {
             register: "注册",
             chat: "打开聊天",
             userlist: "用户名单",
-            openEmoji: "Open emoji selected popup",
-            closeEmoji: "Close emoji menu",
+            openEmoji: "打开表情符号选择弹出窗口",
+            closeEmoji: "关闭表情符号菜单",
         },
     },
     visitCard: {
@@ -27,21 +28,6 @@ const menu: NonNullable<Translation["menu"]> = {
         logout: "登出",
     },
     settings: {
-        gameQuality: {
-            title: "游戏质量",
-            short: {
-                high: "高 (120 fps)",
-                medium: "中 (60 fps)",
-                small: "低 (40 fps)",
-                minimum: "最低 (20 fps)",
-            },
-            long: {
-                high: "高视频质量 (120 fps)",
-                medium: "中视频质量 (60 fps, 推荐)",
-                small: "低视频质量 (40 fps)",
-                minimum: "最低视频质量 (20 fps)",
-            },
-        },
         videoQuality: {
             title: "视频质量",
             short: {
@@ -81,7 +67,6 @@ const menu: NonNullable<Translation["menu"]> = {
         copy: "复制",
         share: "分享",
         walkAutomaticallyToPosition: "自动走到我的位置",
-        selectEntryPoint: "Select an entry point",
     },
     globalMessage: {
         text: "文本",
@@ -93,6 +78,7 @@ const menu: NonNullable<Translation["menu"]> = {
     globalAudio: {
         uploadInfo: "上传文件",
         error: "未选择文件。发送前必须上传一个文件。",
+        errorUpload: "上传文件错误。 请检查您的文件，然后重试。 如果问题仍然存在，请联系管理员。",
     },
     contact: {
         gettingStarted: {
@@ -127,7 +113,7 @@ const menu: NonNullable<Translation["menu"]> = {
         profile: "资料",
         settings: "设置",
         invite: "邀请",
-        credit: "Credit",
+        credit: "信用",
         globalMessages: "全局消息",
         contact: "联系",
     },

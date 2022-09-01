@@ -25,7 +25,7 @@ function createLayoutManagerAction() {
 
                 if (!found) {
                     list.push(newAction);
-                    newAction.userInputManager?.addSpaceEventListner(newAction.callback);
+                    newAction.userInputManager?.addSpaceEventListener(newAction.callback);
                 }
 
                 return list;

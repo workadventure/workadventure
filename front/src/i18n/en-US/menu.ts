@@ -27,21 +27,6 @@ const menu: BaseTranslation = {
         logout: "Log out",
     },
     settings: {
-        gameQuality: {
-            title: "Game quality",
-            short: {
-                high: "High (120 fps)",
-                medium: "Medium (60 fps)",
-                small: "Small (40 fps)",
-                minimum: "Minimum (20 fps)",
-            },
-            long: {
-                high: "High video quality (120 fps)",
-                medium: "Medium video quality (60 fps, recommended)",
-                small: "Small video quality (40 fps)",
-                minimum: "Minimum video quality (20 fps)",
-            },
-        },
         videoQuality: {
             title: "Video quality",
             short: {
@@ -73,6 +58,7 @@ const menu: BaseTranslation = {
         },
         fullscreen: "Fullscreen",
         notifications: "Notifications",
+        chatSounds: "Sounds of chat",
         cowebsiteTrigger: "Always ask before opening websites and Jitsi Meet rooms",
         ignoreFollowRequest: "Ignore requests to follow other users",
     },
@@ -93,6 +79,8 @@ const menu: BaseTranslation = {
     globalAudio: {
         uploadInfo: "Upload a file",
         error: "No file selected. You need to upload a file before sending it.",
+        errorUpload:
+            "Uploading file error. Please check your file and try again. If the problem persists, contact the administrator.",
     },
     contact: {
         gettingStarted: {

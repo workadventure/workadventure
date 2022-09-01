@@ -1,31 +1,39 @@
-import { registeredCallbacks } from "./Api/iframe/registeredCallbacks";
+import { registeredCallbacks } from "./Api/Iframe/registeredCallbacks";
 import {
     isIframeAnswerEvent,
     isIframeErrorAnswerEvent,
     isIframeResponseEvent,
+    isLookingLikeIframeEventWrapper,
     TypedMessageEvent,
 } from "./Api/Events/IframeEvent";
-import chat from "./Api/iframe/chat";
-import nav, { CoWebsite } from "./Api/iframe/nav";
-import controls from "./Api/iframe/controls";
-import ui from "./Api/iframe/ui";
-import sound from "./Api/iframe/sound";
-import room, { setMapURL, setRoomId } from "./Api/iframe/room";
-import { createState } from "./Api/iframe/state";
-import player, { setPlayerName, setPlayerLanguage, setTags, setUserRoomToken, setUuid } from "./Api/iframe/player";
-import type { ButtonDescriptor } from "./Api/iframe/Ui/ButtonDescriptor";
-import type { Popup } from "./Api/iframe/Ui/Popup";
-import type { Sound } from "./Api/iframe/Sound/Sound";
-import { answerPromises, queryWorkadventure } from "./Api/iframe/IframeApiContribution";
-import camera from "./Api/iframe/camera";
-export type { UIWebsite } from "./Api/iframe/Ui/UIWebsite";
-export type { Menu } from "./Api/iframe/Ui/Menu";
-export type { ActionMessage } from "./Api/iframe/Ui/ActionMessage";
-export type { EmbeddedWebsite } from "./Api/iframe/Room/EmbeddedWebsite";
-export type { Area } from "./Api/iframe/Area/Area";
-export type { RemotePlayer, ActionsMenuAction } from "./Api/iframe/ui";
+import chat from "./Api/Iframe/chat";
+import nav, { CoWebsite } from "./Api/Iframe/nav";
+import controls from "./Api/Iframe/controls";
+import ui from "./Api/Iframe/ui";
+import sound from "./Api/Iframe/sound";
+import room, { setMapURL, setRoomId } from "./Api/Iframe/room";
+import { createState } from "./Api/Iframe/state";
+import player, { setPlayerName, setPlayerLanguage, setTags, setUserRoomToken, setUuid } from "./Api/Iframe/player";
+import players from "./Api/Iframe/players";
+import type { ButtonDescriptor } from "./Api/Iframe/Ui/ButtonDescriptor";
+import type { Popup } from "./Api/Iframe/Ui/Popup";
+import type { Sound } from "./Api/Iframe/Sound/Sound";
+import { answerPromises, queryWorkadventure } from "./Api/Iframe/IframeApiContribution";
+import camera from "./Api/Iframe/camera";
+export type { UIWebsite } from "./Api/Iframe/Ui/UIWebsite";
+export type { Menu } from "./Api/Iframe/Ui/Menu";
+export type { ActionMessage } from "./Api/Iframe/Ui/ActionMessage";
+export type { EmbeddedWebsite } from "./Api/Iframe/Room/EmbeddedWebsite";
+export type { Area } from "./Api/Iframe/Area/Area";
+export type { ActionsMenuAction } from "./Api/Iframe/ui";
 
-const globalState = createState("global");
+const globalState = createState();
+
+let _metadata: unknown | undefined;
+
+const setMetadata = (data: unknown | undefined) => {
+    _metadata = data;
+};
 
 // Notify WorkAdventure that we are ready to receive data
 const initPromise = queryWorkadventure({
@@ -39,6 +47,7 @@ const initPromise = queryWorkadventure({
     setTags(gameState.tags);
     setUuid(gameState.uuid);
     setUserRoomToken(gameState.userRoomToken);
+    setMetadata(gameState.metadata);
     globalState.initVariables(gameState.variables as Map<string, unknown>);
     player.state.initVariables(gameState.playerVariables as Map<string, unknown>);
 });
@@ -51,11 +60,33 @@ const wa = {
     sound,
     room,
     player,
+    players,
     camera,
     state: globalState,
 
+    /**
+     * When your script / iFrame loads WorkAdventure, it takes a few milliseconds for your
+     * script / iFrame to exchange data with WorkAdventure. You should wait for the WorkAdventure
+     * API to be fully ready using the WA.onInit() method.
+     * {@link https://workadventu.re/map-building/api-start.md#waiting-for-workadventure-api-to-be-available | Website documentation}
+     *
+     * Some properties (like the current user name, or the room ID) are not available until WA.onInit has completed.
+     *
+     * @returns {void}
+     */
     onInit(): Promise<void> {
         return initPromise;
+    },
+
+    /**
+     * The metadata sent by the administration website.
+     * Important: You need to wait for the end of the initialization before accessing.
+     * {@link https://workadventu.re/map-building/api-metadata.md | Website documentation}
+     *
+     * @returns {unknown|undefined} Metadata
+     */
+    get metadata(): unknown | undefined {
+        return _metadata;
     },
 
     // All methods below are deprecated and should not be used anymore.
@@ -232,10 +263,22 @@ window.addEventListener("message", (message: TypedMessageEvent<unknown>) => {
         if (safeParsedPayload.success) {
             const payloadData = safeParsedPayload.data;
 
-            const callback = registeredCallbacks[payloadData.type];
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            callback?.(payloadData.data);
+            const callbacks = registeredCallbacks[payloadData.type];
+            if (callbacks === undefined) {
+                throw new Error('Missing event handler for event of type "' + payloadData.type + "'");
+            }
+            for (const callback of callbacks) {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
+                callback?.(payloadData.data);
+            }
+        } else {
+            const safeLooksLikeResponse = isLookingLikeIframeEventWrapper.safeParse(payload);
+            if (safeLooksLikeResponse.success) {
+                throw new Error(
+                    "Could not parse message received from WorkAdventure. Message:" + JSON.stringify(payload)
+                );
+            }
         }
     }
 });

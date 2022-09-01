@@ -1,6 +1,7 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import type { Translation } from "../i18n-types";
 
-const chat: NonNullable<Translation["chat"]> = {
+const chat: DeepPartial<Translation["chat"]> = {
     intro: "Voici l'historique de votre chat:",
     enter: "Entrez votre message...",
     menu: {

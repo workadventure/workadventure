@@ -2,7 +2,7 @@ import { getEnvConfig } from "@geprog/vite-plugin-env-config/getEnvConfig";
 
 const DEBUG_MODE: boolean = getEnvConfig("DEBUG_MODE") == "true";
 const PUSHER_URL = getEnvConfig("PUSHER_URL") || "//pusher.workadventure.localhost";
-export const ADMIN_URL = getEnvConfig("ADMIN_URL") || "//workadventu.re";
+export const ADMIN_URL = getEnvConfig("ADMIN_URL") || "";
 const UPLOADER_URL = getEnvConfig("UPLOADER_URL") || "//uploader.workadventure.localhost";
 const ICON_URL = getEnvConfig("ICON_URL") || "//icon.workadventure.localhost";
 const STUN_SERVER: string = getEnvConfig("STUN_SERVER") || "stun:stun.l.google.com:19302";
@@ -21,13 +21,16 @@ export const MAX_PER_GROUP = parseInt(getEnvConfig("MAX_PER_GROUP") || "4");
 export const DISPLAY_TERMS_OF_USE = getEnvConfig("DISPLAY_TERMS_OF_USE") == "true";
 export const NODE_ENV = getEnvConfig("NODE_ENV") || "development";
 export const CONTACT_URL = getEnvConfig("CONTACT_URL") || undefined;
-export const PROFILE_URL = getEnvConfig("PROFILE_URL") || undefined;
-export const IDENTITY_URL = getEnvConfig("IDENTITY_URL") || undefined;
 export const POSTHOG_API_KEY: string = (getEnvConfig("POSTHOG_API_KEY") as string) || "";
 export const POSTHOG_URL = getEnvConfig("POSTHOG_URL") || undefined;
 export const DISABLE_ANONYMOUS: boolean = getEnvConfig("DISABLE_ANONYMOUS") === "true";
-export const OPID_LOGIN_SCREEN_PROVIDER = getEnvConfig("OPID_LOGIN_SCREEN_PROVIDER");
+const enableOpenID = getEnvConfig("ENABLE_OPENID");
+export const ENABLE_OPENID =
+    enableOpenID !== "" && enableOpenID != undefined && enableOpenID != "0" && enableOpenID.toLowerCase() !== "false";
+export const OPID_PROFILE_SCREEN_PROVIDER =
+    getEnvConfig("OPID_PROFILE_SCREEN_PROVIDER") || (ADMIN_URL ? ADMIN_URL + "/profile" : undefined);
 const FALLBACK_LOCALE = getEnvConfig("FALLBACK_LOCALE") || undefined;
+export const CHAT_URL = getEnvConfig("CHAT_URL") || "//chat.workadventure.localhost";
 const PEER_VIDEO_MAX_BANDWIDTH_KBITS_PS = parseInt(getEnvConfig("PEER_VIDEO_MAX_BANDWIDTH_KBITS_PS") || "0");
 const PEER_SCREENSHARE_MAX_BANDWIDTH_KBITS_PS = parseInt(
     getEnvConfig("PEER_SCREENSHARE_MAX_BANDWIDTH_KBITS_PS") || "0"

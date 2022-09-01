@@ -13,7 +13,8 @@ export function getColorByString(str: string): string | null {
     let color = "#";
     for (let i = 0; i < 3; i++) {
         const value = (hash >> (i * 8)) & 255;
-        color += ("00" + value.toString(16)).substr(-2);
+        const radix = "00" + value.toString(16);
+        color += radix.substring(radix.length - 2);
     }
     return color;
 }

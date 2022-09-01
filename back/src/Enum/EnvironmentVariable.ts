@@ -20,6 +20,15 @@ export const REDIS_PASSWORD = process.env.REDIS_PASSWORD || undefined;
 export const STORE_VARIABLES_FOR_LOCAL_MAPS = process.env.STORE_VARIABLES_FOR_LOCAL_MAPS === "true";
 export const PROMETHEUS_AUTHORIZATION_TOKEN = process.env.PROMETHEUS_AUTHORIZATION_TOKEN;
 export const MAP_STORAGE_URL = process.env.MAP_STORAGE_URL || "";
+export const PUBLIC_MAP_STORAGE_URL = process.env.PUBLIC_MAP_STORAGE_URL || "";
+export const EJABBERD_API_URI = (process.env.EJABBERD_API_URI || "").replace(/\/+$/, "");
+export const EJABBERD_DOMAIN = process.env.EJABBERD_DOMAIN || "";
+export const EJABBERD_USER = process.env.EJABBERD_USER || "";
+export const EJABBERD_PASSWORD = process.env.EJABBERD_PASSWORD || "";
+// The maximum time to live of player variables for logged players, expressed in seconds (no limit by default).
+// Use "-1" for infinity.
+// Note that anonymous players don't have any TTL limit because their data is stored in local storage, not in Redis database.
+export const PLAYER_VARIABLES_MAX_TTL = parseInt(process.env.PLAYER_VARIABLES_MAX_TTL || "-1") || -1;
 
 export {
     MINIMUM_DISTANCE,

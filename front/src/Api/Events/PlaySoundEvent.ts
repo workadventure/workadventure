@@ -2,8 +2,8 @@ import { z } from "zod";
 
 export const isSoundConfig = z.object({
     volume: z.optional(z.number()),
-    loop: z.optional(z.boolean()),
-    mute: z.optional(z.boolean()),
+    loop: z.boolean().optional(),
+    mute: z.boolean().optional(),
     rate: z.optional(z.number()),
     detune: z.optional(z.number()),
     seek: z.optional(z.number()),

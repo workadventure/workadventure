@@ -5,6 +5,7 @@ WA.onInit().then(() => {
     console.log('Player id: ', WA.player.id);
     console.log('Player tags: ', WA.player.tags);
     console.log('Player token: ', WA.player.userRoomToken);
+    console.log("Metadata: ", WA.metadata);
 });
 
 WA.room.getTiledMap().then((data) => {

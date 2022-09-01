@@ -14,6 +14,8 @@ import emoji from "./emoji";
 import trigger from "./trigger";
 import muc from "./muc";
 import notification from "./notification";
+import cowebsite from "./cowebsite";
+import actionbar from "./actionbar";
 
 const en_US: BaseTranslation = {
     audio,
@@ -31,6 +33,8 @@ const en_US: BaseTranslation = {
     trigger,
     muc,
     notification,
+    cowebsite,
+    actionbar,
 };
 
 export default en_US;

@@ -1,6 +1,7 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import type { Translation } from "../i18n-types";
 
-const menu: NonNullable<Translation["menu"]> = {
+const menu: DeepPartial<Translation["menu"]> = {
     title: "Menu",
     icon: {
         open: {
@@ -27,21 +28,6 @@ const menu: NonNullable<Translation["menu"]> = {
         logout: "Déconnexion",
     },
     settings: {
-        gameQuality: {
-            title: "Qualité du jeu",
-            short: {
-                high: "Haute (120 fps)",
-                medium: "Moyenne (60 fps)",
-                small: "Reduite (40 fps)",
-                minimum: "Minimale (20 fps)",
-            },
-            long: {
-                high: "Haute (120 fps)",
-                medium: "Moyenne (60 fps, recommandée)",
-                small: "Reduite (40 fps)",
-                minimum: "Minimale (20 fps)",
-            },
-        },
         videoQuality: {
             title: "Qualité de la vidéo",
             short: {
@@ -73,6 +59,7 @@ const menu: NonNullable<Translation["menu"]> = {
         },
         fullscreen: "Plein écran",
         notifications: "Notifications",
+        chatSounds: "Sons du chat",
         cowebsiteTrigger: "Demander toujours avant d'ouvrir des sites web et des salles de conférence Jitsi",
         ignoreFollowRequest: "Ignorer les demandes de suivi des autres utilisateurs",
     },
@@ -93,6 +80,8 @@ const menu: NonNullable<Translation["menu"]> = {
     globalAudio: {
         uploadInfo: "Télécharger un fichier",
         error: "Aucun fichier sélectionné. Vous devez télécharger un fichier avant de l'envoyer.",
+        errorUpload:
+            "Erreur lors de l'envoi du fichier. Veuillez vérifier votre fichier et réessayer. Si le problème persiste, contacter l'administrateur.",
     },
     contact: {
         gettingStarted: {

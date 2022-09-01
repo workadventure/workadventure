@@ -1,6 +1,7 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import type { Translation } from "../i18n-types";
 
-const menu: NonNullable<Translation["menu"]> = {
+const menu: DeepPartial<Translation["menu"]> = {
     title: "Menú",
     icon: {
         open: {
@@ -9,8 +10,8 @@ const menu: NonNullable<Translation["menu"]> = {
             register: "Registro",
             chat: "Abrir chat",
             userlist: "Lista de usuarios",
-            openEmoji: "Open emoji selected popup",
-            closeEmoji: "Close emoji menu",
+            openEmoji: "Abrir emoji emergente seleccionado",
+            closeEmoji: "Cerrar el menú de emojis",
         },
     },
     visitCard: {
@@ -27,21 +28,6 @@ const menu: NonNullable<Translation["menu"]> = {
         logout: "Cerrar sesión",
     },
     settings: {
-        gameQuality: {
-            title: "Calidad del juego",
-            short: {
-                high: "Alta (120 fps)",
-                medium: "Media (60 fps)",
-                small: "Reducida (40 fps)",
-                minimum: "Mínima (20 fps)",
-            },
-            long: {
-                high: "Vídeo de calidad alta (120 fps)",
-                medium: "Vídeo de calidad media (60 fps, recomendado)",
-                small: "Vídeo de calidad reducida (40 fps)",
-                minimum: "Vídeo de calidad mínima (20 fps)",
-            },
-        },
         videoQuality: {
             title: "Calidad del vídeo",
             short: {
@@ -93,6 +79,8 @@ const menu: NonNullable<Translation["menu"]> = {
     globalAudio: {
         uploadInfo: "Suba un archivo",
         error: "Ningún archivo seleccionado. Tiene que subir un archivo antes de enviarlo.",
+        errorUpload:
+            "Error al cargar el archivo. Por favor revise su archivo y vuelva a intentarlo. Si el problema persiste, póngase en contacto con el administrador.",
     },
     contact: {
         gettingStarted: {

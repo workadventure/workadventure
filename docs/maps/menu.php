@@ -118,10 +118,16 @@ return [
                         'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/api-state.md',
                     ],
                     [
-                        'title' => 'Player',
+                        'title' => 'Local player',
                         'url' => '/map-building/api-player.md',
                         'markdown' => 'maps.api-player',
                         'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/api-player.md',
+                    ],
+                    [
+                        'title' => 'Remote players',
+                        'url' => '/map-building/api-players.md',
+                        'markdown' => 'maps.api-players',
+                        'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/api-players.md',
                     ],
                     [
                         'title' => 'UI',

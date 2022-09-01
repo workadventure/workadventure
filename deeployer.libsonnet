@@ -24,11 +24,16 @@
          "REDIS_HOST": "redis",
          "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
          "BBB_URL": "https://test-install.blindsidenetworks.com/bigbluebutton/",
+         "MAP_STORAGE_URL": "map-storage:50053",
+         "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
          "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
-       } else {})
+         "EJABBERD_API_URI": "http://xmpp-"+adminUrl+"/api/",
+       } else {
+         "EJABBERD_API_URI": "http://ejabberd:5443/api/",
+       })
      },
      "back2": {
             "image": "thecodingmachine/workadventure-back:"+tag,
@@ -47,11 +52,16 @@
               "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
               "BBB_URL": "https://test-install.blindsidenetworks.com/bigbluebutton/",
               "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
+              "MAP_STORAGE_URL": "map-storage:50053",
+              "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
-            } else {})
-          },
+              "EJABBERD_API_URI": "http://xmpp-"+adminUrl+"/api/",
+            } else {
+              "EJABBERD_API_URI": "http://ejabberd:5443/api/",
+            })
+     },
      "pusher": {
             "replicas": 2,
             "image": "thecodingmachine/workadventure-pusher:"+tag,
@@ -66,10 +76,13 @@
               "API_URL": "back1:50051,back2:50051",
               "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
               "FRONT_URL": "https://play-"+url,
+              "PUSHER_URL": "https://pusher-"+url,
+              "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
               "ENABLE_OPENAPI_ENDPOINT": "true",
               "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
             } + (if adminUrl != null then {
               # Admin
+              "ADMIN_URL": adminUrl,
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
               "ADMIN_SOCKETS_TOKEN": env.ADMIN_SOCKETS_TOKEN,
@@ -77,14 +90,17 @@
               "OPID_CLIENT_ID": "auth-code-client",
               "OPID_CLIENT_SECRET": env.ADMIN_API_TOKEN,
               "OPID_CLIENT_ISSUER": "https://publichydra-"+url,
-              "OPID_CLIENT_REDIRECT_URL": "https://"+url+"/oauth/hydra",
-              "OPID_LOGIN_SCREEN_PROVIDER": "https://pusher-"+url+"/login-screen",
               "START_ROOM_URL": "/_/global/maps-"+url+"/starter/map.json",
               # Ejabberd
-              "EJABBERD_DOMAIN": "xmpp-admin-"+url,
-              "EJABBERD_URI": "adminxmpp-"+url,
-              "EJABBERD_JWT_SECRET": "tempSecretKeyNeedsToChange",
-            } else {})
+              "EJABBERD_DOMAIN": "xmpp-"+url,
+              "EJABBERD_WS_URI": "wss://xmpp-"+url+"/ws",
+              "EJABBERD_JWT_SECRET": env.EJABBERD_JWT_SECRET,
+            } else {
+              # Ejabberd
+              "EJABBERD_DOMAIN": "ejabberd",
+              "EJABBERD_WS_URI": "ws://ejabberd:5443/ws",
+              //"EJABBERD_JWT_SECRET": env.JWT_SECRET_KEY,
+            })
           },
     "front": {
       "image": "thecodingmachine/workadventure-front:"+tag,
@@ -95,7 +111,6 @@
       "env": {
         "PUSHER_URL": "//pusher-"+url,
         "UPLOADER_URL": "//uploader-"+url,
-        "ADMIN_URL": "//"+url,
         "JITSI_URL": env.JITSI_URL,
         #POSTHOG
         "POSTHOG_API_KEY": if namespace == "master" then env.POSTHOG_API_KEY else "",
@@ -103,8 +118,30 @@
         "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
         "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
         "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
+        "ENABLE_FEATURE_MAP_EDITOR":"true",
         "ICON_URL": "//icon-"+url,
-      }
+        "CHAT_URL": "//chat-"+url,
+      } + (if adminUrl != null then {
+         # Admin
+         "ADMIN_URL": "//"+url,
+         "ENABLE_OPENID": "1",
+       } else {})
+    },
+    "chat": {
+      "image": "thecodingmachine/workadventure-chat:"+tag,
+      "host": {
+        "url": "chat-"+url,
+      },
+      "ports": [80],
+      "env": {
+        "PUSHER_URL": "//pusher-"+url,
+        "UPLOADER_URL": "//uploader-"+url,
+        "CHAT_EMBEDLY_KEY": if std.objectHas(env, 'CHAT_EMBEDLY_KEY') then env.CHAT_EMBEDLY_KEY else "",
+        "ICON_URL": "//icon-"+url
+      } + (if adminUrl != null then {
+        # Admin
+        "ENABLE_OPENID": "1",
+      } else {})
     },
     "map-storage": {
            "image": "thecodingmachine/workadventure-map-storage:"+tag,
@@ -117,14 +154,30 @@
              "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
            }
          },
+    "uploaderredis":{
+      "image": "redis:7",
+      "ports": [6379],
+    },
     "uploader": {
            "image": "thecodingmachine/workadventure-uploader:"+tag,
+           "replicas": 2,
            "host": {
              "url": "uploader-"+url,
              "containerPort": 8080
            },
            "ports": [8080],
            "env": {
+             "UPLOADER_URL": "//uploader-"+url,
+             # AWS
+             "AWS_ACCESS_KEY_ID": if std.objectHas(env, 'AWS_ACCESS_KEY_ID') then env.AWS_ACCESS_KEY_ID else "",
+             "AWS_SECRET_ACCESS_KEY": if std.objectHas(env, 'AWS_SECRET_ACCESS_KEY') then env.AWS_SECRET_ACCESS_KEY else "",
+             "AWS_DEFAULT_REGION": if std.objectHas(env, 'AWS_DEFAULT_REGION') then env.AWS_DEFAULT_REGION else "",
+             "AWS_BUCKET": if std.objectHas(env, 'AWS_BUCKET') then env.AWS_BUCKET else "",
+             "AWS_URL": if std.objectHas(env, 'AWS_URL') then env.AWS_URL else "",
+             "AWS_ENDPOINT": if std.objectHas(env, 'AWS_ENDPOINT') then env.AWS_ENDPOINT else "",
+             #REDIS
+             "REDIS_HOST": "uploaderredis",
+             "REDIS_PORT": "6379",
            }
          },
     "maps": {
@@ -149,7 +202,16 @@
       },
       "ports": [8080]
     },
-  },
+  }+ (if (adminUrl == "") then {
+    "ejabberd": {
+      "image": "thecodingmachine/workadventure-simple-ecs:"+tag,
+      "ports": [5222, 5269, 5443, 5280, 5380, 1883],
+      "env": {
+        "JWT_SECRET": "tempSecretKeyNeedsToChange",
+      }
+    }
+  } else {
+  }),
   "config": {
     k8sextension(k8sConf)::
         k8sConf + {

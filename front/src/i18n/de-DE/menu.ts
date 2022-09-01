@@ -1,6 +1,7 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import type { Translation } from "../i18n-types";
 
-const menu: NonNullable<Translation["menu"]> = {
+const menu: DeepPartial<Translation["menu"]> = {
     title: "Menu",
     icon: {
         open: {
@@ -27,21 +28,6 @@ const menu: NonNullable<Translation["menu"]> = {
         logout: "Ausloggen",
     },
     settings: {
-        gameQuality: {
-            title: "Spiel Qualität",
-            short: {
-                high: "Hoch (120 BpS)",
-                medium: "Mittel (60 BpS)",
-                small: "Gering (40 BpS)",
-                minimum: "Minimal (20 BpS)",
-            },
-            long: {
-                high: "Hohe Video Qualität (120 BpS)",
-                medium: "Mittlere Video Qualität (60 BpS, empfohlen)",
-                small: "Geringe Video Qualität (40 BpS)",
-                minimum: "Minimale Video Qualität (20 BpS)",
-            },
-        },
         videoQuality: {
             title: "Video Qualität",
             short: {
@@ -80,7 +66,6 @@ const menu: NonNullable<Translation["menu"]> = {
         copy: "Kopieren",
         share: "Teilen",
         walkAutomaticallyToPosition: "Automatisch zu meiner Position gehen",
-        selectEntryPoint: "Select an entry point",
     },
     globalMessage: {
         text: "Text",
@@ -92,6 +77,8 @@ const menu: NonNullable<Translation["menu"]> = {
     globalAudio: {
         uploadInfo: "Datei hochladen",
         error: "Keine Datei ausgewählt. Du musst vor dem Versenden eine Datei hochladen.",
+        errorUpload:
+            "Fehler beim Hochladen der Datei. Bitte überprüfen Sie Ihre Datei und versuchen Sie es erneut. Wenn das Problem weiterhin besteht, wenden Sie sich an den Administrator.",
     },
     contact: {
         gettingStarted: {

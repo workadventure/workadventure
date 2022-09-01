@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import { DeepPartial } from "../../Utils/DeepPartial";
+import type { Translation } from "../i18n-types";
 
-const error: BaseTranslation = {
+const error: DeepPartial<Translation["error"]> = {
     accessLink: {
         title: "Link de acesso incorreto",
         subTitle: "Não foi possível encontrar o mapa. Verifique seu link de acesso.",

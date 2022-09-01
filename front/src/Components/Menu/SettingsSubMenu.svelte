@@ -10,19 +10,19 @@
     import { audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
 
     import infoImg from "../images/info.svg";
+    import { iframeListener } from "../../Api/IframeListener";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
-    let notification: boolean = localUserStore.getNotification() === "granted";
+    let notification: boolean = localUserStore.getNotification();
+    let chatSounds: boolean = localUserStore.getChatSounds();
     let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
     let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
     let decreaseAudioPlayerVolumeWhileTalking: boolean = localUserStore.getDecreaseAudioPlayerVolumeWhileTalking();
-    let valueGame: number = localUserStore.getGameQualityValue();
     let valueVideo: number = localUserStore.getVideoQualityValue();
     let valueLocale: string = $locale;
     let valueCameraPrivacySettings = localUserStore.getCameraPrivacySettings();
     let valueMicrophonePrivacySettings = localUserStore.getMicrophonePrivacySettings();
 
-    let previewValueGame = valueGame;
     let previewValueVideo = valueVideo;
     let previewValueLocale = valueLocale;
     let previewCameraPrivacySettings = valueCameraPrivacySettings;
@@ -39,12 +39,6 @@
         if (valueVideo !== previewValueVideo) {
             previewValueVideo = valueVideo;
             videoConstraintStore.setFrameRate(valueVideo);
-        }
-
-        if (valueGame !== previewValueGame) {
-            previewValueGame = valueGame;
-            localUserStore.setGameQualityValue(valueGame);
-            change = true;
         }
 
         if (valueCameraPrivacySettings !== previewCameraPrivacySettings) {
@@ -80,19 +74,26 @@
 
     function changeNotification() {
         if (Notification.permission === "granted") {
-            localUserStore.setNotification(notification ? "granted" : "denied");
+            localUserStore.setNotification(notification);
+            iframeListener.sendSettingsToChatIframe();
         } else {
             Notification.requestPermission()
                 .then((response) => {
                     if (response === "granted") {
-                        localUserStore.setNotification(notification ? "granted" : "denied");
+                        localUserStore.setNotification(notification);
                     } else {
-                        localUserStore.setNotification("denied");
+                        localUserStore.setNotification(false);
                         notification = false;
                     }
+                    iframeListener.sendSettingsToChatIframe();
                 })
                 .catch((e) => console.error(e));
         }
+    }
+
+    function changeChatSounds() {
+        localUserStore.setChatSounds(chatSounds);
+        iframeListener.sendSettingsToChatIframe();
     }
 
     function changeForceCowebsiteTrigger() {
@@ -116,29 +117,6 @@
 
 <div on:submit|preventDefault={saveSetting}>
     <section class="bottom-separator">
-        <h3 class="blue-title">{$LL.menu.settings.gameQuality.title()}</h3>
-        <select bind:value={valueGame} class="tw-w-full">
-            <option value={120}
-                >{isMobile
-                    ? $LL.menu.settings.gameQuality.short.high()
-                    : $LL.menu.settings.gameQuality.long.high()}</option
-            >
-            <option value={60}
-                >{isMobile
-                    ? $LL.menu.settings.gameQuality.short.medium()
-                    : $LL.menu.settings.gameQuality.long.medium()}</option
-            >
-            <option value={40}
-                >{isMobile
-                    ? $LL.menu.settings.gameQuality.short.small()
-                    : $LL.menu.settings.gameQuality.long.small()}</option
-            >
-            <option value={20}
-                >{isMobile
-                    ? $LL.menu.settings.gameQuality.short.minimum()
-                    : $LL.menu.settings.gameQuality.long.minimum()}</option
-            >
-        </select>
         <h3 class="blue-title">{$LL.menu.settings.videoQuality.title()}</h3>
         <select bind:value={valueVideo} class="tw-w-full">
             <option value={30}
@@ -165,7 +143,11 @@
         <h3 class="blue-title">{$LL.menu.settings.language.title()}</h3>
         <select class="tw-w-full languages-switcher" bind:value={valueLocale}>
             {#each displayableLocales as locale (locale.id)}
-                <option value={locale.id}>{`${locale.language} (${locale.region})`}</option>
+                <option value={locale.id}>
+                    {`${locale.language ? locale.language.charAt(0).toUpperCase() + locale.language.slice(1) : ""} (${
+                        locale.region
+                    })`}
+                </option>
             {/each}
         </select>
 
@@ -201,6 +183,10 @@
         <label>
             <input type="checkbox" bind:checked={notification} on:change={changeNotification} />
             <span>{$LL.menu.settings.notifications()}</span>
+        </label>
+        <label>
+            <input type="checkbox" bind:checked={chatSounds} on:change={changeChatSounds} />
+            <span>{$LL.menu.settings.chatSounds()}</span>
         </label>
         <label>
             <input type="checkbox" bind:checked={forceCowebsiteTrigger} on:change={changeForceCowebsiteTrigger} />

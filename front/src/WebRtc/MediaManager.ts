@@ -7,7 +7,13 @@ import { helpCameraSettingsVisibleStore } from "../Stores/HelpCameraSettingsStor
 export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
 
-import { myCameraVisibilityStore } from "../Stores/MyCameraStoreVisibility";
+import {
+    myCameraBlockedStore,
+    myCameraStore,
+    myMicrophoneBlockedStore,
+    myMicrophoneStore,
+    proximityMeetingStore,
+} from "../Stores/MyMediaStore";
 import { layoutManagerActionStore } from "../Stores/LayoutManagerStore";
 import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
 import { localUserStore } from "../Connexion/LocalUserStore";
@@ -40,7 +46,7 @@ export class MediaManager {
             .finally(() => {
                 localStreamStore.subscribe((result) => {
                     if (result.type === "error") {
-                        if (result.error.name !== MediaStreamConstraintsError.NAME) {
+                        if (result.error.name !== MediaStreamConstraintsError.NAME && get(myCameraStore)) {
                             layoutManagerActionStore.addAction({
                                 uuid: "cameraAccessDenied",
                                 type: "warning",
@@ -81,12 +87,32 @@ export class MediaManager {
             });
     }
 
-    public showMyCamera(): void {
-        myCameraVisibilityStore.set(true);
+    public enableMyCamera(): void {
+        if (!get(myCameraBlockedStore)) {
+            myCameraStore.set(true);
+        }
     }
 
-    public hideMyCamera(): void {
-        myCameraVisibilityStore.set(false);
+    public disableMyCamera(): void {
+        myCameraStore.set(false);
+    }
+
+    public enableMyMicrophone(): void {
+        if (!get(myMicrophoneBlockedStore)) {
+            myMicrophoneStore.set(true);
+        }
+    }
+
+    public disableMyMicrophone(): void {
+        myMicrophoneStore.set(false);
+    }
+
+    public enableProximityMeeting(): void {
+        proximityMeetingStore.set(true);
+    }
+
+    public disableProximityMeeting(): void {
+        proximityMeetingStore.set(false);
     }
 
     private getScreenSharingId(userId: string): string {
@@ -169,7 +195,7 @@ export class MediaManager {
 
     public hasNotification(): boolean {
         if (this.canSendNotification && Notification.permission === "granted") {
-            return localUserStore.getNotification() === "granted";
+            return localUserStore.getNotification();
         } else {
             return false;
         }
@@ -183,7 +209,7 @@ export class MediaManager {
         }
     }
 
-    public createNotification(userName: string, notificationType: NotificationType) {
+    public createNotification(userName: string, notificationType: NotificationType, forum: string | null = null) {
         if (document.hasFocus()) {
             return;
         }
@@ -199,7 +225,12 @@ export class MediaManager {
                     new Notification(`${userName} ${get(LL).notification.discussion()}`, options);
                     break;
                 case NotificationType.message:
-                    new Notification(`${userName} ${get(LL).notification.message()}`, options);
+                    new Notification(
+                        `${userName} ${get(LL).notification.message()} ${
+                            forum !== null && get(LL).notification.forum() + " " + forum
+                        }`,
+                        options
+                    );
                     break;
             }
             this.canSendNotification = false;
@@ -215,7 +246,6 @@ export class MediaManager {
             (elementAudioNewMessageNotification as HTMLAudioElement)
                 .play()
                 .then(() => {
-                    console.log("elementAudioNewMessageNotification => played");
                     this.canPlayNotificationMessage = false;
                     return setTimeout(() => (this.canPlayNotificationMessage = true), TIME_NOTIFYING_MILLISECOND);
                 })

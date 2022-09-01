@@ -80,7 +80,7 @@ export class UserInputManager {
         });
     }
 
-    initVirtualJoystick() {
+    private initVirtualJoystick() {
         this.joystick = new MobileJoystick(this.scene);
         this.joystick.on("update", () => {
             this.joystickForceAccuX = this.joystick?.forceX ? this.joystickForceAccuX : 0;
@@ -228,7 +228,7 @@ export class UserInputManager {
         return eventsMap;
     }
 
-    addSpaceEventListner(callback: () => void) {
+    addSpaceEventListener(callback: () => void) {
         this.userInputHandler.addSpaceEventListener(callback);
     }
     removeSpaceEventListener(callback: () => void) {
@@ -237,6 +237,7 @@ export class UserInputManager {
 
     destroy(): void {
         this.joystick?.destroy();
+        this.joystick = undefined;
     }
 
     private bindInputEventHandlers() {

@@ -24,6 +24,7 @@
     "plugins": [
         "@typescript-eslint"
     ],
+    "ignorePatterns": ["**/generated/*.ts"],
     "rules": {
         "no-unused-vars": "off",
         "@typescript-eslint/no-explicit-any": "error",

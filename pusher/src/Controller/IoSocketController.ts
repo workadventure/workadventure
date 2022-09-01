@@ -19,7 +19,6 @@ import {
     FollowAbortMessage,
     VariableMessage,
     LockGroupPromptMessage,
-    XmppMessage,
     AskPositionMessage,
     AvailabilityStatus,
     QueryMessage,
@@ -79,6 +78,7 @@ interface UpgradeData {
     };
     mucRooms: Array<MucRoomDefinitionInterface> | undefined;
     activatedInviteUser: boolean | undefined;
+    isLogged: boolean;
 }
 
 interface UpgradeFailedInvalidData {
@@ -341,6 +341,7 @@ export class IoSocketController {
                         }
 
                         const userIdentifier = tokenData ? tokenData.identifier : "";
+                        const isLogged = tokenData?.accessToken ? true : false;
 
                         let memberTags: string[] = [];
                         let memberVisitCardUrl: string | null = null;
@@ -368,6 +369,7 @@ export class IoSocketController {
                             try {
                                 userData = await adminService.fetchMemberDataByUuid(
                                     userIdentifier,
+                                    isLogged,
                                     roomId,
                                     IPAddress,
                                     characterLayers,
@@ -479,6 +481,7 @@ export class IoSocketController {
                                     bottom,
                                     left,
                                 },
+                                isLogged,
                             } as UpgradeData,
                             /* Spell these correctly */
                             websocketKey,
@@ -644,8 +647,6 @@ export class IoSocketController {
                     client.resetPongTimeout();
                 } else if (message.hasEditmapmessage()) {
                     socketManager.handleEditMapMessage(client, message.getEditmapmessage() as EditMapMessage);
-                } else if (message.hasXmppmessage()) {
-                    socketManager.handleXmppMessage(client, message.getXmppmessage() as XmppMessage);
                 } else if (message.hasAskpositionmessage()) {
                     socketManager.handleAskPositionMessage(
                         client,
@@ -715,6 +716,7 @@ export class IoSocketController {
         client.jabberPassword = ws.jabberPassword;
         client.mucRooms = ws.mucRooms;
         client.activatedInviteUser = ws.activatedInviteUser;
+        client.isLogged = ws.isLogged;
         return client;
     }
 }

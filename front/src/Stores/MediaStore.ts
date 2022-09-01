@@ -6,7 +6,7 @@ import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
 import { errorStore } from "./ErrorStore";
 import { getNavigatorType, isIOS, NavigatorType } from "../WebRtc/DeviceUtils";
 import { WebviewOnOldIOS } from "./Errors/WebviewOnOldIOS";
-import { myCameraVisibilityStore } from "./MyCameraStoreVisibility";
+import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeetingStore } from "./MyMediaStore";
 import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
@@ -193,17 +193,26 @@ function createVideoConstraintStore() {
     };
 }
 
+export const inOpenWebsite = writable(false);
 export const inJitsiStore = writable(false);
 export const inBbbStore = writable(false);
+
+export const inCowebsiteZone = derived(
+    [inJitsiStore, inBbbStore, inOpenWebsite],
+    ([$inJitsiStore, $inBbbStore, $inOpenWebsite]) => {
+        return $inJitsiStore || $inBbbStore || $inOpenWebsite;
+    },
+    false
+);
+
 export const silentStore = writable(false);
-export const denyProximityMeetingStore = writable(false);
 
 export const availabilityStatusStore = derived(
-    [inJitsiStore, inBbbStore, silentStore, privacyShutdownStore, denyProximityMeetingStore],
-    ([$inJitsiStore, $inBbbStore, $silentStore, $privacyShutdownStore, $denyProximityMeetingStore]) => {
+    [inJitsiStore, inBbbStore, silentStore, privacyShutdownStore, proximityMeetingStore],
+    ([$inJitsiStore, $inBbbStore, $silentStore, $privacyShutdownStore, $proximityMeetingStore]) => {
         if ($inJitsiStore) return AvailabilityStatus.JITSI;
         if ($inBbbStore) return AvailabilityStatus.BBB;
-        if ($denyProximityMeetingStore) return AvailabilityStatus.DENY_PROXIMITY_MEETING;
+        if (!$proximityMeetingStore) return AvailabilityStatus.DENY_PROXIMITY_MEETING;
         if ($silentStore) return AvailabilityStatus.SILENT;
         if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
         return AvailabilityStatus.ONLINE;
@@ -262,7 +271,9 @@ export const mediaStreamConstraintsStore = derived(
     [
         requestedCameraState,
         requestedMicrophoneState,
-        myCameraVisibilityStore,
+        myCameraStore,
+        myMicrophoneStore,
+        inExternalServiceStore,
         enableCameraSceneVisibilityStore,
         videoConstraintStore,
         audioConstraintStore,
@@ -274,7 +285,9 @@ export const mediaStreamConstraintsStore = derived(
         [
             $requestedCameraState,
             $requestedMicrophoneState,
-            $myCameraVisibilityStore,
+            $myCameraStore,
+            $myMicrophoneStore,
+            $inExternalServiceStore,
             $enableCameraSceneVisibilityStore,
             $videoConstraintStore,
             $audioConstraintStore,
@@ -287,20 +300,6 @@ export const mediaStreamConstraintsStore = derived(
         let currentVideoConstraint: boolean | MediaTrackConstraints = $videoConstraintStore;
         let currentAudioConstraint: boolean | MediaTrackConstraints = $audioConstraintStore;
 
-        if ($enableCameraSceneVisibilityStore) {
-            set({
-                video: currentVideoConstraint,
-                audio: currentAudioConstraint,
-            });
-            localUserStore.setCameraSetup(
-                JSON.stringify({
-                    video: currentVideoConstraint,
-                    audio: currentAudioConstraint,
-                })
-            );
-            return;
-        }
-
         // Disable webcam if the user requested so
         if ($requestedCameraState === false) {
             currentVideoConstraint = false;
@@ -311,8 +310,17 @@ export const mediaStreamConstraintsStore = derived(
             currentAudioConstraint = false;
         }
 
-        // Disable webcam and microphone when in a Jitsi
-        if ($myCameraVisibilityStore === false) {
+        // Disable webcam when in a Jitsi
+        if ($myCameraStore === false) {
+            currentVideoConstraint = false;
+        }
+
+        // Disable microphone when in a Jitsi
+        if ($myMicrophoneStore === false) {
+            currentAudioConstraint = false;
+        }
+
+        if ($inExternalServiceStore === true) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
@@ -330,7 +338,7 @@ export const mediaStreamConstraintsStore = derived(
         }
 
         // Disable webcam for energy reasons (the user is not moving and we are talking to no one)
-        if ($cameraEnergySavingStore === true) {
+        if ($cameraEnergySavingStore === true && $enableCameraSceneVisibilityStore === false) {
             currentVideoConstraint = false;
             //this optimization is desactivated because of sound issues on chrome
             //todo: fix this conflicts and reactivate this optimization
@@ -371,6 +379,15 @@ export const mediaStreamConstraintsStore = derived(
                     audio: currentAudioConstraint,
                 });
             }, 100);
+        }
+
+        if ($enableCameraSceneVisibilityStore) {
+            localUserStore.setCameraSetup(
+                JSON.stringify({
+                    video: currentVideoConstraint,
+                    audio: currentAudioConstraint,
+                })
+            );
         }
     },
     {

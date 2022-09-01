@@ -2,7 +2,7 @@ import { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import { AdminInterface } from "./AdminInterface";
 import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
-import { DISABLE_ANONYMOUS, START_ROOM_URL } from "../Enum/EnvironmentVariable";
+import { DISABLE_ANONYMOUS, PUBLIC_MAP_STORAGE_URL, START_ROOM_URL } from "../Enum/EnvironmentVariable";
 import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
 import { localWokaService } from "./LocalWokaService";
 
@@ -12,6 +12,7 @@ import { localWokaService } from "./LocalWokaService";
 class LocalAdmin implements AdminInterface {
     async fetchMemberDataByUuid(
         userIdentifier: string,
+        isLogged: boolean,
         playUri: string,
         ipAddress: string,
         characterLayers: string[],
@@ -25,8 +26,7 @@ class LocalAdmin implements AdminInterface {
             visitCardUrl: null,
             textures: (await localWokaService.fetchWokaDetails(characterLayers)) ?? [],
             userRoomToken: undefined,
-            //@ts-ignore
-            mucRooms: [{ name: "Default", uri: playUri }],
+            mucRooms: [{ name: "Connected users", url: playUri, type: "default", subscribe: false }],
             activatedInviteUser: true,
         };
     }
@@ -41,15 +41,23 @@ class LocalAdmin implements AdminInterface {
             });
         }
 
-        const match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);
-        if (!match) {
-            throw new Error("URL format is not good : " + roomUrl.pathname);
+        let mapUrl = "";
+        let canEdit = false;
+        let match = /\/~\/(.+)/.exec(roomUrl.pathname);
+        if (match) {
+            mapUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
+            canEdit = true;
+        } else {
+            match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);
+            if (!match) {
+                throw new Error("URL format is not good : " + roomUrl.pathname);
+            }
+            mapUrl = roomUrl.protocol + "//" + match[1];
         }
-
-        const mapUrl = roomUrl.protocol + "//" + match[1];
 
         return Promise.resolve({
             mapUrl,
+            canEdit,
             authenticationMandatory: DISABLE_ANONYMOUS,
             contactPage: null,
             mucRooms: null,
@@ -100,6 +108,16 @@ class LocalAdmin implements AdminInterface {
     }
 
     async logoutOauth(token: string): Promise<void> {
+        return Promise.reject(new Error("No admin backoffice set!"));
+    }
+
+    banUserByUuid(
+        uuidToBan: string,
+        playUri: string,
+        name: string,
+        message: string,
+        byUserEmail: string
+    ): Promise<boolean> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 }

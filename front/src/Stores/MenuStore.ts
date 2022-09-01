@@ -1,9 +1,8 @@
-import { get, writable } from "svelte/store";
+import { derived, get, writable } from "svelte/store";
 import Timeout = NodeJS.Timeout;
 import { userIsAdminStore } from "./GameStore";
-import { CONTACT_URL, IDENTITY_URL, PROFILE_URL } from "../Enum/EnvironmentVariable";
+import { CONTACT_URL, OPID_PROFILE_SCREEN_PROVIDER, PUSHER_URL } from "../Enum/EnvironmentVariable";
 import type { Translation } from "../i18n/i18n-types";
-import axios from "axios";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { connectionManager } from "../Connexion/ConnectionManager";
 
@@ -11,15 +10,9 @@ export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
 export const menuInputFocusStore = writable(false);
 export const userIsConnected = writable(false);
-export const profileAvailable = writable(true);
 
-menuVisiblilityStore.subscribe((value) => {
-    if (userIsConnected && value && IDENTITY_URL != null) {
-        axios.get(getMeUrl()).catch((err) => {
-            console.error("menuVisiblilityStore => err => ", err);
-            profileAvailable.set(false);
-        });
-    }
+export const profileAvailable = derived(userIsConnected, ($userIsConnected) => {
+    return $userIsConnected && OPID_PROFILE_SCREEN_PROVIDER !== undefined;
 });
 
 let warningContainerTimeout: Timeout | null = null;
@@ -72,19 +65,13 @@ export const inviteMenu: MenuItem = {
     key: SubMenusInterface.invite,
 };
 
+export const inviteUserActivated = writable(true);
+
 function createSubMenusStore() {
-    const { subscribe, update, set } = writable<MenuItem[]>([
+    const { subscribe, update } = writable<MenuItem[]>([
         {
             type: "translated",
             key: SubMenusInterface.profile,
-        },
-        {
-            type: "translated",
-            key: SubMenusInterface.globalMessages,
-        },
-        {
-            type: "translated",
-            key: SubMenusInterface.contact,
         },
         {
             type: "translated",
@@ -95,11 +82,33 @@ function createSubMenusStore() {
             key: SubMenusInterface.aboutRoom,
         },
         inviteMenu,
+        {
+            type: "translated",
+            key: SubMenusInterface.globalMessages,
+        },
+        {
+            type: "translated",
+            key: SubMenusInterface.contact,
+        },
     ]);
+
+    inviteUserActivated.subscribe((value) => {
+        //update menu tab
+        update((valuesSubMenusStore) => {
+            const indexInviteMenu = valuesSubMenusStore.findIndex(
+                (menu) => (menu as TranslatedMenu).key === SubMenusInterface.invite
+            );
+            if (value && indexInviteMenu === -1) {
+                valuesSubMenusStore.splice(3, 0, inviteMenu);
+            } else if (!value && indexInviteMenu !== -1) {
+                valuesSubMenusStore.splice(indexInviteMenu, 1);
+            }
+            return valuesSubMenusStore;
+        });
+    });
 
     return {
         subscribe,
-        set,
         addTranslatedMenu(menuCommand: MenuKeys) {
             update((menuList) => {
                 if (!menuList.find((menu) => menu.type === "translated" && menu.key === menuCommand)) {
@@ -189,29 +198,8 @@ export function handleMenuUnregisterEvent(menuName: string) {
 }
 
 export function getProfileUrl() {
-    return PROFILE_URL + `?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`;
-}
-
-export function getMeUrl() {
-    return IDENTITY_URL + `?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`;
-}
-
-export const inviteUserActivated = writable(true);
-
-inviteUserActivated.subscribe((value) => {
-    //update menu tab
-    const valuesSubMenusStore = get(subMenusStore);
-    if (!valuesSubMenusStore) {
-        return;
-    }
-    const indexInviteMenu = valuesSubMenusStore.findIndex(
-        (menu) => (menu as TranslatedMenu).key === SubMenusInterface.invite
+    return (
+        PUSHER_URL +
+        `/profile-callback?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`
     );
-    if (value && indexInviteMenu === -1) {
-        valuesSubMenusStore.push(inviteMenu);
-        subMenusStore.set(valuesSubMenusStore);
-    } else if (!value && indexInviteMenu !== -1) {
-        valuesSubMenusStore.splice(indexInviteMenu, 1);
-        subMenusStore.set(valuesSubMenusStore);
-    }
-});
+}

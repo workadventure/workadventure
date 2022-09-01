@@ -10,6 +10,7 @@ import type { CoWebsite } from "./CoWebsite/CoWesbite";
 import type CancelablePromise from "cancelable-promise";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { gameManager } from "../Phaser/Game/GameManager";
+import { inCowebsiteZone } from "../Stores/MediaStore";
 
 export enum iframeStates {
     closed = 1,
@@ -150,7 +151,8 @@ class CoWebsiteManager {
             }
 
             if (coWebsite.isClosable()) {
-                this.closeCoWebsite(coWebsite);
+                //if user is in a Jitsi or openWebsite zone, the stack won't be closable
+                this.closeCoWebsite(coWebsite, !get(inCowebsiteZone));
             } else {
                 this.unloadCoWebsite(coWebsite).catch((err) => {
                     console.error("Cannot unload co-website on click on close button", err);
@@ -616,9 +618,11 @@ class CoWebsiteManager {
         }
     }
 
-    private removeCoWebsiteFromStack(coWebsite: CoWebsite) {
+    private removeCoWebsiteFromStack(coWebsite: CoWebsite, withStack: boolean) {
         this.removeHighlightCoWebsite(coWebsite);
-        coWebsites.remove(coWebsite);
+        if (withStack) {
+            coWebsites.remove(coWebsite);
+        }
 
         if (get(coWebsites).length < 1) {
             this.closeMain();
@@ -708,7 +712,7 @@ class CoWebsiteManager {
             })
             .catch((err) => {
                 console.error("Error on co-website loading => ", err);
-                this.removeCoWebsiteFromStack(coWebsite);
+                this.removeCoWebsiteFromStack(coWebsite, true);
             });
 
         return coWebsiteLoading;
@@ -738,12 +742,12 @@ class CoWebsiteManager {
             });
     }
 
-    public closeCoWebsite(coWebsite: CoWebsite): void {
+    public closeCoWebsite(coWebsite: CoWebsite, withStack = true): void {
         if (get(coWebsites).length === 1) {
             this.fire();
         }
 
-        this.removeCoWebsiteFromStack(coWebsite);
+        this.removeCoWebsiteFromStack(coWebsite, withStack);
 
         const mainCoWebsite = this.getMainCoWebsite();
 
