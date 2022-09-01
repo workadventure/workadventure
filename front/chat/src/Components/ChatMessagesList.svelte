@@ -24,6 +24,8 @@
     import { HtmlUtils } from "../Utils/HtmlUtils";
     import File from "./Content/File.svelte";
     import HtmlMessage from "./Content/HtmlMessage.svelte";
+    import crown from "../../public/static/svg/icone-premium-crown.svg";
+    import { iframeListener } from "../IframeListener";
 
     export let mucRoom: MucRoom;
 
@@ -233,6 +235,8 @@
         });
     });
 
+    $: showPremiumLoadOlderMessages = mucRoom.showPremiumLoadOlderMessages;
+
     onDestroy(() => {
         messagesList.removeEventListener("scroll", scrollEvent);
         subscribers.forEach((subscriber) => subscriber());
@@ -240,26 +244,33 @@
 </script>
 
 <div class="wa-messages-list-container" bind:this={messagesList}>
-    <div class="tw-mt-14">
-        {#if $loadingStore}<div
-                style="border-top-color:transparent"
-                class="tw-w-5 tw-h-5 tw-border-2 tw-border-white tw-border-solid tw-rounded-full tw-animate-spin tw-m-auto"
-            />{/if}
-        {#if !$loadingStore && $messagesStore.length > 0 && mucRoom.canLoadOlderMessages}<button
-                class="tw-m-auto tw-cursor-pointer tw-text-xs"
-                on:click={() => mucRoom.retrieveLastMessages()}
-                >{$LL.load()}
-                {$LL.more()}
-                <ArrowUpIcon size="13" class="tw-ml-1" /></button
-            >{/if}
-    </div>
     <div class="emote-menu-container">
         <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
     </div>
 
     <div
-        class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-pb-4 tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen"
+        class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen tw-pt-14"
     >
+        <div class="tw-mb-auto">
+            {#if $loadingStore}<div
+                    style="border-top-color:transparent"
+                    class="tw-w-5 tw-h-5 tw-border-2 tw-border-white tw-border-solid tw-rounded-full tw-animate-spin tw-m-auto"
+                />{/if}
+            {#if !$loadingStore && $messagesStore.length > 0 && mucRoom.canLoadOlderMessages}<button
+                    class="tw-m-auto tw-cursor-pointer tw-text-xs"
+                    on:click={() => mucRoom.retrieveLastMessages()}
+                    >{$LL.load()}
+                    {$LL.more()}
+                    <ArrowUpIcon size="13" class="tw-ml-1" /></button
+                >{/if}
+            {#if $showPremiumLoadOlderMessages && mucRoom.getMe().isAdmin}
+                <button
+                    class="tw-text-orange tw-font-bold tw-underline tw-m-auto tw-text-xs tw-cursor-pointer"
+                    on:click={() => iframeListener.sendRedirectPricing()}
+                    ><img src={crown} class="tw-mr-1" /> {$LL.upgradeToSeeMore()}</button
+                >
+            {/if}
+        </div>
         {#each $messagesStore as message, i}
             {#if showDate(message.time, i)}
                 <div class="wa-separator">
@@ -293,7 +304,13 @@
                             style={`background-color: ${getColor(message.jid)}`}
                         >
                             <div class="wa-container">
-                                <img class="tw-w-full" src={getWoka(message.jid)} alt="Avatar" loading="lazy" />
+                                <img
+                                    class="tw-w-full"
+                                    style="image-rendering: pixelated;"
+                                    src={getWoka(message.jid)}
+                                    alt="Avatar"
+                                    loading="lazy"
+                                />
                             </div>
                         </div>
                         <div
@@ -476,7 +493,7 @@
                                 document.getElementById(`error_${message.id}`)?.classList.add("tw-invisible")}
                         >
                             <div
-                                class={`tw-text-pop-red tw-ml-1 tw-flex ${
+                                class={`tw-cursor-pointer tw-text-pop-red tw-ml-1 tw-flex ${
                                     needHideHeader(message.name, message.time, i) ? "" : "tw-mt-4"
                                 }`}
                                 on:click={() =>
@@ -570,9 +587,6 @@
 </div>
 
 <style lang="scss">
-    .wa-messages-list {
-        padding-bottom: 60px;
-    }
     .wa-error-message {
         position: relative;
         .wa-dropdown-menu {

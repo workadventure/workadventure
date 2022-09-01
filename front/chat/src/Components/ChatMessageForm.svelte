@@ -27,6 +27,7 @@
     import { FileExt, fileMessageManager, UploadedFile, uploadingState } from "../Services/FileMessageManager";
     import File from "./Content/File.svelte";
     import crown from "../../public/static/svg/icone-premium-crown.svg";
+    import { iframeListener } from "../IframeListener";
 
     export let mucRoom: MucRoom;
 
@@ -357,7 +358,8 @@
                             </p>
                             {#if fileUploaded.errorCode === 423 && mucRoom.getMe().isAdmin}<button
                                     class="tw-text-orange tw-font-bold tw-underline tw-m-auto"
-                                    ><img src={crown} class="tw-mr-1" /> Passez premium</button
+                                    on:click={() => iframeListener.sendRedirectPricing()}
+                                    ><img src={crown} class="tw-mr-1" /> {$LL.upgrade()}</button
                                 >{/if}
                         </div>
                     {/if}

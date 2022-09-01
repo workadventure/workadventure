@@ -106,38 +106,44 @@
     });
 </script>
 
+<!-- TODO All 'tw-cursor-default' will be deleted when Chat 1to1 will be released -->
 <div
-    class={`wa-chat-item ${user.isAdmin ? "admin" : "user"}`}
+    class={`wa-chat-item ${user.isAdmin ? "admin" : "user"}  tw-cursor-default`}
     on:click|stopPropagation={() => openChat(user)}
     on:mouseleave={closeChatUserMenu}
 >
     <div
-        class={`tw-relative wa-avatar ${!user.active && "tw-opacity-50"}`}
+        class={`tw-relative wa-avatar ${!user.active && "tw-opacity-50"}  tw-cursor-default`}
         style={`background-color: ${getColor(user.jid)}`}
         on:click|stopPropagation={() => openChat(user)}
     >
-        <div class="wa-container">
-            <img class="tw-w-full" src={getWoka(user.jid)} alt="Avatar" />
+        <div class="wa-container  tw-cursor-default">
+            <img
+                class="tw-w-full  tw-cursor-default"
+                style="image-rendering: pixelated;"
+                src={getWoka(user.jid)}
+                alt="Avatar"
+            />
         </div>
         {#if user.active}
             <span
                 title={getNameOfAvailabilityStatus(user.availabilityStatus)}
                 class={`tw-w-4 tw-h-4 ${getColorOfAvailabilityStatus(
                     user.availabilityStatus
-                )} tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-transform tw-translate-x-2 -tw-translate-y-1 tw-border-solid tw-border-2 tw-border-light-purple`}
+                )}  tw-cursor-default tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-transform tw-translate-x-2 -tw-translate-y-1 tw-border-solid tw-border-2 tw-border-light-purple`}
             />
         {/if}
     </div>
     <div
-        class={`tw-flex-auto tw-ml-3 ${!user.active && "tw-opacity-50"}`}
+        class={`tw-flex-auto tw-ml-3 ${!user.active && "tw-opacity-50"}  tw-cursor-default`}
         on:click|stopPropagation={() => openChat(user)}
     >
-        <h1 class={`tw-text-sm tw-font-bold tw-mb-0`}>
+        <h1 class={`tw-text-sm tw-font-bold tw-mb-0  tw-cursor-default`}>
             {#each chunks as chunk (chunk.key)}
-                <span class={`${chunk.match ? "tw-text-light-blue" : ""}`}>{chunk.text}</span>
+                <span class={`${chunk.match ? "tw-text-light-blue" : ""}  tw-cursor-default`}>{chunk.text}</span>
             {/each}
             {#if user.name.match(/\[\d*]/)}
-                <span class="tw-font-light tw-text-xs tw-text-gray">
+                <span class="tw-font-light tw-text-xs tw-text-gray  tw-cursor-default">
                     #{user.name
                         .match(/\[\d*]/)
                         ?.join()
@@ -165,11 +171,15 @@
                 {/if}
             {/if}
         </h1>
-        <p class="tw-text-xs tw-mb-0 tw-font-condensed">
+        <p class="tw-text-xs tw-mb-0 tw-font-condensed tw-opacity-75  tw-cursor-default">
             {#if user.isMe}
                 {$LL.you()}
             {:else if user.active}
-                {user.isInSameMap ? $LL.userList.isHere() : `${$LL.userList.in()} "${user.roomName}"`}
+                {@html user.isInSameMap
+                    ? $LL.userList.isHere()
+                    : user.roomName
+                    ? `${$LL.userList.in()} <span class="tw-font-medium">${user.roomName}</span>`
+                    : $LL.userList.inAnotherMap()}
             {:else}
                 {$LL.userList.disconnected()}
             {/if}

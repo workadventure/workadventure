@@ -16,6 +16,7 @@ import {
     DISABLE_ANONYMOUS,
     EJABBERD_DOMAIN,
     EJABBERD_JWT_SECRET,
+    MAX_HISTORY_CHAT,
     SOCKET_IDLE_TIMER,
 } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
@@ -36,6 +37,7 @@ interface UpgradeData {
     userUuid: string;
     IPAddress: string;
     playUri: string;
+    maxHistoryChat: number;
     tags: string[];
     userRoomToken: string | undefined;
     mucRooms: Array<MucRoomDefinitionInterface> | undefined;
@@ -46,6 +48,17 @@ interface UpgradeFailedInvalidData {
     reason: "tokenInvalid" | "textureInvalid" | "invalidVersion" | null;
     message: string;
     playUri: string;
+}
+
+interface UserRoomToken {
+    alg: string;
+    iss: string;
+    aud: string;
+    iat: number;
+    uid: string;
+    user: string;
+    room: string;
+    exp: number;
 }
 
 import Jwt from "jsonwebtoken";
@@ -63,7 +76,7 @@ type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData;
 
 export class IoSocketChatController {
     private nextUserId = 1;
-    private isPremium: string = "1";
+    private cache: Map<string, string> = new Map();
 
     constructor(private readonly app: HyperExpress.compressors.TemplatedApp) {
         this.ioConnection();
@@ -94,6 +107,8 @@ export class IoSocketChatController {
                     const websocketExtensions = req.getHeader("sec-websocket-extensions");
                     const IPAddress = req.getHeader("x-forwarded-for");
                     const locale = req.getHeader("accept-language");
+
+                    let maxHistoryChat = MAX_HISTORY_CHAT;
 
                     const playUri = query.playUri;
                     try {
@@ -227,12 +242,20 @@ export class IoSocketChatController {
                         }
 
                         if (userData.userRoomToken && ADMIN_API_URL) {
-                            console.log("isPremium");
-                            this.isPremium = await Axios.get(`${ADMIN_API_URL}/api/is_premium`, {
-                                headers: { userRoomToken: userData.userRoomToken },
-                            })
-                                .then((response) => response.data)
-                                .catch(() => "1");
+                            const jwtDecoded = jwtTokenManager.verifyJWTToken(
+                                userData.userRoomToken
+                            ) as unknown as UserRoomToken;
+                            if (this.cache.has(jwtDecoded.uid)) {
+                                // @ts-ignore
+                                maxHistoryChat = parseInt(this.cache.get(jwtDecoded.room));
+                            } else {
+                                maxHistoryChat = await Axios.get(`${ADMIN_API_URL}/api/limit/historyChat`, {
+                                    headers: { userRoomToken: userData.userRoomToken },
+                                })
+                                    .then((response) => parseInt(response.data))
+                                    .catch((err) => parseInt(err.response?.data));
+                                this.cache.set(jwtDecoded.room, maxHistoryChat.toString());
+                            }
                         }
 
                         // Generate characterLayers objects from characterLayers string[]
@@ -255,6 +278,7 @@ export class IoSocketChatController {
                                 IPAddress,
                                 userIdentifier,
                                 playUri,
+                                maxHistoryChat,
                                 tags: memberTags,
                                 userRoomToken: memberUserRoomToken,
                                 jabberId: userData.jabberId,
@@ -348,7 +372,6 @@ export class IoSocketChatController {
 
     //eslint-disable-next-line @typescript-eslint/no-explicit-any
     private initClient(ws: any): ExSocketInterface {
-        console.log("init client");
         const client: ExSocketInterface = ws;
         client.userId = this.nextUserId;
         this.nextUserId++;
@@ -366,6 +389,7 @@ export class IoSocketChatController {
         client.userIdentifier = ws.userIdentifier;
         client.tags = ws.tags;
         client.playUri = ws.roomId;
+        client.maxHistoryChat = ws.maxHistoryChat;
         client.jabberId = ws.jabberId;
         client.jabberPassword = ws.jabberPassword;
         client.mucRooms = ws.mucRooms;
