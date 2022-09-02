@@ -86,12 +86,16 @@
             </div>
         </div>
 
-        {#if $peerStore.size > 0}
-            <CamerasContainer highlightedEmbedScreen={$highlightedEmbedScreen} />
+        {#if $peerStore.size > 0 || $myCameraStore}
+            <div class="test-div tw-relative tw-self-end tw-z-[300] ">
+                {#if $peerStore.size > 0}
+                    <CamerasContainer highlightedEmbedScreen={$highlightedEmbedScreen} />
+                {/if}
+                {#if $myCameraStore}
+                    <MyCamera />
+                {/if}
+            </div>
         {/if}
-    {/if}
-    {#if $myCameraStore}
-        <MyCamera />
     {/if}
 </div>
 

@@ -58,9 +58,7 @@
 <!-- Components ordered by z-index -->
 <div id="main-layout" bind:this={mainLayout}>
     <aside id="main-layout-left-aside">
-        {#if $embedScreenLayoutStore === LayoutMode.VideoChat || displayCoWebsiteContainerMd}
-            <CoWebsitesContainer vertical={true} />
-        {/if}
+        <CoWebsitesContainer vertical={true} />
     </aside>
 
     <section id="main-layout-main">
@@ -135,28 +133,22 @@
         {/if}
     </section>
 
-    <section id="main-layout-baseline">
-        {#if displayCoWebsiteContainerLg}
-            <CoWebsitesContainer />
-        {/if}
+    {#if $layoutManagerActionVisibilityStore}
+        <LayoutActionManager />
+    {/if}
 
-        {#if $layoutManagerActionVisibilityStore}
-            <LayoutActionManager />
-        {/if}
+    <ActionBar />
 
-        <ActionBar />
+    <!-- audio when user have a message TODO delete it with new chat -->
+    <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
 
-        <!-- audio when user have a message TODO delete it with new chat -->
-        <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
-
-        <Lazy
-            on:onload={() => emoteDataStoreLoading.set(true)}
-            on:loaded={() => emoteDataStoreLoading.set(false)}
-            on:error={() => emoteDataStoreLoading.set(false)}
-            when={$emoteMenuStore}
-            component={() => import("./EmoteMenu/EmoteMenu.svelte")}
-        />
-    </section>
+    <Lazy
+        on:onload={() => emoteDataStoreLoading.set(true)}
+        on:loaded={() => emoteDataStoreLoading.set(false)}
+        on:error={() => emoteDataStoreLoading.set(false)}
+        when={$emoteMenuStore}
+        component={() => import("./EmoteMenu/EmoteMenu.svelte")}
+    />
 </div>
 
 <style lang="scss">
@@ -165,7 +157,7 @@
     #main-layout {
         display: grid;
         grid-template-columns: 120px calc(100% - 120px);
-        grid-template-rows: 80% 20%;
+        grid-template-rows: 100%;
         transition: all 0.2s ease-in-out;
 
         &-left-aside {

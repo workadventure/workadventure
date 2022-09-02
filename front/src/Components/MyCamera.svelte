@@ -4,6 +4,7 @@
         mediaStreamConstraintsStore,
         requestedCameraState,
         silentStore,
+        cameraEnergySavingStore,
     } from "../Stores/MediaStore";
     import { localStreamStore } from "../Stores/MediaStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
@@ -60,7 +61,7 @@
 
         <!--If we have a video to display-->
     {:else if $localStreamStore.type === "success"}
-        {#if $requestedCameraState}
+        {#if $requestedCameraState && $mediaStreamConstraintsStore.video}
             <div class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height">
                 <i class="tw-flex">
                     <span
@@ -92,9 +93,8 @@
                     {/if}
                 </div>
             </div>
-
             <!-- If we do not have a video to display-->
-        {:else if !$requestedCameraState}
+        {:else if !$requestedCameraState && !$cameraEnergySavingStore}
             <div
                 style="background-color: {backgroundColor}; color: {textColor}"
                 class="tw-w-full tw-rounded tw-px-3 tw-flex tw-flex-row tw-items-center media-box-camera-off-size tw-h-10"

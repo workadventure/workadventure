@@ -322,7 +322,7 @@
     style="margin-bottom: 10px"
     class:animated={$bottomActionBarVisibilityStore}
 >
-    <div class="bottom-action-bar">
+    <div class="bottom-action-bar tw-absolute">
         {#if $bottomActionBarVisibilityStore}
             <div
                 class="bottom-action-section tw-flex animate"
