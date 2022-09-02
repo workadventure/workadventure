@@ -41,8 +41,8 @@
 
     let mainLayout: HTMLDivElement;
 
-    let displayCoWebsiteContainerMd = isMediaBreakpointUp("md");
-    let displayCoWebsiteContainerLg = isMediaBreakpointDown("lg");
+    let displayCoWebsiteContainerMd;
+    let displayCoWebsiteContainerLg;
 
     const resizeObserver = new ResizeObserver(() => {
         displayCoWebsiteContainerMd = isMediaBreakpointUp("md");
