@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { audioManagerVisibilityStore } from "../Stores/AudioManagerStore";
-    import { embedScreenLayoutStore, hasEmbedScreen } from "../Stores/EmbedScreensStore";
+    import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import { emoteDataStoreLoading, emoteMenuStore } from "../Stores/EmoteStore";
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import { helpCameraSettingsVisibleStore } from "../Stores/HelpCameraSettingsStore";
@@ -31,7 +31,6 @@
     import { showLimitRoomModalStore, showShareLinkMapModalStore } from "../Stores/ModalStore";
     import LimitRoomModal from "./Modal/LimitRoomModal.svelte";
     import ShareLinkMapModal from "./Modal/ShareLinkMapModal.svelte";
-    import { LayoutMode } from "../WebRtc/LayoutManager";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import ActionsMenu from "./ActionsMenu/ActionsMenu.svelte";
     import Lazy from "./Lazy.svelte";

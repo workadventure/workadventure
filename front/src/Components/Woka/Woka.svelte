@@ -35,7 +35,7 @@
     {src}
     alt=""
     class="nes-pointer noselect"
-    style="--theme-width: {customWidth ?? width}; --theme-height: {customHeight ?? height}"
+    style="--theme-width: {customWidth ?? width}; --theme-height: {customHeight ?? height} image-rendering: pixalated"
     draggable="false"
     on:dragstart|preventDefault={noDrag}
 />
