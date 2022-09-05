@@ -319,7 +319,6 @@
 
 <div
     class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
-    style="margin-bottom: 10px"
     class:animated={$bottomActionBarVisibilityStore}
 >
     <div class="bottom-action-bar tw-absolute">

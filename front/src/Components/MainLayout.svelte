@@ -60,7 +60,7 @@
         <CoWebsitesContainer vertical={true} />
     </aside>
 
-    <section id="main-layout-main">
+    <section id="main-layout-main" class="tw-pb-0">
         <Lazy
             when={$showDesktopCapturerSourcePicker}
             component={() => import("./Video/DesktopCapturerSourcePicker.svelte")}
