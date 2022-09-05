@@ -3,10 +3,16 @@
     import { highlightedEmbedScreen } from "../../../Stores/EmbedScreensStore";
     import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import MediaBox from "../../Video/MediaBox.svelte";
+    import MyCamera from "../../MyCamera.svelte";
+    import {myCameraStore} from "../../../Stores/MyMediaStore";
+    import {isMediaBreakpointUp} from "../../../Utils/BreakpointsUtils";
 
     let layoutDom: HTMLDivElement;
+    let displayFullMedias = isMediaBreakpointUp("md");
 
-    const resizeObserver = new ResizeObserver(() => {});
+    const resizeObserver = new ResizeObserver(() => {
+        displayFullMedias = isMediaBreakpointUp("md");
+    });
 
     onMount(() => {
         resizeObserver.observe(layoutDom);
@@ -28,6 +34,14 @@
                 mozaicQuarter={$streamableCollectionStore.size === 3 || $streamableCollectionStore.size >= 4}
             />
         {/each}
+        {#if $myCameraStore && displayFullMedias}
+            <MyCamera/>
+        {/if}
+    </div>
+    <div class="tw-absolute tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4 tw-right-5 ">
+        {#if $myCameraStore && !displayFullMedias}
+            <MyCamera/>
+        {/if}
     </div>
 </div>
 
