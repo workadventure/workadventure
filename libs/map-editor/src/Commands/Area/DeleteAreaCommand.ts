@@ -7,7 +7,7 @@ export interface DeleteAreaCommandConfig {
     id: number;
 }
 
-export class UpdateAreaCommand extends Command {
+export class DeleteAreaCommand extends Command {
     private areaConfig: ITiledMapRectangleObject;
 
     private gameMap: GameMap;

@@ -1,4 +1,4 @@
-import { CommandConfig, UpdateAreaCommand, Command } from "@workadventure/map-editor";
+import { CommandConfig, UpdateAreaCommand, Command, DeleteAreaCommand } from "@workadventure/map-editor";
 import { Unsubscriber } from "svelte/store";
 import { RoomConnection } from "../../../Connexion/RoomConnection";
 import { mapEditorModeDragCameraPointerDownStore, mapEditorModeStore } from "../../../Stores/MapEditorStore";
@@ -45,8 +45,14 @@ export class MapEditorModeManager {
     private mapEditorModeUnsubscriber!: Unsubscriber;
     private pointerDownUnsubscriber!: Unsubscriber;
 
+    private ctrlKey: Phaser.Input.Keyboard.Key;
+    private shiftKey: Phaser.Input.Keyboard.Key;
+
     constructor(scene: GameScene) {
         this.scene = scene;
+
+        this.ctrlKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL);
+        this.shiftKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
         this.commandsHistory = [];
         this.currentCommandIndex = -1;
@@ -70,8 +76,12 @@ export class MapEditorModeManager {
                 command = new UpdateAreaCommand(this.scene.getGameMap(), commandConfig);
                 break;
             }
+            case "DeleteAreaCommand": {
+                command = new DeleteAreaCommand(this.scene.getGameMap(), commandConfig);
+                break;
+            }
             default: {
-                const _exhaustiveCheck: never = commandConfig.type;
+                const _exhaustiveCheck: never = commandConfig;
                 return;
             }
         }
@@ -123,7 +133,10 @@ export class MapEditorModeManager {
     }
 
     public handleKeyDownEvent(event: KeyboardEvent): void {
-        switch (event.key) {
+        if (this.activeTool) {
+            this.editorTools.get(this.activeTool)?.handleKeyDownEvent(event);
+        }
+        switch (event.key.toLowerCase()) {
             case "`": {
                 this.equipTool();
                 break;
@@ -132,12 +145,10 @@ export class MapEditorModeManager {
                 this.equipTool(EditorToolName.AreaEditor);
                 break;
             }
-            case "r": {
-                this.redoCommand();
-                break;
-            }
-            case "u": {
-                this.undoCommand();
+            case "z": {
+                if (this.ctrlKey) {
+                    this.shiftKey.isDown ? this.redoCommand() : this.undoCommand();
+                }
                 break;
             }
             default: {

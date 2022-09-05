@@ -1,5 +1,6 @@
 import { AreaType, ITiledMapRectangleObject } from "@workadventure/map-editor";
 import { Subscription } from "rxjs";
+import { get } from "svelte/store";
 import { RoomConnection } from "../../../../Connexion/RoomConnection";
 import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
@@ -81,6 +82,25 @@ export class AreaEditorTool extends MapEditorTool {
 
     public getAreaPreviewConfig(id: number): ITiledMapRectangleObject | undefined {
         return this.getAreaPreview(id)?.getConfig();
+    }
+
+    public handleKeyDownEvent(event: KeyboardEvent): void {
+        switch (event.key.toLowerCase()) {
+            case "delete": {
+                const areaPreview = get(mapEditorSelectedAreaPreviewStore);
+                if (!areaPreview) {
+                    break;
+                }
+                this.mapEditorModeManager.executeCommand({
+                    type: "DeleteAreaCommand",
+                    id: areaPreview.getId(),
+                });
+                break;
+            }
+            default: {
+                break;
+            }
+        }
     }
 
     private getAreaPreview(id: number): AreaPreview | undefined {

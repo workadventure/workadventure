@@ -1,5 +1,5 @@
 import { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
-import { DeleteAreaCommandConfig } from './Commands/Area/DeleteArea';
+import { DeleteAreaCommandConfig } from './Commands/Area/DeleteAreaCommand';
 import { UpdateAreaCommandConfig } from './Commands/Area/UpdateAreaCommand';
 
 export type ITiledMapRectangleObject = ITiledMapObject & { width: number; height: number };

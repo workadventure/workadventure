@@ -1,4 +1,4 @@
-import { Command, CommandConfig, GameMap, UpdateAreaCommand } from "@workadventure/map-editor";
+import { Command, CommandConfig, GameMap, UpdateAreaCommand, DeleteAreaCommand } from "@workadventure/map-editor";
 import { writeFileSync } from "fs";
 import { readFile } from "fs/promises";
 
@@ -39,8 +39,13 @@ class MapsManager {
                 command.execute();
                 break;
             }
+            case "DeleteAreaCommand": {
+                command = new DeleteAreaCommand(gameMap, commandConfig);
+                command.execute();
+                break;
+            }
             default: {
-                const _exhaustiveCheck: never = commandConfig.type;
+                const _exhaustiveCheck: never = commandConfig;
                 return;
             }
         }
