@@ -76,6 +76,15 @@ services:
     command: yarn run start:prod
     volumes: []
 
+  maps:
+    image: thecodingmachine/workadventure-maps:${DOCKER_TAG:-develop}
+    build:
+      context: maps/
+      cache_from:
+        - thecodingmachine/workadventure-maps:${DOCKER_TAG:-develop}
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    volumes: []
 
   uploader:
     image: thecodingmachine/workadventure-uploader:${DOCKER_TAG:-develop}
