@@ -8,7 +8,6 @@
     import {peerStore} from "../../../Stores/PeerStore";
     import {myCameraStore} from "../../../Stores/MyMediaStore";
     import MyCamera from "../../MyCamera.svelte";
-    import "../../../../style/tailwind.scss"
 
     function closeCoWebsite() {
         if ($highlightedEmbedScreen?.type === "cowebsite") {
@@ -53,10 +52,8 @@
 
 <div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias}>
     {#if displayFullMedias}
-        <div id="full-medias tw-z-[300] tw-absolute">
+        <div id="full-medias" class="tw-z-[300] tw-relative tw-mx-auto tw-top-8 tw-h-1/2 tw-overflow-y-auto">
             <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen}/>
-        </div>
-        <div class="tw-relative tw-self-end tw-z-[300] tw-bottom-16">
             {#if $myCameraStore}
                 <MyCamera/>
             {/if}
