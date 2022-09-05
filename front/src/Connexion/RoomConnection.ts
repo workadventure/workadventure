@@ -988,6 +988,42 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitMapEditorDeleteArea(id: number): void {
+        this.send({
+            message: {
+                $case: "editMapMessage",
+                editMapMessage: {
+                    message: {
+                        $case: "deleteAreaMessage",
+                        deleteAreaMessage: {
+                            id,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitMapEditorCreateArea(config: ITiledMapRectangleObject): void {
+        this.send({
+            message: {
+                $case: "editMapMessage",
+                editMapMessage: {
+                    message: {
+                        $case: "createAreaMessage",
+                        createAreaMessage: {
+                            id: config.id,
+                            x: config.x,
+                            y: config.y,
+                            width: config.width,
+                            height: config.height,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
     public getAllTags(): string[] {
         return this.tags;
     }

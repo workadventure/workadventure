@@ -344,7 +344,6 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleEditMapMessage(client: ExSocketInterface, message: EditMapMessage): void {
-        console.log("HANDLE EDIT MAP MESSAGE");
         const editWithMapKeyMessage = new EditMapWithKeyMessage();
         editWithMapKeyMessage.setEditmapmessage(message);
         editWithMapKeyMessage.setMapkey(client.roomId.split("~")[1]);

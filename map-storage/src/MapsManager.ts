@@ -40,8 +40,13 @@ class MapsManager {
                 break;
             }
             case "DeleteAreaCommand": {
-                command = new DeleteAreaCommand(gameMap, commandConfig);
-                command.execute();
+                try {
+                    command = new DeleteAreaCommand(gameMap, commandConfig);
+                    command.execute();
+                } catch (e: unknown) {
+                    console.log(e);
+                    throw new Error("COULD NOT EXECUTE MAP-EDIT COMMAND");
+                }
                 break;
             }
             default: {

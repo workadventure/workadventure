@@ -28,31 +28,51 @@ const mapStorageServer: MapStorageServer = {
             callback(null, {});
             return;
         }
-        switch (editMapMessage.message.$case) {
-            case "modifyAreaMessage": {
-                const message = editMapMessage.message.modifyAreaMessage;
-                const area = gameMap.getGameMapAreas().getArea(message.id, AreaType.Static);
-                if (area) {
-                    console.log(message);
-                    const areaObjectConfig: ITiledMapRectangleObject = {
-                        ...area,
-                        ...message,
-                    };
-                    mapsManager.executeCommand(call.request.mapKey, {
-                        type: "UpdateAreaCommand",
-                        areaObjectConfig,
-                    });
-                    callback(null, editMapMessage);
-                    return;
+        try {
+            switch (editMapMessage.message.$case) {
+                case "modifyAreaMessage": {
+                    const message = editMapMessage.message.modifyAreaMessage;
+                    const area = gameMap.getGameMapAreas().getArea(message.id, AreaType.Static);
+                    if (area) {
+                        const areaObjectConfig: ITiledMapRectangleObject = {
+                            ...area,
+                            ...message,
+                        };
+                        mapsManager.executeCommand(call.request.mapKey, {
+                            type: "UpdateAreaCommand",
+                            areaObjectConfig,
+                        });
+                    }
+                    break;
                 }
-                break;
+                case "createAreaMessage": {
+                    // const message = editMapMessage.message.createAreaMessage;
+                    // mapsManager.executeCommand(call.request.mapKey, {
+                    //     type: "DeleteAreaCommand",
+                    //     id: message.id,
+                    // });
+                    break;
+                }
+                case "deleteAreaMessage": {
+                    const message = editMapMessage.message.deleteAreaMessage;
+                    console.log("DELETE AREA MESSAGE HANDLED");
+                    mapsManager.executeCommand(call.request.mapKey, {
+                        type: "DeleteAreaCommand",
+                        id: message.id,
+                    });
+                    break;
+                }
+                default: {
+                    throw new Error(`UNKNOWN EDIT MAP MESSAGE CASE. THIS SHOULD NOT BE POSSIBLE`);
+                }
             }
-            default: {
-                break;
-            }
+            // send edit map message back as a valid one
+            callback(null, editMapMessage);
+        } catch (e) {
+            console.log(e);
+            // do not send editMap message back?
+            callback(null, {});
         }
-        // TODO: Change to EmptyMessage?
-        callback(null, {});
     },
 };
 

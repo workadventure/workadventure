@@ -179,6 +179,15 @@ export class MapEditorModeManager {
                 this.scene.connection?.emitMapEditorModifyArea(commandConfig.areaObjectConfig);
                 break;
             }
+            // case "CreateAreaCommand": {
+            //     this.scene.connection?.emitMapEditorCreateArea(commandConfig.);
+            //     break;
+            // }
+            case "DeleteAreaCommand": {
+                console.log("EMIT DELETE AREA COMMAND");
+                this.scene.connection?.emitMapEditorDeleteArea(commandConfig.id);
+                break;
+            }
             default: {
                 break;
             }

@@ -217,6 +217,18 @@ export interface ModifyAreaMessage {
     height?: number | undefined;
 }
 
+export interface DeleteAreaMessage {
+    id: number;
+}
+
+export interface CreateAreaMessage {
+    id: number;
+    x?: number | undefined;
+    y?: number | undefined;
+    width?: number | undefined;
+    height?: number | undefined;
+}
+
 export interface ClientToServerMessage {
     message?:
         | { $case: "userMovesMessage"; userMovesMessage: UserMovesMessage }
@@ -696,7 +708,13 @@ export interface SubToPusherRoomMessage {
 }
 
 export interface EditMapMessage {
-    message?: { $case: "modifyAreaMessage"; modifyAreaMessage: ModifyAreaMessage };
+    message?:
+        | { $case: "modifyAreaMessage"; modifyAreaMessage: ModifyAreaMessage }
+        | {
+              $case: "createAreaMessage";
+              createAreaMessage: CreateAreaMessage;
+          }
+        | { $case: "deleteAreaMessage"; deleteAreaMessage: DeleteAreaMessage };
 }
 
 export interface EditMapWithKeyMessage {
@@ -1881,6 +1899,138 @@ export const ModifyAreaMessage = {
 
     fromPartial<I extends Exact<DeepPartial<ModifyAreaMessage>, I>>(object: I): ModifyAreaMessage {
         const message = createBaseModifyAreaMessage();
+        message.id = object.id ?? 0;
+        message.x = object.x ?? undefined;
+        message.y = object.y ?? undefined;
+        message.width = object.width ?? undefined;
+        message.height = object.height ?? undefined;
+        return message;
+    },
+};
+
+function createBaseDeleteAreaMessage(): DeleteAreaMessage {
+    return { id: 0 };
+}
+
+export const DeleteAreaMessage = {
+    encode(message: DeleteAreaMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.id !== 0) {
+            writer.uint32(8).int32(message.id);
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): DeleteAreaMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = createBaseDeleteAreaMessage();
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.id = reader.int32();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): DeleteAreaMessage {
+        return { id: isSet(object.id) ? Number(object.id) : 0 };
+    },
+
+    toJSON(message: DeleteAreaMessage): unknown {
+        const obj: any = {};
+        message.id !== undefined && (obj.id = Math.round(message.id));
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<DeleteAreaMessage>, I>>(object: I): DeleteAreaMessage {
+        const message = createBaseDeleteAreaMessage();
+        message.id = object.id ?? 0;
+        return message;
+    },
+};
+
+function createBaseCreateAreaMessage(): CreateAreaMessage {
+    return { id: 0, x: undefined, y: undefined, width: undefined, height: undefined };
+}
+
+export const CreateAreaMessage = {
+    encode(message: CreateAreaMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.id !== 0) {
+            writer.uint32(8).int32(message.id);
+        }
+        if (message.x !== undefined) {
+            writer.uint32(16).uint32(message.x);
+        }
+        if (message.y !== undefined) {
+            writer.uint32(24).uint32(message.y);
+        }
+        if (message.width !== undefined) {
+            writer.uint32(32).uint32(message.width);
+        }
+        if (message.height !== undefined) {
+            writer.uint32(40).uint32(message.height);
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): CreateAreaMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = createBaseCreateAreaMessage();
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.id = reader.int32();
+                    break;
+                case 2:
+                    message.x = reader.uint32();
+                    break;
+                case 3:
+                    message.y = reader.uint32();
+                    break;
+                case 4:
+                    message.width = reader.uint32();
+                    break;
+                case 5:
+                    message.height = reader.uint32();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): CreateAreaMessage {
+        return {
+            id: isSet(object.id) ? Number(object.id) : 0,
+            x: isSet(object.x) ? Number(object.x) : undefined,
+            y: isSet(object.y) ? Number(object.y) : undefined,
+            width: isSet(object.width) ? Number(object.width) : undefined,
+            height: isSet(object.height) ? Number(object.height) : undefined,
+        };
+    },
+
+    toJSON(message: CreateAreaMessage): unknown {
+        const obj: any = {};
+        message.id !== undefined && (obj.id = Math.round(message.id));
+        message.x !== undefined && (obj.x = Math.round(message.x));
+        message.y !== undefined && (obj.y = Math.round(message.y));
+        message.width !== undefined && (obj.width = Math.round(message.width));
+        message.height !== undefined && (obj.height = Math.round(message.height));
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<CreateAreaMessage>, I>>(object: I): CreateAreaMessage {
+        const message = createBaseCreateAreaMessage();
         message.id = object.id ?? 0;
         message.x = object.x ?? undefined;
         message.y = object.y ?? undefined;
@@ -8257,6 +8407,12 @@ export const EditMapMessage = {
         if (message.message?.$case === "modifyAreaMessage") {
             ModifyAreaMessage.encode(message.message.modifyAreaMessage, writer.uint32(10).fork()).ldelim();
         }
+        if (message.message?.$case === "createAreaMessage") {
+            CreateAreaMessage.encode(message.message.createAreaMessage, writer.uint32(18).fork()).ldelim();
+        }
+        if (message.message?.$case === "deleteAreaMessage") {
+            DeleteAreaMessage.encode(message.message.deleteAreaMessage, writer.uint32(26).fork()).ldelim();
+        }
         return writer;
     },
 
@@ -8271,6 +8427,18 @@ export const EditMapMessage = {
                     message.message = {
                         $case: "modifyAreaMessage",
                         modifyAreaMessage: ModifyAreaMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
+                case 2:
+                    message.message = {
+                        $case: "createAreaMessage",
+                        createAreaMessage: CreateAreaMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
+                case 3:
+                    message.message = {
+                        $case: "deleteAreaMessage",
+                        deleteAreaMessage: DeleteAreaMessage.decode(reader, reader.uint32()),
                     };
                     break;
                 default:
@@ -8288,6 +8456,16 @@ export const EditMapMessage = {
                       $case: "modifyAreaMessage",
                       modifyAreaMessage: ModifyAreaMessage.fromJSON(object.modifyAreaMessage),
                   }
+                : isSet(object.createAreaMessage)
+                ? {
+                      $case: "createAreaMessage",
+                      createAreaMessage: CreateAreaMessage.fromJSON(object.createAreaMessage),
+                  }
+                : isSet(object.deleteAreaMessage)
+                ? {
+                      $case: "deleteAreaMessage",
+                      deleteAreaMessage: DeleteAreaMessage.fromJSON(object.deleteAreaMessage),
+                  }
                 : undefined,
         };
     },
@@ -8297,6 +8475,14 @@ export const EditMapMessage = {
         message.message?.$case === "modifyAreaMessage" &&
             (obj.modifyAreaMessage = message.message?.modifyAreaMessage
                 ? ModifyAreaMessage.toJSON(message.message?.modifyAreaMessage)
+                : undefined);
+        message.message?.$case === "createAreaMessage" &&
+            (obj.createAreaMessage = message.message?.createAreaMessage
+                ? CreateAreaMessage.toJSON(message.message?.createAreaMessage)
+                : undefined);
+        message.message?.$case === "deleteAreaMessage" &&
+            (obj.deleteAreaMessage = message.message?.deleteAreaMessage
+                ? DeleteAreaMessage.toJSON(message.message?.deleteAreaMessage)
                 : undefined);
         return obj;
     },
@@ -8311,6 +8497,26 @@ export const EditMapMessage = {
             message.message = {
                 $case: "modifyAreaMessage",
                 modifyAreaMessage: ModifyAreaMessage.fromPartial(object.message.modifyAreaMessage),
+            };
+        }
+        if (
+            object.message?.$case === "createAreaMessage" &&
+            object.message?.createAreaMessage !== undefined &&
+            object.message?.createAreaMessage !== null
+        ) {
+            message.message = {
+                $case: "createAreaMessage",
+                createAreaMessage: CreateAreaMessage.fromPartial(object.message.createAreaMessage),
+            };
+        }
+        if (
+            object.message?.$case === "deleteAreaMessage" &&
+            object.message?.deleteAreaMessage !== undefined &&
+            object.message?.deleteAreaMessage !== null
+        ) {
+            message.message = {
+                $case: "deleteAreaMessage",
+                deleteAreaMessage: DeleteAreaMessage.fromPartial(object.message.deleteAreaMessage),
             };
         }
         return message;

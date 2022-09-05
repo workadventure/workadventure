@@ -115,6 +115,18 @@ message ModifyAreaMessage {
   optional uint32 height = 5;
 }
 
+message DeleteAreaMessage {
+  int32 id = 1;
+}
+
+message CreateAreaMessage {
+  int32 id = 1;
+  optional uint32 x = 2;
+  optional uint32 y = 3;
+  optional uint32 width = 4;
+  optional uint32 height = 5;
+}
+
 message ClientToServerMessage {
   oneof message {
     UserMovesMessage userMovesMessage = 2;
@@ -573,6 +585,8 @@ message SubToPusherRoomMessage {
 message EditMapMessage {
   oneof message {
     ModifyAreaMessage modifyAreaMessage = 1;
+    CreateAreaMessage createAreaMessage = 2;
+    DeleteAreaMessage deleteAreaMessage = 3;
   }
 }
 
