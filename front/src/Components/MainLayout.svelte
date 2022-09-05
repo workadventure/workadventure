@@ -17,7 +17,6 @@
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
     import WarningContainer from "./WarningContainer/WarningContainer.svelte";
-    import { isMediaBreakpointDown, isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
     import FollowMenu from "./FollowMenu/FollowMenu.svelte";
     import { followStateStore } from "../Stores/FollowStore";
@@ -41,13 +40,7 @@
 
     let mainLayout: HTMLDivElement;
 
-    let displayCoWebsiteContainerMd;
-    let displayCoWebsiteContainerLg;
-
-    const resizeObserver = new ResizeObserver(() => {
-        displayCoWebsiteContainerMd = isMediaBreakpointUp("md");
-        displayCoWebsiteContainerLg = isMediaBreakpointDown("lg");
-    });
+    const resizeObserver = new ResizeObserver(() => {});
 
     onMount(() => {
         resizeObserver.observe(mainLayout);
@@ -161,10 +154,6 @@
 
         &-left-aside {
             min-width: 80px;
-        }
-
-        &-baseline {
-            grid-column: 1/3;
         }
     }
 

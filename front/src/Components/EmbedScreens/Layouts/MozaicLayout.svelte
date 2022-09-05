@@ -4,8 +4,8 @@
     import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import MediaBox from "../../Video/MediaBox.svelte";
     import MyCamera from "../../MyCamera.svelte";
-    import {myCameraStore} from "../../../Stores/MyMediaStore";
-    import {isMediaBreakpointUp} from "../../../Utils/BreakpointsUtils";
+    import { myCameraStore } from "../../../Stores/MyMediaStore";
+    import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 
     let layoutDom: HTMLDivElement;
     let displayFullMedias = isMediaBreakpointUp("md");
@@ -35,12 +35,12 @@
             />
         {/each}
         {#if $myCameraStore && displayFullMedias}
-            <MyCamera/>
+            <MyCamera />
         {/if}
     </div>
     <div class="tw-absolute tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4 tw-right-5 ">
         {#if $myCameraStore && !displayFullMedias}
-            <MyCamera/>
+            <MyCamera />
         {/if}
     </div>
 </div>

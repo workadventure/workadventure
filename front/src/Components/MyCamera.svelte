@@ -4,7 +4,6 @@
         mediaStreamConstraintsStore,
         requestedCameraState,
         silentStore,
-        cameraEnergySavingStore,
     } from "../Stores/MediaStore";
     import { localStreamStore } from "../Stores/MediaStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
@@ -73,7 +72,12 @@
             </div>
             <div class="woka-webcam-container container-end video-on-responsive-height tw-pb-1">
                 <div class="tw-flex">
-                    <Woka userId={-1} placeholderSrc={""} customHeight="20&& !$cameraEnergySavingStorepx" customWidth="20px" />
+                    <Woka
+                        userId={-1}
+                        placeholderSrc={""}
+                        customHeight="20&& !$cameraEnergySavingStorepx"
+                        customWidth="20px"
+                    />
                 </div>
             </div>
             <div class="my-webcam-container tw-z-[250] tw-bg-dark-blue/50 tw-rounded tw-transition-all">
@@ -94,7 +98,7 @@
                 </div>
             </div>
             <!-- If we do not have a video to display-->
-        {:else if !$requestedCameraState }
+        {:else if !$requestedCameraState}
             <div
                 style="background-color: {backgroundColor}; color: {textColor}"
                 class="tw-w-full tw-rounded tw-px-3 tw-flex tw-flex-row tw-items-center media-box-camera-off-size tw-h-10"
