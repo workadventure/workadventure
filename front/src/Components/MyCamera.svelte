@@ -1,5 +1,6 @@
 <script lang="ts">
     import {
+        cameraEnergySavingStore,
         localVolumeStore,
         mediaStreamConstraintsStore,
         requestedCameraState,
@@ -98,7 +99,7 @@
                 </div>
             </div>
             <!-- If we do not have a video to display-->
-        {:else if !$requestedCameraState}
+        {:else if !$requestedCameraState && !$cameraEnergySavingStore}
             <div
                 style="background-color: {backgroundColor}; color: {textColor}"
                 class="tw-w-full tw-rounded tw-px-3 tw-flex tw-flex-row tw-items-center media-box-camera-off-size tw-h-10"
