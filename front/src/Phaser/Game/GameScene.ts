@@ -1960,6 +1960,7 @@ ${escapedMessage}
         }
         this.gameMapChangedSubscription.unsubscribe();
         this.messageSubscription?.unsubscribe();
+        gameSceneIsLoadedStore.set(false);
         this.cleanupDone = true;
     }
 
