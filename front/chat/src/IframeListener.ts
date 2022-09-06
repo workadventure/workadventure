@@ -37,6 +37,7 @@ class IframeListener {
                         case "userData": {
                             iframeEvent.data.name = iframeEvent.data.name.replace(emojiRegex, "");
                             userStore.set(iframeEvent.data);
+                            mucRoomsStore.sendPresences();
                             if (!connectionManager.connection) {
                                 connectionManager.init(
                                     iframeEvent.data.playUri,
