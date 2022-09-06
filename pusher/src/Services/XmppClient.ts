@@ -13,18 +13,14 @@ import { EJABBERD_DOMAIN, EJABBERD_WS_URI } from "../Enum/EnvironmentVariable";
 import CancelablePromise from "cancelable-promise";
 import jid, { JID } from "@xmpp/jid";
 import { Client, client, xml } from "@xmpp/client";
+import { Element } from "@xmpp/xml";
 import SASLError from "@xmpp/sasl/lib/SASLError";
 import StreamError from "@xmpp/connection/lib/StreamError";
 
+class ElementExt extends Element {}
+
 //eslint-disable-next-line @typescript-eslint/no-var-requires
 const parse = require("@xmpp/xml/lib/parse");
-
-interface XmlElement {
-    name: string;
-    attrs: { string: string };
-    children: XmlElement[];
-}
-
 export class XmppClient {
     private address!: JID;
     private clientPromise!: CancelablePromise<Client>;
@@ -181,9 +177,21 @@ export class XmppClient {
                 });
 
             xmpp.on("stanza", (stanza: unknown) => {
-                const xmppMessage = new XmppMessage();
                 // @ts-ignore
                 const stanzaString = stanza.toString();
+                const elementExtParsed = parse(stanzaString) as ElementExt;
+
+                //parse for ping XMPP message and send pong
+                if (elementExtParsed.getChild("ping")) {
+                    this.sendPong(
+                        elementExtParsed.getAttr("from"),
+                        elementExtParsed.getAttr("to"),
+                        elementExtParsed.getAttr("id")
+                    );
+                    return;
+                }
+
+                const xmppMessage = new XmppMessage();
                 xmppMessage.setStanza(stanzaString);
 
                 const pusherToIframeMessage = new PusherToIframeMessage();
@@ -263,6 +271,11 @@ export class XmppClient {
             }
             this.clientPromise.cancel();
         }));
+    }
+
+    async sendPong(to: string, from: string, id: string): Promise<void> {
+        await this.send(xml("iq", { from, to, id, type: "result" }).toString());
+        return;
     }
 
     async send(stanza: string): Promise<void> {
