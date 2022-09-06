@@ -9,7 +9,7 @@
         CheckIcon,
         AlertCircleIcon,
         XCircleIcon,
-        ArrowRightCircleIcon
+        ArrowRightCircleIcon,
     } from "svelte-feather-icons";
     import { ChatStates, MucRoom, User } from "../Xmpp/MucRoom";
     import LL, { locale } from "../i18n/i18n-svelte";
@@ -350,8 +350,8 @@
                             </p>
                             {#if fileUploaded.errorMessage === "not-logged"}
                                 <div
-                                        class="tw-text-light-blue tw-cursor-pointer"
-                                        on:click|preventDefault|stopPropagation={() => iframeListener.sendLogin()}
+                                    class="tw-text-light-blue tw-cursor-pointer"
+                                    on:click|preventDefault|stopPropagation={() => iframeListener.sendLogin()}
                                 >
                                     <ArrowRightCircleIcon size="14" />
                                 </div>
@@ -360,8 +360,9 @@
                                 <button
                                     class="tw-text-orange tw-font-bold tw-underline tw-m-auto"
                                     on:click={() => iframeListener.sendRedirectPricing()}
-                                    >
-                                    <img src={crown} class="tw-mr-1" /> {$LL.upgrade()}
+                                >
+                                    <img src={crown} class="tw-mr-1" />
+                                    {$LL.upgrade()}
                                 </button>
                             {/if}
                         </div>

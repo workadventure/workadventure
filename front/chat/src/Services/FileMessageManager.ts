@@ -121,8 +121,8 @@ export class FileMessageManager {
             filesUploadStore.update((list) => {
                 for (const [, file] of list) {
                     file.uploadState = uploadingState.error;
-                    if(err instanceof NotLoggedUser){
-                        file.errorMessage = 'not-logged';
+                    if (err instanceof NotLoggedUser) {
+                        file.errorMessage = "not-logged";
                         file.errorStatus = 401;
                     } else {
                         file.errorMessage = err.response?.data.message;

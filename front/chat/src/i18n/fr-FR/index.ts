@@ -97,7 +97,7 @@ const fr_FR: Translation = {
         openCoWebsite: "Ouvrir en co-website",
         copy: "Copier le lien",
         tooBig: "{fileName} est trop volumineux {maxFileSize}.",
-        notLogged: "Vous devez être connecté pour télécharger un fichier."
+        notLogged: "Vous devez être connecté pour télécharger un fichier.",
     },
     needRefresh: "Votre connexion a expiré, vous devez actualiser la page pour vous reconnecter au chat.",
     refresh: "Rafraichir",

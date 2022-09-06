@@ -197,7 +197,7 @@ export class XmppClient {
         }
     }
 
-    sendToChat(stanza: string) {
+    sendToChat(stanza: string): void {
         const xmppMessage = new XmppMessage();
         xmppMessage.setStanza(stanza);
 
@@ -397,10 +397,10 @@ export class XmppClient {
         return;
     }
 
-    async ping(): Promise<void> {
+    ping(): void {
         if (!this.closing && this.xmppSocket?.status === "online") {
             this.pingUuid = uuidV4();
-            await this.sendToEjabberd(
+            this.sendToEjabberd(
                 xml(
                     "iq",
                     {
@@ -411,7 +411,7 @@ export class XmppClient {
                     },
                     xml("ping", { xmlns: "urn:xmpp:ping" })
                 ).toString()
-            );
+            ).then().catch();
         }
     }
 }
