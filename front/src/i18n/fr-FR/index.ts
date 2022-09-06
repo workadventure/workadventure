@@ -16,6 +16,7 @@ import trigger from "./trigger";
 import muc from "./muc";
 import notification from "./notification";
 import cowebsite from "./cowebsite";
+import actionbar from "./actionbar";
 
 const fr_FR = merge(en_US, {
     audio,
@@ -34,6 +35,7 @@ const fr_FR = merge(en_US, {
     muc,
     notification,
     cowebsite,
+    actionbar,
 });
 
 export default fr_FR;

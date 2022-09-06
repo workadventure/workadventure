@@ -417,6 +417,8 @@ class IframeListener {
                     } else if (iframeEvent.type == "login") {
                         analyticsClient.login();
                         window.location.href = "/login";
+                    } else if (iframeEvent.type == "refresh") {
+                        window.location.reload();
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;

@@ -16,6 +16,7 @@
     import Timeline from "./Timeline/Timeline.svelte";
     import {
         availabilityStatusStore,
+        connectionNotAuthorized,
         timelineActiveStore,
         timelineMessagesToSee,
         timelineOpenedStore,
@@ -25,6 +26,7 @@
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
     import { iframeListener } from "../IframeListener";
     import { fly } from "svelte/transition";
+    import NeedRefresh from "./NeedRefresh.svelte";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -127,7 +129,9 @@
 
 <aside class="chatWindow" bind:this={chatWindowElement}>
     <section class="tw-p-0 tw-m-0" bind:this={listDom}>
-        {#if !connectionManager.connection || !$xmppServerConnectionStatusStore}
+        {#if $connectionNotAuthorized}
+            <NeedRefresh />
+        {:else if !connectionManager.connection || !$xmppServerConnectionStatusStore}
             <Loader text={$userStore ? $LL.reconnecting() : $LL.waitingData()} />
         {:else if $timelineActiveStore}
             <ChatActiveThreadTimeLine on:unactiveThreadTimeLine={() => timelineActiveStore.set(false)} />

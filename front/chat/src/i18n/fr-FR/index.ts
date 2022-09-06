@@ -4,8 +4,9 @@ const fr_FR: Translation = {
     users: "Utilisateurs",
     userList: {
         disconnected: "Non connecté",
-        isHere: "Sur cette map !",
-        isOverThere: "Sur une autre map !",
+        isHere: "Sur cette map",
+        inAnotherMap: "Dans une autre map",
+        in: "Dans ",
         teleport: "Se téléporter",
         search: "Il suffit de chercher !",
         walkTo: "Marcher jusqu'à",
@@ -18,6 +19,11 @@ const fr_FR: Translation = {
         admin: "Administrateur",
         member: "Membre",
         visitor: "Visiteur",
+    },
+    status: {
+        online: "En ligne",
+        away: "Absent",
+        unavailable: "Non disponnible",
     },
     logIn: "Se connecter",
     signIn: "Inscrivez-vous ou connectez-vous pour profiter de toutes les fonctionnalités du chat !",
@@ -56,6 +62,7 @@ const fr_FR: Translation = {
         forum: "sur le forum",
     },
     see: "Voir",
+    show: "Voir",
     less: "moins",
     more: "plus",
     sendBack: "Renvoyer",
@@ -90,6 +97,8 @@ const fr_FR: Translation = {
         openCoWebsite: "Ouvrir en co-website",
         copy: "Copier le lien",
     },
+    needRefresh: "Votre connexion a expiré, vous devez actualiser la page pour vous reconnecter au chat.",
+    refresh: "Rafraichir",
 };
 
 export default fr_FR;

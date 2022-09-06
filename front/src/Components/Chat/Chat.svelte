@@ -14,6 +14,7 @@
     import { Subscription } from "rxjs";
     import { availabilityStatusStore } from "../../Stores/MediaStore";
     import { peerStore } from "../../Stores/PeerStore";
+    import { connectionManager } from "../../Connexion/ConnectionManager";
 
     let chatIframe: HTMLIFrameElement;
 
@@ -30,7 +31,7 @@
     // Phantom woka
     let wokaSrc =
         " data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAdCAYAAABBsffGAAAB/ElEQVRIia1WMW7CQBC8EAoqFy74AD1FqNzkAUi09DROwwN4Ag+gMQ09dcQXXNHQIucBPAJFc2Iue+dd40QZycLc7c7N7d7u+cU9wXw+ryyL0+n00eU9tCZIOp1O/f/ZbBbmzuczX6uuRVTlIAYpCSeTScumaZqw0OVyURd47SIGaZ7n6s4wjmc0Grn7/e6yLFtcr9dPaaOGhcTEeDxu2dxut2hXUJ9ioKmW0IidMg6/NPmD1EmqtojTBWAvE26SW8r+YhfIu87zbyB5BiRerVYtikXxXuLRuK058HABMyz/AX8UHwXgV0NRaEXzDKzaw+EQCioo1yrsLfvyjwZrTvK0yp/xh/o+JwbFhFYgFRNqzGEIB1ZhH2INkXJZoShn2WNSgJRNS/qoYSHxer1+qkhChnC320ULRI1LEsNhv99HISBkLmhP/7L8OfqhiKC6SzEJtSTLHMkGFhK6XC79L89rmtC6rv0YfjXV9COPDwtVQxEc2ZflIu7R+WADQrkA7eCH5BdFwQRXQ8bKxXejeWFoYZGCQM7Yh7BAkcw0DEnEEPHhbjBPQfCDvwzlEINlWZq3OAiOx2O0KwAKU8gehXfzu2Wz2VQMTXqCeLZZSNvtVv20MFsu48gQpDvjuHYxE+ZHESBPSJ/x3sqBvhe0hc5vRXkfypBY4xGcc9+lcFxartG6LgAAAABJRU5ErkJggg==";
-    const playUri = document.location.toString().split("#")[0].toString();
+    const playUri = window.location.protocol + "//" + window.location.hostname + window.location.pathname;
     const name = localUserStore.getName();
 
     let messageStream: Subscription;
@@ -77,6 +78,7 @@
                                         woka: wokaSrc,
                                         isLogged: localUserStore.isLogged(),
                                         availabilityStatus: get(availabilityStatusStore),
+                                        roomName: connectionManager.currentRoom?.roomName ?? null,
                                     },
                                 },
                                 "*"
@@ -183,7 +185,7 @@
         left: -100%;
         height: 100%;
         width: 28%;
-        min-width: 250px;
+        min-width: 335px;
         transition: all 0.2s ease-in-out;
         pointer-events: none;
         visibility: hidden;

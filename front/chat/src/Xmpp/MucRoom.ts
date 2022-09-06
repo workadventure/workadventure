@@ -21,6 +21,7 @@ export const USER_STATUS_DISCONNECTED = "disconnected";
 export type User = {
     name: string;
     playUri: string;
+    roomName: string | null;
     uuid: string;
     status: string;
     active: boolean;
@@ -117,11 +118,13 @@ export const defaultUserData: UserData = {
     woka: defaultWoka,
     isLogged: false,
     availabilityStatus: 0,
+    roomName: null,
 };
 
 export const defaultUser: User = {
     name: "unknown",
     playUri: "",
+    roomName: null,
     uuid: "",
     status: "",
     active: false,
@@ -345,6 +348,7 @@ export class MucRoom {
             // Add window location and have possibility to teleport on the user and remove all hash from the url
             xml("room", {
                 playUri: get(userStore).playUri,
+                name: get(userStore).roomName,
             }),
             // Add uuid of the user to identify and target them on teleport
             xml("user", {
@@ -728,6 +732,7 @@ export class MucRoom {
                 const userJID = jid(x.getChild("item")?.getAttr("jid"));
                 userJID.setResource("");
                 const playUri = xml.getChild("room")?.getAttr("playUri");
+                const roomName = xml.getChild("room")?.getAttr("name");
                 const uuid = xml.getChild("user")?.getAttr("uuid");
                 const color = xml.getChild("user")?.getAttr("color");
                 const woka = xml.getChild("user")?.getAttr("woka");
@@ -742,7 +747,7 @@ export class MucRoom {
                     } else {
                         // If the user is a member and the current user is a member too just disconnect him
                         if (this.getCurrentIsMember(userJID.toString()) && this.getMeIsMember()) {
-                            this.updateUser(userJID, null, null, null, USER_STATUS_DISCONNECTED);
+                            this.updateUser(userJID, null, null, null, null, USER_STATUS_DISCONNECTED);
                         } else {
                             this.deleteUser(userJID.toString());
                         }
@@ -752,6 +757,7 @@ export class MucRoom {
                         userJID,
                         from.resource,
                         playUri,
+                        roomName,
                         uuid,
                         type === "unavailable" ? USER_STATUS_DISCONNECTED : USER_STATUS_AVAILABLE,
                         color,
@@ -931,7 +937,20 @@ export class MucRoom {
                 } else {
                     const { jid } = this.getUserDataByName(name);
                     if (jid !== null && jid) {
-                        this.updateUser(jid, null, null, null, null, null, null, null, null, state.getName());
+                        this.updateUser(
+                            jid,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            state.getName()
+                        );
                     }
                     handledMessage = true;
                 }
@@ -996,6 +1015,10 @@ export class MucRoom {
         return get(this.presenceStore).get(jid.toString())?.playUri ?? "";
     }
 
+    private getCurrentRoomName(jid: JID | string) {
+        return get(this.presenceStore).get(jid.toString())?.roomName ?? null;
+    }
+
     private getCurrentUuid(jid: JID | string) {
         return get(this.presenceStore).get(jid.toString())?.uuid ?? "";
     }
@@ -1032,6 +1055,7 @@ export class MucRoom {
         jid: JID | string,
         nick: string | null = null,
         playUri: string | null = null,
+        roomName: string | null = null,
         uuid: string | null = null,
         status: string | null = null,
         color: string | null = null,
@@ -1055,6 +1079,7 @@ export class MucRoom {
             list.set(jid.toString(), {
                 name: nick ?? this.getCurrentName(jid),
                 playUri: playUri ?? this.getCurrentPlayUri(jid),
+                roomName: roomName ?? this.getCurrentRoomName(jid),
                 uuid: uuid ?? this.getCurrentUuid(jid),
                 status: status ?? this.getCurrentStatus(jid),
                 isInSameMap: (playUri ?? this.getCurrentPlayUri(jid)) === user.playUri,

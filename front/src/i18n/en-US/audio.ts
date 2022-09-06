@@ -6,6 +6,7 @@ const audio: BaseTranslation = {
         allow: "Allow audio",
     },
     message: "Audio message",
+    disable: "Turn off your microphone",
 };
 
 export default audio;
