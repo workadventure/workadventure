@@ -226,7 +226,6 @@ export class XmppClient {
         //cancel promise
         console.info("xmppClient => close");
         this.clientPromise.cancel();
-        this.xmppSocket?.stop();
     }
 
     start(): CancelablePromise {
@@ -251,9 +250,15 @@ export class XmppClient {
                     }
                     try {
                         //stop xmpp socket client
-                        await this.xmppSocket?.stop();
-                    } catch (err) {
-                        console.info("XmppClient => onCancel => xmppSocket => err", err);
+                        await this.xmppSocket?.close();
+                    } catch (errClose) {
+                        console.info("XmppClient => onCancel => xmppSocket => errClose", errClose);
+                        try {
+                            //stop xmpp socket client
+                            await this.xmppSocket?.stop();
+                        } catch (errStop) {
+                            console.info("XmppClient => onCancel => xmppSocket => errStop", errStop);
+                        }
                     }
                 })();
             });
