@@ -37,20 +37,22 @@
         closeChatUserMenu();
     }
     function rankUp(jid: string) {
-        console.info("Rank up feature from workadventure chat coming soon!");
+        console.info("Rank up feature from workadventure chat coming soon!", jid);
         return;
         /*dispatch("rankUp", { jid });
         closeChatUserMenu();*/
     }
     function rankDown(jid: string) {
-        console.info("Rank down feature from workadventure chat coming soon!");
+        console.info("Rank down feature from workadventure chat coming soon!", jid);
         return;
         /*dispatch("rankDown", { jid });
         closeChatUserMenu();*/
     }
     function ban(user: string, name: string, playUri: string) {
-        dispatch("ban", { user, name, playUri });
-        closeChatUserMenu();
+        console.info("ban feature from workadventure chat coming soon!", user, name, playUri);
+        return;
+        //dispatch("ban", { user, name, playUri });
+        //closeChatUserMenu();
     }
 
     function findUserInDefault(jid: string): User | undefined {
