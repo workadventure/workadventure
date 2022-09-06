@@ -174,6 +174,10 @@ export class GameMapAreas {
         const index = areas.findIndex((area) => area.name === name);
         if (index !== -1) {
             areas.splice(index, 1);
+            const areaId = areas.find((area) => area.name === name)?.id;
+            if (areaId) {
+                this.deleteStaticArea(areaId);
+            }
         }
     }
 
@@ -188,7 +192,19 @@ export class GameMapAreas {
         const index = areas.findIndex((area) => area.id === id);
         if (index !== -1) {
             areas.splice(index, 1);
+            const success = this.deleteStaticArea(id);
+            console.log(`deleted area with id ${id}: ${success}`);
         }
+
+    }
+
+    private deleteStaticArea(id: number): boolean {
+        const index = this.gameMap.tiledObjects.findIndex((object) => object.id === id);
+        if (index !== -1) {
+            this.gameMap.tiledObjects.splice(index, 1);
+            return this.gameMap.deleteGameObjectFromMapById(id, this.gameMap.getMap().layers);
+        }
+        return false;
     }
 
     public getAreas(areaType: AreaType): ITiledMapRectangleObject[] {

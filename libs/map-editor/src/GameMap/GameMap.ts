@@ -215,4 +215,20 @@ export class GameMap {
     public getGameMapAreas(): GameMapAreas {
         return this.gameMapAreas;
     }
+
+    // NOTE: Flat layers are deep copied so we cannot operate on them
+    public deleteGameObjectFromMapById(id: number, layers: ITiledMapLayer[]): boolean {
+        for (const layer of layers) {
+            if (layer.type === 'objectgroup') {
+                const index = layer.objects.findIndex(object => object.id === id);
+                if (index !== -1) {
+                    layer.objects.splice(index, 1);
+                    return true;
+                }
+            } else if (layer.type === 'group') {
+                return this.deleteGameObjectFromMapById(id, layer.layers);
+            }
+        }
+        return false;
+    }
 }

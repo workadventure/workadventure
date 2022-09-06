@@ -111,6 +111,8 @@ export class AreaEditorTool extends MapEditorTool {
         this.areaPreviews = [];
         const areaConfigs = this.scene.getGameMapFrontWrapper().getAreas(AreaType.Static);
 
+        console.log(areaConfigs);
+
         for (const config of areaConfigs) {
             const areaPreview = new AreaPreview(this.scene, { ...config });
             this.bindAreaPreviewEventHandlers(areaPreview);
