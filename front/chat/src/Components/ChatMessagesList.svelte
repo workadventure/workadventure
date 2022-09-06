@@ -263,11 +263,11 @@
                     {$LL.more()}
                     <ArrowUpIcon size="13" class="tw-ml-1" /></button
                 >{/if}
-            {#if $showPremiumLoadOlderMessages && mucRoom.getMe().isAdmin}
+            {#if $showPremiumLoadOlderMessages && mucRoom.getMe()?.isAdmin}
                 <button
                     class="tw-text-orange tw-font-bold tw-underline tw-m-auto tw-text-xs tw-cursor-pointer"
                     on:click={() => iframeListener.sendRedirectPricing()}
-                    ><img src={crown} class="tw-mr-1" /> {$LL.upgradeToSeeMore()}</button
+                    ><img alt="Crown icon" src={crown} class="tw-mr-1" /> {$LL.upgradeToSeeMore()}</button
                 >
             {/if}
         </div>

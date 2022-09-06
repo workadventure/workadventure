@@ -187,7 +187,7 @@
         }
     }
 
-    function onKeyDown(key): boolean {
+    function onKeyDown(key: KeyboardEvent): boolean {
         if ((key.key === "Enter" && key.shiftKey) || ["Backspace", "Delete"].includes(key.key)) {
             setTimeout(() => adjustHeight(), 10);
         }
