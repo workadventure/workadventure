@@ -70,8 +70,8 @@ class ConnectionManager {
         userIsConnected.set(false);
 
         //Logout user in pusher and hydra
-        const token = localUserStore.getAuthToken();
-        await Axios.get(`${PUSHER_URL}/logout-callback`, { params: { token } }).then((res) => res.data);
+        const authToken = localUserStore.getAuthToken();
+        await Axios.get(`${PUSHER_URL}/logout-callback`, { params: { authToken } }).then((res) => res.data);
         localUserStore.setAuthToken(null);
 
         //Go on root page
@@ -217,6 +217,8 @@ class ConnectionManager {
                     }
                 }
             }
+
+            // Todo: don't use as set a real type
             this.localUser = localUserStore.getLocalUser() as LocalUser; //if authToken exist in localStorage then localUser cannot be null
         }
         if (this._currentRoom == undefined) {
@@ -367,7 +369,7 @@ class ConnectionManager {
         const { authToken, userUuid, email, username, locale, textures, visitCardUrl } = await Axios.get(
             `${PUSHER_URL}/me`,
             {
-                params: { token, playUri: this.currentRoom?.key },
+                params: { authToken: token, playUri: this.currentRoom?.key },
             }
         ).then((res) => {
             return res.data;

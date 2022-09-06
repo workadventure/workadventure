@@ -27,8 +27,13 @@ import {
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
-import { AdminSocketTokenData, jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenManager";
-import { FetchMemberDataByUuidResponse } from "../Services/AdminApi";
+import {
+    AdminSocketTokenData,
+    AuthTokenData,
+    jwtTokenManager,
+    tokenInvalidException,
+} from "../Services/JWTTokenManager";
+import { FetchMemberDataByAuthTokenResponse } from "../Services/AdminApi";
 import { socketManager } from "../Services/SocketManager";
 import { emitInBatch } from "../Services/IoSocketHelpers";
 import {
@@ -57,7 +62,7 @@ import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
 interface UpgradeData {
     // Data passed here is accessible on the "websocket" socket object.
     rejected: false;
-    token: string;
+    authToken: string;
     userUuid: string;
     IPAddress: string;
     roomId: string;
@@ -273,7 +278,7 @@ export class IoSocketController {
                             throw new Error("Undefined room ID: ");
                         }
 
-                        const token = query.token;
+                        const authToken = query.authToken;
                         const x = Number(query.x);
                         const y = Number(query.y);
                         const top = Number(query.top);
@@ -333,22 +338,54 @@ export class IoSocketController {
                             characterLayers = [characterLayers];
                         }
 
-                        const tokenData =
-                            token && typeof token === "string" ? jwtTokenManager.verifyJWTToken(token) : null;
-
-                        if (DISABLE_ANONYMOUS && !tokenData) {
-                            throw new Error("Expecting token");
+                        if (typeof authToken !== "string") {
+                            throw new Error("authToken expecting");
                         }
 
-                        const userIdentifier = tokenData ? tokenData.identifier : "";
-                        const isLogged = tokenData?.accessToken ? true : false;
+                        let tokenData: AuthTokenData;
+
+                        try {
+                            tokenData = jwtTokenManager.verifyJWTToken(authToken);
+                            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                        } catch (error) {
+                            // Todo: in this case do a redirect to the login page only if has an access token
+                            return res.upgrade(
+                                {
+                                    rejected: true,
+                                    reason: tokenInvalidException,
+                                    message: "",
+                                    roomId,
+                                } as UpgradeFailedData,
+                                websocketKey,
+                                websocketProtocol,
+                                websocketExtensions,
+                                context
+                            );
+                        }
+
+                        if (DISABLE_ANONYMOUS && !tokenData.accessToken) {
+                            return res.upgrade(
+                                {
+                                    rejected: true,
+                                    reason: tokenInvalidException,
+                                    message: "",
+                                    roomId,
+                                } as UpgradeFailedData,
+                                websocketKey,
+                                websocketProtocol,
+                                websocketExtensions,
+                                context
+                            );
+                        }
+
+                        const userIdentifier = tokenData.identifier;
 
                         let memberTags: string[] = [];
                         let memberVisitCardUrl: string | null = null;
                         let memberMessages: unknown;
                         let memberUserRoomToken: string | undefined;
                         let memberTextures: WokaDetail[] = [];
-                        let userData: FetchMemberDataByUuidResponse = {
+                        let userData: FetchMemberDataByAuthTokenResponse = {
                             email: userIdentifier,
                             userUuid: userIdentifier,
                             tags: [],
@@ -367,9 +404,12 @@ export class IoSocketController {
 
                         try {
                             try {
-                                userData = await adminService.fetchMemberDataByUuid(
-                                    userIdentifier,
-                                    isLogged,
+                                if (!authToken || !tokenData) {
+                                    throw new Error("Token data undefined, token cannot be verify");
+                                }
+
+                                userData = await adminService.fetchMemberDataByAuthToken(
+                                    authToken,
                                     roomId,
                                     IPAddress,
                                     characterLayers,
@@ -451,7 +491,7 @@ export class IoSocketController {
                             {
                                 // Data passed here is accessible on the "websocket" socket object.
                                 rejected: false,
-                                token,
+                                authToken,
                                 userUuid: userData.userUuid,
                                 IPAddress,
                                 userIdentifier,
@@ -481,7 +521,7 @@ export class IoSocketController {
                                     bottom,
                                     left,
                                 },
-                                isLogged,
+                                isLogged: Boolean(tokenData.accessToken),
                             } as UpgradeData,
                             /* Spell these correctly */
                             websocketKey,

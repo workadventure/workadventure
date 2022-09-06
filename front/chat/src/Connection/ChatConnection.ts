@@ -41,7 +41,7 @@ export class ChatConnection implements ChatConnection {
     private readonly _xmppConnectionNotAuthorizedStream = new Subject<XmppConnectionNotAuthorizedMessage>();
     public readonly xmppConnectionNotAuthorizedStream = this._xmppConnectionNotAuthorizedStream.asObservable();
 
-    public constructor(token: string | null, roomUrl: string, uuid: string) {
+    public constructor(authToken: string | null, roomUrl: string, uuid: string) {
         let url = new URL(PUSHER_URL, window.location.toString()).toString();
         url = url.replace("http://", "ws://").replace("https://", "wss://");
         if (!url.endsWith("/")) {
@@ -49,7 +49,7 @@ export class ChatConnection implements ChatConnection {
         }
         url += "chat";
         url += "?playUri=" + encodeURIComponent(roomUrl);
-        url += "&token=" + (token ? encodeURIComponent(token) : "");
+        url += "&token=" + (authToken ? encodeURIComponent(authToken) : "");
         url += "&uuid=" + encodeURIComponent(uuid);
         //url += "&name=" + encodeURIComponent(name);
         url += "&version=" + apiVersionHash;

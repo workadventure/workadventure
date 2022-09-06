@@ -7,8 +7,8 @@ import {
     BanUserByUuidMessage,
 } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
-import { jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenManager";
-import { FetchMemberDataByUuidResponse } from "../Services/AdminApi";
+import { AuthTokenData, jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenManager";
+import { FetchMemberDataByAuthTokenResponse } from "../Services/AdminApi";
 import { socketManager } from "../Services/SocketManager";
 import { emitInBatch } from "../Services/IoSocketHelpers";
 import {
@@ -33,7 +33,7 @@ import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
 interface UpgradeData {
     // Data passed here is accessible on the "websocket" socket object.
     rejected: false;
-    token: string;
+    authToken: string;
     userUuid: string;
     IPAddress: string;
     playUri: string;
@@ -111,15 +111,24 @@ export class IoSocketChatController {
                             throw new Error("Undefined room ID: ");
                         }
 
-                        const token = query.token;
+                        const authToken = query.authToken;
                         const version = query.version;
-                        const uuid = query.uuid as string;
+                        const uuid = query.uuid;
+
+                        if (typeof uuid !== "string") {
+                            throw new Error("UUID must be a string");
+                        }
+
+                        if (typeof authToken !== "string") {
+                            throw new Error("authToken must be a string");
+                        }
 
                         if (version !== apiVersionHash) {
                             return res.upgrade(
                                 {
                                     rejected: true,
                                     reason: "error",
+                                    // Todo: Must be translated with the client locale
                                     error: {
                                         type: "retry",
                                         title: "Please refresh",
@@ -140,19 +149,24 @@ export class IoSocketChatController {
                             );
                         }
 
-                        const tokenData =
-                            token && typeof token === "string" ? jwtTokenManager.verifyJWTToken(token) : null;
+                        let tokenData: AuthTokenData;
 
-                        if (DISABLE_ANONYMOUS && !tokenData) {
-                            throw new Error("Expecting token");
+                        try {
+                            tokenData = jwtTokenManager.verifyJWTToken(authToken);
+                        } catch (error) {
+                            console.error(error);
+                            throw new Error("Cannot verify authentication token");
                         }
 
-                        const userIdentifier = tokenData ? tokenData.identifier : uuid ?? "";
-                        const isLogged = !!tokenData?.accessToken;
+                        if (DISABLE_ANONYMOUS && !tokenData.accessToken) {
+                            throw new Error("Anonymous users are not authorized");
+                        }
+
+                        const userIdentifier = tokenData.identifier;
 
                         let memberTags: string[] = [];
                         let memberUserRoomToken: string | undefined;
-                        let userData: FetchMemberDataByUuidResponse = {
+                        let userData: FetchMemberDataByAuthTokenResponse = {
                             email: userIdentifier,
                             userUuid: userIdentifier,
                             tags: [],
@@ -168,9 +182,13 @@ export class IoSocketChatController {
 
                         try {
                             try {
-                                userData = await adminService.fetchMemberDataByUuid(
-                                    userIdentifier,
-                                    isLogged,
+                                console.log();
+                                if (!authToken || !tokenData) {
+                                    throw new Error("Token data undefined, token cannot be verify");
+                                }
+
+                                userData = await adminService.fetchMemberDataByAuthToken(
+                                    authToken,
                                     playUri,
                                     IPAddress,
                                     [],
@@ -282,7 +300,7 @@ export class IoSocketChatController {
                             {
                                 // Data passed here is accessible on the "websocket" socket object.
                                 rejected: false,
-                                token,
+                                authToken,
                                 userUuid: userData.userUuid,
                                 IPAddress,
                                 userIdentifier,
@@ -379,14 +397,15 @@ export class IoSocketChatController {
         });
     }
 
-    //eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // Todo: Add real type not any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private initClient(ws: any): ExSocketInterface {
         const client: ExSocketInterface = ws;
         client.userId = this.nextUserId;
         this.nextUserId++;
         client.userUuid = ws.userUuid;
         client.IPAddress = ws.IPAddress;
-        client.token = ws.token;
+        client.authToken = ws.authToken;
         client.batchedMessages = new BatchMessage();
         client.batchTimeout = null;
         client.emitInBatch = (payload: SubMessage): void => {

@@ -11,7 +11,6 @@ import { isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 
 export class AuthenticateController extends BaseHttpController {
     routes(): void {
-        this.roomAccess();
         this.openIDLogin();
         this.me();
         this.openIDCallback();
@@ -19,35 +18,6 @@ export class AuthenticateController extends BaseHttpController {
         this.register();
         this.anonymLogin();
         this.profileCallback();
-    }
-
-    private roomAccess(): void {
-        this.app.get("/room/access", (req, res) => {
-            (async (): Promise<void> => {
-                try {
-                    const { uuid, playUri, token } = parse(req.path_query);
-                    if (!uuid || !playUri) {
-                        throw new Error("Missing uuid and playUri parameters.");
-                    }
-                    const isLogged = token ? true : false;
-                    res.json(
-                        await adminService.fetchMemberDataByUuid(
-                            uuid as string,
-                            isLogged,
-                            playUri as string,
-                            req.ip,
-                            []
-                        )
-                    );
-                    return;
-                } catch (e) {
-                    console.warn(e);
-                }
-                res.status(500);
-                res.send("User cannot be identified.");
-                return;
-            })().catch((e) => console.error(e));
-        });
     }
 
     private openIDLogin(): void {
@@ -88,10 +58,16 @@ export class AuthenticateController extends BaseHttpController {
                 const { playUri, redirect } = parse(req.path_query);
 
                 if (typeof playUri !== "string") {
-                    throw new Error("Expecting playUri");
+                    res.status(400).send("Expecting playUri");
+                    return;
                 }
 
-                const loginUri = await openIDClient.authorizationUrl(res, redirect as string | undefined, playUri);
+                if (redirect !== undefined && typeof redirect !== "string") {
+                    res.status(400).send("Invalid redirect value");
+                    return;
+                }
+
+                const loginUri = await openIDClient.authorizationUrl(res, redirect, playUri);
                 res.cookie("playUri", playUri, undefined, {
                     httpOnly: true,
                 });
@@ -110,26 +86,16 @@ export class AuthenticateController extends BaseHttpController {
          * @openapi
          * /me:
          *   get:
-         *     description: TODO
+         *     description: Get current user information
          *     parameters:
-         *      - name: "code"
+         *      - name: "authToken"
          *        in: "query"
-         *        description: "todo"
-         *        required: false
-         *        type: "string"
-         *      - name: "nonce"
-         *        in: "query"
-         *        description: "todo"
-         *        required: false
-         *        type: "string"
-         *      - name: "token"
-         *        in: "query"
-         *        description: "todo"
-         *        required: false
+         *        description: "JWT token"
+         *        required: true
          *        type: "string"
          *      - name: "playUri"
          *        in: "query"
-         *        description: "todo"
+         *        description: "Url of the current room"
          *        required: true
          *        type: "string"
          *     responses:
@@ -185,38 +151,43 @@ export class AuthenticateController extends BaseHttpController {
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/me", async (req, res) => {
             const IPAddress = req.header("x-forwarded-for");
-            const { token, playUri } = parse(req.path_query);
+            const { authToken, playUri } = parse(req.path_query);
             try {
-                if (token === undefined) {
-                    throw new Error("Missing token");
+                if (!authToken || typeof authToken !== "string") {
+                    throw new Error("Missing authentication token");
                 }
-                try {
-                    const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
 
-                    const isLogged = authTokenData.accessToken ? true : false;
+                if (!playUri || typeof playUri !== "string") {
+                    throw new Error("Missing playUri");
+                }
+
+                try {
+                    // Todo: if invalid must be redirect to the login page
+                    const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(authToken, false);
+
+                    const language = req.header("accept-language");
 
                     //Get user data from Admin Back Office
                     //This is very important to create User Local in LocalStorage in WorkAdventure
-                    const resUserData = await adminService.fetchMemberDataByUuid(
-                        authTokenData.identifier,
-                        isLogged,
-                        playUri as string,
+                    const resUserData = await adminService.fetchMemberDataByAuthToken(
+                        authToken,
+                        playUri,
                         IPAddress,
                         [],
-                        req.header("accept-language")
+                        language ? language : undefined
                     );
 
                     if (authTokenData.accessToken == undefined) {
                         //if not nonce and code, user connected in anonymous
                         //get data with identifier and return token
-                        return res.json({ ...resUserData, authToken: token });
+                        return res.json({ ...resUserData, authToken });
                     }
 
                     const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
                     return res.json({
                         ...resCheckTokenAuth,
                         ...resUserData,
-                        authToken: token,
+                        authToken,
                         username: authTokenData?.username,
                         locale: authTokenData?.locale,
                     });
@@ -242,9 +213,9 @@ export class AuthenticateController extends BaseHttpController {
          * @openapi
          * /logout-callback:
          *   get:
-         *     description: TODO
+         *     description: Log out
          *     parameters:
-         *      - name: "token"
+         *      - name: "authToken"
          *        in: "query"
          *        description: "todo"
          *        required: false
@@ -256,10 +227,14 @@ export class AuthenticateController extends BaseHttpController {
          */
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/logout-callback", async (req, res) => {
-            const { token } = parse(req.path_query);
+            const { authToken } = parse(req.path_query);
+
+            if (typeof authToken !== "string") {
+                return res.status(400).send("Missing authToken on parameters");
+            }
 
             try {
-                const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
+                const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(authToken, false);
                 if (authTokenData.accessToken == undefined) {
                     throw Error("Token cannot be logout on Hydra");
                 }
@@ -341,7 +316,7 @@ export class AuthenticateController extends BaseHttpController {
      *   post:
      *     description: Try to login with an admin token
      *     parameters:
-     *      - name: "organizationMemberToken"
+     *      - name: "authToken"
      *        in: "body"
      *        description: "A token allowing a user to connect to a given world"
      *        required: true
@@ -368,10 +343,6 @@ export class AuthenticateController extends BaseHttpController {
      *                   type: string
      *                   description: The room URL to connect to
      *                   example: https://play.workadventu.re/@/foo/bar/baz
-     *                 organizationMemberToken:
-     *                   type: string|null
-     *                   description: TODO- unclear. It seems to be sent back from the request?
-     *                   example: ???
      *                 mapUrlStart:
      *                   type: string
      *                   description: TODO- unclear. I cannot find any use of this
@@ -388,32 +359,30 @@ export class AuthenticateController extends BaseHttpController {
         this.app.post("/register", (req, res) => {
             (async (): Promise<void> => {
                 const param = await req.json();
+                const authToken = param.authToken;
+                const playUri = param.playUri;
 
-                //todo: what to do if the organizationMemberToken is already used?
-                const organizationMemberToken: string | null = param.organizationMemberToken;
-                const playUri: string | null = param.playUri;
+                //todo: what to do if the authenticationToken is already used?
+                if (authToken && typeof authToken !== "string") {
+                    res.status(400).send("Missing authentication token");
+                    return;
+                }
 
                 try {
-                    if (typeof organizationMemberToken != "string") throw new Error("No organization token");
-                    const data = await adminService.fetchMemberDataByToken(
-                        organizationMemberToken,
-                        playUri,
-                        req.header("accept-language")
-                    );
+                    const data = await adminService.fetchLoginData(authToken, playUri, req.header("accept-language"));
                     const userUuid = data.userUuid;
                     const email = data.email;
                     const roomUrl = data.roomUrl;
                     const mapUrlStart = data.mapUrlStart;
 
-                    const authToken = jwtTokenManager.createAuthToken(email || userUuid);
+                    const newAuthToken = jwtTokenManager.createAuthToken(email || userUuid);
 
                     res.json({
-                        authToken,
+                        authToken: newAuthToken,
                         userUuid,
                         email,
                         roomUrl,
                         mapUrlStart,
-                        organizationMemberToken,
                     } as RegisterData);
                 } catch (e) {
                     console.error("register => ERROR", e);
@@ -451,11 +420,11 @@ export class AuthenticateController extends BaseHttpController {
                 res.status(403);
                 return res;
             } else {
-                const userUuid = v4();
-                const authToken = jwtTokenManager.createAuthToken(userUuid);
+                const playerUuid = v4();
+                const authToken = jwtTokenManager.createAuthToken(playerUuid);
                 return res.json({
                     authToken,
-                    userUuid,
+                    playerUuid,
                 });
             }
         });

@@ -173,7 +173,7 @@ export class RoomConnection implements RoomConnection {
      * @param availabilityStatus
      */
     public constructor(
-        token: string | null,
+        authToken: string | null,
         roomUrl: string,
         name: string,
         characterLayers: string[],
@@ -189,7 +189,7 @@ export class RoomConnection implements RoomConnection {
         }
         url += "room";
         url += "?roomId=" + encodeURIComponent(roomUrl);
-        url += "&token=" + (token ? encodeURIComponent(token) : "");
+        url += "&authToken=" + (authToken ? encodeURIComponent(authToken) : "");
         url += "&name=" + encodeURIComponent(name);
         for (const layer of characterLayers) {
             url += "&characterLayers=" + encodeURIComponent(layer);

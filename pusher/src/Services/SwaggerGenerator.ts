@@ -1,5 +1,5 @@
 import { generateSchema } from "@anatine/zod-openapi";
-import { isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
+import { isAdminApiLoginUrlData } from "../Messages/JsonMessages/AdminApiLoginUrlData";
 import {
     isErrorApiErrorData,
     isErrorApiRedirectData,
@@ -7,7 +7,7 @@ import {
     isErrorApiUnauthorizedData,
 } from "../Messages/JsonMessages/ErrorApiData";
 import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
-import { isFetchMemberDataByUuidResponse } from "./AdminApi";
+import { isFetchMemberDataByAuthTokenResponse } from "./AdminApi";
 import { isWokaDetail, wokaList, wokaTexture } from "../Messages/JsonMessages/PlayerTextures";
 import { SchemaObject } from "openapi3-ts";
 
@@ -17,9 +17,9 @@ class SwaggerGenerator {
     } {
         const definitions = {
             definitions: {
-                AdminApiData: generateSchema(isAdminApiData),
+                AdminApiLoginUrlData: generateSchema(isAdminApiLoginUrlData),
                 ErrorApiUnauthorizedData: generateSchema(isErrorApiUnauthorizedData),
-                FetchMemberDataByUuidResponse: generateSchema(isFetchMemberDataByUuidResponse),
+                FetchMemberDataByUuidResponse: generateSchema(isFetchMemberDataByAuthTokenResponse),
                 MapDetailsData: generateSchema(isMapDetailsData),
                 WokaDetail: generateSchema(isWokaDetail),
             },
@@ -29,18 +29,13 @@ class SwaggerGenerator {
         }
         return {
             definitions: {
-                AdminApiData: generateSchema(isAdminApiData),
-                //BanBannedAdminMessageInterface: generateSchema(isBanBannedAdminMessageInterface),
+                AdminApiLoginUrlData: generateSchema(isAdminApiLoginUrlData),
                 ErrorApiErrorData: generateSchema(isErrorApiErrorData),
                 ErrorApiRedirectData: generateSchema(isErrorApiRedirectData),
                 ErrorApiRetryData: generateSchema(isErrorApiRetryData),
                 ErrorApiUnauthorizedData: generateSchema(isErrorApiUnauthorizedData),
-                FetchMemberDataByUuidResponse: generateSchema(isFetchMemberDataByUuidResponse),
-                //ListenRoomsMessageInterface: generateSchema(isListenRoomsMessageInterface),
+                FetchMemberDataByUuidResponse: generateSchema(isFetchMemberDataByAuthTokenResponse),
                 MapDetailsData: generateSchema(isMapDetailsData),
-                //RegisterData: generateSchema(isRegisterData),
-                //RoomRedirect: generateSchema(isRoomRedirect),
-                //UserMessageAdminMessageInterface: generateSchema(isUserMessageAdminMessageInterface),
                 WokaDetail: generateSchema(isWokaDetail),
                 WokaList: generateSchema(wokaList),
                 WokaTexture: generateSchema(wokaTexture),

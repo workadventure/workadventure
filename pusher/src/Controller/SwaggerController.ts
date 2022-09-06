@@ -193,7 +193,7 @@ export class SwaggerController extends BaseHttpController {
                                 200: {
                                     description: "The details of the member",
                                     schema: {
-                                        $ref: "#/definitions/AdminApiData",
+                                        $ref: "#/definitions/AdminApiLoginUrlData",
                                     },
                                 },
                                 401: {

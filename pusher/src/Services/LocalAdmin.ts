@@ -1,26 +1,35 @@
-import { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
+import { AdminBannedData, FetchMemberDataByAuthTokenResponse } from "./AdminApi";
 import { AdminInterface } from "./AdminInterface";
 import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { DISABLE_ANONYMOUS, PUBLIC_MAP_STORAGE_URL, START_ROOM_URL } from "../Enum/EnvironmentVariable";
-import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
+import { AdminApiLoginUrlData } from "../Messages/JsonMessages/AdminApiLoginUrlData";
 import { localWokaService } from "./LocalWokaService";
+import { jwtTokenManager } from "./JWTTokenManager";
 
 /**
  * A local class mocking a real admin if no admin is configured.
  */
 class LocalAdmin implements AdminInterface {
-    async fetchMemberDataByUuid(
-        userIdentifier: string,
-        isLogged: boolean,
+    async fetchMemberDataByAuthToken(
+        authToken: string,
         playUri: string,
         ipAddress: string,
         characterLayers: string[],
         locale?: string
-    ): Promise<FetchMemberDataByUuidResponse> {
+    ): Promise<FetchMemberDataByAuthTokenResponse> {
+        let authTokenData = undefined;
+
+        try {
+            authTokenData = jwtTokenManager.verifyJWTToken(authToken);
+        } catch (error) {
+            console.error(error);
+            throw new Error("Cannot fetch token data on member fetching");
+        }
+
         return {
-            email: userIdentifier,
-            userUuid: userIdentifier,
+            email: authTokenData.identifier,
+            userUuid: authTokenData.identifier,
             tags: [],
             messages: [],
             visitCardUrl: null,
@@ -71,11 +80,7 @@ class LocalAdmin implements AdminInterface {
         });
     }
 
-    async fetchMemberDataByToken(
-        organizationMemberToken: string,
-        playUri: string | null,
-        locale?: string
-    ): Promise<AdminApiData> {
+    async fetchLoginData(authToken: string, playUri: string | null, locale?: string): Promise<AdminApiLoginUrlData> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 

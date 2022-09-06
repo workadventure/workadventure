@@ -2,7 +2,7 @@ import { ADMIN_API_TOKEN, ADMIN_API_URL, OPID_PROFILE_SCREEN_PROVIDER } from "..
 import Axios, { AxiosResponse } from "axios";
 import { isMapDetailsData, MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { isRoomRedirect, RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
-import { AdminApiData, isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
+import { AdminApiLoginUrlData, isAdminApiLoginUrlData } from "../Messages/JsonMessages/AdminApiLoginUrlData";
 import { z } from "zod";
 import { isWokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import qs from "qs";
@@ -16,7 +16,7 @@ export interface AdminBannedData {
     message: string;
 }
 
-export const isFetchMemberDataByUuidResponse = z.object({
+export const isFetchMemberDataByAuthTokenResponse = z.object({
     email: extendApi(z.string(), {
         description: "The email of the fetched user, it can be an email, an uuid or undefined.",
         example: "example@workadventu.re",
@@ -62,7 +62,7 @@ export const isFetchMemberDataByUuidResponse = z.object({
     }),
 });
 
-export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
+export type FetchMemberDataByAuthTokenResponse = z.infer<typeof isFetchMemberDataByAuthTokenResponse>;
 
 class AdminApi implements AdminInterface {
     async fetchMapDetails(
@@ -70,24 +70,22 @@ class AdminApi implements AdminInterface {
         authToken?: string,
         locale?: string
     ): Promise<MapDetailsData | RoomRedirect> {
-        let userId: string | undefined = undefined;
+        let authTokenData: AuthTokenData | undefined = undefined;
+
         if (authToken != undefined) {
-            let authTokenData: AuthTokenData;
             try {
                 authTokenData = jwtTokenManager.verifyJWTToken(authToken);
-                userId = authTokenData.identifier;
                 //eslint-disable-next-line @typescript-eslint/no-unused-vars
             } catch (e) {
                 // Decode token, in this case we don't need to create new token.
-                authTokenData = jwtTokenManager.verifyJWTToken(authToken, true);
-                userId = authTokenData.identifier;
-                console.info("JWT expire, but decoded:", userId);
+                const authTokenDataTemp = jwtTokenManager.verifyJWTToken(authToken, true);
+                console.info("JWT expire, but decoded:", authTokenDataTemp.identifier);
             }
         }
 
-        const params: { playUri: string; userId?: string } = {
+        const params: { playUri: string; authToken?: string } = {
             playUri,
-            userId,
+            authToken: authTokenData ? authToken : undefined,
         };
 
         /**
@@ -107,11 +105,11 @@ class AdminApi implements AdminInterface {
          *        required: true
          *        type: "string"
          *        example: "http://play.workadventure.localhost/@/teamSlug/worldSLug/roomSlug"
-         *      - name: "userId"
+         *      - name: "authToken"
          *        in: "query"
-         *        description: "The identifier of the current user \n It can be undefined or an uuid or an email"
+         *        description: "A JWT token who contains identifier and some data"
          *        type: "string"
-         *        example: "998ce839-3dea-4698-8b41-ebbdf7688ad9"
+         *        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGlmaWVyIjoiTm90aGluZyB0byBzZWUgaGVyZSA7KSIsImFjY2Vzc1Rva2VuIjoiZWRmYWJhYjc0ZjgzNTAzZWJhNTI4MGQzYjQyYThkZDkxZjg2MDI4Y2YyN2VjYTdhN2QzYmU1ZGMzMzNiYjg5NiIsImlhdCI6MTY2MjQ3NzAwMiwiZXhwIjoxNjY1MDY5MDAyfQ.HpZTx-kY1wlHM01uCZkIRxGrFuLTPRUf4eEHhKPYZ7g"
          *     responses:
          *       200:
          *         description: The details of the map
@@ -155,14 +153,13 @@ class AdminApi implements AdminInterface {
         );
     }
 
-    async fetchMemberDataByUuid(
-        userIdentifier: string,
-        isLogged: boolean,
+    async fetchMemberDataByAuthToken(
+        authToken: string,
         playUri: string,
         ipAddress: string,
         characterLayers: string[],
         locale?: string
-    ): Promise<FetchMemberDataByUuidResponse> {
+    ): Promise<FetchMemberDataByAuthTokenResponse> {
         /**
          * @openapi
          * /api/room/access:
@@ -174,16 +171,11 @@ class AdminApi implements AdminInterface {
          *     produces:
          *      - "application/json"
          *     parameters:
-         *      - name: "userIdentifier"
+         *      - name: "authToken"
          *        in: "query"
-         *        description: "The identifier of the current user \n It can be undefined or an uuid or an email"
+         *        description: "A JWT token who contains identifier and some data"
          *        type: "string"
-         *        example: "998ce839-3dea-4698-8b41-ebbdf7688ad9"
-         *      - name: "isLogged"
-         *        in: "query"
-         *        description: "Whether the current user is identified using OpenID Connect... or not. Can be 0 or 1"
-         *        type: "string"
-         *        example: "1"
+         *        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGlmaWVyIjoiTm90aGluZyB0byBzZWUgaGVyZSA7KSIsImFjY2Vzc1Rva2VuIjoiZWRmYWJhYjc0ZjgzNTAzZWJhNTI4MGQzYjQyYThkZDkxZjg2MDI4Y2YyN2VjYTdhN2QzYmU1ZGMzMzNiYjg5NiIsImlhdCI6MTY2MjQ3NzAwMiwiZXhwIjoxNjY1MDY5MDAyfQ.HpZTx-kY1wlHM01uCZkIRxGrFuLTPRUf4eEHhKPYZ7g"
          *      - name: "playUri"
          *        in: "query"
          *        description: "The full URL of WorkAdventure"
@@ -206,7 +198,7 @@ class AdminApi implements AdminInterface {
          *       200:
          *         description: The details of the member
          *         schema:
-         *             $ref: "#/definitions/FetchMemberDataByUuidResponse"
+         *             $ref: "#/definitions/FetchMemberDataByAuthTokenResponse"
          *       401:
          *         description: Error while retrieving the data because you are not authorized
          *         schema:
@@ -223,11 +215,10 @@ class AdminApi implements AdminInterface {
          */
         const res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/room/access", {
             params: {
-                userIdentifier,
+                authToken,
                 playUri,
                 ipAddress,
                 characterLayers,
-                isLogged: isLogged ? "1" : "0",
             },
             headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
             paramsSerializer: (p) => {
@@ -235,27 +226,23 @@ class AdminApi implements AdminInterface {
             },
         });
 
-        const fetchMemberDataByUuidResponse = isFetchMemberDataByUuidResponse.safeParse(res.data);
+        const fetchMemberDataByAuthTokenResponse = isFetchMemberDataByAuthTokenResponse.safeParse(res.data);
 
-        if (fetchMemberDataByUuidResponse.success) {
-            return fetchMemberDataByUuidResponse.data;
+        if (fetchMemberDataByAuthTokenResponse.success) {
+            return fetchMemberDataByAuthTokenResponse.data;
         }
 
-        console.error(fetchMemberDataByUuidResponse.error.issues);
+        console.error(fetchMemberDataByAuthTokenResponse.error.issues);
         throw new Error(
             "Invalid answer received from the admin for the /api/room/access endpoint. Received: " +
                 JSON.stringify(res.data)
         );
     }
 
-    async fetchMemberDataByToken(
-        organizationMemberToken: string,
-        playUri: string | null,
-        locale?: string
-    ): Promise<AdminApiData> {
+    async fetchLoginData(authToken: string, playUri: string | null, locale?: string): Promise<AdminApiLoginUrlData> {
         /**
          * @openapi
-         * /api/login-url/{organizationMemberToken}:
+         * /api/login-url/{authToken}:
          *   get:
          *     tags: ["AdminAPI"]
          *     description: Returns a member from the token
@@ -264,7 +251,7 @@ class AdminApi implements AdminInterface {
          *     produces:
          *      - "application/json"
          *     parameters:
-         *      - name: "organizationMemberToken"
+         *      - name: "authToken"
          *        in: "path"
          *        description: "The token of member in the organization"
          *        type: "string"
@@ -278,7 +265,7 @@ class AdminApi implements AdminInterface {
          *       200:
          *         description: The details of the member
          *         schema:
-         *             $ref: "#/definitions/AdminApiData"
+         *             $ref: "#/definitions/AdminApiLoginUrlData"
          *       401:
          *         description: Error while retrieving the data because you are not authorized
          *         schema:
@@ -290,18 +277,18 @@ class AdminApi implements AdminInterface {
          *
          */
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
-        const res = await Axios.get(ADMIN_API_URL + "/api/login-url/" + organizationMemberToken, {
+        const res = await Axios.get(ADMIN_API_URL + "/api/login-url/" + authToken, {
             params: { playUri },
             headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
         });
 
-        const adminApiData = isAdminApiData.safeParse(res.data);
+        const adminApiLoginUrlData = isAdminApiLoginUrlData.safeParse(res.data);
 
-        if (adminApiData.success) {
-            return adminApiData.data;
+        if (adminApiLoginUrlData.success) {
+            return adminApiLoginUrlData.data;
         }
 
-        console.error(adminApiData.error.issues);
+        console.error(adminApiLoginUrlData.error.issues);
         console.error("Message received from /api/login-url is not in the expected format. Message: ", res.data);
         throw new Error("Message received from /api/login-url is not in the expected format.");
     }

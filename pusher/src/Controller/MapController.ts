@@ -24,7 +24,6 @@ export class MapController extends BaseHttpController {
          *      - name: "authToken"
          *        in: "query"
          *        description: "The authentication token"
-         *        required: true
          *        type: "string"
          *     responses:
          *       200:
@@ -98,19 +97,24 @@ export class MapController extends BaseHttpController {
          */
         this.app.get("/map", (req, res) => {
             const query = parse(req.path_query);
-            if (typeof query.playUri !== "string") {
+            const playUri = query.playUri;
+
+            if (typeof playUri !== "string") {
                 console.error("Expected playUri parameter in /map endpoint");
                 res.status(400);
                 res.send("Expected playUri parameter");
                 return;
             }
 
+            const authToken = typeof query.authToken === "string" ? query.authToken : undefined;
+
             (async (): Promise<void> => {
                 try {
+                    const language = req.header("accept-language");
                     let mapDetails = await adminService.fetchMapDetails(
-                        query.playUri as string,
-                        query.authToken as string,
-                        req.header("accept-language")
+                        playUri,
+                        authToken,
+                        language ? language : undefined
                     );
 
                     const mapDetailsParsed = isMapDetailsData.safeParse(mapDetails);

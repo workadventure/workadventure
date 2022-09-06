@@ -1,43 +1,39 @@
-import { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
+import { AdminBannedData, FetchMemberDataByAuthTokenResponse } from "./AdminApi";
 import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
-import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
+import { AdminApiLoginUrlData } from "../Messages/JsonMessages/AdminApiLoginUrlData";
 
 export interface AdminInterface {
     /**
-     * @var playUri: is url of the room
-     * @var userIdentifier: can to be undefined or email or uuid
+     * @var authToken: JWT token
+     * @var authTokenData: Object of JWT token
+     * @var playUri: Url of the room
      * @var ipAddress
      * @var characterLayers
      * @return MapDetailsData|RoomRedirect
      */
-    fetchMemberDataByUuid(
-        userIdentifier: string,
-        isLogged: boolean,
+    fetchMemberDataByAuthToken(
+        authToken: string,
         playUri: string,
         ipAddress: string,
         characterLayers: string[],
         locale?: string
-    ): Promise<FetchMemberDataByUuidResponse>;
+    ): Promise<FetchMemberDataByAuthTokenResponse>;
 
     /**
-     * @var playUri: is url of the room
-     * @var userId: can to be undefined or email or uuid
+     * @var playUri: Url of the room
+     * @var userId: Can to be undefined or email or uuid
      * @return MapDetailsData|RoomRedirect
      */
     fetchMapDetails(playUri: string, authToken?: string, locale?: string): Promise<MapDetailsData | RoomRedirect>;
 
     /**
      * @param locale
-     * @param organizationMemberToken
+     * @param authToken
      * @param playUri
-     * @return AdminApiData
+     * @return AdminApiLoginUrlData
      */
-    fetchMemberDataByToken(
-        organizationMemberToken: string,
-        playUri: string | null,
-        locale?: string
-    ): Promise<AdminApiData>;
+    fetchLoginData(authToken: string, playUri: string | null, locale?: string): Promise<AdminApiLoginUrlData>;
 
     /**
      * @param locale
