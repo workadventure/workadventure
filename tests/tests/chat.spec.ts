@@ -3,6 +3,7 @@ import { login } from './utils/roles';
 import {openChat} from "./utils/menu";
 import {findContainer, startContainer, stopContainer} from "./utils/containers";
 import {createFileOfSize, fileExist} from "./utils/file";
+import {oidcLogin} from "./utils/oidc";
 
 const TIMEOUT_TO_GET_LIST = 30_000;
 
@@ -81,16 +82,19 @@ test.describe('Chat', () => {
       await expect(chat.locator('#activeThread .wa-messages-list .wa-message.received').last()).toContainText('Fine, what about you ?');
       await expect(chat.locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.message-replied')).toContainText('Hello, how are you ?');
 
+      // Generate bulk file
+      //if(!fileExist('./file.txt')) await createFileOfSize('./file.txt', 10_485_860);
 
-      // Try upload file too large
-      if(!fileExist('./file.txt')) await createFileOfSize('./file.txt', 10_485_860);
+      // Try upload file but not logged in
       if(fileExist('./file.txt')){
         await chat.locator('#activeThread input#file').setInputFiles('file.txt');
         await expect(chat.locator('#activeThread #send')).toHaveClass(/cant-send/);
-        await page.pause();
+        await expect(chat.locator('#activeThread .upload-file')).toContainText('need to be logged in to upload a file');
         await chat.locator('#activeThread .upload-file button').click();
       }
 
+      // Log in
+      await oidcLogin(page);
 
 
 
