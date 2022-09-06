@@ -762,7 +762,7 @@ export class MucRoom {
                         type === "unavailable" ? USER_STATUS_DISCONNECTED : USER_STATUS_AVAILABLE,
                         color,
                         woka,
-                        ["moderator", "owner"].includes(role),
+                        ["admin", "owner"].includes(role),
                         isMember === "true",
                         availabilityStatus
                     );
