@@ -52,6 +52,19 @@ export class AreaEditorTool extends MapEditorTool {
                         ?.updatePreview(data as ITiledMapRectangleObject);
                     this.scene.getGameMapFrontWrapper().updateAreaById(data.id, AreaType.Static, data);
                     this.scene.markDirty();
+                    break;
+                }
+                case "createAreaMessage": {
+                    break;
+                }
+                case "deleteAreaMessage": {
+                    const data = message.message.deleteAreaMessage;
+                    const areaPreview = this.areaPreviews.find((preview) => preview.getConfig().id === data.id);
+                    if (!areaPreview) {
+                        break;
+                    }
+                    this.handleAreaPreviewDeletion(areaPreview);
+                    break;
                 }
             }
         });
@@ -66,7 +79,7 @@ export class AreaEditorTool extends MapEditorTool {
             });
     }
 
-    public unsubscribeFromGameMapEvents(): void {
+    public unsubscribeFromGameMapFrontWrapperEvents(): void {
         this.gameMapAreaUpdateSubscription.unsubscribe();
     }
 
@@ -95,12 +108,19 @@ export class AreaEditorTool extends MapEditorTool {
                     type: "DeleteAreaCommand",
                     id: areaPreview.getId(),
                 });
+                this.handleAreaPreviewDeletion(areaPreview);
                 break;
             }
             default: {
                 break;
             }
         }
+    }
+
+    private handleAreaPreviewDeletion(areaPreview: AreaPreview): void {
+        this.deleteAreaPreview(areaPreview.getConfig().id);
+        this.scene.markDirty();
+        mapEditorSelectedAreaPreviewStore.set(undefined);
     }
 
     private getAreaPreview(id: number): AreaPreview | undefined {
@@ -111,8 +131,6 @@ export class AreaEditorTool extends MapEditorTool {
         this.areaPreviews = [];
         const areaConfigs = this.scene.getGameMapFrontWrapper().getAreas(AreaType.Static);
 
-        console.log(areaConfigs);
-
         for (const config of areaConfigs) {
             const areaPreview = new AreaPreview(this.scene, { ...config });
             this.bindAreaPreviewEventHandlers(areaPreview);
@@ -122,6 +140,15 @@ export class AreaEditorTool extends MapEditorTool {
         this.setAreaPreviewsVisibility(false);
 
         return this.areaPreviews;
+    }
+
+    private deleteAreaPreview(id: number): boolean {
+        const index = this.areaPreviews.findIndex((preview) => preview.getConfig().id === id);
+        if (index !== -1) {
+            this.areaPreviews.splice(index, 1)[0].destroy();
+            return true;
+        }
+        return false;
     }
 
     private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {

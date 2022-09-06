@@ -7,6 +7,6 @@ export abstract class MapEditorTool {
     public abstract destroy(): void;
     public abstract subscribeToRoomConnection(connection: RoomConnection): void;
     public abstract subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void;
-    public abstract unsubscribeFromGameMapEvents(): void;
+    public abstract unsubscribeFromGameMapFrontWrapperEvents(): void;
     public abstract handleKeyDownEvent(event: KeyboardEvent): void;
 }

@@ -66,7 +66,7 @@ export class MapEditorModeManager {
         this.activeTool = undefined;
 
         this.subscribeToStores();
-        this.subscribeToGameMapEvents();
+        this.subscribeToGameMapFrontWrapperEvents();
     }
 
     public executeCommand(commandConfig: CommandConfig): void {
@@ -128,7 +128,7 @@ export class MapEditorModeManager {
 
     public destroy(): void {
         this.unsubscribeFromStores();
-        this.unsubscribeFromGameMapEvents();
+        this.unsubscribeFromGameMapFrontWrapperEvents();
         this.pointerDownUnsubscriber();
     }
 
@@ -230,14 +230,14 @@ export class MapEditorModeManager {
         });
     }
 
-    private subscribeToGameMapEvents(): void {
+    private subscribeToGameMapFrontWrapperEvents(): void {
         this.editorTools.forEach((tool) =>
             tool.subscribeToGameMapFrontWrapperEvents(this.scene.getGameMapFrontWrapper())
         );
     }
 
-    private unsubscribeFromGameMapEvents(): void {
-        this.editorTools.forEach((tool) => tool.unsubscribeFromGameMapEvents());
+    private unsubscribeFromGameMapFrontWrapperEvents(): void {
+        this.editorTools.forEach((tool) => tool.unsubscribeFromGameMapFrontWrapperEvents());
     }
 
     private unsubscribeFromStores(): void {
