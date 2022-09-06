@@ -126,6 +126,7 @@ export class XmppClient {
             });
             xmpp.on("online", (address: JID) => {
                 console.info("XmppClient => createClient => online");
+                xmpp.reconnect.stop();
                 status = "connected";
                 //TODO
                 // define if MUC must persistent or not

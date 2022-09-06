@@ -21,7 +21,7 @@
     <div class="tw-px-4 tw-py-1 tw-flex tw-items-center" on:click={showTimeLine}>
         {#if unreadMessages}
             <span
-                class="tw-bg-pop-red tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded tw-animate-pulse"
+                class="tw-bg-pop-red tw-text-white tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded tw-animate-pulse"
             >
                 {unreadMessages}
             </span>
@@ -66,7 +66,7 @@
                 </div>
                 {#if unreadMessages}
                     <span
-                        class="tw-bg-pop-red tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded tw-animate-pulse"
+                        class="tw-bg-pop-red tw-text-white tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded tw-animate-pulse"
                     >
                         {unreadMessages}
                     </span>
