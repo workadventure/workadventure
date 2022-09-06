@@ -35,7 +35,6 @@ export class XmppClient {
     private clientPassword: string;
     private timeout: ReturnType<typeof setTimeout> | undefined;
     private xmppSocket: Client | undefined;
-    private pingInterval: NodeJS.Timer | undefined;
     private isAuthorized = true;
 
     constructor(private clientSocket: ExSocketInterface, private initialMucRooms: MucRoomDefinitionInterface[]) {
@@ -81,10 +80,6 @@ export class XmppClient {
             });
 
             xmpp.on("offline", () => {
-                if (this.pingInterval) {
-                    clearInterval(this.pingInterval);
-                    this.pingInterval = undefined;
-                }
                 console.info("XmppClient => createClient => offline => status", status);
                 status = "disconnected";
 
@@ -156,8 +151,6 @@ export class XmppClient {
                 if (!this.clientSocket.disconnecting) {
                     this.clientSocket.send(pusherToIframeMessage.serializeBinary().buffer, true);
                 }
-
-                this.pingInterval = setInterval(() => this.ping(), 30_000);
             });
             xmpp.on("status", (status: string) => {
                 console.error("XmppClient => createClient => status => status", status);
@@ -276,23 +269,5 @@ export class XmppClient {
         const ctx = parse(stanza);
         await this.xmppSocket?.send(ctx);
         return;
-    }
-
-    ping(): void {
-        if (this.isAuthorized && this.xmppSocket?.status === "online") {
-            this.xmppSocket?.send(
-                xml(
-                    "iq",
-                    {
-                        from: this.clientJID,
-                        to: EJABBERD_DOMAIN,
-                        id: v4(),
-                        type: "get",
-                    },
-                    xml("ping", { xmlns: "urn:xmpp:ping" })
-                )
-            );
-        }
-        // TODO catch pong
     }
 }
