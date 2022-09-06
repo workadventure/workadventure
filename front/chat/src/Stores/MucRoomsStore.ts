@@ -33,7 +33,7 @@ function createMucRoomsStore() {
         getLiveRoom(): MucRoom | undefined {
             return [...get(this).values()].find((mucRoom) => mucRoom.type === "live");
         },
-        sendAvailabilityStatus() {
+        sendPresences() {
             [...get(this).values()].forEach((mucRoom) => mucRoom.sendPresence());
         },
     };

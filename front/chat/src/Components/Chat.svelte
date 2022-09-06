@@ -70,7 +70,7 @@
         );
         subscribeListeners.push(
             availabilityStatusStore.subscribe(() => {
-                mucRoomsStore.sendAvailabilityStatus();
+                mucRoomsStore.sendPresences();
             })
         );
         subscribeListeners.push(
