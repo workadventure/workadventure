@@ -37,13 +37,13 @@
         closeChatUserMenu();
     }
     function rankUp(jid: string) {
-        console.info('Rank up feature from workadventure chat coming soon!');
+        console.info("Rank up feature from workadventure chat coming soon!");
         return;
         /*dispatch("rankUp", { jid });
         closeChatUserMenu();*/
     }
     function rankDown(jid: string) {
-        console.info('Rank down feature from workadventure chat coming soon!');
+        console.info("Rank down feature from workadventure chat coming soon!");
         return;
         /*dispatch("rankDown", { jid });
         closeChatUserMenu();*/
