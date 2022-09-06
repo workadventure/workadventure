@@ -24,7 +24,7 @@ class NotLoggedUser extends Error {}
 export class UploadedFile implements FileExt, UploadedFileInterface {
     public uploadState: uploadingState;
     public errorMessage?: string;
-    public errorStatus?: number;
+    public errorCode?: number;
     public maxFileSize?: string;
     constructor(
         public name: string,
@@ -80,7 +80,7 @@ export class UploadedFile implements FileExt, UploadedFileInterface {
 export interface FileExt extends File {
     uploadState: uploadingState;
     errorMessage?: string;
-    errorStatus?: number;
+    errorCode?: number;
     maxFileSize?: string;
 }
 
@@ -123,10 +123,10 @@ export class FileMessageManager {
                     file.uploadState = uploadingState.error;
                     if (err instanceof NotLoggedUser) {
                         file.errorMessage = "not-logged";
-                        file.errorStatus = 401;
+                        file.errorCode = 401;
                     } else {
                         file.errorMessage = err.response?.data.message;
-                        file.errorStatus = err.response?.status;
+                        file.errorCode = err.response?.status;
                         if (err.response?.data.maxFileSize) {
                             file.maxFileSize = `(< ${err.response?.data.maxFileSize / 1_048_576}Mo)`;
                         }

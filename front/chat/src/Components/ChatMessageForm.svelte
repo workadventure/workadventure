@@ -333,7 +333,7 @@
                     {#if fileUploaded.errorMessage !== undefined}
                         <div
                             class={`error-hover tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-4 tw-py-2 ${
-                                fileUploaded.errorCode === 423 && mucRoom.getMe().isAdmin
+                                fileUploaded.errorCode === 423 && mucRoom.getMe()?.isAdmin
                                     ? "tw-text-orange"
                                     : "tw-text-pop-red"
                             } tw-absolute tw-w-full`}
@@ -356,12 +356,12 @@
                                     <ArrowRightCircleIcon size="14" />
                                 </div>
                             {/if}
-                            {#if fileUploaded.errorCode === 423 && mucRoom.getMe().isAdmin}
+                            {#if fileUploaded.errorCode === 423 && mucRoom.getMe()?.isAdmin}
                                 <button
                                     class="tw-text-orange tw-font-bold tw-underline tw-m-auto"
                                     on:click={() => iframeListener.sendRedirectPricing()}
                                 >
-                                    <img src={crown} class="tw-mr-1" />
+                                    <img alt="Crown logo" src={crown} class="tw-mr-1" />
                                     {$LL.upgrade()}
                                 </button>
                             {/if}

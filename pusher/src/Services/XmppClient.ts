@@ -56,7 +56,7 @@ export class XmppClient {
                 domain: EJABBERD_DOMAIN,
                 username: this.clientID,
                 resource: this.clientResource ? this.clientResource : uuidV4().toString(), //"pusher",
-                password: this.clientPassword
+                password: this.clientPassword,
             });
             this.xmppSocket = xmpp;
 
@@ -411,7 +411,9 @@ export class XmppClient {
                     },
                     xml("ping", { xmlns: "urn:xmpp:ping" })
                 ).toString()
-            ).then().catch();
+            )
+                .then()
+                .catch();
         }
     }
 }
