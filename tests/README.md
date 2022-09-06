@@ -40,7 +40,7 @@ npm run test
 In development, if you want to run a specific test in "headed" mode (visible mode), with only Chromium, run:
 
 ```bash
-npm run headed-test -- tests/[your_test_file.ts]
+npm run test-headed -- tests/[your_test_file.ts]
 ```
 
 

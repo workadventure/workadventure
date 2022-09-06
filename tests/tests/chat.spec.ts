@@ -2,6 +2,7 @@ import {expect, Page, test} from '@playwright/test';
 import { login } from './utils/roles';
 import {openChat} from "./utils/menu";
 import {findContainer, startContainer, stopContainer} from "./utils/containers";
+import {createFileOfSize, fileExist} from "./utils/file";
 
 const TIMEOUT_TO_GET_LIST = 30_000;
 
@@ -81,6 +82,18 @@ test.describe('Chat', () => {
       await expect(chat.locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.message-replied')).toContainText('Hello, how are you ?');
 
 
+      // Try upload file too large
+      if(!fileExist('./file.txt')) await createFileOfSize('./file.txt', 10_485_860);
+      if(fileExist('./file.txt')){
+        await chat.locator('#activeThread input#file').setInputFiles('file.txt');
+        await expect(chat.locator('#activeThread #send')).toHaveClass(/cant-send/);
+        await page.pause();
+        await chat.locator('#activeThread .upload-file button').click();
+      }
+
+
+
+
       // Send a file in a message
       await chat.locator('#activeThread input#file').setInputFiles('README.md');
       await expect(chat.locator('#activeThread #send')).toHaveClass(/can-send/);
@@ -120,7 +133,7 @@ test.describe('Chat', () => {
 
 
       // Walk to
-      // Workaround to wait the end of svelte animation
+      // A workaround to wait the end of svelte animation
       //eslint-disable-next-line playwright/no-wait-for-timeout
       await page.waitForTimeout(3_000);
       await chat.locator('.users .wa-chat-item', {hasText: nickname2}).locator('.wa-dropdown button').click();

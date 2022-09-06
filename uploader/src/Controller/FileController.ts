@@ -322,6 +322,8 @@ export class FileController extends BaseController {
                                 res.writeStatus("413 Request Entity Too Large");
                             } else if (status == 423) {
                                 res.writeStatus("423 Locked");
+                            } else {
+                                res.writeStatus("401 Unauthorized");
                             }
                             this.addCorsHeaders(res);
                             res.writeHeader('Content-Type', 'application/json');

@@ -9,6 +9,7 @@
         CheckIcon,
         AlertCircleIcon,
         XCircleIcon,
+        ArrowRightCircleIcon
     } from "svelte-feather-icons";
     import { ChatStates, MucRoom, User } from "../Xmpp/MucRoom";
     import LL, { locale } from "../i18n/i18n-svelte";
@@ -257,17 +258,6 @@
             emojiOpened = false;
         });
     });
-
-    function getFileError(fileUploaded) {
-        switch (fileUploaded.errorMessage) {
-            case "file-too-big": {
-                return $LL.file.tooBig({ fileName: fileUploaded.name });
-            }
-            default: {
-                return fileUploaded.errorMessage;
-            }
-        }
-    }
 </script>
 
 <div class="wa-message-form">
@@ -354,13 +344,26 @@
                                         fileName: fileUploaded.name,
                                         maxFileSize: fileUploaded.maxFileSize,
                                     })}
+                                {:else if fileUploaded.errorMessage === "not-logged"}
+                                    {$LL.file.notLogged()}
                                 {/if}
                             </p>
-                            {#if fileUploaded.errorCode === 423 && mucRoom.getMe().isAdmin}<button
+                            {#if fileUploaded.errorMessage === "not-logged"}
+                                <div
+                                        class="tw-text-light-blue tw-cursor-pointer"
+                                        on:click|preventDefault|stopPropagation={() => iframeListener.sendLogin()}
+                                >
+                                    <ArrowRightCircleIcon size="14" />
+                                </div>
+                            {/if}
+                            {#if fileUploaded.errorCode === 423 && mucRoom.getMe().isAdmin}
+                                <button
                                     class="tw-text-orange tw-font-bold tw-underline tw-m-auto"
                                     on:click={() => iframeListener.sendRedirectPricing()}
-                                    ><img src={crown} class="tw-mr-1" /> {$LL.upgrade()}</button
-                                >{/if}
+                                    >
+                                    <img src={crown} class="tw-mr-1" /> {$LL.upgrade()}
+                                </button>
+                            {/if}
                         </div>
                     {/if}
                     <div

@@ -1,4 +1,4 @@
-const UPLOAD_MAX_FILESIZE = process.env.UPLOAD_MAX_FILESIZE || 1_073_741_824;
+const UPLOAD_MAX_FILESIZE = parseInt(process.env.UPLOAD_MAX_FILESIZE || '1073741824');
 const ADMIN_API_URL = process.env.ADMIN_API_URL;
 
 const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID;

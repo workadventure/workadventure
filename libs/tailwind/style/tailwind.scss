@@ -208,7 +208,7 @@
         }
 
         .wa-messages-list{
-            padding-bottom: 10px;
+            @apply tw-pb-6;
             min-height: calc(100vh - 2.8rem);
         }
 

@@ -9,27 +9,21 @@ export class UploaderManager {
             formData.append(file.name, file);
         }
         formData.append("userRoomToken", userRoomToken);
-        try {
-            const result = await Axios.post(`${UPLOADER_URL}/upload-file`, formData);
-            return result.data.reduce((list: UploadedFile[], file: UploadedFile) => {
-                list.push(
-                    new UploadedFile(
-                        file.name,
-                        file.id,
-                        file.location,
-                        file.lastModified,
-                        file.webkitRelativePath,
-                        file.size,
-                        file.type
-                    )
-                );
-                return list;
-            }, []);
-        } catch (err) {
-            //TODO manage error from uploader server
-            //console.error("Error push file", err);
-            throw err;
-        }
+        const result = await Axios.post(`${UPLOADER_URL}/upload-file`, formData);
+        return result.data.reduce((list: UploadedFile[], file: UploadedFile) => {
+            list.push(
+                new UploadedFile(
+                    file.name,
+                    file.id,
+                    file.location,
+                    file.lastModified,
+                    file.webkitRelativePath,
+                    file.size,
+                    file.type
+                )
+            );
+            return list;
+        }, []);
     }
 
     public async delete(fileId: string) {

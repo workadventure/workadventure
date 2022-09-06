@@ -19,6 +19,8 @@ export interface UploadedFileInterface {
     uploadState: uploadingState;
 }
 
+class NotLoggedUser extends Error {}
+
 export class UploadedFile implements FileExt, UploadedFileInterface {
     public uploadState: uploadingState;
     public errorMessage?: string;
@@ -100,7 +102,7 @@ export class FileMessageManager {
         try {
             const userRoomToken = userStore.get().userRoomToken;
             if (!userRoomToken) {
-                throw new Error("User not authorized to upload file;");
+                throw new NotLoggedUser();
             }
             const results = await uploaderManager.write(files, userRoomToken);
 
@@ -119,10 +121,15 @@ export class FileMessageManager {
             filesUploadStore.update((list) => {
                 for (const [, file] of list) {
                     file.uploadState = uploadingState.error;
-                    file.errorMessage = err.response?.data.message;
-                    file.errorStatus = err.response?.status;
-                    if (err.response?.data.maxFileSize) {
-                        file.maxFileSize = `(< ${err.response?.data.maxFileSize / 1_048_576}Mo)`;
+                    if(err instanceof NotLoggedUser){
+                        file.errorMessage = 'not-logged';
+                        file.errorStatus = 401;
+                    } else {
+                        file.errorMessage = err.response?.data.message;
+                        file.errorStatus = err.response?.status;
+                        if (err.response?.data.maxFileSize) {
+                            file.maxFileSize = `(< ${err.response?.data.maxFileSize / 1_048_576}Mo)`;
+                        }
                     }
                     list.set(file.name, file);
                 }
