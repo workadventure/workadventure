@@ -758,6 +758,9 @@ export class MucRoom {
                         }
                     }
                 } else {
+                    if (userJID.toString() === this.getMyJID().toString() && this.getAllSubscriptionsId === "") {
+                        this.loadingSubscribers.set(false);
+                    }
                     this.updateUser(
                         userJID,
                         from.resource,
