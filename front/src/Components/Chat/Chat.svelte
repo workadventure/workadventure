@@ -79,6 +79,7 @@
                                         isLogged: localUserStore.isLogged(),
                                         availabilityStatus: get(availabilityStatusStore),
                                         roomName: connectionManager.currentRoom?.roomName ?? null,
+                                        visitCardUrl: gameManager.myVisitCardUrl,
                                     },
                                 },
                                 "*"

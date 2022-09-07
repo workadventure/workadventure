@@ -11,6 +11,7 @@ const en_US: BaseTranslation = {
         search: "Just look it up!",
         walkTo: "Walk to",
         teleporting: "Teleporting ...",
+        businessCard: "Business Card",
     },
     reconnecting: "Connection to presence server ...",
     waitingData: "Waiting user data ...",

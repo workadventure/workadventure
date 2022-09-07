@@ -11,6 +11,7 @@ const fr_FR: Translation = {
         search: "Il suffit de chercher !",
         walkTo: "Marcher jusqu'à",
         teleporting: "Téléportation ...",
+        businessCard: "Carte de visite",
     },
     reconnecting: "Connexion au serveur ...",
     waitingData: "En attentes des informations de l'utilisateur ...",

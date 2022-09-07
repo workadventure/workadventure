@@ -35,6 +35,7 @@ export type User = {
     jid: string;
     isMember: boolean;
     availabilityStatus: number;
+    visitCardUrl?: string | null;
 };
 
 export const ChatStates = {
@@ -119,6 +120,7 @@ export const defaultUserData: UserData = {
     isLogged: false,
     availabilityStatus: 0,
     roomName: null,
+    visitCardUrl: null,
 };
 
 export const defaultUser: User = {
@@ -138,6 +140,7 @@ export const defaultUser: User = {
     jid: "",
     isMember: false,
     availabilityStatus: 0,
+    visitCardUrl: null,
 };
 
 export type DeleteMessageStore = Readable<string[]>;
@@ -363,6 +366,7 @@ export class MucRoom {
                 // If you can subscribe to the default muc room, this is that you are a member
                 isMember: mucRoomsStore.getDefaultRoom()?.subscribe ?? false,
                 availabilityStatus: get(availabilityStatusStore),
+                visitCardUrl: get(userStore).visitCardUrl,
             })
         );
         if (!this.closed) {
@@ -742,6 +746,7 @@ export class MucRoom {
                 const color = xml.getChild("user")?.getAttr("color");
                 const woka = xml.getChild("user")?.getAttr("woka");
                 const isMember = xml.getChild("user")?.getAttr("isMember");
+                const visitCardUrl = xml.getChild("user")?.getAttr("visitCardUrl");
                 const availabilityStatus = parseInt(xml.getChild("user")?.getAttr("availabilityStatus"));
                 //const affiliation = x.getChild("item")?.getAttr("affiliation");
                 const role = x.getChild("item")?.getAttr("role");
@@ -772,7 +777,9 @@ export class MucRoom {
                         woka,
                         ["admin", "owner"].includes(role),
                         isMember === "true",
-                        availabilityStatus
+                        availabilityStatus,
+                        null,
+                        visitCardUrl
                     );
                 }
 
@@ -1056,6 +1063,10 @@ export class MucRoom {
         return get(this.presenceStore).get(jid.toString())?.availabilityStatus ?? 0;
     }
 
+    private getVisitCardUrl(jid: JID | string) {
+        return get(this.presenceStore).get(jid.toString())?.visitCardUrl ?? null;
+    }
+
     private getMeIsAdmin() {
         return get(this.meStore).isAdmin;
     }
@@ -1072,7 +1083,8 @@ export class MucRoom {
         isAdmin: boolean | null = null,
         isMember: boolean | null = null,
         availabilityStatus: number | null = null,
-        chatState: string | null = null
+        chatState: string | null = null,
+        visitCardUrl: string | null = null
     ) {
         let isMe = false;
         const user = get(userStore);
@@ -1102,6 +1114,7 @@ export class MucRoom {
                 jid: jid.toString(),
                 isMember: isMember ?? this.getCurrentIsMember(jid),
                 availabilityStatus: availabilityStatus ?? this.getCurrentAvailabilityStatus(jid),
+                visitCardUrl: visitCardUrl ?? this.getVisitCardUrl(jid),
             });
             numberPresenceUserStore.set(list.size);
             return list;

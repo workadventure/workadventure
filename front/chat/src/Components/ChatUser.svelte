@@ -6,9 +6,11 @@
     import { defaultColor, defaultWoka, MeStore, MucRoom, User } from "../Xmpp/MucRoom";
     import walk from "../../public/static/images/walk.svg";
     import teleport from "../../public/static/images/teleport.svg";
+    import businessCard from "../../public/static/images/business-cards.svg";
     import { GoTo, RankUp, RankDown, Ban } from "../Type/CustomEvent";
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
+    import { iframeListener } from "../IframeListener";
 
     const dispatch = createEventDispatcher<{
         goTo: GoTo;
@@ -53,6 +55,10 @@
         return;
         //dispatch("ban", { user, name, playUri });
         //closeChatUserMenu();
+    }
+    function showBusinessCard(visitCardUrl?: string | null) {
+        if (!visitCardUrl) return;
+        iframeListener.sendShowBusinessCard(visitCardUrl);
     }
 
     function findUserInDefault(jid: string): User | undefined {
@@ -220,6 +226,14 @@
                         on:click|stopPropagation={() => goTo("room", user.playUri, user.uuid)}
                         ><img class="noselect" src={teleport} alt="Teleport to logo" height="13" width="13" />
                         {$LL.userList.teleport()}</span
+                    >
+                {/if}
+                {#if user.visitCardUrl}
+                    <span
+                        class="businessCard wa-dropdown-item"
+                        on:click|stopPropagation={() => showBusinessCard(user.visitCardUrl)}
+                        ><img class="noselect" src={businessCard} alt="Business card" height="13" width="13" />
+                        {$LL.userList.businessCard()}</span
                     >
                 {/if}
                 {#if $meStore.isAdmin}
