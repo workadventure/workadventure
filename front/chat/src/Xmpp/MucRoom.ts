@@ -158,6 +158,8 @@ export class MucRoom {
     public canLoadOlderMessages: boolean;
     private closed: boolean = false;
     private description: string = "";
+    private getAllSubscriptionsId: string = "";
+    private loadingSubscribers: Writable<boolean>;
 
     constructor(
         private connection: ChatConnection,
@@ -177,6 +179,7 @@ export class MucRoom {
         this.countMessagesToSee = writable<number>(0);
         this.loadingStore = writable<boolean>(false);
         this.canLoadOlderMessages = true;
+        this.loadingSubscribers = writable<boolean>(true);
 
         //refrech react message
         this.messageReactStore.subscribe((reacts) => {
@@ -261,19 +264,21 @@ export class MucRoom {
     }
 
     private requestAllSubscribers() {
+        const uuid = uuidv4();
         const messageMucListAllUsers = xml(
             "iq",
             {
                 type: "get",
                 to: jid(this.roomJid.local, this.roomJid.domain).toString(),
                 from: this.jid,
-                id: uuidv4(),
+                id: uuid,
             },
             xml("subscriptions", {
                 xmlns: "urn:xmpp:mucsub:0",
             })
         );
         if (!this.closed) {
+            this.getAllSubscriptionsId = uuid;
             this.connection.emitXmlMessage(messageMucListAllUsers);
             if (_VERBOSE) console.warn("[XMPP]", ">> Get all subscribers sent");
         }
@@ -753,6 +758,9 @@ export class MucRoom {
                         }
                     }
                 } else {
+                    if (userJID.toString() === this.getMyJID().toString() && this.getAllSubscriptionsId === "") {
+                        this.loadingSubscribers.set(false);
+                    }
                     this.updateUser(
                         userJID,
                         from.resource,
@@ -781,7 +789,8 @@ export class MucRoom {
             // Manage registered subscriptions old and new one
             const subscriptions = xml.getChild("subscriptions")?.getChildren("subscription");
             const playUri = xml.getChild("room")?.getAttr("playUri");
-            if (subscriptions) {
+            if (subscriptions && this.getAllSubscriptionsId === xml.getAttr("id")) {
+                this.loadingSubscribers.set(false);
                 subscriptions.forEach((subscription) => {
                     const jid = subscription.getAttr("jid");
                     const nick = subscription.getAttr("nick");
@@ -1167,6 +1176,10 @@ export class MucRoom {
 
     public getLoadingStore() {
         return this.loadingStore;
+    }
+
+    public getLoadingSubscribersStore() {
+        return this.loadingSubscribers;
     }
 
     public getUrl(): string {
