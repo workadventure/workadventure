@@ -161,9 +161,9 @@
     }
 
     function analyseText() {
-        if(newMessageText === ""){
+        if (newMessageText === "") {
             mucRoom.updateComposingState(ChatStates.PAUSED);
-        }else{
+        } else {
             mucRoom.updateComposingState(ChatStates.COMPOSING);
         }
 
