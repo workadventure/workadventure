@@ -161,6 +161,12 @@
     }
 
     function analyseText() {
+        if (newMessageText === "") {
+            mucRoom.updateComposingState(ChatStates.PAUSED);
+        } else {
+            mucRoom.updateComposingState(ChatStates.COMPOSING);
+        }
+
         const values = newMessageText.match(regexUserTag);
         if (values != undefined) {
             const userNameSearching = (values.pop() as string).substring(1);
@@ -356,11 +362,6 @@
                             setTimeout(() => (newMessageText = ""), 10);
                             return false;
                         }
-                        return true;
-                    }}
-                    on:keypress={() => {
-                        adjustHeight();
-                        mucRoom.updateComposingState(ChatStates.COMPOSING);
                         return true;
                     }}
                     rows="1"
