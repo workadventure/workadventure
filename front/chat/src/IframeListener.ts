@@ -212,6 +212,16 @@ class IframeListener {
             "*"
         );
     }
+
+    sendShowBusinessCard(visitCardUrl: string) {
+        window.parent.postMessage(
+            {
+                type: "showBusinessCard",
+                data: { visitCardUrl },
+            },
+            "*"
+        );
+    }
 }
 
 export const iframeListener = new IframeListener();
