@@ -35,7 +35,7 @@ class IframeListener {
                     switch (iframeEvent.type) {
                         case "userData": {
                             userStore.set(iframeEvent.data);
-                            console.log('UserRoomToken :', userStore.get()?.userRoomToken);
+                            console.log("UserRoomToken :", userStore.get()?.userRoomToken);
                             if (!connectionManager.connection) {
                                 connectionManager.init(
                                     iframeEvent.data.playUri,
