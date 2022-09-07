@@ -6,6 +6,7 @@
     import { fly } from "svelte/transition";
     import LL from "../i18n/i18n-svelte";
     import { Ban, GoTo, RankDown, RankUp } from "../Type/CustomEvent";
+    import Loader from "./Loader.svelte";
     const dispatch = createEventDispatcher<{
         goTo: GoTo;
         rankUp: RankUp;
@@ -33,6 +34,8 @@
         window.parent.postMessage({ type: "openInviteMenu" }, "*");
     }
 
+    $: loadingSubscribersStore = mucRoom.getLoadingSubscribersStore();
+
     $: usersList = [...$usersListStore.values()] as Array<User>;
     $: me = usersList.find((user) => user.isMe);
     $: meArray = me ? [me] : [];
@@ -55,11 +58,13 @@
 
 <div id="users" class="users tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
     <div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
-        <span
-            class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
-        >
-            {usersList.filter((user) => user.active).length}
-        </span>
+        {#if !$loadingSubscribersStore}
+            <span
+                class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
+            >
+                {usersList.filter((user) => user.active).length}
+            </span>
+        {/if}
         <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
             {$LL.users()}
         </p>
@@ -69,13 +74,8 @@
     </div>
     {#if showUsers}
         <div transition:fly={{ y: -30, duration: 100 }}>
-            {#if usersList.length === 0}
-                <div class="tw-px-5 tw-mb-2">
-                    <p>{$LL.roomEmpty()}</p>
-                    <button type="button" class="light tw-m-auto tw-cursor-pointer tw-px-3" on:click={showInviteMenu}>
-                        {$LL.invite()}
-                    </button>
-                </div>
+            {#if $loadingSubscribersStore}
+                <Loader text={$LL.loadingUsers()} height="tw-h-40" />
             {:else}
                 {#each usersFiltered as user}
                     <ChatUser
@@ -90,6 +90,20 @@
                         {meStore}
                     />
                 {/each}
+                {#if usersList.filter((user) => !user.isMe).length === 0}
+                    <div
+                        class="tw-mt-2 tw-px-5 tw-py-4 tw-border-t tw-border-solid tw-border-0 tw-border-transparent tw-border-t-light-purple"
+                    >
+                        <p>{$LL.roomEmpty()}</p>
+                        <button
+                            type="button"
+                            class="light tw-m-auto tw-cursor-pointer tw-px-3"
+                            on:click={showInviteMenu}
+                        >
+                            {$LL.invite()}
+                        </button>
+                    </div>
+                {/if}
             {/if}
         </div>
         {#if [...$usersListStore].length > maxUsersMinimized}

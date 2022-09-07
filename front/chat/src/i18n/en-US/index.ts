@@ -40,6 +40,7 @@ const en_US: BaseTranslation = {
         ban: "Ban this user",
     },
     loading: "Loading",
+    loadingUsers: "Loading the users ...",
     load: "Load",
     rankUp: "Promote",
     rankDown: "Retrograde",
@@ -92,7 +93,7 @@ const en_US: BaseTranslation = {
     copy: "Copy",
     copied: "Copied !",
     file: {
-        fileContentNoEmbed: "Content invailable for viewing. Please doawnload it",
+        fileContentNoEmbed: "Content unavailable for viewing. Please download it",
         download: "download",
         openCoWebsite: "Open in co-website",
         copy: "copy the link",
