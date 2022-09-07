@@ -103,16 +103,20 @@ test.describe('Chat', () => {
       await page.keyboard.press('ArrowUp', {delay: 500});
       await expect(chat.locator('#liveRooms')).toContainText('liveZone');
 
+      // Open forum
+      await chat.locator('#liveRooms .wa-chat-item .wa-dropdown button').click();
+      await chat.locator('#liveRooms .wa-chat-item .wa-dropdown .open').click();
+
 
       // Send a file in a message being logged in
-      await chat.locator('#activeThread input#file').setInputFiles('README.md');
+      await chat.locator('#activeThread input#file').setInputFiles('file.txt');
       await expect(chat.locator('#activeThread #send')).toHaveClass(/can-send/);
       await chat.locator('#activeThread #send').click();
       await expect(chat.locator('#activeThread .wa-messages-list .wa-message').last()).toHaveClass(/sent/);
-      await expect(chat.locator('#activeThread .wa-messages-list .wa-message').last().locator('.file')).toContainText('README.md');
+      await expect(chat.locator('#activeThread .wa-messages-list .wa-message').last().locator('.file')).toContainText('file.txt');
       // Receive the file
       await expect(chat2.locator('#activeThread .wa-messages-list .wa-message').last()).toHaveClass(/received/);
-      await expect(chat2.locator('#activeThread .wa-messages-list .wa-message').last().locator('.file')).toContainText('README.md');
+      await expect(chat2.locator('#activeThread .wa-messages-list .wa-message').last().locator('.file')).toContainText('file.txt');
 
       /*
       // TODO later : Manage admin in live zone based on our WorkAdventure role
