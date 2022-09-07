@@ -762,7 +762,7 @@ export class MucRoom {
                         type === "unavailable" ? USER_STATUS_DISCONNECTED : USER_STATUS_AVAILABLE,
                         color,
                         woka,
-                        ["moderator", "owner"].includes(role),
+                        ["admin", "owner"].includes(role),
                         isMember === "true",
                         availabilityStatus
                     );
@@ -1108,11 +1108,10 @@ export class MucRoom {
 
     public updateComposingState(state: string) {
         if (state === ChatStates.COMPOSING) {
-            if (!this.composingTimeOut) {
-                this.sendChatState(ChatStates.COMPOSING);
-            } else {
+            if (this.composingTimeOut) {
                 clearTimeout(this.composingTimeOut);
             }
+            this.sendChatState(ChatStates.COMPOSING);
             this.composingTimeOut = setTimeout(() => {
                 this.sendChatState(ChatStates.PAUSED);
                 if (this.composingTimeOut) {

@@ -445,6 +445,7 @@ class IframeListener {
 
     registerChatIframe(iframe: HTMLIFrameElement): void {
         this.registerIframe(iframe);
+        this.chatIframe = iframe;
         if (this.messagesToChatQueue.size > 0) {
             this.messagesToChatQueue.forEach((message, time) => {
                 this.postMessageToChat(message);
@@ -870,7 +871,7 @@ class IframeListener {
      */
     public postMessage(message: IframeResponseEvent, exceptOrigin?: MessageEventSource) {
         for (const iframe of this.iframes) {
-            if (exceptOrigin === iframe.contentWindow) {
+            if (exceptOrigin === iframe.contentWindow || iframe.src === this.chatIframe?.src) {
                 continue;
             }
             iframe.contentWindow?.postMessage(message, "*");

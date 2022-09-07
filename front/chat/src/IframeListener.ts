@@ -44,6 +44,8 @@ class IframeListener {
                                     iframeEvent.data.uuid,
                                     iframeEvent.data.authToken
                                 );
+                            } else {
+                                mucRoomsStore.sendPresences();
                             }
                             break;
                         }

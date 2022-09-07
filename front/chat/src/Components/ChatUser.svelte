@@ -37,16 +37,22 @@
         closeChatUserMenu();
     }
     function rankUp(jid: string) {
-        dispatch("rankUp", { jid });
-        closeChatUserMenu();
+        console.info("Rank up feature from workadventure chat coming soon!", jid);
+        return;
+        /*dispatch("rankUp", { jid });
+        closeChatUserMenu();*/
     }
     function rankDown(jid: string) {
-        dispatch("rankDown", { jid });
-        closeChatUserMenu();
+        console.info("Rank down feature from workadventure chat coming soon!", jid);
+        return;
+        /*dispatch("rankDown", { jid });
+        closeChatUserMenu();*/
     }
     function ban(user: string, name: string, playUri: string) {
-        dispatch("ban", { user, name, playUri });
-        closeChatUserMenu();
+        console.info("ban feature from workadventure chat coming soon!", user, name, playUri);
+        return;
+        //dispatch("ban", { user, name, playUri });
+        //closeChatUserMenu();
     }
 
     function findUserInDefault(jid: string): User | undefined {
@@ -220,19 +226,19 @@
                     <span
                         class="ban wa-dropdown-item tw-text-pop-red"
                         on:click|stopPropagation={() => ban(user.jid, user.name, user.playUri)}
-                        ><SlashIcon size="13" /> {$LL.ban.title()}</span
+                        ><SlashIcon size="13" /> {$LL.ban.title()} (coming soon)</span
                     >
                     {#if user.isAdmin}
                         <span
                             class="rank-down wa-dropdown-item tw-text-orange"
                             on:click|stopPropagation={() => rankDown(user.jid)}
-                            ><ShieldOffIcon size="13" /> {$LL.rankDown()}</span
+                            ><ShieldOffIcon size="13" /> {$LL.rankDown()} (coming soon)</span
                         >
                     {:else}
                         <span
                             class="rank-up wa-dropdown-item tw-text-orange"
                             on:click|stopPropagation={() => rankUp(user.jid)}
-                            ><ShieldIcon size="13" /> {$LL.rankUp()}</span
+                            ><ShieldIcon size="13" /> {$LL.rankUp()} (coming soon)</span
                         >
                     {/if}
                 {/if}
