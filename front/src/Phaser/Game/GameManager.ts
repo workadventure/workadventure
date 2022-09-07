@@ -18,6 +18,7 @@ import { myCameraStore } from "../../Stores/MyMediaStore";
  */
 export class GameManager {
     private playerName: string | null;
+    private visitCardUrl: string | null;
     private characterLayers: string[] | null;
     private companion: string | null;
     private startRoom!: Room;
@@ -65,6 +66,10 @@ export class GameManager {
         localUserStore.setName(name);
     }
 
+    public setVisitCardurl(visitCardUrl: string): void {
+        this.visitCardUrl = visitCardUrl;
+    }
+
     public setCharacterLayers(layers: string[]): void {
         this.characterLayers = layers;
         localUserStore.setCharacterLayers(layers);
@@ -72,6 +77,10 @@ export class GameManager {
 
     getPlayerName(): string | null {
         return this.playerName;
+    }
+
+    get myVisitCardUrl(): string | null {
+        return this.visitCardUrl;
     }
 
     getCharacterLayers(): string[] {
