@@ -83,7 +83,7 @@ test.describe('Chat', () => {
       await expect(chat.locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.message-replied')).toContainText('Hello, how are you ?');
 
       // Generate bulk file
-      //if(!fileExist('./file.txt')) await createFileOfSize('./file.txt', 10_485_860);
+      if(!fileExist('./file.txt')) await createFileOfSize('./file.txt', 10_485_860);
 
       // Try upload file but not logged in
       if(fileExist('./file.txt')){
@@ -96,9 +96,15 @@ test.describe('Chat', () => {
       // Log in
       await oidcLogin(page);
 
+      await openChat(page);
+
+      // Enter liveZone
+      await page.keyboard.press('ArrowRight', {delay: 2_500});
+      await page.keyboard.press('ArrowUp', {delay: 500});
+      await expect(chat.locator('#liveRooms')).toContainText('liveZone');
 
 
-      /*
+
       // FIXME Try to send file if logged
       // Send a file in a message
       await chat.locator('#activeThread input#file').setInputFiles('README.md');
@@ -109,7 +115,6 @@ test.describe('Chat', () => {
       // Receive the file
       await expect(chat2.locator('#activeThread .wa-messages-list .wa-message').last()).toHaveClass(/received/);
       await expect(chat2.locator('#activeThread .wa-messages-list .wa-message').last().locator('.file')).toContainText('README.md');
-      */
 
       /*
       // TODO later : Manage admin in live zone based on our WorkAdventure role
