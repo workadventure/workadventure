@@ -56,8 +56,8 @@
         //dispatch("ban", { user, name, playUri });
         //closeChatUserMenu();
     }
-    function showBusinessCard(visitCardUrl?: string|null) {
-        if(!visitCardUrl)return;
+    function showBusinessCard(visitCardUrl?: string | null) {
+        if (!visitCardUrl) return;
         iframeListener.sendShowBusinessCard(visitCardUrl);
     }
 

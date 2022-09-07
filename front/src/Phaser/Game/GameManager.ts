@@ -18,7 +18,6 @@ import { myCameraStore } from "../../Stores/MyMediaStore";
  */
 export class GameManager {
     private playerName: string | null;
-    private visitCardUrl: string | null;
     private characterLayers: string[] | null;
     private companion: string | null;
     private startRoom!: Room;
@@ -26,6 +25,7 @@ export class GameManager {
     private currentGameSceneName: string | null = null;
     // Note: this scenePlugin is the scenePlugin of the EntryScene. We should always provide a key in methods called on this scenePlugin.
     private scenePlugin!: Phaser.Scenes.ScenePlugin;
+    private visitCardUrl: string | null = null;
 
     constructor() {
         this.playerName = localUserStore.getName();
