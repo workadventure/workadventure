@@ -391,7 +391,7 @@
                         on:click|preventDefault|stopPropagation={() => {
                             handlerDeleteUploadedFile(fileUploaded);
                         }}
-                        class="tw-pr-0 tw-mr-0"
+                        class="delete tw-pr-0 tw-mr-0"
                     >
                         <Trash2Icon size="14" />
                     </button>
