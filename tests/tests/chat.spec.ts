@@ -104,9 +104,7 @@ test.describe('Chat', () => {
       await expect(chat.locator('#liveRooms')).toContainText('liveZone');
 
 
-
-      // FIXME Try to send file if logged
-      // Send a file in a message
+      // Send a file in a message being logged in
       await chat.locator('#activeThread input#file').setInputFiles('README.md');
       await expect(chat.locator('#activeThread #send')).toHaveClass(/can-send/);
       await chat.locator('#activeThread #send').click();
