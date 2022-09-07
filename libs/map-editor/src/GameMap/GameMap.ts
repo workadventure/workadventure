@@ -231,4 +231,14 @@ export class GameMap {
         }
         return false;
     }
+
+    /**
+     * @return lowest possible available id for new object to be created
+     */
+    public getNextObjectId(): number | undefined {
+        if (this.map.nextobjectid !== undefined) {
+            return this.map.nextobjectid++;
+        }
+        return undefined;
+    }
 }

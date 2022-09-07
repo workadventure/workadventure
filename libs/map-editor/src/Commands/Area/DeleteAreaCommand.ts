@@ -1,6 +1,7 @@
 import { GameMap } from '../../GameMap/GameMap';
 import { AreaType, ITiledMapRectangleObject } from '../../types';
 import { Command } from "../Command";
+import { CreateAreaCommandConfig } from './CreateAreaCommand';
 
 export interface DeleteAreaCommandConfig {
     type: "DeleteAreaCommand";
@@ -27,8 +28,8 @@ export class DeleteAreaCommand extends Command {
         return { type: 'DeleteAreaCommand', id: this.areaConfig.id };
     }
 
-    public undo(): DeleteAreaCommandConfig {
+    public undo(): CreateAreaCommandConfig {
         this.gameMap.getGameMapAreas().addArea(this.areaConfig, AreaType.Static);
-        return { type: 'DeleteAreaCommand', id: this.areaConfig.id };
+        return { type: 'CreateAreaCommand', areaObjectConfig: this.areaConfig };
     }
 }

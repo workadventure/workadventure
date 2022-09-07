@@ -97,6 +97,10 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 mapEditorModeStore.switchMode(!get(mapEditorModeStore));
                 break;
             }
+            case "KeyI": {
+                console.log(this.gameScene.getGameMap().getNextObjectId());
+                break;
+            }
             default: {
                 break;
             }

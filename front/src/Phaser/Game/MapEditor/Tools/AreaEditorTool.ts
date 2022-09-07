@@ -55,6 +55,14 @@ export class AreaEditorTool extends MapEditorTool {
                     break;
                 }
                 case "createAreaMessage": {
+                    const data = message.message.createAreaMessage;
+                    const config = {
+                        class: "area",
+                        name: "NEW STATIC AREA ;*",
+                        visible: true,
+                        ...data,
+                    };
+                    this.handleAreaPreviewCreation(config);
                     break;
                 }
                 case "deleteAreaMessage": {
@@ -111,6 +119,28 @@ export class AreaEditorTool extends MapEditorTool {
                 this.handleAreaPreviewDeletion(areaPreview);
                 break;
             }
+            case "l": {
+                const nextId = this.scene.getGameMap().getNextObjectId();
+                if (nextId === undefined) {
+                    break;
+                }
+                console.log(this.scene.input.activePointer.x, this.scene.input.activePointer.y);
+                this.mapEditorModeManager.executeCommand({
+                    type: "CreateAreaCommand",
+                    areaObjectConfig: {
+                        id: nextId,
+                        class: "area",
+                        name: "NEW STATIC AREA ;*",
+                        visible: true,
+                        width: 100,
+                        height: 100,
+                        x: this.scene.input.activePointer.x,
+                        y: this.scene.input.activePointer.y,
+                    },
+                });
+                this.scene.markDirty(); // make sure to refresh view and show new area preview
+                break;
+            }
             default: {
                 break;
             }
@@ -121,6 +151,13 @@ export class AreaEditorTool extends MapEditorTool {
         this.deleteAreaPreview(areaPreview.getConfig().id);
         this.scene.markDirty();
         mapEditorSelectedAreaPreviewStore.set(undefined);
+    }
+
+    private handleAreaPreviewCreation(config: ITiledMapRectangleObject): void {
+        const areaPreview = new AreaPreview(this.scene, { ...config });
+        this.bindAreaPreviewEventHandlers(areaPreview);
+        this.areaPreviews.push(areaPreview);
+        this.scene.markDirty();
     }
 
     private getAreaPreview(id: number): AreaPreview | undefined {

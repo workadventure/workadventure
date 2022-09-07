@@ -46,11 +46,18 @@ const mapStorageServer: MapStorageServer = {
                     break;
                 }
                 case "createAreaMessage": {
-                    // const message = editMapMessage.message.createAreaMessage;
-                    // mapsManager.executeCommand(call.request.mapKey, {
-                    //     type: "DeleteAreaCommand",
-                    //     id: message.id,
-                    // });
+                    const message = editMapMessage.message.createAreaMessage;
+                    console.log(message);
+                    const areaObjectConfig: ITiledMapRectangleObject = {
+                        class: "area",
+                        name: "",
+                        visible: true,
+                        ...message,
+                    };
+                    mapsManager.executeCommand(call.request.mapKey, {
+                        areaObjectConfig,
+                        type: "CreateAreaCommand",
+                    });
                     break;
                 }
                 case "deleteAreaMessage": {

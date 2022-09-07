@@ -1,4 +1,10 @@
-import { CommandConfig, UpdateAreaCommand, Command, DeleteAreaCommand } from "@workadventure/map-editor";
+import {
+    CommandConfig,
+    UpdateAreaCommand,
+    CreateAreaCommand,
+    Command,
+    DeleteAreaCommand,
+} from "@workadventure/map-editor";
 import { Unsubscriber } from "svelte/store";
 import { RoomConnection } from "../../../Connexion/RoomConnection";
 import { mapEditorModeDragCameraPointerDownStore, mapEditorModeStore } from "../../../Stores/MapEditorStore";
@@ -74,6 +80,10 @@ export class MapEditorModeManager {
         switch (commandConfig.type) {
             case "UpdateAreaCommand": {
                 command = new UpdateAreaCommand(this.scene.getGameMap(), commandConfig);
+                break;
+            }
+            case "CreateAreaCommand": {
+                command = new CreateAreaCommand(this.scene.getGameMap(), commandConfig);
                 break;
             }
             case "DeleteAreaCommand": {
@@ -179,12 +189,11 @@ export class MapEditorModeManager {
                 this.scene.connection?.emitMapEditorModifyArea(commandConfig.areaObjectConfig);
                 break;
             }
-            // case "CreateAreaCommand": {
-            //     this.scene.connection?.emitMapEditorCreateArea(commandConfig.);
-            //     break;
-            // }
+            case "CreateAreaCommand": {
+                this.scene.connection?.emitMapEditorCreateArea(commandConfig.areaObjectConfig);
+                break;
+            }
             case "DeleteAreaCommand": {
-                console.log("EMIT DELETE AREA COMMAND");
                 this.scene.connection?.emitMapEditorDeleteArea(commandConfig.id);
                 break;
             }

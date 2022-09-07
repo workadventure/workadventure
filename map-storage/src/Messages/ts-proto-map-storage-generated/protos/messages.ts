@@ -223,10 +223,10 @@ export interface DeleteAreaMessage {
 
 export interface CreateAreaMessage {
     id: number;
-    x?: number | undefined;
-    y?: number | undefined;
-    width?: number | undefined;
-    height?: number | undefined;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
 }
 
 export interface ClientToServerMessage {
@@ -1956,7 +1956,7 @@ export const DeleteAreaMessage = {
 };
 
 function createBaseCreateAreaMessage(): CreateAreaMessage {
-    return { id: 0, x: undefined, y: undefined, width: undefined, height: undefined };
+    return { id: 0, x: 0, y: 0, width: 0, height: 0 };
 }
 
 export const CreateAreaMessage = {
@@ -1964,16 +1964,16 @@ export const CreateAreaMessage = {
         if (message.id !== 0) {
             writer.uint32(8).int32(message.id);
         }
-        if (message.x !== undefined) {
+        if (message.x !== 0) {
             writer.uint32(16).uint32(message.x);
         }
-        if (message.y !== undefined) {
+        if (message.y !== 0) {
             writer.uint32(24).uint32(message.y);
         }
-        if (message.width !== undefined) {
+        if (message.width !== 0) {
             writer.uint32(32).uint32(message.width);
         }
-        if (message.height !== undefined) {
+        if (message.height !== 0) {
             writer.uint32(40).uint32(message.height);
         }
         return writer;
@@ -2012,10 +2012,10 @@ export const CreateAreaMessage = {
     fromJSON(object: any): CreateAreaMessage {
         return {
             id: isSet(object.id) ? Number(object.id) : 0,
-            x: isSet(object.x) ? Number(object.x) : undefined,
-            y: isSet(object.y) ? Number(object.y) : undefined,
-            width: isSet(object.width) ? Number(object.width) : undefined,
-            height: isSet(object.height) ? Number(object.height) : undefined,
+            x: isSet(object.x) ? Number(object.x) : 0,
+            y: isSet(object.y) ? Number(object.y) : 0,
+            width: isSet(object.width) ? Number(object.width) : 0,
+            height: isSet(object.height) ? Number(object.height) : 0,
         };
     },
 
@@ -2032,10 +2032,10 @@ export const CreateAreaMessage = {
     fromPartial<I extends Exact<DeepPartial<CreateAreaMessage>, I>>(object: I): CreateAreaMessage {
         const message = createBaseCreateAreaMessage();
         message.id = object.id ?? 0;
-        message.x = object.x ?? undefined;
-        message.y = object.y ?? undefined;
-        message.width = object.width ?? undefined;
-        message.height = object.height ?? undefined;
+        message.x = object.x ?? 0;
+        message.y = object.y ?? 0;
+        message.width = object.width ?? 0;
+        message.height = object.height ?? 0;
         return message;
     },
 };

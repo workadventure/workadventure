@@ -121,10 +121,10 @@ message DeleteAreaMessage {
 
 message CreateAreaMessage {
   int32 id = 1;
-  optional uint32 x = 2;
-  optional uint32 y = 3;
-  optional uint32 width = 4;
-  optional uint32 height = 5;
+  uint32 x = 2;
+  uint32 y = 3;
+  uint32 width = 4;
+  uint32 height = 5;
 }
 
 message ClientToServerMessage {

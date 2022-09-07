@@ -1,4 +1,11 @@
-import { Command, CommandConfig, GameMap, UpdateAreaCommand, DeleteAreaCommand } from "@workadventure/map-editor";
+import {
+    Command,
+    CommandConfig,
+    GameMap,
+    UpdateAreaCommand,
+    DeleteAreaCommand,
+    CreateAreaCommand,
+} from "@workadventure/map-editor";
 import { writeFileSync } from "fs";
 import { readFile } from "fs/promises";
 
@@ -36,6 +43,11 @@ class MapsManager {
         switch (commandConfig.type) {
             case "UpdateAreaCommand": {
                 command = new UpdateAreaCommand(gameMap, commandConfig);
+                command.execute();
+                break;
+            }
+            case "CreateAreaCommand": {
+                command = new CreateAreaCommand(gameMap, commandConfig);
                 command.execute();
                 break;
             }

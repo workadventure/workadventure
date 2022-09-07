@@ -1,4 +1,4 @@
-import { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
+import { ITiledMapObject, ITiledMapObjectLayer } from "@workadventure/tiled-map-type-guard";
 import { MathUtils } from "@workadventure/math-utils";
 import { GameMap } from "./GameMap";
 import { AreaType, ITiledMapRectangleObject } from '../types';
@@ -95,6 +95,13 @@ export class GameMapAreas {
         playerPosition?: { x: number; y: number }
     ): void {
         this.getAreas(type).push(area);
+        const floorLayer = this.gameMap.getMap().layers.find(layer => layer.name === "floorLayer");
+        if (floorLayer) {
+            (floorLayer as ITiledMapObjectLayer).objects.push(area);
+            // as we are making changes to the map itself, we can update tiledObjects helper array too!
+            console.log('PUSH TO THE TILED OBJECTS');
+            this.gameMap.tiledObjects.push(area);
+        }
 
         if (playerPosition && this.isPlayerInsideAreaByName(area.name, type, playerPosition)) {
             this.triggerSpecificAreaOnEnter(area);
@@ -199,6 +206,7 @@ export class GameMapAreas {
     }
 
     private deleteStaticArea(id: number): boolean {
+        // TODO: TiledObjects is not up to date! They are a reference because only first level of flatLayers objects are deep copied!
         const index = this.gameMap.tiledObjects.findIndex((object) => object.id === id);
         if (index !== -1) {
             this.gameMap.tiledObjects.splice(index, 1);
