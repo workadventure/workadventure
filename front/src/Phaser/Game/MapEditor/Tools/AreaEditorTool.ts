@@ -203,7 +203,6 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     public handleAreaPreviewCreation(config: ITiledMapRectangleObject): void {
-        this.scene.getGameMap().incrementNextObjectId();
         const areaPreview = new AreaPreview(this.scene, { ...config });
         this.bindAreaPreviewEventHandlers(areaPreview);
         this.areaPreviews.push(areaPreview);

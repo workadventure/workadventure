@@ -23,6 +23,7 @@ export class CreateAreaCommand extends Command {
 
     public execute(): CreateAreaCommandConfig {
         this.gameMap.getGameMapAreas().addArea(this.areaConfig, AreaType.Static);
+        this.gameMap.incrementNextObjectId();
         return { type: 'CreateAreaCommand', areaObjectConfig: this.areaConfig };
     }
 
