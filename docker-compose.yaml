@@ -240,6 +240,7 @@ services:
       REDIS_DB_NUMBER: "$UPLOADER_REDIS_DB_NUMBER"
       ADMIN_API_URL: "$ADMIN_API_URL"
       ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
+      UPLOAD_MAX_FILESIZE: "$UPLOAD_MAX_FILESIZE"
     volumes:
       - ./uploader:/usr/src/app
     labels:
