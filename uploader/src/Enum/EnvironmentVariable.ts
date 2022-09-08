@@ -1,4 +1,4 @@
-const ENABLE_CHAT_UPLOAD = process.env.ENABLE_CHAT_UPLOAD === "true";
+const ENABLE_CHAT_UPLOAD = process.env.ENABLE_CHAT_UPLOAD || true;
 const UPLOAD_MAX_FILESIZE = parseInt(process.env.UPLOAD_MAX_FILESIZE || '1073741824');
 const ADMIN_API_URL = process.env.ADMIN_API_URL;
 
