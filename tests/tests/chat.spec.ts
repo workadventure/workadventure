@@ -90,11 +90,6 @@ test.describe('Chat', () => {
       await expect(chat.locator('#activeThread .wa-messages-list .wa-message.received').last()).toContainText('Fine, what about you ?');
       await expect(chat.locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.message-replied')).toContainText('Hello, how are you ?');
 
-      // Test if upload is disabled
-      await expect(chat.locator('#activeThread input#file')).toBeHidden();
-
-      execSync('docker-compose exec -it chat export ENABLE_CHAT_UPLOAD=true && docker-compose exec -it uploader export ENABLE_CHAT_UPLOAD=true');
-
       // Generate bulk file
       if(!fileExist('./file.txt')) await createFileOfSize('./file.txt', 5_000_000);
 
