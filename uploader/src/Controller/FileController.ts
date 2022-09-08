@@ -268,24 +268,26 @@ export class FileController extends BaseController {
                         }
                     });
 
-                    if(!ENABLE_CHAT_UPLOAD && !ADMIN_API_URL){
-                        throw new DisabledChat('Upload is disabled');
-                    }
-
-                    if(!userRoomToken && ADMIN_API_URL){
-                        throw new Error('No user room token');
-                    }
-
                     if(params == undefined || chunksByFile.size === 0){
                         throw new Error('no file name');
                     }
 
                     const uploadedFile: {name: string, id: string, location: string, size: number, lastModified: Date, type?: string}[] = [];
                     for(const [fileName, buffer] of chunksByFile){
-                        if(ADMIN_API_URL && userRoomToken) {
-                            await Axios.get(`${ADMIN_API_URL}/api/limit/fileSize`, {headers: {userRoomToken}, params: {fileSize: buffer.byteLength}});
+                        if(ADMIN_API_URL) {
+                            if(!userRoomToken){
+                                throw new Error('No user room token');
+                            } else {
+                                await Axios.get(`${ADMIN_API_URL}/api/limit/fileSize`, {
+                                    headers: {'userRoomToken': userRoomToken},
+                                    params: {fileSize: buffer.byteLength}
+                                });
+                            }
                         } else {
-                            if (buffer.byteLength > UPLOAD_MAX_FILESIZE) {
+                            console.log(fileName, ' : ', buffer.byteLength, 'bytes');
+                            if(!ENABLE_CHAT_UPLOAD){
+                                throw new DisabledChat('Upload is disabled');
+                            } else if (buffer.byteLength > UPLOAD_MAX_FILESIZE) {
                                 throw new ByteLenghtBufferException(`file-too-big`);
                             }
                         }
