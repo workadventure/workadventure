@@ -285,7 +285,7 @@ export class FileController extends BaseController {
                                 });
                             }
                         } else {
-                            console.log(fileName, ' : ', buffer.byteLength, 'bytes');
+                            console.log('FILE SIZE', fileName, ' : ', buffer.byteLength, 'bytes', '//', UPLOAD_MAX_FILESIZE);
                             if(!ENABLE_CHAT_UPLOAD){
                                 throw new DisabledChat('Upload is disabled');
                             } else if (buffer.byteLength > UPLOAD_MAX_FILESIZE) {
@@ -316,6 +316,7 @@ export class FileController extends BaseController {
                     this.addCorsHeaders(res);
                     return res.end(JSON.stringify(uploadedFile));
                 }catch(err){
+                    console.error("FILE upload error", err);
                     if(err instanceof ByteLenghtBufferException){
                         res.writeStatus("413 Request Entity Too Large");
                         this.addCorsHeaders(res);
@@ -350,7 +351,6 @@ export class FileController extends BaseController {
                         this.addCorsHeaders(res);
                         return res.end('not-logged');
                     }
-                    console.error("FILE upload error", err);
                     res.writeStatus("500 Internal Server Error");
                     this.addCorsHeaders(res);
                     return res.end('An error happened');
