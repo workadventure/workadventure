@@ -103,7 +103,7 @@ test.describe('Chat', () => {
       await expect(chat2.locator('#activeThread .wa-messages-list .wa-message').last().locator('.file')).toContainText('fileLittle.txt');
 
       // Generate bulk file
-      if(!fileExist('./fileBig.txt')) await createFileOfSize('./fileBig.txt', 10_485_860);
+      if(!fileExist('./fileBig.txt')) await createFileOfSize('./fileBig.txt', 15_485_760);
       // Try upload file but too big
       await chat.locator('#activeThread input#file').setInputFiles('fileBig.txt');
       await expect(chat.locator('#activeThread #send')).toHaveClass(/cant-send/);
