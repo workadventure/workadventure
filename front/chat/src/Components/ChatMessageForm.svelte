@@ -29,7 +29,7 @@
     import File from "./Content/File.svelte";
     import crown from "../../public/static/svg/icone-premium-crown.svg";
     import { iframeListener } from "../IframeListener";
-    import {ADMIN_API_URL, ENABLE_CHAT_UPLOAD} from "../Enum/EnvironmentVariable";
+    import { ADMIN_API_URL, ENABLE_CHAT_UPLOAD } from "../Enum/EnvironmentVariable";
 
     export let mucRoom: MucRoom;
 
@@ -442,7 +442,7 @@
                         class="tw-px-1 tw-py-1 tw-mx-0.5 tw-my-1 tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-cursor-pointer"
                         ><PaperclipIcon size="17" /></label
                     >
-                    {/if}
+                {/if}
                 <button
                     id="send"
                     type="submit"

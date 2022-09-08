@@ -11,4 +11,13 @@ const enableOpenID = getEnvConfig("ENABLE_OPENID");
 const ENABLE_OPENID =
     enableOpenID !== "" && enableOpenID != undefined && enableOpenID != "0" && enableOpenID.toLowerCase() !== "false";
 
-export { PUSHER_URL, FALLBACK_LOCALE, UPLOADER_URL, EMBEDLY_KEY, ICON_URL, ENABLE_OPENID, ENABLE_CHAT_UPLOAD, ADMIN_API_URL };
+export {
+    PUSHER_URL,
+    FALLBACK_LOCALE,
+    UPLOADER_URL,
+    EMBEDLY_KEY,
+    ICON_URL,
+    ENABLE_OPENID,
+    ENABLE_CHAT_UPLOAD,
+    ADMIN_API_URL,
+};

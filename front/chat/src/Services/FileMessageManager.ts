@@ -3,7 +3,7 @@ import { filesUploadStore } from "../Stores/ChatStore";
 import xml, { Element } from "@xmpp/xml";
 import { get } from "svelte/store";
 import { userStore } from "../Stores/LocalUserStore";
-import {ADMIN_API_URL, ENABLE_CHAT_UPLOAD} from "../Enum/EnvironmentVariable";
+import { ADMIN_API_URL, ENABLE_CHAT_UPLOAD } from "../Enum/EnvironmentVariable";
 
 const _VERBOSE = true;
 
@@ -105,7 +105,7 @@ export class FileMessageManager {
             const userRoomToken = userStore.get().userRoomToken;
             if (!userRoomToken && ADMIN_API_URL) {
                 throw new NotLoggedUser();
-            } else if(!userRoomToken && !ENABLE_CHAT_UPLOAD && !ADMIN_API_URL) {
+            } else if (!userRoomToken && !ENABLE_CHAT_UPLOAD && !ADMIN_API_URL) {
                 throw new DisabledChat();
             }
 
