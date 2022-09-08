@@ -1,4 +1,4 @@
-import { AreaType, ITiledMapRectangleObject } from "@workadventure/map-editor";
+import { AreaType, CreateAreaCommandConfig, ITiledMapRectangleObject } from "@workadventure/map-editor";
 import { Subscription } from "rxjs";
 import { get } from "svelte/store";
 import { RoomConnection } from "../../../../Connexion/RoomConnection";
@@ -47,6 +47,16 @@ export class AreaEditorTool extends MapEditorTool {
             switch (message.message?.$case) {
                 case "modifyAreaMessage": {
                     const data = message.message.modifyAreaMessage;
+                    // execute command locally
+                    this.mapEditorModeManager.executeCommand(
+                        {
+                            type: "UpdateAreaCommand",
+                            areaObjectConfig: data as ITiledMapRectangleObject,
+                        },
+                        false,
+                        false
+                    );
+
                     this.areaPreviews
                         .find((area) => area.getConfig().id === data.id)
                         ?.updatePreview(data as ITiledMapRectangleObject);
@@ -57,16 +67,35 @@ export class AreaEditorTool extends MapEditorTool {
                 case "createAreaMessage": {
                     const data = message.message.createAreaMessage;
                     const config = {
-                        class: "area",
-                        name: "NEW STATIC AREA ;*",
-                        visible: true,
                         ...data,
+                        class: "area",
+                        visible: true,
                     };
+                    // execute command locally
+                    this.mapEditorModeManager.executeCommand(
+                        {
+                            type: "CreateAreaCommand",
+                            areaObjectConfig: config,
+                        },
+                        false,
+                        false
+                    );
+
                     this.handleAreaPreviewCreation(config);
                     break;
                 }
                 case "deleteAreaMessage": {
                     const data = message.message.deleteAreaMessage;
+                    // execute command locally
+                    this.mapEditorModeManager.executeCommand(
+                        {
+                            type: "DeleteAreaCommand",
+                            id: data.id,
+                        },
+                        false,
+                        false
+                    );
+
                     const areaPreview = this.areaPreviews.find((preview) => preview.getConfig().id === data.id);
                     if (!areaPreview) {
                         break;
@@ -120,17 +149,12 @@ export class AreaEditorTool extends MapEditorTool {
                 break;
             }
             case "l": {
-                const nextId = this.scene.getGameMap().getNextObjectId();
-                if (nextId === undefined) {
-                    break;
-                }
-                console.log(this.scene.input.activePointer.x, this.scene.input.activePointer.y);
-                this.mapEditorModeManager.executeCommand({
+                const commandConfig = this.mapEditorModeManager.executeCommand({
                     type: "CreateAreaCommand",
                     areaObjectConfig: {
-                        id: nextId,
+                        id: -1,
                         class: "area",
-                        name: "NEW STATIC AREA ;*",
+                        name: "STATIC_AREA_",
                         visible: true,
                         width: 100,
                         height: 100,
@@ -138,7 +162,10 @@ export class AreaEditorTool extends MapEditorTool {
                         y: this.scene.input.activePointer.y,
                     },
                 });
-                this.scene.markDirty(); // make sure to refresh view and show new area preview
+                if (commandConfig !== undefined) {
+                    // how to be sure we get correct type?
+                    this.handleAreaPreviewCreation((commandConfig as CreateAreaCommandConfig).areaObjectConfig);
+                }
                 break;
             }
             default: {

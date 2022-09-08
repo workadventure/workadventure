@@ -46,8 +46,8 @@ import {
     Zone as ProtoZone,
     AskPositionMessage,
     MoveToPositionMessage,
-    EditMapWithKeyMessage,
     SubToPusherRoomMessage,
+    EditMapCommandWithKeyMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -1069,14 +1069,14 @@ export class SocketManager {
         room.emitLockGroupEvent(user, group.getId());
     }
 
-    handleEditMapWithKeyMessage(room: GameRoom, user: User, message: EditMapWithKeyMessage) {
-        getMapStorageClient().handleEditMapWithKeyMessage(message, (err, editMapMessage) => {
+    handleEditMapCommandWithKeyMessage(room: GameRoom, user: User, message: EditMapCommandWithKeyMessage) {
+        getMapStorageClient().handleEditMapCommandWithKeyMessage(message, (err, editMapMessage) => {
             if (err) {
                 throw err;
             }
             console.log("RETURN MESSAGE FROM MAP-STORAGE");
             const subMessage = new SubToPusherRoomMessage();
-            subMessage.setEditmapmessage(editMapMessage);
+            subMessage.setEditmapcommandmessage(editMapMessage);
 
             const batchMessage = new BatchToPusherRoomMessage();
             batchMessage.addPayload(subMessage);

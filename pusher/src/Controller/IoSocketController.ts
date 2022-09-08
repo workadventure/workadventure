@@ -23,7 +23,7 @@ import {
     AvailabilityStatus,
     QueryMessage,
     PingMessage,
-    EditMapMessage,
+    EditMapCommandMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
@@ -645,8 +645,11 @@ export class IoSocketController {
                     );
                 } else if (message.hasPingmessage()) {
                     client.resetPongTimeout();
-                } else if (message.hasEditmapmessage()) {
-                    socketManager.handleEditMapMessage(client, message.getEditmapmessage() as EditMapMessage);
+                } else if (message.hasEditmapcommandmessage()) {
+                    socketManager.handleEditMapCommandMessage(
+                        client,
+                        message.getEditmapcommandmessage() as EditMapCommandMessage
+                    );
                 } else if (message.hasAskpositionmessage()) {
                     socketManager.handleAskPositionMessage(
                         client,

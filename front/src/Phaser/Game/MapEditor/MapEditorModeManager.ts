@@ -42,7 +42,12 @@ export class MapEditorModeManager {
     /**
      * We are making use of CommandPattern to implement an Undo-Redo mechanism
      */
-    private commandsHistory: Command[];
+    private localCommandsHistory: Command[];
+
+    /**
+     * Every command that was applied on the map either from user or from the outside
+     */
+    private allCommandsHistory: Command[];
     /**
      * Which command was called most recently
      */
@@ -60,7 +65,8 @@ export class MapEditorModeManager {
         this.ctrlKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL);
         this.shiftKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
-        this.commandsHistory = [];
+        this.localCommandsHistory = [];
+        this.allCommandsHistory = [];
         this.currentCommandIndex = -1;
 
         this.active = false;
@@ -75,7 +81,11 @@ export class MapEditorModeManager {
         this.subscribeToGameMapFrontWrapperEvents();
     }
 
-    public executeCommand(commandConfig: CommandConfig): void {
+    public executeCommand(
+        commandConfig: CommandConfig,
+        emitMapEditorUpdate = true,
+        alterLocalCommandsHistory = true
+    ): CommandConfig | undefined {
         let command: Command;
         switch (commandConfig.type) {
             case "UpdateAreaCommand": {
@@ -95,36 +105,50 @@ export class MapEditorModeManager {
                 return;
             }
         }
-        if (command) {
-            // We do an execution instantly so there will be no lag from user's perspective
-            command.execute();
-            this.emitMapEditorUpdate(commandConfig);
+        if (!command) {
+            return;
         }
-        // if we are not at the end of commands history and perform an action, get rid of commands later in history than our current point in time
-        if (this.currentCommandIndex !== this.commandsHistory.length - 1) {
-            this.commandsHistory.splice(this.currentCommandIndex + 1);
+        // We do an execution instantly so there will be no lag from user's perspective
+        const executedCommandConfig = command.execute();
+        if (emitMapEditorUpdate) {
+            this.emitMapEditorUpdate(command.getId(), commandConfig);
         }
-        this.commandsHistory.push(command);
-        this.currentCommandIndex += 1;
+
+        this.allCommandsHistory.push(command);
+
+        if (alterLocalCommandsHistory) {
+            // if we are not at the end of commands history and perform an action, get rid of commands later in history than our current point in time
+            if (this.currentCommandIndex !== this.localCommandsHistory.length - 1) {
+                this.localCommandsHistory.splice(this.currentCommandIndex + 1);
+            }
+            this.localCommandsHistory.push(command);
+            this.currentCommandIndex += 1;
+        }
+        return executedCommandConfig;
     }
 
     public undoCommand(): void {
-        if (this.commandsHistory.length === 0 || this.currentCommandIndex === -1) {
+        if (this.localCommandsHistory.length === 0 || this.currentCommandIndex === -1) {
             return;
         }
-        const command = this.commandsHistory[this.currentCommandIndex].undo();
+        const command = this.localCommandsHistory[this.currentCommandIndex];
+        const commandConfig = command.undo();
         // this should not be called with every change. Use some sort of debounce
-        this.emitMapEditorUpdate(command);
+        this.emitMapEditorUpdate(command.getId(), commandConfig);
         this.currentCommandIndex -= 1;
     }
 
     public redoCommand(): void {
-        if (this.commandsHistory.length === 0 || this.currentCommandIndex === this.commandsHistory.length - 1) {
+        if (
+            this.localCommandsHistory.length === 0 ||
+            this.currentCommandIndex === this.localCommandsHistory.length - 1
+        ) {
             return;
         }
-        const command = this.commandsHistory[this.currentCommandIndex + 1].execute();
+        const command = this.localCommandsHistory[this.currentCommandIndex + 1];
+        const commandConfig = command.execute();
         // this should not be called with every change. Use some sort of debounce
-        this.emitMapEditorUpdate(command);
+        this.emitMapEditorUpdate(command.getId(), commandConfig);
         this.currentCommandIndex += 1;
     }
 
@@ -183,18 +207,18 @@ export class MapEditorModeManager {
         }
     }
 
-    private emitMapEditorUpdate(commandConfig: CommandConfig): void {
+    private emitMapEditorUpdate(commandId: string, commandConfig: CommandConfig): void {
         switch (commandConfig.type) {
             case "UpdateAreaCommand": {
-                this.scene.connection?.emitMapEditorModifyArea(commandConfig.areaObjectConfig);
+                this.scene.connection?.emitMapEditorModifyArea(commandId, commandConfig.areaObjectConfig);
                 break;
             }
             case "CreateAreaCommand": {
-                this.scene.connection?.emitMapEditorCreateArea(commandConfig.areaObjectConfig);
+                this.scene.connection?.emitMapEditorCreateArea(commandId, commandConfig.areaObjectConfig);
                 break;
             }
             case "DeleteAreaCommand": {
-                this.scene.connection?.emitMapEditorDeleteArea(commandConfig.id);
+                this.scene.connection?.emitMapEditorDeleteArea(commandId, commandConfig.id);
                 break;
             }
             default: {
@@ -251,6 +275,10 @@ export class MapEditorModeManager {
 
     private unsubscribeFromStores(): void {
         this.mapEditorModeUnsubscriber();
+    }
+
+    public getAllCommandsHistory(): Command[] {
+        return this.allCommandsHistory;
     }
 
     public getScene(): GameScene {

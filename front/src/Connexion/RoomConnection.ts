@@ -968,19 +968,16 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorModifyArea(config: ITiledMapRectangleObject): void {
+    public emitMapEditorModifyArea(commandId: string, config: ITiledMapRectangleObject): void {
         this.send({
             message: {
-                $case: "editMapMessage",
-                editMapMessage: {
-                    message: {
-                        $case: "modifyAreaMessage",
-                        modifyAreaMessage: {
-                            id: config.id,
-                            x: config.x,
-                            y: config.y,
-                            width: config.width,
-                            height: config.height,
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "modifyAreaMessage",
+                            modifyAreaMessage: config,
                         },
                     },
                 },
@@ -988,15 +985,18 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorDeleteArea(id: number): void {
+    public emitMapEditorDeleteArea(commandId: string, id: number): void {
         this.send({
             message: {
-                $case: "editMapMessage",
-                editMapMessage: {
-                    message: {
-                        $case: "deleteAreaMessage",
-                        deleteAreaMessage: {
-                            id,
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "deleteAreaMessage",
+                            deleteAreaMessage: {
+                                id,
+                            },
                         },
                     },
                 },
@@ -1004,19 +1004,16 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorCreateArea(config: ITiledMapRectangleObject): void {
+    public emitMapEditorCreateArea(commandId: string, config: ITiledMapRectangleObject): void {
         this.send({
             message: {
-                $case: "editMapMessage",
-                editMapMessage: {
-                    message: {
-                        $case: "createAreaMessage",
-                        createAreaMessage: {
-                            id: config.id,
-                            x: config.x,
-                            y: config.y,
-                            width: config.width,
-                            height: config.height,
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "createAreaMessage",
+                            createAreaMessage: config,
                         },
                     },
                 },

@@ -2,8 +2,8 @@ import { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
 import { AreaType, ITiledMapRectangleObject } from "@workadventure/map-editor";
 import { mapsManager } from "./MapsManager";
 import {
-    EditMapMessage,
-    EditMapWithKeyMessage,
+    EditMapCommandMessage,
+    EditMapCommandWithKeyMessage,
     EmptyMessage,
     MapStorageServer,
     PingMessage,
@@ -13,25 +13,26 @@ const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, EmptyMessage>, callback: sendUnaryData<PingMessage>): void {
         callback(null, call.request);
     },
-    handleEditMapWithKeyMessage(
-        call: ServerUnaryCall<EditMapWithKeyMessage, EmptyMessage>,
-        callback: sendUnaryData<EditMapMessage>
+    handleEditMapCommandWithKeyMessage(
+        call: ServerUnaryCall<EditMapCommandWithKeyMessage, EmptyMessage>,
+        callback: sendUnaryData<EditMapCommandMessage>
     ): void {
-        const editMapMessage = call.request.editMapMessage;
-        if (!editMapMessage || !editMapMessage.message) {
-            callback(null, {});
+        const editMapCommandMessage = call.request.editMapCommandMessage;
+        if (!editMapCommandMessage || !editMapCommandMessage.editMapMessage?.message) {
+            callback(null, { id: "", editMapMessage: undefined });
             return;
         }
         const gameMap = mapsManager.getGameMap(call.request.mapKey);
         if (!gameMap) {
             // TODO: Send an error?
-            callback(null, {});
+            callback(null, { id: editMapCommandMessage.id, editMapMessage: undefined });
             return;
         }
+        const editMapMessage = editMapCommandMessage.editMapMessage.message;
         try {
-            switch (editMapMessage.message.$case) {
+            switch (editMapMessage.$case) {
                 case "modifyAreaMessage": {
-                    const message = editMapMessage.message.modifyAreaMessage;
+                    const message = editMapMessage.modifyAreaMessage;
                     const area = gameMap.getGameMapAreas().getArea(message.id, AreaType.Static);
                     if (area) {
                         const areaObjectConfig: ITiledMapRectangleObject = {
@@ -46,13 +47,12 @@ const mapStorageServer: MapStorageServer = {
                     break;
                 }
                 case "createAreaMessage": {
-                    const message = editMapMessage.message.createAreaMessage;
+                    const message = editMapMessage.createAreaMessage;
                     console.log(message);
                     const areaObjectConfig: ITiledMapRectangleObject = {
-                        class: "area",
-                        name: "",
-                        visible: true,
                         ...message,
+                        visible: true,
+                        class: "area",
                     };
                     mapsManager.executeCommand(call.request.mapKey, {
                         areaObjectConfig,
@@ -61,7 +61,7 @@ const mapStorageServer: MapStorageServer = {
                     break;
                 }
                 case "deleteAreaMessage": {
-                    const message = editMapMessage.message.deleteAreaMessage;
+                    const message = editMapMessage.deleteAreaMessage;
                     console.log("DELETE AREA MESSAGE HANDLED");
                     mapsManager.executeCommand(call.request.mapKey, {
                         type: "DeleteAreaCommand",
@@ -74,11 +74,11 @@ const mapStorageServer: MapStorageServer = {
                 }
             }
             // send edit map message back as a valid one
-            callback(null, editMapMessage);
+            callback(null, editMapCommandMessage);
         } catch (e) {
             console.log(e);
             // do not send editMap message back?
-            callback(null, {});
+            callback(null, { id: editMapCommandMessage.id, editMapMessage: undefined });
         }
     },
 };

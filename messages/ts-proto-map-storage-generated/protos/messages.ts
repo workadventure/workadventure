@@ -209,6 +209,26 @@ export interface LockGroupPromptMessage {
     lock: boolean;
 }
 
+export interface EditMapMessage {
+    message?:
+        | { $case: "modifyAreaMessage"; modifyAreaMessage: ModifyAreaMessage }
+        | {
+              $case: "createAreaMessage";
+              createAreaMessage: CreateAreaMessage;
+          }
+        | { $case: "deleteAreaMessage"; deleteAreaMessage: DeleteAreaMessage };
+}
+
+export interface EditMapCommandMessage {
+    id: string;
+    editMapMessage: EditMapMessage | undefined;
+}
+
+export interface EditMapCommandWithKeyMessage {
+    mapKey: string;
+    editMapCommandMessage: EditMapCommandMessage | undefined;
+}
+
 export interface ModifyAreaMessage {
     id: number;
     x?: number | undefined;
@@ -227,6 +247,7 @@ export interface CreateAreaMessage {
     y: number;
     width: number;
     height: number;
+    name: string;
 }
 
 export interface ClientToServerMessage {
@@ -252,7 +273,7 @@ export interface ClientToServerMessage {
         | { $case: "queryMessage"; queryMessage: QueryMessage }
         | { $case: "pingMessage"; pingMessage: PingMessage }
         | { $case: "askPositionMessage"; askPositionMessage: AskPositionMessage }
-        | { $case: "editMapMessage"; editMapMessage: EditMapMessage };
+        | { $case: "editMapCommandMessage"; editMapCommandMessage: EditMapCommandMessage };
 }
 
 export interface ItemEventMessage {
@@ -395,7 +416,7 @@ export interface SubMessage {
         | { $case: "errorMessage"; errorMessage: ErrorMessage }
         | { $case: "playerDetailsUpdatedMessage"; playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage }
         | { $case: "pingMessage"; pingMessage: PingMessage }
-        | { $case: "editMapMessage"; editMapMessage: EditMapMessage };
+        | { $case: "editMapCommandMessage"; editMapCommandMessage: EditMapCommandMessage };
 }
 
 export interface BatchMessage {
@@ -671,7 +692,7 @@ export interface PusherToBackMessage {
         | { $case: "lockGroupPromptMessage"; lockGroupPromptMessage: LockGroupPromptMessage }
         | { $case: "queryMessage"; queryMessage: QueryMessage }
         | { $case: "askPositionMessage"; askPositionMessage: AskPositionMessage }
-        | { $case: "editMapWithKeyMessage"; editMapWithKeyMessage: EditMapWithKeyMessage };
+        | { $case: "editMapCommandWithKeyMessage"; editMapCommandWithKeyMessage: EditMapCommandWithKeyMessage };
 }
 
 export interface BatchToPusherMessage {
@@ -704,22 +725,7 @@ export interface SubToPusherRoomMessage {
               $case: "errorMessage";
               errorMessage: ErrorMessage;
           }
-        | { $case: "editMapMessage"; editMapMessage: EditMapMessage };
-}
-
-export interface EditMapMessage {
-    message?:
-        | { $case: "modifyAreaMessage"; modifyAreaMessage: ModifyAreaMessage }
-        | {
-              $case: "createAreaMessage";
-              createAreaMessage: CreateAreaMessage;
-          }
-        | { $case: "deleteAreaMessage"; deleteAreaMessage: DeleteAreaMessage };
-}
-
-export interface EditMapWithKeyMessage {
-    mapKey: string;
-    editMapMessage: EditMapMessage | undefined;
+        | { $case: "editMapCommandMessage"; editMapCommandMessage: EditMapCommandMessage };
 }
 
 export interface UserJoinedRoomMessage {
@@ -1823,6 +1829,261 @@ export const LockGroupPromptMessage = {
     },
 };
 
+function createBaseEditMapMessage(): EditMapMessage {
+    return { message: undefined };
+}
+
+export const EditMapMessage = {
+    encode(message: EditMapMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.message?.$case === "modifyAreaMessage") {
+            ModifyAreaMessage.encode(message.message.modifyAreaMessage, writer.uint32(10).fork()).ldelim();
+        }
+        if (message.message?.$case === "createAreaMessage") {
+            CreateAreaMessage.encode(message.message.createAreaMessage, writer.uint32(18).fork()).ldelim();
+        }
+        if (message.message?.$case === "deleteAreaMessage") {
+            DeleteAreaMessage.encode(message.message.deleteAreaMessage, writer.uint32(26).fork()).ldelim();
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): EditMapMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = createBaseEditMapMessage();
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.message = {
+                        $case: "modifyAreaMessage",
+                        modifyAreaMessage: ModifyAreaMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
+                case 2:
+                    message.message = {
+                        $case: "createAreaMessage",
+                        createAreaMessage: CreateAreaMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
+                case 3:
+                    message.message = {
+                        $case: "deleteAreaMessage",
+                        deleteAreaMessage: DeleteAreaMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): EditMapMessage {
+        return {
+            message: isSet(object.modifyAreaMessage)
+                ? {
+                      $case: "modifyAreaMessage",
+                      modifyAreaMessage: ModifyAreaMessage.fromJSON(object.modifyAreaMessage),
+                  }
+                : isSet(object.createAreaMessage)
+                ? {
+                      $case: "createAreaMessage",
+                      createAreaMessage: CreateAreaMessage.fromJSON(object.createAreaMessage),
+                  }
+                : isSet(object.deleteAreaMessage)
+                ? {
+                      $case: "deleteAreaMessage",
+                      deleteAreaMessage: DeleteAreaMessage.fromJSON(object.deleteAreaMessage),
+                  }
+                : undefined,
+        };
+    },
+
+    toJSON(message: EditMapMessage): unknown {
+        const obj: any = {};
+        message.message?.$case === "modifyAreaMessage" &&
+            (obj.modifyAreaMessage = message.message?.modifyAreaMessage
+                ? ModifyAreaMessage.toJSON(message.message?.modifyAreaMessage)
+                : undefined);
+        message.message?.$case === "createAreaMessage" &&
+            (obj.createAreaMessage = message.message?.createAreaMessage
+                ? CreateAreaMessage.toJSON(message.message?.createAreaMessage)
+                : undefined);
+        message.message?.$case === "deleteAreaMessage" &&
+            (obj.deleteAreaMessage = message.message?.deleteAreaMessage
+                ? DeleteAreaMessage.toJSON(message.message?.deleteAreaMessage)
+                : undefined);
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<EditMapMessage>, I>>(object: I): EditMapMessage {
+        const message = createBaseEditMapMessage();
+        if (
+            object.message?.$case === "modifyAreaMessage" &&
+            object.message?.modifyAreaMessage !== undefined &&
+            object.message?.modifyAreaMessage !== null
+        ) {
+            message.message = {
+                $case: "modifyAreaMessage",
+                modifyAreaMessage: ModifyAreaMessage.fromPartial(object.message.modifyAreaMessage),
+            };
+        }
+        if (
+            object.message?.$case === "createAreaMessage" &&
+            object.message?.createAreaMessage !== undefined &&
+            object.message?.createAreaMessage !== null
+        ) {
+            message.message = {
+                $case: "createAreaMessage",
+                createAreaMessage: CreateAreaMessage.fromPartial(object.message.createAreaMessage),
+            };
+        }
+        if (
+            object.message?.$case === "deleteAreaMessage" &&
+            object.message?.deleteAreaMessage !== undefined &&
+            object.message?.deleteAreaMessage !== null
+        ) {
+            message.message = {
+                $case: "deleteAreaMessage",
+                deleteAreaMessage: DeleteAreaMessage.fromPartial(object.message.deleteAreaMessage),
+            };
+        }
+        return message;
+    },
+};
+
+function createBaseEditMapCommandMessage(): EditMapCommandMessage {
+    return { id: "", editMapMessage: undefined };
+}
+
+export const EditMapCommandMessage = {
+    encode(message: EditMapCommandMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.id !== "") {
+            writer.uint32(10).string(message.id);
+        }
+        if (message.editMapMessage !== undefined) {
+            EditMapMessage.encode(message.editMapMessage, writer.uint32(18).fork()).ldelim();
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): EditMapCommandMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = createBaseEditMapCommandMessage();
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.id = reader.string();
+                    break;
+                case 2:
+                    message.editMapMessage = EditMapMessage.decode(reader, reader.uint32());
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): EditMapCommandMessage {
+        return {
+            id: isSet(object.id) ? String(object.id) : "",
+            editMapMessage: isSet(object.editMapMessage) ? EditMapMessage.fromJSON(object.editMapMessage) : undefined,
+        };
+    },
+
+    toJSON(message: EditMapCommandMessage): unknown {
+        const obj: any = {};
+        message.id !== undefined && (obj.id = message.id);
+        message.editMapMessage !== undefined &&
+            (obj.editMapMessage = message.editMapMessage ? EditMapMessage.toJSON(message.editMapMessage) : undefined);
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<EditMapCommandMessage>, I>>(object: I): EditMapCommandMessage {
+        const message = createBaseEditMapCommandMessage();
+        message.id = object.id ?? "";
+        message.editMapMessage =
+            object.editMapMessage !== undefined && object.editMapMessage !== null
+                ? EditMapMessage.fromPartial(object.editMapMessage)
+                : undefined;
+        return message;
+    },
+};
+
+function createBaseEditMapCommandWithKeyMessage(): EditMapCommandWithKeyMessage {
+    return { mapKey: "", editMapCommandMessage: undefined };
+}
+
+export const EditMapCommandWithKeyMessage = {
+    encode(message: EditMapCommandWithKeyMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.mapKey !== "") {
+            writer.uint32(10).string(message.mapKey);
+        }
+        if (message.editMapCommandMessage !== undefined) {
+            EditMapCommandMessage.encode(message.editMapCommandMessage, writer.uint32(18).fork()).ldelim();
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): EditMapCommandWithKeyMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = createBaseEditMapCommandWithKeyMessage();
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.mapKey = reader.string();
+                    break;
+                case 2:
+                    message.editMapCommandMessage = EditMapCommandMessage.decode(reader, reader.uint32());
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): EditMapCommandWithKeyMessage {
+        return {
+            mapKey: isSet(object.mapKey) ? String(object.mapKey) : "",
+            editMapCommandMessage: isSet(object.editMapCommandMessage)
+                ? EditMapCommandMessage.fromJSON(object.editMapCommandMessage)
+                : undefined,
+        };
+    },
+
+    toJSON(message: EditMapCommandWithKeyMessage): unknown {
+        const obj: any = {};
+        message.mapKey !== undefined && (obj.mapKey = message.mapKey);
+        message.editMapCommandMessage !== undefined &&
+            (obj.editMapCommandMessage = message.editMapCommandMessage
+                ? EditMapCommandMessage.toJSON(message.editMapCommandMessage)
+                : undefined);
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<EditMapCommandWithKeyMessage>, I>>(
+        object: I
+    ): EditMapCommandWithKeyMessage {
+        const message = createBaseEditMapCommandWithKeyMessage();
+        message.mapKey = object.mapKey ?? "";
+        message.editMapCommandMessage =
+            object.editMapCommandMessage !== undefined && object.editMapCommandMessage !== null
+                ? EditMapCommandMessage.fromPartial(object.editMapCommandMessage)
+                : undefined;
+        return message;
+    },
+};
+
 function createBaseModifyAreaMessage(): ModifyAreaMessage {
     return { id: 0, x: undefined, y: undefined, width: undefined, height: undefined };
 }
@@ -1956,7 +2217,7 @@ export const DeleteAreaMessage = {
 };
 
 function createBaseCreateAreaMessage(): CreateAreaMessage {
-    return { id: 0, x: 0, y: 0, width: 0, height: 0 };
+    return { id: 0, x: 0, y: 0, width: 0, height: 0, name: "" };
 }
 
 export const CreateAreaMessage = {
@@ -1975,6 +2236,9 @@ export const CreateAreaMessage = {
         }
         if (message.height !== 0) {
             writer.uint32(40).uint32(message.height);
+        }
+        if (message.name !== "") {
+            writer.uint32(50).string(message.name);
         }
         return writer;
     },
@@ -2001,6 +2265,9 @@ export const CreateAreaMessage = {
                 case 5:
                     message.height = reader.uint32();
                     break;
+                case 6:
+                    message.name = reader.string();
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -2016,6 +2283,7 @@ export const CreateAreaMessage = {
             y: isSet(object.y) ? Number(object.y) : 0,
             width: isSet(object.width) ? Number(object.width) : 0,
             height: isSet(object.height) ? Number(object.height) : 0,
+            name: isSet(object.name) ? String(object.name) : "",
         };
     },
 
@@ -2026,6 +2294,7 @@ export const CreateAreaMessage = {
         message.y !== undefined && (obj.y = Math.round(message.y));
         message.width !== undefined && (obj.width = Math.round(message.width));
         message.height !== undefined && (obj.height = Math.round(message.height));
+        message.name !== undefined && (obj.name = message.name);
         return obj;
     },
 
@@ -2036,6 +2305,7 @@ export const CreateAreaMessage = {
         message.y = object.y ?? 0;
         message.width = object.width ?? 0;
         message.height = object.height ?? 0;
+        message.name = object.name ?? "";
         return message;
     },
 };
@@ -2109,8 +2379,8 @@ export const ClientToServerMessage = {
         if (message.message?.$case === "askPositionMessage") {
             AskPositionMessage.encode(message.message.askPositionMessage, writer.uint32(186).fork()).ldelim();
         }
-        if (message.message?.$case === "editMapMessage") {
-            EditMapMessage.encode(message.message.editMapMessage, writer.uint32(194).fork()).ldelim();
+        if (message.message?.$case === "editMapCommandMessage") {
+            EditMapCommandMessage.encode(message.message.editMapCommandMessage, writer.uint32(194).fork()).ldelim();
         }
         return writer;
     },
@@ -2235,8 +2505,8 @@ export const ClientToServerMessage = {
                     break;
                 case 24:
                     message.message = {
-                        $case: "editMapMessage",
-                        editMapMessage: EditMapMessage.decode(reader, reader.uint32()),
+                        $case: "editMapCommandMessage",
+                        editMapCommandMessage: EditMapCommandMessage.decode(reader, reader.uint32()),
                     };
                     break;
                 default:
@@ -2325,8 +2595,11 @@ export const ClientToServerMessage = {
                       $case: "askPositionMessage",
                       askPositionMessage: AskPositionMessage.fromJSON(object.askPositionMessage),
                   }
-                : isSet(object.editMapMessage)
-                ? { $case: "editMapMessage", editMapMessage: EditMapMessage.fromJSON(object.editMapMessage) }
+                : isSet(object.editMapCommandMessage)
+                ? {
+                      $case: "editMapCommandMessage",
+                      editMapCommandMessage: EditMapCommandMessage.fromJSON(object.editMapCommandMessage),
+                  }
                 : undefined,
         };
     },
@@ -2405,9 +2678,9 @@ export const ClientToServerMessage = {
             (obj.askPositionMessage = message.message?.askPositionMessage
                 ? AskPositionMessage.toJSON(message.message?.askPositionMessage)
                 : undefined);
-        message.message?.$case === "editMapMessage" &&
-            (obj.editMapMessage = message.message?.editMapMessage
-                ? EditMapMessage.toJSON(message.message?.editMapMessage)
+        message.message?.$case === "editMapCommandMessage" &&
+            (obj.editMapCommandMessage = message.message?.editMapCommandMessage
+                ? EditMapCommandMessage.toJSON(message.message?.editMapCommandMessage)
                 : undefined);
         return obj;
     },
@@ -2601,13 +2874,13 @@ export const ClientToServerMessage = {
             };
         }
         if (
-            object.message?.$case === "editMapMessage" &&
-            object.message?.editMapMessage !== undefined &&
-            object.message?.editMapMessage !== null
+            object.message?.$case === "editMapCommandMessage" &&
+            object.message?.editMapCommandMessage !== undefined &&
+            object.message?.editMapCommandMessage !== null
         ) {
             message.message = {
-                $case: "editMapMessage",
-                editMapMessage: EditMapMessage.fromPartial(object.message.editMapMessage),
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: EditMapCommandMessage.fromPartial(object.message.editMapCommandMessage),
             };
         }
         return message;
@@ -3654,8 +3927,8 @@ export const SubMessage = {
         if (message.message?.$case === "pingMessage") {
             PingMessage.encode(message.message.pingMessage, writer.uint32(90).fork()).ldelim();
         }
-        if (message.message?.$case === "editMapMessage") {
-            EditMapMessage.encode(message.message.editMapMessage, writer.uint32(106).fork()).ldelim();
+        if (message.message?.$case === "editMapCommandMessage") {
+            EditMapCommandMessage.encode(message.message.editMapCommandMessage, writer.uint32(106).fork()).ldelim();
         }
         return writer;
     },
@@ -3735,8 +4008,8 @@ export const SubMessage = {
                     break;
                 case 13:
                     message.message = {
-                        $case: "editMapMessage",
-                        editMapMessage: EditMapMessage.decode(reader, reader.uint32()),
+                        $case: "editMapCommandMessage",
+                        editMapCommandMessage: EditMapCommandMessage.decode(reader, reader.uint32()),
                     };
                     break;
                 default:
@@ -3788,8 +4061,11 @@ export const SubMessage = {
                   }
                 : isSet(object.pingMessage)
                 ? { $case: "pingMessage", pingMessage: PingMessage.fromJSON(object.pingMessage) }
-                : isSet(object.editMapMessage)
-                ? { $case: "editMapMessage", editMapMessage: EditMapMessage.fromJSON(object.editMapMessage) }
+                : isSet(object.editMapCommandMessage)
+                ? {
+                      $case: "editMapCommandMessage",
+                      editMapCommandMessage: EditMapCommandMessage.fromJSON(object.editMapCommandMessage),
+                  }
                 : undefined,
         };
     },
@@ -3840,9 +4116,9 @@ export const SubMessage = {
             (obj.pingMessage = message.message?.pingMessage
                 ? PingMessage.toJSON(message.message?.pingMessage)
                 : undefined);
-        message.message?.$case === "editMapMessage" &&
-            (obj.editMapMessage = message.message?.editMapMessage
-                ? EditMapMessage.toJSON(message.message?.editMapMessage)
+        message.message?.$case === "editMapCommandMessage" &&
+            (obj.editMapCommandMessage = message.message?.editMapCommandMessage
+                ? EditMapCommandMessage.toJSON(message.message?.editMapCommandMessage)
                 : undefined);
         return obj;
     },
@@ -3962,13 +4238,13 @@ export const SubMessage = {
             };
         }
         if (
-            object.message?.$case === "editMapMessage" &&
-            object.message?.editMapMessage !== undefined &&
-            object.message?.editMapMessage !== null
+            object.message?.$case === "editMapCommandMessage" &&
+            object.message?.editMapCommandMessage !== undefined &&
+            object.message?.editMapCommandMessage !== null
         ) {
             message.message = {
-                $case: "editMapMessage",
-                editMapMessage: EditMapMessage.fromPartial(object.message.editMapMessage),
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: EditMapCommandMessage.fromPartial(object.message.editMapCommandMessage),
             };
         }
         return message;
@@ -7351,8 +7627,11 @@ export const PusherToBackMessage = {
         if (message.message?.$case === "askPositionMessage") {
             AskPositionMessage.encode(message.message.askPositionMessage, writer.uint32(178).fork()).ldelim();
         }
-        if (message.message?.$case === "editMapWithKeyMessage") {
-            EditMapWithKeyMessage.encode(message.message.editMapWithKeyMessage, writer.uint32(186).fork()).ldelim();
+        if (message.message?.$case === "editMapCommandWithKeyMessage") {
+            EditMapCommandWithKeyMessage.encode(
+                message.message.editMapCommandWithKeyMessage,
+                writer.uint32(186).fork()
+            ).ldelim();
         }
         return writer;
     },
@@ -7471,8 +7750,8 @@ export const PusherToBackMessage = {
                     break;
                 case 23:
                     message.message = {
-                        $case: "editMapWithKeyMessage",
-                        editMapWithKeyMessage: EditMapWithKeyMessage.decode(reader, reader.uint32()),
+                        $case: "editMapCommandWithKeyMessage",
+                        editMapCommandWithKeyMessage: EditMapCommandWithKeyMessage.decode(reader, reader.uint32()),
                     };
                     break;
                 default:
@@ -7553,10 +7832,12 @@ export const PusherToBackMessage = {
                       $case: "askPositionMessage",
                       askPositionMessage: AskPositionMessage.fromJSON(object.askPositionMessage),
                   }
-                : isSet(object.editMapWithKeyMessage)
+                : isSet(object.editMapCommandWithKeyMessage)
                 ? {
-                      $case: "editMapWithKeyMessage",
-                      editMapWithKeyMessage: EditMapWithKeyMessage.fromJSON(object.editMapWithKeyMessage),
+                      $case: "editMapCommandWithKeyMessage",
+                      editMapCommandWithKeyMessage: EditMapCommandWithKeyMessage.fromJSON(
+                          object.editMapCommandWithKeyMessage
+                      ),
                   }
                 : undefined,
         };
@@ -7632,9 +7913,9 @@ export const PusherToBackMessage = {
             (obj.askPositionMessage = message.message?.askPositionMessage
                 ? AskPositionMessage.toJSON(message.message?.askPositionMessage)
                 : undefined);
-        message.message?.$case === "editMapWithKeyMessage" &&
-            (obj.editMapWithKeyMessage = message.message?.editMapWithKeyMessage
-                ? EditMapWithKeyMessage.toJSON(message.message?.editMapWithKeyMessage)
+        message.message?.$case === "editMapCommandWithKeyMessage" &&
+            (obj.editMapCommandWithKeyMessage = message.message?.editMapCommandWithKeyMessage
+                ? EditMapCommandWithKeyMessage.toJSON(message.message?.editMapCommandWithKeyMessage)
                 : undefined);
         return obj;
     },
@@ -7818,13 +8099,15 @@ export const PusherToBackMessage = {
             };
         }
         if (
-            object.message?.$case === "editMapWithKeyMessage" &&
-            object.message?.editMapWithKeyMessage !== undefined &&
-            object.message?.editMapWithKeyMessage !== null
+            object.message?.$case === "editMapCommandWithKeyMessage" &&
+            object.message?.editMapCommandWithKeyMessage !== undefined &&
+            object.message?.editMapCommandWithKeyMessage !== null
         ) {
             message.message = {
-                $case: "editMapWithKeyMessage",
-                editMapWithKeyMessage: EditMapWithKeyMessage.fromPartial(object.message.editMapWithKeyMessage),
+                $case: "editMapCommandWithKeyMessage",
+                editMapCommandWithKeyMessage: EditMapCommandWithKeyMessage.fromPartial(
+                    object.message.editMapCommandWithKeyMessage
+                ),
             };
         }
         return message;
@@ -8294,8 +8577,8 @@ export const SubToPusherRoomMessage = {
         if (message.message?.$case === "errorMessage") {
             ErrorMessage.encode(message.message.errorMessage, writer.uint32(18).fork()).ldelim();
         }
-        if (message.message?.$case === "editMapMessage") {
-            EditMapMessage.encode(message.message.editMapMessage, writer.uint32(26).fork()).ldelim();
+        if (message.message?.$case === "editMapCommandMessage") {
+            EditMapCommandMessage.encode(message.message.editMapCommandMessage, writer.uint32(26).fork()).ldelim();
         }
         return writer;
     },
@@ -8321,8 +8604,8 @@ export const SubToPusherRoomMessage = {
                     break;
                 case 3:
                     message.message = {
-                        $case: "editMapMessage",
-                        editMapMessage: EditMapMessage.decode(reader, reader.uint32()),
+                        $case: "editMapCommandMessage",
+                        editMapCommandMessage: EditMapCommandMessage.decode(reader, reader.uint32()),
                     };
                     break;
                 default:
@@ -8339,8 +8622,11 @@ export const SubToPusherRoomMessage = {
                 ? { $case: "variableMessage", variableMessage: VariableWithTagMessage.fromJSON(object.variableMessage) }
                 : isSet(object.errorMessage)
                 ? { $case: "errorMessage", errorMessage: ErrorMessage.fromJSON(object.errorMessage) }
-                : isSet(object.editMapMessage)
-                ? { $case: "editMapMessage", editMapMessage: EditMapMessage.fromJSON(object.editMapMessage) }
+                : isSet(object.editMapCommandMessage)
+                ? {
+                      $case: "editMapCommandMessage",
+                      editMapCommandMessage: EditMapCommandMessage.fromJSON(object.editMapCommandMessage),
+                  }
                 : undefined,
         };
     },
@@ -8355,9 +8641,9 @@ export const SubToPusherRoomMessage = {
             (obj.errorMessage = message.message?.errorMessage
                 ? ErrorMessage.toJSON(message.message?.errorMessage)
                 : undefined);
-        message.message?.$case === "editMapMessage" &&
-            (obj.editMapMessage = message.message?.editMapMessage
-                ? EditMapMessage.toJSON(message.message?.editMapMessage)
+        message.message?.$case === "editMapCommandMessage" &&
+            (obj.editMapCommandMessage = message.message?.editMapCommandMessage
+                ? EditMapCommandMessage.toJSON(message.message?.editMapCommandMessage)
                 : undefined);
         return obj;
     },
@@ -8385,202 +8671,15 @@ export const SubToPusherRoomMessage = {
             };
         }
         if (
-            object.message?.$case === "editMapMessage" &&
-            object.message?.editMapMessage !== undefined &&
-            object.message?.editMapMessage !== null
+            object.message?.$case === "editMapCommandMessage" &&
+            object.message?.editMapCommandMessage !== undefined &&
+            object.message?.editMapCommandMessage !== null
         ) {
             message.message = {
-                $case: "editMapMessage",
-                editMapMessage: EditMapMessage.fromPartial(object.message.editMapMessage),
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: EditMapCommandMessage.fromPartial(object.message.editMapCommandMessage),
             };
         }
-        return message;
-    },
-};
-
-function createBaseEditMapMessage(): EditMapMessage {
-    return { message: undefined };
-}
-
-export const EditMapMessage = {
-    encode(message: EditMapMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-        if (message.message?.$case === "modifyAreaMessage") {
-            ModifyAreaMessage.encode(message.message.modifyAreaMessage, writer.uint32(10).fork()).ldelim();
-        }
-        if (message.message?.$case === "createAreaMessage") {
-            CreateAreaMessage.encode(message.message.createAreaMessage, writer.uint32(18).fork()).ldelim();
-        }
-        if (message.message?.$case === "deleteAreaMessage") {
-            DeleteAreaMessage.encode(message.message.deleteAreaMessage, writer.uint32(26).fork()).ldelim();
-        }
-        return writer;
-    },
-
-    decode(input: _m0.Reader | Uint8Array, length?: number): EditMapMessage {
-        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-        let end = length === undefined ? reader.len : reader.pos + length;
-        const message = createBaseEditMapMessage();
-        while (reader.pos < end) {
-            const tag = reader.uint32();
-            switch (tag >>> 3) {
-                case 1:
-                    message.message = {
-                        $case: "modifyAreaMessage",
-                        modifyAreaMessage: ModifyAreaMessage.decode(reader, reader.uint32()),
-                    };
-                    break;
-                case 2:
-                    message.message = {
-                        $case: "createAreaMessage",
-                        createAreaMessage: CreateAreaMessage.decode(reader, reader.uint32()),
-                    };
-                    break;
-                case 3:
-                    message.message = {
-                        $case: "deleteAreaMessage",
-                        deleteAreaMessage: DeleteAreaMessage.decode(reader, reader.uint32()),
-                    };
-                    break;
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-            }
-        }
-        return message;
-    },
-
-    fromJSON(object: any): EditMapMessage {
-        return {
-            message: isSet(object.modifyAreaMessage)
-                ? {
-                      $case: "modifyAreaMessage",
-                      modifyAreaMessage: ModifyAreaMessage.fromJSON(object.modifyAreaMessage),
-                  }
-                : isSet(object.createAreaMessage)
-                ? {
-                      $case: "createAreaMessage",
-                      createAreaMessage: CreateAreaMessage.fromJSON(object.createAreaMessage),
-                  }
-                : isSet(object.deleteAreaMessage)
-                ? {
-                      $case: "deleteAreaMessage",
-                      deleteAreaMessage: DeleteAreaMessage.fromJSON(object.deleteAreaMessage),
-                  }
-                : undefined,
-        };
-    },
-
-    toJSON(message: EditMapMessage): unknown {
-        const obj: any = {};
-        message.message?.$case === "modifyAreaMessage" &&
-            (obj.modifyAreaMessage = message.message?.modifyAreaMessage
-                ? ModifyAreaMessage.toJSON(message.message?.modifyAreaMessage)
-                : undefined);
-        message.message?.$case === "createAreaMessage" &&
-            (obj.createAreaMessage = message.message?.createAreaMessage
-                ? CreateAreaMessage.toJSON(message.message?.createAreaMessage)
-                : undefined);
-        message.message?.$case === "deleteAreaMessage" &&
-            (obj.deleteAreaMessage = message.message?.deleteAreaMessage
-                ? DeleteAreaMessage.toJSON(message.message?.deleteAreaMessage)
-                : undefined);
-        return obj;
-    },
-
-    fromPartial<I extends Exact<DeepPartial<EditMapMessage>, I>>(object: I): EditMapMessage {
-        const message = createBaseEditMapMessage();
-        if (
-            object.message?.$case === "modifyAreaMessage" &&
-            object.message?.modifyAreaMessage !== undefined &&
-            object.message?.modifyAreaMessage !== null
-        ) {
-            message.message = {
-                $case: "modifyAreaMessage",
-                modifyAreaMessage: ModifyAreaMessage.fromPartial(object.message.modifyAreaMessage),
-            };
-        }
-        if (
-            object.message?.$case === "createAreaMessage" &&
-            object.message?.createAreaMessage !== undefined &&
-            object.message?.createAreaMessage !== null
-        ) {
-            message.message = {
-                $case: "createAreaMessage",
-                createAreaMessage: CreateAreaMessage.fromPartial(object.message.createAreaMessage),
-            };
-        }
-        if (
-            object.message?.$case === "deleteAreaMessage" &&
-            object.message?.deleteAreaMessage !== undefined &&
-            object.message?.deleteAreaMessage !== null
-        ) {
-            message.message = {
-                $case: "deleteAreaMessage",
-                deleteAreaMessage: DeleteAreaMessage.fromPartial(object.message.deleteAreaMessage),
-            };
-        }
-        return message;
-    },
-};
-
-function createBaseEditMapWithKeyMessage(): EditMapWithKeyMessage {
-    return { mapKey: "", editMapMessage: undefined };
-}
-
-export const EditMapWithKeyMessage = {
-    encode(message: EditMapWithKeyMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-        if (message.mapKey !== "") {
-            writer.uint32(10).string(message.mapKey);
-        }
-        if (message.editMapMessage !== undefined) {
-            EditMapMessage.encode(message.editMapMessage, writer.uint32(18).fork()).ldelim();
-        }
-        return writer;
-    },
-
-    decode(input: _m0.Reader | Uint8Array, length?: number): EditMapWithKeyMessage {
-        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-        let end = length === undefined ? reader.len : reader.pos + length;
-        const message = createBaseEditMapWithKeyMessage();
-        while (reader.pos < end) {
-            const tag = reader.uint32();
-            switch (tag >>> 3) {
-                case 1:
-                    message.mapKey = reader.string();
-                    break;
-                case 2:
-                    message.editMapMessage = EditMapMessage.decode(reader, reader.uint32());
-                    break;
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-            }
-        }
-        return message;
-    },
-
-    fromJSON(object: any): EditMapWithKeyMessage {
-        return {
-            mapKey: isSet(object.mapKey) ? String(object.mapKey) : "",
-            editMapMessage: isSet(object.editMapMessage) ? EditMapMessage.fromJSON(object.editMapMessage) : undefined,
-        };
-    },
-
-    toJSON(message: EditMapWithKeyMessage): unknown {
-        const obj: any = {};
-        message.mapKey !== undefined && (obj.mapKey = message.mapKey);
-        message.editMapMessage !== undefined &&
-            (obj.editMapMessage = message.editMapMessage ? EditMapMessage.toJSON(message.editMapMessage) : undefined);
-        return obj;
-    },
-
-    fromPartial<I extends Exact<DeepPartial<EditMapWithKeyMessage>, I>>(object: I): EditMapWithKeyMessage {
-        const message = createBaseEditMapWithKeyMessage();
-        message.mapKey = object.mapKey ?? "";
-        message.editMapMessage =
-            object.editMapMessage !== undefined && object.editMapMessage !== null
-                ? EditMapMessage.fromPartial(object.editMapMessage)
-                : undefined;
         return message;
     },
 };
@@ -10102,20 +10201,21 @@ export const MapStorageService = {
         responseSerialize: (value: PingMessage) => Buffer.from(PingMessage.encode(value).finish()),
         responseDeserialize: (value: Buffer) => PingMessage.decode(value),
     },
-    handleEditMapWithKeyMessage: {
-        path: "/workadventure.MapStorage/handleEditMapWithKeyMessage",
+    handleEditMapCommandWithKeyMessage: {
+        path: "/workadventure.MapStorage/handleEditMapCommandWithKeyMessage",
         requestStream: false,
         responseStream: false,
-        requestSerialize: (value: EditMapWithKeyMessage) => Buffer.from(EditMapWithKeyMessage.encode(value).finish()),
-        requestDeserialize: (value: Buffer) => EditMapWithKeyMessage.decode(value),
-        responseSerialize: (value: EditMapMessage) => Buffer.from(EditMapMessage.encode(value).finish()),
-        responseDeserialize: (value: Buffer) => EditMapMessage.decode(value),
+        requestSerialize: (value: EditMapCommandWithKeyMessage) =>
+            Buffer.from(EditMapCommandWithKeyMessage.encode(value).finish()),
+        requestDeserialize: (value: Buffer) => EditMapCommandWithKeyMessage.decode(value),
+        responseSerialize: (value: EditMapCommandMessage) => Buffer.from(EditMapCommandMessage.encode(value).finish()),
+        responseDeserialize: (value: Buffer) => EditMapCommandMessage.decode(value),
     },
 } as const;
 
 export interface MapStorageServer extends UntypedServiceImplementation {
     ping: handleUnaryCall<PingMessage, PingMessage>;
-    handleEditMapWithKeyMessage: handleUnaryCall<EditMapWithKeyMessage, EditMapMessage>;
+    handleEditMapCommandWithKeyMessage: handleUnaryCall<EditMapCommandWithKeyMessage, EditMapCommandMessage>;
 }
 
 export interface MapStorageClient extends Client {
@@ -10131,20 +10231,20 @@ export interface MapStorageClient extends Client {
         options: Partial<CallOptions>,
         callback: (error: ServiceError | null, response: PingMessage) => void
     ): ClientUnaryCall;
-    handleEditMapWithKeyMessage(
-        request: EditMapWithKeyMessage,
-        callback: (error: ServiceError | null, response: EditMapMessage) => void
+    handleEditMapCommandWithKeyMessage(
+        request: EditMapCommandWithKeyMessage,
+        callback: (error: ServiceError | null, response: EditMapCommandMessage) => void
     ): ClientUnaryCall;
-    handleEditMapWithKeyMessage(
-        request: EditMapWithKeyMessage,
+    handleEditMapCommandWithKeyMessage(
+        request: EditMapCommandWithKeyMessage,
         metadata: Metadata,
-        callback: (error: ServiceError | null, response: EditMapMessage) => void
+        callback: (error: ServiceError | null, response: EditMapCommandMessage) => void
     ): ClientUnaryCall;
-    handleEditMapWithKeyMessage(
-        request: EditMapWithKeyMessage,
+    handleEditMapCommandWithKeyMessage(
+        request: EditMapCommandWithKeyMessage,
         metadata: Metadata,
         options: Partial<CallOptions>,
-        callback: (error: ServiceError | null, response: EditMapMessage) => void
+        callback: (error: ServiceError | null, response: EditMapCommandMessage) => void
     ): ClientUnaryCall;
 }
 

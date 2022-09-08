@@ -31,7 +31,7 @@ import {
     RoomsList,
     PingMessage,
     QueryMessage,
-    EditMapWithKeyMessage,
+    EditMapCommandWithKeyMessage,
 } from "./Messages/generated/messages_pb";
 import { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
 import { socketManager } from "./Services/SocketManager";
@@ -148,11 +148,11 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 message.getLockgrouppromptmessage() as LockGroupPromptMessage
                             );
-                        } else if (message.hasEditmapwithkeymessage()) {
-                            socketManager.handleEditMapWithKeyMessage(
+                        } else if (message.hasEditmapcommandwithkeymessage()) {
+                            socketManager.handleEditMapCommandWithKeyMessage(
                                 room,
                                 user,
-                                message.getEditmapwithkeymessage() as EditMapWithKeyMessage
+                                message.getEditmapcommandwithkeymessage() as EditMapCommandWithKeyMessage
                             );
                         } else if (message.hasSendusermessage()) {
                             const sendUserMessage = message.getSendusermessage();

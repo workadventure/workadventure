@@ -9,10 +9,12 @@
   "author": "WorkAdventure",
   "license": "ISC",
   "dependencies": {
+    "@workadventure/math-utils": "link:../math-utils",
     "@workadventure/tiled-map-type-guard": "^2.0.4",
-    "@workadventure/math-utils": "link:../math-utils"
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@types/uuid": "^8.3.4",
     "typescript": "^4.3.5"
   },
   "files": [
