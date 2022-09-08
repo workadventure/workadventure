@@ -68,10 +68,6 @@
                 subscribeListeners.push(
                     canSendInitMessageStore.subscribe((value) => {
                         if (value) {
-                            setTimeout(
-                                () => console.log(gameManager.getCurrentGameScene().connection?.userRoomToken),
-                                10_000
-                            );
                             chatIframe?.contentWindow?.postMessage(
                                 {
                                     type: "userData",

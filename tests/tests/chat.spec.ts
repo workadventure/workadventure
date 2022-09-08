@@ -4,6 +4,7 @@ import {openChat} from "./utils/menu";
 import {findContainer, startContainer, stopContainer} from "./utils/containers";
 import {createFileOfSize, fileExist} from "./utils/file";
 import {oidcLogin} from "./utils/oidc";
+import {execSync} from "child_process";
 
 const TIMEOUT_TO_GET_LIST = 30_000;
 
@@ -90,31 +91,13 @@ test.describe('Chat', () => {
       await expect(chat.locator('#activeThread .wa-messages-list .wa-message.received').last()).toContainText('Fine, what about you ?');
       await expect(chat.locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.message-replied')).toContainText('Hello, how are you ?');
 
+      // Test if upload is disabled
+      await expect(chat.locator('#activeThread input#file')).toBeUndefined();
+
+      execSync('docker-compose exec -it chat export ENABLE_CHAT_UPLOAD=true && docker-compose exec -it uploader export ENABLE_CHAT_UPLOAD=true');
+
       // Generate bulk file
-      if(!fileExist('./file.txt')) await createFileOfSize('./file.txt', 10_485_860);
-
-      // Try upload file but not logged in
-      if(fileExist('./file.txt')){
-        await chat.locator('#activeThread input#file').setInputFiles('file.txt');
-        await expect(chat.locator('#activeThread #send')).toHaveClass(/cant-send/);
-        await expect(chat.locator('#activeThread .upload-file')).toContainText('need to be logged in to upload a file');
-        await chat.locator('#activeThread .upload-file button.delete').click();
-      }
-
-      // Log in
-      await oidcLogin(page);
-
-      await openChat(page);
-
-      // Enter liveZone
-      await page.keyboard.press('ArrowRight', {delay: 2_500});
-      await page.keyboard.press('ArrowUp', {delay: 500});
-      await expect(chat.locator('#liveRooms')).toContainText('liveZone');
-
-      // Open forum
-      await chat.locator('#liveRooms .wa-chat-item .wa-dropdown button').click();
-      await chat.locator('#liveRooms .wa-chat-item .wa-dropdown .open').click();
-
+      if(!fileExist('./file.txt')) await createFileOfSize('./file.txt', 5_000_000);
 
       // Send a file in a message being logged in
       await chat.locator('#activeThread input#file').setInputFiles('file.txt');

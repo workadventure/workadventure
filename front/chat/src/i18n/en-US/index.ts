@@ -103,6 +103,7 @@ const en_US: BaseTranslation = {
     refresh: "Refresh",
     upgrade: "Upgrade",
     upgradeToSeeMore: "Upgrade to see more messages",
+    disabled: "This feature is disabled.",
 };
 
 export default en_US;

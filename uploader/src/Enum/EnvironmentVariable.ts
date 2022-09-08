@@ -1,3 +1,4 @@
+const ENABLE_CHAT_UPLOAD = process.env.ENABLE_CHAT_UPLOAD === "true";
 const UPLOAD_MAX_FILESIZE = parseInt(process.env.UPLOAD_MAX_FILESIZE || '1073741824');
 const ADMIN_API_URL = process.env.ADMIN_API_URL;
 
@@ -12,6 +13,7 @@ const REDIS_HOST = process.env.REDIS_HOST;
 const REDIS_PORT = process.env.REDIS_PORT;
 
 export {
+    ENABLE_CHAT_UPLOAD,
     UPLOAD_MAX_FILESIZE,
     ADMIN_API_URL,
 

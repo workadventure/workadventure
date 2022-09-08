@@ -8,12 +8,14 @@ import { uploaderService } from "../Service/UploaderService";
 import { mimeTypeManager } from "../Service/MimeType";
 import { ByteLenghtBufferException } from "../Exception/ByteLenghtBufferException";
 import Axios, {AxiosError} from "axios";
-import {ADMIN_API_URL, UPLOAD_MAX_FILESIZE} from "../Enum/EnvironmentVariable";
+import {ADMIN_API_URL, ENABLE_CHAT_UPLOAD, UPLOAD_MAX_FILESIZE} from "../Enum/EnvironmentVariable";
 
 interface UploadedFileBuffer {
     buffer: Buffer,
     expireDate?: Date
 }
+
+class DisabledChat extends Error{}
 
 export class FileController extends BaseController {
     //TODO migrate in upload file service
@@ -266,6 +268,10 @@ export class FileController extends BaseController {
                         }
                     });
 
+                    if(!ENABLE_CHAT_UPLOAD && !ADMIN_API_URL){
+                        throw new DisabledChat('401 Unauthorized');
+                    }
+
                     if(!userRoomToken && ADMIN_API_URL){
                         throw new Error('No user room token');
                     }
@@ -332,6 +338,10 @@ export class FileController extends BaseController {
                                 maxFileSize: err.response?.data.maxFileSize,
                             }));
                         }
+                    } else if(err instanceof DisabledChat){
+                        res.writeStatus("401 Unauthorized");
+                        this.addCorsHeaders(res);
+                        return res.end('An error happened');
                     }
                     console.error("An error happened", err);
                     res.writeStatus("500 Internal Server Error");

@@ -103,6 +103,7 @@ const fr_FR: Translation = {
     refresh: "Rafraichir",
     upgrade: "Passez premium",
     upgradeToSeeMore: "Passez premium pour voir plus de messages",
+    disabled: "Cette fonctionnalité est désactivée.",
 };
 
 export default fr_FR;

@@ -3,6 +3,7 @@ import { filesUploadStore } from "../Stores/ChatStore";
 import xml, { Element } from "@xmpp/xml";
 import { get } from "svelte/store";
 import { userStore } from "../Stores/LocalUserStore";
+import {ADMIN_API_URL, ENABLE_CHAT_UPLOAD} from "../Enum/EnvironmentVariable";
 
 const _VERBOSE = true;
 
@@ -20,6 +21,7 @@ export interface UploadedFileInterface {
 }
 
 class NotLoggedUser extends Error {}
+class DisabledChat extends Error {}
 
 export class UploadedFile implements FileExt, UploadedFileInterface {
     public uploadState: uploadingState;
@@ -101,9 +103,12 @@ export class FileMessageManager {
 
         try {
             const userRoomToken = userStore.get().userRoomToken;
-            if (!userRoomToken) {
+            if (!userRoomToken && ADMIN_API_URL) {
                 throw new NotLoggedUser();
+            } else if(!userRoomToken && !ENABLE_CHAT_UPLOAD && !ADMIN_API_URL) {
+                throw new DisabledChat();
             }
+
             const results = await uploaderManager.write(files, userRoomToken);
 
             //update state of message
@@ -123,6 +128,9 @@ export class FileMessageManager {
                     file.uploadState = uploadingState.error;
                     if (err instanceof NotLoggedUser) {
                         file.errorMessage = "not-logged";
+                        file.errorCode = 401;
+                    } else if (err instanceof DisabledChat) {
+                        file.errorMessage = "disabled";
                         file.errorCode = 401;
                     } else {
                         file.errorMessage = err.response?.data.message;
