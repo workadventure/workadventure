@@ -16,6 +16,7 @@ interface UploadedFileBuffer {
 }
 
 class DisabledChat extends Error{}
+class NotLoggedUser extends Error {}
 
 export class FileController extends BaseController {
     //TODO migrate in upload file service
@@ -276,7 +277,7 @@ export class FileController extends BaseController {
                     for(const [fileName, buffer] of chunksByFile){
                         if(ADMIN_API_URL) {
                             if(!userRoomToken){
-                                throw new Error('No user room token');
+                                throw new NotLoggedUser();
                             } else {
                                 await Axios.get(`${ADMIN_API_URL}/api/limit/fileSize`, {
                                     headers: {'userRoomToken': userRoomToken},
@@ -344,8 +345,12 @@ export class FileController extends BaseController {
                         res.writeStatus("401 Unauthorized");
                         this.addCorsHeaders(res);
                         return res.end('An error happened');
+                    } else if(err instanceof NotLoggedUser){
+                        res.writeStatus("401 Unauthorized");
+                        this.addCorsHeaders(res);
+                        return res.end('not-logged');
                     }
-                    console.error("An error happened", err);
+                    console.error("FILE upload error", err);
                     res.writeStatus("500 Internal Server Error");
                     this.addCorsHeaders(res);
                     return res.end('An error happened');
