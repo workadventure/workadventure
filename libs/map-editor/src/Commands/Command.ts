@@ -3,7 +3,7 @@ import { CommandConfig } from '../types';
 
 export abstract class Command {
 
-    public id: string;
+    public readonly id: string;
 
     constructor() {
         this.id = uuidv4();
@@ -11,8 +11,4 @@ export abstract class Command {
 
     public abstract execute(): CommandConfig;
     public abstract undo(): CommandConfig;
-
-    public getId(): string {
-        return this.id;
-    }
 }

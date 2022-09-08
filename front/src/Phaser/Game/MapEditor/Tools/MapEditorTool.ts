@@ -1,3 +1,4 @@
+import { CommandConfig } from "@workadventure/map-editor";
 import { RoomConnection } from "../../../../Connexion/RoomConnection";
 import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 
@@ -9,4 +10,5 @@ export abstract class MapEditorTool {
     public abstract subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void;
     public abstract unsubscribeFromGameMapFrontWrapperEvents(): void;
     public abstract handleKeyDownEvent(event: KeyboardEvent): void;
+    public abstract handleCommandExecution(commandConfig: CommandConfig): void;
 }

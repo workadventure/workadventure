@@ -1,4 +1,4 @@
-import { AreaType, CreateAreaCommandConfig, ITiledMapRectangleObject } from "@workadventure/map-editor";
+import { AreaType, CommandConfig, ITiledMapRectangleObject } from "@workadventure/map-editor";
 import { Subscription } from "rxjs";
 import { get } from "svelte/store";
 import { RoomConnection } from "../../../../Connexion/RoomConnection";
@@ -43,10 +43,27 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     public subscribeToRoomConnection(connection: RoomConnection): void {
-        connection.editMapMessageStream.subscribe((message) => {
-            switch (message.message?.$case) {
+        connection.editMapCommandMessageStream.subscribe((editMapCommandMessage) => {
+            const pendingCommands = this.mapEditorModeManager.getPendingCommands();
+
+            if (pendingCommands.length > 0) {
+                if (pendingCommands[pendingCommands.length - 1].id === editMapCommandMessage.id) {
+                    console.log("OUR NEWEST COMMAND CAME BACK FROM THE BACK, ACKNOWLEDGED!");
+                    pendingCommands.pop();
+                    return;
+                } else if (pendingCommands.map((command) => command.id).includes(editMapCommandMessage.id)) {
+                    console.log(
+                        "INCOMING COMMAND IS NOT THE NEWEST COMMAND WAITING FOR ACKNOWLEDGEMENT. REVERTING PENDING COMMANDS"
+                    );
+                    while (pendingCommands.length > 0) {
+                        pendingCommands.pop()?.undo();
+                    }
+                    console.log("PENDING COMMANDS CLEARED. APPLY NEWEST COMMAND FROM THE SERVER");
+                }
+            }
+            switch (editMapCommandMessage.editMapMessage?.message?.$case) {
                 case "modifyAreaMessage": {
-                    const data = message.message.modifyAreaMessage;
+                    const data = editMapCommandMessage.editMapMessage?.message.modifyAreaMessage;
                     // execute command locally
                     this.mapEditorModeManager.executeCommand(
                         {
@@ -56,16 +73,10 @@ export class AreaEditorTool extends MapEditorTool {
                         false,
                         false
                     );
-
-                    this.areaPreviews
-                        .find((area) => area.getConfig().id === data.id)
-                        ?.updatePreview(data as ITiledMapRectangleObject);
-                    this.scene.getGameMapFrontWrapper().updateAreaById(data.id, AreaType.Static, data);
-                    this.scene.markDirty();
                     break;
                 }
                 case "createAreaMessage": {
-                    const data = message.message.createAreaMessage;
+                    const data = editMapCommandMessage.editMapMessage?.message.createAreaMessage;
                     const config = {
                         ...data,
                         class: "area",
@@ -80,12 +91,10 @@ export class AreaEditorTool extends MapEditorTool {
                         false,
                         false
                     );
-
-                    this.handleAreaPreviewCreation(config);
                     break;
                 }
                 case "deleteAreaMessage": {
-                    const data = message.message.deleteAreaMessage;
+                    const data = editMapCommandMessage.editMapMessage?.message.deleteAreaMessage;
                     // execute command locally
                     this.mapEditorModeManager.executeCommand(
                         {
@@ -95,16 +104,30 @@ export class AreaEditorTool extends MapEditorTool {
                         false,
                         false
                     );
-
-                    const areaPreview = this.areaPreviews.find((preview) => preview.getConfig().id === data.id);
-                    if (!areaPreview) {
-                        break;
-                    }
-                    this.handleAreaPreviewDeletion(areaPreview);
                     break;
                 }
             }
         });
+    }
+
+    public handleCommandExecution(commandConfig: CommandConfig): void {
+        switch (commandConfig.type) {
+            case "CreateAreaCommand": {
+                this.handleAreaPreviewCreation(commandConfig.areaObjectConfig);
+                break;
+            }
+            case "DeleteAreaCommand": {
+                this.handleAreaPreviewDeletion(commandConfig.id);
+                break;
+            }
+            case "UpdateAreaCommand": {
+                this.handleAreaPreviewUpdate(commandConfig.areaObjectConfig);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
     }
 
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
@@ -145,16 +168,19 @@ export class AreaEditorTool extends MapEditorTool {
                     type: "DeleteAreaCommand",
                     id: areaPreview.getId(),
                 });
-                this.handleAreaPreviewDeletion(areaPreview);
                 break;
             }
             case "l": {
-                const commandConfig = this.mapEditorModeManager.executeCommand({
+                const newAreaId = this.scene.getGameMap().getNextObjectId();
+                if (newAreaId === undefined) {
+                    return;
+                }
+                this.mapEditorModeManager.executeCommand({
                     type: "CreateAreaCommand",
                     areaObjectConfig: {
-                        id: -1,
+                        id: newAreaId,
                         class: "area",
-                        name: "STATIC_AREA_",
+                        name: `STATIC_AREA_${newAreaId}`,
                         visible: true,
                         width: 100,
                         height: 100,
@@ -162,10 +188,6 @@ export class AreaEditorTool extends MapEditorTool {
                         y: this.scene.input.activePointer.y,
                     },
                 });
-                if (commandConfig !== undefined) {
-                    // how to be sure we get correct type?
-                    this.handleAreaPreviewCreation((commandConfig as CreateAreaCommandConfig).areaObjectConfig);
-                }
                 break;
             }
             default: {
@@ -174,16 +196,23 @@ export class AreaEditorTool extends MapEditorTool {
         }
     }
 
-    private handleAreaPreviewDeletion(areaPreview: AreaPreview): void {
-        this.deleteAreaPreview(areaPreview.getConfig().id);
+    public handleAreaPreviewDeletion(id: number): void {
+        this.deleteAreaPreview(id);
         this.scene.markDirty();
         mapEditorSelectedAreaPreviewStore.set(undefined);
     }
 
-    private handleAreaPreviewCreation(config: ITiledMapRectangleObject): void {
+    public handleAreaPreviewCreation(config: ITiledMapRectangleObject): void {
+        this.scene.getGameMap().incrementNextObjectId();
         const areaPreview = new AreaPreview(this.scene, { ...config });
         this.bindAreaPreviewEventHandlers(areaPreview);
         this.areaPreviews.push(areaPreview);
+        this.scene.markDirty();
+    }
+
+    private handleAreaPreviewUpdate(config: ITiledMapRectangleObject): void {
+        this.areaPreviews.find((area) => area.getConfig().id === config.id)?.updatePreview(config);
+        this.scene.getGameMapFrontWrapper().updateAreaById(config.id, AreaType.Static, config);
         this.scene.markDirty();
     }
 

@@ -45,9 +45,9 @@ export class MapEditorModeManager {
     private localCommandsHistory: Command[];
 
     /**
-     * Every command that was applied on the map either from user or from the outside
+     * Commands sent by us that are still to be acknowledged by the server
      */
-    private allCommandsHistory: Command[];
+    private pendingCommands: Command[];
     /**
      * Which command was called most recently
      */
@@ -66,7 +66,7 @@ export class MapEditorModeManager {
         this.shiftKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
         this.localCommandsHistory = [];
-        this.allCommandsHistory = [];
+        this.pendingCommands = [];
         this.currentCommandIndex = -1;
 
         this.active = false;
@@ -110,17 +110,22 @@ export class MapEditorModeManager {
         }
         // We do an execution instantly so there will be no lag from user's perspective
         const executedCommandConfig = command.execute();
-        if (emitMapEditorUpdate) {
-            this.emitMapEditorUpdate(command.getId(), commandConfig);
+
+        // do any necessary changes for active tool interface
+        if (this.activeTool) {
+            this.editorTools.get(this.activeTool)?.handleCommandExecution(executedCommandConfig);
         }
 
-        this.allCommandsHistory.push(command);
+        if (emitMapEditorUpdate) {
+            this.emitMapEditorUpdate(command.id, commandConfig);
+        }
 
         if (alterLocalCommandsHistory) {
             // if we are not at the end of commands history and perform an action, get rid of commands later in history than our current point in time
             if (this.currentCommandIndex !== this.localCommandsHistory.length - 1) {
                 this.localCommandsHistory.splice(this.currentCommandIndex + 1);
             }
+            this.pendingCommands.push(command);
             this.localCommandsHistory.push(command);
             this.currentCommandIndex += 1;
         }
@@ -134,7 +139,7 @@ export class MapEditorModeManager {
         const command = this.localCommandsHistory[this.currentCommandIndex];
         const commandConfig = command.undo();
         // this should not be called with every change. Use some sort of debounce
-        this.emitMapEditorUpdate(command.getId(), commandConfig);
+        this.emitMapEditorUpdate(command.id, commandConfig);
         this.currentCommandIndex -= 1;
     }
 
@@ -148,7 +153,7 @@ export class MapEditorModeManager {
         const command = this.localCommandsHistory[this.currentCommandIndex + 1];
         const commandConfig = command.execute();
         // this should not be called with every change. Use some sort of debounce
-        this.emitMapEditorUpdate(command.getId(), commandConfig);
+        this.emitMapEditorUpdate(command.id, commandConfig);
         this.currentCommandIndex += 1;
     }
 
@@ -277,8 +282,8 @@ export class MapEditorModeManager {
         this.mapEditorModeUnsubscriber();
     }
 
-    public getAllCommandsHistory(): Command[] {
-        return this.allCommandsHistory;
+    public getPendingCommands(): Command[] {
+        return this.pendingCommands;
     }
 
     public getScene(): GameScene {

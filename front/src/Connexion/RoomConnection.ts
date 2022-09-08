@@ -29,7 +29,7 @@ import {
     AvailabilityStatus,
     CharacterLayerMessage,
     ClientToServerMessage as ClientToServerMessageTsProto,
-    EditMapMessage,
+    EditMapCommandMessage,
     EmoteEventMessage as EmoteEventMessageTsProto,
     ErrorMessage as ErrorMessageTsProto,
     ErrorScreenMessage as ErrorScreenMessageTsProto,
@@ -141,8 +141,8 @@ export class RoomConnection implements RoomConnection {
     private readonly _variableMessageStream = new Subject<{ name: string; value: unknown }>();
     public readonly variableMessageStream = this._variableMessageStream.asObservable();
 
-    private readonly _editMapMessageStream = new Subject<EditMapMessage>();
-    public readonly editMapMessageStream = this._editMapMessageStream.asObservable();
+    private readonly _editMapCommandMessageStream = new Subject<EditMapCommandMessage>();
+    public readonly editMapCommandMessageStream = this._editMapCommandMessageStream.asObservable();
 
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
     public readonly playerDetailsUpdatedMessageStream = this._playerDetailsUpdatedMessageStream.asObservable();
@@ -308,9 +308,10 @@ export class RoomConnection implements RoomConnection {
                                 this.sendPong();
                                 break;
                             }
-                            case "editMapMessage": {
-                                const message = subMessage.editMapMessage;
-                                this._editMapMessageStream.next(message);
+                            case "editMapCommandMessage": {
+                                const message = subMessage.editMapCommandMessage;
+                                console.log(message);
+                                this._editMapCommandMessageStream.next(message);
                                 break;
                             }
                             default: {
