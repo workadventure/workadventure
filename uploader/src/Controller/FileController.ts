@@ -269,7 +269,7 @@ export class FileController extends BaseController {
                     });
 
                     if(!ENABLE_CHAT_UPLOAD && !ADMIN_API_URL){
-                        throw new DisabledChat('401 Unauthorized');
+                        throw new DisabledChat('Upload is disabled');
                     }
 
                     if(!userRoomToken && ADMIN_API_URL){

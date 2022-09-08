@@ -316,34 +316,6 @@ export class XmppClient {
                 const maxDate = new Date();
                 maxDate.setDate(maxDate.getDate() - this.clientSocket.maxHistoryChat);
                 if (endDate > maxDate) {
-                    /*
-                    <iq
-                    xmlns="jabber:client"
-                    xml:lang="en"
-                    to="hello\40workadventu.re@xmpp.workadventure.localhost/b49ce1ee-88c2-46d5-840a-4c8166195972"
-                    from="http\3a\2f\2fplay.workadventure.localhost\2f_\2fglobal\2fmaps.workadventure.localhost\2ftests\2fe2e\2flivezone.json\2flivezone@conference.ejabberd"
-                    type="result"
-                    id="cdaf37eb-4229-4e6a-a29f-272e22953fef"
-                    >
-                    <fin complete="true" xmlns="urn:xmpp:mam:2">
-                    <set xmlns="http://jabber.org/protocol/rsm">
-                    <count>14</count>
-                    <first>1661444459851279</first>
-                    <last>1662032596354953</last>
-                    </set>
-                    </fin>
-                    </iq>
-
-                    <iq type='result' id='juliet1'>
-                      <fin xmlns='urn:xmpp:mam:2'>
-                        <set xmlns='http://jabber.org/protocol/rsm'>
-                          <count>0</count>
-                          <first index='0'>28482-98726-73623</first>
-                          <last>09af3-cc343-b409f</last>
-                        </set>
-                      </fin>
-                    </iq>
-                     */
                     this.sendToChat(
                         xml(
                             "iq",
