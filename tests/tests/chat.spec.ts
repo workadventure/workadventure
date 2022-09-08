@@ -89,18 +89,26 @@ test.describe('Chat', () => {
       await expect(chat.locator('#activeThread .wa-messages-list .wa-message.received').last()).toContainText('Fine, what about you ?');
       await expect(chat.locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.message-replied')).toContainText('Hello, how are you ?');
 
-      // Generate bulk file
-      if(!fileExist('./file.txt')) await createFileOfSize('./file.txt', 5_000_000);
 
-      // Send a file in a message being logged in
-      await chat.locator('#activeThread input#file').setInputFiles('file.txt');
+      // Generate bulk file
+      if(!fileExist('./fileLittle.txt')) await createFileOfSize('./fileLittle.txt', 5_000_000);
+      // Send a file in a message
+      await chat.locator('#activeThread input#file').setInputFiles('fileLittle.txt');
       await expect(chat.locator('#activeThread #send')).toHaveClass(/can-send/);
       await chat.locator('#activeThread #send').click();
       await expect(chat.locator('#activeThread .wa-messages-list .wa-message').last()).toHaveClass(/sent/);
-      await expect(chat.locator('#activeThread .wa-messages-list .wa-message').last().locator('.file')).toContainText('file.txt');
+      await expect(chat.locator('#activeThread .wa-messages-list .wa-message').last().locator('.file')).toContainText('fileLittle.txt');
       // Receive the file
       await expect(chat2.locator('#activeThread .wa-messages-list .wa-message').last()).toHaveClass(/received/);
-      await expect(chat2.locator('#activeThread .wa-messages-list .wa-message').last().locator('.file')).toContainText('file.txt');
+      await expect(chat2.locator('#activeThread .wa-messages-list .wa-message').last().locator('.file')).toContainText('fileLittle.txt');
+      
+      // Generate bulk file
+      if(!fileExist('./file.txt')) await createFileOfSize('./file.txt', 10_485_860);
+      // Try upload file but too big
+      await chat.locator('#activeThread input#file').setInputFiles('fileBig.txt');
+      await expect(chat.locator('#activeThread #send')).toHaveClass(/cant-send/);
+      await expect(chat.locator('#activeThread .upload-file')).toContainText('too big');
+      await chat.locator('#activeThread .upload-file button.delete').click();
 
       /*
       // TODO later : Manage admin in live zone based on our WorkAdventure role

@@ -259,8 +259,6 @@
             emojiOpened = false;
         });
     });
-
-    console.log(ENABLE_CHAT_UPLOAD);
 </script>
 
 <div class="wa-message-form">
