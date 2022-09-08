@@ -3,7 +3,6 @@ import { login } from './utils/roles';
 import {openChat} from "./utils/menu";
 import {findContainer, startContainer, stopContainer} from "./utils/containers";
 import {createFileOfSize, fileExist} from "./utils/file";
-import {execSync} from "child_process";
 
 const TIMEOUT_TO_GET_LIST = 30_000;
 
