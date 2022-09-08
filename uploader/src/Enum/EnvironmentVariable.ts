@@ -1,5 +1,5 @@
 const ENABLE_CHAT_UPLOAD = process.env.ENABLE_CHAT_UPLOAD || true;
-const UPLOAD_MAX_FILESIZE = parseInt(process.env.UPLOAD_MAX_FILESIZE || '1073741824');
+const UPLOAD_MAX_FILESIZE = process.env.UPLOAD_MAX_FILESIZE;
 const ADMIN_API_URL = process.env.ADMIN_API_URL;
 
 const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID;

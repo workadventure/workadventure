@@ -285,10 +285,10 @@ export class FileController extends BaseController {
                                 });
                             }
                         } else {
-                            console.log('FILE SIZE', fileName, ' : ', buffer.byteLength, 'bytes', '//', UPLOAD_MAX_FILESIZE);
+                            console.log('FILE SIZE', fileName, ' : ', buffer.byteLength, 'bytes', '//', UPLOAD_MAX_FILESIZE, 'bytes');
                             if(!ENABLE_CHAT_UPLOAD){
                                 throw new DisabledChat('Upload is disabled');
-                            } else if (buffer.byteLength > UPLOAD_MAX_FILESIZE) {
+                            } else if (UPLOAD_MAX_FILESIZE && buffer.byteLength > parseInt(UPLOAD_MAX_FILESIZE)) {
                                 throw new ByteLenghtBufferException(`file-too-big`);
                             }
                         }
