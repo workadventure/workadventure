@@ -1,8 +1,8 @@
 import { getEnvConfig } from "@geprog/vite-plugin-env-config/getEnvConfig";
 
 const PUSHER_URL = getEnvConfig("PUSHER_URL") || "//pusher.workadventure.localhost";
-const ADMIN_API_URL = process.env.ADMIN_API_URL;
-const ENABLE_CHAT_UPLOAD = process.env.ENABLE_CHAT_UPLOAD || true;
+const ADMIN_API_URL = getEnvConfig("ADMIN_API_URL");
+const ENABLE_CHAT_UPLOAD = getEnvConfig("ENABLE_CHAT_UPLOAD");
 const FALLBACK_LOCALE = getEnvConfig("FALLBACK_LOCALE") || undefined;
 const UPLOADER_URL = getEnvConfig("UPLOADER_URL") || undefined;
 const EMBEDLY_KEY = getEnvConfig("EMBEDLY_KEY") || undefined;
