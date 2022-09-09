@@ -46,16 +46,16 @@ sequenceDiagram
     participant P as Pusher
     participant API as Admin API
     autonumber
-    F ->>+ P: /map
-    P ->>+ API: /api/map
+    F ->>+ P: HTTP /map
+    P ->>+ API: HTTP /api/map
     API -->>- P: MapDetailsData
     P -->>- F: MapDetailsData
-    F ->>+ P: /room/access
-    P ->>+ API: /api/room/access
-    API -->>- P: FetchMemberDataByUuidResponse
-    P -->>- F: FetchMemberDataByUuidResponse
-    F ->>+ P: /woka/list
-    P ->>+ API: /api/woka/list
+    F ->>+ P: WS /room
+    P ->>+ API: HTTP /api/room/access
+    API -->>- P: FetchMemberDataByAuthTokenResponse
+    P -->>- F: FetchMemberDataByAuthTokenResponse
+    F ->>+ P: HTTP /woka/list
+    P ->>+ API: HTTP /api/woka/list
     API -->>- P: WokaList
     P -->>- F: WokaList
 ```
@@ -69,7 +69,7 @@ The most important endpoints are:
 - `/api/room/access`<br>
   _On the sequence diagram this is the call n°6._<br>
   This end point returns the member's information if he can access this room.<br>
-  In case of success, this endpoint returns a `FetchMemberDataByUuidResponse` object.
+  In case of success, this endpoint returns a `FetchMemberDataByAuthTokenResponse` object.
 - `/api/woka/list`<br>
   _On the sequence diagram this is the call n°10._<br>
   This end point returns a list of all the woka from the world specified.<br>
