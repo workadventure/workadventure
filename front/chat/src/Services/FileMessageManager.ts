@@ -121,7 +121,7 @@ export class FileMessageManager {
             });
             //eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
-            console.error("sendFiles => ", err, err.response);
+            console.error("sendFiles => ", err, err.response, err.response?.data);
 
             //add error state in message
             filesUploadStore.update((list) => {
