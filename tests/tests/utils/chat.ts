@@ -41,8 +41,8 @@ class Chat {
 
     async UL_walkTo(page: Page, nickname: string){
         await this.get(page).locator('.users .wa-chat-item', {hasText: nickname}).locator('.wa-dropdown button').click();
-        await expect(this.get(page).locator('span:has-text("Walk to")')).toBeVisible();
-        await this.get(page).locator('span:has-text("Walk to")').click({ timeout: 5_000 });
+        await expect(this.get(page).locator('.users .wa-chat-item', {hasText: nickname}).locator('span:has-text("Walk to")')).toBeVisible();
+        await this.get(page).locator('.users .wa-chat-item', {hasText: nickname}).locator('span:has-text("Walk to")').click({ timeout: 5_000 });
     }
 
     async AT_sendMessage(page: Page, text: string){
@@ -69,7 +69,7 @@ class Chat {
     async AT_reactLastMessage(page: Page){
         await this.get(page).locator('#activeThread .wa-messages-list .wa-message.received').last().hover();
         await this.get(page).locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.actions .action.react').click();
-        await this.get(page).frameLocator('iframe#chatWorkAdventure').locator('.emoji-picker .emoji-picker__emojis button.emoji-picker__emoji').first().click();
+        await page.frameLocator('iframe#chatWorkAdventure').locator('.emoji-picker .emoji-picker__emojis button.emoji-picker__emoji').first().click();
         await expect(this.get(page).locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.emojis span.active')).toBeDefined();
     }
 
@@ -82,7 +82,7 @@ class Chat {
     }
 
     async AT_replyToLastMessage(page: Page, text: string){
-        const lastMessageText = await this.get(page).locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.wa-message-body').textContent();
+        const lastMessageText = await this.get(page).locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.wa-message-body div').first().textContent();
         await this.get(page).locator('#activeThread .wa-messages-list .wa-message.received').last().hover();
         await this.get(page).locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.actions .action.reply').click();
         await expect(this.get(page).locator('#activeThread .wa-message-form .replyMessage .message p')).toContainText(lastMessageText);
