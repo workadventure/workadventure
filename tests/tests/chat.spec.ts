@@ -43,14 +43,13 @@ test.describe('Chat', () => {
       await Chat.checkNameInChat(page2, nickname, TIMEOUT_TO_GET_LIST);
       await Chat.checkNameInChat(page2, nickname2, TIMEOUT_TO_GET_LIST);
 
-
       // Enter in liveZone
       await Map.walkTo(page, 'ArrowRight', 2_500);
       await Map.walkTo(page, 'ArrowUp', 500);
       await Chat.liveRoomExist(page, 'liveZone');
-      await Map.walkTo(page, 'ArrowRight', 2_500);
-      await Map.walkTo(page, 'ArrowDown', 500);
-      await Chat.liveRoomExist(page, 'liveZone');
+      await Map.walkTo(page2, 'ArrowRight', 2_500);
+      await Map.walkTo(page2, 'ArrowDown', 500);
+      await Chat.liveRoomExist(page2, 'liveZone');
 
 
       // Open forum
@@ -72,7 +71,7 @@ test.describe('Chat', () => {
 
 
       // Reply to a message
-      await Chat.AT_replyToLastMessage(page, 'Fine, what about you ?');
+      await Chat.AT_replyToLastMessage(page2, 'Fine, what about you ?');
       // Receive the reply of the message
       await Chat.AT_lastMessageContain(page, 'Fine, what about you ?');
       await Chat.AT_lastMessageReplyContain(page, 'Hello, how are you ?');
