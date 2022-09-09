@@ -103,7 +103,7 @@ export class FileMessageManager {
 
         try {
             const userRoomToken = userStore.get().userRoomToken;
-            console.log("USER ROOM TOKEN :", userRoomToken);
+            console.log("USER ROOM TOKEN :", userRoomToken, !userRoomToken, !!ADMIN_API_URL);
             if (!userRoomToken && ADMIN_API_URL) {
                 throw new NotLoggedUser();
             } else if (!ENABLE_CHAT_UPLOAD && !ADMIN_API_URL) {

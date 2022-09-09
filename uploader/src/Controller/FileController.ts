@@ -345,11 +345,11 @@ export class FileController extends BaseController {
                     } else if(err instanceof DisabledChat){
                         res.writeStatus("401 Unauthorized");
                         this.addCorsHeaders(res);
-                        return res.end('An error happened');
+                        return res.end(JSON.stringify({message: 'disabled'}));
                     } else if(err instanceof NotLoggedUser){
                         res.writeStatus("401 Unauthorized");
                         this.addCorsHeaders(res);
-                        return res.end('not-logged');
+                        return res.end(JSON.stringify({message: 'not-logged'}));
                     }
                     res.writeStatus("500 Internal Server Error");
                     this.addCorsHeaders(res);
