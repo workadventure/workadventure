@@ -64,7 +64,7 @@ export class XmppClient {
                     console.info("XmppClient => createClient => receive => error", err);
                 }
                 //console.error("XmppClient => receive => error =>", err);
-                this.xmppSocket?.stop();
+                this.close();
             });
 
             xmpp.reconnect.on("reconnecting", () => {
