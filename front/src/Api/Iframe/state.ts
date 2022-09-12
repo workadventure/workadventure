@@ -11,8 +11,6 @@ export class WorkadventureStateCommands extends AbstractWorkadventureStateComman
         apiCallback({
             type: "setVariable",
             callback: (payloadData) => {
-                console.error("GOT MESSAGE setVariable FOR Global state");
-                console.error(payloadData);
                 this.setVariableResolvers.next(payloadData);
             },
         }),

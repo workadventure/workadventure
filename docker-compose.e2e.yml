@@ -13,7 +13,7 @@ services:
         - thecodingmachine/workadventure-front:${DOCKER_TAG:-develop}
       args:
         BUILDKIT_INLINE_CACHE: 1
-    command: /bin/sh -c "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"
+    command: /start_nginx.sh
     volumes: []
     labels:
       - "traefik.enable=true"
@@ -30,7 +30,7 @@ services:
         - thecodingmachine/workadventure-chat:${DOCKER_TAG:-develop}
       args:
         BUILDKIT_INLINE_CACHE: 1
-    command: /bin/sh -c "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"
+    command: /start_nginx.sh
     volumes: []
     labels:
       - "traefik.enable=true"
@@ -76,6 +76,15 @@ services:
     command: yarn run start:prod
     volumes: []
 
+  maps:
+    image: thecodingmachine/workadventure-maps:${DOCKER_TAG:-develop}
+    build:
+      context: maps/
+      cache_from:
+        - thecodingmachine/workadventure-maps:${DOCKER_TAG:-develop}
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    volumes: []
 
   uploader:
     image: thecodingmachine/workadventure-uploader:${DOCKER_TAG:-develop}
@@ -87,4 +96,14 @@ services:
       args:
         BUILDKIT_INLINE_CACHE: 1
     command: yarn run runprod
+    volumes: []
+
+  ejabberd:
+    image: thecodingmachine/workadventure-simple-ecs:${DOCKER_TAG:-develop}
+    build:
+      context: xmpp/
+      cache_from:
+        - thecodingmachine/workadventure-simple-ecs:${DOCKER_TAG:-develop}
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     volumes: []

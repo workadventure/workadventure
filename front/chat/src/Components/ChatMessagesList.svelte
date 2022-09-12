@@ -293,7 +293,13 @@
                             style={`background-color: ${getColor(message.jid)}`}
                         >
                             <div class="wa-container">
-                                <img class="tw-w-full" src={getWoka(message.jid)} alt="Avatar" loading="lazy" />
+                                <img
+                                    class="tw-w-full"
+                                    style="image-rendering: pixelated;"
+                                    src={getWoka(message.jid)}
+                                    alt="Avatar"
+                                    loading="lazy"
+                                />
                             </div>
                         </div>
                         <div
@@ -338,7 +344,7 @@
 
                             <!-- Delete message -->
                             {#if [...$deletedMessagesStore].find((deleted) => deleted === message.id)}
-                                <div class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left">
+                                <div class="wa-message-body">
                                     <p class="tw-italic">
                                         {$LL.messageDeleted()}
                                         {#if isMe(message.jid)}
@@ -351,7 +357,7 @@
 
                                 <!-- Message -->
                             {:else}
-                                <div class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left">
+                                <div class="wa-message-body">
                                     <!-- Body associated -->
                                     <div class="tw-text-ellipsis tw-overflow-y-auto tw-whitespace-normal">
                                         {#await HtmlUtils.urlify(message.body)}
@@ -468,7 +474,7 @@
                                 document.getElementById(`error_${message.id}`)?.classList.add("tw-invisible")}
                         >
                             <div
-                                class={`tw-text-pop-red tw-ml-1 tw-flex ${
+                                class={`tw-cursor-pointer tw-text-pop-red tw-ml-1 tw-flex ${
                                     needHideHeader(message.name, message.time, i) ? "" : "tw-mt-4"
                                 }`}
                                 on:click={() =>
@@ -616,8 +622,7 @@
         right: 0;
         border: solid 0.5px white;
     }
-    .message {
-        background-color: rgba(15, 31, 45, 0.9);
+    .wa-message-body {
         position: relative;
         min-width: 75px;
         .actions {

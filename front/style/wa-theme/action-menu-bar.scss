@@ -17,7 +17,7 @@
           @apply tw-rounded-none tw-bg-dark-purple/95 tw-w-10 tw-h-10 tw-px-2 tw-m-0 tw-outline-none;
           @apply sm:tw-w-12 sm:tw-h-12;
 
-          &.hover, &:hover {
+          &.focus, &.hover, &:hover {
             @apply tw-bg-medium-purple/95
           }
 

@@ -5,7 +5,7 @@
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import { getColorByString } from "../Video/utils";
     import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-    import { derived, Unsubscriber, writable } from "svelte/store";
+    import { derived, get, Unsubscriber, writable } from "svelte/store";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { CHAT_URL } from "../../Enum/EnvironmentVariable";
     import { locale } from "../../i18n/i18n-svelte";
@@ -14,6 +14,7 @@
     import { Subscription } from "rxjs";
     import { availabilityStatusStore } from "../../Stores/MediaStore";
     import { peerStore } from "../../Stores/PeerStore";
+    import { connectionManager } from "../../Connexion/ConnectionManager";
 
     let chatIframe: HTMLIFrameElement;
 
@@ -30,13 +31,13 @@
     // Phantom woka
     let wokaSrc =
         " data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAdCAYAAABBsffGAAAB/ElEQVRIia1WMW7CQBC8EAoqFy74AD1FqNzkAUi09DROwwN4Ag+gMQ09dcQXXNHQIucBPAJFc2Iue+dd40QZycLc7c7N7d7u+cU9wXw+ryyL0+n00eU9tCZIOp1O/f/ZbBbmzuczX6uuRVTlIAYpCSeTScumaZqw0OVyURd47SIGaZ7n6s4wjmc0Grn7/e6yLFtcr9dPaaOGhcTEeDxu2dxut2hXUJ9ioKmW0IidMg6/NPmD1EmqtojTBWAvE26SW8r+YhfIu87zbyB5BiRerVYtikXxXuLRuK058HABMyz/AX8UHwXgV0NRaEXzDKzaw+EQCioo1yrsLfvyjwZrTvK0yp/xh/o+JwbFhFYgFRNqzGEIB1ZhH2INkXJZoShn2WNSgJRNS/qoYSHxer1+qkhChnC320ULRI1LEsNhv99HISBkLmhP/7L8OfqhiKC6SzEJtSTLHMkGFhK6XC79L89rmtC6rv0YfjXV9COPDwtVQxEc2ZflIu7R+WADQrkA7eCH5BdFwQRXQ8bKxXejeWFoYZGCQM7Yh7BAkcw0DEnEEPHhbjBPQfCDvwzlEINlWZq3OAiOx2O0KwAKU8gehXfzu2Wz2VQMTXqCeLZZSNvtVv20MFsu48gQpDvjuHYxE+ZHESBPSJ/x3sqBvhe0hc5vRXkfypBY4xGcc9+lcFxartG6LgAAAABJRU5ErkJggg==";
-    const playUri = document.location.toString().split("#")[0].toString();
+    const playUri = window.location.protocol + "//" + window.location.hostname + window.location.pathname;
     const name = localUserStore.getName();
 
     let messageStream: Subscription;
 
     onMount(() => {
-        iframeListener.registerIframe(chatIframe);
+        iframeListener.registerChatIframe(chatIframe);
         chatIframe.addEventListener("load", () => {
             iframeLoadedStore.set(false);
             if (chatIframe && chatIframe.contentWindow && "postMessage" in chatIframe.contentWindow) {
@@ -76,6 +77,8 @@
                                         color: getColorByString(name ?? ""),
                                         woka: wokaSrc,
                                         isLogged: localUserStore.isLogged(),
+                                        availabilityStatus: get(availabilityStatusStore),
+                                        roomName: connectionManager.currentRoom?.roomName ?? null,
                                     },
                                 },
                                 "*"
@@ -94,25 +97,18 @@
                     })
                 );
                 subscribeListeners.push(
+                    availabilityStatusStore.subscribe((status) =>
+                        iframeListener.sendAvailabilityStatusToChatIframe(status)
+                    )
+                );
+                subscribeListeners.push(
                     chatVisibilityStore.subscribe((visibility) => {
                         try {
                             gameManager.getCurrentGameScene()?.onResize();
                         } catch (err) {
                             console.info("gameManager doesn't exist!", err);
                         }
-                        try {
-                            iframeListener.sendChatVisibilityToChatIframe(visibility);
-                        } catch (err) {
-                            console.error("Send chat visibility to chat iFrame", err);
-                        }
-                    })
-                );
-                subscribeListeners.push(
-                    availabilityStatusStore.subscribe((status) => {
-                        iframeListener.postMessageToChat({
-                            type: "availabilityStatus",
-                            data: status,
-                        });
+                        iframeListener.sendChatVisibilityToChatIframe(visibility);
                     })
                 );
                 messageStream = adminMessagesService.messageStream.subscribe((message) => {
@@ -125,22 +121,10 @@
                 //TODO delete it with new XMPP integration
                 //send list to chat iframe
                 subscribeListeners.push(
-                    writingStatusMessageStore.subscribe((list) => {
-                        try {
-                            iframeListener.sendWritingStatusToChatIframe(list);
-                        } catch (err) {
-                            console.error(err);
-                        }
-                    })
+                    writingStatusMessageStore.subscribe((list) => iframeListener.sendWritingStatusToChatIframe(list))
                 );
                 subscribeListeners.push(
-                    peerStore.subscribe((list) => {
-                        try {
-                            iframeListener.sendPeerConnexionStatusToChatIframe(list.size > 0);
-                        } catch (err) {
-                            console.error(err);
-                        }
-                    })
+                    peerStore.subscribe((list) => iframeListener.sendPeerConnexionStatusToChatIframe(list.size > 0))
                 );
             }
         });
@@ -173,7 +157,7 @@
 
 <svelte:window on:keydown={onKeyDown} />
 <div id="chatWindow" class:show={$chatVisibilityStore}>
-    {#if $chatVisibilityStore}<button class="hide" on:click={closeChat}>&lsaquo</button>{/if}
+    {#if $chatVisibilityStore}<button class="hide" on:click={closeChat}>&#215;</button>{/if}
     <iframe
         id="chatWorkAdventure"
         bind:this={chatIframe}
@@ -201,7 +185,7 @@
         left: -100%;
         height: 100%;
         width: 28%;
-        min-width: 250px;
+        min-width: 335px;
         transition: all 0.2s ease-in-out;
         pointer-events: none;
         visibility: hidden;
@@ -217,12 +201,12 @@
         }
         .hide {
             top: 1%;
-            padding: 0 7px 2px 6px;
+            padding: 0 5px 0 3px;
             min-height: fit-content;
             position: absolute;
             right: -21px;
             z-index: -1;
-            font-size: 20px;
+            font-size: 21px;
             border-bottom-left-radius: 0;
             border-top-left-radius: 0;
             background: rgba(27, 27, 41, 0.95);

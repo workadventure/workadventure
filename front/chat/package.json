@@ -73,8 +73,7 @@
     "zod": "^3.14.3"
   },
   "scripts": {
-    "start": "run-p templater serve svelte-check-watch typesafe-i18n-watch",
-    "templater": "cross-env ./templater.sh",
+    "start": "run-p serve svelte-check-watch typesafe-i18n-watch",
     "serve": "cross-env vite --host",
     "build": "cross-env vite build",
     "test": "cross-env TS_NODE_PROJECT=\"tsconfig-for-jasmine.json\" ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",

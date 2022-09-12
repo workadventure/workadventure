@@ -26,4 +26,9 @@ export class StringUtils {
         }
         return Math.abs(hash).toString(36);
     };
+
+    public static normalizeDeviceName = function (label: string): string {
+        // remove IDs (that can appear in Chrome, like: "HD Pro Webcam (4df7:4eda)"
+        return label.replace(/(\([[0-9a-f]{4}:[0-9a-f]{4}\))/g, "").trim();
+    };
 }

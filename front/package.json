@@ -82,8 +82,7 @@
     "zod": "^3.14.3"
   },
   "scripts": {
-    "start": "run-p templater serve watch-iframe-api svelte-check-watch typesafe-i18n-watch",
-    "templater": "cross-env ./templater.sh",
+    "start": "run-p serve watch-iframe-api svelte-check-watch typesafe-i18n-watch",
     "serve": "cross-env vite --host",
     "build": "cross-env vite build",
     "build-iframe-api": "vite --config iframe-api.vite.config.ts build",

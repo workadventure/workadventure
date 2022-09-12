@@ -27,21 +27,6 @@ const menu: BaseTranslation = {
         logout: "Log out",
     },
     settings: {
-        gameQuality: {
-            title: "Game quality",
-            short: {
-                high: "High (120 fps)",
-                medium: "Medium (60 fps)",
-                small: "Small (40 fps)",
-                minimum: "Minimum (20 fps)",
-            },
-            long: {
-                high: "High video quality (120 fps)",
-                medium: "Medium video quality (60 fps, recommended)",
-                small: "Small video quality (40 fps)",
-                minimum: "Minimum video quality (20 fps)",
-            },
-        },
         videoQuality: {
             title: "Video quality",
             short: {

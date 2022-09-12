@@ -22,6 +22,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     my: {
         silentZone: "Stiller Bereich",
     },
+    disable: "Schalten Sie Ihre Kamera aus",
 };
 
 export default camera;
