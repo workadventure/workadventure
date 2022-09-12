@@ -149,8 +149,11 @@ export class AreaEditorTool extends MapEditorTool {
             return;
         }
         areaPreview.updatePreview(config);
+        console.log("GET AREA PREVIEW TO STORE");
         // HACK: A way to update AreaPreviewWindow component values after performin undo / redo operations
-        mapEditorSelectedAreaPreviewStore.set(areaPreview);
+        if (get(mapEditorSelectedAreaPreviewStore) !== undefined) {
+            mapEditorSelectedAreaPreviewStore.set(areaPreview);
+        }
     }
 
     public getAreaPreviewConfig(id: number): ITiledMapRectangleObject | undefined {
