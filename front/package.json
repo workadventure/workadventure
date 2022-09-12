@@ -47,7 +47,7 @@
     "@types/xmpp__jid": "^1.3.3",
     "@types/xmpp__xml": "^0.13.1",
     "@ungap/structured-clone": "^1.0.1",
-    "@workadventure-style/sweetsky": "^1.0.1",
+    "@workadventure-style/sweetsky": "^1.0.2",
     "@workadventure/map-editor-types": "link:../libs/map-editor-types",
     "@workadventure/math-utils": "link:../libs/math-utils",
     "@workadventure/tiled-map-type-guard": "^2.0.4",

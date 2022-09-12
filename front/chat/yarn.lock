@@ -721,10 +721,10 @@
     "@typescript-eslint/types" "5.30.6"
     eslint-visitor-keys "^3.3.0"
 
-"@workadventure-style/sweetsky@^1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@workadventure-style/sweetsky/-/sweetsky-1.0.1.tgz#08c5723a6665199adad1fd98b1dd7cf98af2488e"
-  integrity sha512-ygGGOpvE/4lz67A9wzSJ3ONPnXCMRZ5MNtXONtht7rIPgdhi1nmxkDuNrAKwuMjta1M5n5340veHE3/m9cu1Dw==
+"@workadventure-style/sweetsky@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@workadventure-style/sweetsky/-/sweetsky-1.0.2.tgz#79a3f3c11f42ecf3bc65fb4139c55118d7892367"
+  integrity sha512-bpaUmdZNKo4igeXsiHIiXBi15qAHuibBCo9jta5wVJv+IPEDie9bEK/FFdsh8DPEyQiQDwsUZZqkFkOktXOGRA==
   dependencies:
     "@16bits/nes.css" "^2.3.2"
     "@fontsource/press-start-2p" "^4.3.0"
