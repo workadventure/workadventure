@@ -46,8 +46,7 @@ services:
       ICON_URL: //icon.workadventure.localhost
       STARTUP_COMMAND_2: yarn install
       STARTUP_COMMAND_3: yarn typesafe-i18n
-      STARTUP_COMMAND_4: cd ../libs/tailwind && yarn install
-      STARTUP_COMMAND_5: cd ../map-editor-types && yarn install
+      STARTUP_COMMAND_4: cd ../libs/map-editor-types && yarn install
       STUN_SERVER: "stun:stun.l.google.com:19302"
       TURN_SERVER: "turn:coturn.workadventure.localhost:3478,turns:coturn.workadventure.localhost:5349"
       DISABLE_NOTIFICATIONS: "$DISABLE_NOTIFICATIONS"
@@ -79,8 +78,7 @@ services:
     environment:
       STARTUP_COMMAND_2: yarn install
       STARTUP_COMMAND_3: yarn typesafe-i18n
-      STARTUP_COMMAND_4: cd ../libs/tailwind && yarn install
-      STARTUP_COMMAND_5: cd ../map-editor-types && yarn install
+      STARTUP_COMMAND_4: cd ../libs/map-editor-types && yarn install
       PUSHER_URL: //pusher.workadventure.localhost
       UPLOADER_URL: //uploader.workadventure.localhost
       EMBEDLY_KEY: $EMBEDLY_KEY
