@@ -114,7 +114,7 @@ class OpenIDClient {
             };
 
             if (state && params.state && typeof state === "string") {
-                    checks.state = state;
+                checks.state = state;
             }
 
             return client.callback(OPID_CLIENT_REDIRECT_URL, params, checks).then((tokenSet) => {
