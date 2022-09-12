@@ -132,7 +132,13 @@
         {#if $connectionNotAuthorized}
             <NeedRefresh />
         {:else if !connectionManager.connection || !$xmppServerConnectionStatusStore}
-            <Loader text={($userStore ? (!connectionManager.connection ? $LL.connecting() : $LL.waitingInit()) : $LL.waitingData())} />
+            <Loader
+                text={$userStore
+                    ? !connectionManager.connection
+                        ? $LL.connecting()
+                        : $LL.waitingInit()
+                    : $LL.waitingData()}
+            />
         {:else if $timelineActiveStore}
             <ChatActiveThreadTimeLine on:unactiveThreadTimeLine={() => timelineActiveStore.set(false)} />
         {:else if $activeThreadStore !== undefined}

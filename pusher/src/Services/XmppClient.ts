@@ -288,7 +288,7 @@ export class XmppClient {
         return;
     }
 
-    sendErrorToIframe(message: string){
+    sendErrorToIframe(message: string) {
         const errorMessage = new ErrorMessage();
         errorMessage.setMessage(message);
 
