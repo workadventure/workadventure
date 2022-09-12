@@ -17,6 +17,7 @@ class UploaderService{
             && process.env.AWS_SECRET_ACCESS_KEY != undefined && process.env.AWS_SECRET_ACCESS_KEY != ""
             && process.env.AWS_DEFAULT_REGION != undefined && process.env.AWS_DEFAULT_REGION != ""
         ){
+            console.log('UPLOADER S3 : ', process.env.AWS_ACCESS_KEY_ID, ' // ', process.env.AWS_SECRET_ACCESS_KEY, ' // ', process.env.AWS_DEFAULT_REGION);
             // Set the region
             AWS.config.update({
                 accessKeyId: (process.env.AWS_ACCESS_KEY_ID),
