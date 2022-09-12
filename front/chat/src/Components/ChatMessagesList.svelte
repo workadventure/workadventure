@@ -251,12 +251,12 @@
     <div
         class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen tw-pt-14"
     >
-        <div class="tw-mb-auto">
+        <div class="tw-mb-auto load-history">
             {#if $loadingStore}<div
                     style="border-top-color:transparent"
                     class="tw-w-5 tw-h-5 tw-border-2 tw-border-white tw-border-solid tw-rounded-full tw-animate-spin tw-m-auto"
                 />{/if}
-            {#if !$loadingStore && $messagesStore.length > 0 && mucRoom.canLoadOlderMessages}<button
+            {#if !$loadingStore && mucRoom.canLoadOlderMessages}<button
                     class="tw-m-auto tw-cursor-pointer tw-text-xs"
                     on:click={() => mucRoom.retrieveLastMessages()}
                     >{$LL.load()}

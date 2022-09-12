@@ -245,16 +245,24 @@ export class IoSocketChatController {
                             const jwtDecoded = jwtTokenManager.verifyJWTToken(
                                 userData.userRoomToken
                             ) as unknown as UserRoomToken;
-                            if (this.cache.has(jwtDecoded.uid)) {
+                            if (this.cache.has(jwtDecoded.room)) {
                                 // @ts-ignore
                                 maxHistoryChat = parseInt(this.cache.get(jwtDecoded.room));
+                                console.log('MAX HISTORY CHAT FROM CACHE: ', maxHistoryChat);
                             } else {
                                 maxHistoryChat = await Axios.get(`${ADMIN_API_URL}/api/limit/historyChat`, {
                                     headers: { userRoomToken: userData.userRoomToken },
                                 })
                                     .then((response) => parseInt(response.data))
-                                    .catch((err) => parseInt(err.response?.data));
+                                    .catch((err) => {
+                                        if(Axios.isAxiosError(err) && err.response?.status === 402){
+                                            return parseInt(err.response?.data);
+                                        }
+                                        console.error(err);
+                                        return -1;
+                                    });
                                 this.cache.set(jwtDecoded.room, maxHistoryChat.toString());
+                                console.log('MAX HISTORY CHAT FROM ADMIN: ', maxHistoryChat);
                             }
                         }
 

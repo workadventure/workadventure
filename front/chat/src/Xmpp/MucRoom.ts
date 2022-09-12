@@ -159,6 +159,7 @@ export class MucRoom {
     public showPremiumLoadOlderMessages: Writable<boolean>;
     private closed: boolean = false;
     private description: string = "";
+    private maxHistoryDate: string = "";
 
     constructor(
         private connection: ChatConnection,
@@ -283,52 +284,52 @@ export class MucRoom {
 
     public retrieveLastMessages() {
         const firstMessage = get(this.messageStore).shift();
-        if (!firstMessage) return;
         this.loadingStore.set(true);
+        const now = new Date();
         const messageRetrieveLastMessages = xml(
-            "iq",
-            {
-                type: "set",
-                to: jid(this.roomJid.local, this.roomJid.domain).toString(),
-                from: this.jid,
-                id: uuidv4(),
-            },
-            xml(
-                "query",
+                "iq",
                 {
-                    xmlns: "urn:xmpp:mam:2",
+                    type: "set",
+                    to: jid(this.roomJid.local, this.roomJid.domain).toString(),
+                    from: this.jid,
+                    id: uuidv4(),
                 },
                 xml(
-                    "x",
+                    "query",
                     {
-                        xmlns: "jabber:x:data",
-                        type: "submit",
+                        xmlns: "urn:xmpp:mam:2",
                     },
                     xml(
-                        "field",
+                        "x",
                         {
-                            var: "FORM_TYPE",
-                            type: "hidden",
+                            xmlns: "jabber:x:data",
+                            type: "submit",
                         },
-                        xml("value", {}, "urn:xmpp:mam:2")
+                        xml(
+                            "field",
+                            {
+                                var: "FORM_TYPE",
+                                type: "hidden",
+                            },
+                            xml("value", {}, "urn:xmpp:mam:2")
+                        ),
+                        xml(
+                            "field",
+                            {
+                                var: "end",
+                            },
+                            xml("value", {}, firstMessage ? firstMessage.time.toISOString() : now.toISOString())
+                        )
                     ),
                     xml(
-                        "field",
+                        "set",
                         {
-                            var: "end",
+                            xmlns: "http://jabber.org/protocol/rsm",
                         },
-                        xml("value", {}, firstMessage.time.toISOString())
+                        xml("max", {}, "50")
                     )
-                ),
-                xml(
-                    "set",
-                    {
-                        xmlns: "http://jabber.org/protocol/rsm",
-                    },
-                    xml("max", {}, "50")
                 )
-            )
-        );
+            );
         if (!this.closed) {
             this.connection.emitXmlMessage(messageRetrieveLastMessages);
             if (_VERBOSE) console.warn("[XMPP]", ">> Get older messages sent");
@@ -806,11 +807,17 @@ export class MucRoom {
             const fin = xml.getChild("fin", "urn:xmpp:mam:2");
             if (fin) {
                 const complete = fin.getAttr("complete");
+                const maxHistoryDate = fin.getAttr("maxHistoryDate");
                 const count = parseInt(
                     fin.getChild("set", "http://jabber.org/protocol/rsm")?.getChildText("count") ?? "0"
                 );
-                if (count < 50) {
-                    if (complete === "false") {
+                if(maxHistoryDate){
+                    this.maxHistoryDate = maxHistoryDate;
+                    if(!this.canLoadOlderMessages){
+                        this.showPremiumLoadOlderMessages.set(true);
+                    }
+                } else if (count < 50) {
+                    if (complete === "false" || this.maxHistoryDate !== '') {
                         this.showPremiumLoadOlderMessages.set(true);
                     }
                     this.canLoadOlderMessages = false;

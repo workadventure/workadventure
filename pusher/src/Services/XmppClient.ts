@@ -16,6 +16,7 @@ import { Element } from "@xmpp/xml";
 import { Client, client, xml } from "@xmpp/client";
 import SASLError from "@xmpp/sasl/lib/SASLError";
 import StreamError from "@xmpp/connection/lib/StreamError";
+import {uuid} from "uuidv4";
 
 class ElementExt extends Element {}
 
@@ -305,54 +306,78 @@ export class XmppClient {
         // Test if current world is premium, if not restrict the history
         else if (
             element.getName() === "iq" &&
-            element.getChild("query", "urn:xmpp:mam:2") &&
-            this.clientSocket.maxHistoryChat > 0
+            element.getChild("query", "urn:xmpp:mam:2")
         ) {
-            const query = element.getChild("query", "urn:xmpp:mam:2");
-            const x = query?.getChild("x", "jabber:x:data");
-            const end = x?.getChildByAttr("var", "end")?.getChildText("value");
-            if (end) {
-                const endDate = new Date(end);
-                const maxDate = new Date();
-                maxDate.setDate(maxDate.getDate() - this.clientSocket.maxHistoryChat);
-                if (endDate > maxDate) {
-                    this.sendToChat(
-                        xml(
-                            "iq",
-                            {
-                                type: "result",
-                                id: element.getAttr("id"),
-                                from: element.getAttr("to"),
-                                to: element.getAttr("from"),
-                            },
+            if(this.clientSocket.maxHistoryChat > 0) {
+                const query = element.getChild("query", "urn:xmpp:mam:2");
+                const x = query?.getChild("x", "jabber:x:data");
+                const end = x?.getChildByAttr("var", "end")?.getChildText("value");
+                if (end) {
+                    const endDate = new Date(end);
+                    const maxDate = new Date();
+                    maxDate.setDate(maxDate.getDate() - this.clientSocket.maxHistoryChat);
+                    if (endDate <= maxDate) {
+                        this.sendToChat(
                             xml(
-                                "fin",
+                                "iq",
                                 {
-                                    xmlns: "urn:xmpp:mam:2",
-                                    complete: false,
+                                    type: "result",
+                                    id: element.getAttr("id"),
+                                    from: element.getAttr("to"),
+                                    to: element.getAttr("from"),
                                 },
                                 xml(
-                                    "set",
+                                    "fin",
                                     {
-                                        xmlns: "http://jabber.org/protocol/rsm",
+                                        xmlns: "urn:xmpp:mam:2",
+                                        complete: false,
                                     },
-                                    xml("count", {}, "0")
+                                    xml(
+                                        "set",
+                                        {
+                                            xmlns: "http://jabber.org/protocol/rsm",
+                                        },
+                                        xml("count", {}, "0")
+                                    )
                                 )
+                            ).toString()
+                        );
+                        return null;
+                    } else {
+                        x?.append(
+                            xml(
+                                "field",
+                                {
+                                    var: "start",
+                                },
+                                xml("value", {}, maxDate.toISOString())
                             )
-                        ).toString()
-                    );
-                    return null;
-                } else {
-                    x?.append(
-                        xml(
-                            "field",
-                            {
-                                var: "start",
-                            },
-                            xml("value", {}, maxDate.toISOString())
-                        )
-                    );
+                        );
+                        this.sendToChat(
+                            xml(
+                                "iq",
+                                {
+                                    type: "result",
+                                    id: uuidV4(),
+                                    from: element.getAttr("to"),
+                                    to: element.getAttr("from"),
+                                },
+                                xml(
+                                    "fin",
+                                    {
+                                        xmlns: "urn:xmpp:mam:2",
+                                        complete: false,
+                                        maxHistoryDate: maxDate.toISOString()
+                                    },
+                                )
+                            ).toString()
+                        );
+                    }
                 }
+            }
+            // If getting error on MaxHistoryChat
+            else if(this.clientSocket.maxHistoryChat < 0){
+                return null;
             }
         }
         return element;
