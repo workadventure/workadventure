@@ -33,10 +33,6 @@ jobs:
         with:
           version: '3.x'
 
-      - name: "Install libs/tailwind dependencies"
-        run: yarn install
-        working-directory: "libs/tailwind"
-
       - name: "Install libs/map-editor-types dependencies"
         run: yarn install
         working-directory: "libs/map-editor-types"
@@ -108,14 +104,6 @@ jobs:
         uses: arduino/setup-protoc@v1
         with:
           version: '3.x'
-
-      - name: "Copy libs dependencies"
-        run: mkdir -p ./../front/libs/tailwind && cp -R ./* ./../front/libs
-        working-directory: "libs"
-
-      - name: "Install libs/tailwind dependencies"
-        run: yarn install
-        working-directory: "front/libs/tailwind"
 
       - name: "Install dependencies"
         run: yarn install

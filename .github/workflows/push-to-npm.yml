@@ -32,10 +32,6 @@ jobs:
         with:
           version: '3.x'
 
-      - name: "Install tailwind dependencies"
-        run: yarn install
-        working-directory: "libs/tailwind"
-
       - name: "Install dependencies"
         run: yarn install
         working-directory: "front"
