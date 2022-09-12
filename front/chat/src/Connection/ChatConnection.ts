@@ -49,7 +49,7 @@ export class ChatConnection implements ChatConnection {
         }
         url += "chat";
         url += "?playUri=" + encodeURIComponent(roomUrl);
-        url += "&token=" + (authToken ? encodeURIComponent(authToken) : "");
+        url += "&authToken=" + (authToken ? encodeURIComponent(authToken) : "");
         url += "&uuid=" + encodeURIComponent(uuid);
         //url += "&name=" + encodeURIComponent(name);
         url += "&version=" + apiVersionHash;

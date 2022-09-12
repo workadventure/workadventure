@@ -2,6 +2,7 @@ import { AdminBannedData, FetchMemberDataByAuthTokenResponse } from "./AdminApi"
 import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { AdminApiLoginUrlData } from "../Messages/JsonMessages/AdminApiLoginUrlData";
+import { ErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 
 export interface AdminInterface {
     /**
@@ -18,14 +19,18 @@ export interface AdminInterface {
         ipAddress: string,
         characterLayers: string[],
         locale?: string
-    ): Promise<FetchMemberDataByAuthTokenResponse>;
+    ): Promise<FetchMemberDataByAuthTokenResponse | ErrorApiData>;
 
     /**
      * @var playUri: Url of the room
-     * @var userId: Can to be undefined or email or uuid
+     * @var authToken: Can to be email or uuid
      * @return MapDetailsData|RoomRedirect
      */
-    fetchMapDetails(playUri: string, authToken?: string, locale?: string): Promise<MapDetailsData | RoomRedirect>;
+    fetchMapDetails(
+        playUri: string,
+        authToken?: string,
+        locale?: string
+    ): Promise<MapDetailsData | RoomRedirect | ErrorApiData>;
 
     /**
      * @param locale

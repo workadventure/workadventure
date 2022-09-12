@@ -7,9 +7,10 @@ import { z } from "zod";
 import { isWokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import qs from "qs";
 import { AdminInterface } from "./AdminInterface";
-import { AuthTokenData, jwtTokenManager } from "./JWTTokenManager";
+import { jwtTokenManager } from "./JWTTokenManager";
 import { extendApi } from "@anatine/zod-openapi";
 import { isMucRoomDefinition } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+import { ErrorApiData, isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -69,70 +70,104 @@ class AdminApi implements AdminInterface {
         playUri: string,
         authToken?: string,
         locale?: string
-    ): Promise<MapDetailsData | RoomRedirect> {
-        let authTokenData: AuthTokenData | undefined = undefined;
+    ): Promise<MapDetailsData | RoomRedirect | ErrorApiData> {
+        let decodedToken;
 
-        if (authToken != undefined) {
+        if (authToken) {
             try {
-                authTokenData = jwtTokenManager.verifyJWTToken(authToken);
+                decodedToken = jwtTokenManager.verifyJWTToken(authToken);
                 //eslint-disable-next-line @typescript-eslint/no-unused-vars
             } catch (e) {
                 // Decode token, in this case we don't need to create new token.
                 const authTokenDataTemp = jwtTokenManager.verifyJWTToken(authToken, true);
                 console.info("JWT expire, but decoded:", authTokenDataTemp.identifier);
+                authToken = "";
             }
         }
 
-        const params: { playUri: string; authToken?: string } = {
+        const params: { playUri: string; authToken?: string; userId?: string } = {
             playUri,
-            authToken: authTokenData ? authToken : undefined,
+            authToken,
+            userId: decodedToken?.identifier,
         };
 
-        /**
-         * @openapi
-         * /api/map:
-         *   get:
-         *     tags: ["AdminAPI"]
-         *     description: Returns a map mapping map name to file name of the map
-         *     security:
-         *      - Bearer: []
-         *     produces:
-         *      - "application/json"
-         *     parameters:
-         *      - name: "playUri"
-         *        in: "query"
-         *        description: "The full URL of WorkAdventure"
-         *        required: true
-         *        type: "string"
-         *        example: "http://play.workadventure.localhost/@/teamSlug/worldSLug/roomSlug"
-         *      - name: "authToken"
-         *        in: "query"
-         *        description: "A JWT token who contains identifier and some data"
-         *        type: "string"
-         *        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGlmaWVyIjoiTm90aGluZyB0byBzZWUgaGVyZSA7KSIsImFjY2Vzc1Rva2VuIjoiZWRmYWJhYjc0ZjgzNTAzZWJhNTI4MGQzYjQyYThkZDkxZjg2MDI4Y2YyN2VjYTdhN2QzYmU1ZGMzMzNiYjg5NiIsImlhdCI6MTY2MjQ3NzAwMiwiZXhwIjoxNjY1MDY5MDAyfQ.HpZTx-kY1wlHM01uCZkIRxGrFuLTPRUf4eEHhKPYZ7g"
-         *     responses:
-         *       200:
-         *         description: The details of the map
-         *         schema:
-         *             $ref: "#/definitions/MapDetailsData"
-         *       401:
-         *         description: Error while retrieving the data because you are not authorized
-         *         schema:
-         *             $ref: '#/definitions/ErrorApiRedirectData'
-         *       403:
-         *         description: Error while retrieving the data because you are not authorized
-         *         schema:
-         *             $ref: '#/definitions/ErrorApiUnauthorizedData'
-         *       404:
-         *         description: Error while retrieving the data
-         *         schema:
-         *             $ref: '#/definitions/ErrorApiErrorData'
-         *
-         */
-        const res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/map", {
-            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
-            params,
-        });
+        let res = undefined;
+
+        try {
+            /**
+             * @openapi
+             * /api/map:
+             *   get:
+             *     tags: ["AdminAPI"]
+             *     description: Returns a map mapping name to file name of the map
+             *     security:
+             *      - Bearer: []
+             *     produces:
+             *      - "application/json"
+             *     parameters:
+             *      - name: "playUri"
+             *        in: "query"
+             *        description: "The full URL of WorkAdventure"
+             *        required: true
+             *        type: "string"
+             *        example: "http://play.workadventure.localhost/@/teamSlug/worldSLug/roomSlug"
+             *      - name: "authToken"
+             *        in: "query"
+             *        description: "A JWT token which contains an identifier and some data"
+             *        type: "string"
+             *        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGlmaWVyIjoiTm90aGluZyB0byBzZWUgaGVyZSA7KSIsImFjY2Vzc1Rva2VuIjoiZWRmYWJhYjc0ZjgzNTAzZWJhNTI4MGQzYjQyYThkZDkxZjg2MDI4Y2YyN2VjYTdhN2QzYmU1ZGMzMzNiYjg5NiIsImlhdCI6MTY2MjQ3NzAwMiwiZXhwIjoxNjY1MDY5MDAyfQ.HpZTx-kY1wlHM01uCZkIRxGrFuLTPRUf4eEHhKPYZ7g"
+             *     responses:
+             *       200:
+             *         description: The details of the map
+             *         schema:
+             *             $ref: "#/definitions/MapDetailsData"
+             *       401:
+             *         description: Error while retrieving the data because you are not authorized
+             *         schema:
+             *             $ref: '#/definitions/ErrorApiRedirectData'
+             *       403:
+             *         description: Error while retrieving the data because you are not authorized
+             *         schema:
+             *             $ref: '#/definitions/ErrorApiUnauthorizedData'
+             *       404:
+             *         description: Error while retrieving the data
+             *         schema:
+             *             $ref: '#/definitions/ErrorApiErrorData'
+             *
+             */
+            res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/map", {
+                headers: {
+                    Authorization: `${ADMIN_API_TOKEN}`,
+                    "Accept-Language": locale ?? "en",
+                    "User-Agent": "Pusher",
+                },
+                params,
+            });
+        } catch (err) {
+            if (Axios.isAxiosError(err)) {
+                if (err.response?.status === 404) {
+                    console.warn(err.message, "/api/map", playUri);
+                } else {
+                    console.error(err.message, "/api/map", playUri);
+                }
+
+                const isApiError = isErrorApiData.safeParse(err.response?.data);
+
+                if (isApiError.success) {
+                    return isApiError.data;
+                }
+
+                console.log(isApiError.error.issues);
+
+                throw new Error("Uncatchable error on /api/map endpoint.");
+            } else {
+                console.warn(err);
+            }
+        }
+
+        if (!res) {
+            throw new Error("Error received from the admin for the /api/map endpoint.");
+        }
 
         const mapDetailData = isMapDetailsData.safeParse(res.data);
 
@@ -159,72 +194,117 @@ class AdminApi implements AdminInterface {
         ipAddress: string,
         characterLayers: string[],
         locale?: string
-    ): Promise<FetchMemberDataByAuthTokenResponse> {
-        /**
-         * @openapi
-         * /api/room/access:
-         *   get:
-         *     tags: ["AdminAPI"]
-         *     description: Returns the member's information if he can access this room
-         *     security:
-         *      - Bearer: []
-         *     produces:
-         *      - "application/json"
-         *     parameters:
-         *      - name: "authToken"
-         *        in: "query"
-         *        description: "A JWT token who contains identifier and some data"
-         *        type: "string"
-         *        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGlmaWVyIjoiTm90aGluZyB0byBzZWUgaGVyZSA7KSIsImFjY2Vzc1Rva2VuIjoiZWRmYWJhYjc0ZjgzNTAzZWJhNTI4MGQzYjQyYThkZDkxZjg2MDI4Y2YyN2VjYTdhN2QzYmU1ZGMzMzNiYjg5NiIsImlhdCI6MTY2MjQ3NzAwMiwiZXhwIjoxNjY1MDY5MDAyfQ.HpZTx-kY1wlHM01uCZkIRxGrFuLTPRUf4eEHhKPYZ7g"
-         *      - name: "playUri"
-         *        in: "query"
-         *        description: "The full URL of WorkAdventure"
-         *        required: true
-         *        type: "string"
-         *        example: "http://play.workadventure.localhost/@/teamSlug/worldSLug/roomSlug"
-         *      - name: "ipAddress"
-         *        in: "query"
-         *        description: "IP Address of the user logged in, allows you to check whether a user has been banned or not"
-         *        required: true
-         *        type: "string"
-         *        example: "127.0.0.1"
-         *      - name: "characterLayers"
-         *        in: "query"
-         *        type: "array"
-         *        items:
-         *          type: string
-         *        example: ["male1"]
-         *     responses:
-         *       200:
-         *         description: The details of the member
-         *         schema:
-         *             $ref: "#/definitions/FetchMemberDataByAuthTokenResponse"
-         *       401:
-         *         description: Error while retrieving the data because you are not authorized
-         *         schema:
-         *             $ref: '#/definitions/ErrorApiRedirectData'
-         *       403:
-         *         description: Error while retrieving the data because you are not authorized
-         *         schema:
-         *             $ref: '#/definitions/ErrorApiUnauthorizedData'
-         *       404:
-         *         description: Error while retrieving the data
-         *         schema:
-         *             $ref: '#/definitions/ErrorApiErrorData'
-         *
-         */
-        const res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/room/access", {
-            params: {
-                authToken,
-                playUri,
-                ipAddress,
-                characterLayers,
-            },
-            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
-            paramsSerializer: (p) => {
-                return qs.stringify(p, { arrayFormat: "brackets" });
-            },
-        });
+    ): Promise<FetchMemberDataByAuthTokenResponse | ErrorApiData> {
+        let res = undefined;
+        let decodedToken;
+
+        if (authToken) {
+            try {
+                decodedToken = jwtTokenManager.verifyJWTToken(authToken);
+                //eslint-disable-next-line @typescript-eslint/no-unused-vars
+            } catch (e) {
+                // Decode token, in this case we don't need to create new token.
+                const authTokenDataTemp = jwtTokenManager.verifyJWTToken(authToken, true);
+                console.info("JWT expire, but decoded:", authTokenDataTemp.identifier);
+            }
+        }
+
+        try {
+            /**
+             * @openapi
+             * /api/room/access:
+             *   get:
+             *     tags: ["AdminAPI"]
+             *     description: Returns the member's information if he can access this room
+             *     security:
+             *      - Bearer: []
+             *     produces:
+             *      - "application/json"
+             *     parameters:
+             *      - name: "authToken"
+             *        in: "query"
+             *        description: "A JWT token which contains an identifier and some data"
+             *        type: "string"
+             *        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGlmaWVyIjoiTm90aGluZyB0byBzZWUgaGVyZSA7KSIsImFjY2Vzc1Rva2VuIjoiZWRmYWJhYjc0ZjgzNTAzZWJhNTI4MGQzYjQyYThkZDkxZjg2MDI4Y2YyN2VjYTdhN2QzYmU1ZGMzMzNiYjg5NiIsImlhdCI6MTY2MjQ3NzAwMiwiZXhwIjoxNjY1MDY5MDAyfQ.HpZTx-kY1wlHM01uCZkIRxGrFuLTPRUf4eEHhKPYZ7g"
+             *      - name: "playUri"
+             *        in: "query"
+             *        description: "The full URL of WorkAdventure"
+             *        required: true
+             *        type: "string"
+             *        example: "http://play.workadventure.localhost/@/teamSlug/worldSLug/roomSlug"
+             *      - name: "ipAddress"
+             *        in: "query"
+             *        description: "IP Address of the user logged in, allows you to check whether a user has been banned or not"
+             *        required: true
+             *        type: "string"
+             *        example: "127.0.0.1"
+             *      - name: "characterLayers"
+             *        in: "query"
+             *        type: "array"
+             *        items:
+             *          type: string
+             *        example: ["male1"]
+             *     responses:
+             *       200:
+             *         description: The details of the member
+             *         schema:
+             *             $ref: "#/definitions/FetchMemberDataByAuthTokenResponse"
+             *       401:
+             *         description: Error while retrieving the data because you are not authorized
+             *         schema:
+             *             $ref: '#/definitions/ErrorApiRedirectData'
+             *       403:
+             *         description: Error while retrieving the data because you are not authorized
+             *         schema:
+             *             $ref: '#/definitions/ErrorApiUnauthorizedData'
+             *       404:
+             *         description: Error while retrieving the data
+             *         schema:
+             *             $ref: '#/definitions/ErrorApiErrorData'
+             *
+             */
+            res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/room/access", {
+                params: {
+                    authToken,
+                    userIdentifier: decodedToken?.identifier,
+                    playUri,
+                    ipAddress,
+                    characterLayers,
+                },
+                headers: {
+                    Authorization: `${ADMIN_API_TOKEN}`,
+                    "Accept-Language": locale ?? "en",
+                    "User-Agent": "Pusher",
+                },
+                paramsSerializer: (p) => {
+                    return qs.stringify(p, { arrayFormat: "brackets" });
+                },
+            });
+        } catch (err) {
+            if (Axios.isAxiosError(err)) {
+                if (err.response?.status === 404) {
+                    console.warn(err.message, "/api/map", playUri);
+                } else {
+                    console.error(err.message, "/api/map", playUri);
+                }
+
+                const isApiError = isErrorApiData.safeParse(err.response?.data);
+
+                if (isApiError.success) {
+                    return isApiError.data;
+                }
+
+                console.log(isApiError.error.issues);
+
+                throw new Error("Uncatchable error on /api/room/access endpoint.");
+            } else {
+                console.warn(err);
+            }
+        }
+
+        if (!res) {
+            throw new Error("Error received from the admin for the /api/room/access endpoint.");
+        }
 
         const fetchMemberDataByAuthTokenResponse = isFetchMemberDataByAuthTokenResponse.safeParse(res.data);
 
@@ -279,7 +359,7 @@ class AdminApi implements AdminInterface {
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
         const res = await Axios.get(ADMIN_API_URL + "/api/login-url/" + authToken, {
             params: { playUri },
-            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
+            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en", "User-Agent": "Pusher" },
         });
 
         const adminApiLoginUrlData = isAdminApiLoginUrlData.safeParse(res.data);
@@ -344,7 +424,11 @@ class AdminApi implements AdminInterface {
                 reportWorldSlug: roomUrl,
             },
             {
-                headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
+                headers: {
+                    Authorization: `${ADMIN_API_TOKEN}`,
+                    "Accept-Language": locale ?? "en",
+                    "User-Agent": "Pusher",
+                },
             }
         );
     }
@@ -412,7 +496,13 @@ class AdminApi implements AdminInterface {
                 encodeURIComponent(userUuid) +
                 "&roomUrl=" +
                 encodeURIComponent(roomUrl),
-            { headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" } }
+            {
+                headers: {
+                    Authorization: `${ADMIN_API_TOKEN}`,
+                    "Accept-Language": locale ?? "en",
+                    "User-Agent": "Pusher",
+                },
+            }
         ).then((data) => {
             return data.data;
         });
@@ -451,7 +541,7 @@ class AdminApi implements AdminInterface {
          *             $ref: '#/definitions/ErrorApiErrorData'
          */
         return Axios.get(ADMIN_API_URL + "/api/room/sameWorld" + "?roomUrl=" + encodeURIComponent(roomUrl), {
-            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
+            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en", "User-Agent": "Pusher" },
         }).then((data) => {
             return data.data;
         });
@@ -480,7 +570,7 @@ class AdminApi implements AdminInterface {
                 ADMIN_API_URL + "/api/ban",
                 { uuidToBan, playUri, name, message, byUserEmail },
                 {
-                    headers: { Authorization: `${ADMIN_API_TOKEN}` },
+                    headers: { Authorization: `${ADMIN_API_TOKEN}`, "User-Agent": "Pusher" },
                 }
             );
         } catch (err) {

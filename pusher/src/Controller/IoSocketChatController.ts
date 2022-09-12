@@ -8,7 +8,7 @@ import {
 } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
 import { AuthTokenData, jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenManager";
-import { FetchMemberDataByAuthTokenResponse } from "../Services/AdminApi";
+import { FetchMemberDataByAuthTokenResponse, isFetchMemberDataByAuthTokenResponse } from "../Services/AdminApi";
 import { socketManager } from "../Services/SocketManager";
 import { emitInBatch } from "../Services/IoSocketHelpers";
 import {
@@ -182,18 +182,41 @@ export class IoSocketChatController {
 
                         try {
                             try {
-                                console.log();
                                 if (!authToken || !tokenData) {
                                     throw new Error("Token data undefined, token cannot be verify");
                                 }
 
-                                userData = await adminService.fetchMemberDataByAuthToken(
+                                const tempUserData = await adminService.fetchMemberDataByAuthToken(
                                     authToken,
                                     playUri,
                                     IPAddress,
                                     [],
                                     locale
                                 );
+
+                                const checkUserData = isFetchMemberDataByAuthTokenResponse.safeParse(tempUserData);
+
+                                if (checkUserData.success) {
+                                    userData = checkUserData.data;
+                                } else {
+                                    const isErrorChecking = isErrorApiData.safeParse(tempUserData);
+
+                                    if (isErrorChecking.success) {
+                                        const error = isErrorChecking.data;
+                                        return res.upgrade(
+                                            {
+                                                rejected: true,
+                                                reason: error.httpCode === 401 ? "tokenInvalid" : "error",
+                                                status: error.httpCode,
+                                                error: error,
+                                            } as UpgradeFailedData,
+                                            websocketKey,
+                                            websocketProtocol,
+                                            websocketExtensions,
+                                            context
+                                        );
+                                    }
+                                }
                             } catch (err) {
                                 if (Axios.isAxiosError(err)) {
                                     const errorType = isErrorApiData.safeParse(err?.response?.data);

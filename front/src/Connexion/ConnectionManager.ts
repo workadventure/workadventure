@@ -18,7 +18,11 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { locales } from "../i18n/i18n-util";
 import type { Locales } from "../i18n/i18n-types";
 import { setCurrentLocale } from "../i18n/locales";
-import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
+import { AvailabilityStatus, ErrorScreenMessage } from "../Messages/ts-proto-generated/protos/messages";
+import { isErrorApiData, isErrorApiRedirectData } from "../Messages/JsonMessages/ErrorApiData";
+import { errorScreenStore } from "../Stores/ErrorScreenStore";
+import { get } from "svelte/store";
+import LL from "../i18n/i18n-svelte";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -365,15 +369,62 @@ class ConnectionManager {
     async checkAuthUserConnexion(token: string) {
         //set connected store for menu at false
         userIsConnected.set(false);
+        console.log("dfqsdfsdfs");
 
-        const { authToken, userUuid, email, username, locale, textures, visitCardUrl } = await Axios.get(
-            `${PUSHER_URL}/me`,
-            {
+        let res = undefined;
+
+        try {
+            res = await Axios.get(`${PUSHER_URL}/me`, {
                 params: { authToken: token, playUri: this.currentRoom?.key },
+            });
+        } catch (err) {
+            if (Axios.isAxiosError(err)) {
+                if (err.response?.status === 401) {
+                    connectionManager.logout().catch((e) => console.error(e));
+                    return;
+                } else {
+                    errorScreenStore.setError(
+                        ErrorScreenMessage.fromPartial({
+                            type: "error",
+                            code: "PUSHER_ERROR",
+                            title: get(LL).error.connectionRejected.title(),
+                            details: get(LL).error.connectionRejected.subTitle({ error: err.message }),
+                        })
+                    );
+                    throw new Error("Unknown error");
+                }
             }
-        ).then((res) => {
-            return res.data;
-        });
+        }
+
+        if (!res) {
+            errorScreenStore.setError(
+                ErrorScreenMessage.fromPartial({
+                    type: "error",
+                    code: "NO_AUTH_PUSHER_ERROR",
+                    title: get(LL).error.connectionRejected.title(),
+                    details: get(LL).error.connectionRejected.details(),
+                })
+            );
+            throw new Error("No response on auth user connexion");
+        }
+
+        const errorChecking = isErrorApiData.safeParse(res.data);
+
+        if (errorChecking.success) {
+            console.error(errorChecking.data);
+
+            const redirecErrorChecking = isErrorApiRedirectData.safeParse(errorChecking.data);
+
+            if (redirecErrorChecking.success) {
+                window.location.href = redirecErrorChecking.data.urlToRedirect;
+                return;
+            }
+
+            errorScreenStore.setError(ErrorScreenMessage.fromJSON(errorChecking.data));
+            return;
+        }
+
+        const { authToken, userUuid, email, username, locale, textures, visitCardUrl } = res.data;
 
         localUserStore.setAuthToken(authToken);
         this.localUser = new LocalUser(userUuid, email);

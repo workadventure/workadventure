@@ -6,6 +6,7 @@ import { DISABLE_ANONYMOUS, PUBLIC_MAP_STORAGE_URL, START_ROOM_URL } from "../En
 import { AdminApiLoginUrlData } from "../Messages/JsonMessages/AdminApiLoginUrlData";
 import { localWokaService } from "./LocalWokaService";
 import { jwtTokenManager } from "./JWTTokenManager";
+import { ErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 
 /**
  * A local class mocking a real admin if no admin is configured.
@@ -17,7 +18,7 @@ class LocalAdmin implements AdminInterface {
         ipAddress: string,
         characterLayers: string[],
         locale?: string
-    ): Promise<FetchMemberDataByAuthTokenResponse> {
+    ): Promise<FetchMemberDataByAuthTokenResponse | ErrorApiData> {
         let authTokenData = undefined;
 
         try {
@@ -40,7 +41,11 @@ class LocalAdmin implements AdminInterface {
         };
     }
 
-    fetchMapDetails(playUri: string, authToken?: string, locale?: string): Promise<MapDetailsData | RoomRedirect> {
+    fetchMapDetails(
+        playUri: string,
+        authToken?: string,
+        locale?: string
+    ): Promise<MapDetailsData | RoomRedirect | ErrorApiData> {
         const roomUrl = new URL(playUri);
 
         if (roomUrl.pathname === "/") {

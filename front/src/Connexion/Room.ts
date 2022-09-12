@@ -5,6 +5,7 @@ import { axiosWithRetry } from "./AxiosUtils";
 import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+import { isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 
 export class MapDetail {
     constructor(public readonly mapUrl: string) {}
@@ -57,8 +58,14 @@ export class Room {
             if (result instanceof MapDetail) {
                 return room;
             }
-            redirectCount++;
-            roomUrl = new URL(result.redirectUrl);
+
+            const redirectChecking = isRoomRedirect.safeParse(result);
+
+            if (redirectChecking.success) {
+                redirectCount++;
+                roomUrl = new URL(redirectChecking.data.redirectUrl);
+                continue;
+            }
         }
         throw new Error("Room resolving seems stuck in a redirect loop after 32 redirect attempts");
     }
@@ -110,37 +117,48 @@ export class Room {
 
             const roomRedirectChecking = isRoomRedirect.safeParse(data);
             const mapDetailsDataChecking = isMapDetailsData.safeParse(data);
+            const errorChecking = isErrorApiData.safeParse(data);
 
             if (roomRedirectChecking.success) {
                 return {
-                    redirectUrl: data.redirectUrl,
+                    redirectUrl: roomRedirectChecking.data.redirectUrl,
                 };
             } else if (mapDetailsDataChecking.success) {
-                console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
-                this._mapUrl = data.mapUrl;
-                this._group = data.group;
+                const mapDetails = mapDetailsDataChecking.data;
+
+                console.log("Map ", this.id, " resolves to URL ", mapDetails.mapUrl);
+                this._mapUrl = mapDetails.mapUrl;
+                this._group = mapDetails.group;
                 this._authenticationMandatory =
-                    data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
-                this._iframeAuthentication = data.iframeAuthentication || PUSHER_URL + "/login-screen";
-                this._contactPage = data.contactPage || CONTACT_URL;
-                if (data.expireOn) {
-                    this._expireOn = new Date(data.expireOn);
+                    mapDetails.authenticationMandatory != null ? mapDetails.authenticationMandatory : DISABLE_ANONYMOUS;
+                this._iframeAuthentication = mapDetails.iframeAuthentication || PUSHER_URL + "/login-screen";
+                this._contactPage = mapDetails.contactPage || CONTACT_URL;
+                if (mapDetails.expireOn) {
+                    this._expireOn = new Date(mapDetails.expireOn);
                 }
-                this._canReport = data.canReport ?? false;
-                this._canEditMap = data.canEdit ?? false;
-                this._miniLogo = data.miniLogo ?? undefined;
-                this._loadingCowebsiteLogo = data.loadingCowebsiteLogo ?? undefined;
-                this._loadingLogo = data.loadingLogo ?? undefined;
-                this._loginSceneLogo = data.loginSceneLogo ?? undefined;
-                this._showPoweredBy = data.showPoweredBy ?? true;
-                this._metadata = data.metadata ?? undefined;
+                this._canReport = mapDetails.canReport ?? false;
+                this._canEditMap = mapDetails.canEdit ?? false;
+                this._miniLogo = mapDetails.miniLogo ?? undefined;
+                this._loadingCowebsiteLogo = mapDetails.loadingCowebsiteLogo ?? undefined;
+                this._loadingLogo = mapDetails.loadingLogo ?? undefined;
+                this._loginSceneLogo = mapDetails.loginSceneLogo ?? undefined;
+                this._showPoweredBy = mapDetails.showPoweredBy ?? true;
+                this._metadata = mapDetails.metadata ?? undefined;
 
-                this._mucRooms = data.mucRooms ?? undefined;
-                this._roomName = data.roomName ?? undefined;
+                this._mucRooms = mapDetails.mucRooms ?? undefined;
+                this._roomName = mapDetails.roomName ?? undefined;
 
-                this._pricingUrl = data.pricingUrl ?? undefined;
+                this._pricingUrl = mapDetails.pricingUrl ?? undefined;
 
-                return new MapDetail(data.mapUrl);
+                return new MapDetail(mapDetails.mapUrl);
+            } else if (errorChecking.success) {
+                console.error(
+                    "Error on getting map details, maybe forbidden",
+                    this.roomUrl.toString(),
+                    errorChecking.data
+                );
+
+                throw new Error("Data received by the /map endpoint of the Pusher is not in a valid format.");
             } else {
                 console.log(data);
                 console.error("roomRedirectChecking", roomRedirectChecking.error.issues);
@@ -196,7 +214,7 @@ export class Room {
     }
 
     get mapUrl(): string {
-        if (!this._mapUrl) {
+        if (this._mapUrl === undefined) {
             throw new Error("Map URL not fetched yet");
         }
         return this._mapUrl;

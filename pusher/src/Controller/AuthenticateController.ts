@@ -177,6 +177,12 @@ export class AuthenticateController extends BaseHttpController {
                         language ? language : undefined
                     );
 
+                    const isErrorChecking = isErrorApiData.safeParse(resUserData);
+
+                    if (isErrorChecking.success) {
+                        return res.json(isErrorChecking.data);
+                    }
+
                     if (authTokenData.accessToken == undefined) {
                         //if not nonce and code, user connected in anonymous
                         //get data with identifier and return token
