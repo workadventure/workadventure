@@ -13,7 +13,8 @@ const en_US: BaseTranslation = {
         teleporting: "Teleporting ...",
         businessCard: "Business Card",
     },
-    reconnecting: "Connection to presence server ...",
+    connecting: "Connection to presence server ...",
+    waitingInit: "Waiting for server initialization ...",
     waitingData: "Waiting user data ...",
     search: "Search for user, message, channel, etc.",
     role: {

@@ -118,6 +118,10 @@ export class ChatConnection implements ChatConnection {
                         connectionNotAuthorized.set(true);
                         break;
                     }
+                    case "errorMessage": {
+                        console.error("chatConnection => errorMessage from Pusher => ", message.errorMessage);
+                        break;
+                    }
                     default: {
                         // Security check: if we forget a "case", the line below will catch the error at compile-time.
                         //@ts-ignore

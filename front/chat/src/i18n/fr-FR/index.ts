@@ -13,7 +13,8 @@ const fr_FR: Translation = {
         teleporting: "Téléportation ...",
         businessCard: "Carte de visite",
     },
-    reconnecting: "Connexion au serveur ...",
+    connecting: "Connexion au serveur ...",
+    waitingInit: "Attente de l'initialisation du serveur ...",
     waitingData: "En attentes des informations de l'utilisateur ...",
     search: "Rechercher un utilisateur, un message, un canal ...",
     role: {
