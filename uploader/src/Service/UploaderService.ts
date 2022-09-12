@@ -27,6 +27,7 @@ class UploaderService{
             && AWS_DEFAULT_REGION != undefined && AWS_DEFAULT_REGION != ""
             && AWS_ENDPOINT != undefined && AWS_ENDPOINT != ""
         ){
+            console.log('AWS_config :', AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION, AWS_ENDPOINT);
             // Set the region
             AWS.config.update({
                 accessKeyId: (AWS_ACCESS_KEY_ID),
