@@ -16,7 +16,6 @@ import { Element } from "@xmpp/xml";
 import { Client, client, xml } from "@xmpp/client";
 import SASLError from "@xmpp/sasl/lib/SASLError";
 import StreamError from "@xmpp/connection/lib/StreamError";
-import {uuid} from "uuidv4";
 
 class ElementExt extends Element {}
 
@@ -304,11 +303,8 @@ export class XmppClient {
             }
         }
         // Test if current world is premium, if not restrict the history
-        else if (
-            element.getName() === "iq" &&
-            element.getChild("query", "urn:xmpp:mam:2")
-        ) {
-            if(this.clientSocket.maxHistoryChat > 0) {
+        else if (element.getName() === "iq" && element.getChild("query", "urn:xmpp:mam:2")) {
+            if (this.clientSocket.maxHistoryChat > 0) {
                 const query = element.getChild("query", "urn:xmpp:mam:2");
                 const x = query?.getChild("x", "jabber:x:data");
                 const end = x?.getChildByAttr("var", "end")?.getChildText("value");
@@ -362,21 +358,18 @@ export class XmppClient {
                                     from: element.getAttr("to"),
                                     to: element.getAttr("from"),
                                 },
-                                xml(
-                                    "fin",
-                                    {
-                                        xmlns: "urn:xmpp:mam:2",
-                                        complete: false,
-                                        maxHistoryDate: maxDate.toISOString()
-                                    },
-                                )
+                                xml("fin", {
+                                    xmlns: "urn:xmpp:mam:2",
+                                    complete: false,
+                                    maxHistoryDate: maxDate.toISOString(),
+                                })
                             ).toString()
                         );
                     }
                 }
             }
             // If getting error on MaxHistoryChat
-            else if(this.clientSocket.maxHistoryChat < 0){
+            else if (this.clientSocket.maxHistoryChat < 0) {
                 return null;
             }
         }

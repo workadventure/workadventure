@@ -287,49 +287,49 @@ export class MucRoom {
         this.loadingStore.set(true);
         const now = new Date();
         const messageRetrieveLastMessages = xml(
-                "iq",
+            "iq",
+            {
+                type: "set",
+                to: jid(this.roomJid.local, this.roomJid.domain).toString(),
+                from: this.jid,
+                id: uuidv4(),
+            },
+            xml(
+                "query",
                 {
-                    type: "set",
-                    to: jid(this.roomJid.local, this.roomJid.domain).toString(),
-                    from: this.jid,
-                    id: uuidv4(),
+                    xmlns: "urn:xmpp:mam:2",
                 },
                 xml(
-                    "query",
+                    "x",
                     {
-                        xmlns: "urn:xmpp:mam:2",
+                        xmlns: "jabber:x:data",
+                        type: "submit",
                     },
                     xml(
-                        "x",
+                        "field",
                         {
-                            xmlns: "jabber:x:data",
-                            type: "submit",
+                            var: "FORM_TYPE",
+                            type: "hidden",
                         },
-                        xml(
-                            "field",
-                            {
-                                var: "FORM_TYPE",
-                                type: "hidden",
-                            },
-                            xml("value", {}, "urn:xmpp:mam:2")
-                        ),
-                        xml(
-                            "field",
-                            {
-                                var: "end",
-                            },
-                            xml("value", {}, firstMessage ? firstMessage.time.toISOString() : now.toISOString())
-                        )
+                        xml("value", {}, "urn:xmpp:mam:2")
                     ),
                     xml(
-                        "set",
+                        "field",
                         {
-                            xmlns: "http://jabber.org/protocol/rsm",
+                            var: "end",
                         },
-                        xml("max", {}, "50")
+                        xml("value", {}, firstMessage ? firstMessage.time.toISOString() : now.toISOString())
                     )
+                ),
+                xml(
+                    "set",
+                    {
+                        xmlns: "http://jabber.org/protocol/rsm",
+                    },
+                    xml("max", {}, "50")
                 )
-            );
+            )
+        );
         if (!this.closed) {
             this.connection.emitXmlMessage(messageRetrieveLastMessages);
             if (_VERBOSE) console.warn("[XMPP]", ">> Get older messages sent");
@@ -811,13 +811,13 @@ export class MucRoom {
                 const count = parseInt(
                     fin.getChild("set", "http://jabber.org/protocol/rsm")?.getChildText("count") ?? "0"
                 );
-                if(maxHistoryDate){
+                if (maxHistoryDate) {
                     this.maxHistoryDate = maxHistoryDate;
-                    if(!this.canLoadOlderMessages){
+                    if (!this.canLoadOlderMessages) {
                         this.showPremiumLoadOlderMessages.set(true);
                     }
                 } else if (count < 50) {
-                    if (complete === "false" || this.maxHistoryDate !== '') {
+                    if (complete === "false" || this.maxHistoryDate !== "") {
                         this.showPremiumLoadOlderMessages.set(true);
                     }
                     this.canLoadOlderMessages = false;
