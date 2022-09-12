@@ -721,9 +721,15 @@
     "@typescript-eslint/types" "5.30.6"
     eslint-visitor-keys "^3.3.0"
 
-"@workadventure/tailwind@link:../libs/tailwind":
-  version "0.0.0"
-  uid ""
+"@workadventure-style/sweetsky@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@workadventure-style/sweetsky/-/sweetsky-1.0.1.tgz#08c5723a6665199adad1fd98b1dd7cf98af2488e"
+  integrity sha512-ygGGOpvE/4lz67A9wzSJ3ONPnXCMRZ5MNtXONtht7rIPgdhi1nmxkDuNrAKwuMjta1M5n5340veHE3/m9cu1Dw==
+  dependencies:
+    "@16bits/nes.css" "^2.3.2"
+    "@fontsource/press-start-2p" "^4.3.0"
+    "@tailwindcss/forms" "^0.5.0"
+    tailwindcss "^3.1.8"
 
 "@xmpp/base64@^0.13.1":
   version "0.13.1"
@@ -3901,7 +3907,7 @@ tailwindcss@^3.0.23:
     quick-lru "^5.1.1"
     resolve "^1.22.1"
 
-tailwindcss@^3.1.5:
+tailwindcss@^3.1.8:
   version "3.1.8"
   resolved "https://registry.yarnpkg.com/tailwindcss/-/tailwindcss-3.1.8.tgz#4f8520550d67a835d32f2f4021580f9fddb7b741"
   integrity sha512-YSneUCZSFDYMwk+TGq8qYFdCA3yfBRdBlS7txSq0LUmzyeqRe3a8fBQzbz9M3WS/iFT4BNf/nmw9mEzrnSaC0g==
