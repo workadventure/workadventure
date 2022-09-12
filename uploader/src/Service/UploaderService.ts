@@ -2,7 +2,7 @@ import AWS, {S3} from "aws-sdk";
 import { ManagedUpload } from "aws-sdk/clients/s3";
 import {v4} from "uuid";
 import { createClient, commandOptions } from "redis";
-import { mimeTypeManager } from "./MimeType";
+import {AWS_URL} from "../Enum/EnvironmentVariable";
 
 class UploaderService{
     private s3: S3|null = null;
@@ -26,7 +26,7 @@ class UploaderService{
             });
 
             // Create S3 service object
-            this.s3 = new AWS.S3({apiVersion: '2006-03-01'});
+            this.s3 = new AWS.S3({apiVersion: '2006-03-01', endpoint: AWS_URL, s3ForcePathStyle: true});
         }
 
         if(
