@@ -34,6 +34,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     public activate(): void {
+        this.updateAreaPreviews();
         this.setAreaPreviewsVisibility(true);
         this.scene.markDirty();
     }
@@ -227,14 +228,18 @@ export class AreaEditorTool extends MapEditorTool {
         const areaConfigs = this.scene.getGameMapFrontWrapper().getAreas(AreaType.Static);
 
         for (const config of areaConfigs) {
-            const areaPreview = new AreaPreview(this.scene, { ...config });
-            this.bindAreaPreviewEventHandlers(areaPreview);
-            this.areaPreviews.push(areaPreview);
+            this.areaPreviews.push(this.createAreaPreview(config));
         }
 
         this.setAreaPreviewsVisibility(false);
 
         return this.areaPreviews;
+    }
+
+    private createAreaPreview(areaConfig: ITiledMapRectangleObject): AreaPreview {
+        const areaPreview = new AreaPreview(this.scene, { ...areaConfig });
+        this.bindAreaPreviewEventHandlers(areaPreview);
+        return areaPreview;
     }
 
     private deleteAreaPreview(id: number): boolean {
@@ -250,6 +255,35 @@ export class AreaEditorTool extends MapEditorTool {
         areaPreview.on(AreaPreviewEvent.Clicked, () => {
             mapEditorSelectedAreaPreviewStore.set(areaPreview);
         });
+    }
+
+    private updateAreaPreviews(): void {
+        const areaConfigs = this.scene.getGameMapFrontWrapper().getAreas(AreaType.Static);
+
+        // find previews of areas that exist no longer
+        const areaPreviewsToDelete: number[] = [];
+        for (const preview of this.areaPreviews) {
+            if (!areaConfigs.map((config) => config.id).includes(preview.getId())) {
+                areaPreviewsToDelete.push(preview.getId());
+            }
+        }
+        // destroy them
+        for (const id of areaPreviewsToDelete) {
+            const index = this.areaPreviews.findIndex((preview) => preview.getId() === id);
+            if (index !== -1) {
+                this.areaPreviews.splice(index, 1)[0]?.destroy();
+            }
+        }
+
+        // create previews for new areas that were created during our absence in editor mode
+        for (const config of areaConfigs) {
+            const areaPreview = this.areaPreviews.find((areaPreview) => areaPreview.getId() === config.id);
+            if (areaPreview) {
+                areaPreview.updatePreview(config);
+            } else {
+                this.areaPreviews.push(this.createAreaPreview(config));
+            }
+        }
     }
 
     private setAreaPreviewsVisibility(visible: boolean): void {
