@@ -10,7 +10,7 @@ import {
     AWS_URL, REDIS_HOST,
     REDIS_PORT,
     REDIS_DB_NUMBER,
-    UPLOADER_URL
+    UPLOADER_URL, AWS_ENDPOINT
 } from "../Enum/EnvironmentVariable";
 
 class UploaderService{
@@ -25,6 +25,7 @@ class UploaderService{
             && AWS_ACCESS_KEY_ID != undefined && AWS_ACCESS_KEY_ID != ""
             && AWS_SECRET_ACCESS_KEY != undefined && AWS_SECRET_ACCESS_KEY != ""
             && AWS_DEFAULT_REGION != undefined && AWS_DEFAULT_REGION != ""
+            && AWS_ENDPOINT != undefined && AWS_ENDPOINT != ""
         ){
             // Set the region
             AWS.config.update({
@@ -34,7 +35,7 @@ class UploaderService{
             });
 
             // Create S3 service object
-            this.s3 = new AWS.S3({apiVersion: '2006-03-01', endpoint: AWS_URL, s3ForcePathStyle: true});
+            this.s3 = new AWS.S3({apiVersion: '2006-03-01', endpoint: AWS_ENDPOINT, s3ForcePathStyle: true});
         }
 
         if(
