@@ -11,11 +11,15 @@ const AWS_ENDPOINT = process.env.AWS_ENDPOINT;
 
 const REDIS_HOST = process.env.REDIS_HOST;
 const REDIS_PORT = process.env.REDIS_PORT;
+const REDIS_DB_NUMBER = process.env.REDIS_DB_NUMBER;
+
+const UPLOADER_URL = process.env.UPLOADER_URL;
 
 export {
     ENABLE_CHAT_UPLOAD,
     UPLOAD_MAX_FILESIZE,
     ADMIN_API_URL,
+    UPLOADER_URL,
 
     AWS_ACCESS_KEY_ID,
     AWS_SECRET_ACCESS_KEY,
@@ -25,5 +29,6 @@ export {
     AWS_ENDPOINT,
 
     REDIS_HOST,
-    REDIS_PORT
+    REDIS_PORT,
+    REDIS_DB_NUMBER
 };

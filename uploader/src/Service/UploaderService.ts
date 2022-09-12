@@ -2,7 +2,16 @@ import AWS, {S3} from "aws-sdk";
 import { ManagedUpload } from "aws-sdk/clients/s3";
 import {v4} from "uuid";
 import { createClient, commandOptions } from "redis";
-import {AWS_URL} from "../Enum/EnvironmentVariable";
+import {
+    AWS_ACCESS_KEY_ID,
+    AWS_BUCKET,
+    AWS_DEFAULT_REGION,
+    AWS_SECRET_ACCESS_KEY,
+    AWS_URL, REDIS_HOST,
+    REDIS_PORT,
+    REDIS_DB_NUMBER,
+    UPLOADER_URL
+} from "../Enum/EnvironmentVariable";
 
 class UploaderService{
     private s3: S3|null = null;
@@ -12,17 +21,16 @@ class UploaderService{
     constructor(){
         //TODO create provider with interface injected in this constructor
         if(
-            process.env.AWS_BUCKET != undefined && process.env.AWS_BUCKET != ""
-            && process.env.AWS_ACCESS_KEY_ID != undefined && process.env.AWS_ACCESS_KEY_ID != ""
-            && process.env.AWS_SECRET_ACCESS_KEY != undefined && process.env.AWS_SECRET_ACCESS_KEY != ""
-            && process.env.AWS_DEFAULT_REGION != undefined && process.env.AWS_DEFAULT_REGION != ""
+            AWS_BUCKET != undefined && AWS_BUCKET != ""
+            && AWS_ACCESS_KEY_ID != undefined && AWS_ACCESS_KEY_ID != ""
+            && AWS_SECRET_ACCESS_KEY != undefined && AWS_SECRET_ACCESS_KEY != ""
+            && AWS_DEFAULT_REGION != undefined && AWS_DEFAULT_REGION != ""
         ){
-            console.log('UPLOADER S3 : ', process.env.AWS_ACCESS_KEY_ID, ' // ', process.env.AWS_SECRET_ACCESS_KEY, ' // ', process.env.AWS_DEFAULT_REGION);
             // Set the region
             AWS.config.update({
-                accessKeyId: (process.env.AWS_ACCESS_KEY_ID),
-                secretAccessKey: (process.env.AWS_SECRET_ACCESS_KEY),
-                region: (process.env.AWS_DEFAULT_REGION)
+                accessKeyId: (AWS_ACCESS_KEY_ID),
+                secretAccessKey: (AWS_SECRET_ACCESS_KEY),
+                region: (AWS_DEFAULT_REGION)
             });
 
             // Create S3 service object
@@ -30,13 +38,13 @@ class UploaderService{
         }
 
         if(
-            process.env.REDIS_HOST != undefined
-            && process.env.REDIS_HOST != ""
-            && process.env.REDIS_PORT != undefined
-            && process.env.REDIS_PORT != ""
+            REDIS_HOST != undefined
+            && REDIS_HOST != ""
+            && REDIS_PORT != undefined
+            && REDIS_PORT != ""
         ){
             this.redisClient = createClient({
-                url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}/${process.env.REDIS_DB_NUMBER || 0}`,
+                url: `redis://${REDIS_HOST}:${REDIS_PORT}/${REDIS_DB_NUMBER || 0}`,
             });
             this.redisClient.on('error', (err: unknown) => console.error('Redis Client Error', err));
             this.redisClient.connect();
@@ -47,7 +55,7 @@ class UploaderService{
         const fileUuid = `${v4()}.${fileName.split('.').pop()}`;
         if(this.s3 instanceof S3){
             let uploadParams: S3.Types.PutObjectRequest = {
-                Bucket: `${(process.env.AWS_BUCKET as string)}`,
+                Bucket: `${(AWS_BUCKET as string)}`,
                 Key: fileUuid,
                 Body: chunks,
                 ACL: 'public-read'
@@ -75,7 +83,7 @@ class UploaderService{
             await this.redisClient.set(fileUuid, chunks);
             return new Promise((solve, rej) => {
                 solve({ Key:fileUuid,
-                    Location: `${process.env.UPLOADER_URL}/upload-file/${fileUuid}`,
+                    Location: `${UPLOADER_URL}/upload-file/${fileUuid}`,
                     Bucket: "",
                     ETag: ""
                 });
@@ -96,7 +104,7 @@ class UploaderService{
     async deleteFileById(fileId: string){
         if(this.s3 != undefined){
             const deleteParams: S3.Types.DeleteObjectRequest = {
-                Bucket: `${(process.env.AWS_BUCKET as string)}`,
+                Bucket: `${(AWS_BUCKET as string)}`,
                 Key: fileId
             };
             await this.s3.deleteObject(deleteParams).promise();
