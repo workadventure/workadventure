@@ -44,7 +44,7 @@ class UploaderService{
 
     async uploadFile(fileName: string, chunks: Buffer, mimeType?: string): Promise<ManagedUpload.SendData>{
         const fileUuid = `${v4()}.${fileName.split('.').pop()}`;
-        if(this.s3 != undefined){
+        if(this.s3 instanceof S3){
             let uploadParams: S3.Types.PutObjectRequest = {
                 Bucket: `${(process.env.AWS_BUCKET as string)}`,
                 Key: fileUuid,
