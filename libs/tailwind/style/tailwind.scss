@@ -303,6 +303,10 @@
         &.close,
         &.close-window {
             @apply tw-bg-pop-red tw-text-white tw-ring-1 tw-ring-dark-blue tw-absolute tw-right-5 tw-px-0 tw-py-0 tw-h-6 tw-w-6 tw-justify-center;
+            &#cowebsite-close{
+                position: initial;
+                @apply tw-text-3xl;
+            }
         }
     }
 

@@ -4,6 +4,7 @@ dist/
 /package-lock.json
 *.sh
 !templater.sh
+!start_nginx.sh
 /public/iframe_api.js
 /public/iframe_api.js.map
 /public/es.js

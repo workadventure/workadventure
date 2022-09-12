@@ -2,7 +2,7 @@
     import { onMount } from "svelte";
     import { audioManagerVisibilityStore } from "../Stores/AudioManagerStore";
     import { embedScreenLayoutStore, hasEmbedScreen } from "../Stores/EmbedScreensStore";
-    import { emoteMenuStore } from "../Stores/EmoteStore";
+    import { emoteDataStoreLoading, emoteMenuStore } from "../Stores/EmoteStore";
     import { myCameraStore } from "../Stores/MyMediaStore";
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import { helpCameraSettingsVisibleStore } from "../Stores/HelpCameraSettingsStore";
@@ -155,7 +155,13 @@
         <!-- audio when user have a message TODO delete it with new chat -->
         <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
 
-        <Lazy when={$emoteMenuStore} component={() => import("./EmoteMenu/EmoteMenu.svelte")} />
+        <Lazy
+            on:onload={() => emoteDataStoreLoading.set(true)}
+            on:loaded={() => emoteDataStoreLoading.set(false)}
+            on:error={() => emoteDataStoreLoading.set(false)}
+            when={$emoteMenuStore}
+            component={() => import("./EmoteMenu/EmoteMenu.svelte")}
+        />
     </section>
 </div>
 

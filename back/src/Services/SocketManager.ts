@@ -709,6 +709,7 @@ export class SocketManager {
         joinBBBMeetingQuery: JoinBBBMeetingQuery
     ): Promise<JoinBBBMeetingAnswer> {
         const meetingId = joinBBBMeetingQuery.getMeetingid();
+        const localMeetingId = joinBBBMeetingQuery.getLocalmeetingid();
         const meetingName = joinBBBMeetingQuery.getMeetingname();
         const bbbSettings = gameRoom.getBbbSettings();
 
@@ -724,7 +725,7 @@ export class SocketManager {
         if (user.tags.includes("admin")) {
             isAdmin = true;
         } else {
-            const moderatorTag = await gameRoom.getModeratorTagForBbbMeeting(meetingId);
+            const moderatorTag = await gameRoom.getModeratorTagForBbbMeeting(localMeetingId);
             if (moderatorTag && user.tags.includes(moderatorTag)) {
                 isAdmin = true;
             } else if (moderatorTag === undefined) {
@@ -761,6 +762,11 @@ export class SocketManager {
             userID: user.id,
             joinViaHtml5: true,
         });
+        console.log(
+            `User "${user.name}" (${user.uuid}) joined the BBB meeting "${meetingName}" as ${
+                isAdmin ? "Admin" : "Participant"
+            }.`
+        );
 
         const bbbMeetingAnswer = new JoinBBBMeetingAnswer();
         bbbMeetingAnswer.setMeetingid(meetingId);

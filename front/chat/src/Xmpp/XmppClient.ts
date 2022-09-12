@@ -68,7 +68,7 @@ export class XmppClient {
                     //close reset mucroom, close connection and try to restart
                     xmppServerConnectionStatusStore.set(false);
                     mucRoomsStore.reset();
-                    //connection.close();
+                    connection.close();
                     break;
                 }
                 case Status.UNRECOGNIZED: {
@@ -138,10 +138,10 @@ export class XmppClient {
 
         const roomUrl = jid(waRoomUrl, this.conferenceDomain);
         const room = new MucRoom(this.connection, name, roomUrl, type, subscribe, this.jid);
-        room.connect();
         this.rooms.set(roomUrl.toString(), room);
-
         mucRoomsStore.addMucRoom(room);
+
+        room.connect();
 
         return room;
     }

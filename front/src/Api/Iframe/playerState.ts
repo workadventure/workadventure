@@ -39,10 +39,10 @@ export class WorkadventurePlayerStateCommands extends AbstractWorkadventureState
             data: {
                 key,
                 value,
-                public: options?.public ?? true,
+                public: options?.public ?? false,
                 ttl: options?.ttl ?? undefined,
-                persist: options?.persist ?? false,
-                scope: options?.scope ?? "room",
+                persist: options?.persist ?? true,
+                scope: options?.scope ?? "world",
             },
         });
     }

@@ -8,18 +8,21 @@ import {
     XmppSettingsMessage,
     XmppConnectionStatusChangeMessage_Status,
     IframeToPusherMessage,
+    XmppConnectionNotAuthorizedMessage,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { XmppClient } from "../Xmpp/XmppClient";
 import { Parser } from "@xmpp/xml";
 import { userStore } from "../Stores/LocalUserStore";
+import { connectionNotAuthorized } from "../Stores/ChatStore";
 
 const manualPingDelay = 20000;
 
 export class ChatConnection implements ChatConnection {
-    private readonly socket: WebSocket;
+    private socket?: WebSocket;
     private userId: number | null = null;
     private closed: boolean = false;
     private xmppClient: XmppClient | null = null;
+    private reconnectTimeout: NodeJS.Timeout | null = null;
 
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
@@ -36,21 +39,31 @@ export class ChatConnection implements ChatConnection {
     public readonly xmppConnectionStatusChangeMessageStream =
         this._xmppConnectionStatusChangeMessageStream.asObservable();
 
-    public constructor(token: string | null, roomUrl: string, uuid: string) {
+    private readonly _xmppConnectionNotAuthorizedStream = new Subject<XmppConnectionNotAuthorizedMessage>();
+    public readonly xmppConnectionNotAuthorizedStream = this._xmppConnectionNotAuthorizedStream.asObservable();
+
+    public constructor(private token: string | null, private roomUrl: string, private uuid: string) {
+        this.init();
+    }
+
+    private get buildUrl() {
         let url = new URL(PUSHER_URL, window.location.toString()).toString();
         url = url.replace("http://", "ws://").replace("https://", "wss://");
         if (!url.endsWith("/")) {
             url += "/";
         }
         url += "chat";
-        url += "?playUri=" + encodeURIComponent(roomUrl);
-        url += "&token=" + (token ? encodeURIComponent(token) : "");
-        url += "&uuid=" + encodeURIComponent(uuid);
+        url += "?playUri=" + encodeURIComponent(this.roomUrl);
+        url += "&token=" + (this.token ? encodeURIComponent(this.token) : "");
+        url += "&uuid=" + encodeURIComponent(this.uuid);
         //url += "&name=" + encodeURIComponent(name);
         url += "&version=" + apiVersionHash;
+        return url;
+    }
 
+    private init() {
         try {
-            this.socket = new WebSocket(url);
+            this.socket = new WebSocket(this.buildUrl);
 
             this.socket.binaryType = "arraybuffer";
 
@@ -59,11 +72,14 @@ export class ChatConnection implements ChatConnection {
             this.socket.onopen = () => {
                 //we manually ping every 20s to not be logged out by the server, even when the game is in background.
                 const pingMessage = PingMessageTsProto.encode({}).finish();
-                interval = setInterval(() => this.socket.send(pingMessage), manualPingDelay);
+                interval = setInterval(() => this.socket?.send(pingMessage), manualPingDelay);
             };
 
             this.socket.addEventListener("open", (event) => {
                 this.xmppClient = new XmppClient(this);
+
+                //define connection connection Not Authorized status
+                connectionNotAuthorized.set(false);
             });
 
             this.socket.addEventListener("close", (event) => {
@@ -108,6 +124,11 @@ export class ChatConnection implements ChatConnection {
                         this._xmppMessageStream.next(elementExtParsed);
                         break;
                     }
+                    case "xmppConnectionNotAuthorized": {
+                        this._xmppConnectionNotAuthorizedStream.next(message.xmppConnectionNotAuthorized);
+                        connectionNotAuthorized.set(true);
+                        break;
+                    }
                     default: {
                         // Security check: if we forget a "case", the line below will catch the error at compile-time.
                         //@ts-ignore
@@ -132,7 +153,7 @@ export class ChatConnection implements ChatConnection {
             },
         }).finish();
 
-        this.socket.send(bytes);
+        this.socket?.send(bytes);
     }
 
     public emitBanUserByUuid(playUri: string, uuidToBan: string, name: string, message: string) {
@@ -149,7 +170,7 @@ export class ChatConnection implements ChatConnection {
             },
         }).finish();
 
-        this.socket.send(bytes);
+        this.socket?.send(bytes);
     }
 
     public getXmppClient(): XmppClient | null {
@@ -157,11 +178,11 @@ export class ChatConnection implements ChatConnection {
     }
 
     public close() {
-        this.socket.close();
+        this.socket?.close();
     }
 
     get isClose() {
-        return this.socket.readyState === WebSocket.CLOSED || this.socket.readyState === WebSocket.CLOSING;
+        return this.socket?.readyState === WebSocket.CLOSED || this.socket?.readyState === WebSocket.CLOSING;
     }
 }
 

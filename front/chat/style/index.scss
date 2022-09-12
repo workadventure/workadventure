@@ -2,6 +2,20 @@
 //@import "tailwind";
 @import '@workadventure/tailwind/style/index.scss';
 
+::-webkit-scrollbar {
+    width: 4px;
+}
+::-webkit-scrollbar-track {
+    background-color: rgba(27, 27, 41, 0.95);
+}
+::-webkit-scrollbar-thumb {
+    @apply tw-bg-grey;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:active {
+    @apply tw-bg-light-blue;
+}
+
 .emoji-picker__overlay{
     background: none!important;
 }
@@ -13,9 +27,9 @@
     }
 }
 
-.message{
+.wa-message-body{
+    @apply tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left;
     p{
-        min-height: 20px;
         margin: 0;
         .mention{
             margin: 0 2px;
@@ -28,7 +42,7 @@
 }
 
 .selected {
-    .message{
+    .wa-message{
         &::after{
             @apply tw-animate-ping;
         }

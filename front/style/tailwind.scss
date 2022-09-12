@@ -153,6 +153,10 @@
 
         &.close-window {
             @apply tw-bg-pop-red tw-text-white tw-ring-1 tw-ring-dark-blue tw-absolute tw-right-6 tw-px-0 tw-py-0 tw-h-5 tw-w-5 tw-justify-center tw-outline-none;
+            &#cowebsite-close{
+                position: initial;
+                @apply tw-text-3xl;
+            }
         }
     }
 

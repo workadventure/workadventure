@@ -97,7 +97,12 @@ class OpenIDClient {
         res: Response
     ): Promise<{ email: string; sub: string; access_token: string; username: string; locale: string }> {
         const fullUrl = req.url;
-        const cookies = req.cookies as Record<string, string>;
+        const cookies = req.cookies;
+
+        if (typeof cookies?.code_verifier !== "string") {
+            throw new Error("code verifier doesn't exist");
+        }
+
         const code_verifier = this.decrypt(cookies.code_verifier);
         const state = cookies.oidc_state;
 
@@ -108,7 +113,7 @@ class OpenIDClient {
                 code_verifier,
             };
 
-            if (params.state) {
+            if (state && params.state && typeof state === "string") {
                 checks.state = state;
             }
 

@@ -14,7 +14,7 @@ export const isMucRoomDefinition = z.object({
         description: "The type of the MUC room",
         example: "live",
     }),
-    subscribe: extendApi(z.boolean(), {
+    subscribe: extendApi(z.boolean().optional().default(false), {
         description: "If the user need to subscribe and be persisted in the MUC room",
     }),
 });

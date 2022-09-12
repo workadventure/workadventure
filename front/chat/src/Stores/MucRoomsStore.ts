@@ -28,7 +28,13 @@ function createMucRoomsStore() {
             set(new Set<MucRoom>());
         },
         getDefaultRoom(): MucRoom | undefined {
-            return [...get(mucRoomsStore).values()].find((mucRoom) => mucRoom.type === "default");
+            return [...get(this).values()].find((mucRoom) => mucRoom.type === "default");
+        },
+        getLiveRoom(): MucRoom | undefined {
+            return [...get(this).values()].find((mucRoom) => mucRoom.type === "live");
+        },
+        sendAvailabilityStatus() {
+            [...get(this).values()].forEach((mucRoom) => mucRoom.sendPresence());
         },
     };
 }

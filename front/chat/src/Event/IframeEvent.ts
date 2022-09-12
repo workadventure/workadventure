@@ -55,7 +55,7 @@ export const isIframeEventWrapper = z.union([
         data: z.any(),
     }),
     z.object({
-        type: z.literal("peerConexionStatus"),
+        type: z.literal("peerConnectionStatus"),
         data: z.boolean(),
     }),
 ]);

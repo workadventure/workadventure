@@ -1,6 +1,16 @@
 <script lang="ts">
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
-    import { requestedCameraState, requestedMicrophoneState, silentStore } from "../../Stores/MediaStore";
+    import {
+        audioConstraintStore,
+        cameraListStore,
+        localStreamStore,
+        microphoneListStore,
+        requestedCameraState,
+        requestedMicrophoneState,
+        silentStore,
+        videoConstraintStore,
+    } from "../../Stores/MediaStore";
+    import { ChevronDownIcon, ChevronUpIcon, CheckIcon } from "svelte-feather-icons";
     import cameraImg from "../images/camera.png";
     import cameraOffImg from "../images/camera-off.png";
     import microphoneImg from "../images/microphone.png";
@@ -38,6 +48,7 @@
     import {
         Emoji,
         emoteDataStore,
+        emoteDataStoreLoading,
         emoteMenuStore,
         emoteMenuSubCurrentEmojiSelectedStore,
         emoteMenuSubStore,
@@ -54,8 +65,16 @@
     import { iframeListener } from "../../Api/IframeListener";
     import { onDestroy, onMount } from "svelte";
     import { Unsubscriber, writable } from "svelte/store";
+    import { peerStore } from "../../Stores/PeerStore";
+    import { StringUtils } from "../../Utils/StringUtils";
+    import Tooltip from "../Util/Tooltip.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
+
+    let cameraActive = false;
+    let microphoneActive = false;
+    let selectedCamera: string | undefined = undefined;
+    let selectedMicrophone: string | undefined = undefined;
 
     function screenSharingClick(): void {
         if ($silentStore) return;
@@ -250,6 +269,16 @@
         return false;
     }
 
+    function selectCamera(deviceId: string) {
+        videoConstraintStore.setDeviceId(deviceId);
+        cameraActive = false;
+    }
+
+    function selectMicrophone(deviceId: string) {
+        audioConstraintStore.setDeviceId(deviceId);
+        microphoneActive = false;
+    }
+
     let subscribers = new Array<Unsubscriber>();
     let totalMessagesToSee = writable<number>(0);
     onMount(() => {
@@ -257,7 +286,30 @@
     });
 
     onDestroy(() => {
-        return subscribers.map((subscriber) => subscriber());
+        subscribers.map((subscriber) => subscriber());
+        unsubscribeLocalStreamStore();
+    });
+
+    let stream: MediaStream | null;
+    const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
+        if (value.type === "success") {
+            stream = value.stream;
+
+            if (stream !== null) {
+                const videoTracks = stream.getVideoTracks();
+                if (videoTracks.length > 0) {
+                    selectedCamera = videoTracks[0].getSettings().deviceId;
+                }
+                const audioTracks = stream.getAudioTracks();
+                if (audioTracks.length > 0) {
+                    selectedMicrophone = audioTracks[0].getSettings().deviceId;
+                }
+            }
+        } else {
+            stream = null;
+            selectedCamera = undefined;
+            selectedMicrophone = undefined;
+        }
     });
 
     const isMobile = isMediaBreakpointUp("md");
@@ -270,12 +322,12 @@
     style="margin-bottom: 10px"
     class:animated={$bottomActionBarVisibilityStore}
 >
-    <div class="bottom-action-bar" class:move-menu={$bottomActionBarVisibilityStore}>
+    <div class="bottom-action-bar">
         {#if $bottomActionBarVisibilityStore}
             <div
                 class="bottom-action-section tw-flex animate"
                 id="bubble-menu"
-                in:fly={{ y: 70, duration: 100, delay: 500 }}
+                in:fly={{ y: 70, duration: 100, delay: 200 }}
                 out:fly={{ y: 70, duration: 100, delay: 0 }}
                 class:tw-translate-x-0={$bottomActionBarVisibilityStore}
                 class:translate-right={!$bottomActionBarVisibilityStore}
@@ -286,6 +338,8 @@
                     on:click={() => analyticsClient.follow()}
                     on:click={followClick}
                 >
+                    <Tooltip text={$LL.actionbar.follow()} />
+
                     <button class:border-top-light={$followStateStore === "active"}>
                         <img draggable="false" src={followImg} style="padding: 2px" alt="Toggle follow" />
                     </button>
@@ -296,6 +350,8 @@
                     on:click={() => analyticsClient.layoutPresentChange()}
                     on:click={switchLayoutMode}
                 >
+                    <Tooltip text={$LL.actionbar.layout()} />
+
                     <button>
                         {#if $embedScreenLayoutStore === LayoutMode.Presentation}
                             <img
@@ -321,7 +377,9 @@
                     on:click={() => analyticsClient.lockDiscussion()}
                     on:click={lockClick}
                 >
-                    <button class=" " class:border-top-light={$currentPlayerGroupLockStateStore}>
+                    <Tooltip text={$LL.actionbar.lock()} />
+
+                    <button class:border-top-light={$currentPlayerGroupLockStateStore}>
                         {#if $currentPlayerGroupLockStateStore}
                             <img
                                 draggable="false"
@@ -341,6 +399,8 @@
                     on:click={screenSharingClick}
                     class:enabled={$requestedScreenSharingState}
                 >
+                    <Tooltip text={$LL.actionbar.screensharing()} />
+
                     <button class:border-top-light={$requestedScreenSharingState}>
                         {#if $requestedScreenSharingState && !$silentStore}
                             <img
@@ -364,15 +424,20 @@
 
         <div class="tw-flex tw-flex-row base-section animated">
             <div class="bottom-action-section tw-flex tw-flex-initial">
-                {#if !$inExternalServiceStore && $proximityMeetingStore}
+                {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
                     {#if $myCameraStore}
                         <div
-                            class="bottom-action-button"
+                            class="bottom-action-button tw-relative"
                             on:click={() => analyticsClient.camera()}
                             on:click={cameraClick}
                             class:disabled={!$requestedCameraState || $silentStore}
                         >
-                            <button class:border-top-light={$requestedCameraState}>
+                            <Tooltip text={$LL.actionbar.camera()} />
+
+                            <button
+                                class="tooltiptext sm:tw-w-56 md:tw-w-96"
+                                class:border-top-light={$requestedCameraState}
+                            >
                                 {#if $requestedCameraState && !$silentStore}
                                     <img
                                         draggable="false"
@@ -389,16 +454,51 @@
                                     />
                                 {/if}
                             </button>
+
+                            {#if $requestedCameraState && $cameraListStore.length > 1}
+                                <button
+                                    class="camera tw-absolute tw-text-light-purple focus:outline-none tw-m-0"
+                                    on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
+                                >
+                                    {#if cameraActive}
+                                        <ChevronDownIcon size="13" />
+                                    {:else}
+                                        <ChevronUpIcon size="13" />
+                                    {/if}
+                                </button>
+
+                                <!-- camera list -->
+                                <div
+                                    class={`wa-dropdown-menu ${cameraActive ? "" : "tw-invisible"}`}
+                                    style="bottom: 15px;right: 0;"
+                                    on:mouseleave={() => (cameraActive = false)}
+                                >
+                                    {#each $cameraListStore as camera}
+                                        <span
+                                            class="wa-dropdown-item tw-flex"
+                                            on:click|stopPropagation|preventDefault={() =>
+                                                selectCamera(camera.deviceId)}
+                                        >
+                                            {StringUtils.normalizeDeviceName(camera.label)}
+                                            {#if selectedCamera === camera.deviceId}
+                                                <CheckIcon size="13" class="tw-ml-1" />
+                                            {/if}
+                                        </span>
+                                    {/each}
+                                </div>
+                            {/if}
                         </div>
                     {/if}
 
                     {#if $myMicrophoneStore}
                         <div
-                            class="bottom-action-button"
+                            class="bottom-action-button tw-relative"
                             on:click={() => analyticsClient.microphone()}
                             on:click={microphoneClick}
                             class:disabled={!$requestedMicrophoneState || $silentStore}
                         >
+                            <Tooltip text={$LL.actionbar.microphone()} />
+
                             <button class:border-top-light={$requestedMicrophoneState}>
                                 {#if $requestedMicrophoneState && !$silentStore}
                                     <img
@@ -416,6 +516,40 @@
                                     />
                                 {/if}
                             </button>
+
+                            {#if $requestedMicrophoneState && $microphoneListStore.length > 1}
+                                <button
+                                    class="microphone tw-absolute tw-text-light-purple focus:outline-none tw-m-0"
+                                    on:click|stopPropagation|preventDefault={() =>
+                                        (microphoneActive = !microphoneActive)}
+                                >
+                                    {#if microphoneActive}
+                                        <ChevronDownIcon size="13" />
+                                    {:else}
+                                        <ChevronUpIcon size="13" />
+                                    {/if}
+                                </button>
+
+                                <!-- microphone list -->
+                                <div
+                                    class={`wa-dropdown-menu ${microphoneActive ? "" : "tw-invisible"}`}
+                                    style="bottom: 15px;right: 0;"
+                                    on:mouseleave={() => (microphoneActive = false)}
+                                >
+                                    {#each $microphoneListStore as microphone}
+                                        <span
+                                            class="wa-dropdown-item"
+                                            on:click|stopPropagation|preventDefault={() =>
+                                                selectMicrophone(microphone.deviceId)}
+                                        >
+                                            {StringUtils.normalizeDeviceName(microphone.label)}
+                                            {#if selectedMicrophone === microphone.deviceId}
+                                                <CheckIcon size="13" />
+                                            {/if}
+                                        </span>
+                                    {/each}
+                                </div>
+                            {/if}
                         </div>
                     {/if}
                 {/if}
@@ -425,28 +559,36 @@
                     on:click={toggleChat}
                     class="bottom-action-button tw-relative"
                 >
+                    <Tooltip text={$LL.actionbar.chat()} />
+
                     <button class:border-top-light={$chatVisibilityStore} class="chat-btn">
                         <img draggable="false" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
                     </button>
-                    {#if $totalMessagesToSee > 0}
+                    {#if $chatZoneLiveStore || $peerStore.size > 0}
+                        <div class="tw-absolute tw-top-1 tw-right-0.5">
+                            <span
+                                class={`tw-w-4 tw-h-4 ${
+                                    $peerStore.size > 0 ? "tw-bg-pop-green" : "tw-bg-pop-red"
+                                } tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping`}
+                            />
+                            <span
+                                class={`tw-w-3 tw-h-3 ${
+                                    $peerStore.size > 0 ? "tw-bg-pop-green" : "tw-bg-pop-red"
+                                } tw-block tw-rounded-full tw-absolute tw-top-0.5 tw-right-0.5`}
+                            />
+                        </div>
+                    {:else if $totalMessagesToSee > 0}
                         <span
                             class="tw-absolute tw-top-1.5 tw-right-1 tw-items-center tw-justify-center tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none tw-text-white tw-bg-pop-red tw-rounded-full"
                         >
                             {$totalMessagesToSee}
                         </span>
-                    {:else if $chatZoneLiveStore}
-                        <div class="tw-absolute tw-top-1 tw-right-0">
-                            <span
-                                class="tw-w-4 tw-h-4 tw-bg-pop-red tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-animate-ping"
-                            />
-                            <span
-                                class="tw-w-3 tw-h-3 tw-bg-pop-red tw-block tw-rounded-full tw-absolute tw-right-0.5 tw-top-0.5"
-                            />
-                        </div>
                     {/if}
                 </div>
 
                 <div on:click={toggleEmojiPicker} class="bottom-action-button">
+                    <Tooltip text={$LL.actionbar.emoji()} />
+
                     <button class:border-top-light={$emoteMenuSubStore}>
                         <img draggable="false" src={emojiPickOn} style="padding: 2px" alt="Toggle emoji picker" />
                     </button>
@@ -460,6 +602,8 @@
                     on:click={showMenu}
                     class="bottom-action-button"
                 >
+                    <Tooltip text={$LL.actionbar.menu()} />
+
                     <button id="menuIcon" class:border-top-light={$menuVisiblilityStore}>
                         <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
                     </button>
@@ -550,7 +694,23 @@
 
                 <div class="tw-transition-all bottom-action-button">
                     <button on:click={() => analyticsClient.editEmote()} on:click|preventDefault={edit}>
-                        <img draggable="false" src={penImg} style="padding: 2px" alt={$LL.menu.icon.open.openEmoji()} />
+                        {#if $emoteDataStoreLoading}
+                            <div class="tw-rounded-lg tw-bg-dark tw-text-xs">
+                                <!-- loading animation -->
+                                <div class="loading-group">
+                                    <span class="loading-dot" />
+                                    <span class="loading-dot" />
+                                    <span class="loading-dot" />
+                                </div>
+                            </div>
+                        {:else}
+                            <img
+                                draggable="false"
+                                src={penImg}
+                                style="padding: 2px"
+                                alt={$LL.menu.icon.open.openEmoji()}
+                            />
+                        {/if}
                     </button>
                 </div>
                 <div class="tw-transition-all bottom-action-button">
@@ -580,14 +740,34 @@
         transform: translateX(2rem);
     }
 
+    .bottom-action-section {
+        .bottom-action-button {
+            button.camera,
+            button.microphone {
+                top: 0;
+                width: 20px;
+                height: 20px;
+                background: none;
+                right: 0;
+                border-top-left-radius: 0.25rem;
+                border-bottom-left-radius: 0.25rem;
+                border-top-right-radius: 0.25rem;
+                border-bottom-right-radius: 0.25rem;
+                color: white;
+                padding: 0;
+                margin: 0;
+                display: block;
+                &:hover {
+                    background-color: rgb(56 56 74);
+                }
+            }
+        }
+    }
+
     @include media-breakpoint-down(sm) {
         //is equal to tailwind's sm breakpoint
         .translate-right {
             transform: translateX(0);
-        }
-
-        .move-menu {
-            transform: translate(-3rem, -2rem);
         }
     }
 </style>

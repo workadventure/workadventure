@@ -167,7 +167,6 @@ message ClientToServerMessage {
     LockGroupPromptMessage lockGroupPromptMessage = 18;
     QueryMessage queryMessage = 20;
     PingMessage pingMessage = 21;
-    //XmppMessage xmppMessage = 22;
     AskPositionMessage askPositionMessage = 23;
     EditMapCommandMessage editMapCommandMessage = 24;
   }
@@ -246,8 +245,9 @@ message JitsiJwtQuery {
 }
 
 message JoinBBBMeetingQuery {
-  string meetingId = 1;
-  string meetingName = 2;
+  string meetingId = 1; /* a hash of domain, instance and localMeetingId */
+  string localMeetingId = 2; /* bbbMeeting field from the map  */
+  string meetingName = 3;
   // Fix me Pusher linter fails because eslint-plugin version < 3.0
   // map<string, string> userdata = 3;
 }
@@ -294,7 +294,6 @@ message SubMessage {
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
     PingMessage pingMessage = 11;
-    //XmppMessage xmppMessage = 12;
     EditMapCommandMessage editMapCommandMessage = 13;
   }
 }
@@ -699,6 +698,7 @@ message PusherToIframeMessage{
     XmppSettingsMessage xmppSettingsMessage = 1;
     XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 2;
     XmppMessage xmppMessage = 3;
+    XmppConnectionNotAuthorizedMessage xmppConnectionNotAuthorized= 4;
   }
 }
 
@@ -713,6 +713,10 @@ message XmppSettingsMessage{
   string jid = 1;
   string conferenceDomain = 2;
   repeated MucRoomDefinitionMessage rooms = 3;
+}
+
+message XmppConnectionNotAuthorizedMessage{
+  string message = 1;
 }
 
 
