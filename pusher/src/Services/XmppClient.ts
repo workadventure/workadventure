@@ -280,19 +280,11 @@ export class XmppClient {
     }
 
     private xmlRestrictionsToIframe(xml: ElementExt): boolean {
-        // If it's pong ...
-        /*
-        //parse for ping XMPP message and send pong
-                if (elementExtParsed.getChild("ping")) {
-                    this.sendPong(
-                        elementExtParsed.getAttr("from"),
-                        elementExtParsed.getAttr("to"),
-                        elementExtParsed.getAttr("id")
-                    );
-                    return;
-                }
-         */
-        return !(xml.getName() === "iq" && xml.getAttr("type") === "result" && xml.getAttr("id") === this.pingUuid);
+        if (xml.getChild("ping")) {
+            this.sendPong(xml.getAttr("from"), xml.getAttr("to"), xml.getAttr("id"));
+            return false;
+        }
+        return true;
     }
 
     private xmlRestrictionsToEjabberd(element: ElementExt): null | ElementExt {
@@ -377,9 +369,8 @@ export class XmppClient {
         return element;
     }
 
-    async sendPong(to: string, from: string, id: string): Promise<void> {
-        await this.send(xml("iq", { from, to, id, type: "result" }).toString());
-        return;
+    sendPong(to: string, from: string, id: string): void {
+        this.sendToEjabberd(xml("iq", { from, to, id, type: "result" }).toString());
     }
 
     async sendToEjabberd(stanza: string): Promise<void> {
@@ -393,7 +384,7 @@ export class XmppClient {
         return;
     }
 
-    sendErrorToIframe(message: string) {
+    sendErrorToIframe(message: string): void {
         const errorMessage = new ErrorMessage();
         errorMessage.setMessage(message);
 

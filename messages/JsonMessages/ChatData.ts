@@ -12,6 +12,7 @@ export const isUserData = z.object({
     availabilityStatus: z.number(),
     roomName: z.optional(z.nullable(z.string())),
     userRoomToken: z.optional(z.nullable(z.string())),
+    visitCardUrl: z.optional(z.nullable(z.string()))
 });
 
 export type UserData = z.infer<typeof isUserData>;
