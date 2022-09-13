@@ -35,6 +35,7 @@ export type User = {
     jid: string;
     isMember: boolean;
     availabilityStatus: number;
+    visitCardUrl?: string | null;
 };
 
 export const ChatStates = {
@@ -119,6 +120,7 @@ export const defaultUserData: UserData = {
     isLogged: false,
     availabilityStatus: 0,
     roomName: null,
+    visitCardUrl: null,
 };
 
 export const defaultUser: User = {
@@ -138,6 +140,7 @@ export const defaultUser: User = {
     jid: "",
     isMember: false,
     availabilityStatus: 0,
+    visitCardUrl: null,
 };
 
 export type DeleteMessageStore = Readable<string[]>;
@@ -158,6 +161,8 @@ export class MucRoom {
     public canLoadOlderMessages: boolean;
     private closed: boolean = false;
     private description: string = "";
+    private getAllSubscriptionsId: string = "";
+    private loadingSubscribers: Writable<boolean>;
 
     constructor(
         private connection: ChatConnection,
@@ -177,6 +182,7 @@ export class MucRoom {
         this.countMessagesToSee = writable<number>(0);
         this.loadingStore = writable<boolean>(false);
         this.canLoadOlderMessages = true;
+        this.loadingSubscribers = writable<boolean>(true);
 
         //refrech react message
         this.messageReactStore.subscribe((reacts) => {
@@ -261,19 +267,21 @@ export class MucRoom {
     }
 
     private requestAllSubscribers() {
+        const uuid = uuidv4();
         const messageMucListAllUsers = xml(
             "iq",
             {
                 type: "get",
                 to: jid(this.roomJid.local, this.roomJid.domain).toString(),
                 from: this.jid,
-                id: uuidv4(),
+                id: uuid,
             },
             xml("subscriptions", {
                 xmlns: "urn:xmpp:mucsub:0",
             })
         );
         if (!this.closed) {
+            this.getAllSubscriptionsId = uuid;
             this.connection.emitXmlMessage(messageMucListAllUsers);
             if (_VERBOSE) console.warn("[XMPP]", ">> Get all subscribers sent");
         }
@@ -358,6 +366,7 @@ export class MucRoom {
                 // If you can subscribe to the default muc room, this is that you are a member
                 isMember: mucRoomsStore.getDefaultRoom()?.subscribe ?? false,
                 availabilityStatus: get(availabilityStatusStore),
+                visitCardUrl: get(userStore).visitCardUrl,
             })
         );
         if (!this.closed) {
@@ -737,6 +746,7 @@ export class MucRoom {
                 const color = xml.getChild("user")?.getAttr("color");
                 const woka = xml.getChild("user")?.getAttr("woka");
                 const isMember = xml.getChild("user")?.getAttr("isMember");
+                const visitCardUrl = xml.getChild("user")?.getAttr("visitCardUrl");
                 const availabilityStatus = parseInt(xml.getChild("user")?.getAttr("availabilityStatus"));
                 //const affiliation = x.getChild("item")?.getAttr("affiliation");
                 const role = x.getChild("item")?.getAttr("role");
@@ -753,6 +763,9 @@ export class MucRoom {
                         }
                     }
                 } else {
+                    if (userJID.toString() === this.getMyJID().toString() && this.getAllSubscriptionsId === "") {
+                        this.loadingSubscribers.set(false);
+                    }
                     this.updateUser(
                         userJID,
                         from.resource,
@@ -762,9 +775,11 @@ export class MucRoom {
                         type === "unavailable" ? USER_STATUS_DISCONNECTED : USER_STATUS_AVAILABLE,
                         color,
                         woka,
-                        ["moderator", "owner"].includes(role),
+                        ["admin", "owner"].includes(role),
                         isMember === "true",
-                        availabilityStatus
+                        availabilityStatus,
+                        null,
+                        visitCardUrl
                     );
                 }
 
@@ -781,7 +796,8 @@ export class MucRoom {
             // Manage registered subscriptions old and new one
             const subscriptions = xml.getChild("subscriptions")?.getChildren("subscription");
             const playUri = xml.getChild("room")?.getAttr("playUri");
-            if (subscriptions) {
+            if (subscriptions && this.getAllSubscriptionsId === xml.getAttr("id")) {
+                this.loadingSubscribers.set(false);
                 subscriptions.forEach((subscription) => {
                     const jid = subscription.getAttr("jid");
                     const nick = subscription.getAttr("nick");
@@ -1047,6 +1063,10 @@ export class MucRoom {
         return get(this.presenceStore).get(jid.toString())?.availabilityStatus ?? 0;
     }
 
+    private getVisitCardUrl(jid: JID | string) {
+        return get(this.presenceStore).get(jid.toString())?.visitCardUrl ?? null;
+    }
+
     private getMeIsAdmin() {
         return get(this.meStore).isAdmin;
     }
@@ -1063,7 +1083,8 @@ export class MucRoom {
         isAdmin: boolean | null = null,
         isMember: boolean | null = null,
         availabilityStatus: number | null = null,
-        chatState: string | null = null
+        chatState: string | null = null,
+        visitCardUrl: string | null = null
     ) {
         let isMe = false;
         const user = get(userStore);
@@ -1093,6 +1114,7 @@ export class MucRoom {
                 jid: jid.toString(),
                 isMember: isMember ?? this.getCurrentIsMember(jid),
                 availabilityStatus: availabilityStatus ?? this.getCurrentAvailabilityStatus(jid),
+                visitCardUrl: visitCardUrl ?? this.getVisitCardUrl(jid),
             });
             numberPresenceUserStore.set(list.size);
             return list;
@@ -1108,11 +1130,10 @@ export class MucRoom {
 
     public updateComposingState(state: string) {
         if (state === ChatStates.COMPOSING) {
-            if (!this.composingTimeOut) {
-                this.sendChatState(ChatStates.COMPOSING);
-            } else {
+            if (this.composingTimeOut) {
                 clearTimeout(this.composingTimeOut);
             }
+            this.sendChatState(ChatStates.COMPOSING);
             this.composingTimeOut = setTimeout(() => {
                 this.sendChatState(ChatStates.PAUSED);
                 if (this.composingTimeOut) {
@@ -1168,6 +1189,10 @@ export class MucRoom {
 
     public getLoadingStore() {
         return this.loadingStore;
+    }
+
+    public getLoadingSubscribersStore() {
+        return this.loadingSubscribers;
     }
 
     public getUrl(): string {

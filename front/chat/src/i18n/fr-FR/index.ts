@@ -11,8 +11,10 @@ const fr_FR: Translation = {
         search: "Il suffit de chercher !",
         walkTo: "Marcher jusqu'à",
         teleporting: "Téléportation ...",
+        businessCard: "Carte de visite",
     },
-    reconnecting: "Connexion au serveur ...",
+    connecting: "Connexion au serveur ...",
+    waitingInit: "Attente de l'initialisation du serveur ...",
     waitingData: "En attentes des informations de l'utilisateur ...",
     search: "Rechercher un utilisateur, un message, un canal ...",
     role: {
@@ -23,7 +25,7 @@ const fr_FR: Translation = {
     status: {
         online: "En ligne",
         away: "Absent",
-        unavailable: "Non disponnible",
+        unavailable: "Non disponible",
     },
     logIn: "Se connecter",
     signIn: "Inscrivez-vous ou connectez-vous pour profiter de toutes les fonctionnalités du chat !",
@@ -36,10 +38,11 @@ const fr_FR: Translation = {
     you: "Vous",
     ban: {
         title: "Bannir",
-        content: "Bannir l'utilisateur {userName} du monde courrant. Cela peut être annulé depuis l'administration.",
+        content: "Bannir l'utilisateur {userName} du monde courant. Cela peut être annulé depuis l'administration.",
         ban: "Bannir cet utilisateur",
     },
     loading: "Chargement",
+    loadingUsers: "Chargement des utilisateurs ...",
     load: "Charger",
     rankUp: "Promouvoir",
     rankDown: "Rétrograder",

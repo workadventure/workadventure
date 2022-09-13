@@ -488,13 +488,19 @@ class AdminApi implements AdminInterface {
         message: string,
         byUserEmail: string
     ): Promise<boolean> {
-        return await Axios.post(
-            ADMIN_API_URL + "/api/ban",
-            { uuidToBan, playUri, name, message, byUserEmail },
-            {
-                headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            }
-        ).then(() => true);
+        try {
+            return Axios.post(
+                ADMIN_API_URL + "/api/ban",
+                { uuidToBan, playUri, name, message, byUserEmail },
+                {
+                    headers: { Authorization: `${ADMIN_API_TOKEN}` },
+                }
+            );
+        } catch (err) {
+            return new Promise((solve, reject) => {
+                reject(err);
+            });
+        }
     }
 }
 

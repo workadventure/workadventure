@@ -8,6 +8,8 @@ const playUriKey = "playUri";
 const wokaKey = "woka";
 const colorKey = "color";
 const isLoggedKey = "isLogged";
+const availabilityStatus = "availabilityStatus";
+const roomName = "roomName";
 
 function createUserStore() {
     const { subscribe, update, set } = writable<UserData>();
@@ -38,6 +40,10 @@ class LocalUserStore {
             woka: localStorage.getItem(wokaKey) || "",
             color: localStorage.getItem(colorKey) || "",
             isLogged: localStorage.getItem(isLoggedKey) === "true" || false,
+            availabilityStatus: localStorage.getItem(availabilityStatus)
+                ? Number(localStorage.getItem(availabilityStatus))
+                : 1,
+            roomName: localStorage.getItem(roomName) || "",
         };
     }
 
