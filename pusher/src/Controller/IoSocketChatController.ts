@@ -251,7 +251,11 @@ export class IoSocketChatController {
                                 userData.userRoomToken
                             ) as unknown as UserRoomToken;
                             // If cached lifetime is less than 5 minutes (300_000)
-                            if (this.cache.has(jwtDecoded.room) && this.cache.get(jwtDecoded.room) && (this.cache.get(jwtDecoded.room)?.timestamp || 0) > Date.now() - 300_000) {
+                            if (
+                                this.cache.has(jwtDecoded.room) &&
+                                this.cache.get(jwtDecoded.room) &&
+                                (this.cache.get(jwtDecoded.room)?.timestamp || 0) > Date.now() - 300_000
+                            ) {
                                 // @ts-ignore
                                 maxHistoryChat = this.cache.get(jwtDecoded.room).maxHistoryChat;
                             } else {
@@ -266,7 +270,10 @@ export class IoSocketChatController {
                                         console.error(err);
                                         return -1;
                                     });
-                                this.cache.set(jwtDecoded.room, {maxHistoryChat: maxHistoryChat, timestamp: Date.now()});
+                                this.cache.set(jwtDecoded.room, {
+                                    maxHistoryChat: maxHistoryChat,
+                                    timestamp: Date.now(),
+                                });
                             }
                         }
 

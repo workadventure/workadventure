@@ -33,7 +33,6 @@ export class XmppClient {
     private clientPassword: string;
     private timeout: ReturnType<typeof setTimeout> | undefined;
     private xmppSocket: Client | undefined;
-    private pingUuid: string | null = null;
     private isAuthorized = true;
 
     constructor(private clientSocket: ExSocketInterface, private initialMucRooms: MucRoomDefinitionInterface[]) {
