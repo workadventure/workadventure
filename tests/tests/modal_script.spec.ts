@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-function timeout(ms: number) {
+/*function timeout(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
-}
+}*/
 
 test.describe('Modal', () => {
     test('test', async ({ page }) => {
@@ -18,6 +18,7 @@ test.describe('Modal', () => {
         await page.locator('button.light').click();
         
         await expect(page.locator('#modalIframe')).toHaveAttribute('src', 'https://workadventu.re');
+        //TODO fix me
         //await timeout(3000);
         //await expect(page.locator('#modalIframe')).toHaveCount(0);
     });
