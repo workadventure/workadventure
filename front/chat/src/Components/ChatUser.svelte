@@ -6,9 +6,11 @@
     import { defaultColor, defaultWoka, MeStore, MucRoom, User } from "../Xmpp/MucRoom";
     import walk from "../../public/static/images/walk.svg";
     import teleport from "../../public/static/images/teleport.svg";
+    import businessCard from "../../public/static/images/business-cards.svg";
     import { GoTo, RankUp, RankDown, Ban } from "../Type/CustomEvent";
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
+    import { iframeListener } from "../IframeListener";
 
     const dispatch = createEventDispatcher<{
         goTo: GoTo;
@@ -37,16 +39,26 @@
         closeChatUserMenu();
     }
     function rankUp(jid: string) {
-        dispatch("rankUp", { jid });
-        closeChatUserMenu();
+        console.info("Rank up feature from workadventure chat coming soon!", jid);
+        return;
+        /*dispatch("rankUp", { jid });
+        closeChatUserMenu();*/
     }
     function rankDown(jid: string) {
-        dispatch("rankDown", { jid });
-        closeChatUserMenu();
+        console.info("Rank down feature from workadventure chat coming soon!", jid);
+        return;
+        /*dispatch("rankDown", { jid });
+        closeChatUserMenu();*/
     }
     function ban(user: string, name: string, playUri: string) {
-        dispatch("ban", { user, name, playUri });
-        closeChatUserMenu();
+        console.info("ban feature from workadventure chat coming soon!", user, name, playUri);
+        return;
+        //dispatch("ban", { user, name, playUri });
+        //closeChatUserMenu();
+    }
+    function showBusinessCard(visitCardUrl?: string | null) {
+        if (!visitCardUrl) return;
+        iframeListener.sendShowBusinessCard(visitCardUrl);
     }
 
     function findUserInDefault(jid: string): User | undefined {
@@ -216,23 +228,31 @@
                         {$LL.userList.teleport()}</span
                     >
                 {/if}
+                {#if user.visitCardUrl}
+                    <span
+                        class="businessCard wa-dropdown-item"
+                        on:click|stopPropagation={() => showBusinessCard(user.visitCardUrl)}
+                        ><img class="noselect" src={businessCard} alt="Business card" height="13" width="13" />
+                        {$LL.userList.businessCard()}</span
+                    >
+                {/if}
                 {#if $meStore.isAdmin}
                     <span
                         class="ban wa-dropdown-item tw-text-pop-red"
                         on:click|stopPropagation={() => ban(user.jid, user.name, user.playUri)}
-                        ><SlashIcon size="13" /> {$LL.ban.title()}</span
+                        ><SlashIcon size="13" /> {$LL.ban.title()} (coming soon)</span
                     >
                     {#if user.isAdmin}
                         <span
                             class="rank-down wa-dropdown-item tw-text-orange"
                             on:click|stopPropagation={() => rankDown(user.jid)}
-                            ><ShieldOffIcon size="13" /> {$LL.rankDown()}</span
+                            ><ShieldOffIcon size="13" /> {$LL.rankDown()} (coming soon)</span
                         >
                     {:else}
                         <span
                             class="rank-up wa-dropdown-item tw-text-orange"
                             on:click|stopPropagation={() => rankUp(user.jid)}
-                            ><ShieldIcon size="13" /> {$LL.rankUp()}</span
+                            ><ShieldIcon size="13" /> {$LL.rankUp()} (coming soon)</span
                         >
                     {/if}
                 {/if}

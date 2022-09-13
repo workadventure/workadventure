@@ -364,16 +364,23 @@ class ConnectionManager {
         //set connected store for menu at false
         userIsConnected.set(false);
 
-        const { authToken, userUuid, email, username, locale, textures } = await Axios.get(`${PUSHER_URL}/me`, {
-            params: { token, playUri: this.currentRoom?.key },
-        }).then((res) => {
+        const { authToken, userUuid, email, username, locale, textures, visitCardUrl } = await Axios.get(
+            `${PUSHER_URL}/me`,
+            {
+                params: { token, playUri: this.currentRoom?.key },
+            }
+        ).then((res) => {
             return res.data;
         });
+
         localUserStore.setAuthToken(authToken);
         this.localUser = new LocalUser(userUuid, email);
         localUserStore.saveUser(this.localUser);
         this.authToken = authToken;
 
+        if (visitCardUrl) {
+            gameManager.setVisitCardurl(visitCardUrl);
+        }
         if (username) {
             gameManager.setPlayerName(username);
         }

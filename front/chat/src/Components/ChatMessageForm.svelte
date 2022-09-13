@@ -171,6 +171,12 @@
     }
 
     function analyseText() {
+        if (newMessageText === "") {
+            mucRoom.updateComposingState(ChatStates.PAUSED);
+        } else {
+            mucRoom.updateComposingState(ChatStates.COMPOSING);
+        }
+
         const values = newMessageText.match(regexUserTag);
         if (values != undefined) {
             const userNameSearching = (values.pop() as string).substring(1);

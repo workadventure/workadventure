@@ -22,6 +22,7 @@ import { chatVisibilityStore } from "./Stores/ChatStore";
 import { NotificationType } from "./Media/MediaManager";
 import { activeThreadStore } from "./Stores/ActiveThreadStore";
 import { get } from "svelte/store";
+import { emojiRegex } from "./Utils/HtmlUtils";
 
 class IframeListener {
     init() {
@@ -34,14 +35,16 @@ class IframeListener {
                     const iframeEvent = iframeEventGuarded.data;
                     switch (iframeEvent.type) {
                         case "userData": {
+                            iframeEvent.data.name = iframeEvent.data.name.replace(emojiRegex, "");
                             userStore.set(iframeEvent.data);
-                            console.log("UserRoomToken :", userStore.get()?.userRoomToken);
                             if (!connectionManager.connection) {
                                 connectionManager.init(
                                     iframeEvent.data.playUri,
                                     iframeEvent.data.uuid,
                                     iframeEvent.data.authToken
                                 );
+                            } else {
+                                mucRoomsStore.sendPresences();
                             }
                             break;
                         }
@@ -208,6 +211,16 @@ class IframeListener {
         window.parent.postMessage(
             {
                 type: "refresh",
+            },
+            "*"
+        );
+    }
+
+    sendShowBusinessCard(visitCardUrl: string) {
+        window.parent.postMessage(
+            {
+                type: "showBusinessCard",
+                data: { visitCardUrl },
             },
             "*"
         );

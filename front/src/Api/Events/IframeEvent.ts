@@ -51,6 +51,7 @@ import { isSetPlayerVariableEvent } from "./SetPlayerVariableEvent";
 import { isSettingsEvent } from "./SettingsEvent";
 import { isChatVisibilityEvent } from "./ChatVisibilityEvent";
 import { isNotificationEvent } from "./NotificationEvent";
+import { isShowBusinessCardEvent } from "./ShowBusinessCardEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -250,6 +251,10 @@ export const isIframeEventWrapper = z.union([
         data: z.undefined(),
     }),
     z.object({
+        type: z.literal("showBusinessCard"),
+        data: isShowBusinessCardEvent,
+    }),
+    z.object({
         type: z.literal("redirectPricing"),
         data: z.undefined(),
     }),
@@ -369,10 +374,6 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("chatVisibility"),
         data: isChatVisibilityEvent,
-    }),
-    z.object({
-        type: z.literal("notification"),
-        data: isNotificationEvent,
     }),
     z.object({
         type: z.literal("availabilityStatus"),

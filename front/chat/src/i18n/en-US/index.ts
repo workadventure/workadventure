@@ -11,8 +11,10 @@ const en_US: BaseTranslation = {
         search: "Just look it up!",
         walkTo: "Walk to",
         teleporting: "Teleporting ...",
+        businessCard: "Business Card",
     },
-    reconnecting: "Connection to presence server ...",
+    connecting: "Connection to presence server ...",
+    waitingInit: "Waiting for server initialization ...",
     waitingData: "Waiting user data ...",
     search: "Search for user, message, channel, etc.",
     role: {
@@ -40,6 +42,7 @@ const en_US: BaseTranslation = {
         ban: "Ban this user",
     },
     loading: "Loading",
+    loadingUsers: "Loading the users ...",
     load: "Load",
     rankUp: "Promote",
     rankDown: "Retrograde",
@@ -92,7 +95,7 @@ const en_US: BaseTranslation = {
     copy: "Copy",
     copied: "Copied !",
     file: {
-        fileContentNoEmbed: "Content invailable for viewing. Please doawnload it",
+        fileContentNoEmbed: "Content unavailable for viewing. Please download it",
         download: "download",
         openCoWebsite: "Open in co-website",
         copy: "copy the link",
