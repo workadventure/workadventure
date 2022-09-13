@@ -20,6 +20,7 @@ import type { Popup } from "./Api/Iframe/Ui/Popup";
 import type { Sound } from "./Api/Iframe/Sound/Sound";
 import { answerPromises, queryWorkadventure } from "./Api/Iframe/IframeApiContribution";
 import camera from "./Api/Iframe/camera";
+import modal from "./Api/Iframe/modal";
 export type { UIWebsite } from "./Api/Iframe/Ui/UIWebsite";
 export type { Menu } from "./Api/Iframe/Ui/Menu";
 export type { ActionMessage } from "./Api/Iframe/Ui/ActionMessage";
@@ -62,6 +63,7 @@ const wa = {
     player,
     players,
     camera,
+    modal,
     state: globalState,
 
     /**

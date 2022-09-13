@@ -30,9 +30,8 @@
     import TextMessageContainer from "./TypeMessage/TextMessageContainer.svelte";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
     import AudioPlaying from "./UI/AudioPlaying.svelte";
-    import { showLimitRoomModalStore, showShareLinkMapModalStore } from "../Stores/ModalStore";
+    import { showLimitRoomModalStore, modalVisibilityStore } from "../Stores/ModalStore";
     import LimitRoomModal from "./Modal/LimitRoomModal.svelte";
-    import ShareLinkMapModal from "./Modal/ShareLinkMapModal.svelte";
     import { LayoutMode } from "../WebRtc/LayoutManager";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import ActionsMenu from "./ActionsMenu/ActionsMenu.svelte";
@@ -41,6 +40,7 @@
     import UiWebsiteContainer from "./UI/Website/UIWebsiteContainer.svelte";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
     import { mapEditorModeStore, mapEditorSelectedAreaPreviewStore } from "../Stores/MapEditorStore";
+    import Modal from "./Modal/Modal.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -59,6 +59,10 @@
 
 <!-- Components ordered by z-index -->
 <div id="main-layout" bind:this={mainLayout}>
+    {#if $modalVisibilityStore}
+        <div class="tw-bg-black/60 tw-w-full tw-h-full tw-fixed tw-left-0 tw-right-0" />
+    {/if}
+
     <aside id="main-layout-left-aside">
         {#if $embedScreenLayoutStore === LayoutMode.VideoChat || displayCoWebsiteContainerMd}
             <CoWebsitesContainer vertical={true} />
@@ -105,10 +109,6 @@
             <LimitRoomModal />
         {/if}
 
-        {#if $showShareLinkMapModalStore}
-            <ShareLinkMapModal />
-        {/if}
-
         {#if $actionsMenuStore}
             <ActionsMenu />
         {/if}
@@ -134,6 +134,10 @@
 
         {#if $uiWebsitesStore}
             <UiWebsiteContainer />
+        {/if}
+
+        {#if $modalVisibilityStore}
+            <Modal />
         {/if}
     </section>
 

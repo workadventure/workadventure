@@ -50,6 +50,12 @@ import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { ChatMessage } from "./Events/ChatEvent";
 import { requestVisitCardsStore } from "../Stores/GameStore";
+import {
+    modalIframeAllowlStore,
+    modalIframeSrcStore,
+    modalIframeTitlelStore,
+    modalVisibilityStore,
+} from "../Stores/ModalStore";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -422,6 +428,13 @@ class IframeListener {
                         window.location.reload();
                     } else if (iframeEvent.type == "showBusinessCard") {
                         requestVisitCardsStore.set(iframeEvent.data.visitCardUrl);
+                    } else if (iframeEvent.type == "openModal") {
+                        modalIframeTitlelStore.set(iframeEvent.data.tiltle);
+                        modalIframeAllowlStore.set(iframeEvent.data.allow);
+                        modalIframeSrcStore.set(iframeEvent.data.src);
+                        modalVisibilityStore.set(true);
+                    } else if (iframeEvent.type == "closeModal") {
+                        modalVisibilityStore.set(false);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
