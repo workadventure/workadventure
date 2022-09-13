@@ -25,6 +25,7 @@
         <button type="button" class="close-window" on:click={close}>&times</button>
         {#if $modalIframeSrcStore != undefined}
             <iframe
+                id="modalIframe"
                 height="100%"
                 width="100%"
                 allow={$modalIframeAllowlStore}

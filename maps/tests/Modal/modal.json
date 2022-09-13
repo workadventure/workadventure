@@ -59,7 +59,7 @@
                     {
                      "fontfamily":"Sans Serif",
                      "pixelsize":11,
-                     "text":"Test:\n - A modal is opened \n - After 5 seconds,  a modal should be closed",
+                     "text":"Test:\n - A modal is opened \n - After 2 seconds,  a modal should be closed",
                      "wrap":true
                     },
                  "visible":true,
