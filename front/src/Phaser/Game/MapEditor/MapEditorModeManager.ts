@@ -157,6 +157,21 @@ export class MapEditorModeManager {
         this.currentCommandIndex += 1;
     }
 
+    public revertPendingCommands(): void {
+        while (this.pendingCommands.length > 0) {
+            const command = this.pendingCommands.pop();
+            if (command) {
+                command.undo();
+                // also remove from local history of commands as this is invalid
+                const index = this.localCommandsHistory.findIndex((localCommand) => localCommand.id === command.id);
+                if (index !== -1) {
+                    this.localCommandsHistory.splice(index, 1);
+                    this.currentCommandIndex -= 1;
+                }
+            }
+        }
+    }
+
     public isActive(): boolean {
         return this.active;
     }

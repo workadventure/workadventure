@@ -68,17 +68,6 @@ class MapsManager {
         }
     }
 
-    public clearSaveMapInterval(key: string): boolean {
-        const interval = this.saveMapIntervals.get(key);
-        if (interval) {
-            clearInterval(interval);
-            this.saveMapIntervals.delete(key);
-            this.mapLastChangeTimestamp.delete(key);
-            return true;
-        }
-        return false;
-    }
-
     public getGameMap(key: string): GameMap | undefined {
         return this.loadedMaps.get(key);
     }
@@ -92,6 +81,17 @@ class MapsManager {
         const map = JSON.parse(file);
         this.loadedMaps.set(path, new GameMap(map));
         return map;
+    }
+
+    private clearSaveMapInterval(key: string): boolean {
+        const interval = this.saveMapIntervals.get(key);
+        if (interval) {
+            clearInterval(interval);
+            this.saveMapIntervals.delete(key);
+            this.mapLastChangeTimestamp.delete(key);
+            return true;
+        }
+        return false;
     }
 
     private startSavingMapInterval(key: string, intervalMS: number): void {

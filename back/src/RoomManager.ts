@@ -149,11 +149,49 @@ const roomManager: IRoomManagerServer = {
                                 message.getLockgrouppromptmessage() as LockGroupPromptMessage
                             );
                         } else if (message.hasEditmapcommandwithkeymessage()) {
-                            socketManager.handleEditMapCommandWithKeyMessage(
-                                room,
-                                user,
-                                message.getEditmapcommandwithkeymessage() as EditMapCommandWithKeyMessage
-                            );
+                            // NOTE: TRY TO REMOVE AREA
+                            // const modifyAreaMessage = message.getEditmapcommandwithkeymessage()
+                            //     ?.getEditmapcommandmessage()
+                            //     ?.getEditmapmessage()
+                            //     ?.getModifyareamessage();
+
+                            // if (modifyAreaMessage) {
+                            //     const originalMessage = message.getEditmapcommandwithkeymessage();
+                            //     const mapKey = originalMessage?.getMapkey();
+                            //     const areaId = originalMessage
+                            //         ?.getEditmapcommandmessage()
+                            //         ?.getEditmapmessage()
+                            //         ?.getModifyareamessage()
+                            //         ?.getId();
+                            //     if (areaId !== undefined && mapKey !== undefined) {
+                            //         const deleteAreaMessage = new DeleteAreaMessage();
+                            //         deleteAreaMessage.setId(areaId);
+
+                            //         const editMapMessage = new EditMapMessage();
+                            //         editMapMessage.setDeleteareamessage(deleteAreaMessage);
+
+                            //         const editMapCommandMessage = new EditMapCommandMessage();
+                            //         editMapCommandMessage.setId(uuid())
+                            //         editMapCommandMessage.setEditmapmessage(editMapMessage);
+
+                            //         const editMapCommandWithKeyMessage = new EditMapCommandWithKeyMessage();
+                            //         editMapCommandWithKeyMessage.setMapkey(mapKey);
+                            //         editMapCommandWithKeyMessage.setEditmapcommandmessage(editMapCommandMessage);
+
+                            //         socketManager.handleEditMapCommandWithKeyMessage(
+                            //             room,
+                            //             user,
+                            //             editMapCommandWithKeyMessage,
+                            //         );
+                            //     }
+                            // }
+                            // ===================================
+                            if (message.getEditmapcommandwithkeymessage())
+                                socketManager.handleEditMapCommandWithKeyMessage(
+                                    room,
+                                    user,
+                                    message.getEditmapcommandwithkeymessage() as EditMapCommandWithKeyMessage
+                                );
                         } else if (message.hasSendusermessage()) {
                             const sendUserMessage = message.getSendusermessage();
                             socketManager.handleSendUserMessage(user, sendUserMessage as SendUserMessage);

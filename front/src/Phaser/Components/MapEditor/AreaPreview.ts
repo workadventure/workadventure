@@ -35,7 +35,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
     public updatePreview(config: ITiledMapRectangleObject): void {
         this.config = {
             ...this.config,
-            ...config,
+            ...structuredClone(config),
         };
         this.setPosition(config.x + config.width * 0.5, config.y + config.height * 0.5);
         this.preview.displayWidth = config.width;

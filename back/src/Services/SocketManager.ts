@@ -67,6 +67,7 @@ import { Admin } from "../Model/Admin";
 import crypto from "crypto";
 import QueryCase = QueryMessage.QueryCase;
 import { getMapStorageClient } from "./MapStorageClient";
+import { emitError } from "./MessageHelpers";
 
 const debug = Debug("sockermanager");
 
@@ -1078,19 +1079,13 @@ export class SocketManager {
     handleEditMapCommandWithKeyMessage(room: GameRoom, user: User, message: EditMapCommandWithKeyMessage) {
         getMapStorageClient().handleEditMapCommandWithKeyMessage(message, (err, editMapMessage) => {
             if (err) {
+                emitError(user.socket, err);
                 throw err;
             }
-            console.log("RETURN MESSAGE FROM MAP-STORAGE");
             const subMessage = new SubToPusherRoomMessage();
             subMessage.setEditmapcommandmessage(editMapMessage);
 
-            const batchMessage = new BatchToPusherRoomMessage();
-            batchMessage.addPayload(subMessage);
-
-            // Dispatch the message on the room listeners
-            for (const socket of room.getRoomListeners()) {
-                socket.write(batchMessage);
-            }
+            room.dispatchRoomMessage(subMessage);
         });
     }
 

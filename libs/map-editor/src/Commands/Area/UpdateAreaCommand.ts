@@ -20,8 +20,8 @@ export class UpdateAreaCommand extends Command {
         if (!oldConfig) {
             throw new Error('Trying to update a non existing Area!');
         }
-        this.newConfig = { ...config.areaObjectConfig };
-        this.oldConfig = { ...oldConfig };
+        this.newConfig = JSON.parse(JSON.stringify((config.areaObjectConfig)));
+        this.oldConfig = JSON.parse(JSON.stringify((oldConfig)));
     }
 
     public execute(): UpdateAreaCommandConfig {

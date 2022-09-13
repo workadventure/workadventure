@@ -2,7 +2,7 @@
     "compilerOptions": {
       "rootDir": "src",
       "outDir": "dist",
-      "target": "es2019",
+      "target": "ES2020",
       "lib": [
         "es2019",
         "dom",

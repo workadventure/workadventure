@@ -16,14 +16,11 @@ export class CreateAreaCommand extends Command {
     constructor(gameMap: GameMap, config: CreateAreaCommandConfig) {
         super();
         this.gameMap = gameMap;
-        this.areaConfig = {
-            ...config.areaObjectConfig,
-        };
+        this.areaConfig = JSON.parse(JSON.stringify(config.areaObjectConfig));
     }
 
     public execute(): CreateAreaCommandConfig {
         this.gameMap.getGameMapAreas().addArea(this.areaConfig, AreaType.Static);
-        this.gameMap.incrementNextObjectId();
         return { type: 'CreateAreaCommand', areaObjectConfig: this.areaConfig };
     }
 

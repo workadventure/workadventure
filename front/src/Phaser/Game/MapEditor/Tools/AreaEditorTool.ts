@@ -48,19 +48,16 @@ export class AreaEditorTool extends MapEditorTool {
             const pendingCommands = this.mapEditorModeManager.getPendingCommands();
 
             if (pendingCommands.length > 0) {
-                if (pendingCommands[pendingCommands.length - 1].id === editMapCommandMessage.id) {
-                    console.log("OUR NEWEST COMMAND CAME BACK FROM THE BACK, ACKNOWLEDGED!");
-                    pendingCommands.pop();
+                if (pendingCommands[0].id === editMapCommandMessage.id) {
+                    console.log("OUR OLDEST COMMAND CAME BACK FROM THE BACK, ACKNOWLEDGED!");
+                    pendingCommands.shift();
                     return;
-                } else if (pendingCommands.map((command) => command.id).includes(editMapCommandMessage.id)) {
-                    console.log(
-                        "INCOMING COMMAND IS NOT THE NEWEST COMMAND WAITING FOR ACKNOWLEDGEMENT. REVERTING PENDING COMMANDS"
-                    );
-                    while (pendingCommands.length > 0) {
-                        pendingCommands.pop()?.undo();
-                    }
-                    console.log("PENDING COMMANDS CLEARED. APPLY NEWEST COMMAND FROM THE SERVER");
                 }
+                console.log(
+                    "INCOMING COMMAND IS NOT THE NEWEST COMMAND WAITING FOR ACKNOWLEDGEMENT. REVERTING PENDING COMMANDS"
+                );
+                this.mapEditorModeManager.revertPendingCommands();
+                console.log("PENDING COMMANDS CLEARED. APPLY NEWEST COMMAND FROM THE SERVER");
             }
             switch (editMapCommandMessage.editMapMessage?.message?.$case) {
                 case "modifyAreaMessage": {
@@ -207,7 +204,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     public handleAreaPreviewCreation(config: ITiledMapRectangleObject): void {
-        const areaPreview = new AreaPreview(this.scene, { ...config });
+        const areaPreview = new AreaPreview(this.scene, structuredClone(config));
         this.bindAreaPreviewEventHandlers(areaPreview);
         this.areaPreviews.push(areaPreview);
         this.scene.markDirty();

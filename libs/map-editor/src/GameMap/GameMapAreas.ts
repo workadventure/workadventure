@@ -95,11 +95,11 @@ export class GameMapAreas {
         playerPosition?: { x: number; y: number }
     ): void {
         this.getAreas(type).push(area);
+        this.gameMap.incrementNextObjectId();
         const floorLayer = this.gameMap.getMap().layers.find(layer => layer.name === "floorLayer");
         if (floorLayer) {
             (floorLayer as ITiledMapObjectLayer).objects.push(area);
             // as we are making changes to the map itself, we can update tiledObjects helper array too!
-            console.log('PUSH TO THE TILED OBJECTS');
             this.gameMap.tiledObjects.push(area);
         }
 

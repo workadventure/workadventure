@@ -19,13 +19,15 @@ const mapStorageServer: MapStorageServer = {
     ): void {
         const editMapCommandMessage = call.request.editMapCommandMessage;
         if (!editMapCommandMessage || !editMapCommandMessage.editMapMessage?.message) {
-            callback(null, { id: "", editMapMessage: undefined });
+            callback({ name: "MapStorageError", message: "EditMapCommand message does not exist" }, null);
             return;
         }
         const gameMap = mapsManager.getGameMap(call.request.mapKey);
         if (!gameMap) {
-            // TODO: Send an error?
-            callback(null, { id: editMapCommandMessage.id, editMapMessage: undefined });
+            callback(
+                { name: "MapStorageError", message: `Could not find the game map of ${call.request.mapKey} key!` },
+                { id: editMapCommandMessage.id, editMapMessage: undefined }
+            );
             return;
         }
         const editMapMessage = editMapCommandMessage.editMapMessage.message;
@@ -43,12 +45,13 @@ const mapStorageServer: MapStorageServer = {
                             type: "UpdateAreaCommand",
                             areaObjectConfig,
                         });
+                    } else {
+                        console.log(`Could not find area with id: ${message.id}`);
                     }
                     break;
                 }
                 case "createAreaMessage": {
                     const message = editMapMessage.createAreaMessage;
-                    console.log(message);
                     const areaObjectConfig: ITiledMapRectangleObject = {
                         ...message,
                         visible: true,
@@ -62,7 +65,6 @@ const mapStorageServer: MapStorageServer = {
                 }
                 case "deleteAreaMessage": {
                     const message = editMapMessage.deleteAreaMessage;
-                    console.log("DELETE AREA MESSAGE HANDLED");
                     mapsManager.executeCommand(call.request.mapKey, {
                         type: "DeleteAreaCommand",
                         id: message.id,
@@ -77,8 +79,7 @@ const mapStorageServer: MapStorageServer = {
             callback(null, editMapCommandMessage);
         } catch (e) {
             console.log(e);
-            // do not send editMap message back?
-            callback(null, { id: editMapCommandMessage.id, editMapMessage: undefined });
+            callback({ name: "MapStorageError", message: `${e}` }, null);
         }
     },
 };

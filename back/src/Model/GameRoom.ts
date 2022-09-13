@@ -150,8 +150,14 @@ export class GameRoom implements BrothersFinder {
         return this.users;
     }
 
-    public getRoomListeners(): Set<RoomSocket> {
-        return this.roomListeners;
+    public dispatchRoomMessage(message: SubToPusherRoomMessage): void {
+        const batchMessage = new BatchToPusherRoomMessage();
+        batchMessage.addPayload(message);
+
+        // Dispatch the message on the room listeners
+        for (const socket of this.roomListeners) {
+            socket.write(batchMessage);
+        }
     }
 
     public getUserByUuid(uuid: string): User | undefined {
