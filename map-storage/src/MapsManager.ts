@@ -30,42 +30,42 @@ class MapsManager {
         this.mapLastChangeTimestamp = new Map<string, number>();
     }
 
-    public executeCommand(mapKey: string, commandConfig: CommandConfig): void {
+    public executeCommand(mapKey: string, commandConfig: CommandConfig): boolean {
         const gameMap = this.getGameMap(mapKey);
         if (!gameMap) {
-            return;
+            return false;
         }
         this.mapLastChangeTimestamp.set(mapKey, +new Date());
         if (!this.saveMapIntervals.has(mapKey)) {
             this.startSavingMapInterval(mapKey, this.AUTO_SAVE_INTERVAL_MS);
         }
         let command: Command;
-        switch (commandConfig.type) {
-            case "UpdateAreaCommand": {
-                command = new UpdateAreaCommand(gameMap, commandConfig);
-                command.execute();
-                break;
-            }
-            case "CreateAreaCommand": {
-                command = new CreateAreaCommand(gameMap, commandConfig);
-                command.execute();
-                break;
-            }
-            case "DeleteAreaCommand": {
-                try {
+        try {
+            switch (commandConfig.type) {
+                case "UpdateAreaCommand": {
+                    command = new UpdateAreaCommand(gameMap, commandConfig);
+                    command.execute();
+                    break;
+                }
+                case "CreateAreaCommand": {
+                    command = new CreateAreaCommand(gameMap, commandConfig);
+                    command.execute();
+                    break;
+                }
+                case "DeleteAreaCommand": {
                     command = new DeleteAreaCommand(gameMap, commandConfig);
                     command.execute();
-                } catch (e: unknown) {
-                    console.log(e);
-                    throw new Error("COULD NOT EXECUTE MAP-EDIT COMMAND");
+                    break;
                 }
-                break;
+                default: {
+                    const _exhaustiveCheck: never = commandConfig;
+                }
             }
-            default: {
-                const _exhaustiveCheck: never = commandConfig;
-                return;
-            }
+        } catch (e) {
+            console.log(e);
+            return false;
         }
+        return true;
     }
 
     public getGameMap(key: string): GameMap | undefined {

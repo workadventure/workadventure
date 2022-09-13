@@ -31,6 +31,7 @@ const mapStorageServer: MapStorageServer = {
             return;
         }
         const editMapMessage = editMapCommandMessage.editMapMessage.message;
+        let validCommand = false;
         try {
             switch (editMapMessage.$case) {
                 case "modifyAreaMessage": {
@@ -41,7 +42,7 @@ const mapStorageServer: MapStorageServer = {
                             ...area,
                             ...message,
                         };
-                        mapsManager.executeCommand(call.request.mapKey, {
+                        validCommand = mapsManager.executeCommand(call.request.mapKey, {
                             type: "UpdateAreaCommand",
                             areaObjectConfig,
                         });
@@ -57,7 +58,7 @@ const mapStorageServer: MapStorageServer = {
                         visible: true,
                         class: "area",
                     };
-                    mapsManager.executeCommand(call.request.mapKey, {
+                    validCommand = mapsManager.executeCommand(call.request.mapKey, {
                         areaObjectConfig,
                         type: "CreateAreaCommand",
                     });
@@ -65,7 +66,7 @@ const mapStorageServer: MapStorageServer = {
                 }
                 case "deleteAreaMessage": {
                     const message = editMapMessage.deleteAreaMessage;
-                    mapsManager.executeCommand(call.request.mapKey, {
+                    validCommand = mapsManager.executeCommand(call.request.mapKey, {
                         type: "DeleteAreaCommand",
                         id: message.id,
                     });
@@ -76,7 +77,9 @@ const mapStorageServer: MapStorageServer = {
                 }
             }
             // send edit map message back as a valid one
-            callback(null, editMapCommandMessage);
+            if (validCommand) {
+                callback(null, editMapCommandMessage);
+            }
         } catch (e) {
             console.log(e);
             callback({ name: "MapStorageError", message: `${e}` }, null);
