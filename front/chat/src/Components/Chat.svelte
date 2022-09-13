@@ -122,6 +122,14 @@
         }
     }
 
+    $: loading = !connectionManager.connection || !$xmppServerConnectionStatusStore;
+
+    $: loadingText = $userStore
+        ? !connectionManager.connection
+            ? $LL.connecting()
+            : $LL.waitingInit()
+        : $LL.waitingData();
+
     console.info("Chat fully loaded");
 </script>
 
@@ -131,14 +139,8 @@
     <section class="tw-p-0 tw-m-0" bind:this={listDom}>
         {#if $connectionNotAuthorized}
             <NeedRefresh />
-        {:else if !connectionManager.connection || !$xmppServerConnectionStatusStore}
-            <Loader
-                text={$userStore
-                    ? !connectionManager.connection
-                        ? $LL.connecting()
-                        : $LL.waitingInit()
-                    : $LL.waitingData()}
-            />
+        {:else if loading}
+            <Loader text={loadingText} />
         {:else if $timelineActiveStore}
             <ChatActiveThreadTimeLine on:unactiveThreadTimeLine={() => timelineActiveStore.set(false)} />
         {:else if $activeThreadStore !== undefined}
