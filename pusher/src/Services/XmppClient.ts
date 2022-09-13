@@ -1,6 +1,7 @@
 import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 import { v4 } from "uuid";
 import {
+    ErrorMessage,
     MucRoomDefinitionMessage,
     PusherToIframeMessage,
     XmppConnectionNotAuthorizedMessage,
@@ -63,6 +64,7 @@ export class XmppClient {
                 else {
                     console.info("XmppClient => createClient => receive => error", err);
                 }
+                this.sendErrorToIframe(err as string);
                 //console.error("XmppClient => receive => error =>", err);
                 this.close();
             });
@@ -173,6 +175,7 @@ export class XmppClient {
                             }
                         }
                     }
+                    this.sendErrorToIframe(err.toString());
                     rej(err);
                 });
 
@@ -269,6 +272,7 @@ export class XmppClient {
             } else {
                 console.info("clientPromise => receive => error", err);
             }
+            this.sendErrorToIframe(err.toString());
             this.clientPromise.cancel();
         }));
     }
@@ -282,5 +286,17 @@ export class XmppClient {
         const ctx = parse(stanza);
         await this.xmppSocket?.send(ctx);
         return;
+    }
+
+    sendErrorToIframe(message: string) {
+        const errorMessage = new ErrorMessage();
+        errorMessage.setMessage(message);
+
+        const pusherToIframeMessage = new PusherToIframeMessage();
+        pusherToIframeMessage.setErrormessage(errorMessage);
+
+        if (!this.clientSocket.disconnecting) {
+            this.clientSocket.send(pusherToIframeMessage.serializeBinary().buffer, true);
+        }
     }
 }

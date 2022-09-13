@@ -150,7 +150,7 @@ test.describe('Chat', () => {
       await checkNameInChat(page, nickname);
 
       await stopContainer(ejabberd);
-      await expect(chat).toContainText("Connection to presence server");
+      await expect(chat).toContainText("Waiting for server initialization");
       await startContainer(ejabberd);
       await checkNameInChat(page, nickname);
 

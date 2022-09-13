@@ -674,6 +674,7 @@ message PusherToIframeMessage{
     XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 2;
     XmppMessage xmppMessage = 3;
     XmppConnectionNotAuthorizedMessage xmppConnectionNotAuthorized= 4;
+    ErrorMessage errorMessage = 5;
   }
 }
 
