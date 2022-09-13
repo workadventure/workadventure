@@ -16,7 +16,7 @@ export class CreateAreaCommand extends Command {
     constructor(gameMap: GameMap, config: CreateAreaCommandConfig) {
         super();
         this.gameMap = gameMap;
-        this.areaConfig = JSON.parse(JSON.stringify(config.areaObjectConfig));
+        this.areaConfig = structuredClone(config.areaObjectConfig);
     }
 
     public execute(): CreateAreaCommandConfig {

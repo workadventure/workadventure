@@ -1,7 +1,7 @@
 import { AreaType, CommandConfig, ITiledMapRectangleObject } from "@workadventure/map-editor";
 import { Subscription } from "rxjs";
 import { get } from "svelte/store";
-import { RoomConnection } from "../../../../Connexion/RoomConnection";
+import { EditMapCommandMessage } from "../../../../Messages/ts-proto-generated/protos/messages";
 import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
@@ -43,69 +43,54 @@ export class AreaEditorTool extends MapEditorTool {
         this.gameMapAreaUpdateSubscription.unsubscribe();
     }
 
-    public subscribeToRoomConnection(connection: RoomConnection): void {
-        connection.editMapCommandMessageStream.subscribe((editMapCommandMessage) => {
-            const pendingCommands = this.mapEditorModeManager.getPendingCommands();
-
-            if (pendingCommands.length > 0) {
-                if (pendingCommands[0].id === editMapCommandMessage.id) {
-                    console.log("OUR OLDEST COMMAND CAME BACK FROM THE BACK, ACKNOWLEDGED!");
-                    pendingCommands.shift();
-                    return;
-                }
-                console.log(
-                    "INCOMING COMMAND IS NOT THE NEWEST COMMAND WAITING FOR ACKNOWLEDGEMENT. REVERTING PENDING COMMANDS"
+    public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): void {
+        switch (editMapCommandMessage.editMapMessage?.message?.$case) {
+            case "modifyAreaMessage": {
+                const data = editMapCommandMessage.editMapMessage?.message.modifyAreaMessage;
+                // execute command locally
+                this.mapEditorModeManager.executeCommand(
+                    {
+                        type: "UpdateAreaCommand",
+                        areaObjectConfig: data as ITiledMapRectangleObject,
+                    },
+                    false,
+                    false
                 );
-                this.mapEditorModeManager.revertPendingCommands();
-                console.log("PENDING COMMANDS CLEARED. APPLY NEWEST COMMAND FROM THE SERVER");
+                break;
             }
-            switch (editMapCommandMessage.editMapMessage?.message?.$case) {
-                case "modifyAreaMessage": {
-                    const data = editMapCommandMessage.editMapMessage?.message.modifyAreaMessage;
-                    // execute command locally
-                    this.mapEditorModeManager.executeCommand(
-                        {
-                            type: "UpdateAreaCommand",
-                            areaObjectConfig: data as ITiledMapRectangleObject,
-                        },
-                        false,
-                        false
-                    );
-                    break;
-                }
-                case "createAreaMessage": {
-                    const data = editMapCommandMessage.editMapMessage?.message.createAreaMessage;
-                    const config = {
-                        ...data,
-                        class: "area",
-                        visible: true,
-                    };
-                    // execute command locally
-                    this.mapEditorModeManager.executeCommand(
-                        {
-                            type: "CreateAreaCommand",
-                            areaObjectConfig: config,
-                        },
-                        false,
-                        false
-                    );
-                    break;
-                }
-                case "deleteAreaMessage": {
-                    const data = editMapCommandMessage.editMapMessage?.message.deleteAreaMessage;
-                    // execute command locally
-                    this.mapEditorModeManager.executeCommand(
-                        {
-                            type: "DeleteAreaCommand",
-                            id: data.id,
-                        },
-                        false,
-                        false
-                    );
-                    break;
-                }
+            case "createAreaMessage": {
+                console.log("create area message");
+                const data = editMapCommandMessage.editMapMessage?.message.createAreaMessage;
+                const config = {
+                    ...data,
+                    class: "area",
+                    visible: true,
+                };
+                // execute command locally
+                this.mapEditorModeManager.executeCommand(
+                    {
+                        type: "CreateAreaCommand",
+                        areaObjectConfig: config,
+                    },
+                    false,
+                    false
+                );
+                break;
             }
-        });
+            case "deleteAreaMessage": {
+                const data = editMapCommandMessage.editMapMessage?.message.deleteAreaMessage;
+                // execute command locally
+                this.mapEditorModeManager.executeCommand(
+                    {
+                        type: "DeleteAreaCommand",
+                        id: data.id,
+                    },
+                    false,
+                    false
+                );
+                break;
+            }
+        }
     }
 
     public handleCommandExecution(commandConfig: CommandConfig): void {

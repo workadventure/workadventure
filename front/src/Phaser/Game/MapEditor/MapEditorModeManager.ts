@@ -87,8 +87,10 @@ export class MapEditorModeManager {
         alterLocalCommandsHistory = true
     ): CommandConfig | undefined {
         let command: Command;
+        let delay = 0;
         switch (commandConfig.type) {
             case "UpdateAreaCommand": {
+                delay = 5000;
                 command = new UpdateAreaCommand(this.scene.getGameMap(), commandConfig);
                 break;
             }
@@ -112,12 +114,10 @@ export class MapEditorModeManager {
         const executedCommandConfig = command.execute();
 
         // do any necessary changes for active tool interface
-        if (this.activeTool) {
-            this.editorTools.get(this.activeTool)?.handleCommandExecution(executedCommandConfig);
-        }
+        this.currentlyActiveTool?.handleCommandExecution(executedCommandConfig);
 
         if (emitMapEditorUpdate) {
-            this.emitMapEditorUpdate(command.id, commandConfig);
+            this.emitMapEditorUpdate(command.id, commandConfig, delay);
         }
 
         if (alterLocalCommandsHistory) {
@@ -187,9 +187,7 @@ export class MapEditorModeManager {
     }
 
     public handleKeyDownEvent(event: KeyboardEvent): void {
-        if (this.activeTool) {
-            this.editorTools.get(this.activeTool)?.handleKeyDownEvent(event);
-        }
+        this.currentlyActiveTool?.handleKeyDownEvent(event);
         switch (event.key.toLowerCase()) {
             case "`": {
                 this.equipTool();
@@ -212,7 +210,22 @@ export class MapEditorModeManager {
     }
 
     public subscribeToRoomConnection(connection: RoomConnection): void {
-        this.editorTools.forEach((tool) => tool.subscribeToRoomConnection(connection));
+        connection.editMapCommandMessageStream.subscribe((editMapCommandMessage) => {
+            if (this.pendingCommands.length > 0) {
+                if (this.pendingCommands[0].id === editMapCommandMessage.id) {
+                    console.log("OUR OLDEST COMMAND CAME BACK FROM THE BACK, ACKNOWLEDGED!");
+                    this.pendingCommands.shift();
+                    return;
+                }
+                console.log(
+                    "INCOMING COMMAND IS NOT THE NEWEST COMMAND WAITING FOR ACKNOWLEDGEMENT. REVERTING PENDING COMMANDS"
+                );
+                this.revertPendingCommands();
+                console.log("PENDING COMMANDS CLEARED. APPLY NEWEST COMMAND FROM THE SERVER");
+            }
+
+            this.editorTools.forEach((tool) => tool.handleIncomingCommandMessage(editMapCommandMessage));
+        });
     }
 
     private equipTool(tool?: EditorToolName): void {
@@ -227,42 +240,46 @@ export class MapEditorModeManager {
         }
     }
 
-    private emitMapEditorUpdate(commandId: string, commandConfig: CommandConfig): void {
-        switch (commandConfig.type) {
-            case "UpdateAreaCommand": {
-                this.scene.connection?.emitMapEditorModifyArea(commandId, commandConfig.areaObjectConfig);
-                break;
+    private emitMapEditorUpdate(commandId: string, commandConfig: CommandConfig, delay = 0): void {
+        const func = () => {
+            console.log("EMIT COMMAND");
+            switch (commandConfig.type) {
+                case "UpdateAreaCommand": {
+                    this.scene.connection?.emitMapEditorModifyArea(commandId, commandConfig.areaObjectConfig);
+                    break;
+                }
+                case "CreateAreaCommand": {
+                    this.scene.connection?.emitMapEditorCreateArea(commandId, commandConfig.areaObjectConfig);
+                    break;
+                }
+                case "DeleteAreaCommand": {
+                    this.scene.connection?.emitMapEditorDeleteArea(commandId, commandConfig.id);
+                    break;
+                }
+                default: {
+                    break;
+                }
             }
-            case "CreateAreaCommand": {
-                this.scene.connection?.emitMapEditorCreateArea(commandId, commandConfig.areaObjectConfig);
-                break;
-            }
-            case "DeleteAreaCommand": {
-                this.scene.connection?.emitMapEditorDeleteArea(commandId, commandConfig.id);
-                break;
-            }
-            default: {
-                break;
-            }
+        };
+        if (delay === 0) {
+            func();
+            return;
         }
+        setTimeout(func, delay);
     }
 
     /**
      * Hide everything related to tools like Area Previews etc
      */
     private clearToNeutralState(): void {
-        if (this.activeTool) {
-            this.editorTools.get(this.activeTool)?.clear();
-        }
+        this.currentlyActiveTool?.clear();
     }
 
     /**
      * Show things necessary for tool's usage
      */
     private activateTool(): void {
-        if (this.activeTool) {
-            this.editorTools.get(this.activeTool)?.activate();
-        }
+        this.currentlyActiveTool?.activate();
     }
 
     private subscribeToStores(): void {
@@ -297,8 +314,8 @@ export class MapEditorModeManager {
         this.mapEditorModeUnsubscriber();
     }
 
-    public getPendingCommands(): Command[] {
-        return this.pendingCommands;
+    private get currentlyActiveTool(): MapEditorTool | undefined {
+        return this.activeTool ? this.editorTools.get(this.activeTool) : undefined;
     }
 
     public getScene(): GameScene {

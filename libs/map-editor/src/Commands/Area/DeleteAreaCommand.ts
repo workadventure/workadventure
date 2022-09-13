@@ -20,7 +20,7 @@ export class DeleteAreaCommand extends Command {
         if (!areaConfig) {
             throw new Error('Trying to delete a non existing Area!');
         }
-        this.areaConfig = JSON.parse(JSON.stringify((areaConfig)));
+        this.areaConfig = structuredClone(areaConfig);
     }
 
     public execute(): DeleteAreaCommandConfig {

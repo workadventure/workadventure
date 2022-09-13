@@ -197,7 +197,7 @@ services:
       - "traefik.http.services.back.loadbalancer.server.port=8080"
 
   map-storage:
-    image: thecodingmachine/nodejs:16
+    image: thecodingmachine/nodejs:18
     command: yarn start:dev
     #command: yarn run profile
     environment:

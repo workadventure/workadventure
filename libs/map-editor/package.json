@@ -9,7 +9,6 @@
   "author": "WorkAdventure",
   "license": "ISC",
   "dependencies": {
-    "@ungap/structured-clone": "^1.0.1",
     "@workadventure/math-utils": "link:../math-utils",
     "@workadventure/tiled-map-type-guard": "^2.0.4",
     "uuid": "^9.0.0"
