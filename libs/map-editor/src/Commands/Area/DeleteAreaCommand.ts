@@ -24,12 +24,16 @@ export class DeleteAreaCommand extends Command {
     }
 
     public execute(): DeleteAreaCommandConfig {
-        this.gameMap.getGameMapAreas().deleteAreaById(this.areaConfig.id, AreaType.Static);
+        if (!this.gameMap.getGameMapAreas().deleteAreaById(this.areaConfig.id, AreaType.Static)) {
+            throw new Error(`MapEditorError: Could not execute DeleteArea Command. Area ID: ${this.areaConfig.id}`);
+        }
         return { type: 'DeleteAreaCommand', id: this.areaConfig.id };
     }
 
     public undo(): CreateAreaCommandConfig {
-        this.gameMap.getGameMapAreas().addArea(this.areaConfig, AreaType.Static);
+        if (!this.gameMap.getGameMapAreas().addArea(this.areaConfig, AreaType.Static)) {
+            throw new Error(`MapEditorError: Could not undo DeleteArea Command. Area ID: ${this.areaConfig.id}`);
+        }
         return { type: 'CreateAreaCommand', areaObjectConfig: this.areaConfig };
     }
 }

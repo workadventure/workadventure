@@ -81,11 +81,18 @@ export class MapEditorModeManager {
         this.subscribeToGameMapFrontWrapperEvents();
     }
 
+    /**
+     * Creates new Command object from given command config and executes it, both local and from the back.
+     * @param commandConfig what to execute
+     * @param emitMapEditorUpdate Should the command be emitted further to the game room? Default true.
+     * (for example if command came from the back)
+     * @param addToLocalCommandsHistory Should the command be added to the local commands history to be used in undo/redo mechanism? Default true.
+     */
     public executeCommand(
         commandConfig: CommandConfig,
         emitMapEditorUpdate = true,
-        alterLocalCommandsHistory = true
-    ): CommandConfig | undefined {
+        addToLocalCommandsHistory = true
+    ): boolean {
         let command: Command;
         let delay = 0;
         switch (commandConfig.type) {
@@ -104,11 +111,11 @@ export class MapEditorModeManager {
             }
             default: {
                 const _exhaustiveCheck: never = commandConfig;
-                return;
+                return false;
             }
         }
         if (!command) {
-            return;
+            return false;
         }
         // We do an execution instantly so there will be no lag from user's perspective
         const executedCommandConfig = command.execute();
@@ -120,7 +127,7 @@ export class MapEditorModeManager {
             this.emitMapEditorUpdate(command.id, commandConfig, delay);
         }
 
-        if (alterLocalCommandsHistory) {
+        if (addToLocalCommandsHistory) {
             // if we are not at the end of commands history and perform an action, get rid of commands later in history than our current point in time
             if (this.currentCommandIndex !== this.localCommandsHistory.length - 1) {
                 this.localCommandsHistory.splice(this.currentCommandIndex + 1);
@@ -129,16 +136,18 @@ export class MapEditorModeManager {
             this.localCommandsHistory.push(command);
             this.currentCommandIndex += 1;
         }
-        return executedCommandConfig;
+
+        return true;
     }
 
     public undoCommand(): void {
         if (this.localCommandsHistory.length === 0 || this.currentCommandIndex === -1) {
+            console.log("UNDO COMMAND FALSE");
             return;
         }
         const command = this.localCommandsHistory[this.currentCommandIndex];
-        this.pendingCommands.push(command);
         const commandConfig = command.undo();
+        this.pendingCommands.push(command);
 
         // do any necessary changes for active tool interface
         this.currentlyActiveTool?.handleCommandExecution(commandConfig);
@@ -153,11 +162,12 @@ export class MapEditorModeManager {
             this.localCommandsHistory.length === 0 ||
             this.currentCommandIndex === this.localCommandsHistory.length - 1
         ) {
+            console.log("REDO COMMAND FALSE");
             return;
         }
         const command = this.localCommandsHistory[this.currentCommandIndex + 1];
-        this.pendingCommands.push(command);
         const commandConfig = command.execute();
+        this.pendingCommands.push(command);
 
         // do any necessary changes for active tool interface
         this.currentlyActiveTool?.handleCommandExecution(commandConfig);
@@ -207,6 +217,11 @@ export class MapEditorModeManager {
                 this.equipTool(EditorToolName.AreaEditor);
                 break;
             }
+            case "0": {
+                console.log(`CURRENT COMMAND INDEX: ${this.currentCommandIndex}`);
+                console.log(this.localCommandsHistory);
+                break;
+            }
             case "z": {
                 if (this.ctrlKey) {
                     this.shiftKey.isDown ? this.redoCommand() : this.undoCommand();
@@ -247,7 +262,6 @@ export class MapEditorModeManager {
 
     private emitMapEditorUpdate(commandId: string, commandConfig: CommandConfig, delay = 0): void {
         const func = () => {
-            console.log("EMIT COMMAND");
             switch (commandConfig.type) {
                 case "UpdateAreaCommand": {
                     this.scene.connection?.emitMapEditorModifyArea(commandId, commandConfig.areaObjectConfig);

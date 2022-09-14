@@ -93,11 +93,14 @@ export class GameMapAreas {
         area: ITiledMapRectangleObject,
         type: AreaType,
         playerPosition?: { x: number; y: number }
-    ): void {
-        this.getAreas(type).push(area);
-        this.gameMap.incrementNextObjectId();
+    ): boolean {
+        if (this.getAreas(type).find(existingArea => existingArea.id === area.id)) {
+            return false;
+        }
         const floorLayer = this.gameMap.getMap().layers.find(layer => layer.name === "floorLayer");
         if (floorLayer) {
+            this.getAreas(type).push(area);
+            this.gameMap.incrementNextObjectId();
             (floorLayer as ITiledMapObjectLayer).objects.push(area);
             // as we are making changes to the map itself, we can update tiledObjects helper array too!
             this.gameMap.tiledObjects.push(area);
@@ -106,6 +109,7 @@ export class GameMapAreas {
         if (playerPosition && this.isPlayerInsideAreaByName(area.name, type, playerPosition)) {
             this.triggerSpecificAreaOnEnter(area);
         }
+        return true;
     }
 
     public isPlayerInsideArea(id: number, type: AreaType, playerPosition: { x: number; y: number }): boolean {
@@ -188,20 +192,21 @@ export class GameMapAreas {
         }
     }
 
-    public deleteAreaById(id: number, type: AreaType, playerPosition?: { x: number; y: number }): void {
+    public deleteAreaById(id: number, type: AreaType, playerPosition?: { x: number; y: number }): boolean {
         if (playerPosition) {
             const area = this.getAreasOnPosition(playerPosition, this.areasPositionOffsetY, type).find((area) => area.id === id);
             if (area) {
                 this.triggerSpecificAreaOnLeave(area);
             }
         }
+        let success = false;
         const areas = this.getAreas(type);
         const index = areas.findIndex((area) => area.id === id);
         if (index !== -1) {
             areas.splice(index, 1);
-            const success = this.deleteStaticArea(id);
+            success = this.deleteStaticArea(id);
         }
-
+        return success;
     }
 
     private deleteStaticArea(id: number): boolean {
