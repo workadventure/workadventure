@@ -158,8 +158,8 @@ export class MucRoom {
     private countMessagesToSee: Writable<number>;
     private sendTimeOut: Timeout | undefined;
     private loadingStore: Writable<boolean>;
-    public canLoadOlderMessages: boolean;
-    public showDisabledLoadOlderMessages: Writable<boolean>;
+    private canLoadOlderMessagesStore: Writable<boolean>;
+    private showDisabledLoadOlderMessagesStore: Writable<boolean>;
     private closed: boolean = false;
     private description: string = "";
     private maxHistoryDate: string = "";
@@ -183,8 +183,8 @@ export class MucRoom {
         this.lastMessageSeen = new Date();
         this.countMessagesToSee = writable<number>(0);
         this.loadingStore = writable<boolean>(false);
-        this.canLoadOlderMessages = true;
-        this.showDisabledLoadOlderMessages = writable<boolean>(false);
+        this.canLoadOlderMessagesStore = writable<boolean>(true);
+        this.showDisabledLoadOlderMessagesStore = writable<boolean>(false);
         this.loadingSubscribers = writable<boolean>(true);
 
         //refrech react message
@@ -778,7 +778,7 @@ export class MucRoom {
                         type === "unavailable" ? USER_STATUS_DISCONNECTED : USER_STATUS_AVAILABLE,
                         color,
                         woka,
-                        ["admin", "owner"].includes(role),
+                        ["admin", "moderator", "owner"].includes(role),
                         isMember === "true",
                         availabilityStatus,
                         null,
@@ -829,14 +829,14 @@ export class MucRoom {
                 );
                 if (maxHistoryDate) {
                     this.maxHistoryDate = maxHistoryDate;
-                    if (!this.canLoadOlderMessages) {
-                        this.showDisabledLoadOlderMessages.set(true);
+                    if (!get(this.canLoadOlderMessagesStore)) {
+                        this.showDisabledLoadOlderMessagesStore.set(true);
                     }
                 } else if (count < 50) {
                     if (complete === "false" || this.maxHistoryDate !== "") {
-                        this.showDisabledLoadOlderMessages.set(true);
+                        this.showDisabledLoadOlderMessagesStore.set(true);
                     }
-                    this.canLoadOlderMessages = false;
+                    this.canLoadOlderMessagesStore.set(false);
                 }
                 this.loadingStore.set(false);
                 handledMessage = true;
@@ -1212,6 +1212,14 @@ export class MucRoom {
 
     public getLoadingSubscribersStore() {
         return this.loadingSubscribers;
+    }
+
+    public getCanLoadOlderMessagesStore() {
+        return this.canLoadOlderMessagesStore;
+    }
+
+    public getShowDisabledLoadOlderMessagesStore() {
+        return this.showDisabledLoadOlderMessagesStore;
     }
 
     public getUrl(): string {

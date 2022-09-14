@@ -293,9 +293,8 @@ export class XmppClient {
             if (message.length > 10_000) {
                 return null;
             }
-        }
-        // Test if current world is premium, if not restrict the history
-        else if (element.getName() === "iq" && element.getChild("query", "urn:xmpp:mam:2")) {
+        } else if (element.getName() === "iq" && element.getChild("query", "urn:xmpp:mam:2")) {
+            // Test if current world is not premium, if not restrict the history
             if (this.clientSocket.maxHistoryChat > 0) {
                 const query = element.getChild("query", "urn:xmpp:mam:2");
                 const x = query?.getChild("x", "jabber:x:data");

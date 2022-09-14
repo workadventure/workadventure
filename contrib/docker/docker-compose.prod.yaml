@@ -63,7 +63,6 @@ services:
       - PUSHER_URL=//${PUSHER_HOST}
       - UPLOADER_URL=//${UPLOADER_HOST}
       - EMBEDLY_KEY=${EMBEDLY_KEY}
-      - ADMIN_API_URL=${ADMIN_API_URL}
       - ENABLE_CHAT_UPLOAD=${ENABLE_CHAT_UPLOAD}
     labels:
       - "traefik.enable=true"
@@ -160,7 +159,6 @@ services:
       - REDIS_HOST=${UPLOADER_REDIS_HOST}
       - REDIS_PORT=${UPLOADER_REDIS_PORT}
       #CHAT
-      - ADMIN_API_URL=${ADMIN_API_URL}
       - ENABLE_CHAT_UPLOAD=${ENABLE_CHAT_UPLOAD}
       - UPLOAD_MAX_FILESIZE=${UPLOAD_MAX_FILESIZE}
     labels:
