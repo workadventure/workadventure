@@ -13,6 +13,7 @@ RUN yarn run tag-version && yarn run ts-proto
 # typescript build
 FROM --platform=$BUILDPLATFORM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c as builder
 WORKDIR /usr/src
+COPY libs/ /usr/src/libs
 COPY map-storage/yarn.lock map-storage/package.json ./
 RUN yarn install
 COPY map-storage .
