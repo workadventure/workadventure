@@ -5,7 +5,7 @@ import { axiosWithRetry } from "./AxiosUtils";
 import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
-import {ENABLE_CHAT_UPLOAD} from "../../chat/src/Enum/EnvironmentVariable";
+import {ENABLE_CHAT_UPLOAD} from "../Enum/EnvironmentVariable";
 
 export class MapDetail {
     constructor(public readonly mapUrl: string) {}
