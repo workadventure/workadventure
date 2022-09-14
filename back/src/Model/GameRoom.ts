@@ -142,7 +142,7 @@ export class GameRoom implements BrothersFinder {
         gameRoom
             .getMucManager()
             .then((mucManager) => {
-                mucManager.init().catch((err) => console.error(err));
+                mucManager.init(mapDetails).catch((err) => console.error(err));
             })
             .catch((err) => console.error(err));
         return gameRoom;

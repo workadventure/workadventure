@@ -5,8 +5,6 @@ import { axiosWithRetry } from "./AxiosUtils";
 import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
-import {ENABLE_CHAT_UPLOAD} from "../Enum/EnvironmentVariable";
-
 export class MapDetail {
     constructor(public readonly mapUrl: string) {}
 }
@@ -140,8 +138,8 @@ export class Room {
                 this._mucRooms = data.mucRooms ?? undefined;
                 this._roomName = data.roomName ?? undefined;
 
-                this._enableChat = data.enableChat || true;
-                this._enableChatUpload = data.enableChatUpload || ENABLE_CHAT_UPLOAD;
+                this._enableChat = data.enableChat ?? undefined;
+                this._enableChatUpload = data.enableChatUpload ?? undefined;
 
                 return new MapDetail(data.mapUrl);
             } else {
@@ -265,11 +263,17 @@ export class Room {
         return this._showPoweredBy;
     }
 
-    get enableChat(): boolean | undefined {
+    get enableChat(): boolean {
+        if(this._enableChat === undefined){
+            throw new Error('Enable chat is not defined in the room');
+        }
         return this._enableChat;
     }
 
-    get enableChatUpload(): boolean | undefined {
+    get enableChatUpload(): boolean {
+        if(this._enableChatUpload === undefined){
+            throw new Error('Enable chat upload is not defined in the room');
+        }
         return this._enableChatUpload;
     }
 }

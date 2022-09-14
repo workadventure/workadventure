@@ -4,6 +4,7 @@ import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import {
     DISABLE_ANONYMOUS,
+    ENABLE_CHAT,
     ENABLE_CHAT_UPLOAD,
     PUBLIC_MAP_STORAGE_URL,
     START_ROOM_URL
@@ -73,7 +74,7 @@ class LocalAdmin implements AdminInterface {
             loginSceneLogo: null,
             showPoweredBy: true,
             loadingCowebsiteLogo: null,
-            enableChat: true,
+            enableChat: ENABLE_CHAT,
             enableChatUpload: ENABLE_CHAT_UPLOAD
         });
     }

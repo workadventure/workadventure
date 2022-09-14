@@ -99,8 +99,6 @@ const en_US: BaseTranslation = {
         download: "download",
         openCoWebsite: "Open in co-website",
         copy: "copy the link",
-        tooBig: "{fileName} is too big {maxFileSize}.",
-        notLogged: "You need to be logged in to upload a file.",
     },
     needRefresh: "Your connection has expired, you need to refresh the page to reconnect to the chat.",
     refresh: "Refresh",

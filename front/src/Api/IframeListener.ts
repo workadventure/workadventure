@@ -50,6 +50,7 @@ import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { ChatMessage } from "./Events/ChatEvent";
 import { requestVisitCardsStore } from "../Stores/GameStore";
+import {connectionManager} from "../Connexion/ConnectionManager";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -782,16 +783,26 @@ class IframeListener {
         });
     }
     sendSettingsToChatIframe() {
+        if(!connectionManager.currentRoom){
+            throw new Error('Race condition : Current room is not defined yet');
+        }
         this.postMessageToChat({
             type: "settings",
             data: {
                 notification: localUserStore.getNotification(),
                 chatSounds: localUserStore.getChatSounds(),
+                enableChat: connectionManager.currentRoom?.enableChat,
+                enableChatUpload: connectionManager.currentRoom?.enableChatUpload
             },
         });
     }
 
     sendLeaveMucEventToChatIframe(url: string) {
+        if(!connectionManager.currentRoom){
+            throw new Error('Race condition : Current room is not defined yet');
+        } else if(!connectionManager.currentRoom.enableChat){
+            return;
+        }
         this.postMessageToChat({
             type: "leaveMuc",
             data: {
@@ -801,6 +812,11 @@ class IframeListener {
     }
 
     sendJoinMucEventToChatIframe(url: string, name: string, type: string, subscribe: boolean) {
+        if(!connectionManager.currentRoom){
+            throw new Error('Race condition : Current room is not defined yet');
+        } else if(!connectionManager.currentRoom.enableChat){
+            return;
+        }
         this.postMessageToChat({
             type: "joinMuc",
             data: {
