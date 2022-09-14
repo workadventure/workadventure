@@ -2,7 +2,12 @@ import { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import { AdminInterface } from "./AdminInterface";
 import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
-import { DISABLE_ANONYMOUS, PUBLIC_MAP_STORAGE_URL, START_ROOM_URL } from "../Enum/EnvironmentVariable";
+import {
+    DISABLE_ANONYMOUS,
+    ENABLE_CHAT_UPLOAD,
+    PUBLIC_MAP_STORAGE_URL,
+    START_ROOM_URL
+} from "../Enum/EnvironmentVariable";
 import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
 import { localWokaService } from "./LocalWokaService";
 
@@ -68,6 +73,8 @@ class LocalAdmin implements AdminInterface {
             loginSceneLogo: null,
             showPoweredBy: true,
             loadingCowebsiteLogo: null,
+            enableChat: true,
+            enableChatUpload: ENABLE_CHAT_UPLOAD
         });
     }
 

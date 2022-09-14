@@ -5,6 +5,7 @@ import { axiosWithRetry } from "./AxiosUtils";
 import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+import {ENABLE_CHAT_UPLOAD} from "../../chat/src/Enum/EnvironmentVariable";
 
 export class MapDetail {
     constructor(public readonly mapUrl: string) {}
@@ -33,6 +34,8 @@ export class Room {
     private _mucRooms: Array<MucRoomDefinitionInterface> | undefined;
     private _showPoweredBy: boolean | undefined = true;
     private _roomName: string | undefined;
+    private _enableChat: boolean | undefined;
+    private _enableChatUpload: boolean | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -136,6 +139,9 @@ export class Room {
 
                 this._mucRooms = data.mucRooms ?? undefined;
                 this._roomName = data.roomName ?? undefined;
+
+                this._enableChat = data.enableChat || true;
+                this._enableChatUpload = data.enableChatUpload || ENABLE_CHAT_UPLOAD;
 
                 return new MapDetail(data.mapUrl);
             } else {
@@ -257,5 +263,13 @@ export class Room {
 
     get showPoweredBy(): boolean | undefined {
         return this._showPoweredBy;
+    }
+
+    get enableChat(): boolean | undefined {
+        return this._enableChat;
+    }
+
+    get enableChatUpload(): boolean | undefined {
+        return this._enableChatUpload;
     }
 }
