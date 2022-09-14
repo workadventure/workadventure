@@ -264,15 +264,15 @@ export class Room {
     }
 
     get enableChat(): boolean {
-        if(this._enableChat === undefined){
-            throw new Error('Enable chat is not defined in the room');
+        if (this._enableChat === undefined) {
+            throw new Error("Enable chat is not defined in the room");
         }
         return this._enableChat;
     }
 
     get enableChatUpload(): boolean {
-        if(this._enableChatUpload === undefined){
-            throw new Error('Enable chat upload is not defined in the room');
+        if (this._enableChatUpload === undefined) {
+            throw new Error("Enable chat upload is not defined in the room");
         }
         return this._enableChatUpload;
     }

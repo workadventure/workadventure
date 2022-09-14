@@ -33,7 +33,9 @@ import { VariablesManager } from "../Services/VariablesManager";
 import {
     ADMIN_API_URL,
     BBB_SECRET,
-    BBB_URL, ENABLE_CHAT, ENABLE_CHAT_UPLOAD,
+    BBB_URL,
+    ENABLE_CHAT,
+    ENABLE_CHAT_UPLOAD,
     ENABLE_FEATURE_MAP_EDITOR,
     JITSI_ISS,
     JITSI_URL,
@@ -628,7 +630,7 @@ export class GameRoom implements BrothersFinder {
                 mucRooms: null,
                 showPoweredBy: true,
                 enableChat: ENABLE_CHAT,
-                enableChatUpload: ENABLE_CHAT_UPLOAD
+                enableChatUpload: ENABLE_CHAT_UPLOAD,
             };
         }
 

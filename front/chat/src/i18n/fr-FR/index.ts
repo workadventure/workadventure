@@ -105,7 +105,7 @@ const fr_FR: Translation = {
     upgrade: "Passez premium",
     upgradeToSeeMore: "Passez premium pour voir plus de messages",
     disabled: "Cette fonctionnalité est désactivée.",
-    disabledByAdmin: "Cette fonctionnalité est désactivée par l'administrateur."
+    disabledByAdmin: "Cette fonctionnalité est désactivée par l'administrateur.",
 };
 
 export default fr_FR;

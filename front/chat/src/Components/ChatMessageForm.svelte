@@ -19,7 +19,8 @@
         filesUploadStore,
         hasErrorUploadingFile,
         hasInProgressUploadingFile,
-        mentionsUserStore, enableChatUpload,
+        mentionsUserStore,
+        enableChatUpload,
     } from "../Stores/ChatStore";
     import { UserData } from "../Messages/JsonMessages/ChatData";
     import { userStore } from "../Stores/LocalUserStore";
@@ -238,28 +239,28 @@
 <div class="wa-message-form">
     {#if $selectedMessageToReply}
         <div
-                class="replyMessage"
-                on:click={() => selectedMessageToReply.set(null)}
-                transition:fly={{
+            class="replyMessage"
+            on:click={() => selectedMessageToReply.set(null)}
+            transition:fly={{
                 x: isMe($selectedMessageToReply.name) ? 10 : -10,
                 delay: 100,
                 duration: 200,
             }}
         >
             <div
-                    style={`border-bottom-color:${getColor($selectedMessageToReply.name)}`}
-                    class={`tw-mr-9 tw-flex tw-items-end tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-0.5 ${
+                style={`border-bottom-color:${getColor($selectedMessageToReply.name)}`}
+                class={`tw-mr-9 tw-flex tw-items-end tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-0.5 ${
                     isMe($selectedMessageToReply.name) ? "tw-flex-row-reverse" : "tw-flex-row"
                 }`}
             >
                 <span class={`tw-text-lighter-purple ${isMe($selectedMessageToReply.name) ? "tw-ml-2" : "tw-mr-2"}`}
-                >{#if isMe($selectedMessageToReply.name)}{$LL.me()}{:else}{$selectedMessageToReply.name}{/if}</span
+                    >{#if isMe($selectedMessageToReply.name)}{$LL.me()}{:else}{$selectedMessageToReply.name}{/if}</span
                 >
                 <span class="tw-text-xxxs"
-                >{$selectedMessageToReply.time.toLocaleTimeString($locale, {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                })}</span
+                    >{$selectedMessageToReply.time.toLocaleTimeString($locale, {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                    })}</span
                 >
             </div>
             <div class="tw-flex tw-flex-wrap tw-items-center tw-justify-between">
@@ -289,8 +290,8 @@
         <div class="wa-dropdown-menu">
             {#each usersSearching as user}
                 <span
-                        class="wa-dropdown-item user-tag"
-                        on:click|stopPropagation|preventDefault={() => addUserTag(user)}
+                    class="wa-dropdown-item user-tag"
+                    on:click|stopPropagation|preventDefault={() => addUserTag(user)}
                 >
                     <img src={user.woka} alt={`Woka svg of user: ${user.name}`} />
                     {user.name}
@@ -303,25 +304,25 @@
         <div class="tw-w-full tw-p-2">
             {#each [...$filesUploadStore.values()] as fileUploaded}
                 <div
-                        class="upload-file tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-3 tw-mb-1"
+                    class="upload-file tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-3 tw-mb-1"
                 >
                     {#if fileUploaded.errorMessage != undefined}
                         <div
-                                class="error-hover tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-3 tw-mb-1"
+                            class="error-hover tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-3 tw-mb-1"
                         >
                             <p class="tw-m-0">{fileUploaded.errorMessage}</p>
                         </div>
                     {/if}
                     <div
-                            style="max-width: 92%; display: flex; flex-wrap: nowrap;"
-                            class="tw-flex tw-flex-wrap tw-text-xxs tw-items-center"
+                        style="max-width: 92%; display: flex; flex-wrap: nowrap;"
+                        class="tw-flex tw-flex-wrap tw-text-xxs tw-items-center"
                     >
                         {#if fileUploaded.uploadState === uploadingState.finish}
                             <CheckIcon size="14" class="tw-text-pop-green" />
                         {:else if fileUploaded.uploadState === uploadingState.error}
                             <div
-                                    class="alert-upload tw-cursor-pointer"
-                                    on:click|preventDefault|stopPropagation={() => {
+                                class="alert-upload tw-cursor-pointer"
+                                on:click|preventDefault|stopPropagation={() => {
                                     resend();
                                 }}
                             >
@@ -335,10 +336,10 @@
                         </span>
                     </div>
                     <button
-                            on:click|preventDefault|stopPropagation={() => {
+                        on:click|preventDefault|stopPropagation={() => {
                             handlerDeleteUploadedFile(fileUploaded);
                         }}
-                            class="tw-pr-0 tw-mr-0"
+                        class="tw-pr-0 tw-mr-0"
                     >
                         <Trash2Icon size="14" />
                     </button>
@@ -346,8 +347,8 @@
             {/each}
             {#if informationMessage}
                 <div
-                        class="tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-py-2 tw-text-xs tw-items-center tw-px-4 tw-text-orange tw-w-full tw-mb-1 tw-cursor-pointer"
-                        on:click|preventDefault|stopPropagation={() => informationMessage = null}
+                    class="tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-py-2 tw-text-xs tw-items-center tw-px-4 tw-text-orange tw-w-full tw-mb-1 tw-cursor-pointer"
+                    on:click|preventDefault|stopPropagation={() => (informationMessage = null)}
                 >
                     <div class="tw-text-orange tw-mr-1.5">
                         <AlertCircleIcon size="16" />
@@ -360,14 +361,14 @@
 
             <div class="tw-flex tw-items-center tw-relative">
                 <textarea
-                        type="text"
-                        bind:this={textarea}
-                        bind:value={newMessageText}
-                        placeholder={$LL.enterText()}
-                        on:input={analyseText}
-                        on:focus={onFocus}
-                        on:blur={onBlur}
-                        on:keydown={(key) => {
+                    type="text"
+                    bind:this={textarea}
+                    bind:value={newMessageText}
+                    placeholder={$LL.enterText()}
+                    on:input={analyseText}
+                    on:focus={onFocus}
+                    on:blur={onBlur}
+                    on:keydown={(key) => {
                         if ((key.key === "Enter" && key.shiftKey) || ["Backspace", "Delete"].includes(key.key)) {
                             setTimeout(() => adjustHeight(), 10);
                         }
@@ -378,15 +379,15 @@
                         }
                         return true;
                     }}
-                        rows="1"
-                        style="margin-bottom: 0;"
+                    rows="1"
+                    style="margin-bottom: 0;"
                 />
 
                 <button
-                        class={`tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 ${
+                    class={`tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 ${
                         emojiOpened ? "tw-text-light-blue" : ""
                     }`}
-                        on:click|preventDefault|stopPropagation={openEmoji}
+                    on:click|preventDefault|stopPropagation={openEmoji}
                 >
                     <SmileIcon size="17" />
                 </button>
@@ -395,21 +396,21 @@
                     <label for="file" class="tw-mb-0 tw-cursor-pointer"><PaperclipIcon size="17" /></label>
                 {:else}
                     <button
-                            class={`tw-bg-transparent tw-h-8  tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-opacity-50`}
-                            on:click|preventDefault|stopPropagation={() => informationMessage = $LL.disabledByAdmin()}
+                        class={`tw-bg-transparent tw-h-8  tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-opacity-50`}
+                        on:click|preventDefault|stopPropagation={() => (informationMessage = $LL.disabledByAdmin())}
                     >
                         <PaperclipIcon size="17" />
                     </button>
                 {/if}
                 <button
-                        id="send"
-                        type="submit"
-                        class={`${
+                    id="send"
+                    type="submit"
+                    class={`${
                         !$hasErrorUploadingFile && !$hasInProgressUploadingFile ? "can-send" : "disabled"
                     } tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue`}
-                        on:mouseover={showErrorMessages}
-                        on:focus={showErrorMessages}
-                        on:click={sendMessage}
+                    on:mouseover={showErrorMessages}
+                    on:focus={showErrorMessages}
+                    on:click={sendMessage}
                 >
                     {#if $hasErrorUploadingFile}
                         <AlertCircleIcon size="17" />
@@ -425,95 +426,95 @@
 </div>
 
 <style lang="scss">
-  .replyMessage {
-    padding: 0 20px;
-    margin: 0;
-    position: relative;
+    .replyMessage {
+        padding: 0 20px;
+        margin: 0;
+        position: relative;
 
-    .close {
-      color: rgb(146 142 187);
-      &:hover {
-        color: rgb(255 71 90);
-      }
-    }
-
-    &::after {
-      //content: "x";
-      width: 20px;
-      height: 20px;
-      cursor: pointer;
-      color: white;
-      font-size: 12px;
-      position: absolute;
-      top: 0;
-      right: 4px;
-      border: solid 1px white;
-      text-align: center;
-      border-radius: 99%;
-    }
-
-    .message {
-      opacity: 1;
-    }
-
-    &:hover {
-      cursor: pointer;
-      .close {
-        color: rgb(255 71 90);
-      }
-    }
-  }
-
-  .wa-dropdown-menu {
-    margin: 0 0 0 10px;
-    position: relative;
-    width: fit-content;
-    min-width: auto;
-
-    .wa-dropdown-item.user-tag {
-      &:active,
-      &:focus {
-        --tw-bg-opacity: 1;
-        background-color: rgb(77 75 103 / var(--tw-bg-opacity));
-      }
-    }
-  }
-
-  form {
-    display: flex;
-    padding-left: 4px;
-    padding-right: 4px;
-    // button {
-    //     background-color: #254560;
-    //     border-bottom-right-radius: 4px;
-    //     border-top-right-radius: 4px;
-    //     border: none;
-    //     border-left: solid white 1px;
-    //     font-size: 16px;
-    // }
-
-    .alert-upload {
-      --tw-text-opacity: 1;
-      color: rgb(255 71 90 / var(--tw-text-opacity));
-    }
-    .upload-file {
-      position: relative;
-      display: flex;
-      flex-wrap: nowrap;
-      .error-hover {
-        display: none;
-        position: absolute;
-        color: red;
-        left: 0;
-        top: -32px;
-        width: 100%;
-        min-height: 30px;
-      }
-      &:hover {
-        .error-hover {
-          display: flex;
+        .close {
+            color: rgb(146 142 187);
+            &:hover {
+                color: rgb(255 71 90);
+            }
         }
-      }
+
+        &::after {
+            //content: "x";
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            color: white;
+            font-size: 12px;
+            position: absolute;
+            top: 0;
+            right: 4px;
+            border: solid 1px white;
+            text-align: center;
+            border-radius: 99%;
+        }
+
+        .message {
+            opacity: 1;
+        }
+
+        &:hover {
+            cursor: pointer;
+            .close {
+                color: rgb(255 71 90);
+            }
+        }
     }
-  }
+
+    .wa-dropdown-menu {
+        margin: 0 0 0 10px;
+        position: relative;
+        width: fit-content;
+        min-width: auto;
+
+        .wa-dropdown-item.user-tag {
+            &:active,
+            &:focus {
+                --tw-bg-opacity: 1;
+                background-color: rgb(77 75 103 / var(--tw-bg-opacity));
+            }
+        }
+    }
+
+    form {
+        display: flex;
+        padding-left: 4px;
+        padding-right: 4px;
+        // button {
+        //     background-color: #254560;
+        //     border-bottom-right-radius: 4px;
+        //     border-top-right-radius: 4px;
+        //     border: none;
+        //     border-left: solid white 1px;
+        //     font-size: 16px;
+        // }
+
+        .alert-upload {
+            --tw-text-opacity: 1;
+            color: rgb(255 71 90 / var(--tw-text-opacity));
+        }
+        .upload-file {
+            position: relative;
+            display: flex;
+            flex-wrap: nowrap;
+            .error-hover {
+                display: none;
+                position: absolute;
+                color: red;
+                left: 0;
+                top: -32px;
+                width: 100%;
+                min-height: 30px;
+            }
+            &:hover {
+                .error-hover {
+                    display: flex;
+                }
+            }
+        }
+    }
 </style>

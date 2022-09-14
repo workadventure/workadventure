@@ -7,7 +7,7 @@ import {
     ENABLE_CHAT,
     ENABLE_CHAT_UPLOAD,
     PUBLIC_MAP_STORAGE_URL,
-    START_ROOM_URL
+    START_ROOM_URL,
 } from "../Enum/EnvironmentVariable";
 import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
 import { localWokaService } from "./LocalWokaService";
@@ -75,7 +75,7 @@ class LocalAdmin implements AdminInterface {
             showPoweredBy: true,
             loadingCowebsiteLogo: null,
             enableChat: ENABLE_CHAT,
-            enableChatUpload: ENABLE_CHAT_UPLOAD
+            enableChatUpload: ENABLE_CHAT_UPLOAD,
         });
     }
 

@@ -112,11 +112,11 @@ export const isMapDetailsData = z.object({
     }),
     enableChat: extendApi(z.boolean(), {
         description: "Whether the chat is enabled or not on this room",
-        example: true
+        example: true,
     }),
     enableChatUpload: extendApi(z.boolean(), {
         description: "Whether the feature 'upload' in the chat is enabled or not on this room",
-        example: true
+        example: true,
     }),
 });
 

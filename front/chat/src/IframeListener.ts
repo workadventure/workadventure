@@ -6,7 +6,9 @@ import {
     ChatMessageTypes,
     chatNotificationsStore,
     chatPeerConnectionInProgress,
-    chatSoundsStore, enableChat, enableChatUpload,
+    chatSoundsStore,
+    enableChat,
+    enableChatUpload,
     newChatMessageSubject,
     newChatMessageWritingStatusSubject,
     timelineActiveStore,
@@ -61,7 +63,7 @@ class IframeListener {
                             break;
                         }
                         case "joinMuc": {
-                            if(!get(enableChat)){
+                            if (!get(enableChat)) {
                                 return;
                             }
                             if (!connectionManager.connection) {
@@ -78,7 +80,7 @@ class IframeListener {
                             break;
                         }
                         case "leaveMuc": {
-                            if(!get(enableChat)){
+                            if (!get(enableChat)) {
                                 return;
                             }
                             if (!connectionManager.connection) {
