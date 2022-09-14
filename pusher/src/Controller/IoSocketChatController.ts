@@ -358,7 +358,10 @@ export class IoSocketChatController {
         client.jabberId = ws.jabberId;
         client.jabberPassword = ws.jabberPassword;
         client.mucRooms = ws.mucRooms;
+
+        console.info("IoSocketChatController => initClient => XmppClient");
         client.xmppClient = new XmppClient(client, client.mucRooms);
+
         return client;
     }
 }

@@ -1186,7 +1186,7 @@ export class GameScene extends DirtyScene {
                 const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
                 let html = '<div id="container" hidden>';
                 if (escapedMessage) {
-                    html += `<div class="nes-container with-title is-centered">
+                    html += `<div class="with-title is-centered">
 ${escapedMessage}
  </div> `;
                 }
@@ -1195,7 +1195,7 @@ ${escapedMessage}
                 html += buttonContainer;
                 let id = 0;
                 for (const button of openPopupEvent.buttons) {
-                    html += `<button type="button" class="nes-btn is-${HtmlUtils.escapeHtml(
+                    html += `<button type="button" class="is-${HtmlUtils.escapeHtml(
                         button.className ?? ""
                     )}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
                     id++;
@@ -1960,6 +1960,7 @@ ${escapedMessage}
         }
         this.gameMapChangedSubscription.unsubscribe();
         this.messageSubscription?.unsubscribe();
+        gameSceneIsLoadedStore.set(false);
         this.cleanupDone = true;
     }
 

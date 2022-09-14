@@ -25,6 +25,7 @@ export class GameManager {
     private currentGameSceneName: string | null = null;
     // Note: this scenePlugin is the scenePlugin of the EntryScene. We should always provide a key in methods called on this scenePlugin.
     private scenePlugin!: Phaser.Scenes.ScenePlugin;
+    private visitCardUrl: string | null = null;
 
     constructor() {
         this.playerName = localUserStore.getName();
@@ -65,6 +66,10 @@ export class GameManager {
         localUserStore.setName(name);
     }
 
+    public setVisitCardurl(visitCardUrl: string): void {
+        this.visitCardUrl = visitCardUrl;
+    }
+
     public setCharacterLayers(layers: string[]): void {
         this.characterLayers = layers;
         localUserStore.setCharacterLayers(layers);
@@ -72,6 +77,10 @@ export class GameManager {
 
     getPlayerName(): string | null {
         return this.playerName;
+    }
+
+    get myVisitCardUrl(): string | null {
+        return this.visitCardUrl;
     }
 
     getCharacterLayers(): string[] {

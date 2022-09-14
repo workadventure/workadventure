@@ -167,6 +167,7 @@ message ClientToServerMessage {
     LockGroupPromptMessage lockGroupPromptMessage = 18;
     QueryMessage queryMessage = 20;
     PingMessage pingMessage = 21;
+    //XmppMessage xmppMessage = 22;
     AskPositionMessage askPositionMessage = 23;
     EditMapCommandMessage editMapCommandMessage = 24;
   }
@@ -294,6 +295,7 @@ message SubMessage {
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
     PingMessage pingMessage = 11;
+    //XmppMessage xmppMessage = 12;
     EditMapCommandMessage editMapCommandMessage = 13;
   }
 }
@@ -699,6 +701,7 @@ message PusherToIframeMessage{
     XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 2;
     XmppMessage xmppMessage = 3;
     XmppConnectionNotAuthorizedMessage xmppConnectionNotAuthorized= 4;
+    ErrorMessage errorMessage = 5;
   }
 }
 
@@ -716,7 +719,7 @@ message XmppSettingsMessage{
 }
 
 message XmppConnectionNotAuthorizedMessage{
-  string message = 1;
+
 }
 
 

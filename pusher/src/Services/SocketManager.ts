@@ -745,6 +745,9 @@ export class SocketManager implements ZoneEventListener {
                         "banned",
                         banUserByUuidMessage.getPlayuri()
                     );
+                })
+                .catch((err) => {
+                    console.info("handleBanUserByUuidMessage => err", err);
                 });
         } catch (e) {
             console.error('An error occurred on "handleBanUserByUuidMessage"');

@@ -1,8 +1,9 @@
 <script lang="ts">
     export let text: string;
+    export let height: string = "tw-h-screen";
 </script>
 
-<div class="tw-grid tw-place-items-center tw-h-screen loader">
+<div class={`tw-grid tw-place-items-center ${height} loader`}>
     <div class="tw-flex tw-items-center tw-flex-col">
         <div
             style="border-top-color:transparent"

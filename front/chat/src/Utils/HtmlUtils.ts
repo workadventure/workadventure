@@ -1,5 +1,7 @@
 import { WebLink } from "../Services/WebLinkManager";
 
+export const emojiRegex =
+    /\p{RI}\p{RI}|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?(\u{200D}\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?)+|\p{EPres}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})/gu;
 export class HtmlUtils {
     public static getElementByIdOrFail<T extends HTMLElement>(id: string): T {
         const elem = document.getElementById(id);
@@ -79,12 +81,11 @@ export class HtmlUtils {
     }
 
     public static replaceEmojy(text: string): string {
-        const emojiRegex =
-            /\p{RI}\p{RI}|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?(\u{200D}\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?)+|\p{EPres}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})/gu;
         return text.replace(emojiRegex, (emoji: string) => {
             emoji = HtmlUtils.htmlDecode(emoji);
             const span = document.createElement("span");
             span.style.fontSize = "1rem";
+            span.style.lineHeight = "normal";
             span.append(emoji);
             return span.outerHTML;
         });
