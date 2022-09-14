@@ -27,7 +27,7 @@ export const isUserRoomToken = z.object({
     alg: z.string(),
     iss: z.string(),
     aud: z.string(),
-    iat: z.string(),
+    iat: z.number(),
     uid: z.string(),
     user: extendApi(z.string().nullable(), {
         description: "The email of the current user.",
