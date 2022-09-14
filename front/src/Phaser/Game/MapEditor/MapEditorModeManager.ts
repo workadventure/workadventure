@@ -94,10 +94,10 @@ export class MapEditorModeManager {
         addToLocalCommandsHistory = true
     ): boolean {
         let command: Command;
-        let delay = 0;
+        const delay = 0;
         switch (commandConfig.type) {
             case "UpdateAreaCommand": {
-                delay = 5000;
+                // delay = 5000;
                 command = new UpdateAreaCommand(this.scene.getGameMap(), commandConfig);
                 break;
             }
@@ -142,19 +142,24 @@ export class MapEditorModeManager {
 
     public undoCommand(): void {
         if (this.localCommandsHistory.length === 0 || this.currentCommandIndex === -1) {
-            console.log("UNDO COMMAND FALSE");
             return;
         }
-        const command = this.localCommandsHistory[this.currentCommandIndex];
-        const commandConfig = command.undo();
-        this.pendingCommands.push(command);
+        try {
+            const command = this.localCommandsHistory[this.currentCommandIndex];
+            const commandConfig = command.undo();
+            this.pendingCommands.push(command);
 
-        // do any necessary changes for active tool interface
-        this.currentlyActiveTool?.handleCommandExecution(commandConfig);
+            // do any necessary changes for active tool interface
+            this.currentlyActiveTool?.handleCommandExecution(commandConfig);
 
-        // this should not be called with every change. Use some sort of debounce
-        this.emitMapEditorUpdate(command.id, commandConfig);
-        this.currentCommandIndex -= 1;
+            // this should not be called with every change. Use some sort of debounce
+            this.emitMapEditorUpdate(command.id, commandConfig);
+            this.currentCommandIndex -= 1;
+        } catch (e) {
+            this.localCommandsHistory.splice(this.currentCommandIndex, 1);
+            this.currentCommandIndex -= 1;
+            console.warn(e);
+        }
     }
 
     public redoCommand(): void {
@@ -162,19 +167,24 @@ export class MapEditorModeManager {
             this.localCommandsHistory.length === 0 ||
             this.currentCommandIndex === this.localCommandsHistory.length - 1
         ) {
-            console.log("REDO COMMAND FALSE");
             return;
         }
-        const command = this.localCommandsHistory[this.currentCommandIndex + 1];
-        const commandConfig = command.execute();
-        this.pendingCommands.push(command);
+        try {
+            const command = this.localCommandsHistory[this.currentCommandIndex + 1];
+            const commandConfig = command.execute();
+            this.pendingCommands.push(command);
 
-        // do any necessary changes for active tool interface
-        this.currentlyActiveTool?.handleCommandExecution(commandConfig);
+            // do any necessary changes for active tool interface
+            this.currentlyActiveTool?.handleCommandExecution(commandConfig);
 
-        // this should not be called with every change. Use some sort of debounce
-        this.emitMapEditorUpdate(command.id, commandConfig);
-        this.currentCommandIndex += 1;
+            // this should not be called with every change. Use some sort of debounce
+            this.emitMapEditorUpdate(command.id, commandConfig);
+            this.currentCommandIndex += 1;
+        } catch (e) {
+            this.localCommandsHistory.splice(this.currentCommandIndex, 1);
+            this.currentCommandIndex -= 1;
+            console.warn(e);
+        }
     }
 
     public revertPendingCommands(): void {
