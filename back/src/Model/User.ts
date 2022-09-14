@@ -5,6 +5,7 @@ import { Movable } from "../Model/Movable";
 import { PositionNotifier } from "../Model/PositionNotifier";
 import { ServerDuplexStream } from "@grpc/grpc-js";
 import {
+    ApplicationMessage,
     AvailabilityStatus,
     BatchMessage,
     CompanionMessage,
@@ -48,7 +49,8 @@ export class User implements Movable {
         public readonly companion?: CompanionMessage,
         private outlineColor?: number,
         private voiceIndicatorShown?: boolean,
-        public readonly activatedInviteUser?: boolean
+        public readonly activatedInviteUser?: boolean,
+        public readonly applications?: ApplicationMessage[]
     ) {
         this.listenedZones = new Set<Zone>();
 
@@ -74,7 +76,8 @@ export class User implements Movable {
         companion?: CompanionMessage,
         outlineColor?: number,
         voiceIndicatorShown?: boolean,
-        activatedInviteUser?: boolean
+        activatedInviteUser?: boolean,
+        applications?: ApplicationMessage[]
     ): Promise<User> {
         const playersVariablesRepository = await getPlayersVariablesRepository();
         const variables = new PlayerVariables(uuid, roomUrl, roomGroup, playersVariablesRepository, isLogged);
@@ -98,7 +101,8 @@ export class User implements Movable {
             companion,
             outlineColor,
             voiceIndicatorShown,
-            activatedInviteUser
+            activatedInviteUser,
+            applications
         );
     }
 

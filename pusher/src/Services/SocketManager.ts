@@ -43,6 +43,7 @@ import {
     AskPositionMessage,
     EditMapMessage,
     BanUserByUuidMessage,
+    ApplicationMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -191,6 +192,15 @@ export class SocketManager implements ZoneEventListener {
             joinRoomMessage.setActivatedinviteuser(
                 client.activatedInviteUser != undefined ? client.activatedInviteUser : true
             );
+
+            if (client.applications != undefined) {
+                for (const aplicationValue of client.applications) {
+                    const application = new ApplicationMessage();
+                    application.setName(aplicationValue.name);
+                    application.setScript(aplicationValue.script);
+                    joinRoomMessage.addApplications(application);
+                }
+            }
 
             for (const characterLayer of client.characterLayers) {
                 const characterLayerMessage = new CharacterLayerMessage();

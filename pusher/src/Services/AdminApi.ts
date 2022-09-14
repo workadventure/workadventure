@@ -10,6 +10,7 @@ import { AdminInterface } from "./AdminInterface";
 import { AuthTokenData, jwtTokenManager } from "./JWTTokenManager";
 import { extendApi } from "@anatine/zod-openapi";
 import { isMucRoomDefinition } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+import { isApplicationDefinitionInterface } from "../Messages/JsonMessages/ApplicationDefinitionInterface";
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -59,6 +60,9 @@ export const isFetchMemberDataByUuidResponse = z.object({
     }),
     activatedInviteUser: extendApi(z.boolean().nullable().optional(), {
         description: "Button invite is activated in the action bar",
+    }),
+    applications: extendApi(z.array(isApplicationDefinitionInterface).nullable().optional(), {
+        description: "The applications run into the customer's world",
     }),
 });
 
