@@ -65,7 +65,7 @@
         <section class="centered-column resizing-width tw-m-auto resizing-text">
             <button
                 type="button"
-                class="tw-w-full outline"
+                class="tw-w-full outline tw-min-w-[220px]"
                 on:click={() => analyticsClient.editName()}
                 on:click={openEditNameScene}
             >
@@ -81,7 +81,7 @@
             </button>
             <button
                 type="button"
-                class="tw-w-full outline"
+                class="tw-w-full outline tw-min-w-[220px]"
                 on:click={() => analyticsClient.editWoka()}
                 on:click={openEditSkinScene}
             >
@@ -90,7 +90,7 @@
             </button>
             <button
                 type="button"
-                class="tw-w-full outline"
+                class="tw-w-full outline tw-min-w-[220px]"
                 on:click={() => analyticsClient.editCompanion()}
                 on:click={openEditCompanionScene}
             >
@@ -99,7 +99,7 @@
             </button>
             <button
                 type="button"
-                class="tw-w-full outline"
+                class="tw-w-full outline tw-min-w-[220px]"
                 on:click={() => analyticsClient.editCamera()}
                 on:click={openEnableCameraScene}
             >
