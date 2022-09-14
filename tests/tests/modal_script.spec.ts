@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import {expectInViewport} from "./utils/viewport";
 
 /*function timeout(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -16,8 +17,9 @@ test.describe('Modal', () => {
         await page.locator('button.selectCharacterSceneFormSubmit').click();
         // Click text=Let's go!
         await page.locator('button.light').click();
-        
-        await expect(page.locator('#modalIframe')).toHaveAttribute('src', 'https://workadventu.re');
+        // Check the component of the Webpage
+        await expectInViewport("#chatWindow", page);
+
         //TODO fix me
         //await timeout(3000);
         //await expect(page.locator('#modalIframe')).toHaveCount(0);
