@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import {expectInViewport} from "./utils/viewport";
 
 /*function timeout(ms: number) {
