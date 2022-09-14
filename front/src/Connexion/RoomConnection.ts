@@ -310,7 +310,6 @@ export class RoomConnection implements RoomConnection {
                             }
                             case "editMapCommandMessage": {
                                 const message = subMessage.editMapCommandMessage;
-                                console.log(message);
                                 this._editMapCommandMessageStream.next(message);
                                 break;
                             }

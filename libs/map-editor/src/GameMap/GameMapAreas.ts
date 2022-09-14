@@ -200,7 +200,6 @@ export class GameMapAreas {
         if (index !== -1) {
             areas.splice(index, 1);
             const success = this.deleteStaticArea(id);
-            console.log(`deleted area with id ${id}: ${success}`);
         }
 
     }

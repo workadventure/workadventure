@@ -137,7 +137,12 @@ export class MapEditorModeManager {
             return;
         }
         const command = this.localCommandsHistory[this.currentCommandIndex];
+        this.pendingCommands.push(command);
         const commandConfig = command.undo();
+
+        // do any necessary changes for active tool interface
+        this.currentlyActiveTool?.handleCommandExecution(commandConfig);
+
         // this should not be called with every change. Use some sort of debounce
         this.emitMapEditorUpdate(command.id, commandConfig);
         this.currentCommandIndex -= 1;
@@ -151,7 +156,12 @@ export class MapEditorModeManager {
             return;
         }
         const command = this.localCommandsHistory[this.currentCommandIndex + 1];
+        this.pendingCommands.push(command);
         const commandConfig = command.execute();
+
+        // do any necessary changes for active tool interface
+        this.currentlyActiveTool?.handleCommandExecution(commandConfig);
+
         // this should not be called with every change. Use some sort of debounce
         this.emitMapEditorUpdate(command.id, commandConfig);
         this.currentCommandIndex += 1;
@@ -213,15 +223,10 @@ export class MapEditorModeManager {
         connection.editMapCommandMessageStream.subscribe((editMapCommandMessage) => {
             if (this.pendingCommands.length > 0) {
                 if (this.pendingCommands[0].id === editMapCommandMessage.id) {
-                    console.log("OUR OLDEST COMMAND CAME BACK FROM THE BACK, ACKNOWLEDGED!");
                     this.pendingCommands.shift();
                     return;
                 }
-                console.log(
-                    "INCOMING COMMAND IS NOT THE NEWEST COMMAND WAITING FOR ACKNOWLEDGEMENT. REVERTING PENDING COMMANDS"
-                );
                 this.revertPendingCommands();
-                console.log("PENDING COMMANDS CLEARED. APPLY NEWEST COMMAND FROM THE SERVER");
             }
 
             this.editorTools.forEach((tool) => tool.handleIncomingCommandMessage(editMapCommandMessage));
