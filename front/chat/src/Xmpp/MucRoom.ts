@@ -159,7 +159,7 @@ export class MucRoom {
     private sendTimeOut: Timeout | undefined;
     private loadingStore: Writable<boolean>;
     public canLoadOlderMessages: boolean;
-    public showPremiumLoadOlderMessages: Writable<boolean>;
+    public showDisabledLoadOlderMessages: Writable<boolean>;
     private closed: boolean = false;
     private description: string = "";
     private maxHistoryDate: string = "";
@@ -184,7 +184,7 @@ export class MucRoom {
         this.countMessagesToSee = writable<number>(0);
         this.loadingStore = writable<boolean>(false);
         this.canLoadOlderMessages = true;
-        this.showPremiumLoadOlderMessages = writable<boolean>(false);
+        this.showDisabledLoadOlderMessages = writable<boolean>(false);
         this.loadingSubscribers = writable<boolean>(true);
 
         //refrech react message
@@ -830,11 +830,11 @@ export class MucRoom {
                 if (maxHistoryDate) {
                     this.maxHistoryDate = maxHistoryDate;
                     if (!this.canLoadOlderMessages) {
-                        this.showPremiumLoadOlderMessages.set(true);
+                        this.showDisabledLoadOlderMessages.set(true);
                     }
                 } else if (count < 50) {
                     if (complete === "false" || this.maxHistoryDate !== "") {
-                        this.showPremiumLoadOlderMessages.set(true);
+                        this.showDisabledLoadOlderMessages.set(true);
                     }
                     this.canLoadOlderMessages = false;
                 }

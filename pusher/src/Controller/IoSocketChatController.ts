@@ -50,21 +50,11 @@ interface UpgradeFailedInvalidData {
     playUri: string;
 }
 
-interface UserRoomToken {
-    alg: string;
-    iss: string;
-    aud: string;
-    iat: number;
-    uid: string;
-    user: string;
-    room: string;
-    exp: number;
-}
-
 import Jwt from "jsonwebtoken";
 import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
 import { XmppClient } from "../Services/XmppClient";
 import jid from "@xmpp/jid";
+import { isUserRoomToken } from "../Messages/JsonMessages/AdminApiData";
 
 interface UpgradeFailedErrorData {
     rejected: true;
@@ -247,9 +237,9 @@ export class IoSocketChatController {
                         }
 
                         if (userData.userRoomToken && ADMIN_API_URL) {
-                            const jwtDecoded = jwtTokenManager.verifyJWTToken(
-                                userData.userRoomToken
-                            ) as unknown as UserRoomToken;
+                            const jwtDecoded = isUserRoomToken.parse(
+                                jwtTokenManager.verifyJWTToken(userData.userRoomToken)
+                            );
                             // If cached lifetime is less than 5 minutes (300_000)
                             if (
                                 this.cache.has(jwtDecoded.room) &&

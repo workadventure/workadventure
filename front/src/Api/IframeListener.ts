@@ -50,6 +50,7 @@ import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { ChatMessage } from "./Events/ChatEvent";
 import { requestVisitCardsStore } from "../Stores/GameStore";
+import { connectionManager } from "../Connexion/ConnectionManager";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -419,7 +420,9 @@ class IframeListener {
                         analyticsClient.login();
                         window.location.href = "/login";
                     } else if (iframeEvent.type == "redirectPricing") {
-                        window.location.href = "/pricing";
+                        if (connectionManager.currentRoom && connectionManager.currentRoom.pricingUrl) {
+                            window.location.href = connectionManager.currentRoom.pricingUrl;
+                        }
                     } else if (iframeEvent.type == "refresh") {
                         window.location.reload();
                     } else if (iframeEvent.type == "showBusinessCard") {

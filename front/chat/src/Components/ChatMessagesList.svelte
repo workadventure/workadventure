@@ -26,6 +26,7 @@
     import HtmlMessage from "./Content/HtmlMessage.svelte";
     import crown from "../../public/static/svg/icone-premium-crown.svg";
     import { iframeListener } from "../IframeListener";
+    import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 
     export let mucRoom: MucRoom;
 
@@ -235,7 +236,7 @@
         });
     });
 
-    $: showPremiumLoadOlderMessages = mucRoom.showPremiumLoadOlderMessages;
+    $: showDisabledLoadOlderMessages = mucRoom.showDisabledLoadOlderMessages;
 
     onDestroy(() => {
         messagesList.removeEventListener("scroll", scrollEvent);
@@ -252,10 +253,12 @@
         class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen tw-pt-14"
     >
         <div class="tw-mb-auto load-history">
-            {#if $loadingStore}<div
+            {#if $loadingStore}
+                <div
                     style="border-top-color:transparent"
                     class="tw-w-5 tw-h-5 tw-border-2 tw-border-white tw-border-solid tw-rounded-full tw-animate-spin tw-m-auto"
-                />{/if}
+                />
+            {/if}
             {#if !$loadingStore && mucRoom.canLoadOlderMessages}<button
                     class="tw-m-auto tw-cursor-pointer tw-text-xs"
                     on:click={() => mucRoom.retrieveLastMessages()}
@@ -263,12 +266,18 @@
                     {$LL.more()}
                     <ArrowUpIcon size="13" class="tw-ml-1" /></button
                 >{/if}
-            {#if $showPremiumLoadOlderMessages && mucRoom.getMe()?.isAdmin}
-                <button
-                    class="tw-text-orange tw-font-bold tw-underline tw-m-auto tw-text-xs tw-cursor-pointer"
-                    on:click={() => iframeListener.sendRedirectPricing()}
-                    ><img alt="Crown icon" src={crown} class="tw-mr-1" /> {$LL.upgradeToSeeMore()}</button
-                >
+            {#if $showDisabledLoadOlderMessages && mucRoom.getMe()?.isAdmin}
+                {#if ADMIN_API_URL}
+                    <button
+                        class="tw-text-orange tw-font-bold tw-underline tw-m-auto tw-text-xs tw-cursor-pointer"
+                        on:click={() => iframeListener.sendRedirectPricing()}
+                    >
+                        <img alt="Crown icon" src={crown} class="tw-mr-1" />
+                        {$LL.upgradeToSeeMore()}
+                    </button>
+                {:else}
+                    <div class="tw-text-orange tw-font-bold tw-m-auto tw-text-xs">{$LL.disabled()}</div>
+                {/if}
             {/if}
         </div>
         {#each $messagesStore as message, i}
