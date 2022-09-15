@@ -133,6 +133,8 @@ services:
       EJABBERD_WS_URI: ws://ejabberd:5443/ws
     volumes:
       - ./pusher:/usr/src/app
+    ports:
+      - "9231:9229"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.pusher.rule=Host(`pusher.workadventure.localhost`)"
@@ -192,6 +194,8 @@ services:
       EJABBERD_API_URI: http://ejabberd:5443/api/
     volumes:
       - ./back:/usr/src/app
+    ports:
+      - "9232:9229"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.back.rule=Host(`api.workadventure.localhost`)"
@@ -212,6 +216,8 @@ services:
     volumes:
       - ./map-storage:/usr/src/app
       - ./libs:/usr/src/libs
+    ports:
+      - "9233:9229"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.map-storage.rule=Host(`map-storage.workadventure.localhost`)"
@@ -241,6 +247,8 @@ services:
       UPLOAD_MAX_FILESIZE: "$UPLOAD_MAX_FILESIZE"
     volumes:
       - ./uploader:/usr/src/app
+    ports:
+      - "9234:9229"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.uploader.rule=Host(`uploader.workadventure.localhost`)"

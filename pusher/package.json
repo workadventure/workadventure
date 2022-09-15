@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "tsc": "tsc && cp -rf ./data ./dist/",
-    "dev": "ts-node-dev --exit-child --respawn ./server.ts",
+    "dev": "ts-node-dev --inspect=0.0.0.0:9229 --exit-child --respawn ./server.ts",
     "prod": "tsc && cp -rf ./data ./dist/ && node -r source-map-support/register --max-old-space-size=4096 ./dist/server.js",
     "runprod": "node -r source-map-support/register --max-old-space-size=4096 ./dist/server.js",
     "profile": "tsc && node --prof ./dist/server.js",
