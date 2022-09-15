@@ -400,6 +400,10 @@ jobs:
         run: npm ci
         working-directory: "tests"
 
+      - name: "Install libs/map-editor dependencies"
+        run: yarn install
+        working-directory: "libs/map-editor"
+
       - name: "Install front dependencies"
         run: yarn install --froze-lockfile
         working-directory: "front"
