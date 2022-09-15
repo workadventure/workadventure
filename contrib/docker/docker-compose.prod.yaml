@@ -63,6 +63,7 @@ services:
       - PUSHER_URL=//${PUSHER_HOST}
       - UPLOADER_URL=//${UPLOADER_HOST}
       - EMBEDLY_KEY=${EMBEDLY_KEY}
+      - ENABLE_CHAT_UPLOAD=${ENABLE_CHAT_UPLOAD}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.chat.rule=Host(`${CHAT_HOST}`)"
@@ -157,6 +158,9 @@ services:
       #REDIS
       - REDIS_HOST=${UPLOADER_REDIS_HOST}
       - REDIS_PORT=${UPLOADER_REDIS_PORT}
+      #CHAT
+      - ENABLE_CHAT_UPLOAD=${ENABLE_CHAT_UPLOAD}
+      - UPLOAD_MAX_FILESIZE=${UPLOAD_MAX_FILESIZE}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.uploader.rule=Host(`${UPLOADER_HOST}`)"

@@ -158,9 +158,11 @@ export class MucRoom {
     private countMessagesToSee: Writable<number>;
     private sendTimeOut: Timeout | undefined;
     private loadingStore: Writable<boolean>;
-    public canLoadOlderMessages: boolean;
+    private canLoadOlderMessagesStore: Writable<boolean>;
+    private showDisabledLoadOlderMessagesStore: Writable<boolean>;
     private closed: boolean = false;
     private description: string = "";
+    private maxHistoryDate: string = "";
     private getAllSubscriptionsId: string = "";
     private loadingSubscribers: Writable<boolean>;
 
@@ -181,7 +183,8 @@ export class MucRoom {
         this.lastMessageSeen = new Date();
         this.countMessagesToSee = writable<number>(0);
         this.loadingStore = writable<boolean>(false);
-        this.canLoadOlderMessages = true;
+        this.canLoadOlderMessagesStore = writable<boolean>(true);
+        this.showDisabledLoadOlderMessagesStore = writable<boolean>(false);
         this.loadingSubscribers = writable<boolean>(true);
 
         //refrech react message
@@ -289,8 +292,8 @@ export class MucRoom {
 
     public retrieveLastMessages() {
         const firstMessage = get(this.messageStore).shift();
-        if (!firstMessage) return;
         this.loadingStore.set(true);
+        const now = new Date();
         const messageRetrieveLastMessages = xml(
             "iq",
             {
@@ -323,7 +326,7 @@ export class MucRoom {
                         {
                             var: "end",
                         },
-                        xml("value", {}, firstMessage.time.toISOString())
+                        xml("value", {}, firstMessage ? firstMessage.time.toISOString() : now.toISOString())
                     )
                 ),
                 xml(
@@ -775,7 +778,7 @@ export class MucRoom {
                         type === "unavailable" ? USER_STATUS_DISCONNECTED : USER_STATUS_AVAILABLE,
                         color,
                         woka,
-                        ["admin", "owner"].includes(role),
+                        ["admin", "moderator", "owner"].includes(role),
                         isMember === "true",
                         availabilityStatus,
                         null,
@@ -819,9 +822,21 @@ export class MucRoom {
             // Manage return of MAM response
             const fin = xml.getChild("fin", "urn:xmpp:mam:2");
             if (fin) {
-                const count = fin.getChild("set", "http://jabber.org/protocol/rsm")?.getChildText("count") ?? "0";
-                if (parseInt(count) < 50) {
-                    this.canLoadOlderMessages = false;
+                const complete = fin.getAttr("complete");
+                const maxHistoryDate = fin.getAttr("maxHistoryDate");
+                const count = parseInt(
+                    fin.getChild("set", "http://jabber.org/protocol/rsm")?.getChildText("count") ?? "0"
+                );
+                if (maxHistoryDate) {
+                    this.maxHistoryDate = maxHistoryDate;
+                    if (!get(this.canLoadOlderMessagesStore)) {
+                        this.showDisabledLoadOlderMessagesStore.set(true);
+                    }
+                } else if (count < 50) {
+                    if (complete === "false" || this.maxHistoryDate !== "") {
+                        this.showDisabledLoadOlderMessagesStore.set(true);
+                    }
+                    this.canLoadOlderMessagesStore.set(false);
                 }
                 this.loadingStore.set(false);
                 handledMessage = true;
@@ -1071,6 +1086,10 @@ export class MucRoom {
         return get(this.meStore).isAdmin;
     }
 
+    public getMe() {
+        return get(this.presenceStore).get(this.getMyJID().toString());
+    }
+
     private updateUser(
         jid: JID | string,
         nick: string | null = null,
@@ -1193,6 +1212,14 @@ export class MucRoom {
 
     public getLoadingSubscribersStore() {
         return this.loadingSubscribers;
+    }
+
+    public getCanLoadOlderMessagesStore() {
+        return this.canLoadOlderMessagesStore;
+    }
+
+    public getShowDisabledLoadOlderMessagesStore() {
+        return this.showDisabledLoadOlderMessagesStore;
     }
 
     public getUrl(): string {

@@ -46,6 +46,7 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable 
     backConnection: BackConnection;
     listenedZones: Set<Zone>;
     userRoomToken: string | undefined;
+    maxHistoryChat: number;
     // The ID of the timer that sends ping requests.
     // Ping requests are sent from the server because the setTimeout on the browser is unreliable when the tab is hidden.
     pingIntervalId: NodeJS.Timeout | undefined;

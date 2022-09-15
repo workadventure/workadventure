@@ -87,6 +87,7 @@ services:
       ICON_URL: http://icon.workadventure.localhost
       EJABBERD_DOMAIN: ejabberd
       ENABLE_OPENID: "$OPID_CLIENT_ID"
+      ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
     volumes:
       - ./front/chat:/usr/src/app
       - ./libs:/usr/src/libs
@@ -236,6 +237,8 @@ services:
       REDIS_HOST: "$UPLOADER_REDIS_HOST"
       REDIS_PORT: "$UPLOADER_REDIS_PORT"
       REDIS_DB_NUMBER: "$UPLOADER_REDIS_DB_NUMBER"
+      ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
+      UPLOAD_MAX_FILESIZE: "$UPLOAD_MAX_FILESIZE"
     volumes:
       - ./uploader:/usr/src/app
     labels:

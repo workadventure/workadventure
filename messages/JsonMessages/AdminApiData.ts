@@ -21,3 +21,21 @@ export const isAdminApiData = z.object({
 });
 
 export type AdminApiData = z.infer<typeof isAdminApiData>;
+
+export const isUserRoomToken = z.object({
+    messages: z.optional(z.array(z.unknown())),
+    alg: z.string(),
+    iss: z.string(),
+    aud: z.string(),
+    iat: z.number(),
+    uid: z.string(),
+    user: extendApi(z.string().nullable(), {
+        description: "The email of the current user.",
+        example: "example@workadventu.re",
+    }),
+    room: extendApi(z.string(), {
+        description: "The room URL of the current user.",
+        example: "/@/teamSlug/worldSlug/roomSlug",
+    }),
+    exp: z.number(),
+});
