@@ -102,7 +102,7 @@
         {:else if !$requestedCameraState && !$cameraEnergySavingStore}
             <div
                 style="background-color: {backgroundColor}; color: {textColor}"
-                class="tw-w-full tw-rounded tw-px-3 tw-flex tw-flex-row tw-items-center media-box-camera-off-size tw-h-10"
+                class="tw-w-full tw-rounded tw-px-3 tw-flex tw-flex-row tw-items-center media-box-camera-off-size tw-h-12"
             >
                 <Woka userId={-1} placeholderSrc={""} customHeight="32px" customWidth="32px" />
                 <span
