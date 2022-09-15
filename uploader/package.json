@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "tsc": "tsc",
-    "dev": "ts-node-dev --respawn ./server.ts",
+    "dev": "ts-node-dev --inspect=0.0.0.0:9229 --respawn ./server.ts",
     "prod": "tsc && node --max-old-space-size=4096 ./dist/server.js",
     "runprod": "node --max-old-space-size=4096 ./dist/server.js",
     "profile": "tsc && node --prof ./dist/server.js",
