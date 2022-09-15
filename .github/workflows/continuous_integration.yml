@@ -287,7 +287,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run proto && yarn run copy-to-map-storage-ts-proto
+        run: yarn run ts-proto-map-storage && yarn run copy-to-map-storage-ts-proto
         working-directory: "messages"
 
       - name: "Build"
