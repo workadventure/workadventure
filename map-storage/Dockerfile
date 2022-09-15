@@ -41,4 +41,4 @@ COPY --from=builder /usr/src/dist /usr/src/dist
 COPY --from=builder /usr/src/public /usr/src/public
 
 USER node
-CMD ["yarn", "run", "start:prod"]
+CMD ["yarn", "run", "start"]
