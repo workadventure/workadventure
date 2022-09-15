@@ -286,6 +286,10 @@ jobs:
         run: yarn install
         working-directory: "messages"
 
+      - name: "Install libs/map-editor dependencies"
+        run: yarn install
+        working-directory: "libs/map-editor"
+
       - name: "Build proto messages"
         run: yarn run ts-proto-map-storage && yarn run copy-to-map-storage-ts-proto
         working-directory: "messages"
