@@ -2,7 +2,6 @@ import { ADMIN_API_TOKEN, ADMIN_API_URL, OPID_PROFILE_SCREEN_PROVIDER } from "..
 import Axios, { AxiosResponse } from "axios";
 import { isMapDetailsData, MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { isRoomRedirect, RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
-import { AdminApiLoginUrlData, isAdminApiLoginUrlData } from "../Messages/JsonMessages/AdminApiLoginUrlData";
 import { z } from "zod";
 import { isWokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import qs from "qs";
@@ -11,6 +10,7 @@ import { jwtTokenManager } from "./JWTTokenManager";
 import { extendApi } from "@anatine/zod-openapi";
 import { isMucRoomDefinition } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
 import { ErrorApiData, isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
+import { AdminApiData, isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -319,7 +319,7 @@ class AdminApi implements AdminInterface {
         );
     }
 
-    async fetchLoginData(authToken: string, playUri: string | null, locale?: string): Promise<AdminApiLoginUrlData> {
+    async fetchLoginData(authToken: string, playUri: string | null, locale?: string): Promise<AdminApiData> {
         /**
          * @openapi
          * /api/login-url/{authToken}:
@@ -345,7 +345,7 @@ class AdminApi implements AdminInterface {
          *       200:
          *         description: The details of the member
          *         schema:
-         *             $ref: "#/definitions/AdminApiLoginUrlData"
+         *             $ref: "#/definitions/AdminApiData"
          *       401:
          *         description: Error while retrieving the data because you are not authorized
          *         schema:
@@ -362,13 +362,13 @@ class AdminApi implements AdminInterface {
             headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en", "User-Agent": "Pusher" },
         });
 
-        const adminApiLoginUrlData = isAdminApiLoginUrlData.safeParse(res.data);
+        const adminApiData = isAdminApiData.safeParse(res.data);
 
-        if (adminApiLoginUrlData.success) {
-            return adminApiLoginUrlData.data;
+        if (adminApiData.success) {
+            return adminApiData.data;
         }
 
-        console.error(adminApiLoginUrlData.error.issues);
+        console.error(adminApiData.error.issues);
         console.error("Message received from /api/login-url is not in the expected format. Message: ", res.data);
         throw new Error("Message received from /api/login-url is not in the expected format.");
     }

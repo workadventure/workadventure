@@ -1,8 +1,8 @@
 import { AdminBannedData, FetchMemberDataByAuthTokenResponse } from "./AdminApi";
 import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
-import { AdminApiLoginUrlData } from "../Messages/JsonMessages/AdminApiLoginUrlData";
 import { ErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
+import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
 
 export interface AdminInterface {
     /**
@@ -36,9 +36,9 @@ export interface AdminInterface {
      * @param locale
      * @param authToken
      * @param playUri
-     * @return AdminApiLoginUrlData
+     * @return AdminApiData
      */
-    fetchLoginData(authToken: string, playUri: string | null, locale?: string): Promise<AdminApiLoginUrlData>;
+    fetchLoginData(authToken: string, playUri: string | null, locale?: string): Promise<AdminApiData>;
 
     /**
      * @param locale

@@ -10,6 +10,7 @@ const colorKey = "color";
 const isLoggedKey = "isLogged";
 const availabilityStatus = "availabilityStatus";
 const roomName = "roomName";
+const authToken = "authToken";
 
 function createUserStore() {
     const { subscribe, update, set } = writable<UserData>();
@@ -34,6 +35,7 @@ class LocalUserStore {
     getUserData(): UserData {
         return {
             uuid: localStorage.getItem(uuidKey) || "",
+            authToken: localStorage.getItem(authToken) || "",
             name: localStorage.getItem(nameKey) || "",
             email: localStorage.getItem(emailKey) || undefined,
             playUri: localStorage.getItem(playUriKey) || "",

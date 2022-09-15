@@ -25,6 +25,7 @@ test.describe('Chat', () => {
     );
     const nickname = getUniqueNickname('A');
     await login(page, nickname, 2);
+    await page.pause();
     await openChat(page);
     const ejabberd = await findContainer('ejabberd');
 

@@ -3,10 +3,10 @@ import { AdminInterface } from "./AdminInterface";
 import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { DISABLE_ANONYMOUS, PUBLIC_MAP_STORAGE_URL, START_ROOM_URL } from "../Enum/EnvironmentVariable";
-import { AdminApiLoginUrlData } from "../Messages/JsonMessages/AdminApiLoginUrlData";
 import { localWokaService } from "./LocalWokaService";
 import { jwtTokenManager } from "./JWTTokenManager";
 import { ErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
+import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
 
 /**
  * A local class mocking a real admin if no admin is configured.
@@ -85,7 +85,7 @@ class LocalAdmin implements AdminInterface {
         });
     }
 
-    async fetchLoginData(authToken: string, playUri: string | null, locale?: string): Promise<AdminApiLoginUrlData> {
+    async fetchLoginData(authToken: string, playUri: string | null, locale?: string): Promise<AdminApiData> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 

@@ -1,5 +1,4 @@
 import { generateSchema } from "@anatine/zod-openapi";
-import { isAdminApiLoginUrlData } from "../Messages/JsonMessages/AdminApiLoginUrlData";
 import {
     isErrorApiErrorData,
     isErrorApiRedirectData,
@@ -10,6 +9,7 @@ import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { isFetchMemberDataByAuthTokenResponse } from "./AdminApi";
 import { isWokaDetail, wokaList, wokaTexture } from "../Messages/JsonMessages/PlayerTextures";
 import { SchemaObject } from "openapi3-ts";
+import { isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
 
 class SwaggerGenerator {
     definitions(type: string | null): {
@@ -17,7 +17,7 @@ class SwaggerGenerator {
     } {
         const definitions = {
             definitions: {
-                AdminApiLoginUrlData: generateSchema(isAdminApiLoginUrlData),
+                AdminApiData: generateSchema(isAdminApiData),
                 ErrorApiUnauthorizedData: generateSchema(isErrorApiUnauthorizedData),
                 FetchMemberDataByUuidResponse: generateSchema(isFetchMemberDataByAuthTokenResponse),
                 MapDetailsData: generateSchema(isMapDetailsData),
@@ -29,7 +29,7 @@ class SwaggerGenerator {
         }
         return {
             definitions: {
-                AdminApiLoginUrlData: generateSchema(isAdminApiLoginUrlData),
+                AdminApiData: generateSchema(isAdminApiData),
                 ErrorApiErrorData: generateSchema(isErrorApiErrorData),
                 ErrorApiRedirectData: generateSchema(isErrorApiRedirectData),
                 ErrorApiRetryData: generateSchema(isErrorApiRetryData),
