@@ -1098,7 +1098,7 @@ export class MucRoom {
         }
         this.presenceStore.update((list) => {
             list.set(jid.toString(), {
-                name: nick ?? this.getCurrentName(jid),
+                name: this.convertNameEmoji(nick ?? this.getCurrentName(jid)),
                 playUri: playUri ?? this.getCurrentPlayUri(jid),
                 roomName: roomName ?? this.getCurrentRoomName(jid),
                 uuid: uuid ?? this.getCurrentUuid(jid),
@@ -1213,6 +1213,13 @@ export class MucRoom {
         this.presenceStore.set(new Map<string, User>());
         this.messageStore.set([]);
         this.meStore.set({ isAdmin: false });
+    }
+
+    private convertNameEmoji(username: string): string {
+        return username.replace(
+            /\[e-\w+\]/gu,
+            (match) => `${String.fromCodePoint(Number("0x" + match.substring(3, match.length - 1)))}`
+        );
     }
 
     private static encode(name: string | null | undefined) {
