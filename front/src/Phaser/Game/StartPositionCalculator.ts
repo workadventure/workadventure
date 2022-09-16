@@ -88,8 +88,6 @@ export class StartPositionCalculator {
     }
 
     private initPositionFromLayerName(startPositionName?: string): boolean {
-        let foundLayer: ITiledMapLayer | null = null;
-
         const tileLayers = this.gameMapFrontWrapper.getFlatLayers().filter((layer) => layer.type === "tilelayer");
 
         if (startPositionName !== undefined) {
@@ -99,25 +97,37 @@ export class StartPositionCalculator {
                     [layer.name, `#${layer.name}`].includes(startPositionName) ||
                     layer.name.endsWith("/" + startPositionName)
                 ) {
-                    foundLayer = layer;
-                    break;
+                    try {
+                        const startPosition = this.gameMapFrontWrapper.getRandomPositionFromLayer(layer.name);
+                        this.startPosition = {
+                            x: startPosition.x * (this.mapFile.tilewidth ?? 0) + (this.mapFile.tilewidth ?? 0) / 2,
+                            y: startPosition.y * (this.mapFile.tileheight ?? 0) + (this.mapFile.tileheight ?? 0) / 2,
+                        };
+                        return true;
+                    } catch (e: unknown) {
+                        console.error("Error while finding start position: ", e);
+                    }
                 }
             }
         } else {
             for (const layer of tileLayers) {
-                if (layer.name === this.DEFAULT_START_NAME || this.isStartObject(layer)) {
-                    foundLayer = layer;
-                    break;
+                if (
+                    layer.name === this.DEFAULT_START_NAME ||
+                    layer.name.endsWith("/" + this.DEFAULT_START_NAME) ||
+                    this.isStartObject(layer)
+                ) {
+                    try {
+                        const startPosition = this.gameMapFrontWrapper.getRandomPositionFromLayer(layer.name);
+                        this.startPosition = {
+                            x: startPosition.x * (this.mapFile.tilewidth ?? 0) + (this.mapFile.tilewidth ?? 0) / 2,
+                            y: startPosition.y * (this.mapFile.tileheight ?? 0) + (this.mapFile.tileheight ?? 0) / 2,
+                        };
+                        return true;
+                    } catch (e: unknown) {
+                        console.error("Error while finding start position: ", e);
+                    }
                 }
             }
-        }
-        if (foundLayer) {
-            const startPosition = this.gameMapFrontWrapper.getRandomPositionFromLayer(foundLayer.name);
-            this.startPosition = {
-                x: startPosition.x * (this.mapFile.tilewidth ?? 0) + (this.mapFile.tilewidth ?? 0) / 2,
-                y: startPosition.y * (this.mapFile.tileheight ?? 0) + (this.mapFile.tileheight ?? 0) / 2,
-            };
-            return true;
         }
         return false;
     }
