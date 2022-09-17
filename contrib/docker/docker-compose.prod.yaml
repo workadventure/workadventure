@@ -86,7 +86,6 @@ services:
       - PUBLIC_MAP_STORAGE_URL=https://${MAP_STORAGE_HOST}
       - DISABLE_ANONYMOUS
       - START_ROOM_URL
-      - EJABBERD_DOMAIN=ejabberd
       - OPID_PROMPT=login
       # Only used if you set up a JWT authentication mechanism in Ejabberd
       - EJABBERD_JWT_SECRET
