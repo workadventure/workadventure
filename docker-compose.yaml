@@ -280,7 +280,7 @@ services:
       - "traefik.http.services.icon.loadbalancer.server.port=8080"
 
   ejabberd:
-    image: ejabberd/ecs
+    image: ghcr.io/processone/ejabberd:22.05
     volumes:
       - ./xmpp/ejabberd.yml:/home/ejabberd/conf/ejabberd.yml
     labels:

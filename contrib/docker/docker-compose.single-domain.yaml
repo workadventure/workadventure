@@ -122,7 +122,7 @@ services:
       - "traefik.http.routers.pusher-ssl.service=pusher"
 
   ejabberd:
-    image: ejabberd/ecs
+    image: ghcr.io/processone/ejabberd:22.05
     volumes:
       - ./xmpp/ejabberd.yml:/home/ejabberd/conf/ejabberd.yml
     labels:
