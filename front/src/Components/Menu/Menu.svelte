@@ -12,6 +12,7 @@
         activeSubMenuStore,
         checkSubMenuToShow,
         customMenuIframe,
+        menuInputFocusStore,
         menuVisiblilityStore,
         SubMenusInterface,
         subMenusStore,
@@ -48,6 +49,7 @@
     });
 
     onDestroy(() => {
+        menuInputFocusStore.set(false);
         if (unsubscriberSubMenuStore) {
             unsubscriberSubMenuStore();
         }
