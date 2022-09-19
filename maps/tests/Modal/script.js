@@ -5,7 +5,7 @@ function launchTuto(){
 
     setTimeout(() => {
         WA.modal.closeModal();
-    }, 2000);
+    }, 1000);
 }
 
 setTimeout(() => {

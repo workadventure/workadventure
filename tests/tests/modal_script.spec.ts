@@ -1,9 +1,5 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import {expectInViewport} from "./utils/viewport";
-
-/*function timeout(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}*/
 
 test.describe('Modal', () => {
     test('test', async ({ page }) => {
@@ -18,10 +14,8 @@ test.describe('Modal', () => {
         // Click text=Let's go!
         await page.locator('button.light').click();
         // Check the component of the Webpage
-        await expectInViewport("#chatWindow", page);
-
-        //TODO fix me
-        //await timeout(3000);
-        //await expect(page.locator('#modalIframe')).toHaveCount(0);
+        await expectInViewport("#modalIframe", page);
+        // Check the component of the Webpage
+        await expect(page.locator('#modalIframe')).toHaveCount(0);
     });
 });
