@@ -409,8 +409,8 @@
             {/each}
             {#if informationMessage}
                 <div
-                        class="tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-py-2 tw-text-xs tw-items-center tw-px-4 tw-text-orange tw-w-full tw-mb-1 tw-cursor-pointer"
-                        on:click|preventDefault|stopPropagation={() => (informationMessage = null)}
+                    class="tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-py-2 tw-text-xs tw-items-center tw-px-4 tw-text-orange tw-w-full tw-mb-1 tw-cursor-pointer"
+                    on:click|preventDefault|stopPropagation={() => (informationMessage = null)}
                 >
                     <div class="tw-text-orange tw-mr-1.5">
                         <AlertCircleIcon size="16" />
