@@ -1,5 +1,5 @@
-import { ADMIN_API_URL } from "../enums/EnvironmentVariable";
-import { adminWokaService } from "./AdminWokaService";
-import { localWokaService } from "./LocalWokaService";
+import {adminWokaService} from "./AdminWokaService";
+import {localWokaService} from "./LocalWokaService";
+import {adminApi} from "./AdminApi";
 
-export const wokaService = ADMIN_API_URL ? adminWokaService : localWokaService;
+export const wokaService = adminApi.isEnabled() ? adminWokaService : localWokaService;
