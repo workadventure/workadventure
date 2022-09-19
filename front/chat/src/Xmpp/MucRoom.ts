@@ -15,7 +15,6 @@ import { availabilityStatusStore } from "../Stores/ChatStore";
 import { activeThreadStore } from "../Stores/ActiveThreadStore";
 import Timeout = NodeJS.Timeout;
 import { connectionManager } from "../Connection/ChatConnectionManager";
-import { Subject } from "rxjs";
 
 export const USER_STATUS_AVAILABLE = "available";
 export const USER_STATUS_DISCONNECTED = "disconnected";
