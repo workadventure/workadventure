@@ -14,15 +14,15 @@ RUN yarn run tag-version && yarn run ts-proto-map-storage
 FROM --platform=$BUILDPLATFORM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c as builder
 WORKDIR /usr/src
 RUN apt-get update && apt-get install -y jq
-COPY libs/tailwind/yarn.lock libs/tailwind/package.json ./../libs/tailwind/
-RUN cd /usr/src/libs/tailwind && yarn install --network-timeout 1000000
-COPY libs/math-utils/yarn.lock libs/math-utils/package.json ./../libs/math-utils/
-RUN cd /usr/src/libs/math-utils && yarn install --network-timeout 1000000 && yarn run build && yarn run prepare-for-prod
-COPY libs/map-editor/yarn.lock libs/map-editor/package.json ./../libs/map-editor/
-RUN cd /usr/src/libs/map-editor && yarn install --network-timeout 1000000 && yarn run build && yarn run prepare-for-prod
+COPY libs/tailwind/yarn.lock libs/tailwind/package.json /usr/libs/tailwind/
+RUN cd /usr/libs/tailwind && yarn install --network-timeout 1000000
+COPY libs/math-utils/yarn.lock libs/math-utils/package.json /usr/libs/math-utils/
+RUN cd /usr/libs/math-utils && yarn install --network-timeout 1000000 && yarn run build && yarn run prepare-for-prod
+COPY libs/map-editor/yarn.lock libs/map-editor/package.json /usr/libs/map-editor/
+RUN cd /usr/libs/map-editor && yarn install --network-timeout 1000000 && yarn run build && yarn run prepare-for-prod
 COPY map-storage/yarn.lock map-storage/package.json ./
 RUN cd /usr/src && yarn install
-COPY libs ./../libs
+COPY libs /usr/libs
 COPY map-storage .
 
 COPY --from=proto-builder /usr/src/ts-proto-map-storage-generated src/Messages/ts-proto-map-storage-generated
