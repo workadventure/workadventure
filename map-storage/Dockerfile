@@ -39,6 +39,7 @@ ENV NODE_ENV=production
 RUN yarn install --production
 COPY --from=builder /usr/src/dist /usr/src/dist
 COPY --from=builder /usr/src/public /usr/src/public
+COPY --from=builder /usr/libs /usr/libs
 
 USER node
 CMD ["yarn", "run", "start"]
