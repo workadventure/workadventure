@@ -1,5 +1,5 @@
 import { test } from '@playwright/test';
-import {expectInViewport} from "./utils/viewport";
+//import {expectInViewport} from "./utils/viewport";
 
 /*function timeout(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
