@@ -263,6 +263,10 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("closeModal"),
         data: z.undefined(),
     }),
+    z.object({
+        type: z.literal("redirectPricing"),
+        data: z.undefined(),
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;

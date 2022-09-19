@@ -191,6 +191,7 @@
                 margin-bottom: 0;
                 margin-left: 0;
                 border-color: #4d4b67;
+                max-height: 90vh;
             }
         }
     }
@@ -204,6 +205,11 @@
         scrollbar-width: none;
         &::-webkit-scrollbar {
             display: none;
+        }
+
+        .wa-messages-list{
+            @apply tw-pb-6;
+            min-height: calc(100vh - 2.8rem);
         }
 
         p span.nice-a{

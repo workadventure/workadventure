@@ -12,9 +12,11 @@ import { FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { socketManager } from "../Services/SocketManager";
 import { emitInBatch } from "../Services/IoSocketHelpers";
 import {
+    ADMIN_API_URL,
     DISABLE_ANONYMOUS,
     EJABBERD_DOMAIN,
     EJABBERD_JWT_SECRET,
+    MAX_HISTORY_CHAT,
     SOCKET_IDLE_TIMER,
 } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
@@ -35,6 +37,7 @@ interface UpgradeData {
     userUuid: string;
     IPAddress: string;
     playUri: string;
+    maxHistoryChat: number;
     tags: string[];
     userRoomToken: string | undefined;
     mucRooms: Array<MucRoomDefinitionInterface> | undefined;
@@ -50,8 +53,8 @@ interface UpgradeFailedInvalidData {
 import Jwt from "jsonwebtoken";
 import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
 import { XmppClient } from "../Services/XmppClient";
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { jid } = require("@xmpp/client");
+import jid from "@xmpp/jid";
+import { isUserRoomToken } from "../Messages/JsonMessages/AdminApiData";
 
 interface UpgradeFailedErrorData {
     rejected: true;
@@ -59,10 +62,16 @@ interface UpgradeFailedErrorData {
     error: ErrorApiData;
 }
 
+interface CacheRoomData {
+    maxHistoryChat: number;
+    timestamp: number;
+}
+
 type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData;
 
 export class IoSocketChatController {
     private nextUserId = 1;
+    private cache: Map<string, CacheRoomData> = new Map();
 
     constructor(private readonly app: HyperExpress.compressors.TemplatedApp) {
         this.ioConnection();
@@ -93,6 +102,8 @@ export class IoSocketChatController {
                     const websocketExtensions = req.getHeader("sec-websocket-extensions");
                     const IPAddress = req.getHeader("x-forwarded-for");
                     const locale = req.getHeader("accept-language");
+
+                    let maxHistoryChat = MAX_HISTORY_CHAT;
 
                     const playUri = query.playUri;
                     try {
@@ -217,11 +228,42 @@ export class IoSocketChatController {
                             userData.jabberId = jid(userIdentifier, EJABBERD_DOMAIN).toString();
                             if (EJABBERD_JWT_SECRET) {
                                 userData.jabberPassword = Jwt.sign({ jid: userData.jabberId }, EJABBERD_JWT_SECRET, {
-                                    expiresIn: "1d",
+                                    expiresIn: "30d",
                                     algorithm: "HS256",
                                 });
                             } else {
                                 userData.jabberPassword = "no_password_set";
+                            }
+                        }
+
+                        if (userData.userRoomToken && ADMIN_API_URL) {
+                            const jwtDecoded = isUserRoomToken.parse(
+                                jwtTokenManager.verifyJWTToken(userData.userRoomToken)
+                            );
+                            // If cached lifetime is less than 5 minutes (300_000)
+                            if (
+                                this.cache.has(jwtDecoded.room) &&
+                                this.cache.get(jwtDecoded.room) &&
+                                (this.cache.get(jwtDecoded.room)?.timestamp || 0) > Date.now() - 300_000
+                            ) {
+                                // @ts-ignore
+                                maxHistoryChat = this.cache.get(jwtDecoded.room).maxHistoryChat;
+                            } else {
+                                maxHistoryChat = await Axios.get(`${ADMIN_API_URL}/api/limit/historyChat`, {
+                                    headers: { userRoomToken: userData.userRoomToken },
+                                })
+                                    .then((response) => parseInt(response.data))
+                                    .catch((err) => {
+                                        if (Axios.isAxiosError(err) && err.response?.status === 402) {
+                                            return parseInt(err.response?.data);
+                                        }
+                                        console.error(err);
+                                        return -1;
+                                    });
+                                this.cache.set(jwtDecoded.room, {
+                                    maxHistoryChat: maxHistoryChat,
+                                    timestamp: Date.now(),
+                                });
                             }
                         }
 
@@ -245,6 +287,7 @@ export class IoSocketChatController {
                                 IPAddress,
                                 userIdentifier,
                                 playUri,
+                                maxHistoryChat,
                                 tags: memberTags,
                                 userRoomToken: memberUserRoomToken,
                                 jabberId: userData.jabberId,
@@ -355,6 +398,7 @@ export class IoSocketChatController {
         client.userIdentifier = ws.userIdentifier;
         client.tags = ws.tags;
         client.playUri = ws.roomId;
+        client.maxHistoryChat = ws.maxHistoryChat;
         client.jabberId = ws.jabberId;
         client.jabberPassword = ws.jabberPassword;
         client.mucRooms = ws.mucRooms;

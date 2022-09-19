@@ -21,17 +21,19 @@ export default defineConfig({
         }),
         envConfig({
             variables: [
+                "ADMIN_API_URL",
                 "PUSHER_URL",
                 "FALLBACK_LOCALE",
                 "UPLOADER_URL",
                 "EMBEDLY_KEY",
                 "ICON_URL",
-                "ENABLE_OPENID"
+                "ENABLE_OPENID",
+                "ENABLE_CHAT_UPLOAD",
             ],
         }),
         pluginRewriteAll(),
     ],
     define: {
-        "global": {},
+        global: {},
     },
 });

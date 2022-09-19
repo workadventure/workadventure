@@ -56,6 +56,7 @@ import {
     modalIframeTitlelStore,
     modalVisibilityStore,
 } from "../Stores/ModalStore";
+import { connectionManager } from "../Connexion/ConnectionManager";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -424,6 +425,10 @@ class IframeListener {
                     } else if (iframeEvent.type == "login") {
                         analyticsClient.login();
                         window.location.href = "/login";
+                    } else if (iframeEvent.type == "redirectPricing") {
+                        if (connectionManager.currentRoom && connectionManager.currentRoom.pricingUrl) {
+                            window.location.href = connectionManager.currentRoom.pricingUrl;
+                        }
                     } else if (iframeEvent.type == "refresh") {
                         window.location.reload();
                     } else if (iframeEvent.type == "showBusinessCard") {
@@ -883,7 +888,7 @@ class IframeListener {
     }
 
     /**
-     * Sends the message... to all allowed iframes.
+     * Sends the message... to all allowed iframes and not the chat.
      */
     public postMessage(message: IframeResponseEvent, exceptOrigin?: MessageEventSource) {
         for (const iframe of this.iframes) {
