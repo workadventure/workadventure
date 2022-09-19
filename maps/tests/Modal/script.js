@@ -4,7 +4,7 @@ function launchTuto(){
     WA.modal.openModal({src: 'https://workadventu.re'});
 
     setTimeout(() => {
-        WA.modal.closeModal();
+        //WA.modal.closeModal();
     }, 1000);
 }
 

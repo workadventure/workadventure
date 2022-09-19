@@ -54,6 +54,7 @@ import {
     modalIframeAllowlStore,
     modalIframeSrcStore,
     modalIframeTitlelStore,
+    modalPositionStore,
     modalVisibilityStore,
 } from "../Stores/ModalStore";
 import { connectionManager } from "../Connexion/ConnectionManager";
@@ -437,6 +438,7 @@ class IframeListener {
                         modalIframeTitlelStore.set(iframeEvent.data.tiltle);
                         modalIframeAllowlStore.set(iframeEvent.data.allow);
                         modalIframeSrcStore.set(iframeEvent.data.src);
+                        modalPositionStore.set(iframeEvent.data.position);
                         modalVisibilityStore.set(true);
                     } else if (iframeEvent.type == "closeModal") {
                         modalVisibilityStore.set(false);

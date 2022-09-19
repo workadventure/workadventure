@@ -2,8 +2,9 @@ import { z } from "zod";
 
 export const isModalEvent = z.object({
     src: z.string(),
-    allow: z.string().nullable().default("fullscreen; clipboard-read; clipboard-write"),
-    tiltle: z.string().nullable().default("WorkAdventure modal iframe"),
+    allow: z.string().optional().default("fullscreen; clipboard-read; clipboard-write"),
+    tiltle: z.string().optional().default("WorkAdventure modal iframe"),
+    position: z.string().optional().default("right"),
 });
 
 /**
