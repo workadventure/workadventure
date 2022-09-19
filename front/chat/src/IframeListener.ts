@@ -46,7 +46,6 @@ class IframeListener {
                         case "userData": {
                             iframeEvent.data.name = iframeEvent.data.name.replace(emojiRegex, "");
                             userStore.set(iframeEvent.data);
-                            mucRoomsStore.sendPresences();
                             if (!connectionManager.connection) {
                                 connectionManager.init(
                                     iframeEvent.data.playUri,
@@ -149,7 +148,11 @@ class IframeListener {
                             break;
                         }
                     }
+                } else {
+                    console.error("Message structure not conform", iframeEventGuarded);
                 }
+            } else {
+                console.error("Message received in chat is not conform", lookingLikeEvent.error);
             }
         });
     }
@@ -228,6 +231,15 @@ class IframeListener {
             {
                 type: "showBusinessCard",
                 data: { visitCardUrl },
+            },
+            "*"
+        );
+    }
+
+    sendRedirectPricing() {
+        window.parent.postMessage(
+            {
+                type: "redirectPricing",
             },
             "*"
         );

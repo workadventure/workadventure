@@ -2,6 +2,8 @@ import { uploaderManager } from "./UploaderManager";
 import { filesUploadStore } from "../Stores/ChatStore";
 import xml, { Element } from "@xmpp/xml";
 import { get } from "svelte/store";
+import { userStore } from "../Stores/LocalUserStore";
+import { ADMIN_API_URL, ENABLE_CHAT_UPLOAD } from "../Enum/EnvironmentVariable";
 
 const _VERBOSE = true;
 
@@ -18,9 +20,14 @@ export interface UploadedFileInterface {
     uploadState: uploadingState;
 }
 
+class NotLoggedUser extends Error {}
+class DisabledChat extends Error {}
+
 export class UploadedFile implements FileExt, UploadedFileInterface {
     public uploadState: uploadingState;
     public errorMessage?: string;
+    public errorCode?: number;
+    public maxFileSize?: string;
     constructor(
         public name: string,
         public id: string,
@@ -75,6 +82,8 @@ export class UploadedFile implements FileExt, UploadedFileInterface {
 export interface FileExt extends File {
     uploadState: uploadingState;
     errorMessage?: string;
+    errorCode?: number;
+    maxFileSize?: string;
 }
 
 export class FileMessageManager {
@@ -93,7 +102,15 @@ export class FileMessageManager {
         if (_VERBOSE) console.warn("[XMPP]", "File uploaded");
 
         try {
-            const results = await uploaderManager.write(files);
+            const userRoomToken = userStore.get().userRoomToken;
+            console.log("USER ROOM TOKEN :", userRoomToken, !userRoomToken, !!ADMIN_API_URL);
+            if (!userRoomToken && ADMIN_API_URL) {
+                throw new NotLoggedUser();
+            } else if (!ENABLE_CHAT_UPLOAD && !ADMIN_API_URL) {
+                throw new DisabledChat();
+            }
+
+            const results = await uploaderManager.write(files, userRoomToken);
 
             //update state of message
             filesUploadStore.update((list) => {
@@ -104,13 +121,25 @@ export class FileMessageManager {
             });
             //eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
-            console.error("sendFiles => ", err, err.response);
+            console.error("sendFiles => ", err, err.response, err.response?.data);
 
             //add error state in message
             filesUploadStore.update((list) => {
                 for (const [, file] of list) {
                     file.uploadState = uploadingState.error;
-                    file.errorMessage = err.response?.data?.message;
+                    if (err instanceof NotLoggedUser) {
+                        file.errorMessage = "not-logged";
+                        file.errorCode = 401;
+                    } else if (err instanceof DisabledChat) {
+                        file.errorMessage = "disabled";
+                        file.errorCode = 401;
+                    } else {
+                        file.errorMessage = err.response?.data.message;
+                        file.errorCode = err.response?.status;
+                        if (err.response?.data.maxFileSize) {
+                            file.maxFileSize = `(< ${err.response?.data.maxFileSize / 1_048_576}Mo)`;
+                        }
+                    }
                     list.set(file.name, file);
                 }
                 return list;

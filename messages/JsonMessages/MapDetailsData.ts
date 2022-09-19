@@ -110,6 +110,11 @@ export const isMapDetailsData = z.object({
         description: "The name of the current room.",
         example: "WA Village",
     }),
+    pricingUrl: extendApi(z.string().nullable().optional(), {
+        description:
+            "The url of the page where the user can see the price to upgrade and can use the features he wants in the future.",
+        example: "https://example.com/pricing",
+    }),
     enableChat: extendApi(z.boolean(), {
         description: "Whether the chat is enabled or not on this room",
         example: true,

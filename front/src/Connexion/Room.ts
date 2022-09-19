@@ -32,6 +32,7 @@ export class Room {
     private _mucRooms: Array<MucRoomDefinitionInterface> | undefined;
     private _showPoweredBy: boolean | undefined = true;
     private _roomName: string | undefined;
+    private _pricingUrl: string | undefined;
     private _enableChat: boolean | undefined;
     private _enableChatUpload: boolean | undefined;
 
@@ -137,6 +138,8 @@ export class Room {
 
                 this._mucRooms = data.mucRooms ?? undefined;
                 this._roomName = data.roomName ?? undefined;
+
+                this._pricingUrl = data.pricingUrl ?? undefined;
 
                 this._enableChat = data.enableChat ?? undefined;
                 this._enableChatUpload = data.enableChatUpload ?? undefined;
@@ -261,6 +264,10 @@ export class Room {
 
     get showPoweredBy(): boolean | undefined {
         return this._showPoweredBy;
+    }
+
+    get pricingUrl(): string | undefined {
+        return this._pricingUrl;
     }
 
     get enableChat(): boolean {

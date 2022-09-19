@@ -62,6 +62,8 @@ services:
       PUSHER_URL: /pusher
       UPLOADER_URL: /uploader
       EMBEDLY_KEY: $EMBEDLY_KEY
+      ADMIN_API_URL: $ADMIN_API_URL
+      ENABLE_CHAT_UPLOAD: $ENABLE_CHAT_UPLOAD
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
@@ -222,8 +224,10 @@ services:
       REDIS_HOST: $UPLOADER_REDIS_HOST
       REDIS_PORT: $UPLOADER_REDIS_PORT
       #CHAT
-      ENABLE_CHAT: "$ENABLE_CHAT"
-      ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
+      ADMIN_API_URL: $ADMIN_API_URL
+      ENABLE_CHAT: $ENABLE_CHAT
+      ENABLE_CHAT_UPLOAD: $ENABLE_CHAT_UPLOAD
+      UPLOAD_MAX_FILESIZE: $UPLOAD_MAX_FILESIZE
     volumes:
       - ./uploader:/usr/src/app
     labels:
