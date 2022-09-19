@@ -1,4 +1,5 @@
 import { ITiledMapRectangleObject } from "@workadventure/map-editor";
+import { AlteringSizeSquare, SizeAlteringSquarePosition } from "./AlteringSizeSquare";
 
 export enum AreaPreviewEvent {
     Clicked = "Clicked",
@@ -9,6 +10,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
     private config: ITiledMapRectangleObject;
 
     private preview: Phaser.GameObjects.Rectangle;
+    private squares: Record<SizeAlteringSquarePosition, AlteringSizeSquare>;
 
     constructor(scene: Phaser.Scene, config: ITiledMapRectangleObject) {
         super(scene, config.x + config.width * 0.5, config.y + config.height * 0.5);
@@ -16,8 +18,21 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         this.config = config;
 
         this.preview = this.createPreview(config);
+        this.squares = {
+            [SizeAlteringSquarePosition.TopLeft]: new AlteringSizeSquare(this.scene, this.preview.getTopLeft()),
+            [SizeAlteringSquarePosition.TopCenter]: new AlteringSizeSquare(this.scene, this.preview.getTopCenter()),
+            [SizeAlteringSquarePosition.TopRight]: new AlteringSizeSquare(this.scene, this.preview.getTopRight()),
+            [SizeAlteringSquarePosition.LeftCenter]: new AlteringSizeSquare(this.scene, this.preview.getLeftCenter()),
+            [SizeAlteringSquarePosition.RightCenter]: new AlteringSizeSquare(this.scene, this.preview.getRightCenter()),
+            [SizeAlteringSquarePosition.BottomLeft]: new AlteringSizeSquare(this.scene, this.preview.getBottomLeft()),
+            [SizeAlteringSquarePosition.BottomCenter]: new AlteringSizeSquare(
+                this.scene,
+                this.preview.getBottomCenter()
+            ),
+            [SizeAlteringSquarePosition.BottomRight]: new AlteringSizeSquare(this.scene, this.preview.getBottomRight()),
+        };
 
-        this.add([this.preview]);
+        this.add([this.preview, ...Object.values(this.squares)]);
 
         const bounds = this.getBounds();
         this.setSize(bounds.width, bounds.height);
@@ -29,6 +44,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
 
     public setVisible(value: boolean): this {
         this.preview.setVisible(value);
+        Object.values(this.squares).forEach((square) => square.setVisible(value));
         return this;
     }
 
@@ -45,6 +61,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
     private createPreview(config: ITiledMapRectangleObject): Phaser.GameObjects.Rectangle {
         return this.scene.add
             .rectangle(0, 0, config.width, config.height, 0x0000ff, 0.5)
+            .setStrokeStyle(1, 0x000000)
             .setInteractive({ cursor: "pointer" });
     }
 
