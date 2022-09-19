@@ -1,14 +1,25 @@
-import {expect, Page, test} from '@playwright/test';
+import {expect, test} from '@playwright/test';
 import { login } from './utils/roles';
 import {openChat} from "./utils/menu";
+import Chat from './utils/chat';
+import Map from './utils/map';
 import {findContainer, startContainer, stopContainer} from "./utils/containers";
+import {createFileOfSize} from "./utils/file";
 
 const TIMEOUT_TO_GET_LIST = 30_000;
 
 test.setTimeout(300_000);
 
 test.describe('Chat', () => {
-  test('main', async ({ page, browser }) => {
+  test('main', async ({ page, browser, browserName }) => {
+    page.on('console', msg => console.log(browserName + ' - ' + msg.type() + ' - ' + msg.text()));
+    page.on('response', response => {
+      if (response.status() >= 400) {
+        console.log('>>', response.status(), response.url());
+      }
+    });
+
+
     await page.goto(
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/livezone.json'
     );
@@ -18,9 +29,7 @@ test.describe('Chat', () => {
     const ejabberd = await findContainer('ejabberd');
 
     await test.step('all tests of chat', async () => {
-      await checkNameInChat(page, nickname);
-      const chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
-
+      await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
 
       // Second browser
       const newBrowser = await browser.browserType().launch();
@@ -31,65 +40,62 @@ test.describe('Chat', () => {
       const nickname2 = getUniqueNickname('B');
       await login(page2, nickname2, 3);
       await openChat(page2);
-      const chat2 = page2.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
-      await checkNameInChat(page2, nickname);
-      await checkNameInChat(page2, nickname2);
-
+      await Chat.checkNameInChat(page2, nickname, TIMEOUT_TO_GET_LIST);
+      await Chat.checkNameInChat(page2, nickname2, TIMEOUT_TO_GET_LIST);
 
       // Enter in liveZone
-      await page.keyboard.press('ArrowRight', {delay: 2_500});
-      await page.keyboard.press('ArrowUp', {delay: 500});
-      await expect(chat.locator('#liveRooms')).toContainText('liveZone');
-      await page2.keyboard.press('ArrowRight', {delay: 2_500});
-      await page2.keyboard.press('ArrowDown', {delay: 500});
-      await expect(chat2.locator('#liveRooms')).toContainText('liveZone');
+      await Map.walkTo(page, 'ArrowRight', 2_500);
+      await Map.walkTo(page, 'ArrowUp', 500);
+      await Chat.liveRoomExist(page, 'liveZone');
+      await Map.walkTo(page2, 'ArrowRight', 2_500);
+      await Map.walkTo(page2, 'ArrowDown', 500);
+      await Chat.liveRoomExist(page2, 'liveZone');
 
 
       // Open forum
-      await chat.locator('#liveRooms .wa-chat-item .wa-dropdown button').click();
-      await chat.locator('#liveRooms .wa-chat-item .wa-dropdown .open').click();
-      await chat2.locator('#liveRooms .wa-chat-item .wa-dropdown button').click();
-      await chat2.locator('#liveRooms .wa-chat-item .wa-dropdown .open').click();
+      await Chat.openLiveRoom(page);
+      await Chat.openLiveRoom(page2);
 
 
       // Send a message
-      await chat.locator('#activeThread .wa-message-form textarea').fill('Hello, how are you ?');
-      await chat.locator('#activeThread #send').click();
-      await expect(chat.locator('#activeThread .wa-messages-list .wa-message').last()).toHaveClass(/sent/);
+      await Chat.AT_sendMessage(page, 'Hello, how are you ?');
+      await Chat.AT_checkLastMessageSent(page);
       // Receive the message
-      await expect(chat2.locator('#activeThread .wa-messages-list .wa-message.received').last()).toContainText('Hello, how are you ?');
+      await Chat.AT_lastMessageContain(page2, 'Hello, how are you ?');
 
 
       // React to a message
-      await chat2.locator('#activeThread .wa-messages-list .wa-message.received').last().hover();
-      await chat2.locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.actions .action.react').click();
-      await page2.frameLocator('iframe#chatWorkAdventure').locator('.emoji-picker .emoji-picker__emojis button.emoji-picker__emoji').first().click();
-      await expect(chat2.locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.emojis span.active')).toBeDefined();
+      await Chat.AT_reactLastMessage(page2);
       // Receive the reaction
-      await expect(chat.locator('#activeThread .wa-messages-list .wa-message.sent').last().locator('.emojis span')).toBeDefined();
+      await Chat.AT_checkReactLastMessageReceived(page);
 
 
       // Reply to a message
-      await chat2.locator('#activeThread .wa-messages-list .wa-message.received').last().hover();
-      await chat2.locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.actions .action.reply').click();
-      await expect(chat2.locator('#activeThread .wa-message-form .replyMessage .message p')).toContainText('Hello, how are you ?');
-      await chat2.locator('#activeThread .wa-message-form textarea').fill('Fine, what about you ?');
-      await chat2.locator('#activeThread #send').click();
-      await expect(chat2.locator('#activeThread .wa-messages-list .wa-message').last()).toHaveClass(/sent/);
+      await Chat.AT_replyToLastMessage(page2, 'Fine, what about you ?');
       // Receive the reply of the message
-      await expect(chat.locator('#activeThread .wa-messages-list .wa-message.received').last()).toContainText('Fine, what about you ?');
-      await expect(chat.locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.message-replied')).toContainText('Hello, how are you ?');
+      await Chat.AT_lastMessageContain(page, 'Fine, what about you ?');
+      await Chat.AT_lastMessageReplyContain(page, 'Hello, how are you ?');
 
 
+      // Generate bulk file
+      await createFileOfSize('./fileLittle.txt', 5_000_000);
       // Send a file in a message
-      await chat.locator('#activeThread input#file').setInputFiles('README.md');
-      await expect(chat.locator('#activeThread #send')).toHaveClass(/can-send/);
-      await chat.locator('#activeThread #send').click();
-      await expect(chat.locator('#activeThread .wa-messages-list .wa-message').last()).toHaveClass(/sent/);
-      await expect(chat.locator('#activeThread .wa-messages-list .wa-message').last().locator('.file')).toContainText('README.md');
+      await Chat.AT_uploadFile(page, 'fileLittle.txt');
+      await Chat.AT_canSend(page);
+      await Chat.AT_send(page);
+      await Chat.AT_checkLastMessageSent(page);
+      await Chat.AT_lastMessageFileContain(page, 'fileLittle.txt');
       // Receive the file
-      await expect(chat2.locator('#activeThread .wa-messages-list .wa-message').last()).toHaveClass(/received/);
-      await expect(chat2.locator('#activeThread .wa-messages-list .wa-message').last().locator('.file')).toContainText('README.md');
+      await Chat.AT_checkLastMessageReceived(page2);
+      await Chat.AT_lastMessageFileContain(page2, 'fileLittle.txt');
+
+      // Generate bulk file
+      await createFileOfSize('./fileBig.txt', 15_485_760);
+      // Try upload file but too big
+      await Chat.AT_uploadFile(page, 'fileBig.txt');
+      await Chat.AT_cantSend(page);
+      await Chat.AT_fileContainText(page, 'fileBig.txt is too big');
+      await Chat.AT_deleteFile(page);
 
       /*
       // TODO later : Manage admin in live zone based on our WorkAdventure role
@@ -108,65 +114,52 @@ test.describe('Chat', () => {
       await chat.locator('#activeThread .users .wa-chat-item', {hasText: nickname2}).locator('.wa-dropdown .rank-down').click();
       await expect(chat.locator('#activeThread .users .wa-chat-item', {hasText: nickname2})).toHaveClass(/user/);
       */
-      /*
-      // TODO later : Ban a user
-      await chat.locator('#activeThread .users .wa-chat-item.user').last().locator('.wa-dropdown button').click();
-      await chat.locator('#activeThread .users .wa-chat-item.user').last().locator('.wa-dropdown .ban').click();
-      await expect(chat.locator('#activeThread .users')).not.toContainText(nickname2);
-      */
 
       // Exit forum
-      await chat.locator('#activeThread .exit').click();
+      await Chat.AT_close(page);
 
 
       // Walk to
-      // Workaround to wait the end of svelte animation
+      // A workaround to wait the end of svelte animation
       //eslint-disable-next-line playwright/no-wait-for-timeout
       await page.waitForTimeout(3_000);
-      await chat.locator('.users .wa-chat-item', {hasText: nickname2}).locator('.wa-dropdown button').click();
-      //await expect(chat.locator('.users .wa-chat-item', {hasText: nickname2}).locator('.wa-dropdown .wa-dropdown-menu')).toBeVisible();
-      //await chat.locator('.users .wa-chat-item', {hasText: nickname2}).locator('.wa-dropdown .walk-to').click();
-      await expect(chat.locator('span:has-text("Walk to")')).toBeVisible();
-      await chat.locator('span:has-text("Walk to")').click({ timeout: 5_000 });
+      await Chat.UL_walkTo(page, nickname2);
 
-      // Open timeline
-      await chat.locator('#timeline #openTimeline').click();
+      await Chat.openTimeline(page);
       // FIXME After this issues is completed : https://github.com/thecodingmachine/workadventure/issues/2500
       //await expect(chat.locator('#activeTimeline #timeLine-messageList .event').last()).toContainText(nickname2 + ' join the discussion');
       // Close timeline
-      await chat.locator('#activeTimeline .exit').click();
+      await Chat.closeTimeline(page);
 
       // Exit of liveZone
       await page.locator('#game').focus();
-      await page.keyboard.press('ArrowLeft', {delay: 2_000});
-      await expect(chat).not.toContain('#liveRooms');
+      await Map.walkTo(page, 'ArrowLeft', 2_000);
+      await Chat.noLiveRoom(page);
       await page2.locator('#game').focus();
-      await page2.keyboard.press('ArrowLeft', {delay: 2_000});
-      await expect(chat2).not.toContain('#liveRooms');
+      await Map.walkTo(page2, 'ArrowLeft', 2_000);
+      await Chat.noLiveRoom(page2);
     });
+
+    return;
 
     await test.step('disconnect and reconnect to ejabberd and pusher', async () => {
       const chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
-      await checkNameInChat(page, nickname);
+      await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
 
       await stopContainer(ejabberd);
       await expect(chat).toContainText("Waiting for server initialization");
       await startContainer(ejabberd);
-      await checkNameInChat(page, nickname);
+      await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
 
       const pusher = await findContainer('pusher');
       await stopContainer(pusher);
       await expect(page.locator('.errorScreen p.code')).toContainText('CONNECTION_');
 
       await startContainer(pusher);
-      await checkNameInChat(page, nickname);
+      await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
     });
   });
 });
-
-async function checkNameInChat(page: Page, name: string){
-  await expect(page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow div.users')).toContainText(name, {timeout: TIMEOUT_TO_GET_LIST});
-}
 
 function getUniqueNickname(name: string){
   return `${name}_${Date.now().toString().split("").reverse().join("")}`.substring(0, 8);

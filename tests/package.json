@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "@playwright/test": "~1.25.0",
+    "@playwright/test": "^1.25.1",
     "@types/dockerode": "^3.3.0",
     "@typescript-eslint/eslint-plugin": "^5.33.1",
     "@typescript-eslint/parser": "^5.33.1",

@@ -20,7 +20,16 @@ export default defineConfig({
             preprocess: sveltePreprocess(),
         }),
         envConfig({
-            variables: ["PUSHER_URL", "FALLBACK_LOCALE", "UPLOADER_URL", "EMBEDLY_KEY", "ICON_URL", "ENABLE_OPENID"],
+            variables: [
+                "ADMIN_API_URL",
+                "PUSHER_URL",
+                "FALLBACK_LOCALE",
+                "UPLOADER_URL",
+                "EMBEDLY_KEY",
+                "ICON_URL",
+                "ENABLE_OPENID",
+                "ENABLE_CHAT_UPLOAD",
+            ],
         }),
         pluginRewriteAll(),
     ],

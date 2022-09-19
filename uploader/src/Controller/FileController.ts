@@ -7,11 +7,16 @@ import {Readable} from 'stream'
 import { uploaderService } from "../Service/UploaderService";
 import { mimeTypeManager } from "../Service/MimeType";
 import { ByteLenghtBufferException } from "../Exception/ByteLenghtBufferException";
+import Axios, {AxiosError} from "axios";
+import {ADMIN_API_URL, ENABLE_CHAT_UPLOAD, UPLOAD_MAX_FILESIZE} from "../Enum/EnvironmentVariable";
 
 interface UploadedFileBuffer {
     buffer: Buffer,
     expireDate?: Date
 }
+
+class DisabledChat extends Error{}
+class NotLoggedUser extends Error {}
 
 export class FileController extends BaseController {
     //TODO migrate in upload file service
@@ -64,8 +69,8 @@ export class FileController extends BaseController {
                     });
 
                     await uploaderService.uploadTempFile(
-                        audioMessageId, 
-                        Buffer.concat(chunks), 
+                        audioMessageId,
+                        Buffer.concat(chunks),
                         60
                     );
 
@@ -183,7 +188,7 @@ export class FileController extends BaseController {
                     this.addCorsHeaders(res);
                     res.writeStatus("200 OK");
                     //TODO manage type with the extension of file
-                    const memeType = mimeTypeManager.getMimeTypeByFileName(id); 
+                    const memeType = mimeTypeManager.getMimeTypeByFileName(id);
                     if(memeType !== false){
                         res.writeHeader("Content-Type", memeType);
                     }
@@ -237,7 +242,9 @@ export class FileController extends BaseController {
             (async () => {
                 res.onAborted(() => {
                     console.warn('upload-audio-message request was aborted');
-                })
+                });
+
+                let userRoomToken = null;
 
                 try {
                     const chunksByFile: Map<string, Buffer> = new Map<string, Buffer>();
@@ -254,27 +261,46 @@ export class FileController extends BaseController {
                                     chunksByFile.set(filename, Buffer.concat(chunks));
                                 }
                             })();
+                        },
+                        onField: (fieldname: string, value: any) => {
+                            if(fieldname === 'userRoomToken'){
+                                userRoomToken = value;
+                            }
                         }
                     });
 
                     if(params == undefined || chunksByFile.size === 0){
                         throw new Error('no file name');
                     }
-                    
+
                     const uploadedFile: {name: string, id: string, location: string, size: number, lastModified: Date, type?: string}[] = [];
                     for(const [fileName, buffer] of chunksByFile){
-                        if(buffer.byteLength > 1073741824){
-                            throw new ByteLenghtBufferException(`The file ${fileName} is too big`);
+                        if(ADMIN_API_URL) {
+                            if(!userRoomToken){
+                                throw new NotLoggedUser();
+                            } else {
+                                await Axios.get(`${ADMIN_API_URL}/api/limit/fileSize`, {
+                                    headers: {'userRoomToken': userRoomToken},
+                                    params: {fileSize: buffer.byteLength}
+                                });
+                            }
+                        } else {
+                            console.log('FILE SIZE', fileName, ' : ', buffer.byteLength, 'bytes', '//', UPLOAD_MAX_FILESIZE, 'bytes');
+                            if(!ENABLE_CHAT_UPLOAD){
+                                throw new DisabledChat('Upload is disabled');
+                            } else if (UPLOAD_MAX_FILESIZE && buffer.byteLength > parseInt(UPLOAD_MAX_FILESIZE)) {
+                                throw new ByteLenghtBufferException(`file-too-big`);
+                            }
                         }
                         const mimeType = params[fileName] ? params[fileName].mimetype : undefined;
                         const {Location, Key} = await uploaderService.uploadFile(
-                            fileName, 
-                            buffer, 
+                            fileName,
+                            buffer,
                             mimeType
                         );
                         uploadedFile.push({
-                            name: fileName, 
-                            id: Key, 
+                            name: fileName,
+                            id: Key,
                             location: Location,
                             size: buffer.byteLength,
                             lastModified: new Date(),
@@ -290,14 +316,40 @@ export class FileController extends BaseController {
                     this.addCorsHeaders(res);
                     return res.end(JSON.stringify(uploadedFile));
                 }catch(err){
-                    console.error("An error happened", err);
-                    if( err instanceof ByteLenghtBufferException){
+                    console.error("FILE upload error", err);
+                    if(err instanceof ByteLenghtBufferException){
                         res.writeStatus("413 Request Entity Too Large");
                         this.addCorsHeaders(res);
                         res.writeHeader('Content-Type', 'application/json');
                         return res.end(JSON.stringify({
-                            message: err.message
+                            message: err.message,
+                            maxFileSize: UPLOAD_MAX_FILESIZE
                         }));
+                    } else if(err instanceof AxiosError){
+                        const status = err.response?.status;
+                        if(status) {
+                            if (status == 413) {
+                                res.writeStatus("413 Request Entity Too Large");
+                            } else if (status == 423) {
+                                res.writeStatus("423 Locked");
+                            } else {
+                                res.writeStatus("401 Unauthorized");
+                            }
+                            this.addCorsHeaders(res);
+                            res.writeHeader('Content-Type', 'application/json');
+                            return res.end(JSON.stringify({
+                                message: err.response?.data?.message,
+                                maxFileSize: err.response?.data.maxFileSize,
+                            }));
+                        }
+                    } else if(err instanceof DisabledChat){
+                        res.writeStatus("401 Unauthorized");
+                        this.addCorsHeaders(res);
+                        return res.end(JSON.stringify({message: 'disabled'}));
+                    } else if(err instanceof NotLoggedUser){
+                        res.writeStatus("401 Unauthorized");
+                        this.addCorsHeaders(res);
+                        return res.end(JSON.stringify({message: 'not-logged'}));
                     }
                     res.writeStatus("500 Internal Server Error");
                     this.addCorsHeaders(res);

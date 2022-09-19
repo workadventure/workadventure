@@ -717,8 +717,7 @@ export class SocketManager implements ZoneEventListener {
                 "Trying to send a message from client to server but the XMPP connection is not established yet! There is a race condition."
             );
         }
-        client.xmppClient.send(xmppMessage.getStanza()).catch((e) => console.error(e));
-        console.log("XMPP Message sent");
+        client.xmppClient.sendToEjabberd(xmppMessage.getStanza()).catch((e) => console.error(e));
     }
 
     handleAskPositionMessage(client: ExSocketInterface, askPositionMessage: AskPositionMessage): void {
