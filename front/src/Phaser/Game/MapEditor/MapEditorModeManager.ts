@@ -81,6 +81,10 @@ export class MapEditorModeManager {
         this.subscribeToGameMapFrontWrapperEvents();
     }
 
+    public update(time: number, dt: number): void {
+        this.currentlyActiveTool?.update(time, dt);
+    }
+
     /**
      * Creates new Command object from given command config and executes it, both local and from the back.
      * @param commandConfig what to execute

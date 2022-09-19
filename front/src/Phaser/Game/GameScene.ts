@@ -2198,6 +2198,7 @@ ${escapedMessage}
         if (!this.mapEditorModeManager?.isActive()) {
             this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
         } else {
+            this.mapEditorModeManager.update(time, delta);
             this.cameraManager.move(this.userInputManager.getEventListForGameTick());
         }
 

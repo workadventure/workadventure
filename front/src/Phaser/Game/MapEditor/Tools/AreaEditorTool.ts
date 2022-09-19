@@ -34,6 +34,10 @@ export class AreaEditorTool extends MapEditorTool {
         this.subscribeToStores();
     }
 
+    public update(time: number, dt: number): void {
+        this.areaPreviews.forEach((preview) => preview.update(time, dt));
+    }
+
     public clear(): void {
         mapEditorSelectedAreaPreviewStore.set(undefined);
         this.setAreaPreviewsVisibility(false);

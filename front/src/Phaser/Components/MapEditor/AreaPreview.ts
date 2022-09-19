@@ -1,5 +1,5 @@
 import { ITiledMapRectangleObject } from "@workadventure/map-editor";
-import { SizeAlteringSquare, SizeAlteringSquarePosition } from "./AlteringSizeSquare";
+import { SizeAlteringSquare, SizeAlteringSquarePosition } from "./SizeAlteringSquare";
 
 export enum AreaPreviewEvent {
     Clicked = "Clicked",
@@ -11,6 +11,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
 
     private preview: Phaser.GameObjects.Rectangle;
     private squares: Record<SizeAlteringSquarePosition, SizeAlteringSquare>;
+    private squaresArray: SizeAlteringSquare[];
 
     private selected: boolean;
 
@@ -22,20 +23,45 @@ export class AreaPreview extends Phaser.GameObjects.Container {
 
         this.preview = this.createPreview(config);
         this.squares = {
-            [SizeAlteringSquarePosition.TopLeft]: new SizeAlteringSquare(this.scene, this.preview.getTopLeft()),
-            [SizeAlteringSquarePosition.TopCenter]: new SizeAlteringSquare(this.scene, this.preview.getTopCenter()),
-            [SizeAlteringSquarePosition.TopRight]: new SizeAlteringSquare(this.scene, this.preview.getTopRight()),
-            [SizeAlteringSquarePosition.LeftCenter]: new SizeAlteringSquare(this.scene, this.preview.getLeftCenter()),
-            [SizeAlteringSquarePosition.RightCenter]: new SizeAlteringSquare(this.scene, this.preview.getRightCenter()),
-            [SizeAlteringSquarePosition.BottomLeft]: new SizeAlteringSquare(this.scene, this.preview.getBottomLeft()),
+            [SizeAlteringSquarePosition.TopLeft]: new SizeAlteringSquare(this.scene, this.preview.getTopLeft(), {
+                x: this.x,
+                y: this.y,
+            }),
+            [SizeAlteringSquarePosition.TopCenter]: new SizeAlteringSquare(this.scene, this.preview.getTopCenter(), {
+                x: this.x,
+                y: this.y,
+            }),
+            [SizeAlteringSquarePosition.TopRight]: new SizeAlteringSquare(this.scene, this.preview.getTopRight(), {
+                x: this.x,
+                y: this.y,
+            }),
+            [SizeAlteringSquarePosition.LeftCenter]: new SizeAlteringSquare(this.scene, this.preview.getLeftCenter(), {
+                x: this.x,
+                y: this.y,
+            }),
+            [SizeAlteringSquarePosition.RightCenter]: new SizeAlteringSquare(
+                this.scene,
+                this.preview.getRightCenter(),
+                { x: this.x, y: this.y }
+            ),
+            [SizeAlteringSquarePosition.BottomLeft]: new SizeAlteringSquare(this.scene, this.preview.getBottomLeft(), {
+                x: this.x,
+                y: this.y,
+            }),
             [SizeAlteringSquarePosition.BottomCenter]: new SizeAlteringSquare(
                 this.scene,
-                this.preview.getBottomCenter()
+                this.preview.getBottomCenter(),
+                { x: this.x, y: this.y }
             ),
-            [SizeAlteringSquarePosition.BottomRight]: new SizeAlteringSquare(this.scene, this.preview.getBottomRight()),
+            [SizeAlteringSquarePosition.BottomRight]: new SizeAlteringSquare(
+                this.scene,
+                this.preview.getBottomRight(),
+                { x: this.x, y: this.y }
+            ),
         };
+        this.squaresArray = Object.values(this.squares);
 
-        this.add([this.preview, ...Object.values(this.squares)]);
+        this.add([this.preview, ...this.squaresArray]);
 
         const bounds = this.getBounds();
         this.setSize(bounds.width, bounds.height);
@@ -43,6 +69,12 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         this.bindEventHandlers();
 
         this.scene.add.existing(this);
+    }
+
+    public update(time: number, dt: number): void {
+        if (this.selected) {
+            this.squaresArray.forEach((square) => square.update(time, dt));
+        }
     }
 
     public select(value: boolean): void {
@@ -82,7 +114,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         if (show && !this.preview.visible) {
             return;
         }
-        Object.values(this.squares).forEach((square) => square.setVisible(show));
+        this.squaresArray.forEach((square) => square.setVisible(show));
     }
 
     private bindEventHandlers(): void {
