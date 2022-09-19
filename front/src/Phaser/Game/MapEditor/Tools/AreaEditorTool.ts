@@ -1,6 +1,6 @@
 import { AreaType, CommandConfig, ITiledMapRectangleObject } from "@workadventure/map-editor";
 import { Subscription } from "rxjs";
-import { get } from "svelte/store";
+import { get, Unsubscriber } from "svelte/store";
 import { EditMapCommandMessage } from "../../../../Messages/ts-proto-generated/protos/messages";
 import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
@@ -20,12 +20,18 @@ export class AreaEditorTool extends MapEditorTool {
 
     private gameMapAreaUpdateSubscription!: Subscription;
 
+    private currentlySelectedPreview: AreaPreview | undefined;
+
+    private selectedAreaPreviewStoreSubscriber!: Unsubscriber;
+
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super();
         this.mapEditorModeManager = mapEditorModeManager;
         this.scene = this.mapEditorModeManager.getScene();
 
         this.areaPreviews = this.createAreaPreviews();
+
+        this.subscribeToStores();
     }
 
     public clear(): void {
@@ -41,6 +47,7 @@ export class AreaEditorTool extends MapEditorTool {
 
     public destroy(): void {
         this.gameMapAreaUpdateSubscription.unsubscribe();
+        this.selectedAreaPreviewStoreSubscriber();
     }
 
     public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): void {
@@ -120,10 +127,6 @@ export class AreaEditorTool extends MapEditorTool {
                 this.updateAreaPreview(areaConfig);
                 this.scene.markDirty();
             });
-    }
-
-    public unsubscribeFromGameMapFrontWrapperEvents(): void {
-        this.gameMapAreaUpdateSubscription.unsubscribe();
     }
 
     public updateAreaPreview(config: ITiledMapRectangleObject): void {
@@ -231,6 +234,19 @@ export class AreaEditorTool extends MapEditorTool {
             return true;
         }
         return false;
+    }
+
+    private subscribeToStores(): void {
+        this.selectedAreaPreviewStoreSubscriber = mapEditorSelectedAreaPreviewStore.subscribe(
+            (preview: AreaPreview | undefined) => {
+                this.currentlySelectedPreview?.select(false);
+                this.currentlySelectedPreview = preview;
+                if (this.currentlySelectedPreview) {
+                    this.currentlySelectedPreview?.select(true);
+                }
+                this.scene.markDirty();
+            }
+        );
     }
 
     private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {

@@ -211,8 +211,8 @@ export class MapEditorModeManager {
     }
 
     public destroy(): void {
+        this.editorTools.forEach((tool) => tool.destroy());
         this.unsubscribeFromStores();
-        this.unsubscribeFromGameMapFrontWrapperEvents();
         this.pointerDownUnsubscriber();
     }
 
@@ -333,10 +333,6 @@ export class MapEditorModeManager {
         this.editorTools.forEach((tool) =>
             tool.subscribeToGameMapFrontWrapperEvents(this.scene.getGameMapFrontWrapper())
         );
-    }
-
-    private unsubscribeFromGameMapFrontWrapperEvents(): void {
-        this.editorTools.forEach((tool) => tool.unsubscribeFromGameMapFrontWrapperEvents());
     }
 
     private unsubscribeFromStores(): void {

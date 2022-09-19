@@ -7,7 +7,6 @@ export abstract class MapEditorTool {
     public abstract activate(): void;
     public abstract destroy(): void;
     public abstract subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void;
-    public abstract unsubscribeFromGameMapFrontWrapperEvents(): void;
     public abstract handleKeyDownEvent(event: KeyboardEvent): void;
     /**
      * Perform actions needed to see the changes instantly

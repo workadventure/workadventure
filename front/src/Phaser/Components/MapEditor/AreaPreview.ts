@@ -1,5 +1,5 @@
 import { ITiledMapRectangleObject } from "@workadventure/map-editor";
-import { AlteringSizeSquare, SizeAlteringSquarePosition } from "./AlteringSizeSquare";
+import { SizeAlteringSquare, SizeAlteringSquarePosition } from "./AlteringSizeSquare";
 
 export enum AreaPreviewEvent {
     Clicked = "Clicked",
@@ -10,26 +10,29 @@ export class AreaPreview extends Phaser.GameObjects.Container {
     private config: ITiledMapRectangleObject;
 
     private preview: Phaser.GameObjects.Rectangle;
-    private squares: Record<SizeAlteringSquarePosition, AlteringSizeSquare>;
+    private squares: Record<SizeAlteringSquarePosition, SizeAlteringSquare>;
+
+    private selected: boolean;
 
     constructor(scene: Phaser.Scene, config: ITiledMapRectangleObject) {
         super(scene, config.x + config.width * 0.5, config.y + config.height * 0.5);
 
         this.config = config;
+        this.selected = false;
 
         this.preview = this.createPreview(config);
         this.squares = {
-            [SizeAlteringSquarePosition.TopLeft]: new AlteringSizeSquare(this.scene, this.preview.getTopLeft()),
-            [SizeAlteringSquarePosition.TopCenter]: new AlteringSizeSquare(this.scene, this.preview.getTopCenter()),
-            [SizeAlteringSquarePosition.TopRight]: new AlteringSizeSquare(this.scene, this.preview.getTopRight()),
-            [SizeAlteringSquarePosition.LeftCenter]: new AlteringSizeSquare(this.scene, this.preview.getLeftCenter()),
-            [SizeAlteringSquarePosition.RightCenter]: new AlteringSizeSquare(this.scene, this.preview.getRightCenter()),
-            [SizeAlteringSquarePosition.BottomLeft]: new AlteringSizeSquare(this.scene, this.preview.getBottomLeft()),
-            [SizeAlteringSquarePosition.BottomCenter]: new AlteringSizeSquare(
+            [SizeAlteringSquarePosition.TopLeft]: new SizeAlteringSquare(this.scene, this.preview.getTopLeft()),
+            [SizeAlteringSquarePosition.TopCenter]: new SizeAlteringSquare(this.scene, this.preview.getTopCenter()),
+            [SizeAlteringSquarePosition.TopRight]: new SizeAlteringSquare(this.scene, this.preview.getTopRight()),
+            [SizeAlteringSquarePosition.LeftCenter]: new SizeAlteringSquare(this.scene, this.preview.getLeftCenter()),
+            [SizeAlteringSquarePosition.RightCenter]: new SizeAlteringSquare(this.scene, this.preview.getRightCenter()),
+            [SizeAlteringSquarePosition.BottomLeft]: new SizeAlteringSquare(this.scene, this.preview.getBottomLeft()),
+            [SizeAlteringSquarePosition.BottomCenter]: new SizeAlteringSquare(
                 this.scene,
                 this.preview.getBottomCenter()
             ),
-            [SizeAlteringSquarePosition.BottomRight]: new AlteringSizeSquare(this.scene, this.preview.getBottomRight()),
+            [SizeAlteringSquarePosition.BottomRight]: new SizeAlteringSquare(this.scene, this.preview.getBottomRight()),
         };
 
         this.add([this.preview, ...Object.values(this.squares)]);
@@ -42,9 +45,19 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         this.scene.add.existing(this);
     }
 
+    public select(value: boolean): void {
+        if (this.selected === value) {
+            return;
+        }
+        this.selected = value;
+        this.showSizeAlteringSquares(value);
+    }
+
     public setVisible(value: boolean): this {
         this.preview.setVisible(value);
-        Object.values(this.squares).forEach((square) => square.setVisible(value));
+        if (!value) {
+            this.showSizeAlteringSquares(false);
+        }
         return this;
     }
 
@@ -63,6 +76,13 @@ export class AreaPreview extends Phaser.GameObjects.Container {
             .rectangle(0, 0, config.width, config.height, 0x0000ff, 0.5)
             .setStrokeStyle(1, 0x000000)
             .setInteractive({ cursor: "pointer" });
+    }
+
+    private showSizeAlteringSquares(show = true): void {
+        if (show && !this.preview.visible) {
+            return;
+        }
+        Object.values(this.squares).forEach((square) => square.setVisible(show));
     }
 
     private bindEventHandlers(): void {

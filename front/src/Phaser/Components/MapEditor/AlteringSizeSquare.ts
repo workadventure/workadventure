@@ -9,7 +9,7 @@ export enum SizeAlteringSquarePosition {
     BottomRight = "BottomRight",
 }
 
-export class AlteringSizeSquare extends Phaser.GameObjects.Rectangle {
+export class SizeAlteringSquare extends Phaser.GameObjects.Rectangle {
     constructor(scene: Phaser.Scene, position: { x: number; y: number }) {
         super(scene, position.x, position.y, 7, 7, 0xffffff);
 
