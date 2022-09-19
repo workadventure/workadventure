@@ -77,6 +77,15 @@ export const isFetchMemberDataByUuidResponse = z.object({
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
 
 class AdminApi implements AdminInterface {
+    private enabledFeatures: string[] = ADMIN_API_FEATURES? ADMIN_API_FEATURES.split(",") : []
+    isEnabled(): boolean {
+        return ADMIN_API_URL != "";
+    }
+
+    isFeatureEnabled(featureFlag: string) {
+        return this.isEnabled() && this.enabledFeatures.indexOf(featureFlag) > 0
+    }
+
     async fetchMapDetails(
         playUri: string,
         authToken?: string,
