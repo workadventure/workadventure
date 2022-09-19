@@ -11,6 +11,7 @@
     import { MucRoom, User } from "../Xmpp/MucRoom";
     import { Ban, GoTo, RankDown, RankUp } from "../Type/CustomEvent";
     import { onDestroy } from "svelte";
+    import Loader from "./Loader.svelte";
 
     const dispatch = createEventDispatcher<{
         goTo: GoTo;
@@ -23,6 +24,7 @@
 
     $: usersListStore = activeThread.getPresenceStore();
     $: meStore = activeThread.getMeStore();
+    $: readyStore = activeThread.getRoomReadyStore();
 
     let messagesList: ChatMessagesList;
 
@@ -85,7 +87,9 @@
             </button>
         </div>
     </div>
-    {#if $settingsViewStore}
+    {#if !$readyStore}
+        <Loader text={$LL.loading()} />
+    {:else if $settingsViewStore}
         <div
             in:fly={{ y: -100, duration: 100, delay: 200 }}
             out:fly={{ y: -100, duration: 100 }}
