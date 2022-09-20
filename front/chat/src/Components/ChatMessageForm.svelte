@@ -460,7 +460,7 @@
                     <label for="file" class="tw-mb-0 tw-cursor-pointer"><PaperclipIcon size="17" /></label>
                 {:else}
                     <button
-                            id="file"
+                        id="file"
                         class={`tw-bg-transparent tw-h-8  tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-opacity-50`}
                         on:click|preventDefault|stopPropagation={() => (informationMessage = $LL.disabledByAdmin())}
                     >
