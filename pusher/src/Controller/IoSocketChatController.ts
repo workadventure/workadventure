@@ -244,8 +244,7 @@ export class IoSocketChatController {
                             if (
                                 this.cache.has(jwtDecoded.room) &&
                                 this.cache.get(jwtDecoded.room) &&
-                                (this.cache.get(jwtDecoded.room)?.timestamp || 0) > Date.now() - 300_000 &&
-                                false
+                                (this.cache.get(jwtDecoded.room)?.timestamp || 0) > Date.now() - 300_000
                             ) {
                                 // @ts-ignore
                                 maxHistoryChat = this.cache.get(jwtDecoded.room).maxHistoryChat;
