@@ -40,6 +40,22 @@
     $: me = usersList.find((user) => user.isMe);
     $: meArray = me ? [me] : [];
 
+    $: mapsGroupedUsers = new Map<string, Array<User>>();
+
+    $: usersList.forEach((user) => {
+        let playUri = user.playUri;
+        if(!user.active){
+            playUri = "ZZZZZZZZZZ-disconnected";
+        }
+        if(mapsGroupedUsers.has(playUri)){
+            mapsGroupedUsers.set(playUri, [...mapsGroupedUsers.get(playUri), user]);
+        } else {
+            mapsGroupedUsers.set(playUri, [user]);
+        }
+    });
+
+
+
     $: usersFiltered = meArray
         .concat(
             usersList
@@ -60,7 +76,7 @@
     <div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
         {#if !$loadingSubscribersStore}
             <span
-                class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
+                    class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
             >
                 {usersList.filter((user) => user.active).length}
             </span>
@@ -77,28 +93,30 @@
             {#if $loadingSubscribersStore}
                 <Loader text={$LL.loadingUsers()} height="tw-h-40" />
             {:else}
-                {#each usersFiltered as user}
-                    <ChatUser
-                        {mucRoom}
-                        {openChat}
-                        {user}
-                        on:goTo={(event) => dispatch("goTo", event.detail)}
-                        on:rankUp={(event) => dispatch("rankUp", event.detail)}
-                        on:rankDown={(event) => dispatch("rankDown", event.detail)}
-                        on:ban={(event) => dispatch("ban", event.detail)}
-                        {searchValue}
-                        {meStore}
-                    />
+                {#each [...mapsGroupedUsers.values()] as mapGroupedUsers}
+                    {#each mapGroupedUsers as user}
+                        <ChatUser
+                                {mucRoom}
+                                {openChat}
+                                {user}
+                                on:goTo={(event) => dispatch("goTo", event.detail)}
+                                on:rankUp={(event) => dispatch("rankUp", event.detail)}
+                                on:rankDown={(event) => dispatch("rankDown", event.detail)}
+                                on:ban={(event) => dispatch("ban", event.detail)}
+                                {searchValue}
+                                {meStore}
+                        />
+                    {/each}
                 {/each}
                 {#if usersList.filter((user) => !user.isMe).length === 0}
                     <div
-                        class="tw-mt-2 tw-px-5 tw-py-4 tw-border-t tw-border-solid tw-border-0 tw-border-transparent tw-border-t-light-purple"
+                            class="tw-mt-2 tw-px-5 tw-py-4 tw-border-t tw-border-solid tw-border-0 tw-border-transparent tw-border-t-light-purple"
                     >
                         <p>{$LL.roomEmpty()}</p>
                         <button
-                            type="button"
-                            class="light tw-m-auto tw-cursor-pointer tw-px-3"
-                            on:click={showInviteMenu}
+                                type="button"
+                                class="light tw-m-auto tw-cursor-pointer tw-px-3"
+                                on:click={showInviteMenu}
                         >
                             {$LL.invite()}
                         </button>
