@@ -13,6 +13,7 @@ export enum SizeAlteringSquarePosition {
 
 export enum SizeAlteringSquareEvent {
     PositionChanged = "SizeAlteringSquare:PositionChanged",
+    Selected = "SizeAlteringSquare:Selected",
     Released = "SizeAlteringSquare:Released",
 }
 
@@ -67,6 +68,7 @@ export class SizeAlteringSquare extends Phaser.GameObjects.Rectangle {
 
         this.on(Phaser.Input.Events.POINTER_DOWN, () => {
             this.select(true);
+            this.emit(SizeAlteringSquareEvent.Selected);
         });
     }
 

@@ -15,12 +15,16 @@ export class AreaPreview extends Phaser.GameObjects.Container {
     private squares: SizeAlteringSquare[];
 
     private selected: boolean;
+    private moved: boolean;
+    private squareSelected: boolean;
 
     constructor(scene: Phaser.Scene, config: ITiledMapRectangleObject) {
         super(scene, 0, 0);
 
         this.config = config;
         this.selected = false;
+        this.moved = false;
+        this.squareSelected = false;
 
         this.preview = this.createPreview(config);
         this.squares = [
@@ -95,7 +99,6 @@ export class AreaPreview extends Phaser.GameObjects.Container {
                 0x0000ff,
                 0.5
             )
-            .setStrokeStyle(1, 0x000000)
             .setInteractive({ cursor: "pointer" });
     }
 
@@ -113,45 +116,87 @@ export class AreaPreview extends Phaser.GameObjects.Container {
             }
             this.emit(AreaPreviewEvent.Clicked);
         });
+        this.preview.on(Phaser.Input.Events.POINTER_MOVE, (pointer: Phaser.Input.Pointer) => {
+            if (pointer.isDown && this.selected && !this.squareSelected) {
+                this.preview.x = pointer.worldX;
+                this.preview.y = pointer.worldY;
+                this.updateSquaresPositions();
+                this.moved = true;
+                (this.scene as GameScene).markDirty();
+            }
+        });
+        this.preview.on(Phaser.Input.Events.POINTER_UP, (pointer: Phaser.Input.Pointer) => {
+            if (this.selected && this.moved) {
+                this.moved = false;
+                this.updateConfigWithSquaresAdjustments();
+                this.emit(AreaPreviewEvent.Changed);
+            }
+        });
         this.squares.forEach((square, index) => {
+            square.on(SizeAlteringSquareEvent.Selected, () => {
+                this.squareSelected = true;
+            });
             square.on(SizeAlteringSquareEvent.PositionChanged, () => {
-                switch (index) {
-                    case SizeAlteringSquarePosition.TopLeft: {
-                        this.preview.displayWidth = this.preview.getRightCenter().x - square.x;
-                        this.preview.displayHeight = this.preview.getBottomCenter().y - square.y;
-                        this.preview.x = square.x + this.preview.displayWidth * 0.5;
-                        this.preview.y = square.y + this.preview.displayHeight * 0.5;
-                        this.updateSquaresPositions();
-                        break;
-                    }
-                    case SizeAlteringSquarePosition.TopCenter: {
-                        this.preview.displayHeight = this.preview.getBottomCenter().y - square.y;
-                        this.preview.y = square.y + this.preview.displayHeight * 0.5;
-                        this.updateSquaresPositions();
-                        break;
-                    }
-                    case SizeAlteringSquarePosition.TopRight: {
-                        break;
-                    }
-                    case SizeAlteringSquarePosition.LeftCenter: {
-                        break;
-                    }
-                    case SizeAlteringSquarePosition.RightCenter: {
-                        break;
-                    }
-                    case SizeAlteringSquarePosition.BottomLeft: {
-                        break;
-                    }
-                    case SizeAlteringSquarePosition.BottomCenter: {
-                        break;
-                    }
-                    case SizeAlteringSquarePosition.BottomRight: {
-                        break;
+                if (
+                    [
+                        SizeAlteringSquarePosition.RightCenter,
+                        SizeAlteringSquarePosition.LeftCenter,
+                        SizeAlteringSquarePosition.TopCenter,
+                        SizeAlteringSquarePosition.BottomCenter,
+                    ].includes(index)
+                ) {
+                    this.preview.displayWidth = Math.max(
+                        32,
+                        this.squares[SizeAlteringSquarePosition.RightCenter].x -
+                            this.squares[SizeAlteringSquarePosition.LeftCenter].x
+                    );
+                    this.preview.displayHeight =
+                        this.squares[SizeAlteringSquarePosition.BottomCenter].y -
+                        this.squares[SizeAlteringSquarePosition.TopCenter].y;
+
+                    this.preview.x =
+                        this.squares[SizeAlteringSquarePosition.LeftCenter].x + this.preview.displayWidth * 0.5;
+                    this.preview.y =
+                        this.squares[SizeAlteringSquarePosition.TopCenter].y + this.preview.displayHeight * 0.5;
+                } else {
+                    switch (index) {
+                        case SizeAlteringSquarePosition.TopLeft: {
+                            this.preview.displayWidth = this.preview.getRightCenter().x - square.x;
+                            this.preview.displayHeight = this.preview.getBottomCenter().y - square.y;
+                            this.preview.x = square.x + this.preview.displayWidth * 0.5;
+                            this.preview.y = square.y + this.preview.displayHeight * 0.5;
+                            break;
+                        }
+                        case SizeAlteringSquarePosition.TopRight: {
+                            this.preview.displayWidth = square.x - this.preview.getLeftCenter().x;
+                            this.preview.displayHeight = this.preview.getBottomCenter().y - square.y;
+                            this.preview.x = square.x - this.preview.displayWidth * 0.5;
+                            this.preview.y = square.y + this.preview.displayHeight * 0.5;
+                            break;
+                        }
+                        case SizeAlteringSquarePosition.BottomLeft: {
+                            this.preview.displayWidth = this.preview.getRightCenter().x - square.x;
+                            this.preview.displayHeight = square.y - this.preview.getTopCenter().y;
+                            this.preview.x = square.x + this.preview.displayWidth * 0.5;
+                            this.preview.y = square.y - this.preview.displayHeight * 0.5;
+                            break;
+                        }
+                        case SizeAlteringSquarePosition.BottomRight: {
+                            this.preview.displayWidth = square.x - this.preview.getLeftCenter().x;
+                            this.preview.displayHeight = square.y - this.preview.getTopCenter().y;
+                            this.preview.x = square.x - this.preview.displayWidth * 0.5;
+                            this.preview.y = square.y - this.preview.displayHeight * 0.5;
+                            break;
+                        }
                     }
                 }
+                this.preview.displayWidth = Math.max(32, this.preview.displayWidth);
+                this.preview.displayHeight = Math.max(32, this.preview.displayHeight);
+                this.updateSquaresPositions();
                 (this.scene as GameScene).markDirty();
             });
             square.on(SizeAlteringSquareEvent.Released, () => {
+                this.squareSelected = false;
                 this.updateConfigWithSquaresAdjustments();
                 this.emit(AreaPreviewEvent.Changed);
             });
