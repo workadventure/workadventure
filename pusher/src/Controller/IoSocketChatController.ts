@@ -245,6 +245,7 @@ export class IoSocketChatController {
                                 this.cache.has(jwtDecoded.room) &&
                                 this.cache.get(jwtDecoded.room) &&
                                 (this.cache.get(jwtDecoded.room)?.timestamp || 0) > Date.now() - 300_000
+                                && false
                             ) {
                                 // @ts-ignore
                                 maxHistoryChat = this.cache.get(jwtDecoded.room).maxHistoryChat;
@@ -256,6 +257,10 @@ export class IoSocketChatController {
                                     .catch((err) => {
                                         if (Axios.isAxiosError(err) && err.response?.status === 402) {
                                             return parseInt(err.response?.data);
+                                        }
+                                        else if (Axios.isAxiosError(err) && err.response?.status === 403) {
+                                            // Disabled in admin
+                                            return -2;
                                         }
                                         console.error(err);
                                         return -1;
