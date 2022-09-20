@@ -54,7 +54,7 @@
                 <VideoOffBox peer={streamable} clickable={false} />
             </div>
         </div>
-    {:else}
+    {:else if $constraintStore && $constraintStore.video}
         <div
             class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
      media-box-shape-color
