@@ -1,13 +1,14 @@
-console.log('In ten seconds, the tuto modal will be launched')
+console.info('In ten seconds, the tuto modal will be launched')
 
 function launchTuto(){
-    WA.modal.openModal({src: 'https://workadventu.re'});
+    console.info('Lunch tuto');
+    WA.ui.modal.openModal({src: 'https://workadventu.re'});
 
     setTimeout(() => {
-        WA.modal.closeModal();
-    }, 1000);
+        WA.ui.modal.closeModal();
+    }, 2000);
 }
 
 setTimeout(() => {
     launchTuto();
-}, 1000)
+}, 2000)

@@ -11,7 +11,7 @@ test.describe('Modal', () => {
         );
         await login(page, "Alice");
         await evaluateScript(page, async () => {
-            return WA.modal.openModal({
+            return WA.ui.modal.openModal({
                 src: "https://workadventu.re"
             });
         });

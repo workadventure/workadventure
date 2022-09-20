@@ -309,7 +309,7 @@ class IframeListener {
                     }
 
                     const iframeEvent = iframeEventGuarded.data;
-
+                    console.info("iframeEvent.type", iframeEvent.type);
                     if (iframeEvent.type === "showLayer") {
                         this._showLayerStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "hideLayer") {
