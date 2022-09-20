@@ -37,25 +37,26 @@
     $: loadingSubscribersStore = mucRoom.getLoadingSubscribersStore();
 
     $: usersList = [...$usersListStore.values()] as Array<User>;
-    $: me = usersList.find((user) => user.isMe);
-    $: meArray = me ? [me] : [];
+    $: me = usersList.find((user: User) => user.isMe);
 
-    $: mapsGroupedUsers = new Map<string, Array<User>>();
-
-    $: usersList.forEach((user) => {
-        let playUri = user.playUri;
-        if(!user.active){
-            playUri = "ZZZZZZZZZZ-disconnected";
+    $: usersByMaps = usersList
+        .filter((user: User) => user.name.toLocaleLowerCase().includes(searchValue))
+        .reduce((reduced, user) => {
+        let group = user.roomName ?? "ZZZZZZZZZZ-disconnected";
+        if(!reduced.has(group)) reduced.set(group, [user]);
+        else {
+            const usersList = [...reduced.get(group), user];
+            usersList.sort((a, b) => a.name.localeCompare(b.name));
+            reduced.set(group, usersList);
         }
-        if(mapsGroupedUsers.has(playUri)){
-            mapsGroupedUsers.set(playUri, [...mapsGroupedUsers.get(playUri), user]);
-        } else {
-            mapsGroupedUsers.set(playUri, [user]);
-        }
-    });
+        return reduced;
+    }, new Map<string, User[]>());
+
+    $: roomSorted = [...usersByMaps.keys()].sort((a, b) => a.localeCompare(b));
 
 
 
+    /*
     $: usersFiltered = meArray
         .concat(
             usersList
@@ -70,6 +71,7 @@
                 )
         )
         .splice(0, minimizeUser ? maxUsersMinimized : usersList.length);
+     */
 </script>
 
 <div id="users" class="users tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
@@ -93,8 +95,8 @@
             {#if $loadingSubscribersStore}
                 <Loader text={$LL.loadingUsers()} height="tw-h-40" />
             {:else}
-                {#each [...mapsGroupedUsers.values()] as mapGroupedUsers}
-                    {#each mapGroupedUsers as user}
+                {#each roomSorted as room}
+                    {#each usersByMaps.get(room) as user}
                         <ChatUser
                                 {mucRoom}
                                 {openChat}
