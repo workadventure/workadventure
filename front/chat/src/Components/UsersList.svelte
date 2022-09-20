@@ -52,7 +52,7 @@
         return reduced;
     }, new Map<string, User[]>());
 
-    $: roomSorted = [...usersByMaps.keys()].sort((a, b) => a.localeCompare(b));
+    $: roomSorted = [...usersByMaps.keys()].sort((a, b) => me.roomName === a ? -1 : (me.roomName === b ? 1 : a.localeCompare(b)));
 
 
 
