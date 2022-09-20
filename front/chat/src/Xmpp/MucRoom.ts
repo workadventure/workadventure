@@ -828,7 +828,7 @@ export class MucRoom {
                 const count = parseInt(
                     fin.getChild("set", "http://jabber.org/protocol/rsm")?.getChildText("count") ?? "0"
                 );
-                if(disabled && disabled === 'true'){
+                if (disabled && disabled === "true") {
                     this.canLoadOlderMessagesStore.set(false);
                 } else {
                     if (maxHistoryDate) {

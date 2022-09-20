@@ -375,7 +375,7 @@ export class XmppClient {
                             {
                                 xmlns: "urn:xmpp:mam:2",
                                 complete: this.clientSocket.maxHistoryChat !== -1,
-                                disabled: this.clientSocket.maxHistoryChat !== -1
+                                disabled: this.clientSocket.maxHistoryChat !== -1,
                             },
                             xml(
                                 "set",
