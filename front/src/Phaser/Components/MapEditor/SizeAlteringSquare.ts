@@ -1,14 +1,19 @@
 import { GameScene } from "../../Game/GameScene";
 
 export enum SizeAlteringSquarePosition {
-    TopLeft = "TopLeft",
-    TopCenter = "TopCenter",
-    TopRight = "TopRight",
-    LeftCenter = "LeftCenter",
-    RightCenter = "RightCenter",
-    BottomLeft = "BottomLeft",
-    BottomCenter = "BottomCenter",
-    BottomRight = "BottomRight",
+    TopLeft = 0,
+    TopCenter,
+    TopRight,
+    LeftCenter,
+    RightCenter,
+    BottomLeft,
+    BottomCenter,
+    BottomRight,
+}
+
+export enum SizeAlteringSquareEvent {
+    PositionChanged = "SizeAlteringSquare:PositionChanged",
+    Released = "SizeAlteringSquare:Released",
 }
 
 export class SizeAlteringSquare extends Phaser.GameObjects.Rectangle {
@@ -31,10 +36,15 @@ export class SizeAlteringSquare extends Phaser.GameObjects.Rectangle {
     }
 
     public update(time: number, dt: number): void {
+        // NOTE: We use update instead of PointerMove to not loose focus when moving too fast with pointer
         if (this.selected) {
-            this.x = this.scene.input.activePointer.worldX - this.parentPos.x;
-            this.y = this.scene.input.activePointer.worldY - this.parentPos.y;
-            (this.scene as GameScene).markDirty();
+            const newX = this.scene.input.activePointer.worldX - this.parentPos.x;
+            const newY = this.scene.input.activePointer.worldY - this.parentPos.y;
+            if (this.x !== newX || this.y !== newY) {
+                this.x = newX;
+                this.y = newY;
+                this.emit(SizeAlteringSquareEvent.PositionChanged);
+            }
         }
     }
 
@@ -48,11 +58,19 @@ export class SizeAlteringSquare extends Phaser.GameObjects.Rectangle {
     }
 
     private bindEventHandlers(): void {
+        this.scene.input.on(Phaser.Input.Events.POINTER_UP, () => {
+            if (this.selected) {
+                this.select(false);
+                this.emit(SizeAlteringSquareEvent.Released);
+            }
+        });
+
         this.on(Phaser.Input.Events.POINTER_DOWN, () => {
             this.select(true);
         });
-        this.on(Phaser.Input.Events.POINTER_UP, () => {
-            this.select(false);
-        });
+    }
+
+    public isSelected(): boolean {
+        return this.selected;
     }
 }

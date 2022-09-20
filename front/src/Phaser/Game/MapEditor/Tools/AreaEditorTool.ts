@@ -139,7 +139,6 @@ export class AreaEditorTool extends MapEditorTool {
             return;
         }
         areaPreview.updatePreview(config);
-        console.log("GET AREA PREVIEW TO STORE");
         // HACK: A way to update AreaPreviewWindow component values after performin undo / redo operations
         if (get(mapEditorSelectedAreaPreviewStore) !== undefined) {
             mapEditorSelectedAreaPreviewStore.set(areaPreview);
@@ -177,8 +176,8 @@ export class AreaEditorTool extends MapEditorTool {
                         visible: true,
                         width: 100,
                         height: 100,
-                        x: this.scene.input.activePointer.x,
-                        y: this.scene.input.activePointer.y,
+                        x: this.scene.input.activePointer.worldX - 50,
+                        y: this.scene.input.activePointer.worldY - 50,
                     },
                 });
                 break;
@@ -256,6 +255,12 @@ export class AreaEditorTool extends MapEditorTool {
     private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {
         areaPreview.on(AreaPreviewEvent.Clicked, () => {
             mapEditorSelectedAreaPreviewStore.set(areaPreview);
+        });
+        areaPreview.on(AreaPreviewEvent.Changed, () => {
+            this.mapEditorModeManager.executeCommand({
+                type: "UpdateAreaCommand",
+                areaObjectConfig: areaPreview.getConfig(),
+            });
         });
     }
 
