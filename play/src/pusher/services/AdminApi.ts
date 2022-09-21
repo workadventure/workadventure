@@ -76,14 +76,29 @@ export const isFetchMemberDataByUuidResponse = z.object({
 
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
 
+export enum AdminFeature {
+    CompanionsList="CompanionsList"
+}
+
 class AdminApi implements AdminInterface {
-    private enabledFeatures: string[] = ADMIN_API_FEATURES? ADMIN_API_FEATURES.split(",") : []
+    // Array of enabled admin features
+    private enabledFeatures: AdminFeature[] = ADMIN_API_FEATURES?
+        ADMIN_API_FEATURES.split(",").map(f => f  as AdminFeature) :
+        []
+
+    /**
+     * Checks whether admin api is enabled
+     */
     isEnabled(): boolean {
         return ADMIN_API_URL != "";
     }
 
-    isFeatureEnabled(featureFlag: string) {
-        return this.isEnabled() && this.enabledFeatures.indexOf(featureFlag) > 0
+    /**
+     * Checks whether the given features is enabled
+     * @param featureFlag
+     */
+    isFeatureEnabled(featureFlag: AdminFeature) {
+        return this.isEnabled() && this.enabledFeatures.includes(featureFlag)
     }
 
     async fetchMapDetails(
