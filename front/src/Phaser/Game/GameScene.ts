@@ -391,15 +391,14 @@ export class GameScene extends DirtyScene {
                 return;
             }
             //TODO strategy to add access token
-            if (tileset.image.includes(".svg")){
-                console.log("It's good");
-                this.load.svg(`${url}/${tileset.image}`, `${url}/${tileset.image}`);
-            }
-            else{
-                console.log("it's png");
+            if (tileset.image.includes(".svg")) {
+                this.load.svg(`${url}/${tileset.image}`, `${url}/${tileset.image}`, {
+                    width: tileset.imagewidth,
+                    height: tileset.imageheight,
+                });
+            } else {
                 this.load.image(`${url}/${tileset.image}`, `${url}/${tileset.image}`);
             }
-
         });
 
         // Scan the object layers for objects to load and load them.
