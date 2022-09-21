@@ -41,12 +41,12 @@
 
     $: usersByMaps = usersList
         .filter((user: User) => user.name.toLocaleLowerCase().includes(searchValue))
-        .reduce((reduced, user, index) => {
+        .reduce((reduced, user: User, index) => {
             if ((minimizeUser && index < maxUsersMinimized) || !minimizeUser) {
                 let group = user.roomName ?? "ZZZZZZZZZZ-disconnected";
                 if (!reduced.has(group)) reduced.set(group, [user]);
                 else {
-                    const usersList = [...reduced.get(group), user];
+                    const usersList = [...(reduced.get(group) ?? []), user];
                     usersList.sort((a, b) => a.name.localeCompare(b.name));
                     reduced.set(group, usersList);
                 }
@@ -55,7 +55,7 @@
         }, new Map<string, User[]>());
 
     $: roomSorted = [...usersByMaps.keys()].sort((a, b) =>
-        me.roomName === a ? -1 : me.roomName === b ? 1 : a.localeCompare(b)
+        me?.roomName === a ? -1 : me?.roomName === b ? 1 : a.localeCompare(b)
     );
 </script>
 
@@ -81,7 +81,7 @@
                 <Loader text={$LL.loadingUsers()} height="tw-h-40" />
             {:else}
                 {#each roomSorted as room}
-                    {#each usersByMaps.get(room) as user}
+                    {#each usersByMaps.get(room) ?? [] as user}
                         <ChatUser
                             {mucRoom}
                             {openChat}
