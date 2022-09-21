@@ -12,6 +12,8 @@ import HyperExpress from "hyper-express";
 import { cors } from "./middlewares/Cors";
 import { ENABLE_OPENAPI_ENDPOINT } from "./enums/EnvironmentVariable";
 import { PingController } from "./controllers/PingController";
+import { IoSocketChatController } from "./controllers/IoSocketChatController";
+import {CompanionListController} from "./controllers/CompanionListController";
 import { FrontController } from "./controllers/FrontController";
 import fs from "fs";
 import type * as uWebsockets from "uWebSockets.js";
@@ -83,6 +85,7 @@ class App {
         new AdminController(this.webserver);
         new OpenIdProfileController(this.webserver);
         new WokaListController(this.webserver);
+        new CompanionListController(this.webserver);
         new PingController(this.webserver);
         if (ENABLE_OPENAPI_ENDPOINT) {
             new SwaggerController(this.webserver);
