@@ -12,7 +12,6 @@ export enum SizeAlteringSquarePosition {
 }
 
 export enum SizeAlteringSquareEvent {
-    PositionChanged = "SizeAlteringSquare:PositionChanged",
     Selected = "SizeAlteringSquare:Selected",
     Released = "SizeAlteringSquare:Released",
 }
@@ -20,16 +19,14 @@ export enum SizeAlteringSquareEvent {
 export class SizeAlteringSquare extends Phaser.GameObjects.Rectangle {
     private selected: boolean;
 
-    private parentPos: { x: number; y: number };
-
-    constructor(scene: Phaser.Scene, pos: { x: number; y: number }, parentPos: { x: number; y: number }) {
+    constructor(scene: Phaser.Scene, pos: { x: number; y: number }) {
         super(scene, pos.x, pos.y, 7, 7, 0xffffff);
 
-        this.parentPos = parentPos;
         this.selected = false;
 
         this.setStrokeStyle(1, 0x000000);
         this.setInteractive({ cursor: "pointer" });
+        this.scene.input.setDraggable(this);
 
         this.bindEventHandlers();
 
@@ -38,15 +35,6 @@ export class SizeAlteringSquare extends Phaser.GameObjects.Rectangle {
 
     public update(time: number, dt: number): void {
         // NOTE: We use update instead of PointerMove to not loose focus when moving too fast with pointer
-        if (this.selected) {
-            const newX = this.scene.input.activePointer.worldX - this.parentPos.x;
-            const newY = this.scene.input.activePointer.worldY - this.parentPos.y;
-            if (this.x !== newX || this.y !== newY) {
-                this.x = newX;
-                this.y = newY;
-                this.emit(SizeAlteringSquareEvent.PositionChanged);
-            }
-        }
     }
 
     private select(value: boolean): void {

@@ -1,6 +1,6 @@
 import { ITiledMapRectangleObject } from "@workadventure/map-editor";
 import { GameScene } from "../../Game/GameScene";
-import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition } from "./SizeAlteringSquare";
+import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
 
 export enum AreaPreviewEvent {
     Clicked = "AreaPreview:Clicked",
@@ -28,14 +28,14 @@ export class AreaPreview extends Phaser.GameObjects.Container {
 
         this.preview = this.createPreview(config);
         this.squares = [
-            new SizeAlteringSquare(this.scene, this.preview.getTopLeft(), { x: this.x, y: this.y }),
-            new SizeAlteringSquare(this.scene, this.preview.getTopCenter(), { x: this.x, y: this.y }),
-            new SizeAlteringSquare(this.scene, this.preview.getTopRight(), { x: this.x, y: this.y }),
-            new SizeAlteringSquare(this.scene, this.preview.getLeftCenter(), { x: this.x, y: this.y }),
-            new SizeAlteringSquare(this.scene, this.preview.getRightCenter(), { x: this.x, y: this.y }),
-            new SizeAlteringSquare(this.scene, this.preview.getBottomLeft(), { x: this.x, y: this.y }),
-            new SizeAlteringSquare(this.scene, this.preview.getBottomCenter(), { x: this.x, y: this.y }),
-            new SizeAlteringSquare(this.scene, this.preview.getBottomRight(), { x: this.x, y: this.y }),
+            new SizeAlteringSquare(this.scene, this.preview.getTopLeft()),
+            new SizeAlteringSquare(this.scene, this.preview.getTopCenter()),
+            new SizeAlteringSquare(this.scene, this.preview.getTopRight()),
+            new SizeAlteringSquare(this.scene, this.preview.getLeftCenter()),
+            new SizeAlteringSquare(this.scene, this.preview.getRightCenter()),
+            new SizeAlteringSquare(this.scene, this.preview.getBottomLeft()),
+            new SizeAlteringSquare(this.scene, this.preview.getBottomCenter()),
+            new SizeAlteringSquare(this.scene, this.preview.getBottomRight()),
         ];
 
         this.add([this.preview, ...this.squares]);
@@ -90,7 +90,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
     }
 
     private createPreview(config: ITiledMapRectangleObject): Phaser.GameObjects.Rectangle {
-        return this.scene.add
+        const preview = this.scene.add
             .rectangle(
                 config.x + config.width * 0.5,
                 config.y + config.height * 0.5,
@@ -100,6 +100,8 @@ export class AreaPreview extends Phaser.GameObjects.Container {
                 0.5
             )
             .setInteractive({ cursor: "pointer" });
+        this.scene.input.setDraggable(preview);
+        return preview;
     }
 
     private showSizeAlteringSquares(show = true): void {
@@ -116,10 +118,10 @@ export class AreaPreview extends Phaser.GameObjects.Container {
             }
             this.emit(AreaPreviewEvent.Clicked);
         });
-        this.preview.on(Phaser.Input.Events.POINTER_MOVE, (pointer: Phaser.Input.Pointer) => {
+        this.preview.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             if (pointer.isDown && this.selected && !this.squareSelected) {
-                this.preview.x = pointer.worldX;
-                this.preview.y = pointer.worldY;
+                this.preview.x = dragX;
+                this.preview.y = dragY;
                 this.updateSquaresPositions();
                 this.moved = true;
                 (this.scene as GameScene).markDirty();
@@ -136,65 +138,84 @@ export class AreaPreview extends Phaser.GameObjects.Container {
             square.on(SizeAlteringSquareEvent.Selected, () => {
                 this.squareSelected = true;
             });
-            square.on(SizeAlteringSquareEvent.PositionChanged, () => {
-                if (
-                    [
-                        SizeAlteringSquarePosition.RightCenter,
-                        SizeAlteringSquarePosition.LeftCenter,
-                        SizeAlteringSquarePosition.TopCenter,
-                        SizeAlteringSquarePosition.BottomCenter,
-                    ].includes(index)
-                ) {
-                    this.preview.displayWidth = Math.max(
-                        32,
-                        this.squares[SizeAlteringSquarePosition.RightCenter].x -
-                            this.squares[SizeAlteringSquarePosition.LeftCenter].x
-                    );
-                    this.preview.displayHeight =
-                        this.squares[SizeAlteringSquarePosition.BottomCenter].y -
-                        this.squares[SizeAlteringSquarePosition.TopCenter].y;
 
-                    this.preview.x =
-                        this.squares[SizeAlteringSquarePosition.LeftCenter].x + this.preview.displayWidth * 0.5;
-                    this.preview.y =
-                        this.squares[SizeAlteringSquarePosition.TopCenter].y + this.preview.displayHeight * 0.5;
+            square.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+                const oldX = square.x;
+                const oldY = square.y;
+
+                square.x = dragX;
+                square.y = dragY;
+
+                if ([Edge.RightCenter, Edge.LeftCenter, Edge.TopCenter, Edge.BottomCenter].includes(index)) {
+                    const newWidth = this.squares[Edge.RightCenter].x - this.squares[Edge.LeftCenter].x;
+                    const newHeight = this.squares[Edge.BottomCenter].y - this.squares[Edge.TopCenter].y;
+
+                    if (newWidth >= 32) {
+                        this.preview.displayWidth = newWidth;
+                        this.preview.x = this.squares[Edge.LeftCenter].x + this.preview.displayWidth * 0.5;
+                    } else {
+                        square.x = oldX;
+                    }
+                    if (newHeight >= 32) {
+                        this.preview.displayHeight = newHeight;
+                        this.preview.y = this.squares[Edge.TopCenter].y + this.preview.displayHeight * 0.5;
+                    } else {
+                        square.y = oldY;
+                    }
                 } else {
+                    let newWidth = 0;
+                    let newHeight = 0;
+                    let newCenterX = 0;
+                    let newCenterY = 0;
+
                     switch (index) {
-                        case SizeAlteringSquarePosition.TopLeft: {
-                            this.preview.displayWidth = this.preview.getRightCenter().x - square.x;
-                            this.preview.displayHeight = this.preview.getBottomCenter().y - square.y;
-                            this.preview.x = square.x + this.preview.displayWidth * 0.5;
-                            this.preview.y = square.y + this.preview.displayHeight * 0.5;
+                        case Edge.TopLeft: {
+                            newWidth = this.preview.getRightCenter().x - square.x;
+                            newHeight = this.preview.getBottomCenter().y - square.y;
+                            newCenterX = square.x + this.preview.displayWidth * 0.5;
+                            newCenterY = square.y + this.preview.displayHeight * 0.5;
                             break;
                         }
-                        case SizeAlteringSquarePosition.TopRight: {
-                            this.preview.displayWidth = square.x - this.preview.getLeftCenter().x;
-                            this.preview.displayHeight = this.preview.getBottomCenter().y - square.y;
-                            this.preview.x = square.x - this.preview.displayWidth * 0.5;
-                            this.preview.y = square.y + this.preview.displayHeight * 0.5;
+                        case Edge.TopRight: {
+                            newWidth = square.x - this.preview.getLeftCenter().x;
+                            newHeight = this.preview.getBottomCenter().y - square.y;
+                            newCenterX = square.x - this.preview.displayWidth * 0.5;
+                            newCenterY = square.y + this.preview.displayHeight * 0.5;
                             break;
                         }
-                        case SizeAlteringSquarePosition.BottomLeft: {
-                            this.preview.displayWidth = this.preview.getRightCenter().x - square.x;
-                            this.preview.displayHeight = square.y - this.preview.getTopCenter().y;
-                            this.preview.x = square.x + this.preview.displayWidth * 0.5;
-                            this.preview.y = square.y - this.preview.displayHeight * 0.5;
+                        case Edge.BottomLeft: {
+                            newWidth = this.preview.getRightCenter().x - square.x;
+                            newHeight = square.y - this.preview.getTopCenter().y;
+                            newCenterX = square.x + this.preview.displayWidth * 0.5;
+                            newCenterY = square.y - this.preview.displayHeight * 0.5;
                             break;
                         }
-                        case SizeAlteringSquarePosition.BottomRight: {
-                            this.preview.displayWidth = square.x - this.preview.getLeftCenter().x;
-                            this.preview.displayHeight = square.y - this.preview.getTopCenter().y;
-                            this.preview.x = square.x - this.preview.displayWidth * 0.5;
-                            this.preview.y = square.y - this.preview.displayHeight * 0.5;
+                        case Edge.BottomRight: {
+                            newWidth = square.x - this.preview.getLeftCenter().x;
+                            newHeight = square.y - this.preview.getTopCenter().y;
+                            newCenterX = square.x - this.preview.displayWidth * 0.5;
+                            newCenterY = square.y - this.preview.displayHeight * 0.5;
                             break;
                         }
                     }
+
+                    if (newWidth >= 32) {
+                        this.preview.displayWidth = newWidth;
+                        this.preview.x = newCenterX;
+                    } else {
+                        square.x = oldX;
+                    }
+                    if (newHeight >= 32) {
+                        this.preview.displayHeight = newHeight;
+                        this.preview.y = newCenterY;
+                    } else {
+                        square.y = oldY;
+                    }
                 }
-                this.preview.displayWidth = Math.max(32, this.preview.displayWidth);
-                this.preview.displayHeight = Math.max(32, this.preview.displayHeight);
                 this.updateSquaresPositions();
                 (this.scene as GameScene).markDirty();
             });
+
             square.on(SizeAlteringSquareEvent.Released, () => {
                 this.squareSelected = false;
                 this.updateConfigWithSquaresAdjustments();
@@ -222,7 +243,6 @@ export class AreaPreview extends Phaser.GameObjects.Container {
             width: this.preview.displayWidth,
             height: this.preview.displayHeight,
         };
-        console.log(this.config);
     }
 
     public getConfig(): ITiledMapRectangleObject {
