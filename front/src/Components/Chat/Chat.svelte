@@ -15,6 +15,7 @@
     import { availabilityStatusStore } from "../../Stores/MediaStore";
     import { peerStore } from "../../Stores/PeerStore";
     import { connectionManager } from "../../Connexion/ConnectionManager";
+    import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 
     let chatIframe: HTMLIFrameElement;
 
@@ -24,8 +25,9 @@
     const iframeLoadedStore = writable<boolean>(false);
 
     export const canSendInitMessageStore = derived(
-        [wokaDefinedStore, iframeLoadedStore],
-        ([$wokaDefinedStore, $iframeLoadedStore]) => $wokaDefinedStore && $iframeLoadedStore
+        [wokaDefinedStore, iframeLoadedStore, gameSceneIsLoadedStore],
+        ([$wokaDefinedStore, $iframeLoadedStore, $gameSceneIsLoadedStore]) =>
+            $wokaDefinedStore && $iframeLoadedStore && $gameSceneIsLoadedStore
     );
 
     // Phantom woka
@@ -90,6 +92,7 @@
                                         availabilityStatus: get(availabilityStatusStore),
                                         roomName: connectionManager.currentRoom?.roomName ?? null,
                                         visitCardUrl: gameManager.myVisitCardUrl,
+                                        userRoomToken: gameManager.getCurrentGameScene().connection?.userRoomToken,
                                     },
                                 },
                                 "*"

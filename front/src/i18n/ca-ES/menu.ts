@@ -28,21 +28,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         logout: "Tancar sessió",
     },
     settings: {
-        gameQuality: {
-            title: "Qualitat del joc",
-            short: {
-                high: "Alta (120 fps)",
-                medium: "Mitjana (60 fps)",
-                small: "Reduïda (40 fps)",
-                minimum: "Mínima (20 fps)",
-            },
-            long: {
-                high: "Vídeo de qualitat alta (120 fps)",
-                medium: "Vídeo de qualitat mitjana (60 fps, recomenat)",
-                small: "Vídeo de qualitat reduïda (40 fps)",
-                minimum: "Vídeo de qualitat mínima (20 fps)",
-            },
-        },
         videoQuality: {
             title: "Qualitat del vídeo",
             short: {

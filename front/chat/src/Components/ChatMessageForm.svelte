@@ -9,6 +9,7 @@
         CheckIcon,
         AlertCircleIcon,
         XCircleIcon,
+        ArrowRightCircleIcon,
     } from "svelte-feather-icons";
     import { ChatStates, MucRoom, User } from "../Xmpp/MucRoom";
     import LL, { locale } from "../i18n/i18n-svelte";
@@ -26,6 +27,9 @@
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
     import { FileExt, fileMessageManager, UploadedFile, uploadingState } from "../Services/FileMessageManager";
     import File from "./Content/File.svelte";
+    import crown from "../../public/static/svg/icone-premium-crown.svg";
+    import { iframeListener } from "../IframeListener";
+    import { ADMIN_API_URL, ENABLE_CHAT_UPLOAD } from "../Enum/EnvironmentVariable";
 
     export let mucRoom: MucRoom;
 
@@ -38,6 +42,9 @@
     let emojiOpened = false;
     let newMessageText = "";
     let usersSearching: User[] = [];
+
+    const maxCharMessage = 10_000;
+    $: isMessageTooLong = newMessageText.length > maxCharMessage;
 
     export const defaultColor = "#626262";
     // Negative lookbehind doesn't work on Safari browser
@@ -57,6 +64,9 @@
     function sendMessage() {
         if ($hasInProgressUploadingFile) {
             return;
+        }
+        if (isMessageTooLong) {
+            //return;
         }
         if ($hasErrorUploadingFile) {
             showErrorMessages();
@@ -184,6 +194,28 @@
         }
     }
 
+    function onKeyDown(key: KeyboardEvent): boolean {
+        if ((key.key === "Enter" && key.shiftKey) || ["Backspace", "Delete"].includes(key.key)) {
+            setTimeout(() => adjustHeight(), 10);
+        }
+        if (key.key === "Enter" && !key.shiftKey) {
+            sendMessage();
+            setTimeout(() => (newMessageText = ""), 10);
+            return false;
+        }
+        return true;
+    }
+
+    function onKeyPress(): boolean {
+        adjustHeight();
+        mucRoom.updateComposingState(ChatStates.COMPOSING);
+        return true;
+    }
+
+    function onKeyUp() {
+        adjustHeight();
+    }
+
     function addUserTag(user: User) {
         const values = newMessageText.match(regexUserTag) as string[];
         newMessageText = newMessageText.replace(values.pop() as string, `@${user.name} `);
@@ -305,11 +337,43 @@
                 <div
                     class="upload-file tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-3 tw-mb-1"
                 >
-                    {#if fileUploaded.errorMessage != undefined}
+                    {#if fileUploaded.errorMessage !== undefined}
                         <div
-                            class="error-hover tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-3 tw-mb-1"
+                            class={`error-hover tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-4 tw-py-2 ${
+                                fileUploaded.errorCode === 423 && mucRoom.getMe()?.isAdmin
+                                    ? "tw-text-orange"
+                                    : "tw-text-pop-red"
+                            } tw-absolute tw-w-full`}
                         >
-                            <p class="tw-m-0">{fileUploaded.errorMessage}</p>
+                            <p class="tw-m-0">
+                                {#if fileUploaded.errorMessage === "file-too-big"}
+                                    {$LL.file.tooBig({
+                                        fileName: fileUploaded.name,
+                                        maxFileSize: fileUploaded.maxFileSize,
+                                    })}
+                                {:else if fileUploaded.errorMessage === "not-logged"}
+                                    {$LL.file.notLogged()}
+                                {:else if fileUploaded.errorMessage === "disabled"}
+                                    {$LL.disabled()}
+                                {/if}
+                            </p>
+                            {#if fileUploaded.errorMessage === "not-logged"}
+                                <div
+                                    class="tw-text-light-blue tw-cursor-pointer"
+                                    on:click|preventDefault|stopPropagation={() => iframeListener.sendLogin()}
+                                >
+                                    <ArrowRightCircleIcon size="14" />
+                                </div>
+                            {/if}
+                            {#if fileUploaded.errorCode === 423 && mucRoom.getMe()?.isAdmin}
+                                <button
+                                    class="tw-text-orange tw-font-bold tw-underline tw-m-auto"
+                                    on:click={() => iframeListener.sendRedirectPricing()}
+                                >
+                                    <img alt="Crown logo" src={crown} class="tw-mr-1" />
+                                    {$LL.upgrade()}
+                                </button>
+                            {/if}
                         </div>
                     {/if}
                     <div
@@ -321,9 +385,7 @@
                         {:else if fileUploaded.uploadState === uploadingState.error}
                             <div
                                 class="alert-upload tw-cursor-pointer"
-                                on:click|preventDefault|stopPropagation={() => {
-                                    resend();
-                                }}
+                                on:click|preventDefault|stopPropagation={() => resend()}
                             >
                                 <AlertCircleIcon size="14" />
                             </div>
@@ -338,35 +400,38 @@
                         on:click|preventDefault|stopPropagation={() => {
                             handlerDeleteUploadedFile(fileUploaded);
                         }}
-                        class="tw-pr-0 tw-mr-0"
+                        class="delete tw-pr-0 tw-mr-0"
                     >
                         <Trash2Icon size="14" />
                     </button>
                 </div>
             {/each}
-            <div class="tw-flex tw-items-center tw-relative">
-                <textarea
-                    type="text"
-                    bind:this={textarea}
-                    bind:value={newMessageText}
-                    placeholder={$LL.enterText()}
-                    on:input={analyseText}
-                    on:focus={onFocus}
-                    on:blur={onBlur}
-                    on:keydown={(key) => {
-                        if ((key.key === "Enter" && key.shiftKey) || ["Backspace", "Delete"].includes(key.key)) {
-                            setTimeout(() => adjustHeight(), 10);
-                        }
-                        if (key.key === "Enter" && !key.shiftKey) {
-                            sendMessage();
-                            setTimeout(() => (newMessageText = ""), 10);
-                            return false;
-                        }
-                        return true;
-                    }}
-                    rows="1"
-                    style="margin-bottom: 0;"
-                />
+            <div class="tw-flex tw-items-end tw-relative">
+                <div class="tw-relative tw-w-full">
+                    {#if isMessageTooLong}
+                        <div
+                            class="tw-text-pop-red tw-text-xxxs tw-absolute tw-right-4 tw-font-bold"
+                            style="bottom: -9px;"
+                        >
+                            {newMessageText.length}/{maxCharMessage}
+                        </div>
+                    {/if}
+                    <textarea
+                        type="text"
+                        bind:this={textarea}
+                        bind:value={newMessageText}
+                        placeholder={$LL.enterText()}
+                        on:input={analyseText}
+                        on:focus={onFocus}
+                        on:blur={onBlur}
+                        on:keydown={onKeyDown}
+                        on:keyup={onKeyUp}
+                        on:keypress={onKeyPress}
+                        rows="1"
+                        style="margin-bottom: 0;"
+                        class="tw-w-full"
+                    />
+                </div>
 
                 <button
                     class={`tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 ${
@@ -376,20 +441,28 @@
                 >
                     <SmileIcon size="17" />
                 </button>
-                <input type="file" id="file" name="file" class="tw-hidden" on:input={handleInputFile} multiple />
-                <label for="file" class="tw-mb-0 tw-cursor-pointer"><PaperclipIcon size="17" /></label>
+                {#if ENABLE_CHAT_UPLOAD || ADMIN_API_URL}
+                    <input type="file" id="file" name="file" class="tw-hidden" on:input={handleInputFile} multiple />
+                    <label
+                        for="file"
+                        class="tw-px-1 tw-py-1 tw-mx-0.5 tw-my-1 tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-cursor-pointer"
+                        ><PaperclipIcon size="17" /></label
+                    >
+                {/if}
                 <button
                     id="send"
                     type="submit"
                     class={`${
-                        !$hasErrorUploadingFile && !$hasInProgressUploadingFile ? "can-send" : "disabled"
+                        !$hasErrorUploadingFile && !$hasInProgressUploadingFile && !isMessageTooLong
+                            ? "can-send"
+                            : "cant-send"
                     } tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue`}
                     on:mouseover={showErrorMessages}
                     on:focus={showErrorMessages}
                     on:click={sendMessage}
                 >
-                    {#if $hasErrorUploadingFile}
-                        <AlertCircleIcon size="17" />
+                    {#if $hasErrorUploadingFile || isMessageTooLong}
+                        <AlertCircleIcon size="17" class="tw-text-pop-red" />
                     {:else if $hasInProgressUploadingFile}
                         <LoaderIcon size="17" class="tw-animate-spin" />
                     {:else}
@@ -479,12 +552,13 @@
             flex-wrap: nowrap;
             .error-hover {
                 display: none;
-                position: absolute;
-                color: red;
                 left: 0;
-                top: -32px;
-                width: 100%;
                 min-height: 30px;
+                bottom: 35px;
+            }
+            button {
+                min-height: 0;
+                cursor: pointer;
             }
             &:hover {
                 .error-hover {

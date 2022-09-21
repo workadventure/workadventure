@@ -609,8 +609,8 @@ export interface ObtainedMediaStreamConstraints {
 }
 
 let obtainedMediaConstraint: ObtainedMediaStreamConstraints = {
-    audio: false,
-    video: false,
+    audio: true,
+    video: true,
 };
 /**
  * A store containing the actual states of audio and video (activated or deactivated)

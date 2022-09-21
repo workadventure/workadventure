@@ -63,6 +63,7 @@ services:
       - PUSHER_URL=//${PUSHER_HOST}
       - UPLOADER_URL=//${UPLOADER_HOST}
       - EMBEDLY_KEY=${EMBEDLY_KEY}
+      - ENABLE_CHAT_UPLOAD=${ENABLE_CHAT_UPLOAD}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.chat.rule=Host(`${CHAT_HOST}`)"
@@ -157,6 +158,9 @@ services:
       #REDIS
       - REDIS_HOST=${UPLOADER_REDIS_HOST}
       - REDIS_PORT=${UPLOADER_REDIS_PORT}
+      #CHAT
+      - ENABLE_CHAT_UPLOAD=${ENABLE_CHAT_UPLOAD}
+      - UPLOAD_MAX_FILESIZE=${UPLOAD_MAX_FILESIZE}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.uploader.rule=Host(`${UPLOADER_HOST}`)"
@@ -187,19 +191,7 @@ services:
       - redisdata:/data
 
   ejabberd:
-    image: ejabberd/ecs
-    volumes:
-      - ./xmpp/ejabberd.yml:/home/ejabberd/conf/ejabberd.yml
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.xmpp.rule=Host(`${XMPP_HOST}`)"
-      - "traefik.http.routers.xmpp.entryPoints=web"
-      - "traefik.http.services.xmpp.loadbalancer.server.port=5380"
-      - "traefik.http.routers.xmpp-ssl.rule=Host(`${XMPP_HOST}`)"
-      - "traefik.http.routers.xmpp-ssl.entryPoints=websecure"
-      - "traefik.http.routers.xmpp-ssl.tls=true"
-      - "traefik.http.routers.xmpp-ssl.service=xmpp"
-      - "traefik.http.routers.xmpp-ssl.tls.certresolver=myresolver"
+    image: thecodingmachine/workadventure-simple-ecs:${VERSION}
 
   map-storage:
     image: thecodingmachine/workadventure-map-storage:${VERSION}
