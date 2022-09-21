@@ -146,6 +146,11 @@ export class AreaPreview extends Phaser.GameObjects.Container {
                 square.x = dragX;
                 square.y = dragY;
 
+                let newWidth = 0;
+                let newHeight = 0;
+                let newCenterX = 0;
+                let newCenterY = 0;
+
                 if ([Edge.RightCenter, Edge.LeftCenter, Edge.TopCenter, Edge.BottomCenter].includes(index)) {
                     const newWidth = this.squares[Edge.RightCenter].x - this.squares[Edge.LeftCenter].x;
                     const newHeight = this.squares[Edge.BottomCenter].y - this.squares[Edge.TopCenter].y;
@@ -163,54 +168,49 @@ export class AreaPreview extends Phaser.GameObjects.Container {
                         square.y = oldY;
                     }
                 } else {
-                    let newWidth = 0;
-                    let newHeight = 0;
-                    let newCenterX = 0;
-                    let newCenterY = 0;
-
                     switch (index) {
                         case Edge.TopLeft: {
                             newWidth = this.preview.getRightCenter().x - square.x;
                             newHeight = this.preview.getBottomCenter().y - square.y;
-                            newCenterX = square.x + this.preview.displayWidth * 0.5;
-                            newCenterY = square.y + this.preview.displayHeight * 0.5;
+                            newCenterX = square.x + newWidth * 0.5;
+                            newCenterY = square.y + newHeight * 0.5;
                             break;
                         }
                         case Edge.TopRight: {
                             newWidth = square.x - this.preview.getLeftCenter().x;
                             newHeight = this.preview.getBottomCenter().y - square.y;
-                            newCenterX = square.x - this.preview.displayWidth * 0.5;
-                            newCenterY = square.y + this.preview.displayHeight * 0.5;
+                            newCenterX = square.x - newWidth * 0.5;
+                            newCenterY = square.y + newHeight * 0.5;
                             break;
                         }
                         case Edge.BottomLeft: {
                             newWidth = this.preview.getRightCenter().x - square.x;
                             newHeight = square.y - this.preview.getTopCenter().y;
-                            newCenterX = square.x + this.preview.displayWidth * 0.5;
-                            newCenterY = square.y - this.preview.displayHeight * 0.5;
+                            newCenterX = square.x + newWidth * 0.5;
+                            newCenterY = square.y - newHeight * 0.5;
                             break;
                         }
                         case Edge.BottomRight: {
                             newWidth = square.x - this.preview.getLeftCenter().x;
                             newHeight = square.y - this.preview.getTopCenter().y;
-                            newCenterX = square.x - this.preview.displayWidth * 0.5;
-                            newCenterY = square.y - this.preview.displayHeight * 0.5;
+                            newCenterX = square.x - newWidth * 0.5;
+                            newCenterY = square.y - newHeight * 0.5;
                             break;
                         }
                     }
+                }
 
-                    if (newWidth >= 32) {
-                        this.preview.displayWidth = newWidth;
-                        this.preview.x = newCenterX;
-                    } else {
-                        square.x = oldX;
-                    }
-                    if (newHeight >= 32) {
-                        this.preview.displayHeight = newHeight;
-                        this.preview.y = newCenterY;
-                    } else {
-                        square.y = oldY;
-                    }
+                if (newWidth >= 32) {
+                    this.preview.displayWidth = newWidth;
+                    this.preview.x = newCenterX;
+                } else {
+                    square.x = oldX;
+                }
+                if (newHeight >= 32) {
+                    this.preview.displayHeight = newHeight;
+                    this.preview.y = newCenterY;
+                } else {
+                    square.y = oldY;
                 }
                 this.updateSquaresPositions();
                 (this.scene as GameScene).markDirty();
