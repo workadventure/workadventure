@@ -14,7 +14,7 @@ class AdminApi {
         };
 
         const res = await Axios.get(ADMIN_API_URL + "/api/map", {
-            headers: { Authorization: `${ADMIN_API_TOKEN}`, "User-Agent": "Back" },
+            headers: { Authorization: `${ADMIN_API_TOKEN}`, "User-Agent": "WorkAdventure Back" },
             params,
         });
 
