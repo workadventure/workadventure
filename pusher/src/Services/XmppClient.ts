@@ -102,11 +102,7 @@ export class XmppClient {
             });
 
             xmpp.on("disconnect", () => {
-                debug(
-                    "XmppClient => createClient => disconnect => status",
-                    status,
-                    this.clientSocket.disconnecting
-                );
+                debug("XmppClient => createClient => disconnect => status", status, this.clientSocket.disconnecting);
                 if (status !== "disconnected") {
                     status = "disconnected";
 
