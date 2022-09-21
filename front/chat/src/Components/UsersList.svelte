@@ -23,7 +23,6 @@
 
     let minimizeUser = true;
     const maxUsersMinimized = 7;
-    let countUserShown = 0;
 
     function openChat(user: User) {
         return user;
@@ -42,25 +41,29 @@
 
     $: usersByMaps = usersList
         .filter((user: User) => user.name.toLocaleLowerCase().includes(searchValue))
-        .reduce((reduced, user) => {
-            let group = user.roomName ?? "ZZZZZZZZZZ-disconnected";
-            if(!reduced.has(group)) reduced.set(group, [user]);
-            else {
-                const usersList = [...reduced.get(group), user];
-                usersList.sort((a, b) => a.name.localeCompare(b.name));
-                reduced.set(group, usersList);
+        .reduce((reduced, user, index) => {
+            if ((minimizeUser && index < maxUsersMinimized) || !minimizeUser) {
+                let group = user.roomName ?? "ZZZZZZZZZZ-disconnected";
+                if (!reduced.has(group)) reduced.set(group, [user]);
+                else {
+                    const usersList = [...reduced.get(group), user];
+                    usersList.sort((a, b) => a.name.localeCompare(b.name));
+                    reduced.set(group, usersList);
+                }
             }
             return reduced;
         }, new Map<string, User[]>());
 
-    $: roomSorted = [...usersByMaps.keys()].sort((a, b) => me.roomName === a ? -1 : (me.roomName === b ? 1 : a.localeCompare(b)));
+    $: roomSorted = [...usersByMaps.keys()].sort((a, b) =>
+        me.roomName === a ? -1 : me.roomName === b ? 1 : a.localeCompare(b)
+    );
 </script>
 
 <div id="users" class="users tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
     <div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
         {#if !$loadingSubscribersStore}
             <span
-                    class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
+                class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
             >
                 {usersList.filter((user) => user.active).length}
             </span>
@@ -79,31 +82,28 @@
             {:else}
                 {#each roomSorted as room}
                     {#each usersByMaps.get(room) as user}
-                        {#if (minimizeUser && countUserShown < maxUsersMinimized) || !minimizeUser}
-                            {countUserShown++}
-                            <ChatUser
-                                    {mucRoom}
-                                    {openChat}
-                                    {user}
-                                    on:goTo={(event) => dispatch("goTo", event.detail)}
-                                    on:rankUp={(event) => dispatch("rankUp", event.detail)}
-                                    on:rankDown={(event) => dispatch("rankDown", event.detail)}
-                                    on:ban={(event) => dispatch("ban", event.detail)}
-                                    {searchValue}
-                                    {meStore}
-                            />
-                        {/if}
+                        <ChatUser
+                            {mucRoom}
+                            {openChat}
+                            {user}
+                            on:goTo={(event) => dispatch("goTo", event.detail)}
+                            on:rankUp={(event) => dispatch("rankUp", event.detail)}
+                            on:rankDown={(event) => dispatch("rankDown", event.detail)}
+                            on:ban={(event) => dispatch("ban", event.detail)}
+                            {searchValue}
+                            {meStore}
+                        />
                     {/each}
                 {/each}
                 {#if usersList.filter((user) => !user.isMe).length === 0}
                     <div
-                            class="tw-mt-2 tw-px-5 tw-py-4 tw-border-t tw-border-solid tw-border-0 tw-border-transparent tw-border-t-light-purple"
+                        class="tw-mt-2 tw-px-5 tw-py-4 tw-border-t tw-border-solid tw-border-0 tw-border-transparent tw-border-t-light-purple"
                     >
                         <p>{$LL.roomEmpty()}</p>
                         <button
-                                type="button"
-                                class="light tw-m-auto tw-cursor-pointer tw-px-3"
-                                on:click={showInviteMenu}
+                            type="button"
+                            class="light tw-m-auto tw-cursor-pointer tw-px-3"
+                            on:click={showInviteMenu}
                         >
                             {$LL.invite()}
                         </button>
