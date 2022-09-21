@@ -424,7 +424,12 @@ export class IoSocketController {
                                     const isErrorChecking = isErrorApiData.safeParse(tempUserData);
 
                                     if (isErrorChecking.success) {
-                                        const error = isErrorChecking.data;
+                                        const isErrorApiDataWithHttpCode = isErrorApiData.and(
+                                            z.object({
+                                                httpCode: z.number(),
+                                            })
+                                        );
+                                        const error = isErrorApiDataWithHttpCode.parse(tempUserData);
                                         return res.upgrade(
                                             {
                                                 rejected: true,

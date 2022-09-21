@@ -9,10 +9,6 @@ import { extendApi } from "@anatine/zod-openapi";
 export const isErrorApiErrorData = extendApi(
     z.object({
         type: z.literal("error"),
-        httpCode: extendApi(z.number(), {
-            description: "The HTTP status code.",
-            example: "404",
-        }),
         code: extendApi(z.string(), {
             description: "The system code of an error, it must be in SCREAMING_SNAKE_CASE.",
             example: "ROOM_NOT_FOUND",
@@ -41,10 +37,6 @@ export const isErrorApiErrorData = extendApi(
 export const isErrorApiRetryData = extendApi(
     z.object({
         type: z.literal("retry"),
-        httpCode: extendApi(z.number(), {
-            description: "The HTTP status code.",
-            example: "404",
-        }),
         code: extendApi(z.string(), {
             description:
                 "The system code of an error, it must be in SCREAMING_SNAKE_CASE. \n It will not be displayed to the user.",
@@ -87,10 +79,6 @@ export const isErrorApiRetryData = extendApi(
 export const isErrorApiRedirectData = extendApi(
     z.object({
         type: z.literal("redirect"),
-        httpCode: extendApi(z.number(), {
-            description: "The HTTP status code.",
-            example: "301",
-        }),
         urlToRedirect: extendApi(z.string(), {
             description: "A URL specified to redirect the user onto it directly",
             example: "/contact-us",
@@ -106,10 +94,6 @@ export const isErrorApiRedirectData = extendApi(
 export const isErrorApiUnauthorizedData = extendApi(
     z.object({
         type: z.literal("unauthorized"),
-        httpCode: extendApi(z.string(), {
-            description: "The HTTP status code.",
-            example: "403",
-        }),
         code: extendApi(z.string(), {
             description: "This is the system code of an error, it must be in SCREAMING_SNAKE_CASE.",
             example: "USER_ACCESS_FORBIDDEN",

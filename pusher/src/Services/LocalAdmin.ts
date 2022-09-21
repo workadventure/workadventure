@@ -18,7 +18,7 @@ class LocalAdmin implements AdminInterface {
         ipAddress: string,
         characterLayers: string[],
         locale?: string
-    ): Promise<FetchMemberDataByAuthTokenResponse | ErrorApiData> {
+    ): Promise<FetchMemberDataByAuthTokenResponse | (ErrorApiData & { httpCode: number })> {
         let authTokenData = undefined;
 
         try {

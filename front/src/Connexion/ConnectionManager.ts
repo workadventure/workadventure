@@ -23,6 +23,7 @@ import { isErrorApiData, isErrorApiRedirectData } from "../Messages/JsonMessages
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { get } from "svelte/store";
 import LL from "../i18n/i18n-svelte";
+import { isMeData } from "../Messages/JsonMessages/MeData";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -207,17 +208,34 @@ class ConnectionManager {
                     console.error(err);
                     // if the user must be connected in the current room or if the pusher error is not openid provider access error
                     // try to connect with function loadOpenIDScreen
-                    if (
-                        this._currentRoom.authenticationMandatory ||
-                        (Axios.isAxiosError(err) &&
-                            err.response?.data &&
-                            err.response.data !== "User cannot to be connected on openid provider")
-                    ) {
-                        const redirect = this.loadOpenIDScreen();
-                        if (redirect === null) {
-                            throw new Error("Unable to redirect on login page.");
+                    if (Axios.isAxiosError(err)) {
+                        if (err.response?.status === 401) {
+                            const redirect = this.loadOpenIDScreen();
+                            if (redirect === null) {
+                                throw new Error("Unable to redirect on login page.");
+                            }
+                            return redirect;
+                        } else {
+                            errorScreenStore.setError(
+                                ErrorScreenMessage.fromPartial({
+                                    type: "error",
+                                    code: "PUSHER_ERROR",
+                                    title: get(LL).error.connectionRejected.title(),
+                                    details: get(LL).error.connectionRejected.subTitle({ error: err.message }),
+                                })
+                            );
+                            throw err;
                         }
-                        return redirect;
+                    } else {
+                        errorScreenStore.setError(
+                            ErrorScreenMessage.fromPartial({
+                                type: "error",
+                                code: "NO_AUTH_PUSHER_ERROR",
+                                title: get(LL).error.connectionRejected.title(),
+                                details: get(LL).error.connectionRejected.details(),
+                            })
+                        );
+                        throw err;
                     }
                 }
             }
@@ -369,54 +387,20 @@ class ConnectionManager {
     async checkAuthUserConnexion(token: string) {
         //set connected store for menu at false
         userIsConnected.set(false);
-        console.log("dfqsdfsdfs");
 
-        let res = undefined;
-
-        try {
-            res = await Axios.get(`${PUSHER_URL}/me`, {
-                params: { authToken: token, playUri: this.currentRoom?.key },
-            });
-        } catch (err) {
-            if (Axios.isAxiosError(err)) {
-                if (err.response?.status === 401) {
-                    connectionManager.logout().catch((e) => console.error(e));
-                    return;
-                } else {
-                    errorScreenStore.setError(
-                        ErrorScreenMessage.fromPartial({
-                            type: "error",
-                            code: "PUSHER_ERROR",
-                            title: get(LL).error.connectionRejected.title(),
-                            details: get(LL).error.connectionRejected.subTitle({ error: err.message }),
-                        })
-                    );
-                    throw new Error("Unknown error");
-                }
-            }
-        }
-
-        if (!res) {
-            errorScreenStore.setError(
-                ErrorScreenMessage.fromPartial({
-                    type: "error",
-                    code: "NO_AUTH_PUSHER_ERROR",
-                    title: get(LL).error.connectionRejected.title(),
-                    details: get(LL).error.connectionRejected.details(),
-                })
-            );
-            throw new Error("No response on auth user connexion");
-        }
+        const res = await Axios.get<undefined>(`${PUSHER_URL}/me`, {
+            params: { authToken: token, playUri: this.currentRoom?.key },
+        });
 
         const errorChecking = isErrorApiData.safeParse(res.data);
 
         if (errorChecking.success) {
             console.error(errorChecking.data);
 
-            const redirecErrorChecking = isErrorApiRedirectData.safeParse(errorChecking.data);
+            const redirectErrorChecking = isErrorApiRedirectData.safeParse(errorChecking.data);
 
-            if (redirecErrorChecking.success) {
-                window.location.href = redirecErrorChecking.data.urlToRedirect;
+            if (redirectErrorChecking.success) {
+                window.location.href = redirectErrorChecking.data.urlToRedirect;
                 return;
             }
 
@@ -424,7 +408,9 @@ class ConnectionManager {
             return;
         }
 
-        const { authToken, userUuid, email, username, locale, textures, visitCardUrl } = res.data;
+        const meData = isMeData.parse(res.data);
+
+        const { authToken, userUuid, email, username, locale, textures, visitCardUrl } = meData;
 
         localUserStore.setAuthToken(authToken);
         this.localUser = new LocalUser(userUuid, email);
@@ -440,7 +426,7 @@ class ConnectionManager {
 
         if (locale) {
             try {
-                if (locales.indexOf(locale) !== -1) {
+                if (locales.indexOf(locale as Locales) !== -1) {
                     await setCurrentLocale(locale as Locales);
                 } else {
                     const nonRegionSpecificLocale = locales.find((l) => l.startsWith(locale.split("-")[0]));

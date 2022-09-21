@@ -55,6 +55,7 @@ import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefi
 import { XmppClient } from "../Services/XmppClient";
 import jid from "@xmpp/jid";
 import { isUserRoomToken } from "../Messages/JsonMessages/AdminApiData";
+import { z } from "zod";
 
 interface UpgradeFailedErrorData {
     rejected: true;
@@ -199,23 +200,24 @@ export class IoSocketChatController {
                                 if (checkUserData.success) {
                                     userData = checkUserData.data;
                                 } else {
-                                    const isErrorChecking = isErrorApiData.safeParse(tempUserData);
-
-                                    if (isErrorChecking.success) {
-                                        const error = isErrorChecking.data;
-                                        return res.upgrade(
-                                            {
-                                                rejected: true,
-                                                reason: error.httpCode === 401 ? "tokenInvalid" : "error",
-                                                status: error.httpCode,
-                                                error: error,
-                                            } as UpgradeFailedData,
-                                            websocketKey,
-                                            websocketProtocol,
-                                            websocketExtensions,
-                                            context
-                                        );
-                                    }
+                                    const isErrorApiDataWithHttpCode = isErrorApiData.and(
+                                        z.object({
+                                            httpCode: z.number(),
+                                        })
+                                    );
+                                    const error = isErrorApiDataWithHttpCode.parse(tempUserData);
+                                    return res.upgrade(
+                                        {
+                                            rejected: true,
+                                            reason: error.httpCode === 401 ? "tokenInvalid" : "error",
+                                            status: error.httpCode,
+                                            error: error,
+                                        } as UpgradeFailedData,
+                                        websocketKey,
+                                        websocketProtocol,
+                                        websocketExtensions,
+                                        context
+                                    );
                                 }
                             } catch (err) {
                                 if (Axios.isAxiosError(err)) {

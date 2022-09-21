@@ -194,7 +194,7 @@ class AdminApi implements AdminInterface {
         ipAddress: string,
         characterLayers: string[],
         locale?: string
-    ): Promise<FetchMemberDataByAuthTokenResponse | ErrorApiData> {
+    ): Promise<FetchMemberDataByAuthTokenResponse | (ErrorApiData & { httpCode: number })> {
         let res = undefined;
         let decodedToken;
 
@@ -282,16 +282,24 @@ class AdminApi implements AdminInterface {
             });
         } catch (err) {
             if (Axios.isAxiosError(err)) {
+                if (!err.response) {
+                    console.error(err);
+                    throw new Error("No response received from /api/room/access endpoing");
+                }
+
                 if (err.response?.status === 404) {
                     console.warn(err.message, "/api/map", playUri);
                 } else {
                     console.error(err.message, "/api/map", playUri);
                 }
 
-                const isApiError = isErrorApiData.safeParse(err.response?.data);
+                const isApiError = isErrorApiData.safeParse(err.response.data);
 
                 if (isApiError.success) {
-                    return isApiError.data;
+                    return {
+                        ...isApiError.data,
+                        httpCode: err.response.status,
+                    };
                 }
 
                 console.log(isApiError.error.issues);

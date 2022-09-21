@@ -52,7 +52,8 @@ class OpenIDClient {
                     );
                     this.issuerPromise.catch((e) => {
                         console.warn(
-                            "Failed to fetch OIDC configuration for .well-known/openid-configuration only. Error message: ", e
+                            "Failed to fetch OIDC configuration for .well-known/openid-configuration only. Error message: ",
+                            e
                         );
                         this.issuerPromise = null;
                     });
