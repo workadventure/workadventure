@@ -27,6 +27,7 @@
     import { iframeListener } from "../IframeListener";
     import { fly } from "svelte/transition";
     import NeedRefresh from "./NeedRefresh.svelte";
+    import ChatForumRooms from "./ChatForumRooms.svelte";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -36,6 +37,7 @@
     let searchValue = "";
     let showUsers = true;
     let showLives = true;
+    let showForums = true;
 
     beforeUpdate(() => {
         autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
@@ -104,6 +106,9 @@
     }
     function handleShowLives() {
         showLives = !showLives;
+    }
+    function handleShowForums() {
+        showForums = !showForums;
     }
 
     function closeChat() {
@@ -194,6 +199,16 @@
                             defaultMucRoom?.sendBan(event.detail.user, event.detail.name, event.detail.playUri)}
                     />
                 {/if}
+
+                <ChatForumRooms
+                        {showForums}
+                        searchValue={searchValue.toLocaleLowerCase()}
+                        on:activeThread={handleActiveThread}
+                        on:showForums={handleShowForums}
+                        forumRooms={[...$mucRoomsStore].filter(
+                        (mucRoom) => mucRoom.type === "forum" && mucRoom.name.toLowerCase().includes(searchValue)
+                    )}
+                />
 
                 <ChatLiveRooms
                     {showLives}

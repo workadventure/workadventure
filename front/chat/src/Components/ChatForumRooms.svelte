@@ -6,8 +6,8 @@
     import { MucRoom } from "../Xmpp/MucRoom";
     const dispatch = createEventDispatcher();
 
-    export let liveRooms: MucRoom[];
-    export let showLives: Boolean;
+    export let forumRooms: MucRoom[];
+    export let showForums: Boolean;
     export let searchValue: string;
 
     function open(liveRoom: MucRoom) {
@@ -15,38 +15,38 @@
     }
 </script>
 
-{#if liveRooms.length > 0}
+<!--{#if forumRooms.length > 0}-->
     <div
-        id="liveRooms"
+        id="forumRooms"
         class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple"
         transition:fly={{ y: -30, duration: 100 }}
     >
         <div
             class="tw-px-4 tw-py-1 tw-flex tw-items-center tw-cursor-pointer"
-            on:click|stopPropagation={() => dispatch("showLives")}
+            on:click|stopPropagation={() => dispatch("showForums")}
         >
             <span
                 class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
             >
-                {liveRooms.length}
+                {forumRooms.length}
             </span>
-            <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">Live zones</p>
+            <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">Forums</p>
             <button class="tw-text-lighter-purple">
-                <ChevronUpIcon class={`tw-transform tw-transition ${showLives ? "" : "tw-rotate-180"}`} />
+                <ChevronUpIcon class={`tw-transform tw-transition ${showForums ? "" : "tw-rotate-180"}`} />
             </button>
         </div>
-        {#if showLives}
+        {#if showForums}
             <div transition:fly={{ y: -30, duration: 100 }}>
-                {#each liveRooms as liveRoom}
+                {#each forumRooms as forumRoom}
                     <ChatMucRoom
-                        mucRoom={liveRoom}
+                        mucRoom={forumRoom}
                         {searchValue}
-                        meStore={liveRoom.getMeStore()}
-                        usersListStore={liveRoom.getPresenceStore()}
+                        meStore={forumRoom.getMeStore()}
+                        usersListStore={forumRoom.getPresenceStore()}
                         {open}
                     />
                 {/each}
             </div>
         {/if}
     </div>
-{/if}
+<!--{/if}-->
