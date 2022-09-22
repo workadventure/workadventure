@@ -13,7 +13,7 @@
     import LL from "../i18n/i18n-svelte";
     import Woka from "./Woka/Woka.svelte";
     import { localUserStore } from "../Connexion/LocalUserStore";
-    import microphoneOffImg from "./images/microphone-off-blue.png";
+    import microphoneOffImg from "./images/microphone-off.png";
 
     let stream: MediaStream | null;
     let userName = localUserStore.getName();
