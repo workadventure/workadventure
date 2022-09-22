@@ -161,7 +161,7 @@ export class MucRoom {
     private canLoadOlderMessagesStore: Writable<boolean>;
     private showDisabledLoadOlderMessagesStore: Writable<boolean>;
     private closed: boolean = false;
-    private description: string = "";
+    description: string = "";
     private maxHistoryDate: string = "";
     private getAllSubscriptionsId: string = "";
     private loadingSubscribers: Writable<boolean>;

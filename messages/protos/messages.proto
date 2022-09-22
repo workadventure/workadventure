@@ -441,6 +441,7 @@ message ServerToClientMessage {
     //XmppSettingsMessage xmppSettingsMessage = 29;
     //XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 30;
     MoveToPositionMessage moveToPositionMessage = 31;
+    ChatMessage chatMessage = 32;
   }
 }
 
@@ -660,9 +661,25 @@ message EmptyMessage {
 
 
 
-/*******************************************************µ************************
+
+/*********************************************************************************
  * Start Chat Messages
  ********************************************************************************/
+message ChatMessage{
+  oneof message {
+    JoinMucRoomMessage joinMucRoomMessage = 1;
+    LeaveMucRoomMessage leaveMucRoomMessage = 2;
+  }
+}
+
+message JoinMucRoomMessage{
+  MucRoomDefinitionMessage mucRoomDefinitionMessage = 1;
+}
+
+message LeaveMucRoomMessage{
+  string url = 1;
+}
+
 message IframeToPusherMessage{
   oneof message {
     XmppMessage xmppMessage = 1;
@@ -683,7 +700,7 @@ message MucRoomDefinitionMessage {
   string url = 1;
   string name = 2;
   string type = 3;
-  bool subscribe = 4;
+  google.protobuf.BoolValue subscribe = 4;
 }
 
 message XmppSettingsMessage{
@@ -741,6 +758,7 @@ service RoomManager {
   rpc sendAdminMessageToRoom(AdminRoomMessage) returns (EmptyMessage);
   rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (EmptyMessage);
   rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (EmptyMessage);
+  rpc sendChatMessagePrompt(ChatMessage) returns (EmptyMessage);
   rpc getRooms(EmptyMessage) returns (RoomsList);
   rpc ping(PingMessage) returns (PingMessage);
 }

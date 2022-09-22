@@ -17,6 +17,7 @@ import { Client, client, xml } from "@xmpp/client";
 import { Element } from "@xmpp/xml";
 import SASLError from "@xmpp/sasl/lib/SASLError";
 import StreamError from "@xmpp/connection/lib/StreamError";
+import {BoolValue} from "google-protobuf/google/protobuf/wrappers_pb";
 
 class ElementExt extends Element {}
 
@@ -129,7 +130,7 @@ export class XmppClient {
                 this.address = address;
                 const xmppSettings = new XmppSettingsMessage();
                 xmppSettings.setJid(address.toString());
-                xmppSettings.setConferencedomain("conference.ejabberd");
+                xmppSettings.setConferencedomain("conference."+EJABBERD_DOMAIN);
                 xmppSettings.setRoomsList(
                     this.initialMucRooms.map((definition: MucRoomDefinitionInterface) => {
                         const mucRoomDefinitionMessage = new MucRoomDefinitionMessage();
@@ -139,7 +140,9 @@ export class XmppClient {
                         mucRoomDefinitionMessage.setName(definition.name);
                         mucRoomDefinitionMessage.setUrl(definition.url);
                         mucRoomDefinitionMessage.setType(definition.type);
-                        mucRoomDefinitionMessage.setSubscribe(definition.subscribe);
+                        if(definition.subscribe !== undefined){
+                            mucRoomDefinitionMessage.setSubscribe(new BoolValue().setValue(definition.subscribe));
+                        }
                         return mucRoomDefinitionMessage;
                     })
                 );

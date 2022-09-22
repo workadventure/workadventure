@@ -100,9 +100,10 @@
                         ><RefreshCwIcon size="13" class="tw-mr-2" /> {$LL.reinit()}
                     </button>
                 {/if}
+                <button on:click={() => activeThread.sendSubject()}>send subject</button>
             </div>
             <div class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5">
-                <p class="tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">Chatzone</p>
+                <p class="tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">{activeThread.description}</p>
             </div>
             <div class="users wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
                 <p class="tw-px-5 tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">

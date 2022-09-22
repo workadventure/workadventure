@@ -86,8 +86,9 @@ export class XmppClient {
         xmppServerConnectionStatusStore.set(true);
 
         for (const { name, url, type, subscribe } of initialRoomDefinitions) {
-            if (name && url) {
-                this.joinMuc(name, url, type, subscribe);
+            if (name && url && type) {
+                console.log('Subscribe :', subscribe ?? mucRoomsStore.getDefaultRoom()?.subscribe);
+                this.joinMuc(name, url, type, subscribe ?? mucRoomsStore.getDefaultRoom()?.subscribe);
             }
         }
     }
