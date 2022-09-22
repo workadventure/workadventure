@@ -8,6 +8,7 @@
         modalIframeTitlelStore,
         modalVisibilityStore,
         modalPositionStore,
+        modalIframeAllowApi,
     } from "../../Stores/ModalStore";
 
     let modalIframe: HTMLIFrameElement;
@@ -23,11 +24,15 @@
     }
 
     onMount(() => {
-        iframeListener.registerChatIframe(modalIframe);
+        if ($modalIframeAllowApi) {
+            iframeListener.registerChatIframe(modalIframe);
+        }
     });
 
     onDestroy(() => {
-        iframeListener.unregisterIframe(modalIframe);
+        if ($modalIframeAllowApi) {
+            iframeListener.unregisterIframe(modalIframe);
+        }
     });
 </script>
 

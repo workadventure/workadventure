@@ -51,6 +51,7 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import { ChatMessage } from "./Events/ChatEvent";
 import { requestVisitCardsStore } from "../Stores/GameStore";
 import {
+    modalIframeAllowApi,
     modalIframeAllowlStore,
     modalIframeSrcStore,
     modalIframeTitlelStore,
@@ -439,6 +440,7 @@ class IframeListener {
                         modalIframeAllowlStore.set(iframeEvent.data.allow);
                         modalIframeSrcStore.set(iframeEvent.data.src);
                         modalPositionStore.set(iframeEvent.data.position);
+                        modalIframeAllowApi.set(iframeEvent.data.allowApi);
                         modalVisibilityStore.set(true);
                     } else if (iframeEvent.type == "closeModal") {
                         modalVisibilityStore.set(false);
