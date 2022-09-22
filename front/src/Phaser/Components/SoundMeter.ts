@@ -10,6 +10,7 @@ export class SoundMeter {
     private dataArray: Uint8Array | undefined;
     private context: IAudioContext | undefined;
     private source: IMediaStreamAudioSourceNode<IAudioContext> | undefined;
+    private readonly NB_OF_BAR = 7;
 
     constructor(mediaStream: MediaStream) {
         this.instant = 0.0;
@@ -17,27 +18,43 @@ export class SoundMeter {
         this.connectToSource(mediaStream, new AudioContext());
     }
 
-    public getVolume(): number {
+    public getVolume(): number[] {
         if (this.context === undefined || this.dataArray === undefined || this.analyser === undefined) {
-            return 0;
+            return [];
         }
         this.analyser.getByteFrequencyData(this.dataArray);
+        //console.log(this.dataArray)
 
-        const input = this.dataArray;
-        let i;
-        let sum = 0.0;
-        //let clipcount = 0;
-        for (i = 0; i < input.length; ++i) {
-            sum += input[i] * input[i];
-            //    if (Math.abs(input[i]) > 0.99) {
-            //        clipcount += 1;
-            //    }
+        // const input = this.dataArray;
+        // let i;
+        // let sum = 0.0;
+        // //let clipcount = 0;
+        // for (i = 0; i < input.length; ++i) {
+        //     sum += input[i] * input[i];
+        //     //    if (Math.abs(input[i]) > 0.99) {
+        //     //        clipcount += 1;0
+        //     //    }
+        // }
+        // this.instant = Math.sqrt(sum / input.length);
+        // //this.slow = 0.95 * that.slow + 0.05 * that.instant;
+        // //this.clip = clipcount / input.length;
+
+        return this.getFrenquenciesByBar();
+    }
+
+    public getFrenquenciesByBar() {
+        const spectrum: number[] = [0, 0, 0, 0, 0, 0, 0];
+
+        if (!this.dataArray) {
+            return spectrum;
         }
-        this.instant = Math.sqrt(sum / input.length);
-        //this.slow = 0.95 * that.slow + 0.05 * that.instant;
-        //this.clip = clipcount / input.length;
 
-        return this.instant;
+        this.analyser?.getByteFrequencyData(this.dataArray);
+        for (let i = 0; i < this.NB_OF_BAR; i++) {
+            const index = (i + 10) * 2; //Covers more steps from the whole spectrum.
+            spectrum[i] = this.dataArray[index];
+        }
+        return spectrum;
     }
 
     public stop(): void {

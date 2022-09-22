@@ -644,7 +644,7 @@ export const obtainedMediaConstraintStore = derived<Readable<MediaStreamConstrai
     }
 );
 
-export const localVolumeStore = readable<number | undefined>(undefined, (set) => {
+export const localVolumeStore = readable<number[] | undefined>(undefined, (set) => {
     let timeout: ReturnType<typeof setTimeout>;
     let soundMeter: SoundMeter;
     const unsubscribe = localStreamStore.subscribe((localStreamStoreValue) => {

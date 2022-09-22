@@ -1092,11 +1092,12 @@ export class GameScene extends DirtyScene {
             }
             if (newPeerNumber > 0) {
                 if (!this.localVolumeStoreUnsubscriber) {
-                    this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((volume) => {
-                        if (volume === undefined) {
+                    this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((spectrum) => {
+                        if (spectrum === undefined) {
                             this.CurrentPlayer.showTalkIcon(false, true);
                             return;
                         }
+                        const volume = spectrum.reduce((a, b) => a + b, 0);
                         this.tryChangeShowVoiceIndicatorState(volume > talkIconVolumeTreshold);
                     });
                 }

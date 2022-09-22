@@ -1,7 +1,7 @@
 <script lang="ts">
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
-    export let volume = 0;
+    export let volume = [0, 0, 0, 0, 0, 0, 0];
     let display = true;
     export let classcss: string;
     export let barColor = "white";
@@ -17,72 +17,21 @@
     }
 </script>
 
-<div
-    class="tw-flex tw-justify-between tw-w-10 tw-h-10 md:tw-w-5 md:tw-w-5 lg:tw-w-10 lg:tw-h-10 tw-items-center {classcss ??
-        ''}"
-    class:active={display}
->
-    <div
-        class=" tw-h-1/5 voice-meter-bar {barClass}"
-        class:scale-y-min={volume < 35}
-        class:tw-scale-y-[0.3]={volume >= 35 && volume < 50}
-        class:tw-scale-y-75={volume >= 50 && volume < 65}
-        class:tw-scale-y-125={volume >= 65 && volume < 80}
-        class:tw-scale-y-140={volume >= 80 && volume < 95}
-        class:tw-scale-y-135={volume > 95}
-    />
-    <div
-        class="tw-h-1/2 voice-meter-bar {barClass}"
-        class:scale-y-min={volume < 35}
-        class:tw-scale-y-35={volume >= 35 && volume < 50}
-        class:tw-scale-y-95={volume >= 50 && volume < 65}
-        class:tw-scale-y-110={volume >= 65 && volume < 80}
-        class:tw-scale-y-235={volume >= 80 && volume < 95}
-        class:tw-scale-y-135={volume > 80}
-    />
-    <div
-        class="tw-h-2/5 voice-meter-bar {barClass}"
-        class:scale-y-min={volume < 35}
-        class:tw-scale-y-75={volume >= 35 && volume < 50}
-        class:tw-scale-y-80={volume >= 50 && volume < 65}
-        class:tw-scale-y-95={volume >= 65 && volume < 80}
-        class:tw-scale-y-235={volume >= 80 && volume < 95}
-        class:tw-scale-y-135={volume > 95}
-    />
-    <div
-        class="tw-h-3/5 voice-meter-bar {barClass}"
-        class:scale-y-min={volume < 35}
-        class:tw-scale-y-[0.4]={volume >= 35 && volume < 50}
-        class:tw-scale-y-80={volume >= 50 && volume < 65}
-        class:tw-scale-y-105={volume >= 65 && volume < 80}
-        class:tw-scale-y-235={volume >= 80 && volume < 95}
-        class:tw-scale-y-135={volume > 95}
-    />
-    <div
-        class="tw-h-3/5 voice-meter-bar {barClass}"
-        class:scale-y-min={volume < 35}
-        class:tw-scale-y-35={volume >= 35 && volume < 50}
-        class:tw-scale-y-75={volume >= 50 && volume < 65}
-        class:tw-scale-y-95={volume >= 65 && volume < 80}
-        class:tw-scale-y-235={volume >= 80 && volume < 95}
-        class:tw-scale-y-135={volume > 95}
-    />
-    <div
-        class="tw-h-1/2 voice-meter-bar {barClass}"
-        class:scale-y-min={volume < 35}
-        class:tw-scale-y-[0.4]={volume >= 35 && volume < 50}
-        class:tw-scale-y-80={volume >= 50 && volume < 65}
-        class:tw-scale-y-95={volume >= 65 && volume < 80}
-        class:tw-scale-y-125={volume >= 80 && volume < 95}
-        class:tw-scale-y-135={volume > 95}
-    />
-    <div
-        class="tw-h-1/5 voice-meter-bar {barClass}"
-        class:scale-y-min={volume < 35}
-        class:tw-scale-y-35={volume >= 35 && volume < 50}
-        class:tw-scale-y-95={volume >= 50 && volume < 65}
-        class:tw-scale-y-140={volume >= 65 && volume < 80}
-        class:tw-scale-y-125={volume >= 80 && volume < 95}
-        class:tw-scale-y-135={volume > 95}
-    />
+<div class="tw-flex tw-justify-between tw-w-10 tw-h-10 tw-items-center {classcss ?? ''}" class:active={display}>
+    {#each volume as bar}
+        <div
+            class="tw-h-8 voice-meter-bar {barClass}"
+            class:tw-scale-y-[3%]={bar < 10}
+            class:tw-scale-y-[10%]={bar > 20 && bar < 30}
+            class:tw-scale-y-[20%]={bar > 30 && bar < 40}
+            class:tw-scale-y-[30%]={bar > 40 && bar < 50}
+            class:tw-scale-y-[40%]={bar > 50 && bar < 60}
+            class:tw-scale-y-[50%]={bar > 60 && bar < 70}
+            class:tw-scale-y-[60%]={bar > 70 && bar < 80}
+            class:tw-scale-y-[70%]={bar > 80 && bar < 90}
+            class:tw-scale-y-[80%]={bar > 90 && bar < 120}
+            class:tw-scale-y-[90%]={bar > 120 && bar < 140}
+            class:tw-scale-y-[100%]={bar >= 140}
+        />
+    {/each}
 </div>
