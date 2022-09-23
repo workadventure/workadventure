@@ -8,7 +8,7 @@ import { uploaderService } from "../Service/UploaderService";
 import { mimeTypeManager } from "../Service/MimeType";
 import { ByteLenghtBufferException } from "../Exception/ByteLenghtBufferException";
 import Axios, {AxiosError} from "axios";
-import {ADMIN_API_URL, ENABLE_CHAT_UPLOAD, UPLOAD_MAX_FILESIZE} from "../Enum/EnvironmentVariable";
+import {ADMIN_API_URL, CHAT_URL, ENABLE_CHAT_UPLOAD, UPLOAD_MAX_FILESIZE} from "../Enum/EnvironmentVariable";
 
 interface UploadedFileBuffer {
     buffer: Buffer,
@@ -161,6 +161,25 @@ export class FileController extends BaseController {
             this.addCorsHeaders(res);
             res.end();
         });
+
+        this.App.options("/external-upload-file/*", (res: HttpResponse, req: HttpRequest) => {
+            this.addCorsHeaders(res);
+            res.end();
+        });
+
+        this.App.get("/external-upload-file/:id", (res: HttpResponse, req: HttpRequest) => {
+            (async () => {
+                res.onAborted(() => {
+                    console.warn('download file request was aborted');
+                })
+                const id = req.getParameter(0);
+                const signedLink = await uploaderService.getLink(id)
+                res.writeStatus('302')
+                res.writeHeader("Location", signedLink)
+                this.addCorsHeaders(res);
+                res.end()
+            })()
+        })
 
         this.App.get("/upload-file/:id", (res: HttpResponse, req: HttpRequest) => {
             (async () => {

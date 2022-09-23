@@ -16,4 +16,8 @@ export class NullStorageProvider implements StorageProvider,TempStorageProvider 
     uploadTempFile(audioMessageId: string, buffer: Buffer, expireSecond: number): Promise<unknown> {
         throw new Error("No providers setup for temporary storage");
     }
+
+    getExternalDownloadLink(fileId: string): Promise<string> {
+        throw new Error("S3 and Redis for upload file are not defined");
+    }
 }

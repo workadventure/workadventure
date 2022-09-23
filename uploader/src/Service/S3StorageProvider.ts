@@ -4,9 +4,11 @@ import {
     AWS_BUCKET,
     AWS_DEFAULT_REGION,
     AWS_ENDPOINT,
-    AWS_SECRET_ACCESS_KEY
+    AWS_SECRET_ACCESS_KEY,
+    UPLOADER_URL
 } from "../Enum/EnvironmentVariable";
 import AWS, {S3} from "aws-sdk";
+import {CORSRules} from "aws-sdk/clients/s3";
 
 export class S3StorageProvider implements StorageProvider {
     private s3: AWS.S3;
@@ -16,7 +18,6 @@ export class S3StorageProvider implements StorageProvider {
     }
 
     constructor() {
-        console.log('AWS_config :', AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION, AWS_ENDPOINT);
         // Set the region
         AWS.config.update({
             accessKeyId: (AWS_ACCESS_KEY_ID),
@@ -31,14 +32,31 @@ export class S3StorageProvider implements StorageProvider {
             options.endpoint = AWS_ENDPOINT
         }
         this.s3 = new AWS.S3(options);
+        if (!AWS_BUCKET) throw new Error(`AWS_BUCKET must be set `)
+        const bucket:string = AWS_BUCKET
+
+        const corsRules:CORSRules = [
+            {
+                "AllowedHeaders": [ "Authorization" ],
+                "AllowedMethods": [ "GET", "HEAD" ],
+                // It must be a wildcard because file will be downloaded via redirect and origin is set to null
+                "AllowedOrigins": [ "*" ],
+                "ExposeHeaders": [ "Access-Control-Allow-Origin" ]
+            }
+        ]
+        this.s3.putBucketCors({Bucket: bucket, CORSConfiguration: {CORSRules: corsRules}}, (err, _data)=> {
+            if (err) {
+                console.log("Could not setup CORS for S3 bucket", err);
+                return
+            }
+        })
     }
 
     async upload(fileUuid: string, chunks: Buffer, mimeType:string|undefined) {
         let uploadParams: S3.Types.PutObjectRequest = {
             Bucket: `${(AWS_BUCKET as string)}`,
             Key: fileUuid,
-            Body: chunks,
-            ACL: 'public-read'
+            Body: chunks
         };
 
         if(mimeType !== undefined){
@@ -55,6 +73,7 @@ export class S3StorageProvider implements StorageProvider {
             }
             return data;
         }).promise();
+        uploadedFile.Location=`${UPLOADER_URL}/external-upload-file/${fileUuid}`
         return {...uploadedFile, Key: fileUuid};
     }
 
@@ -68,6 +87,11 @@ export class S3StorageProvider implements StorageProvider {
 
     get(fileId: string): Promise<Buffer | undefined | null> {
         throw new Error(`S3 storage provider does not support get method`)
+    }
+
+    async getExternalDownloadLink(fileId: string): Promise<string> {
+        const params = {Bucket: AWS_BUCKET, Key: fileId, Expires: 60};
+        return await this.s3.getSignedUrlPromise('getObject', params);
     }
 }
 export const s3StorageProvider = S3StorageProvider.isEnabled()? new S3StorageProvider() : null;

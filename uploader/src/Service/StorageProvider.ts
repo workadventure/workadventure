@@ -5,6 +5,8 @@ export interface StorageProvider {
     deleteFileById(fileId: string): Promise<void>;
 
     get(fileId: string): Promise<Buffer | undefined | null>;
+
+    getExternalDownloadLink(fileId: string): Promise<string>;
 }
 
 export interface Location {

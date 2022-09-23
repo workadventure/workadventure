@@ -46,6 +46,10 @@ export class RedisStorageProvider implements StorageProvider, TempStorageProvide
     get(fileId: string):Promise<Buffer|undefined|null> {
         return this.redisClient.get(commandOptions({ returnBuffers: true }), fileId)
     }
+
+    getExternalDownloadLink(fileId: string): Promise<string> {
+        throw new Error(`Redis storage provider doesn't support external download links`)
+    }
 }
 
 export const redisStorageProvider = RedisStorageProvider.isEnabled()? new RedisStorageProvider(): null

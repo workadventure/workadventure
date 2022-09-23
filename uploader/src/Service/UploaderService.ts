@@ -30,6 +30,10 @@ class UploaderService{
     getTemp(fileId: string){
         return this.tempStorageProvider.get(fileId);
     }
+
+    getLink(fileId: string) {
+        return this.storageProvider.getExternalDownloadLink(fileId)
+    }
 }
 
 export const uploaderService = new UploaderService(storageProviderService, tempProviderService);
