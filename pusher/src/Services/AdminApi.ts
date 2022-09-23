@@ -71,23 +71,27 @@ class AdminApi implements AdminInterface {
         locale?: string
     ): Promise<MapDetailsData | RoomRedirect> {
         let userId: string | undefined = undefined;
+        let accessToken: string | undefined = undefined;
         if (authToken != undefined) {
             let authTokenData: AuthTokenData;
             try {
                 authTokenData = jwtTokenManager.verifyJWTToken(authToken);
                 userId = authTokenData.identifier;
+                accessToken = authTokenData.accessToken;
                 //eslint-disable-next-line @typescript-eslint/no-unused-vars
             } catch (e) {
                 // Decode token, in this case we don't need to create new token.
                 authTokenData = jwtTokenManager.verifyJWTToken(authToken, true);
                 userId = authTokenData.identifier;
+                accessToken = authTokenData.accessToken;
                 console.info("JWT expire, but decoded:", userId);
             }
         }
 
-        const params: { playUri: string; userId?: string } = {
+        const params: { playUri: string; userId?: string; accessToken?: string } = {
             playUri,
             userId,
+            accessToken,
         };
 
         /**
@@ -112,6 +116,10 @@ class AdminApi implements AdminInterface {
          *        description: "The identifier of the current user \n It can be undefined or an uuid or an email"
          *        type: "string"
          *        example: "998ce839-3dea-4698-8b41-ebbdf7688ad9"
+         *      - name: "accessToken"
+         *        in: "query"
+         *        description: "The OpenID access token in case the user is identified"
+         *        type: "string"
          *     responses:
          *       200:
          *         description: The details of the map
