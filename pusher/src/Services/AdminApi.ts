@@ -157,7 +157,7 @@ class AdminApi implements AdminInterface {
 
     async fetchMemberDataByUuid(
         userIdentifier: string,
-        isLogged: boolean,
+        accessToken: string | undefined,
         playUri: string,
         ipAddress: string,
         characterLayers: string[],
@@ -182,8 +182,13 @@ class AdminApi implements AdminInterface {
          *      - name: "isLogged"
          *        in: "query"
          *        description: "Whether the current user is identified using OpenID Connect... or not. Can be 0 or 1"
+         *        deprecated: true
          *        type: "string"
          *        example: "1"
+         *      - name: "accessToken"
+         *        in: "query"
+         *        description: "The OpenID access token (if the user is logged)"
+         *        type: "string"
          *      - name: "playUri"
          *        in: "query"
          *        description: "The full URL of WorkAdventure"
@@ -227,7 +232,8 @@ class AdminApi implements AdminInterface {
                 playUri,
                 ipAddress,
                 characterLayers,
-                isLogged: isLogged ? "1" : "0",
+                accessToken,
+                isLogged: accessToken ? "1" : "0", // deprecated, use accessToken instead
             },
             headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
             paramsSerializer: (p) => {
