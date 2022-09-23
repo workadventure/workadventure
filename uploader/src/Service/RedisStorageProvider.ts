@@ -1,5 +1,5 @@
 import {StorageProvider} from "./StorageProvider";
-import {REDIS_DB_NUMBER, REDIS_HOST, REDIS_PORT, UPLOADER_URL} from "../Enum/EnvironmentVariable";
+import {REDIS_DB_NUMBER, REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, UPLOADER_URL} from "../Enum/EnvironmentVariable";
 import {commandOptions, createClient} from "redis";
 import {ManagedUpload} from "aws-sdk/clients/s3";
 import {TempStorageProvider} from "./TempStorageProvider";
@@ -8,8 +8,9 @@ export class RedisStorageProvider implements StorageProvider, TempStorageProvide
     private redisClient;
 
     constructor() {
+        const password = REDIS_PASSWORD? `:${REDIS_PASSWORD}@` : ""
         this.redisClient = createClient({
-            url: `redis://${REDIS_HOST}:${REDIS_PORT}/${REDIS_DB_NUMBER || 0}`,
+            url: `redis://${password}${REDIS_HOST}:${REDIS_PORT}/${REDIS_DB_NUMBER || 0}`,
         });
         this.redisClient.on('error', (err: unknown) => console.error('Redis Client Error', err));
         this.redisClient.connect();
