@@ -369,7 +369,7 @@ export class IoSocketController {
                             try {
                                 userData = await adminService.fetchMemberDataByUuid(
                                     userIdentifier,
-                                    isLogged,
+                                    tokenData?.accessToken,
                                     roomId,
                                     IPAddress,
                                     characterLayers,
