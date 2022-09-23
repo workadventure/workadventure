@@ -46,7 +46,7 @@ import {
     Zone as ProtoZone,
     AskPositionMessage,
     MoveToPositionMessage,
-    EditMapMessage,
+    EditMapMessage, ChatMessagePrompt, SubToPusherRoomMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -1022,6 +1022,25 @@ export class SocketManager {
 
             recipient.socket.write(clientMessage);
         });
+    }
+
+    async dispatchChatMessagePrompt(chatMessagePrompt: ChatMessagePrompt): Promise<boolean> {
+        const room = await this.roomsPromises.get(chatMessagePrompt.getRoomid());
+        console.log(chatMessagePrompt.getRoomid());
+        if (!room) {
+            return false;
+        }
+
+        const subMessage = new SubToPusherRoomMessage();
+        if(chatMessagePrompt.hasJoinmucroommessage()) {
+            subMessage.setJoinmucroommessage(chatMessagePrompt.getJoinmucroommessage());
+        } else if(chatMessagePrompt.hasLeavemucroommessage()){
+            subMessage.setLeavemucroommessage(chatMessagePrompt.getLeavemucroommessage());
+        }
+        room.sendSubMessageToRoom(subMessage);
+
+        console.log("CHATMESSAGEPROMPT DISPATCHED TO ROOM :", chatMessagePrompt.getRoomid());
+        return true;
     }
 
     handleEmoteEventMessage(room: GameRoom, user: User, emotePromptMessage: EmotePromptMessage) {

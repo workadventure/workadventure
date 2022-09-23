@@ -4,13 +4,13 @@ import {
     BatchMessage,
     XmppMessage,
     IframeToPusherMessage,
-    BanUserByUuidMessage,
+    BanUserByUuidMessage, SubChatMessage, BatchChatMessage,
 } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
 import { jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenManager";
 import { FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { socketManager } from "../Services/SocketManager";
-import { emitInBatch } from "../Services/IoSocketHelpers";
+import {emitInBatch} from "../Services/IoSocketHelpers";
 import {
     ADMIN_API_URL,
     DISABLE_ANONYMOUS,
@@ -36,7 +36,7 @@ interface UpgradeData {
     token: string;
     userUuid: string;
     IPAddress: string;
-    playUri: string;
+    roomId: string;
     maxHistoryChat: number;
     tags: string[];
     userRoomToken: string | undefined;
@@ -47,7 +47,7 @@ interface UpgradeFailedInvalidData {
     rejected: true;
     reason: "tokenInvalid" | "textureInvalid" | "invalidVersion" | null;
     message: string;
-    playUri: string;
+    roomId: string;
 }
 
 import Jwt from "jsonwebtoken";
@@ -70,7 +70,6 @@ interface CacheRoomData {
 type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData;
 
 export class IoSocketChatController {
-    private nextUserId = 1;
     private cache: Map<string, CacheRoomData> = new Map();
 
     constructor(private readonly app: HyperExpress.compressors.TemplatedApp) {
@@ -114,6 +113,7 @@ export class IoSocketChatController {
                         const token = query.token;
                         const version = query.version;
                         const uuid = query.uuid as string;
+                        const userId = parseInt(query.userId as string);
 
                         if (version !== apiVersionHash) {
                             return res.upgrade(
@@ -199,7 +199,7 @@ export class IoSocketChatController {
                                                 reason: null,
                                                 status: 500,
                                                 message: err?.response?.data,
-                                                playUri: playUri,
+                                                roomId: playUri,
                                             } as UpgradeFailedData,
                                             websocketKey,
                                             websocketProtocol,
@@ -282,11 +282,12 @@ export class IoSocketChatController {
                             {
                                 // Data passed here is accessible on the "websocket" socket object.
                                 rejected: false,
+                                userId,
                                 token,
                                 userUuid: userData.userUuid,
                                 IPAddress,
                                 userIdentifier,
-                                playUri,
+                                roomId: playUri,
                                 maxHistoryChat,
                                 tags: memberTags,
                                 userRoomToken: memberUserRoomToken,
@@ -310,7 +311,7 @@ export class IoSocketChatController {
                                     rejected: true,
                                     reason: e instanceof InvalidTokenError ? tokenInvalidException : null,
                                     message: e.message,
-                                    playUri,
+                                    roomId: playUri,
                                 } as UpgradeFailedData,
                                 websocketKey,
                                 websocketProtocol,
@@ -323,7 +324,7 @@ export class IoSocketChatController {
                                     rejected: true,
                                     reason: null,
                                     message: "500 Internal Server Error",
-                                    playUri,
+                                    roomId: playUri,
                                 } as UpgradeFailedData,
                                 websocketKey,
                                 websocketProtocol,
@@ -343,7 +344,8 @@ export class IoSocketChatController {
                 }
 
                 // Let's join the room
-                this.initClient(ws); // const client =
+                const client = this.initClient(ws);
+                socketManager.pusherRoomJoinChat(client);
             },
             message: (ws, arrayBuffer): void => {
                 const client = ws as ExSocketInterface;
@@ -363,10 +365,11 @@ export class IoSocketChatController {
             drain: (ws) => {
                 console.log("WebSocket backpressure: " + ws.getBufferedAmount());
             },
-            close: (ws) => {
+            close: async (ws) => {
                 console.log("IoSocketChatController closing ...");
                 const client = ws as ExSocketInterface;
                 try {
+                    await socketManager.getOrCreateRoom(client.roomId).then((room) => room.leaveChat(client));
                     client.disconnecting = true;
                     if (client.xmppClient != undefined) {
                         client.xmppClient.close();
@@ -382,14 +385,13 @@ export class IoSocketChatController {
     //eslint-disable-next-line @typescript-eslint/no-explicit-any
     private initClient(ws: any): ExSocketInterface {
         const client: ExSocketInterface = ws;
-        client.userId = this.nextUserId;
-        this.nextUserId++;
+        client.userId = ws.userId;
         client.userUuid = ws.userUuid;
         client.IPAddress = ws.IPAddress;
         client.token = ws.token;
-        client.batchedMessages = new BatchMessage();
+        client.batchedMessages = new BatchChatMessage();
         client.batchTimeout = null;
-        client.emitInBatch = (payload: SubMessage): void => {
+        client.emitInBatch = (payload: SubMessage | SubChatMessage): void => {
             emitInBatch(client, payload);
         };
         client.disconnecting = false;
@@ -397,7 +399,7 @@ export class IoSocketChatController {
         client.messages = ws.messages;
         client.userIdentifier = ws.userIdentifier;
         client.tags = ws.tags;
-        client.playUri = ws.roomId;
+        client.roomId = ws.roomId;
         client.maxHistoryChat = ws.maxHistoryChat;
         client.jabberId = ws.jabberId;
         client.jabberPassword = ws.jabberPassword;

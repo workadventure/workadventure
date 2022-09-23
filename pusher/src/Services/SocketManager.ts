@@ -276,6 +276,11 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
+    public async pusherRoomJoinChat(client: ExSocketInterface): Promise<void> {
+        const pusherRoom = await this.getOrCreateRoom(client.roomId);
+        pusherRoom.joinChat(client);
+    }
+
     private closeWebsocketConnection(
         client: ExSocketInterface | ExAdminSocketInterface,
         code: number,

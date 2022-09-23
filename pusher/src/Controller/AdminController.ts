@@ -7,7 +7,8 @@ import {
     RoomsList,
     JoinMucRoomMessage,
     LeaveMucRoomMessage,
-    MucRoomDefinitionMessage, ChatMessage,
+    MucRoomDefinitionMessage,
+    ChatMessagePrompt,
 } from "../Messages/generated/messages_pb";
 import { adminToken } from "../Middleware/AdminToken";
 import { BaseHttpController } from "./BaseHttpController";
@@ -268,7 +269,8 @@ export class AdminController extends BaseHttpController {
                 const mucRoomName: string = body.mucRoomName;
                 const mucRoomType: string = body.mucRoomType;
 
-                const chatMessage = new ChatMessage();
+                const chatMessagePrompt = new ChatMessagePrompt();
+                chatMessagePrompt.setRoomid(body.roomId);
 
                 if(body.type === "join"){
                     const mucRoomDefinition = new MucRoomDefinitionMessage();
@@ -279,19 +281,19 @@ export class AdminController extends BaseHttpController {
                     const joinMucRoomMessage = new JoinMucRoomMessage();
                     joinMucRoomMessage.setMucroomdefinitionmessage(mucRoomDefinition);
 
-                    chatMessage.setJoinmucroommessage(joinMucRoomMessage);
+                    chatMessagePrompt.setJoinmucroommessage(joinMucRoomMessage);
                 } else if(body.type === "leave"){
                     const leaveMucRoomMessage = new LeaveMucRoomMessage();
                     leaveMucRoomMessage.setUrl(mucRoomUrl);
 
-                    chatMessage.setLeavemucroommessage(leaveMucRoomMessage);
+                    chatMessagePrompt.setLeavemucroommessage(leaveMucRoomMessage);
                 } else {
                     throw new Error("Incorrect type parameter value");
                 }
 
                 await apiClientRepository.getClient(roomId).then((roomClient) => {
                     return new Promise<void>((res, rej) => {
-                        roomClient.sendChatMessagePrompt(chatMessage, (err) => {
+                        roomClient.sendChatMessagePrompt(chatMessagePrompt, (err) => {
                             err ? rej(err) : res();
                         });
                     });

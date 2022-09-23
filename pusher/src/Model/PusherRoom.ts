@@ -6,7 +6,7 @@ import { apiClientRepository } from "../Services/ApiClientRepository";
 import {
     BatchToPusherRoomMessage,
     ErrorMessage,
-    RoomMessage,
+    RoomMessage, SubChatMessage,
     SubMessage,
     VariableWithTagMessage,
 } from "../Messages/generated/messages_pb";
@@ -24,6 +24,7 @@ export class PusherRoom {
     private backConnection!: ClientReadableStream<BatchToPusherRoomMessage>;
     private isClosing = false;
     private listeners: Set<ExSocketInterface> = new Set<ExSocketInterface>();
+    private listenersChat: Set<ExSocketInterface> = new Set<ExSocketInterface>();
 
     constructor(public readonly roomUrl: string, private socketListener: ZoneEventListener) {
         // A zone is 10 sprites wide.
@@ -51,6 +52,16 @@ export class PusherRoom {
 
         //socket.xmppClient = new XmppClient(socket, this.mucRooms);
         socket.pusherRoom = this;
+    }
+
+    public joinChat(socket: ExSocketInterface): void {
+        this.listenersChat.add(socket);
+        socket.pusherRoom = this;
+    }
+
+    public leaveChat(socket: ExSocketInterface): void {
+        this.listenersChat.delete(socket);
+        socket.pusherRoom = undefined;
     }
 
     public leave(socket: ExSocketInterface): void {
@@ -116,6 +127,22 @@ export class PusherRoom {
                         subMessage.setErrormessage(errorMessage);
                         listener.emitInBatch(subMessage);
                     }
+                } else if(message.hasJoinmucroommessage()){
+                    // Let's dispatch this joinMucRoomMessage to all the listeners
+                    for (const listener of this.listenersChat) {
+                        const subChatMessage = new SubChatMessage();
+                        subChatMessage.setJoinmucroommessage(message.getJoinmucroommessage());
+                        listener.emitInBatch(subChatMessage);
+                    }
+                    console.log("===> JOINMUCROOMMESSAGE received");
+                } else if(message.hasLeavemucroommessage()){
+                    // Let's dispatch this leaveMucRoomMessage to all the listeners
+                    for (const listener of this.listenersChat) {
+                        const subChatMessage = new SubChatMessage();
+                        subChatMessage.setLeavemucroommessage(message.getLeavemucroommessage());
+                        listener.emitInBatch(subChatMessage);
+                    }
+                    console.log("===> LEAVEMUCROOMMESSAGE received");
                 } else {
                     throw new Error("Unexpected message");
                 }

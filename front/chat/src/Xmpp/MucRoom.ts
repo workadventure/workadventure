@@ -112,6 +112,7 @@ export const defaultColor = "#626262";
 export const defaultUserData: UserData = {
     uuid: "default",
     email: null,
+    userId: 0,
     name: "",
     playUri: "",
     authToken: "",
@@ -170,6 +171,7 @@ export class MucRoom {
         private connection: ChatConnection,
         public readonly name: string,
         private roomJid: JID,
+        private url: string,
         public type: string,
         public subscribe: boolean,
         private jid: string
@@ -1224,6 +1226,10 @@ export class MucRoom {
 
     public getUrl(): string {
         return this.roomJid.local + "@" + this.roomJid.domain.toString();
+    }
+
+    public getRawUrl(): string {
+        return this.url;
     }
 
     public getMyJID(): JID {

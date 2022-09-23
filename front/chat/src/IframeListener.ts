@@ -40,6 +40,7 @@ class IframeListener {
                             if (!connectionManager.connection) {
                                 connectionManager.init(
                                     iframeEvent.data.playUri,
+                                    iframeEvent.data.userId,
                                     iframeEvent.data.uuid,
                                     iframeEvent.data.authToken
                                 );

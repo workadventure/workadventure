@@ -2,11 +2,11 @@ import { PointInterface } from "./PointInterface";
 import { Identificable } from "./Identificable";
 import { ViewportInterface } from "../../Model/Websocket/ViewportMessage";
 import {
-    AvailabilityStatus,
+    AvailabilityStatus, BatchChatMessage,
     BatchMessage,
     CompanionMessage,
     PusherToBackMessage,
-    ServerToClientMessage,
+    ServerToClientMessage, SubChatMessage,
     SubMessage,
 } from "../../Messages/generated/messages_pb";
 import { ClientDuplexStream } from "@grpc/grpc-js";
@@ -22,7 +22,7 @@ export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToCli
 export interface ExSocketInterface extends compressors.WebSocket, Identificable {
     token: string;
     roomId: string;
-    //userId: number;   // A temporary (autoincremented) identifier for this user
+    userId: number;
     userUuid: string; // A unique identifier for this user
     userIdentifier: string;
     isLogged: boolean;
@@ -36,8 +36,8 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable 
     /**
      * Pushes an event that will be sent in the next batch of events
      */
-    emitInBatch: (payload: SubMessage) => void;
-    batchedMessages: BatchMessage;
+    emitInBatch: (payload: SubMessage | SubChatMessage) => void;
+    batchedMessages: BatchMessage | BatchChatMessage;
     batchTimeout: NodeJS.Timeout | null;
     disconnecting: boolean;
     messages: unknown;

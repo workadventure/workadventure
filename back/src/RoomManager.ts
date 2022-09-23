@@ -32,8 +32,15 @@ import {
     PingMessage,
     QueryMessage,
     EditMapMessage,
+    ChatMessagePrompt
 } from "./Messages/generated/messages_pb";
-import { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
+import {
+    sendUnaryData,
+    ServerDuplexStream,
+    ServerErrorResponse,
+    ServerUnaryCall,
+    ServerWritableStream
+} from "@grpc/grpc-js";
 import { socketManager } from "./Services/SocketManager";
 import {
     emitError,
@@ -353,6 +360,19 @@ const roomManager: IRoomManagerServer = {
         // FIXME: we could improve return message by returning a Success|ErrorMessage message
         socketManager.dispatchRoomRefresh(call.request.getRoomid()).catch((e) => console.error(e));
         callback(null, new EmptyMessage());
+    },
+    sendChatMessagePrompt(
+        call: ServerUnaryCall<ChatMessagePrompt, EmptyMessage>,
+        callback: sendUnaryData<EmptyMessage>
+    ): void {
+        socketManager.dispatchChatMessagePrompt(call.request)
+            .then(() => {
+                callback(null, new EmptyMessage());
+            })
+            .catch((err) => {
+                console.error(err);
+                callback(err as ServerErrorResponse, new EmptyMessage());
+            });
     },
     getRooms(call: ServerUnaryCall<EmptyMessage, EmptyMessage>, callback: sendUnaryData<RoomsList>): void {
         callback(null, socketManager.getAllRooms());

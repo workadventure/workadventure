@@ -73,6 +73,7 @@
                                     type: "userData",
                                     data: {
                                         ...localUserStore.getLocalUser(),
+                                        userId: gameManager.getCurrentGameScene().connection?.getUserId(),
                                         name,
                                         playUri,
                                         authToken: localUserStore.getAuthToken(),

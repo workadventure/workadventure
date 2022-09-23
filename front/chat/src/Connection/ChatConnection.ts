@@ -8,7 +8,7 @@ import {
     XmppSettingsMessage,
     XmppConnectionStatusChangeMessage_Status,
     IframeToPusherMessage,
-    XmppConnectionNotAuthorizedMessage,
+    XmppConnectionNotAuthorizedMessage, LeaveMucRoomMessage, MucRoomDefinitionMessage,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { XmppClient } from "../Xmpp/XmppClient";
 import { Parser } from "@xmpp/xml";
@@ -38,10 +38,16 @@ export class ChatConnection implements ChatConnection {
     public readonly xmppConnectionStatusChangeMessageStream =
         this._xmppConnectionStatusChangeMessageStream.asObservable();
 
+    private readonly _joinMucRoomMessageStream = new Subject<MucRoomDefinitionMessage>();
+    public readonly joinMucRoomMessageStream = this._joinMucRoomMessageStream.asObservable();
+
+    private readonly _leaveMucRoomMessageStream = new Subject<LeaveMucRoomMessage>();
+    public readonly leaveMucRoomMessageStream = this._leaveMucRoomMessageStream.asObservable();
+
     private readonly _xmppConnectionNotAuthorizedStream = new Subject<XmppConnectionNotAuthorizedMessage>();
     public readonly xmppConnectionNotAuthorizedStream = this._xmppConnectionNotAuthorizedStream.asObservable();
 
-    public constructor(token: string | null, roomUrl: string, uuid: string) {
+    public constructor(token: string | null, roomUrl: string, userId: number, uuid: string) {
         let url = new URL(PUSHER_URL, window.location.toString()).toString();
         url = url.replace("http://", "ws://").replace("https://", "wss://");
         if (!url.endsWith("/")) {
@@ -51,6 +57,7 @@ export class ChatConnection implements ChatConnection {
         url += "?playUri=" + encodeURIComponent(roomUrl);
         url += "&token=" + (token ? encodeURIComponent(token) : "");
         url += "&uuid=" + encodeURIComponent(uuid);
+        url += "&userId=" + encodeURIComponent(userId);
         //url += "&name=" + encodeURIComponent(name);
         url += "&version=" + apiVersionHash;
 
@@ -93,6 +100,30 @@ export class ChatConnection implements ChatConnection {
                 }
 
                 switch (message.$case) {
+                    case "batchChatMessage": {
+                        for (const subChatMessageWrapper of message.batchChatMessage.payload) {
+                            const subChatMessage = subChatMessageWrapper.message;
+                            if (subChatMessage === undefined) {
+                                return;
+                            }
+                            switch (subChatMessage.$case) {
+                                case "joinMucRoomMessage": {
+                                    this._joinMucRoomMessageStream.next(subChatMessage.joinMucRoomMessage.mucRoomDefinitionMessage);
+                                    break;
+                                }
+                                case "leaveMucRoomMessage": {
+                                    this._leaveMucRoomMessageStream.next(subChatMessage.leaveMucRoomMessage);
+                                    break;
+                                }
+                                default: {
+                                    // Security check: if we forget a "case", the line below will catch the error at compile-time.
+                                    //@ts-ignore
+                                    const _exhaustiveCheck: never = subChatMessage;
+                                }
+                            }
+                        }
+                        break;
+                    }
                     case "xmppSettingsMessage": {
                         this._xmppSettingsMessageStream.next(message.xmppSettingsMessage);
                         break;

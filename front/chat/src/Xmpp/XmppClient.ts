@@ -9,6 +9,7 @@ import { ChatConnection } from "../Connection/ChatConnection";
 import { activeThreadStore } from "../Stores/ActiveThreadStore";
 import { get } from "svelte/store";
 import { userStore } from "../Stores/LocalUserStore";
+import {connectionManager} from "../Connection/ChatConnectionManager";
 
 export class XmppClient {
     private jid: string | undefined;
@@ -19,6 +20,20 @@ export class XmppClient {
     private nickCount = 0;
 
     constructor(private connection: ChatConnection) {
+        connectionManager.connection?.joinMucRoomMessageStream.subscribe((mucRoomDefinitionMessage) => {
+            const mucRoom = mucRoomsStore.get(mucRoomDefinitionMessage.url);
+            if(!mucRoom) {
+                this.joinMuc(mucRoomDefinitionMessage.name, mucRoomDefinitionMessage.url, mucRoomDefinitionMessage.type, mucRoomDefinitionMessage.subscribe);
+            }
+        });
+
+        connectionManager.connection?.leaveMucRoomMessageStream.subscribe((leaveMucRoomMessage) => {
+            const mucRoom = mucRoomsStore.get(leaveMucRoomMessage.url);
+            if(mucRoom) {
+                this.removeMuc(mucRoom);
+            }
+        });
+
         connection.xmppSettingsMessageStream.subscribe((settings) => {
             if (settings === undefined) {
                 return;
@@ -87,8 +102,7 @@ export class XmppClient {
 
         for (const { name, url, type, subscribe } of initialRoomDefinitions) {
             if (name && url && type) {
-                console.log('Subscribe :', subscribe ?? mucRoomsStore.getDefaultRoom()?.subscribe);
-                this.joinMuc(name, url, type, subscribe ?? mucRoomsStore.getDefaultRoom()?.subscribe);
+                this.joinMuc(name, url, type, subscribe);
             }
         }
     }
@@ -130,15 +144,17 @@ export class XmppClient {
         }).join("");
     }
 
-    public joinMuc(name: string, waRoomUrl: string, type: string, subscribe: boolean): MucRoom {
+    public joinMuc(name: string, waRoomUrl: string, type: string, subscribe: boolean|undefined): MucRoom {
         if (this.jid === undefined || this.conferenceDomain === undefined) {
             throw new Error(
                 "joinRoom called before we received the XMPP connection details. There is a race condition."
             );
         }
 
+        const predictedSubscribe = subscribe ?? mucRoomsStore.getDefaultRoom()?.subscribe ?? false;
+
         const roomUrl = jid(waRoomUrl, this.conferenceDomain);
-        const room = new MucRoom(this.connection, name, roomUrl, type, subscribe, this.jid);
+        const room = new MucRoom(this.connection, name, roomUrl, waRoomUrl, type, predictedSubscribe, this.jid);
         this.rooms.set(roomUrl.toString(), room);
         mucRoomsStore.addMucRoom(room);
 

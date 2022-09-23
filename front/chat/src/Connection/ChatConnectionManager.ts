@@ -2,17 +2,20 @@ import { ChatConnection } from "./ChatConnection";
 
 class ConnectionManager {
     private chatConnection?: ChatConnection;
+    private userId: number;
     private uuid: string;
     private playUri: string;
     private authToken?: string;
     private setTimeout?: NodeJS.Timeout;
 
     constructor() {
+        this.userId = 0;
         this.uuid = "";
         this.playUri = "";
     }
 
-    init(playUri: string, uuid: string, authToken?: string) {
+    init(playUri: string, userId: number, uuid: string, authToken?: string) {
+        this.userId = userId;
         this.uuid = uuid;
         this.authToken = authToken;
         this.playUri = playUri;
@@ -32,7 +35,7 @@ class ConnectionManager {
     }
 
     public start() {
-        this.chatConnection = new ChatConnection(this.authToken ?? "", this.playUri, this.uuid);
+        this.chatConnection = new ChatConnection(this.authToken ?? "", this.playUri, this.userId, this.uuid);
 
         /*this.chatConnection.xmppConnectionNotAuthorizedStream.subscribe(() => {
             if (this.setTimeout) {

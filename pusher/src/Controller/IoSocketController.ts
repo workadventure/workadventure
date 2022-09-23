@@ -23,7 +23,7 @@ import {
     AvailabilityStatus,
     QueryMessage,
     PingMessage,
-    EditMapMessage,
+    EditMapMessage, SubChatMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
@@ -691,7 +691,7 @@ export class IoSocketController {
         client.token = ws.token;
         client.batchedMessages = new BatchMessage();
         client.batchTimeout = null;
-        client.emitInBatch = (payload: SubMessage): void => {
+        client.emitInBatch = (payload: SubMessage | SubChatMessage): void => {
             emitInBatch(client, payload);
         };
         client.resetPongTimeout = (): void => {

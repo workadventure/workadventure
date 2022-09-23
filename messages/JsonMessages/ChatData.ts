@@ -3,6 +3,7 @@ import { z } from "zod";
 export const isUserData = z.object({
     uuid: z.string(),
     email: z.string().nullable().optional(),
+    userId: z.number(),
     name: z.string(),
     playUri: z.string(),
     authToken: z.optional(z.string()),
