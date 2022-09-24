@@ -1,5 +1,6 @@
-import {LocalCompanionSevice} from "./LocalCompanionSevice";
-import {AdminCompanionService} from "./AdminCompanionService";
+import { LocalCompanionSevice } from "./LocalCompanionSevice";
+import { AdminCompanionService } from "./AdminCompanionService";
 
-export const companionService = AdminCompanionService.isEnabled() ? new AdminCompanionService(): new LocalCompanionSevice();
-
+export const companionService = AdminCompanionService.isEnabled()
+    ? new AdminCompanionService()
+    : new LocalCompanionSevice();

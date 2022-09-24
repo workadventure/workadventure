@@ -1,6 +1,6 @@
-import {BaseHttpController} from "./BaseHttpController";
-import {parse} from "query-string";
-import {jwtTokenManager} from "../Services/JWTTokenManager";
+import { BaseHttpController } from "./BaseHttpController";
+import { parse } from "query-string";
+import { jwtTokenManager } from "../Services/JWTTokenManager";
 import Request from "hyper-express/types/components/http/Request";
 import Response from "hyper-express/types/components/http/Response";
 
@@ -54,5 +54,5 @@ export abstract class AuthenticatedProviderController<T> extends BaseHttpControl
         });
     }
 
-    protected abstract getData(roomUrl: string, req: Request): Promise<T|undefined>;
+    protected abstract getData(roomUrl: string, req: Request): Promise<T | undefined>;
 }

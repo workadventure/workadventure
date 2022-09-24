@@ -8,7 +8,7 @@ import {adminApi, AdminFeature} from "./AdminApi";
 
 export class AdminCompanionService implements CompanionServiceList {
     static isEnabled(): boolean {
-        return adminApi.isFeatureEnabled(AdminFeature.CompanionsList)
+        return adminApi.isFeatureEnabled(AdminFeature.CompanionsList);
     }
     /**
      * Returns the list of all companions for the current user.
