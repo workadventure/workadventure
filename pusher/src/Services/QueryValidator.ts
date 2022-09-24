@@ -18,7 +18,7 @@ export function validateQuery<T extends ZodObject<ZodRawShape>>(
     if (result.success) {
         return result.data;
     } else {
-        const messages = result.error.issues.map((issue) => issue.message);
+        const messages = result.error.issues.map((issue) => "Parameter " + issue.path + ": " + issue.message);
         res.status(400).json(messages);
         return undefined;
     }
