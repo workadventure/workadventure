@@ -19,6 +19,6 @@ export const companionTexture = z.object({
 
 export type CompanionTexture = z.infer<typeof companionTexture>;
 
-export const companionList = z.array(companionTexture)
+export const companionList = z.array(companionTexture);
 
-export type CompanionList = z.infer<typeof companionList>
+export type CompanionList = z.infer<typeof companionList>;
