@@ -58,7 +58,7 @@ export class Room {
                 return room;
             }
             redirectCount++;
-            roomUrl = new URL(result.redirectUrl);
+            roomUrl = new URL(result.redirectUrl, window.location.href);
         }
         throw new Error("Room resolving seems stuck in a redirect loop after 32 redirect attempts");
     }
