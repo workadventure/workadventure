@@ -51,7 +51,9 @@
     />
     <section class="error-section">
         {#if (name.trim() === "" && startValidating) || errorName !== ""}
-            <p class="err">{errorName ?? $LL.login.input.name.empty()}</p>
+            <p class="err">
+                {#if errorName}{errorName}{:else}{$LL.login.input.name.empty()}{/if}
+            </p>
         {/if}
     </section>
 
