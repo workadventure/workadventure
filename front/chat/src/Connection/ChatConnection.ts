@@ -230,7 +230,7 @@ const parse = (data: string): ElementExt | null => {
     });
 
     p.write(data);
-    p.end(data);
+    p.end("");
 
     if (error) {
         throw error;

@@ -69,6 +69,7 @@ export class GameRoom implements BrothersFinder {
 
     private roomListeners: Set<RoomSocket> = new Set<RoomSocket>();
     private mapEditorMessagesHandler = new MapEditorMessagesHandler(this.roomListeners);
+    mucManager: MucManager | null = null;
 
     private constructor(
         public readonly roomUrl: string,
@@ -139,12 +140,9 @@ export class GameRoom implements BrothersFinder {
             });
         }
 
-        gameRoom
-            .getMucManager()
-            .then((mucManager) => {
-                mucManager.init().catch((err) => console.error(err));
-            })
-            .catch((err) => console.error(err));
+        gameRoom.mucManager = await gameRoom.getMucManager(mapDetails);
+        gameRoom.mucManager.init().catch((err) => console.error(err));
+
         return gameRoom;
     }
 
@@ -867,7 +865,7 @@ export class GameRoom implements BrothersFinder {
     private mucManagerPromise: Promise<MucManager> | undefined;
     private mucManagerLastLoad: Date | undefined;
 
-    private getMucManager(): Promise<MucManager> {
+    private getMucManager(mapDetails: MapDetailsData): Promise<MucManager> {
         const lastMapUrl = this.mapUrl;
         if (!this.mucManagerPromise) {
             // For localhost maps
@@ -875,7 +873,7 @@ export class GameRoom implements BrothersFinder {
             this.mucManagerLastLoad = new Date();
             this.mucManagerPromise = this.getMap(true)
                 .then((map) => {
-                    return new MucManager(this.roomUrl, map);
+                    return new MucManager(this.roomUrl, map, mapDetails);
                 })
                 .catch((e) => {
                     if (e instanceof LocalUrlError) {
@@ -906,7 +904,7 @@ export class GameRoom implements BrothersFinder {
                             }
                         }, 1000);
                     }
-                    return new MucManager(this.roomUrl, null);
+                    return new MucManager(this.roomUrl, null, mapDetails);
                 });
         }
         this.mapUrl = lastMapUrl;

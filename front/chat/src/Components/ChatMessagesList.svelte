@@ -66,11 +66,14 @@
         return jid === mucRoom.getMyJID().toString();
     }
 
-    function findUserInDefault(jid: string): User | UserData | undefined {
-        if (isMe(jid)) {
+    function findUserInDefault(jidOrName: string): User | UserData | undefined {
+        if (isMe(jidOrName)) {
             return $userStore;
         }
-        const userData = [...$presenseStore].find(([, user]) => user.jid === jid);
+        let userData = [...$presenseStore].find(([, user]) => user.jid === jidOrName);
+        if(!userData){
+            userData = [...$presenseStore].find(([, user]) => user.name === jidOrName);
+        }
         let user = undefined;
         if (userData) {
             [, user] = userData;
@@ -78,8 +81,8 @@
         return user;
     }
 
-    function getWoka(jid: string) {
-        const user = findUserInDefault(jid);
+    function getWoka(jidOrName: string) {
+        const user = findUserInDefault(jidOrName);
         if (user) {
             return user.woka;
         } else {
@@ -87,8 +90,8 @@
         }
     }
 
-    function getColor(jid: string) {
-        const user = findUserInDefault(jid);
+    function getColor(jidOrName: string) {
+        const user = findUserInDefault(jidOrName);
         if (user) {
             return user.color;
         } else {
@@ -310,13 +313,13 @@
                                     : "tw-mt-4"
                             } tw-relative wa-avatar-mini tw-mr-2`}
                             transition:fade={{ duration: 100 }}
-                            style={`background-color: ${getColor(message.jid)}`}
+                            style={`background-color: ${getColor(message.name)}`}
                         >
                             <div class="wa-container">
                                 <img
                                     class="tw-w-full"
                                     style="image-rendering: pixelated;"
-                                    src={getWoka(message.jid)}
+                                    src={getWoka(message.name)}
                                     alt="Avatar"
                                     loading="lazy"
                                 />
@@ -331,7 +334,7 @@
                             }}
                         >
                             <div
-                                style={`border-bottom-color:${getColor(message.jid)}`}
+                                style={`border-bottom-color:${getColor(message.name)}`}
                                 class={`tw-flex tw-items-end tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-0.5 ${
                                     !message.targetMessageReply && needHideHeader(message.name, message.time, i)
                                         ? "tw-hidden"

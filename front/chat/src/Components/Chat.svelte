@@ -66,8 +66,8 @@
             })
         );
         subscribeListeners.push(
-            totalMessagesToSee.subscribe((total) => {
-                window.parent.postMessage({ type: "chatTotalMessagesToSee", data: total }, "*");
+            totalMessagesToSee.subscribe((total: number) => {
+                iframeListener.sendChatTotalMessagesToSee(total);
             })
         );
         subscribeListeners.push(

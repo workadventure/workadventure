@@ -1,6 +1,6 @@
 import Axios, { AxiosError, AxiosInstance } from "axios";
 import { EJABBERD_DOMAIN, EJABBERD_PASSWORD, EJABBERD_API_URI, EJABBERD_USER } from "../Enum/EnvironmentVariable";
-import { ChatZone } from "./MucManager";
+import { MucRoom } from "./MucManager";
 import { ChatClient } from "./ChatClient";
 
 export class EjabberdClient implements ChatClient {
@@ -30,7 +30,7 @@ export class EjabberdClient implements ChatClient {
             .catch((error) => console.error(error));
     }
 
-    async createMucRoom(chatZone: ChatZone) {
+    async createMucRoom(chatZone: MucRoom) {
         await this.axios
             ?.post("create_room", {
                 name: `${EjabberdClient.encode(chatZone.mucUrl ?? "")}`,

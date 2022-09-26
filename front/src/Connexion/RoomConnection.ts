@@ -60,6 +60,7 @@ import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
 import { ITiledMapRectangleObject } from "@workadventure/map-editor-types";
 import { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
+import {iframeListener} from "../Api/IframeListener";
 
 const manualPingDelay = 20000;
 

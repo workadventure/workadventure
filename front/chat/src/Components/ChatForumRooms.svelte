@@ -4,6 +4,7 @@
     import ChatMucRoom from "./ChatMucRoom.svelte";
     import { createEventDispatcher } from "svelte";
     import { MucRoom } from "../Xmpp/MucRoom";
+    import {derived} from "svelte/store";
     const dispatch = createEventDispatcher();
 
     export let forumRooms: MucRoom[];
@@ -13,6 +14,11 @@
     function open(liveRoom: MucRoom) {
         dispatch("activeThread", liveRoom);
     }
+
+    const unread = derived(
+        forumRooms.map(forum => forum.getCountMessagesToSee()),
+        $unread => $unread.reduce((sum, number) => sum + number, 0)
+    );
 </script>
 
 <!--{#if forumRooms.length > 0}-->
@@ -25,11 +31,13 @@
             class="tw-px-4 tw-py-1 tw-flex tw-items-center tw-cursor-pointer"
             on:click|stopPropagation={() => dispatch("showForums")}
         >
-            <span
-                class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
-            >
-                {forumRooms.length}
-            </span>
+            {#if $unread > 0}
+                <span
+                    class="tw-bg-pop-red tw-text-white tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded tw-animate-pulse"
+                >
+                    {$unread}
+                </span>
+            {/if}
             <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">Forums</p>
             <button class="tw-text-lighter-purple">
                 <ChevronUpIcon class={`tw-transform tw-transition ${showForums ? "" : "tw-rotate-180"}`} />

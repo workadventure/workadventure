@@ -189,6 +189,17 @@ class IframeListener {
             "*"
         );
     }
+
+    sendChatTotalMessagesToSee(total: number) {
+        window.parent.postMessage(
+            {
+                type: "chatTotalMessagesToSee",
+                data: total,
+            },
+            "*"
+        );
+    }
+
     sendNotificationToFront(userName: string, notificationType: NotificationType, forum: null | string) {
         window.parent.postMessage(
             {
