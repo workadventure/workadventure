@@ -22,12 +22,8 @@
 
         let finalName = name.trim();
         if (finalName !== "") {
-            try {
-                loginScene.login(finalName);
-            } catch (e) {
-                if (e?.message === "name-format") {
-                    errorName = $LL.login.input.name.error();
-                }
+            if (!loginScene.login(finalName)) {
+                errorName = $LL.login.input.name.error();
             }
         }
     }

@@ -6,6 +6,7 @@ const login: DeepPartial<Translation["login"]> = {
         name: {
             placeholder: "Trage deinen Namen ein",
             empty: "Kein Name angegeben",
+            error: "Der Name ist falsch oder zu lang",
         },
     },
     terms: 'Wenn du fortfährst, akzeptierst du die <a href="https://workadventu.re/terms-of-use" target="_blank">Nutzungsbedingungen</a>, <a href="https://workadventu.re/privacy-policy" target="_blank">Datenschutzerklärung</a> und <a href="https://workadventu.re/cookie-policy" target="_blank">Cookierichtlinien</a>.',
