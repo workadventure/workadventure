@@ -6,6 +6,7 @@
     import poweredByWorkAdventureImg from "../images/Powered_By_WorkAdventure_Big.png";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../i18n/i18n-svelte";
+    import { NameNotValidError, NameTooLongError } from "../../Exception/NameError";
 
     export let game: Game;
 
@@ -22,8 +23,14 @@
 
         let finalName = name.trim();
         if (finalName !== "") {
-            if (!loginScene.login(finalName)) {
-                errorName = $LL.login.input.name.error();
+            try {
+                loginScene.login(finalName);
+            } catch (e) {
+                if (e instanceof NameTooLongError) {
+                    errorName = $LL.login.input.name.tooLongError();
+                } else if (e instanceof NameNotValidError) {
+                    errorName = $LL.login.input.name.notValidError();
+                }
             }
         }
     }

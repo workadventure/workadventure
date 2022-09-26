@@ -5,7 +5,8 @@ import { localUserStore } from "../../Connexion/LocalUserStore";
 import { connectionManager } from "../../Connexion/ConnectionManager";
 import { gameManager } from "../Game/GameManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
-import { isUserNameValid } from "../../Connexion/LocalUser";
+import { isUserNameTooLong, isUserNameValid } from "../../Connexion/LocalUser";
+import { NameNotValidError, NameTooLongError } from "../../Exception/NameError";
 
 export const LoginSceneName = "LoginScene";
 
@@ -41,11 +42,13 @@ export class LoginScene extends ResizableScene {
     public login(name: string): boolean {
         analyticsClient.validationName();
 
-        if (isUserNameValid(name)) {
+        if (isUserNameTooLong(name)) {
+            throw new NameTooLongError();
+        } else if (!isUserNameValid(name)) {
+            throw new NameNotValidError();
+        } else {
             name = name.trim();
             gameManager.setPlayerName(name);
-        } else {
-            return false;
         }
 
         this.scene.stop(LoginSceneName);
