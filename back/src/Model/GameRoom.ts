@@ -911,7 +911,7 @@ export class GameRoom implements BrothersFinder {
         return this.mucManagerPromise;
     }
 
-    public sendSubMessageToRoom(subMessage: SubToPusherRoomMessage){
+    public sendSubMessageToRoom(subMessage: SubToPusherRoomMessage) {
         const batchMessage = new BatchToPusherRoomMessage();
         batchMessage.addPayload(subMessage);
 

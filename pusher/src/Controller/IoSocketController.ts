@@ -23,7 +23,8 @@ import {
     AvailabilityStatus,
     QueryMessage,
     PingMessage,
-    EditMapMessage, SubChatMessage,
+    EditMapMessage,
+    SubChatMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";

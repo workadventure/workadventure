@@ -71,7 +71,7 @@
             return $userStore;
         }
         let userData = [...$presenseStore].find(([, user]) => user.jid === jidOrName);
-        if(!userData){
+        if (!userData) {
             userData = [...$presenseStore].find(([, user]) => user.name === jidOrName);
         }
         let user = undefined;

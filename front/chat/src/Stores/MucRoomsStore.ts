@@ -1,6 +1,6 @@
 import { get, writable } from "svelte/store";
 import type { MucRoom } from "../Xmpp/MucRoom";
-import {JID} from "@xmpp/jid";
+import { JID } from "@xmpp/jid";
 
 /**
  * True if the connection between the pusher and the XMPP server is established, false otherwise.

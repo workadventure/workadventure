@@ -46,7 +46,9 @@ import {
     Zone as ProtoZone,
     AskPositionMessage,
     MoveToPositionMessage,
-    EditMapMessage, ChatMessagePrompt, SubToPusherRoomMessage,
+    EditMapMessage,
+    ChatMessagePrompt,
+    SubToPusherRoomMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -65,7 +67,7 @@ import Debug from "debug";
 import { Admin } from "../Model/Admin";
 import crypto from "crypto";
 import QueryCase = QueryMessage.QueryCase;
-import {StringValue} from "google-protobuf/google/protobuf/wrappers_pb";
+import { StringValue } from "google-protobuf/google/protobuf/wrappers_pb";
 
 const debug = Debug("sockermanager");
 
@@ -1033,9 +1035,9 @@ export class SocketManager {
         }
 
         const subMessage = new SubToPusherRoomMessage();
-        if(chatMessagePrompt.hasJoinmucroommessage()) {
+        if (chatMessagePrompt.hasJoinmucroommessage()) {
             subMessage.setJoinmucroommessage(chatMessagePrompt.getJoinmucroommessage());
-        } else if(chatMessagePrompt.hasLeavemucroommessage()){
+        } else if (chatMessagePrompt.hasLeavemucroommessage()) {
             subMessage.setLeavemucroommessage(chatMessagePrompt.getLeavemucroommessage());
         }
         room.sendSubMessageToRoom(subMessage);

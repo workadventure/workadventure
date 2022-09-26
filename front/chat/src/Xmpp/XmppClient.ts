@@ -5,13 +5,13 @@ import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoo
 import ElementExt from "./Lib/ElementExt";
 import {
     MucRoomDefinitionMessage,
-    XmppConnectionStatusChangeMessage_Status as Status
+    XmppConnectionStatusChangeMessage_Status as Status,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { ChatConnection } from "../Connection/ChatConnection";
 import { activeThreadStore } from "../Stores/ActiveThreadStore";
 import { get } from "svelte/store";
 import { userStore } from "../Stores/LocalUserStore";
-import {connectionManager} from "../Connection/ChatConnectionManager";
+import { connectionManager } from "../Connection/ChatConnectionManager";
 
 export class XmppClient {
     private jid: string | undefined;
@@ -24,14 +24,19 @@ export class XmppClient {
     constructor(private connection: ChatConnection) {
         connectionManager.connection?.joinMucRoomMessageStream.subscribe((mucRoomDefinitionMessage) => {
             const mucRoom = mucRoomsStore.get(mucRoomDefinitionMessage.url);
-            if(!mucRoom) {
-                this.joinMuc(mucRoomDefinitionMessage.name, mucRoomDefinitionMessage.url, mucRoomDefinitionMessage.type, mucRoomDefinitionMessage.subscribe);
+            if (!mucRoom) {
+                this.joinMuc(
+                    mucRoomDefinitionMessage.name,
+                    mucRoomDefinitionMessage.url,
+                    mucRoomDefinitionMessage.type,
+                    mucRoomDefinitionMessage.subscribe
+                );
             }
         });
 
         connectionManager.connection?.leaveMucRoomMessageStream.subscribe((leaveMucRoomMessage) => {
             const mucRoom = mucRoomsStore.get(leaveMucRoomMessage.url);
-            if(mucRoom) {
+            if (mucRoom) {
                 this.removeMuc(mucRoom);
             }
         });
@@ -146,7 +151,7 @@ export class XmppClient {
         }).join("");
     }
 
-    public joinMuc(name: string, waRoomUrl: string, type: string, subscribe: boolean|undefined): MucRoom {
+    public joinMuc(name: string, waRoomUrl: string, type: string, subscribe: boolean | undefined): MucRoom {
         if (this.jid === undefined || this.conferenceDomain === undefined) {
             throw new Error(
                 "joinRoom called before we received the XMPP connection details. There is a race condition."

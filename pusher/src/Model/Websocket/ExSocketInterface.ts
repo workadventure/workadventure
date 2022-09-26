@@ -2,11 +2,13 @@ import { PointInterface } from "./PointInterface";
 import { Identificable } from "./Identificable";
 import { ViewportInterface } from "../../Model/Websocket/ViewportMessage";
 import {
-    AvailabilityStatus, BatchChatMessage,
+    AvailabilityStatus,
+    BatchChatMessage,
     BatchMessage,
     CompanionMessage,
     PusherToBackMessage,
-    ServerToClientMessage, SubChatMessage,
+    ServerToClientMessage,
+    SubChatMessage,
     SubMessage,
 } from "../../Messages/generated/messages_pb";
 import { ClientDuplexStream } from "@grpc/grpc-js";

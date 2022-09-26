@@ -31,7 +31,7 @@
     <div class="tw-relative" on:click|stopPropagation={() => open(mucRoom)}>
         <img class={``} src="/static/images/logo-wa-2.png" alt="Send" width="35" />
         <div class="tw-block tw-absolute tw-right-0 tw-top-0 tw-transform tw-translate-x-2 -tw-translate-y-1">
-            {#if mucRoom.type === 'live'}
+            {#if mucRoom.type === "live"}
                 <div class="tw-block tw-relative">
                     <span
                         class="tw-w-4 tw-h-4 tw-bg-pop-red tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-animate-ping"

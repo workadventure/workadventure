@@ -245,8 +245,6 @@ export class AdminController extends BaseHttpController {
         });
     }
 
-
-
     sendChatMessagePrompt(): void {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.post("/chat/message", { middlewares: [adminToken] }, async (req, res) => {
@@ -272,7 +270,7 @@ export class AdminController extends BaseHttpController {
                 const chatMessagePrompt = new ChatMessagePrompt();
                 chatMessagePrompt.setRoomid(body.roomId);
 
-                if(body.type === "join"){
+                if (body.type === "join") {
                     const mucRoomDefinition = new MucRoomDefinitionMessage();
                     mucRoomDefinition.setUrl(mucRoomUrl);
                     mucRoomDefinition.setName(mucRoomName);
@@ -282,7 +280,7 @@ export class AdminController extends BaseHttpController {
                     joinMucRoomMessage.setMucroomdefinitionmessage(mucRoomDefinition);
 
                     chatMessagePrompt.setJoinmucroommessage(joinMucRoomMessage);
-                } else if(body.type === "leave"){
+                } else if (body.type === "leave") {
                     const leaveMucRoomMessage = new LeaveMucRoomMessage();
                     leaveMucRoomMessage.setUrl(mucRoomUrl);
 

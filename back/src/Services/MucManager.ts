@@ -1,7 +1,7 @@
 import { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard/dist";
 import Axios from "axios";
 import { EjabberdClient, ejabberdClient } from "./EjabberdClient";
-import {MapDetailsData} from "../Messages/JsonMessages/MapDetailsData";
+import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 
 export interface MucRoom {
     chatName?: string;
@@ -27,7 +27,7 @@ export class MucManager {
         if (map) {
             this.mucRooms = MucManager.findMucRoomsInMap(map);
             this.mucRooms?.forEach((mucRoom) => {
-                if(mucRoom.type === "forum") {
+                if (mucRoom.type === "forum") {
                     mucRoom.mucUrl = `${this.roomUrl}/forum/${mucRoom?.chatName ?? ""}`;
                 } else {
                     mucRoom.mucUrl = `${this.roomUrl}/${mucRoom?.chatName ?? ""}`;

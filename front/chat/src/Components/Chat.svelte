@@ -201,11 +201,11 @@
                 {/if}
 
                 <ChatForumRooms
-                        {showForums}
-                        searchValue={searchValue.toLocaleLowerCase()}
-                        on:activeThread={handleActiveThread}
-                        on:showForums={handleShowForums}
-                        forumRooms={[...$mucRoomsStore].filter(
+                    {showForums}
+                    searchValue={searchValue.toLocaleLowerCase()}
+                    on:activeThread={handleActiveThread}
+                    on:showForums={handleShowForums}
+                    forumRooms={[...$mucRoomsStore].filter(
                         (mucRoom) => mucRoom.type === "forum" && mucRoom.name.toLowerCase().includes(searchValue)
                     )}
                 />

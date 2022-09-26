@@ -4,13 +4,15 @@ import {
     BatchMessage,
     XmppMessage,
     IframeToPusherMessage,
-    BanUserByUuidMessage, SubChatMessage, BatchChatMessage,
+    BanUserByUuidMessage,
+    SubChatMessage,
+    BatchChatMessage,
 } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
 import { jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenManager";
 import { FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { socketManager } from "../Services/SocketManager";
-import {emitInBatch} from "../Services/IoSocketHelpers";
+import { emitInBatch } from "../Services/IoSocketHelpers";
 import {
     ADMIN_API_URL,
     DISABLE_ANONYMOUS,

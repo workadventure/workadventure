@@ -32,14 +32,14 @@ import {
     PingMessage,
     QueryMessage,
     EditMapMessage,
-    ChatMessagePrompt
+    ChatMessagePrompt,
 } from "./Messages/generated/messages_pb";
 import {
     sendUnaryData,
     ServerDuplexStream,
     ServerErrorResponse,
     ServerUnaryCall,
-    ServerWritableStream
+    ServerWritableStream,
 } from "@grpc/grpc-js";
 import { socketManager } from "./Services/SocketManager";
 import {
@@ -365,7 +365,8 @@ const roomManager: IRoomManagerServer = {
         call: ServerUnaryCall<ChatMessagePrompt, EmptyMessage>,
         callback: sendUnaryData<EmptyMessage>
     ): void {
-        socketManager.dispatchChatMessagePrompt(call.request)
+        socketManager
+            .dispatchChatMessagePrompt(call.request)
             .then(() => {
                 callback(null, new EmptyMessage());
             })

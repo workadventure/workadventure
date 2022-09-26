@@ -28,7 +28,7 @@ class LocalAdmin implements AdminInterface {
             userRoomToken: undefined,
             mucRooms: [
                 { name: "Connected users", url: playUri, type: "default", subscribe: false },
-                { name: "Welcome", url: `${playUri}/forum/welcome`, type: "forum", subscribe: false }
+                { name: "Welcome", url: `${playUri}/forum/welcome`, type: "forum", subscribe: false },
             ],
             activatedInviteUser: true,
         };

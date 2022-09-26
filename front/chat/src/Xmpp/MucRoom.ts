@@ -940,7 +940,12 @@ export class MucRoom {
                                 const owner = [...(presenceStore ? get(presenceStore) : new Map<string, User>())].find(
                                     ([, user]) => user.name === name
                                 );
-                                console.log([...(presenceStore ? get(presenceStore) : new Map<string, User>())], "owner", owner, body);
+                                console.log(
+                                    [...(presenceStore ? get(presenceStore) : new Map<string, User>())],
+                                    "owner",
+                                    owner,
+                                    body
+                                );
                                 const message: Message = {
                                     name,
                                     jid: owner ? owner[0] : "",

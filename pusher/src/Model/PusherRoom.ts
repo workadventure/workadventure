@@ -6,7 +6,8 @@ import { apiClientRepository } from "../Services/ApiClientRepository";
 import {
     BatchToPusherRoomMessage,
     ErrorMessage,
-    RoomMessage, SubChatMessage,
+    RoomMessage,
+    SubChatMessage,
     SubMessage,
     VariableWithTagMessage,
 } from "../Messages/generated/messages_pb";
@@ -127,7 +128,7 @@ export class PusherRoom {
                         subMessage.setErrormessage(errorMessage);
                         listener.emitInBatch(subMessage);
                     }
-                } else if(message.hasJoinmucroommessage()){
+                } else if (message.hasJoinmucroommessage()) {
                     // Let's dispatch this joinMucRoomMessage to all the listeners
                     for (const listener of this.listenersChat) {
                         const subChatMessage = new SubChatMessage();
@@ -135,7 +136,7 @@ export class PusherRoom {
                         listener.emitInBatch(subChatMessage);
                     }
                     console.log("===> JOINMUCROOMMESSAGE received");
-                } else if(message.hasLeavemucroommessage()){
+                } else if (message.hasLeavemucroommessage()) {
                     // Let's dispatch this leaveMucRoomMessage to all the listeners
                     for (const listener of this.listenersChat) {
                         const subChatMessage = new SubChatMessage();

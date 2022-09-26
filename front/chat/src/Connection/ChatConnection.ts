@@ -8,7 +8,9 @@ import {
     XmppSettingsMessage,
     XmppConnectionStatusChangeMessage_Status,
     IframeToPusherMessage,
-    XmppConnectionNotAuthorizedMessage, LeaveMucRoomMessage, MucRoomDefinitionMessage,
+    XmppConnectionNotAuthorizedMessage,
+    LeaveMucRoomMessage,
+    MucRoomDefinitionMessage,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { XmppClient } from "../Xmpp/XmppClient";
 import { Parser } from "@xmpp/xml";
@@ -108,7 +110,9 @@ export class ChatConnection implements ChatConnection {
                             }
                             switch (subChatMessage.$case) {
                                 case "joinMucRoomMessage": {
-                                    this._joinMucRoomMessageStream.next(subChatMessage.joinMucRoomMessage.mucRoomDefinitionMessage);
+                                    this._joinMucRoomMessageStream.next(
+                                        subChatMessage.joinMucRoomMessage.mucRoomDefinitionMessage
+                                    );
                                     break;
                                 }
                                 case "leaveMucRoomMessage": {
