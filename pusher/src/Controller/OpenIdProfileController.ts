@@ -1,18 +1,28 @@
-import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
 import { OPID_CLIENT_ISSUER } from "../Enum/EnvironmentVariable";
 import { BaseHttpController } from "./BaseHttpController";
+import { validateQuery } from "../Services/QueryValidator";
+import { z } from "zod";
 
 export class OpenIdProfileController extends BaseHttpController {
     routes(): void {
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/profile", async (req, res) => {
-            const { accessToken } = parse(req.path_query);
-            if (!accessToken) {
-                throw Error("Access token expected cannot to be check on Hydra");
+            const query = validateQuery(
+                req,
+                res,
+                z.object({
+                    accessToken: z.string(),
+                })
+            );
+            if (query === undefined) {
+                return;
             }
+
+            const { accessToken } = query;
+
             try {
-                const resCheckTokenAuth = await openIDClient.checkTokenAuth(accessToken as string);
+                const resCheckTokenAuth = await openIDClient.checkTokenAuth(accessToken);
                 if (!resCheckTokenAuth.sub) {
                     throw new Error("Email was not found");
                 }
