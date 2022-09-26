@@ -32,7 +32,8 @@ export class RedisPlayersVariablesRepository implements PlayersVariablesReposito
         let maxExpire: number | undefined = 0;
         for (const entry of Object.entries(variables ?? [])) {
             const key = entry[0];
-            const [expireStr, isPublicStr, value] = entry[1].split(":", 3);
+            const [expireStr, isPublicStr] = entry[1].split(":", 2);
+            const value = entry[1].split(":").slice(2).join(":");
             if (isPublicStr === undefined || value === undefined) {
                 console.error(
                     'Invalid value stored in Redis. Expecting the value to be in the "ttl:0|1:value" format. Got: ',

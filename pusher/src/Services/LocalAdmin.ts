@@ -12,7 +12,7 @@ import { localWokaService } from "./LocalWokaService";
 class LocalAdmin implements AdminInterface {
     async fetchMemberDataByUuid(
         userIdentifier: string,
-        isLogged: boolean,
+        accessToken: string | undefined,
         playUri: string,
         ipAddress: string,
         characterLayers: string[],
