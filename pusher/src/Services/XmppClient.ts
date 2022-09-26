@@ -17,6 +17,9 @@ import { Client, client, xml } from "@xmpp/client";
 import { Element } from "@xmpp/xml";
 import SASLError from "@xmpp/sasl/lib/SASLError";
 import StreamError from "@xmpp/connection/lib/StreamError";
+import Debug from "debug";
+
+const debug = Debug("xmppClient");
 
 class ElementExt extends Element {}
 
@@ -61,9 +64,9 @@ export class XmppClient {
 
             xmpp.on("error", (err: unknown) => {
                 if (err instanceof SASLError)
-                    console.info("XmppClient => createClient => receive => error", err.name, err.condition);
+                    debug("XmppClient => createClient => receive => error", err.name, err.condition);
                 else {
-                    console.info("XmppClient => createClient => receive => error", err);
+                    debug("XmppClient => createClient => receive => error", err);
                 }
                 this.sendErrorToIframe(err as string);
                 //console.error("XmppClient => receive => error =>", err);
@@ -71,15 +74,15 @@ export class XmppClient {
             });
 
             xmpp.reconnect.on("reconnecting", () => {
-                console.info("XmppClient => createClient => reconnecting");
+                debug("XmppClient => createClient => reconnecting");
             });
 
             xmpp.reconnect.on("reconnected", () => {
-                console.info("XmppClient => createClient => reconnected");
+                debug("XmppClient => createClient => reconnected");
             });
 
             xmpp.on("offline", () => {
-                console.info("XmppClient => createClient => offline => status", status);
+                debug("XmppClient => createClient => offline => status", status);
                 status = "disconnected";
 
                 //close en restart connexion
@@ -99,11 +102,7 @@ export class XmppClient {
             });
 
             xmpp.on("disconnect", () => {
-                console.info(
-                    "XmppClient => createClient => disconnect => status",
-                    status,
-                    this.clientSocket.disconnecting
-                );
+                debug("XmppClient => createClient => disconnect => status", status, this.clientSocket.disconnecting);
                 if (status !== "disconnected") {
                     status = "disconnected";
 
@@ -119,7 +118,7 @@ export class XmppClient {
                 }
             });
             xmpp.on("online", (address: JID) => {
-                console.info("XmppClient => createClient => online");
+                debug("XmppClient => createClient => online");
                 xmpp.reconnect.stop();
                 status = "connected";
                 //TODO
@@ -152,13 +151,13 @@ export class XmppClient {
                 }
             });
             xmpp.on("status", (status: string) => {
-                console.error("XmppClient => createClient => status => status", status);
+                debug("XmppClient => createClient => status => status", status);
                 // FIXME: the client keeps trying to reconnect.... even if the pusher is disconnected!
             });
 
             xmpp.start()
                 .then(() => {
-                    console.log("XmppClient => createClient => start");
+                    debug("XmppClient => createClient => start");
                     res(xmpp);
                 })
                 .catch((err: Error) => {
@@ -229,17 +228,17 @@ export class XmppClient {
 
     close(): void {
         //cancel promise
-        console.info("xmppClient => close");
+        debug("xmppClient => close");
         this.clientPromise.cancel();
     }
 
     start(): CancelablePromise {
-        console.info("xmppClient => start");
+        debug("xmppClient => start");
         return (this.clientPromise = new CancelablePromise((res, rej, onCancel) => {
             this.createClient(res, rej);
             onCancel(() => {
                 (async (): Promise<void> => {
-                    console.info("clientPromise => onCancel => from xmppClient");
+                    debug("clientPromise => onCancel => from xmppClient");
                     if (this.timeout) {
                         clearTimeout(this.timeout);
                         this.timeout = undefined;
@@ -269,9 +268,9 @@ export class XmppClient {
             });
         }).catch((err) => {
             if (err instanceof SASLError) {
-                console.info("clientPromise => receive => error", err.name, err.condition);
+                debug("clientPromise => receive => error", err.name, err.condition);
             } else {
-                console.info("clientPromise => receive => error", err);
+                debug("clientPromise => receive => error", err);
             }
             this.sendErrorToIframe(err.toString());
             this.clientPromise.cancel();
