@@ -22,9 +22,9 @@
 
     export let activeThread: MucRoom;
 
-    $: usersListStore = activeThread.getPresenceStore();
-    $: meStore = activeThread.getMeStore();
-    $: readyStore = activeThread.getRoomReadyStore();
+    const usersListStore = activeThread.getPresenceStore();
+    const meStore = activeThread.getMeStore();
+    const readyStore = activeThread.getRoomReadyStore();
 
     let messagesList: ChatMessagesList;
 

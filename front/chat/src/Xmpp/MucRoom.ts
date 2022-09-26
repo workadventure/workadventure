@@ -814,6 +814,8 @@ export class MucRoom {
                 }
 
                 handledMessage = true;
+            } else if (xml.getChild("c", "http://jabber.org/protocol/caps")) {
+                // Noting to do, not used for the moment
             } else {
                 if (this.type === "live" && type === "unavailable") {
                     this.readyStore.set(false);

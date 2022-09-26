@@ -282,8 +282,6 @@ export class XmppClient {
         if (xml.getChild("ping")) {
             this.sendPong(xml.getAttr("from"), xml.getAttr("to"), xml.getAttr("id"));
             return false;
-        } else if (xml.getName() === "presence" && xml.getChild("c", "http://jabber.org/protocol/caps")) {
-            return false;
         }
         return true;
     }
