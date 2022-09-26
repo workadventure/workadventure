@@ -67,7 +67,6 @@ import Debug from "debug";
 import { Admin } from "../Model/Admin";
 import crypto from "crypto";
 import QueryCase = QueryMessage.QueryCase;
-import { StringValue } from "google-protobuf/google/protobuf/wrappers_pb";
 
 const debug = Debug("sockermanager");
 

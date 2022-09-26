@@ -1,7 +1,6 @@
 import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 import {
     SubMessage,
-    BatchMessage,
     XmppMessage,
     IframeToPusherMessage,
     BanUserByUuidMessage,
