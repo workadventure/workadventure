@@ -306,7 +306,8 @@ class LocalUserStore {
                     if (storedValue) {
                         const userKey = key.substring((userProperties + "_" + context + "__|__").length);
 
-                        const [expireStr, isPublicStr, value] = storedValue.split(":", 3);
+                        const [expireStr, isPublicStr] = storedValue.split(":", 2);
+                        const value = storedValue.split(":").slice(2).join(":");
                         if (isPublicStr === undefined || value === undefined) {
                             console.error(
                                 'Invalid value stored in Redis. Expecting the value to be in the "ttl:0|1:value" format. Got: ',
