@@ -13,7 +13,7 @@ export interface AdminSocketTokenData {
 }
 export const tokenInvalidException = "tokenInvalid";
 
-class JWTTokenManager {
+export class JWTTokenManager {
     public verifyAdminSocketToken(token: string): AdminSocketTokenData {
         if (!ADMIN_SOCKETS_TOKEN) {
             throw new Error("Missing environment variable ADMIN_SOCKETS_TOKEN");

@@ -1,13 +1,17 @@
 import { BaseHttpController } from "./BaseHttpController";
 import { parse } from "query-string";
-import { jwtTokenManager } from "../Services/JWTTokenManager";
+import { JWTTokenManager } from "../Services/JWTTokenManager";
 import Request from "hyper-express/types/components/http/Request";
 import Response from "hyper-express/types/components/http/Response";
+import { Server } from "hyper-express";
 
 /*
  * Base class to expose authenticated pusher endpoints that will provide data based on room url
  */
 export abstract class AuthenticatedProviderController<T> extends BaseHttpController {
+    constructor(protected app: Server, protected jwtTokenManager: JWTTokenManager) {
+        super(app);
+    }
     /**
      * Setup authenticated routes that take at least the room url query parameter
      * @param endpoint
@@ -28,7 +32,7 @@ export abstract class AuthenticatedProviderController<T> extends BaseHttpControl
             }
 
             try {
-                const jwtData = jwtTokenManager.verifyJWTToken(token);
+                const jwtData = this.jwtTokenManager.verifyJWTToken(token);
                 // Let's set the "uuid" param
                 req.params["uuid"] = jwtData.identifier;
             } catch (e) {
