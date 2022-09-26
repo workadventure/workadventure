@@ -11,7 +11,7 @@ export class WokaListController extends AuthenticatedProviderController<WokaList
         return wokaService.getWokaList(roomUrl, req.params["uuid"]);
     }
 
-    routes() {
+    routes(): void {
         super.setupRoutes("/woka/list");
     }
 }

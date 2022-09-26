@@ -11,7 +11,7 @@ export class CompanionListController extends AuthenticatedProviderController<Com
         return companionService.getCompanionList(roomUrl, req.params["uuid"]);
     }
 
-    routes() {
+    routes(): void {
         super.setupRoutes("/companion/list");
     }
 }
