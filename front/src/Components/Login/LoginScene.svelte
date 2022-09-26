@@ -24,7 +24,7 @@
         if (finalName !== "") {
             try {
                 loginScene.login(finalName);
-            } catch (e: Error) {
+            } catch (e) {
                 if (e.message === "name-format") {
                     errorName = $LL.login.input.name.error();
                 }
