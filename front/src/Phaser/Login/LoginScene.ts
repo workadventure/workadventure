@@ -5,6 +5,7 @@ import { localUserStore } from "../../Connexion/LocalUserStore";
 import { connectionManager } from "../../Connexion/ConnectionManager";
 import { gameManager } from "../Game/GameManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
+import { isUserNameValid } from "../../Connexion/LocalUser";
 
 export const LoginSceneName = "LoginScene";
 
@@ -40,8 +41,12 @@ export class LoginScene extends ResizableScene {
     public login(name: string): void {
         analyticsClient.validationName();
 
-        name = name.trim();
-        gameManager.setPlayerName(name);
+        if (isUserNameValid(name)) {
+            name = name.trim();
+            gameManager.setPlayerName(name);
+        } else {
+            throw new Error("name-format");
+        }
 
         this.scene.stop(LoginSceneName);
         gameManager.tryResumingGame(SelectCharacterSceneName);

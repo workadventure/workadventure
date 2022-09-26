@@ -13,6 +13,7 @@
 
     let name = gameManager.getPlayerName() || "";
     let startValidating = false;
+    let errorName = "";
 
     let logo = gameManager.currentStartedRoom?.loginSceneLogo ?? logoImg;
 
@@ -21,7 +22,13 @@
 
         let finalName = name.trim();
         if (finalName !== "") {
-            loginScene.login(finalName);
+            try {
+                loginScene.login(finalName);
+            } catch (e: Error) {
+                if (e.message === "name-format") {
+                    errorName = $LL.login.input.name.error();
+                }
+            }
         }
     }
 </script>
@@ -44,11 +51,11 @@
         on:keypress={() => {
             startValidating = true;
         }}
-        class:is-error={name.trim() === "" && startValidating}
+        class:is-error={(name.trim() === "" && startValidating) || errorName !== ""}
     />
     <section class="error-section">
-        {#if name.trim() === "" && startValidating}
-            <p class="err">{$LL.login.input.name.empty()}</p>
+        {#if (name.trim() === "" && startValidating) || errorName !== ""}
+            <p class="err">{errorName ?? $LL.login.input.name.empty()}</p>
         {/if}
     </section>
 
