@@ -35,7 +35,7 @@ ENV NODE_ENV=production
 RUN yarn run build
 
 # final production image
-FROM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c
+FROM node:18.9.1@sha256:48c6c0054de0a80275f9ff67010ab7b555848e126bc35893bba8a77bf871550a
 WORKDIR /usr/src
 COPY map-storage/yarn.lock map-storage/package.json ./
 ENV NODE_ENV=production
