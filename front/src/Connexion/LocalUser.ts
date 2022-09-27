@@ -26,7 +26,7 @@ export function isUserNameTooLong(value: unknown): boolean {
         typeof value === "string" &&
         value.length > 0 &&
         !localUserStore.isUsernameInJwt() &&
-        value.length <= maxUserNameLength
+        value.length > maxUserNameLength
     );
 }
 
