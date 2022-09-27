@@ -1,25 +1,17 @@
 <script lang="ts">
-    import { MeStore, MucRoom, User, UsersStore } from "../Xmpp/MucRoom";
+    import { MucRoom, User } from "../Xmpp/MucRoom";
     import ChatUser from "./ChatUser.svelte";
-    import { createEventDispatcher } from "svelte";
     import { ChevronUpIcon } from "svelte-feather-icons";
     import { fly } from "svelte/transition";
     import LL from "../i18n/i18n-svelte";
-    import { Ban, GoTo, RankDown, RankUp } from "../Type/CustomEvent";
     import Loader from "./Loader.svelte";
-    const dispatch = createEventDispatcher<{
-        goTo: GoTo;
-        rankUp: RankUp;
-        rankDown: RankDown;
-        ban: Ban;
-        showUsers: undefined;
-    }>();
+    import { showUsersStore } from "../Stores/ChatStore";
 
     export let mucRoom: MucRoom;
-    export let usersListStore: UsersStore;
-    export let meStore: MeStore;
-    export let showUsers: boolean;
     export let searchValue: string;
+
+    const usersListStore = mucRoom.getPresenceStore();
+    const meStore = mucRoom.getMeStore();
 
     let minimizeUser = true;
     const maxUsersMinimized = 7;
@@ -71,28 +63,18 @@
         <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
             {$LL.users()}
         </p>
-        <button class="tw-text-lighter-purple" on:click={() => dispatch("showUsers")}>
-            <ChevronUpIcon class={`tw-transform tw-transition ${showUsers ? "" : "tw-rotate-180"}`} />
+        <button class="tw-text-lighter-purple" on:click={() => showUsersStore.set(!$showUsersStore)}>
+            <ChevronUpIcon class={`tw-transform tw-transition ${$showUsersStore ? "" : "tw-rotate-180"}`} />
         </button>
     </div>
-    {#if showUsers}
+    {#if $showUsersStore}
         <div transition:fly={{ y: -30, duration: 100 }}>
             {#if $loadingSubscribersStore}
                 <Loader text={$LL.loadingUsers()} height="tw-h-40" />
             {:else}
                 {#each roomSorted as room}
                     {#each usersByMaps.get(room) ?? [] as user}
-                        <ChatUser
-                            {mucRoom}
-                            {openChat}
-                            {user}
-                            on:goTo={(event) => dispatch("goTo", event.detail)}
-                            on:rankUp={(event) => dispatch("rankUp", event.detail)}
-                            on:rankDown={(event) => dispatch("rankDown", event.detail)}
-                            on:ban={(event) => dispatch("ban", event.detail)}
-                            {searchValue}
-                            {meStore}
-                        />
+                        <ChatUser {mucRoom} {openChat} {user} {searchValue} {meStore} />
                     {/each}
                 {/each}
                 {#if usersList.filter((user) => !user.isMe).length === 0}

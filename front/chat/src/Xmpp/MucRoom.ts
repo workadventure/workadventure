@@ -160,7 +160,7 @@ export class MucRoom {
     private loadingStore: Writable<boolean>;
     private canLoadOlderMessagesStore: Writable<boolean>;
     private showDisabledLoadOlderMessagesStore: Writable<boolean>;
-    private closed: boolean = false;
+    public closed: boolean = false;
     description: string = "";
     private maxHistoryDate: string = "";
     private getAllSubscriptionsId: string = "";
@@ -818,6 +818,7 @@ export class MucRoom {
                 handledMessage = true;
             } else if (xml.getChild("c", "http://jabber.org/protocol/caps")) {
                 // Noting to do, not used for the moment
+                handledMessage = true;
             } else {
                 if (this.type === "live" && type === "unavailable") {
                     this.readyStore.set(false);

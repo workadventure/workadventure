@@ -158,14 +158,17 @@ export class XmppClient {
             );
         }
 
-        const predictedSubscribe = subscribe ?? mucRoomsStore.getDefaultRoom()?.subscribe ?? false;
-
         const roomUrl = jid(waRoomUrl, this.conferenceDomain);
-        const room = new MucRoom(this.connection, name, roomUrl, waRoomUrl, type, predictedSubscribe, this.jid);
-        this.rooms.set(roomUrl.toString(), room);
-        mucRoomsStore.addMucRoom(room);
+        let room = this.rooms.get(roomUrl.toString());
 
-        room.connect();
+        if (!room) {
+            const predictedSubscribe = subscribe ?? mucRoomsStore.getDefaultRoom()?.subscribe ?? false;
+            room = new MucRoom(this.connection, name, roomUrl, waRoomUrl, type, predictedSubscribe, this.jid);
+            this.rooms.set(roomUrl.toString(), room);
+            mucRoomsStore.addMucRoom(room);
+
+            room.connect();
+        }
 
         return room;
     }

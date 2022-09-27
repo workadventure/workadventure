@@ -2,17 +2,14 @@
     import { fly } from "svelte/transition";
     import { ChevronUpIcon } from "svelte-feather-icons";
     import ChatMucRoom from "./ChatMucRoom.svelte";
-    import { createEventDispatcher } from "svelte";
-    import { MucRoom } from "../Xmpp/MucRoom";
-    const dispatch = createEventDispatcher();
+    import { showLivesStore } from "../Stores/ChatStore";
+    import { mucRoomsStore } from "../Stores/MucRoomsStore";
 
-    export let liveRooms: MucRoom[];
-    export let showLives: Boolean;
     export let searchValue: string;
 
-    function open(liveRoom: MucRoom) {
-        dispatch("activeThread", liveRoom);
-    }
+    $: liveRooms = [...$mucRoomsStore].filter(
+        (mucRoom) => mucRoom.type === "live" && mucRoom.name.toLowerCase().includes(searchValue)
+    );
 </script>
 
 {#if liveRooms.length > 0}
@@ -23,7 +20,7 @@
     >
         <div
             class="tw-px-4 tw-py-1 tw-flex tw-items-center tw-cursor-pointer"
-            on:click|stopPropagation={() => dispatch("showLives")}
+            on:click|stopPropagation={() => showLivesStore.set(!$showLivesStore)}
         >
             <span
                 class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
@@ -32,19 +29,13 @@
             </span>
             <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">Live zones</p>
             <button class="tw-text-lighter-purple">
-                <ChevronUpIcon class={`tw-transform tw-transition ${showLives ? "" : "tw-rotate-180"}`} />
+                <ChevronUpIcon class={`tw-transform tw-transition ${$showLivesStore ? "" : "tw-rotate-180"}`} />
             </button>
         </div>
-        {#if showLives}
+        {#if $showLivesStore}
             <div transition:fly={{ y: -30, duration: 100 }}>
                 {#each liveRooms as liveRoom}
-                    <ChatMucRoom
-                        mucRoom={liveRoom}
-                        {searchValue}
-                        meStore={liveRoom.getMeStore()}
-                        usersListStore={liveRoom.getPresenceStore()}
-                        {open}
-                    />
+                    <ChatMucRoom mucRoom={liveRoom} {searchValue} />
                 {/each}
             </div>
         {/if}

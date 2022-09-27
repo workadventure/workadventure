@@ -19,9 +19,12 @@
         connectionNotAuthorized,
         timelineActiveStore,
         timelineMessagesToSee,
-        timelineOpenedStore,
+        showTimelineStore,
+        showUsersStore,
+        showLivesStore,
+        showForumsStore,
     } from "../Stores/ChatStore";
-    import { Unsubscriber, derived } from "svelte/store";
+    import { Unsubscriber, derived, writable } from "svelte/store";
     import { connectionManager } from "../Connection/ChatConnectionManager";
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
     import { iframeListener } from "../IframeListener";
@@ -35,9 +38,6 @@
     let autoscroll: boolean;
 
     let searchValue = "";
-    let showUsers = true;
-    let showLives = true;
-    let showForums = true;
 
     beforeUpdate(() => {
         autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
@@ -80,6 +80,42 @@
                 defaultMucRoom = mucRoomsStore.getDefaultRoom();
             })
         );
+        subscribeListeners.push(
+            showUsersStore.subscribe((value) => {
+                if (value) {
+                    showLivesStore.set(false);
+                    showForumsStore.set(false);
+                    showTimelineStore.set(false);
+                }
+            })
+        );
+        subscribeListeners.push(
+            showLivesStore.subscribe((value) => {
+                if (value) {
+                    showUsersStore.set(false);
+                    showForumsStore.set(false);
+                    showTimelineStore.set(false);
+                }
+            })
+        );
+        subscribeListeners.push(
+            showForumsStore.subscribe((value) => {
+                if (value) {
+                    showLivesStore.set(false);
+                    showUsersStore.set(false);
+                    showTimelineStore.set(false);
+                }
+            })
+        );
+        subscribeListeners.push(
+            showTimelineStore.subscribe((value) => {
+                if (value) {
+                    showLivesStore.set(false);
+                    showForumsStore.set(false);
+                    showUsersStore.set(false);
+                }
+            })
+        );
     });
 
     onDestroy(() => {
@@ -100,15 +136,6 @@
 
     function handleActiveThread(event: unknown) {
         activeThreadStore.set((event as { detail: MucRoom | undefined }).detail);
-    }
-    function handleShowUsers() {
-        showUsers = !showUsers;
-    }
-    function handleShowLives() {
-        showLives = !showLives;
-    }
-    function handleShowForums() {
-        showForums = !showForums;
     }
 
     function closeChat() {
@@ -149,15 +176,7 @@
         {:else if $timelineActiveStore}
             <ChatActiveThreadTimeLine on:unactiveThreadTimeLine={() => timelineActiveStore.set(false)} />
         {:else if $activeThreadStore !== undefined}
-            <ChatActiveThread
-                activeThread={$activeThreadStore}
-                on:goTo={(event) =>
-                    $activeThreadStore?.goTo(event.detail.type, event.detail.playUri, event.detail.uuid)}
-                on:rankUp={(event) => $activeThreadStore?.sendRankUp(event.detail.jid)}
-                on:rankDown={(event) => $activeThreadStore?.sendRankDown(event.detail.jid)}
-                on:ban={(event) =>
-                    $activeThreadStore?.sendBan(event.detail.user, event.detail.name, event.detail.playUri)}
-            />
+            <ChatActiveThread activeThread={$activeThreadStore} />
         {:else}
             <div class="wa-message-bg" transition:fly={{ x: -500, duration: 400 }}>
                 <!-- searchbar -->
@@ -167,7 +186,7 @@
                             class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
                             placeholder={$LL.search()}
                             bind:value={searchValue}
-                            on:input={() => timelineOpenedStore.set(false)}
+                            on:input={() => showTimelineStore.set(false)}
                         />
                     </div>
                 </div>
@@ -185,41 +204,13 @@
                 {#if defaultMucRoom !== undefined}
                     <UsersList
                         mucRoom={defaultMucRoom}
-                        {showUsers}
-                        usersListStore={defaultMucRoom?.getPresenceStore()}
-                        meStore={defaultMucRoom?.getMeStore()}
                         searchValue={searchValue.toLocaleLowerCase()}
                         on:activeThread={handleActiveThread}
-                        on:showUsers={handleShowUsers}
-                        on:goTo={(event) =>
-                            defaultMucRoom?.goTo(event.detail.type, event.detail.playUri, event.detail.uuid)}
-                        on:rankUp={(event) => defaultMucRoom?.sendRankUp(event.detail.jid)}
-                        on:rankDown={(event) => defaultMucRoom?.sendRankDown(event.detail.jid)}
-                        on:ban={(event) =>
-                            defaultMucRoom?.sendBan(event.detail.user, event.detail.name, event.detail.playUri)}
                     />
                 {/if}
 
-                <ChatForumRooms
-                    {showForums}
-                    searchValue={searchValue.toLocaleLowerCase()}
-                    on:activeThread={handleActiveThread}
-                    on:showForums={handleShowForums}
-                    forumRooms={[...$mucRoomsStore].filter(
-                        (mucRoom) => mucRoom.type === "forum" && mucRoom.name.toLowerCase().includes(searchValue)
-                    )}
-                />
-
-                <ChatLiveRooms
-                    {showLives}
-                    searchValue={searchValue.toLocaleLowerCase()}
-                    on:activeThread={handleActiveThread}
-                    on:showLives={handleShowLives}
-                    liveRooms={[...$mucRoomsStore].filter(
-                        (mucRoom) => mucRoom.type === "live" && mucRoom.name.toLowerCase().includes(searchValue)
-                    )}
-                />
-
+                <ChatForumRooms searchValue={searchValue.toLocaleLowerCase()} />
+                <ChatLiveRooms searchValue={searchValue.toLocaleLowerCase()} />
                 <Timeline on:activeThreadTimeLine={() => timelineActiveStore.set(true)} />
             </div>
         {/if}

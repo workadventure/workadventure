@@ -3,13 +3,15 @@
     import OnlineUsers from "./OnlineUsers.svelte";
     import LL from "../i18n/i18n-svelte";
     import highlightWords from "highlight-words";
-    import { MeStore, MucRoom, UsersStore } from "../Xmpp/MucRoom";
+    import { MucRoom } from "../Xmpp/MucRoom";
+    import { activeThreadStore } from "../Stores/ActiveThreadStore";
 
     export let mucRoom: MucRoom;
-    export let meStore: MeStore;
-    export let usersListStore: UsersStore;
-    export let open: Function;
     export let searchValue: string;
+
+    function open() {
+        activeThreadStore.set(mucRoom);
+    }
 
     let forumMenuActive = false;
     let openChatForumMenu = () => {
@@ -24,7 +26,9 @@
         query: searchValue,
     });
 
-    $: unreads = mucRoom.getCountMessagesToSee();
+    const usersListStore = mucRoom.getPresenceStore();
+    const meStore = mucRoom.getMeStore();
+    const unreads = mucRoom.getCountMessagesToSee();
 </script>
 
 <div class={`wa-chat-item`} on:mouseleave={closeChatUserMenu}>

@@ -2,18 +2,16 @@
     import { fly } from "svelte/transition";
     import { ChevronUpIcon } from "svelte-feather-icons";
     import ChatMucRoom from "./ChatMucRoom.svelte";
-    import { createEventDispatcher } from "svelte";
-    import { MucRoom } from "../Xmpp/MucRoom";
     import { derived } from "svelte/store";
-    const dispatch = createEventDispatcher();
+    import { showForumsStore } from "../Stores/ChatStore";
+    import { mucRoomsStore } from "../Stores/MucRoomsStore";
 
-    export let forumRooms: MucRoom[];
-    export let showForums: Boolean;
     export let searchValue: string;
 
-    function open(liveRoom: MucRoom) {
-        dispatch("activeThread", liveRoom);
-    }
+    const forumRooms =
+        [...$mucRoomsStore].filter(
+            (mucRoom) => mucRoom.type === "forum" && mucRoom.name.toLowerCase().includes(searchValue)
+        ) || [];
 
     const unread = derived(
         forumRooms.map((forum) => forum.getCountMessagesToSee()),
@@ -21,7 +19,6 @@
     );
 </script>
 
-<!--{#if forumRooms.length > 0}-->
 <div
     id="forumRooms"
     class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple"
@@ -29,7 +26,7 @@
 >
     <div
         class="tw-px-4 tw-py-1 tw-flex tw-items-center tw-cursor-pointer"
-        on:click|stopPropagation={() => dispatch("showForums")}
+        on:click|stopPropagation={() => showForumsStore.set(!$showForumsStore)}
     >
         {#if $unread > 0}
             <span
@@ -40,21 +37,14 @@
         {/if}
         <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">Forums</p>
         <button class="tw-text-lighter-purple">
-            <ChevronUpIcon class={`tw-transform tw-transition ${showForums ? "" : "tw-rotate-180"}`} />
+            <ChevronUpIcon class={`tw-transform tw-transition ${$showForumsStore ? "" : "tw-rotate-180"}`} />
         </button>
     </div>
-    {#if showForums}
+    {#if $showForumsStore}
         <div transition:fly={{ y: -30, duration: 100 }}>
             {#each forumRooms as forumRoom}
-                <ChatMucRoom
-                    mucRoom={forumRoom}
-                    {searchValue}
-                    meStore={forumRoom.getMeStore()}
-                    usersListStore={forumRoom.getPresenceStore()}
-                    {open}
-                />
+                <ChatMucRoom mucRoom={forumRoom} {searchValue} />
             {/each}
         </div>
     {/if}
 </div>
-<!--{/if}-->

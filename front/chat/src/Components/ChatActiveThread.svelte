@@ -113,17 +113,7 @@
                     {$LL.users()}
                 </p>
                 {#each [...$usersListStore] as [_, user]}
-                    <ChatUser
-                        mucRoom={activeThread}
-                        {openChat}
-                        {user}
-                        on:goTo={(event) => dispatch("goTo", event.detail)}
-                        on:rankUp={(event) => dispatch("rankUp", event.detail)}
-                        on:rankDown={(event) => dispatch("rankDown", event.detail)}
-                        on:ban={(event) => dispatch("ban", event.detail)}
-                        searchValue=""
-                        {meStore}
-                    />
+                    <ChatUser mucRoom={activeThread} {openChat} {user} searchValue="" {meStore} />
                 {/each}
             </div>
         </div>
