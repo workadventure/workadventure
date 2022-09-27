@@ -465,7 +465,8 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "refreshRoomMessage": {
-                    //todo: implement a way to notify the user the room was refreshed.
+                    console.info("roomConnection => refreshRoomMessage received");
+                    window.location.reload();
                     break;
                 }
                 case "followRequestMessage": {

@@ -140,8 +140,6 @@ test.describe('Chat', () => {
       await Chat.noLiveRoom(page2);
     });
 
-    return;
-
     await test.step('disconnect and reconnect to ejabberd and pusher', async () => {
       const chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);

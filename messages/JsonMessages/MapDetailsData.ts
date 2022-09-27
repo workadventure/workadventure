@@ -97,8 +97,8 @@ export const isMapDetailsData = z.object({
         example: "https://example.com/logo_login.png",
     }),
     showPoweredBy: extendApi(z.boolean().nullable().optional(), {
-        description: "The URL of the image to be used on the name scene",
-        example: "https://example.com/logo_login.png",
+        description: "Whether the logo PoweredBy is enabled or not on this room",
+        example: true,
     }),
     thirdParty: extendApi(isMapThirdPartyData.nullable().optional(), {
         description: "Configuration data for third party services",
@@ -114,6 +114,14 @@ export const isMapDetailsData = z.object({
         description:
             "The url of the page where the user can see the price to upgrade and can use the features he wants in the future.",
         example: "https://example.com/pricing",
+    }),
+    enableChat: extendApi(z.boolean().optional(), {
+        description: "Whether the chat is enabled or not on this room",
+        example: true,
+    }),
+    enableChatUpload: extendApi(z.boolean().optional(), {
+        description: "Whether the feature 'upload' in the chat is enabled or not on this room",
+        example: true,
     }),
 });
 

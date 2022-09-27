@@ -107,6 +107,7 @@ const en_US: BaseTranslation = {
     upgrade: "Upgrade",
     upgradeToSeeMore: "Upgrade to see more messages",
     disabled: "This feature is disabled.",
+    disabledByAdmin: "This feature is disabled by the administrator.",
 };
 
 export default en_US;
