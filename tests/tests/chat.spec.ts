@@ -31,6 +31,11 @@ test.describe('Chat', () => {
     await test.step('all tests of chat', async () => {
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
 
+      // Enter in liveZone
+      await Map.walkTo(page, 'ArrowRight', 2_500);
+      await Map.walkTo(page, 'ArrowUp', 500);
+      await Chat.liveRoomExist(page, 'liveZone');
+
       // Second browser
       const newBrowser = await browser.browserType().launch();
       const page2 = await newBrowser.newPage();
@@ -44,9 +49,6 @@ test.describe('Chat', () => {
       await Chat.checkNameInChat(page2, nickname2, TIMEOUT_TO_GET_LIST);
 
       // Enter in liveZone
-      await Map.walkTo(page, 'ArrowRight', 2_500);
-      await Map.walkTo(page, 'ArrowUp', 500);
-      await Chat.liveRoomExist(page, 'liveZone');
       await Map.walkTo(page2, 'ArrowRight', 2_500);
       await Map.walkTo(page2, 'ArrowDown', 500);
       await Chat.liveRoomExist(page2, 'liveZone');
@@ -118,11 +120,10 @@ test.describe('Chat', () => {
       // Exit forum
       await Chat.AT_close(page);
 
+      // Expand users
+      await Chat.expandUsers(page);
 
       // Walk to
-      // A workaround to wait the end of svelte animation
-      //eslint-disable-next-line playwright/no-wait-for-timeout
-      await page.waitForTimeout(3_000);
       await Chat.UL_walkTo(page, nickname2);
 
       await Chat.openTimeline(page);

@@ -26,6 +26,10 @@ class Chat {
         await expect(this.get(page)).not.toContain('#liveRooms');
     }
 
+    async expandUsers(page: Page){
+        await this.get(page).locator('#users div:has-text("Users") button > .feather-chevron-up').click();
+    }
+
     async openLiveRoom(page: Page){
         await this.get(page).locator('#liveRooms .wa-chat-item .wa-dropdown button').click();
         await this.get(page).locator('#liveRooms .wa-chat-item .wa-dropdown .open').click();
