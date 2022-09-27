@@ -4,6 +4,7 @@ import {JWTTokenManager} from "../src/Services/JWTTokenManager";
 import Request from "hyper-express/types/components/http/Request";
 import Response from "hyper-express/types/components/http/Response";
 
+const NOT_A_SECRET = "foo"
 class MockAuthenticatedProviderController extends AuthenticatedProviderController<string> {
     promise = Promise.resolve("success")
     protected getData(roomUrl: string, req: Request): Promise<string | undefined> {
@@ -47,7 +48,7 @@ class FakeResponse {
 
 class FakeRequest {
     params: object = {}
-    constructor(public path_query: string = "", private headers: object = {"Authorization":"token"}) {
+    constructor(public path_query: string = "", private headers: object = {"Authorization" : NOT_A_SECRET}) {
     }
     header(header: string): string {
         // @ts-ignore
