@@ -872,7 +872,7 @@ export class GameRoom implements BrothersFinder {
     private mucManagerPromise: Promise<MucManager> | undefined;
     private mucManagerLastLoad: Date | undefined;
 
-    private getMucManager(mapDetails: MapDetailsData): Promise<MucManager> {
+    private getMucManager(): Promise<MucManager> {
         const lastMapUrl = this.mapUrl;
         if (!this.mucManagerPromise) {
             // For localhost maps
@@ -880,7 +880,7 @@ export class GameRoom implements BrothersFinder {
             this.mucManagerLastLoad = new Date();
             this.mucManagerPromise = this.getMap(true)
                 .then((map) => {
-                    return new MucManager(this.roomUrl, map, mapDetails);
+                    return new MucManager(this.roomUrl, map);
                 })
                 .catch((e) => {
                     if (e instanceof LocalUrlError) {
@@ -911,7 +911,7 @@ export class GameRoom implements BrothersFinder {
                             }
                         }, 1000);
                     }
-                    return new MucManager(this.roomUrl, null, mapDetails);
+                    return new MucManager(this.roomUrl, null);
                 });
         }
         this.mapUrl = lastMapUrl;

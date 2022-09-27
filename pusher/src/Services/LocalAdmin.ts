@@ -25,7 +25,7 @@ class LocalAdmin implements AdminInterface {
         locale?: string
     ): Promise<FetchMemberDataByUuidResponse> {
         const mucRooms = [{ name: "Connected users", url: playUri, type: "default", subscribe: false }];
-        if(ENABLE_CHAT){
+        if (ENABLE_CHAT) {
             mucRooms.push({ name: "Welcome", url: `${playUri}/forum/welcome`, type: "forum", subscribe: false });
         }
         return {

@@ -2,6 +2,7 @@ import { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled
 import Axios from "axios";
 import { EjabberdClient, ejabberdClient } from "./EjabberdClient";
 import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
+import { ENABLE_CHAT } from "../Enum/EnvironmentVariable";
 
 export interface MucRoom {
     chatName?: string;
@@ -19,9 +20,8 @@ export class MucManager {
     /**
      * @param roomUrl
      * @param map The map can be "null" if it is hosted on a private network. In this case, we assume this is a test setup and bypass any server-side checks.
-     * @param mapDetails
      */
-    constructor(private roomUrl: string, private map: ITiledMap | null, private mapDetails: MapDetailsData) {
+    constructor(private roomUrl: string, private map: ITiledMap | null) {
         // We initialize the list of variable object at room start. The objects cannot be edited later
         // (otherwise, this would cause a security issue if the scripting API can edit this list of objects)
         if (map) {
@@ -91,7 +91,7 @@ export class MucManager {
                     }
                 }
             }
-            if (this.mucRooms && mapDetails.enableChat) {
+            if (this.mucRooms && (mapDetails.enableChat ?? ENABLE_CHAT)) {
                 for (const [, mucRoom] of this.mucRooms) {
                     if (mucRoom.mucCreated) return;
                     if (mucRoom.mucUrl) {
