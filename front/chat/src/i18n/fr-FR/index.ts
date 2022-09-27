@@ -72,7 +72,7 @@ const fr_FR: Translation = {
     delete: "Supprimer",
     messageDeleted: "Ce message a été supprimé par ",
     emoji: {
-        icon: "Icon pour ouvrir ou fermer la selection d'emoji",
+        icon: "Emojis",
         search: "Chercher un emoji...",
         categories: {
             recents: "Emojis récents",
