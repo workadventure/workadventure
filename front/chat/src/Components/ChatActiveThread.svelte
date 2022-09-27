@@ -5,20 +5,11 @@
     import LL from "../i18n/i18n-svelte";
     import { activeThreadStore, settingsViewStore } from "../Stores/ActiveThreadStore";
     import ChatUser from "./ChatUser.svelte";
-    import { createEventDispatcher } from "svelte";
     import ChatMessagesList from "./ChatMessagesList.svelte";
     import OnlineUsers from "./OnlineUsers.svelte";
     import { MucRoom, User } from "../Xmpp/MucRoom";
-    import { Ban, GoTo, RankDown, RankUp } from "../Type/CustomEvent";
     import { onDestroy } from "svelte";
     import Loader from "./Loader.svelte";
-
-    const dispatch = createEventDispatcher<{
-        goTo: GoTo;
-        rankUp: RankUp;
-        rankDown: RankDown;
-        ban: Ban;
-    }>();
 
     export let activeThread: MucRoom;
 

@@ -24,7 +24,7 @@
         showLivesStore,
         showForumsStore,
     } from "../Stores/ChatStore";
-    import { Unsubscriber, derived, writable } from "svelte/store";
+    import { Unsubscriber, derived } from "svelte/store";
     import { connectionManager } from "../Connection/ChatConnectionManager";
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
     import { iframeListener } from "../IframeListener";

@@ -18,7 +18,7 @@
 <div
     id="forumRooms"
     class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple"
-    transition:fly={{ y: -30, duration: 100 }}
+    transition:fly={{ x: -30, duration: 50 }}
 >
     <div
         class="tw-px-4 tw-py-1 tw-flex tw-items-center tw-cursor-pointer"
