@@ -19,7 +19,7 @@ export function areCharacterLayersValid(value: string[] | null): boolean {
         return false;
     }
     for (const layerName of value) {
-        if (layerName.length === 0 || layerName === " ") {
+        if (layerName === undefined) {
             return false;
         }
     }

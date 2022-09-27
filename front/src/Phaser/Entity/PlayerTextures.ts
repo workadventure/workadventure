@@ -48,7 +48,12 @@ export class PlayerTextures {
     private wokaCollections = new Map<string, BodyResourceDescriptionInterface[]>();
 
     public loadPlayerTexturesMetadata(metadata: WokaList): void {
-        this.mapTexturesMetadataIntoResources(metadata);
+        const metadataWithoutHats = structuredClone(metadata);
+        delete metadataWithoutHats["hat"];
+        delete metadataWithoutHats["accessory"];
+        delete metadataWithoutHats["body"];
+        // this.mapTexturesMetadataIntoResources(metadata);
+        this.mapTexturesMetadataIntoResources(metadataWithoutHats);
     }
 
     public getTexturesResources(key: PlayerTexturesKey): BodyResourceDescriptionListInterface {

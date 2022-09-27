@@ -135,8 +135,9 @@ export class CustomizeScene extends AbstractCharacterScene {
         const layers: string[] = [];
         let i = 0;
         for (const layerItem of this.selectedLayers) {
-            if (layerItem !== undefined) {
-                layers.push(this.layers[i][layerItem].id);
+            const clothId = this.layers[i][layerItem]?.id;
+            if (layerItem !== undefined && clothId !== undefined) {
+                layers.push(clothId);
             }
             i++;
         }
@@ -335,6 +336,10 @@ export class CustomizeScene extends AbstractCharacterScene {
         let i = 0;
         for (const layerItem of this.selectedLayers) {
             const bodyPart = CustomWokaBodyPart[CustomWokaBodyPartOrder[i] as CustomWokaBodyPart];
+            if (!this.layers[i][layerItem]) {
+                i += 1;
+                continue;
+            }
             this.customWokaPreviewer.updateSprite(this.layers[i][layerItem].id, bodyPart);
             i += 1;
         }
@@ -344,17 +349,18 @@ export class CustomizeScene extends AbstractCharacterScene {
         return {
             [CustomWokaBodyPart.Accessory]:
                 this.layers[CustomWokaBodyPartOrder.Accessory][this.selectedLayers[CustomWokaBodyPartOrder.Accessory]]
-                    .id,
+                    ?.id ?? "",
             [CustomWokaBodyPart.Body]:
-                this.layers[CustomWokaBodyPartOrder.Body][this.selectedLayers[CustomWokaBodyPartOrder.Body]].id,
+                this.layers[CustomWokaBodyPartOrder.Body][this.selectedLayers[CustomWokaBodyPartOrder.Body]]?.id ?? "",
             [CustomWokaBodyPart.Clothes]:
-                this.layers[CustomWokaBodyPartOrder.Clothes][this.selectedLayers[CustomWokaBodyPartOrder.Clothes]].id,
+                this.layers[CustomWokaBodyPartOrder.Clothes][this.selectedLayers[CustomWokaBodyPartOrder.Clothes]]
+                    ?.id ?? "",
             [CustomWokaBodyPart.Eyes]:
-                this.layers[CustomWokaBodyPartOrder.Eyes][this.selectedLayers[CustomWokaBodyPartOrder.Eyes]].id,
+                this.layers[CustomWokaBodyPartOrder.Eyes][this.selectedLayers[CustomWokaBodyPartOrder.Eyes]]?.id ?? "",
             [CustomWokaBodyPart.Hair]:
-                this.layers[CustomWokaBodyPartOrder.Hair][this.selectedLayers[CustomWokaBodyPartOrder.Hair]].id,
+                this.layers[CustomWokaBodyPartOrder.Hair][this.selectedLayers[CustomWokaBodyPartOrder.Hair]]?.id ?? "",
             [CustomWokaBodyPart.Hat]:
-                this.layers[CustomWokaBodyPartOrder.Hat][this.selectedLayers[CustomWokaBodyPartOrder.Hat]].id,
+                this.layers[CustomWokaBodyPartOrder.Hat][this.selectedLayers[CustomWokaBodyPartOrder.Hat]]?.id ?? "",
         };
     }
 

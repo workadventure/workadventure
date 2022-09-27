@@ -97,8 +97,8 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
     }
 
     public updateSprite(textureKey: string, bodyPart: CustomWokaBodyPart): void {
-        this.sprites[bodyPart].anims.stop();
-        this.sprites[bodyPart].setTexture(textureKey).setVisible(textureKey !== "");
+        this.sprites[bodyPart]?.anims.stop();
+        this.sprites[bodyPart]?.setTexture(textureKey).setVisible(textureKey !== "");
         if (textureKey === "") {
             return;
         }
