@@ -32,7 +32,7 @@
 </script>
 
 <div class={`wa-chat-item`} on:mouseleave={closeChatUserMenu}>
-    <div class="tw-relative" on:click|stopPropagation={() => open(mucRoom)}>
+    <div class="tw-relative" on:click|stopPropagation={() => open()}>
         <img class={``} src="/static/images/logo-wa-2.png" alt="Send" width="35" />
         <div class="tw-block tw-absolute tw-right-0 tw-top-0 tw-transform tw-translate-x-2 -tw-translate-y-1">
             {#if mucRoom.type === "live"}
@@ -47,7 +47,7 @@
             {/if}
         </div>
     </div>
-    <div class="tw-flex-auto tw-ml-2" on:click|stopPropagation={() => open(mucRoom)}>
+    <div class="tw-flex-auto tw-ml-2" on:click|stopPropagation={() => open()}>
         <h1 class="tw-text-sm tw-font-bold tw-mb-0">
             {#each chunks as chunk (chunk.key)}
                 <span class={`${chunk.match ? "tw-text-light-blue" : ""}`}>{chunk.text}</span>
@@ -72,7 +72,7 @@
 
         <!-- menu -->
         <div class={`wa-dropdown-menu ${forumMenuActive ? "" : "tw-invisible"}`} on:mouseleave={closeChatUserMenu}>
-            <span class="open wa-dropdown-item" on:click|stopPropagation={() => open(mucRoom)}
+            <span class="open wa-dropdown-item" on:click|stopPropagation={() => open()}
                 ><EyeIcon size="12" class="tw-mr-1" /> {$LL.open()}
             </span>
             {#if $meStore.isAdmin}
