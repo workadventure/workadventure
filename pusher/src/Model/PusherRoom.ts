@@ -75,7 +75,10 @@ export class PusherRoom {
     }
 
     public isEmpty(): boolean {
-        return this.positionNotifier.isEmpty();
+        if (this.listenersChat.size === 0 && this.listeners.size === 0 && !this.positionNotifier.isEmpty()) {
+            console.error("PusherRoom => positionNotifier not empty but no listeners registered !");
+        }
+        return this.listenersChat.size === 0 && this.listeners.size === 0;
     }
 
     public needsUpdate(versionNumber: number): boolean {
