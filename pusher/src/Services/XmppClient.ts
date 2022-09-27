@@ -360,7 +360,32 @@ export class XmppClient {
             }
             // If getting error on MaxHistoryChat
             else if (this.clientSocket.maxHistoryChat < 0) {
-                return null;
+                this.sendToChat(
+                    xml(
+                        "iq",
+                        {
+                            type: "result",
+                            id: element.getAttr("id"),
+                            from: element.getAttr("to"),
+                            to: element.getAttr("from"),
+                        },
+                        xml(
+                            "fin",
+                            {
+                                xmlns: "urn:xmpp:mam:2",
+                                complete: this.clientSocket.maxHistoryChat !== -1,
+                                disabled: this.clientSocket.maxHistoryChat !== -1,
+                            },
+                            xml(
+                                "set",
+                                {
+                                    xmlns: "http://jabber.org/protocol/rsm",
+                                },
+                                xml("count", {}, "0")
+                            )
+                        )
+                    ).toString()
+                );
             }
         }
         return element;

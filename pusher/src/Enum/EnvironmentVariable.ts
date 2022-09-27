@@ -30,6 +30,8 @@ export const EJABBERD_DOMAIN: string = process.env.EJABBERD_DOMAIN || "";
 export const EJABBERD_WS_URI: string = process.env.EJABBERD_WS_URI || "";
 export const EJABBERD_JWT_SECRET: string = process.env.EJABBERD_JWT_SECRET || "";
 export const MAX_HISTORY_CHAT: number = parseInt(process.env.MAX_HISTORY_CHAT ?? "0");
+export const ENABLE_CHAT: boolean = process.env.ENABLE_CHAT !== "false";
+export const ENABLE_CHAT_UPLOAD: boolean = process.env.ENABLE_CHAT_UPLOAD !== "false";
 
 const debugErrorMessages = process.env.DEBUG_ERROR_MESSAGES;
 export const DEBUG_ERROR_MESSAGES =

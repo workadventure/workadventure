@@ -5,7 +5,7 @@ import { isLocale } from "./Locale";
 import { isLeaveMucEvent } from "./LeaveMucEvent";
 import { isJoinMucEvent } from "./JoinMucEvent";
 import { isChatVisibility } from "./ChatVisibility";
-import { isSettings } from "./Settings";
+import { isSettings } from "./SettingsEvent";
 
 export const isIframeEventWrapper = z.union([
     z.object({

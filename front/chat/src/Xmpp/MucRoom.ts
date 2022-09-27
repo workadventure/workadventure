@@ -852,19 +852,24 @@ export class MucRoom {
             if (fin) {
                 const complete = fin.getAttr("complete");
                 const maxHistoryDate = fin.getAttr("maxHistoryDate");
+                const disabled = fin.getAttr("disabled");
                 const count = parseInt(
                     fin.getChild("set", "http://jabber.org/protocol/rsm")?.getChildText("count") ?? "0"
                 );
-                if (maxHistoryDate) {
-                    this.maxHistoryDate = maxHistoryDate;
-                    if (!get(this.canLoadOlderMessagesStore)) {
-                        this.showDisabledLoadOlderMessagesStore.set(true);
-                    }
-                } else if (count < 50) {
-                    if (complete === "false" || this.maxHistoryDate !== "") {
-                        this.showDisabledLoadOlderMessagesStore.set(true);
-                    }
+                if (disabled && disabled === "true") {
                     this.canLoadOlderMessagesStore.set(false);
+                } else {
+                    if (maxHistoryDate) {
+                        this.maxHistoryDate = maxHistoryDate;
+                        if (!get(this.canLoadOlderMessagesStore)) {
+                            this.showDisabledLoadOlderMessagesStore.set(true);
+                        }
+                    } else if (count < 50) {
+                        if (complete === "false" || this.maxHistoryDate !== "") {
+                            this.showDisabledLoadOlderMessagesStore.set(true);
+                        }
+                        this.canLoadOlderMessagesStore.set(false);
+                    }
                 }
                 this.loadingStore.set(false);
                 handledMessage = true;
