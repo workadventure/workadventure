@@ -25,11 +25,13 @@
         if (finalName !== "") {
             try {
                 loginScene.login(finalName);
-            } catch (e) {
-                if (e instanceof NameTooLongError) {
+            } catch (err) {
+                if (err instanceof NameTooLongError) {
                     errorName = $LL.login.input.name.tooLongError();
-                } else if (e instanceof NameNotValidError) {
+                } else if (err instanceof NameNotValidError) {
                     errorName = $LL.login.input.name.notValidError();
+                } else {
+                    throw err;
                 }
             }
         }

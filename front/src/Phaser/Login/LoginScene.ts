@@ -42,18 +42,19 @@ export class LoginScene extends ResizableScene {
     public login(name: string): void {
         if (isUserNameTooLong(name)) {
             throw new NameTooLongError();
-        } else if (!isUserNameValid(name)) {
-            throw new NameNotValidError();
-        } else {
-            analyticsClient.validationName();
-            name = name.trim();
-            gameManager.setPlayerName(name);
-
-            this.scene.stop(LoginSceneName);
-            gameManager.tryResumingGame(SelectCharacterSceneName);
-            this.scene.remove(LoginSceneName);
-            loginSceneVisibleStore.set(false);
         }
+        if (!isUserNameValid(name)) {
+            throw new NameNotValidError();
+        }
+
+        analyticsClient.validationName();
+        name = name.trim();
+        gameManager.setPlayerName(name);
+
+        this.scene.stop(LoginSceneName);
+        gameManager.tryResumingGame(SelectCharacterSceneName);
+        this.scene.remove(LoginSceneName);
+        loginSceneVisibleStore.set(false);
     }
 
     update(time: number, delta: number): void {}
