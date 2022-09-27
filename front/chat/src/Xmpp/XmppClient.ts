@@ -12,6 +12,7 @@ import { activeThreadStore } from "../Stores/ActiveThreadStore";
 import { get } from "svelte/store";
 import { userStore } from "../Stores/LocalUserStore";
 import { connectionManager } from "../Connection/ChatConnectionManager";
+import { showLivesStore } from "../Stores/ChatStore";
 
 export class XmppClient {
     private jid: string | undefined;
@@ -168,6 +169,10 @@ export class XmppClient {
             mucRoomsStore.addMucRoom(room);
 
             room.connect();
+        }
+
+        if (type === "live") {
+            showLivesStore.set(true);
         }
 
         return room;

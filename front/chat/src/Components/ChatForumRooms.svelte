@@ -4,14 +4,10 @@
     import ChatMucRoom from "./ChatMucRoom.svelte";
     import { derived } from "svelte/store";
     import { showForumsStore } from "../Stores/ChatStore";
-    import { mucRoomsStore } from "../Stores/MucRoomsStore";
+    import { MucRoom } from "../Xmpp/MucRoom";
 
     export let searchValue: string;
-
-    const forumRooms =
-        [...$mucRoomsStore].filter(
-            (mucRoom) => mucRoom.type === "forum" && mucRoom.name.toLowerCase().includes(searchValue)
-        ) || [];
+    export let forumRooms: MucRoom[];
 
     const unread = derived(
         forumRooms.map((forum) => forum.getCountMessagesToSee()),

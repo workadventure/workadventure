@@ -3,13 +3,10 @@
     import { ChevronUpIcon } from "svelte-feather-icons";
     import ChatMucRoom from "./ChatMucRoom.svelte";
     import { showLivesStore } from "../Stores/ChatStore";
-    import { mucRoomsStore } from "../Stores/MucRoomsStore";
+    import { MucRoom } from "../Xmpp/MucRoom";
 
     export let searchValue: string;
-
-    $: liveRooms = [...$mucRoomsStore].filter(
-        (mucRoom) => mucRoom.type === "live" && mucRoom.name.toLowerCase().includes(searchValue)
-    );
+    export let liveRooms: MucRoom[];
 </script>
 
 {#if liveRooms.length > 0}

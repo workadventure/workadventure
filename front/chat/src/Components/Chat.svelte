@@ -209,8 +209,21 @@
                     />
                 {/if}
 
-                <ChatForumRooms searchValue={searchValue.toLocaleLowerCase()} />
-                <ChatLiveRooms searchValue={searchValue.toLocaleLowerCase()} />
+                <ChatForumRooms
+                    searchValue={searchValue.toLocaleLowerCase()}
+                    forumRooms={[...$mucRoomsStore].filter(
+                        (mucRoom) => mucRoom.type === "forum" && mucRoom.name.toLowerCase().includes(searchValue)
+                    )}
+                />
+                <ChatLiveRooms
+                    searchValue={searchValue.toLocaleLowerCase()}
+                    liveRooms={[...$mucRoomsStore].filter(
+                        (mucRoom) =>
+                            mucRoom.type === "live" &&
+                            !mucRoom.closed &&
+                            mucRoom.name.toLowerCase().includes(searchValue)
+                    )}
+                />
                 <Timeline on:activeThreadTimeLine={() => timelineActiveStore.set(true)} />
             </div>
         {/if}
