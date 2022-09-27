@@ -30,6 +30,10 @@ class Chat {
         await this.get(page).locator('#users div:has-text("Users") button > .feather-chevron-up').click();
     }
 
+    async expandForums(page: Page){
+        await this.get(page).locator('#forums div:has-text("Forums") button > .feather-chevron-up').click();
+    }
+
     async openLiveRoom(page: Page){
         await this.get(page).locator('#liveRooms .wa-chat-item .wa-dropdown button').click();
         await this.get(page).locator('#liveRooms .wa-chat-item .wa-dropdown .open').click();
@@ -121,6 +125,10 @@ class Chat {
 
     async AT_close(page: Page){
         await this.get(page).locator('#activeThread .exit').click();
+    }
+
+    async forumExist(page: Page, name: string) {
+        await expect(this.get(page).locator('#forums')).toContainText(name);
     }
 }
 

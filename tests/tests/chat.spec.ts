@@ -139,6 +139,15 @@ test.describe('Chat', () => {
       await page2.locator('#game').focus();
       await Map.walkTo(page2, 'ArrowLeft', 2_000);
       await Chat.noLiveRoom(page2);
+
+      await page2.close();
+    });
+
+    await test.step('default forum exist', async () => {
+      await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
+
+      await Chat.expandForums(page);
+      await Chat.forumExist(page, 'Welcome');
     });
 
     return;
