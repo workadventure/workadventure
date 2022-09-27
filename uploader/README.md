@@ -89,4 +89,4 @@ Optionally, you can set the instance password:
 ## A note on temporary files
 
 As of now, only Redis storage support "temporary files" (for example, audio files). You can have both AWS
-and Redis setup and uplodar will favor AWS for permanent files and Redis for temporary files.
+and Redis setup and the uploader will favor AWS for permanent files and Redis for temporary files.
