@@ -115,11 +115,11 @@ export const isMapDetailsData = z.object({
             "The url of the page where the user can see the price to upgrade and can use the features he wants in the future.",
         example: "https://example.com/pricing",
     }),
-    enableChat: extendApi(z.boolean(), {
+    enableChat: extendApi(z.boolean().optional(), {
         description: "Whether the chat is enabled or not on this room",
         example: true,
     }),
-    enableChatUpload: extendApi(z.boolean(), {
+    enableChatUpload: extendApi(z.boolean().optional(), {
         description: "Whether the feature 'upload' in the chat is enabled or not on this room",
         example: true,
     }),
