@@ -124,7 +124,7 @@
 
         if (document.body.scrollTop >= 0 && lastScrollPosition < 0) {
             //Pull to refresh ...
-            mucRoom.retrieveLastMessages();
+            mucRoom.sendRetrieveLastMessages();
         }
         lastScrollPosition = document.body.scrollTop;
     }
@@ -257,7 +257,7 @@
                 {#if !$loadingStore}
                     <button
                         class="tw-m-auto tw-cursor-pointer tw-text-xs"
-                        on:click={() => mucRoom.retrieveLastMessages()}
+                        on:click={() => mucRoom.sendRetrieveLastMessages()}
                         >{$LL.load()}
                         {$LL.more()}
                         <ArrowUpIcon size="13" class="tw-ml-1" /></button

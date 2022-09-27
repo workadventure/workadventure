@@ -1,4 +1,5 @@
 import { MAX_USERNAME_LENGTH } from "../Enum/EnvironmentVariable";
+import { localUserStore } from "./LocalUserStore";
 
 export type LayerNames = "woka" | "body" | "eyes" | "hair" | "clothes" | "hat" | "accessory";
 
@@ -11,7 +12,22 @@ export interface CharacterTexture {
 export const maxUserNameLength: number = MAX_USERNAME_LENGTH;
 
 export function isUserNameValid(value: unknown): boolean {
-    return typeof value === "string" && value.length > 0 && value.length <= maxUserNameLength && /\S/.test(value);
+    return (
+        typeof value === "string" &&
+        value.length > 0 &&
+        !localUserStore.isUsernameInJwt() &&
+        value.length <= maxUserNameLength &&
+        /\S/.test(value)
+    );
+}
+
+export function isUserNameTooLong(value: unknown): boolean {
+    return (
+        typeof value === "string" &&
+        value.length > 0 &&
+        !localUserStore.isUsernameInJwt() &&
+        value.length > maxUserNameLength
+    );
 }
 
 export function areCharacterLayersValid(value: string[] | null): boolean {

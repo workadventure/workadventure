@@ -37,23 +37,26 @@
     $: loadingSubscribersStore = mucRoom.getLoadingSubscribersStore();
 
     $: usersList = [...$usersListStore.values()] as Array<User>;
-    $: me = usersList.find((user) => user.isMe);
-    $: meArray = me ? [me] : [];
+    $: me = usersList.find((user: User) => user.isMe);
 
-    $: usersFiltered = meArray
-        .concat(
-            usersList
-                .filter((user) => user.active && !user.isMe && user.name.toLocaleLowerCase().includes(searchValue))
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .concat(
-                    usersList
-                        .filter(
-                            (user) => !user.active && !user.isMe && user.name.toLocaleLowerCase().includes(searchValue)
-                        )
-                        .sort((a, b) => a.name.localeCompare(b.name))
-                )
-        )
-        .splice(0, minimizeUser ? maxUsersMinimized : usersList.length);
+    $: usersByMaps = usersList
+        .filter((user: User) => user.name.toLocaleLowerCase().includes(searchValue))
+        .reduce((reduced, user: User, index) => {
+            if ((minimizeUser && index < maxUsersMinimized) || !minimizeUser) {
+                let group = user.roomName ?? "ZZZZZZZZZZ-disconnected";
+                if (!reduced.has(group)) reduced.set(group, [user]);
+                else {
+                    const usersList = [...(reduced.get(group) ?? []), user];
+                    usersList.sort((a, b) => a.name.localeCompare(b.name));
+                    reduced.set(group, usersList);
+                }
+            }
+            return reduced;
+        }, new Map<string, User[]>());
+
+    $: roomSorted = [...usersByMaps.keys()].sort((a, b) =>
+        me?.roomName === a ? -1 : me?.roomName === b ? 1 : a.localeCompare(b)
+    );
 </script>
 
 <div id="users" class="users tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
@@ -77,18 +80,20 @@
             {#if $loadingSubscribersStore}
                 <Loader text={$LL.loadingUsers()} height="tw-h-40" />
             {:else}
-                {#each usersFiltered as user}
-                    <ChatUser
-                        {mucRoom}
-                        {openChat}
-                        {user}
-                        on:goTo={(event) => dispatch("goTo", event.detail)}
-                        on:rankUp={(event) => dispatch("rankUp", event.detail)}
-                        on:rankDown={(event) => dispatch("rankDown", event.detail)}
-                        on:ban={(event) => dispatch("ban", event.detail)}
-                        {searchValue}
-                        {meStore}
-                    />
+                {#each roomSorted as room}
+                    {#each usersByMaps.get(room) ?? [] as user}
+                        <ChatUser
+                            {mucRoom}
+                            {openChat}
+                            {user}
+                            on:goTo={(event) => dispatch("goTo", event.detail)}
+                            on:rankUp={(event) => dispatch("rankUp", event.detail)}
+                            on:rankDown={(event) => dispatch("rankDown", event.detail)}
+                            on:ban={(event) => dispatch("ban", event.detail)}
+                            {searchValue}
+                            {meStore}
+                        />
+                    {/each}
                 {/each}
                 {#if usersList.filter((user) => !user.isMe).length === 0}
                     <div
@@ -106,7 +111,7 @@
                 {/if}
             {/if}
         </div>
-        {#if [...$usersListStore].length > maxUsersMinimized}
+        {#if [...usersByMaps.values()].flat().length > maxUsersMinimized}
             <div class="tw-px-2 tw-mb-1  tw-flex tw-justify-end" on:click={() => (minimizeUser = !minimizeUser)}>
                 <button class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline">
                     {$LL.see()}
