@@ -21,6 +21,7 @@ import { urlManager } from "../../Url/UrlManager";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { GameMapProperties } from "@workadventure/map-editor-types";
+import { connectionManager } from "../../Connexion/ConnectionManager";
 
 interface OpenCoWebsite {
     actionId: string;
@@ -230,6 +231,12 @@ export class GameMapPropertiesListener {
 
         // Muc zone
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.CHAT_NAME, (newValue, oldValue, allProps) => {
+            if (!connectionManager.currentRoom) {
+                throw new Error("Race condition : Current room is not defined yet");
+            } else if (!connectionManager.currentRoom.enableChat) {
+                return;
+            }
+
             const playUri = urlManager.getPlayUri() + "/";
 
             if (oldValue !== undefined) {

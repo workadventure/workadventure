@@ -5,6 +5,10 @@ import { UserData } from "../Messages/JsonMessages/ChatData";
 import { FileExt, UploadedFile, uploadingState } from "../Services/FileMessageManager";
 import { Message, User } from "../Xmpp/MucRoom";
 
+// Global config store for the whole chat
+export const enableChat = writable<boolean>(true);
+export const enableChatUpload = writable<boolean>(false);
+
 const _newChatMessageSubject = new Subject<string>();
 export const newChatMessageSubject = _newChatMessageSubject.asObservable();
 

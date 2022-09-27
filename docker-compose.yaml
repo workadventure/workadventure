@@ -131,6 +131,8 @@ services:
       EJABBERD_JWT_SECRET: mySecretJwtToken
       EJABBERD_DOMAIN: ejabberd
       EJABBERD_WS_URI: ws://ejabberd:5443/ws
+      ENABLE_CHAT: "$ENABLE_CHAT"
+      ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
     volumes:
       - ./pusher:/usr/src/app
     labels:
@@ -190,6 +192,8 @@ services:
       PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
       PLAYER_VARIABLES_MAX_TTL: $PLAYER_VARIABLES_MAX_TTL
       EJABBERD_API_URI: http://ejabberd:5443/api/
+      ENABLE_CHAT: "$ENABLE_CHAT"
+      ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
     volumes:
       - ./back:/usr/src/app
     labels:

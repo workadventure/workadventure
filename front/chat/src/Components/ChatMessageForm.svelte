@@ -21,6 +21,7 @@
         hasErrorUploadingFile,
         hasInProgressUploadingFile,
         mentionsUserStore,
+        enableChatUpload,
     } from "../Stores/ChatStore";
     import { UserData } from "../Messages/JsonMessages/ChatData";
     import { userStore } from "../Stores/LocalUserStore";
@@ -29,7 +30,6 @@
     import File from "./Content/File.svelte";
     import crown from "../../public/static/svg/icone-premium-crown.svg";
     import { iframeListener } from "../IframeListener";
-    import { ADMIN_API_URL, ENABLE_CHAT_UPLOAD } from "../Enum/EnvironmentVariable";
 
     export let mucRoom: MucRoom;
 
@@ -38,7 +38,7 @@
     let emojiContainer: HTMLElement;
     let picker: EmojiButton;
     let textarea: HTMLTextAreaElement;
-
+    let informationMessage: string | null = null;
     let emojiOpened = false;
     let newMessageText = "";
     let usersSearching: User[] = [];
@@ -406,7 +406,20 @@
                     </button>
                 </div>
             {/each}
-            <div class="tw-flex tw-items-end tw-relative">
+            {#if informationMessage}
+                <div
+                    class="tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-py-2 tw-text-xs tw-items-center tw-px-4 tw-text-orange tw-w-full tw-mb-1 tw-cursor-pointer"
+                    on:click|preventDefault|stopPropagation={() => (informationMessage = null)}
+                >
+                    <div class="tw-text-orange tw-mr-1.5">
+                        <AlertCircleIcon size="16" />
+                    </div>
+                    <p class="tw-m-0">
+                        {informationMessage}
+                    </p>
+                </div>
+            {/if}
+            <div class="tw-flex tw-items-center tw-relative">
                 <div class="tw-relative tw-w-full">
                     {#if isMessageTooLong}
                         <div
@@ -441,13 +454,17 @@
                 >
                     <SmileIcon size="17" />
                 </button>
-                {#if ENABLE_CHAT_UPLOAD || ADMIN_API_URL}
+                {#if $enableChatUpload}
                     <input type="file" id="file" name="file" class="tw-hidden" on:input={handleInputFile} multiple />
-                    <label
-                        for="file"
-                        class="tw-px-1 tw-py-1 tw-mx-0.5 tw-my-1 tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-cursor-pointer"
-                        ><PaperclipIcon size="17" /></label
+                    <label for="file" class="tw-mb-0 tw-cursor-pointer"><PaperclipIcon size="17" /></label>
+                {:else}
+                    <button
+                        id="file"
+                        class={`tw-bg-transparent tw-h-8  tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-opacity-50`}
+                        on:click|preventDefault|stopPropagation={() => (informationMessage = $LL.disabledByAdmin())}
                     >
+                        <PaperclipIcon size="17" />
+                    </button>
                 {/if}
                 <button
                     id="send"

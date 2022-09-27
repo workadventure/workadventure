@@ -78,6 +78,7 @@
                 subscribeListeners.push(
                     canSendInitMessageStore.subscribe((value) => {
                         if (value) {
+                            iframeListener.sendSettingsToChatIframe();
                             chatIframe?.contentWindow?.postMessage(
                                 {
                                     type: "userData",
@@ -107,7 +108,6 @@
                                 },
                                 "*"
                             );
-                            iframeListener.sendSettingsToChatIframe();
                         }
                     })
                 );

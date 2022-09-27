@@ -30,6 +30,9 @@ export const EJABBERD_PASSWORD = process.env.EJABBERD_PASSWORD || "";
 // Note that anonymous players don't have any TTL limit because their data is stored in local storage, not in Redis database.
 export const PLAYER_VARIABLES_MAX_TTL = parseInt(process.env.PLAYER_VARIABLES_MAX_TTL || "-1") || -1;
 
+export const ENABLE_CHAT = process.env.ENABLE_CHAT !== "false";
+export const ENABLE_CHAT_UPLOAD = process.env.ENABLE_CHAT_UPLOAD !== "false";
+
 export {
     MINIMUM_DISTANCE,
     ADMIN_API_URL,

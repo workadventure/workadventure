@@ -57,7 +57,7 @@ export class MucManager {
         }
     }
 
-    public async init() {
+    public async init(mapDetails: MapDetailsData) {
         const allMucRoomsCreated = await ejabberdClient.getAllMucRooms();
         const allMucRoomsCreatedOfWorld: string[] = [];
         if (Axios.isAxiosError(allMucRoomsCreated)) {
@@ -91,7 +91,7 @@ export class MucManager {
                     }
                 }
             }
-            if (this.mucRooms) {
+            if (this.mucRooms && mapDetails.enableChat) {
                 for (const [, mucRoom] of this.mucRooms) {
                     if (mucRoom.mucCreated) return;
                     if (mucRoom.mucUrl) {
