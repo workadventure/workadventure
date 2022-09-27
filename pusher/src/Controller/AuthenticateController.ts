@@ -8,6 +8,7 @@ import { RegisterData } from "../Messages/JsonMessages/RegisterData";
 import { adminService } from "../Services/AdminService";
 import Axios from "axios";
 import { isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
+import { z } from "zod";
 
 export class AuthenticateController extends BaseHttpController {
     routes(): void {
@@ -29,11 +30,11 @@ export class AuthenticateController extends BaseHttpController {
                     if (!uuid || !playUri) {
                         throw new Error("Missing uuid and playUri parameters.");
                     }
-                    const isLogged = token ? true : false;
+
                     res.json(
                         await adminService.fetchMemberDataByUuid(
                             uuid as string,
-                            isLogged,
+                            z.string().parse(token),
                             playUri as string,
                             req.ip,
                             []
@@ -193,13 +194,11 @@ export class AuthenticateController extends BaseHttpController {
                 try {
                     const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
 
-                    const isLogged = authTokenData.accessToken ? true : false;
-
                     //Get user data from Admin Back Office
                     //This is very important to create User Local in LocalStorage in WorkAdventure
                     const resUserData = await adminService.fetchMemberDataByUuid(
                         authTokenData.identifier,
-                        isLogged,
+                        authTokenData.accessToken,
                         playUri as string,
                         IPAddress,
                         [],

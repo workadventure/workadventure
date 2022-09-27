@@ -34,6 +34,8 @@ import {
     ADMIN_API_URL,
     BBB_SECRET,
     BBB_URL,
+    ENABLE_CHAT,
+    ENABLE_CHAT_UPLOAD,
     ENABLE_FEATURE_MAP_EDITOR,
     JITSI_ISS,
     JITSI_URL,
@@ -142,7 +144,7 @@ export class GameRoom implements BrothersFinder {
         gameRoom
             .getMucManager()
             .then((mucManager) => {
-                mucManager.init().catch((err) => console.error(err));
+                mucManager.init(mapDetails).catch((err) => console.error(err));
             })
             .catch((err) => console.error(err));
         return gameRoom;
@@ -627,6 +629,8 @@ export class GameRoom implements BrothersFinder {
                 group: null,
                 mucRooms: null,
                 showPoweredBy: true,
+                enableChat: ENABLE_CHAT,
+                enableChatUpload: ENABLE_CHAT_UPLOAD,
             };
         }
 

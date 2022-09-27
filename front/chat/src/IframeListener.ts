@@ -7,6 +7,8 @@ import {
     chatNotificationsStore,
     chatPeerConnectionInProgress,
     chatSoundsStore,
+    enableChat,
+    enableChatUpload,
     newChatMessageSubject,
     newChatMessageWritingStatusSubject,
     timelineActiveStore,
@@ -34,6 +36,13 @@ class IframeListener {
                 if (iframeEventGuarded.success) {
                     const iframeEvent = iframeEventGuarded.data;
                     switch (iframeEvent.type) {
+                        case "settings": {
+                            chatSoundsStore.set(iframeEvent.data.chatSounds);
+                            chatNotificationsStore.set(iframeEvent.data.notification);
+                            enableChat.set(iframeEvent.data.enableChat);
+                            enableChatUpload.set(iframeEvent.data.enableChatUpload);
+                            break;
+                        }
                         case "userData": {
                             iframeEvent.data.name = iframeEvent.data.name.replace(emojiRegex, "");
                             userStore.set(iframeEvent.data);
@@ -53,6 +62,9 @@ class IframeListener {
                             break;
                         }
                         case "joinMuc": {
+                            if (!get(enableChat)) {
+                                return;
+                            }
                             if (!connectionManager.connection) {
                                 connectionManager.start();
                             }
@@ -67,6 +79,9 @@ class IframeListener {
                             break;
                         }
                         case "leaveMuc": {
+                            if (!get(enableChat)) {
+                                return;
+                            }
                             if (!connectionManager.connection) {
                                 connectionManager.start();
                             }
@@ -126,11 +141,6 @@ class IframeListener {
                             } else if (mucRoomsStore.getLiveRoom()) {
                                 activeThreadStore.set(mucRoomsStore.getLiveRoom());
                             }
-                            break;
-                        }
-                        case "settings": {
-                            chatSoundsStore.set(iframeEvent.data.chatSounds);
-                            chatNotificationsStore.set(iframeEvent.data.notification);
                             break;
                         }
                         case "availabilityStatus": {
