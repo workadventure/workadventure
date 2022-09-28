@@ -2,22 +2,13 @@
     import highlightWords from "highlight-words";
     import { MoreHorizontalIcon, ShieldOffIcon, ShieldIcon, SlashIcon, UsersIcon } from "svelte-feather-icons";
     import LL from "../i18n/i18n-svelte";
-    import { createEventDispatcher } from "svelte";
     import { defaultColor, defaultWoka, MeStore, MucRoom, User } from "../Xmpp/MucRoom";
     import walk from "../../public/static/images/walk.svg";
     import teleport from "../../public/static/images/teleport.svg";
     import businessCard from "../../public/static/images/business-cards.svg";
-    import { GoTo, RankUp, RankDown, Ban } from "../Type/CustomEvent";
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
     import { iframeListener } from "../IframeListener";
-
-    const dispatch = createEventDispatcher<{
-        goTo: GoTo;
-        rankUp: RankUp;
-        rankDown: RankDown;
-        ban: Ban;
-    }>();
 
     export let mucRoom: MucRoom;
     export let user: User;
