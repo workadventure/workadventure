@@ -14,7 +14,10 @@ export const companionTexture = z.object({
         description: "The URL of the image of the texture.",
         example: "http://example.com/resources/characters/pipoya/Cat 01-1.png",
     }),
-    behaviour: extendApi(z.enum(['simple', 'dog', 'cat']), { description: "The companion behavior (simple|dog|cat)", example: "dog" }),
+    behaviour: extendApi(z.enum(["simple", "dog", "cat"]), {
+        description: "The companion behavior (simple|dog|cat)",
+        example: "dog",
+    }),
 });
 
 export type CompanionTexture = z.infer<typeof companionTexture>;
