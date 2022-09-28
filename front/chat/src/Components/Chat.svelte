@@ -22,7 +22,7 @@
         showTimelineStore,
         showUsersStore,
         showLivesStore,
-        showForumsStore,
+        showForumsStore, enableChat,
     } from "../Stores/ChatStore";
     import { Unsubscriber, derived } from "svelte/store";
     import { connectionManager } from "../Connection/ChatConnectionManager";
@@ -209,21 +209,23 @@
                     />
                 {/if}
 
-                <ChatForumRooms
-                    searchValue={searchValue.toLocaleLowerCase()}
-                    forumRooms={[...$mucRoomsStore].filter(
-                        (mucRoom) => mucRoom.type === "forum" && mucRoom.name.toLowerCase().includes(searchValue)
-                    )}
-                />
-                <ChatLiveRooms
-                    searchValue={searchValue.toLocaleLowerCase()}
-                    liveRooms={[...$mucRoomsStore].filter(
-                        (mucRoom) =>
-                            mucRoom.type === "live" &&
-                            !mucRoom.closed &&
-                            mucRoom.name.toLowerCase().includes(searchValue)
-                    )}
-                />
+                {#if $enableChat}
+                    <ChatForumRooms
+                        searchValue={searchValue.toLocaleLowerCase()}
+                        forumRooms={[...$mucRoomsStore].filter(
+                            (mucRoom) => mucRoom.type === "forum" && mucRoom.name.toLowerCase().includes(searchValue)
+                        )}
+                    />
+                    <ChatLiveRooms
+                        searchValue={searchValue.toLocaleLowerCase()}
+                        liveRooms={[...$mucRoomsStore].filter(
+                            (mucRoom) =>
+                                mucRoom.type === "live" &&
+                                !mucRoom.closed &&
+                                mucRoom.name.toLowerCase().includes(searchValue)
+                        )}
+                    />
+                {/if}
                 <Timeline on:activeThreadTimeLine={() => timelineActiveStore.set(true)} />
             </div>
         {/if}
