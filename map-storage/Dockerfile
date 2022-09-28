@@ -41,6 +41,7 @@ COPY map-storage/yarn.lock map-storage/package.json ./
 ENV NODE_ENV=production
 RUN yarn install --production
 COPY --from=builder /usr/src/dist /usr/src/dist
+COPY --from=builder /usr/libs /usr/libs
 COPY --chown=node:node --from=builder /usr/src/public /usr/src/public
 
 USER node
