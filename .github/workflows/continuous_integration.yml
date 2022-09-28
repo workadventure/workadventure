@@ -37,9 +37,9 @@ jobs:
         run: yarn install
         working-directory: "libs/tailwind"
 
-      - name: "Install libs/map-editor-types dependencies"
+      - name: "Install libs/map-editor dependencies"
         run: yarn install
-        working-directory: "libs/map-editor-types"
+        working-directory: "libs/map-editor"
 
       - name: "Install dependencies"
         run: yarn install
@@ -286,8 +286,12 @@ jobs:
         run: yarn install
         working-directory: "messages"
 
+      - name: "Install libs/map-editor dependencies"
+        run: yarn install
+        working-directory: "libs/map-editor"
+
       - name: "Build proto messages"
-        run: yarn run ts-proto-nest && yarn run copy-to-map-storage
+        run: yarn run ts-proto-map-storage && yarn run copy-to-map-storage-ts-proto
         working-directory: "messages"
 
       - name: "Build"
@@ -399,6 +403,10 @@ jobs:
       - name: "Install dependencies"
         run: npm ci
         working-directory: "tests"
+
+      - name: "Install libs/map-editor dependencies"
+        run: yarn install
+        working-directory: "libs/map-editor"
 
       - name: "Install front dependencies"
         run: yarn install --froze-lockfile

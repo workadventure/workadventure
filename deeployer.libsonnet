@@ -149,7 +149,7 @@
              "url": "map-storage-"+url,
              "containerPort": 3000
            },
-           "ports": [3000],
+           "ports": [3000, 50053],
            "env": {
              "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
            }

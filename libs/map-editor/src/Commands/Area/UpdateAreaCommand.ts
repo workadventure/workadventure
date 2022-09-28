@@ -1,5 +1,5 @@
 import { GameMap } from '../../GameMap/GameMap';
-import { AreaType, CommandConfig, ITiledMapRectangleObject } from '../../types';
+import { AreaType, ITiledMapRectangleObject } from '../../types';
 import { Command } from "../Command";
 
 export interface UpdateAreaCommandConfig {
@@ -11,7 +11,6 @@ export class UpdateAreaCommand extends Command {
     private oldConfig: ITiledMapRectangleObject;
     private newConfig: ITiledMapRectangleObject;
 
-    // TODO: Get GameMap as a Phaserless type from the lib
     private gameMap: GameMap;
     
     constructor(gameMap: GameMap, config: UpdateAreaCommandConfig) {
@@ -21,17 +20,21 @@ export class UpdateAreaCommand extends Command {
         if (!oldConfig) {
             throw new Error('Trying to update a non existing Area!');
         }
-        this.newConfig = { ...config.areaObjectConfig };
-        this.oldConfig = { ...oldConfig };
+        this.newConfig = structuredClone(config.areaObjectConfig);
+        this.oldConfig = structuredClone(oldConfig);
     }
 
     public execute(): UpdateAreaCommandConfig {
-        this.gameMap.getGameMapAreas().updateAreaById(this.newConfig.id, AreaType.Static, this.newConfig);
+        if (!this.gameMap.getGameMapAreas().updateAreaById(this.newConfig.id, AreaType.Static, this.newConfig)) {
+            throw new Error(`MapEditorError: Could not execute UpdateArea Command. Area ID: ${this.newConfig.id}`);
+        }
         return { type: 'UpdateAreaCommand', areaObjectConfig: this.newConfig };
     }
 
     public undo(): UpdateAreaCommandConfig {
-        this.gameMap.getGameMapAreas().updateAreaById(this.oldConfig.id, AreaType.Static, this.oldConfig);
+        if (!this.gameMap.getGameMapAreas().updateAreaById(this.oldConfig.id, AreaType.Static, this.oldConfig)) {
+            throw new Error(`MapEditorError: Could not undo UpdateArea Command. Area ID: ${this.newConfig.id}`);
+        }
         return { type: 'UpdateAreaCommand', areaObjectConfig: this.oldConfig };
     }
 }

@@ -46,9 +46,9 @@ import {
     Zone as ProtoZone,
     AskPositionMessage,
     MoveToPositionMessage,
-    EditMapMessage,
-    ChatMessagePrompt,
     SubToPusherRoomMessage,
+    EditMapCommandWithKeyMessage,
+    ChatMessagePrompt,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -67,6 +67,8 @@ import Debug from "debug";
 import { Admin } from "../Model/Admin";
 import crypto from "crypto";
 import QueryCase = QueryMessage.QueryCase;
+import { getMapStorageClient } from "./MapStorageClient";
+import { emitError } from "./MessageHelpers";
 
 const debug = Debug("sockermanager");
 
@@ -1041,7 +1043,6 @@ export class SocketManager {
         }
         room.sendSubMessageToRoom(subMessage);
 
-        console.log("CHATMESSAGEPROMPT DISPATCHED TO ROOM :", chatMessagePrompt.getRoomid());
         return true;
     }
 
@@ -1094,13 +1095,17 @@ export class SocketManager {
         room.emitLockGroupEvent(user, group.getId());
     }
 
-    handleEditMapMessage(room: GameRoom, user: User, message: EditMapMessage) {
-        if (message.hasModifyareamessage()) {
-            const msg = message.getModifyareamessage();
-            if (msg) {
-                room.getMapEditorMessagesHandler().handleModifyAreaMessage(msg);
+    handleEditMapCommandWithKeyMessage(room: GameRoom, user: User, message: EditMapCommandWithKeyMessage) {
+        getMapStorageClient().handleEditMapCommandWithKeyMessage(message, (err, editMapMessage) => {
+            if (err) {
+                emitError(user.socket, err);
+                throw err;
             }
-        }
+            const subMessage = new SubToPusherRoomMessage();
+            subMessage.setEditmapcommandmessage(editMapMessage);
+
+            room.dispatchRoomMessage(subMessage);
+        });
     }
 
     getAllRooms(): RoomsList {

@@ -1,5 +1,5 @@
-import { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
-import { MathUtils } from '@workadventure/math-utils';
+import { ITiledMapObject, ITiledMapObjectLayer } from "@workadventure/tiled-map-type-guard";
+import { MathUtils } from "@workadventure/math-utils";
 import { GameMap } from "./GameMap";
 import { AreaType, ITiledMapRectangleObject } from '../types';
 
@@ -56,8 +56,8 @@ export class GameMapAreas {
         oldPosition: { x: number; y: number } | undefined,
         position: { x: number; y: number } | undefined
     ): boolean {
-        const areasByOldPosition = this.getAreasOnPosition(oldPosition, this.areasPositionOffsetY);
-        const areasByNewPosition = this.getAreasOnPosition(position, this.areasPositionOffsetY);
+        const areasByOldPosition = oldPosition ? this.getAreasOnPosition(oldPosition, this.areasPositionOffsetY) : [];
+        const areasByNewPosition = position ? this.getAreasOnPosition(position, this.areasPositionOffsetY) : [];
 
         const enterAreas = new Set(areasByNewPosition);
         const leaveAreas = new Set(areasByOldPosition);
@@ -92,18 +92,29 @@ export class GameMapAreas {
     public addArea(
         area: ITiledMapRectangleObject,
         type: AreaType,
-        position: { x: number; y: number } | undefined
-    ): void {
-        this.getAreas(type).push(area);
+        playerPosition?: { x: number; y: number }
+    ): boolean {
+        if (this.getAreas(type).find(existingArea => existingArea.id === area.id)) {
+            return false;
+        }
+        const floorLayer = this.gameMap.getMap().layers.find(layer => layer.name === "floorLayer");
+        if (floorLayer) {
+            this.getAreas(type).push(area);
+            this.gameMap.incrementNextObjectId();
+            (floorLayer as ITiledMapObjectLayer).objects.push(area);
+            // as we are making changes to the map itself, we can update tiledObjects helper array too!
+            this.gameMap.tiledObjects.push(area);
+        }
 
-        if (this.isPlayerInsideAreaByName(area.name, type, position)) {
+        if (playerPosition && this.isPlayerInsideAreaByName(area.name, type, playerPosition)) {
             this.triggerSpecificAreaOnEnter(area);
         }
+        return true;
     }
 
-    public isPlayerInsideArea(id: number, type: AreaType, position: { x: number; y: number } | undefined): boolean {
+    public isPlayerInsideArea(id: number, type: AreaType, playerPosition: { x: number; y: number }): boolean {
         return (
-            this.getAreasOnPosition(position, this.areasPositionOffsetY, type).findIndex((area) => area.id === id) !==
+            this.getAreasOnPosition(playerPosition, this.areasPositionOffsetY, type).findIndex((area) => area.id === id) !==
             -1
         );
     }
@@ -111,7 +122,7 @@ export class GameMapAreas {
     public isPlayerInsideAreaByName(
         name: string,
         type: AreaType,
-        position: { x: number; y: number } | undefined
+        position: { x: number; y: number }
     ): boolean {
         return (
             this.getAreasOnPosition(position, this.areasPositionOffsetY, type).findIndex(
@@ -161,30 +172,51 @@ export class GameMapAreas {
         }
     }
 
-    public deleteAreaByName(name: string, type: AreaType, position: { x: number; y: number } | undefined): void {
-        const area = this.getAreasOnPosition(position, this.areasPositionOffsetY, type).find(
-            (area) => area.name === name
-        );
-        if (area) {
-            this.triggerSpecificAreaOnLeave(area);
+    public deleteAreaByName(name: string, type: AreaType, playerPosition?: { x: number; y: number }): void {
+        if (playerPosition) {
+            const area = this.getAreasOnPosition(playerPosition, this.areasPositionOffsetY, type).find(
+                (area) => area.name === name
+            );
+            if (area) {
+                this.triggerSpecificAreaOnLeave(area);
+            }
         }
         const areas = this.getAreas(type);
         const index = areas.findIndex((area) => area.name === name);
         if (index !== -1) {
             areas.splice(index, 1);
+            const areaId = areas.find((area) => area.name === name)?.id;
+            if (areaId) {
+                this.deleteStaticArea(areaId);
+            }
         }
     }
 
-    public deleteAreaById(id: number, type: AreaType, position: { x: number; y: number } | undefined): void {
-        const area = this.getAreasOnPosition(position, this.areasPositionOffsetY, type).find((area) => area.id === id);
-        if (area) {
-            this.triggerSpecificAreaOnLeave(area);
+    public deleteAreaById(id: number, type: AreaType, playerPosition?: { x: number; y: number }): boolean {
+        if (playerPosition) {
+            const area = this.getAreasOnPosition(playerPosition, this.areasPositionOffsetY, type).find((area) => area.id === id);
+            if (area) {
+                this.triggerSpecificAreaOnLeave(area);
+            }
         }
+        let success = false;
         const areas = this.getAreas(type);
         const index = areas.findIndex((area) => area.id === id);
         if (index !== -1) {
             areas.splice(index, 1);
+            success = this.deleteStaticArea(id);
         }
+        return success;
+    }
+
+    private deleteStaticArea(id: number): boolean {
+        // TODO: TiledObjects is not up to date! They are a reference because only first level of flatLayers objects are deep copied!
+        const index = this.gameMap.tiledObjects.findIndex((object) => object.id === id);
+        if (index !== -1) {
+            this.gameMap.tiledObjects.splice(index, 1);
+            return this.gameMap.deleteGameObjectFromMapById(id, this.gameMap.getMap().layers);
+        }
+        return false;
     }
 
     public getAreas(areaType: AreaType): ITiledMapRectangleObject[] {
@@ -225,7 +257,7 @@ export class GameMapAreas {
         }
     }
 
-    public getProperties(position: { x: number; y: number } | undefined): Map<string, string | boolean | number> {
+    public getProperties(position: { x: number; y: number }): Map<string, string | boolean | number> {
         const properties = new Map<string, string | boolean | number>();
         for (const area of this.getAreasOnPosition(position, this.areasPositionOffsetY)) {
             if (area.properties !== undefined) {
@@ -241,13 +273,10 @@ export class GameMapAreas {
     }
 
     private getAreasOnPosition(
-        position?: { x: number; y: number },
+        position: { x: number; y: number },
         offsetY = 0,
         areaType?: AreaType
     ): ITiledMapRectangleObject[] {
-        if (!position) {
-            return [];
-        }
         const areasOfInterest = areaType
             ? this.getAreas(areaType).values()
             : [...this.staticAreas.values(), ...this.dynamicAreas.values()];
