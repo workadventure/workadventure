@@ -28,12 +28,12 @@ export default defineConfig({
                 "EMBEDLY_KEY",
                 "ICON_URL",
                 "ENABLE_OPENID",
-                "ENABLE_CHAT_UPLOAD"
+                "ENABLE_CHAT_UPLOAD",
             ],
         }),
         pluginRewriteAll(),
     ],
     define: {
-        "global": {},
+        global: {},
     },
 });

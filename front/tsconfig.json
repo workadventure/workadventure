@@ -9,6 +9,7 @@
     //"module": "CommonJS",
     "module": "ESNext",
     "target": "ES2020",
+    "baseUrl": "./",
     "declaration": false,
     "downlevelIteration": true,
     "jsx": "react",
