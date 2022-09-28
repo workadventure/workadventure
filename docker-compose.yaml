@@ -31,7 +31,7 @@ services:
           - 'map-storage.workadventure.localhost'
 
   front:
-    image: thecodingmachine/nodejs:16
+    image: thecodingmachine/nodejs:v2-16-bullseye
     environment:
       DEBUG_MODE: "$DEBUG_MODE"
       JITSI_URL: $JITSI_URL
@@ -74,7 +74,7 @@ services:
       - "traefik.http.services.front.loadbalancer.server.port=8080"
 
   chat:
-    image: thecodingmachine/nodejs:16
+    image: thecodingmachine/nodejs:v2-16-bullseye
     command: yarn run start
     environment:
       STARTUP_COMMAND_2: yarn install
@@ -97,7 +97,7 @@ services:
       - "traefik.http.services.chat.loadbalancer.server.port=8080"
 
   pusher:
-    image: thecodingmachine/nodejs:16
+    image: thecodingmachine/nodejs:v2-16-bullseye
     command: yarn dev
     environment:
       DEBUG: "socket:*"
@@ -161,7 +161,7 @@ services:
       - "traefik.http.services.maps.loadbalancer.server.port=80"
 
   back:
-    image: thecodingmachine/nodejs:16
+    image: thecodingmachine/nodejs:v2-16-bullseye
     command: yarn dev
     #command: yarn run profile
     environment:
@@ -221,7 +221,7 @@ services:
       - "traefik.http.services.map-storage.loadbalancer.server.port=3000"
 
   uploader:
-    image: thecodingmachine/nodejs:16
+    image: thecodingmachine/nodejs:v2-16-bullseye
     command: yarn dev
     #command: yarn run profile
     environment:
