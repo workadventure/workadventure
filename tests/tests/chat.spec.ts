@@ -129,11 +129,11 @@ test.describe('Chat', () => {
       // Walk to
       await Chat.UL_walkTo(page, nickname2);
 
-      await Chat.openTimeline(page);
       // FIXME After this issues is completed : https://github.com/thecodingmachine/workadventure/issues/2500
+      //await Chat.openTimeline(page);
       //await expect(chat.locator('#activeTimeline #timeLine-messageList .event').last()).toContainText(nickname2 + ' join the discussion');
       // Close timeline
-      await Chat.closeTimeline(page);
+      //await Chat.closeTimeline(page);
 
       // Exit of liveZone
       await page.locator('#game').focus();
@@ -147,6 +147,9 @@ test.describe('Chat', () => {
     });
 
     await test.step('default forum exist', async () => {
+      await page.reload();
+      await openChat(page);
+
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
 
       await Chat.expandForums(page);

@@ -27,11 +27,15 @@ class Chat {
     }
 
     async expandUsers(page: Page){
+        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).toHaveClass(/tw-rotate-180/);
         await this.get(page).locator('#users div:has-text("Users") button > .feather-chevron-up').click();
+        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).not.toHaveClass(/tw-rotate-180/);
     }
 
     async expandForums(page: Page){
-        await this.get(page).locator('#forums div:has-text("Forums") button > .feather-chevron-up').click();
+        //await expect(page.locator('#forumRooms div:has-text("Forums") button .feather-chevron-up')).toHaveClass(/tw-rotate-180/);
+        await this.get(page).locator('#forumRooms div:has-text("Forums") button > .feather-chevron-up').click();
+        //await expect(page.locator('#forumRooms div:has-text("Forums") button .feather-chevron-up')).not.toHaveClass(/tw-rotate-180/);
     }
 
     async openLiveRoom(page: Page){
@@ -128,7 +132,7 @@ class Chat {
     }
 
     async forumExist(page: Page, name: string) {
-        await expect(this.get(page).locator('#forums')).toContainText(name);
+        await expect(this.get(page).locator('#forumRooms')).toContainText(name);
     }
 }
 
