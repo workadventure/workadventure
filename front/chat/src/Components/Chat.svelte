@@ -22,7 +22,8 @@
         showTimelineStore,
         showUsersStore,
         showLivesStore,
-        showForumsStore, enableChat,
+        showForumsStore,
+        enableChat,
     } from "../Stores/ChatStore";
     import { Unsubscriber, derived } from "svelte/store";
     import { connectionManager } from "../Connection/ChatConnectionManager";
