@@ -12,7 +12,7 @@ import { activeThreadStore } from "../Stores/ActiveThreadStore";
 import { get } from "svelte/store";
 import { userStore } from "../Stores/LocalUserStore";
 import { connectionManager } from "../Connection/ChatConnectionManager";
-import { showLivesStore } from "../Stores/ChatStore";
+import { enableChat, showLivesStore } from "../Stores/ChatStore";
 
 export class XmppClient {
     private jid: string | undefined;
@@ -153,11 +153,16 @@ export class XmppClient {
         }).join("");
     }
 
-    public joinMuc(name: string, waRoomUrl: string, type: string, subscribe: boolean | undefined): MucRoom {
+    public joinMuc(name: string, waRoomUrl: string, type: string, subscribe: boolean | undefined): void {
         if (this.jid === undefined || this.conferenceDomain === undefined) {
             throw new Error(
                 "joinRoom called before we received the XMPP connection details. There is a race condition."
             );
+        }
+
+        // Chat is disabled and try to join a new room that is not the users list
+        if (type !== "default" && !get(enableChat)) {
+            return;
         }
 
         const roomUrl = jid(waRoomUrl, this.conferenceDomain);
@@ -175,8 +180,6 @@ export class XmppClient {
         if (type === "live") {
             showLivesStore.set(true);
         }
-
-        return room;
     }
 
     public leaveMuc(name: string): void {
