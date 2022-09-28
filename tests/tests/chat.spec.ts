@@ -4,7 +4,7 @@ import {openChat} from "./utils/menu";
 import Chat from './utils/chat';
 import Map from './utils/map';
 import {findContainer, startContainer, stopContainer} from "./utils/containers";
-import {createFileOfSize} from "./utils/file";
+import {createFileOfSize, deleteFile, fileExist} from "./utils/file";
 
 const TIMEOUT_TO_GET_LIST = 30_000;
 
@@ -98,6 +98,9 @@ test.describe('Chat', () => {
       await Chat.AT_cantSend(page);
       await Chat.AT_fileContainText(page, 'fileBig.txt is too big');
       await Chat.AT_deleteFile(page);
+
+      if(fileExist('./fileLittle.txt')) deleteFile('./fileLittle.txt');
+      if(fileExist('./fileBig.txt')) deleteFile('./fileBig.txt');
 
       /*
       // TODO later : Manage admin in live zone based on our WorkAdventure role
