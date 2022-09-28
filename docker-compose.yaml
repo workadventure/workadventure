@@ -251,6 +251,7 @@ services:
 
   messages:
     image: thecodingmachine/workadventure-back-base:v1-16
+    platform: linux/amd64
     environment:
       #STARTUP_COMMAND_0: sudo apt-get install -y inotify-tools
       STARTUP_COMMAND_1: yarn install
