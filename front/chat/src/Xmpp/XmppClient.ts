@@ -91,6 +91,7 @@ export class XmppClient {
                     //close reset mucroom, close connection and try to restart
                     xmppServerConnectionStatusStore.set(false);
                     mucRoomsStore.reset();
+                    this.rooms.clear();
                     //connection.close();
                     break;
                 }
