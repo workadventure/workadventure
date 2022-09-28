@@ -157,6 +157,8 @@ test.describe('Chat', () => {
     });
 
     await test.step('disconnect and reconnect to ejabberd and pusher', async () => {
+      await page.reload();
+      await openChat(page);
       const chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
 
