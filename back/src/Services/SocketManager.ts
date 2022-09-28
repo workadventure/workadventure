@@ -885,8 +885,10 @@ export class SocketManager {
     private cleanupRoomIfEmpty(room: GameRoom): void {
         if (room.isEmpty()) {
             this.roomsPromises.delete(room.roomUrl);
-            this.resolvedRooms.delete(room.roomUrl);
-            gaugeManager.decNbRoomGauge();
+            const deleted = this.resolvedRooms.delete(room.roomUrl);
+            if (deleted) {
+                gaugeManager.decNbRoomGauge();
+            }
             debug('Room is empty. Deleting room "%s"', room.roomUrl);
         }
     }
