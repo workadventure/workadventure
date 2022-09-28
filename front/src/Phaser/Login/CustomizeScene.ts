@@ -32,7 +32,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     private bodyPartsDraggableGridLeftShadow!: Phaser.GameObjects.Image;
     private bodyPartsDraggableGridRightShadow!: Phaser.GameObjects.Image;
     private bodyPartsDraggableGrid!: DraggableGrid;
-    private bodyPartsButtons!: Record<CustomWokaBodyPart, IconButton>;
+    private bodyPartsButtons!: Map<CustomWokaBodyPart, IconButton>;
 
     private randomizeButton!: Button;
     private finishButton!: Button;
@@ -107,7 +107,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.initializeFinishButton();
 
         this.selectedBodyPartType = CustomWokaBodyPart.Body;
-        this.bodyPartsButtons.Body.select();
+        this.bodyPartsButtons.get(CustomWokaBodyPart.Body)?.select();
 
         this.bindEventHandlers();
 
@@ -135,8 +135,9 @@ export class CustomizeScene extends AbstractCharacterScene {
         const layers: string[] = [];
         let i = 0;
         for (const layerItem of this.selectedLayers) {
-            if (layerItem !== undefined) {
-                layers.push(this.layers[i][layerItem].id);
+            const clothId = this.layers[i][layerItem]?.id;
+            if (layerItem !== undefined && clothId !== undefined) {
+                layers.push(clothId);
             }
             i++;
         }
@@ -235,19 +236,32 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private initializeBodyPartsButtons(): void {
-        this.bodyPartsButtons = {
-            [CustomWokaBodyPart.Accessory]: new IconButton(
-                this,
-                0,
-                0,
-                this.getDefaultIconButtonConfig("iconAccessory")
-            ),
-            [CustomWokaBodyPart.Body]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconBody")),
-            [CustomWokaBodyPart.Clothes]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconClothes")),
-            [CustomWokaBodyPart.Eyes]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconEyes", 0.7)),
-            [CustomWokaBodyPart.Hair]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconHair")),
-            [CustomWokaBodyPart.Hat]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconHat")),
+        this.bodyPartsButtons = new Map<CustomWokaBodyPart, IconButton>();
+
+        const bodyPartIcons: Record<CustomWokaBodyPart, string> = {
+            [CustomWokaBodyPart.Accessory]: "iconAccessory",
+            [CustomWokaBodyPart.Body]: "iconBody",
+            [CustomWokaBodyPart.Clothes]: "iconClothes",
+            [CustomWokaBodyPart.Eyes]: "iconEyes",
+            [CustomWokaBodyPart.Hair]: "iconHair",
+            [CustomWokaBodyPart.Hat]: "iconHat",
         };
+
+        for (const part in CustomWokaBodyPart) {
+            if (this.layers[CustomWokaBodyPartOrder[part as CustomWokaBodyPart]].length === 0) {
+                continue;
+            }
+            const scale = part === CustomWokaBodyPart.Eyes ? 0.7 : 1;
+            this.bodyPartsButtons.set(
+                part as CustomWokaBodyPart,
+                new IconButton(
+                    this,
+                    0,
+                    0,
+                    this.getDefaultIconButtonConfig(bodyPartIcons[part as CustomWokaBodyPart], scale)
+                )
+            );
+        }
     }
 
     private getDefaultIconButtonConfig(iconTextureKey: string, iconScale?: number): IconButtonConfig {
@@ -335,27 +349,25 @@ export class CustomizeScene extends AbstractCharacterScene {
         let i = 0;
         for (const layerItem of this.selectedLayers) {
             const bodyPart = CustomWokaBodyPart[CustomWokaBodyPartOrder[i] as CustomWokaBodyPart];
+            if (!this.layers[i][layerItem]) {
+                i += 1;
+                continue;
+            }
             this.customWokaPreviewer.updateSprite(this.layers[i][layerItem].id, bodyPart);
             i += 1;
         }
     }
 
     private getCurrentlySelectedWokaTexturesRecord(): Record<CustomWokaBodyPart, string> {
-        return {
-            [CustomWokaBodyPart.Accessory]:
-                this.layers[CustomWokaBodyPartOrder.Accessory][this.selectedLayers[CustomWokaBodyPartOrder.Accessory]]
-                    .id,
-            [CustomWokaBodyPart.Body]:
-                this.layers[CustomWokaBodyPartOrder.Body][this.selectedLayers[CustomWokaBodyPartOrder.Body]].id,
-            [CustomWokaBodyPart.Clothes]:
-                this.layers[CustomWokaBodyPartOrder.Clothes][this.selectedLayers[CustomWokaBodyPartOrder.Clothes]].id,
-            [CustomWokaBodyPart.Eyes]:
-                this.layers[CustomWokaBodyPartOrder.Eyes][this.selectedLayers[CustomWokaBodyPartOrder.Eyes]].id,
-            [CustomWokaBodyPart.Hair]:
-                this.layers[CustomWokaBodyPartOrder.Hair][this.selectedLayers[CustomWokaBodyPartOrder.Hair]].id,
-            [CustomWokaBodyPart.Hat]:
-                this.layers[CustomWokaBodyPartOrder.Hat][this.selectedLayers[CustomWokaBodyPartOrder.Hat]].id,
-        };
+        const textures: Record<CustomWokaBodyPart, string> = {} as Record<CustomWokaBodyPart, string>;
+
+        for (const part in CustomWokaBodyPart) {
+            textures[part as CustomWokaBodyPart] =
+                this.layers[CustomWokaBodyPartOrder[part as CustomWokaBodyPart]][
+                    this.selectedLayers[CustomWokaBodyPartOrder[part as CustomWokaBodyPart]]
+                ]?.id ?? "";
+        }
+        return textures;
     }
 
     private handleCustomWokaPreviewerOnResize(): void {
@@ -368,11 +380,14 @@ export class CustomizeScene extends AbstractCharacterScene {
         const ratio = innerHeight / innerWidth;
         const slotDimension = WokaBodyPartSlot.SIZE;
 
-        for (const part in this.bodyPartsButtons) {
-            this.bodyPartsButtons[part as CustomWokaBodyPart].setDisplaySize(slotDimension, slotDimension);
+        for (const part of this.bodyPartsButtons.values()) {
+            part.setDisplaySize(slotDimension, slotDimension);
         }
 
-        const slotSize = this.bodyPartsButtons.Accessory.displayHeight;
+        const slotSize = this.bodyPartsButtons.get(CustomWokaBodyPart.Body)?.displayHeight ?? slotDimension;
+
+        let positionOrderFirst: { x: number; y: number }[] = [];
+        let positionOrderSecond: { x: number; y: number }[] = [];
 
         if (ratio > 1.6) {
             const middle = Math.floor(this.customWokaPreviewer.x);
@@ -383,41 +398,78 @@ export class CustomizeScene extends AbstractCharacterScene {
             );
             const bottom = Math.floor(top + slotSize + 23);
 
-            this.bodyPartsButtons.Body.setPosition(left, top);
-            this.bodyPartsButtons.Eyes.setPosition(middle, top);
-            this.bodyPartsButtons.Hair.setPosition(right, top);
-            this.bodyPartsButtons.Clothes.setPosition(left, bottom);
-            this.bodyPartsButtons.Hat.setPosition(middle, bottom);
-            this.bodyPartsButtons.Accessory.setPosition(right, bottom);
+            positionOrderFirst = [
+                { x: left, y: top },
+                { x: middle, y: top },
+                { x: right, y: top },
+            ];
+            positionOrderSecond = [
+                { x: left, y: bottom },
+                { x: middle, y: bottom },
+                { x: right, y: bottom },
+            ];
+        } else {
+            const left = Math.floor(
+                this.customWokaPreviewer.x - this.customWokaPreviewer.displayWidth * 0.5 - slotSize * 0.5 - 24
+            );
+            const right = Math.floor(
+                this.customWokaPreviewer.x + this.customWokaPreviewer.displayWidth * 0.5 + slotSize * 0.5 + 24
+            );
+            const top = Math.floor(0 + slotSize * 0.5 + 11);
+            const middle = Math.floor(top + slotSize + 24);
+            const bottom = Math.floor(middle + slotSize + 24);
 
-            return;
+            positionOrderFirst = [
+                { x: left, y: top },
+                { x: left, y: middle },
+                { x: left, y: bottom },
+            ];
+            positionOrderSecond = [
+                { x: right, y: top },
+                { x: right, y: middle },
+                { x: right, y: bottom },
+            ];
         }
 
-        const left = Math.floor(
-            this.customWokaPreviewer.x - this.customWokaPreviewer.displayWidth * 0.5 - slotSize * 0.5 - 24
-        );
-        const right = Math.floor(
-            this.customWokaPreviewer.x + this.customWokaPreviewer.displayWidth * 0.5 + slotSize * 0.5 + 24
-        );
-        const top = Math.floor(0 + slotSize * 0.5 + 11);
-        const middle = Math.floor(top + slotSize + 24);
-        const bottom = Math.floor(middle + slotSize + 24);
+        const buttonsTypesFirst: CustomWokaBodyPart[] = [
+            CustomWokaBodyPart.Body,
+            CustomWokaBodyPart.Eyes,
+            CustomWokaBodyPart.Hair,
+        ];
 
-        this.bodyPartsButtons.Body.setPosition(left, top);
-        this.bodyPartsButtons.Eyes.setPosition(left, middle);
-        this.bodyPartsButtons.Hair.setPosition(left, bottom);
-        this.bodyPartsButtons.Clothes.setPosition(right, top);
-        this.bodyPartsButtons.Hat.setPosition(right, middle);
-        this.bodyPartsButtons.Accessory.setPosition(right, bottom);
+        const buttonsTypesSecond: CustomWokaBodyPart[] = [
+            CustomWokaBodyPart.Clothes,
+            CustomWokaBodyPart.Hat,
+            CustomWokaBodyPart.Accessory,
+        ];
+
+        let i = 0;
+        for (const part of buttonsTypesFirst) {
+            const button = this.bodyPartsButtons.get(part);
+            if (button) {
+                button.setPosition(positionOrderFirst[i].x, positionOrderFirst[i].y);
+                i += 1;
+            }
+        }
+        i = 0;
+        for (const part of buttonsTypesSecond) {
+            const button = this.bodyPartsButtons.get(part);
+            if (button) {
+                button.setPosition(positionOrderSecond[i].x, positionOrderSecond[i].y);
+                i += 1;
+            }
+        }
     }
 
     private handleBodyPartsDraggableGridOnResize(): void {
         const gridHeight = 110;
         const gridWidth = innerWidth / waScaleManager.getActualZoom();
 
+        // TODO: CHANGE THAT
+        const button = this.bodyPartsButtons.get(CustomWokaBodyPart.Hair);
         const gridTopMargin = Math.max(
             this.finishButton.y + this.finishButton.displayHeight * 0.5,
-            this.bodyPartsButtons.Hair.y + this.bodyPartsButtons.Hair.displayHeight * 0.5
+            (button?.y ?? 0) + (button?.displayHeight ?? 0) * 0.5
         );
         const gridBottomMargin = this.cameras.main.worldView.y + this.cameras.main.height;
 
@@ -446,6 +498,7 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         this.populateGrid();
         const selectedGridItem = this.selectGridItem();
+        // NOTE: Bug in the library where centering on given item, if there's only one, will make list disappear!
         if (selectedGridItem) {
             this.centerGridOnItem(selectedGridItem);
         }
@@ -513,8 +566,8 @@ export class CustomizeScene extends AbstractCharacterScene {
         });
 
         for (const bodyPart in CustomWokaBodyPart) {
-            const button = this.bodyPartsButtons[bodyPart as CustomWokaBodyPart];
-            button.on(IconButtonEvent.Clicked, (selected: boolean) => {
+            const button = this.bodyPartsButtons.get(bodyPart as CustomWokaBodyPart);
+            button?.on(IconButtonEvent.Clicked, (selected: boolean) => {
                 if (!selected) {
                     this.selectBodyPartType(bodyPart as CustomWokaBodyPart);
                 }
@@ -565,15 +618,17 @@ export class CustomizeScene extends AbstractCharacterScene {
     private selectBodyPartType(bodyPart: CustomWokaBodyPart): void {
         this.selectedBodyPartType = bodyPart;
         this.deselectAllButtons();
-        const button = this.bodyPartsButtons[bodyPart];
-        button.select(true);
+        const button = this.bodyPartsButtons.get(bodyPart);
+        button?.select(true);
         this.populateGrid();
         const selectedGridItem = this.selectGridItem();
         if (!selectedGridItem) {
             return;
         }
         this.bodyPartsDraggableGrid.moveContentToBeginning();
-        this.centerGridOnItem(selectedGridItem);
+        if (this.bodyPartsDraggableGrid.getAllItems().length > 1) {
+            this.centerGridOnItem(selectedGridItem);
+        }
     }
 
     private setNewBodyPart(bodyPartIndex: number) {
@@ -692,8 +747,8 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private deselectAllButtons(): void {
-        for (const bodyPart in CustomWokaBodyPart) {
-            this.bodyPartsButtons[bodyPart as CustomWokaBodyPart].select(false);
+        for (const button of this.bodyPartsButtons.values()) {
+            button.select(false);
         }
     }
 

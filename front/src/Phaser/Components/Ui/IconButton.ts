@@ -28,6 +28,7 @@ export class IconButton extends Phaser.GameObjects.Container {
     private hovered = false;
     private pressed = false;
     private selected = false;
+    private disabled = false;
 
     constructor(scene: Phaser.Scene, x: number, y: number, config: IconButtonConfig) {
         super(scene, x, y);
@@ -48,7 +49,17 @@ export class IconButton extends Phaser.GameObjects.Container {
         this.scene.add.existing(this);
     }
 
+    public disable(val = true): void {
+        this.disabled = val;
+        val ? this.disableInteractive() : this.setInteractive({ cursor: "pointer" });
+        this.background.setVisible(!val);
+        this.setAlpha(val ? 0.25 : 1);
+    }
+
     public select(select = true): void {
+        if (this.disabled) {
+            return;
+        }
         if (this.selected === select) {
             return;
         }
@@ -57,6 +68,9 @@ export class IconButton extends Phaser.GameObjects.Container {
     }
 
     private updateButtonAppearance(): void {
+        if (this.disabled) {
+            return;
+        }
         if (this.selected) {
             this.drawBackground(this.config.selected);
             return;
@@ -86,6 +100,9 @@ export class IconButton extends Phaser.GameObjects.Container {
 
     private bindEventHandlers(): void {
         this.on(Phaser.Input.Events.POINTER_OVER, () => {
+            if (this.disabled) {
+                return;
+            }
             if (this.selected) {
                 return;
             }
@@ -93,11 +110,17 @@ export class IconButton extends Phaser.GameObjects.Container {
             this.updateButtonAppearance();
         });
         this.on(Phaser.Input.Events.POINTER_OUT, () => {
+            if (this.disabled) {
+                return;
+            }
             this.hovered = false;
             this.pressed = false;
             this.updateButtonAppearance();
         });
         this.on(Phaser.Input.Events.POINTER_DOWN, () => {
+            if (this.disabled) {
+                return;
+            }
             if (this.selected) {
                 return;
             }
@@ -105,6 +128,9 @@ export class IconButton extends Phaser.GameObjects.Container {
             this.updateButtonAppearance();
         });
         this.on(Phaser.Input.Events.POINTER_UP, () => {
+            if (this.disabled) {
+                return;
+            }
             if (this.selected) {
                 return;
             }
