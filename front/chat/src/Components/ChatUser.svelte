@@ -35,7 +35,7 @@
         chatMenuActive = false;
     };
     function goTo(type: string, playUri: string, uuid: string) {
-        dispatch("goTo", { type, playUri, uuid });
+        mucRoom.goTo(type, playUri, uuid);
         closeChatUserMenu();
     }
     function rankUp(jid: string) {
