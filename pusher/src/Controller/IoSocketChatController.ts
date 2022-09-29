@@ -24,6 +24,10 @@ import { WebSocket } from "uWebSockets.js";
 import { adminService } from "../Services/AdminService";
 import { ErrorApiData, isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
+import Jwt from "jsonwebtoken";
+import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+import { XmppClient } from "../Services/XmppClient";
+import Debug from "debug";
 
 /**
  * The object passed between the "open" and the "upgrade" methods when opening a websocket
@@ -47,9 +51,6 @@ interface UpgradeFailedInvalidData {
     playUri: string;
 }
 
-import Jwt from "jsonwebtoken";
-import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
-import { XmppClient } from "../Services/XmppClient";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { jid } = require("@xmpp/client");
 
@@ -60,6 +61,8 @@ interface UpgradeFailedErrorData {
 }
 
 type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData;
+
+const debug = Debug("ioSocketChatController");
 
 export class IoSocketChatController {
     private nextUserId = 1;
@@ -230,7 +233,7 @@ export class IoSocketChatController {
                             SocketManager.mergeCharacterLayersAndCustomTextures(characterLayers, memberTextures);*/
 
                         if (upgradeAborted.aborted) {
-                            console.log("Ouch! Client disconnected before we could upgrade it!");
+                            debug("Ouch! Client disconnected before we could upgrade it!");
                             /* You must not upgrade now */
                             return;
                         }
@@ -318,10 +321,10 @@ export class IoSocketChatController {
                 //let ok = ws.send(message, isBinary);
             },
             drain: (ws) => {
-                console.log("WebSocket backpressure: " + ws.getBufferedAmount());
+                debug("WebSocket backpressure: " + ws.getBufferedAmount());
             },
             close: (ws) => {
-                console.log("IoSocketChatController closing ...");
+                debug("IoSocketChatController closing ...");
                 const client = ws as ExSocketInterface;
                 try {
                     client.disconnecting = true;
@@ -359,7 +362,7 @@ export class IoSocketChatController {
         client.jabberPassword = ws.jabberPassword;
         client.mucRooms = ws.mucRooms;
 
-        console.info("IoSocketChatController => initClient => XmppClient");
+        debug("IoSocketChatController => initClient => XmppClient");
         client.xmppClient = new XmppClient(client, client.mucRooms);
 
         return client;
