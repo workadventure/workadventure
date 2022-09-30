@@ -10,6 +10,14 @@ export type CommandConfig =
     DeleteAreaCommandConfig |
     CreateAreaCommandConfig;
 
+export interface AreaData {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    properties: Record<string, string | number | boolean>;
+}
+
 export enum AreaType {
     Static = "Static",
     Dynamic = "Dynamic",

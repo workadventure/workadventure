@@ -40,7 +40,8 @@
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
     import UiWebsiteContainer from "./UI/Website/UIWebsiteContainer.svelte";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
-    import { mapEditorModeStore, mapEditorSelectedAreaPreviewStore } from "../Stores/MapEditorStore";
+    import { mapEditorModeStore } from "../Stores/MapEditorStore";
+    import MapEditorControlPanel from "./MapEditor/MapEditorControlPanel.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -62,6 +63,9 @@
     <aside id="main-layout-left-aside">
         {#if $embedScreenLayoutStore === LayoutMode.VideoChat || displayCoWebsiteContainerMd}
             <CoWebsitesContainer vertical={true} />
+        {/if}
+        {#if $mapEditorModeStore}
+            <MapEditorControlPanel />
         {/if}
     </aside>
 
@@ -119,13 +123,6 @@
 
         {#if $requestVisitCardsStore}
             <VisitCard visitCardUrl={$requestVisitCardsStore} />
-        {/if}
-
-        {#if $mapEditorModeStore}
-            <Lazy
-                when={$mapEditorSelectedAreaPreviewStore !== undefined}
-                component={() => import("./MapEditor/AreaPreviewWindow.svelte")}
-            />
         {/if}
 
         {#if hasEmbedScreen}

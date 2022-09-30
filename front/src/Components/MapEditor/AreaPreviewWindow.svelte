@@ -29,7 +29,7 @@
         $mapEditorSelectedAreaPreviewStore = undefined;
     }
 
-    function updatePreview() {
+    function sendUpdateAreaCommand() {
         if (!areaData) {
             return;
         }
@@ -46,65 +46,64 @@
 <svelte:window on:keydown={onKeyDown} />
 
 {#if areaPreview && areaData}
-    <div class="area-details-window nes-container is-rounded">
-        <button type="button" class="nes-btn is-error close" on:click={closeAreaPreviewWindow}>&times</button>
+    <div class="area-details-window tw-bg-purple/95 tw-rounded">
         <h2>{areaData.name}</h2>
-        fields:
-        <hr />
         <div class="fields">
-            <label for="x">x</label>
-            <input bind:value={areaData.x} on:change={updatePreview} type="number" id="x" />
-            <label for="x">y</label>
-            <input bind:value={areaData.y} on:change={updatePreview} type="number" id="y" />
-            <label for="x">width</label>
-            <input bind:value={areaData.width} on:change={updatePreview} type="number" id="width" />
-            <label for="x">height</label>
-            <input bind:value={areaData.height} on:change={updatePreview} type="number" id="height" />
+            <div class="field">
+                <p class="blue-title">x:</p>
+                <input bind:value={areaData.x} on:change={sendUpdateAreaCommand} type="number" id="x" />
+            </div>
+            <div class="field">
+                <p class="blue-title">y:</p>
+                <input bind:value={areaData.y} on:change={sendUpdateAreaCommand} type="number" id="y" />
+            </div>
+            <div class="field">
+                <p class="blue-title">width:</p>
+                <input bind:value={areaData.width} on:change={sendUpdateAreaCommand} type="number" id="width" />
+            </div>
+            <div class="field">
+                <p class="blue-title">height:</p>
+                <input bind:value={areaData.height} on:change={sendUpdateAreaCommand} type="number" id="height" />
+            </div>
+            <div class="field">
+                <p class="blue-title">focusable:</p>
+                <!-- <input bind:value={areaData.properties["focusable"]} on:change={sendUpdateAreaCommand} type="checkbox" id="focusable" /> -->
+            </div>
         </div>
-        <br />
-        properties:
-        <hr />
-        <div class="actions">
+        <!-- <div class="actions">
             {#each areaData.properties ?? [] as property}
                 <div>{property.name}: {property.value}</div>
             {/each}
-        </div>
+        </div> -->
     </div>
 {/if}
 
 <style lang="scss">
     .area-details-window {
-        position: absolute;
-        left: 30%;
-        top: 30%;
-        transform: translate(-50%, 0);
-        width: 400px !important;
-        height: max-content !important;
-        max-height: 60vh;
-        // margin-top: 100px;
+        margin: auto;
+        width: 350px !important;
         z-index: 425;
 
         pointer-events: auto;
-        font-family: "Press Start 2P";
-        background-color: #333333;
-        color: whitesmoke;
 
         .fields {
             display: flex;
             flex-direction: column;
-            // align-items: flex-end;
+        }
+
+        .field {
+            align-items: center;
+            justify-content: space-between;
+            padding-left: 10px;
+            padding-right: 10px;
+            display: flex;
+            flex-direction: row;
         }
 
         h2 {
             text-align: center;
             margin-bottom: 20px;
-            font-family: "Press Start 2P";
-        }
-
-        .nes-btn.is-error.close {
-            position: absolute;
-            top: -20px;
-            right: -20px;
+            // font-family: "Press Start 2P";
         }
     }
 </style>
