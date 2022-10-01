@@ -47,7 +47,7 @@
 
 {#if areaPreview && areaData}
     <div class="area-details-window nes-container is-rounded">
-        <button type="button" class="nes-btn is-error close" on:click={closeAreaPreviewWindow}>&times</button>
+        <button type="button" class="nes-btn is-error close" on:click={closeAreaPreviewWindow}>&times;</button>
         <h2>{areaData.name}</h2>
         fields:
         <hr />

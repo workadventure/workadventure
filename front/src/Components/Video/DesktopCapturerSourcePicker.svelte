@@ -56,7 +56,7 @@
 </script>
 
 <div class="source-picker nes-container is-rounded" transition:fly={{ y: -50, duration: 500 }}>
-    <button type="button" class="nes-btn is-error close" on:click={cancel}>&times</button>
+    <button type="button" class="nes-btn is-error close" on:click={cancel}>&times;</button>
     <h2>Select a Screen or Window to share!</h2>
     <section class="streams">
         {#each desktopCapturerSources as source}
