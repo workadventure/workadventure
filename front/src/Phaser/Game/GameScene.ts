@@ -2533,7 +2533,7 @@ ${escapedMessage}
         });
     }
 
-    public initialiseJitsi(coWebsite: JitsiCoWebsite, roomName: string, jwt?: string): void {
+    public initialiseJitsi(coWebsite: JitsiCoWebsite, roomName: string, jwt?: string, jitsiUrl?: string): void {
         const allProps = this.gameMapFrontWrapper.getCurrentProperties();
         const jitsiConfig = this.safeParseJSONstring(
             allProps.get(GameMapProperties.JITSI_CONFIG) as string | undefined,
@@ -2543,7 +2543,9 @@ ${escapedMessage}
             allProps.get(GameMapProperties.JITSI_INTERFACE_CONFIG) as string | undefined,
             GameMapProperties.JITSI_INTERFACE_CONFIG
         );
-        const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
+        if (!jitsiUrl) {
+            jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
+        }
 
         coWebsite.setJitsiLoadPromise(() => {
             return jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl);

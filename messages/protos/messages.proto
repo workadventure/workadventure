@@ -231,6 +231,7 @@ message AnswerMessage {
 
 message JitsiJwtAnswer {
   string jwt = 1;
+  string url = 2;
 }
 
 message JoinBBBMeetingAnswer {
