@@ -203,7 +203,8 @@ export class GameRoom implements BrothersFinder {
             joinRoomMessage.getCompanion(),
             undefined,
             undefined,
-            joinRoomMessage.getActivatedinviteuser()
+            joinRoomMessage.getActivatedinviteuser(),
+            joinRoomMessage.getApplicationsList()
         );
         this.nextUserId++;
         this.users.set(user.id, user);

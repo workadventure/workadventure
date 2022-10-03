@@ -469,6 +469,7 @@ export class IoSocketController {
                                 jabberPassword: userData.jabberPassword,
                                 mucRooms: userData.mucRooms,
                                 activatedInviteUser: userData.activatedInviteUser,
+                                applications: userData.applications,
                                 position: {
                                     x: x,
                                     y: y,
@@ -720,6 +721,7 @@ export class IoSocketController {
         client.mucRooms = ws.mucRooms;
         client.activatedInviteUser = ws.activatedInviteUser;
         client.isLogged = ws.isLogged;
+        client.applications = ws.applications;
         return client;
     }
 }

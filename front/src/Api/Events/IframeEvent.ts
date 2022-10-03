@@ -52,6 +52,7 @@ import { isSettingsEvent } from "./SettingsEvent";
 import { isChatVisibilityEvent } from "./ChatVisibilityEvent";
 import { isNotificationEvent } from "./NotificationEvent";
 import { isShowBusinessCardEvent } from "./ShowBusinessCardEvent";
+import { isModalEvent } from "./ModalEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -253,6 +254,14 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("showBusinessCard"),
         data: isShowBusinessCardEvent,
+    }),
+    z.object({
+        type: z.literal("openModal"),
+        data: isModalEvent,
+    }),
+    z.object({
+        type: z.literal("closeModal"),
+        data: z.undefined(),
     }),
     z.object({
         type: z.literal("redirectPricing"),

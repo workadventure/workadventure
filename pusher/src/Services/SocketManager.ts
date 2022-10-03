@@ -42,6 +42,7 @@ import {
     XmppMessage,
     AskPositionMessage,
     BanUserByUuidMessage,
+    ApplicationMessage,
     EditMapCommandMessage,
     EditMapCommandWithKeyMessage,
 } from "../Messages/generated/messages_pb";
@@ -192,6 +193,15 @@ export class SocketManager implements ZoneEventListener {
             joinRoomMessage.setActivatedinviteuser(
                 client.activatedInviteUser != undefined ? client.activatedInviteUser : true
             );
+
+            if (client.applications != undefined) {
+                for (const aplicationValue of client.applications) {
+                    const application = new ApplicationMessage();
+                    application.setName(aplicationValue.name);
+                    application.setScript(aplicationValue.script);
+                    joinRoomMessage.addApplications(application);
+                }
+            }
 
             for (const characterLayer of client.characterLayers) {
                 const characterLayerMessage = new CharacterLayerMessage();

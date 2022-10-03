@@ -138,6 +138,9 @@ export class SocketManager {
         roomJoinedMessage.setActivatedinviteuser(
             user.activatedInviteUser != undefined ? user.activatedInviteUser : true
         );
+        if (user.applications != undefined) {
+            roomJoinedMessage.setApplicationsList(user.applications);
+        }
 
         const playerVariables = user.getVariables().getVariables();
 

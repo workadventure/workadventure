@@ -12,3 +12,4 @@ _
 /front/svelte-check-watch/
 
 front/public/iframe_api.js
+*.code-workspace

@@ -50,6 +50,14 @@ import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { ChatMessage } from "./Events/ChatEvent";
 import { requestVisitCardsStore } from "../Stores/GameStore";
+import {
+    modalIframeAllowApi,
+    modalIframeAllowlStore,
+    modalIframeSrcStore,
+    modalIframeTitlelStore,
+    modalPositionStore,
+    modalVisibilityStore,
+} from "../Stores/ModalStore";
 import { connectionManager } from "../Connexion/ConnectionManager";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
@@ -302,7 +310,7 @@ class IframeListener {
                     }
 
                     const iframeEvent = iframeEventGuarded.data;
-
+                    console.info("iframeEvent.type", iframeEvent.type);
                     if (iframeEvent.type === "showLayer") {
                         this._showLayerStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "hideLayer") {
@@ -427,6 +435,15 @@ class IframeListener {
                         window.location.reload();
                     } else if (iframeEvent.type == "showBusinessCard") {
                         requestVisitCardsStore.set(iframeEvent.data.visitCardUrl);
+                    } else if (iframeEvent.type == "openModal") {
+                        modalIframeTitlelStore.set(iframeEvent.data.tiltle);
+                        modalIframeAllowlStore.set(iframeEvent.data.allow);
+                        modalIframeSrcStore.set(iframeEvent.data.src);
+                        modalPositionStore.set(iframeEvent.data.position);
+                        modalIframeAllowApi.set(iframeEvent.data.allowApi);
+                        modalVisibilityStore.set(true);
+                    } else if (iframeEvent.type == "closeModal") {
+                        modalVisibilityStore.set(false);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;

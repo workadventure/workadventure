@@ -60,6 +60,7 @@ import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
 import { ITiledMapRectangleObject } from "@workadventure/map-editor";
 import { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
+import { iframeListener } from "../Api/IframeListener";
 
 const manualPingDelay = 20000;
 
@@ -349,6 +350,15 @@ export class RoomConnection implements RoomConnection {
                             ? roomJoinedMessage.activatedInviteUser
                             : true
                     );
+
+                    // If there are scripts from the admin, run it
+                    if (roomJoinedMessage.applications != undefined) {
+                        for (const script of roomJoinedMessage.applications) {
+                            iframeListener.registerScript(script.script).catch((err) => {
+                                console.error("roomJoinedMessage => registerScript => err", err);
+                            });
+                        }
+                    }
 
                     // If one of the URLs sent to us does not exist, let's go to the Woka selection screen.
                     if (
