@@ -391,7 +391,14 @@ export class GameScene extends DirtyScene {
                 return;
             }
             //TODO strategy to add access token
-            this.load.image(`${url}/${tileset.image}`, `${url}/${tileset.image}`);
+            if (tileset.image.includes(".svg")) {
+                this.load.svg(`${url}/${tileset.image}`, `${url}/${tileset.image}`, {
+                    width: tileset.imagewidth,
+                    height: tileset.imageheight,
+                });
+            } else {
+                this.load.image(`${url}/${tileset.image}`, `${url}/${tileset.image}`);
+            }
         });
 
         // Scan the object layers for objects to load and load them.
@@ -1668,6 +1675,7 @@ ${escapedMessage}
                     this.load.on("filecomplete-json-" + eventTileset.url, () => {
                         let jsonTileset = this.cache.json.get(eventTileset.url);
                         const imageUrl = jsonTilesetDir + "/" + jsonTileset.image;
+
                         this.load.image(imageUrl, imageUrl);
                         this.load.on("filecomplete-image-" + imageUrl, () => {
                             //Add the firstgid of the tileset to the json file
