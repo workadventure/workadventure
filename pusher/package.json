@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "tsc": "tsc && cp -rf ./data ./dist/",
-    "dev": "ts-node-dev --exit-child --respawn ./server.ts",
+    "dev": "ts-node-dev --inspect=0.0.0.0:9229 --exit-child --respawn ./server.ts",
     "prod": "tsc && cp -rf ./data ./dist/ && node -r source-map-support/register --max-old-space-size=4096 ./dist/server.js",
     "runprod": "node -r source-map-support/register --max-old-space-size=4096 ./dist/server.js",
     "profile": "tsc && node --prof ./dist/server.js",
@@ -48,7 +48,8 @@
     "cancelable-promise": "^4.2.1",
     "circular-json": "^0.5.9",
     "debug": "^4.3.1",
-    "google-protobuf": "^3.13.0",
+    "google-protobuf": "^3.21.0",
+    "@grpc/grpc-js": "^1.6.7",
     "hyper-express": "^5.8.1",
     "jsonwebtoken": "^8.5.1",
     "mkdirp": "^1.0.4",

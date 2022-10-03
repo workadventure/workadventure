@@ -1,6 +1,6 @@
 import type { GameScene } from "../Game/GameScene";
 import { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
-import { GameMapProperties } from "@workadventure/map-editor-types";
+import { GameMapProperties } from "@workadventure/map-editor";
 
 export class TextUtils {
     public static createTextFromITiledMapObject(scene: GameScene, object: ITiledMapObject): void {

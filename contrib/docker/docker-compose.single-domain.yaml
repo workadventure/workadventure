@@ -102,6 +102,8 @@ services:
       OPID_LOCALE_CLAIM: $OPID_LOCALE_CLAIM
       DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
       START_ROOM_URL: "$START_ROOM_URL"
+      ENABLE_CHAT: "$ENABLE_CHAT"
+      ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
       # Only used if you set up a JWT authentication mechanism in Ejabberd
       EJABBERD_JWT_SECRET: mySecretJwtToken
       EJABBERD_DOMAIN: ejabberd
@@ -186,6 +188,8 @@ services:
       NODE_ENV: development
       EJABBERD_API_URI: $EJABBERD_API_URI
       EJABBERD_DOMAIN: $EJABBERD_DOMAIN
+      ENABLE_CHAT: "$ENABLE_CHAT"
+      ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
     volumes:
       - ./back:/usr/src/app
     labels:
@@ -221,6 +225,7 @@ services:
       REDIS_PORT: $UPLOADER_REDIS_PORT
       #CHAT
       ADMIN_API_URL: $ADMIN_API_URL
+      ENABLE_CHAT: $ENABLE_CHAT
       ENABLE_CHAT_UPLOAD: $ENABLE_CHAT_UPLOAD
       UPLOAD_MAX_FILESIZE: $UPLOAD_MAX_FILESIZE
     volumes:

@@ -31,6 +31,7 @@ const emojiFavorite = "emojiFavorite";
 const JwtAuthToken = z
     .object({
         accessToken: z.string().optional().nullable(),
+        username: z.string().optional().nullable(),
     })
     .partial();
 
@@ -244,6 +245,10 @@ class LocalUserStore {
         );
 
         return JSON.parse(jsonPayload);
+    }
+
+    isUsernameInJwt() {
+        return !!this.jwt?.username;
     }
 
     setNotification(value: boolean): void {

@@ -139,7 +139,7 @@ import { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterfac
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
-import { AreaType, GameMap, GameMapProperties } from "@workadventure/map-editor-types";
+import { AreaType, GameMap, GameMapProperties } from "@workadventure/map-editor";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { GameStateEvent } from "../../Api/Events/GameStateEvent";
 export interface GameSceneInitInterface {
@@ -391,7 +391,14 @@ export class GameScene extends DirtyScene {
                 return;
             }
             //TODO strategy to add access token
-            this.load.image(`${url}/${tileset.image}`, `${url}/${tileset.image}`);
+            if (tileset.image.includes(".svg")) {
+                this.load.svg(`${url}/${tileset.image}`, `${url}/${tileset.image}`, {
+                    width: tileset.imagewidth,
+                    height: tileset.imageheight,
+                });
+            } else {
+                this.load.image(`${url}/${tileset.image}`, `${url}/${tileset.image}`);
+            }
         });
 
         // Scan the object layers for objects to load and load them.
@@ -1668,6 +1675,7 @@ ${escapedMessage}
                     this.load.on("filecomplete-json-" + eventTileset.url, () => {
                         let jsonTileset = this.cache.json.get(eventTileset.url);
                         const imageUrl = jsonTilesetDir + "/" + jsonTileset.image;
+
                         this.load.image(imageUrl, imageUrl);
                         this.load.on("filecomplete-image-" + imageUrl, () => {
                             //Add the firstgid of the tileset to the json file
@@ -2198,6 +2206,7 @@ ${escapedMessage}
         if (!this.mapEditorModeManager?.isActive()) {
             this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
         } else {
+            this.mapEditorModeManager.update(time, delta);
             this.cameraManager.move(this.userInputManager.getEventListForGameTick());
         }
 

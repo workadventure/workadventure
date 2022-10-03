@@ -259,6 +259,9 @@ export class IoSocketChatController {
                                     .catch((err) => {
                                         if (Axios.isAxiosError(err) && err.response?.status === 402) {
                                             return parseInt(err.response?.data);
+                                        } else if (Axios.isAxiosError(err) && err.response?.status === 403) {
+                                            // Disabled in admin
+                                            return -2;
                                         }
                                         console.error(err);
                                         return -1;

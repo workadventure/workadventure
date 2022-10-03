@@ -278,6 +278,16 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
+"@dprint/formatter@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@dprint/formatter/-/formatter-0.2.0.tgz#5eb044e0969ef5b918b26db42eb9d75e7c6661ee"
+  integrity sha512-E1q1JaOPeEUBhG//IUayqJQvNpqprZ0OCF8B/bIhUqSsMIp0Y74PgF8JPvDCrOdq43qiGUYAavVO8iCBHOoU/A==
+
+"@dprint/typescript@^0.71.2":
+  version "0.71.2"
+  resolved "https://registry.yarnpkg.com/@dprint/typescript/-/typescript-0.71.2.tgz#07cba75950be8aee753d6983d1f6144cba65db49"
+  integrity sha512-QpQJiJMxSMhqqOgVk1zrh+2ueQnZmBQ6aCtVgXKd3zxyVOEIj5CLarfDmza/9KFOU+5lKsprbGAQBskC+xODkw==
+
 "@eslint/eslintrc@^1.3.0":
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/@eslint/eslintrc/-/eslintrc-1.3.0.tgz#29f92c30bb3e771e4a2048c95fa6855392dfac4f"
@@ -2210,10 +2220,10 @@ globby@^11.1.0:
     merge2 "^1.4.1"
     slash "^3.0.0"
 
-google-protobuf@^3.13.0:
-  version "3.20.1"
-  resolved "https://registry.yarnpkg.com/google-protobuf/-/google-protobuf-3.20.1.tgz#1b255c2b59bcda7c399df46c65206aa3c7a0ce8b"
-  integrity sha512-XMf1+O32FjYIV3CYu6Tuh5PNbfNEU5Xu22X+Xkdb/DUexFlCzhvv7d5Iirm4AOwn8lv4al1YvIhzGrg2j9Zfzw==
+google-protobuf@^3.21.0:
+  version "3.21.0"
+  resolved "https://registry.yarnpkg.com/google-protobuf/-/google-protobuf-3.21.0.tgz#8dfa3fca16218618d373d414d3c1139e28034d6e"
+  integrity sha512-byR7MBTK4tZ5PZEb+u5ZTzpt4SfrTxv5682MjPlHN16XeqgZE2/8HOIWeiXe8JKnT9OVbtBGhbq8mtvkK8cd5g==
 
 graceful-fs@^4.1.2, graceful-fs@^4.1.3, graceful-fs@^4.1.6, graceful-fs@^4.2.0:
   version "4.2.10"
@@ -2697,11 +2707,6 @@ lodash.merge@^4.6.2:
   version "4.6.2"
   resolved "https://registry.yarnpkg.com/lodash.merge/-/lodash.merge-4.6.2.tgz#558aa53b43b661e1925a0afdfa36a9a1085fe57a"
   integrity sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==
-
-lodash@^4.17.15:
-  version "4.17.21"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
-  integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
 
 log-update@^4.0.0:
   version "4.0.0"
@@ -3218,7 +3223,7 @@ prettier-plugin-svelte@^2.7.0:
   resolved "https://registry.yarnpkg.com/prettier-plugin-svelte/-/prettier-plugin-svelte-2.7.0.tgz#ecfa4fe824238a4466a3497df1a96d15cf43cabb"
   integrity sha512-fQhhZICprZot2IqEyoiUYLTRdumULGRvw0o4dzl5jt0jfzVWdGqeYW27QTWAeXhoupEZJULmNoH3ueJwUWFLIA==
 
-prettier@^2.3.1, prettier@^2.5.1:
+prettier@^2.3.1:
   version "2.7.1"
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.7.1.tgz#e235806850d057f97bb08368a4f7d899f7760c64"
   integrity sha512-ujppO+MkdPqoVINuDFDRLClm7D78qbDt0/NR+wp5FqEZOoTNAjPHWj17QRhu7geIHJfcNhRk1XVQmF8Bp3ye+g==
@@ -3995,13 +4000,13 @@ ts-node@^10.8.0:
     v8-compile-cache-lib "^3.0.1"
     yn "3.1.1"
 
-ts-poet@^4.15.0:
-  version "4.15.0"
-  resolved "https://registry.yarnpkg.com/ts-poet/-/ts-poet-4.15.0.tgz#637145fa554d3b27c56541578df0ce08cd9eb328"
-  integrity sha512-sLLR8yQBvHzi9d4R1F4pd+AzQxBfzOSSjfxiJxQhkUoH5bL7RsAC6wgvtVUQdGqiCsyS9rT6/8X2FI7ipdir5g==
+ts-poet@^5.1.0:
+  version "5.2.0"
+  resolved "https://registry.yarnpkg.com/ts-poet/-/ts-poet-5.2.0.tgz#4e52d5076b80296c89009014fa959bfe60bc9a09"
+  integrity sha512-2YOgli1AwPk+S1youa6cm0XfQUZpFQNCkKpEvuegO/7vRPYkgxi7LIDtYfofUXqsy/GQUoOV4h6NlgTgoEtPfg==
   dependencies:
-    lodash "^4.17.15"
-    prettier "^2.5.1"
+    "@dprint/formatter" "^0.2.0"
+    "@dprint/typescript" "^0.71.2"
 
 ts-proto-descriptors@1.7.1:
   version "1.7.1"
@@ -4011,16 +4016,16 @@ ts-proto-descriptors@1.7.1:
     long "^4.0.0"
     protobufjs "^6.8.8"
 
-ts-proto@^1.96.0:
-  version "1.117.0"
-  resolved "https://registry.yarnpkg.com/ts-proto/-/ts-proto-1.117.0.tgz#9186c36b7d71153fd65dc8f18c28defe54be65d7"
-  integrity sha512-htGXhOsq1oZ7T13YeNjpm4xYxniTk+tsdEX2/KQVg+2ycTjMw1POk7gI4B2agp1ABxv+Qwe5/QuLIf8fQQ72dw==
+ts-proto@^1.123.1:
+  version "1.123.1"
+  resolved "https://registry.yarnpkg.com/ts-proto/-/ts-proto-1.123.1.tgz#aeced4a08e2338bcef750f37b51d2783127c596b"
+  integrity sha512-TXxFncNbmVvzEURIgUWSYpTEuIStSbl45Y++dZjtUOwo/MhswlBZlgLXGDnRt3EmM/O06GRgu+ORabbHaOEkzA==
   dependencies:
     "@types/object-hash" "^1.3.0"
     dataloader "^1.4.0"
     object-hash "^1.3.1"
     protobufjs "^6.11.3"
-    ts-poet "^4.15.0"
+    ts-poet "^5.1.0"
     ts-proto-descriptors "1.7.1"
 
 tsconfig-paths@^3.14.1:

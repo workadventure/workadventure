@@ -31,6 +31,7 @@ export const OPID_PROFILE_SCREEN_PROVIDER =
     getEnvConfig("OPID_PROFILE_SCREEN_PROVIDER") || (ADMIN_URL ? ADMIN_URL + "/profile" : undefined);
 const FALLBACK_LOCALE = getEnvConfig("FALLBACK_LOCALE") || undefined;
 export const CHAT_URL = getEnvConfig("CHAT_URL") || "//chat.workadventure.localhost";
+export const ENABLE_CHAT_UPLOAD = getEnvConfig("ENABLE_CHAT_UPLOAD") !== "false";
 
 export {
     DEBUG_MODE,

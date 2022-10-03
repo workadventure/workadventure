@@ -4,7 +4,7 @@
     import { Unsubscriber } from "svelte/store";
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { ITiledMapRectangleObject } from "@workadventure/map-editor-types";
+    import { ITiledMapRectangleObject } from "@workadventure/map-editor";
 
     let areaPreview: AreaPreview | undefined;
     let areaData: ITiledMapRectangleObject | undefined;
@@ -47,7 +47,7 @@
 
 {#if areaPreview && areaData}
     <div class="area-details-window nes-container is-rounded">
-        <button type="button" class="nes-btn is-error close" on:click={closeAreaPreviewWindow}>&times</button>
+        <button type="button" class="nes-btn is-error close" on:click={closeAreaPreviewWindow}>&times;</button>
         <h2>{areaData.name}</h2>
         fields:
         <hr />

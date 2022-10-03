@@ -1,6 +1,10 @@
-import { CommandConfig } from "@workadventure/map-editor-types";
-import { UpdateAreaCommand } from "@workadventure/map-editor-types/src/Commands/Area/UpdateAreaCommand";
-import { Command } from "@workadventure/map-editor-types/src/Commands/Command";
+import {
+    CommandConfig,
+    UpdateAreaCommand,
+    CreateAreaCommand,
+    Command,
+    DeleteAreaCommand,
+} from "@workadventure/map-editor";
 import { Unsubscriber } from "svelte/store";
 import { RoomConnection } from "../../../Connexion/RoomConnection";
 import { mapEditorModeDragCameraPointerDownStore, mapEditorModeStore } from "../../../Stores/MapEditorStore";
@@ -38,7 +42,12 @@ export class MapEditorModeManager {
     /**
      * We are making use of CommandPattern to implement an Undo-Redo mechanism
      */
-    private commandsHistory: Command[];
+    private localCommandsHistory: Command[];
+
+    /**
+     * Commands sent by us that are still to be acknowledged by the server
+     */
+    private pendingCommands: Command[];
     /**
      * Which command was called most recently
      */
@@ -47,10 +56,17 @@ export class MapEditorModeManager {
     private mapEditorModeUnsubscriber!: Unsubscriber;
     private pointerDownUnsubscriber!: Unsubscriber;
 
+    private ctrlKey: Phaser.Input.Keyboard.Key;
+    private shiftKey: Phaser.Input.Keyboard.Key;
+
     constructor(scene: GameScene) {
         this.scene = scene;
 
-        this.commandsHistory = [];
+        this.ctrlKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL);
+        this.shiftKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+
+        this.localCommandsHistory = [];
+        this.pendingCommands = [];
         this.currentCommandIndex = -1;
 
         this.active = false;
@@ -62,51 +78,132 @@ export class MapEditorModeManager {
         this.activeTool = undefined;
 
         this.subscribeToStores();
-        this.subscribeToGameMapEvents();
+        this.subscribeToGameMapFrontWrapperEvents();
     }
 
-    public executeCommand(commandConfig: CommandConfig): void {
+    public update(time: number, dt: number): void {
+        this.currentlyActiveTool?.update(time, dt);
+    }
+
+    /**
+     * Creates new Command object from given command config and executes it, both local and from the back.
+     * @param commandConfig what to execute
+     * @param emitMapEditorUpdate Should the command be emitted further to the game room? Default true.
+     * (for example if command came from the back)
+     * @param addToLocalCommandsHistory Should the command be added to the local commands history to be used in undo/redo mechanism? Default true.
+     */
+    public executeCommand(
+        commandConfig: CommandConfig,
+        emitMapEditorUpdate = true,
+        addToLocalCommandsHistory = true
+    ): boolean {
         let command: Command;
+        const delay = 0;
         switch (commandConfig.type) {
             case "UpdateAreaCommand": {
+                // delay = 5000;
                 command = new UpdateAreaCommand(this.scene.getGameMap(), commandConfig);
-                command.execute();
-                // this should not be called with every change. Use some sort of debounce
-                this.scene.connection?.emitMapEditorModifyArea(commandConfig.areaObjectConfig);
+                break;
+            }
+            case "CreateAreaCommand": {
+                command = new CreateAreaCommand(this.scene.getGameMap(), commandConfig);
+                break;
+            }
+            case "DeleteAreaCommand": {
+                command = new DeleteAreaCommand(this.scene.getGameMap(), commandConfig);
                 break;
             }
             default: {
-                const _exhaustiveCheck: never = commandConfig.type;
-                return;
+                const _exhaustiveCheck: never = commandConfig;
+                return false;
             }
         }
-        this.emitMapEditorUpdate(commandConfig);
-        // if we are not at the end of commands history and perform an action, get rid of commands later in history than our current point in time
-        if (this.currentCommandIndex !== this.commandsHistory.length - 1) {
-            this.commandsHistory.splice(this.currentCommandIndex + 1);
+        if (!command) {
+            return false;
         }
-        this.commandsHistory.push(command);
-        this.currentCommandIndex += 1;
+        // We do an execution instantly so there will be no lag from user's perspective
+        const executedCommandConfig = command.execute();
+
+        // do any necessary changes for active tool interface
+        this.currentlyActiveTool?.handleCommandExecution(executedCommandConfig);
+
+        if (emitMapEditorUpdate) {
+            this.emitMapEditorUpdate(command.id, commandConfig, delay);
+        }
+
+        if (addToLocalCommandsHistory) {
+            // if we are not at the end of commands history and perform an action, get rid of commands later in history than our current point in time
+            if (this.currentCommandIndex !== this.localCommandsHistory.length - 1) {
+                this.localCommandsHistory.splice(this.currentCommandIndex + 1);
+            }
+            this.pendingCommands.push(command);
+            this.localCommandsHistory.push(command);
+            this.currentCommandIndex += 1;
+        }
+
+        return true;
     }
 
     public undoCommand(): void {
-        if (this.commandsHistory.length === 0 || this.currentCommandIndex === -1) {
+        if (this.localCommandsHistory.length === 0 || this.currentCommandIndex === -1) {
             return;
         }
-        const command = this.commandsHistory[this.currentCommandIndex].undo();
-        // this should not be called with every change. Use some sort of debounce
-        this.emitMapEditorUpdate(command);
-        this.currentCommandIndex -= 1;
+        try {
+            const command = this.localCommandsHistory[this.currentCommandIndex];
+            const commandConfig = command.undo();
+            this.pendingCommands.push(command);
+
+            // do any necessary changes for active tool interface
+            this.currentlyActiveTool?.handleCommandExecution(commandConfig);
+
+            // this should not be called with every change. Use some sort of debounce
+            this.emitMapEditorUpdate(command.id, commandConfig);
+            this.currentCommandIndex -= 1;
+        } catch (e) {
+            this.localCommandsHistory.splice(this.currentCommandIndex, 1);
+            this.currentCommandIndex -= 1;
+            console.warn(e);
+        }
     }
 
     public redoCommand(): void {
-        if (this.commandsHistory.length === 0 || this.currentCommandIndex === this.commandsHistory.length - 1) {
+        if (
+            this.localCommandsHistory.length === 0 ||
+            this.currentCommandIndex === this.localCommandsHistory.length - 1
+        ) {
             return;
         }
-        const command = this.commandsHistory[this.currentCommandIndex + 1].execute();
-        // this should not be called with every change. Use some sort of debounce
-        this.emitMapEditorUpdate(command);
-        this.currentCommandIndex += 1;
+        try {
+            const command = this.localCommandsHistory[this.currentCommandIndex + 1];
+            const commandConfig = command.execute();
+            this.pendingCommands.push(command);
+
+            // do any necessary changes for active tool interface
+            this.currentlyActiveTool?.handleCommandExecution(commandConfig);
+
+            // this should not be called with every change. Use some sort of debounce
+            this.emitMapEditorUpdate(command.id, commandConfig);
+            this.currentCommandIndex += 1;
+        } catch (e) {
+            this.localCommandsHistory.splice(this.currentCommandIndex, 1);
+            this.currentCommandIndex -= 1;
+            console.warn(e);
+        }
+    }
+
+    public revertPendingCommands(): void {
+        while (this.pendingCommands.length > 0) {
+            const command = this.pendingCommands.pop();
+            if (command) {
+                command.undo();
+                // also remove from local history of commands as this is invalid
+                const index = this.localCommandsHistory.findIndex((localCommand) => localCommand.id === command.id);
+                if (index !== -1) {
+                    this.localCommandsHistory.splice(index, 1);
+                    this.currentCommandIndex -= 1;
+                }
+            }
+        }
     }
 
     public isActive(): boolean {
@@ -118,13 +215,14 @@ export class MapEditorModeManager {
     }
 
     public destroy(): void {
+        this.editorTools.forEach((tool) => tool.destroy());
         this.unsubscribeFromStores();
-        this.unsubscribeFromGameMapEvents();
         this.pointerDownUnsubscriber();
     }
 
     public handleKeyDownEvent(event: KeyboardEvent): void {
-        switch (event.key) {
+        this.currentlyActiveTool?.handleKeyDownEvent(event);
+        switch (event.key.toLowerCase()) {
             case "`": {
                 this.equipTool();
                 break;
@@ -133,12 +231,15 @@ export class MapEditorModeManager {
                 this.equipTool(EditorToolName.AreaEditor);
                 break;
             }
-            case "r": {
-                this.redoCommand();
+            case "0": {
+                console.log(`CURRENT COMMAND INDEX: ${this.currentCommandIndex}`);
+                console.log(this.localCommandsHistory);
                 break;
             }
-            case "u": {
-                this.undoCommand();
+            case "z": {
+                if (this.ctrlKey) {
+                    this.shiftKey.isDown ? this.redoCommand() : this.undoCommand();
+                }
                 break;
             }
             default: {
@@ -148,7 +249,17 @@ export class MapEditorModeManager {
     }
 
     public subscribeToRoomConnection(connection: RoomConnection): void {
-        this.editorTools.forEach((tool) => tool.subscribeToRoomConnection(connection));
+        connection.editMapCommandMessageStream.subscribe((editMapCommandMessage) => {
+            if (this.pendingCommands.length > 0) {
+                if (this.pendingCommands[0].id === editMapCommandMessage.id) {
+                    this.pendingCommands.shift();
+                    return;
+                }
+                this.revertPendingCommands();
+            }
+
+            this.editorTools.forEach((tool) => tool.handleIncomingCommandMessage(editMapCommandMessage));
+        });
     }
 
     private equipTool(tool?: EditorToolName): void {
@@ -163,34 +274,45 @@ export class MapEditorModeManager {
         }
     }
 
-    private emitMapEditorUpdate(commandConfig: CommandConfig): void {
-        switch (commandConfig.type) {
-            case "UpdateAreaCommand": {
-                this.scene.connection?.emitMapEditorModifyArea(commandConfig.areaObjectConfig);
-                break;
+    private emitMapEditorUpdate(commandId: string, commandConfig: CommandConfig, delay = 0): void {
+        const func = () => {
+            switch (commandConfig.type) {
+                case "UpdateAreaCommand": {
+                    this.scene.connection?.emitMapEditorModifyArea(commandId, commandConfig.areaObjectConfig);
+                    break;
+                }
+                case "CreateAreaCommand": {
+                    this.scene.connection?.emitMapEditorCreateArea(commandId, commandConfig.areaObjectConfig);
+                    break;
+                }
+                case "DeleteAreaCommand": {
+                    this.scene.connection?.emitMapEditorDeleteArea(commandId, commandConfig.id);
+                    break;
+                }
+                default: {
+                    break;
+                }
             }
-            default: {
-                break;
-            }
+        };
+        if (delay === 0) {
+            func();
+            return;
         }
+        setTimeout(func, delay);
     }
 
     /**
      * Hide everything related to tools like Area Previews etc
      */
     private clearToNeutralState(): void {
-        if (this.activeTool) {
-            this.editorTools.get(this.activeTool)?.clear();
-        }
+        this.currentlyActiveTool?.clear();
     }
 
     /**
      * Show things necessary for tool's usage
      */
     private activateTool(): void {
-        if (this.activeTool) {
-            this.editorTools.get(this.activeTool)?.activate();
-        }
+        this.currentlyActiveTool?.activate();
     }
 
     private subscribeToStores(): void {
@@ -211,18 +333,18 @@ export class MapEditorModeManager {
         });
     }
 
-    private subscribeToGameMapEvents(): void {
+    private subscribeToGameMapFrontWrapperEvents(): void {
         this.editorTools.forEach((tool) =>
             tool.subscribeToGameMapFrontWrapperEvents(this.scene.getGameMapFrontWrapper())
         );
     }
 
-    private unsubscribeFromGameMapEvents(): void {
-        this.editorTools.forEach((tool) => tool.unsubscribeFromGameMapEvents());
-    }
-
     private unsubscribeFromStores(): void {
         this.mapEditorModeUnsubscriber();
+    }
+
+    private get currentlyActiveTool(): MapEditorTool | undefined {
+        return this.activeTool ? this.editorTools.get(this.activeTool) : undefined;
     }
 
     public getScene(): GameScene {

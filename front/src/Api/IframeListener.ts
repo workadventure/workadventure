@@ -804,16 +804,26 @@ class IframeListener {
         });
     }
     sendSettingsToChatIframe() {
+        if (!connectionManager.currentRoom) {
+            throw new Error("Race condition : Current room is not defined yet");
+        }
         this.postMessageToChat({
             type: "settings",
             data: {
                 notification: localUserStore.getNotification(),
                 chatSounds: localUserStore.getChatSounds(),
+                enableChat: connectionManager.currentRoom?.enableChat,
+                enableChatUpload: connectionManager.currentRoom?.enableChatUpload,
             },
         });
     }
 
     sendLeaveMucEventToChatIframe(url: string) {
+        if (!connectionManager.currentRoom) {
+            throw new Error("Race condition : Current room is not defined yet");
+        } else if (!connectionManager.currentRoom.enableChat) {
+            return;
+        }
         this.postMessageToChat({
             type: "leaveMuc",
             data: {
@@ -823,6 +833,11 @@ class IframeListener {
     }
 
     sendJoinMucEventToChatIframe(url: string, name: string, type: string, subscribe: boolean) {
+        if (!connectionManager.currentRoom) {
+            throw new Error("Race condition : Current room is not defined yet");
+        } else if (!connectionManager.currentRoom.enableChat) {
+            return;
+        }
         this.postMessageToChat({
             type: "joinMuc",
             data: {

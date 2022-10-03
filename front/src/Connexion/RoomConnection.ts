@@ -29,7 +29,7 @@ import {
     AvailabilityStatus,
     CharacterLayerMessage,
     ClientToServerMessage as ClientToServerMessageTsProto,
-    EditMapMessage,
+    EditMapCommandMessage,
     EmoteEventMessage as EmoteEventMessageTsProto,
     ErrorMessage as ErrorMessageTsProto,
     ErrorScreenMessage as ErrorScreenMessageTsProto,
@@ -58,7 +58,7 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
-import { ITiledMapRectangleObject } from "@workadventure/map-editor-types";
+import { ITiledMapRectangleObject } from "@workadventure/map-editor";
 import { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 
@@ -142,8 +142,8 @@ export class RoomConnection implements RoomConnection {
     private readonly _variableMessageStream = new Subject<{ name: string; value: unknown }>();
     public readonly variableMessageStream = this._variableMessageStream.asObservable();
 
-    private readonly _editMapMessageStream = new Subject<EditMapMessage>();
-    public readonly editMapMessageStream = this._editMapMessageStream.asObservable();
+    private readonly _editMapCommandMessageStream = new Subject<EditMapCommandMessage>();
+    public readonly editMapCommandMessageStream = this._editMapCommandMessageStream.asObservable();
 
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
     public readonly playerDetailsUpdatedMessageStream = this._playerDetailsUpdatedMessageStream.asObservable();
@@ -309,9 +309,9 @@ export class RoomConnection implements RoomConnection {
                                 this.sendPong();
                                 break;
                             }
-                            case "editMapMessage": {
-                                const message = subMessage.editMapMessage;
-                                this._editMapMessageStream.next(message);
+                            case "editMapCommandMessage": {
+                                const message = subMessage.editMapCommandMessage;
+                                this._editMapCommandMessageStream.next(message);
                                 break;
                             }
                             default: {
@@ -475,7 +475,8 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "refreshRoomMessage": {
-                    //todo: implement a way to notify the user the room was refreshed.
+                    console.info("roomConnection => refreshRoomMessage received");
+                    window.location.reload();
                     break;
                 }
                 case "followRequestMessage": {
@@ -978,19 +979,52 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorModifyArea(config: ITiledMapRectangleObject): void {
+    public emitMapEditorModifyArea(commandId: string, config: ITiledMapRectangleObject): void {
         this.send({
             message: {
-                $case: "editMapMessage",
-                editMapMessage: {
-                    message: {
-                        $case: "modifyAreaMessage",
-                        modifyAreaMessage: {
-                            id: config.id,
-                            x: config.x,
-                            y: config.y,
-                            width: config.width,
-                            height: config.height,
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "modifyAreaMessage",
+                            modifyAreaMessage: config,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitMapEditorDeleteArea(commandId: string, id: number): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "deleteAreaMessage",
+                            deleteAreaMessage: {
+                                id,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitMapEditorCreateArea(commandId: string, config: ITiledMapRectangleObject): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "createAreaMessage",
+                            createAreaMessage: config,
                         },
                     },
                 },
