@@ -2,7 +2,7 @@ import {TargetDevice} from "./TargetDevice";
 
 export interface StorageProvider {
 
-    upload(fileUuid: string, chunks: Buffer, mimeType: string | undefined): Promise<Location>;
+    upload(fileUuid: string, chunks: Buffer, mimeType: string | undefined): Promise<string>;
 
     deleteFileById(fileId: string): Promise<void>;
 

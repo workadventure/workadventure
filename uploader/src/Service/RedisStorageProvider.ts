@@ -1,7 +1,6 @@
 import {StorageProvider} from "./StorageProvider";
-import {REDIS_DB_NUMBER, REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, UPLOADER_URL} from "../Enum/EnvironmentVariable";
+import {REDIS_DB_NUMBER, REDIS_HOST, REDIS_PASSWORD, REDIS_PORT} from "../Enum/EnvironmentVariable";
 import {commandOptions, createClient} from "redis";
-import {ManagedUpload} from "aws-sdk/clients/s3";
 import {TempStorageProvider} from "./TempStorageProvider";
 import {TargetDevice} from "./TargetDevice";
 
@@ -21,15 +20,10 @@ export class RedisStorageProvider implements StorageProvider, TempStorageProvide
         return !!REDIS_HOST && !!REDIS_PORT
     }
 
-    async upload(fileUuid: string, chunks: Buffer, mimeType: string | undefined): Promise<ManagedUpload.SendData> {
+    async upload(fileUuid: string, chunks: Buffer, mimeType: string | undefined): Promise<string> {
         await this.redisClient.set(fileUuid, chunks);
         return new Promise((solve, rej) => {
-            solve({
-                Key: fileUuid,
-                Location: `${UPLOADER_URL}/upload-file/${fileUuid}`,
-                Bucket: "",
-                ETag: ""
-            });
+            solve(fileUuid);
         });
     }
 

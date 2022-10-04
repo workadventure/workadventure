@@ -6,7 +6,7 @@ import {Readable} from 'stream'
 import {uploaderService} from "../Service/UploaderService";
 import {ByteLenghtBufferException} from "../Exception/ByteLenghtBufferException";
 import Axios, {AxiosError} from "axios";
-import {ADMIN_API_URL, ENABLE_CHAT_UPLOAD, UPLOAD_MAX_FILESIZE} from "../Enum/EnvironmentVariable";
+import {ADMIN_API_URL, ENABLE_CHAT_UPLOAD, UPLOAD_MAX_FILESIZE, UPLOADER_URL} from "../Enum/EnvironmentVariable";
 import {HttpResponseDevice} from "./HttpResponseDevice";
 import {addCorsHeaders} from "./addCorsHeaders";
 
@@ -232,15 +232,16 @@ export class FileController {
                             }
                         }
                         const mimeType = params[fileName] ? params[fileName].mimetype : undefined;
-                        const {Location, Key} = await uploaderService.uploadFile(
+                        const fileUuid = await uploaderService.uploadFile(
                             fileName,
                             buffer,
                             mimeType
                         );
+                        const location = `${UPLOADER_URL}/upload-file/${fileUuid}`
                         uploadedFile.push({
                             name: fileName,
-                            id: Key,
-                            location: Location,
+                            id: fileUuid,
+                            location: location,
                             size: buffer.byteLength,
                             lastModified: new Date(),
                             type: mimeType

@@ -7,7 +7,7 @@ export class NullStorageProvider implements StorageProvider,TempStorageProvider 
         throw new Error("S3 and Redis for upload file are not defined");
     }
 
-    upload(fileUuid: string, chunks: Buffer, mimeType: string | undefined): Promise<Location> {
+    upload(fileUuid: string, chunks: Buffer, mimeType: string | undefined): Promise<string> {
         throw new Error("S3 and Redis for upload file are not defined");
     }
 

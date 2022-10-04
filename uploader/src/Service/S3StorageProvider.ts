@@ -1,12 +1,11 @@
-import {Location, StorageProvider} from "./StorageProvider";
+import {StorageProvider} from "./StorageProvider";
 import {
     AWS_ACCESS_KEY_ID,
     AWS_BUCKET,
     AWS_DEFAULT_REGION,
     AWS_ENDPOINT,
     AWS_SECRET_ACCESS_KEY,
-    UPLOADER_AWS_SIGNED_URL_EXPIRATION,
-    UPLOADER_URL
+    UPLOADER_AWS_SIGNED_URL_EXPIRATION
 } from "../Enum/EnvironmentVariable";
 import AWS, {S3} from "aws-sdk";
 import {CORSRules} from "aws-sdk/clients/s3";
@@ -54,7 +53,7 @@ export class S3StorageProvider implements StorageProvider {
         })
     }
 
-    async upload(fileUuid: string, chunks: Buffer, mimeType:string|undefined): Promise<Location> {
+    async upload(fileUuid: string, chunks: Buffer, mimeType:string|undefined): Promise<string> {
         let uploadParams: S3.Types.PutObjectRequest = {
             Bucket: `${(AWS_BUCKET as string)}`,
             Key: fileUuid,
@@ -69,14 +68,13 @@ export class S3StorageProvider implements StorageProvider {
         }
 
         //upload file in data
-        const uploadedFile = await this.s3.upload(uploadParams,  (err, data)  => {
+        await this.s3.upload(uploadParams,  (err, data)  => {
             if (err || !data) {
                 throw err;
             }
             return data;
         }).promise();
-        uploadedFile.Location=`${UPLOADER_URL}/upload-file/${fileUuid}`
-        return {...uploadedFile, Key: fileUuid};
+        return fileUuid
     }
 
     async deleteFileById(fileId: string): Promise<void> {

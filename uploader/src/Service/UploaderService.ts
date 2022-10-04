@@ -8,7 +8,7 @@ class UploaderService{
     constructor(private storageProvider: StorageProvider, private tempStorageProvider: TempStorageProvider){
     }
 
-    async uploadFile(fileName: string, chunks: Buffer, mimeType?: string): Promise<Location>{
+    async uploadFile(fileName: string, chunks: Buffer, mimeType?: string): Promise<string>{
         const fileUuid = `${v4()}.${fileName.split('.').pop()}`;
 
         return this.storageProvider.upload(fileUuid, chunks, mimeType)
