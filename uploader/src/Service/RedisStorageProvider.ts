@@ -3,12 +3,13 @@ import {REDIS_DB_NUMBER, REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, UPLOADER_URL} f
 import {commandOptions, createClient} from "redis";
 import {ManagedUpload} from "aws-sdk/clients/s3";
 import {TempStorageProvider} from "./TempStorageProvider";
+import {TargetDevice} from "./TargetDevice";
 
 export class RedisStorageProvider implements StorageProvider, TempStorageProvider {
     private redisClient;
 
     constructor() {
-        const password = REDIS_PASSWORD? `:${REDIS_PASSWORD}@` : ""
+        const password = REDIS_PASSWORD ? `:${REDIS_PASSWORD}@` : ""
         this.redisClient = createClient({
             url: `redis://${password}${REDIS_HOST}:${REDIS_PORT}/${REDIS_DB_NUMBER || 0}`,
         });
@@ -47,8 +48,10 @@ export class RedisStorageProvider implements StorageProvider, TempStorageProvide
         return this.redisClient.get(commandOptions({ returnBuffers: true }), fileId)
     }
 
-    getExternalDownloadLink(fileId: string): Promise<string> {
-        throw new Error(`Redis storage provider doesn't support external download links`)
+    copyFile(fileId: string, target: TargetDevice): void {
+        this.get(fileId).then((buffer: Buffer | undefined | null)=> {
+            target.copyFromBuffer(buffer)
+        })
     }
 }
 

@@ -1,5 +1,6 @@
-import {StorageProvider,Location} from "./StorageProvider";
+import {StorageProvider, Location} from "./StorageProvider";
 import {TempStorageProvider} from "./TempStorageProvider";
+import {TargetDevice} from "./TargetDevice";
 
 export class NullStorageProvider implements StorageProvider,TempStorageProvider {
     deleteFileById(fileId: string): Promise<void> {
@@ -9,6 +10,7 @@ export class NullStorageProvider implements StorageProvider,TempStorageProvider 
     upload(fileUuid: string, chunks: Buffer, mimeType: string | undefined): Promise<Location> {
         throw new Error("S3 and Redis for upload file are not defined");
     }
+
     get(fileId: string): Promise<Buffer | undefined | null> {
         throw new Error("S3 and Redis for upload file are not defined");
     }
@@ -17,7 +19,7 @@ export class NullStorageProvider implements StorageProvider,TempStorageProvider 
         throw new Error("No providers setup for temporary storage");
     }
 
-    getExternalDownloadLink(fileId: string): Promise<string> {
+    copyFile(fileId: string, target: TargetDevice): void {
         throw new Error("S3 and Redis for upload file are not defined");
     }
 }

@@ -2,6 +2,7 @@ import {v4} from "uuid";
 import {Location, StorageProvider} from "./StorageProvider";
 import {storageProviderService, tempProviderService} from "./StorageProviderService";
 import {TempStorageProvider} from "./TempStorageProvider";
+import {TargetDevice} from "./TargetDevice";
 
 class UploaderService{
     constructor(private storageProvider: StorageProvider, private tempStorageProvider: TempStorageProvider){
@@ -21,16 +22,12 @@ class UploaderService{
         await this.storageProvider.deleteFileById(fileId)
     }
 
-    get(fileId: string): Promise<Buffer|undefined|null>{
-        return this.storageProvider.get(fileId)
-    }
-
     getTemp(fileId: string){
         return this.tempStorageProvider.get(fileId);
     }
 
-    getLink(fileId: string) {
-        return this.storageProvider.getExternalDownloadLink(fileId)
+    copyFile(fileId: string, target: TargetDevice) {
+        this.storageProvider.copyFile(fileId, target)
     }
 }
 

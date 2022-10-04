@@ -2,13 +2,13 @@ import {App} from "../Server/sifrr.server";
 
 import {v4} from "uuid";
 import {HttpRequest, HttpResponse} from "uWebSockets.js";
-import {BaseController} from "./BaseController";
 import {Readable} from 'stream'
-import { uploaderService } from "../Service/UploaderService";
-import { mimeTypeManager } from "../Service/MimeType";
-import { ByteLenghtBufferException } from "../Exception/ByteLenghtBufferException";
+import {uploaderService} from "../Service/UploaderService";
+import {ByteLenghtBufferException} from "../Exception/ByteLenghtBufferException";
 import Axios, {AxiosError} from "axios";
-import {ADMIN_API_URL, CHAT_URL, ENABLE_CHAT_UPLOAD, UPLOAD_MAX_FILESIZE} from "../Enum/EnvironmentVariable";
+import {ADMIN_API_URL, ENABLE_CHAT_UPLOAD, UPLOAD_MAX_FILESIZE} from "../Enum/EnvironmentVariable";
+import {HttpResponseDevice} from "./HttpResponseDevice";
+import {addCorsHeaders} from "./addCorsHeaders";
 
 interface UploadedFileBuffer {
     buffer: Buffer,
@@ -18,12 +18,11 @@ interface UploadedFileBuffer {
 class DisabledChat extends Error{}
 class NotLoggedUser extends Error {}
 
-export class FileController extends BaseController {
+export class FileController {
     //TODO migrate in upload file service
     private uploadedFileBuffers: Map<string, UploadedFileBuffer> = new Map<string, UploadedFileBuffer>();
 
     constructor(private App : App) {
-        super();
         this.App = App;
 
         this.uploadAudioMessage();
@@ -35,7 +34,7 @@ export class FileController extends BaseController {
 
     uploadAudioMessage(){
         this.App.options("/upload-audio-message", (res: HttpResponse, req: HttpRequest) => {
-            this.addCorsHeaders(res);
+            addCorsHeaders(res);
             res.end();
         });
 
@@ -75,7 +74,7 @@ export class FileController extends BaseController {
                     );
 
                     res.writeStatus("200 OK");
-                    this.addCorsHeaders(res);
+                    addCorsHeaders(res);
                     res.end(JSON.stringify({
                         id: audioMessageId,
                         path: `/download-audio-message/${audioMessageId}`
@@ -84,7 +83,7 @@ export class FileController extends BaseController {
                 } catch (e) {
                     console.error("An error happened", e)
                     res.writeStatus("500 Internal Server Error");
-                    this.addCorsHeaders(res);
+                    addCorsHeaders(res);
                     res.end('An error happened');
                 }
             })();
@@ -93,7 +92,7 @@ export class FileController extends BaseController {
 
     downloadAudioMessage(){
         this.App.options("/download-audio-message/*", (res: HttpResponse, req: HttpRequest) => {
-            this.addCorsHeaders(res);
+            addCorsHeaders(res);
             res.end();
         });
 
@@ -108,7 +107,7 @@ export class FileController extends BaseController {
                 const buffer = await uploaderService.getTemp(id);
                 if (buffer == undefined) {
                     res.writeStatus("404 Not found");
-                    this.addCorsHeaders(res);
+                    addCorsHeaders(res);
                     res.end("Cannot find file");
                     return;
                 }
@@ -158,102 +157,23 @@ export class FileController extends BaseController {
 
     downloadFile(){
         this.App.options("/upload-file/*", (res: HttpResponse, req: HttpRequest) => {
-            this.addCorsHeaders(res);
+            addCorsHeaders(res);
             res.end();
         });
-
-        this.App.options("/external-upload-file/*", (res: HttpResponse, req: HttpRequest) => {
-            this.addCorsHeaders(res);
-            res.end();
-        });
-
-        this.App.get("/external-upload-file/:id", (res: HttpResponse, req: HttpRequest) => {
-            (async () => {
-                res.onAborted(() => {
-                    console.warn('download file request was aborted');
-                })
-                const id = req.getParameter(0);
-                const signedLink = await uploaderService.getLink(id)
-                res.writeStatus('302')
-                res.writeHeader("Location", signedLink)
-                this.addCorsHeaders(res);
-                res.end()
-            })()
-        })
 
         this.App.get("/upload-file/:id", (res: HttpResponse, req: HttpRequest) => {
-            (async () => {
-                res.onAborted(() => {
-                    console.warn('download file request was aborted');
-                })
-
-                const id = req.getParameter(0);
-                try{
-                    const fileBuffer = await uploaderService.get(id);
-                    if (fileBuffer == undefined) {
-                        res.writeStatus("404 Not found");
-                        this.addCorsHeaders(res);
-                        res.end("Cannot find file");
-                        return;
-                    }
-
-                    const readable = new Readable()
-                    readable._read = () => {} // _read is required but you can noop it
-                    readable.push(fileBuffer);
-                    readable.push(null);
-
-                    const size = fileBuffer.byteLength;
-
-                    this.addCorsHeaders(res);
-                    res.writeStatus("200 OK");
-                    //TODO manage type with the extension of file
-                    const memeType = mimeTypeManager.getMimeTypeByFileName(id);
-                    if(memeType !== false){
-                        res.writeHeader("Content-Type", memeType);
-                    }
-
-                    return readable.on('data', buffer => {
-                        const chunk = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
-                            lastOffset = res.getWriteOffset();
-
-                        // First try
-                        const [ok, done] = res.tryEnd(chunk, size);
-
-                        if (done) {
-                            readable.destroy();
-                        } else if (!ok) {
-                            // pause because backpressure
-                            readable.pause();
-
-                            // Save unsent chunk for later
-                            res.ab = chunk;
-                            res.abOffset = lastOffset;
-
-                            // Register async handlers for drainage
-                            res.onWritable(offset => {
-                                const [ok, done] = res.tryEnd(res.ab.slice(offset - res.abOffset), size);
-                                if (done) {
-                                    readable.destroy();
-                                } else if (ok) {
-                                    readable.resume();
-                                }
-                                return ok;
-                            });
-                        }
-                    });
-                }catch(err){
-                    console.error("downloadFile => An error happened", err);
-                    this.addCorsHeaders(res);
-                    res.writeStatus("500 Internal Server Error");
-                    return res.end('An error happened');
-                }
-            })();
-        });
+            res.onAborted(() => {
+                console.warn('download file request was aborted');
+            })
+            const id = req.getParameter(0);
+            const targetDevice = new HttpResponseDevice(id, res)
+            uploaderService.copyFile(id, targetDevice)
+        })
     }
 
     uploadFile(){
         this.App.options("/upload-file", (res: HttpResponse, req: HttpRequest) => {
-            this.addCorsHeaders(res);
+            addCorsHeaders(res);
             res.end();
         });
 
@@ -281,7 +201,7 @@ export class FileController extends BaseController {
                                 }
                             })();
                         },
-                        onField: (fieldname: string, value: any) => {
+                        onField: (fieldname: string, value: never) => {
                             if(fieldname === 'userRoomToken'){
                                 userRoomToken = value;
                             }
@@ -332,13 +252,13 @@ export class FileController extends BaseController {
                     }
 
                     res.writeStatus("200 OK");
-                    this.addCorsHeaders(res);
+                    addCorsHeaders(res);
                     return res.end(JSON.stringify(uploadedFile));
                 }catch(err){
                     console.error("FILE upload error", err);
                     if(err instanceof ByteLenghtBufferException){
                         res.writeStatus("413 Request Entity Too Large");
-                        this.addCorsHeaders(res);
+                        addCorsHeaders(res);
                         res.writeHeader('Content-Type', 'application/json');
                         return res.end(JSON.stringify({
                             message: err.message,
@@ -354,7 +274,7 @@ export class FileController extends BaseController {
                             } else {
                                 res.writeStatus("401 Unauthorized");
                             }
-                            this.addCorsHeaders(res);
+                            addCorsHeaders(res);
                             res.writeHeader('Content-Type', 'application/json');
                             return res.end(JSON.stringify({
                                 message: err.response?.data?.message,
@@ -363,15 +283,15 @@ export class FileController extends BaseController {
                         }
                     } else if(err instanceof DisabledChat){
                         res.writeStatus("401 Unauthorized");
-                        this.addCorsHeaders(res);
+                        addCorsHeaders(res);
                         return res.end(JSON.stringify({message: 'disabled'}));
                     } else if(err instanceof NotLoggedUser){
                         res.writeStatus("401 Unauthorized");
-                        this.addCorsHeaders(res);
+                        addCorsHeaders(res);
                         return res.end(JSON.stringify({message: 'not-logged'}));
                     }
                     res.writeStatus("500 Internal Server Error");
-                    this.addCorsHeaders(res);
+                    addCorsHeaders(res);
                     return res.end('An error happened');
                 }
             })();
@@ -380,7 +300,7 @@ export class FileController extends BaseController {
 
     deleteUploadedFile(){
         this.App.options("/upload-file/:fileId", (res: HttpResponse, req: HttpRequest) => {
-            this.addCorsHeaders(res);
+            addCorsHeaders(res);
             res.end();
         });
 
@@ -394,12 +314,12 @@ export class FileController extends BaseController {
                 try{
                     await uploaderService.deleteFileById(fileId);
                     res.writeStatus("200 OK");
-                    this.addCorsHeaders(res);
+                    addCorsHeaders(res);
                     return res.end(JSON.stringify({message: "ok", id: fileId}));
                 }catch(err){
                     console.error("deleteUploadedFile => An error happened", err)
                     res.writeStatus("500 Internal Server Error");
-                    this.addCorsHeaders(res);
+                    addCorsHeaders(res);
                     return res.end('An error happened');
                 }
             })();

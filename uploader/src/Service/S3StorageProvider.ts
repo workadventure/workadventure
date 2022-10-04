@@ -10,6 +10,7 @@ import {
 } from "../Enum/EnvironmentVariable";
 import AWS, {S3} from "aws-sdk";
 import {CORSRules} from "aws-sdk/clients/s3";
+import {TargetDevice} from "./TargetDevice";
 
 export class S3StorageProvider implements StorageProvider {
     private s3: AWS.S3;
@@ -74,7 +75,7 @@ export class S3StorageProvider implements StorageProvider {
             }
             return data;
         }).promise();
-        uploadedFile.Location=`${UPLOADER_URL}/external-upload-file/${fileUuid}`
+        uploadedFile.Location=`${UPLOADER_URL}/upload-file/${fileUuid}`
         return {...uploadedFile, Key: fileUuid};
     }
 
@@ -86,11 +87,11 @@ export class S3StorageProvider implements StorageProvider {
         await this.s3.deleteObject(deleteParams).promise();
     }
 
-    get(fileId: string): Promise<Buffer | undefined | null> {
-        throw new Error(`S3 storage provider does not support get method`)
+    copyFile(fileId: string, target: TargetDevice): void {
+        this.getExternalDownloadLink(fileId).then(link => target.copyFromLink(link))
     }
 
-    async getExternalDownloadLink(fileId: string): Promise<string> {
+    private async getExternalDownloadLink(fileId: string): Promise<string> {
         const params = {Bucket: AWS_BUCKET, Key: fileId, Expires: UPLOADER_AWS_SIGNED_URL_EXPIRATION};
         return await this.s3.getSignedUrlPromise('getObject', params);
     }
