@@ -1,10 +1,4 @@
-import {
-    AreaChangeCallback,
-    AreaType,
-    GameMap,
-    GameMapProperties,
-    ITiledMapRectangleObject,
-} from "@workadventure/map-editor";
+import { AreaChangeCallback, AreaData, AreaType, GameMap, GameMapProperties } from "@workadventure/map-editor";
 import {
     ITiledMap,
     ITiledMapLayer,
@@ -60,7 +54,7 @@ export class GameMapFrontWrapper {
      * Firing on map change, containing newest collision grid array
      */
     private mapChangedSubject = new Subject<number[][]>();
-    private areaUpdatedSubject = new Subject<ITiledMapRectangleObject>();
+    private areaUpdatedSubject = new Subject<AreaData>();
 
     constructor(gameMap: GameMap, phaserMap: Phaser.Tilemaps.Tilemap, terrains: Array<Phaser.Tilemaps.Tileset>) {
         this.gameMap = gameMap;
@@ -291,7 +285,7 @@ export class GameMapFrontWrapper {
             console.warn('Could not find layer "' + layerName + '" when calling setProperty');
             return;
         }
-        this.gameMap.setProperty(layer, propertyName, propertyValue);
+        this.gameMap.setTiledObjectProperty(layer, propertyName, propertyValue);
         this.triggerAllProperties();
         this.triggerLayersChange();
     }
@@ -332,11 +326,11 @@ export class GameMapFrontWrapper {
         throw new Error("No possible position found");
     }
 
-    public getObjectProperty(
+    public getTiledObjectProperty(
         object: { properties?: ITiledMapProperty[] },
         propertyName: string
     ): string | boolean | number | undefined {
-        return this.gameMap.getObjectProperty(object, propertyName);
+        return this.gameMap.getTiledObjectProperty(object, propertyName);
     }
 
     public getObjectWithName(name: string): ITiledMapObject | undefined {
@@ -361,43 +355,43 @@ export class GameMapFrontWrapper {
         areaName: string,
         areaType: AreaType,
         propertyName: string,
-        propertyValue: string | number | undefined | boolean
+        propertyValue: string | number | boolean
     ): void {
         const area = this.getAreaByName(areaName, areaType);
         if (area === undefined) {
             console.warn('Could not find area "' + areaName + '" when calling setProperty');
             return;
         }
-        this.gameMap.setProperty(area, propertyName, propertyValue);
+        this.gameMap.setAreaProperty(area, propertyName, propertyValue);
         this.triggerAllProperties();
         this.gameMap.getGameMapAreas().triggerAreasChange(this.oldPosition, this.position);
     }
 
-    public getAreas(areaType: AreaType): ITiledMapRectangleObject[] {
+    public getAreas(areaType: AreaType): AreaData[] {
         return this.gameMap.getGameMapAreas().getAreas(areaType);
     }
 
-    public addArea(area: ITiledMapRectangleObject, type: AreaType): void {
+    public addArea(area: AreaData, type: AreaType): void {
         this.gameMap.getGameMapAreas().addArea(area, type, this.position);
     }
 
-    public triggerSpecificAreaOnEnter(area: ITiledMapRectangleObject): void {
+    public triggerSpecificAreaOnEnter(area: AreaData): void {
         this.gameMap.getGameMapAreas().triggerSpecificAreaOnEnter(area);
     }
 
-    public triggerSpecificAreaOnLeave(area: ITiledMapRectangleObject): void {
+    public triggerSpecificAreaOnLeave(area: AreaData): void {
         this.gameMap.getGameMapAreas().triggerSpecificAreaOnLeave(area);
     }
 
-    public getAreaByName(name: string, type: AreaType): ITiledMapRectangleObject | undefined {
+    public getAreaByName(name: string, type: AreaType): AreaData | undefined {
         return this.gameMap.getGameMapAreas().getAreaByName(name, type);
     }
 
-    public getArea(id: number, type: AreaType): ITiledMapRectangleObject | undefined {
+    public getArea(id: number, type: AreaType): AreaData | undefined {
         return this.gameMap.getGameMapAreas().getArea(id, type);
     }
 
-    public updateAreaByName(name: string, type: AreaType, config: Partial<ITiledMapObject>): void {
+    public updateAreaByName(name: string, type: AreaType, config: Partial<AreaData>): void {
         const gameMapAreas = this.gameMap.getGameMapAreas();
         const area = gameMapAreas.updateAreaByName(name, type, config);
         if (this.position && area && gameMapAreas.isPlayerInsideAreaByName(name, type, this.position)) {
@@ -406,7 +400,7 @@ export class GameMapFrontWrapper {
         this.areaUpdatedSubject.next(gameMapAreas.getAreaByName(name, AreaType.Static));
     }
 
-    public updateAreaById(id: number, type: AreaType, config: Partial<ITiledMapRectangleObject>): void {
+    public updateAreaById(id: number, type: AreaType, config: Partial<AreaData>): void {
         const gameMapAreas = this.gameMap.getGameMapAreas();
         const area = gameMapAreas.updateAreaById(id, type, config);
         if (this.position && area && gameMapAreas.isPlayerInsideArea(id, type, this.position)) {
@@ -441,7 +435,7 @@ export class GameMapFrontWrapper {
         return this.mapChangedSubject.asObservable();
     }
 
-    public getAreaUpdatedObservable(): Observable<ITiledMapRectangleObject> {
+    public getAreaUpdatedObservable(): Observable<AreaData> {
         return this.areaUpdatedSubject.asObservable();
     }
 

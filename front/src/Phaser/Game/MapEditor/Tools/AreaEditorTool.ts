@@ -1,4 +1,4 @@
-import { AreaType, CommandConfig, ITiledMapRectangleObject } from "@workadventure/map-editor";
+import { AreaData, AreaType, CommandConfig } from "@workadventure/map-editor";
 import { Subscription } from "rxjs";
 import { get, Unsubscriber } from "svelte/store";
 import { EditMapCommandMessage } from "../../../../Messages/ts-proto-generated/protos/messages";
@@ -62,7 +62,7 @@ export class AreaEditorTool extends MapEditorTool {
                 this.mapEditorModeManager.executeCommand(
                     {
                         type: "UpdateAreaCommand",
-                        areaObjectConfig: data as ITiledMapRectangleObject,
+                        areaObjectConfig: data as AreaData,
                     },
                     false,
                     false
@@ -72,10 +72,10 @@ export class AreaEditorTool extends MapEditorTool {
             case "createAreaMessage": {
                 console.log("create area message");
                 const data = editMapCommandMessage.editMapMessage?.message.createAreaMessage;
-                const config = {
+                const config: AreaData = {
                     ...data,
-                    class: "area",
                     visible: true,
+                    properties: {},
                 };
                 // execute command locally
                 this.mapEditorModeManager.executeCommand(
@@ -127,13 +127,13 @@ export class AreaEditorTool extends MapEditorTool {
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
         this.gameMapAreaUpdateSubscription = gameMapFrontWrapper
             .getAreaUpdatedObservable()
-            .subscribe((areaConfig: ITiledMapRectangleObject) => {
+            .subscribe((areaConfig: AreaData) => {
                 this.updateAreaPreview(areaConfig);
                 this.scene.markDirty();
             });
     }
 
-    public updateAreaPreview(config: ITiledMapRectangleObject): void {
+    public updateAreaPreview(config: AreaData): void {
         const areaPreview = this.getAreaPreview(config.id);
         if (!areaPreview) {
             return;
@@ -145,7 +145,7 @@ export class AreaEditorTool extends MapEditorTool {
         }
     }
 
-    public getAreaPreviewConfig(id: number): ITiledMapRectangleObject | undefined {
+    public getAreaPreviewConfig(id: number): AreaData | undefined {
         return this.getAreaPreview(id)?.getConfig();
     }
 
@@ -171,9 +171,9 @@ export class AreaEditorTool extends MapEditorTool {
                     type: "CreateAreaCommand",
                     areaObjectConfig: {
                         id: newAreaId,
-                        class: "area",
                         name: `STATIC_AREA_${newAreaId}`,
                         visible: true,
+                        properties: {},
                         width: 100,
                         height: 100,
                         x: this.scene.input.activePointer.worldX - 50,
@@ -194,14 +194,14 @@ export class AreaEditorTool extends MapEditorTool {
         mapEditorSelectedAreaPreviewStore.set(undefined);
     }
 
-    public handleAreaPreviewCreation(config: ITiledMapRectangleObject): void {
+    public handleAreaPreviewCreation(config: AreaData): void {
         const areaPreview = new AreaPreview(this.scene, structuredClone(config));
         this.bindAreaPreviewEventHandlers(areaPreview);
         this.areaPreviews.push(areaPreview);
         this.scene.markDirty();
     }
 
-    private handleAreaPreviewUpdate(config: ITiledMapRectangleObject): void {
+    private handleAreaPreviewUpdate(config: AreaData): void {
         this.areaPreviews.find((area) => area.getConfig().id === config.id)?.updatePreview(config);
         this.scene.getGameMapFrontWrapper().updateAreaById(config.id, AreaType.Static, config);
         this.scene.markDirty();
@@ -224,7 +224,7 @@ export class AreaEditorTool extends MapEditorTool {
         return this.areaPreviews;
     }
 
-    private createAreaPreview(areaConfig: ITiledMapRectangleObject): AreaPreview {
+    private createAreaPreview(areaConfig: AreaData): AreaPreview {
         const areaPreview = new AreaPreview(this.scene, { ...areaConfig });
         this.bindAreaPreviewEventHandlers(areaPreview);
         return areaPreview;

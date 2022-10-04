@@ -60,15 +60,8 @@ export class DynamicAreaManager {
                 {
                     ...createAreaEvent,
                     id: -1,
-                    gid: -1,
                     visible: true,
-                    rotation: 0,
-                    type: "area",
-                    class: "area",
-                    ellipse: false,
-                    polygon: [],
-                    polyline: [],
-                    properties: [],
+                    properties: {},
                 },
                 AreaType.Dynamic
             );

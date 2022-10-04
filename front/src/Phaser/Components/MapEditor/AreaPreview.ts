@@ -1,4 +1,4 @@
-import { ITiledMapRectangleObject } from "@workadventure/map-editor";
+import { AreaData } from "@workadventure/map-editor";
 import { GameScene } from "../../Game/GameScene";
 import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
 
@@ -9,7 +9,7 @@ export enum AreaPreviewEvent {
 }
 
 export class AreaPreview extends Phaser.GameObjects.Container {
-    private config: ITiledMapRectangleObject;
+    private config: AreaData;
 
     private preview: Phaser.GameObjects.Rectangle;
     private squares: SizeAlteringSquare[];
@@ -18,7 +18,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
     private moved: boolean;
     private squareSelected: boolean;
 
-    constructor(scene: Phaser.Scene, config: ITiledMapRectangleObject) {
+    constructor(scene: Phaser.Scene, config: AreaData) {
         super(scene, 0, 0);
 
         this.config = config;
@@ -76,7 +76,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         return this;
     }
 
-    public updatePreview(config: ITiledMapRectangleObject): void {
+    public updatePreview(config: AreaData): void {
         this.config = {
             ...this.config,
             ...structuredClone(config),
@@ -89,7 +89,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         this.updateSquaresPositions();
     }
 
-    private createPreview(config: ITiledMapRectangleObject): Phaser.GameObjects.Rectangle {
+    private createPreview(config: AreaData): Phaser.GameObjects.Rectangle {
         const preview = this.scene.add
             .rectangle(
                 config.x + config.width * 0.5,
@@ -245,7 +245,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         };
     }
 
-    public getConfig(): ITiledMapRectangleObject {
+    public getConfig(): AreaData {
         return this.config;
     }
 

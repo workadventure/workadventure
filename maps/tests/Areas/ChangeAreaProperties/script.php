@@ -21,11 +21,13 @@
 
                 const area = WA.room.area.create({
                         name: 'Center',
-                        x: 224,
-                        y: 256,
+                        x: 0,
+                        y: 0,
                         width: 514,
                         height: 288,
                     });
+
+                    area.setProperty('focusable', true);
 
                 WA.room.area.onEnter('Center').subscribe(() => {
                     console.log(onAreaEnterField.value || 'default area enter message');

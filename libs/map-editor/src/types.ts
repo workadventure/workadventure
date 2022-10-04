@@ -4,6 +4,7 @@ import { DeleteAreaCommandConfig } from './Commands/Area/DeleteAreaCommand';
 import { UpdateAreaCommandConfig } from './Commands/Area/UpdateAreaCommand';
 
 export type ITiledMapRectangleObject = ITiledMapObject & { width: number; height: number };
+export type AreaProperties = Record<string, number | string | boolean>;
 
 export type CommandConfig =
     UpdateAreaCommandConfig |
@@ -11,11 +12,14 @@ export type CommandConfig =
     CreateAreaCommandConfig;
 
 export interface AreaData {
+    id: number;
+    name: string;
     x: number;
     y: number;
     width: number;
     height: number;
-    properties: Record<string, string | number | boolean>;
+    properties: AreaProperties;
+    visible: boolean;
 }
 
 export enum AreaType {

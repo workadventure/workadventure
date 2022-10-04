@@ -6,7 +6,7 @@ import {
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
 import { AreaChangeCallback, GameMapAreas } from "./GameMapAreas";
-import { GameMapProperties } from '../types';
+import { AreaProperties, GameMapProperties } from '../types';
 import { flattenGroupLayersMap } from './LayersFlattener';
 
 
@@ -106,7 +106,7 @@ export class GameMap {
         return this.tileNameMap.get(tile);
     }
 
-    public setProperty(
+    public setTiledObjectProperty(
         holder: { properties?: ITiledMapProperty[] },
         propertyName: string,
         propertyValue: string | number | undefined | boolean
@@ -135,7 +135,22 @@ export class GameMap {
         property.value = propertyValue;
     }
 
-    public getObjectProperty(
+    public setAreaProperty(
+        holder: { properties: AreaProperties },
+        key: string,
+        value: string | number | boolean
+    ): void {
+        this.gameMapAreas.setProperty(holder, key, value);
+    }
+
+    public getAreaProperty(
+        holder: { properties: AreaProperties },
+        key: string,
+    ): string | number | boolean {
+        return this.gameMapAreas.getProperty(holder, key);
+    }
+
+    public getTiledObjectProperty(
         object: { properties?: ITiledMapProperty[] },
         propertyName: string
     ): string | boolean | number | undefined {
@@ -143,6 +158,7 @@ export class GameMap {
         if (!properties) {
             return undefined;
         }
+        console.log(properties)
         const obj = properties.find(
             (property: ITiledMapProperty) => property.name.toLowerCase() === propertyName.toLowerCase()
         );

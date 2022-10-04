@@ -22,16 +22,19 @@ export class StartPositionCalculator {
 
     public getStartPositionNames(): string[] {
         const names: string[] = [];
-        for (const obj of [
-            ...this.gameMapFrontWrapper.getFlatLayers(),
-            ...this.gameMapFrontWrapper.getAreas(AreaType.Static),
-        ]) {
+        for (const obj of this.gameMapFrontWrapper.getFlatLayers()) {
             if (obj.name === "start") {
                 names.push(obj.name);
                 continue;
             }
             if (this.isStartObject(obj)) {
                 names.push(obj.name);
+            }
+        }
+        for (const area of this.gameMapFrontWrapper.getAreas(AreaType.Static)) {
+            if (area.name === "start" || area.properties[GameMapProperties.START] === true) {
+                names.push(area.name);
+                continue;
             }
         }
         return names;
@@ -77,7 +80,7 @@ export class StartPositionCalculator {
         const area = this.gameMapFrontWrapper.getAreaByName(startPositionName, AreaType.Static);
         if (area) {
             if (needStartProperty) {
-                if (!(this.gameMapFrontWrapper.getObjectProperty(area, "start") === true)) {
+                if (!area.properties["start"]) {
                     return false;
                 }
             }
@@ -175,11 +178,11 @@ export class StartPositionCalculator {
     }
 
     private isStartObject(obj: ITiledMapLayer | ITiledMapObject): boolean {
-        if (this.gameMapFrontWrapper.getObjectProperty(obj, GameMapProperties.START) == true) {
+        if (this.gameMapFrontWrapper.getTiledObjectProperty(obj, GameMapProperties.START) == true) {
             return true;
         }
         // legacy reasons
-        return this.gameMapFrontWrapper.getObjectProperty(obj, GameMapProperties.START_LAYER) == true;
+        return this.gameMapFrontWrapper.getTiledObjectProperty(obj, GameMapProperties.START_LAYER) == true;
     }
 
     public getStartPositionName(): string {

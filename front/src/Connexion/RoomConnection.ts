@@ -58,8 +58,8 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
-import { ITiledMapRectangleObject } from "@workadventure/map-editor";
 import { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
+import { AreaData } from "@workadventure/map-editor";
 
 const manualPingDelay = 20000;
 
@@ -969,7 +969,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorModifyArea(commandId: string, config: ITiledMapRectangleObject): void {
+    public emitMapEditorModifyArea(commandId: string, config: AreaData): void {
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1005,7 +1005,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorCreateArea(commandId: string, config: ITiledMapRectangleObject): void {
+    public emitMapEditorCreateArea(commandId: string, config: AreaData): void {
         this.send({
             message: {
                 $case: "editMapCommandMessage",

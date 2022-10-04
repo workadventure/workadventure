@@ -1,5 +1,5 @@
 import { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
-import { AreaType, ITiledMapRectangleObject } from "@workadventure/map-editor";
+import { AreaData, AreaType } from "@workadventure/map-editor";
 import { mapsManager } from "./MapsManager";
 import {
     EditMapCommandMessage,
@@ -38,7 +38,7 @@ const mapStorageServer: MapStorageServer = {
                     const message = editMapMessage.modifyAreaMessage;
                     const area = gameMap.getGameMapAreas().getArea(message.id, AreaType.Static);
                     if (area) {
-                        const areaObjectConfig: ITiledMapRectangleObject = {
+                        const areaObjectConfig: AreaData = {
                             ...area,
                             ...message,
                         };
@@ -53,10 +53,10 @@ const mapStorageServer: MapStorageServer = {
                 }
                 case "createAreaMessage": {
                     const message = editMapMessage.createAreaMessage;
-                    const areaObjectConfig: ITiledMapRectangleObject = {
+                    const areaObjectConfig: AreaData = {
                         ...message,
+                        properties: {},
                         visible: true,
-                        class: "area",
                     };
                     validCommand = mapsManager.executeCommand(call.request.mapKey, {
                         areaObjectConfig,

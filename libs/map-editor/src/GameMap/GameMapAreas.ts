@@ -1,11 +1,11 @@
-import { ITiledMapObject, ITiledMapObjectLayer } from "@workadventure/tiled-map-type-guard";
+import { ITiledMapObject, ITiledMapObjectLayer, ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
 import { MathUtils } from "@workadventure/math-utils";
 import { GameMap } from "./GameMap";
-import { AreaType, ITiledMapRectangleObject } from '../types';
+import { AreaData, AreaProperties, AreaType } from '../types';
 
 export type AreaChangeCallback = (
-    areasChangedByAction: Array<ITiledMapObject>,
-    allAreasOnNewPosition: Array<ITiledMapObject>
+    areasChangedByAction: Array<AreaData>,
+    allAreasOnNewPosition: Array<AreaData>
 ) => void;
 
 export class GameMapAreas {
@@ -17,11 +17,11 @@ export class GameMapAreas {
     /**
      * Areas that we can do CRUD operations on via scripting API
      */
-    private readonly dynamicAreas: ITiledMapRectangleObject[] = [];
+    private readonly dynamicAreas: AreaData[] = [];
     /**
      * Areas loaded from Tiled map file
      */
-    private readonly staticAreas: ITiledMapRectangleObject[] = [];
+    private readonly staticAreas: AreaData[] = [];
 
     private readonly areasPositionOffsetY: number = 16;
     private readonly staticAreaNamePrefix = "STATIC_AREA_";
@@ -31,21 +31,106 @@ export class GameMapAreas {
         this.gameMap = gameMap;
 
         // NOTE: We leave "zone" for legacy reasons
-        this.gameMap.tiledObjects
-            .filter((object) => ["zone", "area"].includes(object.class ?? ""))
-            .forEach((area) => {
-                let name = area.name;
-                if (!name) {
-                    name = `${this.staticAreaNamePrefix}${this.unnamedStaticAreasCounter}`;
-                    area.name = name;
-                    this.unnamedStaticAreasCounter++;
+        try {
+            this.gameMap.tiledObjects
+                .filter((object) => ["zone", "area"].includes(object.class ?? ""))
+                .forEach((areaRaw: ITiledMapObject) => {
+                    this.staticAreas.push(this.tiledObjectToAreaData(areaRaw));
+                });
+        } catch(e) {
+            console.error('CANNOT PARSE TILED OBJECTS TO AREA DATA FORMAT');
+        }
+    }
+
+    private tiledObjectToAreaData(tiledObject: ITiledMapObject): AreaData {
+        let name = tiledObject.name;
+        if (!name) {
+            name = `${this.staticAreaNamePrefix}${this.unnamedStaticAreasCounter}`;
+            tiledObject.name = name;
+            this.unnamedStaticAreasCounter++;
+        }
+        if (tiledObject.width === undefined || tiledObject.height === undefined) {
+            throw new Error(`Area name "${name}" must be a rectangle`);
+        }
+        return {
+            name,
+            id: tiledObject.id,
+            x: tiledObject.x,
+            y: tiledObject.y,
+            width: tiledObject.width,
+            height: tiledObject.height,
+            properties: this.mapTiledPropertiesToAreaProperties(tiledObject),
+            visible: true,
+        }
+    }
+
+    private mapTiledPropertiesToAreaProperties(areaRaw: ITiledMapObject): AreaProperties {
+        if (!areaRaw.properties) {
+            return {};
+        }
+        const properties: AreaProperties = {};
+        for (const rawProperty of areaRaw.properties) {
+            const value = rawProperty.value;
+
+            // TODO: Figure out what to do with JSON type
+            if (value === undefined || value === null) {
+                continue;
+            }
+            // @ts-ignore
+            properties[rawProperty.name] = value;
+        }
+        return properties;
+    }
+
+    private mapAreaPropertiesToTiledProperties(areaProperties: AreaProperties): ITiledMapProperty[] {
+        const properties: ITiledMapProperty[] = [];
+        for (const key in areaProperties) {
+            const data = areaProperties[key];
+            if (data === null) {
+                continue;
+            }
+            switch (typeof data) {
+                case "string": {
+                    properties.push({
+                        name: key,
+                        type: "string",
+                        value: data,
+                    });
+                    break;
                 }
-                if (area.width === undefined || area.height === undefined) {
-                    console.warn(`Area name "${name}" must be a rectangle`);
-                    return;
+                // save as float to be safe?
+                case "number": {
+                    properties.push({
+                        name: key,
+                        type: "float",
+                        value: data,
+                    });
+                    break;
                 }
-                this.staticAreas.push(area as ITiledMapRectangleObject);
-            });
+                case "boolean": {
+                    properties.push({
+                        name: key,
+                        type: "bool",
+                        value: data,
+                    });
+                    break;
+                }
+            }
+        }
+        return properties;
+    }
+
+    private areaDataToTiledObject(areaData: AreaData): ITiledMapObject {
+        return {
+            id: areaData.id,
+            type: "area",
+            class: "area",
+            name: areaData.name,
+            visible: true,
+            x: areaData.x,
+            y: areaData.y,
+            properties: this.mapAreaPropertiesToTiledProperties(areaData.properties),
+        }
     }
 
     /**
@@ -90,7 +175,7 @@ export class GameMapAreas {
     }
 
     public addArea(
-        area: ITiledMapRectangleObject,
+        area: AreaData,
         type: AreaType,
         playerPosition?: { x: number; y: number }
     ): boolean {
@@ -99,11 +184,12 @@ export class GameMapAreas {
         }
         const floorLayer = this.gameMap.getMap().layers.find(layer => layer.name === "floorLayer");
         if (floorLayer) {
+            const areaDataAsTileObject = this.areaDataToTiledObject(area);
             this.getAreas(type).push(area);
             this.gameMap.incrementNextObjectId();
-            (floorLayer as ITiledMapObjectLayer).objects.push(area);
+            (floorLayer as ITiledMapObjectLayer).objects.push(areaDataAsTileObject);
             // as we are making changes to the map itself, we can update tiledObjects helper array too!
-            this.gameMap.tiledObjects.push(area);
+            this.gameMap.tiledObjects.push(areaDataAsTileObject);
         }
 
         if (playerPosition && this.isPlayerInsideAreaByName(area.name, type, playerPosition)) {
@@ -130,12 +216,11 @@ export class GameMapAreas {
             ) !== -1
         );
     }
-    // TODO: Remove the need of passing by player position. Resolve any callbacks from FrontWrapper perspective!
     public updateAreaByName(
         name: string,
         type: AreaType,
-        config: Partial<ITiledMapObject>
-    ): ITiledMapRectangleObject | undefined {
+        config: Partial<AreaData>
+    ): AreaData | undefined {
         const area = this.getAreaByName(name, type);
         if (!area) {
             return;
@@ -147,8 +232,8 @@ export class GameMapAreas {
     public updateAreaById(
         id: number,
         type: AreaType,
-        config: Partial<ITiledMapRectangleObject>
-    ): ITiledMapRectangleObject | undefined {
+        config: Partial<AreaData>
+    ): AreaData | undefined {
         const area = this.getArea(id, type);
         if (!area) {
             return;
@@ -157,7 +242,7 @@ export class GameMapAreas {
         return area;
     }
 
-    public updateArea(area: ITiledMapRectangleObject, config: Partial<ITiledMapObject>): void {
+    public updateArea(area: AreaData, config: Partial<AreaData>): void {
         if (config.x !== undefined) {
             area.x = config.x;
         }
@@ -219,15 +304,15 @@ export class GameMapAreas {
         return false;
     }
 
-    public getAreas(areaType: AreaType): ITiledMapRectangleObject[] {
+    public getAreas(areaType: AreaType): AreaData[] {
         return areaType === AreaType.Dynamic ? this.dynamicAreas : this.staticAreas;
     }
 
-    public getAreaByName(name: string, type: AreaType): ITiledMapRectangleObject | undefined {
+    public getAreaByName(name: string, type: AreaType): AreaData | undefined {
         return this.getAreas(type).find((area) => area.name === name);
     }
 
-    public getArea(id: number, type: AreaType): ITiledMapRectangleObject | undefined {
+    public getArea(id: number, type: AreaType): AreaData | undefined {
         return this.getAreas(type).find((area) => area.id === id);
     }
 
@@ -245,13 +330,13 @@ export class GameMapAreas {
         this.leaveAreaCallbacks.push(callback);
     }
 
-    public triggerSpecificAreaOnEnter(area: ITiledMapRectangleObject): void {
+    public triggerSpecificAreaOnEnter(area: AreaData): void {
         for (const callback of this.enterAreaCallbacks) {
             callback([area], []);
         }
     }
 
-    public triggerSpecificAreaOnLeave(area: ITiledMapRectangleObject): void {
+    public triggerSpecificAreaOnLeave(area: AreaData): void {
         for (const callback of this.leaveAreaCallbacks) {
             callback([area], []);
         }
@@ -261,27 +346,43 @@ export class GameMapAreas {
         const properties = new Map<string, string | boolean | number>();
         for (const area of this.getAreasOnPosition(position, this.areasPositionOffsetY)) {
             if (area.properties !== undefined) {
-                for (const property of area.properties) {
-                    if (property.value === undefined) {
+                for (const key in area.properties) {
+                    const property = area.properties[key];
+                    if (property === undefined) {
                         continue;
                     }
-                    properties.set(property.name, property.value as string | number | boolean);
+                    properties.set(key, property);
                 }
             }
         }
         return properties;
     }
 
+    public setProperty(
+        holder: { properties: AreaProperties },
+        key: string,
+        value: string | number | boolean
+    ): void {
+        holder.properties[key] = value;
+    }
+
+    public getProperty(
+        holder: { properties: AreaProperties },
+        key: string,
+    ): string | number | boolean {
+        return holder.properties[key];
+    }
+
     private getAreasOnPosition(
         position: { x: number; y: number },
         offsetY = 0,
         areaType?: AreaType
-    ): ITiledMapRectangleObject[] {
+    ): AreaData[] {
         const areasOfInterest = areaType
             ? this.getAreas(areaType).values()
             : [...this.staticAreas.values(), ...this.dynamicAreas.values()];
 
-        const overlappedAreas: ITiledMapRectangleObject[] = [];
+        const overlappedAreas: AreaData[] = [];
         for (const area of areasOfInterest) {
             if (MathUtils.isOverlappingWithRectangle({ x: position.x, y: position.y + offsetY }, area)) {
                 overlappedAreas.push(area);

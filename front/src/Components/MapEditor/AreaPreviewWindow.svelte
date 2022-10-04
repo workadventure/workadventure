@@ -4,10 +4,10 @@
     import { Unsubscriber } from "svelte/store";
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { ITiledMapRectangleObject } from "@workadventure/map-editor";
+    import { AreaData } from "@workadventure/map-editor";
 
     let areaPreview: AreaPreview | undefined;
-    let areaData: ITiledMapRectangleObject | undefined;
+    let areaData: AreaData | undefined;
     let mapEditorSelectedAreaPreviewStoreUnsubscriber: Unsubscriber;
 
     const gameScene = gameManager.getCurrentGameScene();
