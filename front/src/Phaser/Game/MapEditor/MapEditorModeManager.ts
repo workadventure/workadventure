@@ -101,7 +101,6 @@ export class MapEditorModeManager {
         const delay = 0;
         switch (commandConfig.type) {
             case "UpdateAreaCommand": {
-                // delay = 5000;
                 command = new UpdateAreaCommand(this.scene.getGameMap(), commandConfig);
                 break;
             }

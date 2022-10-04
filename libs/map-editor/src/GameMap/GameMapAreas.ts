@@ -242,21 +242,6 @@ export class GameMapAreas {
         return area;
     }
 
-    public updateArea(area: AreaData, config: Partial<AreaData>): void {
-        if (config.x !== undefined) {
-            area.x = config.x;
-        }
-        if (config.y !== undefined) {
-            area.y = config.y;
-        }
-        if (config.width !== undefined) {
-            area.width = config.width;
-        }
-        if (config.height !== undefined) {
-            area.height = config.height;
-        }
-    }
-
     public deleteAreaByName(name: string, type: AreaType, playerPosition?: { x: number; y: number }): void {
         if (playerPosition) {
             const area = this.getAreasOnPosition(playerPosition, this.areasPositionOffsetY, type).find(
@@ -292,6 +277,29 @@ export class GameMapAreas {
             success = this.deleteStaticArea(id);
         }
         return success;
+    }
+
+    private updateArea(area: AreaData, config: Partial<AreaData>): void {
+        const tiledObject = this.gameMap.tiledObjects.find(object => object.id === area.id);
+        if (!tiledObject) {
+            throw new Error(`Area of id: ${area.id} has not been mapped to tileObjects array!`);
+        }
+        if (config.x !== undefined) {
+            area.x = config.x;
+            tiledObject.x = config.x;
+        }
+        if (config.y !== undefined) {
+            area.y = config.y;
+            tiledObject.y = config.y;
+        }
+        if (config.width !== undefined) {
+            area.width = config.width;
+            tiledObject.width = config.width;
+        }
+        if (config.height !== undefined) {
+            area.height = config.height;
+            tiledObject.height = config.height;
+        }
     }
 
     private deleteStaticArea(id: number): boolean {

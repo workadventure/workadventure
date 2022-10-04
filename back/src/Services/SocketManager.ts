@@ -1084,7 +1084,6 @@ export class SocketManager {
             }
             const subMessage = new SubToPusherRoomMessage();
             subMessage.setEditmapcommandmessage(editMapMessage);
-
             room.dispatchRoomMessage(subMessage);
         });
     }
