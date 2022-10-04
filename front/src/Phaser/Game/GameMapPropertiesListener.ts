@@ -258,11 +258,11 @@ export class GameMapPropertiesListener {
         });
 
         this.gameMapFrontWrapper.onEnterArea((newAreas) => {
-            this.onEnterPlaceHandler(newAreas);
+            this.onEnterPlaceHandler(newAreas.map((area) => this.gameMapFrontWrapper.mapAreaToTiledObject(area)));
         });
 
         this.gameMapFrontWrapper.onLeaveArea((oldAreas) => {
-            this.onLeavePlaceHandler(oldAreas);
+            this.onLeavePlaceHandler(oldAreas.map((area) => this.gameMapFrontWrapper.mapAreaToTiledObject(area)));
         });
     }
 
@@ -409,6 +409,7 @@ export class GameMapPropertiesListener {
             return;
         }
         if (place.x === undefined || place.y === undefined || !place.height || !place.width) {
+            console.log(place);
             return;
         }
         const focusable = place.properties.find((property) => property.name === GameMapProperties.FOCUSABLE);

@@ -120,7 +120,7 @@ export class GameMapAreas {
         return properties;
     }
 
-    private areaDataToTiledObject(areaData: AreaData): ITiledMapObject {
+    public mapAreaDataToTiledObject(areaData: AreaData): ITiledMapObject {
         return {
             id: areaData.id,
             type: "area",
@@ -129,6 +129,8 @@ export class GameMapAreas {
             visible: true,
             x: areaData.x,
             y: areaData.y,
+            width: areaData.width,
+            height: areaData.height,
             properties: this.mapAreaPropertiesToTiledProperties(areaData.properties),
         }
     }
@@ -184,7 +186,7 @@ export class GameMapAreas {
         }
         const floorLayer = this.gameMap.getMap().layers.find(layer => layer.name === "floorLayer");
         if (floorLayer) {
-            const areaDataAsTileObject = this.areaDataToTiledObject(area);
+            const areaDataAsTileObject = this.mapAreaDataToTiledObject(area);
             this.getAreas(type).push(area);
             this.gameMap.incrementNextObjectId();
             (floorLayer as ITiledMapObjectLayer).objects.push(areaDataAsTileObject);

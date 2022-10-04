@@ -367,6 +367,10 @@ export class GameMapFrontWrapper {
         this.gameMap.getGameMapAreas().triggerAreasChange(this.oldPosition, this.position);
     }
 
+    public mapAreaToTiledObject(area: AreaData): ITiledMapObject {
+        return this.gameMap.getGameMapAreas().mapAreaDataToTiledObject(area);
+    }
+
     public getAreas(areaType: AreaType): AreaData[] {
         return this.gameMap.getGameMapAreas().getAreas(areaType);
     }
