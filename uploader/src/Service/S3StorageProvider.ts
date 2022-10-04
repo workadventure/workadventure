@@ -1,4 +1,4 @@
-import {StorageProvider} from "./StorageProvider";
+import {Location, StorageProvider} from "./StorageProvider";
 import {
     AWS_ACCESS_KEY_ID,
     AWS_BUCKET,
@@ -53,7 +53,7 @@ export class S3StorageProvider implements StorageProvider {
         })
     }
 
-    async upload(fileUuid: string, chunks: Buffer, mimeType:string|undefined) {
+    async upload(fileUuid: string, chunks: Buffer, mimeType:string|undefined): Promise<Location> {
         let uploadParams: S3.Types.PutObjectRequest = {
             Bucket: `${(AWS_BUCKET as string)}`,
             Key: fileUuid,
