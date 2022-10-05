@@ -38,10 +38,7 @@ const mapStorageServer: MapStorageServer = {
                     const message = editMapMessage.modifyAreaMessage;
                     const area = gameMap.getGameMapAreas().getArea(message.id, AreaType.Static);
                     if (area) {
-                        const areaObjectConfig: AreaData = {
-                            ...area,
-                            ...message,
-                        };
+                        const areaObjectConfig: AreaData = structuredClone(area);
                         validCommand = mapsManager.executeCommand(call.request.mapKey, {
                             type: "UpdateAreaCommand",
                             areaObjectConfig,

@@ -286,6 +286,8 @@ export class GameMapAreas {
         if (!tiledObject) {
             throw new Error(`Area of id: ${area.id} has not been mapped to tileObjects array!`);
         }
+
+        // modify elementary data. How to make it cleaner?
         if (config.x !== undefined) {
             area.x = config.x;
             tiledObject.x = config.x;
@@ -301,6 +303,14 @@ export class GameMapAreas {
         if (config.height !== undefined) {
             area.height = config.height;
             tiledObject.height = config.height;
+        }
+
+        // modify properties
+        if (config.properties) {
+            for (const propertyKey in config.properties) {
+                area.properties[propertyKey] = config.properties[propertyKey];
+            }
+            tiledObject.properties = this.mapAreaPropertiesToTiledProperties(config.properties);
         }
     }
 

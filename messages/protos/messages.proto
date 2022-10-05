@@ -133,6 +133,11 @@ message ModifyAreaMessage {
   optional uint32 y = 3;
   optional uint32 width = 4;
   optional uint32 height = 5;
+  optional AreaProperties properties = 6;
+}
+
+message AreaProperties {
+  optional bool focusable = 1;
 }
 
 message DeleteAreaMessage {

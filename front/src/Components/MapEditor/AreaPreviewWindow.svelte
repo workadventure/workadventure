@@ -10,12 +10,16 @@
     let areaData: AreaData | undefined;
     let mapEditorSelectedAreaPreviewStoreUnsubscriber: Unsubscriber;
 
+    let propertyFocusable: boolean;
+
     const gameScene = gameManager.getCurrentGameScene();
 
     mapEditorSelectedAreaPreviewStoreUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((preview) => {
         areaPreview = preview;
         if (preview) {
             areaData = { ...preview.getConfig() };
+
+            propertyFocusable = areaData.properties["focusable"] as boolean;
         }
     });
 
@@ -33,6 +37,7 @@
         if (!areaData) {
             return;
         }
+        areaData.properties["focusable"] = propertyFocusable;
         gameScene.getMapEditorModeManager().executeCommand({ type: "UpdateAreaCommand", areaObjectConfig: areaData });
     }
 
@@ -67,7 +72,12 @@
             </div>
             <div class="field">
                 <p class="blue-title">focusable:</p>
-                <!-- <input bind:value={areaData.properties["focusable"]} on:change={sendUpdateAreaCommand} type="checkbox" id="focusable" /> -->
+                <input
+                    bind:checked={propertyFocusable}
+                    on:change={sendUpdateAreaCommand}
+                    type="checkbox"
+                    id="focusable"
+                />
             </div>
         </div>
         <!-- <div class="actions">
