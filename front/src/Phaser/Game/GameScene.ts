@@ -1620,6 +1620,7 @@ ${escapedMessage}
                 playerVariables: this.playerVariablesManager.variables,
                 userRoomToken: this.connection ? this.connection.userRoomToken : "",
                 metadata: this.room.metadata,
+                isLogged: localUserStore.isLogged(),
             };
         });
         this.iframeSubscriptionList.push(
