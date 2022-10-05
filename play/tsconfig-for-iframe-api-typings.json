@@ -1,0 +1,11 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "outDir": "./packages/iframe-api-typings/",
+        "declaration": true,
+        "emitDeclarationOnly": true,
+        "types": ["phaser"]
+    },
+    "include": ["src/iframe_api.ts"]
+}

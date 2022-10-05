@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" id="svg2985" version="1.1" inkscape:version="0.48.4 r9939" width="485.33627" height="485.33627" sodipodi:docname="600px-France_road_sign_B1j.svg[1].png">
+  <metadata id="metadata2991">
+    <rdf:RDF>
+      <cc:Work rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+        <dc:title/>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs id="defs2989"/>
+  <sodipodi:namedview pagecolor="#ffffff" bordercolor="#666666" borderopacity="1" objecttolerance="10" gridtolerance="10" guidetolerance="10" inkscape:pageopacity="0" inkscape:pageshadow="2" inkscape:window-width="1272" inkscape:window-height="745" id="namedview2987" showgrid="false" inkscape:snap-global="true" inkscape:snap-grids="true" inkscape:snap-bbox="true" inkscape:bbox-paths="true" inkscape:bbox-nodes="true" inkscape:snap-bbox-edge-midpoints="true" inkscape:snap-bbox-midpoints="true" inkscape:object-paths="true" inkscape:snap-intersection-paths="true" inkscape:object-nodes="true" inkscape:snap-smooth-nodes="true" inkscape:snap-midpoints="true" inkscape:snap-object-midpoints="true" inkscape:snap-center="false" fit-margin-top="0" fit-margin-left="0" fit-margin-right="0" fit-margin-bottom="0" inkscape:zoom="0.59970176" inkscape:cx="390.56499" inkscape:cy="244.34365" inkscape:window-x="86" inkscape:window-y="-8" inkscape:window-maximized="1" inkscape:current-layer="layer1">
+    <inkscape:grid type="xygrid" id="grid2995" empspacing="5" visible="true" enabled="true" snapvisiblegridlinesonly="true" originx="-57.33186px" originy="-57.33186px"/>
+  </sodipodi:namedview>
+  <g inkscape:groupmode="layer" id="layer1" inkscape:label="1" style="display:inline" transform="translate(-57.33186,-57.33186)">
+    <path sodipodi:type="arc" style="color:#000000;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:2.5;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" id="path2997" sodipodi:cx="300" sodipodi:cy="300" sodipodi:rx="240" sodipodi:ry="240" d="M 540,300 C 540,432.54834 432.54834,540 300,540 167.45166,540 60,432.54834 60,300 60,167.45166 167.45166,60 300,60 432.54834,60 540,167.45166 540,300 z" transform="matrix(1.0058783,0,0,1.0058783,-1.76349,-1.76349)"/>
+    <path sodipodi:type="arc" style="color:#000000;fill:#ff0000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2.5;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" id="path4005" sodipodi:cx="304.75" sodipodi:cy="214.75" sodipodi:rx="44.75" sodipodi:ry="44.75" d="m 349.5,214.75 c 0,24.71474 -20.03526,44.75 -44.75,44.75 -24.71474,0 -44.75,-20.03526 -44.75,-44.75 0,-24.71474 20.03526,-44.75 44.75,-44.75 24.71474,0 44.75,20.03526 44.75,44.75 z" transform="matrix(5.1364411,0,0,5.1364411,-1265.3304,-803.05073)"/>
+    <rect style="color:#000000;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2.5;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" id="rect4001" width="345" height="80.599998" x="127.5" y="259.70001"/>
+  </g>
+</svg>
