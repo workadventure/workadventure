@@ -138,6 +138,7 @@ message ModifyAreaMessage {
 
 message AreaProperties {
   optional bool focusable = 1;
+  optional bool silent = 2;
 }
 
 message DeleteAreaMessage {

@@ -1,4 +1,5 @@
 import { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
+import * as _ from "lodash";
 import { AreaData, AreaType } from "@workadventure/map-editor";
 import { mapsManager } from "./MapsManager";
 import {
@@ -39,6 +40,7 @@ const mapStorageServer: MapStorageServer = {
                     const area = gameMap.getGameMapAreas().getArea(message.id, AreaType.Static);
                     if (area) {
                         const areaObjectConfig: AreaData = structuredClone(area);
+                        _.merge(areaObjectConfig, message);
                         validCommand = mapsManager.executeCommand(call.request.mapKey, {
                             type: "UpdateAreaCommand",
                             areaObjectConfig,

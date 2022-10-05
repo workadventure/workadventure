@@ -11,6 +11,7 @@
     let mapEditorSelectedAreaPreviewStoreUnsubscriber: Unsubscriber;
 
     let propertyFocusable: boolean;
+    let propertySilent: boolean;
 
     const gameScene = gameManager.getCurrentGameScene();
 
@@ -20,6 +21,7 @@
             areaData = { ...preview.getConfig() };
 
             propertyFocusable = areaData.properties["focusable"] as boolean;
+            propertySilent = areaData.properties["silent"] as boolean;
         }
     });
 
@@ -38,6 +40,7 @@
             return;
         }
         areaData.properties["focusable"] = propertyFocusable;
+        areaData.properties["silent"] = propertySilent;
         gameScene.getMapEditorModeManager().executeCommand({ type: "UpdateAreaCommand", areaObjectConfig: areaData });
     }
 
@@ -78,6 +81,10 @@
                     type="checkbox"
                     id="focusable"
                 />
+            </div>
+            <div class="field">
+                <p class="blue-title">silent:</p>
+                <input bind:checked={propertySilent} on:change={sendUpdateAreaCommand} type="checkbox" id="silent" />
             </div>
         </div>
         <!-- <div class="actions">
