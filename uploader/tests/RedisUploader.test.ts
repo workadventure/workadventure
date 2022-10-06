@@ -1,37 +1,14 @@
-import App from "../src/App";
-import {TemplatedApp} from "uWebSockets.js";
+// import App from "../src/App";
 import axios from "axios";
-import {GenericContainer, StartedTestContainer} from "testcontainers";
-import * as redis from "redis"
-import isPortReachable from "./utils/isPortReachable";
-import {UPLOADER_URL} from "../src/Enum/EnvironmentVariable";
-import {redisStorageProvider} from "../src/Service/RedisStorageProvider";
+import {StartedTestContainer} from "testcontainers";
+import {REDIS_PORT, UPLOADER_URL} from "../src/Enum/EnvironmentVariable";
 import {verifyResponseHeaders} from "./utils/verifyResponseHeaders";
 import {uploadFile} from "./utils/uploadFile";
 import {download} from "./utils/download";
 import {uploadMultipleFilesTest, uploadSingleFileTest} from "./UploaderTestCommon";
+import {RedisContainer} from "./utils/RedisContainer";
 
 const APP_PORT = 7373
-
-jest.mock("redis", ()=> {
-    let mockLazyConnect = ()=>{}
-    const actualRedis = jest.requireActual("redis")
-
-    return {
-        // Mock control method to actually connect
-        originalConnect: ()=> {
-            mockLazyConnect()
-        },
-        createClient: (...args: never)=> {
-            const original = actualRedis.createClient.apply(args)
-            mockLazyConnect = original.connect.bind(original)
-            // Disables connect because we don't want the storage to connect to redis until it's actually available
-            original.connect = jest.fn()
-            return original
-        },
-        commandOptions: actualRedis.commandOptions
-    }
-})
 
 jest.mock('../src/Enum/EnvironmentVariable', () => ({
     get REDIS_HOST () {
@@ -52,23 +29,19 @@ jest.mock('../src/Enum/EnvironmentVariable', () => ({
 }))
 
 describe("Redis Uploader tests", () => {
-    let app:TemplatedApp|undefined
     let redisContainer:StartedTestContainer
+    const redisPort = parseInt(REDIS_PORT || "0")
     beforeAll(async ()=> {
-        redisContainer = await new GenericContainer("redis:6")
-         // testcontainers doesn't recommend mapping host port, but because of jest mocking constant we need to
-         // know the host port beforehand
-          .withExposedPorts({ container: 6379, host: 6379})
-          .start();
+        redisContainer = await new RedisContainer()
+            .port(redisPort)
+            .start();
 
-        await new Promise(resolve => {
-            app = App.listen(APP_PORT, resolve)
+        const App = await require("../src/App").default
+        await new Promise( resolve => {
+            App.listen(APP_PORT, resolve)
         })
-        await isPortReachable(6379, { host: 'localhost' , timeout: 10000})
-        //@ts-ignore ignore error because originalConnect is our control method
-        redis.originalConnect()
-
     })
+
     afterAll(()=> {
         redisContainer?.stop()
     })
@@ -83,6 +56,7 @@ describe("Redis Uploader tests", () => {
     it("should upload one file to redis", async ()=> {
         const responseData = await uploadSingleFileTest();
 
+        const redisStorageProvider = await require("../src/Service/RedisStorageProvider").redisStorageProvider;
         const actual = await redisStorageProvider?.get(responseData.id)
 
         expect(actual?.toString()).toEqual("file contents")

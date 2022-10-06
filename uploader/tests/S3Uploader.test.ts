@@ -1,17 +1,8 @@
 import App from "../src/App";
 import {TemplatedApp} from "uWebSockets.js";
 import {StartedTestContainer} from "testcontainers";
-import {
-    AWS_ACCESS_KEY_ID,
-    AWS_BUCKET,
-    AWS_ENDPOINT,
-    AWS_SECRET_ACCESS_KEY,
-    UPLOADER_URL
-} from "../src/Enum/EnvironmentVariable";
+import {AWS_ACCESS_KEY_ID, AWS_BUCKET, AWS_ENDPOINT, AWS_SECRET_ACCESS_KEY} from "../src/Enum/EnvironmentVariable";
 import AWS from "aws-sdk";
-import {uploadFile} from "./utils/uploadFile";
-import {download} from "./utils/download";
-import {verifyResponseHeaders} from "./utils/verifyResponseHeaders";
 import {LocalStackContainer} from "./utils/LocalStackContainer";
 import {uploadMultipleFilesTest, uploadSingleFileTest} from "./UploaderTestCommon";
 
