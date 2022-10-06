@@ -61,13 +61,13 @@ export class XmppClient {
             });
             this.xmppSocket = xmpp;
 
-            xmpp.on("error", (err: unknown) => {
+            xmpp.on("error", (err) => {
                 if (err instanceof SASLError)
                     debug("XmppClient => createClient => receive => error", err.name, err.condition);
                 else {
                     debug("XmppClient => createClient => receive => error", err);
                 }
-                this.sendErrorToIframe(err as string);
+                this.sendErrorToIframe(err.message);
                 //console.error("XmppClient => receive => error =>", err);
                 this.close();
             });
