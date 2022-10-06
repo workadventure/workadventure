@@ -347,7 +347,7 @@ export class AuthenticateController extends BaseHttpController {
                         userInfo?.locale
                     );
 
-                    res.clearCookie("playUri");
+                    //res.clearCookie("playUri");
                     // FIXME: possibly redirect to Admin instead.
                     res.redirect(playUri + "?token=" + encodeURIComponent(authToken));
                     return;

@@ -121,8 +121,8 @@ class OpenIDClient {
             }
 
             return client.callback(OPID_CLIENT_REDIRECT_URL, params, checks).then((tokenSet) => {
-                res.clearCookie("code_verifier");
-                res.clearCookie("oidc_state");
+                //res.clearCookie("code_verifier");
+                //res.clearCookie("oidc_state");
 
                 return client.userinfo(tokenSet).then((res) => {
                     return {
