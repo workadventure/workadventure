@@ -1,7 +1,13 @@
 import App from "../src/App";
 import {TemplatedApp} from "uWebSockets.js";
 import {StartedTestContainer} from "testcontainers";
-import {AWS_BUCKET, AWS_DEFAULT_REGION, AWS_ENDPOINT, UPLOADER_URL} from "../src/Enum/EnvironmentVariable";
+import {
+    AWS_ACCESS_KEY_ID,
+    AWS_BUCKET,
+    AWS_DEFAULT_REGION,
+    AWS_ENDPOINT, AWS_SECRET_ACCESS_KEY,
+    UPLOADER_URL
+} from "../src/Enum/EnvironmentVariable";
 import AWS from "aws-sdk";
 import {uploadFile} from "./utils/uploadFile";
 import {download} from "./utils/download";
@@ -47,7 +53,7 @@ describe("S3 Uploader tests", () => {
     jest.setTimeout(15000)
     let s3: AWS.S3
     beforeAll(async ()=> {
-        AWS.config.update({ accessKeyId: "dontcare", secretAccessKey: "doesnmatter" });
+        AWS.config.update({ accessKeyId: AWS_ACCESS_KEY_ID, secretAccessKey: AWS_SECRET_ACCESS_KEY });
 
         s3 = new AWS.S3(options);
         const check = (resolve: (value: unknown)=>void, reject: ()=>void) => {
