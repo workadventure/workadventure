@@ -3,10 +3,13 @@ import {TemplatedApp} from "uWebSockets.js";
 import axios, {AxiosResponse} from "axios";
 import {GenericContainer, StartedTestContainer} from "testcontainers";
 import * as redis from "redis"
-import isPortReachable from "./is-port-reachable";
+import isPortReachable from "./utils/isPortReachable";
 import FormData from 'form-data';
 import {CHAT_URL, UPLOADER_URL} from "../src/Enum/EnvironmentVariable";
 import {redisStorageProvider} from "../src/Service/RedisStorageProvider";
+import { verifyResponseHeaders } from "./utils/verifyResponseHeaders";
+import {uploadFile} from "./utils/uploadFile";
+import {download} from "./utils/download";
 
 const APP_PORT = 7373
 
@@ -53,6 +56,8 @@ describe("Redis Uploader tests", () => {
     let redisContainer:StartedTestContainer
     beforeAll(async ()=> {
         redisContainer = await new GenericContainer("redis:6")
+         // testcontainers doesn't recommend mapping host port, but because of jest mocking constant we need to
+         // know the host port beforehand
           .withExposedPorts({ container: 6379, host: 6379})
           .start();
 
@@ -126,28 +131,4 @@ describe("Redis Uploader tests", () => {
         const tempFileUrl = `${UPLOADER_URL}/download-audio-message/${data.id}`;
         expect(await download(tempFileUrl)).toEqual("temp file contents")
     })
-
-    async function uploadFile(uploadUrl: string, fileList: {name: string, contents: string}[]) {
-        const formData = new FormData();
-        fileList.forEach(entry => {
-            const fileBuffer = Buffer.from(entry.contents, "utf-8")
-            formData.append('file', fileBuffer, entry.name);
-        })
-
-        return await axios.post(uploadUrl, formData.getBuffer(), {
-            headers: formData.getHeaders()
-        });
-    }
-
-    async function download(url: string) {
-        const res = await axios.get(url)
-        expect(res.status).toBe(200)
-        return res.data
-    }
-
-    function verifyResponseHeaders(response: AxiosResponse) {
-        expect(response.headers['access-control-allow-headers']).toEqual("Origin, X-Requested-With, Content-Type, Accept")
-        expect(response.headers['access-control-allow-methods']).toEqual('GET, POST, OPTIONS, PUT, PATCH, DELETE')
-        expect(response.headers['access-control-allow-origin']).toEqual(CHAT_URL)
-    }
 })

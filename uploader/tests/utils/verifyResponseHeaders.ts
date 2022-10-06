@@ -1,0 +1,8 @@
+import {AxiosResponse} from "axios";
+import {CHAT_URL} from "../../src/Enum/EnvironmentVariable";
+
+export function verifyResponseHeaders(response: AxiosResponse) {
+    expect(response.headers['access-control-allow-headers']).toEqual("Origin, X-Requested-With, Content-Type, Accept")
+    expect(response.headers['access-control-allow-methods']).toEqual('GET, POST, OPTIONS, PUT, PATCH, DELETE')
+    expect(response.headers['access-control-allow-origin']).toEqual(CHAT_URL)
+}

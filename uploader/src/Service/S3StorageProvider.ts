@@ -12,45 +12,13 @@ import {CORSRules} from "aws-sdk/clients/s3";
 import {TargetDevice} from "./TargetDevice";
 
 export class S3StorageProvider implements StorageProvider {
-    private s3: AWS.S3;
+    private s3: AWS.S3 | undefined;
 
     static isEnabled():boolean {
         return !!AWS_BUCKET && !!AWS_ACCESS_KEY_ID && !!AWS_SECRET_ACCESS_KEY && !!AWS_DEFAULT_REGION
     }
 
     constructor() {
-        // Set the region
-        AWS.config.update({
-            accessKeyId: (AWS_ACCESS_KEY_ID),
-            secretAccessKey: (AWS_SECRET_ACCESS_KEY),
-            region: (AWS_DEFAULT_REGION)
-        });
-
-        // Create S3 service object
-        const options = {apiVersion: '2006-03-01', s3ForcePathStyle: true};
-        if (AWS_ENDPOINT){
-            // @ts-ignore
-            options.endpoint = AWS_ENDPOINT
-        }
-        this.s3 = new AWS.S3(options);
-        if (!AWS_BUCKET) throw new Error(`AWS_BUCKET must be set `)
-        const bucket:string = AWS_BUCKET
-
-        const corsRules:CORSRules = [
-            {
-                "AllowedHeaders": [ "Authorization" ],
-                "AllowedMethods": [ "GET", "HEAD" ],
-                // It must be a wildcard because file will be downloaded via redirect and origin is set to null
-                "AllowedOrigins": [ "*" ],
-                "ExposeHeaders": [ "Access-Control-Allow-Origin" ]
-            }
-        ]
-        this.s3.putBucketCors({Bucket: bucket, CORSConfiguration: {CORSRules: corsRules}}, (err, _data)=> {
-            if (err) {
-                console.log("Could not setup CORS for S3 bucket", err);
-                return
-            }
-        })
     }
 
     async upload(fileUuid: string, chunks: Buffer, mimeType:string|undefined): Promise<string> {
@@ -68,7 +36,7 @@ export class S3StorageProvider implements StorageProvider {
         }
 
         //upload file in data
-        await this.s3.upload(uploadParams,  (err, data)  => {
+        await this.S3().upload(uploadParams,  (err, data)  => {
             if (err || !data) {
                 throw err;
             }
@@ -82,7 +50,7 @@ export class S3StorageProvider implements StorageProvider {
             Bucket: `${(AWS_BUCKET as string)}`,
             Key: fileId
         };
-        await this.s3.deleteObject(deleteParams).promise();
+        await this.S3().deleteObject(deleteParams).promise();
     }
 
     copyFile(fileId: string, target: TargetDevice): void {
@@ -91,7 +59,44 @@ export class S3StorageProvider implements StorageProvider {
 
     private async getExternalDownloadLink(fileId: string): Promise<string> {
         const params = {Bucket: AWS_BUCKET, Key: fileId, Expires: UPLOADER_AWS_SIGNED_URL_EXPIRATION};
-        return await this.s3.getSignedUrlPromise('getObject', params);
+        return await this.S3().getSignedUrlPromise('getObject', params);
+    }
+
+    private S3() {
+        if (this.s3 === undefined) {
+            // Set the region
+            AWS.config.update({
+                accessKeyId: (AWS_ACCESS_KEY_ID),
+                secretAccessKey: (AWS_SECRET_ACCESS_KEY),
+                region: (AWS_DEFAULT_REGION)
+            });
+
+            // Create S3 service object
+            const options = {apiVersion: '2006-03-01', s3ForcePathStyle: true};
+            if (AWS_ENDPOINT){
+                // @ts-ignore
+                options.endpoint = AWS_ENDPOINT
+            }
+            if (!AWS_BUCKET) throw new Error(`AWS_BUCKET must be set `)
+            this.s3 = new AWS.S3(options);
+            const bucket:string = AWS_BUCKET
+            const corsRules:CORSRules = [
+                {
+                    "AllowedHeaders": [ "Authorization" ],
+                    "AllowedMethods": [ "GET", "HEAD" ],
+                    // It must be a wildcard because file will be downloaded via redirect and origin is set to null
+                    "AllowedOrigins": [ "*" ],
+                    "ExposeHeaders": [ "Access-Control-Allow-Origin" ]
+                }
+            ]
+            this.s3.putBucketCors({Bucket: bucket, CORSConfiguration: {CORSRules: corsRules}}, (err, _data)=> {
+                if (err) {
+                    console.log("Could not setup CORS for S3 bucket", err);
+                    return
+                }
+            })
+        }
+        return this.s3
     }
 }
 export const s3StorageProvider = S3StorageProvider.isEnabled()? new S3StorageProvider() : null;
