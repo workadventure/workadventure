@@ -1,5 +1,5 @@
 {
-  "name": "workadventureback",
+  "name": "workadventureuploader",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,7 +9,7 @@
     "prod": "tsc && node --max-old-space-size=4096 ./dist/server.js",
     "runprod": "node --max-old-space-size=4096 ./dist/server.js",
     "profile": "tsc && node --prof ./dist/server.js",
-    "test": "jest --forceExit",
+    "test": "find tests -name '*.test.ts' | xargs -I{} jest --forceExit {}",
     "lint": "node_modules/.bin/eslint src/ . --ext .ts",
     "fix": "node_modules/.bin/eslint --fix src/ . --ext .ts"
   },

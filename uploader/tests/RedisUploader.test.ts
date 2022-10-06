@@ -1,13 +1,12 @@
 import App from "../src/App";
 import {TemplatedApp} from "uWebSockets.js";
-import axios, {AxiosResponse} from "axios";
+import axios from "axios";
 import {GenericContainer, StartedTestContainer} from "testcontainers";
 import * as redis from "redis"
 import isPortReachable from "./utils/isPortReachable";
-import FormData from 'form-data';
-import {CHAT_URL, UPLOADER_URL} from "../src/Enum/EnvironmentVariable";
+import {UPLOADER_URL} from "../src/Enum/EnvironmentVariable";
 import {redisStorageProvider} from "../src/Service/RedisStorageProvider";
-import { verifyResponseHeaders } from "./utils/verifyResponseHeaders";
+import {verifyResponseHeaders} from "./utils/verifyResponseHeaders";
 import {uploadFile} from "./utils/uploadFile";
 import {download} from "./utils/download";
 

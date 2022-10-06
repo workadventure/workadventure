@@ -8,14 +8,14 @@ import {download} from "./utils/download";
 import {verifyResponseHeaders} from "./utils/verifyResponseHeaders";
 import {LocalStackContainer} from "./utils/LocalStackContainer";
 
-const APP_PORT = 7373
+const APP_PORT = 7374
 
 jest.mock('../src/Enum/EnvironmentVariable', () => ({
     get ENABLE_CHAT_UPLOAD() {
         return true
     },
     get UPLOADER_URL() {
-        return `http://localhost:7373`
+        return `http://localhost:7374`
     },
     get CHAT_URL() {
         return "http://chat.location"

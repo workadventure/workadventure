@@ -44,7 +44,6 @@ To avoid manual work, it is recommended to also give the following permissions:
 ```
     s3:PutBucketCORS
 ```
-
 The bucket can be private (and that is recommended), but it must allow cors. Uploader will try to set up thes CORSs header,
 but it will fail if the provided credentials does not include permissions (s3:PutBucketCORS). If you really don't want to 
 provide this permission, you can try setting the configuration by yourself:
@@ -90,3 +89,8 @@ Optionally, you can set the instance password:
 
 As of now, only Redis storage support "temporary files" (for example, audio files). You can have both AWS
 and Redis setup and the uploader will favor AWS for permanent files and Redis for temporary files.
+
+# A note on tests
+
+The tests run in separate node instances because Redis and S3 provider configurations conflict in a global way.
+
