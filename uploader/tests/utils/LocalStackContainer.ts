@@ -8,12 +8,12 @@ export class LocalStackContainer extends GenericContainer {
         // eslint-disable-next-line prefer-spread
         this.withExposedPorts.bind(this).apply(null, portRange)
     }
-    async run(init: (resolve: (value: unknown) => void, reject: () => void) => void):Promise<void> {
+    async run(check: (resolve: (value: unknown) => void, reject: () => void) => void):Promise<void> {
         this.start().then()
         return new Promise((resolve) => {
             const attempt = () => {
                 new Promise((resolve, reject) => {
-                    init(resolve, reject)
+                    check(resolve, reject)
                 }).then(() => resolve()).catch(()=> {
                     setTimeout(attempt, 200)
                 })

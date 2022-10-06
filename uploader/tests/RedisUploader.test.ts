@@ -9,6 +9,7 @@ import {redisStorageProvider} from "../src/Service/RedisStorageProvider";
 import {verifyResponseHeaders} from "./utils/verifyResponseHeaders";
 import {uploadFile} from "./utils/uploadFile";
 import {download} from "./utils/download";
+import {uploadMultipleFilesTest, uploadSingleFileTest} from "./UploaderTestCommon";
 
 const APP_PORT = 7373
 
@@ -80,39 +81,15 @@ describe("Redis Uploader tests", () => {
     })
 
     it("should upload one file to redis", async ()=> {
-        const response = await uploadFile(
-            `${UPLOADER_URL}/upload-file`,
-            [{name: "upload-subject1.txt", contents: "file contents"}]
-            );
+        const responseData = await uploadSingleFileTest();
 
-        expect(response.status).toBe(200)
-        verifyResponseHeaders(response);
+        const actual = await redisStorageProvider?.get(responseData.id)
 
-        const data = response.data[0]
-        expect(data.location).toEqual(`${UPLOADER_URL}/upload-file/${data.id}`)
-
-        const actual = await redisStorageProvider?.get(data.id)
         expect(actual?.toString()).toEqual("file contents")
-
-        expect(await download(data.location)).toEqual("file contents")
     })
 
     it("should upload multiple files to redis", async ()=> {
-        const response = await uploadFile(
-            `${UPLOADER_URL}/upload-file`,[
-                {name: "upload-subject1.txt", contents: "first file contents"},
-                {name: "upload-subject2.txt", contents: "second file contents"}
-            ]);
-        expect(response.data.length).toEqual(2)
-
-        const file1 = response.data[0]
-        expect(file1.location).toEqual(`${UPLOADER_URL}/upload-file/${file1.id}`)
-
-        const file2 = response.data[1]
-        expect(file2.location).toEqual(`${UPLOADER_URL}/upload-file/${file2.id}`)
-
-        expect(await download(file1.location)).toEqual("first file contents")
-        expect(await download(file2.location)).toEqual("second file contents")
+        await uploadMultipleFilesTest();
     })
 
 

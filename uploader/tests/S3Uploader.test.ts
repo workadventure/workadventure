@@ -4,8 +4,8 @@ import {StartedTestContainer} from "testcontainers";
 import {
     AWS_ACCESS_KEY_ID,
     AWS_BUCKET,
-    AWS_DEFAULT_REGION,
-    AWS_ENDPOINT, AWS_SECRET_ACCESS_KEY,
+    AWS_ENDPOINT,
+    AWS_SECRET_ACCESS_KEY,
     UPLOADER_URL
 } from "../src/Enum/EnvironmentVariable";
 import AWS from "aws-sdk";
@@ -13,6 +13,7 @@ import {uploadFile} from "./utils/uploadFile";
 import {download} from "./utils/download";
 import {verifyResponseHeaders} from "./utils/verifyResponseHeaders";
 import {LocalStackContainer} from "./utils/LocalStackContainer";
+import {uploadMultipleFilesTest, uploadSingleFileTest} from "./UploaderTestCommon";
 
 const APP_PORT = 7374
 
@@ -52,12 +53,13 @@ describe("S3 Uploader tests", () => {
     const options = {s3ForcePathStyle: true, endpoint: AWS_ENDPOINT};
     jest.setTimeout(15000)
     let s3: AWS.S3
+    const testBucket = AWS_BUCKET||""
     beforeAll(async ()=> {
         AWS.config.update({ accessKeyId: AWS_ACCESS_KEY_ID, secretAccessKey: AWS_SECRET_ACCESS_KEY });
 
         s3 = new AWS.S3(options);
         const check = (resolve: (value: unknown)=>void, reject: ()=>void) => {
-            s3.createBucket({Bucket: AWS_BUCKET||""}, (err: unknown)=>{
+            s3.listBuckets( (err: unknown)=>{
                 err? reject() : resolve(0)
             })
         }
@@ -67,28 +69,50 @@ describe("S3 Uploader tests", () => {
             app = App.listen(APP_PORT, resolve)
         })
     })
+
+    beforeEach(async () => {
+        await new Promise(resolve => {
+            s3.createBucket({Bucket: testBucket}, () =>{
+                resolve(0)
+            })
+        })
+    })
+    afterEach(async ()=> {
+        await new Promise(resolve => {
+            s3.deleteBucket({Bucket: testBucket}, ()=> {
+                resolve(0)
+            })
+        })
+    })
+
     afterAll(()=> {
         localstackContainer?.stop()
     })
 
     it("should upload one file to s3", async ()=> {
-        const response = await uploadFile(
-            `${UPLOADER_URL}/upload-file`,
-            [{name: "upload-subject1.txt", contents: "s3 file contents"}]
-            );
-
-        expect(response.status).toBe(200)
-        verifyResponseHeaders(response);
-
-        const data = response.data[0]
-        expect(data.location).toEqual(`${UPLOADER_URL}/upload-file/${data.id}`)
-
-        expect(await download(data.location)).toEqual("s3 file contents")
+        const responseData = await uploadSingleFileTest();
         await new Promise((resolve, reject) => {
-            s3.listObjects({Bucket: AWS_BUCKET||""}, (err, objects) => {
+            s3.listObjects({Bucket: testBucket}, (err, objects) => {
                 if (err) reject()
                 const files = objects?.Contents || []
-                expect(files[0]?.Key).toEqual(data.id)
+                expect(files[0]?.Key).toEqual(responseData.id)
+                resolve(0)
+            })
+        })
+    })
+
+    it("should upload multiple files to S3", async ()=> {
+        const responseData = await uploadMultipleFilesTest();
+        const file1 = responseData[0]
+        const file2 = responseData[1]
+
+        await new Promise((resolve, reject) => {
+            s3.listObjects({Bucket: testBucket}, (err, objects) => {
+                if (err) reject()
+                const files = objects?.Contents || []
+                const fileNames = files.map(f=>f.Key)
+                expect(fileNames).toContain(file1.id)
+                expect(fileNames).toContain(file2.id)
                 resolve(0)
             })
         })

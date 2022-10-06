@@ -10,6 +10,7 @@
     "runprod": "node --max-old-space-size=4096 ./dist/server.js",
     "profile": "tsc && node --prof ./dist/server.js",
     "test": "find tests -name '*.test.ts' | xargs -I{} jest --forceExit {}",
+    "testOne": "jest --forceExit",
     "lint": "node_modules/.bin/eslint src/ . --ext .ts",
     "fix": "node_modules/.bin/eslint --fix src/ . --ext .ts"
   },
