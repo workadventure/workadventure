@@ -283,7 +283,16 @@ export class XmppClient {
 
     async send(stanza: string): Promise<void> {
         const ctx = parse(stanza);
-        await this.xmppSocket?.send(ctx);
+        try {
+            await this.xmppSocket?.send(ctx);
+        } catch (e: unknown) {
+            console.error("An error occurred while sending a message to XMPP server: ", e);
+            try {
+                this.close();
+            } catch (e2: unknown) {
+                console.error("An error occurred while closing connection to XMPP server: ", e2);
+            }
+        }
         return;
     }
 
