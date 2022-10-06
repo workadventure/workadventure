@@ -1186,7 +1186,7 @@ export class GameScene extends DirtyScene {
                 const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
                 let html = '<div id="container" hidden>';
                 if (escapedMessage) {
-                    html += `<div class="nes-container with-title is-centered">
+                    html += `<div class="with-title is-centered">
 ${escapedMessage}
  </div> `;
                 }
@@ -1195,7 +1195,7 @@ ${escapedMessage}
                 html += buttonContainer;
                 let id = 0;
                 for (const button of openPopupEvent.buttons) {
-                    html += `<button type="button" class="nes-btn is-${HtmlUtils.escapeHtml(
+                    html += `<button type="button" class="is-${HtmlUtils.escapeHtml(
                         button.className ?? ""
                     )}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
                     id++;
@@ -2533,7 +2533,7 @@ ${escapedMessage}
         });
     }
 
-    public initialiseJitsi(coWebsite: JitsiCoWebsite, roomName: string, jwt?: string): void {
+    public initialiseJitsi(coWebsite: JitsiCoWebsite, roomName: string, jwt?: string, jitsiUrl?: string): void {
         const allProps = this.gameMapFrontWrapper.getCurrentProperties();
         const jitsiConfig = this.safeParseJSONstring(
             allProps.get(GameMapProperties.JITSI_CONFIG) as string | undefined,
@@ -2543,7 +2543,9 @@ ${escapedMessage}
             allProps.get(GameMapProperties.JITSI_INTERFACE_CONFIG) as string | undefined,
             GameMapProperties.JITSI_INTERFACE_CONFIG
         );
-        const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
+        if (!jitsiUrl) {
+            jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
+        }
 
         coWebsite.setJitsiLoadPromise(() => {
             return jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl);

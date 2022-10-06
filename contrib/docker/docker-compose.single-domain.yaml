@@ -62,6 +62,8 @@ services:
       PUSHER_URL: /pusher
       UPLOADER_URL: /uploader
       EMBEDLY_KEY: $EMBEDLY_KEY
+      ADMIN_API_URL: $ADMIN_API_URL
+      ENABLE_CHAT_UPLOAD: $ENABLE_CHAT_UPLOAD
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
@@ -120,9 +122,9 @@ services:
       - "traefik.http.routers.pusher-ssl.service=pusher"
 
   ejabberd:
-    image: ejabberd/ecs
+    image: ghcr.io/processone/ejabberd:22.05
     volumes:
-      - ./xmpp/ejabberd.yml:/home/ejabberd/conf/ejabberd.yml
+      - ./xmpp/ejabberd.yml:/opt/ejabberd/conf/ejabberd.yml
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.xmpp.rule=Host(`xmpp.workadventure.localhost`)"
@@ -217,6 +219,10 @@ services:
       #REDIS
       REDIS_HOST: $UPLOADER_REDIS_HOST
       REDIS_PORT: $UPLOADER_REDIS_PORT
+      #CHAT
+      ADMIN_API_URL: $ADMIN_API_URL
+      ENABLE_CHAT_UPLOAD: $ENABLE_CHAT_UPLOAD
+      UPLOAD_MAX_FILESIZE: $UPLOAD_MAX_FILESIZE
     volumes:
       - ./uploader:/usr/src/app
     labels:

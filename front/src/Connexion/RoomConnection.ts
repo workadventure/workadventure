@@ -35,6 +35,7 @@ import {
     ErrorScreenMessage as ErrorScreenMessageTsProto,
     GroupDeleteMessage as GroupDeleteMessageTsProto,
     GroupUpdateMessage as GroupUpdateMessageTsProto,
+    JitsiJwtAnswer,
     JoinBBBMeetingAnswer,
     MoveToPositionMessage as MoveToPositionMessageProto,
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
@@ -1065,7 +1066,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public async queryJitsiJwtToken(jitsiRoom: string): Promise<string> {
+    public async queryJitsiJwtToken(jitsiRoom: string): Promise<JitsiJwtAnswer> {
         const answer = await this.query({
             $case: "jitsiJwtQuery",
             jitsiJwtQuery: {
@@ -1075,7 +1076,7 @@ export class RoomConnection implements RoomConnection {
         if (answer.$case !== "jitsiJwtAnswer") {
             throw new Error("Unexpected answer");
         }
-        return answer.jitsiJwtAnswer.jwt;
+        return answer.jitsiJwtAnswer;
     }
 
     public async queryBBBMeetingUrl(
@@ -1083,11 +1084,13 @@ export class RoomConnection implements RoomConnection {
         props: Map<string, string | number | boolean>
     ): Promise<JoinBBBMeetingAnswer> {
         const meetingName = props.get("meetingName") as string;
+        const localMeetingId = props.get("bbbMeeting") as string;
 
         const answer = await this.query({
             $case: "joinBBBMeetingQuery",
             joinBBBMeetingQuery: {
                 meetingId,
+                localMeetingId,
                 meetingName,
             },
         });

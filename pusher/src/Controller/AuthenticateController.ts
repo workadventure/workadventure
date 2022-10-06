@@ -1,13 +1,14 @@
 import { v4 } from "uuid";
 import { BaseHttpController } from "./BaseHttpController";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
-import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
 import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
 import { RegisterData } from "../Messages/JsonMessages/RegisterData";
 import { adminService } from "../Services/AdminService";
 import Axios from "axios";
 import { isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
+import { z } from "zod";
+import { validateQuery } from "../Services/QueryValidator";
 
 export class AuthenticateController extends BaseHttpController {
     routes(): void {
@@ -25,20 +26,22 @@ export class AuthenticateController extends BaseHttpController {
         this.app.get("/room/access", (req, res) => {
             (async (): Promise<void> => {
                 try {
-                    const { uuid, playUri, token } = parse(req.path_query);
-                    if (!uuid || !playUri) {
-                        throw new Error("Missing uuid and playUri parameters.");
-                    }
-                    const isLogged = token ? true : false;
-                    res.json(
-                        await adminService.fetchMemberDataByUuid(
-                            uuid as string,
-                            isLogged,
-                            playUri as string,
-                            req.ip,
-                            []
-                        )
+                    const query = validateQuery(
+                        req,
+                        res,
+                        z.object({
+                            uuid: z.string(),
+                            playUri: z.string(),
+                            token: z.string().optional(),
+                        })
                     );
+                    if (query === undefined) {
+                        return;
+                    }
+
+                    const { uuid, playUri, token } = query;
+
+                    res.json(await adminService.fetchMemberDataByUuid(uuid, token, playUri, req.ip, []));
                     return;
                 } catch (e) {
                     console.warn(e);
@@ -85,14 +88,20 @@ export class AuthenticateController extends BaseHttpController {
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/login-screen", async (req, res) => {
             try {
-                const { playUri, redirect } = parse(req.path_query);
-
-                if (typeof playUri !== "string") {
-                    throw new Error("Expecting playUri");
+                const query = validateQuery(
+                    req,
+                    res,
+                    z.object({
+                        playUri: z.string(),
+                        redirect: z.string().optional(),
+                    })
+                );
+                if (query === undefined) {
+                    return;
                 }
 
-                const loginUri = await openIDClient.authorizationUrl(res, redirect as string | undefined, playUri);
-                res.cookie("playUri", playUri, undefined, {
+                const loginUri = await openIDClient.authorizationUrl(res, query.redirect, query.playUri);
+                res.cookie("playUri", query.playUri, undefined, {
                     httpOnly: true,
                 });
 
@@ -185,22 +194,28 @@ export class AuthenticateController extends BaseHttpController {
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/me", async (req, res) => {
             const IPAddress = req.header("x-forwarded-for");
-            const { token, playUri } = parse(req.path_query);
+            const query = validateQuery(
+                req,
+                res,
+                z.object({
+                    token: z.string(),
+                    playUri: z.string(),
+                })
+            );
+            if (query === undefined) {
+                return;
+            }
+            const { token, playUri } = query;
             try {
-                if (token === undefined) {
-                    throw new Error("Missing token");
-                }
                 try {
-                    const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
-
-                    const isLogged = authTokenData.accessToken ? true : false;
+                    const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token, false);
 
                     //Get user data from Admin Back Office
                     //This is very important to create User Local in LocalStorage in WorkAdventure
                     const resUserData = await adminService.fetchMemberDataByUuid(
                         authTokenData.identifier,
-                        isLogged,
-                        playUri as string,
+                        authTokenData.accessToken,
+                        playUri,
                         IPAddress,
                         [],
                         req.header("accept-language")
@@ -256,12 +271,21 @@ export class AuthenticateController extends BaseHttpController {
          */
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/logout-callback", async (req, res) => {
-            const { token } = parse(req.path_query);
+            const query = validateQuery(
+                req,
+                res,
+                z.object({
+                    token: z.string(),
+                })
+            );
+            if (query === undefined) {
+                return;
+            }
 
             try {
-                const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
+                const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(query.token, false);
                 if (authTokenData.accessToken == undefined) {
-                    throw Error("Token cannot be logout on Hydra");
+                    throw Error("Cannot log out, no access token found.");
                 }
                 await openIDClient.logoutUser(authTokenData.accessToken);
             } catch (error) {
@@ -479,29 +503,34 @@ export class AuthenticateController extends BaseHttpController {
     private profileCallback(): void {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/profile-callback", async (req, res) => {
-            const { token, playUri } = parse(req.path_query);
+            const query = validateQuery(
+                req,
+                res,
+                z.object({
+                    token: z.string(),
+                    playUri: z.string(),
+                })
+            );
+            if (query === undefined) {
+                return;
+            }
+            const { token, playUri } = query;
             try {
-                //verify connected by token
-                if (token != undefined) {
-                    try {
-                        const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
-                        if (authTokenData.accessToken == undefined) {
-                            throw Error("Token cannot be checked on OpenID connect provider");
-                        }
-                        await openIDClient.checkTokenAuth(authTokenData.accessToken);
-
-                        //get login profile
-                        res.status(302);
-                        res.setHeader(
-                            "Location",
-                            adminService.getProfileUrl(authTokenData.accessToken, playUri as string)
-                        );
-                        res.send("");
-                        return;
-                    } catch (error) {
-                        this.castErrorToResponse(error, res);
-                        return;
+                try {
+                    const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token, false);
+                    if (authTokenData.accessToken == undefined) {
+                        throw Error("Token cannot be checked on OpenID connect provider");
                     }
+                    await openIDClient.checkTokenAuth(authTokenData.accessToken);
+
+                    //get login profile
+                    res.status(302);
+                    res.setHeader("Location", adminService.getProfileUrl(authTokenData.accessToken, playUri));
+                    res.send("");
+                    return;
+                } catch (error) {
+                    this.castErrorToResponse(error, res);
+                    return;
                 }
             } catch (error) {
                 console.error("profileCallback => ERROR", error);

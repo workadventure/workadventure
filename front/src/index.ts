@@ -13,7 +13,6 @@ import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugi
 import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { EntryScene } from "./Phaser/Login/EntryScene";
 import { coWebsiteManager } from "./WebRtc/CoWebsiteManager";
-import { localUserStore } from "./Connexion/LocalUserStore";
 import { ErrorScene } from "./Phaser/Reconnecting/ErrorScene";
 import { iframeListener } from "./Api/IframeListener";
 import { desktopApi } from "./Api/Desktop/index";
@@ -25,16 +24,15 @@ import { HtmlUtils } from "./WebRtc/HtmlUtils";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
 
 const { width, height } = coWebsiteManager.getGameSize();
-const valueGameQuality = localUserStore.getGameQualityValue();
 const fps: Phaser.Types.Core.FPSConfig = {
     /**
      * The minimum acceptable rendering rate, in frames per second.
      */
-    min: valueGameQuality,
+    min: 60,
     /**
      * The optimum rendering rate, in frames per second.
      */
-    target: valueGameQuality,
+    target: 60,
     /**
      * Use setTimeout instead of requestAnimationFrame to run the game loop.
      */

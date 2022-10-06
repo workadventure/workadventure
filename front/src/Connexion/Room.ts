@@ -33,6 +33,7 @@ export class Room {
     private _mucRooms: Array<MucRoomDefinitionInterface> | undefined;
     private _showPoweredBy: boolean | undefined = true;
     private _roomName: string | undefined;
+    private _pricingUrl: string | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -57,7 +58,7 @@ export class Room {
                 return room;
             }
             redirectCount++;
-            roomUrl = new URL(result.redirectUrl);
+            roomUrl = new URL(result.redirectUrl, window.location.href);
         }
         throw new Error("Room resolving seems stuck in a redirect loop after 32 redirect attempts");
     }
@@ -136,6 +137,8 @@ export class Room {
 
                 this._mucRooms = data.mucRooms ?? undefined;
                 this._roomName = data.roomName ?? undefined;
+
+                this._pricingUrl = data.pricingUrl ?? undefined;
 
                 return new MapDetail(data.mapUrl);
             } else {
@@ -257,5 +260,9 @@ export class Room {
 
     get showPoweredBy(): boolean | undefined {
         return this._showPoweredBy;
+    }
+
+    get pricingUrl(): string | undefined {
+        return this._pricingUrl;
     }
 }

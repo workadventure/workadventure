@@ -9,7 +9,6 @@ const requestedCameraStateKey = "requestedCameraStateKey";
 const requestedMicrophoneStateKey = "requestedMicrophoneStateKey";
 const characterLayersKey = "characterLayers";
 const companionKey = "companion";
-const gameQualityKey = "gameQuality";
 const videoQualityKey = "videoQuality";
 const audioPlayerVolumeKey = "audioVolume";
 const audioPlayerMuteKey = "audioMute";
@@ -120,14 +119,6 @@ class LocalUserStore {
 
     wasCompanionSet(): boolean {
         return localStorage.getItem(companionKey) ? true : false;
-    }
-
-    setGameQualityValue(value: number): void {
-        localStorage.setItem(gameQualityKey, "" + value);
-    }
-
-    getGameQualityValue(): number {
-        return parseInt(localStorage.getItem(gameQualityKey) || "60");
     }
 
     setVideoQualityValue(value: number): void {

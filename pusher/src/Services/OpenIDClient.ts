@@ -40,16 +40,19 @@ class OpenIDClient {
                     console.log(
                         "Failed to fetch OIDC configuration for both .well-known/openid-configuration and oauth-authorization-server. Trying .well-known/openid-configuration only."
                     );
-                    this.issuerPromise = Issuer.discover(OPID_CLIENT_ISSUER + "/.well-known/openid-configuration").then(
-                        (issuer) => {
+                    this.issuerPromise = Issuer.discover(OPID_CLIENT_ISSUER + "/.well-known/openid-configuration")
+                        .then((issuer) => {
                             return new issuer.Client({
                                 client_id: OPID_CLIENT_ID,
                                 client_secret: OPID_CLIENT_SECRET,
                                 redirect_uris: [OPID_CLIENT_REDIRECT_URL],
                                 response_types: ["code"],
                             });
-                        }
-                    );
+                        })
+                        .catch((e) => {
+                            this.issuerPromise = null;
+                            throw e;
+                        });
                     return this.issuerPromise;
                 });
         }
@@ -97,7 +100,12 @@ class OpenIDClient {
         res: Response
     ): Promise<{ email: string; sub: string; access_token: string; username: string; locale: string }> {
         const fullUrl = req.url;
-        const cookies = req.cookies as Record<string, string>;
+        const cookies = req.cookies;
+
+        if (typeof cookies?.code_verifier !== "string") {
+            throw new Error("code verifier doesn't exist");
+        }
+
         const code_verifier = this.decrypt(cookies.code_verifier);
         const state = cookies.oidc_state;
 
@@ -108,7 +116,7 @@ class OpenIDClient {
                 code_verifier,
             };
 
-            if (params.state) {
+            if (state && params.state && typeof state === "string") {
                 checks.state = state;
             }
 

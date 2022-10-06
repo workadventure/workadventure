@@ -24,6 +24,9 @@
     import { HtmlUtils } from "../Utils/HtmlUtils";
     import File from "./Content/File.svelte";
     import HtmlMessage from "./Content/HtmlMessage.svelte";
+    import crown from "../../public/static/svg/icone-premium-crown.svg";
+    import { iframeListener } from "../IframeListener";
+    import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 
     export let mucRoom: MucRoom;
 
@@ -34,6 +37,8 @@
     $: usersStore = mucRoom.getPresenceStore();
     $: loadingStore = mucRoom.getLoadingStore();
     $: meStore = mucRoom.getMeStore();
+    $: canLoadOlderMessagesStore = mucRoom.getCanLoadOlderMessagesStore();
+    $: showDisabledLoadOlderMessagesStore = mucRoom.getShowDisabledLoadOlderMessagesStore();
 
     let isScrolledDown = false;
     let messagesList: HTMLElement;
@@ -119,7 +124,7 @@
 
         if (document.body.scrollTop >= 0 && lastScrollPosition < 0) {
             //Pull to refresh ...
-            mucRoom.retrieveLastMessages();
+            mucRoom.sendRetrieveLastMessages();
         }
         lastScrollPosition = document.body.scrollTop;
     }
@@ -240,26 +245,41 @@
 </script>
 
 <div class="wa-messages-list-container" bind:this={messagesList}>
-    <div class="tw-mt-14">
-        {#if $loadingStore}<div
-                style="border-top-color:transparent"
-                class="tw-w-5 tw-h-5 tw-border-2 tw-border-white tw-border-solid tw-rounded-full tw-animate-spin tw-m-auto"
-            />{/if}
-        {#if !$loadingStore && $messagesStore.length > 0 && mucRoom.canLoadOlderMessages}<button
-                class="tw-m-auto tw-cursor-pointer tw-text-xs"
-                on:click={() => mucRoom.retrieveLastMessages()}
-                >{$LL.load()}
-                {$LL.more()}
-                <ArrowUpIcon size="13" class="tw-ml-1" /></button
-            >{/if}
-    </div>
     <div class="emote-menu-container">
         <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
     </div>
 
     <div
-        class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-pb-4 tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen"
+        class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen tw-pt-14"
     >
+        <div class="tw-mb-auto load-history">
+            {#if $canLoadOlderMessagesStore}
+                {#if !$loadingStore}
+                    <button
+                        class="tw-m-auto tw-cursor-pointer tw-text-xs"
+                        on:click={() => mucRoom.sendRetrieveLastMessages()}
+                        >{$LL.load()}
+                        {$LL.more()}
+                        <ArrowUpIcon size="13" class="tw-ml-1" /></button
+                    >
+                {:else}
+                    <div
+                        style="border-top-color:transparent"
+                        class="tw-w-5 tw-h-5 tw-border-2 tw-border-white tw-border-solid tw-rounded-full tw-animate-spin tw-m-auto"
+                    />
+                {/if}
+            {:else if $showDisabledLoadOlderMessagesStore && mucRoom.getMe()?.isAdmin}
+                {#if ADMIN_API_URL}
+                    <button
+                        class="tw-text-orange tw-font-bold tw-underline tw-m-auto tw-text-xs tw-cursor-pointer"
+                        on:click={() => iframeListener.sendRedirectPricing()}
+                    >
+                        <img alt="Crown icon" src={crown} class="tw-mr-1" />
+                        {$LL.upgradeToSeeMore()}
+                    </button>
+                {/if}
+            {/if}
+        </div>
         {#each $messagesStore as message, i}
             {#if showDate(message.time, i)}
                 <div class="wa-separator">
@@ -374,47 +394,55 @@
                                         {/each}
                                     {/if}
 
-                                    <!-- Action bar -->
-                                    <div
-                                        class="actions tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
-                                    >
-                                        <div class="action reply" on:click={() => selectMessage(message)}>
-                                            <CornerDownLeftIcon size="17" />
-                                        </div>
-                                        <div class="action react" on:click={() => reactMessage(message)}>
-                                            <SmileIcon size="17" />
-                                        </div>
-                                        <div class="action more-option">
-                                            <MoreHorizontalIcon size="17" />
+                                    {#if !message.error}
+                                        <!-- Action bar -->
+                                        <div
+                                            class="actions tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
+                                        >
+                                            <div class="action reply" on:click={() => selectMessage(message)}>
+                                                <CornerDownLeftIcon size="17" />
+                                            </div>
+                                            <div class="action react" on:click={() => reactMessage(message)}>
+                                                <SmileIcon size="17" />
+                                            </div>
+                                            <div class="action more-option">
+                                                <MoreHorizontalIcon size="17" />
 
-                                            <div class="wa-dropdown-menu tw-invisible">
-                                                <span class="wa-dropdown-item" on:click={() => selectMessage(message)}>
-                                                    <CornerDownLeftIcon size="13" class="tw-mr-1" />
-                                                    {$LL.reply()}
-                                                </span>
-                                                <span class="wa-dropdown-item" on:click={() => reactMessage(message)}>
-                                                    <SmileIcon size="13" class="tw-mr-1" />
-                                                    {$LL.react()}
-                                                </span>
-                                                <span
-                                                    class="wa-dropdown-item"
-                                                    on:click={(e) => copyMessage(e, message)}
-                                                >
-                                                    <CopyIcon size="13" class="tw-mr-1" />
-                                                    {$LL.copy()}
-                                                </span>
-                                                {#if $meStore.isAdmin || isMe(message.jid)}
+                                                <div class="wa-dropdown-menu tw-invisible">
                                                     <span
-                                                        class="wa-dropdown-item tw-text-pop-red"
-                                                        on:click={() => mucRoom.sendRemoveMessage(message.id)}
+                                                        class="wa-dropdown-item"
+                                                        on:click={() => selectMessage(message)}
                                                     >
-                                                        <Trash2Icon size="13" class="tw-mr-1" />
-                                                        {$LL.delete()}
+                                                        <CornerDownLeftIcon size="13" class="tw-mr-1" />
+                                                        {$LL.reply()}
                                                     </span>
-                                                {/if}
+                                                    <span
+                                                        class="wa-dropdown-item"
+                                                        on:click={() => reactMessage(message)}
+                                                    >
+                                                        <SmileIcon size="13" class="tw-mr-1" />
+                                                        {$LL.react()}
+                                                    </span>
+                                                    <span
+                                                        class="wa-dropdown-item"
+                                                        on:click={(e) => copyMessage(e, message)}
+                                                    >
+                                                        <CopyIcon size="13" class="tw-mr-1" />
+                                                        {$LL.copy()}
+                                                    </span>
+                                                    {#if $meStore.isAdmin || isMe(message.jid)}
+                                                        <span
+                                                            class="wa-dropdown-item tw-text-pop-red"
+                                                            on:click={() => mucRoom.sendRemoveMessage(message.id)}
+                                                        >
+                                                            <Trash2Icon size="13" class="tw-mr-1" />
+                                                            {$LL.delete()}
+                                                        </span>
+                                                    {/if}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    {/if}
                                 </div>
 
                                 <!-- React associated -->
@@ -568,9 +596,6 @@
 </div>
 
 <style lang="scss">
-    .wa-messages-list {
-        padding-bottom: 60px;
-    }
     .wa-error-message {
         position: relative;
         .wa-dropdown-menu {
@@ -625,6 +650,7 @@
     .wa-message-body {
         position: relative;
         min-width: 75px;
+        word-break: break-all;
         .actions {
             display: none;
             position: absolute;
