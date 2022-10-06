@@ -6,6 +6,7 @@
     import poweredByWorkAdventureImg from "../images/Powered_By_WorkAdventure_Big.png";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../i18n/i18n-svelte";
+    import { NameNotValidError, NameTooLongError } from "../../Exception/NameError";
 
     export let game: Game;
 
@@ -13,6 +14,7 @@
 
     let name = gameManager.getPlayerName() || "";
     let startValidating = false;
+    let errorName = "";
 
     let logo = gameManager.currentStartedRoom?.loginSceneLogo ?? logoImg;
 
@@ -21,7 +23,17 @@
 
         let finalName = name.trim();
         if (finalName !== "") {
-            loginScene.login(finalName);
+            try {
+                loginScene.login(finalName);
+            } catch (err) {
+                if (err instanceof NameTooLongError) {
+                    errorName = $LL.login.input.name.tooLongError();
+                } else if (err instanceof NameNotValidError) {
+                    errorName = $LL.login.input.name.notValidError();
+                } else {
+                    throw err;
+                }
+            }
         }
     }
 </script>
@@ -44,11 +56,13 @@
         on:keypress={() => {
             startValidating = true;
         }}
-        class:is-error={name.trim() === "" && startValidating}
+        class:is-error={(name.trim() === "" && startValidating) || errorName !== ""}
     />
     <section class="error-section">
-        {#if name.trim() === "" && startValidating}
-            <p class="err">{$LL.login.input.name.empty()}</p>
+        {#if (name.trim() === "" && startValidating) || errorName !== ""}
+            <p class="err">
+                {#if errorName}{errorName}{:else}{$LL.login.input.name.empty()}{/if}
+            </p>
         {/if}
     </section>
 
