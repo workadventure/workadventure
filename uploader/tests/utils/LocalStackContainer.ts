@@ -1,5 +1,6 @@
 import {GenericContainer} from "testcontainers";
 import AWS from "aws-sdk";
+import {AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY} from "../../src/Enum/EnvironmentVariable";
 
 export class LocalStackContainer extends GenericContainer {
     constructor() {
@@ -9,10 +10,8 @@ export class LocalStackContainer extends GenericContainer {
         // eslint-disable-next-line prefer-spread
         this.withExposedPorts.bind(this).apply(null, portRange)
     }
-    async run():Promise<void> {
-        const access = "mock"
-        const secret = "mock"
-        AWS.config.update({ accessKeyId: access, secretAccessKey: secret });
+    async run(): Promise<void> {
+        AWS.config.update({ accessKeyId: AWS_ACCESS_KEY_ID, secretAccessKey: AWS_SECRET_ACCESS_KEY });
 
         const options = {s3ForcePathStyle: true, endpoint: "http://localhost:4566"};
         const s3 = new AWS.S3(options);
@@ -21,12 +20,12 @@ export class LocalStackContainer extends GenericContainer {
                 err? reject() : resolve(0)
             })
         }
-        this.start().then()
-        return new Promise((resolve) => {
+        this.start().then(()=>{})
+        await new Promise((resolve) => {
             const attempt = () => {
                 new Promise((resolve, reject) => {
                     check(resolve, reject)
-                }).then(() => resolve()).catch(()=> {
+                }).then(() => resolve(0)).catch(()=> {
                     setTimeout(attempt, 200)
                 })
             }

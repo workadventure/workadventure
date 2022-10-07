@@ -1,5 +1,5 @@
 import {StartedTestContainer} from "testcontainers";
-import {CHAT_URL} from "../src/Enum/EnvironmentVariable";
+import {AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, CHAT_URL} from "../src/Enum/EnvironmentVariable";
 import AWS from "aws-sdk";
 import {LocalStackContainer} from "./utils/LocalStackContainer";
 import {uploadMultipleFilesTest, uploadSingleFileTest} from "./UploaderTestCommon";
@@ -11,6 +11,12 @@ import isPortReachable from "./utils/isPortReachable";
 jest.mock('../src/Enum/EnvironmentVariable', () => ({
     get CHAT_URL() {
         return "http://chat.location"
+    },
+    get AWS_ACCESS_KEY_ID() {
+        return "mock"
+    },
+    get AWS_SECRET_ACCESS_KEY() {
+        return "mock"
     }
 }))
 
@@ -19,16 +25,13 @@ describe("S3 Uploader tests", () => {
     const UPLOADER_URL = `http://localhost:${APP_PORT}`
     let server: ChildProcess| undefined;
 
-    let localstackContainer: StartedTestContainer
     let s3: AWS.S3
     const testBucket = "storage-bucket"
     jest.setTimeout(30000)
     beforeAll(async ()=> {
         await new LocalStackContainer().run()
 
-        const access = "mock"
-        const secret = "mock"
-        AWS.config.update({ accessKeyId: access, secretAccessKey: secret });
+        AWS.config.update({ accessKeyId: AWS_ACCESS_KEY_ID, secretAccessKey: AWS_SECRET_ACCESS_KEY });
         const options = {s3ForcePathStyle: true, endpoint: "http://localhost:4566"};
         s3 = new AWS.S3(options);
 
@@ -64,7 +67,8 @@ describe("S3 Uploader tests", () => {
     })
 
     afterAll(async ()=> {
-        localstackContainer?.stop()
+        // We should be killing localstack, but for some reason testcontainer never fullfill
+        // the start promise. For now, we rely on jest forcing exit to complete the tests
         server?.kill()
         await new Promise(resolve => {
             server?.on("close", ()=> {
