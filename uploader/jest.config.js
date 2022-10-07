@@ -8,5 +8,6 @@ module.exports = {
   transformIgnorePatterns: ['<rootDir>/node_modules/'],
   roots: [
     "./tests"
-  ]
+  ],
+  globalSetup: "<rootDir>/tests/globalTestSetup.ts"
 };

@@ -68,7 +68,7 @@ describe("Redis Uploader tests", () => {
         await redisClient.connect();
 
         const actual = await redisClient.get(responseData.id)
-        await redisClient.disconnect()
+        await redisClient.quit()
 
         expect(actual?.toString()).toEqual("file contents")
     })
