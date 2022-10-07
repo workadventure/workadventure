@@ -24,12 +24,13 @@ describe("S3 Uploader tests", () => {
     const APP_PORT = 7374
     const UPLOADER_URL = `http://localhost:${APP_PORT}`
     let server: ChildProcess| undefined;
+    let localStackContainer: StartedTestContainer|undefined
 
     let s3: AWS.S3
     const testBucket = "storage-bucket"
     jest.setTimeout(30000)
     beforeAll(async ()=> {
-        await new LocalStackContainer().run()
+        localStackContainer = await new LocalStackContainer().run()
 
         AWS.config.update({ accessKeyId: AWS_ACCESS_KEY_ID, secretAccessKey: AWS_SECRET_ACCESS_KEY });
         const options = {s3ForcePathStyle: true, endpoint: "http://localhost:4566"};
@@ -67,8 +68,7 @@ describe("S3 Uploader tests", () => {
     })
 
     afterAll(async ()=> {
-        // We should be killing localstack, but for some reason testcontainer never fullfill
-        // the start promise. For now, we rely on jest forcing exit to complete the tests
+        await localStackContainer?.stop()
         server?.kill()
         await new Promise(resolve => {
             server?.on("close", ()=> {

@@ -1,16 +1,13 @@
-import {GenericContainer} from "testcontainers";
+import {GenericContainer, StartedTestContainer} from "testcontainers";
 import AWS from "aws-sdk";
 import {AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY} from "../../src/Enum/EnvironmentVariable";
 
 export class LocalStackContainer extends GenericContainer {
     constructor() {
         super("localstack/localstack:1.1");
-        const portRange = [...Array(4559-4510).keys()].map(i => ({container: 4510+i, host: 4510+i}));
-        portRange.push({ container: 4566, host: 4566})
-        // eslint-disable-next-line prefer-spread
-        this.withExposedPorts.bind(this).apply(null, portRange)
+        this.withExposedPorts({ container: 4566, host: 4566})
     }
-    async run(): Promise<void> {
+    async run(): Promise<StartedTestContainer> {
         AWS.config.update({ accessKeyId: AWS_ACCESS_KEY_ID, secretAccessKey: AWS_SECRET_ACCESS_KEY });
 
         const options = {s3ForcePathStyle: true, endpoint: "http://localhost:4566"};
@@ -20,7 +17,7 @@ export class LocalStackContainer extends GenericContainer {
                 err? reject() : resolve(0)
             })
         }
-        this.start().then(()=>{})
+        const startPromise = this.start()
         await new Promise((resolve) => {
             const attempt = () => {
                 new Promise((resolve, reject) => {
@@ -31,5 +28,6 @@ export class LocalStackContainer extends GenericContainer {
             }
             attempt()
         })
+        return startPromise
     }
 }
