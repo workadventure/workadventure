@@ -12,8 +12,6 @@ export class RedisContainer extends GenericContainer {
     }
 
     async start() {
-        // testcontainers doesn't recommend mapping host port, but because of jest mocking constant
-        // we need to know the host port beforehand
         this.withExposedPorts({ container: this.redisPort, host: this.redisPort})
 
         const startedTestContainer = await super.start()

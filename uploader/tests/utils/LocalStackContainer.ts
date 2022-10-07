@@ -1,4 +1,5 @@
 import {GenericContainer} from "testcontainers";
+import AWS from "aws-sdk";
 
 export class LocalStackContainer extends GenericContainer {
     constructor() {
@@ -8,7 +9,18 @@ export class LocalStackContainer extends GenericContainer {
         // eslint-disable-next-line prefer-spread
         this.withExposedPorts.bind(this).apply(null, portRange)
     }
-    async run(check: (resolve: (value: unknown) => void, reject: () => void) => void):Promise<void> {
+    async run():Promise<void> {
+        const access = "mock"
+        const secret = "mock"
+        AWS.config.update({ accessKeyId: access, secretAccessKey: secret });
+
+        const options = {s3ForcePathStyle: true, endpoint: "http://localhost:4566"};
+        const s3 = new AWS.S3(options);
+        const check = (resolve: (value: unknown)=>void, reject: ()=>void) => {
+            s3.listBuckets( (err: unknown)=>{
+                err? reject() : resolve(0)
+            })
+        }
         this.start().then()
         return new Promise((resolve) => {
             const attempt = () => {

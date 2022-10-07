@@ -20,7 +20,6 @@ export default async function isPortReachable(port: number, {host, timeout = 100
 		socket.once('timeout', onError);
 
 		socket.connect(port, host, () => {
-			console.log(`Connection successful`)
 			socket.end();
 			resolve(0);
 		});
