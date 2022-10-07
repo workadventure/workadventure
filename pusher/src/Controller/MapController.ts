@@ -1,9 +1,10 @@
 import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
 import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
-import { parse } from "query-string";
 import { BaseHttpController } from "./BaseHttpController";
 import { adminService } from "../Services/AdminService";
 import { InvalidTokenError } from "./InvalidTokenError";
+import { validateQuery } from "../Services/QueryValidator";
+import { z } from "zod";
 
 export class MapController extends BaseHttpController {
     // Returns a map mapping map name to file name of the map
@@ -97,19 +98,23 @@ export class MapController extends BaseHttpController {
          *
          */
         this.app.get("/map", (req, res) => {
-            const query = parse(req.path_query);
-            if (typeof query.playUri !== "string") {
-                console.error("Expected playUri parameter in /map endpoint");
-                res.status(400);
-                res.send("Expected playUri parameter");
+            const query = validateQuery(
+                req,
+                res,
+                z.object({
+                    playUri: z.string(),
+                    authToken: z.string().optional(),
+                })
+            );
+            if (query === undefined) {
                 return;
             }
 
             (async (): Promise<void> => {
                 try {
                     let mapDetails = await adminService.fetchMapDetails(
-                        query.playUri as string,
-                        query.authToken as string,
+                        query.playUri,
+                        query.authToken,
                         req.header("accept-language")
                     );
 

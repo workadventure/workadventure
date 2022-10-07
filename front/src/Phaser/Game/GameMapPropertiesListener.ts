@@ -90,11 +90,17 @@ export class GameMapPropertiesListener {
                         addPrefix = false;
                     }
                     const roomName = jitsiFactory.getRoomName(newValue.toString(), this.scene.roomUrl, addPrefix);
-                    const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
+                    let jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
 
                     let jwt: string | undefined;
                     if (JITSI_PRIVATE_MODE && !jitsiUrl) {
-                        jwt = await this.scene.connection?.queryJitsiJwtToken(roomName);
+                        if (!this.scene.connection) {
+                            console.log("Cannot connect to Jitsi. No connection to Pusher server.");
+                            return;
+                        }
+                        const answer = await this.scene.connection.queryJitsiJwtToken(roomName);
+                        jwt = answer.jwt;
+                        jitsiUrl = answer.url;
                     }
 
                     let domain = jitsiUrl || JITSI_URL;
@@ -102,8 +108,16 @@ export class GameMapPropertiesListener {
                         throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
                     }
 
+                    let domainWithoutProtocol = domain;
                     if (domain.substring(0, 7) !== "http://" && domain.substring(0, 8) !== "https://") {
+                        domainWithoutProtocol = domain;
                         domain = `${location.protocol}//${domain}`;
+                    } else {
+                        if (domain.startsWith("http://")) {
+                            domainWithoutProtocol = domain.substring(7);
+                        } else {
+                            domainWithoutProtocol = domain.substring(8);
+                        }
                     }
 
                     inJitsiStore.set(true);
@@ -113,7 +127,7 @@ export class GameMapPropertiesListener {
                     const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, closable);
 
                     coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
-                    this.scene.initialiseJitsi(coWebsite, roomName, jwt);
+                    this.scene.initialiseJitsi(coWebsite, roomName, jwt, domainWithoutProtocol);
 
                     layoutManagerActionStore.removeAction("jitsi");
                 };

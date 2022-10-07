@@ -40,16 +40,19 @@ class OpenIDClient {
                     console.log(
                         "Failed to fetch OIDC configuration for both .well-known/openid-configuration and oauth-authorization-server. Trying .well-known/openid-configuration only."
                     );
-                    this.issuerPromise = Issuer.discover(OPID_CLIENT_ISSUER + "/.well-known/openid-configuration").then(
-                        (issuer) => {
+                    this.issuerPromise = Issuer.discover(OPID_CLIENT_ISSUER + "/.well-known/openid-configuration")
+                        .then((issuer) => {
                             return new issuer.Client({
                                 client_id: OPID_CLIENT_ID,
                                 client_secret: OPID_CLIENT_SECRET,
                                 redirect_uris: [OPID_CLIENT_REDIRECT_URL],
                                 response_types: ["code"],
                             });
-                        }
-                    );
+                        })
+                        .catch((e) => {
+                            this.issuerPromise = null;
+                            throw e;
+                        });
                     return this.issuerPromise;
                 });
         }

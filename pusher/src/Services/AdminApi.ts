@@ -128,7 +128,9 @@ class AdminApi implements AdminInterface {
          *       200:
          *         description: The details of the map
          *         schema:
-         *             $ref: "#/definitions/MapDetailsData"
+         *           oneOf:
+         *            - $ref: "#/definitions/MapDetailsData"
+         *            - $ref: "#/definitions/RoomRedirect"
          *       401:
          *         description: Error while retrieving the data because you are not authorized
          *         schema:
