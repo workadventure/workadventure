@@ -285,6 +285,10 @@ export class IoSocketController {
                         const version = query.version;
 
                         if (version !== apiVersionHash) {
+                            if (upgradeAborted.aborted) {
+                                // If the response points to nowhere, don't attempt an upgrade
+                                return;
+                            }
                             return res.upgrade(
                                 {
                                     rejected: true,
@@ -379,6 +383,10 @@ export class IoSocketController {
                                 if (Axios.isAxiosError(err)) {
                                     const errorType = isErrorApiData.safeParse(err?.response?.data);
                                     if (errorType.success) {
+                                        if (upgradeAborted.aborted) {
+                                            // If the response points to nowhere, don't attempt an upgrade
+                                            return;
+                                        }
                                         return res.upgrade(
                                             {
                                                 rejected: true,
@@ -392,6 +400,10 @@ export class IoSocketController {
                                             context
                                         );
                                     } else {
+                                        if (upgradeAborted.aborted) {
+                                            // If the response points to nowhere, don't attempt an upgrade
+                                            return;
+                                        }
                                         return res.upgrade(
                                             {
                                                 rejected: true,
@@ -494,6 +506,10 @@ export class IoSocketController {
                             if (!(e instanceof InvalidTokenError)) {
                                 console.error(e);
                             }
+                            if (upgradeAborted.aborted) {
+                                // If the response points to nowhere, don't attempt an upgrade
+                                return;
+                            }
                             res.upgrade(
                                 {
                                     rejected: true,
@@ -507,6 +523,10 @@ export class IoSocketController {
                                 context
                             );
                         } else {
+                            if (upgradeAborted.aborted) {
+                                // If the response points to nowhere, don't attempt an upgrade
+                                return;
+                            }
                             res.upgrade(
                                 {
                                     rejected: true,
