@@ -78,7 +78,7 @@ describe("Redis Uploader tests", () => {
     })
 
 
-    it("should upload and download audio message file  to redis", async ()=> {
+    it("should upload and download audio message file to redis", async ()=> {
         const uploadResponse = await uploadFile(
             `${UPLOADER_URL}/upload-audio-message`,
             [{name: "temp-server.txt", contents: "temp file contents"}]);

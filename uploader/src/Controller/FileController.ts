@@ -97,61 +97,12 @@ export class FileController {
         });
 
         this.App.get("/download-audio-message/:id", (res: HttpResponse, req: HttpRequest) => {
-
-            (async () => {
-                res.onAborted(() => {
-                    console.warn('download-audio-message request was aborted');
-                })
-
-                const id = req.getParameter(0);
-                const buffer = await uploaderService.getTemp(id);
-                if (buffer == undefined) {
-                    res.writeStatus("404 Not found");
-                    addCorsHeaders(res);
-                    res.end("Cannot find file");
-                    return;
-                }
-
-                const readable = new Readable()
-                readable._read = () => {} // _read is required but you can noop it
-                readable.push(buffer);
-                readable.push(null);
-
-                const size = buffer.byteLength;
-
-                res.writeStatus("200 OK");
-
-                readable.on('data', buffer => {
-                    const chunk = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
-                        lastOffset = res.getWriteOffset();
-
-                    // First try
-                    const [ok, done] = res.tryEnd(chunk, size);
-
-                    if (done) {
-                        readable.destroy();
-                    } else if (!ok) {
-                        // pause because backpressure
-                        readable.pause();
-
-                        // Save unsent chunk for later
-                        res.ab = chunk;
-                        res.abOffset = lastOffset;
-
-                        // Register async handlers for drainage
-                        res.onWritable(offset => {
-                            const [ok, done] = res.tryEnd(res.ab.slice(offset - res.abOffset), size);
-                            if (done) {
-                                readable.destroy();
-                            } else if (ok) {
-                                readable.resume();
-                            }
-                            return ok;
-                        });
-                    }
-                });
-            })();
-
+            res.onAborted(() => {
+                console.warn('download-audio-message request was aborted');
+            })
+            const id = req.getParameter(0);
+            const targetDevice = new HttpResponseDevice(id, res)
+            uploaderService.copyFile(id, targetDevice)
         });
     }
 
