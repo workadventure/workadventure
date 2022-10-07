@@ -212,6 +212,38 @@ jobs:
         run: yarn run pretty-check
         working-directory: "back"
 
+  continuous-integration-uploader:
+    name: "Continuous Integration Uploader"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: "Install dependencies"
+        run: yarn install
+        working-directory: "uploader"
+
+      
+      - name: "Build"
+        run: yarn run build
+        working-directory: "uploader"
+
+      - name: "Lint"
+        run: yarn run lint
+        working-directory: "uploader"
+
+      - name: "jest"
+        run: yarn test
+        working-directory: "uploader"
+
+
   continuous-integration-map-storage:
     name: "Continuous Integration Map Storage"
 
