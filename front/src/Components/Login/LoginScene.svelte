@@ -39,15 +39,17 @@
 </script>
 
 <form
-    class="loginScene tw-w-screen tw-bg-dark-blue/75 tw-flex tw-flex-col tw-h-screen tw-px-10 md:tw-px-32 tw-pointer-events-auto tw-pt-20"
+    class="loginScene tw-w-screen tw-bg-dark-purple/50 tw-flex tw-flex-col tw-h-screen tw-px-10 md:tw-px-32 tw-pointer-events-auto tw-pt-20"
     on:submit|preventDefault={submit}
 >
     <section class="tw-h-fit tw-max-w-2xl tw-self-center">
         <img src={logo} alt="logo" class="main-logo tw-w-full" />
     </section>
-    <div class="tw-bg-dark-purple tw-w-full sm:tw-w-96 tw-rounded tw-mx-auto tw-text-center">
+    <div
+        class="tw-bg-dark-blue/75 tw-w-full sm:tw-w-96 md:tw-w-10/12 lg:tw-w-1/2 xl:tw-w-1/3 tw-rounded tw-mx-auto tw-text-center tw-p-8"
+    >
         <section class="text-center tw-flex tw-h-fit tw-flex-col">
-            <h2 class="tw-text-light-blue">{$LL.login.input.name.placeholder()}</h2>
+            <h2 class="tw-text-light-blue tw-text-base tw-font-normal">{$LL.login.input.name.placeholder()}</h2>
             <input
                 type="text"
                 name="loginSceneName"
@@ -81,8 +83,8 @@
             <button type="submit" class="light loginSceneFormSubmit">{$LL.login.continue()}</button>
         </section>
     </div>
-    {#if true}
-        <section class="text-right tw-flex powered-by tw-justify-center">
+    {#if logo !== logoImg && gameManager.currentStartedRoom.showPoweredBy !== false}
+        <section class="text-right tw-flex powered-by tw-justify-center tw-items-end">
             <img src={poweredByWorkAdventureImg} alt="Powered by WorkAdventure" class="tw-h-14" />
         </section>
     {/if}
