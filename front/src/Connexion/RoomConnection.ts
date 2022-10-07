@@ -970,6 +970,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitMapEditorModifyArea(commandId: string, config: AreaData): void {
+        console.log(config);
         this.send({
             message: {
                 $case: "editMapCommandMessage",

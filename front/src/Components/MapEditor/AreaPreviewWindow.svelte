@@ -11,6 +11,7 @@
     let mapEditorSelectedAreaPreviewStoreUnsubscriber: Unsubscriber;
 
     let propertyFocusable: boolean;
+    let propertyZoomMargin: number;
     let propertySilent: boolean;
 
     const gameScene = gameManager.getCurrentGameScene();
@@ -21,6 +22,7 @@
             areaData = { ...preview.getConfig() };
 
             propertyFocusable = areaData.properties["focusable"] as boolean;
+            propertyZoomMargin = areaData.properties["zoom_margin"] as number;
             propertySilent = areaData.properties["silent"] as boolean;
         }
     });
@@ -41,6 +43,7 @@
         }
         areaData.properties["focusable"] = propertyFocusable;
         areaData.properties["silent"] = propertySilent;
+        areaData.properties["zoom_margin"] = propertyZoomMargin;
         gameScene.getMapEditorModeManager().executeCommand({ type: "UpdateAreaCommand", areaObjectConfig: areaData });
     }
 
@@ -80,6 +83,15 @@
                     on:change={sendUpdateAreaCommand}
                     type="checkbox"
                     id="focusable"
+                />
+            </div>
+            <div class="field">
+                <p class="blue-title">zoom margin:</p>
+                <input
+                    bind:value={propertyZoomMargin}
+                    on:change={sendUpdateAreaCommand}
+                    type="number"
+                    id="zoom_margin"
                 />
             </div>
             <div class="field">

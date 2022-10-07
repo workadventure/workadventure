@@ -4,7 +4,6 @@ import { DeleteAreaCommandConfig } from './Commands/Area/DeleteAreaCommand';
 import { UpdateAreaCommandConfig } from './Commands/Area/UpdateAreaCommand';
 
 export type ITiledMapRectangleObject = ITiledMapObject & { width: number; height: number };
-export type AreaProperties = Record<string, number | string | boolean>;
 
 export type CommandConfig =
     UpdateAreaCommandConfig |
@@ -18,9 +17,17 @@ export interface AreaData {
     y: number;
     width: number;
     height: number;
-    properties: AreaProperties;
     visible: boolean;
+    properties: AreaProperties;
 }
+
+// NOTE: This is the same type as declared in messages.proto. any way so we can use one from proto instead of duplicating it?
+export interface AreaProperties {
+    focusable?: boolean;
+    zoom_margin?: number;
+    silent?: boolean;
+    customProperties: Record<string, any>;
+};
 
 export enum AreaType {
     Static = "Static",

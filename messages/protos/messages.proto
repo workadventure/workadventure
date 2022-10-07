@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "google/protobuf/wrappers.proto";
+import "google/protobuf/struct.proto";
 
 /*********** PARTIAL MESSAGES **************/
 
@@ -138,7 +139,17 @@ message ModifyAreaMessage {
 
 message AreaProperties {
   optional bool focusable = 1;
-  optional bool silent = 2;
+  optional float zoom_margin = 2;
+  optional bool silent = 3;
+  map<string, google.protobuf.Value> customProperties = 4;
+}
+
+message CustomAreaProperty {
+  oneof value {
+    bool boolVal = 1;
+    float numberVal = 2;
+    string stringVal = 3;
+  }
 }
 
 message DeleteAreaMessage {

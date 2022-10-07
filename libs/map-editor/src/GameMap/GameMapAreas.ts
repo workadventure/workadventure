@@ -2,6 +2,7 @@ import { ITiledMapObject, ITiledMapObjectLayer, ITiledMapProperty } from "@worka
 import { MathUtils } from "@workadventure/math-utils";
 import { GameMap } from "./GameMap";
 import { AreaData, AreaProperties, AreaType } from '../types';
+import * as _ from "lodash";
 
 export type AreaChangeCallback = (
     areasChangedByAction: Array<AreaData>,
@@ -38,7 +39,23 @@ export class GameMapAreas {
                     this.staticAreas.push(this.tiledObjectToAreaData(areaRaw));
                 });
         } catch(e) {
-            console.error('CANNOT PARSE TILED OBJECTS TO AREA DATA FORMAT');
+            console.error('CANNOT PARSE TILED OBJECTS TO AREA DATA FORMAT:');
+            console.error(e);
+        }
+    }
+
+    public mapAreaDataToTiledObject(areaData: AreaData): ITiledMapObject {
+        return {
+            id: areaData.id,
+            type: "area",
+            class: "area",
+            name: areaData.name,
+            visible: true,
+            x: areaData.x,
+            y: areaData.y,
+            width: areaData.width,
+            height: areaData.height,
+            properties: this.mapAreaPropertiesToTiledProperties(areaData.properties),
         }
     }
 
@@ -66,9 +83,13 @@ export class GameMapAreas {
 
     private mapTiledPropertiesToAreaProperties(areaRaw: ITiledMapObject): AreaProperties {
         if (!areaRaw.properties) {
-            return {};
+            return {
+                customProperties: {},
+            };
         }
-        const properties: AreaProperties = {};
+        const properties: AreaProperties = {
+            customProperties: {},
+        };
         for (const rawProperty of areaRaw.properties) {
             const value = rawProperty.value;
 
@@ -76,62 +97,69 @@ export class GameMapAreas {
             if (value === undefined || value === null) {
                 continue;
             }
-            // @ts-ignore
-            properties[rawProperty.name] = value;
+
+            // 
+            if (["focusable", "zoom_margin", "silent"].includes(rawProperty.name)) {
+                // @ts-ignore
+                properties[rawProperty.name] = value;
+            } else {
+                // @ts-ignore
+                properties.customProperties[rawProperty.name] = value;
+            }
         }
         return properties;
     }
 
     private mapAreaPropertiesToTiledProperties(areaProperties: AreaProperties): ITiledMapProperty[] {
         const properties: ITiledMapProperty[] = [];
-        for (const key in areaProperties) {
-            const data = areaProperties[key];
-            if (data === null) {
+
+        const focusable = areaProperties.focusable;
+        const zoom_margin = areaProperties.zoom_margin;
+        const silent = areaProperties.silent;
+
+        if (focusable !== undefined) {
+            properties.push({ name: "focusable", type: "bool", value: focusable });
+        }
+        if (zoom_margin !== undefined) {
+            properties.push({ name: "zoom_margin", type: "float", value: zoom_margin });
+        }
+        if (silent !== undefined) {
+            properties.push({ name: "silent", type: "bool", value: silent });
+        }
+
+        for (const key in areaProperties.customProperties) {
+            const data = areaProperties.customProperties[key];
+            if (data === undefined) {
                 continue;
             }
-            switch (typeof data) {
-                case "string": {
-                    properties.push({
-                        name: key,
-                        type: "string",
-                        value: data,
-                    });
-                    break;
-                }
-                // save as float to be safe?
-                case "number": {
-                    properties.push({
-                        name: key,
-                        type: "float",
-                        value: data,
-                    });
-                    break;
-                }
-                case "boolean": {
-                    properties.push({
-                        name: key,
-                        type: "bool",
-                        value: data,
-                    });
-                    break;
-                }
-            }
+            properties.push(this.mapAreaPropertyToTiledProperty(key, data));
         }
         return properties;
     }
 
-    public mapAreaDataToTiledObject(areaData: AreaData): ITiledMapObject {
-        return {
-            id: areaData.id,
-            type: "area",
-            class: "area",
-            name: areaData.name,
-            visible: true,
-            x: areaData.x,
-            y: areaData.y,
-            width: areaData.width,
-            height: areaData.height,
-            properties: this.mapAreaPropertiesToTiledProperties(areaData.properties),
+    private mapAreaPropertyToTiledProperty(key: string, value: string | boolean | number): ITiledMapProperty {
+        switch (typeof value) {
+            case "string": {
+                return {
+                    value,
+                    name: key,
+                    type: "string",
+                };
+            }
+            case "number": {
+                return {
+                    value,
+                    name: key,
+                    type: "float",
+                };
+            }
+            case "boolean": {
+                return {
+                    value,
+                    name: key,
+                    type: "bool",
+                };
+            }
         }
     }
 
@@ -286,32 +314,10 @@ export class GameMapAreas {
         if (!tiledObject) {
             throw new Error(`Area of id: ${area.id} has not been mapped to tileObjects array!`);
         }
-
-        // modify elementary data. How to make it cleaner?
-        if (config.x !== undefined) {
-            area.x = config.x;
-            tiledObject.x = config.x;
-        }
-        if (config.y !== undefined) {
-            area.y = config.y;
-            tiledObject.y = config.y;
-        }
-        if (config.width !== undefined) {
-            area.width = config.width;
-            tiledObject.width = config.width;
-        }
-        if (config.height !== undefined) {
-            area.height = config.height;
-            tiledObject.height = config.height;
-        }
-
-        // modify properties
         if (config.properties) {
-            for (const propertyKey in config.properties) {
-                area.properties[propertyKey] = config.properties[propertyKey];
-            }
-            tiledObject.properties = this.mapAreaPropertiesToTiledProperties(config.properties);
+            _.merge(area, config);
         }
+        _.merge(tiledObject, this.mapAreaDataToTiledObject(area));
     }
 
     private deleteStaticArea(id: number): boolean {
@@ -365,32 +371,67 @@ export class GameMapAreas {
     public getProperties(position: { x: number; y: number }): Map<string, string | boolean | number> {
         const properties = new Map<string, string | boolean | number>();
         for (const area of this.getAreasOnPosition(position, this.areasPositionOffsetY)) {
-            if (area.properties !== undefined) {
-                for (const key in area.properties) {
-                    const property = area.properties[key];
-                    if (property === undefined) {
-                        continue;
-                    }
-                    properties.set(key, property);
+            if (area.properties === undefined) {
+                continue;
+            }
+            const flattenedProperties = this.flattenAreaProperties(area.properties);
+            for (const key in flattenedProperties) {
+                const property = flattenedProperties[key];
+                if (property === undefined) {
+                    continue;
                 }
+                properties.set(key, property);
             }
         }
         return properties;
     }
 
     public setProperty(
-        holder: { properties: AreaProperties },
+        area: AreaData,
         key: string,
-        value: string | number | boolean
+        value: string | number | boolean,
     ): void {
-        holder.properties[key] = value;
+        switch (key) {
+            case "focusable": {
+                if (typeof value === "boolean") {
+                    area.properties.focusable = value;
+                }
+                break;
+            }
+            case "zoom_margin": {
+                if (typeof value === "number") {
+                    area.properties.zoom_margin = value;
+                }
+                break;
+            }
+            case "silent": {
+                if (typeof value === "boolean") {
+                    area.properties.silent = value;
+                }
+                break;
+            }
+            default: {
+                area.properties.customProperties[key] = value;
+            }
+        }
     }
 
-    public getProperty(
-        holder: { properties: AreaProperties },
-        key: string,
-    ): string | number | boolean {
-        return holder.properties[key];
+    private flattenAreaProperties(properties: AreaProperties): Record<string, string | boolean | number> {
+        const flattenedProperties: Record<string, string | boolean | number> = {};
+        if (properties.focusable !== undefined) {
+            flattenedProperties.focusable = properties.focusable;
+        }
+        if (properties.zoom_margin !== undefined) {
+            flattenedProperties.zoom_margin = properties.zoom_margin;
+        }
+        if (properties.silent !== undefined) {
+            flattenedProperties.silent = properties.silent;
+        }
+
+        for (const key in properties.customProperties) {
+            flattenedProperties[key] = properties.customProperties[key];
+        }
+        return flattenedProperties;
     }
 
     private getAreasOnPosition(

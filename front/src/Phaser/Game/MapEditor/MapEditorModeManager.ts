@@ -215,11 +215,6 @@ export class MapEditorModeManager {
                 this.equipTool(EditorToolName.AreaEditor);
                 break;
             }
-            case "0": {
-                console.log(`CURRENT COMMAND INDEX: ${this.currentCommandIndex}`);
-                console.log(this.localCommandsHistory);
-                break;
-            }
             case "z": {
                 if (this.ctrlKey) {
                     this.shiftKey.isDown ? this.redoCommand() : this.undoCommand();
@@ -234,6 +229,7 @@ export class MapEditorModeManager {
 
     public subscribeToRoomConnection(connection: RoomConnection): void {
         connection.editMapCommandMessageStream.subscribe((editMapCommandMessage) => {
+            console.log(editMapCommandMessage);
             if (this.pendingCommands.length > 0) {
                 if (this.pendingCommands[0].id === editMapCommandMessage.id) {
                     this.pendingCommands.shift();
