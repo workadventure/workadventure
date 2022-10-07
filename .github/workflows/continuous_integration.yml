@@ -230,11 +230,6 @@ jobs:
         run: yarn install
         working-directory: "uploader"
 
-      
-      - name: "Build"
-        run: yarn run build
-        working-directory: "uploader"
-
       - name: "Lint"
         run: yarn run lint
         working-directory: "uploader"
