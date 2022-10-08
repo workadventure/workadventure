@@ -1,9 +1,8 @@
 import { BaseHttpController } from "./BaseHttpController";
 import { parse } from "query-string";
-import { JWTTokenManager } from "../Services/JWTTokenManager";
-import Request from "hyper-express/types/components/http/Request";
-import Response from "hyper-express/types/components/http/Response";
-import { Server } from "hyper-express";
+import type { JWTTokenManager } from "../services/JWTTokenManager";
+import type { Request, Response } from "hyper-express";
+import type { Server } from "hyper-express";
 
 /*
  * Base class to expose authenticated pusher endpoints that will provide data based on room url
@@ -17,13 +16,14 @@ export abstract class AuthenticatedProviderController<T> extends BaseHttpControl
      * @param endpoint
      */
     setupRoutes(endpoint: string): void {
-        this.app.options(endpoint, {}, (req: Request, res: Response) => {
+        this.app.options(endpoint, (req: Request, res: Response) => {
             res.status(200).send("");
             return;
         });
 
+
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.app.get(endpoint, {}, async (req, res) => {
+        this.app.get(endpoint,  async (req, res) => {
             const token = req.header("Authorization");
 
             if (!token) {

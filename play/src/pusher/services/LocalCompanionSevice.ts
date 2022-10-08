@@ -1,10 +1,10 @@
 import type {CompanionCollectionList} from "../../messages/JsonMessages/CompanionTextures";
-import type {CompanionService} from "./CompanionService";
+import type {CompanionServiceInterface} from "./CompanionServiceInterface";
 
 /**
  * Companion Service list that the default list of companions
  */
-export class LocalCompanionSevice implements CompanionService {
+export class LocalCompanionSevice implements CompanionServiceInterface {
     async getCompanionList(roomUrl: string, token: string): Promise<CompanionCollectionList | undefined> {
         const defaultCompanionList: CompanionCollectionList = await require("../../data/companions.json");
         console.log("Default: ");

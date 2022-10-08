@@ -1,10 +1,9 @@
-import type { CompanionService } from "../services/CompanionService";
 import { AuthenticatedProviderController } from "./AuthenticatedProviderController";
 import type { CompanionCollectionList } from "../../messages/JsonMessages/CompanionTextures";
-import type Request from "hyper-express/types/components/http/Request";
+import type { Request } from "hyper-express";
+import type { CompanionServiceInterface } from "../services/CompanionServiceInterface";
 import type { Server } from "hyper-express";
 import type { JWTTokenManager } from "../services/JWTTokenManager";
-
 
 /**
  * A controller to expose the companion list
@@ -13,7 +12,7 @@ export class CompanionListController extends AuthenticatedProviderController<Com
     constructor(
         protected app: Server,
         protected jwtTokenManager: JWTTokenManager,
-        private companionService: CompanionService
+        private companionService: CompanionServiceInterface
     ) {
         super(app, jwtTokenManager);
     }
