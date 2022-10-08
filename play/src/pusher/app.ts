@@ -18,6 +18,9 @@ import { FrontController } from "./controllers/FrontController";
 import fs from "fs";
 import type * as uWebsockets from "uWebSockets.js";
 import { globalErrorHandler } from "./services/GlobalErrorHandler";
+import {adminApi} from "./services/AdminApi";
+import {jwtTokenManager} from "./services/JWTTokenManager";
+import {CompanionServiceInstance} from "./services/CompanionServiceInstance";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LiveDirectory = require("live-directory");
 
@@ -84,13 +87,18 @@ class App {
         new DebugController(this.webserver);
         new AdminController(this.webserver);
         new OpenIdProfileController(this.webserver);
-        new WokaListController(this.webserver);
-        new CompanionListController(this.webserver);
+        new WokaListController(this.webserver, jwtTokenManager);
         new PingController(this.webserver);
         if (ENABLE_OPENAPI_ENDPOINT) {
             new SwaggerController(this.webserver);
         }
         new FrontController(this.webserver, liveAssets);
+        adminApi.initialise().then(() => {
+            const companionService = CompanionServiceInstance.get();
+            new CompanionListController(this.webserver, jwtTokenManager, companionService);
+        }).catch(reason=> {
+            console.error(`Failed to initialized companion list : ${reason}`)
+        });
     }
 
     public listen(port: number, host?: string): Promise<uWebsockets.us_listen_socket | string> {

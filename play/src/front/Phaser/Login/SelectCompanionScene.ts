@@ -8,7 +8,7 @@ import {PinchManager} from "../UserInput/PinchManager";
 import {selectCompanionSceneVisibleStore} from "../../Stores/SelectCompanionStore";
 import {waScaleManager} from "../Services/WaScaleManager";
 import {isMediaBreakpointUp} from "../../Utils/BreakpointsUtils";
-import type {CompanionList} from "../../../messages/JsonMessages/CompanionTextures";
+import type {CompanionCollectionList} from "../../../messages/JsonMessages/CompanionTextures";
 import type {CompanionTexture} from "../../../messages/JsonMessages/CompanionTextures";
 import {SuperLoaderPlugin} from "../Services/SuperLoaderPlugin";
 import {
@@ -42,8 +42,8 @@ export class SelectCompanionScene extends ResizableScene {
 
         const companionLoadingManager = new CompanionTexturesLoadingManager(this.superLoad, this.load);
 
-        companionLoadingManager.loadTextures((list: CompanionList) => {
-            list.forEach((texture) => {
+        companionLoadingManager.loadTextures((list: CompanionCollectionList) => {
+            list[0].textures.forEach((texture) => {
                 this.companionModels.push(texture);
                 companionLoadingManager.loadByTexture(texture);
             });

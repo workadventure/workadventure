@@ -1,6 +1,8 @@
-import { LocalCompanionSevice } from "./LocalCompanionSevice";
-import { AdminCompanionService } from "./AdminCompanionService";
+import { CompanionCollectionList } from "../../messages/JsonMessages/CompanionTextures";
 
-export const companionService = AdminCompanionService.isEnabled()
-    ? new AdminCompanionService()
-    : new LocalCompanionSevice();
+/**
+ * Services that can retrieve the list of companions
+ */
+export interface CompanionService {
+    getCompanionList(roomUrl: string, token: string): Promise<CompanionCollectionList | undefined>;
+}

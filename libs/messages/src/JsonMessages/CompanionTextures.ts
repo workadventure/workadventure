@@ -12,12 +12,8 @@ export const companionTexture = z.object({
     name: extendApi(z.string(), { description: "The name of the texture.", example: "dog1" }),
     img: extendApi(z.string(), {
         description: "The URL of the image of the texture.",
-        example: "http://example.com/resources/characters/pipoya/Cat 01-1.png",
-    }),
-    behaviour: extendApi(z.enum(["simple", "dog", "cat"]), {
-        description: "The companion behavior (simple|dog|cat)",
-        example: "dog",
-    }),
+        example: "https://example.com/resources/characters/pipoya/Cat 01-1.png",
+    })
 });
 
 export type CompanionTexture = z.infer<typeof companionTexture>;
@@ -25,3 +21,12 @@ export type CompanionTexture = z.infer<typeof companionTexture>;
 export const companionList = z.array(companionTexture);
 
 export type CompanionList = z.infer<typeof companionList>;
+
+export const companionTextureCollection = z.object({
+    name: extendApi(z.string(), { description: "A collection of companions" }),
+    textures: companionList
+})
+
+export type CompanionCollection = z.infer<typeof companionTextureCollection>
+export const companionCollectionList = z.array(companionTextureCollection)
+export type CompanionCollectionList = z.infer<typeof companionCollectionList>

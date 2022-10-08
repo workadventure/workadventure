@@ -1,7 +1,7 @@
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import CancelablePromise from "cancelable-promise";
-import { companionList } from "../../../messages/JsonMessages/CompanionTextures";
-import type { CompanionList } from "../../../messages/JsonMessages/CompanionTextures";
+import { companionCollectionList } from "../../../messages/JsonMessages/CompanionTextures";
+import type { CompanionCollectionList } from "../../../messages/JsonMessages/CompanionTextures";
 import type { CompanionTexture } from "../../../messages/JsonMessages/CompanionTextures";
 import {PUSHER_URL} from "../../Enum/EnvironmentVariable";
 import {gameManager} from "../Game/GameManager";
@@ -13,11 +13,11 @@ export function companionListMetakey() {
     return "companion-list" + gameManager.currentStartedRoom.href;
 }
 
-let companionTextureList: CompanionList | null = null;
+let companionTextureList: CompanionCollectionList | null = null;
 export class CompanionTexturesLoadingManager {
     constructor(private superLoad: SuperLoaderPlugin, private loader: LoaderPlugin) {}
 
-    loadTextures(processListCallback: (_l: CompanionList) => void) {
+    loadTextures(processListCallback: (_l: CompanionCollectionList) => void) {
         if (companionTextureList) return processListCallback(companionTextureList);
 
         this.superLoad
@@ -33,7 +33,7 @@ export class CompanionTexturesLoadingManager {
                     withCredentials: true,
                 },
                 (_key, _type, data) => {
-                    companionTextureList = companionList.parse(data);
+                    companionTextureList = companionCollectionList.parse(data);
                     processListCallback(companionTextureList);
                 }
             )
@@ -50,7 +50,7 @@ export class CompanionTexturesLoadingManager {
             });
 
             this.loadTextures((companionList) => {
-                const texture = companionList.find((t) => t.name === textureName);
+                const texture = companionList[0].textures.find((t) => t.name === textureName);
                 if (!texture) {
                     console.error(`Companion texture ${textureName} not found`);
                     return reject(`Companion texture '${textureName}' not found!`);
