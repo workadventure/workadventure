@@ -20,7 +20,6 @@ import type * as uWebsockets from "uWebSockets.js";
 import { globalErrorHandler } from "./services/GlobalErrorHandler";
 import {adminApi} from "./services/AdminApi";
 import {jwtTokenManager} from "./services/JWTTokenManager";
-import {CompanionServiceInstance} from "./services/CompanionServiceInstance";
 import {CompanionService} from "./services/CompanionService";
 import {WokaService} from "./services/WokaService";
 // eslint-disable-next-line @typescript-eslint/no-var-requires

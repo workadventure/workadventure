@@ -8,7 +8,6 @@ import {gameManager} from "../Game/GameManager";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import type {SuperLoaderPlugin} from "../Services/SuperLoaderPlugin";
 
-
 export function companionListMetakey() {
     return "companion-list" + gameManager.currentStartedRoom.href;
 }
