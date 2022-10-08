@@ -1,8 +1,15 @@
-import type { CompanionCollectionList } from "../../messages/JsonMessages/CompanionTextures";
+import  { AdminCompanionService } from "./AdminCompanionService";
+import  { LocalCompanionSevice } from "./LocalCompanionSevice";
+import type { CompanionServiceInterface } from "./CompanionServiceInterface";
+import type { AdminCapabilities } from "./adminApi/AdminCapabilities";
 
-/**
- * Services that can retrieve the list of companions
- */
-export interface CompanionService {
-    getCompanionList(roomUrl: string, token: string): Promise<CompanionCollectionList | undefined>;
+export class CompanionService {
+    private static instance: CompanionServiceInterface | undefined;
+    static get(capabilities: AdminCapabilities): CompanionServiceInterface {
+        if (!CompanionService.instance)
+            CompanionService.instance = AdminCompanionService.isEnabled(capabilities)
+                ? new AdminCompanionService()
+                : new LocalCompanionSevice();
+        return CompanionService.instance;
+    }
 }

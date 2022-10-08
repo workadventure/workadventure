@@ -103,7 +103,9 @@ class AdminApi implements AdminInterface {
             try {
                 const res = await Axios.get<unknown, AxiosResponse<string[]>>(ADMIN_API_URL + "/api/capabilities");
                 this.capabilities = new RemoteCapabilities(new Map<string, string>(Object.entries(res.data)));
-                console.info(`Capabilities query successful. Found capabitlies:\n${JSON.stringify(res.data, null, 2)}`);
+                console.info(
+                    `Capabilities query successful. Found capabilities: ${this.capabilities.info()}`
+                );
                 resolve(0);
             } catch (ex) {
                 // ignore errors when querying capabilities
@@ -132,7 +134,7 @@ class AdminApi implements AdminInterface {
             void queryCapabilities(resolve);
         });
         console.log(`Remote admin api connection successful at ${ADMIN_API_URL}`);
-        return this.capabilities
+        return this.capabilities;
     }
 
     async fetchMapDetails(

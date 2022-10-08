@@ -21,6 +21,8 @@ import { globalErrorHandler } from "./services/GlobalErrorHandler";
 import {adminApi} from "./services/AdminApi";
 import {jwtTokenManager} from "./services/JWTTokenManager";
 import {CompanionServiceInstance} from "./services/CompanionServiceInstance";
+import {CompanionService} from "./services/CompanionService";
+import {WokaService} from "./services/WokaService";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LiveDirectory = require("live-directory");
 
@@ -87,15 +89,14 @@ class App {
         new DebugController(this.webserver);
         new AdminController(this.webserver);
         new OpenIdProfileController(this.webserver);
-        new WokaListController(this.webserver, jwtTokenManager);
         new PingController(this.webserver);
         if (ENABLE_OPENAPI_ENDPOINT) {
             new SwaggerController(this.webserver);
         }
         new FrontController(this.webserver, liveAssets);
-        adminApi.initialise().then(() => {
-            const companionService = CompanionServiceInstance.get();
-            new CompanionListController(this.webserver, jwtTokenManager, companionService);
+        adminApi.initialise().then((capabilities) => {
++            new CompanionListController(this.webserver, jwtTokenManager, CompanionService.get(capabilities));
++            new WokaListController(this.webserver, jwtTokenManager, WokaService.get(capabilities));
         }).catch(reason=> {
             console.error(`Failed to initialized companion list : ${reason}`)
         });
