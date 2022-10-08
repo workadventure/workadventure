@@ -1,19 +1,19 @@
 import axios from "axios";
 import type {AxiosResponse} from "axios";
 import {ADMIN_API_TOKEN, ADMIN_API_URL} from "../enums/EnvironmentVariable";
-import {companionList} from "../../messages/JsonMessages/CompanionTextures";
-import type {CompanionList} from "../../messages/JsonMessages/CompanionTextures";
-import type {CompanionServiceList} from "./CompanionServiceList";
-import {adminApi, AdminFeature} from "./AdminApi";
+import {companionCollectionList} from "../../messages/JsonMessages/CompanionTextures";
+import type {CompanionCollectionList} from "../../messages/JsonMessages/CompanionTextures";
+import {adminApi, AdminCapability } from "./AdminApi";
+import type {CompanionService} from "./CompanionService";
 
-export class AdminCompanionService implements CompanionServiceList {
+export class AdminCompanionService implements CompanionService {
     static isEnabled(): boolean {
-        return adminApi.isFeatureEnabled(AdminFeature.CompanionsList);
+        return adminApi.hasCapability(AdminCapability.CompanionsList);
     }
     /**
      * Returns the list of all companions for the current user.
      */
-    getCompanionList(roomUrl: string, token: string): Promise<CompanionList | undefined> {
+    getCompanionList(roomUrl: string, token: string): Promise<CompanionCollectionList | undefined> {
         /**
          * @openapi
          * /api/companion/list:
@@ -58,7 +58,7 @@ export class AdminCompanionService implements CompanionServiceList {
                 },
             })
             .then((res) => {
-                return companionList.parse(res.data);
+                return companionCollectionList.parse(res.data);
             })
             .catch((err) => {
                 console.error(`Cannot get companion list from admin API with token: ${token}`, err);

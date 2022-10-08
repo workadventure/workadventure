@@ -1,4 +1,4 @@
-import { ADMIN_API_TOKEN, ADMIN_API_URL, OPID_PROFILE_SCREEN_PROVIDER } from "../enums/EnvironmentVariable";
+import { ADMIN_API_TOKEN, ADMIN_API_URL, OPID_PROFILE_SCREEN_PROVIDER, ADMIN_API_RETRY_DELAY } from "../enums/EnvironmentVariable";
 import Axios from "axios";
 import type { AxiosResponse } from "axios";
 import {
@@ -76,15 +76,12 @@ export const isFetchMemberDataByUuidResponse = z.object({
 
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
 
-export enum AdminFeature {
-    CompanionsList = "CompanionsList",
+export enum AdminCapability {
+    CompanionsList = "api/companion/list",
 }
 
 class AdminApi implements AdminInterface {
-    // Array of enabled admin features
-    private enabledFeatures: AdminFeature[] = ADMIN_API_FEATURES
-        ? ADMIN_API_FEATURES.split(",").map((f) => f as AdminFeature)
-        : [];
+    private capabilities: Map<string, string> = new Map<string, string>();
 
     /**
      * Checks whether admin api is enabled
@@ -93,12 +90,55 @@ class AdminApi implements AdminInterface {
         return ADMIN_API_URL != "";
     }
 
+    async initialise(): Promise<void> {
+        if (!this.isEnabled()) {
+            console.info("Admin API not configured. Will use local implementations");
+            return;
+        }
+
+        console.log(`Admin api is enabled at ${ADMIN_API_URL}. Will check connection and capabilities`);
+        let warnIssued = false;
+        const queryCapabilities = async (resolve: (_v: unknown) => void): Promise<void> => {
+            try {
+                const res = await Axios.get<unknown, AxiosResponse<string[]>>(ADMIN_API_URL + "/api/capabilities");
+                this.capabilities = new Map<string, string>(Object.entries(res.data));
+                console.info(`Capabilities query successful. Found capabitlies:\n${JSON.stringify(res.data, null, 2)}`);
+                resolve(0);
+            } catch (ex) {
+                // ignore errors when querying capabilities
+                const status = (ex as { response: { status: number } })?.response?.status;
+                if (status === 404) {
+                    // 404 probably means and older api version
+                    resolve(0);
+                    console.warn(`Admin API server does not implement capabilities, default to basic capabilities`);
+                    return;
+                }
+                // if we get here, it might be due to connectivity issues
+                if (!warnIssued)
+                    console.warn(
+                        `Could not reach Admin API server at ${ADMIN_API_URL}, will retry in ${ADMIN_API_RETRY_DELAY} ms`,
+                        ex
+                    );
+
+                warnIssued = true;
+
+                setTimeout(() => {
+                    void queryCapabilities(resolve);
+                }, ADMIN_API_RETRY_DELAY);
+            }
+        };
+        await new Promise((resolve) => {
+            void queryCapabilities(resolve);
+        });
+        console.log(`Remote admin api connection successful at ${ADMIN_API_URL}`);
+    }
+
     /**
      * Checks whether the given features is enabled
-     * @param featureFlag
+     * @param capability
      */
-    isFeatureEnabled(featureFlag: AdminFeature) {
-        return this.isEnabled() && this.enabledFeatures.includes(featureFlag);
+    hasCapability(capability: AdminCapability): boolean {
+        return this.isEnabled() && this.capabilities.has(capability);
     }
 
     async fetchMapDetails(

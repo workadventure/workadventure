@@ -104,6 +104,7 @@ function toBool(value: BoolAsString | undefined, defaultValue: boolean): boolean
 export const SECRET_KEY = env.SECRET_KEY;
 export const API_URL = env.API_URL;
 export const ADMIN_API_URL = env.ADMIN_API_URL;
+export const ADMIN_API_RETRY_DELAY = parseInt(process.env.ADMIN_API_RETRY_DELAY || "500");
 export const ADMIN_URL = env.ADMIN_URL;
 export const ADMIN_API_TOKEN = env.ADMIN_API_TOKEN;
 export const ADMIN_SOCKETS_TOKEN = env.ADMIN_SOCKETS_TOKEN;

@@ -1,8 +1,8 @@
-import {AuthenticatedProviderController} from "../src/Controller/AuthenticatedProviderController";
-import {Server} from "hyper-express";
-import {JWTTokenManager} from "../src/Services/JWTTokenManager";
-import Request from "hyper-express/types/components/http/Request";
-import Response from "hyper-express/types/components/http/Response";
+import {AuthenticatedProviderController} from "../../src/pusher/controllers/AuthenticatedProviderController";
+import type {Server} from "hyper-express";
+import {JWTTokenManager} from "../../src/pusher/services/JWTTokenManager";
+import type Request from "hyper-express/types/components/http/Request";
+import type Response from "hyper-express/types/components/http/Response";
 
 const NOT_A_SECRET = "foo"
 class MockAuthenticatedProviderController extends AuthenticatedProviderController<string> {
@@ -90,6 +90,8 @@ describe("AuthenticatedProviderController", () => {
             // @ts-ignore
             expect(req.params["uuid"]).toEqual("avaliduser")
             done()
+        }).catch(error => {
+            console.error(error)
         })
     });
 
