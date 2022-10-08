@@ -13,5 +13,4 @@ export class RemoteCapabilities implements AdminCapabilities {
     info(): string {
         return JSON.stringify(Object.fromEntries(this.capabilities), null, 2);
     }
-
 }
