@@ -16,6 +16,11 @@ import type { AdminInterface } from "./AdminInterface";
 import { jwtTokenManager } from "./JWTTokenManager";
 import type { AuthTokenData } from "./JWTTokenManager";
 import { extendApi } from "@anatine/zod-openapi";
+import { isMucRoomDefinition } from "../../messages/JsonMessages/MucRoomDefinitionInterface";
+import { isApplicationDefinitionInterface } from "../../messages/JsonMessages/ApplicationDefinitionInterface";
+import type { AdminCapabilities } from "./adminApi/AdminCapabilities";
+import { RemoteCapabilities } from "./adminApi/RemoteCapabilities";
+import { LocalCapabilities } from "./adminApi/LocalCapabilities";
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -76,12 +81,8 @@ export const isFetchMemberDataByUuidResponse = z.object({
 
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
 
-export enum AdminCapability {
-    CompanionsList = "api/companion/list",
-}
-
 class AdminApi implements AdminInterface {
-    private capabilities: Map<string, string> = new Map<string, string>();
+    private capabilities: AdminCapabilities = new LocalCapabilities();
 
     /**
      * Checks whether admin api is enabled
@@ -90,10 +91,10 @@ class AdminApi implements AdminInterface {
         return ADMIN_API_URL != "";
     }
 
-    async initialise(): Promise<void> {
+    async initialise(): Promise<AdminCapabilities> {
         if (!this.isEnabled()) {
             console.info("Admin API not configured. Will use local implementations");
-            return;
+            return this.capabilities;
         }
 
         console.log(`Admin api is enabled at ${ADMIN_API_URL}. Will check connection and capabilities`);
@@ -101,7 +102,7 @@ class AdminApi implements AdminInterface {
         const queryCapabilities = async (resolve: (_v: unknown) => void): Promise<void> => {
             try {
                 const res = await Axios.get<unknown, AxiosResponse<string[]>>(ADMIN_API_URL + "/api/capabilities");
-                this.capabilities = new Map<string, string>(Object.entries(res.data));
+                this.capabilities = new RemoteCapabilities(new Map<string, string>(Object.entries(res.data)));
                 console.info(`Capabilities query successful. Found capabitlies:\n${JSON.stringify(res.data, null, 2)}`);
                 resolve(0);
             } catch (ex) {
@@ -131,14 +132,7 @@ class AdminApi implements AdminInterface {
             void queryCapabilities(resolve);
         });
         console.log(`Remote admin api connection successful at ${ADMIN_API_URL}`);
-    }
-
-    /**
-     * Checks whether the given features is enabled
-     * @param capability
-     */
-    hasCapability(capability: AdminCapability): boolean {
-        return this.isEnabled() && this.capabilities.has(capability);
+        return this.capabilities
     }
 
     async fetchMapDetails(

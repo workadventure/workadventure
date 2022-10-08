@@ -3,12 +3,13 @@ import type {AxiosResponse} from "axios";
 import {ADMIN_API_TOKEN, ADMIN_API_URL} from "../enums/EnvironmentVariable";
 import {companionCollectionList} from "../../messages/JsonMessages/CompanionTextures";
 import type {CompanionCollectionList} from "../../messages/JsonMessages/CompanionTextures";
-import {adminApi, AdminCapability } from "./AdminApi";
 import type {CompanionService} from "./CompanionService";
+import type {AdminCapabilities} from "./adminApi/AdminCapabilities";
+import {AdminCapability} from "./adminApi/AdminCapabilities";
 
 export class AdminCompanionService implements CompanionService {
-    static isEnabled(): boolean {
-        return adminApi.hasCapability(AdminCapability.CompanionsList);
+    static isEnabled(capabilities: AdminCapabilities): boolean {
+        return capabilities.has(AdminCapability.CompanionsList);
     }
     /**
      * Returns the list of all companions for the current user.
