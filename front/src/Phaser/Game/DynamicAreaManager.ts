@@ -61,7 +61,9 @@ export class DynamicAreaManager {
                     ...createAreaEvent,
                     id: -1,
                     visible: true,
-                    properties: {},
+                    properties: {
+                        customProperties: {},
+                    },
                 },
                 AreaType.Dynamic
             );
