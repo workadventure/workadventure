@@ -22,7 +22,7 @@
             areaData = { ...preview.getConfig() };
 
             propertyFocusable = areaData.properties["focusable"] as boolean;
-            propertyZoomMargin = areaData.properties["zoom_margin"] as number;
+            propertyZoomMargin = areaData.properties["zoomMargin"] as number;
             propertySilent = areaData.properties["silent"] as boolean;
         }
     });
@@ -43,7 +43,7 @@
         }
         areaData.properties["focusable"] = propertyFocusable;
         areaData.properties["silent"] = propertySilent;
-        areaData.properties["zoom_margin"] = propertyZoomMargin;
+        areaData.properties["zoomMargin"] = propertyZoomMargin;
         gameScene.getMapEditorModeManager().executeCommand({ type: "UpdateAreaCommand", areaObjectConfig: areaData });
     }
 
@@ -91,7 +91,7 @@
                     bind:value={propertyZoomMargin}
                     on:change={sendUpdateAreaCommand}
                     type="number"
-                    id="zoom_margin"
+                    id="zoomMargin"
                 />
             </div>
             <div class="field">

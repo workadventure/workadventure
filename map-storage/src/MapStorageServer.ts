@@ -37,6 +37,7 @@ const mapStorageServer: MapStorageServer = {
             switch (editMapMessage.$case) {
                 case "modifyAreaMessage": {
                     const message = editMapMessage.modifyAreaMessage;
+                    console.log(message);
                     const area = gameMap.getGameMapAreas().getArea(message.id, AreaType.Static);
                     if (area) {
                         const areaObjectConfig: AreaData = structuredClone(area);
@@ -54,7 +55,9 @@ const mapStorageServer: MapStorageServer = {
                     const message = editMapMessage.createAreaMessage;
                     const areaObjectConfig: AreaData = {
                         ...message,
-                        properties: {},
+                        properties: {
+                            customProperties: {},
+                        },
                         visible: true,
                     };
                     validCommand = mapsManager.executeCommand(call.request.mapKey, {

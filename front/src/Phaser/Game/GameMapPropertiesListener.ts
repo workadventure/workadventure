@@ -414,7 +414,9 @@ export class GameMapPropertiesListener {
         }
         const focusable = place.properties.find((property) => property.name === GameMapProperties.FOCUSABLE);
         if (focusable && focusable.value === true) {
-            const zoomMargin = place.properties.find((property) => property.name === GameMapProperties.ZOOM_MARGIN);
+            const zoomMargin = place.properties.find((property) =>
+                [GameMapProperties.ZOOM_MARGIN, "zoom_margin"].includes(property.name)
+            );
             this.scene.getCameraManager().enterFocusMode(
                 {
                     x: place.x + place.width * 0.5,

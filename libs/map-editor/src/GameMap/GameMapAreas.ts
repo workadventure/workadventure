@@ -1,4 +1,4 @@
-import { ITiledMapObject, ITiledMapObjectLayer, ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
+import { ITiledMapObject, ITiledMapObjectLayer, ITiledMapProperty as zoomMargin } from "@workadventure/tiled-map-type-guard";
 import { MathUtils } from "@workadventure/math-utils";
 import { GameMap } from "./GameMap";
 import { AreaData, AreaProperties, AreaType } from '../types';
@@ -31,11 +31,14 @@ export class GameMapAreas {
     constructor(gameMap: GameMap) {
         this.gameMap = gameMap;
 
+        console.log('D1');
         // NOTE: We leave "zone" for legacy reasons
         try {
+            console.log(this.gameMap.tiledObjects);
             this.gameMap.tiledObjects
                 .filter((object) => ["zone", "area"].includes(object.class ?? ""))
                 .forEach((areaRaw: ITiledMapObject) => {
+                    console.log('D2');
                     this.staticAreas.push(this.tiledObjectToAreaData(areaRaw));
                 });
         } catch(e) {
@@ -99,7 +102,7 @@ export class GameMapAreas {
             }
 
             // 
-            if (["focusable", "zoom_margin", "silent"].includes(rawProperty.name)) {
+            if (["focusable", "silent", "zoomMargin"].includes(rawProperty.name)) {
                 // @ts-ignore
                 properties[rawProperty.name] = value;
             } else {
@@ -107,21 +110,22 @@ export class GameMapAreas {
                 properties.customProperties[rawProperty.name] = value;
             }
         }
+        console.log(properties);
         return properties;
     }
 
-    private mapAreaPropertiesToTiledProperties(areaProperties: AreaProperties): ITiledMapProperty[] {
-        const properties: ITiledMapProperty[] = [];
+    private mapAreaPropertiesToTiledProperties(areaProperties: AreaProperties): zoomMargin[] {
+        const properties: zoomMargin[] = [];
 
         const focusable = areaProperties.focusable;
-        const zoom_margin = areaProperties.zoom_margin;
+        const zoomMargin = areaProperties.zoomMargin;
         const silent = areaProperties.silent;
 
         if (focusable !== undefined) {
             properties.push({ name: "focusable", type: "bool", value: focusable });
         }
-        if (zoom_margin !== undefined) {
-            properties.push({ name: "zoom_margin", type: "float", value: zoom_margin });
+        if (zoomMargin !== undefined) {
+            properties.push({ name: "zoomMargin", type: "float", value: zoomMargin });
         }
         if (silent !== undefined) {
             properties.push({ name: "silent", type: "bool", value: silent });
@@ -137,7 +141,7 @@ export class GameMapAreas {
         return properties;
     }
 
-    private mapAreaPropertyToTiledProperty(key: string, value: string | boolean | number): ITiledMapProperty {
+    private mapAreaPropertyToTiledProperty(key: string, value: string | boolean | number): zoomMargin {
         switch (typeof value) {
             case "string": {
                 return {
@@ -398,9 +402,9 @@ export class GameMapAreas {
                 }
                 break;
             }
-            case "zoom_margin": {
+            case "zoomMargin": {
                 if (typeof value === "number") {
-                    area.properties.zoom_margin = value;
+                    area.properties.zoomMargin = value;
                 }
                 break;
             }
@@ -421,8 +425,8 @@ export class GameMapAreas {
         if (properties.focusable !== undefined) {
             flattenedProperties.focusable = properties.focusable;
         }
-        if (properties.zoom_margin !== undefined) {
-            flattenedProperties.zoom_margin = properties.zoom_margin;
+        if (properties.zoomMargin !== undefined) {
+            flattenedProperties.zoomMargin = properties.zoomMargin;
         }
         if (properties.silent !== undefined) {
             flattenedProperties.silent = properties.silent;

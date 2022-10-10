@@ -24,7 +24,7 @@ export interface AreaData {
 // NOTE: This is the same type as declared in messages.proto. any way so we can use one from proto instead of duplicating it?
 export interface AreaProperties {
     focusable?: boolean;
-    zoom_margin?: number;
+    zoomMargin?: number;
     silent?: boolean;
     customProperties: Record<string, any>;
 };
@@ -77,5 +77,5 @@ export enum GameMapProperties {
     URL = "url",
     WRITABLE_BY = "writableBy",
     ZONE = "zone",
-    ZOOM_MARGIN = "zoom_margin",
+    ZOOM_MARGIN = "zoomMargin",
 }

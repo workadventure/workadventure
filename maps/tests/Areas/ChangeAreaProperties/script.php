@@ -50,7 +50,7 @@
     </script>
 </head>
 <body style="color: #ffffff">
-focusaaaable: <input type="checkbox" id="focusable" value=1 checked /><br/>
+focusable: <input type="checkbox" id="focusable" value=1 checked /><br/>
 zoom_margin: <input type="text" id="zoom_margin" value=0 /><br/>
 silent: <input type="checkbox" id="silent" value=0 /><br/>
 openWebsite: <input type="text" id="openWebiste" value="https://workadventu.re/" /><br/>
