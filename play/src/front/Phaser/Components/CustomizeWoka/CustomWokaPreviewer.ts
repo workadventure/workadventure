@@ -1,6 +1,6 @@
 import { Easing } from "../../../types";
 import { getPlayerAnimations, PlayerAnimationTypes } from "../../Player/Animation";
-import { PositionMessage_Direction } from "../../../Messages/ts-proto-generated/protos/messages";
+import { PositionMessage_Direction } from "../../../../messages/ts-proto-generated/protos/messages";
 import { ProtobufClientUtils } from "../../../Network/ProtobufClientUtils";
 
 export enum CustomWokaBodyPart {

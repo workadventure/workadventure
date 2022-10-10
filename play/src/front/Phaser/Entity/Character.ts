@@ -8,7 +8,8 @@ import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipel
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
 import type { PictureStore } from "../../Stores/PictureStore";
-import { Unsubscriber, Writable, writable } from "svelte/store";
+import type { Unsubscriber, Writable } from "svelte/store";
+import { writable } from "svelte/store";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import type CancelablePromise from "cancelable-promise";
@@ -16,7 +17,7 @@ import { TalkIcon } from "../Components/TalkIcon";
 import { Deferred } from "ts-deferred";
 import { PlayerStatusDot } from "../Components/PlayerStatusDot";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import { AvailabilityStatus, PositionMessage_Direction } from "../../Messages/ts-proto-generated/protos/messages";
+import { AvailabilityStatus, PositionMessage_Direction } from "../../../messages/ts-proto-generated/protos/messages";
 import Text = Phaser.GameObjects.Text;
 import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;

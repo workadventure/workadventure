@@ -1,6 +1,6 @@
-import { CommandConfig } from "@workadventure/map-editor";
-import { EditMapCommandMessage } from "../../../../Messages/ts-proto-generated/protos/messages";
-import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
+import type { CommandConfig } from "@workadventure/map-editor";
+import type { EditMapCommandMessage } from "../../../../../messages/ts-proto-generated/protos/messages";
+import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 
 export abstract class MapEditorTool {
     public abstract update(time: number, dt: number): void;

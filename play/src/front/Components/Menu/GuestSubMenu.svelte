@@ -1,5 +1,5 @@
 <script lang="ts">
-    import LL from "../../i18n/i18n-svelte";
+    import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 
@@ -87,5 +87,5 @@
 </div>
 
 <style lang="scss">
-    @import "../../../style/breakpoints.scss";
+    @import "../../style/breakpoints.scss";
 </style>

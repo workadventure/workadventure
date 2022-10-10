@@ -5,7 +5,7 @@
     import { get } from "svelte/store";
     import type { Unsubscriber } from "svelte/store";
     import { onDestroy, onMount } from "svelte";
-    import LL from "../../i18n/i18n-svelte";
+    import LL from "../../../i18n/i18n-svelte";
 
     let HTMLAudioPlayer: HTMLAudioElement;
     let audioPlayerVolumeIcon: HTMLElement;

@@ -1,31 +1,31 @@
-import { registeredCallbacks } from "./front/api/Iframe/registeredCallbacks";
+import { registeredCallbacks } from "./front/Api/Iframe/registeredCallbacks";
 import {
     isIframeAnswerEvent,
     isIframeErrorAnswerEvent,
     isIframeResponseEvent,
     isLookingLikeIframeEventWrapper
-} from "./front/api/Events/IframeEvent";
-import type { TypedMessageEvent } from "./front/api/Events/IframeEvent";
-import chat from "./front/api/Iframe/chat";
-import nav, { CoWebsite } from "./front/api/Iframe/nav";
-import controls from "./front/api/Iframe/controls";
-import ui from "./front/api/Iframe/ui";
-import sound from "./front/api/Iframe/sound";
-import room, { setMapURL, setRoomId } from "./front/api/Iframe/room";
-import { createState } from "./front/api/Iframe/state";
-import player, { setPlayerName, setPlayerLanguage, setTags, setUserRoomToken, setUuid } from "./front/api/Iframe/player";
-import players from "./front/api/Iframe/players";
-import type { ButtonDescriptor } from "./front/api/Iframe/Ui/ButtonDescriptor";
-import type { Popup } from "./front/api/Iframe/Ui/Popup";
-import type { Sound } from "./front/api/Iframe/Sound/Sound";
-import { answerPromises, queryWorkadventure } from "./front/api/Iframe/IframeApiContribution";
-import camera from "./front/api/Iframe/camera";
-export type { UIWebsite } from "./front/api/Iframe/Ui/UIWebsite";
-export type { Menu } from "./front/api/Iframe/Ui/Menu";
-export type { ActionMessage } from "./front/api/Iframe/Ui/ActionMessage";
-export type { EmbeddedWebsite } from "./front/api/Iframe/Room/EmbeddedWebsite";
-export type { Area } from "./front/api/Iframe/Area/Area";
-export type { ActionsMenuAction } from "./front/api/Iframe/ui";
+} from "./front/Api/Events/IframeEvent";
+import type { TypedMessageEvent } from "./front/Api/Events/IframeEvent";
+import chat from "./front/Api/Iframe/chat";
+import nav, { CoWebsite } from "./front/Api/Iframe/nav";
+import controls from "./front/Api/Iframe/controls";
+import ui from "./front/Api/Iframe/ui";
+import sound from "./front/Api/Iframe/sound";
+import room, { setMapURL, setRoomId } from "./front/Api/Iframe/room";
+import { createState } from "./front/Api/Iframe/state";
+import player, { setPlayerName, setPlayerLanguage, setTags, setUserRoomToken, setUuid } from "./front/Api/Iframe/player";
+import players from "./front/Api/Iframe/players";
+import type { ButtonDescriptor } from "./front/Api/Iframe/Ui/ButtonDescriptor";
+import type { Popup } from "./front/Api/Iframe/Ui/Popup";
+import type { Sound } from "./front/Api/Iframe/Sound/Sound";
+import { answerPromises, queryWorkadventure } from "./front/Api/Iframe/IframeApiContribution";
+import camera from "./front/Api/Iframe/camera";
+export type { UIWebsite } from "./front/Api/Iframe/Ui/UIWebsite";
+export type { Menu } from "./front/Api/Iframe/Ui/Menu";
+export type { ActionMessage } from "./front/Api/Iframe/Ui/ActionMessage";
+export type { EmbeddedWebsite } from "./front/Api/Iframe/Room/EmbeddedWebsite";
+export type { Area } from "./front/Api/Iframe/Area/Area";
+export type { ActionsMenuAction } from "./front/Api/Iframe/ui";
 
 const globalState = createState();
 

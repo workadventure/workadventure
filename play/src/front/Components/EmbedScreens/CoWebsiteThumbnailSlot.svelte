@@ -13,7 +13,7 @@
     import jitsiIcon from "../images/jitsi.png";
     import meetingIcon from "../images/meeting.svg";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import LL from "../../i18n/i18n-svelte";
+    import LL from "../../../i18n/i18n-svelte";
 
     export let index: number;
     export let coWebsite: CoWebsite;
@@ -219,7 +219,7 @@
 
 <style lang="scss">
     .cowebsite-thumbnail {
-        cursor: url("../../../style/images/cursor_pointer.png"), pointer;
+        cursor: url("../../images/cursor_pointer.png"), pointer;
         position: relative;
         padding: 0;
         background-color: rgba(#000000, 0.6);

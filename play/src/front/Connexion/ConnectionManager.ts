@@ -11,14 +11,14 @@ import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { userIsConnected, warningContainerStore } from "../Stores/MenuStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { axiosWithRetry } from "./AxiosUtils";
-import { isRegisterData } from "../Messages/JsonMessages/RegisterData";
+import { isRegisterData } from "../../messages/JsonMessages/RegisterData";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
 import { gameManager } from "../Phaser/Game/GameManager";
-import { locales } from "../i18n/i18n-util";
-import type { Locales } from "../i18n/i18n-types";
-import { setCurrentLocale } from "../i18n/locales";
-import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
+import { locales } from "../../i18n/i18n-util";
+import type { Locales } from "../../i18n/i18n-types";
+import { setCurrentLocale } from "../../i18n/locales";
+import type { AvailabilityStatus } from "../../messages/ts-proto-generated/protos/messages";
 
 class ConnectionManager {
     private localUser!: LocalUser;

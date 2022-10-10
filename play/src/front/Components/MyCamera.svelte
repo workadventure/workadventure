@@ -4,7 +4,7 @@
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { onDestroy, onMount } from "svelte";
     import { srcObject } from "./Video/utils";
-    import LL from "../i18n/i18n-svelte";
+    import LL from "../../i18n/i18n-svelte";
 
     let stream: MediaStream | null;
 
@@ -51,7 +51,7 @@
 </div>
 
 <style lang="scss">
-    @import "../../style/breakpoints.scss";
+    @import "../style/breakpoints.scss";
 
     .my-cam-video-container {
         position: absolute;

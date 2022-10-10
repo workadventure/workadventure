@@ -1,4 +1,5 @@
-import { derived, get, Readable, readable, writable } from "svelte/store";
+import type { Readable } from "svelte/store";
+import { derived, get, readable, writable } from "svelte/store";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { userMovingStore } from "./GameStore";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
@@ -11,7 +12,7 @@ import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
+import { AvailabilityStatus } from "../../messages/ts-proto-generated/protos/messages";
 
 import deepEqual from "fast-deep-equal";
 
@@ -446,7 +447,7 @@ async function toggleConstraints(track: MediaStreamTrack, constraints: MediaTrac
         track.stop();
     }
 
-    if (typeof constraints !== "boolean" && constraints !== true) {
+    if (typeof constraints !== "boolean") {
         return track.applyConstraints(constraints);
     }
 }

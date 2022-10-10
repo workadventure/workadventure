@@ -1,6 +1,6 @@
 import type { Translation } from "../i18n-types";
-import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
-import { DeepPartial } from "../../Utils/DeepPartial";
+import { ADMIN_URL } from "../../front/Enum/EnvironmentVariable";
+import type { DeepPartial } from "../DeepPartial";
 
 const upgradeLink = ADMIN_URL + "/pricing";
 

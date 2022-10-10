@@ -5,13 +5,14 @@
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import { getColorByString } from "../Video/utils";
     import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-    import { derived, get, Unsubscriber, writable } from "svelte/store";
+    import type { Unsubscriber } from "svelte/store";
+    import { derived, get, writable } from "svelte/store";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { CHAT_URL } from "../../Enum/EnvironmentVariable";
-    import { locale } from "../../i18n/i18n-svelte";
+    import { locale } from "../../../i18n/i18n-svelte";
     import { AdminMessageEventTypes, adminMessagesService } from "../../Connexion/AdminMessagesService";
     import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
-    import { Subscription } from "rxjs";
+    import type { Subscription } from "rxjs";
     import { availabilityStatusStore } from "../../Stores/MediaStore";
     import { peerStore } from "../../Stores/PeerStore";
     import { connectionManager } from "../../Connexion/ConnectionManager";
@@ -183,7 +184,7 @@
 </div>
 
 <style lang="scss">
-    @import "../../../style/breakpoints.scss";
+    @import "../../style/breakpoints.scss";
 
     @include media-breakpoint-up(sm) {
         #chatWindow {

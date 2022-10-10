@@ -14,12 +14,12 @@ import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
 import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
-import LL from "../../i18n/i18n-svelte";
+import LL from "../../../i18n/i18n-svelte";
 import { inJitsiStore, inBbbStore, silentStore, inOpenWebsite } from "../../Stores/MediaStore";
-import { ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
+import type { ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
 import { urlManager } from "../../Url/UrlManager";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
-import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
+import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { GameMapProperties } from "@workadventure/map-editor";
 import { connectionManager } from "../../Connexion/ConnectionManager";
 

@@ -3,9 +3,9 @@
     import { videoConstraintStore } from "../../Stores/MediaStore";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { menuVisiblilityStore } from "../../Stores/MenuStore";
-    import LL, { locale } from "../../i18n/i18n-svelte";
-    import type { Locales } from "../../i18n/i18n-types";
-    import { displayableLocales, setCurrentLocale } from "../../i18n/locales";
+    import LL, { locale } from "../../../i18n/i18n-svelte";
+    import type { Locales } from "../../../i18n/i18n-types";
+    import { displayableLocales, setCurrentLocale } from "../../../i18n/locales";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
 
@@ -208,5 +208,5 @@
 </div>
 
 <style lang="scss">
-    @import "../../../style/breakpoints.scss";
+    @import "../../style/breakpoints.scss";
 </style>

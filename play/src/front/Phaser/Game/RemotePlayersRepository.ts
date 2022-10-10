@@ -8,9 +8,9 @@ import {
     availabilityStatusToJSON,
     PlayerDetailsUpdatedMessage,
     UserMovedMessage,
-} from "../../Messages/ts-proto-generated/protos/messages";
-import { MessageUserJoined } from "../../Connexion/ConnexionModels";
-import { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
+} from "../../../messages/ts-proto-generated/protos/messages";
+import type { MessageUserJoined } from "../../Connexion/ConnexionModels";
+import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import { iframeListener } from "../../Api/IframeListener";
 import { RoomConnection } from "../../Connexion/RoomConnection";
 

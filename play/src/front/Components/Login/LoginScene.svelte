@@ -5,7 +5,7 @@
     import logoImg from "../images/logo.png";
     import poweredByWorkAdventureImg from "../images/Powered_By_WorkAdventure_Big.png";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import LL from "../../i18n/i18n-svelte";
+    import LL from "../../../i18n/i18n-svelte";
     import { NameNotValidError, NameTooLongError } from "../../Exception/NameError";
 
     export let game: Game;
@@ -85,7 +85,7 @@
 </form>
 
 <style lang="scss">
-    @import "../../../style/breakpoints.scss";
+    @import "../../style/breakpoints.scss";
 
     .loginScene {
         pointer-events: auto;

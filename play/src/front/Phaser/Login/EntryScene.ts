@@ -2,9 +2,9 @@ import { gameManager } from "../Game/GameManager";
 import { Scene } from "phaser";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
-import { localeDetector } from "../../i18n/locales";
+import { localeDetector } from "../../../i18n/locales";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
-import { isErrorApiData } from "../../Messages/JsonMessages/ErrorApiData";
+import { isErrorApiData } from "../../../messages/JsonMessages/ErrorApiData";
 
 export const EntrySceneName = "EntryScene";
 

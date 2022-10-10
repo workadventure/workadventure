@@ -2,7 +2,7 @@
     import { fly } from "svelte/transition";
     import { userIsAdminStore, limitMapStore } from "../../Stores/GameStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
-    import LL from "../../i18n/i18n-svelte";
+    import LL from "../../../i18n/i18n-svelte";
 
     const registerLink = ADMIN_URL + "/second-step-register";
 </script>

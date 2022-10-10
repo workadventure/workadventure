@@ -17,9 +17,9 @@ import {
 import { layoutManagerActionStore } from "../Stores/LayoutManagerStore";
 import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
 import { localUserStore } from "../Connexion/LocalUserStore";
-import LL from "../i18n/i18n-svelte";
+import LL from "../../i18n/i18n-svelte";
 import { get } from "svelte/store";
-import { localeDetector } from "../i18n/locales";
+import { localeDetector } from "../../i18n/locales";
 
 export enum NotificationType {
     discussion = 1,

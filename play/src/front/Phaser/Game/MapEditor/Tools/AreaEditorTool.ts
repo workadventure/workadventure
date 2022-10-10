@@ -1,12 +1,14 @@
-import { AreaType, CommandConfig, ITiledMapRectangleObject } from "@workadventure/map-editor";
-import { Subscription } from "rxjs";
-import { get, Unsubscriber } from "svelte/store";
-import { EditMapCommandMessage } from "../../../../Messages/ts-proto-generated/protos/messages";
+import type { CommandConfig, ITiledMapRectangleObject } from "@workadventure/map-editor";
+import { AreaType } from "@workadventure/map-editor";
+import type { Subscription } from "rxjs";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
+import type { EditMapCommandMessage } from "../../../../../messages/ts-proto-generated/protos/messages";
 import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
-import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
-import { GameScene } from "../../GameScene";
-import { MapEditorModeManager } from "../MapEditorModeManager";
+import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
+import type { GameScene } from "../../GameScene";
+import type { MapEditorModeManager } from "../MapEditorModeManager";
 import { MapEditorTool } from "./MapEditorTool";
 
 export class AreaEditorTool extends MapEditorTool {

@@ -4,7 +4,8 @@ import { CustomizeSceneName } from "./CustomizeScene";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { loadAllDefaultModels } from "../Entity/PlayerTexturesLoadingManager";
 import { Loader } from "../Components/Loader";
-import { BodyResourceDescriptionInterface, PlayerTextures } from "../Entity/PlayerTextures";
+import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
+import { PlayerTextures } from "../Entity/PlayerTextures";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { areCharacterLayersValid } from "../../Connexion/LocalUser";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
@@ -21,7 +22,7 @@ import {
 import { DraggableGrid } from "@home-based-studio/phaser3-utils";
 import { WokaSlot } from "../Components/SelectWoka/WokaSlot";
 import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
-import { wokaList } from "../../Messages/JsonMessages/PlayerTextures";
+import { wokaList } from "../../../messages/JsonMessages/PlayerTextures";
 import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
 
 //todo: put this constants in a dedicated file

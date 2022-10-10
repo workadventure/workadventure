@@ -1,1 +1,3 @@
     //"dev": "concurrently \"cross-env vite\" \"serve\" \"npm:watch-iframe-api\" \"npm:svelte-check-watch\" \"npm:typesafe-i18n-watch\" \"ts-node-dev --inspect=0.0.0.0:9229 --exit-child --respawn ./src/server.ts\"",
+
+    "dev": "concurrently --names \"Pusher\" \"ts-node-dev --inspect=0.0.0.0:9229 --exit-child --respawn ./src/server.ts\"",

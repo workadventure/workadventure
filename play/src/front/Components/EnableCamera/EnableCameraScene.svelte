@@ -16,7 +16,7 @@
     import cinemaCloseImg from "../images/cinema-close.svg";
     import cinemaImg from "../images/cinema.svg";
     import microphoneImg from "../images/microphone.svg";
-    import LL from "../../i18n/i18n-svelte";
+    import LL from "../../../i18n/i18n-svelte";
     import { StringUtils } from "../../Utils/StringUtils";
     import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
 

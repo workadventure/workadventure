@@ -4,7 +4,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import type { Message } from "../../Stores/TypeMessageStore/MessageStore";
     import { banMessageStore } from "../../Stores/TypeMessageStore/BanMessageStore";
-    import LL from "../../i18n/i18n-svelte";
+    import LL from "../../../i18n/i18n-svelte";
 
     export let message: Message;
 

@@ -1,7 +1,8 @@
 import type { Subscription } from "rxjs";
 import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
-import { get, Unsubscriber } from "svelte/store";
+import type{ Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
 
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connexion/ConnectionManager";
@@ -58,7 +59,8 @@ import type { RoomConnection } from "../../Connexion/RoomConnection";
 import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import type { AddPlayerInterface } from "./AddPlayerInterface";
-import { CameraManager, CameraManagerEvent, CameraManagerEventCameraUpdateData } from "./CameraManager";
+import type { CameraManagerEventCameraUpdateData } from "./CameraManager";
+import { CameraManager, CameraManagerEvent } from "./CameraManager";
 
 import { peerStore } from "../../Stores/PeerStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
@@ -66,14 +68,16 @@ import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteMenuStore, emoteStore } from "../../Stores/EmoteStore";
 import { jitsiParticipantsCountStore, userIsAdminStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
+import type {
+    MenuItem,
+    TranslatedMenu
+} from "../../Stores/MenuStore";
 import {
     activeSubMenuStore,
     contactPageStore,
-    MenuItem,
     menuVisiblilityStore,
     SubMenusInterface,
     subMenusStore,
-    TranslatedMenu,
 } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
@@ -92,7 +96,7 @@ import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
-import LL, { locale } from "../../i18n/i18n-svelte";
+import LL, { locale } from "../../../i18n/i18n-svelte";
 import {
     availabilityStatusStore,
     localVolumeStore,
@@ -114,12 +118,13 @@ import {
     AvailabilityStatus,
     ErrorScreenMessage,
     PositionMessage_Direction,
-} from "../../Messages/ts-proto-generated/protos/messages";
+} from "../../../messages/ts-proto-generated/protos/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 import { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import { IframeEventDispatcher } from "./IframeEventDispatcher";
-import { PlayerDetailsUpdate, RemotePlayersRepository } from "./RemotePlayersRepository";
+import type { PlayerDetailsUpdate } from "./RemotePlayersRepository";
+import { RemotePlayersRepository } from "./RemotePlayersRepository";
 import { MapEditorModeManager } from "./MapEditor/MapEditorModeManager";
 import { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
 import {
@@ -128,7 +133,7 @@ import {
     _newChatMessageWritingStatusSubject,
 } from "../../Stores/ChatStore";
 import structuredClone from "@ungap/structured-clone";
-import {
+import type {
     ITiledMap,
     ITiledMapLayer,
     ITiledMapObject,

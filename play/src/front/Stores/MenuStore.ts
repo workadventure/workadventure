@@ -2,7 +2,7 @@ import { derived, get, writable } from "svelte/store";
 import Timeout = NodeJS.Timeout;
 import { userIsAdminStore } from "./GameStore";
 import { CONTACT_URL, OPID_PROFILE_SCREEN_PROVIDER, PUSHER_URL } from "../Enum/EnvironmentVariable";
-import type { Translation } from "../i18n/i18n-types";
+import type { Translation } from "../../i18n/i18n-types";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { connectionManager } from "../Connexion/ConnectionManager";
 

@@ -2,7 +2,7 @@
     import { fly } from "svelte/transition";
     import { requestVisitCardsStore } from "../../Stores/GameStore";
     import { onMount } from "svelte";
-    import LL from "../../i18n/i18n-svelte";
+    import LL from "../../../i18n/i18n-svelte";
 
     export let visitCardUrl: string;
     let w = "500px";

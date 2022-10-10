@@ -1,5 +1,5 @@
 import { Subject } from "rxjs";
-import type { BanUserMessage, SendUserMessage } from "../Messages/ts-proto-generated/protos/messages";
+import type { BanUserMessage, SendUserMessage } from "../../messages/ts-proto-generated/protos/messages";
 
 export enum AdminMessageEventTypes {
     admin = "message",

@@ -28,11 +28,8 @@ export type RemotePeer = VideoPeer | ScreenSharingPeer;
 export class SimplePeer {
     private PeerScreenSharingConnectionArray: Map<number, ScreenSharingPeer> = new Map<number, ScreenSharingPeer>();
     private PeerConnectionArray: Map<number, VideoPeer> = new Map<number, VideoPeer>();
-    private readonly sendLocalScreenSharingStreamCallback: StartScreenSharingCallback;
-    private readonly stopLocalScreenSharingStreamCallback: StopScreenSharingCallback;
     private readonly unsubscribers: (() => void)[] = [];
     private readonly rxJsUnsubscribers: Subscription[] = [];
-    private readonly userId: number;
     private lastWebrtcUserName: string | undefined;
     private lastWebrtcPassword: string | undefined;
 
@@ -40,10 +37,6 @@ export class SimplePeer {
         //we make sure we don't get any old peer.
         peerStore.cleanupStore();
         screenSharingPeerStore.cleanupStore();
-        // We need to go through this weird bound function pointer in order to be able to "free" this reference later.
-        this.sendLocalScreenSharingStreamCallback = this.sendLocalScreenSharingStream.bind(this);
-        this.stopLocalScreenSharingStreamCallback = this.stopLocalScreenSharingStream.bind(this);
-
         let localScreenCapture: MediaStream | null = null;
 
         //todo
@@ -66,7 +59,6 @@ export class SimplePeer {
             })
         );
 
-        this.userId = Connection.getUserId();
         this.initialise();
 
         blackListManager.onBlockStream.subscribe((userUuid) => {

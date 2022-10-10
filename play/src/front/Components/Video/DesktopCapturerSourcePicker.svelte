@@ -126,7 +126,7 @@
             background-clip: padding-box;
 
             &.clickable * {
-                cursor: url("../../../style/images/cursor_pointer.png"), pointer;
+                cursor: url("../../style/images/cursor_pointer.png"), pointer;
             }
 
             &:hover {

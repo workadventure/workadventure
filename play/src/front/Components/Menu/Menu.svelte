@@ -7,7 +7,9 @@
     import CustomSubMenu from "./CustomSubMenu.svelte";
     import GuestSubMenu from "./GuestSubMenu.svelte";
     import chevronImg from "../images/chevron.svg";
-
+    import type {
+        TranslatedMenu
+    } from "../../Stores/MenuStore";
     import {
         activeSubMenuStore,
         checkSubMenuToShow,
@@ -15,14 +17,13 @@
         menuInputFocusStore,
         menuVisiblilityStore,
         SubMenusInterface,
-        subMenusStore,
-        TranslatedMenu,
+        subMenusStore
     } from "../../Stores/MenuStore";
     import type { MenuItem } from "../../Stores/MenuStore";
     import { onDestroy, onMount } from "svelte";
     import type { Unsubscriber } from "svelte/store";
     import { sendMenuClickedEvent } from "../../Api/Iframe/Ui/MenuItem";
-    import LL from "../../i18n/i18n-svelte";
+    import LL from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     let activeSubMenu: MenuItem = $subMenusStore[$activeSubMenuStore];
@@ -153,5 +154,5 @@
 </div>
 
 <style lang="scss">
-    @import "../../../style/breakpoints.scss";
+    @import "../../style/breakpoints.scss";
 </style>

@@ -57,7 +57,7 @@ export class LoginScene extends ResizableScene {
         loginSceneVisibleStore.set(false);
     }
 
-    update(time: number, delta: number): void {}
+    update(_time: number, _delta: number): void {}
 
     public onResize(): void {}
 }

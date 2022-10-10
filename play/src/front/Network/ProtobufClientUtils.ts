@@ -1,4 +1,4 @@
-import { PositionMessage_Direction } from "../Messages/ts-proto-generated/protos/messages";
+import { PositionMessage_Direction } from "../../messages/ts-proto-generated/protos/messages";
 
 export interface MucRoomDefinitionInterface {
     name: string;

@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Game } from "../../Phaser/Game/Game";
     import { SelectCharacterScene, SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
-    import LL from "../../i18n/i18n-svelte";
+    import LL from "../../../i18n/i18n-svelte";
     import {
         collectionsSizeStore,
         customizeAvailableStore,
@@ -58,7 +58,7 @@
 </section>
 
 <style lang="scss">
-    @import "../../../style/breakpoints.scss";
+    @import "../../style/breakpoints.scss";
 
     section {
         font-family: "Press Start 2P";

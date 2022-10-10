@@ -7,7 +7,7 @@
     import { playersStore } from "../../Stores/PlayersStore";
     import { connectionManager } from "../../Connexion/ConnectionManager";
     import { get } from "svelte/store";
-    import LL from "../../i18n/i18n-svelte";
+    import LL from "../../../i18n/i18n-svelte";
 
     let blockActive = true;
     let reportActive = !blockActive;

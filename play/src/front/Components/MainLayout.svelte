@@ -170,7 +170,7 @@
 </div>
 
 <style lang="scss">
-    @import "../../style/breakpoints.scss";
+    @import "../style/breakpoints.scss";
 
     #main-layout {
         display: grid;

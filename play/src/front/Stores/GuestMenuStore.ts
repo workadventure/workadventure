@@ -5,10 +5,13 @@ import { startLayerNamesStore } from "./StartLayerNamesStore";
 export const walkAutomaticallyStore = writable<boolean>(false);
 
 export function copyLink() {
-    const input: HTMLInputElement = document.getElementById("input-share-link") as HTMLInputElement;
-    input.focus();
-    input.select();
-    document.execCommand("copy");
+    const input = document.getElementById("input-share-link");
+
+    if (!(input instanceof HTMLInputElement)) {
+        return;
+    }
+
+    navigator.clipboard.writeText(input.value);
 }
 
 export function getLink(): string {

@@ -5,7 +5,7 @@
     import { AdminMessageEventTypes } from "../../Connexion/AdminMessagesService";
     import Quill from "quill";
     import type { PlayGlobalMessageInterface } from "../../Connexion/ConnexionModels";
-    import LL from "../../i18n/i18n-svelte";
+    import LL from "../../../i18n/i18n-svelte";
 
     //toolbar
     const toolbarOptions = [
@@ -75,7 +75,7 @@
 </section>
 
 <style lang="scss">
-    @import "../../../style/breakpoints.scss";
+    @import "../../style/breakpoints.scss";
     @import "quill/dist/quill.snow.css";
 
     section.section-input-send-text {

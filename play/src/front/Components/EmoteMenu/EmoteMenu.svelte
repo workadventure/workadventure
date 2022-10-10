@@ -3,7 +3,7 @@
     import { emoteMenuStore, emoteDataStore } from "../../Stores/EmoteStore";
     import { onDestroy, onMount } from "svelte";
     import { EmojiButton } from "@joeattardi/emoji-button";
-    import LL from "../../i18n/i18n-svelte";
+    import LL from "../../../i18n/i18n-svelte";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 
     let emojiContainer: HTMLElement;

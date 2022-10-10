@@ -51,15 +51,15 @@ import {
     ViewportMessage as ViewportMessageTsProto,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnexionMessage,
-} from "../Messages/ts-proto-generated/protos/messages";
+} from "../../messages/ts-proto-generated/protos/messages";
 import { Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
-import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
-import { ITiledMapRectangleObject } from "@workadventure/map-editor";
-import { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
+import { apiVersionHash } from "../../messages/JsonMessages/ApiVersion";
+import type { ITiledMapRectangleObject } from "@workadventure/map-editor";
+import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 
 const manualPingDelay = 20000;

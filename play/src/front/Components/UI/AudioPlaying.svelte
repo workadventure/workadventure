@@ -3,7 +3,7 @@
     import megaphoneImg from "./images/megaphone.svg";
     import { soundPlayingStore } from "../../Stores/SoundPlayingStore";
     import { afterUpdate } from "svelte";
-    import LL from "../../i18n/i18n-svelte";
+    import LL from "../../../i18n/i18n-svelte";
 
     export let url: string;
     let audio: HTMLAudioElement;

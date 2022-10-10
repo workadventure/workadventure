@@ -1,5 +1,5 @@
 <script lang="ts">
-    import LL from "../../i18n/i18n-svelte";
+    import LL from "../../../i18n/i18n-svelte";
     import { contactPageStore } from "../../Stores/MenuStore";
 
     function goToGettingStarted() {

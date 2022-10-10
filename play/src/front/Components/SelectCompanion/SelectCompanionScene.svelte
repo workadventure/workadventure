@@ -1,5 +1,5 @@
 <script lang="ts">
-    import LL from "../../i18n/i18n-svelte";
+    import LL from "../../../i18n/i18n-svelte";
     import type { Game } from "../../Phaser/Game/Game";
     import { SelectCompanionScene, SelectCompanionSceneName } from "../../Phaser/Login/SelectCompanionScene";
 
@@ -47,7 +47,7 @@
 </form>
 
 <style lang="scss">
-    @import "../../../style/breakpoints.scss";
+    @import "../../style/breakpoints.scss";
 
     form.selectCompanionScene {
         font-family: "Press Start 2P";

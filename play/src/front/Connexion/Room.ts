@@ -2,9 +2,9 @@ import { CONTACT_URL, PUSHER_URL, DISABLE_ANONYMOUS } from "../Enum/EnvironmentV
 import { localUserStore } from "./LocalUserStore";
 import axios from "axios";
 import { axiosWithRetry } from "./AxiosUtils";
-import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
-import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
-import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+import { isMapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
+import { isRoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
+import type { MucRoomDefinitionInterface } from "../../messages/JsonMessages/MucRoomDefinitionInterface";
 export class MapDetail {
     constructor(public readonly mapUrl: string) {}
 }

@@ -1,6 +1,5 @@
 import "phaser";
-import GameConfig = Phaser.Types.Core.GameConfig;
-import "../style/index.scss";
+//import "./front/style/index.scss";
 
 import { DEBUG_MODE } from "./front/Enum/EnvironmentVariable";
 import { LoginScene } from "./front/Phaser/Login/LoginScene";
@@ -14,8 +13,8 @@ import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-p
 import { EntryScene } from "./front/Phaser/Login/EntryScene";
 import { coWebsiteManager } from "./front/WebRtc/CoWebsiteManager";
 import { ErrorScene } from "./front/Phaser/Reconnecting/ErrorScene";
-import { iframeListener } from "./front/api/IframeListener";
-import { desktopApi } from "./front/api/Desktop";
+import { iframeListener } from "./front/Api/IframeListener";
+import { desktopApi } from "./front/Api/Desktop";
 import { HdpiManager } from "./front/Phaser/Services/HdpiManager";
 import { waScaleManager } from "./front/Phaser/Services/WaScaleManager";
 import { Game } from "./front/Phaser/Game/Game";
@@ -73,7 +72,7 @@ switch (phaserMode) {
 const hdpiManager = new HdpiManager(640 * 480, 196 * 196);
 const { game: gameSize, real: realSize } = hdpiManager.getOptimalGameSize({ width, height });
 
-const config: GameConfig = {
+const config: Phaser.Types.Core.GameConfig = {
     type: mode,
     title: "WorkAdventure",
     scale: {

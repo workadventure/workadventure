@@ -36,17 +36,21 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { chatVisibilityStore, chatZoneLiveStore } from "../../Stores/ChatStore";
     import { proximityMeetingStore } from "../../Stores/MyMediaStore";
+    import type {
+        MenuItem,
+        TranslatedMenu,
+    } from "../../Stores/MenuStore";
     import {
         activeSubMenuStore,
         menuVisiblilityStore,
         inviteUserActivated,
         SubMenusInterface,
         subMenusStore,
-        MenuItem,
-        TranslatedMenu,
     } from "../../Stores/MenuStore";
-    import {
+    import type {
         Emoji,
+    } from "../../Stores/EmoteStore";
+    import {
         emoteDataStore,
         emoteDataStoreLoading,
         emoteMenuStore,
@@ -54,7 +58,7 @@
         emoteMenuSubStore,
         emoteStore,
     } from "../../Stores/EmoteStore";
-    import LL from "../../i18n/i18n-svelte";
+    import LL from "../../../i18n/i18n-svelte";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
     import { fly } from "svelte/transition";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
@@ -64,7 +68,8 @@
     import { mapEditorModeStore } from "../../Stores/MapEditorStore";
     import { iframeListener } from "../../Api/IframeListener";
     import { onDestroy, onMount } from "svelte";
-    import { Unsubscriber, writable } from "svelte/store";
+    import type { Unsubscriber } from "svelte/store";
+    import { writable } from "svelte/store";
     import { peerStore } from "../../Stores/PeerStore";
     import { StringUtils } from "../../Utils/StringUtils";
     import Tooltip from "../Util/Tooltip.svelte";
@@ -729,7 +734,7 @@
 {/if}
 
 <style lang="scss">
-    @import "../../../style/breakpoints.scss";
+    @import "../../style/breakpoints.scss";
 
     .animated {
         transition-property: transform;

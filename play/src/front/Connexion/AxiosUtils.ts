@@ -1,7 +1,7 @@
 import axios from "axios";
 import * as rax from "retry-axios";
 import { errorStore } from "../Stores/ErrorStore";
-import LL from "../i18n/i18n-svelte";
+import LL from "../../i18n/i18n-svelte";
 import { get } from "svelte/store";
 
 /**

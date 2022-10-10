@@ -1,6 +1,6 @@
 <script lang="ts">
     import { errorStore, hasClosableMessagesInErrorStore } from "../../Stores/ErrorStore";
-    import LL from "../../i18n/i18n-svelte";
+    import LL from "../../../i18n/i18n-svelte";
 
     function close(): boolean {
         errorStore.clearClosableMessages();

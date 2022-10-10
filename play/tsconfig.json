@@ -1,11 +1,10 @@
 {
   "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
-    "experimentalDecorators": true,
     "target": "ES2020",
     "baseUrl": "./",
     "downlevelIteration": true,
-    "module": "commonjs",
+    "module": "ESNext",
     "allowJs": true,
     "sourceMap": true,
     "outDir": "./dist",

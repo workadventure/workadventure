@@ -33,7 +33,7 @@
 </div>
 
 <style lang="scss">
-    @import "../../../style/breakpoints.scss";
+    @import "../../style/breakpoints.scss";
 
     .media-container {
         display: flex;
@@ -106,7 +106,7 @@
         }
 
         &.clickable {
-            cursor: url("../../../style/images/cursor_pointer.png"), pointer;
+            cursor: url("../../style/images/cursor_pointer.png"), pointer;
         }
 
         > div {
