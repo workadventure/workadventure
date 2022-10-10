@@ -12,7 +12,7 @@
   "homepage": "https://github.com/thecodingmachine/workadventure#readme",
   "scripts": {
     "start": "node -r source-map-support/register --max-old-space-size=4096 ./dist/server.js",
-    "dev": "concurrently \"npm:svelte-check-watch\"",
+    "dev": "concurrently \"cross-env vite\" \"serve\"",
     "build": "cross-env concurrently \"vite build\" \"tsc && cp -rf ./data ./dist/\"",
     "profile": "tsc && node --prof ./dist/server.js",
     "build-iframe-api": "vite --config iframe-api.vite.config.ts build",
@@ -20,8 +20,8 @@
     "build-typings": "cross-env tsc --project tsconfig-for-iframe-api-typings.json",
     "precommit": "lint-staged",
     "test": "cross-env ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
-    "svelte-check-watch": "svelte-check --ignore \"src/messages/**/*\" --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore\" --watch --tsconfig ./tsconfig-svelte.json",
-    "svelte-check": "svelte-check --ignore \"src/messages\" --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore\" --tsconfig ./tsconfig-svelte.json",
+    "svelte-check-watch": "svelte-check --tsconfig ./tsconfig-svelte.json --workspace src --ignore src/messages/ --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore\" --watch",
+    "svelte-check": "svelte-check --tsconfig ./tsconfig-svelte.json --workspace src --ignore src/messages/ --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore\"",
     "lint": "node_modules/.bin/eslint src/ tests/ --ext .ts,.svelte",
     "lint-fix": "node_modules/.bin/eslint --fix src/ tests/ --ext .ts,.svelte",
     "pretty": "yarn prettier --write 'src/**/*.{ts,svelte}'",
@@ -80,7 +80,7 @@
   "dependencies": {
     "@16bits/nes.css": "^2.3.2",
     "@anatine/zod-openapi": "^1.9.8",
-    "@fontsource/press-start-2p": "^4.5.11",
+    "@fontsource/press-start-2p": "^4.3.0",
     "@grpc/grpc-js": "^1.7.1",
     "@joeattardi/emoji-button": "^4.6.2",
     "@tailwindcss/forms": "^0.5.0",

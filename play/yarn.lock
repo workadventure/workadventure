@@ -341,7 +341,7 @@
     minimatch "^3.1.2"
     strip-json-comments "^3.1.1"
 
-"@fontsource/press-start-2p@^4.3.0", "@fontsource/press-start-2p@^4.5.11":
+"@fontsource/press-start-2p@^4.3.0":
   version "4.5.11"
   resolved "https://registry.yarnpkg.com/@fontsource/press-start-2p/-/press-start-2p-4.5.11.tgz#c347ffc85221bac9b242cbbc54194b65d76c4f24"
   integrity sha512-wICB8YPvoBi9Ok7s+CxAOljiQ6wqQN/UhrDrB63q9nudYDSOWmvrjFQaXSlj0AN16nAkDjZiaCz6dcKtR0kleg==

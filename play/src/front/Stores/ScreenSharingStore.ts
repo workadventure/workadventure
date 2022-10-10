@@ -1,4 +1,5 @@
-import { derived, Readable, readable, writable } from "svelte/store";
+import type { Readable } from "svelte/store";
+import { derived, readable, writable } from "svelte/store";
 import { peerStore } from "./PeerStore";
 import type { LocalStreamStoreValue } from "./MediaStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";

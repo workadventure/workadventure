@@ -1,6 +1,6 @@
 import { requestedCameraState, requestedMicrophoneState, silentStore } from "../../Stores/MediaStore";
 import { get } from "svelte/store";
-import { WorkAdventureDesktopApi } from "../../Interfaces/DesktopAppInterfaces";
+import type { WorkAdventureDesktopApi } from "../../Interfaces/DesktopAppInterfaces";
 
 declare global {
     interface Window {

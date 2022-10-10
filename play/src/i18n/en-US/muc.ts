@@ -1,4 +1,4 @@
-import { BaseTranslation } from "../i18n-types";
+import type { BaseTranslation } from "../i18n-types";
 
 const muc: BaseTranslation = {
     title: "Users list",

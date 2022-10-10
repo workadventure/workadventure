@@ -2,7 +2,8 @@ import { Easing } from "../../types";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import type { Box } from "../../WebRtc/LayoutManager";
 import { hasMovedEventName, Player } from "../Player/Player";
-import { WaScaleManager, WaScaleManagerEvent, WaScaleManagerFocusTarget } from "../Services/WaScaleManager";
+import type { WaScaleManagerFocusTarget } from "../Services/WaScaleManager";
+import { WaScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";
 import { ActiveEventList, UserInputEvent } from "../UserInput/UserInputManager";
 import type { GameScene } from "./GameScene";
 

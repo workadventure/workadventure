@@ -1,5 +1,6 @@
 import CancelablePromise from "cancelable-promise";
-import { get, Readable, writable, Writable } from "svelte/store";
+import type { Readable, Writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 import { iframeListener } from "../../Api/IframeListener";
 import { coWebsiteManager } from "../CoWebsiteManager";
 import type { CoWebsite, CoWebsiteState } from "./CoWesbite";

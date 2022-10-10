@@ -1,5 +1,7 @@
-import { derived, get, Readable } from "svelte/store";
-import { ScreenSharingLocalMedia, screenSharingLocalMedia } from "./ScreenSharingStore";
+import type { Readable } from "svelte/store";
+import { derived, get } from "svelte/store";
+import type { ScreenSharingLocalMedia } from "./ScreenSharingStore";
+import { screenSharingLocalMedia } from "./ScreenSharingStore";
 import { peerStore, screenSharingStreamStore } from "./PeerStore";
 import type { RemotePeer } from "../WebRtc/SimplePeer";
 import { highlightedEmbedScreen } from "./EmbedScreensStore";

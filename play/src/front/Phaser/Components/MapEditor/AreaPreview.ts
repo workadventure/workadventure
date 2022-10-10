@@ -1,5 +1,5 @@
-import { ITiledMapRectangleObject } from "@workadventure/map-editor";
-import { GameScene } from "../../Game/GameScene";
+import type { ITiledMapRectangleObject } from "@workadventure/map-editor";
+import type { GameScene } from "../../Game/GameScene";
 import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
 
 export enum AreaPreviewEvent {

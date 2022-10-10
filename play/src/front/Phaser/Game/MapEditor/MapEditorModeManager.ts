@@ -1,16 +1,18 @@
-import {
+import type {
     CommandConfig,
+} from "@workadventure/map-editor";
+import {
     UpdateAreaCommand,
     CreateAreaCommand,
     Command,
     DeleteAreaCommand,
 } from "@workadventure/map-editor";
-import { Unsubscriber } from "svelte/store";
-import { RoomConnection } from "../../../Connexion/RoomConnection";
+import type { Unsubscriber } from "svelte/store";
+import type { RoomConnection } from "../../../Connexion/RoomConnection";
 import { mapEditorModeDragCameraPointerDownStore, mapEditorModeStore } from "../../../Stores/MapEditorStore";
-import { GameScene } from "../GameScene";
+import type { GameScene } from "../GameScene";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
-import { MapEditorTool } from "./Tools/MapEditorTool";
+import type { MapEditorTool } from "./Tools/MapEditorTool";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",

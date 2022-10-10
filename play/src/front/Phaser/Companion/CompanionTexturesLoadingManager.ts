@@ -1,5 +1,6 @@
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
-import { COMPANION_RESOURCES, CompanionResourceDescriptionInterface } from "./CompanionTextures";
+import type { CompanionResourceDescriptionInterface } from "./CompanionTextures";
+import { COMPANION_RESOURCES } from "./CompanionTextures";
 import CancelablePromise from "cancelable-promise";
 
 export const getAllCompanionResources = (loader: LoaderPlugin): CompanionResourceDescriptionInterface[] => {

@@ -13,7 +13,7 @@ self.addEventListener('install', function(event) {
     );
 });
 
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', () => {
     //never cache data will be stored in dev mode
 });
 

@@ -2,7 +2,8 @@ import { derived, get, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWesbite";
 import { LayoutMode } from "../WebRtc/LayoutManager";
 import { coWebsites } from "./CoWebsiteStore";
-import { Streamable, streamableCollectionStore } from "./StreamableCollectionStore";
+import type { Streamable } from "./StreamableCollectionStore";
+import { streamableCollectionStore } from "./StreamableCollectionStore";
 
 export type EmbedScreen =
     | {

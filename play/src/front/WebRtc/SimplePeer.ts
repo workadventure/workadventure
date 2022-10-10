@@ -2,7 +2,7 @@ import type {
     WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "../Connexion/ConnexionModels";
-import { mediaManager, NotificationType, StartScreenSharingCallback, StopScreenSharingCallback } from "./MediaManager";
+import { mediaManager, NotificationType } from "./MediaManager";
 import { ScreenSharingPeer } from "./ScreenSharingPeer";
 import { VideoPeer } from "./VideoPeer";
 import type { RoomConnection } from "../Connexion/RoomConnection";
@@ -11,7 +11,7 @@ import { get } from "svelte/store";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { playersStore } from "../Stores/PlayersStore";
 import { peerStore, screenSharingPeerStore } from "../Stores/PeerStore";
-import { Subscription } from "rxjs";
+import type { Subscription } from "rxjs";
 
 export interface UserSimplePeerInterface {
     userId: number;

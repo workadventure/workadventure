@@ -1,6 +1,6 @@
 import { MAX_EXTRAPOLATION_TIME } from "../../Enum/EnvironmentVariable";
 import type { PositionInterface } from "../../Connexion/ConnexionModels";
-import { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
+import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
 
 export class PlayerMovement {
     public constructor(

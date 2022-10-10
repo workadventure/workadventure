@@ -3,8 +3,10 @@ import type { RoomConnection } from "../Connexion/RoomConnection";
 import { blackListManager } from "./BlackListManager";
 import type { Subscription } from "rxjs";
 import type { UserSimplePeerInterface } from "./SimplePeer";
-import { readable, Readable, Unsubscriber } from "svelte/store";
-import { localStreamStore, obtainedMediaConstraintStore, ObtainedMediaStreamConstraints } from "../Stores/MediaStore";
+import type { Readable, Unsubscriber } from "svelte/store";
+import { readable } from "svelte/store";
+import type { ObtainedMediaStreamConstraints } from "../Stores/MediaStore";
+import { localStreamStore, obtainedMediaConstraintStore } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
 import {
     chatMessagesStore,

@@ -4,7 +4,7 @@
  * This class takes care of unregistering iframes when they are closed
  */
 import { iframeListener } from "../../Api/IframeListener";
-import { IframeResponseEvent } from "../../Api/Events/IframeEvent";
+import type { IframeResponseEvent } from "../../Api/Events/IframeEvent";
 
 export class IframeEventDispatcher {
     private targets = new Set<MessageEventSource>();

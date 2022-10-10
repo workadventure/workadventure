@@ -1,5 +1,5 @@
 import { areCharacterLayersValid, isUserNameValid, LocalUser } from "./LocalUser";
-import { Emoji } from "../Stores/EmoteStore";
+import type { Emoji } from "../Stores/EmoteStore";
 import { z } from "zod";
 
 const playerNameKey = "playerName";

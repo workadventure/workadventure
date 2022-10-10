@@ -1,11 +1,13 @@
-import {
+import type {
     AreaChangeCallback,
-    AreaType,
-    GameMap,
-    GameMapProperties,
     ITiledMapRectangleObject,
 } from "@workadventure/map-editor";
 import {
+    AreaType,
+    GameMap,
+    GameMapProperties,
+} from "@workadventure/map-editor";
+import type {
     ITiledMap,
     ITiledMapLayer,
     ITiledMapObject,

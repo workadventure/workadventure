@@ -1,5 +1,5 @@
 import "phaser";
-//import "./front/style/index.scss";
+import "./front/style/index.scss";
 
 import { DEBUG_MODE } from "./front/Enum/EnvironmentVariable";
 import { LoginScene } from "./front/Phaser/Login/LoginScene";

@@ -106,7 +106,7 @@ import {
 import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connexion/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
-import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
+import type { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 import CancelablePromise from "cancelable-promise";
@@ -121,12 +121,12 @@ import {
 } from "../../../messages/ts-proto-generated/protos/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
-import { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
+import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import { IframeEventDispatcher } from "./IframeEventDispatcher";
 import type { PlayerDetailsUpdate } from "./RemotePlayersRepository";
 import { RemotePlayersRepository } from "./RemotePlayersRepository";
 import { MapEditorModeManager } from "./MapEditor/MapEditorModeManager";
-import { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
+import type { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
 import {
     chatVisibilityStore,
     _newChatMessageSubject,
@@ -140,13 +140,13 @@ import type {
     ITiledMapProperty,
     ITiledMapTileset,
 } from "@workadventure/tiled-map-type-guard";
-import { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
+import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
 import { AreaType, GameMap, GameMapProperties } from "@workadventure/map-editor";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
-import { GameStateEvent } from "../../Api/Events/GameStateEvent";
+import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PositionInterface;

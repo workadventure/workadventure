@@ -1,7 +1,9 @@
 import type { RoomConnection } from "../Connexion/RoomConnection";
-import { MESSAGE_TYPE_CONSTRAINT, PeerStatus } from "./VideoPeer";
+import type { PeerStatus } from "./VideoPeer";
+import { MESSAGE_TYPE_CONSTRAINT } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
-import { Readable, readable, writable, Writable } from "svelte/store";
+import type { Readable, Writable } from "svelte/store";
+import { readable, writable } from "svelte/store";
 import { getIceServersConfig } from "../Components/Video/utils";
 import { highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";

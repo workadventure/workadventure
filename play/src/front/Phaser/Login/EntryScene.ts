@@ -13,7 +13,6 @@ export const EntrySceneName = "EntryScene";
  * and to route to the next correct scene.
  */
 export class EntryScene extends Scene {
-    private localeLoaded = false;
 
     constructor() {
         super({

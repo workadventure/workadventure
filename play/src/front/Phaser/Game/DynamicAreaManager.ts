@@ -1,8 +1,8 @@
 import { AreaType } from "@workadventure/map-editor";
-import { Subscription } from "rxjs";
-import { CreateAreaEvent, ModifyAreaEvent } from "../../Api/Events/CreateAreaEvent";
+import type { Subscription } from "rxjs";
+import type { CreateAreaEvent, ModifyAreaEvent } from "../../Api/Events/CreateAreaEvent";
 import { iframeListener } from "../../Api/IframeListener";
-import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
+import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 
 export class DynamicAreaManager {
     private readonly gameMapFrontWrapper: GameMapFrontWrapper;
