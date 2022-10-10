@@ -24,7 +24,6 @@ import { LocalCapabilities } from "./adminApi/LocalCapabilities";
 import { isCapabilities} from "../../messages/JsonMessages/CapabilitiesData"
 import type {Capabilities} from "../../messages/JsonMessages/CapabilitiesData"
 
-
 export interface AdminBannedData {
     is_banned: boolean;
     message: string;
@@ -159,7 +158,7 @@ class AdminApi implements AdminInterface {
          */
         const res = await Axios.get<unknown, AxiosResponse<string[]>>(ADMIN_API_URL + "/api/capabilities");
 
-        return isCapabilities.parse(res.data)
+        return isCapabilities.parse(res.data);
     }
 
     async fetchMapDetails(

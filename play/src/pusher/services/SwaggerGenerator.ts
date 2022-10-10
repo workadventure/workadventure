@@ -32,7 +32,7 @@ class SwaggerGenerator {
                 FetchMemberDataByUuidResponse: generateSchema(isFetchMemberDataByUuidResponse),
                 MapDetailsData: generateSchema(isMapDetailsData),
                 RoomRedirect: generateSchema(isRoomRedirect),
-                WokaDetail: generateSchema(isWokaDetail)
+                WokaDetail: generateSchema(isWokaDetail),
             },
         };
         if (type === "external") {
