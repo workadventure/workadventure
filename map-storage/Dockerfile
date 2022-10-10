@@ -18,12 +18,15 @@ COPY libs/tailwind/yarn.lock libs/tailwind/package.json /usr/libs/tailwind/
 RUN cd /usr/libs/tailwind && yarn install --network-timeout 1000000
 COPY libs/math-utils/yarn.lock libs/math-utils/package.json /usr/libs/math-utils/
 RUN cd /usr/libs/math-utils && yarn install --network-timeout 1000000
+COPY libs/messages/yarn.lock libs/messages/package.json /usr/libs/messages/
+RUN cd /usr/libs/messages && yarn install --network-timeout 1000000
 COPY libs/map-editor/yarn.lock libs/map-editor/package.json /usr/libs/map-editor/
 RUN cd /usr/libs/map-editor && yarn install --network-timeout 1000000
 COPY map-storage/yarn.lock map-storage/package.json ./
 RUN cd /usr/src && yarn install
 COPY libs /usr/libs
 RUN cd /usr/libs/math-utils && yarn run build && yarn run prepare-for-prod
+RUN cd /usr/libs/messages && yarn run build && yarn run prepare-for-prod
 RUN cd /usr/libs/map-editor && yarn run build && yarn run prepare-for-prod
 COPY map-storage .
 

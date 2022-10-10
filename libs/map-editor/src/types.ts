@@ -1,33 +1,26 @@
-import { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
+import { AreaProperties, ModifyAreaMessage } from "@workadventure/messages";
 import { CreateAreaCommandConfig } from './Commands/Area/CreateAreaCommand';
 import { DeleteAreaCommandConfig } from './Commands/Area/DeleteAreaCommand';
 import { UpdateAreaCommandConfig } from './Commands/Area/UpdateAreaCommand';
 
-export type ITiledMapRectangleObject = ITiledMapObject & { width: number; height: number };
 
 export type CommandConfig =
     UpdateAreaCommandConfig |
     DeleteAreaCommandConfig |
     CreateAreaCommandConfig;
 
-export interface AreaData {
-    id: number;
-    name: string;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    visible: boolean;
-    properties: AreaProperties;
-}
+export type AreaData = Required<ModifyAreaMessage> & { visible: boolean }; // move visible to messages also
 
-// NOTE: This is the same type as declared in messages.proto. any way so we can use one from proto instead of duplicating it?
-export interface AreaProperties {
-    focusable?: boolean;
-    zoomMargin?: number;
-    silent?: boolean;
-    customProperties: Record<string, any>;
-};
+// export interface AreaData {
+//     id: number;
+//     name: string;
+//     x: number;
+//     y: number;
+//     width: number;
+//     height: number;
+//     visible: boolean;
+//     properties: AreaProperties;
+// }
 
 export enum AreaType {
     Static = "Static",

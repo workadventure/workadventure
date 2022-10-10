@@ -1,7 +1,8 @@
 import { ITiledMapObject, ITiledMapObjectLayer, ITiledMapProperty as zoomMargin } from "@workadventure/tiled-map-type-guard";
 import { MathUtils } from "@workadventure/math-utils";
 import { GameMap } from "./GameMap";
-import { AreaData, AreaProperties, AreaType } from '../types';
+import { AreaProperties } from "@workadventure/messages";
+import { AreaData, AreaType } from '../types';
 import * as _ from "lodash";
 
 export type AreaChangeCallback = (
