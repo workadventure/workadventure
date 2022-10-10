@@ -21,6 +21,9 @@ import { isApplicationDefinitionInterface } from "../../messages/JsonMessages/Ap
 import type { AdminCapabilities } from "./adminApi/AdminCapabilities";
 import { RemoteCapabilities } from "./adminApi/RemoteCapabilities";
 import { LocalCapabilities } from "./adminApi/LocalCapabilities";
+import { isCapabilities} from "../../messages/JsonMessages/CapabilitiesData"
+import type {Capabilities} from "../../messages/JsonMessages/CapabilitiesData"
+
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -101,8 +104,8 @@ class AdminApi implements AdminInterface {
         let warnIssued = false;
         const queryCapabilities = async (resolve: (_v: unknown) => void): Promise<void> => {
             try {
-                const res = await Axios.get<unknown, AxiosResponse<string[]>>(ADMIN_API_URL + "/api/capabilities");
-                this.capabilities = new RemoteCapabilities(new Map<string, string>(Object.entries(res.data)));
+                const capabilities = await this.fetchCapabilities();
+                this.capabilities = new RemoteCapabilities(new Map<string, string>(Object.entries(capabilities)));
                 console.info(`Capabilities query successful. Found capabilities: ${this.capabilities.info()}`);
                 resolve(0);
             } catch (ex) {
@@ -133,6 +136,30 @@ class AdminApi implements AdminInterface {
         });
         console.log(`Remote admin api connection successful at ${ADMIN_API_URL}`);
         return this.capabilities;
+    }
+
+    private async fetchCapabilities(): Promise<Capabilities> {
+        /**
+         * @openapi
+         * /api/capabilities:
+         *   get:
+         *     tags: ["AdminAPI"]
+         *     description: Get admin api capabilties
+         *     produces:
+         *      - "application/json"
+         *     responses:
+         *       200:
+         *         description: a map of capabilities and versions
+         *         schema:
+         *             type: object
+         *             items:
+         *                 $ref: '#/definitions/Capabilities'
+         *       404:
+         *         description: Endpoint not found. If the admin api does not implement, will use default capabilities
+         */
+        const res = await Axios.get<unknown, AxiosResponse<string[]>>(ADMIN_API_URL + "/api/capabilities");
+
+        return isCapabilities.parse(res.data)
     }
 
     async fetchMapDetails(
