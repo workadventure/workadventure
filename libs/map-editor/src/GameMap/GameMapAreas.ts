@@ -31,14 +31,11 @@ export class GameMapAreas {
     constructor(gameMap: GameMap) {
         this.gameMap = gameMap;
 
-        console.log('D1');
         // NOTE: We leave "zone" for legacy reasons
         try {
-            console.log(this.gameMap.tiledObjects);
             this.gameMap.tiledObjects
                 .filter((object) => ["zone", "area"].includes(object.class ?? ""))
                 .forEach((areaRaw: ITiledMapObject) => {
-                    console.log('D2');
                     this.staticAreas.push(this.tiledObjectToAreaData(areaRaw));
                 });
         } catch(e) {
@@ -110,7 +107,6 @@ export class GameMapAreas {
                 properties.customProperties[rawProperty.name] = value;
             }
         }
-        console.log(properties);
         return properties;
     }
 
