@@ -26,6 +26,7 @@ const fr_FR: Translation = {
         online: "En ligne",
         away: "Absent",
         unavailable: "Non disponible",
+        meeting: "En reunion",
     },
     logIn: "Se connecter",
     signIn: "Inscrivez-vous ou connectez-vous pour profiter de toutes les fonctionnalités du chat !",

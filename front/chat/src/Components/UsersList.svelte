@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { MeStore, MucRoom, User, UsersStore } from "../Xmpp/MucRoom";
+    import { MeStore, MucRoom } from "../Xmpp/MucRoom";
+    import { User, UsersStore } from "../Xmpp/AbstractRoom";
     import ChatUser from "./ChatUser.svelte";
     import { createEventDispatcher } from "svelte";
     import { ChevronUpIcon } from "svelte-feather-icons";
@@ -7,6 +8,7 @@
     import LL from "../i18n/i18n-svelte";
     import { Ban, GoTo, RankDown, RankUp } from "../Type/CustomEvent";
     import Loader from "./Loader.svelte";
+    import {connectionManager} from "../Connection/ChatConnectionManager";
     const dispatch = createEventDispatcher<{
         goTo: GoTo;
         rankUp: RankUp;
@@ -25,7 +27,7 @@
     const maxUsersMinimized = 7;
 
     function openChat(user: User) {
-        return user;
+        connectionManager.connectionOrFail.getXmppClient()?.openSingleRoom(user.jid);
         //dispatch('activeThread', user);
     }
 

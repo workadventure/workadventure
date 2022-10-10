@@ -1,4 +1,4 @@
-import jid from "@xmpp/jid";
+import jid, {JID} from "@xmpp/jid";
 import { Observable, Subject } from "rxjs";
 import { MucRoom } from "./MucRoom";
 import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
@@ -9,12 +9,14 @@ import { ChatConnection } from "../Connection/ChatConnection";
 import { activeThreadStore } from "../Stores/ActiveThreadStore";
 import { get } from "svelte/store";
 import { userStore } from "../Stores/LocalUserStore";
+import {SingleRoom} from "./SingleRoom";
 
 export class XmppClient {
     private jid: string | undefined;
     private conferenceDomain: string | undefined;
     private subscriptions = new Map<string, Subject<ElementExt>>();
     private rooms = new Map<string, MucRoom>();
+    private singleRooms = new Map<string, SingleRoom>();
 
     private nickCount = 0;
 
@@ -137,7 +139,7 @@ export class XmppClient {
         }
 
         const roomUrl = jid(waRoomUrl, this.conferenceDomain);
-        const room = new MucRoom(this.connection, name, roomUrl, type, subscribe, this.jid);
+        const room = new MucRoom(this.connection, this, name, roomUrl, type, subscribe, this.jid);
         this.rooms.set(roomUrl.toString(), room);
         mucRoomsStore.addMucRoom(room);
 
@@ -171,7 +173,7 @@ export class XmppClient {
         const roomUrl = room.getUrl();
 
         const activeThread = get(activeThreadStore);
-        if (activeThread && activeThread.getUrl() === roomUrl.toString()) {
+        if (activeThread && activeThread instanceof MucRoom && activeThread.getUrl() === roomUrl.toString()) {
             activeThreadStore.reset();
         }
 
@@ -179,11 +181,27 @@ export class XmppClient {
         mucRoomsStore.removeMucRoom(room);
     }
 
+    public openSingleRoom(jid: JID | string){
+        let singleRoom = this.singleRooms.get(jid.toString());
+        if(!singleRoom){
+            singleRoom = new SingleRoom(this.connection, this, jid.toString());
+            this.singleRooms.set(jid.toString(), singleRoom);
+        }
+        activeThreadStore.set(singleRoom);
+    }
+
     public close() {
         for (const [, room] of this.rooms) {
             room.sendDisconnect();
             mucRoomsStore.removeMucRoom(room);
         }
+    }
+
+    public getMyJID(): string{
+        if(!this.jid){
+            throw new Error("My JID is not defined");
+        }
+        return this.jid;
     }
 
     public getPlayerName() {

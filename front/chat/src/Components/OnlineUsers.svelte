@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { UsersStore } from "../Xmpp/MucRoom";
+    import { UsersStore } from "../Xmpp/AbstractRoom";
     import LL from "../i18n/i18n-svelte";
 
     export let usersListStore: UsersStore;

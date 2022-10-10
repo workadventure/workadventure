@@ -3,7 +3,8 @@
     import OnlineUsers from "./OnlineUsers.svelte";
     import LL from "../i18n/i18n-svelte";
     import highlightWords from "highlight-words";
-    import { MeStore, MucRoom, UsersStore } from "../Xmpp/MucRoom";
+    import { MeStore, MucRoom } from "../Xmpp/MucRoom";
+    import { UsersStore } from "../Xmpp/AbstractRoom";
 
     export let liveRoom: MucRoom;
     export let meStore: MeStore;

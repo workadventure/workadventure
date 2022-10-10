@@ -3,7 +3,8 @@
     import { MoreHorizontalIcon, ShieldOffIcon, ShieldIcon, SlashIcon, UsersIcon } from "svelte-feather-icons";
     import LL from "../i18n/i18n-svelte";
     import { createEventDispatcher } from "svelte";
-    import { defaultColor, defaultWoka, MeStore, MucRoom, User } from "../Xmpp/MucRoom";
+    import { MeStore, MucRoom } from "../Xmpp/MucRoom";
+    import { defaultColor, defaultWoka, User} from "../Xmpp/AbstractRoom";
     import walk from "../../public/static/images/walk.svg";
     import teleport from "../../public/static/images/teleport.svg";
     import businessCard from "../../public/static/images/business-cards.svg";
@@ -97,18 +98,21 @@
                 return "tw-bg-pop-red";
             case 3:
                 return "tw-bg-orange";
+            case 4:
+                return "tw-bg-light-blue";
         }
     }
 
     function getNameOfAvailabilityStatus(status: number) {
         switch (status) {
             case 1:
-            default:
                 return $LL.status.online();
             case 2:
                 return $LL.status.away();
             case 3:
                 return $LL.status.unavailable();
+            case 4:
+                return $LL.status.meeting();
         }
     }
 

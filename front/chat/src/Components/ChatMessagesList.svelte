@@ -1,6 +1,7 @@
 <script lang="ts">
     import { fade, fly } from "svelte/transition";
-    import { ChatStates, defaultColor, defaultWoka, Message, MucRoom, User } from "../Xmpp/MucRoom";
+    import { MucRoom } from "../Xmpp/MucRoom";
+    import { ChatStates, defaultColor, defaultWoka, User, Message} from "../Xmpp/AbstractRoom";
     import LL, { locale } from "../i18n/i18n-svelte";
     import { userStore } from "../Stores/LocalUserStore";
     import { mucRoomsStore } from "../Stores/MucRoomsStore";

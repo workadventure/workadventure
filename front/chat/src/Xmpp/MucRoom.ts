@@ -9,44 +9,29 @@ import { v4 as uuidv4 } from "uuid";
 import { userStore } from "../Stores/LocalUserStore";
 import { UserData } from "../Messages/JsonMessages/ChatData";
 import { filesUploadStore, mentionsUserStore } from "../Stores/ChatStore";
-import { fileMessageManager, UploadedFile } from "../Services/FileMessageManager";
+import { fileMessageManager } from "../Services/FileMessageManager";
 import { mediaManager, NotificationType } from "../Media/MediaManager";
 import { availabilityStatusStore } from "../Stores/ChatStore";
 import { activeThreadStore } from "../Stores/ActiveThreadStore";
 import Timeout = NodeJS.Timeout;
 import { connectionManager } from "../Connection/ChatConnectionManager";
-
-export const USER_STATUS_AVAILABLE = "available";
-export const USER_STATUS_DISCONNECTED = "disconnected";
-export type User = {
-    name: string;
-    playUri: string;
-    roomName: string | null;
-    uuid: string;
-    status: string;
-    active: boolean;
-    isInSameMap: boolean;
-    color: string;
-    woka: string;
-    unreads: boolean;
-    isAdmin: boolean;
-    chatState: string;
-    isMe: boolean;
-    jid: string;
-    isMember: boolean;
-    availabilityStatus: number;
-    visitCardUrl?: string | null;
-};
-
-export const ChatStates = {
-    ACTIVE: "active",
-    INACTIVE: "inactive",
-    GONE: "gone",
-    COMPOSING: "composing",
-    PAUSED: "paused",
-};
-export type UserList = Map<string, User>;
-export type UsersStore = Readable<UserList>;
+import {
+    AbstractRoom,
+    ChatStates,
+    defaultUser,
+    defaultUserData,
+    defaultWoka,
+    Message, MessageType,
+    ReactAction,
+    ReactMessage,
+    ReplyMessage,
+    User,
+    UserStatus,
+    UserList,
+    UsersStore
+} from "./AbstractRoom";
+import {HtmlUtils} from "../Utils/HtmlUtils";
+import {XmppClient} from "./XmppClient";
 
 export type Teleport = {
     state: boolean;
@@ -54,109 +39,20 @@ export type Teleport = {
 };
 export type TeleportStore = Readable<Teleport>;
 
-type ReplyMessage = {
-    id: string;
-    senderName: string;
-    body: string;
-    files?: UploadedFile[];
-};
-
-enum reactAction {
-    add = 1,
-    delete = -1,
-}
-
-type ReactMessage = {
-    id: string;
-    message: string;
-    from: string;
-    emoji: string;
-    operation: number;
-};
-
-export type Message = {
-    body: string;
-    name: string;
-    jid: string;
-    time: Date;
-    id: string;
-    delivered: boolean;
-    error: boolean;
-    from: string;
-    type: messageType;
-    targetMessageReply?: ReplyMessage;
-    targetMessageReact?: Map<string, number>;
-    files?: UploadedFile[];
-    mentions?: User[];
-};
-export type MessagesList = Message[];
-export type MessagesStore = Readable<MessagesList>;
-
 export type Me = {
     isAdmin: boolean;
 };
 
 export type MeStore = Readable<Me>;
 
-enum messageType {
-    message = 1,
-    reply,
-    react,
-}
+const _VERBOSE = true;
 
-const _VERBOSE = false;
-export const defaultWoka =
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAdCAYAAABBsffGAAAB/ElEQVRIia1WMW7CQBC8EAoqFy74AD1FqNzkAUi09DROwwN4Ag+gMQ09dcQXXNHQIucBPAJFc2Iue+dd40QZycLc7c7N7d7u+cU9wXw+ryyL0+n00eU9tCZIOp1O/f/ZbBbmzuczX6uuRVTlIAYpCSeTScumaZqw0OVyURd47SIGaZ7n6s4wjmc0Grn7/e6yLFtcr9dPaaOGhcTEeDxu2dxut2hXUJ9ioKmW0IidMg6/NPmD1EmqtojTBWAvE26SW8r+YhfIu87zbyB5BiRerVYtikXxXuLRuK058HABMyz/AX8UHwXgV0NRaEXzDKzaw+EQCioo1yrsLfvyjwZrTvK0yp/xh/o+JwbFhFYgFRNqzGEIB1ZhH2INkXJZoShn2WNSgJRNS/qoYSHxer1+qkhChnC320ULRI1LEsNhv99HISBkLmhP/7L8OfqhiKC6SzEJtSTLHMkGFhK6XC79L89rmtC6rv0YfjXV9COPDwtVQxEc2ZflIu7R+WADQrkA7eCH5BdFwQRXQ8bKxXejeWFoYZGCQM7Yh7BAkcw0DEnEEPHhbjBPQfCDvwzlEINlWZq3OAiOx2O0KwAKU8gehXfzu2Wz2VQMTXqCeLZZSNvtVv20MFsu48gQpDvjuHYxE+ZHESBPSJ/x3sqBvhe0hc5vRXkfypBY4xGcc9+lcFxartG6LgAAAABJRU5ErkJggg==";
-export const defaultColor = "#626262";
-
-export const defaultUserData: UserData = {
-    uuid: "default",
-    email: null,
-    name: "",
-    playUri: "",
-    authToken: "",
-    color: defaultColor,
-    woka: defaultWoka,
-    isLogged: false,
-    availabilityStatus: 0,
-    roomName: null,
-    visitCardUrl: null,
-};
-
-export const defaultUser: User = {
-    name: "unknown",
-    playUri: "",
-    roomName: null,
-    uuid: "",
-    status: "",
-    active: false,
-    isInSameMap: false,
-    color: defaultColor,
-    woka: defaultWoka,
-    unreads: false,
-    isAdmin: false,
-    chatState: "",
-    isMe: false,
-    jid: "",
-    isMember: false,
-    availabilityStatus: 0,
-    visitCardUrl: null,
-};
-
-export type DeleteMessageStore = Readable<string[]>;
-
-export class MucRoom {
+export class MucRoom extends AbstractRoom{
     private presenceStore: Writable<UserList>;
     private teleportStore: Writable<Teleport>;
-    private messageStore: Writable<Message[]>;
-    private messageReactStore: Writable<Map<string, ReactMessage[]>>;
-    private deletedMessagesStore: Writable<string[]>;
     private meStore: Writable<Me>;
     private composingTimeOut: Timeout | undefined;
-    public lastMessageSeen: Date;
-    private countMessagesToSee: Writable<number>;
     private sendTimeOut: Timeout | undefined;
-    private loadingStore: Writable<boolean>;
     private canLoadOlderMessagesStore: Writable<boolean>;
     private showDisabledLoadOlderMessagesStore: Writable<boolean>;
     private closed: boolean = false;
@@ -169,49 +65,23 @@ export class MucRoom {
     private subscriptions = new Map<string, string>();
 
     constructor(
-        private connection: ChatConnection,
+        protected connection: ChatConnection,
+        xmppClient: XmppClient,
         public readonly name: string,
-        private roomJid: JID,
+        protected roomJid: jid.JID,
         public type: string,
         public subscribe: boolean,
         private jid: string
     ) {
+        super(connection, xmppClient);
+
         this.presenceStore = writable<UserList>(new Map<string, User>());
-        this.messageStore = writable<Message[]>(new Array(0));
-        this.deletedMessagesStore = writable<string[]>(new Array(0));
-        this.messageReactStore = writable<Map<string, ReactMessage[]>>(new Map<string, ReactMessage[]>());
         this.teleportStore = writable<Teleport>({ state: false, to: null });
         this.meStore = writable<Me>({ isAdmin: false });
-        this.lastMessageSeen = new Date();
-        this.countMessagesToSee = writable<number>(0);
-        this.loadingStore = writable<boolean>(false);
         this.canLoadOlderMessagesStore = writable<boolean>(true);
         this.showDisabledLoadOlderMessagesStore = writable<boolean>(false);
-        this.loadingSubscribers = writable<boolean>(true);
+        this.loadingSubscribers = writable<boolean>(false);
         this.readyStore = writable<boolean>(true);
-
-        //refrech react message
-        this.messageReactStore.subscribe((reacts) => {
-            this.messageStore.update((messages) => {
-                messages.forEach((message, index) => {
-                    if (!reacts.has(message.id)) return;
-
-                    const reactsByMessage = reacts.get(message.id);
-                    message.targetMessageReact = reactsByMessage?.reduce((list: Map<string, number>, reactMessage) => {
-                        if (list.has(reactMessage.emoji)) {
-                            const nb = (list.get(reactMessage.emoji) as number) + reactMessage.operation * 1;
-                            list.set(reactMessage.emoji, nb);
-                        } else {
-                            list.set(reactMessage.emoji, reactMessage.operation * 1);
-                        }
-                        return list;
-                    }, new Map<string, number>());
-
-                    messages[index] = message;
-                });
-                return messages;
-            });
-        });
     }
 
     public getPlayerName() {
@@ -255,6 +125,10 @@ export class MucRoom {
         return defaultUserData;
     }
 
+    protected getUser(jid: JID | string): User {
+        return get(this.presenceStore).get(jid.toString()) ?? defaultUser;
+    }
+
     public goTo(type: string, playUri: string, uuid: string) {
         this.teleportStore.set({ state: true, to: uuid });
         if (type === "room") {
@@ -287,6 +161,7 @@ export class MucRoom {
             })
         );
         if (!this.closed) {
+            this.loadingSubscribers.set(true);
             this.getAllSubscriptionsId = uuid;
             this.connection.emitXmlMessage(messageMucListAllUsers);
             if (_VERBOSE) console.warn("[XMPP]", ">> Get all subscribers sent");
@@ -616,7 +491,7 @@ export class MucRoom {
                     delivered: false,
                     error: false,
                     from: this.jid,
-                    type: messageReply != undefined ? messageType.reply : messageType.message,
+                    type: messageReply != undefined ? MessageType.reply : MessageType.message,
                     files: fileMessageManager.files,
                     targetMessageReply:
                         messageReply != undefined
@@ -645,16 +520,16 @@ export class MucRoom {
 
         return messages.reduce((value, message) => {
             if (message.emoji == emojiStr && jid(message.from).getLocal() == jid(this.jid).getLocal()) {
-                value = message.operation == reactAction.add;
+                value = message.operation == ReactAction.add;
             }
             return value;
         }, false);
     }
     public sendReactMessage(emoji: string, messageReact: Message) {
         //define action, delete or not
-        let action = reactAction.add;
+        let action = ReactAction.add;
         if (this.haveSelected(messageReact.id, emoji)) {
-            action = reactAction.delete;
+            action = ReactAction.delete;
         }
 
         const idMessage = uuidv4();
@@ -787,7 +662,7 @@ export class MucRoom {
                     if (userJID.toString() !== this.getMyJID().toString()) {
                         // If the user is a member and the current user is a member too just disconnect him
                         if (this.getCurrentIsMember(userJID.toString()) && this.getMeIsMember()) {
-                            this.updateUser(userJID, null, null, null, null, USER_STATUS_DISCONNECTED);
+                            this.updateUser(userJID, null, null, null, null, UserStatus.DISCONNECTED);
                         } else {
                             this.deleteUser(userJID.toString());
                         }
@@ -802,7 +677,7 @@ export class MucRoom {
                         playUri,
                         roomName,
                         uuid,
-                        type === "unavailable" ? USER_STATUS_DISCONNECTED : USER_STATUS_AVAILABLE,
+                        type === "unavailable" ? UserStatus.DISCONNECTED : UserStatus.AVAILABLE,
                         color,
                         woka,
                         ["admin", "moderator", "owner"].includes(role),
@@ -952,7 +827,7 @@ export class MucRoom {
                                     delivered: true,
                                     error: false,
                                     from: from.toString(),
-                                    type: xml.getChild("reply") ? messageType.message : messageType.reply,
+                                    type: xml.getChild("reply") ? MessageType.message : MessageType.reply,
                                 };
 
                                 //get reply message
@@ -1046,7 +921,7 @@ export class MucRoom {
                     delivered: true,
                     error: false,
                     from: from.toString(),
-                    type: messageXML?.getChild("reply") ? messageType.message : messageType.reply,
+                    type: messageXML?.getChild("reply") ? MessageType.message : MessageType.reply,
                 };
                 //console.warn('MAM message received not state', messageXML?.toString());
                 this.messageStore.update((messages) => {
@@ -1059,46 +934,7 @@ export class MucRoom {
 
         if (!handledMessage) {
             console.warn("Unhandled message targeted at the room: ", xml);
-            console.warn("Message name : ", xml.getName());
         }
-    }
-
-    // All gets from the presenceStore
-    private getCurrentName(jid: JID | string) {
-        return get(this.presenceStore).get(jid.toString())?.name ?? "";
-    }
-    private getCurrentStatus(jid: JID | string) {
-        return get(this.presenceStore).get(jid.toString())?.status ?? USER_STATUS_DISCONNECTED;
-    }
-    private getCurrentPlayUri(jid: JID | string) {
-        return get(this.presenceStore).get(jid.toString())?.playUri ?? "";
-    }
-    private getCurrentRoomName(jid: JID | string) {
-        return get(this.presenceStore).get(jid.toString())?.roomName ?? null;
-    }
-    private getCurrentUuid(jid: JID | string) {
-        return get(this.presenceStore).get(jid.toString())?.uuid ?? "";
-    }
-    private getCurrentColor(jid: JID | string) {
-        return get(this.presenceStore).get(jid.toString())?.color ?? defaultColor;
-    }
-    private getCurrentWoka(jid: JID | string) {
-        return get(this.presenceStore).get(jid.toString())?.woka ?? defaultWoka;
-    }
-    private getCurrentIsAdmin(jid: JID | string) {
-        return get(this.presenceStore).get(jid.toString())?.isAdmin ?? false;
-    }
-    private getCurrentChatState(jid: JID | string) {
-        return get(this.presenceStore).get(jid.toString())?.chatState ?? ChatStates.INACTIVE;
-    }
-    private getCurrentIsMember(jid: JID | string) {
-        return get(this.presenceStore).get(jid.toString())?.isMember ?? true;
-    }
-    private getCurrentAvailabilityStatus(jid: JID | string) {
-        return get(this.presenceStore).get(jid.toString())?.availabilityStatus ?? 0;
-    }
-    private getVisitCardUrl(jid: JID | string) {
-        return get(this.presenceStore).get(jid.toString())?.visitCardUrl ?? null;
     }
 
     private getMeIsAdmin() {
@@ -1108,7 +944,7 @@ export class MucRoom {
         return this.subscribe;
     }
     public getMe() {
-        return get(this.presenceStore).get(this.getMyJID().toString());
+        return get(this.presenceStore).get(super.getMyJID().toString());
     }
 
     private updateUser(
@@ -1129,7 +965,7 @@ export class MucRoom {
         let isMe = false;
         const user = get(userStore);
         //MucRoom.encode(user?.email) ?? MucRoom.encode(user?.uuid)) + "@" + EJABBERD_DOMAIN === jid &&
-        if (jid.toString() === this.getMyJID().toString()) {
+        if (jid.toString() === this.getMyJID()) {
             isMe = true;
             this.meStore.update((me) => {
                 me.isAdmin = isAdmin ?? this.getMeIsAdmin();
@@ -1138,13 +974,13 @@ export class MucRoom {
         }
         this.presenceStore.update((list) => {
             list.set(jid.toString(), {
-                name: this.convertNameEmoji(nick ?? this.getCurrentName(jid)),
+                name: HtmlUtils.convertEmoji(nick ?? this.getCurrentName(jid)),
                 playUri: playUri ?? this.getCurrentPlayUri(jid),
                 roomName: roomName ?? this.getCurrentRoomName(jid),
                 uuid: uuid ?? this.getCurrentUuid(jid),
                 status: status ?? this.getCurrentStatus(jid),
                 isInSameMap: (playUri ?? this.getCurrentPlayUri(jid)) === user.playUri,
-                active: (status ?? this.getCurrentStatus(jid)) === USER_STATUS_AVAILABLE,
+                active: (status ?? this.getCurrentStatus(jid)) === UserStatus.AVAILABLE,
                 color: color ?? this.getCurrentColor(jid),
                 woka: woka ?? this.getCurrentWoka(jid),
                 unreads: false,
@@ -1188,6 +1024,10 @@ export class MucRoom {
         }
     }
 
+    public getUrl(): string {
+        return this.roomJid.local + "@" + this.roomJid.domain.toString();
+    }
+
     public deleteMessage(idMessage: string) {
         this.messageStore.update((messages) => {
             return messages.filter((message) => message.id !== idMessage);
@@ -1210,20 +1050,8 @@ export class MucRoom {
     public getTeleportStore(): TeleportStore {
         return this.teleportStore;
     }
-    public getMessagesStore(): MessagesStore {
-        return this.messageStore;
-    }
-    public getDeletedMessagesStore(): DeleteMessageStore {
-        return this.deletedMessagesStore;
-    }
     public getMeStore(): MeStore {
         return this.meStore;
-    }
-    public getCountMessagesToSee() {
-        return this.countMessagesToSee;
-    }
-    public getLoadingStore() {
-        return this.loadingStore;
     }
     public getLoadingSubscribersStore() {
         return this.loadingSubscribers;
@@ -1238,45 +1066,12 @@ export class MucRoom {
         return this.readyStore;
     }
 
-    public getUrl(): string {
-        return this.roomJid.local + "@" + this.roomJid.domain.toString();
-    }
-
-    public getMyJID(): JID {
-        const myJID = jid(this.jid);
-        myJID.setResource("");
-        return myJID;
-    }
-
     public resetTeleportStore(): void {
         this.teleportStore.set({ state: false, to: null });
     }
 
     public reset(): void {
-        this.presenceStore.set(new Map<string, User>());
-        this.messageStore.set([]);
+        super.reset();
         this.meStore.set({ isAdmin: false });
-    }
-
-    private convertNameEmoji(username: string): string {
-        return username.replace(
-            /\[e-\w+\]/gu,
-            (match) => `${String.fromCodePoint(Number("0x" + match.substring(3, match.length - 1)))}`
-        );
-    }
-
-    private static encode(name: string | null | undefined) {
-        if (!name) return name;
-        return name
-            .replace(/\\/g, "\\5c")
-            .replace(/ /g, "\\20")
-            .replace(/\*/g, "\\22")
-            .replace(/&/g, "\\26")
-            .replace(/'/g, "\\27")
-            .replace(/\//g, "\\2f")
-            .replace(/:/g, "\\3a")
-            .replace(/</g, "\\3c")
-            .replace(/>/g, "\\3e")
-            .replace(/@/g, "\\40");
     }
 }

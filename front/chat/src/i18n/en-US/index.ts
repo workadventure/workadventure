@@ -26,6 +26,7 @@ const en_US: BaseTranslation = {
         online: "Online",
         away: "Away",
         unavailable: "Unavailable",
+        meeting: "In a meeting",
     },
     logIn: "Log in",
     signIn: "Register or log in to enjoy all the features of the chat !",

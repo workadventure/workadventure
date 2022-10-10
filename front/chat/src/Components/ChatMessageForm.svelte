@@ -11,7 +11,8 @@
         XCircleIcon,
         ArrowRightCircleIcon,
     } from "svelte-feather-icons";
-    import { ChatStates, MucRoom, User } from "../Xmpp/MucRoom";
+    import { MucRoom } from "../Xmpp/MucRoom";
+    import { ChatStates, User } from "../Xmpp/AbstractRoom";
     import LL, { locale } from "../i18n/i18n-svelte";
     import { createEventDispatcher, onMount } from "svelte";
     import { EmojiButton } from "@joeattardi/emoji-button";
