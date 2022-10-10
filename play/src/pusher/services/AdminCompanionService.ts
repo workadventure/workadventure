@@ -44,7 +44,7 @@ export class AdminCompanionService implements CompanionServiceInterface {
          *         schema:
          *             type: array
          *             items:
-         *                 $ref: '#/definitions/CompanionList'
+         *                 $ref: '#/definitions/CompanionCollection'
          *       404:
          *         description: Error while retrieving the data
          *         schema:

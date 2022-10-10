@@ -8,7 +8,7 @@ import { extendApi } from "@anatine/zod-openapi";
 
 //The list of all the companion textures
 
-export const companionTexture = z.object({
+export const isCompanionDetail = z.object({
     name: extendApi(z.string(), { description: "The name of the texture.", example: "dog1" }),
     img: extendApi(z.string(), {
         description: "The URL of the image of the texture.",
@@ -16,14 +16,14 @@ export const companionTexture = z.object({
     }),
 });
 
-export type CompanionTexture = z.infer<typeof companionTexture>;
+export type CompanionTexture = z.infer<typeof isCompanionDetail>;
 
-export const companionList = z.array(companionTexture);
+export const companionList = z.array(isCompanionDetail);
 
 export type CompanionList = z.infer<typeof companionList>;
 
 export const companionTextureCollection = z.object({
-    name: extendApi(z.string(), { description: "A collection of companions" }),
+    name: extendApi(z.string(), { description: "Collection name", example: "cats" }),
     textures: companionList,
 });
 

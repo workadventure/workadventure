@@ -10,6 +10,10 @@ import {
     wokaList,
     wokaTexture,
     isRoomRedirect,
+    companionCollectionList,
+    companionTextureCollection,
+    isCompanionDetail,
+    isCapabilities,
 } from "@workadventure/messages";
 import { isFetchMemberDataByUuidResponse } from "./AdminApi";
 import type { SchemaObject } from "openapi3-ts";
@@ -25,7 +29,7 @@ class SwaggerGenerator {
                 FetchMemberDataByUuidResponse: generateSchema(isFetchMemberDataByUuidResponse),
                 MapDetailsData: generateSchema(isMapDetailsData),
                 RoomRedirect: generateSchema(isRoomRedirect),
-                WokaDetail: generateSchema(isWokaDetail),
+                WokaDetail: generateSchema(isWokaDetail)
             },
         };
         if (type === "external") {
@@ -35,6 +39,10 @@ class SwaggerGenerator {
             definitions: {
                 AdminApiData: generateSchema(isAdminApiData),
                 //BanBannedAdminMessageInterface: generateSchema(isBanBannedAdminMessageInterface),
+                Capabilities: generateSchema(isCapabilities),
+                CompanionCollectionList: generateSchema(companionCollectionList),
+                CompanionDetail: generateSchema(isCompanionDetail),
+                CompanionCollection: generateSchema(companionTextureCollection),
                 ErrorApiErrorData: generateSchema(isErrorApiErrorData),
                 ErrorApiRedirectData: generateSchema(isErrorApiRedirectData),
                 ErrorApiRetryData: generateSchema(isErrorApiRetryData),
