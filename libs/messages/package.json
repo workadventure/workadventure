@@ -15,7 +15,7 @@
     "@grpc/grpc-js": "^1.6.7",
     "google-protobuf": "^3.21.0",
     "rxjs": "6.6.3",
-    "zod": "^3.14.3"
+    "zod": "^3.19.1"
   },
   "devDependencies": {
     "@types/node": "^18.7.17",

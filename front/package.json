@@ -80,7 +80,7 @@
     "ts-proto": "^1.123.1",
     "typesafe-i18n": "^5.4.0",
     "uuidv4": "^6.2.10",
-    "zod": "^3.14.3"
+    "zod": "^3.19.1"
   },
   "scripts": {
     "start": "run-p serve watch-iframe-api svelte-check-watch typesafe-i18n-watch",

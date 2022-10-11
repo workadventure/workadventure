@@ -60,7 +60,7 @@
     "source-map-support": "^0.5.21",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.10.0",
     "uuidv4": "^6.0.7",
-    "zod": "^3.14.3"
+    "zod": "^3.19.1"
   },
   "devDependencies": {
     "@types/bigbluebutton-js": "^0.2.1",
