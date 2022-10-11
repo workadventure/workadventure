@@ -24,13 +24,16 @@ import { InvalidTokenError } from "./InvalidTokenError";
 import HyperExpress from "hyper-express";
 import { WebSocket } from "uWebSockets.js";
 import { adminService } from "../Services/AdminService";
-import { ErrorApiData, isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
-import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
+import {
+    ErrorApiData,
+    isErrorApiData,
+    apiVersionHash,
+    MucRoomDefinitionInterface,
+    isUserRoomToken,
+} from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
-import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
 import { XmppClient } from "../Services/XmppClient";
 import Debug from "debug";
-import { isUserRoomToken } from "../Messages/JsonMessages/AdminApiData";
 
 /**
  * The object passed between the "open" and the "upgrade" methods when opening a websocket

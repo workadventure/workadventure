@@ -11,7 +11,7 @@ import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { userIsConnected, warningContainerStore } from "../Stores/MenuStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { axiosWithRetry } from "./AxiosUtils";
-import { isRegisterData } from "../Messages/JsonMessages/RegisterData";
+import { isRegisterData } from "@workadventure/messages";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
 import { gameManager } from "../Phaser/Game/GameManager";

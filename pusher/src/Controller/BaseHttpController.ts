@@ -1,7 +1,7 @@
 import { Server } from "hyper-express";
 import Response from "hyper-express/types/components/http/Response";
 import axios from "axios";
-import { isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
+import { isErrorApiData } from "@workadventure/messages";
 import { DEBUG_ERROR_MESSAGES } from "../Enum/EnvironmentVariable";
 
 export class BaseHttpController {

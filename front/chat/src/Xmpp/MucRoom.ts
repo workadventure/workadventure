@@ -7,7 +7,7 @@ import ElementExt from "./Lib/ElementExt";
 import { mucRoomsStore, numberPresenceUserStore } from "../Stores/MucRoomsStore";
 import { v4 as uuidv4 } from "uuid";
 import { userStore } from "../Stores/LocalUserStore";
-import { UserData } from "../Messages/JsonMessages/ChatData";
+import { UserData } from "@workadventure/messages";
 import { filesUploadStore, mentionsUserStore } from "../Stores/ChatStore";
 import { fileMessageManager, UploadedFile } from "../Services/FileMessageManager";
 import { mediaManager, NotificationType } from "../Media/MediaManager";

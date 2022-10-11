@@ -1,7 +1,6 @@
 import { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import { AdminInterface } from "./AdminInterface";
-import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
-import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
+import { MapDetailsData, RoomRedirect, AdminApiData } from "@workadventure/messages";
 import {
     DISABLE_ANONYMOUS,
     ENABLE_CHAT,
@@ -9,7 +8,6 @@ import {
     PUBLIC_MAP_STORAGE_URL,
     START_ROOM_URL,
 } from "../Enum/EnvironmentVariable";
-import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
 import { localWokaService } from "./LocalWokaService";
 
 /**

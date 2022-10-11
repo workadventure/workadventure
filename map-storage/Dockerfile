@@ -32,7 +32,6 @@ COPY map-storage .
 
 COPY --from=proto-builder /usr/src/ts-proto-map-storage-generated src/Messages/ts-proto-map-storage-generated
 RUN sed -i 's/import { Observable } from "rxjs";/import type { Observable } from "rxjs";/g' src/Messages/ts-proto-map-storage-generated/protos/messages.ts
-#COPY --from=proto-builder /usr/src/JsonMessages src/Messages/JsonMessages
 
 ENV NODE_ENV=production
 RUN yarn run build

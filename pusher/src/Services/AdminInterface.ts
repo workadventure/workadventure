@@ -1,7 +1,5 @@
 import { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
-import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
-import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
-import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
+import { MapDetailsData, RoomRedirect, AdminApiData } from "@workadventure/messages";
 
 export interface AdminInterface {
     /**

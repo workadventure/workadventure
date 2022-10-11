@@ -931,6 +931,10 @@
     semver "^7.3.2"
     tsutils "^3.17.1"
 
+"@workadventure/messages@link:../libs/messages":
+  version "0.0.0"
+  uid ""
+
 "@xmpp/base64@^0.13.1":
   version "0.13.1"
   resolved "https://registry.yarnpkg.com/@xmpp/base64/-/base64-0.13.1.tgz#92cb55554cea301e5e157d0f4e957d3c3d6e9c3e"

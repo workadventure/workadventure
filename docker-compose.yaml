@@ -134,6 +134,7 @@ services:
       ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
     volumes:
       - ./pusher:/usr/src/app
+      - ./libs:/usr/src/libs
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.pusher.rule=Host(`pusher.workadventure.localhost`)"
@@ -195,6 +196,7 @@ services:
       ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
     volumes:
       - ./back:/usr/src/app
+      - ./libs:/usr/src/libs
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.back.rule=Host(`api.workadventure.localhost`)"
@@ -261,6 +263,7 @@ services:
       - ./front:/usr/src/front
       - ./pusher:/usr/src/pusher
       - ./map-storage:/usr/src/map-storage
+      - ./libs:/usr/src/libs
 
   redis:
     image: redis:6

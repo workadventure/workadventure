@@ -50,6 +50,7 @@
     "@workadventure/map-editor": "link:../libs/map-editor",
     "@workadventure/math-utils": "link:../libs/math-utils",
     "@workadventure/tailwind": "link:../libs/tailwind",
+    "@workadventure/messages": "link:../libs/messages",
     "@workadventure/tiled-map-type-guard": "^2.0.4",
     "@xmpp/component": "^0.13.1",
     "@xmpp/jid": "^0.13.1",

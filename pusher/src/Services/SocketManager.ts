@@ -55,7 +55,7 @@ import Debug from "debug";
 import { ExAdminSocketInterface } from "../Model/Websocket/ExAdminSocketInterface";
 import { compressors } from "hyper-express";
 import { adminService } from "./AdminService";
-import { ErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
+import { ErrorApiData } from "@workadventure/messages";
 import { BoolValue, Int32Value, StringValue } from "google-protobuf/google/protobuf/wrappers_pb";
 
 const debug = Debug("socket");

@@ -1,7 +1,7 @@
 import { derived, writable } from "svelte/store";
 import { Subject } from "rxjs";
 import { userStore } from "./LocalUserStore";
-import { UserData } from "../Messages/JsonMessages/ChatData";
+import { UserData } from "@workadventure/messages";
 import { FileExt, UploadedFile, uploadingState } from "../Services/FileMessageManager";
 import { Message, User } from "../Xmpp/MucRoom";
 

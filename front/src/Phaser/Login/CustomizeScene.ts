@@ -20,7 +20,7 @@ import { DraggableGrid } from "@home-based-studio/phaser3-utils";
 import { WokaBodyPartSlot, WokaBodyPartSlotConfig } from "../Components/CustomizeWoka/WokaBodyPartSlot";
 import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
 import { Button } from "../Components/Ui/Button";
-import { wokaList } from "../../Messages/JsonMessages/PlayerTextures";
+import { wokaList } from "@workadventure/messages";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
 import { IconButton, IconButtonConfig, IconButtonEvent } from "../Components/Ui/IconButton";
 import { selectCharacterCustomizeSceneVisibleStore } from "../../Stores/SelectCharacterStore";

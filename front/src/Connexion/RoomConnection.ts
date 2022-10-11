@@ -57,7 +57,7 @@ import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
-import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
+import { apiVersionHash } from "@workadventure/messages";
 import { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { AreaData } from "@workadventure/map-editor";
 

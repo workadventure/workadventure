@@ -22,7 +22,6 @@ COPY front/chat .
 
 COPY --from=proto-builder /usr/src/ts-proto-generated src/Messages/ts-proto-generated
 RUN sed -i 's/import { Observable } from "rxjs";/import type { Observable } from "rxjs";/g' src/Messages/ts-proto-generated/protos/messages.ts
-COPY --from=proto-builder /usr/src/JsonMessages src/Messages/JsonMessages
 
 # upgrade RAM available to 6G
 RUN yarn run typesafe-i18n && NODE_OPTIONS="--max-old-space-size=6144" yarn build

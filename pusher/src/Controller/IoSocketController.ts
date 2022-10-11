@@ -45,11 +45,15 @@ import Axios from "axios";
 import { InvalidTokenError } from "../Controller/InvalidTokenError";
 import HyperExpress from "hyper-express";
 import { WebSocket } from "uWebSockets.js";
-import { WokaDetail } from "../Messages/JsonMessages/PlayerTextures";
-import { z } from "zod";
+import {
+    WokaDetail,
+    ErrorApiData,
+    isErrorApiData,
+    apiVersionHash,
+    MucRoomDefinitionInterface,
+} from "@workadventure/messages";
 import { adminService } from "../Services/AdminService";
-import { ErrorApiData, isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
-import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
+import { z } from "zod";
 
 /**
  * The object passed between the "open" and the "upgrade" methods when opening a websocket
@@ -88,7 +92,6 @@ interface UpgradeFailedInvalidData {
     roomId: string;
 }
 import Jwt from "jsonwebtoken";
-import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
 //eslint-disable-next-line @typescript-eslint/no-var-requires
 const { jid } = require("@xmpp/client");
 

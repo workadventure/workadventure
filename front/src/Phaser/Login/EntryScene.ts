@@ -4,7 +4,7 @@ import { waScaleManager } from "../Services/WaScaleManager";
 import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
 import { localeDetector } from "../../i18n/locales";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
-import { isErrorApiData } from "../../Messages/JsonMessages/ErrorApiData";
+import { isErrorApiData } from "@workadventure/messages";
 
 export const EntrySceneName = "EntryScene";
 

@@ -1,5 +1,5 @@
 import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
-import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
+import { isMapDetailsData } from "@workadventure/messages";
 import { parse } from "query-string";
 import { BaseHttpController } from "./BaseHttpController";
 import { adminService } from "../Services/AdminService";

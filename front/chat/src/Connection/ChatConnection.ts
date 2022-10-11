@@ -1,5 +1,5 @@
 import { PUSHER_URL } from "../Enum/EnvironmentVariable";
-import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
+import { apiVersionHash } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import ElementExt from "../Xmpp/Lib/ElementExt";
 import {

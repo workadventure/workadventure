@@ -4,10 +4,9 @@ import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
 import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
-import { RegisterData } from "../Messages/JsonMessages/RegisterData";
+import { RegisterData, isErrorApiData } from "@workadventure/messages";
 import { adminService } from "../Services/AdminService";
 import Axios from "axios";
-import { isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 import { z } from "zod";
 
 export class AuthenticateController extends BaseHttpController {

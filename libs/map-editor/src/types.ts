@@ -11,17 +11,6 @@ export type CommandConfig =
 
 export type AreaData = Required<ModifyAreaMessage> & { visible: boolean }; // move visible to messages also
 
-// export interface AreaData {
-//     id: number;
-//     name: string;
-//     x: number;
-//     y: number;
-//     width: number;
-//     height: number;
-//     visible: boolean;
-//     properties: AreaProperties;
-// }
-
 export enum AreaType {
     Static = "Static",
     Dynamic = "Dynamic",

@@ -1,15 +1,20 @@
 import { ADMIN_API_TOKEN, ADMIN_API_URL, OPID_PROFILE_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
 import Axios, { AxiosResponse } from "axios";
-import { isMapDetailsData, MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
-import { isRoomRedirect, RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
-import { AdminApiData, isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
+import {
+    isMapDetailsData,
+    MapDetailsData,
+    isRoomRedirect,
+    RoomRedirect,
+    AdminApiData,
+    isAdminApiData,
+    isMucRoomDefinition,
+    isWokaDetail,
+} from "@workadventure/messages";
 import { z } from "zod";
-import { isWokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import qs from "qs";
 import { AdminInterface } from "./AdminInterface";
 import { AuthTokenData, jwtTokenManager } from "./JWTTokenManager";
 import { extendApi } from "@anatine/zod-openapi";
-import { isMucRoomDefinition } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
 
 export interface AdminBannedData {
     is_banned: boolean;

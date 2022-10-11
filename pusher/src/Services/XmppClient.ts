@@ -9,7 +9,7 @@ import {
     XmppMessage,
     XmppSettingsMessage,
 } from "../Messages/generated/messages_pb";
-import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+import { MucRoomDefinitionInterface } from "@workadventure/messages";
 import { EJABBERD_DOMAIN, EJABBERD_WS_URI } from "../Enum/EnvironmentVariable";
 import CancelablePromise from "cancelable-promise";
 import jid, { JID } from "@xmpp/jid";

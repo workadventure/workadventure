@@ -2,9 +2,7 @@ import { CONTACT_URL, PUSHER_URL, DISABLE_ANONYMOUS } from "../Enum/EnvironmentV
 import { localUserStore } from "./LocalUserStore";
 import axios from "axios";
 import { axiosWithRetry } from "./AxiosUtils";
-import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
-import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
-import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+import { isMapDetailsData, isRoomRedirect, MucRoomDefinitionInterface } from "@workadventure/messages";
 export class MapDetail {
     constructor(public readonly mapUrl: string) {}
 }

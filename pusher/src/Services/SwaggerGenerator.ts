@@ -1,14 +1,16 @@
 import { generateSchema } from "@anatine/zod-openapi";
-import { isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
 import {
+    isMapDetailsData,
+    isAdminApiData,
     isErrorApiErrorData,
     isErrorApiRedirectData,
     isErrorApiRetryData,
     isErrorApiUnauthorizedData,
-} from "../Messages/JsonMessages/ErrorApiData";
-import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
+    isWokaDetail,
+    wokaList,
+    wokaTexture,
+} from "@workadventure/messages";
 import { isFetchMemberDataByUuidResponse } from "./AdminApi";
-import { isWokaDetail, wokaList, wokaTexture } from "../Messages/JsonMessages/PlayerTextures";
 import { SchemaObject } from "openapi3-ts";
 
 class SwaggerGenerator {

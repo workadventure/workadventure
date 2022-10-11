@@ -23,7 +23,7 @@
         mentionsUserStore,
         enableChatUpload,
     } from "../Stores/ChatStore";
-    import { UserData } from "../Messages/JsonMessages/ChatData";
+    import { UserData } from "@workadventure/messages";
     import { userStore } from "../Stores/LocalUserStore";
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
     import { FileExt, fileMessageManager, UploadedFile, uploadingState } from "../Services/FileMessageManager";

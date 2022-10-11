@@ -17,7 +17,6 @@ COPY back/yarn.lock back/package.json ./
 RUN yarn install
 COPY back .
 COPY --from=proto-builder /usr/src/generated src/Messages/generated
-COPY --from=proto-builder /usr/src/JsonMessages src/Messages/JsonMessages
 ENV NODE_ENV=production
 RUN yarn run tsc
 

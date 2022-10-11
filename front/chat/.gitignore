@@ -3,4 +3,3 @@ dist/
 /yarn-error.log
 /package-lock.json
 /src/Messages/ts-proto-generated/
-/src/Messages/JsonMessages/
