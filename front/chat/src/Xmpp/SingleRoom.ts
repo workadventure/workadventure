@@ -1,13 +1,15 @@
-import type { ChatConnection } from "../Connection/ChatConnection";
 import {AbstractRoom} from "./AbstractRoom";
 import {XmppClient} from "./XmppClient";
 
+const _VERBOSE = true;
+
 export class SingleRoom extends AbstractRoom {
-    constructor(protected connection: ChatConnection, xmppClient: XmppClient, public userJid: string) {
-        super(connection, xmppClient);
+
+    constructor(xmppClient: XmppClient, public jid: string) {
+        super(xmppClient, jid, "chat", _VERBOSE);
     }
 
-    get user(){
-        return this.xmppClient.getUser(this.userJid);
+    public updateComposingState(state: string) {
+        // TODO implement
     }
 }

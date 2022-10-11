@@ -31,8 +31,9 @@
     import File from "./Content/File.svelte";
     import crown from "../../public/static/svg/icone-premium-crown.svg";
     import { iframeListener } from "../IframeListener";
+    import {SingleRoom} from "../Xmpp/SingleRoom";
 
-    export let mucRoom: MucRoom;
+    export let mucRoom: MucRoom | SingleRoom;
 
     const dispatch = createEventDispatcher();
 
@@ -52,7 +53,7 @@
     // const regexUserTag = /(?<![\w@])@([\w@]+(?:[.!][\w@]+)*)+$/gm;
     const regexUserTag = /@([\w@]+(?:[.!][\w@]+)*)+$/gm;
 
-    $: presenseStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
+    $: presenseStore = mucRoomsStore.getDefaultRoom().getPresenceStore();
 
     function onFocus() {}
     function onBlur() {}

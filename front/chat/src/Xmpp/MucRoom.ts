@@ -1,4 +1,3 @@
-import type { ChatConnection } from "../Connection/ChatConnection";
 import xml, { Element } from "@xmpp/xml";
 import jid, { JID } from "@xmpp/jid";
 import type { Readable, Writable } from "svelte/store";
@@ -8,7 +7,6 @@ import { mucRoomsStore, numberPresenceUserStore } from "../Stores/MucRoomsStore"
 import { v4 as uuidv4 } from "uuid";
 import { userStore } from "../Stores/LocalUserStore";
 import { UserData } from "../Messages/JsonMessages/ChatData";
-import { filesUploadStore, mentionsUserStore } from "../Stores/ChatStore";
 import { fileMessageManager } from "../Services/FileMessageManager";
 import { mediaManager, NotificationType } from "../Media/MediaManager";
 import { availabilityStatusStore } from "../Stores/ChatStore";
@@ -21,8 +19,8 @@ import {
     defaultUser,
     defaultUserData,
     defaultWoka,
-    Message, MessageType,
-    ReactAction,
+    Message,
+    MessageType,
     ReactMessage,
     ReplyMessage,
     User,
@@ -52,7 +50,6 @@ export class MucRoom extends AbstractRoom{
     private teleportStore: Writable<Teleport>;
     private meStore: Writable<Me>;
     private composingTimeOut: Timeout | undefined;
-    private sendTimeOut: Timeout | undefined;
     private canLoadOlderMessagesStore: Writable<boolean>;
     private showDisabledLoadOlderMessagesStore: Writable<boolean>;
     private closed: boolean = false;
@@ -65,15 +62,13 @@ export class MucRoom extends AbstractRoom{
     private subscriptions = new Map<string, string>();
 
     constructor(
-        protected connection: ChatConnection,
         xmppClient: XmppClient,
         public readonly name: string,
         protected roomJid: jid.JID,
         public type: string,
-        public subscribe: boolean,
-        private jid: string
+        public subscribe: boolean
     ) {
-        super(connection, xmppClient);
+        super(xmppClient, jid(roomJid.local, roomJid.domain).toString(), "groupchat", _VERBOSE);
 
         this.presenceStore = writable<UserList>(new Map<string, User>());
         this.teleportStore = writable<Teleport>({ state: false, to: null });
@@ -153,7 +148,7 @@ export class MucRoom extends AbstractRoom{
             {
                 type: "get",
                 to: jid(this.roomJid.local, this.roomJid.domain).toString(),
-                from: this.jid,
+                from: this.getMyJID(),
                 id: uuid,
             },
             xml("subscriptions", {
@@ -163,7 +158,7 @@ export class MucRoom extends AbstractRoom{
         if (!this.closed) {
             this.loadingSubscribers.set(true);
             this.getAllSubscriptionsId = uuid;
-            this.connection.emitXmlMessage(messageMucListAllUsers);
+            this.xmppClient.getConnection().emitXmlMessage(messageMucListAllUsers);
             if (_VERBOSE) console.warn("[XMPP]", ">> Get all subscribers sent");
         }
     }
@@ -176,7 +171,7 @@ export class MucRoom extends AbstractRoom{
             {
                 type: "set",
                 to: jid(this.roomJid.local, this.roomJid.domain).toString(),
-                from: this.jid,
+                from: this.getMyJID(),
                 id: uuidv4(),
             },
             xml(
@@ -216,7 +211,7 @@ export class MucRoom extends AbstractRoom{
             )
         );
         if (!this.closed) {
-            this.connection.emitXmlMessage(messageRetrieveLastMessages);
+            this.xmppClient.getConnection().emitXmlMessage(messageRetrieveLastMessages);
             if (_VERBOSE) console.warn("[XMPP]", ">> Get older messages sent");
         }
     }
@@ -229,7 +224,7 @@ export class MucRoom extends AbstractRoom{
             "presence",
             {
                 to: jid(this.roomJid.local, this.roomJid.domain, this.getPlayerName()).toString(),
-                from: this.jid,
+                from: this.getMyJID(),
                 id: presenceId,
                 //type:'subscribe', //check presence documentation https://www.ietf.org/archive/id/draft-ietf-xmpp-3921bis-01.html#sub
                 //persistent: true
@@ -254,7 +249,7 @@ export class MucRoom extends AbstractRoom{
             })
         );
         if (!this.closed) {
-            this.connection.emitXmlMessage(messagePresence);
+            this.xmppClient.getConnection().emitXmlMessage(messagePresence);
             if (_VERBOSE) console.warn("[XMPP]", ">> ", first && "First", "Presence sent", get(userStore).uuid);
         }
     }
@@ -264,7 +259,7 @@ export class MucRoom extends AbstractRoom{
             {
                 type: "set",
                 to: jid(this.roomJid.local, this.roomJid.domain).toString(),
-                from: this.jid,
+                from: this.getMyJID(),
                 id: uuidv4(),
             },
             xml(
@@ -283,7 +278,7 @@ export class MucRoom extends AbstractRoom{
             )
         );
         if (!this.closed) {
-            this.connection.emitXmlMessage(messageMucSubscribe);
+            this.xmppClient.getConnection().emitXmlMessage(messageMucSubscribe);
             if (_VERBOSE)
                 console.warn("[XMPP]", ">> Subscribe sent from", this.getPlayerName(), "to", this.roomJid.local);
         }
@@ -300,7 +295,7 @@ export class MucRoom extends AbstractRoom{
             {
                 type: "set",
                 to: jid(this.roomJid.local, this.roomJid.domain).toString(),
-                from: this.jid,
+                from: this.getMyJID(),
                 id: uuidv4(),
             },
             xml(
@@ -319,14 +314,14 @@ export class MucRoom extends AbstractRoom{
             )
         );
         if (!this.closed) {
-            this.connection.emitXmlMessage(messageMucAffiliateUser);
+            this.xmppClient.getConnection().emitXmlMessage(messageMucAffiliateUser);
             if (_VERBOSE) console.warn("[XMPP]", ">> Affiliation sent");
         }
     }
     public sendBan(user: string, name: string, playUri: string) {
         const userJID = jid(user);
         //this.affiliate("outcast", userJID);
-        this.connection.emitBanUserByUuid(playUri, userJID.local, name, "Test message de ban");
+        this.xmppClient.getConnection().emitBanUserByUuid(playUri, userJID.local, name, "Test message de ban");
         if (_VERBOSE) console.warn("[XMPP]", ">> Ban user message sent");
     }
 
@@ -336,7 +331,7 @@ export class MucRoom extends AbstractRoom{
         // Recreate room in ejabberd
         //setTimeout(() => this.sendPresence(), 100);
         // Tell all users to subscribe to it
-        //setTimeout(() => this.connection.emitJoinMucRoom(this.name, this.type, this.roomJid.local), 200);
+        //setTimeout(() => this.xmppClient.getConnection().emitJoinMucRoom(this.name, this.type, this.roomJid.local), 200);
     }
 
     public sendDestroy() {
@@ -346,7 +341,7 @@ export class MucRoom extends AbstractRoom{
             {
                 type: "set",
                 to: jid(this.roomJid.local, this.roomJid.domain).toString(),
-                from: this.jid,
+                from: this.getMyJID(),
                 id: destroyId,
             },
             xml(
@@ -365,7 +360,7 @@ export class MucRoom extends AbstractRoom{
         );
         if (!this.closed) {
             this.subscriptions.set(destroyId, "destroyRoom");
-            this.connection.emitXmlMessage(messageMucDestroy);
+            this.xmppClient.getConnection().emitXmlMessage(messageMucDestroy);
             if (_VERBOSE) console.warn("[XMPP]", ">> Destroy room sent");
         }
     }
@@ -376,11 +371,11 @@ export class MucRoom extends AbstractRoom{
         const to = jid(this.roomJid.local, this.roomJid.domain, this.getPlayerName());
         const messageMucSubscribe = xml(
             "presence",
-            { to: to.toString(), from: this.jid, type: "unavailable", id: presenceId },
+            { to: to.toString(), from: this.getMyJID(), type: "unavailable", id: presenceId },
             xml("x", { xmlns: "http://jabber.org/protocol/muc#user" })
         );
         if (!this.closed) {
-            this.connection.emitXmlMessage(messageMucSubscribe);
+            this.xmppClient.getConnection().emitXmlMessage(messageMucSubscribe);
             if (_VERBOSE) console.warn("[XMPP]", ">> Disconnect sent");
             this.closed = true;
         }
@@ -390,7 +385,7 @@ export class MucRoom extends AbstractRoom{
             "message",
             {
                 to: this.roomJid.toString(),
-                from: this.jid,
+                from: this.getMyJID(),
                 type: "groupchat",
                 id: uuidv4(),
                 xmlns: "jabber:client",
@@ -402,7 +397,7 @@ export class MucRoom extends AbstractRoom{
             xml("body", {}, "")
         );
         if (!this.closed) {
-            this.connection.emitXmlMessage(messageRemove);
+            this.xmppClient.getConnection().emitXmlMessage(messageRemove);
             if (_VERBOSE) console.warn("[XMPP]", ">> Remove message sent");
         }
     }
@@ -412,7 +407,7 @@ export class MucRoom extends AbstractRoom{
             {
                 type: "groupchat",
                 to: jid(this.roomJid.local, this.roomJid.domain).toString(),
-                from: this.jid,
+                from: this.getMyJID(),
                 id: uuidv4(),
             },
             xml(state, {
@@ -420,181 +415,9 @@ export class MucRoom extends AbstractRoom{
             })
         );
         if (!this.closed) {
-            this.connection.emitXmlMessage(chatState);
+            this.xmppClient.getConnection().emitXmlMessage(chatState);
             if (_VERBOSE) console.warn("[XMPP]", ">> Chat state sent");
         }
-    }
-    public sendMessage(text: string, messageReply?: Message) {
-        const idMessage = uuidv4();
-        const message = xml(
-            "message",
-            {
-                type: "groupchat",
-                to: jid(this.roomJid.local, this.roomJid.domain).toString(),
-                from: this.jid,
-                id: idMessage,
-            },
-            xml("body", {}, text)
-        );
-
-        //create message reply
-        if (messageReply != undefined) {
-            const xmlReplyMessage = xml("reply", {
-                to: messageReply.from,
-                id: messageReply.id,
-                xmlns: "urn:xmpp:reply:0",
-                senderName: messageReply.name,
-                body: messageReply.body,
-            });
-            //check if exist files in the reply message
-            if (messageReply.files != undefined) {
-                xmlReplyMessage.append(fileMessageManager.getXmlFileAttrFrom(messageReply.files));
-            }
-            //append node xml of reply message
-            message.append(xmlReplyMessage);
-        }
-
-        //check if exist files into the message
-        if (get(filesUploadStore).size > 0) {
-            message.append(fileMessageManager.getXmlFileAttr);
-        }
-
-        if (get(mentionsUserStore).size > 0) {
-            message.append(
-                [...get(mentionsUserStore).values()].reduce((xmlValue, user) => {
-                    xmlValue.append(
-                        xml(
-                            "mention",
-                            {
-                                from: this.jid,
-                                to: user.jid,
-                                name: user.name,
-                                user,
-                            } //TODO change it to use an XMPP implementation of mention
-                        )
-                    );
-                    return xmlValue;
-                }, xml("mentions"))
-            );
-        }
-
-        if (!this.closed) {
-            this.connection.emitXmlMessage(message);
-
-            this.messageStore.update((messages) => {
-                messages.push({
-                    name: this.getPlayerName(),
-                    jid: this.getMyJID().toString(),
-                    body: text,
-                    time: new Date(),
-                    id: idMessage,
-                    delivered: false,
-                    error: false,
-                    from: this.jid,
-                    type: messageReply != undefined ? MessageType.reply : MessageType.message,
-                    files: fileMessageManager.files,
-                    targetMessageReply:
-                        messageReply != undefined
-                            ? {
-                                  id: messageReply.id,
-                                  senderName: messageReply.name,
-                                  body: messageReply.body,
-                                  files: messageReply.files,
-                              }
-                            : undefined,
-                    mentions: [...get(mentionsUserStore).values()],
-                });
-                return messages;
-            });
-
-            //clear list of file uploaded
-            fileMessageManager.reset();
-            mentionsUserStore.set(new Set<User>());
-
-            this.manageResendMessage();
-        }
-    }
-    public haveSelected(messageId: string, emojiStr: string) {
-        const messages = get(this.messageReactStore).get(messageId);
-        if (!messages) return false;
-
-        return messages.reduce((value, message) => {
-            if (message.emoji == emojiStr && jid(message.from).getLocal() == jid(this.jid).getLocal()) {
-                value = message.operation == ReactAction.add;
-            }
-            return value;
-        }, false);
-    }
-    public sendReactMessage(emoji: string, messageReact: Message) {
-        //define action, delete or not
-        let action = ReactAction.add;
-        if (this.haveSelected(messageReact.id, emoji)) {
-            action = ReactAction.delete;
-        }
-
-        const idMessage = uuidv4();
-        const newReactMessage = {
-            id: idMessage,
-            message: messageReact.id,
-            from: this.jid,
-            emoji,
-            operation: action,
-        };
-
-        const messageReacted = xml(
-            "message",
-            {
-                type: "groupchat",
-                to: jid(this.roomJid.local, this.roomJid.domain).toString(),
-                from: this.jid,
-                id: idMessage,
-            },
-            xml("body", {}, emoji),
-            xml("reaction", {
-                to: messageReact.from,
-                from: this.jid,
-                id: messageReact.id,
-                xmlns: "urn:xmpp:reaction:0",
-                reaction: emoji,
-                action,
-            })
-        );
-
-        if (!this.closed) {
-            this.connection.emitXmlMessage(messageReacted);
-
-            this.messageReactStore.update((reactMessages) => {
-                //create or get list of react message
-                let newReactMessages = new Array<ReactMessage>();
-                if (reactMessages.has(newReactMessage.message)) {
-                    newReactMessages = reactMessages.get(newReactMessage.message) as ReactMessage[];
-                }
-                //check if already exist
-                if (!newReactMessages.find((react) => react.id === newReactMessage.id)) {
-                    newReactMessages.push(newReactMessage);
-                    reactMessages.set(newReactMessage.message, newReactMessages);
-                }
-                return reactMessages;
-            });
-
-            this.manageResendMessage();
-        }
-    }
-
-    private manageResendMessage() {
-        this.lastMessageSeen = new Date();
-        this.countMessagesToSee.set(0);
-
-        if (this.sendTimeOut) {
-            clearTimeout(this.sendTimeOut);
-        }
-        this.sendTimeOut = setTimeout(() => {
-            this.messageStore.update((messages) => {
-                messages = messages.map((message) => (!message.delivered ? { ...message, error: true } : message));
-                return messages;
-            });
-        }, 10_000);
-        if (_VERBOSE) console.warn("[XMPP]", ">> Message sent");
     }
 
     onMessage(xml: ElementExt): void {

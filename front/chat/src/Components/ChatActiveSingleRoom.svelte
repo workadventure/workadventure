@@ -22,8 +22,8 @@
 
     onMount(() => {
         subscribeListeners.push(mucRoomsStore.getDefaultRoom().getPresenceStore().subscribe(users => {
-            if(users.has(singleRoom.userJid)) {
-                userTargeted = users.get(singleRoom.userJid);
+            if(users.has(singleRoom.jid)) {
+                userTargeted = users.get(singleRoom.jid);
             }
         }));
     });
@@ -126,10 +126,7 @@
 
         </div>
     {:else}
-        <!-- <ChatMessagesList mucRoom={singleRoom} bind:this={messagesList} /> -->
-        <div bind:this={messagesList}>
-            test
-        </div>
+        <ChatMessagesList mucRoom={singleRoom} bind:this={messagesList} />
 
         <div class="messageForm">
             <ChatMessageForm mucRoom={singleRoom} on:scrollDown={messagesList.scrollDown} />

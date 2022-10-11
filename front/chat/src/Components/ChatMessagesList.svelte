@@ -28,18 +28,19 @@
     import crown from "../../public/static/svg/icone-premium-crown.svg";
     import { iframeListener } from "../IframeListener";
     import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
+    import {SingleRoom} from "../Xmpp/SingleRoom";
 
-    export let mucRoom: MucRoom;
+    export let mucRoom: MucRoom | SingleRoom;
 
     $: unreads = mucRoom.getCountMessagesToSee();
     $: messagesStore = mucRoom.getMessagesStore();
     $: deletedMessagesStore = mucRoom.getDeletedMessagesStore();
-    $: presenseStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
-    $: usersStore = mucRoom.getPresenceStore();
+    $: presenseStore = mucRoomsStore.getDefaultRoom().getPresenceStore();
+    $: usersStore = mucRoom instanceof MucRoom ? mucRoom.getPresenceStore() : undefined;
     $: loadingStore = mucRoom.getLoadingStore();
-    $: meStore = mucRoom.getMeStore();
-    $: canLoadOlderMessagesStore = mucRoom.getCanLoadOlderMessagesStore();
-    $: showDisabledLoadOlderMessagesStore = mucRoom.getShowDisabledLoadOlderMessagesStore();
+    $: meStore =  mucRoom instanceof MucRoom ? mucRoom.getMeStore() : undefined;
+    $: canLoadOlderMessagesStore = mucRoom instanceof MucRoom ? mucRoom.getCanLoadOlderMessagesStore() : undefined;
+    $: showDisabledLoadOlderMessagesStore = mucRoom instanceof MucRoom ? mucRoom.getShowDisabledLoadOlderMessagesStore() : undefined;
 
     let isScrolledDown = false;
     let messagesList: HTMLElement;
@@ -125,7 +126,9 @@
 
         if (document.body.scrollTop >= 0 && lastScrollPosition < 0) {
             //Pull to refresh ...
-            mucRoom.sendRetrieveLastMessages();
+            if(mucRoom instanceof MucRoom) {
+                mucRoom.sendRetrieveLastMessages();
+            }
         }
         lastScrollPosition = document.body.scrollTop;
     }
@@ -254,7 +257,7 @@
         class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen tw-pt-14"
     >
         <div class="tw-mb-auto load-history">
-            {#if $canLoadOlderMessagesStore}
+            {#if canLoadOlderMessagesStore && $canLoadOlderMessagesStore}
                 {#if !$loadingStore}
                     <button
                         class="tw-m-auto tw-cursor-pointer tw-text-xs"
@@ -269,7 +272,7 @@
                         class="tw-w-5 tw-h-5 tw-border-2 tw-border-white tw-border-solid tw-rounded-full tw-animate-spin tw-m-auto"
                     />
                 {/if}
-            {:else if $showDisabledLoadOlderMessagesStore && mucRoom.getMe()?.isAdmin}
+            {:else if showDisabledLoadOlderMessagesStore && $showDisabledLoadOlderMessagesStore && mucRoom.getMe()?.isAdmin}
                 {#if ADMIN_API_URL}
                     <button
                         class="tw-text-orange tw-font-bold tw-underline tw-m-auto tw-text-xs tw-cursor-pointer"
@@ -431,7 +434,7 @@
                                                         <CopyIcon size="13" class="tw-mr-1" />
                                                         {$LL.copy()}
                                                     </span>
-                                                    {#if $meStore.isAdmin || isMe(message.jid)}
+                                                    {#if meStore && $meStore.isAdmin || isMe(message.jid)}
                                                         <span
                                                             class="wa-dropdown-item tw-text-pop-red"
                                                             on:click={() => mucRoom.sendRemoveMessage(message.id)}
@@ -536,46 +539,48 @@
                 </div>
             </div>
         {/each}
-        {#each [...$usersStore].filter(([, userFilter]) => userFilter.chatState === ChatStates.COMPOSING) as [nb, user]}
-            <div class={`tw-mt-2`} id={`user-line-${nb}`}>
-                <div class={`tw-flex tw-justify-start`}>
-                    <div
-                        class={`tw-mt-4 tw-relative wa-avatar-mini tw-mr-2 tw-z-10`}
-                        style={`background-color: ${getColor(user.jid)}`}
-                        in:fade={{ duration: 100 }}
-                        out:fade={{ delay: 200, duration: 100 }}
-                    >
-                        <div class="wa-container">
-                            <img class="tw-w-full" src={getWoka(user.jid)} alt="Avatar" />
-                        </div>
-                    </div>
-                    <div
-                        class={`tw-w-3/4`}
-                        in:fly={{ x: -10, delay: 100, duration: 200 }}
-                        out:fly={{ x: -10, duration: 200 }}
-                    >
-                        <div class="tw-w-fit">
-                            <div
-                                style={`border-bottom-color:${getColor(user.jid)}`}
-                                class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-pb-1`}
-                            >
-                                <span class="tw-text-lighter-purple tw-text-xxs">
-                                    {user.name}
-                                </span>
+        {#if usersStore}
+            {#each [...$usersStore].filter(([, userFilter]) => userFilter.chatState === ChatStates.COMPOSING) as [nb, user]}
+                <div class={`tw-mt-2`} id={`user-line-${nb}`}>
+                    <div class={`tw-flex tw-justify-start`}>
+                        <div
+                            class={`tw-mt-4 tw-relative wa-avatar-mini tw-mr-2 tw-z-10`}
+                            style={`background-color: ${getColor(user.jid)}`}
+                            in:fade={{ duration: 100 }}
+                            out:fade={{ delay: 200, duration: 100 }}
+                        >
+                            <div class="wa-container">
+                                <img class="tw-w-full" src={getWoka(user.jid)} alt="Avatar" />
                             </div>
-                            <div class="tw-rounded-lg tw-bg-dark tw-text-xs tw-p-3">
-                                <!-- loading animation -->
-                                <div class="loading-group">
-                                    <span class="loading-dot" />
-                                    <span class="loading-dot" />
-                                    <span class="loading-dot" />
+                        </div>
+                        <div
+                            class={`tw-w-3/4`}
+                            in:fly={{ x: -10, delay: 100, duration: 200 }}
+                            out:fly={{ x: -10, duration: 200 }}
+                        >
+                            <div class="tw-w-fit">
+                                <div
+                                    style={`border-bottom-color:${getColor(user.jid)}`}
+                                    class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-pb-1`}
+                                >
+                                    <span class="tw-text-lighter-purple tw-text-xxs">
+                                        {user.name}
+                                    </span>
+                                </div>
+                                <div class="tw-rounded-lg tw-bg-dark tw-text-xs tw-p-3">
+                                    <!-- loading animation -->
+                                    <div class="loading-group">
+                                        <span class="loading-dot" />
+                                        <span class="loading-dot" />
+                                        <span class="loading-dot" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        {/each}
+            {/each}
+        {/if}
         {#if $unreads > 0}
             <div class="tw-w-full tw-fixed tw-left-0 tw-bottom-14 tw-animate-bounce tw-cursor-pointer">
                 <div

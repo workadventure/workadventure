@@ -1,13 +1,16 @@
 import type { ChatConnection } from "../Connection/ChatConnection";
-import { JID } from "@xmpp/jid";
+import jid, { JID } from "@xmpp/jid";
 import type { Readable, Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
 import ElementExt from "./Lib/ElementExt";
 import { userStore } from "../Stores/LocalUserStore";
 import { UserData } from "../Messages/JsonMessages/ChatData";
-import { UploadedFile } from "../Services/FileMessageManager";
-import { connectionManager } from "../Connection/ChatConnectionManager";
+import {fileMessageManager, UploadedFile} from "../Services/FileMessageManager";
 import {XmppClient} from "./XmppClient";
+import {v4 as uuidv4} from "uuid";
+import xml from "@xmpp/xml";
+import {filesUploadStore, mentionsUserStore} from "../Stores/ChatStore";
+import Timeout = NodeJS.Timeout;
 
 export const UserStatus = {
     AVAILABLE: "available",
@@ -137,10 +140,13 @@ export class AbstractRoom {
     public lastMessageSeen: Date;
     protected countMessagesToSee: Writable<number>;
     protected loadingStore: Writable<boolean>;
+    private sendTimeOut: Timeout | undefined;
 
     constructor(
-        protected connection: ChatConnection,
-        protected xmppClient: XmppClient
+        protected xmppClient: XmppClient,
+        protected recipient: string,
+        protected messageType: string,
+        protected _VERBOSE: boolean
     ) {
         if (this.constructor === AbstractRoom) {
             throw new TypeError('Abstract class "AbstractRoom" cannot be instantiated directly');
@@ -182,11 +188,9 @@ export class AbstractRoom {
     public getPlayerName(): string {
         return this.xmppClient.getPlayerName() ?? "unknown";
     }
-
     public getMyJID(): string {
         return this.xmppClient.getMyJID() ?? "unknown";
     }
-
     public getPlayerUuid(): string {
         return get(userStore).uuid ?? "unknown";
     }
@@ -197,6 +201,182 @@ export class AbstractRoom {
 
     onMessage(xml: ElementExt): void {
         throw new TypeError('Can\'t use onMessage function from Abstract class "AbstractRoom", need to be implemented.');
+    }
+
+
+    // All functions to send XMPP message to XMPP server
+    public deleteMessage(idMessage: string) {
+        this.messageStore.update((messages) => {
+            return messages.filter((message) => message.id !== idMessage);
+        });
+        return true;
+    }
+    public sendMessage(text: string, messageReply?: Message) {
+        const idMessage = uuidv4();
+        const message = xml(
+            "message",
+            {
+                type: this.messageType,
+                to: this.recipient,
+                from: this.getMyJID(),
+                id: idMessage,
+            },
+            xml("body", {}, text)
+        );
+
+        //create message reply
+        if (messageReply != undefined) {
+            const xmlReplyMessage = xml("reply", {
+                to: messageReply.from,
+                id: messageReply.id,
+                xmlns: "urn:xmpp:reply:0",
+                senderName: messageReply.name,
+                body: messageReply.body,
+            });
+            //check if exist files in the reply message
+            if (messageReply.files != undefined) {
+                xmlReplyMessage.append(fileMessageManager.getXmlFileAttrFrom(messageReply.files));
+            }
+            //append node xml of reply message
+            message.append(xmlReplyMessage);
+        }
+
+        //check if exist files into the message
+        if (get(filesUploadStore).size > 0) {
+            message.append(fileMessageManager.getXmlFileAttr);
+        }
+
+        if (get(mentionsUserStore).size > 0) {
+            message.append(
+                [...get(mentionsUserStore).values()].reduce((xmlValue, user) => {
+                    xmlValue.append(
+                        xml(
+                            "mention",
+                            {
+                                from: this.getMyJID(),
+                                to: user.jid,
+                                name: user.name,
+                                user,
+                            } //TODO change it to use an XMPP implementation of mention
+                        )
+                    );
+                    return xmlValue;
+                }, xml("mentions"))
+            );
+        }
+
+        this.xmppClient.getConnection().emitXmlMessage(message);
+
+        this.messageStore.update((messages) => {
+            messages.push({
+                name: this.getPlayerName(),
+                jid: this.getMyJID(),
+                body: text,
+                time: new Date(),
+                id: idMessage,
+                delivered: false,
+                error: false,
+                from: this.getMyJID(),
+                type: messageReply != undefined ? MessageType.reply : MessageType.message,
+                files: fileMessageManager.files,
+                targetMessageReply:
+                    messageReply != undefined
+                        ? {
+                            id: messageReply.id,
+                            senderName: messageReply.name,
+                            body: messageReply.body,
+                            files: messageReply.files,
+                        }
+                        : undefined,
+                mentions: [...get(mentionsUserStore).values()],
+            });
+            return messages;
+        });
+
+        //clear list of file uploaded
+        fileMessageManager.reset();
+        mentionsUserStore.set(new Set<User>());
+
+        this.manageResendMessage();
+    }
+    private manageResendMessage() {
+        this.lastMessageSeen = new Date();
+        this.countMessagesToSee.set(0);
+
+        if (this.sendTimeOut) {
+            clearTimeout(this.sendTimeOut);
+        }
+        this.sendTimeOut = setTimeout(() => {
+            this.messageStore.update((messages) => {
+                messages = messages.map((message) => (!message.delivered ? { ...message, error: true } : message));
+                return messages;
+            });
+        }, 10_000);
+        if (this._VERBOSE) console.warn("[XMPP]", ">> Message sent");
+    }
+    public haveSelected(messageId: string, emojiStr: string) {
+        const messages = get(this.messageReactStore).get(messageId);
+        if (!messages) return false;
+
+        return messages.reduce((value, message) => {
+            if (message.emoji == emojiStr && jid(message.from).getLocal() == jid(this.getMyJID()).getLocal()) {
+                value = message.operation == ReactAction.add;
+            }
+            return value;
+        }, false);
+    }
+    public sendReactMessage(emoji: string, messageReact: Message) {
+        //define action, delete or not
+        let action = ReactAction.add;
+        if (this.haveSelected(messageReact.id, emoji)) {
+            action = ReactAction.delete;
+        }
+
+        const idMessage = uuidv4();
+        const newReactMessage = {
+            id: idMessage,
+            message: messageReact.id,
+            from: this.getMyJID(),
+            emoji,
+            operation: action,
+        };
+
+        const messageReacted = xml(
+            "message",
+            {
+                type: "groupchat",
+                to: this.recipient,
+                from: this.getMyJID(),
+                id: idMessage,
+            },
+            xml("body", {}, emoji),
+            xml("reaction", {
+                to: messageReact.from,
+                from: this.getMyJID(),
+                id: messageReact.id,
+                xmlns: "urn:xmpp:reaction:0",
+                reaction: emoji,
+                action,
+            })
+        );
+
+        this.xmppClient.getConnection().emitXmlMessage(messageReacted);
+
+        this.messageReactStore.update((reactMessages) => {
+            //create or get list of react message
+            let newReactMessages = new Array<ReactMessage>();
+            if (reactMessages.has(newReactMessage.message)) {
+                newReactMessages = reactMessages.get(newReactMessage.message) as ReactMessage[];
+            }
+            //check if already exist
+            if (!newReactMessages.find((react) => react.id === newReactMessage.id)) {
+                newReactMessages.push(newReactMessage);
+                reactMessages.set(newReactMessage.message, newReactMessages);
+            }
+            return reactMessages;
+        });
+
+        this.manageResendMessage();
     }
 
 
@@ -241,13 +421,6 @@ export class AbstractRoom {
         return this.getUser(jid).visitCardUrl ?? null;
     }
 
-    public deleteMessage(idMessage: string) {
-        this.messageStore.update((messages) => {
-            return messages.filter((message) => message.id !== idMessage);
-        });
-        return true;
-    }
-
     // Get all store
     public getMessagesStore(): MessagesStore {
         return this.messageStore;
@@ -265,6 +438,8 @@ export class AbstractRoom {
     public reset(): void {
         this.messageStore.set([]);
     }
+
+
 
     private static encode(name: string | null | undefined) {
         if (!name) return name;

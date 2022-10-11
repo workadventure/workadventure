@@ -139,7 +139,7 @@ export class XmppClient {
         }
 
         const roomUrl = jid(waRoomUrl, this.conferenceDomain);
-        const room = new MucRoom(this.connection, this, name, roomUrl, type, subscribe, this.jid);
+        const room = new MucRoom(this, name, roomUrl, type, subscribe);
         this.rooms.set(roomUrl.toString(), room);
         mucRoomsStore.addMucRoom(room);
 
@@ -184,7 +184,7 @@ export class XmppClient {
     public openSingleRoom(jid: JID | string){
         let singleRoom = this.singleRooms.get(jid.toString());
         if(!singleRoom){
-            singleRoom = new SingleRoom(this.connection, this, jid.toString());
+            singleRoom = new SingleRoom(this, jid.toString());
             this.singleRooms.set(jid.toString(), singleRoom);
         }
         activeThreadStore.set(singleRoom);
@@ -202,6 +202,9 @@ export class XmppClient {
             throw new Error("My JID is not defined");
         }
         return this.jid;
+    }
+    public getConnection(): ChatConnection{
+        return this.connection;
     }
 
     public getPlayerName() {
