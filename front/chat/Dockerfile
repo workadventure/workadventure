@@ -20,9 +20,6 @@ COPY front/chat/yarn.lock front/chat/package.json ./
 RUN yarn install --network-timeout 1000000
 COPY front/chat .
 
-COPY --from=proto-builder /usr/src/ts-proto-generated src/Messages/ts-proto-generated
-RUN sed -i 's/import { Observable } from "rxjs";/import type { Observable } from "rxjs";/g' src/Messages/ts-proto-generated/protos/messages.ts
-
 # upgrade RAM available to 6G
 RUN yarn run typesafe-i18n && NODE_OPTIONS="--max-old-space-size=6144" yarn build
 

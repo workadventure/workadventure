@@ -8,7 +8,7 @@ import type CancelablePromise from "cancelable-promise";
 import LL from "../../i18n/i18n-svelte";
 import { blackListManager } from "../../WebRtc/BlackListManager";
 import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
-import { PositionMessage, PositionMessage_Direction } from "../../Messages/ts-proto-generated/protos/messages";
+import { PositionMessage, PositionMessage_Direction } from "@workadventure/messages";
 
 export enum RemotePlayerEvent {
     Clicked = "Clicked",

@@ -1,4 +1,4 @@
-import { AvailabilityStatus } from "../../Messages/ts-proto-generated/protos/messages";
+import { AvailabilityStatus } from "@workadventure/messages";
 import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
 
 export interface PlayerInterface {

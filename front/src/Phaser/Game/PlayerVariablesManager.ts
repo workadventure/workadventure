@@ -2,7 +2,7 @@ import type { RoomConnection } from "../../Connexion/RoomConnection";
 import { iframeListener } from "../../Api/IframeListener";
 import { SetPlayerVariableEvent } from "../../Api/Events/SetPlayerVariableEvent";
 import { IframeEventDispatcher } from "./IframeEventDispatcher";
-import { SetPlayerVariableMessage } from "../../Messages/ts-proto-generated/protos/messages";
+import { SetPlayerVariableMessage } from "@workadventure/messages";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 
 /**

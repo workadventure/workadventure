@@ -45,6 +45,7 @@
     "@types/simple-peer": "^9.11.1",
     "@types/socket.io-client": "^1.4.32",
     "@workadventure/tailwind": "link:../libs/tailwind",
+    "@workadventure/messages": "link:../libs/messages",
     "@xmpp/client": "^0.13.0",
     "@xmpp/debug": "^0.13.0",
     "axios": "^0.21.2",

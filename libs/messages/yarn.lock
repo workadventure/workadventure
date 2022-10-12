@@ -9,7 +9,7 @@
   dependencies:
     ts-deepmerge "^4.0.0"
 
-"@grpc/grpc-js@^1.6.7":
+"@grpc/grpc-js@^1.7.1":
   version "1.7.1"
   resolved "https://registry.yarnpkg.com/@grpc/grpc-js/-/grpc-js-1.7.1.tgz#cfac092e61eac6fe0f80d22943f98e1ba45f02a2"
   integrity sha512-GVtMU4oh/TeKkWGzXUEsyZtyvSUIT1z49RtGH1UnEGeL+sLuxKl8QH3KZTlSB329R1sWJmesm5hQ5CxXdYH9dg==

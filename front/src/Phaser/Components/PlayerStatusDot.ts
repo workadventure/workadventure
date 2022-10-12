@@ -1,4 +1,4 @@
-import { AvailabilityStatus } from "../../Messages/ts-proto-generated/protos/messages";
+import { AvailabilityStatus } from "@workadventure/messages";
 import { Easing } from "../../types";
 
 export class PlayerStatusDot extends Phaser.GameObjects.Container {

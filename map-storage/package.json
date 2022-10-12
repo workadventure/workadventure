@@ -38,10 +38,11 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@grpc/grpc-js": "^1.6.7",
+    "@grpc/grpc-js": "^1.7.1",
     "@grpc/proto-loader": "^0.6.13",
     "@types/cors": "^2.8.12",
     "@workadventure/map-editor": "link:../libs/map-editor",
+    "@workadventure/messages": "link:../libs/messages",
     "@workadventure/tiled-map-type-guard": "^1.0.3",
     "concurrently": "^7.3.0",
     "cors": "^2.8.5",

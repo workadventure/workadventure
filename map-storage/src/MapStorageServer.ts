@@ -8,7 +8,7 @@ import {
     EmptyMessage,
     MapStorageServer,
     PingMessage,
-} from "./Messages/ts-proto-map-storage-generated/protos/messages";
+} from "@workadventure/messages";
 
 const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, EmptyMessage>, callback: sendUnaryData<PingMessage>): void {

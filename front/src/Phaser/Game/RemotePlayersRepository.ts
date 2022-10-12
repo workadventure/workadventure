@@ -4,11 +4,7 @@
  * We need to make the distinction between RemotePlayerData and RemotePlayer (Phaser sprite) because data is arriving
  * from the Websocket but we cannot safely create/update a sprite until we are in the "update" method of the GameScene.
  */
-import {
-    availabilityStatusToJSON,
-    PlayerDetailsUpdatedMessage,
-    UserMovedMessage,
-} from "../../Messages/ts-proto-generated/protos/messages";
+import { availabilityStatusToJSON, PlayerDetailsUpdatedMessage, UserMovedMessage } from "@workadventure/messages";
 import { MessageUserJoined } from "../../Connexion/ConnexionModels";
 import { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import { iframeListener } from "../../Api/IframeListener";

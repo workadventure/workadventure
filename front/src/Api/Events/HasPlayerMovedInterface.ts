@@ -1,4 +1,4 @@
-import { PositionMessage } from "../../Messages/ts-proto-generated/protos/messages";
+import { PositionMessage } from "@workadventure/messages";
 
 export interface HasPlayerMovedInterface extends PositionMessage {
     oldX?: number;

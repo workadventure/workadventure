@@ -104,7 +104,7 @@
   resolved "https://registry.yarnpkg.com/@geprog/vite-plugin-env-config/-/vite-plugin-env-config-4.0.7.tgz#6072209718a64f941fc05d7c98535677ee51eb25"
   integrity sha512-//FkQtPWKcNxp2mQjI9tFV+b8ZMCWaq7WrE8nhmzRnVa2Ilf34bEd+H+t+8TXeRx4jPWLQzvyWVBx5aieDBzSw==
 
-"@grpc/grpc-js@^1.6.7":
+"@grpc/grpc-js@^1.7.1":
   version "1.7.1"
   resolved "https://registry.yarnpkg.com/@grpc/grpc-js/-/grpc-js-1.7.1.tgz#cfac092e61eac6fe0f80d22943f98e1ba45f02a2"
   integrity sha512-GVtMU4oh/TeKkWGzXUEsyZtyvSUIT1z49RtGH1UnEGeL+sLuxKl8QH3KZTlSB329R1sWJmesm5hQ5CxXdYH9dg==
@@ -4003,7 +4003,7 @@ yocto-queue@^0.1.0:
   resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
 
-zod@^3.14.3, zod@^3.17.3:
+zod@^3.17.3:
   version "3.18.0"
   resolved "https://registry.yarnpkg.com/zod/-/zod-3.18.0.tgz#2eed58b3cafb8d9a67aa2fee69279702f584f3bc"
   integrity sha512-gwTm8RfUCe8l9rDwN5r2A17DkAa8Ez4Yl4yXqc5VqeGaXaJahzYYXbTwvhroZi0SNBqTwh/bKm2N0mpCzuw4bA==

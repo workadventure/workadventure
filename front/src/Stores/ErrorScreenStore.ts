@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import { ErrorScreenMessage } from "../Messages/ts-proto-generated/protos/messages";
+import { ErrorScreenMessage } from "@workadventure/messages";
 import Axios from "axios";
 
 /**

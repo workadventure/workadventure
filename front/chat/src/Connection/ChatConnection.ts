@@ -9,7 +9,7 @@ import {
     XmppConnectionStatusChangeMessage_Status,
     IframeToPusherMessage,
     XmppConnectionNotAuthorizedMessage,
-} from "../Messages/ts-proto-generated/protos/messages";
+} from "@workadventure/messages";
 import { XmppClient } from "../Xmpp/XmppClient";
 import { Parser } from "@xmpp/xml";
 import { userStore } from "../Stores/LocalUserStore";

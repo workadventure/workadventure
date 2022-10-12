@@ -18,7 +18,7 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { locales } from "../i18n/i18n-util";
 import type { Locales } from "../i18n/i18n-types";
 import { setCurrentLocale } from "../i18n/locales";
-import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
+import { AvailabilityStatus } from "@workadventure/messages";
 
 class ConnectionManager {
     private localUser!: LocalUser;

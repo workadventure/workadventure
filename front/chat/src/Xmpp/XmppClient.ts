@@ -4,7 +4,7 @@ import { MucRoom } from "./MucRoom";
 import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
 import type { MucRoomDefinitionInterface } from "@workadventure/messages";
 import ElementExt from "./Lib/ElementExt";
-import { XmppConnectionStatusChangeMessage_Status as Status } from "../Messages/ts-proto-generated/protos/messages";
+import { XmppConnectionStatusChangeMessage_Status as Status } from "@workadventure/messages";
 import { ChatConnection } from "../Connection/ChatConnection";
 import { activeThreadStore } from "../Stores/ActiveThreadStore";
 import { get } from "svelte/store";

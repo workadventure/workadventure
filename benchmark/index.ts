@@ -1,7 +1,7 @@
 import {RoomConnection} from "../front/src/Connexion/RoomConnection";
 import {connectionManager} from "../front/src/Connexion/ConnectionManager";
-import * as WebSocket from "ws"
-import { AvailabilityStatus } from '../front/src/Messages/ts-proto-generated/protos/messages';
+import * as WebSocket from "ws";
+import { AvailabilityStatus } from "@workadventure/messages";
 
 let userMovedCount = 0;
 

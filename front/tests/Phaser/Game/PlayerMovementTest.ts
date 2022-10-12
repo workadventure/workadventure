@@ -1,6 +1,6 @@
 import "jasmine";
 import { PlayerMovement } from "../../../src/Phaser/Game/PlayerMovement";
-import { PositionMessage_Direction } from "../../../src/Messages/ts-proto-generated/protos/messages";
+import { PositionMessage_Direction } from "@workadventure/messages";
 
 describe("Interpolation / Extrapolation", () => {
     it("should interpolate", () => {

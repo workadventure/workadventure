@@ -114,7 +114,7 @@ import {
     AvailabilityStatus,
     ErrorScreenMessage,
     PositionMessage_Direction,
-} from "../../Messages/ts-proto-generated/protos/messages";
+} from "@workadventure/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 import { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";

@@ -1,7 +1,7 @@
 import { AreaData, AreaType, CommandConfig } from "@workadventure/map-editor";
 import { Subscription } from "rxjs";
 import { get, Unsubscriber } from "svelte/store";
-import { EditMapCommandMessage } from "../../../../Messages/ts-proto-generated/protos/messages";
+import { EditMapCommandMessage } from "@workadventure/messages";
 import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
