@@ -249,6 +249,8 @@ export class IoSocketChatController {
                             } else {
                                 userData.jabberPassword = "no_password_set";
                             }
+                        } else {
+                            userData.jabberPassword = tokenData?.accessToken;
                         }
 
                         if (userData.userRoomToken && ADMIN_API_URL) {
