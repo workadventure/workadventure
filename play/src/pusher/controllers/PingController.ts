@@ -1,6 +1,6 @@
 import { BaseHttpController } from "./BaseHttpController";
 import { apiClientRepository } from "../services/ApiClientRepository";
-import { PingMessage } from "../messages/generated/messages_pb";
+import { PingMessage } from "../../messages/generated/messages_pb";
 import { Metadata } from "@grpc/grpc-js";
 
 export class PingController extends BaseHttpController {

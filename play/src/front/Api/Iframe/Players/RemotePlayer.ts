@@ -1,6 +1,7 @@
-import { AddPlayerEvent } from "../../Events/AddPlayerEvent";
-import { Observable, Subject } from "rxjs";
-import { PlayerPosition } from "../../Events/PlayerPosition";
+import type { AddPlayerEvent } from "../../Events/AddPlayerEvent";
+import type { Observable} from "rxjs";
+import { Subject } from "rxjs";
+import type { PlayerPosition } from "../../Events/PlayerPosition";
 import { ActionsMenuAction } from "../ui";
 import { sendToWorkadventure } from "../IframeApiContribution";
 

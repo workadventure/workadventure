@@ -1,10 +1,11 @@
 import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
-import {
+import type {
     SubMessage,
-    BatchMessage,
     XmppMessage,
-    IframeToPusherMessage,
-    BanUserByUuidMessage,
+    BanUserByUuidMessage} from "../../messages/generated/messages_pb";
+import {
+    BatchMessage,
+    IframeToPusherMessage
 } from "../../messages/generated/messages_pb";
 import qs from "qs";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
@@ -90,9 +91,8 @@ export class IoSocketChatController {
             maxPayloadLength: 16 * 1024 * 1024,
             maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
             //idleTimeout: 10,
-            upgrade: (res, req, context) => {
-                // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-                (async () => {
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
+            upgrade: async (res, req, context) => {
                     /* Keep track of abortions */
                     const upgradeAborted = { aborted: false };
 
@@ -339,7 +339,6 @@ export class IoSocketChatController {
                             );
                         }
                     }
-                })();
             },
             /* Handlers */
             open: (_ws: WebSocket) => {

@@ -1,6 +1,7 @@
-import { Observable, Subject } from "rxjs";
+import type { Observable} from "rxjs";
+import { Subject } from "rxjs";
 
-import { SetVariableEvent } from "../Events/SetVariableEvent";
+import type { SetVariableEvent } from "../Events/SetVariableEvent";
 
 export abstract class AbstractWorkadventureStateCommands {
     protected setVariableResolvers = new Subject<SetVariableEvent>();

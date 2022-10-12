@@ -1,5 +1,4 @@
 import { BaseHttpController } from "./BaseHttpController";
-import qs from "qs";
 import { wokaService } from "../services/WokaService";
 import { jwtTokenManager } from "../services/JWTTokenManager";
 import type { Request, Response } from "hyper-express";
@@ -30,7 +29,7 @@ export class WokaListController extends BaseHttpController {
                 return;
             }
 
-            let { roomUrl } = qs.parse(req.path_query);
+            let { roomUrl } = req.query;
 
             if (typeof roomUrl !== "string") {
                 return res.status(400).send("missing roomUrl URL parameter");

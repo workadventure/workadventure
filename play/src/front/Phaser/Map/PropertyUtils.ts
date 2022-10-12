@@ -1,4 +1,4 @@
-import { ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
+import type { ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
 
 export class PropertyUtils {
     public static findProperty(

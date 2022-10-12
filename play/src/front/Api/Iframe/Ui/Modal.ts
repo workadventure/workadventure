@@ -1,5 +1,5 @@
 import { IframeApiContribution, sendToWorkadventure } from "../IframeApiContribution";
-import { ModalEvent } from "../../Events/ModalEvent";
+import type { ModalEvent } from "../../Events/ModalEvent";
 
 export class WorkadventureModalCommands extends IframeApiContribution<WorkadventureModalCommands> {
     callbacks = [];

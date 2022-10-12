@@ -4,7 +4,7 @@ declare module "phaser3-rex-plugins/plugins/virtualjoystick.js" {
     /*const content: any; // eslint-disable-line
     export default content;*/
     import GameObject = Phaser.GameObjects.GameObject;
-    import { Scene } from "phaser";
+    import type { Scene } from "phaser";
 
     type CursorKey = {
         isDown: boolean;

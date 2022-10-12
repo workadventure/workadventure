@@ -1,18 +1,21 @@
 import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
 import type { PointInterface } from "../models/Websocket/PointInterface";
 import {
-    SetPlayerDetailsMessage,
     SubMessage,
     BatchMessage,
-    ItemEventMessage,
-    ViewportMessage,
     ClientToServerMessage,
-    WebRtcSignalToServerMessage,
-    PlayGlobalMessage,
-    ReportPlayerMessage,
     SendUserMessage,
     ServerToClientMessage,
     CompanionMessage,
+    PingMessage
+} from "../../messages/generated/messages_pb";
+import type { UserMovesMessage ,
+    SetPlayerDetailsMessage,
+    ItemEventMessage,
+    ViewportMessage,
+    WebRtcSignalToServerMessage,
+    PlayGlobalMessage,
+    ReportPlayerMessage,
     EmotePromptMessage,
     FollowRequestMessage,
     FollowConfirmationMessage,
@@ -22,10 +25,7 @@ import {
     AskPositionMessage,
     AvailabilityStatus,
     QueryMessage,
-    PingMessage,
-    EditMapCommandMessage,
-} from "../../messages/generated/messages_pb";
-import type { UserMovesMessage } from "../../messages/generated/messages_pb";
+    EditMapCommandMessage} from "../../messages/generated/messages_pb";
 import qs from "qs";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
@@ -253,8 +253,8 @@ export class IoSocketController {
             idleTimeout: SOCKET_IDLE_TIMER,
             maxPayloadLength: 16 * 1024 * 1024,
             maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
-            upgrade: (res, req, context) => {
-                (async (): Promise<void> => {
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
+            upgrade: async (res, req, context) => {
                     /* Keep track of abortions */
                     const upgradeAborted = { aborted: false };
 
@@ -533,7 +533,6 @@ export class IoSocketController {
                             );
                         }
                     }
-                })();
             },
             /* Handlers */
             open: (_ws: WebSocket) => {

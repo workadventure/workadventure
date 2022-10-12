@@ -24,11 +24,10 @@ import {
     warningContainerStore,
 } from "../Stores/MenuStore";
 import { localUserStore } from "./LocalUserStore";
-import {
+import type {
     AnswerMessage,
     AvailabilityStatus,
     CharacterLayerMessage,
-    ClientToServerMessage as ClientToServerMessageTsProto,
     EditMapCommandMessage,
     EmoteEventMessage as EmoteEventMessageTsProto,
     ErrorMessage as ErrorMessageTsProto,
@@ -41,16 +40,18 @@ import {
     PositionMessage as PositionMessageTsProto,
     PositionMessage_Direction,
     QueryMessage,
-    ServerToClientMessage as ServerToClientMessageTsProto,
-    SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
-    SetPlayerVariableMessage_Scope,
     TokenExpiredMessage,
     UserJoinedMessage as UserJoinedMessageTsProto,
     UserLeftMessage as UserLeftMessageTsProto,
     UserMovedMessage as UserMovedMessageTsProto,
     ViewportMessage as ViewportMessageTsProto,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
-    WorldConnexionMessage,
+    WorldConnexionMessage} from "../../messages/ts-proto-generated/protos/messages";
+import {
+    ClientToServerMessage as ClientToServerMessageTsProto,
+    ServerToClientMessage as ServerToClientMessageTsProto,
+    SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
+    SetPlayerVariableMessage_Scope
 } from "../../messages/ts-proto-generated/protos/messages";
 import { Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";

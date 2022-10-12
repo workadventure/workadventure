@@ -9,8 +9,11 @@ export default defineConfig({
         host: "0.0.0.0",
         port: 8080,
         hmr: {
-        // workaround for development in docker
-        clientPort: 80,
+            // workaround for development in docker
+            clientPort: 80,
+        },
+        watch: {
+            ignored: ['./src/pusher']
         },
     },
     build: {

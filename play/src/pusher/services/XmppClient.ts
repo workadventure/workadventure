@@ -12,7 +12,8 @@ import {
 import type { MucRoomDefinitionInterface } from "../../messages/JsonMessages/MucRoomDefinitionInterface";
 import { EJABBERD_DOMAIN, EJABBERD_WS_URI } from "../enums/EnvironmentVariable";
 import CancelablePromise from "cancelable-promise";
-import jid, { JID } from "@xmpp/jid";
+import type { JID } from "@xmpp/jid";
+import jid from "@xmpp/jid";
 import type { Client } from "@xmpp/client";
 import { client, xml } from "@xmpp/client";
 import { Element } from "@xmpp/xml";
@@ -45,7 +46,7 @@ export class XmppClient {
         this.clientDomain = this.clientJID.domain;
         this.clientResource = this.clientJID.resource;
         this.clientPassword = clientSocket.jabberPassword;
-        this.start();
+        this.start().catch((err) => { throw err });
     }
 
     // FIXME: complete a scenario where ejabberd is STOPPED when a user enters the room and then started
@@ -97,7 +98,7 @@ export class XmppClient {
                 }
                 if (this.isAuthorized) {
                     this.timeout = setTimeout(() => {
-                        this.start();
+                        this.start().catch((err) => { throw err });
                     }, 10_000);
                 }
             });
@@ -237,35 +238,35 @@ export class XmppClient {
         debug("xmppClient => start");
         return (this.clientPromise = new CancelablePromise((res, rej, onCancel) => {
             this.createClient(res, rej);
-            onCancel(() => {
-                (async (): Promise<void> => {
-                    debug("clientPromise => onCancel => from xmppClient");
-                    if (this.timeout) {
-                        clearTimeout(this.timeout);
-                        this.timeout = undefined;
-                    }
 
-                    //send present unavailable
-                    try {
-                        if (this.xmppSocket?.status === "online") {
-                            await this.xmppSocket?.send(xml("presence", { type: "unavailable" }));
-                        }
-                    } catch (err) {
-                        console.info("XmppClient => onCancel => presence => err", err);
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
+            onCancel(async () => {
+                debug("clientPromise => onCancel => from xmppClient");
+                if (this.timeout) {
+                    clearTimeout(this.timeout);
+                    this.timeout = undefined;
+                }
+
+                //send present unavailable
+                try {
+                    if (this.xmppSocket?.status === "online") {
+                        await this.xmppSocket?.send(xml("presence", { type: "unavailable" }));
                     }
+                } catch (err) {
+                    console.info("XmppClient => onCancel => presence => err", err);
+                }
+                try {
+                    //stop xmpp socket client
+                    await this.xmppSocket?.close();
+                } catch (errClose) {
+                    console.info("XmppClient => onCancel => xmppSocket => errClose", errClose);
                     try {
                         //stop xmpp socket client
-                        await this.xmppSocket?.close();
-                    } catch (errClose) {
-                        console.info("XmppClient => onCancel => xmppSocket => errClose", errClose);
-                        try {
-                            //stop xmpp socket client
-                            await this.xmppSocket?.stop();
-                        } catch (errStop) {
-                            console.info("XmppClient => onCancel => xmppSocket => errStop", errStop);
-                        }
+                        await this.xmppSocket?.stop();
+                    } catch (errStop) {
+                        console.info("XmppClient => onCancel => xmppSocket => errStop", errStop);
                     }
-                })();
+                }
             });
         }).catch((err) => {
             if (err instanceof SASLError) {
@@ -393,7 +394,7 @@ export class XmppClient {
     }
 
     sendPong(to: string, from: string, id: string): void {
-        this.sendToEjabberd(xml("iq", { from, to, id, type: "result" }).toString());
+        this.sendToEjabberd(xml("iq", { from, to, id, type: "result" }).toString()).catch((err) => { throw err });
     }
 
     async sendToEjabberd(stanza: string): Promise<void> {

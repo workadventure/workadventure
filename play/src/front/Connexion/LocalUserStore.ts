@@ -1,4 +1,5 @@
-import { areCharacterLayersValid, isUserNameValid, LocalUser } from "./LocalUser";
+import type { LocalUser } from "./LocalUser";
+import { areCharacterLayersValid, isUserNameValid } from "./LocalUser";
 import type { Emoji } from "../Stores/EmoteStore";
 import { z } from "zod";
 

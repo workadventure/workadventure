@@ -3,7 +3,8 @@ import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events
 import { Subject } from "rxjs";
 import { apiCallback } from "./registeredCallbacks";
 import { playerState } from "./playerState";
-import proximityMeeting, { WorkadventureProximityMeetingCommands } from "./Player/ProximityMeeting";
+import type { WorkadventureProximityMeetingCommands } from "./Player/ProximityMeeting";
+import proximityMeeting from "./Player/ProximityMeeting";
 
 const moveStream = new Subject<HasPlayerMovedEvent>();
 

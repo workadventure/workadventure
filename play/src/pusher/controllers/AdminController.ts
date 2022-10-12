@@ -1,11 +1,12 @@
 import { apiClientRepository } from "../services/ApiClientRepository";
+import type {
+    RoomsList} from "../../messages/generated/messages_pb";
 import {
     AdminRoomMessage,
     WorldFullWarningToRoomMessage,
     RefreshRoomPromptMessage,
-    EmptyMessage,
-    RoomsList,
-} from "../messages/generated/messages_pb";
+    EmptyMessage
+} from "../../messages/generated/messages_pb";
 import { adminToken } from "../middlewares/AdminToken";
 import { BaseHttpController } from "./BaseHttpController";
 import { Metadata } from "@grpc/grpc-js";

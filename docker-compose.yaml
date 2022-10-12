@@ -24,8 +24,8 @@ services:
         networks:
             default:
                 aliases:
+                    - 'front.workadventure.localhost'
                     - 'play.workadventure.localhost'
-                    - 'pusher.workadventure.localhost'
                     - 'maps.workadventure.localhost'
                     - 'oidc.workadventure.localhost'
                     - 'map-storage.workadventure.localhost'
@@ -55,7 +55,7 @@ services:
             HOST: "0.0.0.0"
             NODE_ENV: development
             SERVER_ID: "$SERVER_ID"
-            FRONT_URL: http://play.workadventure.localhost
+            FRONT_URL: http://front.workadventure.localhost
             PUSHER_URL: http://play.workadventure.localhost
             UPLOADER_URL: http://uploader.workadventure.localhost
             ICON_URL: http://icon.workadventure.localhost
@@ -96,9 +96,12 @@ services:
             ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
         labels:
             - "traefik.enable=true"
+            - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"
+            - "traefik.http.routers.front.service=front"
+            - "traefik.http.services.front.loadbalancer.server.port=8080"
             - "traefik.http.routers.play.rule=Host(`play.workadventure.localhost`)"
-            - "traefik.http.routers.play.entryPoints=web"
-            - "traefik.http.services.play.loadbalancer.server.port=8080"
+            - "traefik.http.routers.play.service=play"
+            - "traefik.http.services.play.loadbalancer.server.port=3000"
 
     chat:
         image: thecodingmachine/nodejs:v2-18-bullseye

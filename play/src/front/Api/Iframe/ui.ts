@@ -5,12 +5,13 @@ import { Popup } from "./Ui/Popup";
 import { ActionMessage } from "./Ui/ActionMessage";
 import { Menu } from "./Ui/Menu";
 import type { RequireOnlyOne } from "../types";
-import { ActionsMenuActionClickedEvent } from "../Events/ActionsMenuActionClickedEvent";
-import { Observable, Subject } from "rxjs";
+import type { ActionsMenuActionClickedEvent } from "../Events/ActionsMenuActionClickedEvent";
+import type { Observable} from "rxjs";
+import { Subject } from "rxjs";
 import type { UIWebsiteCommands } from "./Ui/UIWebsite";
 import website from "./Ui/UIWebsite";
 import { RemotePlayer } from "./Players/RemotePlayer";
-import { AddPlayerEvent } from "../Events/AddPlayerEvent";
+import type { AddPlayerEvent } from "../Events/AddPlayerEvent";
 import modal from "./Ui/Modal";
 import type { WorkadventureModalCommands } from "./Ui/Modal";
 

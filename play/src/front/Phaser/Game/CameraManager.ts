@@ -1,10 +1,12 @@
 import { Easing } from "../../types";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import type { Box } from "../../WebRtc/LayoutManager";
-import { hasMovedEventName, Player } from "../Player/Player";
-import type { WaScaleManagerFocusTarget } from "../Services/WaScaleManager";
-import { WaScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";
-import { ActiveEventList, UserInputEvent } from "../UserInput/UserInputManager";
+import type { Player } from "../Player/Player";
+import { hasMovedEventName } from "../Player/Player";
+import type { WaScaleManagerFocusTarget , WaScaleManager} from "../Services/WaScaleManager";
+import { WaScaleManagerEvent } from "../Services/WaScaleManager";
+import type { ActiveEventList} from "../UserInput/UserInputManager";
+import { UserInputEvent } from "../UserInput/UserInputManager";
 import type { GameScene } from "./GameScene";
 
 export enum CameraMode {

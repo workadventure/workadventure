@@ -1,9 +1,10 @@
-import {
+import type {
     ActionMessageType,
     MessageReferenceEvent,
+    TriggerActionMessageEvent} from "../../Events/Ui/TriggerActionMessageEvent";
+import {
     removeActionMessage,
-    triggerActionMessage,
-    TriggerActionMessageEvent,
+    triggerActionMessage
 } from "../../Events/Ui/TriggerActionMessageEvent";
 import { queryWorkadventure } from "../IframeApiContribution";
 import type { ActionMessageOptions } from "../ui";

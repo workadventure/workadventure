@@ -1,4 +1,3 @@
-import qs from "qs";
 import { openIDClient } from "../services/OpenIDClient";
 import { OPID_CLIENT_ISSUER } from "../enums/EnvironmentVariable";
 import { BaseHttpController } from "./BaseHttpController";
@@ -7,7 +6,7 @@ export class OpenIdProfileController extends BaseHttpController {
     routes(): void {
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/profile", async (req, res) => {
-            const { accessToken } = qs.parse(req.path_query);
+            const { accessToken } = req.query;
             if (!accessToken) {
                 throw Error("Access token expected cannot to be check on Hydra");
             }

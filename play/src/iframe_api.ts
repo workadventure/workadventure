@@ -7,7 +7,8 @@ import {
 } from "./front/Api/Events/IframeEvent";
 import type { TypedMessageEvent } from "./front/Api/Events/IframeEvent";
 import chat from "./front/Api/Iframe/chat";
-import nav, { CoWebsite } from "./front/Api/Iframe/nav";
+import type { CoWebsite } from "./front/Api/Iframe/nav";
+import nav from "./front/Api/Iframe/nav";
 import controls from "./front/Api/Iframe/controls";
 import ui from "./front/Api/Iframe/ui";
 import sound from "./front/Api/Iframe/sound";

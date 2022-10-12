@@ -1,5 +1,6 @@
 import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
-import { Observable, Subject } from "rxjs";
+import type { Observable} from "rxjs";
+import { Subject } from "rxjs";
 import type { WasCameraUpdatedEvent } from "../Events/WasCameraUpdatedEvent";
 import { apiCallback } from "./registeredCallbacks";
 

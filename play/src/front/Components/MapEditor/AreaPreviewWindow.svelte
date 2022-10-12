@@ -1,10 +1,10 @@
 <script lang="ts">
     import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
     import { onDestroy } from "svelte";
-    import { Unsubscriber } from "svelte/store";
-    import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
+    import type { Unsubscriber } from "svelte/store";
+    import type { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { ITiledMapRectangleObject } from "@workadventure/map-editor";
+    import type { ITiledMapRectangleObject } from "@workadventure/map-editor";
 
     let areaPreview: AreaPreview | undefined;
     let areaData: ITiledMapRectangleObject | undefined;

@@ -2,7 +2,6 @@ import { v4 } from "uuid";
 import { BaseHttpController } from "./BaseHttpController";
 import type { AuthTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager } from "../services/JWTTokenManager";
-import qs from "qs";
 import { openIDClient } from "../services/OpenIDClient";
 import { DISABLE_ANONYMOUS } from "../enums/EnvironmentVariable";
 import type { RegisterData } from "../../messages/JsonMessages/RegisterData";
@@ -27,7 +26,7 @@ export class AuthenticateController extends BaseHttpController {
         this.app.get("/room/access", (req, res) => {
             (async (): Promise<void> => {
                 try {
-                    const { uuid, playUri, token } = qs.parse(req.path_query);
+                    const { uuid, playUri, token } = req.query;
                     if (!uuid || !playUri) {
                         throw new Error("Missing uuid and playUri parameters.");
                     }
@@ -87,7 +86,7 @@ export class AuthenticateController extends BaseHttpController {
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/login-screen", async (req, res) => {
             try {
-                const { playUri, redirect } = qs.parse(req.path_query);
+                const { playUri, redirect } = req.query;
 
                 if (typeof playUri !== "string") {
                     throw new Error("Expecting playUri");
@@ -187,7 +186,7 @@ export class AuthenticateController extends BaseHttpController {
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/me", async (req, res) => {
             const IPAddress = req.header("x-forwarded-for");
-            const { token, playUri } = qs.parse(req.path_query);
+            const { token, playUri } = req.query;
             try {
                 if (token === undefined) {
                     throw new Error("Missing token");
@@ -256,7 +255,7 @@ export class AuthenticateController extends BaseHttpController {
          */
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/logout-callback", async (req, res) => {
-            const { token } = qs.parse(req.path_query);
+            const { token } = req.query;
 
             try {
                 const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
@@ -385,41 +384,41 @@ export class AuthenticateController extends BaseHttpController {
         this.app.options("/register", (req, res) => {
             res.status(200).send("");
         });
-        this.app.post("/register", (req, res) => {
-            (async (): Promise<void> => {
-                const param = await req.json();
 
-                //todo: what to do if the organizationMemberToken is already used?
-                const organizationMemberToken: string | null = param.organizationMemberToken;
-                const playUri: string | null = param.playUri;
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        this.app.post("/register", async (req, res) => {
+            const param = await req.json();
 
-                try {
-                    if (typeof organizationMemberToken != "string") throw new Error("No organization token");
-                    const data = await adminService.fetchMemberDataByToken(
-                        organizationMemberToken,
-                        playUri,
-                        req.header("accept-language")
-                    );
-                    const userUuid = data.userUuid;
-                    const email = data.email;
-                    const roomUrl = data.roomUrl;
-                    const mapUrlStart = data.mapUrlStart;
+            //todo: what to do if the organizationMemberToken is already used?
+            const organizationMemberToken: string | null = param.organizationMemberToken;
+            const playUri: string | null = param.playUri;
 
-                    const authToken = jwtTokenManager.createAuthToken(email || userUuid);
+            try {
+                if (typeof organizationMemberToken != "string") throw new Error("No organization token");
+                const data = await adminService.fetchMemberDataByToken(
+                    organizationMemberToken,
+                    playUri,
+                    req.header("accept-language")
+                );
+                const userUuid = data.userUuid;
+                const email = data.email;
+                const roomUrl = data.roomUrl;
+                const mapUrlStart = data.mapUrlStart;
 
-                    res.json({
-                        authToken,
-                        userUuid,
-                        email,
-                        roomUrl,
-                        mapUrlStart,
-                        organizationMemberToken,
-                    } as RegisterData);
-                } catch (e) {
-                    console.error("register => ERROR", e);
-                    this.castErrorToResponse(e, res);
-                }
-            })();
+                const authToken = jwtTokenManager.createAuthToken(email || userUuid);
+
+                res.json({
+                    authToken,
+                    userUuid,
+                    email,
+                    roomUrl,
+                    mapUrlStart,
+                    organizationMemberToken,
+                } as RegisterData);
+            } catch (e) {
+                console.error("register => ERROR", e);
+                this.castErrorToResponse(e, res);
+            }
         });
     }
 
@@ -479,7 +478,7 @@ export class AuthenticateController extends BaseHttpController {
     private profileCallback(): void {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/profile-callback", async (req, res) => {
-            const { token, playUri } = qs.parse(req.path_query);
+            const { token, playUri } = req.query;
             try {
                 //verify connected by token
                 if (token != undefined) {

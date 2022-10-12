@@ -11,7 +11,7 @@ package-lock.json
 
 node_modules
 dist
-dist-ssr
+dist-svelte
 *.local
 
 # Editor directories and files
@@ -24,3 +24,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+/public/iframe_api.js
+/public/iframe_api.js.map
+/public/es.js
+/svelte-check-watch/public/iframe_api.js

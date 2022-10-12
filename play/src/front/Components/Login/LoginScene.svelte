@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { Game } from "../../Phaser/Game/Game";
-    import { LoginScene, LoginSceneName } from "../../Phaser/Login/LoginScene";
+    import type { LoginScene} from "../../Phaser/Login/LoginScene";
+    import { LoginSceneName } from "../../Phaser/Login/LoginScene";
     import { DISPLAY_TERMS_OF_USE, MAX_USERNAME_LENGTH } from "../../Enum/EnvironmentVariable";
     import logoImg from "../images/logo.png";
     import poweredByWorkAdventureImg from "../images/Powered_By_WorkAdventure_Big.png";

@@ -14,13 +14,13 @@ import type {
     PositionMessage,
     SetPlayerDetailsMessage,
     UserJoinedZoneMessage,
-    UserLeftZoneMessage} from "../messages/generated/messages_pb";
+    UserLeftZoneMessage} from "../../messages/generated/messages_pb";
 import {
     GroupUpdateMessage,
     UserJoinedMessage,
     UserMovedMessage,
     ZoneMessage,
-} from "../messages/generated/messages_pb";
+} from "../../messages/generated/messages_pb";
 import type { ClientReadableStream } from "@grpc/grpc-js";
 import type { PositionDispatcher } from "../models/PositionDispatcher";
 import Debug from "debug";

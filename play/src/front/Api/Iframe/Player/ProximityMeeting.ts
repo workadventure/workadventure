@@ -1,6 +1,6 @@
 import { Subject } from "rxjs";
-import { JoinProximityMeetingEvent } from "../../Events/ProximityMeeting/JoinProximityMeetingEvent";
-import { ParticipantProximityMeetingEvent } from "../../Events/ProximityMeeting/ParticipantProximityMeetingEvent";
+import type { JoinProximityMeetingEvent } from "../../Events/ProximityMeeting/JoinProximityMeetingEvent";
+import type { ParticipantProximityMeetingEvent } from "../../Events/ProximityMeeting/ParticipantProximityMeetingEvent";
 
 import { IframeApiContribution } from "../IframeApiContribution";
 import { RemotePlayer } from "../Players/RemotePlayer";

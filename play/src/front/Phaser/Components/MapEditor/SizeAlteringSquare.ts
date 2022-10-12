@@ -1,4 +1,4 @@
-import { GameScene } from "../../Game/GameScene";
+import type { GameScene } from "../../Game/GameScene";
 
 export enum SizeAlteringSquarePosition {
     TopLeft = 0,

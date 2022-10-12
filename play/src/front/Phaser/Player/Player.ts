@@ -1,5 +1,6 @@
 import type { GameScene } from "../Game/GameScene";
-import { ActiveEventList, UserInputEvent } from "../UserInput/UserInputManager";
+import type { ActiveEventList} from "../UserInput/UserInputManager";
+import { UserInputEvent } from "../UserInput/UserInputManager";
 import { Character } from "../Entity/Character";
 
 import { get } from "svelte/store";

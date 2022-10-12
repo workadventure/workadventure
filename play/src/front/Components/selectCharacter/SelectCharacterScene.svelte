@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { Game } from "../../Phaser/Game/Game";
-    import { SelectCharacterScene, SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
+    import type { SelectCharacterScene} from "../../Phaser/Login/SelectCharacterScene";
+    import { SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
     import LL from "../../../i18n/i18n-svelte";
     import {
         collectionsSizeStore,

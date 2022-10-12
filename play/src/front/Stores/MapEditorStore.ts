@@ -1,7 +1,7 @@
 import { writable } from "svelte/store";
 import { connectionManager } from "../Connexion/ConnectionManager";
 import { ENABLE_FEATURE_MAP_EDITOR } from "../Enum/EnvironmentVariable";
-import { AreaPreview } from "../Phaser/Components/MapEditor/AreaPreview";
+import type { AreaPreview } from "../Phaser/Components/MapEditor/AreaPreview";
 
 function createMapEditorModeStore() {
     const { set, subscribe } = writable(false);

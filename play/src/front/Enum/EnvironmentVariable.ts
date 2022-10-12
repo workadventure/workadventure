@@ -1,7 +1,7 @@
 import { getEnvConfig } from "@geprog/vite-plugin-env-config/getEnvConfig";
 
 const DEBUG_MODE: boolean = getEnvConfig("DEBUG_MODE") == "true";
-const PUSHER_URL = getEnvConfig("PUSHER_URL") || "//pusher.workadventure.localhost";
+const PUSHER_URL = getEnvConfig("PUSHER_URL") || "//play.workadventure.localhost";
 export const ADMIN_URL = getEnvConfig("ADMIN_URL") || "";
 const UPLOADER_URL = getEnvConfig("UPLOADER_URL") || "//uploader.workadventure.localhost";
 const ICON_URL = getEnvConfig("ICON_URL") || "//icon.workadventure.localhost";

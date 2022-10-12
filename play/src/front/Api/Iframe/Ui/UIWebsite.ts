@@ -1,4 +1,4 @@
-import {
+import type {
     CreateUIWebsiteEvent,
     UIWebsiteCSSValue,
     UIWebsiteMargin,

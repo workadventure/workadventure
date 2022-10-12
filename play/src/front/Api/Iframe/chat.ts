@@ -1,4 +1,4 @@
-import { UserInputChatEvent } from "../Events/UserInputChatEvent";
+import type { UserInputChatEvent } from "../Events/UserInputChatEvent";
 import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import { Subject } from "rxjs";

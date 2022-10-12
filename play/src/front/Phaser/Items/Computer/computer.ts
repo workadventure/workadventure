@@ -4,7 +4,7 @@ import type { ItemFactoryInterface } from "../ItemFactoryInterface";
 import type { GameScene } from "../../Game/GameScene";
 import { ActionableItem } from "../ActionableItem";
 import { z } from "zod";
-import { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
+import type { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 
 export const isComputerState = z.object({
     status: z.string(),

@@ -1,10 +1,10 @@
 import type {
     CommandConfig,
-} from "@workadventure/map-editor";
+
+    Command} from "@workadventure/map-editor";
 import {
     UpdateAreaCommand,
     CreateAreaCommand,
-    Command,
     DeleteAreaCommand,
 } from "@workadventure/map-editor";
 import type { Unsubscriber } from "svelte/store";

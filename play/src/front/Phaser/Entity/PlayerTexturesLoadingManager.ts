@@ -1,6 +1,6 @@
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
-import type { BodyResourceDescriptionInterface } from "./PlayerTextures";
-import { PlayerTextures, PlayerTexturesKey } from "./PlayerTextures";
+import type { BodyResourceDescriptionInterface , PlayerTextures} from "./PlayerTextures";
+import { PlayerTexturesKey } from "./PlayerTextures";
 import CancelablePromise from "cancelable-promise";
 import type { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import Texture = Phaser.Textures.Texture;

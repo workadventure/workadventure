@@ -1,7 +1,8 @@
-import { Observable, Subject } from "rxjs";
+import type { Observable} from "rxjs";
+import { Subject } from "rxjs";
 
-import { EnterLeaveEvent } from "../Events/EnterLeaveEvent";
-import { ChangeLayerEvent } from "../Events/ChangeLayerEvent";
+import type { EnterLeaveEvent } from "../Events/EnterLeaveEvent";
+import type { ChangeLayerEvent } from "../Events/ChangeLayerEvent";
 
 import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
@@ -9,8 +10,8 @@ import { apiCallback } from "./registeredCallbacks";
 import type { WorkadventureRoomWebsiteCommands } from "./website";
 import website from "./website";
 import area from "./area";
-import { WorkadventureAreaCommands } from "./area";
-import { ITiledMap } from "@workadventure/tiled-map-type-guard";
+import type { WorkadventureAreaCommands } from "./area";
+import type { ITiledMap } from "@workadventure/tiled-map-type-guard";
 
 const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();

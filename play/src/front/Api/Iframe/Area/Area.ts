@@ -1,5 +1,5 @@
-import { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
-import { CreateAreaEvent } from "../../Events/CreateAreaEvent";
+import type { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
+import type { CreateAreaEvent } from "../../Events/CreateAreaEvent";
 import { sendToWorkadventure } from "../IframeApiContribution";
 
 // TODO: Include more properties to extends functionality later on

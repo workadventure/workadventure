@@ -8,11 +8,13 @@ import { OpenIdProfileController } from "./controllers/OpenIdProfileController";
 import { WokaListController } from "./controllers/WokaListController";
 import { SwaggerController } from "./controllers/SwaggerController";
 import HyperExpress from "hyper-express";
-import { cors } from "./middlewares/Cors";
-import { ENABLE_OPENAPI_ENDPOINT } from "./enums/EnvironmentVariable";
+import cors from "cors";
+import { ENABLE_OPENAPI_ENDPOINT, FRONT_URL } from "./enums/EnvironmentVariable";
 import { PingController } from "./controllers/PingController";
 import { IoSocketChatController } from "./controllers/IoSocketChatController";
 import { FrontController } from "./controllers/FrontController";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const LiveDirectory = require("live-directory");
 
 class App {
     public app: HyperExpress.compressors.TemplatedApp;
@@ -22,7 +24,31 @@ class App {
         this.app = webserver.uws_instance;
 
         // Global middlewares
-        webserver.use(cors);
+        webserver.use(cors({
+            origin: (origin) => {
+                console.log("coucou2", origin)
+                return FRONT_URL === "*" ? origin : FRONT_URL;
+            },
+            allowedHeaders: [
+                "Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization", "Pragma", "Cache-Control"
+            ],
+            credentials: true
+        }));
+
+        /**
+         * Todo: Replace this lib by the embed static middleware of HyperExpress
+         *       when the v3.0 will be released.
+         */
+        const liveAssets = new LiveDirectory({
+            path: "public",
+            keep: {
+                extensions: [".css", ".js", ".png", ".svg", ".ico", ".xml", ".mp3", ".json", ".html", ".ttf"]
+            }
+        });
+
+        liveAssets.ready().then(() => {
+            console.info("All static assets has been loaded!");
+        });
 
         // Socket controllers
         new IoSocketController(this.app);
@@ -40,7 +66,7 @@ class App {
         if (ENABLE_OPENAPI_ENDPOINT) {
             new SwaggerController(webserver);
         }
-        new FrontController(webserver);
+        new FrontController(webserver, liveAssets);
     }
 }
 

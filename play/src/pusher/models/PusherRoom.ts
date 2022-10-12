@@ -6,12 +6,12 @@ import { apiClientRepository } from "../services/ApiClientRepository";
 import {
     RoomMessage,
     SubMessage,
-} from "../messages/generated/messages_pb";
+} from "../../messages/generated/messages_pb";
 import type {
     BatchToPusherRoomMessage,
     ErrorMessage,
     VariableWithTagMessage,
-} from "../messages/generated/messages_pb";
+} from "../../messages/generated/messages_pb";
 import Debug from "debug";
 import type { ClientReadableStream } from "@grpc/grpc-js";
 

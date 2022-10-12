@@ -1,6 +1,7 @@
-import { Observable, Subject } from "rxjs";
-import { ChangeAreaEvent } from "../Events/ChangeAreaEvent";
-import { CreateAreaEvent } from "../Events/CreateAreaEvent";
+import type { Observable} from "rxjs";
+import { Subject } from "rxjs";
+import type { ChangeAreaEvent } from "../Events/ChangeAreaEvent";
+import type { CreateAreaEvent } from "../Events/CreateAreaEvent";
 import { Area } from "./Area/Area";
 import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";

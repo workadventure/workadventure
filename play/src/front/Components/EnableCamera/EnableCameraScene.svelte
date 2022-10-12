@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { Game } from "../../Phaser/Game/Game";
-    import { EnableCameraScene, EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
+    import type { EnableCameraScene} from "../../Phaser/Login/EnableCameraScene";
+    import { EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
     import {
         audioConstraintStore,
         cameraListStore,
