@@ -8,7 +8,7 @@ const login: DeepPartial<Translation["login"]> = {
             empty: "Le nom est vide",
         },
     },
-    terms: 'En continuant, vous acceptez nos {links}.',
+    terms: "En continuant, vous acceptez nos {links}.",
     termsOfUse: "nos conditions d'utilisation",
     privacyPolicy: "notre politique de confidentialité",
     cookiePolicy: "notre politique relative aux cookies",

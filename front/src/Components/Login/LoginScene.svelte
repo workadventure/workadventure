@@ -5,7 +5,7 @@
     import logoImg from "../images/logo.png";
     import poweredByWorkAdventureImg from "../images/Powered_By_WorkAdventure_Big.png";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import LL, {locale} from "../../i18n/i18n-svelte";
+    import LL, { locale } from "../../i18n/i18n-svelte";
 
     export let game: Game;
 
@@ -19,23 +19,29 @@
 
     let legalStrings: string[] = [];
     if (legals?.termsOfUseUrl) {
-        legalStrings.push("<a href=\""+encodeURI(legals.termsOfUseUrl)+"\" target=\"_blank\">" + $LL.login.termsOfUse() + "</a>");
+        legalStrings.push(
+            '<a href="' + encodeURI(legals.termsOfUseUrl) + '" target="_blank">' + $LL.login.termsOfUse() + "</a>"
+        );
     }
     if (legals?.privacyPolicyUrl) {
-        legalStrings.push("<a href=\""+encodeURI(legals.privacyPolicyUrl)+"\" target=\"_blank\">" + $LL.login.privacyPolicy() + "</a>");
+        legalStrings.push(
+            '<a href="' + encodeURI(legals.privacyPolicyUrl) + '" target="_blank">' + $LL.login.privacyPolicy() + "</a>"
+        );
     }
     if (legals?.cookiePolicyUrl) {
-        legalStrings.push("<a href=\""+encodeURI(legals.cookiePolicyUrl)+"\" target=\"_blank\">" + $LL.login.cookiePolicy() + "</a>");
+        legalStrings.push(
+            '<a href="' + encodeURI(legals.cookiePolicyUrl) + '" target="_blank">' + $LL.login.cookiePolicy() + "</a>"
+        );
     }
 
     let legalString: string | undefined;
     if (legalStrings.length > 0) {
         if (Intl.ListFormat) {
-            const formatter = new Intl.ListFormat(locale, { style: 'long', type: 'conjunction' });
+            const formatter = new Intl.ListFormat(locale as unknown as string, { style: "long", type: "conjunction" });
             legalString = formatter.format(legalStrings);
         } else {
             // For old browsers
-            legalString = legalStrings.join(', ');
+            legalString = legalStrings.join(", ");
         }
     }
 
@@ -80,7 +86,7 @@
             <a style="display: none;" href="translation">Needed for translation CSS</a>
             <p>
                 {@html $LL.login.terms({
-                    links: legalString
+                    links: legalString,
                 })}
             </p>
         </section>

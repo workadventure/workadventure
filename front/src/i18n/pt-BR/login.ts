@@ -8,7 +8,7 @@ const login: DeepPartial<Translation["login"]> = {
             empty: "O nome está vazio",
         },
     },
-    terms: 'Ao continuar, você concorda com nossos {links}.',
+    terms: "Ao continuar, você concorda com nossos {links}.",
     termsOfUse: "termos de uso",
     privacyPolicy: "política de privacidade",
     cookiePolicy: "política de cookies",

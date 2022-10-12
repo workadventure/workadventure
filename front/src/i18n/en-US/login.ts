@@ -7,7 +7,7 @@ const login: BaseTranslation = {
             empty: "The name is empty",
         },
     },
-    terms: 'By continuing, you are agreeing our {links}.',
+    terms: "By continuing, you are agreeing our {links}.",
     termsOfUse: "terms of use",
     privacyPolicy: "privacy policy",
     cookiePolicy: "cookie policy",
