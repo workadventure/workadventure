@@ -2,7 +2,7 @@ import { CONTACT_URL, PUSHER_URL, DISABLE_ANONYMOUS } from "../Enum/EnvironmentV
 import { localUserStore } from "./LocalUserStore";
 import axios from "axios";
 import { axiosWithRetry } from "./AxiosUtils";
-import {isMapDetailsData, LegalsData, MapDetailsData} from "../Messages/JsonMessages/MapDetailsData";
+import { isMapDetailsData, LegalsData, MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
 
@@ -106,7 +106,9 @@ export class Room {
             const data = result.data;
 
             if ((data as MapDetailsData).authenticationMandatory !== undefined) {
-                (data as MapDetailsData).authenticationMandatory = Boolean((data as MapDetailsData).authenticationMandatory);
+                (data as MapDetailsData).authenticationMandatory = Boolean(
+                    (data as MapDetailsData).authenticationMandatory
+                );
             }
 
             const roomRedirectChecking = isRoomRedirect.safeParse(data);

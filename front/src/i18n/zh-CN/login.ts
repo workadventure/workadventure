@@ -8,7 +8,7 @@ const login: DeepPartial<Translation["login"]> = {
             empty: "名字为空",
         },
     },
-    terms: '点击继续，意味着你同意我们的{links}.',
+    terms: "点击继续，意味着你同意我们的{links}.",
     termsOfUse: "使用协议",
     privacyPolicy: "隐私政策",
     cookiePolicy: "Cookie策略",

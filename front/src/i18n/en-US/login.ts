@@ -9,7 +9,7 @@ const login: BaseTranslation = {
             notValidError: "Incorrect name format",
         },
     },
-    terms: 'By continuing, you are agreeing our {links}.',
+    terms: "By continuing, you are agreeing our {links}.",
     termsOfUse: "terms of use",
     privacyPolicy: "privacy policy",
     cookiePolicy: "cookie policy",

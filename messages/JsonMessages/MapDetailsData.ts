@@ -158,7 +158,7 @@ export const isMapDetailsData = z.object({
         description: "Configuration of the 'Customize your Woka' scene (WIP)",
     }),
     backgroundColor: extendApi(z.string().nullable().optional(), {
-        description: 'The background color used on configuration scenes (enter your name, select a woka, etc...) (WIP)',
+        description: "The background color used on configuration scenes (enter your name, select a woka, etc...) (WIP)",
         example: "#330033",
     }),
 });
