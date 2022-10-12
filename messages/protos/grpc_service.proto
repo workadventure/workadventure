@@ -1,0 +1,28 @@
+syntax = "proto3";
+import "messages.proto";
+
+/**
+ * Service handled by the "back". Pusher servers connect to this service.
+ */
+service RoomManager {
+  rpc joinRoom(stream PusherToBackMessage) returns (stream ServerToClientMessage); // Holds a connection between one given client and the back
+  rpc listenZone(ZoneMessage) returns (stream BatchToPusherMessage); // Connection used to send to a pusher messages related to a given zone of a given room
+  rpc listenRoom(RoomMessage) returns (stream BatchToPusherRoomMessage); // Connection used to send to a pusher messages related to a given room
+  rpc adminRoom(stream AdminPusherToBackMessage) returns (stream ServerToAdminClientMessage);
+  rpc sendAdminMessage(AdminMessage) returns (EmptyMessage);
+  rpc sendGlobalAdminMessage(AdminGlobalMessage) returns (EmptyMessage);
+  rpc ban(BanMessage) returns (EmptyMessage);
+  rpc sendAdminMessageToRoom(AdminRoomMessage) returns (EmptyMessage);
+  rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (EmptyMessage);
+  rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (EmptyMessage);
+  rpc getRooms(EmptyMessage) returns (RoomsList);
+  rpc ping(PingMessage) returns (PingMessage);
+}
+
+/**
+ * Service handled by the "map-storage". Back servers connect to this service.
+ */
+service MapStorage {
+  rpc ping(PingMessage) returns (PingMessage);
+  rpc handleEditMapCommandWithKeyMessage(EditMapCommandWithKeyMessage) returns (EditMapCommandMessage);
+}

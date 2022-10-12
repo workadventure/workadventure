@@ -1,4 +1,5 @@
-export * from './ts-proto-generated/protos/messages';
+export * as ProtoMessages from './ts-proto-generated/messages';
+export * as ProtoServices from './ts-proto-generated/grpc_service';
 
 export * from './JsonMessages/AdminApiData';
 export * from './JsonMessages/ApiVersion';
