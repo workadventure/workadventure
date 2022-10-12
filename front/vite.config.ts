@@ -39,7 +39,6 @@ export default defineConfig({
                 "START_ROOM_URL",
                 "MAX_USERNAME_LENGTH",
                 "MAX_PER_GROUP",
-                "DISPLAY_TERMS_OF_USE",
                 "POSTHOG_API_KEY",
                 "POSTHOG_URL",
                 "NODE_ENV",

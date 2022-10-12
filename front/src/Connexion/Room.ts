@@ -2,7 +2,7 @@ import { CONTACT_URL, PUSHER_URL, DISABLE_ANONYMOUS } from "../Enum/EnvironmentV
 import { localUserStore } from "./LocalUserStore";
 import axios from "axios";
 import { axiosWithRetry } from "./AxiosUtils";
-import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
+import {isMapDetailsData, LegalsData, MapDetailsData} from "../Messages/JsonMessages/MapDetailsData";
 import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
 
@@ -34,6 +34,7 @@ export class Room {
     private _showPoweredBy: boolean | undefined = true;
     private _roomName: string | undefined;
     private _pricingUrl: string | undefined;
+    private _legals: LegalsData | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -95,7 +96,7 @@ export class Room {
 
     private async getMapDetail(): Promise<MapDetail | RoomRedirect> {
         try {
-            const result = await axiosWithRetry.get(`${PUSHER_URL}/map`, {
+            const result = await axiosWithRetry.get<unknown>(`${PUSHER_URL}/map`, {
                 params: {
                     playUri: this.roomUrl.toString(),
                     authToken: localUserStore.getAuthToken(),
@@ -104,18 +105,20 @@ export class Room {
 
             const data = result.data;
 
-            if (data.authenticationMandatory !== undefined) {
-                data.authenticationMandatory = Boolean(data.authenticationMandatory);
+            if ((data as MapDetailsData).authenticationMandatory !== undefined) {
+                (data as MapDetailsData).authenticationMandatory = Boolean((data as MapDetailsData).authenticationMandatory);
             }
 
             const roomRedirectChecking = isRoomRedirect.safeParse(data);
             const mapDetailsDataChecking = isMapDetailsData.safeParse(data);
 
             if (roomRedirectChecking.success) {
+                const data = roomRedirectChecking.data;
                 return {
                     redirectUrl: data.redirectUrl,
                 };
             } else if (mapDetailsDataChecking.success) {
+                const data = mapDetailsDataChecking.data;
                 console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
                 this._mapUrl = data.mapUrl;
                 this._group = data.group;
@@ -139,6 +142,7 @@ export class Room {
                 this._roomName = data.roomName ?? undefined;
 
                 this._pricingUrl = data.pricingUrl ?? undefined;
+                this._legals = data.legals ?? undefined;
 
                 return new MapDetail(data.mapUrl);
             } else {
@@ -264,5 +268,9 @@ export class Room {
 
     get pricingUrl(): string | undefined {
         return this._pricingUrl;
+    }
+
+    get legals(): LegalsData | undefined {
+        return this._legals;
     }
 }

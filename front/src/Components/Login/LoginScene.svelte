@@ -1,11 +1,11 @@
 <script lang="ts">
     import type { Game } from "../../Phaser/Game/Game";
     import { LoginScene, LoginSceneName } from "../../Phaser/Login/LoginScene";
-    import { DISPLAY_TERMS_OF_USE, MAX_USERNAME_LENGTH } from "../../Enum/EnvironmentVariable";
+    import { MAX_USERNAME_LENGTH } from "../../Enum/EnvironmentVariable";
     import logoImg from "../images/logo.png";
     import poweredByWorkAdventureImg from "../images/Powered_By_WorkAdventure_Big.png";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import LL from "../../i18n/i18n-svelte";
+    import LL, {locale} from "../../i18n/i18n-svelte";
     import { NameNotValidError, NameTooLongError } from "../../Exception/NameError";
 
     export let game: Game;
@@ -17,6 +17,29 @@
     let errorName = "";
 
     let logo = gameManager.currentStartedRoom?.loginSceneLogo ?? logoImg;
+    let legals = gameManager.currentStartedRoom?.legals ?? {};
+
+    let legalStrings: string[] = [];
+    if (legals?.termsOfUseUrl) {
+        legalStrings.push("<a href=\""+encodeURI(legals.termsOfUseUrl)+"\" target=\"_blank\">" + $LL.login.termsOfUse() + "</a>");
+    }
+    if (legals?.privacyPolicyUrl) {
+        legalStrings.push("<a href=\""+encodeURI(legals.privacyPolicyUrl)+"\" target=\"_blank\">" + $LL.login.privacyPolicy() + "</a>");
+    }
+    if (legals?.cookiePolicyUrl) {
+        legalStrings.push("<a href=\""+encodeURI(legals.cookiePolicyUrl)+"\" target=\"_blank\">" + $LL.login.cookiePolicy() + "</a>");
+    }
+
+    let legalString: string | undefined;
+    if (legalStrings.length > 0) {
+        if (Intl.ListFormat) {
+            const formatter = new Intl.ListFormat(locale, { style: 'long', type: 'conjunction' });
+            legalString = formatter.format(legalStrings);
+        } else {
+            // For old browsers
+            legalString = legalStrings.join(', ');
+        }
+    }
 
     function submit() {
         startValidating = true;
@@ -66,11 +89,13 @@
         {/if}
     </section>
 
-    {#if DISPLAY_TERMS_OF_USE}
+    {#if legalString}
         <section class="terms-and-conditions">
-            <a style="display: none;" href="traduction">Need for traduction</a>
+            <a style="display: none;" href="translation">Needed for translation CSS</a>
             <p>
-                {@html $LL.login.terms()}
+                {@html $LL.login.terms({
+                    links: legalString
+                })}
             </p>
         </section>
     {/if}
