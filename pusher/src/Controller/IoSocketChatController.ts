@@ -109,6 +109,8 @@ export class IoSocketChatController {
 
                     let maxHistoryChat = MAX_HISTORY_CHAT;
 
+                    let jabberPassword = null;
+
                     const playUri = query.playUri;
                     try {
                         if (typeof playUri !== "string") {
@@ -169,7 +171,6 @@ export class IoSocketChatController {
                             userRoomToken: undefined,
                             messages: [],
                             jabberId: null,
-                            jabberPassword: null,
                             mucRooms: [],
                         };
 
@@ -242,15 +243,15 @@ export class IoSocketChatController {
                             // If there is no admin, or no user, let's log users using JWT tokens
                             userData.jabberId = jid(userIdentifier, EJABBERD_DOMAIN).toString();
                             if (EJABBERD_JWT_SECRET) {
-                                userData.jabberPassword = Jwt.sign({ jid: userData.jabberId }, EJABBERD_JWT_SECRET, {
+                                jabberPassword = Jwt.sign({ jid: userData.jabberId }, EJABBERD_JWT_SECRET, {
                                     expiresIn: "30d",
                                     algorithm: "HS256",
                                 });
                             } else {
-                                userData.jabberPassword = "no_password_set";
+                                jabberPassword = "no_password_set";
                             }
                         } else {
-                            userData.jabberPassword = tokenData?.accessToken;
+                            jabberPassword = tokenData?.accessToken;
                         }
 
                         if (userData.userRoomToken && ADMIN_API_URL) {
@@ -310,7 +311,7 @@ export class IoSocketChatController {
                                 tags: memberTags,
                                 userRoomToken: memberUserRoomToken,
                                 jabberId: userData.jabberId,
-                                jabberPassword: userData.jabberPassword,
+                                jabberPassword: jabberPassword,
                                 mucRooms: userData.mucRooms,
                             } as UpgradeData,
                             /* Spell these correctly */
