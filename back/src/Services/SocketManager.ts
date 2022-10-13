@@ -48,6 +48,7 @@ import {
     MoveToPositionMessage,
     SubToPusherRoomMessage,
     EditMapCommandWithKeyMessage,
+    EditMapCommandMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -1077,15 +1078,18 @@ export class SocketManager {
     }
 
     handleEditMapCommandWithKeyMessage(room: GameRoom, user: User, message: EditMapCommandWithKeyMessage) {
-        getMapStorageClient().handleEditMapCommandWithKeyMessage(message, (err, editMapMessage) => {
-            if (err) {
-                emitError(user.socket, err);
-                throw err;
+        getMapStorageClient().handleEditMapCommandWithKeyMessage(
+            message,
+            (err: unknown, editMapMessage: EditMapCommandMessage) => {
+                if (err) {
+                    emitError(user.socket, err);
+                    throw err;
+                }
+                const subMessage = new SubToPusherRoomMessage();
+                subMessage.setEditmapcommandmessage(editMapMessage);
+                room.dispatchRoomMessage(subMessage);
             }
-            const subMessage = new SubToPusherRoomMessage();
-            subMessage.setEditmapcommandmessage(editMapMessage);
-            room.dispatchRoomMessage(subMessage);
-        });
+        );
     }
 
     getAllRooms(): RoomsList {

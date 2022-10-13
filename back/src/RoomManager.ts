@@ -1,4 +1,4 @@
-import { IRoomManagerServer } from "./Messages/generated/messages_grpc_pb";
+import { IRoomManagerServer } from "./Messages/generated/services_grpc_pb";
 import {
     AdminGlobalMessage,
     AdminMessage,

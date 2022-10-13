@@ -1,0 +1,1 @@
+export * from './ts-proto-generated/grpc_service';

@@ -1151,6 +1151,10 @@
     "@typescript-eslint/types" "5.28.0"
     eslint-visitor-keys "^3.3.0"
 
+"@workadventure/grpc-services@link:../libs/grpc-services":
+  version "0.0.0"
+  uid ""
+
 "@workadventure/map-editor@link:../libs/map-editor":
   version "0.0.0"
   uid ""

@@ -132,7 +132,7 @@ export class GameRoom implements BrothersFinder {
         );
 
         if (ENABLE_FEATURE_MAP_EDITOR) {
-            getMapStorageClient().ping(new PingMessage(), (err, res) => {
+            getMapStorageClient().ping(new PingMessage(), (err: unknown, res: unknown) => {
                 console.log(`==================================`);
                 console.log(err);
                 console.log(JSON.stringify(res));

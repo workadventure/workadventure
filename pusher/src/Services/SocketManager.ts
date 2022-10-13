@@ -517,7 +517,7 @@ export class SocketManager implements ZoneEventListener {
         backAdminMessage.setRoomid(roomId);
         backAdminMessage.setRecipientuuid(userUuid);
         backAdminMessage.setType(type);
-        backConnection.sendAdminMessage(backAdminMessage, (error) => {
+        backConnection.sendAdminMessage(backAdminMessage, (error: unknown) => {
             if (error !== null) {
                 console.error("Error while sending admin message", error);
             }
@@ -542,7 +542,7 @@ export class SocketManager implements ZoneEventListener {
         banMessage.setRoomid(roomId);
         banMessage.setRecipientuuid(userUuid);
         banMessage.setType(type);
-        backConnection.ban(banMessage, (error) => {
+        backConnection.ban(banMessage, (error: unknown) => {
             if (error !== null) {
                 console.error("Error while sending admin message", error);
             }

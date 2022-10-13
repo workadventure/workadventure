@@ -43,6 +43,7 @@
     "@types/cors": "^2.8.12",
     "@workadventure/map-editor": "link:../libs/map-editor",
     "@workadventure/messages": "link:../libs/messages",
+    "@workadventure/grpc-services": "link:../libs/grpc-services",
     "@workadventure/tiled-map-type-guard": "^1.0.3",
     "concurrently": "^7.3.0",
     "cors": "^2.8.5",

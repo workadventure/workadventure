@@ -1,7 +1,7 @@
 /**
  * A class to get connections to the correct "api" server given a room name.
  */
-import { RoomManagerClient } from "../Messages/generated/messages_grpc_pb";
+import { RoomManagerClient } from "../Messages/generated/services_grpc_pb";
 import * as grpc from "@grpc/grpc-js";
 import crypto from "crypto";
 import { API_URL } from "../Enum/EnvironmentVariable";

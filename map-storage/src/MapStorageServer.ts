@@ -6,9 +6,10 @@ import {
     EditMapCommandMessage,
     EditMapCommandWithKeyMessage,
     EmptyMessage,
-    MapStorageServer,
     PingMessage,
 } from "@workadventure/messages";
+
+import { MapStorageServer } from "@workadventure/grpc-services";
 
 const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, EmptyMessage>, callback: sendUnaryData<PingMessage>): void {

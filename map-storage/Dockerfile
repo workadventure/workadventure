@@ -20,6 +20,8 @@ COPY libs/math-utils/yarn.lock libs/math-utils/package.json /usr/libs/math-utils
 RUN cd /usr/libs/math-utils && yarn install --network-timeout 1000000
 COPY libs/messages/yarn.lock libs/messages/package.json /usr/libs/messages/
 RUN cd /usr/libs/messages && yarn install --network-timeout 1000000
+COPY libs/grpc-services/yarn.lock libs/grpc-services/package.json /usr/libs/grpc-services/
+RUN cd /usr/libs/grpc-services && yarn install --network-timeout 1000000
 COPY libs/map-editor/yarn.lock libs/map-editor/package.json /usr/libs/map-editor/
 RUN cd /usr/libs/map-editor && yarn install --network-timeout 1000000
 COPY map-storage/yarn.lock map-storage/package.json ./
