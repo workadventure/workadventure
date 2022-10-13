@@ -103,6 +103,8 @@ export class AuthenticateController extends BaseHttpController {
                 const loginUri = await openIDClient.authorizationUrl(res, query.redirect, query.playUri);
                 res.cookie("playUri", query.playUri, undefined, {
                     httpOnly: true,
+                    sameSite: "none",
+                    secure: true,
                 });
 
                 return res.redirect(loginUri);

@@ -70,6 +70,8 @@ class OpenIDClient {
             // it should be httpOnly (not readable by javascript) and encrypted.
             res.cookie("code_verifier", this.encrypt(code_verifier), undefined, {
                 httpOnly: true,
+                sameSite: "none",
+                secure: true,
             });
 
             // We also store the state in cookies. The state should not be needed, except for older OpenID client servers that
@@ -77,6 +79,8 @@ class OpenIDClient {
             const state = uuid();
             res.cookie("oidc_state", state, undefined, {
                 httpOnly: true,
+                sameSite: "none",
+                secure: true,
             });
 
             const code_challenge = generators.codeChallenge(code_verifier);
