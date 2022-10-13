@@ -1,5 +1,4 @@
 import { derived, get, writable } from "svelte/store";
-import Timeout = NodeJS.Timeout;
 import { userIsAdminStore } from "./GameStore";
 import { CONTACT_URL, OPID_PROFILE_SCREEN_PROVIDER, PUSHER_URL } from "../Enum/EnvironmentVariable";
 import type { Translation } from "../../i18n/i18n-types";
@@ -15,7 +14,7 @@ export const profileAvailable = derived(userIsConnected, ($userIsConnected) => {
     return $userIsConnected && OPID_PROFILE_SCREEN_PROVIDER !== undefined;
 });
 
-let warningContainerTimeout: Timeout | null = null;
+let warningContainerTimeout: NodeJS.Timeout | null = null;
 function createWarningContainerStore() {
     const { subscribe, set } = writable<boolean>(false);
 

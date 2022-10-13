@@ -7,7 +7,7 @@
     "module": "ES2020",
     "allowJs": true,
     "sourceMap": true,
-    "outDir": "./dist",
+    "outDir": "./dist/public",
     "strict": true,
     "noImplicitThis": false,
     "noImplicitReturns": true,
@@ -24,7 +24,6 @@
   },
   "exclude": [
     "dist",
-    "dist-svelte",
     "public/iframe_api.js",
     "packages/iframe-api-typings",
   ]

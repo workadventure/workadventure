@@ -34,6 +34,10 @@ export class FrontController extends BaseHttpController {
             return this.displayFront(res);
         });
 
+        this.app.get("/index.html", (req: Request, res: Response) => {
+            return res.status(303).redirect("/");
+        });
+
         this.app.get("/*", (req: Request, res: Response) => {
             if (req.path.startsWith('/src') || req.path.startsWith('/node_modules')) {
                 return res.status(303).redirect(`${FRONT_URL}${decodeURI(req.path)}`);
@@ -52,7 +56,8 @@ export class FrontController extends BaseHttpController {
     }
 
     private displayFront(res: Response) {
-        const file = fs.readFileSync("index.html");
+        const indexPath = process.env.NODE_ENV === "production" ? "public/index.html" : "index.html";
+        const file = fs.readFileSync(indexPath);
 
         if (!file) {
             return res.status(500).send();

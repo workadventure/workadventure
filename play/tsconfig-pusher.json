@@ -1,6 +1,16 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "CommonJS"
+    "module": "CommonJS",
+    "outDir": "./dist",
+    "preserveValueImports": false,
   },
+  "include": [
+    "./src",
+  ],
+  "exclude": [
+    "./src/front",
+    "./src/svelte.ts",
+    "./src/iframe_api.ts",
+  ]
 }

@@ -1,4 +1,4 @@
-import type { AdminPusherToBackMessage, ServerToAdminClientMessage } from "../../messages/generated/messages_pb";
+import type { AdminPusherToBackMessage, ServerToAdminClientMessage } from "../../../messages/generated/messages_pb";
 import type { compressors } from "hyper-express";
 import type { ClientDuplexStream } from "@grpc/grpc-js";
 
