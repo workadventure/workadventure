@@ -62,6 +62,7 @@ services:
       # Note: ENABLE_OPENID needs to have any not falsy value to be enabled.
       ENABLE_OPENID: "$OPID_CLIENT_ID"
       OPID_PROFILE_SCREEN_PROVIDER: "$OPID_PROFILE_SCREEN_PROVIDER"
+      OPID_LOGOUT_REDIRECT_URL: "$OPID_LOGOUT_REDIRECT_URL"
       CHAT_URL: //chat.workadventure.localhost
     command: yarn run start
     volumes:

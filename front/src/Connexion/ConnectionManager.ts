@@ -72,6 +72,10 @@ class ConnectionManager {
         //Logout user in pusher and hydra
         const token = localUserStore.getAuthToken();
         await Axios.get(`${PUSHER_URL}/logout-callback`, { params: { token } }).then((res) => res.data);
+        if (this._currentRoom?.opidLogoutRedirectUrl != undefined) {
+            window.location.replace(this._currentRoom?.opidLogoutRedirectUrl);
+            return;
+        }
         localUserStore.setAuthToken(null);
 
         //Go on root page

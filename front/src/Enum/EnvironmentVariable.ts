@@ -28,6 +28,7 @@ export const ENABLE_OPENID =
     enableOpenID !== "" && enableOpenID != undefined && enableOpenID != "0" && enableOpenID.toLowerCase() !== "false";
 export const OPID_PROFILE_SCREEN_PROVIDER =
     getEnvConfig("OPID_PROFILE_SCREEN_PROVIDER") || (ADMIN_URL ? ADMIN_URL + "/profile" : undefined);
+export const OPID_LOGOUT_REDIRECT_URL = getEnvConfig("OPID_LOGOUT_REDIRECT_URL");
 const FALLBACK_LOCALE = getEnvConfig("FALLBACK_LOCALE") || undefined;
 export const CHAT_URL = getEnvConfig("CHAT_URL") || "//chat.workadventure.localhost";
 
