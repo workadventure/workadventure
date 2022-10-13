@@ -6,6 +6,7 @@ import { isLeaveMucEvent } from "./LeaveMucEvent";
 import { isJoinMucEvent } from "./JoinMucEvent";
 import { isChatVisibility } from "./ChatVisibility";
 import { isSettings } from "./SettingsEvent";
+import {isXmppSettingsMessageEvent} from "./XmppSettingsMessageEvent";
 
 export const isIframeEventWrapper = z.union([
     z.object({
@@ -39,6 +40,10 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("availabilityStatus"),
         data: z.number(),
+    }),
+    z.object({
+        type: z.literal("xmppSettingsMessage"),
+        data: isXmppSettingsMessageEvent,
     }),
 
     //TODO delete with chat XMPP integration for the discussion circle

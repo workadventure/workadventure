@@ -570,6 +570,7 @@ export class IoSocketController {
                 // Let's join the room
                 const client = this.initClient(ws);
                 socketManager.handleJoinRoom(client);
+                socketManager.emitXMPPSettings(client);
 
                 //get data information and show messages
                 if (client.messages && Array.isArray(client.messages)) {

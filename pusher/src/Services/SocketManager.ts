@@ -44,7 +44,7 @@ import {
     BanUserByUuidMessage,
     ApplicationMessage,
     EditMapCommandMessage,
-    EditMapCommandWithKeyMessage,
+    EditMapCommandWithKeyMessage, XmppSettingsMessage, MucRoomDefinitionMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -58,6 +58,8 @@ import { compressors } from "hyper-express";
 import { adminService } from "./AdminService";
 import { ErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 import { BoolValue, Int32Value, StringValue } from "google-protobuf/google/protobuf/wrappers_pb";
+import {MucRoomDefinitionInterface} from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+import {EJABBERD_DOMAIN} from "../Enum/EnvironmentVariable";
 
 const debug = Debug("socket");
 
@@ -761,6 +763,35 @@ export class SocketManager implements ZoneEventListener {
         } catch (e) {
             console.error('An error occurred on "handleBanUserByUuidMessage"');
             console.error(e);
+        }
+    }
+
+
+    emitXMPPSettings(client: ExSocketInterface): void {
+        const xmppSettings = new XmppSettingsMessage();
+        xmppSettings.setConferencedomain("conference."+EJABBERD_DOMAIN);
+        xmppSettings.setRoomsList(
+            client.mucRooms.map((definition: MucRoomDefinitionInterface) => {
+                const mucRoomDefinitionMessage = new MucRoomDefinitionMessage();
+                if (!definition.name || !definition.url || !definition.type) {
+                    throw new Error("Name URL and type cannot be empty!");
+                }
+                mucRoomDefinitionMessage.setName(definition.name);
+                mucRoomDefinitionMessage.setUrl(definition.url);
+                mucRoomDefinitionMessage.setType(definition.type);
+                mucRoomDefinitionMessage.setSubscribe(definition.subscribe);
+                return mucRoomDefinitionMessage;
+            })
+        );
+
+        xmppSettings.setJabberid(client.jabberId);
+        xmppSettings.setJabberpassword(client.jabberPassword);
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setXmppsettingsmessage(xmppSettings);
+
+        if (!client.disconnecting) {
+            client.send(serverToClientMessage.serializeBinary().buffer, true);
         }
     }
 }

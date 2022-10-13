@@ -64,25 +64,25 @@ export class XmppClient {
 
             xmpp.on("error", (err) => {
                 if (err instanceof SASLError)
-                    debug("XmppClient => createClient => receive => error", err.name, err.condition);
+                    debug("XmppClient_OLD => createClient => receive => error", err.name, err.condition);
                 else {
-                    debug("XmppClient => createClient => receive => error", err);
+                    debug("XmppClient_OLD => createClient => receive => error", err);
                 }
                 this.sendErrorToIframe(err.message);
-                //console.error("XmppClient => receive => error =>", err);
+                //console.error("XmppClient_OLD => receive => error =>", err);
                 this.close();
             });
 
             xmpp.reconnect.on("reconnecting", () => {
-                debug("XmppClient => createClient => reconnecting");
+                debug("XmppClient_OLD => createClient => reconnecting");
             });
 
             xmpp.reconnect.on("reconnected", () => {
-                debug("XmppClient => createClient => reconnected");
+                debug("XmppClient_OLD => createClient => reconnected");
             });
 
             xmpp.on("offline", () => {
-                debug("XmppClient => createClient => offline => status", status);
+                debug("XmppClient_OLD => createClient => offline => status", status);
                 status = "disconnected";
 
                 //close en restart connexion
@@ -102,7 +102,7 @@ export class XmppClient {
             });
 
             xmpp.on("disconnect", () => {
-                debug("XmppClient => createClient => disconnect => status", status, this.clientSocket.disconnecting);
+                debug("XmppClient_OLD => createClient => disconnect => status", status, this.clientSocket.disconnecting);
                 if (status !== "disconnected") {
                     status = "disconnected";
 
@@ -118,7 +118,7 @@ export class XmppClient {
                 }
             });
             xmpp.on("online", (address: JID) => {
-                debug("XmppClient => createClient => online");
+                debug("XmppClient_OLD => createClient => online");
                 xmpp.reconnect.stop();
                 status = "connected";
                 //TODO
@@ -151,13 +151,13 @@ export class XmppClient {
                 }
             });
             xmpp.on("status", (status: string) => {
-                debug("XmppClient => createClient => status => status", status);
+                debug("XmppClient_OLD => createClient => status => status", status);
                 // FIXME: the client keeps trying to reconnect.... even if the pusher is disconnected!
             });
 
             xmpp.start()
                 .then(() => {
-                    debug("XmppClient => createClient => start");
+                    debug("XmppClient_OLD => createClient => start");
                     res(xmpp);
                 })
                 .catch((err: Error) => {
@@ -193,7 +193,7 @@ export class XmppClient {
                 }
             });
         } catch (err) {
-            console.error("XmppClient => createClient => Error", err);
+            console.error("XmppClient_OLD => createClient => Error", err);
             rej(err);
         }
     }
@@ -250,18 +250,18 @@ export class XmppClient {
                             await this.xmppSocket?.send(xml("presence", { type: "unavailable" }));
                         }
                     } catch (err) {
-                        console.info("XmppClient => onCancel => presence => err", err);
+                        console.info("XmppClient_OLD => onCancel => presence => err", err);
                     }
                     try {
                         //stop xmpp socket client
                         await this.xmppSocket?.close();
                     } catch (errClose) {
-                        console.info("XmppClient => onCancel => xmppSocket => errClose", errClose);
+                        console.info("XmppClient_OLD => onCancel => xmppSocket => errClose", errClose);
                         try {
                             //stop xmpp socket client
                             await this.xmppSocket?.stop();
                         } catch (errStop) {
-                            console.info("XmppClient => onCancel => xmppSocket => errStop", errStop);
+                            console.info("XmppClient_OLD => onCancel => xmppSocket => errStop", errStop);
                         }
                     }
                 })();

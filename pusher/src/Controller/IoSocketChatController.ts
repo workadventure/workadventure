@@ -428,7 +428,7 @@ export class IoSocketChatController {
         client.jabberPassword = ws.jabberPassword;
         client.mucRooms = ws.mucRooms;
 
-        debug("IoSocketChatController => initClient => XmppClient");
+        debug("IoSocketChatController => initClient => XmppClient_OLD");
         client.xmppClient = new XmppClient(client, client.mucRooms);
 
         return client;

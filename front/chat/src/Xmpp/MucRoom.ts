@@ -1,4 +1,3 @@
-import type { ChatConnection } from "../Connection/ChatConnection";
 import xml, { Element } from "@xmpp/xml";
 import jid, { JID } from "@xmpp/jid";
 import type { Readable, Writable } from "svelte/store";
@@ -15,6 +14,7 @@ import { availabilityStatusStore } from "../Stores/ChatStore";
 import { activeThreadStore } from "../Stores/ActiveThreadStore";
 import Timeout = NodeJS.Timeout;
 import { connectionManager } from "../Connection/ChatConnectionManager";
+import {XmppClient} from "./XmppClient";
 
 export const USER_STATUS_AVAILABLE = "available";
 export const USER_STATUS_DISCONNECTED = "disconnected";
@@ -169,7 +169,7 @@ export class MucRoom {
     private subscriptions = new Map<string, string>();
 
     constructor(
-        private connection: ChatConnection,
+        private connection: XmppClient,
         public readonly name: string,
         private roomJid: JID,
         public type: string,
@@ -288,7 +288,7 @@ export class MucRoom {
         );
         if (!this.closed) {
             this.getAllSubscriptionsId = uuid;
-            this.connection.emitXmlMessage(messageMucListAllUsers);
+            this.connection.send(messageMucListAllUsers);
             if (_VERBOSE) console.warn("[XMPP]", ">> Get all subscribers sent");
         }
     }
@@ -341,7 +341,7 @@ export class MucRoom {
             )
         );
         if (!this.closed) {
-            this.connection.emitXmlMessage(messageRetrieveLastMessages);
+            this.connection.send(messageRetrieveLastMessages);
             if (_VERBOSE) console.warn("[XMPP]", ">> Get older messages sent");
         }
     }
@@ -379,7 +379,7 @@ export class MucRoom {
             })
         );
         if (!this.closed) {
-            this.connection.emitXmlMessage(messagePresence);
+            this.connection.send(messagePresence);
             if (_VERBOSE) console.warn("[XMPP]", ">> ", first && "First", "Presence sent", get(userStore).uuid);
         }
     }
@@ -408,7 +408,7 @@ export class MucRoom {
             )
         );
         if (!this.closed) {
-            this.connection.emitXmlMessage(messageMucSubscribe);
+            this.connection.send(messageMucSubscribe);
             if (_VERBOSE)
                 console.warn("[XMPP]", ">> Subscribe sent from", this.getPlayerName(), "to", this.roomJid.local);
         }
@@ -444,15 +444,16 @@ export class MucRoom {
             )
         );
         if (!this.closed) {
-            this.connection.emitXmlMessage(messageMucAffiliateUser);
+            this.connection.send(messageMucAffiliateUser);
             if (_VERBOSE) console.warn("[XMPP]", ">> Affiliation sent");
         }
     }
     public sendBan(user: string, name: string, playUri: string) {
-        const userJID = jid(user);
+        //const userJID = jid(user);
         //this.affiliate("outcast", userJID);
-        this.connection.emitBanUserByUuid(playUri, userJID.local, name, "Test message de ban");
-        if (_VERBOSE) console.warn("[XMPP]", ">> Ban user message sent");
+        // TODO SEND BAN USER BY UUID TO FRONT AND TO PUSHER AND TO ADMIN
+        //this.connection.emitBanUserByUuid(playUri, userJID.local, name, "Test message de ban");
+        if (_VERBOSE) console.warn("[XMPP]", ">> Ban user message NOT sent");
     }
 
     public reInitialize() {
@@ -490,7 +491,7 @@ export class MucRoom {
         );
         if (!this.closed) {
             this.subscriptions.set(destroyId, "destroyRoom");
-            this.connection.emitXmlMessage(messageMucDestroy);
+            this.connection.send(messageMucDestroy);
             if (_VERBOSE) console.warn("[XMPP]", ">> Destroy room sent");
         }
     }
@@ -505,7 +506,7 @@ export class MucRoom {
             xml("x", { xmlns: "http://jabber.org/protocol/muc#user" })
         );
         if (!this.closed) {
-            this.connection.emitXmlMessage(messageMucSubscribe);
+            this.connection.send(messageMucSubscribe);
             if (_VERBOSE) console.warn("[XMPP]", ">> Disconnect sent");
             this.closed = true;
         }
@@ -527,7 +528,7 @@ export class MucRoom {
             xml("body", {}, "")
         );
         if (!this.closed) {
-            this.connection.emitXmlMessage(messageRemove);
+            this.connection.send(messageRemove);
             if (_VERBOSE) console.warn("[XMPP]", ">> Remove message sent");
         }
     }
@@ -545,7 +546,7 @@ export class MucRoom {
             })
         );
         if (!this.closed) {
-            this.connection.emitXmlMessage(chatState);
+            this.connection.send(chatState);
             if (_VERBOSE) console.warn("[XMPP]", ">> Chat state sent");
         }
     }
@@ -604,7 +605,7 @@ export class MucRoom {
         }
 
         if (!this.closed) {
-            this.connection.emitXmlMessage(message);
+            this.connection.send(message);
 
             this.messageStore.update((messages) => {
                 messages.push({
@@ -686,7 +687,7 @@ export class MucRoom {
         );
 
         if (!this.closed) {
-            this.connection.emitXmlMessage(messageReacted);
+            this.connection.send(messageReacted);
 
             this.messageReactStore.update((reactMessages) => {
                 //create or get list of react message

@@ -33,7 +33,9 @@
     "tsconfig-paths": "^3.14.1",
     "typescript": "^4.7.2",
     "vite": "^2.9.9",
-    "vite-plugin-rewrite-all": "^0.1.2"
+    "vite-plugin-rewrite-all": "^0.1.2",
+    "@types/xmpp__client": "^0.13.0",
+    "@types/xmpp__jid": "^1.3.3"
   },
   "dependencies": {
     "@16bits/nes.css": "^2.3.2",
@@ -44,9 +46,11 @@
     "@types/marked": "^4.0.3",
     "@types/simple-peer": "^9.11.1",
     "@types/socket.io-client": "^1.4.32",
+    "@types/debug": "^4.1.5",
     "@workadventure/tailwind": "link:../libs/tailwind",
-    "@xmpp/client": "^0.13.0",
+    "@xmpp/client": "^0.13.1",
     "@xmpp/debug": "^0.13.0",
+    "debug": "^4.3.1",
     "axios": "^0.21.2",
     "buffer": "^6.0.3",
     "cancelable-promise": "^4.2.1",

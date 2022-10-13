@@ -49,7 +49,7 @@ export class PusherRoom {
             return;
         }
 
-        //socket.xmppClient = new XmppClient(socket, this.mucRooms);
+        //socket.xmppClient = new XmppClient_OLD(socket, this.mucRooms);
         socket.pusherRoom = this;
     }
 

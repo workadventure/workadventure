@@ -10,7 +10,7 @@ import {
     IframeToPusherMessage,
     XmppConnectionNotAuthorizedMessage,
 } from "../Messages/ts-proto-generated/protos/messages";
-import { XmppClient } from "../Xmpp/XmppClient";
+import { XmppClient_OLD } from "../Xmpp/XmppClient_OLD";
 import { Parser } from "@xmpp/xml";
 import { userStore } from "../Stores/LocalUserStore";
 import { connectionNotAuthorized } from "../Stores/ChatStore";
@@ -21,7 +21,7 @@ export class ChatConnection implements ChatConnection {
     private readonly socket: WebSocket;
     private userId: number | null = null;
     private closed: boolean = false;
-    private xmppClient: XmppClient | null = null;
+    private xmppClient: XmppClient_OLD | null = null;
 
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
@@ -68,7 +68,7 @@ export class ChatConnection implements ChatConnection {
             };
 
             this.socket.addEventListener("open", () => {
-                this.xmppClient = new XmppClient(this);
+                this.xmppClient = new XmppClient_OLD(this);
             });
 
             this.socket.addEventListener("close", (event) => {
@@ -166,7 +166,7 @@ export class ChatConnection implements ChatConnection {
         this.socket.send(bytes);
     }
 
-    public getXmppClient(): XmppClient | null {
+    public getXmppClient(): XmppClient_OLD | null {
         return this.xmppClient;
     }
 

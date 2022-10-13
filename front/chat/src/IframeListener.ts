@@ -31,7 +31,7 @@ class IframeListener {
         window.addEventListener("message", (message: MessageEvent): void => {
             const payload = message.data;
             const lookingLikeEvent = isLookingLikeIframeEventWrapper.safeParse(payload);
-            if (lookingLikeEvent.success) {
+            if (lookingLikeEvent.success){
                 const iframeEventGuarded = isIframeEventWrapper.safeParse(lookingLikeEvent.data);
                 if (iframeEventGuarded.success) {
                     const iframeEvent = iframeEventGuarded.data;
@@ -43,18 +43,22 @@ class IframeListener {
                             enableChatUpload.set(iframeEvent.data.enableChatUpload);
                             break;
                         }
+                        case "xmppSettingsMessage": {
+
+                            break;
+                        }
                         case "userData": {
                             iframeEvent.data.name = iframeEvent.data.name.replace(emojiRegex, "");
                             userStore.set(iframeEvent.data);
-                            if (!connectionManager.connection) {
-                                connectionManager.init(
-                                    iframeEvent.data.playUri,
-                                    iframeEvent.data.uuid,
-                                    iframeEvent.data.authToken
-                                );
-                            } else {
-                                mucRoomsStore.sendPresences();
-                            }
+                            // if (!connectionManager.connection) {
+                            //     connectionManager.init(
+                            //         iframeEvent.data.playUri,
+                            //         iframeEvent.data.uuid,
+                            //         iframeEvent.data.authToken
+                            //     );
+                            // } else {
+                            mucRoomsStore.sendPresences();
+                            //}
                             break;
                         }
                         case "setLocale": {
@@ -149,7 +153,7 @@ class IframeListener {
                         }
                     }
                 } else {
-                    console.error("Message structure not conform", iframeEventGuarded);
+                    console.error("Message structure not conform", lookingLikeEvent.data, iframeEventGuarded);
                 }
             } else {
                 console.error("Message received in chat is not conform", lookingLikeEvent.error);
