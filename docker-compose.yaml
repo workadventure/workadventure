@@ -118,7 +118,7 @@ services:
             ENABLE_OPENID: "$OPID_CLIENT_ID"
             ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
         volumes:
-            - ./chat:/usr/src/chat
+            - ./chat:/usr/src/app
             - ./libs:/usr/src/libs
         labels:
             - "traefik.enable=true"
@@ -252,7 +252,6 @@ services:
             - ./back:/usr/src/back
             - ./play:/usr/src/play
             - ./chat:/usr/src/chat
-            - ./pusher:/usr/src/pusher
             - ./map-storage:/usr/src/map-storage
 
     redis:

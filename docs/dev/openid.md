@@ -11,15 +11,15 @@ The way you do this depends on the provider.
 
 As part of this configuration, you will need to configure the "redirect URL".
 
-For WorkAdventure, the redirect URL is: `https://pusher.[your-domain]/openid-callback`.
+For WorkAdventure, the redirect URL is: `https://play.[your-domain]/openid-callback`.
 
 Then, you need to configure these environment variables:
 
 - `ENABLE_OPENID` (*front container*): set this to 1 to enable login
-- `OPID_CLIENT_ISSUER` (*pusher container*): the full URL to your OpenID Connect provider
-- `OPID_CLIENT_ID` (*pusher container*): the ID of the OpenID client that you created in the OpenID Connect provider
-- `OPID_CLIENT_SECRET` (*pusher container*): the secret of the OpenID client that you created in the OpenID Connect provider
-- `OPID_PROMPT` (*pusher container*): whether the Authorization Server prompts the End-User for reauthentication and consent. Used as the [`prompt` parameter of the authentication request](https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest) (Default: login)
+- `OPID_CLIENT_ISSUER` (*play container*): the full URL to your OpenID Connect provider
+- `OPID_CLIENT_ID` (*play container*): the ID of the OpenID client that you created in the OpenID Connect provider
+- `OPID_CLIENT_SECRET` (*play container*): the secret of the OpenID client that you created in the OpenID Connect provider
+- `OPID_PROMPT` (*play container*): whether the Authorization Server prompts the End-User for reauthentication and consent. Used as the [`prompt` parameter of the authentication request](https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest) (Default: login)
 
 
 ## Complete flow

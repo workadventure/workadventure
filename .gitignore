@@ -9,7 +9,4 @@ maps/dist/computer.js
 maps/dist/computer.js.map
 node_modules
 _
-/front/svelte-check-watch/
-
-front/public/iframe_api.js
 *.code-workspace

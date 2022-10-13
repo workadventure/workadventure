@@ -16,9 +16,9 @@ WORKDIR /usr/src
 COPY libs/tailwind/yarn.lock libs/tailwind/package.json ./../libs/tailwind/
 RUN cd ../libs/tailwind && yarn install --network-timeout 1000000
 COPY libs ./../libs
-COPY front/chat/yarn.lock front/chat/package.json ./
+COPY chat/yarn.lock chat/package.json ./
 RUN yarn install --network-timeout 1000000
-COPY front/chat .
+COPY chat .
 
 COPY --from=proto-builder /usr/src/ts-proto-generated src/Messages/ts-proto-generated
 RUN sed -i 's/import { Observable } from "rxjs";/import type { Observable } from "rxjs";/g' src/Messages/ts-proto-generated/protos/messages.ts
@@ -33,9 +33,9 @@ RUN mv /usr/src/dist/index.html /usr/src/dist/index.tpl.html
 FROM nginx:1.21.6-alpine
 
 RUN rm /usr/share/nginx/html/index.html
-COPY front/chat/nginx.conf /etc/nginx/conf.d/default.conf
-COPY front/chat/templater.sh /
-COPY front/chat/start_nginx.sh /start_nginx.sh
+COPY chat/nginx.conf /etc/nginx/conf.d/default.conf
+COPY chat/templater.sh /
+COPY chat/start_nginx.sh /start_nginx.sh
 
 COPY --from=builder /usr/src/dist /usr/share/nginx/html
 COPY --from=builder /usr/src/server.template.json /usr/share/nginx/html/server.template.json
