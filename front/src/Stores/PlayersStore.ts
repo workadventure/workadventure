@@ -3,6 +3,7 @@ import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import type { RoomConnection } from "../Connexion/RoomConnection";
 import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
 import { getColorByString } from "../Components/Video/utils";
+import { localUserStore } from "../Connexion/LocalUserStore";
 
 let idCount = 0;
 
@@ -31,6 +32,7 @@ function createPlayersStore() {
                         userUuid: message.userUuid,
                         availabilityStatus: message.availabilityStatus,
                         color: getColorByString(message.name),
+                        isLogged: localUserStore.isLogged(),
                     });
                     return users;
                 });
@@ -71,6 +73,7 @@ function createPlayersStore() {
                     availabilityStatus: AvailabilityStatus.ONLINE,
                     userUuid: "dummy",
                     color: getColorByString(name),
+                    isLogged: localUserStore.isLogged(),
                 });
                 return users;
             });
