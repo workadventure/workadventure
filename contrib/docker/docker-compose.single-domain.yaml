@@ -42,6 +42,7 @@ services:
       # Advice: you should instead use Coturn REST API along the TURN_STATIC_AUTH_SECRET in the Back container
       TURN_USER: ""
       TURN_PASSWORD: ""
+      OPID_LOGOUT_REDIRECT_URL: "$OPID_LOGOUT_REDIRECT_URL"
       DISABLE_ANONYMOUS: "$DISABLE_ANONYMOUS"
     command: yarn run start
     volumes:

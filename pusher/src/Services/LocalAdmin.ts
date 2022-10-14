@@ -63,6 +63,7 @@ class LocalAdmin implements AdminInterface {
             mucRooms: null,
             group: null,
             iframeAuthentication: null,
+            opidLogoutRedirectUrl: null,
             miniLogo: null,
             loadingLogo: null,
             loginSceneLogo: null,

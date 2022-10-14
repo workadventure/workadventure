@@ -47,6 +47,7 @@ export default defineConfig({
                 "OPID_PROFILE_SCREEN_PROVIDER",
                 "FALLBACK_LOCALE",
                 "CHAT_URL",
+                "OPID_LOGOUT_REDIRECT_URL",
             ],
         }),
         pluginRewriteAll(),

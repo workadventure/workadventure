@@ -79,6 +79,10 @@ export class MapController extends BaseHttpController {
          *                   type: string|null
          *                   description: The URL of the authentication Iframe
          *                   example: https://mycompany.com/authc
+         *                 opidLogoutRedirectUrl:
+         *                    type: string|null
+         *                    description: The URL of the logout redirect
+         *                    example: https://mycompany.com/logout
          *                 expireOn:
          *                   type: string|undefined
          *                   description: The date (in ISO 8601 format) at which the room will expire

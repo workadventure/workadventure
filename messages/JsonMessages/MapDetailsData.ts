@@ -102,6 +102,10 @@ export const isMapDetailsData = z.object({
         description: "The URL of the authentication Iframe",
         example: "https://mycompany.com/authc",
     }),
+    opidLogoutRedirectUrl: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the logout redirect",
+        example: "https://mycompany.com/logout",
+    }),
     // The date (in ISO 8601 format) at which the room will expire
     expireOn: extendApi(z.optional(z.string()), {
         description: "The date (in ISO 8601 format) at which the room will expire",
