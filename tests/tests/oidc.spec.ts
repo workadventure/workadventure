@@ -21,8 +21,8 @@ test.describe('OpenID connect', () => {
     await expect(isLogged).toBe(false);
 
     // Sign in, then sign out
-    await oidcLogin(page, 'hello@workadventu.re', 'apideo');
-    
+    await oidcLogin(page);
+
     // Test if player variable is correct
     isLogged = await evaluateScript(page, async () => {
       await WA.onInit();
