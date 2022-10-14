@@ -18,7 +18,7 @@ export class Room {
     public readonly id: string;
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
     private _iframeAuthentication?: string = PUSHER_URL + "/login-screen";
-    private _opidLogoutRedirectUrl: string | undefined | null;
+    private _opidLogoutRedirectUrl = "/";
     private _mapUrl: string | undefined;
     private readonly _search: URLSearchParams;
     private _contactPage: string | undefined;
@@ -128,7 +128,7 @@ export class Room {
                 this._authenticationMandatory =
                     data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
                 this._iframeAuthentication = data.iframeAuthentication || PUSHER_URL + "/login-screen";
-                this._opidLogoutRedirectUrl = data.opidLogoutRedirectUrl || OPID_LOGOUT_REDIRECT_URL || null;
+                this._opidLogoutRedirectUrl = data.opidLogoutRedirectUrl || OPID_LOGOUT_REDIRECT_URL || "/";
                 this._contactPage = data.contactPage || CONTACT_URL;
                 if (data.expireOn) {
                     this._expireOn = new Date(data.expireOn);
@@ -218,7 +218,7 @@ export class Room {
         return this._iframeAuthentication;
     }
 
-    get opidLogoutRedirectUrl(): string | undefined | null {
+    get opidLogoutRedirectUrl(): string {
         return this._opidLogoutRedirectUrl;
     }
 
