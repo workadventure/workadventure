@@ -13,18 +13,28 @@ test.describe('OpenID connect', () => {
 
     await login(page);
 
+    // Test if player variable is correct
+    let isLogged = await evaluateScript(page, async () => {
+      await WA.onInit();
+      return WA.player.isLogged;
+    });
+    await expect(isLogged).toBe(false);
+
     // Sign in, then sign out
-    await oidcLogin(page);
+    await oidcLogin(page, 'hello@workadventu.re', 'apideo');
+    
+    // Test if player variable is correct
+    isLogged = await evaluateScript(page, async () => {
+      await WA.onInit();
+      return WA.player.isLogged;
+    });
+    await expect(isLogged).toBe(true);
+
+    // Log out user
     await oidcLogout(page);
 
     // Let's check the sign in button is back here when we signed out
     await page.click('#menuIcon img:first-child');
     await expect(page.locator('a:has-text("Sign in")')).toContainText("Sign in");
-
-    // Test if player variable is correct
-    const isLogged = await evaluateScript(page, () => {
-      return WA.player.isLogged;
-    });
-    expect(isLogged).toBe(true);
   });
 });
