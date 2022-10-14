@@ -141,8 +141,6 @@ class IframeListener {
                 } else {
                     console.error("Message structure not conform", iframeEventGuarded);
                 }
-            } else {
-                console.error("Message received in chat is not conform", lookingLikeEvent.error);
             }
         });
     }
