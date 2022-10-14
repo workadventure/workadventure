@@ -86,7 +86,7 @@ services:
       ICON_URL: http://icon.workadventure.localhost
       ENABLE_OPENID: "$OPID_CLIENT_ID"
       ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
-      EJABBERD_DOMAIN: xmpp.workadventure.localhost
+      EJABBERD_DOMAIN: ejabberd
       EJABBERD_WS_URI: ws://xmpp.workadventure.localhost:5443/ws
     volumes:
       - ./front/chat:/usr/src/app
@@ -129,7 +129,7 @@ services:
       START_ROOM_URL: "$START_ROOM_URL"
       # Only used if you set up a JWT authentication mechanism in Ejabberd
       EJABBERD_JWT_SECRET: mySecretJwtToken
-      EJABBERD_DOMAIN: xmpp.workadventure.localhost
+      EJABBERD_DOMAIN: ejabberd
       ENABLE_CHAT: "$ENABLE_CHAT"
       ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
     volumes:
@@ -193,7 +193,7 @@ services:
       PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
       PLAYER_VARIABLES_MAX_TTL: $PLAYER_VARIABLES_MAX_TTL
       EJABBERD_API_URI: http://ejabberd:5443/api/
-      EJABBERD_DOMAIN: xmpp.workadventure.localhost
+      EJABBERD_DOMAIN: ejabberd
       EJABBERD_USER: $EJABBERD_USER
       EJABBERD_PASSWORD: $EJABBERD_PASSWORD
       ENABLE_CHAT: "$ENABLE_CHAT"
