@@ -43,11 +43,7 @@ import { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
 import { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
 import { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
 import { MessageUserJoined } from "../Connexion/ConnexionModels";
-import {
-    availabilityStatusToJSON,
-    MucRoomDefinitionMessage,
-    XmppSettingsMessage,
-} from "../Messages/ts-proto-generated/protos/messages";
+import { availabilityStatusToJSON } from "../Messages/ts-proto-generated/protos/messages";
 import { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
@@ -63,8 +59,6 @@ import {
     modalVisibilityStore,
 } from "../Stores/ModalStore";
 import { connectionManager } from "../Connexion/ConnectionManager";
-import { isXmppSettingsMessageEvent, XmppSettingsMessageEvent } from "./Events/XmppSettingsMessageEvent";
-import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
 import { gameManager } from "../Phaser/Game/GameManager";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (

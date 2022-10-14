@@ -400,6 +400,7 @@ jobs:
         with:
           node-version: 16
 
+
       - name: "Install dependencies"
         run: npm ci
         working-directory: "tests"
@@ -411,6 +412,14 @@ jobs:
       - name: "Install front dependencies"
         run: yarn install --froze-lockfile
         working-directory: "front"
+
+      - name: "Install messages dependencies"
+        run: yarn install
+        working-directory: "messages"
+
+      - name: "Copy JSON messages"
+        run: yarn run json-copy-to-front
+        working-directory: "messages"
 
       - name: "Build API typings"
         run: yarn run build-typings
