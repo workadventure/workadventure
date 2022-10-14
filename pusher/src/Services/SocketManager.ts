@@ -39,7 +39,6 @@ import {
     InvalidTextureMessage,
     ErrorScreenMessage,
     QueryMessage,
-    XmppMessage,
     AskPositionMessage,
     BanUserByUuidMessage,
     ApplicationMessage,
@@ -257,10 +256,6 @@ export class SocketManager implements ZoneEventListener {
                         );
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
                     }
-                    if (client.xmppClient) {
-                        console.log("Trying disconnecting from xmppClient");
-                        client.xmppClient.close();
-                    }
                 })
                 .on("error", (err: Error) => {
                     console.error(
@@ -458,10 +453,6 @@ export class SocketManager implements ZoneEventListener {
                     //user leave previous room
                     //Client.leave(Client.roomId);
                 } finally {
-                    if (socket.xmppClient) {
-                        console.log("leaveRoom => close");
-                        socket.xmppClient.close();
-                    }
                     //delete Client.roomId;
                     clientEventsEmitter.emitClientLeave(socket.userUuid, socket.roomId);
                     debug("User ", socket.name, " left: ", socket.userUuid);
@@ -721,15 +712,6 @@ export class SocketManager implements ZoneEventListener {
                 return;
             });
         }
-    }
-
-    handleXmppMessage(client: ExSocketInterface, xmppMessage: XmppMessage): void {
-        if (client.xmppClient === undefined) {
-            throw new Error(
-                "Trying to send a message from client to server but the XMPP connection is not established yet! There is a race condition."
-            );
-        }
-        client.xmppClient.sendToEjabberd(xmppMessage.getStanza()).catch((e) => console.error(e));
     }
 
     handleAskPositionMessage(client: ExSocketInterface, askPositionMessage: AskPositionMessage): void {

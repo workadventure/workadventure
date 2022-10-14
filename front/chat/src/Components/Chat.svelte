@@ -22,7 +22,7 @@
         timelineOpenedStore,
     } from "../Stores/ChatStore";
     import { Unsubscriber, derived } from "svelte/store";
-    import { connectionManager } from "../Connection/ChatConnectionManager";
+    import { chatConnectionManager } from "../Connection/ChatConnectionManager";
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
     import { iframeListener } from "../IframeListener";
     import { fly } from "svelte/transition";
@@ -122,10 +122,10 @@
         }
     }
 
-    $: loading = !connectionManager.connection || !$xmppServerConnectionStatusStore;
+    $: loading = !chatConnectionManager.connection || !$xmppServerConnectionStatusStore;
 
     $: loadingText = $userStore
-        ? !connectionManager.connection
+        ? !chatConnectionManager.connection
             ? $LL.connecting()
             : $LL.waitingInit()
         : $LL.waitingData();

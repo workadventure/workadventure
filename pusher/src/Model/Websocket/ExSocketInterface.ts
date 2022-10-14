@@ -14,7 +14,6 @@ import { Zone } from "../../Model/Zone";
 import { compressors } from "hyper-express";
 import { WokaDetail } from "../../Messages/JsonMessages/PlayerTextures";
 import { PusherRoom } from "../../Model/PusherRoom";
-import { XmppClient } from "../../Services/XmppClient";
 import { MucRoomDefinitionInterface } from "../../Messages/JsonMessages/MucRoomDefinitionInterface";
 import { ApplicationDefinitionInterface } from "../../Messages/JsonMessages/ApplicationDefinitionInterface";
 
@@ -55,7 +54,6 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable 
     pongTimeoutId: NodeJS.Timeout | undefined;
     resetPongTimeout: () => void;
     pusherRoom: PusherRoom | undefined;
-    xmppClient: XmppClient | undefined;
     jabberId: string;
     jabberPassword: string;
     activatedInviteUser: boolean | undefined;

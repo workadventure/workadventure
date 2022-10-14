@@ -1,11 +1,11 @@
-import { v4 as uuidV4 } from "uuid";
+import { v4 as uuid } from "uuid";
 import {
     XmppSettingsMessage,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { EJABBERD_DOMAIN, EJABBERD_WS_URI } from "../Enum/EnvironmentVariable";
 import CancelablePromise from "cancelable-promise";
 import jid, { JID } from "@xmpp/jid";
-import { Client, client, xml } from "@xmpp/client";
+import { Client, client, xml } from "@xmpp/client/dist/xmpp";
 import { Element } from "@xmpp/xml";
 import SASLError from "@xmpp/sasl/lib/SASLError";
 import StreamError from "@xmpp/connection/lib/StreamError";
@@ -18,34 +18,34 @@ import {get} from "svelte/store";
 import {activeThreadStore} from "../Stores/ActiveThreadStore";
 import {userStore} from "../Stores/LocalUserStore";
 
+// @ts-ignore
+import parse from "@xmpp/xml/lib/parse";
+
 const debug = Debug("xmppClient");
 
 class ElementExt extends Element {}
 
-//eslint-disable-next-line @typescript-eslint/no-var-requires
-const parse = require("@xmpp/xml/lib/parse");
-
 export class XmppClient {
     private address!: JID;
+    private readonly conferenceDomain: string;
     private clientPromise!: CancelablePromise<Client>;
     private clientJID: JID;
-    private clientID: string;
+    private readonly clientID: string;
     private clientDomain: string;
-    private clientResource: string;
-    private clientPassword: string;
+    private readonly clientResource: string;
+    private readonly clientPassword: string;
     private timeout: ReturnType<typeof setTimeout> | undefined;
     private xmppSocket: Client | undefined;
     private isAuthorized = true;
 
-
-    private jid: string | undefined;
-    private conferenceDomain: string | undefined;
+    public isClosed = false;
     private subscriptions = new Map<string, Subject<ElementExt>>();
     private rooms = new Map<string, MucRoom>();
 
     private nickCount = 0;
 
     constructor(private xmppSettingsMessages: XmppSettingsMessage) {
+        this.conferenceDomain = xmppSettingsMessages.conferenceDomain;
         this.clientJID = jid(xmppSettingsMessages.jabberId);
         this.clientID = this.clientJID.local;
         this.clientDomain = this.clientJID.domain;
@@ -64,32 +64,32 @@ export class XmppClient {
                 service: `${EJABBERD_WS_URI}`,
                 domain: EJABBERD_DOMAIN,
                 username: this.clientID,
-                resource: this.clientResource ? this.clientResource : uuidV4().toString(), //"pusher",
+                resource: this.clientResource ? this.clientResource : uuid().toString(), //"pusher",
                 password: this.clientPassword,
             });
             this.xmppSocket = xmpp;
 
             xmpp.on("error", (err) => {
                 if (err instanceof SASLError)
-                    debug("XmppClient_OLD => createClient => receive => error", err.name, err.condition);
+                    debug("XmppClient => createClient => receive => error", err.name, err.condition);
                 else {
-                    debug("XmppClient_OLD => createClient => receive => error", err);
+                    debug("XmppClient => createClient => receive => error", err);
                 }
                 console.error(err.message);
-                //console.error("XmppClient_OLD => receive => error =>", err);
+                //console.error("XmppClient => receive => error =>", err);
                 this.close();
             });
 
             xmpp.reconnect.on("reconnecting", () => {
-                debug("XmppClient_OLD => createClient => reconnecting");
+                debug("XmppClient => createClient => reconnecting");
             });
 
             xmpp.reconnect.on("reconnected", () => {
-                debug("XmppClient_OLD => createClient => reconnected");
+                debug("XmppClient => createClient => reconnected");
             });
 
             xmpp.on("offline", () => {
-                debug("XmppClient_OLD => createClient => offline => status", status);
+                debug("XmppClient => createClient => offline => status", status);
                 status = "disconnected";
 
                 //close en restart connexion
@@ -109,7 +109,7 @@ export class XmppClient {
             });
 
             xmpp.on("disconnect", () => {
-                debug("XmppClient_OLD => createClient => disconnect => status", status);
+                debug("XmppClient => createClient => disconnect => status", status);
                 if (status !== "disconnected") {
                         console.log("Disconnected from xmpp server");
                         //if connection manager is not closed or be closing,
@@ -125,7 +125,7 @@ export class XmppClient {
                 }
             });
             xmpp.on("online", (address: JID) => {
-                debug("XmppClient_OLD => createClient => online");
+                debug("XmppClient => createClient => online");
                 xmpp.reconnect.stop();
                 status = "connected";
                 //TODO
@@ -135,13 +135,13 @@ export class XmppClient {
                 this.address = address;
             });
             xmpp.on("status", (status: string) => {
-                debug("XmppClient_OLD => createClient => status => status", status);
+                debug("XmppClient => createClient => status => status", status);
                 // FIXME: the client keeps trying to reconnect.... even if the pusher is disconnected!
             });
 
             xmpp.start()
                 .then(() => {
-                    debug("XmppClient_OLD => createClient => start");
+                    debug("XmppClient => createClient => start");
                     xmppServerConnectionStatusStore.set(true);
 
                     for (const { name, url, type, subscribe } of this.xmppSettingsMessages.rooms) {
@@ -168,12 +168,12 @@ export class XmppClient {
                 const stanzaString = stanza.toString();
 
                 const elementExtParsed = parse(stanzaString) as ElementExt;
+
                 if (elementExtParsed) {
 
-                    // TODO DIRECTLY RETURN PONG HERE
-                    const canContinue = this.xmlRestrictionsToIframe(elementExtParsed);
-
-                    if (canContinue) {
+                    if (elementExtParsed.getChild("ping")) {
+                        void this.sendPong(elementExtParsed.getAttr("from"), elementExtParsed.getAttr("to"), elementExtParsed.getAttr("id"));
+                    } else {
                         let handledMessage = false;
                         const id = elementExtParsed.getAttr("id");
 
@@ -201,7 +201,7 @@ export class XmppClient {
                 }
             });
         } catch (err) {
-            console.error("XmppClient_OLD => createClient => Error", err);
+            console.error("XmppClient => createClient => Error", err);
             rej(err);
         }
     }
@@ -240,20 +240,21 @@ export class XmppClient {
                             await this.xmppSocket?.send(xml("presence", { type: "unavailable" }));
                         }
                     } catch (err) {
-                        console.info("XmppClient_OLD => onCancel => presence => err", err);
+                        console.info("XmppClient => onCancel => presence => err", err);
                     }
                     try {
                         //stop xmpp socket client
                         await this.xmppSocket?.close();
                     } catch (errClose) {
-                        console.info("XmppClient_OLD => onCancel => xmppSocket => errClose", errClose);
+                        console.info("XmppClient => onCancel => xmppSocket => errClose", errClose);
                         try {
                             //stop xmpp socket client
                             await this.xmppSocket?.stop();
                         } catch (errStop) {
-                            console.info("XmppClient_OLD => onCancel => xmppSocket => errStop", errStop);
+                            console.info("XmppClient => onCancel => xmppSocket => errStop", errStop);
                         }
                     }
+                    this.isClosed = true;
                 })();
             });
         }).catch((err) => {
@@ -265,15 +266,6 @@ export class XmppClient {
             console.error(err.toString());
             this.clientPromise.cancel();
         }));
-    }
-
-    /** @deprecated **/
-    private xmlRestrictionsToIframe(xml: ElementExt): boolean {
-        if (xml.getChild("ping")) {
-            void this.sendPong(xml.getAttr("from"), xml.getAttr("to"), xml.getAttr("id"));
-            return false;
-        }
-        return true;
     }
 
     private xmlRestrictionsToEjabberd(element: ElementExt): null | ElementExt {
@@ -424,14 +416,8 @@ export class XmppClient {
 
 
     public joinMuc(name: string, waRoomUrl: string, type: string, subscribe: boolean): MucRoom {
-        if (this.jid === undefined || this.conferenceDomain === undefined) {
-            throw new Error(
-                "joinRoom called before we received the XMPP connection details. There is a race condition."
-            );
-        }
-
         const roomUrl = jid(waRoomUrl, this.conferenceDomain);
-        const room = new MucRoom(this, name, roomUrl, type, subscribe, this.jid);
+        const room = new MucRoom(this, name, roomUrl, type, subscribe, this.clientJID.toString());
         this.rooms.set(roomUrl.toString(), room);
         mucRoomsStore.addMucRoom(room);
 
@@ -441,12 +427,6 @@ export class XmppClient {
     }
 
     public leaveMuc(name: string): void {
-        if (this.jid === undefined || this.conferenceDomain === undefined) {
-            throw new Error(
-                "leaveMuc called before we received the XMPP connection details. There is a race condition."
-            );
-        }
-
         const roomUrl = jid(name, this.conferenceDomain);
         const room = this.rooms.get(roomUrl.toString());
         if (room === undefined) {
@@ -457,11 +437,6 @@ export class XmppClient {
     }
 
     public removeMuc(room: MucRoom) {
-        if (this.jid === undefined || this.conferenceDomain === undefined) {
-            throw new Error(
-                "leaveMuc called before we received the XMPP connection details. There is a race condition."
-            );
-        }
         const roomUrl = room.getUrl();
 
         const activeThread = get(activeThreadStore);

@@ -3,6 +3,7 @@ import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { envConfig } from "@geprog/vite-plugin-env-config";
 import sveltePreprocess from "svelte-preprocess";
 import pluginRewriteAll from "vite-plugin-rewrite-all";
+import NodeGlobalsPolyfillPlugin from "@esbuild-plugins/node-globals-polyfill";
 
 export default defineConfig({
     server: {
@@ -29,6 +30,8 @@ export default defineConfig({
                 "ICON_URL",
                 "ENABLE_OPENID",
                 "ENABLE_CHAT_UPLOAD",
+                "EJABBERD_WS_URI",
+                "EJABBERD_DOMAIN"
             ],
         }),
         pluginRewriteAll(),
@@ -36,4 +39,18 @@ export default defineConfig({
     define: {
         global: {},
     },
+    optimizeDeps: {
+        esbuildOptions: {
+            // Node.js global to browser globalThis
+            define: {
+                global: 'globalThis'
+            },
+            // Enable esbuild polyfill plugins
+            plugins: [
+                NodeGlobalsPolyfillPlugin({
+                    buffer: true
+                })
+            ]
+        }
+    }
 });

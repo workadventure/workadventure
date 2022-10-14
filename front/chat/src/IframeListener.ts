@@ -19,7 +19,7 @@ import { setCurrentLocale } from "./i18n/locales";
 import { Locales } from "./i18n/i18n-types";
 import { mucRoomsStore } from "./Stores/MucRoomsStore";
 import { defaultUserData } from "./Xmpp/MucRoom";
-import { connectionManager } from "./Connection/ChatConnectionManager";
+import { chatConnectionManager } from "./Connection/ChatConnectionManager";
 import { chatVisibilityStore } from "./Stores/ChatStore";
 import { NotificationType } from "./Media/MediaManager";
 import { activeThreadStore } from "./Stores/ActiveThreadStore";
@@ -44,21 +44,21 @@ class IframeListener {
                             break;
                         }
                         case "xmppSettingsMessage": {
-
+                            chatConnectionManager.initXmppSettings(iframeEvent.data);
                             break;
                         }
                         case "userData": {
                             iframeEvent.data.name = iframeEvent.data.name.replace(emojiRegex, "");
                             userStore.set(iframeEvent.data);
-                            // if (!connectionManager.connection) {
-                            //     connectionManager.init(
-                            //         iframeEvent.data.playUri,
-                            //         iframeEvent.data.uuid,
-                            //         iframeEvent.data.authToken
-                            //     );
-                            // } else {
-                            mucRoomsStore.sendPresences();
-                            //}
+                            if (!chatConnectionManager.connection) {
+                                chatConnectionManager.initUser(
+                                    iframeEvent.data.playUri,
+                                    iframeEvent.data.uuid,
+                                    iframeEvent.data.authToken
+                                );
+                            } else {
+                                mucRoomsStore.sendPresences();
+                            }
                             break;
                         }
                         case "setLocale": {
@@ -69,11 +69,10 @@ class IframeListener {
                             if (!get(enableChat)) {
                                 return;
                             }
-                            if (!connectionManager.connection) {
-                                connectionManager.start();
+                            if (!chatConnectionManager.connection) {
+                                chatConnectionManager.start();
                             }
-                            connectionManager.connectionOrFail
-                                .getXmppClient()
+                            chatConnectionManager.connectionOrFail
                                 ?.joinMuc(
                                     iframeEvent.data.name,
                                     iframeEvent.data.url,
@@ -86,10 +85,10 @@ class IframeListener {
                             if (!get(enableChat)) {
                                 return;
                             }
-                            if (!connectionManager.connection) {
-                                connectionManager.start();
+                            if (!chatConnectionManager.connection) {
+                                chatConnectionManager.start();
                             }
-                            connectionManager.connectionOrFail.getXmppClient()?.leaveMuc(iframeEvent.data.url);
+                            chatConnectionManager.connectionOrFail?.leaveMuc(iframeEvent.data.url);
                             break;
                         }
                         case "updateWritingStatusChatList": {

@@ -64,6 +64,8 @@ services:
       EMBEDLY_KEY: $EMBEDLY_KEY
       ADMIN_API_URL: $ADMIN_API_URL
       ENABLE_CHAT_UPLOAD: $ENABLE_CHAT_UPLOAD
+      EJABBERD_DOMAIN: $EJABBERD_DOMAIN
+      EJABBERD_WS_URI: $EJABBERD_WS_URI
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
@@ -102,12 +104,11 @@ services:
       OPID_LOCALE_CLAIM: $OPID_LOCALE_CLAIM
       DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
       START_ROOM_URL: "$START_ROOM_URL"
+      EJABBERD_DOMAIN: $EJABBERD_DOMAIN
       ENABLE_CHAT: "$ENABLE_CHAT"
       ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
       # Only used if you set up a JWT authentication mechanism in Ejabberd
       EJABBERD_JWT_SECRET: mySecretJwtToken
-      EJABBERD_DOMAIN: ejabberd
-      EJABBERD_WS_URI: ws://ejabberd:5443/ws
     volumes:
       - ./pusher:/usr/src/app
     labels:
@@ -129,13 +130,17 @@ services:
       - ./xmpp/ejabberd.yml:/opt/ejabberd/conf/ejabberd.yml
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.xmpp.rule=Host(`xmpp.workadventure.localhost`)"
-      - "traefik.http.routers.xmpp.entryPoints=web"
-      - "traefik.http.services.xmpp.loadbalancer.server.port=5380"
-      - "traefik.http.routers.xmpp-ssl.rule=Host(`xmpp.workadventure.localhost`)"
-      - "traefik.http.routers.xmpp-ssl.entryPoints=websecure"
-      - "traefik.http.routers.xmpp-ssl.tls=true"
-      - "traefik.http.routers.xmpp-ssl.service=xmpp"
+      - "traefik.http.middlewares.strip-ejabberd-prefix.stripprefix.prefixes=/xmpp"
+      - "traefik.http.routers.ejabberd.rule=PathPrefix(`/xmpp`)"
+      - "traefik.http.routers.ejabberd.middlewares=strip-ejabberd-prefix@docker"
+      - "traefik.http.routers.ejabberd.entryPoints=web,traefik"
+      - "traefik.http.services.ejabberd.loadbalancer.server.port=5380"
+      - "traefik.http.routers.ejabberd-ssl.rule=PathPrefix(`/xmpp`)"
+      - "traefik.http.routers.ejabberd-ssl.middlewares=strip-ejabberd-prefix@docker"
+      - "traefik.http.routers.ejabberd-ssl.entryPoints=websecure"
+      - "traefik.http.routers.ejabberd-ssl.tls=true"
+      - "traefik.http.routers.ejabberd-ssl.service=ejabberd"
+
 
   maps:
     image: thecodingmachine/php:8.1-v4-apache-node12

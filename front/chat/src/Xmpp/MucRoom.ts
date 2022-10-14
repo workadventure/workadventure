@@ -4,7 +4,7 @@ import type { Readable, Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
 import ElementExt from "./Lib/ElementExt";
 import { mucRoomsStore, numberPresenceUserStore } from "../Stores/MucRoomsStore";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuid } from "uuid";
 import { userStore } from "../Stores/LocalUserStore";
 import { UserData } from "../Messages/JsonMessages/ChatData";
 import { filesUploadStore, mentionsUserStore } from "../Stores/ChatStore";
@@ -13,7 +13,6 @@ import { mediaManager, NotificationType } from "../Media/MediaManager";
 import { availabilityStatusStore } from "../Stores/ChatStore";
 import { activeThreadStore } from "../Stores/ActiveThreadStore";
 import Timeout = NodeJS.Timeout;
-import { connectionManager } from "../Connection/ChatConnectionManager";
 import {XmppClient} from "./XmppClient";
 
 export const USER_STATUS_AVAILABLE = "available";
@@ -216,7 +215,7 @@ export class MucRoom {
 
     public getPlayerName() {
         try {
-            return connectionManager.connectionOrFail.getXmppClient()?.getPlayerName() ?? "unknown";
+            return this.connection.getPlayerName() ?? "unknown";
         } catch (e) {
             console.log(e);
         }
@@ -273,21 +272,21 @@ export class MucRoom {
     }
 
     private sendRequestAllSubscribers() {
-        const uuid = uuidv4();
+        const id = uuid();
         const messageMucListAllUsers = xml(
             "iq",
             {
                 type: "get",
                 to: jid(this.roomJid.local, this.roomJid.domain).toString(),
                 from: this.jid,
-                id: uuid,
+                id,
             },
             xml("subscriptions", {
                 xmlns: "urn:xmpp:mucsub:0",
             })
         );
         if (!this.closed) {
-            this.getAllSubscriptionsId = uuid;
+            this.getAllSubscriptionsId = id;
             this.connection.send(messageMucListAllUsers);
             if (_VERBOSE) console.warn("[XMPP]", ">> Get all subscribers sent");
         }
@@ -302,7 +301,7 @@ export class MucRoom {
                 type: "set",
                 to: jid(this.roomJid.local, this.roomJid.domain).toString(),
                 from: this.jid,
-                id: uuidv4(),
+                id: uuid(),
             },
             xml(
                 "query",
@@ -346,7 +345,7 @@ export class MucRoom {
         }
     }
     public sendPresence(first: boolean = false) {
-        const presenceId = uuidv4();
+        const presenceId = uuid();
         if (first) {
             this.presenceId = presenceId;
         }
@@ -390,7 +389,7 @@ export class MucRoom {
                 type: "set",
                 to: jid(this.roomJid.local, this.roomJid.domain).toString(),
                 from: this.jid,
-                id: uuidv4(),
+                id: uuid(),
             },
             xml(
                 "subscribe",
@@ -426,7 +425,7 @@ export class MucRoom {
                 type: "set",
                 to: jid(this.roomJid.local, this.roomJid.domain).toString(),
                 from: this.jid,
-                id: uuidv4(),
+                id: uuid(),
             },
             xml(
                 "query",
@@ -466,7 +465,7 @@ export class MucRoom {
     }
 
     public sendDestroy() {
-        const destroyId = uuidv4();
+        const destroyId = uuid();
         const messageMucDestroy = xml(
             "iq",
             {
@@ -497,7 +496,7 @@ export class MucRoom {
     }
 
     public sendDisconnect() {
-        const presenceId = uuidv4();
+        const presenceId = uuid();
         this.presenceId = presenceId;
         const to = jid(this.roomJid.local, this.roomJid.domain, this.getPlayerName());
         const messageMucSubscribe = xml(
@@ -518,7 +517,7 @@ export class MucRoom {
                 to: this.roomJid.toString(),
                 from: this.jid,
                 type: "groupchat",
-                id: uuidv4(),
+                id: uuid(),
                 xmlns: "jabber:client",
             },
             xml("remove", {
@@ -539,7 +538,7 @@ export class MucRoom {
                 type: "groupchat",
                 to: jid(this.roomJid.local, this.roomJid.domain).toString(),
                 from: this.jid,
-                id: uuidv4(),
+                id: uuid(),
             },
             xml(state, {
                 xmlns: "http://jabber.org/protocol/chatstates",
@@ -551,7 +550,7 @@ export class MucRoom {
         }
     }
     public sendMessage(text: string, messageReply?: Message) {
-        const idMessage = uuidv4();
+        const idMessage = uuid();
         const message = xml(
             "message",
             {
@@ -658,7 +657,7 @@ export class MucRoom {
             action = reactAction.delete;
         }
 
-        const idMessage = uuidv4();
+        const idMessage = uuid();
         const newReactMessage = {
             id: idMessage,
             message: messageReact.id,
@@ -735,7 +734,7 @@ export class MucRoom {
         if (xml.getAttr("type") === "error") {
             console.warn("[XMPP]", "<< Error received :", xml.toString());
             if (xml.getChild("error")?.getChildText("text") === "That nickname is already in use by another occupant") {
-                connectionManager.connectionOrFail.getXmppClient()?.incrementNickCount();
+                this.connection.incrementNickCount();
                 this.connect();
                 handledMessage = true;
             } else if (xml.getChild("error")?.getChildText("text") === "You have been banned from this room") {
@@ -751,7 +750,7 @@ export class MucRoom {
             // If last registered presence received
             if (id === this.presenceId) {
                 if (this.closed) {
-                    connectionManager.connectionOrFail.getXmppClient()?.removeMuc(this);
+                    this.connection.removeMuc(this);
                     return;
                 } else {
                     this.readyStore.set(true);
