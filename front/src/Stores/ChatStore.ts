@@ -5,7 +5,6 @@ import { iframeListener } from "../Api/IframeListener";
 import { Subject } from "rxjs";
 import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
 import { ChatMessage, ChatMessageTypes } from "../Api/Events/ChatEvent";
-import { XmppSettingsMessage } from "../Messages/ts-proto-generated/protos/messages";
 
 export const chatZoneLiveStore = writable(false);
 export const chatVisibilityStore = writable(false);
