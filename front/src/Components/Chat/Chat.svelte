@@ -47,8 +47,6 @@
         }
     );
 
-    let messageStream: Subscription;
-
     onMount(() => {
         iframeListener.registerChatIframe(chatIframe);
         chatIframe.addEventListener("load", () => {
@@ -126,13 +124,15 @@
                         iframeListener.sendChatVisibilityToChatIframe(visibility);
                     })
                 );
-                subscribeObservers.push(adminMessagesService.messageStream.subscribe((message) => {
-                    if (message.type === AdminMessageEventTypes.banned) {
-                        chatIframe.remove();
-                    }
-                    chatVisibilityStore.set(false);
-                    menuIconVisiblilityStore.set(false);
-                }));
+                subscribeObservers.push(
+                    adminMessagesService.messageStream.subscribe((message) => {
+                        if (message.type === AdminMessageEventTypes.banned) {
+                            chatIframe.remove();
+                        }
+                        chatVisibilityStore.set(false);
+                        menuIconVisiblilityStore.set(false);
+                    })
+                );
                 //TODO delete it with new XMPP integration
                 //send list to chat iframe
                 subscribeListeners.push(

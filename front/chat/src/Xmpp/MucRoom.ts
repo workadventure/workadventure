@@ -13,7 +13,7 @@ import { mediaManager, NotificationType } from "../Media/MediaManager";
 import { availabilityStatusStore } from "../Stores/ChatStore";
 import { activeThreadStore } from "../Stores/ActiveThreadStore";
 import Timeout = NodeJS.Timeout;
-import {XmppClient} from "./XmppClient";
+import { XmppClient } from "./XmppClient";
 
 export const USER_STATUS_AVAILABLE = "available";
 export const USER_STATUS_DISCONNECTED = "disconnected";

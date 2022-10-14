@@ -31,7 +31,7 @@ class IframeListener {
         window.addEventListener("message", (message: MessageEvent): void => {
             const payload = message.data;
             const lookingLikeEvent = isLookingLikeIframeEventWrapper.safeParse(payload);
-            if (lookingLikeEvent.success){
+            if (lookingLikeEvent.success) {
                 const iframeEventGuarded = isIframeEventWrapper.safeParse(lookingLikeEvent.data);
                 if (iframeEventGuarded.success) {
                     const iframeEvent = iframeEventGuarded.data;
@@ -72,13 +72,12 @@ class IframeListener {
                             if (!chatConnectionManager.connection) {
                                 chatConnectionManager.start();
                             }
-                            chatConnectionManager.connectionOrFail
-                                ?.joinMuc(
-                                    iframeEvent.data.name,
-                                    iframeEvent.data.url,
-                                    iframeEvent.data.type,
-                                    iframeEvent.data.subscribe
-                                );
+                            chatConnectionManager.connectionOrFail?.joinMuc(
+                                iframeEvent.data.name,
+                                iframeEvent.data.url,
+                                iframeEvent.data.type,
+                                iframeEvent.data.subscribe
+                            );
                             break;
                         }
                         case "leaveMuc": {

@@ -46,7 +46,7 @@ import { MessageUserJoined } from "../Connexion/ConnexionModels";
 import {
     availabilityStatusToJSON,
     MucRoomDefinitionMessage,
-    XmppSettingsMessage
+    XmppSettingsMessage,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import { localUserStore } from "../Connexion/LocalUserStore";
@@ -63,9 +63,9 @@ import {
     modalVisibilityStore,
 } from "../Stores/ModalStore";
 import { connectionManager } from "../Connexion/ConnectionManager";
-import {isXmppSettingsMessageEvent, XmppSettingsMessageEvent} from "./Events/XmppSettingsMessageEvent";
-import {MucRoomDefinitionInterface} from "../Messages/JsonMessages/MucRoomDefinitionInterface";
-import {gameManager} from "../Phaser/Game/GameManager";
+import { isXmppSettingsMessageEvent, XmppSettingsMessageEvent } from "./Events/XmppSettingsMessageEvent";
+import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+import { gameManager } from "../Phaser/Game/GameManager";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -814,10 +814,10 @@ class IframeListener {
             throw new Error("Race condition : Current room is not defined yet");
         }
         const xmppSettingsMessage = gameManager.getCurrentGameScene().connection?.xmppSettingsMessage;
-        if(xmppSettingsMessage){
+        if (xmppSettingsMessage) {
             this.postMessageToChat({
                 type: "xmppSettingsMessage",
-                data: xmppSettingsMessage
+                data: xmppSettingsMessage,
             });
         }
         this.postMessageToChat({

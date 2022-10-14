@@ -43,7 +43,9 @@ import {
     BanUserByUuidMessage,
     ApplicationMessage,
     EditMapCommandMessage,
-    EditMapCommandWithKeyMessage, XmppSettingsMessage, MucRoomDefinitionMessage,
+    EditMapCommandWithKeyMessage,
+    XmppSettingsMessage,
+    MucRoomDefinitionMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -57,8 +59,8 @@ import { compressors } from "hyper-express";
 import { adminService } from "./AdminService";
 import { ErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 import { BoolValue, Int32Value, StringValue } from "google-protobuf/google/protobuf/wrappers_pb";
-import {MucRoomDefinitionInterface} from "../Messages/JsonMessages/MucRoomDefinitionInterface";
-import {EJABBERD_DOMAIN} from "../Enum/EnvironmentVariable";
+import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+import { EJABBERD_DOMAIN } from "../Enum/EnvironmentVariable";
 
 const debug = Debug("socket");
 
@@ -748,10 +750,9 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-
     emitXMPPSettings(client: ExSocketInterface): void {
         const xmppSettings = new XmppSettingsMessage();
-        xmppSettings.setConferencedomain("conference."+EJABBERD_DOMAIN);
+        xmppSettings.setConferencedomain("conference." + EJABBERD_DOMAIN);
         xmppSettings.setRoomsList(
             client.mucRooms.map((definition: MucRoomDefinitionInterface) => {
                 const mucRoomDefinitionMessage = new MucRoomDefinitionMessage();

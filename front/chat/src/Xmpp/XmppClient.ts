@@ -1,7 +1,5 @@
 import { v4 as uuid } from "uuid";
-import {
-    XmppSettingsMessage,
-} from "../Messages/ts-proto-generated/protos/messages";
+import { XmppSettingsMessage } from "../Messages/ts-proto-generated/protos/messages";
 import { EJABBERD_DOMAIN, EJABBERD_WS_URI } from "../Enum/EnvironmentVariable";
 import CancelablePromise from "cancelable-promise";
 import jid, { JID } from "@xmpp/jid";
@@ -10,13 +8,13 @@ import { Element } from "@xmpp/xml";
 import SASLError from "@xmpp/sasl/lib/SASLError";
 import StreamError from "@xmpp/connection/lib/StreamError";
 import Debug from "debug";
-import {mucRoomsStore, xmppServerConnectionStatusStore} from "../Stores/MucRoomsStore";
-import {connectionNotAuthorized} from "../Stores/ChatStore";
-import {Subject} from "rxjs";
-import {MucRoom} from "./MucRoom";
-import {get} from "svelte/store";
-import {activeThreadStore} from "../Stores/ActiveThreadStore";
-import {userStore} from "../Stores/LocalUserStore";
+import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
+import { connectionNotAuthorized } from "../Stores/ChatStore";
+import { Subject } from "rxjs";
+import { MucRoom } from "./MucRoom";
+import { get } from "svelte/store";
+import { activeThreadStore } from "../Stores/ActiveThreadStore";
+import { userStore } from "../Stores/LocalUserStore";
 
 // @ts-ignore
 import parse from "@xmpp/xml/lib/parse";
@@ -111,17 +109,17 @@ export class XmppClient {
             xmpp.on("disconnect", () => {
                 debug("XmppClient => createClient => disconnect => status", status);
                 if (status !== "disconnected") {
-                        console.log("Disconnected from xmpp server");
-                        //if connection manager is not closed or be closing,
-                        //continue with the same WebSocket and wait information from server
-                        //if (!connectionManager.isClose) {
-                        //  break;
-                        //}
+                    console.log("Disconnected from xmpp server");
+                    //if connection manager is not closed or be closing,
+                    //continue with the same WebSocket and wait information from server
+                    //if (!connectionManager.isClose) {
+                    //  break;
+                    //}
 
-                        //close reset mucroom, close connection and try to restart
-                        xmppServerConnectionStatusStore.set(false);
-                        mucRoomsStore.reset();
-                        //connection.close();
+                    //close reset mucroom, close connection and try to restart
+                    xmppServerConnectionStatusStore.set(false);
+                    mucRoomsStore.reset();
+                    //connection.close();
                 }
             });
             xmpp.on("online", (address: JID) => {
@@ -170,9 +168,12 @@ export class XmppClient {
                 const elementExtParsed = parse(stanzaString) as ElementExt;
 
                 if (elementExtParsed) {
-
                     if (elementExtParsed.getChild("ping")) {
-                        void this.sendPong(elementExtParsed.getAttr("from"), elementExtParsed.getAttr("to"), elementExtParsed.getAttr("id"));
+                        void this.sendPong(
+                            elementExtParsed.getAttr("from"),
+                            elementExtParsed.getAttr("to"),
+                            elementExtParsed.getAttr("id")
+                        );
                     } else {
                         let handledMessage = false;
                         const id = elementExtParsed.getAttr("id");
@@ -269,7 +270,6 @@ export class XmppClient {
     }
 
     private xmlRestrictionsToEjabberd(element: ElementExt): null | ElementExt {
-
         // TODO IMPLEMENT RESTRICTIONS
         // Test body message length
         // if (element.getName() === "message" && element.getChild("body")) {
@@ -377,7 +377,7 @@ export class XmppClient {
     }
 
     async sendPong(to: string, from: string, id: string): Promise<void> {
-        await this.sendToEjabberd(xml("iq", {from, to, id, type: "result"}).toString());
+        await this.sendToEjabberd(xml("iq", { from, to, id, type: "result" }).toString());
     }
 
     async sendToEjabberd(stanza: string): Promise<void> {
@@ -412,8 +412,6 @@ export class XmppClient {
             }
         }
     }
-
-
 
     public joinMuc(name: string, waRoomUrl: string, type: string, subscribe: boolean): MucRoom {
         const roomUrl = jid(waRoomUrl, this.conferenceDomain);

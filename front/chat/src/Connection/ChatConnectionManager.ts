@@ -1,5 +1,5 @@
-import {XmppSettingsMessage} from "../Messages/ts-proto-generated/protos/messages";
-import {XmppClient} from "../Xmpp/XmppClient";
+import { XmppSettingsMessage } from "../Messages/ts-proto-generated/protos/messages";
+import { XmppClient } from "../Xmpp/XmppClient";
 
 class ChatConnectionManager {
     private uuid: string;
@@ -21,7 +21,7 @@ class ChatConnectionManager {
         this.start();
     }
 
-    initXmppSettings(xmppSettingsMessages: XmppSettingsMessage){
+    initXmppSettings(xmppSettingsMessages: XmppSettingsMessage) {
         this.xmppSettingsMessage = xmppSettingsMessages;
 
         this.start();
@@ -39,7 +39,7 @@ class ChatConnectionManager {
     }
 
     public start() {
-        if(this.uuid !== "" && this.authToken && this.playUri !== "" && this.xmppSettingsMessage){
+        if (this.uuid !== "" && this.authToken && this.playUri !== "" && this.xmppSettingsMessage) {
             this.xmppClient = new XmppClient(this.xmppSettingsMessage);
         }
 

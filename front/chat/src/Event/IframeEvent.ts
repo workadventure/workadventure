@@ -6,7 +6,7 @@ import { isLeaveMucEvent } from "./LeaveMucEvent";
 import { isJoinMucEvent } from "./JoinMucEvent";
 import { isChatVisibility } from "./ChatVisibility";
 import { isSettings } from "./SettingsEvent";
-import {isXmppSettingsMessageEvent} from "./XmppSettingsMessageEvent";
+import { isXmppSettingsMessageEvent } from "./XmppSettingsMessageEvent";
 
 export const isIframeEventWrapper = z.union([
     z.object({
