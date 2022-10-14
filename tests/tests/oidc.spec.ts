@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { login } from './utils/roles';
 import {oidcLogin, oidcLogout} from "./utils/oidc";
+import {evaluateScript} from "./utils/scripting";
 
 test.describe('OpenID connect', () => {
   test('can login and logout', async ({
@@ -19,5 +20,11 @@ test.describe('OpenID connect', () => {
     // Let's check the sign in button is back here when we signed out
     await page.click('#menuIcon img:first-child');
     await expect(page.locator('a:has-text("Sign in")')).toContainText("Sign in");
+
+    // Test if player variable is correct
+    const isLogged = await evaluateScript(page, () => {
+      return WA.player.isLogged;
+    });
+    expect(isLogged).toBe(true);
   });
 });
