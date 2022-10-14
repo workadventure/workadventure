@@ -11,7 +11,7 @@ import {
     SECRET_KEY,
 } from "../Enum/EnvironmentVariable";
 import Response from "hyper-express/types/components/http/Response";
-import { uuid } from "uuidv4";
+import { v4 } from "uuid";
 import Request from "hyper-express/types/components/http/Request";
 import crypto from "crypto";
 
@@ -74,7 +74,7 @@ class OpenIDClient {
 
             // We also store the state in cookies. The state should not be needed, except for older OpenID client servers that
             // don't understand PKCE
-            const state = uuid();
+            const state = v4();
             res.cookie("oidc_state", state, undefined, {
                 httpOnly: true,
             });

@@ -50,7 +50,7 @@
     "query-string": "^6.13.3",
     "redis": "^4.2.0",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.10.0",
-    "uuidv4": "^6.0.7"
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@types/busboy": "^0.2.3",
@@ -60,7 +60,7 @@
     "@types/jasmine": "^4.0.3",
     "@types/jsonwebtoken": "^8.3.8",
     "@types/mkdirp": "^1.0.1",
-    "@types/uuidv4": "^5.0.0",
+    "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
     "eslint": "^6.8.0",
