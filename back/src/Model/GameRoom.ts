@@ -835,6 +835,7 @@ export class GameRoom implements BrothersFinder {
 
     public getJitsiSettings(): MapJitsiData | undefined {
         const jitsi = this.thirdParty?.jitsi;
+
         if (jitsi) {
             return jitsi;
         }

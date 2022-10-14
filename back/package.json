@@ -58,7 +58,6 @@
     "redis": "^4.3.1",
     "source-map-support": "^0.5.21",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.10.0",
-    "uuidv4": "^6.0.7",
     "zod": "^3.14.3"
   },
   "devDependencies": {
@@ -71,7 +70,6 @@
     "@types/jasmine": "^4.0.3",
     "@types/jsonwebtoken": "^8.3.8",
     "@types/mkdirp": "^1.0.1",
-    "@types/uuidv4": "^5.0.0",
     "@typescript-eslint/eslint-plugin": "^5.8.0",
     "@typescript-eslint/parser": "^5.8.0",
     "eslint": "^8.5.0",

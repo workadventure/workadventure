@@ -703,6 +703,7 @@ export class SocketManager {
 
         const jitsiJwtAnswer = new JitsiJwtAnswer();
         jitsiJwtAnswer.setJwt(jwt);
+        jitsiJwtAnswer.setUrl(jitsiSettings.url);
 
         return jitsiJwtAnswer;
     }

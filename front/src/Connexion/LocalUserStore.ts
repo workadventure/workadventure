@@ -31,7 +31,6 @@ const emojiFavorite = "emojiFavorite";
 const JwtAuthToken = z
     .object({
         accessToken: z.string().optional().nullable(),
-        username: z.string().optional().nullable(),
     })
     .partial();
 
@@ -44,6 +43,7 @@ interface PlayerVariable {
 
 class LocalUserStore {
     private jwt: JwtAuthToken | undefined;
+    private name: string | undefined;
 
     saveUser(localUser: LocalUser) {
         localStorage.setItem("localUser", JSON.stringify(localUser));
@@ -55,10 +55,14 @@ class LocalUserStore {
     }
 
     setName(name: string): void {
+        this.name = name;
         localStorage.setItem(playerNameKey, name);
     }
 
     getName(): string | null {
+        if (this.name) {
+            return this.name;
+        }
         const value = localStorage.getItem(playerNameKey) || "";
         return isUserNameValid(value) ? value : null;
     }
@@ -245,10 +249,6 @@ class LocalUserStore {
         );
 
         return JSON.parse(jsonPayload);
-    }
-
-    isUsernameInJwt() {
-        return !!this.jwt?.username;
     }
 
     setNotification(value: boolean): void {
