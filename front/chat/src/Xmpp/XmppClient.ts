@@ -61,7 +61,7 @@ export class XmppClient {
             console.log(
                 "Create client config : EJABBERD_WS_URI [",
                 EJABBERD_WS_URI,
-                "] - EJABBERD_WS_URI [",
+                "] - EJABBERD_DOMAIN [",
                 EJABBERD_DOMAIN,
                 "]"
             );

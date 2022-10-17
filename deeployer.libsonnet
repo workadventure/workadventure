@@ -137,8 +137,11 @@
         "PUSHER_URL": "//pusher-"+url,
         "UPLOADER_URL": "//uploader-"+url,
         "CHAT_EMBEDLY_KEY": if std.objectHas(env, 'CHAT_EMBEDLY_KEY') then env.CHAT_EMBEDLY_KEY else "",
-        "ICON_URL": "//icon-"+url
+        "ICON_URL": "//icon-"+url,
+        "EJABBERD_DOMAIN": "wss://xmpp-"+url+":5443/ws",
+        "EJABBERD_DOMAIN": "ejabberd",
       } + (if adminUrl != null then {
+        "EJABBERD_DOMAIN": "xmpp-"+url,
         # Admin
         "ENABLE_OPENID": "1",
       } else {})

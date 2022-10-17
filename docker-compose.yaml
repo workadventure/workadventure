@@ -295,6 +295,7 @@ services:
   ejabberd:
     image: ghcr.io/processone/ejabberd:22.05
     ports:
+      - '5222:5222'
       - '5443:5443'
     volumes:
       - ./xmpp/ejabberd.yml:/opt/ejabberd/conf/ejabberd.yml
