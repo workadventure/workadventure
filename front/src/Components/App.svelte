@@ -18,6 +18,8 @@
     import ErrorScreen from "./UI/ErrorScreen.svelte";
     import Chat from "./Chat/Chat.svelte";
     import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
+    import { mapEditorModeStore } from "../Stores/MapEditorStore";
+    import MapEditor from "./MapEditor/MapEditor.svelte";
 
     export let game: Game;
 </script>
@@ -48,5 +50,8 @@
     </div>
 {:else if $gameSceneIsLoadedStore && !$selectCharacterCustomizeSceneVisibleStore}
     <Chat />
+    {#if $mapEditorModeStore}
+        <MapEditor />
+    {/if}
     <MainLayout />
 {/if}

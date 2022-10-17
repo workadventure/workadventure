@@ -1,0 +1,38 @@
+<script lang="ts">
+    import AreaPreviewWindow from "./AreaPreviewWindow.svelte";
+    import PropertyPreviewSidebar from "./PropertyPreviewSidebar.svelte";
+
+    // function close() {
+    //     mapEditorModeStore.switchMode(false);
+    // }
+</script>
+
+<div class="map-editor tw-bg-dark-blue/95">
+    <div class="sidebar">
+        <AreaPreviewWindow />
+        <PropertyPreviewSidebar />
+    </div>
+</div>
+
+<style lang="scss">
+    .map-editor {
+        position: absolute !important;
+        top: 0;
+        right: 0;
+        // width: fit-content !important;
+        width: auto;
+        min-width: 30%;
+        // width: 30% !important;
+        z-index: 425;
+
+        pointer-events: auto;
+        color: whitesmoke;
+
+        .sidebar {
+            display: flex;
+            flex-direction: row;
+            // align-items: stretch;
+            gap: 10px;
+        }
+    }
+</style>

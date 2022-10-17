@@ -5,6 +5,7 @@
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { AreaData } from "@workadventure/map-editor";
+    import OptionBox from "./OptionBox.svelte";
 
     let areaPreview: AreaPreview | undefined;
     let areaData: AreaData | undefined;
@@ -76,6 +77,7 @@
                 <p class="blue-title">height:</p>
                 <input bind:value={areaData.height} on:change={sendUpdateAreaCommand} type="number" id="height" />
             </div>
+            <OptionBox title="Focusable" description="Lorem ipsum dolor sit amet, consectetur adipiscing elit." />
             <div class="field">
                 <p class="blue-title">focusable:</p>
                 <input
@@ -110,10 +112,11 @@
 <style lang="scss">
     .area-details-window {
         margin: auto;
-        width: 350px !important;
         z-index: 425;
-
+        height: 100%;
+        width: fit-content !important;
         pointer-events: auto;
+        flex: 1 1 0;
 
         .fields {
             display: flex;
@@ -123,8 +126,8 @@
         .field {
             align-items: center;
             justify-content: space-between;
-            padding-left: 10px;
-            padding-right: 10px;
+            // padding-left: 10px;
+            // padding-right: 10px;
             display: flex;
             flex-direction: row;
         }
