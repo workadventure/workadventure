@@ -9,7 +9,8 @@ const CPU_OVERHEAT_THRESHOLD = Number(process.env.CPU_OVERHEAT_THRESHOLD) || 80;
 const PUSHER_HTTP_PORT = parseInt(process.env.PUSHER_HTTP_PORT || "3000") || 3000;
 export const SOCKET_IDLE_TIMER = parseInt(process.env.SOCKET_IDLE_TIMER as string) || 120; // maximum time (in second) without activity before a socket is closed. Should be greater than 60 seconds in order to cope for Chrome intensive throttling (https://developer.chrome.com/blog/timer-throttling-in-chrome-88/#intensive-throttling)
 
-export const FRONT_URL = process.env.FRONT_URL || "http://localhost";
+export const VITE_URL = process.env.VITE_URL || "http://localhost"; // Used only in development
+export const PLAY_URL = process.env.PLAY_URL || "http://localhost"; // Use "*" to allow any domain
 export const PUSHER_URL = process.env.PUSHER_URL || "";
 export const PUBLIC_MAP_STORAGE_URL = process.env.PUBLIC_MAP_STORAGE_URL || "";
 export const OPID_CLIENT_ID = process.env.OPID_CLIENT_ID || "";

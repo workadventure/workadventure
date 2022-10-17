@@ -55,7 +55,8 @@ services:
             HOST: "0.0.0.0"
             NODE_ENV: development
             SERVER_ID: "$SERVER_ID"
-            FRONT_URL: http://front.workadventure.localhost
+            PLAY_URL: "http://play.workadventure.localhost"
+            VITE_URL: "http://front.workadventure.localhost"
             PUSHER_URL: http://play.workadventure.localhost
             UPLOADER_URL: http://uploader.workadventure.localhost
             ICON_URL: http://icon.workadventure.localhost

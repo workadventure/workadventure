@@ -9,7 +9,7 @@ import { WokaListController } from "./controllers/WokaListController";
 import { SwaggerController } from "./controllers/SwaggerController";
 import HyperExpress from "hyper-express";
 import cors from "cors";
-import { ENABLE_OPENAPI_ENDPOINT, FRONT_URL } from "./enums/EnvironmentVariable";
+import { ENABLE_OPENAPI_ENDPOINT, PLAY_URL } from "./enums/EnvironmentVariable";
 import { PingController } from "./controllers/PingController";
 import { IoSocketChatController } from "./controllers/IoSocketChatController";
 import { FrontController } from "./controllers/FrontController";
@@ -24,16 +24,24 @@ class App {
         this.app = webserver.uws_instance;
 
         // Global middlewares
-        webserver.use(cors({
-            origin: (origin) => {
-                console.log("coucou2", origin)
-                return FRONT_URL === "*" ? origin : FRONT_URL;
-            },
-            allowedHeaders: [
-                "Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization", "Pragma", "Cache-Control"
-            ],
-            credentials: true
-        }));
+        webserver.use(
+            cors({
+                origin: (origin) => {
+                    console.log("coucou2", origin);
+                    return PLAY_URL === "*" ? origin : PLAY_URL;
+                },
+                allowedHeaders: [
+                    "Origin",
+                    "X-Requested-With",
+                    "Content-Type",
+                    "Accept",
+                    "Authorization",
+                    "Pragma",
+                    "Cache-Control",
+                ],
+                credentials: true,
+            })
+        );
 
         /**
          * Todo: Replace this lib by the embed static middleware of HyperExpress
@@ -42,8 +50,8 @@ class App {
         const liveAssets = new LiveDirectory({
             path: "public",
             keep: {
-                extensions: [".css", ".js", ".png", ".svg", ".ico", ".xml", ".mp3", ".json", ".html", ".ttf"]
-            }
+                extensions: [".css", ".js", ".png", ".svg", ".ico", ".xml", ".mp3", ".json", ".html", ".ttf"],
+            },
         });
 
         liveAssets.ready().then(() => {
