@@ -58,6 +58,14 @@ export class XmppClient {
         if (!this.isAuthorized) return;
         try {
             let status: "disconnected" | "connected" = "disconnected";
+            console.log("Create client config :", {
+                service: `${EJABBERD_WS_URI}`,
+                domain: EJABBERD_DOMAIN,
+                username: this.clientID,
+                resource: this.clientResource ? this.clientResource : uuid().toString(),
+                password: this.clientPassword,
+            });
+            
             const xmpp = client({
                 service: `${EJABBERD_WS_URI}`,
                 domain: EJABBERD_DOMAIN,
