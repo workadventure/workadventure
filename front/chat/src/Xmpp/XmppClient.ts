@@ -18,7 +18,6 @@ import { userStore } from "../Stores/LocalUserStore";
 
 // @ts-ignore
 import parse from "@xmpp/xml/lib/parse";
-import { getEnvConfig } from "@geprog/vite-plugin-env-config/dist/getEnvConfig";
 
 const debug = Debug("xmppClient");
 
