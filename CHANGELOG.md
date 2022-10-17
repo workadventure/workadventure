@@ -28,7 +28,7 @@
 ### Misc
 - Finished migrating "Build your map" documentation into the "/docs" directory of this repository (#1417 #1385)
 - Refactoring documentation (dedicated page for variables) (#1414)
-- Play container code is now completely linted (#1413)
+- Front container code is now completely linted (#1413)
 
 ## Version 1.4.15
 
