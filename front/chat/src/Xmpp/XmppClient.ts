@@ -157,7 +157,6 @@ export class XmppClient {
                             connectionNotAuthorized.set(true);
                         }
                     }
-                    console.trace("XmppClient => createClient => start", err);
                     rej(err);
                 });
 
@@ -265,7 +264,7 @@ export class XmppClient {
                 debug("clientPromise => receive => error", err);
             }
 
-            console.trace("clientPromise => receive => Error", err);
+            console.trace("clientPromise => receive => error", err);
             this.clientPromise.cancel();
         }));
     }
