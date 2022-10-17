@@ -14,7 +14,6 @@ class ChatConnectionManager {
     }
 
     initUser(playUri: string, uuid: string, authToken?: string) {
-        console.log("userInfo received");
         this.uuid = uuid;
         this.authToken = authToken;
         this.playUri = playUri;
@@ -23,7 +22,6 @@ class ChatConnectionManager {
     }
 
     initXmppSettings(xmppSettingsMessages: XmppSettingsMessage) {
-        console.log("xmppSettingsMessage received");
         this.xmppSettingsMessage = xmppSettingsMessages;
 
         this.start();
@@ -41,7 +39,6 @@ class ChatConnectionManager {
     }
 
     public start() {
-        console.log("start connection called");
         if (this.uuid !== "" && this.authToken && this.playUri !== "" && this.xmppSettingsMessage) {
             this.xmppClient = new XmppClient(this.xmppSettingsMessage);
         }

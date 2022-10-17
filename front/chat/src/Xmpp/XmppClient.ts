@@ -73,7 +73,7 @@ export class XmppClient {
                 else {
                     debug("XmppClient => createClient => receive => error", err);
                 }
-                console.error(err.message);
+                console.trace("XmppClient => createClient => receive => error", err);
                 //console.error("XmppClient => receive => error =>", err);
                 this.close();
             });
@@ -157,7 +157,7 @@ export class XmppClient {
                             connectionNotAuthorized.set(true);
                         }
                     }
-                    console.error(err.toString());
+                    console.trace("XmppClient => createClient => start", err);
                     rej(err);
                 });
 
@@ -202,7 +202,7 @@ export class XmppClient {
                 }
             });
         } catch (err) {
-            console.error("XmppClient => createClient => Error", err);
+            console.trace("XmppClient => createClient => Error", err);
             rej(err);
         }
     }
@@ -264,7 +264,8 @@ export class XmppClient {
             } else {
                 debug("clientPromise => receive => error", err);
             }
-            console.error(err.toString());
+
+            console.trace("clientPromise => receive => Error", err);
             this.clientPromise.cancel();
         }));
     }
