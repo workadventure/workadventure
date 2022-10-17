@@ -65,7 +65,7 @@ export class XmppClient {
                 resource: this.clientResource ? this.clientResource : uuid().toString(),
                 password: this.clientPassword,
             });
-            
+
             const xmpp = client({
                 service: `${EJABBERD_WS_URI}`,
                 domain: EJABBERD_DOMAIN,
