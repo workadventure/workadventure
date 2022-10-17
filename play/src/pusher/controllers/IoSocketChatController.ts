@@ -1,12 +1,6 @@
 import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
-import type {
-    SubMessage,
-    XmppMessage,
-    BanUserByUuidMessage} from "../../messages/generated/messages_pb";
-import {
-    BatchMessage,
-    IframeToPusherMessage
-} from "../../messages/generated/messages_pb";
+import type { SubMessage, XmppMessage, BanUserByUuidMessage } from "../../messages/generated/messages_pb";
+import { BatchMessage, IframeToPusherMessage } from "../../messages/generated/messages_pb";
 import qs from "qs";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
 import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
@@ -93,252 +87,266 @@ export class IoSocketChatController {
             //idleTimeout: 10,
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             upgrade: async (res, req, context) => {
-                    /* Keep track of abortions */
-                    const upgradeAborted = { aborted: false };
+                /* Keep track of abortions */
+                const upgradeAborted = { aborted: false };
 
-                    res.onAborted(() => {
-                        /* We can simply signal that we were aborted */
-                        upgradeAborted.aborted = true;
-                    });
+                res.onAborted(() => {
+                    /* We can simply signal that we were aborted */
+                    upgradeAborted.aborted = true;
+                });
 
-                    const query = qs.parse(req.getQuery());
-                    const websocketKey = req.getHeader("sec-websocket-key");
-                    const websocketProtocol = req.getHeader("sec-websocket-protocol");
-                    const websocketExtensions = req.getHeader("sec-websocket-extensions");
-                    const IPAddress = req.getHeader("x-forwarded-for");
-                    const locale = req.getHeader("accept-language");
+                const query = qs.parse(req.getQuery());
+                const websocketKey = req.getHeader("sec-websocket-key");
+                const websocketProtocol = req.getHeader("sec-websocket-protocol");
+                const websocketExtensions = req.getHeader("sec-websocket-extensions");
+                const IPAddress = req.getHeader("x-forwarded-for");
+                const locale = req.getHeader("accept-language");
 
-                    let maxHistoryChat = MAX_HISTORY_CHAT;
+                let maxHistoryChat = MAX_HISTORY_CHAT;
 
-                    const playUri = query.playUri;
-                    try {
-                        if (typeof playUri !== "string") {
-                            throw new Error("Undefined room ID: ");
-                        }
+                const playUri = query.playUri;
+                try {
+                    if (typeof playUri !== "string") {
+                        throw new Error("Undefined room ID: ");
+                    }
 
-                        const token = query.token;
-                        const version = query.version;
-                        const uuid = query.uuid as string;
+                    const token = query.token;
+                    const version = query.version;
+                    const uuid = query.uuid as string;
 
-                        if (version !== apiVersionHash) {
-                            return res.upgrade(
-                                {
-                                    rejected: true,
-                                    reason: "error",
-                                    error: {
-                                        type: "retry",
-                                        title: "Please refresh",
-                                        subtitle: "New version available",
-                                        image: "/resources/icons/new_version.png",
-                                        code: "NEW_VERSION",
-                                        details:
-                                            "A new version of WorkAdventure is available. Please refresh your window",
-                                        canRetryManual: true,
-                                        buttonTitle: "Refresh",
-                                        timeToRetry: 999999,
-                                    },
-                                } as UpgradeFailedData,
-                                websocketKey,
-                                websocketProtocol,
-                                websocketExtensions,
-                                context
-                            );
-                        }
-
-                        const tokenData =
-                            token && typeof token === "string" ? jwtTokenManager.verifyJWTToken(token) : null;
-
-                        if (DISABLE_ANONYMOUS && !tokenData) {
-                            throw new Error("Expecting token");
-                        }
-
-                        const userIdentifier = tokenData ? tokenData.identifier : uuid ?? "";
-
-                        let memberTags: string[] = [];
-                        let memberUserRoomToken: string | undefined;
-                        let userData: FetchMemberDataByUuidResponse = {
-                            email: userIdentifier,
-                            userUuid: userIdentifier,
-                            tags: [],
-                            visitCardUrl: null,
-                            textures: [],
-                            anonymous: true,
-                            userRoomToken: undefined,
-                            messages: [],
-                            jabberId: null,
-                            jabberPassword: null,
-                            mucRooms: [],
-                        };
-
-                        try {
-                            try {
-                                userData = await adminService.fetchMemberDataByUuid(
-                                    userIdentifier,
-                                    tokenData?.accessToken,
-                                    playUri,
-                                    IPAddress,
-                                    [],
-                                    locale
-                                );
-                            } catch (err) {
-                                if (Axios.isAxiosError(err)) {
-                                    const errorType = isErrorApiData.safeParse(err?.response?.data);
-                                    if (errorType.success) {
-                                        return res.upgrade(
-                                            {
-                                                rejected: true,
-                                                reason: "error",
-                                                status: err?.response?.status,
-                                                error: errorType.data,
-                                            } as UpgradeFailedData,
-                                            websocketKey,
-                                            websocketProtocol,
-                                            websocketExtensions,
-                                            context
-                                        );
-                                    } else {
-                                        return res.upgrade(
-                                            {
-                                                rejected: true,
-                                                reason: null,
-                                                status: 500,
-                                                message: err?.response?.data,
-                                                playUri: playUri,
-                                            } as UpgradeFailedData,
-                                            websocketKey,
-                                            websocketProtocol,
-                                            websocketExtensions,
-                                            context
-                                        );
-                                    }
-                                }
-                                throw err;
-                            }
-                            memberTags = userData.tags;
-                            memberUserRoomToken = userData.userRoomToken;
-                        } catch (e) {
-                            console.log(
-                                "access not granted for user " +
-                                    (userIdentifier || "anonymous") +
-                                    " and room " +
-                                    playUri
-                            );
-                            console.error(e);
-                            throw new Error("User cannot access this world");
-                        }
-
-                        if (!userData.jabberId) {
-                            // If there is no admin, or no user, let's log users using JWT tokens
-                            userData.jabberId = jid(userIdentifier, EJABBERD_DOMAIN).toString();
-                            if (EJABBERD_JWT_SECRET) {
-                                userData.jabberPassword = Jwt.sign({ jid: userData.jabberId }, EJABBERD_JWT_SECRET, {
-                                    expiresIn: "30d",
-                                    algorithm: "HS256",
-                                });
-                            } else {
-                                userData.jabberPassword = "no_password_set";
-                            }
-                        }
-
-                        if (userData.userRoomToken && ADMIN_API_URL) {
-                            const jwtDecoded = isUserRoomToken.parse(
-                                jwtTokenManager.verifyJWTToken(userData.userRoomToken)
-                            );
-                            // If cached lifetime is less than 5 minutes (300_000)
-                            if (
-                                this.cache.has(jwtDecoded.room) &&
-                                this.cache.get(jwtDecoded.room) &&
-                                (this.cache.get(jwtDecoded.room)?.timestamp || 0) > Date.now() - 300_000
-                            ) {
-                                // @ts-ignore
-                                maxHistoryChat = this.cache.get(jwtDecoded.room).maxHistoryChat;
-                            } else {
-                                maxHistoryChat = await Axios.get(`${ADMIN_API_URL}/api/limit/historyChat`, {
-                                    headers: { userRoomToken: userData.userRoomToken },
-                                })
-                                    .then((response) => parseInt(response.data))
-                                    .catch((err) => {
-                                        if (Axios.isAxiosError(err) && err.response?.status === 402) {
-                                            return parseInt(typeof err.response.data === "string" ? err.response.data : "");
-                                        } else if (Axios.isAxiosError(err) && err.response?.status === 403) {
-                                            // Disabled in admin
-                                            return -2;
-                                        }
-                                        console.error(err);
-                                        return -1;
-                                    });
-                                this.cache.set(jwtDecoded.room, {
-                                    maxHistoryChat: maxHistoryChat,
-                                    timestamp: Date.now(),
-                                });
-                            }
-                        }
-
-                        // Generate characterLayers objects from characterLayers string[]
-                        /*const characterLayerObjs: CharacterLayer[] =
-                            SocketManager.mergeCharacterLayersAndCustomTextures(characterLayers, memberTextures);*/
-
+                    if (version !== apiVersionHash) {
                         if (upgradeAborted.aborted) {
-                            debug("Ouch! Client disconnected before we could upgrade it!");
-                            /* You must not upgrade now */
+                            // If the response points to nowhere, don't attempt an upgrade
                             return;
                         }
-
-                        /* This immediately calls open handler, you must not use res after this call */
-                        res.upgrade(
+                        return res.upgrade(
                             {
-                                // Data passed here is accessible on the "websocket" socket object.
-                                rejected: false,
-                                token,
-                                userUuid: userData.userUuid,
-                                IPAddress,
-                                userIdentifier,
-                                playUri,
-                                maxHistoryChat,
-                                tags: memberTags,
-                                userRoomToken: memberUserRoomToken,
-                                jabberId: userData.jabberId,
-                                jabberPassword: userData.jabberPassword,
-                                mucRooms: userData.mucRooms,
-                            } as UpgradeData,
-                            /* Spell these correctly */
+                                rejected: true,
+                                reason: "error",
+                                error: {
+                                    type: "retry",
+                                    title: "Please refresh",
+                                    subtitle: "New version available",
+                                    image: "/resources/icons/new_version.png",
+                                    code: "NEW_VERSION",
+                                    details: "A new version of WorkAdventure is available. Please refresh your window",
+                                    canRetryManual: true,
+                                    buttonTitle: "Refresh",
+                                    timeToRetry: 999999,
+                                },
+                            } as UpgradeFailedData,
                             websocketKey,
                             websocketProtocol,
                             websocketExtensions,
                             context
                         );
-                    } catch (e) {
-                        if (e instanceof Error) {
-                            if (!(e instanceof InvalidTokenError)) {
-                                console.error(e);
+                    }
+
+                    const tokenData = token && typeof token === "string" ? jwtTokenManager.verifyJWTToken(token) : null;
+
+                    if (DISABLE_ANONYMOUS && !tokenData) {
+                        throw new Error("Expecting token");
+                    }
+
+                    const userIdentifier = tokenData ? tokenData.identifier : uuid ?? "";
+
+                    let memberTags: string[] = [];
+                    let memberUserRoomToken: string | undefined;
+                    let userData: FetchMemberDataByUuidResponse = {
+                        email: userIdentifier,
+                        userUuid: userIdentifier,
+                        tags: [],
+                        visitCardUrl: null,
+                        textures: [],
+                        anonymous: true,
+                        userRoomToken: undefined,
+                        messages: [],
+                        jabberId: null,
+                        jabberPassword: null,
+                        mucRooms: [],
+                    };
+
+                    try {
+                        try {
+                            userData = await adminService.fetchMemberDataByUuid(
+                                userIdentifier,
+                                tokenData?.accessToken,
+                                playUri,
+                                IPAddress,
+                                [],
+                                locale
+                            );
+                        } catch (err) {
+                            if (Axios.isAxiosError(err)) {
+                                const errorType = isErrorApiData.safeParse(err?.response?.data);
+                                if (errorType.success) {
+                                    if (upgradeAborted.aborted) {
+                                        // If the response points to nowhere, don't attempt an upgrade
+                                        return;
+                                    }
+                                    return res.upgrade(
+                                        {
+                                            rejected: true,
+                                            reason: "error",
+                                            status: err?.response?.status,
+                                            error: errorType.data,
+                                        } as UpgradeFailedData,
+                                        websocketKey,
+                                        websocketProtocol,
+                                        websocketExtensions,
+                                        context
+                                    );
+                                } else {
+                                    if (upgradeAborted.aborted) {
+                                        // If the response points to nowhere, don't attempt an upgrade
+                                        return;
+                                    }
+                                    return res.upgrade(
+                                        {
+                                            rejected: true,
+                                            reason: null,
+                                            status: 500,
+                                            message: err?.response?.data,
+                                            playUri: playUri,
+                                        } as UpgradeFailedData,
+                                        websocketKey,
+                                        websocketProtocol,
+                                        websocketExtensions,
+                                        context
+                                    );
+                                }
                             }
-                            res.upgrade(
-                                {
-                                    rejected: true,
-                                    reason: e instanceof InvalidTokenError ? tokenInvalidException : null,
-                                    message: e.message,
-                                    playUri,
-                                } as UpgradeFailedData,
-                                websocketKey,
-                                websocketProtocol,
-                                websocketExtensions,
-                                context
-                            );
+                            throw err;
+                        }
+                        memberTags = userData.tags;
+                        memberUserRoomToken = userData.userRoomToken;
+                    } catch (e) {
+                        console.log(
+                            "access not granted for user " + (userIdentifier || "anonymous") + " and room " + playUri
+                        );
+                        console.error(e);
+                        throw new Error("User cannot access this world");
+                    }
+
+                    if (!userData.jabberId) {
+                        // If there is no admin, or no user, let's log users using JWT tokens
+                        userData.jabberId = jid(userIdentifier, EJABBERD_DOMAIN).toString();
+                        if (EJABBERD_JWT_SECRET) {
+                            userData.jabberPassword = Jwt.sign({ jid: userData.jabberId }, EJABBERD_JWT_SECRET, {
+                                expiresIn: "30d",
+                                algorithm: "HS256",
+                            });
                         } else {
-                            res.upgrade(
-                                {
-                                    rejected: true,
-                                    reason: null,
-                                    message: "500 Internal Server Error",
-                                    playUri,
-                                } as UpgradeFailedData,
-                                websocketKey,
-                                websocketProtocol,
-                                websocketExtensions,
-                                context
-                            );
+                            userData.jabberPassword = "no_password_set";
                         }
                     }
+
+                    if (userData.userRoomToken && ADMIN_API_URL) {
+                        const jwtDecoded = isUserRoomToken.parse(
+                            jwtTokenManager.verifyJWTToken(userData.userRoomToken)
+                        );
+                        // If cached lifetime is less than 5 minutes (300_000)
+                        if (
+                            this.cache.has(jwtDecoded.room) &&
+                            this.cache.get(jwtDecoded.room) &&
+                            (this.cache.get(jwtDecoded.room)?.timestamp || 0) > Date.now() - 300_000
+                        ) {
+                            // @ts-ignore
+                            maxHistoryChat = this.cache.get(jwtDecoded.room).maxHistoryChat;
+                        } else {
+                            maxHistoryChat = await Axios.get(`${ADMIN_API_URL}/api/limit/historyChat`, {
+                                headers: { userRoomToken: userData.userRoomToken },
+                            })
+                                .then((response) => parseInt(response.data))
+                                .catch((err) => {
+                                    if (Axios.isAxiosError(err) && err.response?.status === 402) {
+                                        return parseInt(typeof err.response.data === "string" ? err.response.data : "");
+                                    } else if (Axios.isAxiosError(err) && err.response?.status === 403) {
+                                        // Disabled in admin
+                                        return -2;
+                                    }
+                                    console.error(err);
+                                    return -1;
+                                });
+                            this.cache.set(jwtDecoded.room, {
+                                maxHistoryChat: maxHistoryChat,
+                                timestamp: Date.now(),
+                            });
+                        }
+                    }
+
+                    // Generate characterLayers objects from characterLayers string[]
+                    /*const characterLayerObjs: CharacterLayer[] =
+                            SocketManager.mergeCharacterLayersAndCustomTextures(characterLayers, memberTextures);*/
+
+                    if (upgradeAborted.aborted) {
+                        debug("Ouch! Client disconnected before we could upgrade it!");
+                        /* You must not upgrade now */
+                        return;
+                    }
+                    /* This immediately calls open handler, you must not use res after this call */
+                    res.upgrade(
+                        {
+                            // Data passed here is accessible on the "websocket" socket object.
+                            rejected: false,
+                            token,
+                            userUuid: userData.userUuid,
+                            IPAddress,
+                            userIdentifier,
+                            playUri,
+                            maxHistoryChat,
+                            tags: memberTags,
+                            userRoomToken: memberUserRoomToken,
+                            jabberId: userData.jabberId,
+                            jabberPassword: userData.jabberPassword,
+                            mucRooms: userData.mucRooms,
+                        } as UpgradeData,
+                        /* Spell these correctly */
+                        websocketKey,
+                        websocketProtocol,
+                        websocketExtensions,
+                        context
+                    );
+                } catch (e) {
+                    if (e instanceof Error) {
+                        if (!(e instanceof InvalidTokenError)) {
+                            console.error(e);
+                        }
+                        if (upgradeAborted.aborted) {
+                            // If the response points to nowhere, don't attempt an upgrade
+                            return;
+                        }
+                        res.upgrade(
+                            {
+                                rejected: true,
+                                reason: e instanceof InvalidTokenError ? tokenInvalidException : null,
+                                message: e.message,
+                                playUri,
+                            } as UpgradeFailedData,
+                            websocketKey,
+                            websocketProtocol,
+                            websocketExtensions,
+                            context
+                        );
+                    } else {
+                        if (upgradeAborted.aborted) {
+                            // If the response points to nowhere, don't attempt an upgrade
+                            return;
+                        }
+                        res.upgrade(
+                            {
+                                rejected: true,
+                                reason: null,
+                                message: "500 Internal Server Error",
+                                playUri,
+                            } as UpgradeFailedData,
+                            websocketKey,
+                            websocketProtocol,
+                            websocketExtensions,
+                            context
+                        );
+                    }
+                }
             },
             /* Handlers */
             open: (_ws: WebSocket) => {

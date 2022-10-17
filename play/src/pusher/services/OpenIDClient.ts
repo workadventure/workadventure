@@ -11,7 +11,7 @@ import {
     OPID_PROMPT,
     SECRET_KEY,
 } from "../enums/EnvironmentVariable";
-import { uuid } from "uuidv4";
+import { v4 } from "uuid";
 import crypto from "crypto";
 import type { Request, Response } from "hyper-express";
 
@@ -40,16 +40,19 @@ class OpenIDClient {
                     console.log(
                         "Failed to fetch OIDC configuration for both .well-known/openid-configuration and oauth-authorization-server. Trying .well-known/openid-configuration only."
                     );
-                    this.issuerPromise = Issuer.discover(OPID_CLIENT_ISSUER + "/.well-known/openid-configuration").then(
-                        (issuer) => {
+                    this.issuerPromise = Issuer.discover(OPID_CLIENT_ISSUER + "/.well-known/openid-configuration")
+                        .then((issuer) => {
                             return new issuer.Client({
                                 client_id: OPID_CLIENT_ID,
                                 client_secret: OPID_CLIENT_SECRET,
                                 redirect_uris: [OPID_CLIENT_REDIRECT_URL],
                                 response_types: ["code"],
                             });
-                        }
-                    );
+                        })
+                        .catch((e) => {
+                            this.issuerPromise = null;
+                            throw e;
+                        });
                     return this.issuerPromise;
                 });
         }
@@ -71,7 +74,7 @@ class OpenIDClient {
 
             // We also store the state in cookies. The state should not be needed, except for older OpenID client servers that
             // don't understand PKCE
-            const state = uuid();
+            const state = v4();
             res.cookie("oidc_state", state, undefined, {
                 httpOnly: true,
             });

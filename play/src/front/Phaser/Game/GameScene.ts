@@ -1,7 +1,7 @@
 import type { Subscription } from "rxjs";
 import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
-import type{ Unsubscriber } from "svelte/store";
+import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 
 import { userMessageManager } from "../../Administration/UserMessageManager";
@@ -68,10 +68,7 @@ import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteMenuStore, emoteStore } from "../../Stores/EmoteStore";
 import { jitsiParticipantsCountStore, userIsAdminStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
-import type {
-    MenuItem,
-    TranslatedMenu
-} from "../../Stores/MenuStore";
+import type { MenuItem, TranslatedMenu } from "../../Stores/MenuStore";
 import {
     activeSubMenuStore,
     contactPageStore,
@@ -1625,6 +1622,7 @@ ${escapedMessage}
                 playerVariables: this.playerVariablesManager.variables,
                 userRoomToken: this.connection ? this.connection.userRoomToken : "",
                 metadata: this.room.metadata,
+                isLogged: localUserStore.isLogged(),
             };
         });
         this.iframeSubscriptionList.push(
@@ -2547,7 +2545,7 @@ ${escapedMessage}
         });
     }
 
-    public initialiseJitsi(coWebsite: JitsiCoWebsite, roomName: string, jwt?: string): void {
+    public initialiseJitsi(coWebsite: JitsiCoWebsite, roomName: string, jwt?: string, jitsiUrl?: string): void {
         const allProps = this.gameMapFrontWrapper.getCurrentProperties();
         const jitsiConfig = this.safeParseJSONstring(
             allProps.get(GameMapProperties.JITSI_CONFIG) as string | undefined,
@@ -2557,7 +2555,9 @@ ${escapedMessage}
             allProps.get(GameMapProperties.JITSI_INTERFACE_CONFIG) as string | undefined,
             GameMapProperties.JITSI_INTERFACE_CONFIG
         );
-        const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
+        if (!jitsiUrl) {
+            jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
+        }
 
         coWebsite.setJitsiLoadPromise(() => {
             return jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl);

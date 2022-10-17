@@ -13,6 +13,7 @@ export const isGameStateEvent = z.object({
     playerVariables: z.unknown(), // Todo : Typing
     userRoomToken: z.string().optional(),
     metadata: z.unknown().optional(),
+    isLogged: z.boolean().optional().default(false),
 });
 
 /**

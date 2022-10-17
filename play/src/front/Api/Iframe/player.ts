@@ -44,6 +44,12 @@ export const setUuid = (_uuid: string | undefined) => {
     uuid = _uuid;
 };
 
+let isLogged: boolean | undefined;
+
+export const setIsLogged = (_isLogged: boolean | undefined) => {
+    isLogged = _isLogged === true;
+};
+
 export class WorkadventurePlayerCommands extends IframeApiContribution<WorkadventurePlayerCommands> {
     readonly state = playerState;
 
@@ -250,6 +256,22 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
 
     get proximityMeeting(): WorkadventureProximityMeetingCommands {
         return proximityMeeting;
+    }
+
+    /**
+     * Get a value to provide connected status for the current player.
+     * Important: You need to wait for the end of the initialization before accessing.
+     * {@link https://workadventu.re/map-building/api-player.md#get-the-tags-of-the-player | Website documentation}
+     *
+     * @returns {boolean} Player tags
+     */
+    get isLogged(): boolean {
+        if (isLogged === undefined) {
+            throw new Error(
+                "IsLogged not initialized yet. You should call WA.player.isLogged within a WA.onInit callback."
+            );
+        }
+        return isLogged;
     }
 }
 

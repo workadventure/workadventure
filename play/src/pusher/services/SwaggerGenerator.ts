@@ -10,6 +10,7 @@ import { isMapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
 import { isFetchMemberDataByUuidResponse } from "./AdminApi";
 import { isWokaDetail, wokaList, wokaTexture } from "../../messages/JsonMessages/PlayerTextures";
 import type { SchemaObject } from "openapi3-ts";
+import { isRoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
 
 class SwaggerGenerator {
     definitions(type: string | null): {
@@ -21,6 +22,7 @@ class SwaggerGenerator {
                 ErrorApiUnauthorizedData: generateSchema(isErrorApiUnauthorizedData),
                 FetchMemberDataByUuidResponse: generateSchema(isFetchMemberDataByUuidResponse),
                 MapDetailsData: generateSchema(isMapDetailsData),
+                RoomRedirect: generateSchema(isRoomRedirect),
                 WokaDetail: generateSchema(isWokaDetail),
             },
         };
@@ -38,6 +40,7 @@ class SwaggerGenerator {
                 FetchMemberDataByUuidResponse: generateSchema(isFetchMemberDataByUuidResponse),
                 //ListenRoomsMessageInterface: generateSchema(isListenRoomsMessageInterface),
                 MapDetailsData: generateSchema(isMapDetailsData),
+                RoomRedirect: generateSchema(isRoomRedirect),
                 //RegisterData: generateSchema(isRegisterData),
                 //RoomRedirect: generateSchema(isRoomRedirect),
                 //UserMessageAdminMessageInterface: generateSchema(isUserMessageAdminMessageInterface),

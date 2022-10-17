@@ -46,7 +46,9 @@ export class XmppClient {
         this.clientDomain = this.clientJID.domain;
         this.clientResource = this.clientJID.resource;
         this.clientPassword = clientSocket.jabberPassword;
-        this.start().catch((err) => { throw err });
+        this.start().catch((err) => {
+            throw err;
+        });
     }
 
     // FIXME: complete a scenario where ejabberd is STOPPED when a user enters the room and then started
@@ -64,13 +66,13 @@ export class XmppClient {
             });
             this.xmppSocket = xmpp;
 
-            xmpp.on("error", (err: unknown) => {
+            xmpp.on("error", (err) => {
                 if (err instanceof SASLError)
                     debug("XmppClient => createClient => receive => error", err.name, err.condition);
                 else {
                     debug("XmppClient => createClient => receive => error", err);
                 }
-                this.sendErrorToIframe(err as string);
+                this.sendErrorToIframe(err.message);
                 //console.error("XmppClient => receive => error =>", err);
                 this.close();
             });
@@ -98,7 +100,9 @@ export class XmppClient {
                 }
                 if (this.isAuthorized) {
                     this.timeout = setTimeout(() => {
-                        this.start().catch((err) => { throw err });
+                        this.start().catch((err) => {
+                            throw err;
+                        });
                     }, 10_000);
                 }
             });
@@ -394,15 +398,26 @@ export class XmppClient {
     }
 
     sendPong(to: string, from: string, id: string): void {
-        this.sendToEjabberd(xml("iq", { from, to, id, type: "result" }).toString()).catch((err) => { throw err });
+        this.sendToEjabberd(xml("iq", { from, to, id, type: "result" }).toString()).catch((err) => {
+            throw err;
+        });
     }
 
     async sendToEjabberd(stanza: string): Promise<void> {
         const ctx = parse(stanza);
-        if (ctx) {
-            const restricted = this.xmlRestrictionsToEjabberd(ctx);
-            if (restricted) {
-                await this.xmppSocket?.send(restricted as Element);
+        try {
+            if (ctx) {
+                const restricted = this.xmlRestrictionsToEjabberd(ctx);
+                if (restricted) {
+                    await this.xmppSocket?.send(restricted as Element);
+                }
+            }
+        } catch (e: unknown) {
+            console.error("An error occurred while sending a message to XMPP server: ", e);
+            try {
+                this.close();
+            } catch (e2: unknown) {
+                console.error("An error occurred while closing connection to XMPP server: ", e2);
             }
         }
         return;

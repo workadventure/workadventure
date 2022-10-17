@@ -3,6 +3,8 @@ import { isMapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
 import { BaseHttpController } from "./BaseHttpController";
 import { adminService } from "../services/AdminService";
 import { InvalidTokenError } from "./InvalidTokenError";
+import { validateQuery } from "../services/QueryValidator";
+import { z } from "zod";
 import type { Request, Response } from "hyper-express";
 
 export class MapController extends BaseHttpController {
@@ -96,40 +98,46 @@ export class MapController extends BaseHttpController {
          *                   example: https://example.com/logo_login.png
          *
          */
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.app.get("/map", async (req: Request, res: Response) => {
-            if (typeof req.query.playUri !== "string") {
-                console.error("Expected playUri parameter in /map endpoint");
-                res.status(400);
-                res.send("Expected playUri parameter");
+        this.app.get("/map", (req: Request, res: Response) => {
+            const query = validateQuery(
+                req,
+                res,
+                z.object({
+                    playUri: z.string(),
+                    authToken: z.string().optional(),
+                })
+            );
+            if (query === undefined) {
                 return;
             }
 
-            try {
-                let mapDetails = await adminService.fetchMapDetails(
-                    req.query.playUri as string,
-                    req.query.authToken as string,
-                    req.header("accept-language")
-                );
+            (async (): Promise<void> => {
+                try {
+                    let mapDetails = await adminService.fetchMapDetails(
+                        query.playUri,
+                        query.authToken,
+                        req.header("accept-language")
+                    );
 
-                const mapDetailsParsed = isMapDetailsData.safeParse(mapDetails);
-                if (DISABLE_ANONYMOUS && mapDetailsParsed.success) {
-                    mapDetails = mapDetailsParsed.data;
-                    mapDetails.authenticationMandatory = true;
-                }
+                    const mapDetailsParsed = isMapDetailsData.safeParse(mapDetails);
+                    if (DISABLE_ANONYMOUS && mapDetailsParsed.success) {
+                        mapDetails = mapDetailsParsed.data;
+                        mapDetails.authenticationMandatory = true;
+                    }
 
-                res.json(mapDetails);
-                return;
-            } catch (e) {
-                if (e instanceof InvalidTokenError) {
-                    console.warn("Invalid token received", e);
-                    res.status(401);
-                    res.send("The Token is invalid");
+                    res.json(mapDetails);
                     return;
-                } else {
-                    this.castErrorToResponse(e, res);
+                } catch (e) {
+                    if (e instanceof InvalidTokenError) {
+                        console.warn("Invalid token received", e);
+                        res.status(401);
+                        res.send("The Token is invalid");
+                        return;
+                    } else {
+                        this.castErrorToResponse(e, res);
+                    }
                 }
-            }
+            })().catch((e) => console.error(e));
         });
     }
 }

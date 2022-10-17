@@ -1,9 +1,9 @@
 import { ADMIN_API_TOKEN, ADMIN_API_URL, OPID_PROFILE_SCREEN_PROVIDER } from "../enums/EnvironmentVariable";
 import Axios from "axios";
-import type {AxiosResponse} from "axios";
+import type { AxiosResponse } from "axios";
 import type { MapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
 import { isMapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
-import type{ RoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
+import type { RoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
 import { isRoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
 import type { AdminApiData } from "../../messages/JsonMessages/AdminApiData";
 import { isAdminApiData } from "../../messages/JsonMessages/AdminApiData";
@@ -132,7 +132,9 @@ class AdminApi implements AdminInterface {
          *       200:
          *         description: The details of the map
          *         schema:
-         *             $ref: "#/definitions/MapDetailsData"
+         *           oneOf:
+         *            - $ref: "#/definitions/MapDetailsData"
+         *            - $ref: "#/definitions/RoomRedirect"
          *       401:
          *         description: Error while retrieving the data because you are not authorized
          *         schema:

@@ -34,6 +34,7 @@ import type {
     ErrorScreenMessage as ErrorScreenMessageTsProto,
     GroupDeleteMessage as GroupDeleteMessageTsProto,
     GroupUpdateMessage as GroupUpdateMessageTsProto,
+    JitsiJwtAnswer,
     JoinBBBMeetingAnswer,
     MoveToPositionMessage as MoveToPositionMessageProto,
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
@@ -46,12 +47,13 @@ import type {
     UserMovedMessage as UserMovedMessageTsProto,
     ViewportMessage as ViewportMessageTsProto,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
-    WorldConnexionMessage} from "../../messages/ts-proto-generated/protos/messages";
+    WorldConnexionMessage,
+} from "../../messages/ts-proto-generated/protos/messages";
 import {
     ClientToServerMessage as ClientToServerMessageTsProto,
     ServerToClientMessage as ServerToClientMessageTsProto,
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
-    SetPlayerVariableMessage_Scope
+    SetPlayerVariableMessage_Scope,
 } from "../../messages/ts-proto-generated/protos/messages";
 import { Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -1110,7 +1112,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public async queryJitsiJwtToken(jitsiRoom: string): Promise<string> {
+    public async queryJitsiJwtToken(jitsiRoom: string): Promise<JitsiJwtAnswer> {
         const answer = await this.query({
             $case: "jitsiJwtQuery",
             jitsiJwtQuery: {
@@ -1120,7 +1122,7 @@ export class RoomConnection implements RoomConnection {
         if (answer.$case !== "jitsiJwtAnswer") {
             throw new Error("Unexpected answer");
         }
-        return answer.jitsiJwtAnswer.jwt;
+        return answer.jitsiJwtAnswer;
     }
 
     public async queryBBBMeetingUrl(

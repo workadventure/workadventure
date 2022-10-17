@@ -3,7 +3,7 @@ import {
     isIframeAnswerEvent,
     isIframeErrorAnswerEvent,
     isIframeResponseEvent,
-    isLookingLikeIframeEventWrapper
+    isLookingLikeIframeEventWrapper,
 } from "./front/Api/Events/IframeEvent";
 import type { TypedMessageEvent } from "./front/Api/Events/IframeEvent";
 import chat from "./front/Api/Iframe/chat";
@@ -14,7 +14,14 @@ import ui from "./front/Api/Iframe/ui";
 import sound from "./front/Api/Iframe/sound";
 import room, { setMapURL, setRoomId } from "./front/Api/Iframe/room";
 import { createState } from "./front/Api/Iframe/state";
-import player, { setPlayerName, setPlayerLanguage, setTags, setUserRoomToken, setUuid } from "./front/Api/Iframe/player";
+import player, {
+    setPlayerName,
+    setPlayerLanguage,
+    setTags,
+    setUserRoomToken,
+    setUuid,
+    setIsLogged,
+} from "./front/Api/Iframe/player";
 import players from "./front/Api/Iframe/players";
 import type { ButtonDescriptor } from "./front/Api/Iframe/Ui/ButtonDescriptor";
 import type { Popup } from "./front/Api/Iframe/Ui/Popup";
@@ -51,6 +58,7 @@ const initPromise = queryWorkadventure({
     setMetadata(gameState.metadata);
     globalState.initVariables(gameState.variables as Map<string, unknown>);
     player.state.initVariables(gameState.playerVariables as Map<string, unknown>);
+    setIsLogged(gameState.isLogged);
 });
 
 const wa = {
