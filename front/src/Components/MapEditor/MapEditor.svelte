@@ -15,24 +15,23 @@
 </div>
 
 <style lang="scss">
-    .map-editor {
-        position: absolute !important;
-        top: 0;
-        right: 0;
-        // width: fit-content !important;
-        width: auto;
-        min-width: 30%;
-        // width: 30% !important;
-        z-index: 425;
+  .map-editor {
+    position: absolute !important;
+    top: 0;
+    right: 0;
+    width: fit-content !important;
+    // width: 30% !important;
+    z-index: 425;
 
-        pointer-events: auto;
-        color: whitesmoke;
+    pointer-events: auto;
+    color: whitesmoke;
 
-        .sidebar {
-            display: flex;
-            flex-direction: row;
-            // align-items: stretch;
-            gap: 10px;
-        }
+    .sidebar {
+      position: relative !important;
+      display: flex;
+      flex-direction: row;
+      // align-items: stretch;
+      gap: 10px;
     }
+  }
 </style>

@@ -1,1 +1,1 @@
-export * from './ts-proto-generated/grpc_service';
+export * from './ts-proto-generated/services';
