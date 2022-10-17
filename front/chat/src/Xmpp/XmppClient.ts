@@ -65,8 +65,7 @@ export class XmppClient {
                 "] - EJABBERD_WS_URI [",
                 EJABBERD_DOMAIN,
                 "]",
-                getEnvConfig("EJABBERD_WS_URI"),
-                process.env.EJABBERD_WS_URI
+                getEnvConfig("EJABBERD_WS_URI")
             );
 
             const xmpp = client({
