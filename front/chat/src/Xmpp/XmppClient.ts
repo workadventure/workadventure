@@ -47,7 +47,7 @@ export class XmppClient {
         this.clientJID = jid(xmppSettingsMessages.jabberId);
         this.clientID = this.clientJID.local;
         this.clientDomain = this.clientJID.domain;
-        this.clientResource = this.clientJID.resource;
+        this.clientResource = this.clientJID.resource ?? uuid().toString();
         this.clientPassword = xmppSettingsMessages.jabberPassword;
         void this.start();
     }
@@ -62,15 +62,15 @@ export class XmppClient {
                 service: `${EJABBERD_WS_URI}`,
                 domain: EJABBERD_DOMAIN,
                 username: this.clientID,
-                resource: this.clientResource ? this.clientResource : uuid().toString(), //"pusher",
-                password: this.clientPassword,
+                resource: this.clientResource, //"pusher",
+                temp: this.clientPassword,
             });
 
             const xmpp = client({
                 service: `${EJABBERD_WS_URI}`,
                 domain: EJABBERD_DOMAIN,
                 username: this.clientID,
-                resource: this.clientResource ? this.clientResource : uuid().toString(), //"pusher",
+                resource: this.clientResource, //"pusher",
                 password: this.clientPassword,
             });
             this.xmppSocket = xmpp;
