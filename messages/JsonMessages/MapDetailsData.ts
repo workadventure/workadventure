@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
 import { isMucRoomDefinition } from "./MucRoomDefinitionInterface";
+import { isMetaTagFavicon } from "./MetaTagFavicon";
 
 /*
  * WARNING! The original file is in /messages/JsonMessages.
@@ -122,6 +123,34 @@ export const isMapDetailsData = z.object({
     enableChatUpload: extendApi(z.boolean().optional(), {
         description: "Whether the feature 'upload' in the chat is enabled or not on this room",
         example: true,
+    }),
+    // Meta tags values
+    title: extendApi(z.string(), {
+        description: "Title shown on browser tab",
+        example: "WorkAdventure - My Awesome World",
+    }),
+    description: extendApi(z.string(), {
+        description: "Description of the webpage",
+        example: "My awesome world in WorkAdventure",
+    }),
+    favicons: extendApi(isMetaTagFavicon.array(), {
+        description: "Icon to load inside the index.html and on the manifest",
+    }),
+    appName: extendApi(z.string(), {
+        description: "Name display on the PWA",
+        example: "WorkAdventure",
+    }),
+    shortAppName: extendApi(z.string(), {
+        description: "PWA name when there not enough space",
+        example: "WA",
+    }),
+    themeColor: extendApi(z.string(), {
+        description: "Color use for theme PWA icons, Windows app and android browser",
+        example: "#000000",
+    }),
+    cardImage: extendApi(z.string(), {
+        description: "The URL of the image to be used on OG card tags",
+        example: "https://example.com/awesome_world.png",
     }),
 });
 

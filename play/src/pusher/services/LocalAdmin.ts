@@ -11,6 +11,7 @@ import {
 } from "../enums/EnvironmentVariable";
 import type { AdminApiData } from "../../messages/JsonMessages/AdminApiData";
 import { localWokaService } from "./LocalWokaService";
+import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
 
 /**
  * A local class mocking a real admin if no admin is configured.
@@ -76,6 +77,7 @@ class LocalAdmin implements AdminInterface {
             loadingCowebsiteLogo: null,
             enableChat: ENABLE_CHAT,
             enableChatUpload: ENABLE_CHAT_UPLOAD,
+            ...MetaTagsDefaultValue,
         });
     }
 
