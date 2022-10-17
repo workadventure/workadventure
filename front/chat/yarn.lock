@@ -1833,6 +1833,11 @@ debug@^4.1.0, debug@^4.1.1, debug@^4.2.0, debug@^4.3.2, debug@^4.3.4:
   dependencies:
     ms "2.1.2"
 
+deep-copy-ts@^0.5.4:
+  version "0.5.4"
+  resolved "https://registry.yarnpkg.com/deep-copy-ts/-/deep-copy-ts-0.5.4.tgz#e81b15797e4075cb3a690a1a7ac30179f2d72562"
+  integrity sha512-YJbPjw0YqdosorpCsa6copy1p/gJsFT9Q6Zq0tLi7D0nXh6Y/usjeIQZfkzV3HVuqY0Hl/5gM7TwgIbIWvEjlA==
+
 deep-is@^0.1.3:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/deep-is/-/deep-is-0.1.4.tgz#a6f2dce612fadd2ef1f519b73551f17e85199831"
@@ -4245,6 +4250,11 @@ ts-deepmerge@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/ts-deepmerge/-/ts-deepmerge-4.0.0.tgz#e236314a601ff9a6526cbd07c4b97e885f58532a"
   integrity sha512-IrjjAwfM/J6ajWv5wDRZBdpVaTmuONJN1vC85mXlWVPXKelouLFiqsjR7m0h245qY6zZEtcDtcOTc4Rozgg1TQ==
+
+ts-deferred@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/ts-deferred/-/ts-deferred-1.0.4.tgz#58145ebaeef5b8f2a290b8cec3d060839f9489c7"
+  integrity sha512-uE0e0mUQpqbS3VbqqauLDJ5x9kyHeMXGxRwmoXc+woXkEYWj/MiN61IsfPtlCzfxcVwlxy+S70aU05+atxeoPQ==
 
 ts-node@^10.8.0:
   version "10.9.1"
