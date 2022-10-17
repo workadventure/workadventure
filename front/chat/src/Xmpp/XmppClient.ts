@@ -18,6 +18,7 @@ import { userStore } from "../Stores/LocalUserStore";
 
 // @ts-ignore
 import parse from "@xmpp/xml/lib/parse";
+import { getEnvConfig } from "@geprog/vite-plugin-env-config/dist/getEnvConfig";
 
 const debug = Debug("xmppClient");
 
@@ -58,13 +59,15 @@ export class XmppClient {
         if (!this.isAuthorized) return;
         try {
             let status: "disconnected" | "connected" = "disconnected";
-            console.log("Create client config :", {
-                service: `${EJABBERD_WS_URI}`,
-                domain: EJABBERD_DOMAIN,
-                username: this.clientID,
-                resource: this.clientResource ? this.clientResource : uuid().toString(),
-                password: this.clientPassword,
-            });
+            console.log(
+                "Create client config : EJABBERD_WS_URI [",
+                EJABBERD_WS_URI,
+                "] - EJABBERD_WS_URI [",
+                EJABBERD_DOMAIN,
+                "]",
+                getEnvConfig("EJABBERD_WS_URI"),
+                process.env.EJABBERD_WS_URI
+            );
 
             const xmpp = client({
                 service: `${EJABBERD_WS_URI}`,
