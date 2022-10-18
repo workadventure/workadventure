@@ -138,7 +138,7 @@
         "UPLOADER_URL": "//uploader-"+url,
         "CHAT_EMBEDLY_KEY": if std.objectHas(env, 'CHAT_EMBEDLY_KEY') then env.CHAT_EMBEDLY_KEY else "",
         "ICON_URL": "//icon-"+url,
-        "EJABBERD_WS_URI": "wss://xmpp-"+url+":5443/ws",
+        "EJABBERD_WS_URI": "wss://xmpp-"+url+"/ws",
         "EJABBERD_DOMAIN": "ejabberd",
       } + (if adminUrl != null then {
         "EJABBERD_DOMAIN": "xmpp-"+url,
@@ -207,13 +207,13 @@
     },
   }+ (if (adminUrl == "") then {
     "ejabberd": {
-        "host": {
-            "url": "xmpp-"+url,
-            "containerPort": 5443,
-            "https": "enable"
-      },
       "image": "thecodingmachine/workadventure-simple-ecs:"+tag,
       "ports": [5222, 5269, 5443, 5280, 5380, 1883],
+      "host": {
+          "url": "xmpp-"+url,
+          "containerPort": 5443,
+          "https": "enable"
+      },
       "env": {
         "JWT_SECRET": "tempSecretKeyNeedsToChange",
       }
@@ -330,5 +330,17 @@
              }
           },
         }
-  }
+  }+ (if (adminUrl == "") then {
+   ejabberd+: {
+       ingress+: {
+         spec+: {
+           tls+: [{
+             hosts: ["xmpp-"+url],
+             secretName: "certificate-tls"
+           }]
+         }
+       }
+     },
+  } else {
+  }),
 }
