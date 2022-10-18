@@ -27,6 +27,7 @@
     import emojiPickOn from "../images/emoji-on.png";
     import closeImg from "../images/close.png";
     import penImg from "../images/pen.png";
+    import hammerImg from "../images/hammer.png";
     import WorkAdventureImg from "../images/icon-workadventure-white.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
@@ -44,6 +45,7 @@
         subMenusStore,
         MenuItem,
         TranslatedMenu,
+        userIsConnected,
     } from "../../Stores/MenuStore";
     import {
         Emoji,
@@ -75,6 +77,7 @@
         modalPositionStore,
         modalVisibilityStore,
     } from "../../Stores/ModalStore";
+    import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -272,6 +275,10 @@
 
         resetChatVisibility();
         resetModalVisibility();
+    }
+
+    function openBo() {
+        window.open(`${ADMIN_URL}/admin`, "_blanck");
     }
 
     function register() {
@@ -623,7 +630,6 @@
                         </span>
                     {/if}
                 </div>
-
                 <div on:click={toggleEmojiPicker} class="bottom-action-button">
                     <Tooltip text={$LL.actionbar.emoji()} />
 
@@ -657,6 +663,20 @@
                         </button>
                     </div>
                 {/if}
+                {#if $userHasAccessToBackOfficeStore}
+                    <div
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={() => analyticsClient.openBackOffice()}
+                        on:click={openBo}
+                        class="bottom-action-button"
+                    >
+                        <Tooltip text={$LL.actionbar.bo()} />
+
+                        <button id="mapEditorIcon" class:border-top-light={$menuVisiblilityStore}>
+                            <img draggable="false" src={hammerImg} style="padding: 2px" alt="toggle-map-editor" />
+                        </button>
+                    </div>
+                {/if}
             </div>
 
             {#if $inviteUserActivated}
@@ -677,7 +697,7 @@
                 </div>
             {/if}
 
-            {#if $inviteUserActivated}
+            {#if !$userIsConnected}
                 <div
                     class="bottom-action-section tw-flex tw-flex-initial"
                     in:fly={{}}

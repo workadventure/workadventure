@@ -65,7 +65,12 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteMenuStore, emoteStore } from "../../Stores/EmoteStore";
-import { jitsiParticipantsCountStore, userIsAdminStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
+import {
+    jitsiParticipantsCountStore,
+    userIsAdminStore,
+    userIsEditorStore,
+    userIsJitsiDominantSpeakerStore,
+} from "../../Stores/GameStore";
 import {
     activeSubMenuStore,
     contactPageStore,
@@ -761,6 +766,7 @@ export class GameScene extends DirtyScene {
 
                 playersStore.connectToRoomConnection(this.connection);
                 userIsAdminStore.set(this.connection.hasTag("admin"));
+                userIsEditorStore.set(this.connection.hasTag("editor"));
 
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
 
