@@ -17,12 +17,12 @@ export interface AdminBannedData {
 }
 
 export const isFetchMemberDataByUuidResponse = z.object({
-    email: extendApi(z.string(), {
-        description: "The email of the fetched user, it can be an email, an uuid or undefined.",
+    email: extendApi(z.string().nullable(), {
+        description: "The email of the fetched user, it can be an email, an uuid or null.",
         example: "example@workadventu.re",
     }),
     userUuid: extendApi(z.string(), {
-        description: "The uuid of the fetched user, it can be an email, an uuid or undefined.",
+        description: "The uuid of the fetched user, it can be an email, an uuid.",
         example: "998ce839-3dea-4698-8b41-ebbdf7688ad9",
     }),
     tags: extendApi(z.array(z.string()), {
