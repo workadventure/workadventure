@@ -4,14 +4,14 @@ import { startLayerNamesStore } from "./StartLayerNamesStore";
 
 export const walkAutomaticallyStore = writable<boolean>(false);
 
-export function copyLink() {
+export async function copyLink() {
     const input = document.getElementById("input-share-link");
 
     if (!(input instanceof HTMLInputElement)) {
         return;
     }
 
-    navigator.clipboard.writeText(input.value);
+    await navigator.clipboard.writeText(input.value);
 }
 
 export function getLink(): string {
@@ -58,6 +58,10 @@ export async function shareLink() {
         await navigator.share(shareData);
     } catch (err) {
         console.error("Error: " + err);
-        copyLink();
+        try {
+            await copyLink();
+        } catch (err2) {
+            console.error("Error 2: " + err2);
+        }
     }
 }

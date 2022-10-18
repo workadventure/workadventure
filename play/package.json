@@ -136,6 +136,7 @@
     "swagger-ui-dist": "^4.14.2",
     "ts-deepmerge": "^2.0.4",
     "ts-deferred": "^1.0.4",
+    "ts-proto-descriptors": "^1.7.1",
     "typesafe-i18n": "^5.14.0",
     "uuid": "^9.0.0",
     "zod": "^3.19.1"

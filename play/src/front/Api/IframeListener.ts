@@ -6,16 +6,8 @@ import type { OpenTabEvent } from "./Events/OpenTabEvent";
 import type { ButtonClickedEvent } from "./Events/ButtonClickedEvent";
 import type { ClosePopupEvent } from "./Events/ClosePopupEvent";
 import { scriptUtils } from "./ScriptUtils";
-import type {
-    IframeErrorAnswerEvent,
-    IframeQueryMap,
-    IframeResponseEvent,
-} from "./Events/IframeEvent";
-import {
-    isIframeEventWrapper,
-    isIframeQueryWrapper,
-    isLookingLikeIframeEventWrapper,
-} from "./Events/IframeEvent";
+import type { IframeErrorAnswerEvent, IframeQueryMap, IframeResponseEvent } from "./Events/IframeEvent";
+import { isIframeEventWrapper, isIframeQueryWrapper, isLookingLikeIframeEventWrapper } from "./Events/IframeEvent";
 import type { UserInputChatEvent } from "./Events/UserInputChatEvent";
 import type { PlaySoundEvent } from "./Events/PlaySoundEvent";
 import type { StopSoundEvent } from "./Events/StopSoundEvent";

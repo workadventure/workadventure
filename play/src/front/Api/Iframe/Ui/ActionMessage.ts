@@ -1,11 +1,9 @@
 import type {
     ActionMessageType,
     MessageReferenceEvent,
-    TriggerActionMessageEvent} from "../../Events/Ui/TriggerActionMessageEvent";
-import {
-    removeActionMessage,
-    triggerActionMessage
+    TriggerActionMessageEvent,
 } from "../../Events/Ui/TriggerActionMessageEvent";
+import { removeActionMessage, triggerActionMessage } from "../../Events/Ui/TriggerActionMessageEvent";
 import { queryWorkadventure } from "../IframeApiContribution";
 import type { ActionMessageOptions } from "../ui";
 function uuidv4() {

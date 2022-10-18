@@ -1,6 +1,11 @@
 import { AreaType, GameMapProperties } from "@workadventure/map-editor";
 import { MathUtils } from "@workadventure/math-utils";
-import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileLayer } from "@workadventure/tiled-map-type-guard";
+import type {
+    ITiledMap,
+    ITiledMapLayer,
+    ITiledMapObject,
+    ITiledMapTileLayer,
+} from "@workadventure/tiled-map-type-guard";
 import type { PositionInterface } from "../../Connexion/ConnexionModels";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 export class StartPositionCalculator {

@@ -3,10 +3,7 @@ import { PositionDispatcher } from "./PositionDispatcher";
 import type { ViewportInterface } from "./Websocket/ViewportMessage";
 import type { ZoneEventListener } from "./Zone";
 import { apiClientRepository } from "../services/ApiClientRepository";
-import {
-    RoomMessage,
-    SubMessage,
-} from "../../messages/generated/messages_pb";
+import { RoomMessage, SubMessage } from "../../messages/generated/messages_pb";
 import type {
     BatchToPusherRoomMessage,
     ErrorMessage,

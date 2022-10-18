@@ -26,7 +26,8 @@ import type {
     XmppMessage,
     AskPositionMessage,
     BanUserByUuidMessage,
-    EditMapCommandMessage} from "../../messages/generated/messages_pb";
+    EditMapCommandMessage,
+} from "../../messages/generated/messages_pb";
 import {
     AdminMessage,
     AdminPusherToBackMessage,
@@ -755,7 +756,9 @@ export class SocketManager implements ZoneEventListener {
                         banUserByUuidMessage.getMessage(),
                         "banned",
                         banUserByUuidMessage.getPlayuri()
-                    ).catch((err) => { throw err });
+                    ).catch((err) => {
+                        throw err;
+                    });
                 })
                 .catch((err) => {
                     console.info("handleBanUserByUuidMessage => err", err);

@@ -1,5 +1,5 @@
 import type { AddPlayerEvent } from "../../Events/AddPlayerEvent";
-import type { Observable} from "rxjs";
+import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
 import type { PlayerPosition } from "../../Events/PlayerPosition";
 import { ActionsMenuAction } from "../ui";

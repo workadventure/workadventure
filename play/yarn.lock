@@ -3981,6 +3981,25 @@ prom-client@^14.1.0:
   dependencies:
     tdigest "^0.1.1"
 
+protobufjs@^6.8.8:
+  version "6.11.3"
+  resolved "https://registry.yarnpkg.com/protobufjs/-/protobufjs-6.11.3.tgz#637a527205a35caa4f3e2a9a4a13ddffe0e7af74"
+  integrity sha512-xL96WDdCZYdU7Slin569tFX712BxsxslWwAfAhCYjQKGTq7dAU91Lomy6nLLhh/dyGhk/YH4TwTSRxTzhuHyZg==
+  dependencies:
+    "@protobufjs/aspromise" "^1.1.2"
+    "@protobufjs/base64" "^1.1.2"
+    "@protobufjs/codegen" "^2.0.4"
+    "@protobufjs/eventemitter" "^1.1.0"
+    "@protobufjs/fetch" "^1.1.0"
+    "@protobufjs/float" "^1.0.2"
+    "@protobufjs/inquire" "^1.1.0"
+    "@protobufjs/path" "^1.1.2"
+    "@protobufjs/pool" "^1.1.0"
+    "@protobufjs/utf8" "^1.1.0"
+    "@types/long" "^4.0.1"
+    "@types/node" ">=13.7.0"
+    long "^4.0.0"
+
 protobufjs@^7.0.0:
   version "7.1.2"
   resolved "https://registry.yarnpkg.com/protobufjs/-/protobufjs-7.1.2.tgz#a0cf6aeaf82f5625bffcf5a38b7cd2a7de05890c"
@@ -4759,6 +4778,14 @@ ts-node@^10.4.0:
     make-error "^1.1.1"
     v8-compile-cache-lib "^3.0.1"
     yn "3.1.1"
+
+ts-proto-descriptors@^1.7.1:
+  version "1.7.1"
+  resolved "https://registry.yarnpkg.com/ts-proto-descriptors/-/ts-proto-descriptors-1.7.1.tgz#685d00305b06adfa929fd5a016a419382cd64c50"
+  integrity sha512-oIKUh3K4Xts4v29USGLfUG+2mEk32MsqpgZAOUyUlkrcIdv34yE+k2oZ2Nzngm6cV/JgFdOxRCqeyvmWHuYAyw==
+  dependencies:
+    long "^4.0.0"
+    protobufjs "^6.8.8"
 
 tsconfig-paths@^4.0.0:
   version "4.1.0"

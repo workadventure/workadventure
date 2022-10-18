@@ -1,12 +1,5 @@
-import type {
-    CommandConfig,
-
-    Command} from "@workadventure/map-editor";
-import {
-    UpdateAreaCommand,
-    CreateAreaCommand,
-    DeleteAreaCommand,
-} from "@workadventure/map-editor";
+import type { CommandConfig, Command } from "@workadventure/map-editor";
+import { UpdateAreaCommand, CreateAreaCommand, DeleteAreaCommand } from "@workadventure/map-editor";
 import type { Unsubscriber } from "svelte/store";
 import type { RoomConnection } from "../../../Connexion/RoomConnection";
 import { mapEditorModeDragCameraPointerDownStore, mapEditorModeStore } from "../../../Stores/MapEditorStore";

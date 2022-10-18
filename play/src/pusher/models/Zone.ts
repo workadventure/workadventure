@@ -14,7 +14,8 @@ import type {
     PositionMessage,
     SetPlayerDetailsMessage,
     UserJoinedZoneMessage,
-    UserLeftZoneMessage} from "../../messages/generated/messages_pb";
+    UserLeftZoneMessage,
+} from "../../messages/generated/messages_pb";
 import {
     GroupUpdateMessage,
     UserJoinedMessage,
@@ -205,111 +206,129 @@ export class Zone {
     /**
      * Creates a connection to the back server to track the users.
      */
-    public async init(): Promise<void> {
-        debug("Opening connection to zone %d, %d on back server", this.x, this.y);
-        const apiClient = await apiClientRepository.getClient(this.positionDispatcher.roomId);
-        const zoneMessage = new ZoneMessage();
-        zoneMessage.setRoomid(this.positionDispatcher.roomId);
-        zoneMessage.setX(this.x);
-        zoneMessage.setY(this.y);
-        this.backConnection = apiClient.listenZone(zoneMessage);
-        this.backConnection.on("data", (batch: BatchToPusherMessage) => {
-            for (const message of batch.getPayloadList()) {
-                if (message.hasUserjoinedzonemessage()) {
-                    const userJoinedZoneMessage = message.getUserjoinedzonemessage() as UserJoinedZoneMessage;
-                    const userDescriptor = UserDescriptor.createFromUserJoinedZoneMessage(userJoinedZoneMessage);
-                    this.users.set(userJoinedZoneMessage.getUserid(), userDescriptor);
+    public init(): void {
+        (async () => {
+            debug("Opening connection to zone %d, %d on back server", this.x, this.y);
+            try {
+                const apiClient = await apiClientRepository.getClient(this.positionDispatcher.roomId);
+                const zoneMessage = new ZoneMessage();
+                zoneMessage.setRoomid(this.positionDispatcher.roomId);
+                zoneMessage.setX(this.x);
+                zoneMessage.setY(this.y);
+                this.backConnection = apiClient.listenZone(zoneMessage);
+                this.backConnection.on("data", (batch: BatchToPusherMessage) => {
+                    for (const message of batch.getPayloadList()) {
+                        if (message.hasUserjoinedzonemessage()) {
+                            const userJoinedZoneMessage = message.getUserjoinedzonemessage() as UserJoinedZoneMessage;
+                            const userDescriptor =
+                                UserDescriptor.createFromUserJoinedZoneMessage(userJoinedZoneMessage);
+                            this.users.set(userJoinedZoneMessage.getUserid(), userDescriptor);
 
-                    const fromZone = userJoinedZoneMessage.getFromzone();
+                            const fromZone = userJoinedZoneMessage.getFromzone();
 
-                    this.notifyUserEnter(userDescriptor, fromZone?.toObject());
-                } else if (message.hasGroupupdatezonemessage()) {
-                    const groupUpdateZoneMessage = message.getGroupupdatezonemessage() as GroupUpdateZoneMessage;
-                    const groupDescriptor = GroupDescriptor.createFromGroupUpdateZoneMessage(groupUpdateZoneMessage);
+                            this.notifyUserEnter(userDescriptor, fromZone?.toObject());
+                        } else if (message.hasGroupupdatezonemessage()) {
+                            const groupUpdateZoneMessage =
+                                message.getGroupupdatezonemessage() as GroupUpdateZoneMessage;
+                            const groupDescriptor =
+                                GroupDescriptor.createFromGroupUpdateZoneMessage(groupUpdateZoneMessage);
 
-                    // Do we have it already?
-                    const groupId = groupUpdateZoneMessage.getGroupid();
-                    const oldGroupDescriptor = this.groups.get(groupId);
-                    if (oldGroupDescriptor !== undefined) {
-                        oldGroupDescriptor.update(groupDescriptor);
+                            // Do we have it already?
+                            const groupId = groupUpdateZoneMessage.getGroupid();
+                            const oldGroupDescriptor = this.groups.get(groupId);
+                            if (oldGroupDescriptor !== undefined) {
+                                oldGroupDescriptor.update(groupDescriptor);
 
-                        this.notifyGroupMove(groupDescriptor);
-                    } else {
-                        this.groups.set(groupId, groupDescriptor);
-                        const fromZone = groupUpdateZoneMessage.getFromzone();
-                        this.notifyGroupEnter(groupDescriptor, fromZone?.toObject());
+                                this.notifyGroupMove(groupDescriptor);
+                            } else {
+                                this.groups.set(groupId, groupDescriptor);
+                                const fromZone = groupUpdateZoneMessage.getFromzone();
+                                this.notifyGroupEnter(groupDescriptor, fromZone?.toObject());
+                            }
+                        } else if (message.hasUserleftzonemessage()) {
+                            const userLeftMessage = message.getUserleftzonemessage() as UserLeftZoneMessage;
+                            this.users.delete(userLeftMessage.getUserid());
+
+                            this.notifyUserLeft(userLeftMessage.getUserid(), userLeftMessage.getTozone()?.toObject());
+                        } else if (message.hasGroupleftzonemessage()) {
+                            const groupLeftMessage = message.getGroupleftzonemessage() as GroupLeftZoneMessage;
+                            this.groups.delete(groupLeftMessage.getGroupid());
+
+                            this.notifyGroupLeft(
+                                groupLeftMessage.getGroupid(),
+                                groupLeftMessage.getTozone()?.toObject()
+                            );
+                        } else if (message.hasUsermovedmessage()) {
+                            const userMovedMessage = message.getUsermovedmessage() as UserMovedMessage;
+
+                            const userId = userMovedMessage.getUserid();
+                            const userDescriptor = this.users.get(userId);
+
+                            if (userDescriptor === undefined) {
+                                console.error('Unexpected move message received for unknown user "' + userId + '"');
+                                return;
+                            }
+
+                            userDescriptor.update(userMovedMessage);
+
+                            this.notifyUserMove(userDescriptor);
+                        } else if (message.hasEmoteeventmessage()) {
+                            const emoteEventMessage = message.getEmoteeventmessage() as EmoteEventMessage;
+                            this.notifyEmote(emoteEventMessage);
+                        } else if (message.hasPlayerdetailsupdatedmessage()) {
+                            const playerDetailsUpdatedMessage =
+                                message.getPlayerdetailsupdatedmessage() as PlayerDetailsUpdatedMessage;
+
+                            const userId = playerDetailsUpdatedMessage.getUserid();
+                            const userDescriptor = this.users.get(userId);
+
+                            if (userDescriptor === undefined) {
+                                console.error('Unexpected details message received for unknown user "' + userId + '"');
+                                return;
+                            }
+
+                            const details = playerDetailsUpdatedMessage.getDetails();
+                            if (details === undefined) {
+                                console.error(
+                                    'Unexpected details message without details received for user "' + userId + '"'
+                                );
+                                return;
+                            }
+
+                            userDescriptor.updateDetails(details);
+
+                            this.notifyPlayerDetailsUpdated(playerDetailsUpdatedMessage);
+                        } else if (message.hasErrormessage()) {
+                            const errorMessage = message.getErrormessage() as ErrorMessage;
+                            this.notifyError(errorMessage);
+                        } else {
+                            throw new Error("Unexpected message");
+                        }
                     }
-                } else if (message.hasUserleftzonemessage()) {
-                    const userLeftMessage = message.getUserleftzonemessage() as UserLeftZoneMessage;
-                    this.users.delete(userLeftMessage.getUserid());
+                });
 
-                    this.notifyUserLeft(userLeftMessage.getUserid(), userLeftMessage.getTozone()?.toObject());
-                } else if (message.hasGroupleftzonemessage()) {
-                    const groupLeftMessage = message.getGroupleftzonemessage() as GroupLeftZoneMessage;
-                    this.groups.delete(groupLeftMessage.getGroupid());
-
-                    this.notifyGroupLeft(groupLeftMessage.getGroupid(), groupLeftMessage.getTozone()?.toObject());
-                } else if (message.hasUsermovedmessage()) {
-                    const userMovedMessage = message.getUsermovedmessage() as UserMovedMessage;
-
-                    const userId = userMovedMessage.getUserid();
-                    const userDescriptor = this.users.get(userId);
-
-                    if (userDescriptor === undefined) {
-                        console.error('Unexpected move message received for unknown user "' + userId + '"');
-                        return;
+                this.backConnection.on("error", (e) => {
+                    if (!this.isClosing) {
+                        debug("Error on back connection");
+                        this.close();
+                        this.onBackFailure(e, this);
                     }
-
-                    userDescriptor.update(userMovedMessage);
-
-                    this.notifyUserMove(userDescriptor);
-                } else if (message.hasEmoteeventmessage()) {
-                    const emoteEventMessage = message.getEmoteeventmessage() as EmoteEventMessage;
-                    this.notifyEmote(emoteEventMessage);
-                } else if (message.hasPlayerdetailsupdatedmessage()) {
-                    const playerDetailsUpdatedMessage =
-                        message.getPlayerdetailsupdatedmessage() as PlayerDetailsUpdatedMessage;
-
-                    const userId = playerDetailsUpdatedMessage.getUserid();
-                    const userDescriptor = this.users.get(userId);
-
-                    if (userDescriptor === undefined) {
-                        console.error('Unexpected details message received for unknown user "' + userId + '"');
-                        return;
+                });
+                this.backConnection.on("close", () => {
+                    if (!this.isClosing) {
+                        debug("Close on back connection");
+                        this.close();
+                        this.onBackFailure(null, this);
                     }
-
-                    const details = playerDetailsUpdatedMessage.getDetails();
-                    if (details === undefined) {
-                        console.error('Unexpected details message without details received for user "' + userId + '"');
-                        return;
-                    }
-
-                    userDescriptor.updateDetails(details);
-
-                    this.notifyPlayerDetailsUpdated(playerDetailsUpdatedMessage);
-                } else if (message.hasErrormessage()) {
-                    const errorMessage = message.getErrormessage() as ErrorMessage;
-                    this.notifyError(errorMessage);
+                });
+            } catch (e) {
+                if (e instanceof Error) {
+                    this.onBackFailure(e, this);
                 } else {
-                    throw new Error("Unexpected message");
+                    throw e;
                 }
             }
-        });
-
-        this.backConnection.on("error", (e) => {
-            if (!this.isClosing) {
-                debug("Error on back connection");
-                this.close();
-                this.onBackFailure(e, this);
-            }
-        });
-        this.backConnection.on("close", () => {
-            if (!this.isClosing) {
-                debug("Close on back connection");
-                this.close();
-                this.onBackFailure(null, this);
-            }
-        });
+        })().catch((e) => console.error(e));
     }
 
     public close(): void {

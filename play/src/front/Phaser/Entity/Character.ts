@@ -17,7 +17,7 @@ import { TalkIcon } from "../Components/TalkIcon";
 import { Deferred } from "ts-deferred";
 import { PlayerStatusDot } from "../Components/PlayerStatusDot";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import type { AvailabilityStatus} from "../../../messages/ts-proto-generated/protos/messages";
+import type { AvailabilityStatus } from "../../../messages/ts-proto-generated/protos/messages";
 import { PositionMessage_Direction } from "../../../messages/ts-proto-generated/protos/messages";
 import Text = Phaser.GameObjects.Text;
 import Container = Phaser.GameObjects.Container;

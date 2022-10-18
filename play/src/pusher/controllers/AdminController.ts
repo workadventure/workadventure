@@ -1,11 +1,10 @@
 import { apiClientRepository } from "../services/ApiClientRepository";
-import type {
-    RoomsList} from "../../messages/generated/messages_pb";
+import type { RoomsList } from "../../messages/generated/messages_pb";
 import {
     AdminRoomMessage,
     WorldFullWarningToRoomMessage,
     RefreshRoomPromptMessage,
-    EmptyMessage
+    EmptyMessage,
 } from "../../messages/generated/messages_pb";
 import { adminToken } from "../middlewares/AdminToken";
 import { BaseHttpController } from "./BaseHttpController";

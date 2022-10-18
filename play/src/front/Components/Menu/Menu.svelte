@@ -7,9 +7,7 @@
     import CustomSubMenu from "./CustomSubMenu.svelte";
     import GuestSubMenu from "./GuestSubMenu.svelte";
     import chevronImg from "../images/chevron.svg";
-    import type {
-        TranslatedMenu
-    } from "../../Stores/MenuStore";
+    import type { TranslatedMenu } from "../../Stores/MenuStore";
     import {
         activeSubMenuStore,
         checkSubMenuToShow,
@@ -17,7 +15,7 @@
         menuInputFocusStore,
         menuVisiblilityStore,
         SubMenusInterface,
-        subMenusStore
+        subMenusStore,
     } from "../../Stores/MenuStore";
     import type { MenuItem } from "../../Stores/MenuStore";
     import { onDestroy, onMount } from "svelte";

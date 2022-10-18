@@ -36,10 +36,7 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { chatVisibilityStore, chatZoneLiveStore } from "../../Stores/ChatStore";
     import { proximityMeetingStore } from "../../Stores/MyMediaStore";
-    import type {
-        MenuItem,
-        TranslatedMenu,
-    } from "../../Stores/MenuStore";
+    import type { MenuItem, TranslatedMenu } from "../../Stores/MenuStore";
     import {
         activeSubMenuStore,
         menuVisiblilityStore,
@@ -47,9 +44,7 @@
         SubMenusInterface,
         subMenusStore,
     } from "../../Stores/MenuStore";
-    import type {
-        Emoji,
-    } from "../../Stores/EmoteStore";
+    import type { Emoji } from "../../Stores/EmoteStore";
     import {
         emoteDataStore,
         emoteDataStoreLoading,

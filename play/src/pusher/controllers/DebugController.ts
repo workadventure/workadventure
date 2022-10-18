@@ -6,7 +6,6 @@ import { BaseHttpController } from "./BaseHttpController";
 export class DebugController extends BaseHttpController {
     routes(): void {
         this.app.get("/dump", (req, res) => {
-
             if (ADMIN_API_TOKEN === "") {
                 return res.status(401).send("No token configured!");
             }

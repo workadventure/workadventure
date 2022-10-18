@@ -11,10 +11,10 @@
 import { Zone } from "./Zone";
 import type { ZoneEventListener } from "./Zone";
 import type { ViewportInterface } from "./Websocket/ViewportMessage";
-import type{ ExSocketInterface } from "./Websocket/ExSocketInterface";
-//import Debug from "debug";
+import type { ExSocketInterface } from "./Websocket/ExSocketInterface";
+import Debug from "debug";
 
-//const debug = Debug('positiondispatcher');
+const debug = Debug("positiondispatcher");
 
 interface ZoneDescriptor {
     i: number;
@@ -116,6 +116,7 @@ export class PositionDispatcher {
             zone = new Zone(this, this.socketListener, i, j, (e, myZone) => {
                 // On failure, we delete the zone from the dispatcher so it can be recreated later.
                 this.deleteZone(myZone);
+                debug(`Connection to the back failed: "${e?.message}" .Deleting zone ${myZone.x},${myZone.y}`);
                 // TODO: we should check if the position dispatcher is still containing a room and propagate the onFailure to the parent if it is empty.
             });
             zone.init();

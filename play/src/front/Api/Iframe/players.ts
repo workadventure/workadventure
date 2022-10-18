@@ -1,8 +1,8 @@
 import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
-import type { Observable} from "rxjs";
+import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
 import { apiCallback } from "./registeredCallbacks";
-import type { RemotePlayerInterface, RemotePlayerMoved} from "./Players/RemotePlayer";
+import type { RemotePlayerInterface, RemotePlayerMoved } from "./Players/RemotePlayer";
 import { RemotePlayer, remotePlayers } from "./Players/RemotePlayer";
 import type { AddPlayerEvent } from "../Events/AddPlayerEvent";
 

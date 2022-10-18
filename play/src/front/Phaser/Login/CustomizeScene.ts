@@ -13,11 +13,9 @@ import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
 import {
     CustomWokaBodyPart,
     CustomWokaBodyPartOrder,
-    CustomWokaPreviewer
+    CustomWokaPreviewer,
 } from "../Components/CustomizeWoka/CustomWokaPreviewer";
-import type {
-    CustomWokaPreviewerConfig
-} from "../Components/CustomizeWoka/CustomWokaPreviewer";
+import type { CustomWokaPreviewerConfig } from "../Components/CustomizeWoka/CustomWokaPreviewer";
 import { DraggableGrid } from "@home-based-studio/phaser3-utils";
 import type { WokaBodyPartSlotConfig } from "../Components/CustomizeWoka/WokaBodyPartSlot";
 import { WokaBodyPartSlot } from "../Components/CustomizeWoka/WokaBodyPartSlot";
@@ -25,7 +23,7 @@ import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/g
 import { Button } from "../Components/Ui/Button";
 import { wokaList } from "../../../messages/JsonMessages/PlayerTextures";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
-import type{ IconButtonConfig } from "../Components/Ui/IconButton";
+import type { IconButtonConfig } from "../Components/Ui/IconButton";
 import { IconButton, IconButtonEvent } from "../Components/Ui/IconButton";
 import { selectCharacterCustomizeSceneVisibleStore } from "../../Stores/SelectCharacterStore";
 

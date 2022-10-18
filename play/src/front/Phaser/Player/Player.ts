@@ -1,5 +1,5 @@
 import type { GameScene } from "../Game/GameScene";
-import type { ActiveEventList} from "../UserInput/UserInputManager";
+import type { ActiveEventList } from "../UserInput/UserInputManager";
 import { UserInputEvent } from "../UserInput/UserInputManager";
 import { Character } from "../Entity/Character";
 

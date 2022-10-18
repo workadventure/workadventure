@@ -1,10 +1,11 @@
 import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
 import type { Emoji } from "../Stores/EmoteStore";
+import type { PostHog } from "posthog-js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare let window: any;
 
 class AnalyticsClient {
-    private posthogPromise: Promise<typeof import("posthog-js").default> | undefined;
+    private posthogPromise: Promise<PostHog> | undefined;
 
     constructor() {
         if (POSTHOG_API_KEY && POSTHOG_URL) {

@@ -1,4 +1,4 @@
-import type { Observable} from "rxjs";
+import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
 import type { ChangeAreaEvent } from "../Events/ChangeAreaEvent";
 import type { CreateAreaEvent } from "../Events/CreateAreaEvent";

@@ -6,10 +6,9 @@
  */
 import type {
     PlayerDetailsUpdatedMessage,
-    UserMovedMessage} from "../../../messages/ts-proto-generated/protos/messages";
-import {
-    availabilityStatusToJSON
+    UserMovedMessage,
 } from "../../../messages/ts-proto-generated/protos/messages";
+import { availabilityStatusToJSON } from "../../../messages/ts-proto-generated/protos/messages";
 import type { MessageUserJoined } from "../../Connexion/ConnexionModels";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import { iframeListener } from "../../Api/IframeListener";

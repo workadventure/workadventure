@@ -6,7 +6,7 @@ import { ActionMessage } from "./Ui/ActionMessage";
 import { Menu } from "./Ui/Menu";
 import type { RequireOnlyOne } from "../types";
 import type { ActionsMenuActionClickedEvent } from "../Events/ActionsMenuActionClickedEvent";
-import type { Observable} from "rxjs";
+import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
 import type { UIWebsiteCommands } from "./Ui/UIWebsite";
 import website from "./Ui/UIWebsite";

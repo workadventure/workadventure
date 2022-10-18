@@ -17,7 +17,10 @@ export const isLiveDirectory = z.object({
     watcher: z.unknown(),
     tree: z.unknown(),
     files: z.record(z.string(), isLiveFile),
-    get: z.function().args(z.string()).returns(z.union([z.undefined(), isLiveFile.passthrough()])),
+    get: z
+        .function()
+        .args(z.string())
+        .returns(z.union([z.undefined(), isLiveFile.passthrough()])),
 });
 
 export type LiveDirectory = z.infer<typeof isLiveDirectory>;
