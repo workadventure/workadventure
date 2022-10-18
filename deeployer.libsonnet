@@ -207,6 +207,11 @@
     },
   }+ (if (adminUrl == "") then {
     "ejabberd": {
+        "host": {
+            "url": "xmpp-"+url,
+            "containerPort": 5443,
+            "https": "enable"
+      },
       "image": "thecodingmachine/workadventure-simple-ecs:"+tag,
       "ports": [5222, 5269, 5443, 5280, 5380, 1883],
       "env": {
