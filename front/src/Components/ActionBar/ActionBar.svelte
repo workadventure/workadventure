@@ -284,7 +284,7 @@
     function register() {
         modalIframeTitlelStore.set($LL.menu.icon.open.register());
         modalIframeAllowlStore.set("fullscreen");
-        modalIframeSrcStore.set(`${ADMIN_URL}/funnel/connection`);
+        modalIframeSrcStore.set(`${ADMIN_URL}/funnel/connection?roomUrl=${window.location.toString()}`);
         modalPositionStore.set("center");
         modalIframeAllowApi.set(true);
         modalVisibilityStore.set(true);
