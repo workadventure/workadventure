@@ -65,7 +65,12 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteMenuStore, emoteStore } from "../../Stores/EmoteStore";
-import { jitsiParticipantsCountStore, userIsAdminStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
+import {
+    jitsiParticipantsCountStore,
+    userIsAdminStore,
+    userIsEditorStore,
+    userIsJitsiDominantSpeakerStore,
+} from "../../Stores/GameStore";
 import {
     activeSubMenuStore,
     contactPageStore,
@@ -142,6 +147,7 @@ import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyM
 import { AreaType, GameMap, GameMapProperties } from "@workadventure/map-editor";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { GameStateEvent } from "../../Api/Events/GameStateEvent";
+import { modalVisibilityStore } from "../../Stores/ModalStore";
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PositionInterface;
@@ -192,6 +198,8 @@ export class GameScene extends DirtyScene {
     private highlightedEmbedScreenUnsubscriber!: Unsubscriber;
     private embedScreenLayoutStoreUnsubscriber!: Unsubscriber;
     private availabilityStatusStoreUnsubscriber!: Unsubscriber;
+
+    private modalVisibilityStoreUnsubscriber!: Unsubscriber;
 
     MapUrlFile: string;
     roomUrl: string;
@@ -758,6 +766,7 @@ export class GameScene extends DirtyScene {
 
                 playersStore.connectToRoomConnection(this.connection);
                 userIsAdminStore.set(this.connection.hasTag("admin"));
+                userIsEditorStore.set(this.connection.hasTag("editor"));
 
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
 
@@ -1026,6 +1035,12 @@ export class GameScene extends DirtyScene {
             if (emoteMenu) {
                 this.userInputManager.disableControls();
             } else {
+                this.userInputManager.restoreControls();
+            }
+        });
+
+        this.modalVisibilityStoreUnsubscriber = modalVisibilityStore.subscribe((visibility) => {
+            if (!visibility && !this.userInputManager.isControlsEnabled) {
                 this.userInputManager.restoreControls();
             }
         });
