@@ -113,6 +113,25 @@
                 />
                 <span class="">{$LL.menu.profile.edit.camera()}</span>
             </button>
+            {#if ENABLE_OPENID}
+                {#if $userIsConnected}
+                    <button
+                        type="button"
+                        class="tw-w-full outline tw-min-w-[220px] tw-flex tw-justify-center tw-items-center"
+                        on:click={() => analyticsClient.logout()}
+                        on:click={logOut}>{$LL.menu.profile.logout()}</button
+                    >
+                {:else}
+                    <a
+                        type="button"
+                        class="btn light tw-min-w-[220px] tw-flex tw-justify-center tw-items-center"
+                        href="/login"
+                        on:click={() => analyticsClient.login()}
+                    >
+                        {$LL.menu.profile.login()}</a
+                    >
+                {/if}
+            {/if}
         </section>
     </div>
 
@@ -124,25 +143,6 @@
                     src={getProfileUrl()}
                     class="tw-w-4/5 tw-h-screen tw-border-0 tw-border-solid tw-border-light-blue"
                 />
-            {/if}
-            {#if ENABLE_OPENID}
-                {#if $userIsConnected}
-                    <button
-                        type="button"
-                        class="btn outline resizing-width tw-justify-center"
-                        on:click={() => analyticsClient.logout()}
-                        on:click={logOut}>{$LL.menu.profile.logout()}</button
-                    >
-                {:else}
-                    <a
-                        type="button"
-                        class="btn light resizing-width tw-justify-center"
-                        href="/login"
-                        on:click={() => analyticsClient.login()}
-                    >
-                        {$LL.menu.profile.login()}</a
-                    >
-                {/if}
             {/if}
         </section>
     </div>
