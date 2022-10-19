@@ -59,7 +59,12 @@
 
 {#if areaPreview && areaData}
     <div class="area-details-window tw-bg-purple/95 tw-rounded">
-        <h2>{areaData.name}</h2>
+        <div
+            class="area-details-window-name tw-bg-light-purple/40 tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple"
+        >
+            <h1>{areaData.name}</h1>
+            <p>{"Lorem ipsum dolor sit amet, consectetur adipiscing elit."}</p>
+        </div>
         <div class="fields">
             <div class="field">
                 <p class="blue-title">x:</p>
@@ -73,7 +78,7 @@
                 <p class="blue-title">width:</p>
                 <input bind:value={areaData.width} on:change={sendUpdateAreaCommand} type="number" id="width" />
             </div>
-            <div class="field">
+            <div class="field tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
                 <p class="blue-title">height:</p>
                 <input bind:value={areaData.height} on:change={sendUpdateAreaCommand} type="number" id="height" />
             </div>
@@ -132,10 +137,10 @@
             flex-direction: row;
         }
 
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            // font-family: "Press Start 2P";
-        }
+        // h2 {
+        //     text-align: center;
+        //     margin-bottom: 20px;
+        //     // font-family: "Press Start 2P";
+        // }
     }
 </style>

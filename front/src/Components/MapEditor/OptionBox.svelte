@@ -5,7 +5,9 @@
     export let description = "Description";
 </script>
 
-<div class="map-editor-property-option-box">
+<div
+    class="map-editor-property-option-box tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple"
+>
     <img src={walk} alt="icon" class="option-box-icon" />
     <div class="option-box-text">
         <h3>{title}</h3>
@@ -22,8 +24,8 @@
         justify-content: space-between;
         max-width: 100%;
         gap: 10px;
-        border-top: 1px solid black;
-        border-bottom: 1px solid black;
+        // border-top: 1px solid black;
+        // border-bottom: 1px solid black;
         padding: 5px 15px 5px 15px;
     }
 

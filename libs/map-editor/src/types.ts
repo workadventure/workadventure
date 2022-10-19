@@ -16,6 +16,12 @@ export enum AreaType {
     Dynamic = "Dynamic",
 }
 
+export interface PropertyPreviewData {
+    name: string;
+    turnedOn: boolean;
+    additionalSettings: Record<string, string | number | boolean | {}>;
+}
+
 export enum GameMapProperties {
     ALLOW_API = "allowApi",
     AUDIO_LOOP = "audioLoop",

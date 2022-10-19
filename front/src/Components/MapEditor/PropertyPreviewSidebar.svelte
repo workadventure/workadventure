@@ -1,25 +1,15 @@
 <script lang="ts">
-    // function onKeyDown(e: KeyboardEvent) {
-    //     if (e.key === "Escape") {
-    //         closeAreaPreviewWindow();
-    //     }
-    // }
+    // import { PropertyPreviewData } from '@workadventure/map-editor';
 
-    // function closeAreaPreviewWindow() {
-    //     $mapEditorSelectedAreaPreviewStore = undefined;
-    // }
-
-    // onDestroy(() => {
-    //     if (mapEditorSelectedAreaPreviewStoreUnsubscriber) {
-    //         mapEditorSelectedAreaPreviewStoreUnsubscriber();
-    //     }
-    // });
+    // let propertyPreviewData: PropertyPreviewData | undefined;
+    // let mapEditorSelectedPropertyPreviewDataStoreUnsubscriber: Unsubscriber;
 </script>
 
 <!-- <svelte:window on:keydown={onKeyDown} /> -->
 
+<!-- {#if areaPreview && areaData} -->
 <div class="area-details-window tw-bg-purple/95">
-    <h2>PROPERTIESsssss</h2>
+    <h2>PROPERTIES</h2>
 </div>
 
 <style lang="scss">
