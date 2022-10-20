@@ -16,10 +16,11 @@ export enum AreaType {
     Dynamic = "Dynamic",
 }
 
-export interface PropertyPreviewData {
+export interface PredefinedPropertyData {
     name: string;
+    description: string;
     turnedOn: boolean;
-    additionalSettings: Record<string, string | number | boolean | {}>;
+    additionalProperties: Record<string, string | number | boolean | {}>;
 }
 
 export enum GameMapProperties {

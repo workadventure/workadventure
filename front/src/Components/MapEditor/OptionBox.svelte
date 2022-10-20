@@ -1,17 +1,28 @@
 <script lang="ts">
+    import { PredefinedPropertyData } from "@workadventure/map-editor";
     import walk from "../../../public/static/images/logo-WA-min.png";
+    import { mapEditorSelectePropertyStore } from "../../Stores/MapEditorStore";
 
-    export let title = "Title";
-    export let description = "Description";
+    export let propertyData: PredefinedPropertyData = {
+        name: "Name",
+        description: "Description",
+        turnedOn: false,
+        additionalProperties: {},
+    };
+
+    function setPropertiesData() {
+        mapEditorSelectePropertyStore.set(propertyData);
+    }
 </script>
 
 <div
-    class="map-editor-property-option-box tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple"
+    class="map-editor-property-option-box tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple tw-cursor-pointer"
+    on:click={setPropertiesData}
 >
     <img src={walk} alt="icon" class="option-box-icon" />
     <div class="option-box-text">
-        <h3>{title}</h3>
-        <p>{description}</p>
+        <h3>{propertyData.name}</h3>
+        <p>{propertyData.description}</p>
     </div>
     <input type="checkbox" id="silent" />
 </div>

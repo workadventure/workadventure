@@ -229,7 +229,6 @@ export class MapEditorModeManager {
 
     public subscribeToRoomConnection(connection: RoomConnection): void {
         connection.editMapCommandMessageStream.subscribe((editMapCommandMessage) => {
-            console.log(editMapCommandMessage);
             if (this.pendingCommands.length > 0) {
                 if (this.pendingCommands[0].id === editMapCommandMessage.id) {
                     this.pendingCommands.shift();

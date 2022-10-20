@@ -2,7 +2,7 @@ import { AreaData, AreaType, CommandConfig } from "@workadventure/map-editor";
 import { Subscription } from "rxjs";
 import { get, Unsubscriber } from "svelte/store";
 import { EditMapCommandMessage } from "@workadventure/messages";
-import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
+import { mapEditorSelectedAreaPreviewStore, mapEditorSelectePropertyStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { GameScene } from "../../GameScene";
@@ -40,6 +40,7 @@ export class AreaEditorTool extends MapEditorTool {
 
     public clear(): void {
         mapEditorSelectedAreaPreviewStore.set(undefined);
+        mapEditorSelectePropertyStore.set(undefined);
         this.setAreaPreviewsVisibility(false);
     }
 
@@ -192,6 +193,7 @@ export class AreaEditorTool extends MapEditorTool {
         this.deleteAreaPreview(id);
         this.scene.markDirty();
         mapEditorSelectedAreaPreviewStore.set(undefined);
+        mapEditorSelectePropertyStore.set(undefined);
     }
 
     public handleAreaPreviewCreation(config: AreaData): void {

@@ -1,10 +1,10 @@
 <script lang="ts">
-    import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
+    import { mapEditorSelectedAreaPreviewStore, mapEditorSelectePropertyStore } from "../../Stores/MapEditorStore";
     import { onDestroy } from "svelte";
     import { Unsubscriber } from "svelte/store";
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { AreaData } from "@workadventure/map-editor";
+    import { AreaData, PredefinedPropertyData } from "@workadventure/map-editor";
     import OptionBox from "./OptionBox.svelte";
 
     let areaPreview: AreaPreview | undefined;
@@ -14,6 +14,15 @@
     let propertyFocusable: boolean;
     let propertyZoomMargin: number;
     let propertySilent: boolean;
+
+    const focusablePropertyData: PredefinedPropertyData = {
+        name: "Focusable",
+        description: "Focus camera on this area. Set zoom margin if needed.",
+        turnedOn: false,
+        additionalProperties: {
+            zoomMargin: 0,
+        },
+    };
 
     const gameScene = gameManager.getCurrentGameScene();
 
@@ -36,6 +45,7 @@
 
     function closeAreaPreviewWindow() {
         $mapEditorSelectedAreaPreviewStore = undefined;
+        $mapEditorSelectePropertyStore = undefined;
     }
 
     function sendUpdateAreaCommand() {
@@ -82,8 +92,8 @@
                 <p class="blue-title">height:</p>
                 <input bind:value={areaData.height} on:change={sendUpdateAreaCommand} type="number" id="height" />
             </div>
-            <OptionBox title="Focusable" description="Lorem ipsum dolor sit amet, consectetur adipiscing elit." />
-            <div class="field">
+            <OptionBox propertyData={focusablePropertyData} />
+            <!-- <div class="field">
                 <p class="blue-title">focusable:</p>
                 <input
                     bind:checked={propertyFocusable}
@@ -100,11 +110,11 @@
                     type="number"
                     id="zoomMargin"
                 />
-            </div>
-            <div class="field">
+            </div> -->
+            <!-- <div class="field">
                 <p class="blue-title">silent:</p>
                 <input bind:checked={propertySilent} on:change={sendUpdateAreaCommand} type="checkbox" id="silent" />
-            </div>
+            </div> -->
         </div>
         <!-- <div class="actions">
             {#each areaData.properties ?? [] as property}
