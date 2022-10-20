@@ -46,6 +46,7 @@ export class VideoPeer extends Peer {
     private newMessageSubscribtion: Subscription | undefined;
     private closing = false; //this is used to prevent destroy() from being called twice
     private newWritingStatusMessageSubscribtion: Subscription | undefined;
+    private volumeStoreSubscribe?: Unsubscriber;
     private localStreamStoreSubscribe: Unsubscriber;
     private obtainedMediaConstraintStoreSubscribe: Unsubscriber;
 
@@ -67,10 +68,13 @@ export class VideoPeer extends Peer {
         this.uniqueId = "video_" + this.userId;
 
         this.volumeStore = readable<number[] | undefined>(undefined, (set) => {
-            let timeout: ReturnType<typeof setTimeout>;
+            if (this.volumeStoreSubscribe) {
+                this.volumeStoreSubscribe();
+            }
             let soundMeter: SoundMeter;
-            const unsubscribe = this.streamStore.subscribe((mediaStream) => {
-                clearInterval(timeout);
+            let timeout: NodeJS.Timeout;
+
+            this.volumeStoreSubscribe = this.streamStore.subscribe((mediaStream) => {
                 if (soundMeter) {
                     soundMeter.stop();
                 }
@@ -81,10 +85,13 @@ export class VideoPeer extends Peer {
                 soundMeter = new SoundMeter(mediaStream);
                 let error = false;
 
+                if (timeout) {
+                    clearTimeout(timeout);
+                }
                 timeout = setInterval(() => {
                     try {
                         console.log("getting volume");
-                        set(soundMeter.getVolume());
+                        set(soundMeter?.getVolume());
                     } catch (err) {
                         if (!error) {
                             console.error(err);
@@ -95,10 +102,12 @@ export class VideoPeer extends Peer {
             });
 
             return () => {
-                unsubscribe();
-                clearInterval(timeout);
+                set(undefined);
                 if (soundMeter) {
                     soundMeter.stop();
+                }
+                if (timeout) {
+                    clearTimeout(timeout);
                 }
             };
         });
@@ -306,6 +315,7 @@ export class VideoPeer extends Peer {
             chatMessagesStore.addOutcomingUser(this.userId);
             if (this.localStreamStoreSubscribe) this.localStreamStoreSubscribe();
             if (this.obtainedMediaConstraintStoreSubscribe) this.obtainedMediaConstraintStoreSubscribe();
+            if (this.volumeStoreSubscribe) this.volumeStoreSubscribe();
             super.destroy();
         } catch (err) {
             console.error("VideoPeer::destroy", err);
