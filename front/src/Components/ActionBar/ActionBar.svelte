@@ -59,7 +59,7 @@
     import LL from "../../i18n/i18n-svelte";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
     import { fly } from "svelte/transition";
-    import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
+    import { ADMIN_URL, ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import { mapEditorModeStore } from "../../Stores/MapEditorStore";
@@ -696,7 +696,7 @@
                 </div>
             {/if}
 
-            {#if !$userIsConnected}
+            {#if ENABLE_OPENID && !$userIsConnected}
                 <div
                     class="bottom-action-section tw-flex tw-flex-initial"
                     in:fly={{}}
