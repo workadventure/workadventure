@@ -24,33 +24,31 @@ export class AuthenticateController extends BaseHttpController {
     }
 
     private roomAccess(): void {
-        this.app.get("/room/access", (req, res) => {
-            (async (): Promise<void> => {
-                try {
-                    const query = validateQuery(
-                        req,
-                        res,
-                        z.object({
-                            uuid: z.string(),
-                            playUri: z.string(),
-                            token: z.string().optional(),
-                        })
-                    );
-                    if (query === undefined) {
-                        return;
-                    }
-
-                    const { uuid, playUri, token } = query;
-
-                    res.json(await adminService.fetchMemberDataByUuid(uuid, token, playUri, req.ip, []));
+        this.app.get("/room/access", async (req, res) => {
+            try {
+                const query = validateQuery(
+                    req,
+                    res,
+                    z.object({
+                        uuid: z.string(),
+                        playUri: z.string(),
+                        token: z.string().optional(),
+                    })
+                );
+                if (query === undefined) {
                     return;
-                } catch (e) {
-                    console.warn(e);
                 }
-                res.status(500);
-                res.send("User cannot be identified.");
+
+                const { uuid, playUri, token } = query;
+
+                res.json(await adminService.fetchMemberDataByUuid(uuid, token, playUri, req.ip, []));
                 return;
-            })().catch((e) => console.error(e));
+            } catch (e) {
+                console.warn(e);
+            }
+            res.status(500);
+            res.send("User cannot be identified.");
+            return;
         });
     }
 
@@ -106,7 +104,8 @@ export class AuthenticateController extends BaseHttpController {
                     httpOnly: true,
                 });
 
-                return res.redirect(loginUri);
+                res.redirect(loginUri);
+                return;
             } catch (e) {
                 console.error("openIDLogin => e", e);
                 this.castErrorToResponse(e, res);
@@ -225,30 +224,35 @@ export class AuthenticateController extends BaseHttpController {
                     if (authTokenData.accessToken == undefined) {
                         //if not nonce and code, user connected in anonymous
                         //get data with identifier and return token
-                        return res.json({ ...resUserData, authToken: token });
+                        res.json({ ...resUserData, authToken: token });
+                        return;
                     }
 
                     const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
-                    return res.json({
+                    res.json({
                         ...resCheckTokenAuth,
                         ...resUserData,
                         authToken: token,
                         username: authTokenData?.username,
                         locale: authTokenData?.locale,
                     });
+                    return;
                 } catch (err) {
                     if (Axios.isAxiosError(err)) {
                         const errorType = isErrorApiData.safeParse(err?.response?.data);
                         if (errorType.success) {
                             res.sendStatus(err?.response?.status ?? 500);
-                            return res.json(errorType.data);
+                            res.json(errorType.data);
+                            return;
                         }
                     }
-                    return this.castErrorToResponse(err, res);
+                    this.castErrorToResponse(err, res);
+                    return;
                 }
             } catch (e) {
                 console.error("openIDCallback => ERROR", e);
-                return this.castErrorToResponse(e, res);
+                this.castErrorToResponse(e, res);
+                return;
             }
         });
     }
@@ -270,7 +274,6 @@ export class AuthenticateController extends BaseHttpController {
          *         description: TODO
          *
          */
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/logout-callback", async (req, res) => {
             const query = validateQuery(
                 req,
@@ -293,7 +296,8 @@ export class AuthenticateController extends BaseHttpController {
                 console.error("openIDCallback => logout-callback", error);
             }
 
-            return res.status(200).send("");
+            res.status(200).send("");
+            return;
         });
     }
 
@@ -319,44 +323,42 @@ export class AuthenticateController extends BaseHttpController {
          *         description: Redirects to play once authentication is done, unless we use an AdminAPI (in this case, we redirect to the AdminAPI with same parameters)
          */
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.app.get("/openid-callback", (req, res) => {
-            (async (): Promise<void> => {
-                const playUri = (req.cookies as Record<string, string>).playUri;
-                try {
-                    if (!playUri) {
-                        throw new Error("Missing playUri in cookies");
-                    }
-                    //user have not token created, check data on hydra and create token
-                    let userInfo = null;
-                    try {
-                        userInfo = await openIDClient.getUserInfo(req, res);
-                    } catch (err) {
-                        //if no access on openid provider, return error
-                        console.error("An error occurred while connecting to OpenID Provider => ", err);
-                        res.status(500);
-                        res.send("An error occurred while connecting to OpenID Provider");
-                        return;
-                    }
-                    const email = userInfo.email || userInfo.sub;
-                    if (!email) {
-                        throw new Error("No email in the response");
-                    }
-                    const authToken = jwtTokenManager.createAuthToken(
-                        email,
-                        userInfo?.access_token,
-                        userInfo?.username,
-                        userInfo?.locale
-                    );
-
-                    res.clearCookie("playUri");
-                    // FIXME: possibly redirect to Admin instead.
-                    res.redirect(playUri + "?token=" + encodeURIComponent(authToken));
-                    return;
-                } catch (e) {
-                    console.error("openIDCallback => ERROR", e);
-                    return this.castErrorToResponse(e, res);
+        this.app.get("/openid-callback", async (req, res) => {
+            const playUri = (req.cookies as Record<string, string>).playUri;
+            try {
+                if (!playUri) {
+                    throw new Error("Missing playUri in cookies");
                 }
-            })().catch((e) => console.error(e));
+                //user have not token created, check data on hydra and create token
+                let userInfo = null;
+                try {
+                    userInfo = await openIDClient.getUserInfo(req, res);
+                } catch (err) {
+                    //if no access on openid provider, return error
+                    console.error("An error occurred while connecting to OpenID Provider => ", err);
+                    res.status(500);
+                    res.send("An error occurred while connecting to OpenID Provider");
+                    return;
+                }
+                const email = userInfo.email || userInfo.sub;
+                if (!email) {
+                    throw new Error("No email in the response");
+                }
+                const authToken = jwtTokenManager.createAuthToken(
+                    email,
+                    userInfo?.access_token,
+                    userInfo?.username,
+                    userInfo?.locale
+                );
+
+                res.clearCookie("playUri");
+                // FIXME: possibly redirect to Admin instead.
+                res.redirect(playUri + "?token=" + encodeURIComponent(authToken));
+                return;
+            } catch (e) {
+                console.error("openIDCallback => ERROR", e);
+                return this.castErrorToResponse(e, res);
+            }
         });
     }
 
@@ -411,7 +413,6 @@ export class AuthenticateController extends BaseHttpController {
             res.status(200).send("");
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.post("/register", async (req, res) => {
             const param = await req.json();
 
@@ -474,14 +475,15 @@ export class AuthenticateController extends BaseHttpController {
         this.app.post("/anonymLogin", (req, res) => {
             if (DISABLE_ANONYMOUS) {
                 res.status(403);
-                return res;
+                return;
             } else {
                 const userUuid = v4();
                 const authToken = jwtTokenManager.createAuthToken(userUuid);
-                return res.json({
+                res.json({
                     authToken,
                     userUuid,
                 });
+                return;
             }
         });
     }
@@ -502,7 +504,6 @@ export class AuthenticateController extends BaseHttpController {
      *         description: Redirects the user to the profile screen of the admin
      */
     private profileCallback(): void {
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/profile-callback", async (req, res) => {
             const query = validateQuery(
                 req,

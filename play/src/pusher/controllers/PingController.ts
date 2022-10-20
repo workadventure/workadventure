@@ -52,45 +52,43 @@ export class PingController extends BaseHttpController {
          *               example: ko
          *
          */
-        this.app.get("/ping-backs", (req, res) => {
-            (async (): Promise<void> => {
-                const clients = await apiClientRepository.getAllClients();
+        this.app.get("/ping-backs", async (req, res) => {
+            const clients = await apiClientRepository.getAllClients();
 
-                const promises: Promise<PingMessage>[] = [];
-                for (const client of clients) {
-                    promises.push(
-                        new Promise<PingMessage>((resolve, reject) => {
-                            client.ping(
-                                new PingMessage(),
-                                new Metadata(),
-                                {
-                                    deadline: Date.now() + 1000,
-                                },
-                                (error, result) => {
-                                    if (error) {
-                                        reject(error);
-                                    } else {
-                                        resolve(result);
-                                    }
+            const promises: Promise<PingMessage>[] = [];
+            for (const client of clients) {
+                promises.push(
+                    new Promise<PingMessage>((resolve, reject) => {
+                        client.ping(
+                            new PingMessage(),
+                            new Metadata(),
+                            {
+                                deadline: Date.now() + 1000,
+                            },
+                            (error, result) => {
+                                if (error) {
+                                    reject(error);
+                                } else {
+                                    resolve(result);
                                 }
-                            );
-                        })
-                    );
+                            }
+                        );
+                    })
+                );
+            }
+
+            // Note: this call will take at most 1 second because we won't wait more for all the promises to resolve.
+            const pingsResult = await Promise.allSettled(promises);
+
+            for (const pingResult of pingsResult) {
+                if (pingResult.status === "rejected") {
+                    res.status(503).send("ko");
+                    return;
                 }
+            }
 
-                // Note: this call will take at most 1 second because we won't wait more for all the promises to resolve.
-                const pingsResult = await Promise.allSettled(promises);
-
-                for (const pingResult of pingsResult) {
-                    if (pingResult.status === "rejected") {
-                        res.status(503).send("ko");
-                        return;
-                    }
-                }
-
-                res.status(200).send("pong");
-                return;
-            })().catch((e) => console.error(e));
+            res.status(200).send("pong");
+            return;
         });
     }
 }

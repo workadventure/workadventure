@@ -98,7 +98,7 @@ export class MapController extends BaseHttpController {
          *                   example: https://example.com/logo_login.png
          *
          */
-        this.app.get("/map", (req: Request, res: Response) => {
+        this.app.get("/map", async (req: Request, res: Response) => {
             const query = validateQuery(
                 req,
                 res,
@@ -111,33 +111,31 @@ export class MapController extends BaseHttpController {
                 return;
             }
 
-            (async (): Promise<void> => {
-                try {
-                    let mapDetails = await adminService.fetchMapDetails(
-                        query.playUri,
-                        query.authToken,
-                        req.header("accept-language")
-                    );
+            try {
+                let mapDetails = await adminService.fetchMapDetails(
+                    query.playUri,
+                    query.authToken,
+                    req.header("accept-language")
+                );
 
-                    const mapDetailsParsed = isMapDetailsData.safeParse(mapDetails);
-                    if (DISABLE_ANONYMOUS && mapDetailsParsed.success) {
-                        mapDetails = mapDetailsParsed.data;
-                        mapDetails.authenticationMandatory = true;
-                    }
-
-                    res.json(mapDetails);
-                    return;
-                } catch (e) {
-                    if (e instanceof InvalidTokenError) {
-                        console.warn("Invalid token received", e);
-                        res.status(401);
-                        res.send("The Token is invalid");
-                        return;
-                    } else {
-                        this.castErrorToResponse(e, res);
-                    }
+                const mapDetailsParsed = isMapDetailsData.safeParse(mapDetails);
+                if (DISABLE_ANONYMOUS && mapDetailsParsed.success) {
+                    mapDetails = mapDetailsParsed.data;
+                    mapDetails.authenticationMandatory = true;
                 }
-            })().catch((e) => console.error(e));
+
+                res.json(mapDetails);
+                return;
+            } catch (e) {
+                if (e instanceof InvalidTokenError) {
+                    console.warn("Invalid token received", e);
+                    res.status(401);
+                    res.send("The Token is invalid");
+                    return;
+                } else {
+                    this.castErrorToResponse(e, res);
+                }
+            }
         });
     }
 }

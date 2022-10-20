@@ -2908,10 +2908,10 @@ human-signals@^2.1.0:
   resolved "https://registry.yarnpkg.com/human-signals/-/human-signals-2.1.0.tgz#dc91fcba42e4d06e4abaed33b3e7a3c02f514ea0"
   integrity sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==
 
-hyper-express@^6.4.10:
-  version "6.4.10"
-  resolved "https://registry.yarnpkg.com/hyper-express/-/hyper-express-6.4.10.tgz#fddd13f9fa4b4b7fa476295dd2c89f2abd518357"
-  integrity sha512-lrYfWdkYWmmgQD/96GPd0DsRSxeeTOrvD0DphR+8qHCtyB377orfxZj/9ZxPmvT7/d4jY92EYR2tdVpTUOCD9A==
+hyper-express@^6.4.11:
+  version "6.4.11"
+  resolved "https://registry.yarnpkg.com/hyper-express/-/hyper-express-6.4.11.tgz#509cd1bc47b166c56dd061da26ddf1229afd7218"
+  integrity sha512-N2kw09u+LPntnZD6O31rwhxLkc78Ilm3Q2PUmvzmcwaOaajPUz/V0ddsneoVErBROLWXLvxTB6MTU5wJ/+SwCQ==
   dependencies:
     "@types/busboy" "^0.3.1"
     "@types/express" "^4.17.13"

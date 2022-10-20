@@ -240,22 +240,31 @@ export class SwaggerController extends BaseHttpController {
             if (
                 fileParsed.name.startsWith(".") ||
                 ![".css", ".js", ".json", ".png", ".jpg", ".jpeg", ".html"].includes(fileParsed.ext)
-            )
-                return response.status(404).send("");
+            ) {
+                response.status(404).send("");
+                return;
+            }
 
             // Strip away '/assets' from the request path to get asset relative path
             const formattedPath = request.path.replace("/swagger-ui", "");
             const realPath = `${path.resolve("node_modules/swagger-ui-dist")}${formattedPath}`;
 
-            if (!fs.existsSync(realPath)) return response.status(404).send("");
+            if (!fs.existsSync(realPath)) {
+                response.status(404).send("");
+                return;
+            }
 
             const file = fs.readFileSync(realPath);
 
             // Return a 404 if no asset/file exists on the derived path
-            if (file === undefined) return response.status(404).send("");
+            if (file === undefined) {
+                response.status(404).send("");
+                return;
+            }
 
             // Set appropriate mime-type and serve file buffer as response body
-            return response.type(fileParsed.ext).send(file.buffer);
+            response.type(fileParsed.ext).send(file.buffer);
+            return;
         });
     }
 }

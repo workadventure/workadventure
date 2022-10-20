@@ -52,7 +52,8 @@ export class FrontController extends BaseHttpController {
         });
 
         this.app.get("/index.html", (req: Request, res: Response) => {
-            return res.status(303).redirect("/");
+            res.status(303).redirect("/");
+            return;
         });
 
         // this.app.get("/static/images/favicons/manifest.json", (req: Request, res: Response) => {
@@ -61,7 +62,8 @@ export class FrontController extends BaseHttpController {
 
         this.app.get("/*", (req: Request, res: Response) => {
             if (req.path.startsWith("/src") || req.path.startsWith("/node_modules")) {
-                return res.status(303).redirect(`${VITE_URL}${decodeURI(req.path)}`);
+                res.status(303).redirect(`${VITE_URL}${decodeURI(req.path)}`);
+                return;
             }
 
             const filePath = req.path.startsWith("/src") ? req.path.replace(/\/src/, "") : req.path;
@@ -69,16 +71,28 @@ export class FrontController extends BaseHttpController {
             const file = this.liveAssets.get(decodeURI(filePath));
 
             if (!file) {
-                return res.status(404).send();
+                res.status(404).send();
+                return;
             }
 
-            return res.type(file.extension).send(file.buffer);
+            res.type(file.extension).send(file.buffer);
+            return;
         });
     }
 
     private displayFront(res: Response, url: string) {
         (async () => {
-            const indexPath = process.env.NODE_ENV === "production" ? "public/index.html" : "index.html";
+            let indexPath: string;
+            if (fs.existsSync("index.html")) {
+                // In dev mode
+                indexPath = "index.html";
+            } else if (fs.existsSync("public/index.html")) {
+                // In prod mode
+                indexPath = "public/index.html";
+            } else {
+                throw new Error("Could not find index.html file");
+            }
+
             const file = fs.readFileSync(indexPath);
 
             if (!file) {
@@ -93,8 +107,13 @@ export class FrontController extends BaseHttpController {
                 return res.type("html").send(formattedFile);
             } catch (e) {
                 console.error(e);
-                return res.status(500).send();
+                res.status(500).send();
+                return;
             }
-        })().catch((e) => console.error(e));
+        })().catch((e) => {
+            console.error(e);
+            res.status(500).send();
+            return;
+        });
     }
 }

@@ -42,8 +42,7 @@ export class AdminController extends BaseHttpController {
      *         example: "ok"
      */
     receiveRoomEditionPrompt(): void {
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.app.post("/room/refresh", { middlewares: [adminToken] }, async (req: Request, res: Response) => {
+        this.app.post("/room/refresh", [adminToken], async (req: Request, res: Response) => {
             const body = await req.json();
 
             try {
@@ -109,8 +108,7 @@ export class AdminController extends BaseHttpController {
      *         example: "ok"
      */
     receiveGlobalMessagePrompt(): void {
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.app.post("/message", { middlewares: [adminToken] }, async (req: Request, res: Response) => {
+        this.app.post("/message", [adminToken], async (req: Request, res: Response) => {
             const body = await req.json();
 
             try {
@@ -185,8 +183,7 @@ export class AdminController extends BaseHttpController {
      *                 type: integer
      */
     getRoomsList(): void {
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.app.get("/rooms", { middlewares: [adminToken] }, async (req: Request, res: Response) => {
+        this.app.get("/rooms", {}, [adminToken], async (req: Request, res: Response) => {
             try {
                 const roomClients = await apiClientRepository.getAllClients();
 

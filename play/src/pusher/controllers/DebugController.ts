@@ -7,15 +7,17 @@ export class DebugController extends BaseHttpController {
     routes(): void {
         this.app.get("/dump", (req, res) => {
             if (ADMIN_API_TOKEN === "") {
-                return res.status(401).send("No token configured!");
+                res.status(401).send("No token configured!");
+                return;
             }
             if (req.query.token !== ADMIN_API_TOKEN) {
-                return res.status(401).send("Invalid token sent!");
+                res.status(401).send("Invalid token sent!");
+                return;
             }
 
             const worlds = Object.fromEntries(socketManager.getWorlds().entries());
 
-            return res.json(
+            res.json(
                 stringify(worlds, (key: unknown, value: unknown) => {
                     if (value instanceof Map) {
                         const obj: any = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -34,6 +36,7 @@ export class DebugController extends BaseHttpController {
                     }
                 })
             );
+            return;
         });
     }
 }

@@ -255,304 +255,307 @@ export class IoSocketController {
             idleTimeout: SOCKET_IDLE_TIMER,
             maxPayloadLength: 16 * 1024 * 1024,
             maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            upgrade: async (res, req, context) => {
-                /* Keep track of abortions */
-                const upgradeAborted = { aborted: false };
+            upgrade: (res, req, context) => {
+                (async () => {
+                    /* Keep track of abortions */
+                    const upgradeAborted = { aborted: false };
 
-                res.onAborted(() => {
-                    /* We can simply signal that we were aborted */
-                    upgradeAborted.aborted = true;
-                });
+                    res.onAborted(() => {
+                        /* We can simply signal that we were aborted */
+                        upgradeAborted.aborted = true;
+                    });
 
-                const query = qs.parse(req.getQuery());
-                const websocketKey = req.getHeader("sec-websocket-key");
-                const websocketProtocol = req.getHeader("sec-websocket-protocol");
-                const websocketExtensions = req.getHeader("sec-websocket-extensions");
-                const IPAddress = req.getHeader("x-forwarded-for");
-                const locale = req.getHeader("accept-language");
+                    const query = qs.parse(req.getQuery());
+                    const websocketKey = req.getHeader("sec-websocket-key");
+                    const websocketProtocol = req.getHeader("sec-websocket-protocol");
+                    const websocketExtensions = req.getHeader("sec-websocket-extensions");
+                    const IPAddress = req.getHeader("x-forwarded-for");
+                    const locale = req.getHeader("accept-language");
 
-                const roomId = query.roomId;
-                try {
-                    if (typeof roomId !== "string") {
-                        throw new Error("Undefined room ID: ");
-                    }
-
-                    const token = query.token;
-                    const x = Number(query.x);
-                    const y = Number(query.y);
-                    const top = Number(query.top);
-                    const bottom = Number(query.bottom);
-                    const left = Number(query.left);
-                    const right = Number(query.right);
-                    const name = query.name;
-                    const availabilityStatus = Number(query.availabilityStatus);
-                    const version = query.version;
-
-                    if (version !== apiVersionHash) {
-                        if (upgradeAborted.aborted) {
-                            // If the response points to nowhere, don't attempt an upgrade
-                            return;
-                        }
-                        return res.upgrade(
-                            {
-                                rejected: true,
-                                reason: "error",
-                                error: {
-                                    type: "retry",
-                                    title: "Please refresh",
-                                    subtitle: "New version available",
-                                    image: "/resources/icons/new_version.png",
-                                    code: "NEW_VERSION",
-                                    details: "A new version of WorkAdventure is available. Please refresh your window",
-                                    canRetryManual: true,
-                                    buttonTitle: "Refresh",
-                                    timeToRetry: 999999,
-                                },
-                            } as UpgradeFailedData,
-                            websocketKey,
-                            websocketProtocol,
-                            websocketExtensions,
-                            context
-                        );
-                    }
-
-                    let companion: CompanionMessage | undefined = undefined;
-
-                    if (typeof query.companion === "string") {
-                        companion = new CompanionMessage();
-                        companion.setName(query.companion);
-                    }
-
-                    if (typeof name !== "string") {
-                        throw new Error("Expecting name");
-                    }
-                    if (typeof availabilityStatus !== "number") {
-                        throw new Error("Expecting availability status");
-                    }
-                    if (name === "") {
-                        throw new Error("No empty name");
-                    }
-                    let characterLayers: string[];
-
-                    if (!query.characterLayers) {
-                        throw new Error("Expecting skin");
-                    }
-                    if (typeof query.characterLayers === "string") {
-                        characterLayers = [query.characterLayers];
-                    } else {
-                        const checkCharacterLayers = z.string().array().safeParse(query.characterLayers);
-                        if (!checkCharacterLayers.success) {
-                            throw new Error("Unknown layers data");
-                        }
-
-                        characterLayers = checkCharacterLayers.data;
-                    }
-
-                    const tokenData = token && typeof token === "string" ? jwtTokenManager.verifyJWTToken(token) : null;
-
-                    if (DISABLE_ANONYMOUS && !tokenData) {
-                        throw new Error("Expecting token");
-                    }
-
-                    const userIdentifier = tokenData ? tokenData.identifier : "";
-                    const isLogged = !!tokenData?.accessToken;
-
-                    let memberTags: string[] = [];
-                    let memberVisitCardUrl: string | null = null;
-                    let memberMessages: unknown;
-                    let memberUserRoomToken: string | undefined;
-                    let memberTextures: WokaDetail[] = [];
-                    let userData: FetchMemberDataByUuidResponse = {
-                        email: userIdentifier,
-                        userUuid: userIdentifier,
-                        tags: [],
-                        visitCardUrl: null,
-                        textures: [],
-                        messages: [],
-                        anonymous: true,
-                        userRoomToken: undefined,
-                        jabberId: null,
-                        jabberPassword: null,
-                        mucRooms: [],
-                        activatedInviteUser: true,
-                    };
-
-                    let characterLayerObjs: WokaDetail[];
-
+                    const roomId = query.roomId;
                     try {
-                        try {
-                            userData = await adminService.fetchMemberDataByUuid(
-                                userIdentifier,
-                                tokenData?.accessToken,
-                                roomId,
-                                IPAddress,
-                                characterLayers,
-                                locale
-                            );
-                        } catch (err) {
-                            if (Axios.isAxiosError(err)) {
-                                const errorType = isErrorApiData.safeParse(err?.response?.data);
-                                if (errorType.success) {
-                                    if (upgradeAborted.aborted) {
-                                        // If the response points to nowhere, don't attempt an upgrade
-                                        return;
-                                    }
-                                    return res.upgrade(
-                                        {
-                                            rejected: true,
-                                            reason: "error",
-                                            status: err?.response?.status,
-                                            error: errorType.data,
-                                        } as UpgradeFailedData,
-                                        websocketKey,
-                                        websocketProtocol,
-                                        websocketExtensions,
-                                        context
-                                    );
-                                } else {
-                                    if (upgradeAborted.aborted) {
-                                        // If the response points to nowhere, don't attempt an upgrade
-                                        return;
-                                    }
-                                    return res.upgrade(
-                                        {
-                                            rejected: true,
-                                            reason: null,
-                                            status: 500,
-                                            message: err?.response?.data,
-                                            roomId: roomId,
-                                        } as UpgradeFailedData,
-                                        websocketKey,
-                                        websocketProtocol,
-                                        websocketExtensions,
-                                        context
-                                    );
-                                }
+                        if (typeof roomId !== "string") {
+                            throw new Error("Undefined room ID: ");
+                        }
+
+                        const token = query.token;
+                        const x = Number(query.x);
+                        const y = Number(query.y);
+                        const top = Number(query.top);
+                        const bottom = Number(query.bottom);
+                        const left = Number(query.left);
+                        const right = Number(query.right);
+                        const name = query.name;
+                        const availabilityStatus = Number(query.availabilityStatus);
+                        const version = query.version;
+
+                        if (version !== apiVersionHash) {
+                            if (upgradeAborted.aborted) {
+                                // If the response points to nowhere, don't attempt an upgrade
+                                return;
                             }
-                            throw err;
+                            return res.upgrade(
+                                {
+                                    rejected: true,
+                                    reason: "error",
+                                    error: {
+                                        type: "retry",
+                                        title: "Please refresh",
+                                        subtitle: "New version available",
+                                        image: "/resources/icons/new_version.png",
+                                        code: "NEW_VERSION",
+                                        details:
+                                            "A new version of WorkAdventure is available. Please refresh your window",
+                                        canRetryManual: true,
+                                        buttonTitle: "Refresh",
+                                        timeToRetry: 999999,
+                                    },
+                                } as UpgradeFailedData,
+                                websocketKey,
+                                websocketProtocol,
+                                websocketExtensions,
+                                context
+                            );
                         }
-                        memberMessages = userData.messages;
-                        memberTags = userData.tags;
-                        memberVisitCardUrl = userData.visitCardUrl;
-                        memberTextures = userData.textures;
-                        memberUserRoomToken = userData.userRoomToken;
-                        characterLayerObjs = memberTextures;
-                    } catch (e) {
-                        console.log(
-                            "access not granted for user " + (userIdentifier || "anonymous") + " and room " + roomId
-                        );
-                        console.error(e);
-                        throw new Error("User cannot access this world");
-                    }
 
-                    if (!userData.jabberId) {
-                        // If there is no admin, or no user, let's log users using JWT tokens
-                        userData.jabberId = jid(userIdentifier, EJABBERD_DOMAIN).toString();
-                        if (EJABBERD_JWT_SECRET) {
-                            userData.jabberPassword = Jwt.sign({ jid: userData.jabberId }, EJABBERD_JWT_SECRET, {
-                                expiresIn: "1d",
-                                algorithm: "HS256",
-                            });
+                        let companion: CompanionMessage | undefined = undefined;
+
+                        if (typeof query.companion === "string") {
+                            companion = new CompanionMessage();
+                            companion.setName(query.companion);
+                        }
+
+                        if (typeof name !== "string") {
+                            throw new Error("Expecting name");
+                        }
+                        if (typeof availabilityStatus !== "number") {
+                            throw new Error("Expecting availability status");
+                        }
+                        if (name === "") {
+                            throw new Error("No empty name");
+                        }
+                        let characterLayers: string[];
+
+                        if (!query.characterLayers) {
+                            throw new Error("Expecting skin");
+                        }
+                        if (typeof query.characterLayers === "string") {
+                            characterLayers = [query.characterLayers];
                         } else {
-                            userData.jabberPassword = "no_password_set";
+                            const checkCharacterLayers = z.string().array().safeParse(query.characterLayers);
+                            if (!checkCharacterLayers.success) {
+                                throw new Error("Unknown layers data");
+                            }
+
+                            characterLayers = checkCharacterLayers.data;
                         }
-                    }
 
-                    // Generate characterLayers objects from characterLayers string[]
-                    /*const characterLayerObjs: CharacterLayer[] =
-                            SocketManager.mergeCharacterLayersAndCustomTextures(characterLayers, memberTextures);*/
+                        const tokenData =
+                            token && typeof token === "string" ? jwtTokenManager.verifyJWTToken(token) : null;
 
-                    if (upgradeAborted.aborted) {
-                        console.log("Ouch! Client disconnected before we could upgrade it!");
-                        /* You must not upgrade now */
-                        return;
-                    }
+                        if (DISABLE_ANONYMOUS && !tokenData) {
+                            throw new Error("Expecting token");
+                        }
 
-                    /* This immediately calls open handler, you must not use res after this call */
-                    res.upgrade(
-                        {
-                            // Data passed here is accessible on the "websocket" socket object.
-                            rejected: false,
-                            token,
-                            userUuid: userData.userUuid,
-                            IPAddress,
-                            userIdentifier,
-                            roomId,
-                            name,
-                            companion,
-                            availabilityStatus,
-                            characterLayers: characterLayerObjs,
-                            messages: memberMessages,
-                            tags: memberTags,
-                            visitCardUrl: memberVisitCardUrl,
-                            userRoomToken: memberUserRoomToken,
-                            textures: memberTextures,
-                            jabberId: userData.jabberId,
-                            jabberPassword: userData.jabberPassword,
-                            mucRooms: userData.mucRooms,
-                            activatedInviteUser: userData.activatedInviteUser,
-                            applications: userData.applications,
-                            position: {
-                                x: x,
-                                y: y,
-                                direction: "down",
-                                moving: false,
-                            } as PointInterface,
-                            viewport: {
-                                top,
-                                right,
-                                bottom,
-                                left,
-                            },
-                            isLogged,
-                        } as UpgradeData,
-                        /* Spell these correctly */
-                        websocketKey,
-                        websocketProtocol,
-                        websocketExtensions,
-                        context
-                    );
-                } catch (e) {
-                    if (e instanceof Error) {
-                        if (!(e instanceof InvalidTokenError)) {
+                        const userIdentifier = tokenData ? tokenData.identifier : "";
+                        const isLogged = !!tokenData?.accessToken;
+
+                        let memberTags: string[] = [];
+                        let memberVisitCardUrl: string | null = null;
+                        let memberMessages: unknown;
+                        let memberUserRoomToken: string | undefined;
+                        let memberTextures: WokaDetail[] = [];
+                        let userData: FetchMemberDataByUuidResponse = {
+                            email: userIdentifier,
+                            userUuid: userIdentifier,
+                            tags: [],
+                            visitCardUrl: null,
+                            textures: [],
+                            messages: [],
+                            anonymous: true,
+                            userRoomToken: undefined,
+                            jabberId: null,
+                            jabberPassword: null,
+                            mucRooms: [],
+                            activatedInviteUser: true,
+                        };
+
+                        let characterLayerObjs: WokaDetail[];
+
+                        try {
+                            try {
+                                userData = await adminService.fetchMemberDataByUuid(
+                                    userIdentifier,
+                                    tokenData?.accessToken,
+                                    roomId,
+                                    IPAddress,
+                                    characterLayers,
+                                    locale
+                                );
+                            } catch (err) {
+                                if (Axios.isAxiosError(err)) {
+                                    const errorType = isErrorApiData.safeParse(err?.response?.data);
+                                    if (errorType.success) {
+                                        if (upgradeAborted.aborted) {
+                                            // If the response points to nowhere, don't attempt an upgrade
+                                            return;
+                                        }
+                                        return res.upgrade(
+                                            {
+                                                rejected: true,
+                                                reason: "error",
+                                                status: err?.response?.status,
+                                                error: errorType.data,
+                                            } as UpgradeFailedData,
+                                            websocketKey,
+                                            websocketProtocol,
+                                            websocketExtensions,
+                                            context
+                                        );
+                                    } else {
+                                        if (upgradeAborted.aborted) {
+                                            // If the response points to nowhere, don't attempt an upgrade
+                                            return;
+                                        }
+                                        return res.upgrade(
+                                            {
+                                                rejected: true,
+                                                reason: null,
+                                                status: 500,
+                                                message: err?.response?.data,
+                                                roomId: roomId,
+                                            } as UpgradeFailedData,
+                                            websocketKey,
+                                            websocketProtocol,
+                                            websocketExtensions,
+                                            context
+                                        );
+                                    }
+                                }
+                                throw err;
+                            }
+                            memberMessages = userData.messages;
+                            memberTags = userData.tags;
+                            memberVisitCardUrl = userData.visitCardUrl;
+                            memberTextures = userData.textures;
+                            memberUserRoomToken = userData.userRoomToken;
+                            characterLayerObjs = memberTextures;
+                        } catch (e) {
+                            console.log(
+                                "access not granted for user " + (userIdentifier || "anonymous") + " and room " + roomId
+                            );
                             console.error(e);
+                            throw new Error("User cannot access this world");
                         }
+
+                        if (!userData.jabberId) {
+                            // If there is no admin, or no user, let's log users using JWT tokens
+                            userData.jabberId = jid(userIdentifier, EJABBERD_DOMAIN).toString();
+                            if (EJABBERD_JWT_SECRET) {
+                                userData.jabberPassword = Jwt.sign({ jid: userData.jabberId }, EJABBERD_JWT_SECRET, {
+                                    expiresIn: "1d",
+                                    algorithm: "HS256",
+                                });
+                            } else {
+                                userData.jabberPassword = "no_password_set";
+                            }
+                        }
+
+                        // Generate characterLayers objects from characterLayers string[]
+                        /*const characterLayerObjs: CharacterLayer[] =
+                                SocketManager.mergeCharacterLayersAndCustomTextures(characterLayers, memberTextures);*/
+
                         if (upgradeAborted.aborted) {
-                            // If the response points to nowhere, don't attempt an upgrade
+                            console.log("Ouch! Client disconnected before we could upgrade it!");
+                            /* You must not upgrade now */
                             return;
                         }
+
+                        /* This immediately calls open handler, you must not use res after this call */
                         res.upgrade(
                             {
-                                rejected: true,
-                                reason: e instanceof InvalidTokenError ? tokenInvalidException : null,
-                                message: e.message,
+                                // Data passed here is accessible on the "websocket" socket object.
+                                rejected: false,
+                                token,
+                                userUuid: userData.userUuid,
+                                IPAddress,
+                                userIdentifier,
                                 roomId,
-                            } as UpgradeFailedData,
+                                name,
+                                companion,
+                                availabilityStatus,
+                                characterLayers: characterLayerObjs,
+                                messages: memberMessages,
+                                tags: memberTags,
+                                visitCardUrl: memberVisitCardUrl,
+                                userRoomToken: memberUserRoomToken,
+                                textures: memberTextures,
+                                jabberId: userData.jabberId,
+                                jabberPassword: userData.jabberPassword,
+                                mucRooms: userData.mucRooms,
+                                activatedInviteUser: userData.activatedInviteUser,
+                                applications: userData.applications,
+                                position: {
+                                    x: x,
+                                    y: y,
+                                    direction: "down",
+                                    moving: false,
+                                } as PointInterface,
+                                viewport: {
+                                    top,
+                                    right,
+                                    bottom,
+                                    left,
+                                },
+                                isLogged,
+                            } as UpgradeData,
+                            /* Spell these correctly */
                             websocketKey,
                             websocketProtocol,
                             websocketExtensions,
                             context
                         );
-                    } else {
-                        if (upgradeAborted.aborted) {
-                            // If the response points to nowhere, don't attempt an upgrade
-                            return;
+                    } catch (e) {
+                        if (e instanceof Error) {
+                            if (!(e instanceof InvalidTokenError)) {
+                                console.error(e);
+                            }
+                            if (upgradeAborted.aborted) {
+                                // If the response points to nowhere, don't attempt an upgrade
+                                return;
+                            }
+                            res.upgrade(
+                                {
+                                    rejected: true,
+                                    reason: e instanceof InvalidTokenError ? tokenInvalidException : null,
+                                    message: e.message,
+                                    roomId,
+                                } as UpgradeFailedData,
+                                websocketKey,
+                                websocketProtocol,
+                                websocketExtensions,
+                                context
+                            );
+                        } else {
+                            if (upgradeAborted.aborted) {
+                                // If the response points to nowhere, don't attempt an upgrade
+                                return;
+                            }
+                            res.upgrade(
+                                {
+                                    rejected: true,
+                                    reason: null,
+                                    message: "500 Internal Server Error",
+                                    roomId,
+                                } as UpgradeFailedData,
+                                websocketKey,
+                                websocketProtocol,
+                                websocketExtensions,
+                                context
+                            );
                         }
-                        res.upgrade(
-                            {
-                                rejected: true,
-                                reason: null,
-                                message: "500 Internal Server Error",
-                                roomId,
-                            } as UpgradeFailedData,
-                            websocketKey,
-                            websocketProtocol,
-                            websocketExtensions,
-                            context
-                        );
                     }
-                }
+                })().catch((e) => console.error(e));
             },
             /* Handlers */
             open: (_ws: WebSocket) => {

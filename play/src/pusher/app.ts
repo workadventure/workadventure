@@ -13,6 +13,7 @@ import { ENABLE_OPENAPI_ENDPOINT, PLAY_URL } from "./enums/EnvironmentVariable";
 import { PingController } from "./controllers/PingController";
 import { IoSocketChatController } from "./controllers/IoSocketChatController";
 import { FrontController } from "./controllers/FrontController";
+import fs from "fs";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LiveDirectory = require("live-directory");
 
@@ -43,14 +44,25 @@ class App {
             })
         );
 
+        let path: string;
+        if (fs.existsSync("public")) {
+            // In dev mode
+            path = "public";
+        } else if (fs.existsSync("dist/public")) {
+            // In prod mode
+            path = "dist/public";
+        } else {
+            throw new Error("Could not find public folder");
+        }
+
         /**
          * Todo: Replace this lib by the embed static middleware of HyperExpress
          *       when the v3.0 will be released.
          */
         const liveAssets = new LiveDirectory({
-            path: "public",
+            path,
             keep: {
-                extensions: [".css", ".js", ".png", ".svg", ".ico", ".xml", ".mp3", ".json", ".html", ".ttf"],
+                extensions: [".css", ".js", ".png", ".svg", ".ico", ".xml", ".mp3", ".json", ".html", ".ttf", ".woff2"],
             },
         });
 
