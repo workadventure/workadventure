@@ -7,10 +7,11 @@
     import Woka from "../Woka/Woka.svelte";
     import { Streamable } from "../../Stores/StreamableCollectionStore";
     import { onMount } from "svelte";
-    import { EmbedScreen } from "../../Stores/EmbedScreensStore";
+    import { EmbedScreen, embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
     import BanReportBox from "./BanReportBox.svelte";
     import microphoneOffImg from "../images/microphone-off.png";
+    import { LayoutMode } from "../../WebRtc/LayoutManager";
 
     let videoContainer: HTMLDivElement;
     export let peer: VideoPeer;
@@ -48,11 +49,18 @@
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
     <div
-        style="background-color: {backGroundColor}; color: {textColor}"
-        class="tw-w-full tw-rounded tw-px-3 tw-flex tw-flex-row tw-items-center"
+        style={$embedScreenLayoutStore === LayoutMode.VideoChat
+            ? `border: solid 2px ${backGroundColor}; color: ${textColor}`
+            : `background-color: ${backGroundColor}; color: ${textColor}`}
+        class={($embedScreenLayoutStore === LayoutMode.VideoChat ? "tw-items-end" : "tw-items-center tw-px-3") +
+            " tw-w-full tw-rounded tw-flex tw-flex-row tw-relative"}
     >
         <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
-        <span class="tw-font-semibold tw-text-sm tw-not-italic tw-break-words tw-px-2 tw-overflow-y-auto tw-max-h-10"
+        <span
+            style={$embedScreenLayoutStore === LayoutMode.VideoChat
+                ? `background-color: ${backGroundColor}; color: ${textColor}`
+                : ""}
+            class="tw-font-semibold tw-text-sm tw-not-italic tw-break-words tw-px-2 tw-overflow-y-auto tw-max-h-10"
             >{name}</span
         >
         {#if $constraintStore && $constraintStore.audio !== false}

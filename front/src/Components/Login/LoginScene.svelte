@@ -50,6 +50,7 @@
     >
         <section class="text-center tw-flex tw-h-fit tw-flex-col">
             <h2 class="tw-text-light-blue tw-text-base tw-font-normal">{$LL.login.input.name.placeholder()}</h2>
+            <!-- svelte-ignore a11y-autofocus -->
             <input
                 type="text"
                 name="loginSceneName"

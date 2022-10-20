@@ -8,6 +8,7 @@
     import { displayableLocales, setCurrentLocale } from "../../i18n/locales";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
+    import { onMount } from "svelte";
 
     import infoImg from "../images/info.svg";
     import { iframeListener } from "../../Api/IframeListener";
@@ -27,6 +28,8 @@
     let previewValueLocale = valueLocale;
     let previewCameraPrivacySettings = valueCameraPrivacySettings;
     let previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
+
+    let divContainer: HTMLDivElement;
 
     async function saveSetting() {
         let change = false;
@@ -112,10 +115,17 @@
         menuVisiblilityStore.set(false);
     }
 
-    const isMobile = isMediaBreakpointUp("md");
+    let isMobile = isMediaBreakpointUp("md");
+    const resizeObserver = new ResizeObserver(() => {
+        isMobile = isMediaBreakpointUp("md");
+    });
+
+    onMount(() => {
+        resizeObserver.observe(divContainer);
+    });
 </script>
 
-<div on:submit|preventDefault={saveSetting}>
+<div on:submit|preventDefault={saveSetting} bind:this={divContainer}>
     <section class="bottom-separator">
         <h3 class="blue-title">{$LL.menu.settings.videoQuality.title()}</h3>
         <select bind:value={valueVideo} class="tw-w-full">
