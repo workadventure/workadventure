@@ -56,12 +56,12 @@ export function rebootTraefik(): void {
     dockerCompose('up --force-recreate -d reverse-proxy');
 }
 
-export async function rebootPusher(): Promise<void> {
-    dockerCompose('up --force-recreate -d pusher');
+export async function rebootPlay(): Promise<void> {
+    dockerCompose('up --force-recreate -d play');
 }
 
-export async function stopPusher(): Promise<void> {
-    dockerCompose('stop pusher');
+export async function stopPlay(): Promise<void> {
+    dockerCompose('stop play');
 }
 
 export async function stopEjabberd(): Promise<void> {
