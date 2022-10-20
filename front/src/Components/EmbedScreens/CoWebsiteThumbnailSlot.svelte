@@ -112,7 +112,7 @@
     on:click={onClick}
 >
     <img
-        class="cowebsite-icon noselect nes-pointer"
+        class="cowebsite-icon noselect clickable tw-bg-dark-blue/50 tw-p-0 tw-border-medium-purple tw-border-solid tw-rounded tw-pointer-events-auto hover:tw-border-light-purple hover:tw-bg-dark-blue/75 hover:tw-scale-105 tw-transition-all"
         class:hide={!iconLoaded}
         class:meeting={isMeeting}
         bind:this={icon}
@@ -138,7 +138,8 @@
                 begin="0s"
                 calcMode="discrete"
             />
-        </rect><rect x="40" y="19" width="20" height="20" fill="#14304c">
+        </rect>
+        <rect x="40" y="19" width="20" height="20" fill="#14304c">
             <animate
                 attributeName="fill"
                 values="#365dff;#14304c;#14304c"
@@ -148,7 +149,8 @@
                 begin="0.125s"
                 calcMode="discrete"
             />
-        </rect><rect x="61" y="19" width="20" height="20" fill="#14304c">
+        </rect>
+        <rect x="61" y="19" width="20" height="20" fill="#14304c">
             <animate
                 attributeName="fill"
                 values="#365dff;#14304c;#14304c"
@@ -158,7 +160,8 @@
                 begin="0.25s"
                 calcMode="discrete"
             />
-        </rect><rect x="19" y="40" width="20" height="20" fill="#14304c">
+        </rect>
+        <rect x="19" y="40" width="20" height="20" fill="#14304c">
             <animate
                 attributeName="fill"
                 values="#365dff;#14304c;#14304c"
@@ -168,7 +171,8 @@
                 begin="0.875s"
                 calcMode="discrete"
             />
-        </rect><rect x="61" y="40" width="20" height="20" fill="#14304c">
+        </rect>
+        <rect x="61" y="40" width="20" height="20" fill="#14304c">
             <animate
                 attributeName="fill"
                 values="#365dff;#14304c;#14304c"
@@ -178,7 +182,8 @@
                 begin="0.375s"
                 calcMode="discrete"
             />
-        </rect><rect x="19" y="61" width="20" height="20" fill="#14304c">
+        </rect>
+        <rect x="19" y="61" width="20" height="20" fill="#14304c">
             <animate
                 attributeName="fill"
                 values="#365dff;#14304c;#14304c"
@@ -188,7 +193,8 @@
                 begin="0.75s"
                 calcMode="discrete"
             />
-        </rect><rect x="40" y="61" width="20" height="20" fill="#14304c">
+        </rect>
+        <rect x="40" y="61" width="20" height="20" fill="#14304c">
             <animate
                 attributeName="fill"
                 values="#365dff;#14304c;#14304c"
@@ -198,7 +204,8 @@
                 begin="0.625s"
                 calcMode="discrete"
             />
-        </rect><rect x="61" y="61" width="20" height="20" fill="#14304c">
+        </rect>
+        <rect x="61" y="61" width="20" height="20" fill="#14304c">
             <animate
                 attributeName="fill"
                 values="#365dff;#14304c;#14304c"
@@ -212,7 +219,7 @@
     </svg>
 
     <!-- TODO use trigger message property -->
-    <div class="cowebsite-hover" style="width: max-content;">
+    <div class="cowebsite-hover tw-opacity-1 md:tw-opacity-0" style="width: max-content;">
         <p>{$LL.cowebsite.open()} / {$LL.cowebsite.close()} <b>{cowebsiteName}</b></p>
     </div>
 </div>
@@ -221,30 +228,9 @@
     .cowebsite-thumbnail {
         cursor: url("../../../style/images/cursor_pointer.png"), pointer;
         position: relative;
-        padding: 0;
-        background-color: rgba(#000000, 0.6);
         margin: 12px;
         margin-top: auto;
         margin-bottom: auto;
-
-        &::before {
-            content: "";
-            position: absolute;
-            width: 58px;
-            height: 58px;
-            left: -8px;
-            top: -8px;
-
-            margin: 4px;
-
-            border-style: solid;
-            border-width: 4px;
-            border-image-slice: 3;
-            border-image-width: 3;
-            border-image-repeat: stretch;
-            border-image-source: url('data:image/svg+xml;utf8,<?xml version="1.0" encoding="UTF-8" ?><svg version="1.1" width="8" height="8" xmlns="http://www.w3.org/2000/svg"><path d="M3 1 h1 v1 h-1 z M4 1 h1 v1 h-1 z M2 2 h1 v1 h-1 z M5 2 h1 v1 h-1 z M1 3 h1 v1 h-1 z M6 3 h1 v1 h-1 z M1 4 h1 v1 h-1 z M6 4 h1 v1 h-1 z M2 5 h1 v1 h-1 z M5 5 h1 v1 h-1 z M3 6 h1 v1 h-1 z M4 6 h1 v1 h-1 z" fill="rgb(33,37,41)" /></svg>');
-            border-image-outset: 1;
-        }
 
         &:not(.vertical) {
             transition: all 300ms;
@@ -265,7 +251,6 @@
             }
 
             .cowebsite-hover {
-                display: block;
                 width: max-content !important;
                 top: -4px;
                 left: 55px;
@@ -354,15 +339,7 @@
             }
         }
 
-        &:hover {
-            .cowebsite-hover {
-                display: block;
-                width: max-content !important;
-            }
-        }
-
         .cowebsite-hover {
-            display: none;
             position: absolute;
             background-color: rgba(0, 0, 0, 0.6);
             top: -40px;
@@ -377,6 +354,13 @@
 
             p {
                 margin-bottom: 0;
+            }
+        }
+
+        &:hover {
+            .cowebsite-hover {
+                opacity: 1;
+                width: max-content !important;
             }
         }
     }

@@ -6,6 +6,8 @@
     import { afterUpdate, onMount } from "svelte";
     import { isMediaBreakpointDown, isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
     import { peerStore } from "../../../Stores/PeerStore";
+    import { myCameraStore } from "../../../Stores/MyMediaStore";
+    import MyCamera from "../../MyCamera.svelte";
 
     function closeCoWebsite() {
         if ($highlightedEmbedScreen?.type === "cowebsite") {
@@ -28,11 +30,11 @@
     let layoutDom: HTMLDivElement;
 
     let displayCoWebsiteContainer = isMediaBreakpointDown("lg");
-    let displayFullMedias = isMediaBreakpointUp("sm");
+    let displayFullMedias = isMediaBreakpointUp("md");
 
     const resizeObserver = new ResizeObserver(() => {
         displayCoWebsiteContainer = isMediaBreakpointDown("lg");
-        displayFullMedias = isMediaBreakpointUp("sm");
+        displayFullMedias = isMediaBreakpointUp("md");
 
         if (!displayCoWebsiteContainer && $highlightedEmbedScreen && $highlightedEmbedScreen.type === "cowebsite") {
             highlightedEmbedScreen.removeHighlight();
@@ -50,11 +52,14 @@
 
 <div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias}>
     {#if displayFullMedias}
-        <div id="full-medias">
+        <div id="full-medias" class="tw-z-[300] tw-relative tw-mx-auto tw-top-8 tw-h-1/2 tw-overflow-y-auto">
             <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
+            {#if $myCameraStore}
+                <MyCamera />
+            {/if}
         </div>
     {:else}
-        <div id="embed-left-block" class:full={$peerStore && $peerStore.size === 0}>
+        <div id="embed-left-block">
             <div id="main-embed-screen">
                 {#if $highlightedEmbedScreen}
                     {#if $highlightedEmbedScreen.type === "streamable"}
@@ -74,8 +79,8 @@
                                 />
                                 <div class="actions">
                                     <button type="button" class="nes-btn is-error close" on:click={closeCoWebsite}
-                                        >&times;</button
-                                    >
+                                        >&times;
+                                    </button>
                                 </div>
                             </div>
                         {/key}
@@ -84,13 +89,22 @@
             </div>
         </div>
 
-        {#if $peerStore.size > 0}
-            <CamerasContainer highlightedEmbedScreen={$highlightedEmbedScreen} />
+        {#if $peerStore.size > 0 || $myCameraStore}
+            <div class="tw-relative tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4">
+                {#if $peerStore.size > 0}
+                    <CamerasContainer highlightedEmbedScreen={$highlightedEmbedScreen} />
+                {/if}
+                {#if $myCameraStore}
+                    <MyCamera />
+                {/if}
+            </div>
         {/if}
     {/if}
 </div>
 
 <style lang="scss">
+    @import "../../../../style/breakpoints.scss";
+
     #presentation-layout {
         height: 100%;
         width: 100%;
@@ -112,11 +126,6 @@
         flex: 0 0 75%;
         height: 100%;
         width: 75%;
-
-        &.full {
-            flex: 0 0 98% !important;
-            width: 98% !important;
-        }
     }
 
     #main-embed-screen {
@@ -134,6 +143,7 @@
                 background-color: rgba(#000000, 0.6);
                 margin: 0 !important;
                 padding: 0 !important;
+
                 .actions {
                     z-index: 151;
                     position: absolute;
@@ -150,6 +160,12 @@
                     }
                 }
             }
+        }
+    }
+
+    @include media-breakpoint-only(md) {
+        #embed-left-block {
+            flex: 0 0 65%;
         }
     }
 </style>

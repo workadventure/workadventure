@@ -20,9 +20,10 @@
     }
 </script>
 
-<div class="video-container screen-blocker {cssClass ? cssClass : ''}" class:hide={!stream}>
+<div class="video-container {cssClass ? cssClass : ''}" class:hide={!stream}>
     {#if stream}
         <video
+            class="tw-h-full tw-max-w-full tw-mx-auto tw-rounded screen-blocker"
             use:srcObject={stream}
             autoplay
             muted

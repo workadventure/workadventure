@@ -14,6 +14,7 @@ import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
 
 import deepEqual from "fast-deep-equal";
+import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -122,16 +123,30 @@ const userMoved5SecondsAgoStore = readable(false, function start(set) {
 /**
  * A store containing whether the mouse is getting close the bottom right corner.
  */
-const mouseInBottomRight = readable(false, function start(set) {
-    let lastInBottomRight = false;
+const mouseInCameraTriggerArea = readable(false, function start(set) {
+    let lastInTriggerArea = false;
     const gameDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>("game");
 
     const detectInBottomRight = (event: MouseEvent) => {
+        const isSmallScreen = isMediaBreakpointUp("md");
         const rect = gameDiv.getBoundingClientRect();
-        const inBottomRight = event.x - rect.left > (rect.width * 3) / 4 && event.y - rect.top > (rect.height * 3) / 4;
-        if (inBottomRight !== lastInBottomRight) {
-            lastInBottomRight = inBottomRight;
-            set(inBottomRight);
+
+        if (!isSmallScreen) {
+            const inBottomRight =
+                event.x - rect.left > (rect.width * 3) / 4 && event.y - rect.top > (rect.height * 3) / 4; //Mouse's x is further than 3/4 of the width and lower than 3/4 starting from top
+            if (inBottomRight !== lastInTriggerArea) {
+                lastInTriggerArea = inBottomRight;
+                set(inBottomRight);
+            }
+        } else {
+            const inTopCenter =
+                event.x - rect.left > rect.width / 4 &&
+                event.x + rect.left < (rect.width * 3) / 4 &&
+                event.y - rect.top < rect.height / 4;
+            if (inTopCenter !== lastInTriggerArea) {
+                lastInTriggerArea = inTopCenter;
+                set(inTopCenter);
+            }
         }
     };
 
@@ -146,7 +161,7 @@ const mouseInBottomRight = readable(false, function start(set) {
  * A store that contains "true" if the webcam should be stopped for energy efficiency reason - i.e. we are not moving and not in a conversation.
  */
 export const cameraEnergySavingStore = derived(
-    [userMoved5SecondsAgoStore, peerStore, enabledWebCam10secondsAgoStore, mouseInBottomRight],
+    [userMoved5SecondsAgoStore, peerStore, enabledWebCam10secondsAgoStore, mouseInCameraTriggerArea],
     ([$userMoved5SecondsAgoStore, $peerStore, $enabledWebCam10secondsAgoStore, $mouseInBottomRight]) => {
         return (
             !$mouseInBottomRight &&
@@ -629,7 +644,7 @@ export const obtainedMediaConstraintStore = derived<Readable<MediaStreamConstrai
     }
 );
 
-export const localVolumeStore = readable<number | undefined>(undefined, (set) => {
+export const localVolumeStore = readable<number[] | undefined>(undefined, (set) => {
     let timeout: ReturnType<typeof setTimeout>;
     let soundMeter: SoundMeter;
     const unsubscribe = localStreamStore.subscribe((localStreamStoreValue) => {

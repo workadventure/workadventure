@@ -65,7 +65,12 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteMenuStore, emoteStore } from "../../Stores/EmoteStore";
-import { jitsiParticipantsCountStore, userIsAdminStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
+import {
+    jitsiParticipantsCountStore,
+    userIsAdminStore,
+    userIsEditorStore,
+    userIsJitsiDominantSpeakerStore,
+} from "../../Stores/GameStore";
 import {
     activeSubMenuStore,
     contactPageStore,
@@ -142,6 +147,7 @@ import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyM
 import { AreaType, GameMap, GameMapProperties } from "@workadventure/map-editor";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { GameStateEvent } from "../../Api/Events/GameStateEvent";
+import { modalVisibilityStore } from "../../Stores/ModalStore";
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PositionInterface;
@@ -192,6 +198,8 @@ export class GameScene extends DirtyScene {
     private highlightedEmbedScreenUnsubscriber!: Unsubscriber;
     private embedScreenLayoutStoreUnsubscriber!: Unsubscriber;
     private availabilityStatusStoreUnsubscriber!: Unsubscriber;
+
+    private modalVisibilityStoreUnsubscriber!: Unsubscriber;
 
     MapUrlFile: string;
     roomUrl: string;
@@ -758,6 +766,7 @@ export class GameScene extends DirtyScene {
 
                 playersStore.connectToRoomConnection(this.connection);
                 userIsAdminStore.set(this.connection.hasTag("admin"));
+                userIsEditorStore.set(this.connection.hasTag("editor"));
 
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
 
@@ -1030,6 +1039,12 @@ export class GameScene extends DirtyScene {
             }
         });
 
+        this.modalVisibilityStoreUnsubscriber = modalVisibilityStore.subscribe((visibility) => {
+            if (!visibility && !this.userInputManager.isControlsEnabled) {
+                this.userInputManager.restoreControls();
+            }
+        });
+
         this.followUsersColorStoreUnsubscriber = followUsersColorStore.subscribe((color) => {
             if (color !== undefined) {
                 this.CurrentPlayer.setFollowOutlineColor(color);
@@ -1041,11 +1056,11 @@ export class GameScene extends DirtyScene {
         });
 
         this.highlightedEmbedScreenUnsubscriber = highlightedEmbedScreen.subscribe((value) => {
-            this.reposition();
+            //this.reposition();
         });
 
         this.embedScreenLayoutStoreUnsubscriber = embedScreenLayoutStore.subscribe((layout) => {
-            this.reposition();
+            //this.reposition();
         });
 
         const talkIconVolumeTreshold = 10;
@@ -1099,15 +1114,16 @@ export class GameScene extends DirtyScene {
             }
             if (newPeerNumber > 0) {
                 if (!this.localVolumeStoreUnsubscriber) {
-                    this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((volume) => {
-                        if (volume === undefined) {
+                    this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((spectrum) => {
+                        if (spectrum === undefined) {
                             this.CurrentPlayer.showTalkIcon(false, true);
                             return;
                         }
+                        const volume = spectrum.reduce((a, b) => a + b, 0);
                         this.tryChangeShowVoiceIndicatorState(volume > talkIconVolumeTreshold);
                     });
                 }
-                this.reposition();
+                //this.reposition();
             } else {
                 this.CurrentPlayer.showTalkIcon(false, true);
                 this.connection?.emitPlayerShowVoiceIndicator(false);
@@ -1117,7 +1133,8 @@ export class GameScene extends DirtyScene {
                     this.localVolumeStoreUnsubscriber();
                     this.localVolumeStoreUnsubscriber = undefined;
                 }
-                this.reposition();
+
+                //this.reposition();
             }
 
             oldUsers = newUsers;
@@ -1620,6 +1637,7 @@ ${escapedMessage}
                 playerVariables: this.playerVariablesManager.variables,
                 userRoomToken: this.connection ? this.connection.userRoomToken : "",
                 metadata: this.room.metadata,
+                isLogged: localUserStore.isLogged(),
             };
         });
         this.iframeSubscriptionList.push(
@@ -2532,7 +2550,7 @@ ${escapedMessage}
         return undefined;
     }
 
-    private reposition(instant = false): void {
+    public reposition(instant = false): void {
         // Recompute camera offset if needed
         this.time.delayedCall(0, () => {
             biggestAvailableAreaStore.recompute();
@@ -2542,7 +2560,7 @@ ${escapedMessage}
         });
     }
 
-    public initialiseJitsi(coWebsite: JitsiCoWebsite, roomName: string, jwt?: string): void {
+    public initialiseJitsi(coWebsite: JitsiCoWebsite, roomName: string, jwt?: string, jitsiUrl?: string): void {
         const allProps = this.gameMapFrontWrapper.getCurrentProperties();
         const jitsiConfig = this.safeParseJSONstring(
             allProps.get(GameMapProperties.JITSI_CONFIG) as string | undefined,
@@ -2552,7 +2570,9 @@ ${escapedMessage}
             allProps.get(GameMapProperties.JITSI_INTERFACE_CONFIG) as string | undefined,
             GameMapProperties.JITSI_INTERFACE_CONFIG
         );
-        const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
+        if (!jitsiUrl) {
+            jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
+        }
 
         coWebsite.setJitsiLoadPromise(() => {
             return jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl);

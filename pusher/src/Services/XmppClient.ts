@@ -62,13 +62,13 @@ export class XmppClient {
             });
             this.xmppSocket = xmpp;
 
-            xmpp.on("error", (err: unknown) => {
+            xmpp.on("error", (err) => {
                 if (err instanceof SASLError)
                     debug("XmppClient => createClient => receive => error", err.name, err.condition);
                 else {
                     debug("XmppClient => createClient => receive => error", err);
                 }
-                this.sendErrorToIframe(err as string);
+                this.sendErrorToIframe(err.message);
                 //console.error("XmppClient => receive => error =>", err);
                 this.close();
             });
@@ -397,10 +397,19 @@ export class XmppClient {
 
     async sendToEjabberd(stanza: string): Promise<void> {
         const ctx = parse(stanza);
-        if (ctx) {
-            const restricted = this.xmlRestrictionsToEjabberd(ctx);
-            if (restricted) {
-                await this.xmppSocket?.send(restricted as Element);
+        try {
+            if (ctx) {
+                const restricted = this.xmlRestrictionsToEjabberd(ctx);
+                if (restricted) {
+                    await this.xmppSocket?.send(restricted as Element);
+                }
+            }
+        } catch (e: unknown) {
+            console.error("An error occurred while sending a message to XMPP server: ", e);
+            try {
+                this.close();
+            } catch (e2: unknown) {
+                console.error("An error occurred while closing connection to XMPP server: ", e2);
             }
         }
         return;

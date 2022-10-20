@@ -10,6 +10,7 @@ const actionbar: BaseTranslation = {
     microphone: "Mute / Unmute",
     emoji: "Open / Close emoji",
     menu: "Open / Close menu",
+    bo: "Open back office",
 };
 
 export default actionbar;

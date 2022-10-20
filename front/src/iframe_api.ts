@@ -13,7 +13,14 @@ import ui from "./Api/Iframe/ui";
 import sound from "./Api/Iframe/sound";
 import room, { setMapURL, setRoomId } from "./Api/Iframe/room";
 import { createState } from "./Api/Iframe/state";
-import player, { setPlayerName, setPlayerLanguage, setTags, setUserRoomToken, setUuid } from "./Api/Iframe/player";
+import player, {
+    setPlayerName,
+    setPlayerLanguage,
+    setTags,
+    setUserRoomToken,
+    setUuid,
+    setIsLogged,
+} from "./Api/Iframe/player";
 import players from "./Api/Iframe/players";
 import type { ButtonDescriptor } from "./Api/Iframe/Ui/ButtonDescriptor";
 import type { Popup } from "./Api/Iframe/Ui/Popup";
@@ -50,6 +57,7 @@ const initPromise = queryWorkadventure({
     setMetadata(gameState.metadata);
     globalState.initVariables(gameState.variables as Map<string, unknown>);
     player.state.initVariables(gameState.playerVariables as Map<string, unknown>);
+    setIsLogged(gameState.isLogged);
 });
 
 const wa = {

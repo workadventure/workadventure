@@ -1,10 +1,13 @@
 <script lang="ts">
+    //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
+
     import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
 
     import type { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import { getColorByString, srcObject, getTextColorByBackgroundColor } from "./utils";
+    import BanReportBox from "./BanReportBox.svelte";
 
     export let clickable = false;
 
@@ -25,7 +28,10 @@
     }
 </script>
 
-<div class="video-container">
+<div
+    class="video-container screen-sharing tw-flex tw-w-full tw-flex-col tw-h-full"
+    on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
+>
     {#if $statusStore === "connecting"}
         <div class="connecting-spinner" />
     {/if}
@@ -33,29 +39,28 @@
         <div class="rtc-error" />
     {/if}
     {#if $streamStore !== null}
-        <i class="container">
-            <span style="background-color: {backGroundColor}; color: {textColor};">{name}</span>
-        </i>
         <!-- svelte-ignore a11y-media-has-caption -->
         <video
             use:srcObject={$streamStore}
             autoplay
             playsinline
-            on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
+            class="tw-h-full tw-max-w-full tw-mx-auto tw-rounded"
         />
+        <div
+            class="nametag-screenshare-container container-end tw-flex media-box-camera-on-size video-on-responsive-height"
+        >
+            <i class="flex">
+                <span
+                    style="background-color: {backGroundColor}; color: {textColor};"
+                    class="nametag-text nametag-shape tw-pr-3 tw-pl-2 tw-h-3 tw-max-h-8">{name}</span
+                >
+            </i>
+        </div>
     {/if}
+    <div
+        class="report-ban-screenshare-container tw-flex video-on-responsive-height media-box-camera-on-position media-box-screensharing-size
+        tw-z-[600] tw-flex tw-opacity-0 tw-translate-x-0 tw-transition-all"
+    >
+        <BanReportBox {peer} />
+    </div>
 </div>
-
-<style lang="scss">
-    .video-container {
-        video {
-            width: 100%;
-        }
-        i {
-            white-space: nowrap;
-            span {
-                padding: 2px 32px;
-            }
-        }
-    }
-</style>
