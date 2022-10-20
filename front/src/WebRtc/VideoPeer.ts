@@ -3,7 +3,7 @@ import type { RoomConnection } from "../Connexion/RoomConnection";
 import { blackListManager } from "./BlackListManager";
 import type { Subscription } from "rxjs";
 import type { UserSimplePeerInterface } from "./SimplePeer";
-import { readable, Readable, Unsubscriber } from "svelte/store";
+import { readable, writable, Writable, Readable, Unsubscriber } from "svelte/store";
 import { localStreamStore, obtainedMediaConstraintStore, ObtainedMediaStreamConstraints } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
 import {
@@ -39,9 +39,9 @@ export class VideoPeer extends Peer {
     public readonly uniqueId: string;
     private onBlockSubscribe: Subscription;
     private onUnBlockSubscribe: Subscription;
-    public readonly streamStore: Readable<MediaStream | null>;
+    public readonly streamStore: Writable<MediaStream | null> = writable<MediaStream | null>(null);
     public readonly volumeStore: Readable<number[] | undefined>;
-    public readonly statusStore: Readable<PeerStatus>;
+    public readonly statusStore: Writable<PeerStatus> = writable<PeerStatus>("closed");
     public readonly constraintsStore: Readable<ObtainedMediaStreamConstraints | null>;
     private newMessageSubscribtion: Subscription | undefined;
     private closing = false; //this is used to prevent destroy() from being called twice
@@ -65,18 +65,6 @@ export class VideoPeer extends Peer {
         this.userId = user.userId;
         this.userUuid = playersStore.getPlayerById(this.userId)?.userUuid || "";
         this.uniqueId = "video_" + this.userId;
-
-        this.streamStore = readable<MediaStream | null>(null, (set) => {
-            const onStream = (stream: MediaStream | null) => {
-                set(stream);
-            };
-
-            this.on("stream", onStream);
-
-            return () => {
-                this.off("stream", onStream);
-            };
-        });
 
         this.volumeStore = readable<number[] | undefined>(undefined, (set) => {
             let timeout: ReturnType<typeof setTimeout>;
@@ -130,28 +118,6 @@ export class VideoPeer extends Peer {
             };
         });
 
-        this.statusStore = readable<PeerStatus>("connecting", (set) => {
-            const onConnect = () => {
-                set("connected");
-            };
-            const onError = () => {
-                set("error");
-            };
-            const onClose = () => {
-                set("closed");
-            };
-
-            this.on("connect", onConnect);
-            this.on("error", onError);
-            this.on("close", onClose);
-
-            return () => {
-                this.off("connect", onConnect);
-                this.off("error", onError);
-                this.off("close", onClose);
-            };
-        });
-
         //start listen signal for the peer connection
         this.on("signal", (data: unknown) => {
             this.sendWebrtcSignal(data);
@@ -160,6 +126,8 @@ export class VideoPeer extends Peer {
         this.on("stream", (stream: MediaStream) => this.stream(stream));
 
         this.on("close", () => {
+            this.statusStore.set("closed");
+
             this._connected = false;
             this.toClose = true;
             this.destroy();
@@ -167,11 +135,15 @@ export class VideoPeer extends Peer {
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.on("error", (err: any) => {
+            this.statusStore.set("error");
+
             console.error(`error => ${this.userId} => ${err.code}`, err);
             mediaManager.isError("" + this.userId);
         });
 
         this.on("connect", () => {
+            this.statusStore.set("connected");
+
             this._connected = true;
             chatMessagesStore.addIncomingUser(this.userId);
 
@@ -237,6 +209,8 @@ export class VideoPeer extends Peer {
         });
 
         this.once("finish", () => {
+            this.statusStore.set("closed");
+
             this._onFinish();
         });
 
@@ -303,6 +277,8 @@ export class VideoPeer extends Peer {
      * Sends received stream to screen.
      */
     private stream(stream: MediaStream) {
+        this.streamStore.set(stream);
+
         try {
             this.remoteStream = stream;
             if (blackListManager.isBlackListed(this.userUuid) || this.blocked) {

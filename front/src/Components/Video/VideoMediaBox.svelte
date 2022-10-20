@@ -62,13 +62,15 @@
             <div class="rtc-error" />
         {/if}
         <!-- svelte-ignore a11y-media-has-caption &ndash;&gt;-->
-        <video
-            class:no-video={!$constraintStore || $constraintStore.video === false}
-            class="tw-h-full tw-max-w-full tw-rounded"
-            use:srcObject={$streamStore}
-            autoplay
-            playsinline
-        />
+        {#if $streamStore}
+            <video
+                class:no-video={!$constraintStore || $constraintStore.video === false}
+                class="tw-h-full tw-max-w-full tw-rounded"
+                use:srcObject={$streamStore}
+                autoplay
+                playsinline
+            />
+        {/if}
 
         <div
             class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height

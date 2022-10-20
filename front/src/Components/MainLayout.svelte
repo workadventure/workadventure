@@ -37,6 +37,7 @@
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
     import { mapEditorModeStore, mapEditorSelectedAreaPreviewStore } from "../Stores/MapEditorStore";
     import Modal from "./Modal/Modal.svelte";
+    import { coWebsites } from "../Stores/CoWebsiteStore";
 
     let mainLayout: HTMLDivElement;
 
@@ -48,7 +49,7 @@
 </script>
 
 <!-- Components ordered by z-index -->
-<div id="main-layout" bind:this={mainLayout}>
+<div id="main-layout" class={[...$coWebsites.values()].length === 0 ? "not-cowebsite" : ""} bind:this={mainLayout}>
     {#if $modalVisibilityStore}
         <div class="tw-bg-black/60 tw-w-full tw-h-full tw-fixed tw-left-0 tw-right-0" />
     {/if}
@@ -168,12 +169,20 @@
             &-left-aside {
                 min-width: auto;
             }
+
+            &.not-cowebsite {
+                grid-template-columns: 0% 100%;
+            }
         }
     }
 
     @include media-breakpoint-up(sm) {
         #main-layout {
             grid-template-columns: 20% 80%;
+
+            &.not-cowebsite {
+                grid-template-columns: 0% 100%;
+            }
         }
     }
 </style>
