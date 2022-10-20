@@ -108,7 +108,7 @@
         </div>
     {/if}
     {#if selectedMicrophone != undefined}
-        <HorizontalSoundMeterWidget volume={$localVolumeStore} />
+        <HorizontalSoundMeterWidget spectrum={$localVolumeStore} />
     {/if}
 
     <section class="selectWebcamForm">

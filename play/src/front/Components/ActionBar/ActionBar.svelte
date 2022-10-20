@@ -27,6 +27,7 @@
     import emojiPickOn from "../images/emoji-on.png";
     import closeImg from "../images/close.png";
     import penImg from "../images/pen.png";
+    import hammerImg from "../images/hammer.png";
     import WorkAdventureImg from "../images/icon-workadventure-white.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
@@ -43,6 +44,7 @@
         inviteUserActivated,
         SubMenusInterface,
         subMenusStore,
+        userIsConnected,
     } from "../../Stores/MenuStore";
     import type { Emoji } from "../../Stores/EmoteStore";
     import {
@@ -56,8 +58,7 @@
     import LL from "../../../i18n/i18n-svelte";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
     import { fly } from "svelte/transition";
-    import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
-    import { limitMapStore } from "../../Stores/GameStore";
+    import { ADMIN_URL, ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import { mapEditorModeStore } from "../../Stores/MapEditorStore";
@@ -68,6 +69,15 @@
     import { peerStore } from "../../Stores/PeerStore";
     import { StringUtils } from "../../Utils/StringUtils";
     import Tooltip from "../Util/Tooltip.svelte";
+    import {
+        modalIframeAllowApi,
+        modalIframeAllowlStore,
+        modalIframeSrcStore,
+        modalIframeTitlelStore,
+        modalPositionStore,
+        modalVisibilityStore,
+    } from "../../Stores/ModalStore";
+    import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -226,6 +236,8 @@
     }
 
     function showInvite() {
+        modalVisibilityStore.set(false);
+
         const indexInviteMenu = $subMenusStore.findIndex(
             (menu: MenuItem) => (menu as TranslatedMenu).key === SubMenusInterface.invite
         );
@@ -240,7 +252,9 @@
         }
         activeSubMenuStore.set(indexInviteMenu);
         menuVisiblilityStore.set(true);
-        chatVisibilityStore.set(false);
+
+        resetChatVisibility();
+        resetModalVisibility();
     }
 
     function showMenu() {
@@ -258,11 +272,42 @@
         }
         activeSubMenuStore.set(indexInviteMenu);
         menuVisiblilityStore.set(true);
-        chatVisibilityStore.set(false);
+
+        resetChatVisibility();
+        resetModalVisibility();
+    }
+
+    function openBo() {
+        window.open(`${ADMIN_URL}/admin`, "_blanck");
     }
 
     function register() {
-        window.open(`${ADMIN_URL}/second-step-register`, "_self");
+        modalIframeTitlelStore.set($LL.menu.icon.open.register());
+        modalIframeAllowlStore.set("fullscreen");
+        modalIframeSrcStore.set(`${ADMIN_URL}/funnel/connection?roomUrl=${window.location.toString()}`);
+        modalPositionStore.set("center");
+        modalIframeAllowApi.set(true);
+        modalVisibilityStore.set(true);
+
+        resetMenuVisibility();
+        resetChatVisibility();
+    }
+
+    function resetModalVisibility() {
+        modalVisibilityStore.set(false);
+        modalIframeTitlelStore.set(null);
+        modalIframeAllowlStore.set(null);
+        modalIframeSrcStore.set(null);
+        modalIframeAllowApi.set(false);
+    }
+
+    function resetMenuVisibility() {
+        menuVisiblilityStore.set(false);
+        activeSubMenuStore.set(0);
+    }
+
+    function resetChatVisibility() {
+        chatVisibilityStore.set(false);
     }
 
     function noDrag() {
@@ -319,10 +364,9 @@
 
 <div
     class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
-    style="margin-bottom: 10px"
     class:animated={$bottomActionBarVisibilityStore}
 >
-    <div class="bottom-action-bar">
+    <div class="bottom-action-bar tw-absolute">
         {#if $bottomActionBarVisibilityStore}
             <div
                 class="bottom-action-section tw-flex animate"
@@ -585,7 +629,6 @@
                         </span>
                     {/if}
                 </div>
-
                 <div on:click={toggleEmojiPicker} class="bottom-action-button">
                     <Tooltip text={$LL.actionbar.emoji()} />
 
@@ -619,25 +662,21 @@
                         </button>
                     </div>
                 {/if}
-            </div>
-
-            {#if $limitMapStore}
-                <div
-                    class="bottom-action-section tw-flex tw-flex-initial"
-                    in:fly={{}}
-                    on:dragstart|preventDefault={noDrag}
-                    on:click={() => analyticsClient.openRegister()}
-                    on:click={register}
-                >
-                    <button
-                        class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base"
-                        id="register-btn"
-                        class:border-top-light={$menuVisiblilityStore}
+                {#if $userHasAccessToBackOfficeStore}
+                    <div
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={() => analyticsClient.openBackOffice()}
+                        on:click={openBo}
+                        class="bottom-action-button"
                     >
-                        {$LL.menu.icon.open.register()}
-                    </button>
-                </div>
-            {/if}
+                        <Tooltip text={$LL.actionbar.bo()} />
+
+                        <button id="mapEditorIcon" class:border-top-light={$menuVisiblilityStore}>
+                            <img draggable="false" src={hammerImg} style="padding: 2px" alt="toggle-map-editor" />
+                        </button>
+                    </div>
+                {/if}
+            </div>
 
             {#if $inviteUserActivated}
                 <div
@@ -653,6 +692,24 @@
                         class:border-top-light={$menuVisiblilityStore}
                     >
                         {$LL.menu.sub.invite()}
+                    </button>
+                </div>
+            {/if}
+
+            {#if ENABLE_OPENID && !$userIsConnected}
+                <div
+                    class="bottom-action-section tw-flex tw-flex-initial"
+                    in:fly={{}}
+                    on:dragstart|preventDefault={noDrag}
+                    on:click={() => analyticsClient.openRegister()}
+                    on:click={register}
+                >
+                    <button
+                        class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base"
+                        id="register-btn"
+                        class:border-top-light={$menuVisiblilityStore}
+                    >
+                        {$LL.menu.icon.open.register()}
                     </button>
                 </div>
             {/if}
@@ -768,6 +825,10 @@
         //is equal to tailwind's sm breakpoint
         .translate-right {
             transform: translateX(0);
+        }
+
+        .move-menu {
+            transform: translateX(-3rem);
         }
     }
 </style>

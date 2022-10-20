@@ -10,6 +10,7 @@ const actionbar: BaseTranslation = {
     microphone: "Activer / Couper le microphone",
     emoji: "Ouvrir / Fermer les émoticônes",
     menu: "Ouvrir / Fermer le menu",
+    bo: "Open back office",
 };
 
 export default actionbar;

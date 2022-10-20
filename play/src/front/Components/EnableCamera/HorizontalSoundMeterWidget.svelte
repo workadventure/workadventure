@@ -1,14 +1,16 @@
 <script lang="ts">
-    export let volume = 0;
+    export let spectrum = [0, 0, 0, 0, 0, 0, 0];
 
     const NB_BARS = 20;
 
-    function color(i: number, volume: number) {
+    function color(i: number, spectrum: number[]) {
         const red = (255 * i) / NB_BARS;
         const green = 255 * (1 - i / NB_BARS);
+        const sumSpectrum = spectrum.reduce((a, b) => a + b, 0);
+        const avgVolume = (sumSpectrum / spectrum.length) % 20;
 
         let alpha = 1;
-        if (i >= volume) {
+        if (i >= avgVolume) {
             alpha = 0.5;
         }
 
@@ -16,9 +18,9 @@
     }
 </script>
 
-<div class="horizontal-sound-meter" class:active={volume !== undefined}>
+<div class="horizontal-sound-meter" class:active={spectrum !== undefined}>
     {#each [...Array(NB_BARS).keys()] as i (i)}
-        <div style={color(i, volume)} />
+        <div style={color(i, spectrum)} />
     {/each}
 </div>
 

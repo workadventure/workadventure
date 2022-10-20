@@ -21,6 +21,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     },
     my: {
         silentZone: "Zone silencieuse",
+        nameTag: "Vous",
     },
     disable: "Couper la caméra",
 };

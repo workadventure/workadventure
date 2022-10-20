@@ -20,6 +20,7 @@ const camera: BaseTranslation = {
     },
     my: {
         silentZone: "Silent zone",
+        nameTag: "You",
     },
     disable: "Turn off your camera",
 };

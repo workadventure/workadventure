@@ -3,6 +3,7 @@
     import MozaicLayout from "./Layouts/MozaicLayout.svelte";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+    import "../../style/wa-theme/video-ui.scss";
 </script>
 
 <div id="embedScreensContainer">
