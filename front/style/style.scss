@@ -9,11 +9,13 @@ select {
 body {
     overflow: hidden;
 }
+
 body button:focus,
 body img:focus,
 body input:focus {
     outline: -webkit-focus-ring-color auto 0;
 }
+
 body .message-info {
     width: 20%;
     height: auto;
@@ -24,262 +26,21 @@ body .message-info {
     padding-top: 10px;
     text-align: center;
 }
+
 body .message-info.error {
     background: red;
 }
+
 body .message-info.success {
     background: green;
 }
+
 body .message-info.info {
     background: dodgerblue;
 }
+
 body .message-info.warning {
     background: #ffa500d6;
-}
-
-.video-container {
-    display: flex;
-    transition: all 0.2s ease;
-    cursor: url("./images/cursor_pointer.png"), pointer;
-    width: 100%;
-
-    &.no-clikable {
-        video {
-            cursor: url("./images/cursor_normal.png"), pointer;
-        }
-    }
-
-    video {
-        height: fit-content;
-        max-height: 100%;
-        max-width: 100%;
-        width: 100%;
-        cursor: url("./images/cursor_pointer.png"), pointer;
-
-        &.mobile {
-            width: 100%;
-            height: 21vh;
-        }
-        &:focus {
-            outline: none;
-        }
-    }
-
-    i {
-        position: absolute;
-        width: 150px;
-        height: auto;
-        left: -6px;
-        top: calc(100% - 28px);
-        text-align: center;
-        color: white;
-        span {
-            font-size: 14px;
-            margin: 2px;
-            background-color: white;
-            border: solid 3px black;
-            border-radius: 8px;
-            font-style: normal;
-        }
-    }
-
-    .woka-icon {
-        position: absolute;
-        left: 90px;
-        top: calc(100% - 24px);
-        height: 23px;
-        overflow: hidden;
-        border-radius: 50%;
-        transition: all 0.2s ease;
-        &.no-video {
-            left: calc(50% - 30px);
-            top: calc(50% - 30px);
-            height: auto;
-            img {
-                height: 60px;
-                width: 60px;
-            }
-        }
-        img {
-            height: 40px;
-            width: 40px;
-        }
-    }
-    &:hover {
-        .woka-icon {
-            top: calc(100% - 30px);
-            height: 30px;
-            &.no-video {
-                top: calc(100% - 32px);
-                height: 35px;
-            }
-        }
-    }
-
-    img {
-        position: absolute;
-        display: none;
-        width: 20px;
-        height: 20px;
-        left: 5px;
-        bottom: 5px;
-        padding: 10px;
-
-        &.active {
-            display: block !important;
-        }
-    }
-
-    img.block-logo {
-        left: 30%;
-        bottom: 15%;
-        width: 150px;
-        height: 150px;
-    }
-
-    button.report {
-        display: block;
-        cursor: url("./images/cursor_pointer.png"), pointer;
-        background: none;
-        background-color: rgba(0, 0, 0, 0);
-        border: none;
-        background-color: black;
-        border-radius: 15px;
-        position: absolute;
-        width: 0px;
-        height: 35px;
-        right: 5px;
-        bottom: 5px;
-        padding: 0px;
-        overflow: hidden;
-        z-index: 2;
-        transition: all 0.5s ease;
-
-        img {
-            position: absolute;
-            display: block;
-            bottom: 5px;
-            left: 5px;
-            margin: 0;
-            padding: 0;
-            cursor: url("./images/cursor_pointer.png"), pointer;
-            width: 25px;
-            height: 25px;
-        }
-
-        span {
-            position: absolute;
-            bottom: 6px;
-            left: 36px;
-            color: white;
-            font-size: 16px;
-            cursor: url("./images/cursor_pointer.png"), pointer;
-        }
-
-        img.active {
-            display: block !important;
-        }
-    }
-
-    &:hover button.report {
-        width: 35px;
-        padding: 10px;
-
-        &:hover {
-            width: 160px;
-        }
-    }
-}
-
-.sound-progress {
-    display: none;
-    position: absolute;
-    right: 14px;
-    top: calc(50% - 5px);
-}
-.sound-progress.active {
-    display: table-column;
-}
-.sound-progress span {
-    position: absolute;
-    color: black;
-    background-color: #00000020;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-}
-.sound-progress span.active {
-    background-color: #00c3ff66;
-}
-.sound-progress span:nth-child(1) {
-    top: calc(50% + 20px);
-}
-.sound-progress span:nth-child(2) {
-    top: calc(50% + 10px);
-}
-.sound-progress span:nth-child(3) {
-    top: calc(50% - 0px);
-}
-.sound-progress span:nth-child(4) {
-    top: calc(50% - 10px);
-}
-.sound-progress span:nth-child(5) {
-    top: calc(50% - 20px);
-}
-
-/* Spinner */
-.connecting-spinner {
-    /*display: inline-block;*/
-    position: absolute;
-    left: calc(50% - 62px);
-    top: calc(50% - 62px);
-
-    width: 130px;
-    height: 130px;
-}
-.connecting-spinner:after {
-    content: " ";
-    display: block;
-    width: 108px;
-    height: 108px;
-    margin: 8px;
-    border-radius: 50%;
-    border: 6px solid #fff;
-    border-color: #fff transparent #fff transparent;
-    animation: connecting-spinner 1.2s linear infinite;
-}
-@keyframes connecting-spinner {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-.rtc-error {
-    position: absolute;
-    left: calc(50% - 68px);
-    top: calc(50% - 68px);
-
-    width: 130px;
-    height: 130px;
-}
-.rtc-error:after {
-    content: " ";
-    display: block;
-    width: 108px;
-    height: 108px;
-    margin: 8px;
-    border-radius: 50%;
-    border: 6px solid #f00;
-    animation: blinker 1s linear infinite;
-}
-
-@keyframes blinker {
-    50% {
-        opacity: 0;
-    }
 }
 
 /* New layout */
@@ -288,6 +49,7 @@ body {
     height: 100%;
     width: 100%;
 }
+
 .main-container {
     height: 100%;
     width: 100%;
@@ -401,6 +163,7 @@ input[type="range"]:focus::-ms-fill-upper {
 .chat-mode > div:hover {
     margin: 0%;
 }
+
 .chat-mode.one-col {
     grid-template-columns: repeat(1, 1fr);
 }
@@ -632,6 +395,7 @@ div.modal-report-user {
 .discussion .active-btn.active {
     display: block;
 }
+
 .discussion .active-btn:hover {
     transform: scale(1.1) rotateY(3.142rad);
 }
@@ -793,6 +557,7 @@ div.modal-report-user {
     height: 20px;
     background-color: #ffffff69;
 }
+
 .discussion .send-message img:hover {
     background-color: #ffffff;
 }
@@ -809,6 +574,7 @@ div.action {
     animation-iteration-count: infinite;
     animation-timing-function: ease-in-out;
 }
+
 div.action.info,
 div.action.warning,
 div.action.danger {
@@ -817,6 +583,7 @@ div.action.danger {
     animation-iteration-count: infinite;
     animation-timing-function: ease-in-out;
 }
+
 div.action p.action-body {
     cursor: url("./images/cursor_pointer.png"), pointer;
     padding: 10px;
@@ -829,13 +596,44 @@ div.action p.action-body {
     margin-left: calc(50% - 175px);
     border-radius: 15px;
 }
+
 div.action.warning p.action-body {
     background-color: #ff9800eb;
     color: #000;
 }
+
 div.action.danger p.action-body {
     background-color: #da0000e3;
     color: #000;
+}
+
+.popUpElement {
+    font-family: "Press Start 2P";
+    text-align: left;
+    color: white;
+}
+
+.popUpElement div {
+    font-family: "Press Start 2P";
+    font-size: 10px;
+    background-color: #727678;
+    white-space: pre-line;
+}
+
+.popUpElement .nes-container {
+    padding: 1rem 1rem;
+}
+
+.popUpElement button {
+    position: relative;
+    font-size: 10px;
+    border-image-repeat: revert;
+    margin-right: 5px;
+}
+
+.popUpElement .buttonContainer {
+    float: right;
+    background-color: inherit;
 }
 
 @keyframes mymove {

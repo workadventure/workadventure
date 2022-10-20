@@ -85,7 +85,7 @@
                 on:click={() => analyticsClient.editWoka()}
                 on:click={openEditSkinScene}
             >
-                <Woka userId={-1} placeholderSrc="" width="26px" height="26px" />
+                <Woka userId={-1} placeholderSrc="" customWidth="26px" customHeight="26px" />
                 <span class="">{$LL.menu.profile.edit.woka()}</span>
             </button>
             <button

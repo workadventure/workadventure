@@ -59,7 +59,7 @@
     import LL from "../../i18n/i18n-svelte";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
     import { fly } from "svelte/transition";
-    import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
+    import { ADMIN_URL, ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import { mapEditorModeStore } from "../../Stores/MapEditorStore";
@@ -364,10 +364,9 @@
 
 <div
     class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
-    style="margin-bottom: 10px"
     class:animated={$bottomActionBarVisibilityStore}
 >
-    <div class="bottom-action-bar">
+    <div class="bottom-action-bar tw-absolute">
         {#if $bottomActionBarVisibilityStore}
             <div
                 class="bottom-action-section tw-flex animate"
@@ -697,7 +696,7 @@
                 </div>
             {/if}
 
-            {#if !$userIsConnected}
+            {#if ENABLE_OPENID && !$userIsConnected}
                 <div
                     class="bottom-action-section tw-flex tw-flex-initial"
                     in:fly={{}}
@@ -826,6 +825,10 @@
         //is equal to tailwind's sm breakpoint
         .translate-right {
             transform: translateX(0);
+        }
+
+        .move-menu {
+            transform: translateX(-3rem);
         }
     }
 </style>

@@ -5,8 +5,10 @@
 
     export let userId: number;
     export let placeholderSrc: string;
-    export let width = "62px";
-    export let height = "62px";
+    export let customWidth: string;
+    export let customHeight: string;
+    let width = "62px";
+    let height = "62px";
 
     const gameScene = gameManager.getCurrentGameScene();
     let playerWokaPictureStore;
@@ -33,7 +35,7 @@
     {src}
     alt=""
     class="nes-pointer noselect"
-    style="--theme-width: {width}; --theme-height: {height}"
+    style="--theme-width: {customWidth ?? width}; --theme-height: {customHeight ?? height} image-rendering: pixalated"
     draggable="false"
     on:dragstart|preventDefault={noDrag}
 />

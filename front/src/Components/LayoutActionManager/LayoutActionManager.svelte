@@ -6,7 +6,9 @@
     }
 </script>
 
-<div class="layout-manager-list tw-flex tw-flex-col tw-m-auto tw-right-0 tw-left-0 tw-absolute tw-bottom-10 tw-z-[155]">
+<div
+    class="layout-manager-list tw-flex tw-flex-col tw-m-auto tw-right-0 tw-left-0 tw-absolute tw-bottom-10 tw-z-[155] tw-justify-end"
+>
     {#each $layoutManagerActionStore as action}
         {#if action.type === "warning"}
             <div

@@ -5,121 +5,139 @@
     import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
+    import VideoOffBox from "./VideoOffBox.svelte";
+    import { ObtainedMediaStreamConstraints } from "../../Stores/MediaStore";
+    import { Readable } from "svelte/store";
+    import { fly } from "svelte/transition";
+    import { gameManager } from "../../Phaser/Game/GameManager";
 
     export let streamable: Streamable;
     export let isHightlighted = false;
     export let isClickable = false;
     export let mozaicSolo = false;
-    export let mozaicFullWidth = false;
+    export let mozaicDuo = false;
     export let mozaicQuarter = false;
+
+    let constraintStore: Readable<ObtainedMediaStreamConstraints | null>;
+    if (streamable instanceof VideoPeer) {
+        constraintStore = streamable.constraintsStore;
+    }
+
+    const gameScene = gameManager.getCurrentGameScene();
+
+    function triggerReposition() {
+        gameScene.reposition();
+    }
 </script>
 
-<div
-    class="media-container nes-container is-rounded {isHightlighted ? 'hightlighted' : ''}"
-    class:clickable={isClickable}
-    class:mozaic-solo={mozaicSolo}
-    class:mozaic-full-width={mozaicFullWidth}
-    class:mozaic-quarter={mozaicQuarter}
->
-    <div>
-        {#if streamable instanceof VideoPeer}
-            <VideoMediaBox peer={streamable} clickable={isClickable} />
-        {:else if streamable instanceof ScreenSharingPeer}
+{#if streamable instanceof VideoPeer}
+    {#if $constraintStore && !$constraintStore.video}
+        <div
+            class="media-container {isHightlighted
+                ? 'hightlighted tw-max-w-sm tw-mx-auto'
+                : 'tw-flex tw-m-auto tw-flex media-box-camera-off-size tw-h-12'}
+     media-box-shape-color tw-pointer-events-auto tw-p-0 screen-blocker
+"
+            class:clickable={isClickable}
+            class:mozaic-duo={mozaicDuo}
+            class:mozaic-full-width={mozaicSolo}
+            class:mozaic-quarter={mozaicQuarter}
+            transition:fly={{ x: 200, duration: 250 }}
+            on:introend={() => {
+                triggerReposition();
+            }}
+            on:outroend={() => {
+                triggerReposition();
+            }}
+        >
+            <div class="{isHightlighted ? 'tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-flex screen-blocker">
+                <VideoOffBox peer={streamable} clickable={false} />
+            </div>
+        </div>
+    {:else if $constraintStore && $constraintStore.video}
+        <div
+            class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
+     media-box-shape-color
+"
+            class:clickable={isClickable}
+            class:mozaic-duo={mozaicDuo}
+            class:mozaic-full-width={mozaicSolo}
+            class:mozaic-quarter={mozaicQuarter}
+            transition:fly={{ x: 200, duration: 250 }}
+            on:introend={() => {
+                triggerReposition();
+            }}
+            on:outroend={() => {
+                triggerReposition();
+            }}
+        >
+            <div class="{isHightlighted ? 'tw-h-[32vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-flex screen-blocker">
+                <VideoMediaBox peer={streamable} clickable={isClickable} />
+            </div>
+        </div>
+    {/if}
+{:else if streamable instanceof ScreenSharingPeer}
+    <div
+        class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
+     media-box-shape-color
+"
+        class:clickable={isClickable}
+        class:mozaic-duo={mozaicDuo}
+        class:mozaic-full-width={mozaicSolo}
+        class:mozaic-quarter={mozaicQuarter}
+        transition:fly={{ x: 200, duration: 250 }}
+        on:introend={() => {
+            triggerReposition();
+        }}
+        on:outroend={() => {
+            triggerReposition();
+        }}
+    >
+        <div class="{isHightlighted ? 'tw-h-[41vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-h-full tw-flex screen-blocker">
             <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
-        {:else}
-            <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />
-        {/if}
+        </div>
     </div>
-</div>
+{:else}
+    <div
+        class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
+     media-box-shape-color
+"
+        class:clickable={isClickable}
+        class:mozaic-duo={mozaicDuo}
+        class:mozaic-full-width={mozaicSolo}
+        class:mozaic-quarter={mozaicQuarter}
+        transition:fly={{ x: 200, duration: 250 }}
+        on:introend={() => {
+            triggerReposition();
+        }}
+        on:outroend={() => {
+            triggerReposition();
+        }}
+    >
+        <div
+            class="{isHightlighted ? 'tw-h-[41vw] tw-mr-6' : 'tw-mx-auto'}   tw-w-full tw-h-full tw-flex screen-blocker"
+        >
+            <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />
+        </div>
+    </div>
+{/if}
 
 <style lang="scss">
     @import "../../../style/breakpoints.scss";
 
+    //Classes factorizing tailwind's ones are defined in video-ui.scss
+
     .media-container {
-        display: flex;
-        margin-top: 4%;
-        margin-bottom: 4%;
-        margin-left: auto;
-        margin-right: auto;
         transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, max-height 0.2s,
             max-width 0.2s;
-        pointer-events: auto;
-
-        padding: 0;
-        max-height: 200px;
-        max-width: 85%;
 
         &:hover {
-            margin-top: 2%;
+            margin-top: 4%;
             margin-bottom: 2%;
-        }
-
-        &.hightlighted {
-            margin-top: 0% !important;
-            margin-bottom: 0% !important;
-            margin-left: 0% !important;
-
-            max-height: 100% !important;
-            max-width: 96% !important;
-
-            &:hover {
-                margin-top: 0% !important;
-                margin-bottom: 0% !important;
-            }
-        }
-
-        &.mozaic-solo {
-            max-height: inherit !important;
-            width: 90% !important;
-        }
-
-        &.mozaic-full-width {
-            width: 95%;
-            max-width: 95%;
-            margin-left: 3%;
-            margin-right: 3%;
-            margin-top: auto;
-            margin-bottom: auto;
-            max-height: 95%;
-
-            &:hover {
-                margin-top: auto;
-                margin-bottom: auto;
-            }
-        }
-
-        &.mozaic-quarter {
-            width: 95%;
-            max-width: 95%;
-            margin-top: auto;
-            margin-bottom: auto;
-            max-height: 95%;
-
-            &:hover {
-                margin-top: auto;
-                margin-bottom: auto;
-            }
-        }
-
-        &.nes-container.is-rounded {
-            border-image-outset: 1;
         }
 
         &.clickable {
             cursor: url("../../../style/images/cursor_pointer.png"), pointer;
-        }
-
-        > div {
-            background-color: rgba(0, 0, 0, 0.6);
-            display: flex;
-            width: 100%;
-        }
-    }
-
-    @include media-breakpoint-only(md) {
-        .media-container {
-            margin-top: 10%;
-            margin-bottom: 10%;
         }
     }
 </style>

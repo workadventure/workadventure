@@ -6,7 +6,7 @@
 </script>
 
 {#if $coWebsites.length > 0}
-    <div id="cowebsite-thumbnail-container" class:vertical>
+    <div id="cowebsite-thumbnail-container" class:vertical class="tw-z-[350]">
         {#each [...$coWebsites.values()] as coWebsite, index (coWebsite.getId())}
             <CoWebsiteThumbnail {index} {coWebsite} {vertical} />
         {/each}
@@ -22,8 +22,6 @@
         position: absolute;
         bottom: 5px;
         left: 2%;
-        overflow-x: auto;
-        overflow-y: hidden;
         overflow: visible;
 
         &.vertical {
