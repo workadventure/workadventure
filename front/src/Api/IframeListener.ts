@@ -50,6 +50,15 @@ import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { ChatMessage } from "./Events/ChatEvent";
 import { requestVisitCardsStore } from "../Stores/GameStore";
+import {
+    modalIframeAllowApi,
+    modalIframeAllowlStore,
+    modalIframeSrcStore,
+    modalIframeTitlelStore,
+    modalPositionStore,
+    modalVisibilityStore,
+} from "../Stores/ModalStore";
+import { connectionManager } from "../Connexion/ConnectionManager";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -301,7 +310,7 @@ class IframeListener {
                     }
 
                     const iframeEvent = iframeEventGuarded.data;
-
+                    console.info("iframeEvent.type", iframeEvent.type);
                     if (iframeEvent.type === "showLayer") {
                         this._showLayerStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "hideLayer") {
@@ -418,10 +427,23 @@ class IframeListener {
                     } else if (iframeEvent.type == "login") {
                         analyticsClient.login();
                         window.location.href = "/login";
+                    } else if (iframeEvent.type == "redirectPricing") {
+                        if (connectionManager.currentRoom && connectionManager.currentRoom.pricingUrl) {
+                            window.location.href = connectionManager.currentRoom.pricingUrl;
+                        }
                     } else if (iframeEvent.type == "refresh") {
                         window.location.reload();
                     } else if (iframeEvent.type == "showBusinessCard") {
                         requestVisitCardsStore.set(iframeEvent.data.visitCardUrl);
+                    } else if (iframeEvent.type == "openModal") {
+                        modalIframeTitlelStore.set(iframeEvent.data.tiltle);
+                        modalIframeAllowlStore.set(iframeEvent.data.allow);
+                        modalIframeSrcStore.set(iframeEvent.data.src);
+                        modalPositionStore.set(iframeEvent.data.position);
+                        modalIframeAllowApi.set(iframeEvent.data.allowApi);
+                        modalVisibilityStore.set(true);
+                    } else if (iframeEvent.type == "closeModal") {
+                        modalVisibilityStore.set(false);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
@@ -782,16 +804,26 @@ class IframeListener {
         });
     }
     sendSettingsToChatIframe() {
+        if (!connectionManager.currentRoom) {
+            throw new Error("Race condition : Current room is not defined yet");
+        }
         this.postMessageToChat({
             type: "settings",
             data: {
                 notification: localUserStore.getNotification(),
                 chatSounds: localUserStore.getChatSounds(),
+                enableChat: connectionManager.currentRoom?.enableChat,
+                enableChatUpload: connectionManager.currentRoom?.enableChatUpload,
             },
         });
     }
 
     sendLeaveMucEventToChatIframe(url: string) {
+        if (!connectionManager.currentRoom) {
+            throw new Error("Race condition : Current room is not defined yet");
+        } else if (!connectionManager.currentRoom.enableChat) {
+            return;
+        }
         this.postMessageToChat({
             type: "leaveMuc",
             data: {
@@ -801,6 +833,11 @@ class IframeListener {
     }
 
     sendJoinMucEventToChatIframe(url: string, name: string, type: string, subscribe: boolean) {
+        if (!connectionManager.currentRoom) {
+            throw new Error("Race condition : Current room is not defined yet");
+        } else if (!connectionManager.currentRoom.enableChat) {
+            return;
+        }
         this.postMessageToChat({
             type: "joinMuc",
             data: {
@@ -870,7 +907,7 @@ class IframeListener {
     }
 
     /**
-     * Sends the message... to all allowed iframes.
+     * Sends the message... to all allowed iframes and not the chat.
      */
     public postMessage(message: IframeResponseEvent, exceptOrigin?: MessageEventSource) {
         for (const iframe of this.iframes) {

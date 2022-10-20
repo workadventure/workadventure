@@ -65,7 +65,12 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteMenuStore, emoteStore } from "../../Stores/EmoteStore";
-import { jitsiParticipantsCountStore, userIsAdminStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
+import {
+    jitsiParticipantsCountStore,
+    userIsAdminStore,
+    userIsEditorStore,
+    userIsJitsiDominantSpeakerStore,
+} from "../../Stores/GameStore";
 import {
     activeSubMenuStore,
     contactPageStore,
@@ -139,9 +144,10 @@ import { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterfac
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
-import { AreaType, GameMap, GameMapProperties } from "@workadventure/map-editor-types";
+import { AreaType, GameMap, GameMapProperties } from "@workadventure/map-editor";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { GameStateEvent } from "../../Api/Events/GameStateEvent";
+import { modalVisibilityStore } from "../../Stores/ModalStore";
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PositionInterface;
@@ -192,6 +198,8 @@ export class GameScene extends DirtyScene {
     private highlightedEmbedScreenUnsubscriber!: Unsubscriber;
     private embedScreenLayoutStoreUnsubscriber!: Unsubscriber;
     private availabilityStatusStoreUnsubscriber!: Unsubscriber;
+
+    private modalVisibilityStoreUnsubscriber!: Unsubscriber;
 
     MapUrlFile: string;
     roomUrl: string;
@@ -391,7 +399,14 @@ export class GameScene extends DirtyScene {
                 return;
             }
             //TODO strategy to add access token
-            this.load.image(`${url}/${tileset.image}`, `${url}/${tileset.image}`);
+            if (tileset.image.includes(".svg")) {
+                this.load.svg(`${url}/${tileset.image}`, `${url}/${tileset.image}`, {
+                    width: tileset.imagewidth,
+                    height: tileset.imageheight,
+                });
+            } else {
+                this.load.image(`${url}/${tileset.image}`, `${url}/${tileset.image}`);
+            }
         });
 
         // Scan the object layers for objects to load and load them.
@@ -751,6 +766,7 @@ export class GameScene extends DirtyScene {
 
                 playersStore.connectToRoomConnection(this.connection);
                 userIsAdminStore.set(this.connection.hasTag("admin"));
+                userIsEditorStore.set(this.connection.hasTag("editor"));
 
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
 
@@ -1019,6 +1035,12 @@ export class GameScene extends DirtyScene {
             if (emoteMenu) {
                 this.userInputManager.disableControls();
             } else {
+                this.userInputManager.restoreControls();
+            }
+        });
+
+        this.modalVisibilityStoreUnsubscriber = modalVisibilityStore.subscribe((visibility) => {
+            if (!visibility && !this.userInputManager.isControlsEnabled) {
                 this.userInputManager.restoreControls();
             }
         });
@@ -1615,6 +1637,7 @@ ${escapedMessage}
                 playerVariables: this.playerVariablesManager.variables,
                 userRoomToken: this.connection ? this.connection.userRoomToken : "",
                 metadata: this.room.metadata,
+                isLogged: localUserStore.isLogged(),
             };
         });
         this.iframeSubscriptionList.push(
@@ -1670,6 +1693,7 @@ ${escapedMessage}
                     this.load.on("filecomplete-json-" + eventTileset.url, () => {
                         let jsonTileset = this.cache.json.get(eventTileset.url);
                         const imageUrl = jsonTilesetDir + "/" + jsonTileset.image;
+
                         this.load.image(imageUrl, imageUrl);
                         this.load.on("filecomplete-image-" + imageUrl, () => {
                             //Add the firstgid of the tileset to the json file
@@ -2200,6 +2224,7 @@ ${escapedMessage}
         if (!this.mapEditorModeManager?.isActive()) {
             this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
         } else {
+            this.mapEditorModeManager.update(time, delta);
             this.cameraManager.move(this.userInputManager.getEventListForGameTick());
         }
 
@@ -2535,7 +2560,7 @@ ${escapedMessage}
         });
     }
 
-    public initialiseJitsi(coWebsite: JitsiCoWebsite, roomName: string, jwt?: string): void {
+    public initialiseJitsi(coWebsite: JitsiCoWebsite, roomName: string, jwt?: string, jitsiUrl?: string): void {
         const allProps = this.gameMapFrontWrapper.getCurrentProperties();
         const jitsiConfig = this.safeParseJSONstring(
             allProps.get(GameMapProperties.JITSI_CONFIG) as string | undefined,
@@ -2545,7 +2570,9 @@ ${escapedMessage}
             allProps.get(GameMapProperties.JITSI_INTERFACE_CONFIG) as string | undefined,
             GameMapProperties.JITSI_INTERFACE_CONFIG
         );
-        const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
+        if (!jitsiUrl) {
+            jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
+        }
 
         coWebsite.setJitsiLoadPromise(() => {
             return jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl);

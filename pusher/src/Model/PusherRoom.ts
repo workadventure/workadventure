@@ -101,10 +101,10 @@ export class PusherRoom {
                             listener.emitInBatch(subMessage);
                         }
                     }
-                } else if (message.hasEditmapmessage()) {
+                } else if (message.hasEditmapcommandmessage()) {
                     for (const listener of this.listeners) {
                         const subMessage = new SubMessage();
-                        subMessage.setEditmapmessage(message.getEditmapmessage());
+                        subMessage.setEditmapcommandmessage(message.getEditmapcommandmessage());
                         listener.emitInBatch(subMessage);
                     }
                 } else if (message.hasErrormessage()) {

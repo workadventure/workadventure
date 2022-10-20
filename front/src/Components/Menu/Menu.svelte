@@ -12,6 +12,7 @@
         activeSubMenuStore,
         checkSubMenuToShow,
         customMenuIframe,
+        menuInputFocusStore,
         menuVisiblilityStore,
         SubMenusInterface,
         subMenusStore,
@@ -48,6 +49,7 @@
     });
 
     onDestroy(() => {
+        menuInputFocusStore.set(false);
         if (unsubscriberSubMenuStore) {
             unsubscriberSubMenuStore();
         }
@@ -144,7 +146,7 @@
         </nav>
     </div>
     <div class="menu-submenu-container tw-bg-dark-purple/95 tw-rounded" transition:fly={{ y: -1000, duration: 500 }}>
-        <button type="button" class="close-window" on:click={closeMenu}>&times</button>
+        <button type="button" class="close-window" on:click={closeMenu}>&times;</button>
         <h2>{activeSubMenuTranslation}</h2>
         <svelte:component this={activeComponent} {...props} />
     </div>

@@ -99,9 +99,15 @@ const en_US: BaseTranslation = {
         download: "download",
         openCoWebsite: "Open in co-website",
         copy: "copy the link",
+        tooBig: "{fileName} is too big {maxFileSize}.",
+        notLogged: "You need to be logged in to upload a file.",
     },
     needRefresh: "Your connection has expired, you need to refresh the page to reconnect to the chat.",
     refresh: "Refresh",
+    upgrade: "Upgrade",
+    upgradeToSeeMore: "Upgrade to see more messages",
+    disabled: "This feature is disabled.",
+    disabledByAdmin: "This feature is disabled by the administrator.",
 };
 
 export default en_US;

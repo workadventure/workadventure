@@ -29,7 +29,7 @@ jobs:
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
-        if: ${{ github.repository_owner == 'thecodingmachine' }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -44,7 +44,7 @@ jobs:
 
       - name: Build and push
         uses: docker/build-push-action@v3
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         with:
           context: .
           file: front/Dockerfile
@@ -90,7 +90,7 @@ jobs:
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
-        if: ${{ github.repository_owner == 'thecodingmachine' }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -105,7 +105,7 @@ jobs:
 
       - name: Build and push
         uses: docker/build-push-action@v3
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         with:
           context: .
           file: front/chat/Dockerfile
@@ -151,7 +151,7 @@ jobs:
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
-        if: ${{ github.repository_owner == 'thecodingmachine' }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -166,7 +166,7 @@ jobs:
 
       - name: Build and push
         uses: docker/build-push-action@v3
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         with:
           context: .
           file: back/Dockerfile
@@ -212,7 +212,7 @@ jobs:
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
-        if: ${{ github.repository_owner == 'thecodingmachine' }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -227,7 +227,7 @@ jobs:
 
       - name: Build and push
         uses: docker/build-push-action@v3
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         with:
           context: .
           file: pusher/Dockerfile
@@ -269,7 +269,7 @@ jobs:
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
-        if: ${{ github.repository_owner == 'thecodingmachine' }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -284,7 +284,7 @@ jobs:
 
       - name: Build and push
         uses: docker/build-push-action@v3
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         with:
           file: uploader/Dockerfile
           push: true
@@ -325,7 +325,7 @@ jobs:
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
-        if: ${{ github.repository_owner == 'thecodingmachine' }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -340,7 +340,7 @@ jobs:
 
       - name: Build and push
         uses: docker/build-push-action@v3
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         with:
           context: maps/
           file: maps/Dockerfile
@@ -384,7 +384,7 @@ jobs:
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
-        if: ${{ github.repository_owner == 'thecodingmachine' }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -399,7 +399,7 @@ jobs:
 
       - name: Build and push
         uses: docker/build-push-action@v3
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         with:
           context: .
           file: map-storage/Dockerfile
@@ -445,7 +445,7 @@ jobs:
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
-        if: ${{ github.repository_owner == 'thecodingmachine' }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -460,7 +460,7 @@ jobs:
 
       - name: Build and push
         uses: docker/build-push-action@v3
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         with:
           context: xmpp/
           platforms: linux/amd64,linux/arm64

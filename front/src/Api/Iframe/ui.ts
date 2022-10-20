@@ -11,6 +11,8 @@ import type { UIWebsiteCommands } from "./Ui/UIWebsite";
 import website from "./Ui/UIWebsite";
 import { RemotePlayer } from "./Players/RemotePlayer";
 import { AddPlayerEvent } from "../Events/AddPlayerEvent";
+import modal from "./Ui/Modal";
+import type { WorkadventureModalCommands } from "./Ui/Modal";
 
 let popupId = 0;
 const popups: Map<number, Popup> = new Map<number, Popup>();
@@ -270,6 +272,10 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
 
     get website(): UIWebsiteCommands {
         return website;
+    }
+
+    get modal(): WorkadventureModalCommands {
+        return modal;
     }
 }
 

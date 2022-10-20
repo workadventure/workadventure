@@ -1,5 +1,5 @@
 import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
-import { v4 } from "uuid";
+import { v4 as uuidV4 } from "uuid";
 import {
     ErrorMessage,
     MucRoomDefinitionMessage,
@@ -17,11 +17,15 @@ import { Client, client, xml } from "@xmpp/client";
 import { Element } from "@xmpp/xml";
 import SASLError from "@xmpp/sasl/lib/SASLError";
 import StreamError from "@xmpp/connection/lib/StreamError";
+import Debug from "debug";
+
+const debug = Debug("xmppClient");
 
 class ElementExt extends Element {}
 
 //eslint-disable-next-line @typescript-eslint/no-var-requires
 const parse = require("@xmpp/xml/lib/parse");
+
 export class XmppClient {
     private address!: JID;
     private clientPromise!: CancelablePromise<Client>;
@@ -53,32 +57,32 @@ export class XmppClient {
                 service: `${EJABBERD_WS_URI}`,
                 domain: EJABBERD_DOMAIN,
                 username: this.clientID,
-                resource: this.clientResource ? this.clientResource : v4().toString(), //"pusher",
+                resource: this.clientResource ? this.clientResource : uuidV4().toString(), //"pusher",
                 password: this.clientPassword,
             });
             this.xmppSocket = xmpp;
 
-            xmpp.on("error", (err: unknown) => {
+            xmpp.on("error", (err) => {
                 if (err instanceof SASLError)
-                    console.info("XmppClient => createClient => receive => error", err.name, err.condition);
+                    debug("XmppClient => createClient => receive => error", err.name, err.condition);
                 else {
-                    console.info("XmppClient => createClient => receive => error", err);
+                    debug("XmppClient => createClient => receive => error", err);
                 }
-                this.sendErrorToIframe(err as string);
+                this.sendErrorToIframe(err.message);
                 //console.error("XmppClient => receive => error =>", err);
                 this.close();
             });
 
             xmpp.reconnect.on("reconnecting", () => {
-                console.info("XmppClient => createClient => reconnecting");
+                debug("XmppClient => createClient => reconnecting");
             });
 
             xmpp.reconnect.on("reconnected", () => {
-                console.info("XmppClient => createClient => reconnected");
+                debug("XmppClient => createClient => reconnected");
             });
 
             xmpp.on("offline", () => {
-                console.info("XmppClient => createClient => offline => status", status);
+                debug("XmppClient => createClient => offline => status", status);
                 status = "disconnected";
 
                 //close en restart connexion
@@ -98,11 +102,7 @@ export class XmppClient {
             });
 
             xmpp.on("disconnect", () => {
-                console.info(
-                    "XmppClient => createClient => disconnect => status",
-                    status,
-                    this.clientSocket.disconnecting
-                );
+                debug("XmppClient => createClient => disconnect => status", status, this.clientSocket.disconnecting);
                 if (status !== "disconnected") {
                     status = "disconnected";
 
@@ -118,7 +118,7 @@ export class XmppClient {
                 }
             });
             xmpp.on("online", (address: JID) => {
-                console.info("XmppClient => createClient => online");
+                debug("XmppClient => createClient => online");
                 xmpp.reconnect.stop();
                 status = "connected";
                 //TODO
@@ -151,13 +151,13 @@ export class XmppClient {
                 }
             });
             xmpp.on("status", (status: string) => {
-                console.error("XmppClient => createClient => status => status", status);
+                debug("XmppClient => createClient => status => status", status);
                 // FIXME: the client keeps trying to reconnect.... even if the pusher is disconnected!
             });
 
             xmpp.start()
                 .then(() => {
-                    console.log("XmppClient => createClient => start");
+                    debug("XmppClient => createClient => start");
                     res(xmpp);
                 })
                 .catch((err: Error) => {
@@ -182,31 +182,31 @@ export class XmppClient {
             xmpp.on("stanza", (stanza: unknown) => {
                 // @ts-ignore
                 const stanzaString = stanza.toString();
+
                 const elementExtParsed = parse(stanzaString) as ElementExt;
+                if (elementExtParsed) {
+                    const canContinue = this.xmlRestrictionsToIframe(elementExtParsed);
 
-                //parse for ping XMPP message and send pong
-                if (elementExtParsed.getChild("ping")) {
-                    this.sendPong(
-                        elementExtParsed.getAttr("from"),
-                        elementExtParsed.getAttr("to"),
-                        elementExtParsed.getAttr("id")
-                    );
-                    return;
-                }
-
-                const xmppMessage = new XmppMessage();
-                xmppMessage.setStanza(stanzaString);
-
-                const pusherToIframeMessage = new PusherToIframeMessage();
-                pusherToIframeMessage.setXmppmessage(xmppMessage);
-
-                if (!this.clientSocket.disconnecting) {
-                    this.clientSocket.send(pusherToIframeMessage.serializeBinary().buffer, true);
+                    if (canContinue) {
+                        this.sendToChat(stanzaString);
+                    }
                 }
             });
         } catch (err) {
             console.error("XmppClient => createClient => Error", err);
             rej(err);
+        }
+    }
+
+    sendToChat(stanza: string): void {
+        const xmppMessage = new XmppMessage();
+        xmppMessage.setStanza(stanza);
+
+        const pusherToIframeMessage = new PusherToIframeMessage();
+        pusherToIframeMessage.setXmppmessage(xmppMessage);
+
+        if (!this.clientSocket.disconnecting) {
+            this.clientSocket.send(pusherToIframeMessage.serializeBinary().buffer, true);
         }
     }
 
@@ -228,17 +228,17 @@ export class XmppClient {
 
     close(): void {
         //cancel promise
-        console.info("xmppClient => close");
+        debug("xmppClient => close");
         this.clientPromise.cancel();
     }
 
     start(): CancelablePromise {
-        console.info("xmppClient => start");
+        debug("xmppClient => start");
         return (this.clientPromise = new CancelablePromise((res, rej, onCancel) => {
             this.createClient(res, rej);
             onCancel(() => {
                 (async (): Promise<void> => {
-                    console.info("clientPromise => onCancel => from xmppClient");
+                    debug("clientPromise => onCancel => from xmppClient");
                     if (this.timeout) {
                         clearTimeout(this.timeout);
                         this.timeout = undefined;
@@ -268,27 +268,154 @@ export class XmppClient {
             });
         }).catch((err) => {
             if (err instanceof SASLError) {
-                console.info("clientPromise => receive => error", err.name, err.condition);
+                debug("clientPromise => receive => error", err.name, err.condition);
             } else {
-                console.info("clientPromise => receive => error", err);
+                debug("clientPromise => receive => error", err);
             }
             this.sendErrorToIframe(err.toString());
             this.clientPromise.cancel();
         }));
     }
 
-    async sendPong(to: string, from: string, id: string): Promise<void> {
-        await this.send(xml("iq", { from, to, id, type: "result" }).toString());
-        return;
+    private xmlRestrictionsToIframe(xml: ElementExt): boolean {
+        if (xml.getChild("ping")) {
+            this.sendPong(xml.getAttr("from"), xml.getAttr("to"), xml.getAttr("id"));
+            return false;
+        }
+        return true;
     }
 
-    async send(stanza: string): Promise<void> {
+    private xmlRestrictionsToEjabberd(element: ElementExt): null | ElementExt {
+        // Test body message length
+        if (element.getName() === "message" && element.getChild("body")) {
+            const message = element.getChildText("body") ?? "";
+            if (message.length > 10_000) {
+                return null;
+            }
+        } else if (element.getName() === "iq" && element.getChild("query", "urn:xmpp:mam:2")) {
+            // Test if current world is not premium, if not restrict the history
+            if (this.clientSocket.maxHistoryChat > 0) {
+                const query = element.getChild("query", "urn:xmpp:mam:2");
+                const x = query?.getChild("x", "jabber:x:data");
+                const end = x?.getChildByAttr("var", "end")?.getChildText("value");
+                if (end) {
+                    const endDate = new Date(end);
+                    const maxDate = new Date();
+                    maxDate.setDate(maxDate.getDate() - this.clientSocket.maxHistoryChat);
+                    if (endDate <= maxDate) {
+                        this.sendToChat(
+                            xml(
+                                "iq",
+                                {
+                                    type: "result",
+                                    id: element.getAttr("id"),
+                                    from: element.getAttr("to"),
+                                    to: element.getAttr("from"),
+                                },
+                                xml(
+                                    "fin",
+                                    {
+                                        xmlns: "urn:xmpp:mam:2",
+                                        complete: false,
+                                    },
+                                    xml(
+                                        "set",
+                                        {
+                                            xmlns: "http://jabber.org/protocol/rsm",
+                                        },
+                                        xml("count", {}, "0")
+                                    )
+                                )
+                            ).toString()
+                        );
+                        return null;
+                    } else {
+                        x?.append(
+                            xml(
+                                "field",
+                                {
+                                    var: "start",
+                                },
+                                xml("value", {}, maxDate.toISOString())
+                            )
+                        );
+                        this.sendToChat(
+                            xml(
+                                "iq",
+                                {
+                                    type: "result",
+                                    id: uuidV4(),
+                                    from: element.getAttr("to"),
+                                    to: element.getAttr("from"),
+                                },
+                                xml("fin", {
+                                    xmlns: "urn:xmpp:mam:2",
+                                    complete: false,
+                                    maxHistoryDate: maxDate.toISOString(),
+                                })
+                            ).toString()
+                        );
+                    }
+                }
+            }
+            // If getting error on MaxHistoryChat
+            else if (this.clientSocket.maxHistoryChat < 0) {
+                this.sendToChat(
+                    xml(
+                        "iq",
+                        {
+                            type: "result",
+                            id: element.getAttr("id"),
+                            from: element.getAttr("to"),
+                            to: element.getAttr("from"),
+                        },
+                        xml(
+                            "fin",
+                            {
+                                xmlns: "urn:xmpp:mam:2",
+                                complete: this.clientSocket.maxHistoryChat !== -1,
+                                disabled: this.clientSocket.maxHistoryChat !== -1,
+                            },
+                            xml(
+                                "set",
+                                {
+                                    xmlns: "http://jabber.org/protocol/rsm",
+                                },
+                                xml("count", {}, "0")
+                            )
+                        )
+                    ).toString()
+                );
+            }
+        }
+        return element;
+    }
+
+    sendPong(to: string, from: string, id: string): void {
+        this.sendToEjabberd(xml("iq", { from, to, id, type: "result" }).toString());
+    }
+
+    async sendToEjabberd(stanza: string): Promise<void> {
         const ctx = parse(stanza);
-        await this.xmppSocket?.send(ctx);
+        try {
+            if (ctx) {
+                const restricted = this.xmlRestrictionsToEjabberd(ctx);
+                if (restricted) {
+                    await this.xmppSocket?.send(restricted as Element);
+                }
+            }
+        } catch (e: unknown) {
+            console.error("An error occurred while sending a message to XMPP server: ", e);
+            try {
+                this.close();
+            } catch (e2: unknown) {
+                console.error("An error occurred while closing connection to XMPP server: ", e2);
+            }
+        }
         return;
     }
 
-    sendErrorToIframe(message: string) {
+    sendErrorToIframe(message: string): void {
         const errorMessage = new ErrorMessage();
         errorMessage.setMessage(message);
 

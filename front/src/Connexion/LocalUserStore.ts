@@ -43,6 +43,7 @@ interface PlayerVariable {
 
 class LocalUserStore {
     private jwt: JwtAuthToken | undefined;
+    private name: string | undefined;
 
     saveUser(localUser: LocalUser) {
         localStorage.setItem("localUser", JSON.stringify(localUser));
@@ -54,10 +55,14 @@ class LocalUserStore {
     }
 
     setName(name: string): void {
+        this.name = name;
         localStorage.setItem(playerNameKey, name);
     }
 
     getName(): string | null {
+        if (this.name) {
+            return this.name;
+        }
         const value = localStorage.getItem(playerNameKey) || "";
         return isUserNameValid(value) ? value : null;
     }
@@ -306,7 +311,8 @@ class LocalUserStore {
                     if (storedValue) {
                         const userKey = key.substring((userProperties + "_" + context + "__|__").length);
 
-                        const [expireStr, isPublicStr, value] = storedValue.split(":", 3);
+                        const [expireStr, isPublicStr] = storedValue.split(":", 2);
+                        const value = storedValue.split(":").slice(2).join(":");
                         if (isPublicStr === undefined || value === undefined) {
                             console.error(
                                 'Invalid value stored in Redis. Expecting the value to be in the "ttl:0|1:value" format. Got: ',

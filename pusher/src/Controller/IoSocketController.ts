@@ -23,7 +23,7 @@ import {
     AvailabilityStatus,
     QueryMessage,
     PingMessage,
-    EditMapMessage,
+    EditMapCommandMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
@@ -285,6 +285,10 @@ export class IoSocketController {
                         const version = query.version;
 
                         if (version !== apiVersionHash) {
+                            if (upgradeAborted.aborted) {
+                                // If the response points to nowhere, don't attempt an upgrade
+                                return;
+                            }
                             return res.upgrade(
                                 {
                                     rejected: true,
@@ -369,7 +373,7 @@ export class IoSocketController {
                             try {
                                 userData = await adminService.fetchMemberDataByUuid(
                                     userIdentifier,
-                                    isLogged,
+                                    tokenData?.accessToken,
                                     roomId,
                                     IPAddress,
                                     characterLayers,
@@ -379,6 +383,10 @@ export class IoSocketController {
                                 if (Axios.isAxiosError(err)) {
                                     const errorType = isErrorApiData.safeParse(err?.response?.data);
                                     if (errorType.success) {
+                                        if (upgradeAborted.aborted) {
+                                            // If the response points to nowhere, don't attempt an upgrade
+                                            return;
+                                        }
                                         return res.upgrade(
                                             {
                                                 rejected: true,
@@ -392,6 +400,10 @@ export class IoSocketController {
                                             context
                                         );
                                     } else {
+                                        if (upgradeAborted.aborted) {
+                                            // If the response points to nowhere, don't attempt an upgrade
+                                            return;
+                                        }
                                         return res.upgrade(
                                             {
                                                 rejected: true,
@@ -469,6 +481,7 @@ export class IoSocketController {
                                 jabberPassword: userData.jabberPassword,
                                 mucRooms: userData.mucRooms,
                                 activatedInviteUser: userData.activatedInviteUser,
+                                applications: userData.applications,
                                 position: {
                                     x: x,
                                     y: y,
@@ -494,6 +507,10 @@ export class IoSocketController {
                             if (!(e instanceof InvalidTokenError)) {
                                 console.error(e);
                             }
+                            if (upgradeAborted.aborted) {
+                                // If the response points to nowhere, don't attempt an upgrade
+                                return;
+                            }
                             res.upgrade(
                                 {
                                     rejected: true,
@@ -507,6 +524,10 @@ export class IoSocketController {
                                 context
                             );
                         } else {
+                            if (upgradeAborted.aborted) {
+                                // If the response points to nowhere, don't attempt an upgrade
+                                return;
+                            }
                             res.upgrade(
                                 {
                                     rejected: true,
@@ -645,8 +666,11 @@ export class IoSocketController {
                     );
                 } else if (message.hasPingmessage()) {
                     client.resetPongTimeout();
-                } else if (message.hasEditmapmessage()) {
-                    socketManager.handleEditMapMessage(client, message.getEditmapmessage() as EditMapMessage);
+                } else if (message.hasEditmapcommandmessage()) {
+                    socketManager.handleEditMapCommandMessage(
+                        client,
+                        message.getEditmapcommandmessage() as EditMapCommandMessage
+                    );
                 } else if (message.hasAskpositionmessage()) {
                     socketManager.handleAskPositionMessage(
                         client,
@@ -717,6 +741,7 @@ export class IoSocketController {
         client.mucRooms = ws.mucRooms;
         client.activatedInviteUser = ws.activatedInviteUser;
         client.isLogged = ws.isLogged;
+        client.applications = ws.applications;
         return client;
     }
 }

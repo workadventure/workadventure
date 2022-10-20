@@ -16,6 +16,7 @@ import { WokaDetail } from "../../Messages/JsonMessages/PlayerTextures";
 import { PusherRoom } from "../../Model/PusherRoom";
 import { XmppClient } from "../../Services/XmppClient";
 import { MucRoomDefinitionInterface } from "../../Messages/JsonMessages/MucRoomDefinitionInterface";
+import { ApplicationDefinitionInterface } from "../../Messages/JsonMessages/ApplicationDefinitionInterface";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
@@ -46,6 +47,7 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable 
     backConnection: BackConnection;
     listenedZones: Set<Zone>;
     userRoomToken: string | undefined;
+    maxHistoryChat: number;
     // The ID of the timer that sends ping requests.
     // Ping requests are sent from the server because the setTimeout on the browser is unreliable when the tab is hidden.
     pingIntervalId: NodeJS.Timeout | undefined;
@@ -58,4 +60,5 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable 
     jabberPassword: string;
     activatedInviteUser: boolean | undefined;
     mucRooms: Array<MucRoomDefinitionInterface>;
+    applications: Array<ApplicationDefinitionInterface> | undefined;
 }

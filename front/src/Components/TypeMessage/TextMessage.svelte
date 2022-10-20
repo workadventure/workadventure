@@ -30,5 +30,5 @@
     <div class="content-text-message tw-flex tw-text-white tw-max-h-60 tw-w-full tw-overflow-auto tw-mt-7 tw-mr-6">
         {@html converter.convert()}
     </div>
-    <button type="button" class="btn close-window" on:click|preventDefault={closeTextMessage}>&times </button>
+    <button type="button" class="btn close-window" on:click|preventDefault={closeTextMessage}>&times;</button>
 </div>

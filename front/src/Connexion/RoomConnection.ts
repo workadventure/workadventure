@@ -29,12 +29,13 @@ import {
     AvailabilityStatus,
     CharacterLayerMessage,
     ClientToServerMessage as ClientToServerMessageTsProto,
-    EditMapMessage,
+    EditMapCommandMessage,
     EmoteEventMessage as EmoteEventMessageTsProto,
     ErrorMessage as ErrorMessageTsProto,
     ErrorScreenMessage as ErrorScreenMessageTsProto,
     GroupDeleteMessage as GroupDeleteMessageTsProto,
     GroupUpdateMessage as GroupUpdateMessageTsProto,
+    JitsiJwtAnswer,
     JoinBBBMeetingAnswer,
     MoveToPositionMessage as MoveToPositionMessageProto,
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
@@ -58,8 +59,9 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
-import { ITiledMapRectangleObject } from "@workadventure/map-editor-types";
+import { ITiledMapRectangleObject } from "@workadventure/map-editor";
 import { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
+import { iframeListener } from "../Api/IframeListener";
 
 const manualPingDelay = 20000;
 
@@ -141,8 +143,8 @@ export class RoomConnection implements RoomConnection {
     private readonly _variableMessageStream = new Subject<{ name: string; value: unknown }>();
     public readonly variableMessageStream = this._variableMessageStream.asObservable();
 
-    private readonly _editMapMessageStream = new Subject<EditMapMessage>();
-    public readonly editMapMessageStream = this._editMapMessageStream.asObservable();
+    private readonly _editMapCommandMessageStream = new Subject<EditMapCommandMessage>();
+    public readonly editMapCommandMessageStream = this._editMapCommandMessageStream.asObservable();
 
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
     public readonly playerDetailsUpdatedMessageStream = this._playerDetailsUpdatedMessageStream.asObservable();
@@ -308,9 +310,9 @@ export class RoomConnection implements RoomConnection {
                                 this.sendPong();
                                 break;
                             }
-                            case "editMapMessage": {
-                                const message = subMessage.editMapMessage;
-                                this._editMapMessageStream.next(message);
+                            case "editMapCommandMessage": {
+                                const message = subMessage.editMapCommandMessage;
+                                this._editMapCommandMessageStream.next(message);
                                 break;
                             }
                             default: {
@@ -349,6 +351,15 @@ export class RoomConnection implements RoomConnection {
                             ? roomJoinedMessage.activatedInviteUser
                             : true
                     );
+
+                    // If there are scripts from the admin, run it
+                    if (roomJoinedMessage.applications != undefined) {
+                        for (const script of roomJoinedMessage.applications) {
+                            iframeListener.registerScript(script.script).catch((err) => {
+                                console.error("roomJoinedMessage => registerScript => err", err);
+                            });
+                        }
+                    }
 
                     // If one of the URLs sent to us does not exist, let's go to the Woka selection screen.
                     if (
@@ -465,7 +476,8 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "refreshRoomMessage": {
-                    //todo: implement a way to notify the user the room was refreshed.
+                    console.info("roomConnection => refreshRoomMessage received");
+                    window.location.reload();
                     break;
                 }
                 case "followRequestMessage": {
@@ -968,19 +980,52 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorModifyArea(config: ITiledMapRectangleObject): void {
+    public emitMapEditorModifyArea(commandId: string, config: ITiledMapRectangleObject): void {
         this.send({
             message: {
-                $case: "editMapMessage",
-                editMapMessage: {
-                    message: {
-                        $case: "modifyAreaMessage",
-                        modifyAreaMessage: {
-                            id: config.id,
-                            x: config.x,
-                            y: config.y,
-                            width: config.width,
-                            height: config.height,
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "modifyAreaMessage",
+                            modifyAreaMessage: config,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitMapEditorDeleteArea(commandId: string, id: number): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "deleteAreaMessage",
+                            deleteAreaMessage: {
+                                id,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitMapEditorCreateArea(commandId: string, config: ITiledMapRectangleObject): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "createAreaMessage",
+                            createAreaMessage: config,
                         },
                     },
                 },
@@ -1065,7 +1110,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public async queryJitsiJwtToken(jitsiRoom: string): Promise<string> {
+    public async queryJitsiJwtToken(jitsiRoom: string): Promise<JitsiJwtAnswer> {
         const answer = await this.query({
             $case: "jitsiJwtQuery",
             jitsiJwtQuery: {
@@ -1075,7 +1120,7 @@ export class RoomConnection implements RoomConnection {
         if (answer.$case !== "jitsiJwtAnswer") {
             throw new Error("Unexpected answer");
         }
-        return answer.jitsiJwtAnswer.jwt;
+        return answer.jitsiJwtAnswer;
     }
 
     public async queryBBBMeetingUrl(

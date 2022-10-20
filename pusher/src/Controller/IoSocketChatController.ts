@@ -12,9 +12,11 @@ import { FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { socketManager } from "../Services/SocketManager";
 import { emitInBatch } from "../Services/IoSocketHelpers";
 import {
+    ADMIN_API_URL,
     DISABLE_ANONYMOUS,
     EJABBERD_DOMAIN,
     EJABBERD_JWT_SECRET,
+    MAX_HISTORY_CHAT,
     SOCKET_IDLE_TIMER,
 } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
@@ -24,6 +26,11 @@ import { WebSocket } from "uWebSockets.js";
 import { adminService } from "../Services/AdminService";
 import { ErrorApiData, isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
+import Jwt from "jsonwebtoken";
+import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+import { XmppClient } from "../Services/XmppClient";
+import Debug from "debug";
+import { isUserRoomToken } from "../Messages/JsonMessages/AdminApiData";
 
 /**
  * The object passed between the "open" and the "upgrade" methods when opening a websocket
@@ -35,6 +42,7 @@ interface UpgradeData {
     userUuid: string;
     IPAddress: string;
     playUri: string;
+    maxHistoryChat: number;
     tags: string[];
     userRoomToken: string | undefined;
     mucRooms: Array<MucRoomDefinitionInterface> | undefined;
@@ -47,9 +55,6 @@ interface UpgradeFailedInvalidData {
     playUri: string;
 }
 
-import Jwt from "jsonwebtoken";
-import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
-import { XmppClient } from "../Services/XmppClient";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { jid } = require("@xmpp/client");
 
@@ -59,10 +64,18 @@ interface UpgradeFailedErrorData {
     error: ErrorApiData;
 }
 
+interface CacheRoomData {
+    maxHistoryChat: number;
+    timestamp: number;
+}
+
 type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData;
+
+const debug = Debug("ioSocketChatController");
 
 export class IoSocketChatController {
     private nextUserId = 1;
+    private cache: Map<string, CacheRoomData> = new Map();
 
     constructor(private readonly app: HyperExpress.compressors.TemplatedApp) {
         this.ioConnection();
@@ -94,6 +107,8 @@ export class IoSocketChatController {
                     const IPAddress = req.getHeader("x-forwarded-for");
                     const locale = req.getHeader("accept-language");
 
+                    let maxHistoryChat = MAX_HISTORY_CHAT;
+
                     const playUri = query.playUri;
                     try {
                         if (typeof playUri !== "string") {
@@ -105,6 +120,10 @@ export class IoSocketChatController {
                         const uuid = query.uuid as string;
 
                         if (version !== apiVersionHash) {
+                            if (upgradeAborted.aborted) {
+                                // If the response points to nowhere, don't attempt an upgrade
+                                return;
+                            }
                             return res.upgrade(
                                 {
                                     rejected: true,
@@ -137,7 +156,6 @@ export class IoSocketChatController {
                         }
 
                         const userIdentifier = tokenData ? tokenData.identifier : uuid ?? "";
-                        const isLogged = !!tokenData?.accessToken;
 
                         let memberTags: string[] = [];
                         let memberUserRoomToken: string | undefined;
@@ -159,7 +177,7 @@ export class IoSocketChatController {
                             try {
                                 userData = await adminService.fetchMemberDataByUuid(
                                     userIdentifier,
-                                    isLogged,
+                                    tokenData?.accessToken,
                                     playUri,
                                     IPAddress,
                                     [],
@@ -169,6 +187,10 @@ export class IoSocketChatController {
                                 if (Axios.isAxiosError(err)) {
                                     const errorType = isErrorApiData.safeParse(err?.response?.data);
                                     if (errorType.success) {
+                                        if (upgradeAborted.aborted) {
+                                            // If the response points to nowhere, don't attempt an upgrade
+                                            return;
+                                        }
                                         return res.upgrade(
                                             {
                                                 rejected: true,
@@ -182,6 +204,10 @@ export class IoSocketChatController {
                                             context
                                         );
                                     } else {
+                                        if (upgradeAborted.aborted) {
+                                            // If the response points to nowhere, don't attempt an upgrade
+                                            return;
+                                        }
                                         return res.upgrade(
                                             {
                                                 rejected: true,
@@ -217,11 +243,45 @@ export class IoSocketChatController {
                             userData.jabberId = jid(userIdentifier, EJABBERD_DOMAIN).toString();
                             if (EJABBERD_JWT_SECRET) {
                                 userData.jabberPassword = Jwt.sign({ jid: userData.jabberId }, EJABBERD_JWT_SECRET, {
-                                    expiresIn: "1d",
+                                    expiresIn: "30d",
                                     algorithm: "HS256",
                                 });
                             } else {
                                 userData.jabberPassword = "no_password_set";
+                            }
+                        }
+
+                        if (userData.userRoomToken && ADMIN_API_URL) {
+                            const jwtDecoded = isUserRoomToken.parse(
+                                jwtTokenManager.verifyJWTToken(userData.userRoomToken)
+                            );
+                            // If cached lifetime is less than 5 minutes (300_000)
+                            if (
+                                this.cache.has(jwtDecoded.room) &&
+                                this.cache.get(jwtDecoded.room) &&
+                                (this.cache.get(jwtDecoded.room)?.timestamp || 0) > Date.now() - 300_000
+                            ) {
+                                // @ts-ignore
+                                maxHistoryChat = this.cache.get(jwtDecoded.room).maxHistoryChat;
+                            } else {
+                                maxHistoryChat = await Axios.get(`${ADMIN_API_URL}/api/limit/historyChat`, {
+                                    headers: { userRoomToken: userData.userRoomToken },
+                                })
+                                    .then((response) => parseInt(response.data))
+                                    .catch((err) => {
+                                        if (Axios.isAxiosError(err) && err.response?.status === 402) {
+                                            return parseInt(err.response?.data);
+                                        } else if (Axios.isAxiosError(err) && err.response?.status === 403) {
+                                            // Disabled in admin
+                                            return -2;
+                                        }
+                                        console.error(err);
+                                        return -1;
+                                    });
+                                this.cache.set(jwtDecoded.room, {
+                                    maxHistoryChat: maxHistoryChat,
+                                    timestamp: Date.now(),
+                                });
                             }
                         }
 
@@ -230,11 +290,10 @@ export class IoSocketChatController {
                             SocketManager.mergeCharacterLayersAndCustomTextures(characterLayers, memberTextures);*/
 
                         if (upgradeAborted.aborted) {
-                            console.log("Ouch! Client disconnected before we could upgrade it!");
+                            debug("Ouch! Client disconnected before we could upgrade it!");
                             /* You must not upgrade now */
                             return;
                         }
-
                         /* This immediately calls open handler, you must not use res after this call */
                         res.upgrade(
                             {
@@ -245,6 +304,7 @@ export class IoSocketChatController {
                                 IPAddress,
                                 userIdentifier,
                                 playUri,
+                                maxHistoryChat,
                                 tags: memberTags,
                                 userRoomToken: memberUserRoomToken,
                                 jabberId: userData.jabberId,
@@ -262,6 +322,10 @@ export class IoSocketChatController {
                             if (!(e instanceof InvalidTokenError)) {
                                 console.error(e);
                             }
+                            if (upgradeAborted.aborted) {
+                                // If the response points to nowhere, don't attempt an upgrade
+                                return;
+                            }
                             res.upgrade(
                                 {
                                     rejected: true,
@@ -275,6 +339,10 @@ export class IoSocketChatController {
                                 context
                             );
                         } else {
+                            if (upgradeAborted.aborted) {
+                                // If the response points to nowhere, don't attempt an upgrade
+                                return;
+                            }
                             res.upgrade(
                                 {
                                     rejected: true,
@@ -318,10 +386,10 @@ export class IoSocketChatController {
                 //let ok = ws.send(message, isBinary);
             },
             drain: (ws) => {
-                console.log("WebSocket backpressure: " + ws.getBufferedAmount());
+                debug("WebSocket backpressure: " + ws.getBufferedAmount());
             },
             close: (ws) => {
-                console.log("IoSocketChatController closing ...");
+                debug("IoSocketChatController closing ...");
                 const client = ws as ExSocketInterface;
                 try {
                     client.disconnecting = true;
@@ -355,11 +423,12 @@ export class IoSocketChatController {
         client.userIdentifier = ws.userIdentifier;
         client.tags = ws.tags;
         client.playUri = ws.roomId;
+        client.maxHistoryChat = ws.maxHistoryChat;
         client.jabberId = ws.jabberId;
         client.jabberPassword = ws.jabberPassword;
         client.mucRooms = ws.mucRooms;
 
-        console.info("IoSocketChatController => initClient => XmppClient");
+        debug("IoSocketChatController => initClient => XmppClient");
         client.xmppClient = new XmppClient(client, client.mucRooms);
 
         return client;

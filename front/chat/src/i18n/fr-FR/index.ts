@@ -72,7 +72,7 @@ const fr_FR: Translation = {
     delete: "Supprimer",
     messageDeleted: "Ce message a été supprimé par ",
     emoji: {
-        icon: "Icone pour ouvrir ou fermer la selection d'emoji",
+        icon: "Emojis",
         search: "Chercher un emoji...",
         categories: {
             recents: "Emojis récents",
@@ -85,7 +85,7 @@ const fr_FR: Translation = {
             objects: "Objets",
             symbols: "Symbols",
             flags: "Drapeaux",
-            custom: "Personalisés",
+            custom: "Personnalisés",
         },
         notFound: "Aucun emoji trouvé",
     },
@@ -99,9 +99,15 @@ const fr_FR: Translation = {
         download: "Téléchargement",
         openCoWebsite: "Ouvrir en co-website",
         copy: "Copier le lien",
+        tooBig: "{fileName} est trop volumineux {maxFileSize}.",
+        notLogged: "Vous devez être connecté pour télécharger un fichier.",
     },
     needRefresh: "Votre connexion a expiré, vous devez actualiser la page pour vous reconnecter au chat.",
     refresh: "Rafraichir",
+    upgrade: "Passez premium",
+    upgradeToSeeMore: "Passez premium pour voir plus de messages",
+    disabled: "Cette fonctionnalité est désactivée.",
+    disabledByAdmin: "Cette fonctionnalité est désactivée par l'administrateur.",
 };
 
 export default fr_FR;

@@ -41,8 +41,10 @@ import {
     QueryMessage,
     XmppMessage,
     AskPositionMessage,
-    EditMapMessage,
     BanUserByUuidMessage,
+    ApplicationMessage,
+    EditMapCommandMessage,
+    EditMapCommandWithKeyMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -191,6 +193,15 @@ export class SocketManager implements ZoneEventListener {
             joinRoomMessage.setActivatedinviteuser(
                 client.activatedInviteUser != undefined ? client.activatedInviteUser : true
             );
+
+            if (client.applications != undefined) {
+                for (const aplicationValue of client.applications) {
+                    const application = new ApplicationMessage();
+                    application.setName(aplicationValue.name);
+                    application.setScript(aplicationValue.script);
+                    joinRoomMessage.addApplications(application);
+                }
+            }
 
             for (const characterLayer of client.characterLayers) {
                 const characterLayerMessage = new CharacterLayerMessage();
@@ -342,9 +353,13 @@ export class SocketManager implements ZoneEventListener {
         client.backConnection.write(pusherToBackMessage);
     }
 
-    handleEditMapMessage(client: ExSocketInterface, message: EditMapMessage): void {
+    handleEditMapCommandMessage(client: ExSocketInterface, message: EditMapCommandMessage): void {
+        const editWithMapKeyMessage = new EditMapCommandWithKeyMessage();
+        editWithMapKeyMessage.setEditmapcommandmessage(message);
+        editWithMapKeyMessage.setMapkey(client.roomId.split("~")[1]);
+
         const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setEditmapmessage(message);
+        pusherToBackMessage.setEditmapcommandwithkeymessage(editWithMapKeyMessage);
         client.backConnection.write(pusherToBackMessage);
     }
 
@@ -712,8 +727,7 @@ export class SocketManager implements ZoneEventListener {
                 "Trying to send a message from client to server but the XMPP connection is not established yet! There is a race condition."
             );
         }
-        client.xmppClient.send(xmppMessage.getStanza()).catch((e) => console.error(e));
-        console.log("XMPP Message sent");
+        client.xmppClient.sendToEjabberd(xmppMessage.getStanza()).catch((e) => console.error(e));
     }
 
     handleAskPositionMessage(client: ExSocketInterface, askPositionMessage: AskPositionMessage): void {
