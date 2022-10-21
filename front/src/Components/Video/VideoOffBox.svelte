@@ -44,16 +44,12 @@
 
 <div
     class="video-container video-off"
-    class:no-clikable={!clickable}
     bind:this={videoContainer}
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
     <div
-        style={$embedScreenLayoutStore === LayoutMode.VideoChat
-            ? `border: solid 2px ${backGroundColor}; color: ${textColor}`
-            : `background-color: ${backGroundColor}; color: ${textColor}`}
-        class={($embedScreenLayoutStore === LayoutMode.VideoChat ? "tw-items-end" : "tw-items-center tw-px-3") +
-            " tw-w-full tw-rounded tw-flex tw-flex-row tw-relative"}
+        style={`border: solid 2px ${backGroundColor}; color: ${textColor}; background-color: ${backGroundColor}; color: ${textColor}`}
+        class="tw-items-center tw-px-3 tw-w-full tw-rounded tw-flex tw-flex-row tw-relative"
     >
         <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
         <span
@@ -79,7 +75,7 @@
                 class:tw-brightness-100={textColor === "white"}
             />
         {/if}
-        <div class="tw-flex report-ban-container-cam-off media-box-camera-off-size tw-opacity-0 tw-h-10">
+        <div class="tw-w-full tw-flex report-ban-container-cam-off tw-opacity-0 tw-h-10">
             <BanReportBox {peer} />
         </div>
     </div>
