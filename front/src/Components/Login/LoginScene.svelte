@@ -47,7 +47,7 @@
     </section>
     <div class="tw-w-full sm:tw-w-96 md:tw-w-10/12 lg:tw-w-1/2 xl:tw-w-1/3 tw-rounded tw-mx-auto tw-text-center tw-p-8">
         <section class="text-center tw-flex tw-h-fit tw-flex-col tw-justify-center tw-items-center">
-            <h2 class="tw-text-white tw-text-base tw-font-xl">{$LL.login.input.name.placeholder()}</h2>
+            <h2 class="tw-text-white tw-text-2xl">{$LL.login.input.name.placeholder()}</h2>
             <!-- svelte-ignore a11y-autofocus -->
             <input
                 type="text"
