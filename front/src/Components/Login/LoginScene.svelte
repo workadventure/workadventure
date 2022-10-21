@@ -39,22 +39,20 @@
 </script>
 
 <form
-    class="loginScene tw-w-screen tw-bg-dark-purple/50 tw-flex tw-flex-col tw-h-screen tw-px-10 md:tw-px-32 tw-pointer-events-auto tw-pt-20"
+    class="loginScene tw-w-screen tw-flex tw-flex-col tw-h-screen tw-px-10 md:tw-px-32 tw-pointer-events-auto tw-pt-20"
     on:submit|preventDefault={submit}
 >
     <section class="tw-h-fit tw-max-w-2xl tw-self-center">
         <img src={logo} alt="logo" class="main-logo tw-w-full" />
     </section>
-    <div
-        class="tw-bg-dark-blue/75 tw-w-full sm:tw-w-96 md:tw-w-10/12 lg:tw-w-1/2 xl:tw-w-1/3 tw-rounded tw-mx-auto tw-text-center tw-p-8"
-    >
-        <section class="text-center tw-flex tw-h-fit tw-flex-col">
-            <h2 class="tw-text-light-blue tw-text-base tw-font-normal">{$LL.login.input.name.placeholder()}</h2>
+    <div class="tw-w-full sm:tw-w-96 md:tw-w-10/12 lg:tw-w-1/2 xl:tw-w-1/3 tw-rounded tw-mx-auto tw-text-center tw-p-8">
+        <section class="text-center tw-flex tw-h-fit tw-flex-col tw-justify-center tw-items-center">
+            <h2 class="tw-text-white tw-text-base tw-font-xl">{$LL.login.input.name.placeholder()}</h2>
             <!-- svelte-ignore a11y-autofocus -->
             <input
                 type="text"
                 name="loginSceneName"
-                class=""
+                class="tw-w-96 tw-text-center tw-border-white"
                 autofocus
                 maxlength={MAX_USERNAME_LENGTH}
                 bind:value={name}

@@ -97,7 +97,7 @@
 
 <form class="enableCameraScene tw-pointer-events-auto" on:submit|preventDefault={submit}>
     <section class="tw-px-10 md:tw-px-32">
-        <div class="tw-bg-dark-purple/50 tw-p-8">
+        <div class="tw-p-8">
             <section class="text-center">
                 <h2>{$LL.camera.enable.title()}</h2>
             </section>
