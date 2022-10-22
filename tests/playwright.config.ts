@@ -59,7 +59,6 @@ const config: PlaywrightTestConfig = {
       name: 'firefox',
       use: {
         ...devices['Desktop Firefox'],
-        permissions: ["microphone","camera"],
       },
     },
 
@@ -67,7 +66,6 @@ const config: PlaywrightTestConfig = {
       name: 'webkit',
       use: {
         ...devices['Desktop Safari'],
-        permissions: ["microphone","camera"],
       },
     },
 
