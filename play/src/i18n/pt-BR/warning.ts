@@ -1,12 +1,9 @@
 import type { Translation } from "../i18n-types";
-import { ADMIN_URL } from "../../front/Enum/EnvironmentVariable";
 import type { DeepPartial } from "../DeepPartial";
-
-const upgradeLink = ADMIN_URL + "/pricing";
 
 const warning: DeepPartial<Translation["warning"]> = {
     title: "Aviso!",
-    content: `Este mundo está perto do seu limite!. Você pode atualizar sua capacidade <a href="${upgradeLink}" target="_blank">aqui</a>`,
+    content: `Este mundo está perto do seu limite!. Você pode atualizar sua capacidade <a href="{upgradeLink}" target="_blank">aqui</a>`,
     limit: "Este mundo está perto do seu limite!",
     accessDenied: {
         camera: "Acesso à câmera negado. Clique aqui e verifique as permissões do seu navegador.",

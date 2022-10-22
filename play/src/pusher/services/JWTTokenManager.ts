@@ -15,6 +15,9 @@ export const tokenInvalidException = "tokenInvalid";
 
 class JWTTokenManager {
     public verifyAdminSocketToken(token: string): AdminSocketTokenData {
+        if (!ADMIN_SOCKETS_TOKEN) {
+            throw new Error("Missing environment variable ADMIN_SOCKETS_TOKEN");
+        }
         return Jwt.verify(token, ADMIN_SOCKETS_TOKEN) as AdminSocketTokenData;
     }
 

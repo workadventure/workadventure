@@ -55,7 +55,7 @@ services:
             HOST: "0.0.0.0"
             NODE_ENV: development
             SERVER_ID: "$SERVER_ID"
-            PLAY_URL: "http://play.workadventure.localhost"
+            ALLOWED_CORS_ORIGIN: "http://play.workadventure.localhost"
             VITE_URL: "http://front.workadventure.localhost"
             PUSHER_URL: http://play.workadventure.localhost
             UPLOADER_URL: http://uploader.workadventure.localhost
@@ -71,11 +71,9 @@ services:
             MAX_PER_GROUP: "$MAX_PER_GROUP"
             MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
             # Note: ENABLE_OPENID needs to have any not falsy value to be enabled.
-            ENABLE_OPENID: "$OPID_CLIENT_ID"
             OPID_CLIENT_ID: $OPID_CLIENT_ID
             OPID_CLIENT_SECRET: $OPID_CLIENT_SECRET
             OPID_CLIENT_ISSUER: $OPID_CLIENT_ISSUER
-            OPID_CLIENT_REDIRECT_URL: $OPID_CLIENT_REDIRECT_URL
             OPID_PROFILE_SCREEN_PROVIDER: $OPID_PROFILE_SCREEN_PROVIDER
             OPID_SCOPE: $OPID_SCOPE
             OPID_PROMPT: $OPID_PROMPT

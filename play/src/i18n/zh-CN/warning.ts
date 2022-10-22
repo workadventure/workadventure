@@ -1,12 +1,9 @@
 import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
-import { ADMIN_URL } from "../../front/Enum/EnvironmentVariable";
-
-const upgradeLink = ADMIN_URL + "/pricing";
 
 const warning: DeepPartial<Translation["warning"]> = {
     title: "警告!",
-    content: `该世界已接近容量限制！你可以 <a href="${upgradeLink}" target="_blank">点击这里</a> 升级它的容量`,
+    content: `该世界已接近容量限制！你可以 <a href="{upgradeLink}" target="_blank">点击这里</a> 升级它的容量`,
     limit: "该世界已接近容量限制!",
     accessDenied: {
         camera: "摄像头访问权限被拒绝。点击这里检查你的浏览器权限。",

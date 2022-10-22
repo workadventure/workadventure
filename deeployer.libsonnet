@@ -96,7 +96,6 @@
           "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
           "ADMIN_SOCKETS_TOKEN": env.ADMIN_SOCKETS_TOKEN,
           # Opid client
-          "ENABLE_OPENID": "1",
           "OPID_CLIENT_ID": "auth-code-client",
           "OPID_CLIENT_SECRET": env.ADMIN_API_TOKEN,
           "OPID_CLIENT_ISSUER": "https://publichydra-"+url,

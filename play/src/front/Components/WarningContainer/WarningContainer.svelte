@@ -10,14 +10,14 @@
 <main class="warningMain" transition:fly={{ y: -200, duration: 500 }}>
     {#if $userIsAdminStore}
         <h2>{$LL.warning.title()}</h2>
-        <p>{@html $LL.warning.content()}</p>
+        <p>{@html $LL.warning.content({ upgradeLink: ADMIN_URL + "/pricing" })}</p>
     {:else if $limitMapStore}
         <p>
             This map is available for 2 days. You can register your domain <a href={registerLink}>here</a>!
         </p>
     {:else}
         <h2>{$LL.warning.title()}</h2>
-        <p>{@html $LL.warning.content()}</p>
+        <p>{@html $LL.warning.content({ upgradeLink: ADMIN_URL + "/pricing" })}</p>
     {/if}
 </main>
 

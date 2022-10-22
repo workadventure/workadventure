@@ -23,7 +23,7 @@ export class SwaggerController extends BaseHttpController {
         });
 
         this.app.get("/openapi/admin", (req, res) => {
-            const options = {
+            const options: swaggerJsdoc.Options = {
                 swaggerDefinition: {
                     swagger: "2.0",
                     //openapi: "3.0.0",
@@ -36,7 +36,6 @@ export class SwaggerController extends BaseHttpController {
                             email: "hello@workadventu.re",
                         },
                     },
-                    host: "pusher." + ADMIN_URL.replace("//", ""),
                     tags: [
                         {
                             name: "AdminAPI",
@@ -54,6 +53,9 @@ export class SwaggerController extends BaseHttpController {
                 },
                 apis: ["./src/Services/*.ts"],
             };
+            if (ADMIN_URL && options.swaggerDefinition) {
+                options.swaggerDefinition.host = "pusher." + ADMIN_URL.replace("//", "");
+            }
             res.json(swaggerJsdoc(options));
         });
 

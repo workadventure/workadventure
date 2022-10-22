@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>WorkAdventure</title>
+        <title>{{ title }}</title>
         <link rel="stylesheet" href="/style/tailwind.scss" />
         <meta charset="UTF-8" />
-        <meta name="description" content="Virtual space for your company, team, metavers, friends..." />
+        <meta name="description" content="{{ description }}" />
         <meta
             name="viewport"
             content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
@@ -15,38 +15,28 @@
         <!-- END TRACK CODE -->
 
         <!-- App Design -->
-        <meta name="msapplication-TileColor" content="#000000" />
-        <meta name="msapplication-TileImage" content="static/images/favicons/ms-icon-144x144.png" />
-        <meta name="theme-color" content="#000000" />
+        <meta name="msapplication-TileColor" content="{{ themeColor }}" />
+        <meta name="msapplication-TileImage" content="{{ msApplicationTileImage }}" />
+        <meta name="theme-color" content="{{ themeColor }}" />
 
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="website">
-        <meta property="og:url" content="https://play.workadventu.re/">
-        <meta property="og:title" content="WorkAdventure">
-        <meta property="og:description" content="Virtual space for your company, team, metavers, friends...">
-        <meta property="og:image" content="https://workadventu.re/images/general/logo-og.png">
+        <meta property="og:url" content="{{ url }}">
+        <meta property="og:title" content="{{ title }}">
+        <meta property="og:description" content="{{ description }}">
+        <meta property="og:image" content="{{ cardImage }}">
 
         <!-- Twitter -->
         <meta property="twitter:card" content="summary_large_image">
-        <meta property="twitter:url" content="https://play.workadventu.re/">
-        <meta property="twitter:title" content="WorkAdventure">
-        <meta property="twitter:description" content="Virtual space for your company, team, metavers, friends...">
-        <meta property="twitter:image" content="https://workadventu.re/images/general/logo-og.png">
+        <meta property="twitter:url" content="{{ url }}">
+        <meta property="twitter:title" content="{{ title }}">
+        <meta property="twitter:description" content="{{ description }}">
+        <meta property="twitter:image" content="{{ cardImage }}">
 
         <!-- Icons -->
-        <link rel="icon" type="image/png" sizes="16x16" href="static/images/favicons/favicon-16x16.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="static/images/favicons/favicon-32x32.png" />
-        <link rel="apple-touch-icon" type="image/png" sizes="57x57" href="static/images/favicons/apple-icon-57x57.png" />
-        <link rel="apple-touch-icon" type="image/png" sizes="60x60" href="static/images/favicons/apple-icon-60x60.png" />
-        <link rel="apple-touch-icon" type="image/png" sizes="72x72" href="static/images/favicons/apple-icon-72x72.png" />
-        <link rel="apple-touch-icon" type="image/png" sizes="76x76" href="static/images/favicons/apple-icon-76x76.png" />
-        <link rel="icon" type="image/png" sizes="96x96" href="static/images/favicons/favicon-96x96.png" />
-        <link rel="apple-touch-icon" type="image/png" sizes="114x114" href="static/images/favicons/apple-icon-114x114.png" />
-        <link rel="apple-touch-icon" type="image/png" sizes="120x120" href="static/images/favicons/apple-icon-120x120.png" />
-        <link rel="apple-touch-icon" type="image/png" sizes="144x144" href="static/images/favicons/apple-icon-144x144.png" />
-        <link rel="apple-touch-icon" type="image/png" sizes="152x152" href="static/images/favicons/apple-icon-152x152.png" />
-        <link rel="apple-touch-icon" type="image/png" sizes="180x180" href="static/images/favicons/apple-icon-180x180.png" />
-        <link rel="icon" type="image/png" sizes="192x192" href="static/images/favicons/android-icon-192x192.png" />
+        {{#favIcons}}
+        <link rel="{{ rel }}" type="image/png" sizes="{{ sizes }}" href="{{ src }}" />
+        {{/favIcons}}
         <link rel="manifest" href="static/images/favicons/manifest.json" />
 
         <base href="/" />
@@ -58,6 +48,9 @@
                 visibility: collapse;
             }
         </style>
+        <script>
+            {{{ script }}}
+        </script>
     </head>
     <body id="body" style="margin: 0; background-color: #000">
         <div class="main-container" id="main-container">
@@ -68,7 +61,7 @@
             <div id="cowebsite">
                 <aside id="cowebsite-aside" class="noselect">
                     <div id="cowebsite-aside-buttons">
-                        <button type="button" id="cowebsite-close" class="close-window top-right-btn" alt="close all co-websites">&times;</button>
+                        <button type="button" id="cowebsite-close" class="close-window top-right-btn">&times;</button>
                         <button
                             class="top-right-btn btn tw-bg-medium-purple"
                             id="cowebsite-fullscreen"

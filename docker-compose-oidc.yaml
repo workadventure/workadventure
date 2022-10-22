@@ -2,13 +2,11 @@ version: "3.6"
 services:
   play:
     environment:
-      ENABLE_OPENID: 1
       #OPID_CLIENT_ID: authorization-code-with-pkce-client-id
       #OPID_CLIENT_SECRET: authorization-code-with-pkce-client-secret
       OPID_CLIENT_ID: authorization-code-client-id
       OPID_CLIENT_SECRET: authorization-code-client-secret
       OPID_CLIENT_ISSUER: http://oidc.workadventure.localhost
-      OPID_CLIENT_REDIRECT_URL: http://play.workadventure.localhost/openid-callback
 
   chat:
     environment:

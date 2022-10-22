@@ -1,15 +1,29 @@
 import { detectLocale, navigatorDetector, initLocalStorageDetector } from "typesafe-i18n/detectors";
-import { FALLBACK_LOCALE } from "../front/Enum/EnvironmentVariable";
 import { setLocale } from "./i18n-svelte";
 import type { Locales } from "./i18n-types";
 import { baseLocale, locales } from "./i18n-util";
 import { loadLocaleAsync } from "./i18n-util.async";
 
-const fallbackLocale = (FALLBACK_LOCALE || baseLocale) as Locales;
+let fallbackLocale: Locales | undefined;
 const localStorageProperty = "language";
+
+async function getFallbackLocale(): Promise<Locales> {
+    if (fallbackLocale !== undefined) {
+        return fallbackLocale;
+    }
+    if (window) {
+        const envVars = await import("../front/Enum/EnvironmentVariable");
+        fallbackLocale = (envVars.FALLBACK_LOCALE || baseLocale) as Locales;
+    } else {
+        const envVars = await import("../pusher/enums/EnvironmentVariable");
+        fallbackLocale = (envVars.FALLBACK_LOCALE || baseLocale) as Locales;
+    }
+    return fallbackLocale;
+}
 
 export const localeDetector = async () => {
     const exist = localStorage.getItem(localStorageProperty);
+    const fallbackLocale = await getFallbackLocale();
     let detectedLocale: Locales = fallbackLocale;
 
     if (exist) {

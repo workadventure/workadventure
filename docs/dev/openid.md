@@ -15,7 +15,6 @@ For WorkAdventure, the redirect URL is: `https://play.[your-domain]/openid-callb
 
 Then, you need to configure these environment variables:
 
-- `ENABLE_OPENID` (*front container*): set this to 1 to enable login
 - `OPID_CLIENT_ISSUER` (*play container*): the full URL to your OpenID Connect provider
 - `OPID_CLIENT_ID` (*play container*): the ID of the OpenID client that you created in the OpenID Connect provider
 - `OPID_CLIENT_SECRET` (*play container*): the secret of the OpenID client that you created in the OpenID Connect provider

@@ -9,7 +9,7 @@ import { WokaListController } from "./controllers/WokaListController";
 import { SwaggerController } from "./controllers/SwaggerController";
 import HyperExpress from "hyper-express";
 import cors from "cors";
-import { ENABLE_OPENAPI_ENDPOINT, PLAY_URL } from "./enums/EnvironmentVariable";
+import { ENABLE_OPENAPI_ENDPOINT, ALLOWED_CORS_ORIGIN } from "./enums/EnvironmentVariable";
 import { PingController } from "./controllers/PingController";
 import { IoSocketChatController } from "./controllers/IoSocketChatController";
 import { FrontController } from "./controllers/FrontController";
@@ -25,24 +25,25 @@ class App {
         this.app = webserver.uws_instance;
 
         // Global middlewares
-        webserver.use(
-            cors({
-                origin: (origin) => {
-                    console.log("coucou2", origin);
-                    return PLAY_URL === "*" ? origin : PLAY_URL;
-                },
-                allowedHeaders: [
-                    "Origin",
-                    "X-Requested-With",
-                    "Content-Type",
-                    "Accept",
-                    "Authorization",
-                    "Pragma",
-                    "Cache-Control",
-                ],
-                credentials: true,
-            })
-        );
+        if (ALLOWED_CORS_ORIGIN) {
+            webserver.use(
+                cors({
+                    origin: (origin) => {
+                        return ALLOWED_CORS_ORIGIN === "*" ? origin : ALLOWED_CORS_ORIGIN;
+                    },
+                    allowedHeaders: [
+                        "Origin",
+                        "X-Requested-With",
+                        "Content-Type",
+                        "Accept",
+                        "Authorization",
+                        "Pragma",
+                        "Cache-Control",
+                    ],
+                    credentials: true,
+                })
+            );
+        }
 
         let path: string;
         if (fs.existsSync("public")) {

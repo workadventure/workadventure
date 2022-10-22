@@ -8,9 +8,10 @@ class AnalyticsClient {
     private posthogPromise: Promise<PostHog> | undefined;
 
     constructor() {
-        if (POSTHOG_API_KEY && POSTHOG_URL) {
+        const postHogApiKey = POSTHOG_API_KEY;
+        if (postHogApiKey && POSTHOG_URL) {
             this.posthogPromise = import("posthog-js").then(({ default: posthog }) => {
-                posthog.init(POSTHOG_API_KEY, { api_host: POSTHOG_URL });
+                posthog.init(postHogApiKey, { api_host: POSTHOG_URL });
                 //the posthog toolbar need a reference in window to be able to work
                 window.posthog = posthog;
                 return posthog;

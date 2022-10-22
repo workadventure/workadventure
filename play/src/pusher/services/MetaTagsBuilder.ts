@@ -1,4 +1,3 @@
-import { load } from "cheerio";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { isMapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
 import { adminService } from "./AdminService";
@@ -83,18 +82,23 @@ export const MetaTagsDefaultValue: RequiredMetaTagsData = {
 };
 
 export class MetaTagsBuilder {
-    constructor(private htmlFile: Buffer, private url: string) {}
+    constructor(private url: string) {}
 
-    async build(): Promise<Buffer> {
-        const metaTagsValues = ADMIN_API_URL
-            ? { ...MetaTagsDefaultValue, ...(await this.getMetaFromAdmin()) }
-            : await this.getMetaFromFile();
-
-        if (!metaTagsValues) {
-            return this.htmlFile;
+    public async getMeta(userAgent: string): Promise<RequiredMetaTagsData> {
+        if (ADMIN_API_URL) {
+            return { ...MetaTagsDefaultValue, ...(await this.getMetaFromAdmin()) };
+        }
+        // Let's only populate the metadata for bots. For normal users, this is useless and it wastes time
+        // downloading the map from the Pusher.
+        userAgent = userAgent.toLowerCase();
+        // "bot" covers Twitter and Google
+        // "facebook" covers obviously Facebook
+        // "preview" covers Bing and Microsoft products
+        if (userAgent.includes("bot") || userAgent.includes("facebook") || userAgent.includes("preview")) {
+            return (await this.getMetaFromFile()) || MetaTagsDefaultValue;
         }
 
-        return this.render(metaTagsValues);
+        return MetaTagsDefaultValue;
     }
 
     private async fetchMapDetails(): Promise<MapDetailsData | undefined> {
@@ -122,6 +126,15 @@ export class MetaTagsBuilder {
     }
 
     private async fetchMapFile(): Promise<ITiledMap | undefined> {
+        // Note: we could probably read the map file ONLY if the request comes from a bot.
+        // Otherwise, the map file is already read in the Game scene!
+
+        // FIXME: This is incorrect, we need to fetch the mapUrl from the adminService.
+        // FIXME: This is incorrect, we need to fetch the mapUrl from the adminService.
+        // FIXME: This is incorrect, we need to fetch the mapUrl from the adminService.
+        // FIXME: This is incorrect, we need to fetch the mapUrl from the adminService.
+        // FIXME: This is incorrect, we need to fetch the mapUrl from the adminService.
+        // Then, we need to cache the call to the mapUrl to avoid too many calls (possibly setting up axios to use etags too!)
         const urlObject = new URL(this.url);
         let mapUrl = urlObject.pathname;
         const urlParsed = mapUrl.substring(1).split("/");
@@ -170,35 +183,5 @@ export class MetaTagsBuilder {
         }
 
         return this.metaValuesFromMapFile(mapFile);
-    }
-
-    render(metaValues: RequiredMetaTagsData): Buffer {
-        const $ = load(this.htmlFile);
-
-        $("title").text(metaValues.title);
-        $("meta[name=description]").attr("content", metaValues.description);
-
-        $("meta[name=theme-color]").attr("content", metaValues.themeColor);
-        $("meta[name=msapplication-TileColor]").attr("content", metaValues.themeColor);
-        $("meta[name=msapplication-TileImage]").attr(
-            "content",
-            metaValues.favIcons[metaValues.favIcons.length - 1].src
-        );
-
-        $("meta[property=og:url]").attr("content", this.url);
-        $("meta[property=og:title]").attr("content", metaValues.title);
-        $("meta[property=og:description]").attr("content", metaValues.description);
-        $("meta[property=og:image]").attr("content", metaValues.cardImage);
-
-        $("meta[property=twitter:url]").attr("content", this.url);
-        $("meta[property=twitter:title]").attr("content", metaValues.title);
-        $("meta[property=twitter:description]").attr("content", metaValues.description);
-        $("meta[property=twitter:image]").attr("content", metaValues.cardImage);
-
-        for (const favicon of metaValues.favIcons) {
-            $(`link[sizes=${favicon.sizes}]`).attr("href", favicon.src);
-        }
-
-        return Buffer.from($.html(), "utf8");
     }
 }

@@ -1,53 +1,40 @@
-import { getEnvConfig } from "@geprog/vite-plugin-env-config/getEnvConfig";
+//import { getEnvConfig } from "@geprog/vite-plugin-env-config/getEnvConfig";
+import type { FrontConfigurationInterface } from "../../common/FrontConfigurationInterface";
 
-const DEBUG_MODE: boolean = getEnvConfig("DEBUG_MODE") == "true";
-const PUSHER_URL = getEnvConfig("PUSHER_URL") || "//play.workadventure.localhost";
-export const ADMIN_URL = getEnvConfig("ADMIN_URL") || "";
-const UPLOADER_URL = getEnvConfig("UPLOADER_URL") || "//uploader.workadventure.localhost";
-const ICON_URL = getEnvConfig("ICON_URL") || "//icon.workadventure.localhost";
-const STUN_SERVER: string = getEnvConfig("STUN_SERVER") || "stun:stun.l.google.com:19302";
-const TURN_SERVER: string = getEnvConfig("TURN_SERVER") || "";
-const SKIP_RENDER_OPTIMIZATIONS: boolean = getEnvConfig("SKIP_RENDER_OPTIMIZATIONS") == "true";
-const DISABLE_NOTIFICATIONS: boolean = getEnvConfig("DISABLE_NOTIFICATIONS") == "true";
-const TURN_USER: string = getEnvConfig("TURN_USER") || "";
-const TURN_PASSWORD: string = getEnvConfig("TURN_PASSWORD") || "";
-const JITSI_URL: string | undefined = getEnvConfig("JITSI_URL") === "" ? undefined : getEnvConfig("JITSI_URL");
-const JITSI_PRIVATE_MODE: boolean = getEnvConfig("JITSI_PRIVATE_MODE") == "true";
-const ENABLE_FEATURE_MAP_EDITOR: boolean = getEnvConfig("ENABLE_FEATURE_MAP_EDITOR") == "true";
-const POSITION_DELAY = 200; // Wait 200ms between sending position events
-const MAX_EXTRAPOLATION_TIME = 100; // Extrapolate a maximum of 250ms if no new movement is sent by the player
-export const MAX_USERNAME_LENGTH = parseInt(getEnvConfig("MAX_USERNAME_LENGTH") || "") || 10;
-export const MAX_PER_GROUP = parseInt(getEnvConfig("MAX_PER_GROUP") || "4");
-export const DISPLAY_TERMS_OF_USE = getEnvConfig("DISPLAY_TERMS_OF_USE") == "true";
-export const NODE_ENV = getEnvConfig("NODE_ENV") || "development";
-export const CONTACT_URL = getEnvConfig("CONTACT_URL") || undefined;
-export const POSTHOG_API_KEY: string = (getEnvConfig("POSTHOG_API_KEY") as string) || "";
-export const POSTHOG_URL = getEnvConfig("POSTHOG_URL") || undefined;
-export const DISABLE_ANONYMOUS: boolean = getEnvConfig("DISABLE_ANONYMOUS") === "true";
-const enableOpenID = getEnvConfig("ENABLE_OPENID");
-export const ENABLE_OPENID =
-    enableOpenID !== "" && enableOpenID != undefined && enableOpenID != "0" && enableOpenID.toLowerCase() !== "false";
-export const OPID_PROFILE_SCREEN_PROVIDER =
-    getEnvConfig("OPID_PROFILE_SCREEN_PROVIDER") || (ADMIN_URL ? ADMIN_URL + "/profile" : undefined);
-const FALLBACK_LOCALE = getEnvConfig("FALLBACK_LOCALE") || undefined;
-export const CHAT_URL = getEnvConfig("CHAT_URL") || "//chat.workadventure.localhost";
-export const ENABLE_CHAT_UPLOAD = getEnvConfig("ENABLE_CHAT_UPLOAD") !== "false";
+declare global {
+    interface Window {
+        env: FrontConfigurationInterface;
+    }
+}
 
-export {
-    DEBUG_MODE,
-    SKIP_RENDER_OPTIMIZATIONS,
-    DISABLE_NOTIFICATIONS,
-    PUSHER_URL,
-    UPLOADER_URL,
-    ICON_URL,
-    POSITION_DELAY,
-    MAX_EXTRAPOLATION_TIME,
-    STUN_SERVER,
-    TURN_SERVER,
-    TURN_USER,
-    TURN_PASSWORD,
-    JITSI_URL,
-    JITSI_PRIVATE_MODE,
-    ENABLE_FEATURE_MAP_EDITOR,
-    FALLBACK_LOCALE,
-};
+const env = window.env;
+export const DEBUG_MODE = env.DEBUG_MODE;
+export const PUSHER_URL = env.PUSHER_URL;
+export const ADMIN_URL = env.ADMIN_URL;
+export const UPLOADER_URL = env.UPLOADER_URL;
+export const ICON_URL = env.ICON_URL;
+export const STUN_SERVER = env.STUN_SERVER;
+export const TURN_SERVER = env.TURN_SERVER;
+export const SKIP_RENDER_OPTIMIZATIONS = env.SKIP_RENDER_OPTIMIZATIONS;
+export const DISABLE_NOTIFICATIONS = env.DISABLE_NOTIFICATIONS;
+export const TURN_USER = env.TURN_USER;
+export const TURN_PASSWORD = env.TURN_PASSWORD;
+export const JITSI_URL = env.JITSI_URL;
+export const JITSI_PRIVATE_MODE = env.JITSI_PRIVATE_MODE;
+export const ENABLE_FEATURE_MAP_EDITOR = env.ENABLE_FEATURE_MAP_EDITOR;
+export const MAX_USERNAME_LENGTH = env.MAX_USERNAME_LENGTH;
+export const MAX_PER_GROUP = env.MAX_PER_GROUP;
+export const DISPLAY_TERMS_OF_USE = env.DISPLAY_TERMS_OF_USE;
+export const NODE_ENV = env.NODE_ENV;
+export const CONTACT_URL = env.CONTACT_URL;
+export const POSTHOG_API_KEY = env.POSTHOG_API_KEY;
+export const POSTHOG_URL = env.POSTHOG_URL;
+export const DISABLE_ANONYMOUS = env.DISABLE_ANONYMOUS;
+export const ENABLE_OPENID = env.ENABLE_OPENID;
+export const OPID_PROFILE_SCREEN_PROVIDER = env.OPID_PROFILE_SCREEN_PROVIDER;
+export const CHAT_URL = env.CHAT_URL;
+export const ENABLE_CHAT_UPLOAD = env.ENABLE_CHAT_UPLOAD;
+export const FALLBACK_LOCALE = env.FALLBACK_LOCALE;
+
+export const POSITION_DELAY = 200; // Wait 200ms between sending position events
+export const MAX_EXTRAPOLATION_TIME = 100; // Extrapolate a maximum of 250ms if no new movement is sent by the player

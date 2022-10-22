@@ -314,7 +314,10 @@ class JitsiFactory {
 
             // Load Jitsi if the environment variable is set.
             const jitsiScript = document.createElement("script");
-            jitsiScript.src = "https://" + domain + "/external_api.js";
+            if (!domain.startsWith("https://")) {
+                domain = "https://" + domain;
+            }
+            jitsiScript.src = domain + "/external_api.js";
             jitsiScript.onload = () => {
                 resolve();
             };
