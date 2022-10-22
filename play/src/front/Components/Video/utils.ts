@@ -49,12 +49,13 @@ export function srcObject(node: HTMLVideoElement, stream: MediaStream | null) {
 }
 
 export function getIceServersConfig(user: UserSimplePeerInterface): RTCIceServer[] {
-    const config: RTCIceServer[] = [
-        {
+    const config: RTCIceServer[] = [];
+    if (STUN_SERVER) {
+        config.push({
             urls: STUN_SERVER.split(","),
-        },
-    ];
-    if (TURN_SERVER !== "") {
+        });
+    }
+    if (TURN_SERVER) {
         config.push({
             urls: TURN_SERVER.split(","),
             username: user.webRtcUser || TURN_USER,
