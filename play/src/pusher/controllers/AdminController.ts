@@ -44,7 +44,7 @@ export class AdminController extends BaseHttpController {
     receiveRoomEditionPrompt(): void {
         this.app.post("/room/refresh", [], async (req: Request, res: Response) => {
             // TODO: propertly use the hyper-express middleware fixture when it is propertly fixed (see https://github.com/kartikk221/hyper-express/issues/125)
-            adminToken(req, res, async () => {
+            await adminToken(req, res, async () => {
                 const body = await req.json();
 
                 try {
@@ -70,7 +70,7 @@ export class AdminController extends BaseHttpController {
 
                 res.send("ok");
                 return;
-            })
+            });
         });
     }
 
@@ -113,7 +113,7 @@ export class AdminController extends BaseHttpController {
     receiveGlobalMessagePrompt(): void {
         this.app.post("/message", [], async (req: Request, res: Response) => {
             // TODO: propertly use the hyper-express middleware fixture when it is propertly fixed (see https://github.com/kartikk221/hyper-express/issues/125)
-            adminToken(req, res, async () => {
+            await adminToken(req, res, async () => {
                 const body = await req.json();
 
                 try {
@@ -160,7 +160,7 @@ export class AdminController extends BaseHttpController {
                 }
 
                 res.send("ok");
-            })
+            });
         });
     }
 
@@ -191,7 +191,7 @@ export class AdminController extends BaseHttpController {
     getRoomsList(): void {
         this.app.get("/rooms", [], async (req: Request, res: Response) => {
             // TODO: propertly use the hyper-express middleware fixture when it is propertly fixed (see https://github.com/kartikk221/hyper-express/issues/125)
-            adminToken(req, res, async () => {
+            await adminToken(req, res, async () => {
                 try {
                     const roomClients = await apiClientRepository.getAllClients();
 
@@ -243,8 +243,7 @@ export class AdminController extends BaseHttpController {
                     this.castErrorToResponse(err, res);
                     return;
                 }
-            })
-
+            });
         });
     }
 }

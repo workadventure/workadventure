@@ -269,6 +269,7 @@ test.describe('API WA.players', () => {
   });
 
   test('Test variable persistence for logged users.', async ({ page, browser }) => {
+    test.setTimeout(120_000); // Fix Webkit that can take more than 60s
     await page.goto(
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
     );

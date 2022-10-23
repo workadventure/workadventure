@@ -1,5 +1,6 @@
 //import Docker from "dockerode";
 //import * as Dockerode from "dockerode";
+import { Page } from '@playwright/test';
 import Dockerode from 'dockerode';
 import { execSync } from 'child_process';
 
@@ -58,6 +59,20 @@ export function rebootTraefik(): void {
 
 export async function rebootPlay(): Promise<void> {
     dockerCompose('up --force-recreate -d play');
+}
+
+export async function gotoWait200(page: Page, url: string): Promise<void> {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+        const response = await page.goto(url);
+        // Because we just rebooted play, we might get HTTP 502 errors from Traefik.
+        // Let's wait for a correct answer.
+        if (response.ok()) {
+            break;
+        }
+        // eslint-disable-next-line playwright/no-wait-for-timeout
+        await page.waitForTimeout(1_000);
+    }
 }
 
 export async function stopPlay(): Promise<void> {

@@ -50,10 +50,13 @@ module.exports = {
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/ban-ts-comment": "off",
         "@typescript-eslint/ban-ts-ignore": "off",
-        "@typescript-eslint/consistent-type-imports": "error"
+        "@typescript-eslint/consistent-type-imports": "error",
     },
     "settings": {
         "svelte3/typescript": true,
-        "svelte3/ignore-styles": () => true
+        "svelte3/ignore-styles": () => true,
+        "svelte3/ignore-warnings": (warning) => {
+            return  (warning.code === "a11y-click-events-have-key-events" || warning.code === "security-anchor-rel-noreferrer");
+        },
     }
 }
