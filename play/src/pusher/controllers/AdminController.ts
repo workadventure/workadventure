@@ -42,32 +42,35 @@ export class AdminController extends BaseHttpController {
      *         example: "ok"
      */
     receiveRoomEditionPrompt(): void {
-        this.app.post("/room/refresh", [adminToken], async (req: Request, res: Response) => {
-            const body = await req.json();
+        this.app.post("/room/refresh", [], async (req: Request, res: Response) => {
+            // TODO: propertly use the hyper-express middleware fixture when it is propertly fixed (see https://github.com/kartikk221/hyper-express/issues/125)
+            adminToken(req, res, async () => {
+                const body = await req.json();
 
-            try {
-                if (typeof body.roomId !== "string") {
-                    throw new Error("Incorrect roomId parameter");
-                }
-                const roomId: string = body.roomId;
+                try {
+                    if (typeof body.roomId !== "string") {
+                        throw new Error("Incorrect roomId parameter");
+                    }
+                    const roomId: string = body.roomId;
 
-                await apiClientRepository.getClient(roomId).then((roomClient) => {
-                    return new Promise<void>((res, rej) => {
-                        const roomMessage = new RefreshRoomPromptMessage();
-                        roomMessage.setRoomid(roomId);
+                    await apiClientRepository.getClient(roomId).then((roomClient) => {
+                        return new Promise<void>((res, rej) => {
+                            const roomMessage = new RefreshRoomPromptMessage();
+                            roomMessage.setRoomid(roomId);
 
-                        roomClient.sendRefreshRoomPrompt(roomMessage, (err) => {
-                            err ? rej(err) : res();
+                            roomClient.sendRefreshRoomPrompt(roomMessage, (err) => {
+                                err ? rej(err) : res();
+                            });
                         });
                     });
-                });
-            } catch (err) {
-                this.castErrorToResponse(err, res);
-                return;
-            }
+                } catch (err) {
+                    this.castErrorToResponse(err, res);
+                    return;
+                }
 
-            res.send("ok");
-            return;
+                res.send("ok");
+                return;
+            })
         });
     }
 
@@ -108,53 +111,56 @@ export class AdminController extends BaseHttpController {
      *         example: "ok"
      */
     receiveGlobalMessagePrompt(): void {
-        this.app.post("/message", [adminToken], async (req: Request, res: Response) => {
-            const body = await req.json();
+        this.app.post("/message", [], async (req: Request, res: Response) => {
+            // TODO: propertly use the hyper-express middleware fixture when it is propertly fixed (see https://github.com/kartikk221/hyper-express/issues/125)
+            adminToken(req, res, async () => {
+                const body = await req.json();
 
-            try {
-                if (typeof body.text !== "string") {
-                    throw new Error("Incorrect text parameter");
-                }
-                if (body.type !== "capacity" && body.type !== "message") {
-                    throw new Error("Incorrect type parameter");
-                }
-                if (!body.targets || typeof body.targets !== "object") {
-                    throw new Error("Incorrect targets parameter");
-                }
-                const text: string = body.text;
-                const type: string = body.type;
-                const targets: string[] = body.targets;
+                try {
+                    if (typeof body.text !== "string") {
+                        throw new Error("Incorrect text parameter");
+                    }
+                    if (body.type !== "capacity" && body.type !== "message") {
+                        throw new Error("Incorrect type parameter");
+                    }
+                    if (!body.targets || typeof body.targets !== "object") {
+                        throw new Error("Incorrect targets parameter");
+                    }
+                    const text: string = body.text;
+                    const type: string = body.type;
+                    const targets: string[] = body.targets;
 
-                await Promise.all(
-                    targets.map((roomId) => {
-                        return apiClientRepository.getClient(roomId).then((roomClient) => {
-                            return new Promise<void>((res, rej) => {
-                                if (type === "message") {
-                                    const roomMessage = new AdminRoomMessage();
-                                    roomMessage.setMessage(text);
-                                    roomMessage.setRoomid(roomId);
+                    await Promise.all(
+                        targets.map((roomId) => {
+                            return apiClientRepository.getClient(roomId).then((roomClient) => {
+                                return new Promise<void>((res, rej) => {
+                                    if (type === "message") {
+                                        const roomMessage = new AdminRoomMessage();
+                                        roomMessage.setMessage(text);
+                                        roomMessage.setRoomid(roomId);
 
-                                    roomClient.sendAdminMessageToRoom(roomMessage, (err) => {
-                                        err ? rej(err) : res();
-                                    });
-                                } else if (type === "capacity") {
-                                    const roomMessage = new WorldFullWarningToRoomMessage();
-                                    roomMessage.setRoomid(roomId);
+                                        roomClient.sendAdminMessageToRoom(roomMessage, (err) => {
+                                            err ? rej(err) : res();
+                                        });
+                                    } else if (type === "capacity") {
+                                        const roomMessage = new WorldFullWarningToRoomMessage();
+                                        roomMessage.setRoomid(roomId);
 
-                                    roomClient.sendWorldFullWarningToRoom(roomMessage, (err) => {
-                                        err ? rej(err) : res();
-                                    });
-                                }
+                                        roomClient.sendWorldFullWarningToRoom(roomMessage, (err) => {
+                                            err ? rej(err) : res();
+                                        });
+                                    }
+                                });
                             });
-                        });
-                    })
-                );
-            } catch (err) {
-                this.castErrorToResponse(err, res);
-                return;
-            }
+                        })
+                    );
+                } catch (err) {
+                    this.castErrorToResponse(err, res);
+                    return;
+                }
 
-            res.send("ok");
+                res.send("ok");
+            })
         });
     }
 
@@ -183,58 +189,62 @@ export class AdminController extends BaseHttpController {
      *                 type: integer
      */
     getRoomsList(): void {
-        this.app.get("/rooms", {}, [adminToken], async (req: Request, res: Response) => {
-            try {
-                const roomClients = await apiClientRepository.getAllClients();
+        this.app.get("/rooms", [], async (req: Request, res: Response) => {
+            // TODO: propertly use the hyper-express middleware fixture when it is propertly fixed (see https://github.com/kartikk221/hyper-express/issues/125)
+            adminToken(req, res, async () => {
+                try {
+                    const roomClients = await apiClientRepository.getAllClients();
 
-                const emptyMessage = new EmptyMessage();
+                    const emptyMessage = new EmptyMessage();
 
-                const promises: Promise<RoomsList>[] = [];
-                for (const roomClient of roomClients) {
-                    promises.push(
-                        new Promise<RoomsList>((resolve, reject) => {
-                            roomClient.getRooms(
-                                emptyMessage,
-                                new Metadata(),
-                                {
-                                    deadline: Date.now() + 1000,
-                                },
-                                (error, result) => {
-                                    if (error) {
-                                        reject(error);
-                                    } else {
-                                        resolve(result);
+                    const promises: Promise<RoomsList>[] = [];
+                    for (const roomClient of roomClients) {
+                        promises.push(
+                            new Promise<RoomsList>((resolve, reject) => {
+                                roomClient.getRooms(
+                                    emptyMessage,
+                                    new Metadata(),
+                                    {
+                                        deadline: Date.now() + 1000,
+                                    },
+                                    (error, result) => {
+                                        if (error) {
+                                            reject(error);
+                                        } else {
+                                            resolve(result);
+                                        }
                                     }
-                                }
-                            );
-                        })
-                    );
-                }
-
-                // Note: this call will take at most 1 second because we won't wait more for all the promises to resolve.
-                const roomsListsResult = await Promise.allSettled(promises);
-
-                const rooms: Record<string, number> = {};
-
-                for (const roomsListResult of roomsListsResult) {
-                    if (roomsListResult.status === "fulfilled") {
-                        for (const room of roomsListResult.value.getRoomdescriptionList()) {
-                            rooms[room.getRoomid()] = room.getNbusers();
-                        }
-                    } else {
-                        console.warn(
-                            "One back server did not respond within one second to the call to 'getRooms': ",
-                            roomsListResult.reason
+                                );
+                            })
                         );
                     }
-                }
 
-                res.setHeader("Content-Type", "application/json").send(JSON.stringify(rooms));
-                return;
-            } catch (err) {
-                this.castErrorToResponse(err, res);
-                return;
-            }
+                    // Note: this call will take at most 1 second because we won't wait more for all the promises to resolve.
+                    const roomsListsResult = await Promise.allSettled(promises);
+
+                    const rooms: Record<string, number> = {};
+
+                    for (const roomsListResult of roomsListsResult) {
+                        if (roomsListResult.status === "fulfilled") {
+                            for (const room of roomsListResult.value.getRoomdescriptionList()) {
+                                rooms[room.getRoomid()] = room.getNbusers();
+                            }
+                        } else {
+                            console.warn(
+                                "One back server did not respond within one second to the call to 'getRooms': ",
+                                roomsListResult.reason
+                            );
+                        }
+                    }
+
+                    res.setHeader("Content-Type", "application/json").send(JSON.stringify(rooms));
+                    return;
+                } catch (err) {
+                    this.castErrorToResponse(err, res);
+                    return;
+                }
+            })
+
         });
     }
 }
