@@ -1,4 +1,5 @@
 import "jasmine";
+import {} from "../../Mock/window";
 import { areCharacterLayersValid, isUserNameValid, maxUserNameLength } from "../../../../src/front/Connexion/LocalUser";
 
 describe("isUserNameValid()", () => {

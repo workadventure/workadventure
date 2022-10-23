@@ -17,6 +17,13 @@ services:
     volumes: []
     environment:
       ENABLE_OPENAPI_ENDPOINT: "false"
+      STARTUP_COMMAND_0: ""
+      STARTUP_COMMAND_1: ""
+      STARTUP_COMMAND_2: ""
+      STARTUP_COMMAND_3: ""
+      STARTUP_COMMAND_4: ""
+      STARTUP_COMMAND_5: ""
+
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.play.rule=Host(`play.workadventure.localhost`)"
@@ -34,6 +41,10 @@ services:
         BUILDKIT_INLINE_CACHE: 1
     command: /start_nginx.sh
     volumes: []
+    environment:
+      STARTUP_COMMAND_2: ""
+      STARTUP_COMMAND_3: ""
+      STARTUP_COMMAND_4: ""
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.chat.rule=Host(`chat.workadventure.localhost`)"
@@ -51,6 +62,11 @@ services:
         BUILDKIT_INLINE_CACHE: 1
     command: yarn run runprod
     volumes: []
+    environment:
+      ENABLE_OPENAPI_ENDPOINT: "false"
+      STARTUP_COMMAND_0: ""
+      STARTUP_COMMAND_1: ""
+      STARTUP_COMMAND_2: ""
 
   map-storage:
     image: thecodingmachine/workadventure-map-storage:${DOCKER_TAG:-develop}
@@ -63,6 +79,10 @@ services:
         BUILDKIT_INLINE_CACHE: 1
     command: yarn run start:prod
     volumes: []
+    environment:
+      ENABLE_OPENAPI_ENDPOINT: "false"
+      STARTUP_COMMAND_1: ""
+      STARTUP_COMMAND_2: ""
 
   maps:
     image: thecodingmachine/workadventure-maps:${DOCKER_TAG:-develop}
@@ -73,6 +93,9 @@ services:
       args:
         BUILDKIT_INLINE_CACHE: 1
     volumes: []
+    environment:
+      STARTUP_COMMAND_0: ""
+      STARTUP_COMMAND_1: ""
 
   uploader:
     image: thecodingmachine/workadventure-uploader:${DOCKER_TAG:-develop}
@@ -85,6 +108,9 @@ services:
         BUILDKIT_INLINE_CACHE: 1
     command: yarn run runprod
     volumes: []
+    environment:
+      ENABLE_OPENAPI_ENDPOINT: "false"
+      STARTUP_COMMAND_1: ""
 
   ejabberd:
     image: thecodingmachine/workadventure-simple-ecs:${DOCKER_TAG:-develop}
