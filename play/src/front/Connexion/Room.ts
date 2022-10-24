@@ -1,8 +1,9 @@
-import { CONTACT_URL, PUSHER_URL, DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
+import { CONTACT_URL, PUSHER_URL, DISABLE_ANONYMOUS, OPID_LOGOUT_REDIRECT_URL } from "../Enum/EnvironmentVariable";
 import { localUserStore } from "./LocalUserStore";
 import axios from "axios";
 import { axiosWithRetry } from "./AxiosUtils";
 import { isMapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
+import type { LegalsData, MapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
 import { isRoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
 import type { MucRoomDefinitionInterface } from "../../messages/JsonMessages/MucRoomDefinitionInterface";
 import { isErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
@@ -19,6 +20,7 @@ export class Room {
     public readonly id: string;
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
     private _iframeAuthentication?: string = PUSHER_URL + "/login-screen";
+    private _opidLogoutRedirectUrl = "/";
     private _mapUrl: string | undefined;
     private readonly _search: URLSearchParams;
     private _contactPage: string | undefined;
@@ -37,6 +39,7 @@ export class Room {
     private _pricingUrl: string | undefined;
     private _enableChat: boolean | undefined;
     private _enableChatUpload: boolean | undefined;
+    private _legals: LegalsData | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -98,7 +101,7 @@ export class Room {
 
     private async getMapDetail(): Promise<MapDetail | RoomRedirect> {
         try {
-            const result = await axiosWithRetry.get(`${PUSHER_URL}/map`, {
+            const result = await axiosWithRetry.get<unknown>(`${PUSHER_URL}/map`, {
                 params: {
                     playUri: this.roomUrl.toString(),
                     authToken: localUserStore.getAuthToken(),
@@ -107,8 +110,10 @@ export class Room {
 
             const data = result.data;
 
-            if (data.authenticationMandatory !== undefined) {
-                data.authenticationMandatory = Boolean(data.authenticationMandatory);
+            if ((data as MapDetailsData).authenticationMandatory !== undefined) {
+                (data as MapDetailsData).authenticationMandatory = Boolean(
+                    (data as MapDetailsData).authenticationMandatory
+                );
             }
 
             const roomRedirectChecking = isRoomRedirect.safeParse(data);
@@ -116,16 +121,19 @@ export class Room {
             const errorApiDataChecking = isErrorApiData.safeParse(data);
 
             if (roomRedirectChecking.success) {
+                const data = roomRedirectChecking.data;
                 return {
                     redirectUrl: data.redirectUrl,
                 };
             } else if (mapDetailsDataChecking.success) {
+                const data = mapDetailsDataChecking.data;
                 console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
                 this._mapUrl = data.mapUrl;
                 this._group = data.group;
                 this._authenticationMandatory =
                     data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
                 this._iframeAuthentication = data.iframeAuthentication || PUSHER_URL + "/login-screen";
+                this._opidLogoutRedirectUrl = data.opidLogoutRedirectUrl || OPID_LOGOUT_REDIRECT_URL || "/";
                 this._contactPage = data.contactPage || CONTACT_URL;
                 if (data.expireOn) {
                     this._expireOn = new Date(data.expireOn);
@@ -143,6 +151,7 @@ export class Room {
                 this._roomName = data.roomName ?? undefined;
 
                 this._pricingUrl = data.pricingUrl ?? undefined;
+                this._legals = data.legals ?? undefined;
 
                 this._enableChat = data.enableChat ?? undefined;
                 this._enableChatUpload = data.enableChatUpload ?? undefined;
@@ -223,6 +232,10 @@ export class Room {
         return this._iframeAuthentication;
     }
 
+    get opidLogoutRedirectUrl(): string {
+        return this._opidLogoutRedirectUrl;
+    }
+
     get contactPage(): string | undefined {
         return this._contactPage;
     }
@@ -291,5 +304,9 @@ export class Room {
             throw new Error("Enable chat upload is not defined in the room");
         }
         return this._enableChatUpload;
+    }
+
+    get legals(): LegalsData | undefined {
+        return this._legals;
     }
 }

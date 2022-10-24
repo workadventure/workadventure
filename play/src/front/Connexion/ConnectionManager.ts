@@ -75,7 +75,7 @@ class ConnectionManager {
         localUserStore.setAuthToken(null);
 
         //Go on root page
-        window.location.assign("/");
+        window.location.assign(this._currentRoom?.opidLogoutRedirectUrl ?? "/");
     }
 
     /**

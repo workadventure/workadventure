@@ -15,7 +15,6 @@ export interface FrontConfigurationInterface {
     ENABLE_FEATURE_MAP_EDITOR: boolean;
     MAX_USERNAME_LENGTH: number;
     MAX_PER_GROUP: number;
-    DISPLAY_TERMS_OF_USE: boolean;
     NODE_ENV: string;
     CONTACT_URL: string | undefined;
     POSTHOG_API_KEY: string | undefined;
@@ -23,6 +22,7 @@ export interface FrontConfigurationInterface {
     DISABLE_ANONYMOUS: boolean;
     ENABLE_OPENID: boolean;
     OPID_PROFILE_SCREEN_PROVIDER: string | undefined;
+    OPID_LOGOUT_REDIRECT_URL: string | undefined;
     CHAT_URL: string | undefined;
     ENABLE_CHAT_UPLOAD: boolean;
     FALLBACK_LOCALE: string | undefined;

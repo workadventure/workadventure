@@ -80,6 +80,7 @@ services:
             OPID_PROMPT: $OPID_PROMPT
             OPID_USERNAME_CLAIM: $OPID_USERNAME_CLAIM
             OPID_LOCALE_CLAIM: $OPID_LOCALE_CLAIM
+            OPID_LOGOUT_REDIRECT_URL: "$OPID_LOGOUT_REDIRECT_URL"
             CHAT_URL: http://chat.workadventure.localhost
             SECRET_KEY: yourSecretKey
             ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"

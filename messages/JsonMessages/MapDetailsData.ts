@@ -75,6 +75,42 @@ const MetaTagsData = z.object({
 
 const RequiredMetaTagsData = MetaTagsData.required();
 
+const isLegalsData = z.object({
+    termsOfUseUrl: extendApi(z.string().nullable().optional(), {
+        description: "The link to the 'terms of user' page (link displayed on the 'enter your name' scene)",
+    }),
+    privacyPolicyUrl: extendApi(z.string().nullable().optional(), {
+        description: "The link to the 'privacy policy' page (link displayed on the 'enter your name' scene)",
+    }),
+    cookiePolicyUrl: extendApi(z.string().nullable().optional(), {
+        description: "The link to the 'cookie policy' page (link displayed on the 'enter your name' scene)",
+    }),
+});
+
+const CustomizeSceneData = z.object({
+    clothesIcon: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the clothes icon",
+    }),
+    accessoryIcon: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the accessory icon",
+    }),
+    hatIcon: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the hat icon",
+    }),
+    hairIcon: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the hair icon",
+    }),
+    eyesIcon: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the eyes icon",
+    }),
+    bodyIcon: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the body icon",
+    }),
+    turnIcon: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the turn icon",
+    }),
+});
+
 export const isMapDetailsData = z.object({
     mapUrl: extendApi(z.string(), {
         description: "The full URL to the JSON map file",
@@ -99,6 +135,10 @@ export const isMapDetailsData = z.object({
     iframeAuthentication: extendApi(z.string().nullable().optional(), {
         description: "The URL of the authentication Iframe",
         example: "https://mycompany.com/authc",
+    }),
+    opidLogoutRedirectUrl: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the logout redirect",
+        example: "https://mycompany.com/logout",
     }),
     // The date (in ISO 8601 format) at which the room will expire
     expireOn: extendApi(z.optional(z.string()), {
@@ -160,6 +200,16 @@ export const isMapDetailsData = z.object({
     metatags: extendApi(MetaTagsData.nullable().optional(), {
         description: "Data related to METATAGS / meta tags. Contains page title, favicons, og data, etc...",
     }),
+    legals: extendApi(isLegalsData.nullable().optional(), {
+        description: "Configuration of the legals link (privacy policy, etc...)",
+    }),
+    customizeWokaScene: extendApi(CustomizeSceneData.nullable().optional(), {
+        description: "Configuration of the 'Customize your Woka' scene (WIP)",
+    }),
+    backgroundColor: extendApi(z.string().nullable().optional(), {
+        description: "The background color used on configuration scenes (enter your name, select a woka, etc...) (WIP)",
+        example: "#330033",
+    }),
 });
 
 export type MapDetailsData = z.infer<typeof isMapDetailsData>;
@@ -168,3 +218,5 @@ export type MapBbbData = z.infer<typeof isBbbData>;
 export type MapJitsiData = z.infer<typeof isJitsiData>;
 export type MetaTagsData = z.infer<typeof MetaTagsData>;
 export type RequiredMetaTagsData = z.infer<typeof RequiredMetaTagsData>;
+export type LegalsData = z.infer<typeof isLegalsData>;
+export type CustomizeSceneData = z.infer<typeof CustomizeSceneData>;

@@ -10,7 +10,10 @@ const login: DeepPartial<Translation["login"]> = {
             notValidError: "Der Name ist ungültig",
         },
     },
-    terms: 'Wenn du fortfährst, akzeptierst du die <a href="https://workadventu.re/terms-of-use" target="_blank">Nutzungsbedingungen</a>, <a href="https://workadventu.re/privacy-policy" target="_blank">Datenschutzerklärung</a> und <a href="https://workadventu.re/cookie-policy" target="_blank">Cookierichtlinien</a>.',
+    terms: "Wenn du fortfährst, akzeptierst du die {links}.",
+    termsOfUse: "Nutzungsbedingungen",
+    privacyPolicy: "Datenschutzerklärung",
+    cookiePolicy: "Cookierichtlinien",
     continue: "Fortfahren",
 };
 

@@ -7,7 +7,7 @@ import type { MetaTagsData, RequiredMetaTagsData, MapDetailsData } from "../../m
 
 export const MetaTagsDefaultValue: RequiredMetaTagsData = {
     title: "WorkAdventure",
-    description: "Virtual space for your company, team, metaverse, friends...",
+    description: "Create your own digital office, Metaverse and meet online with the world.",
     favIcons: [
         {
             rel: "icon",

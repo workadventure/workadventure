@@ -10,7 +10,10 @@ const login: DeepPartial<Translation["login"]> = {
             notValidError: "El nombre no es válido",
         },
     },
-    terms: 'Si continúa, está de acuerdo con nuestros <a href="https://workadventu.re/terms-of-use" target="_blank">términos de uso</a>, <a href="https://workadventu.re/privacy-policy" target="_blank">política de privacidad</a> y <a href="https://workadventu.re/cookie-policy" target="_blank">política de cookie</a>.',
+    terms: "Si continúa, está de acuerdo con nuestros {links}.",
+    termsOfUse: "términos de uso",
+    privacyPolicy: "política de privacidad",
+    cookiePolicy: "política de cookie",
     continue: "Continuar",
 };
 

@@ -8,7 +8,10 @@ const login: DeepPartial<Translation["login"]> = {
             empty: "名字为空",
         },
     },
-    terms: '点击继续，意味着你同意我们的<a href="https://workadventu.re/terms-of-use" target="_blank">使用协议</a>, <a href="https://workadventu.re/privacy-policy" target="_blank">隐私政策</a> 和 <a href="https://workadventu.re/cookie-policy" target="_blank">Cookie策略</a>.',
+    terms: "点击继续，意味着你同意我们的{links}.",
+    termsOfUse: "使用协议",
+    privacyPolicy: "隐私政策",
+    cookiePolicy: "Cookie策略",
     continue: "继续",
 };
 
