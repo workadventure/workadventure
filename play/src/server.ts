@@ -1,4 +1,4 @@
-import App from "./pusher/app";
+import app from "./pusher/app";
 import { PUSHER_HTTP_PORT } from "./pusher/enums/EnvironmentVariable";
 import fs from "fs";
 import process from "process";
@@ -8,4 +8,4 @@ if (fs.existsSync("dist") && !fs.existsSync("src")) {
     process.chdir("dist");
 }
 
-App.listen(PUSHER_HTTP_PORT, () => console.log(`WorkAdventure starting on port ${PUSHER_HTTP_PORT}!`));
+app.listen(PUSHER_HTTP_PORT).then(() => console.log(`WorkAdventure starting on port ${PUSHER_HTTP_PORT}!`));

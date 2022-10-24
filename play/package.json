@@ -105,7 +105,6 @@
     "buffer": "^6.0.3",
     "cancelable-promise": "^4.3.0",
     "concurrently": "^7.4.0",
-    "cors": "^2.8.5",
     "cross-env": "^7.0.3",
     "debug": "^4.3.4",
     "easystarjs": "^0.4.4",

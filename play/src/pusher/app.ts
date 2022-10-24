@@ -7,43 +7,27 @@ import { AdminController } from "./controllers/AdminController";
 import { OpenIdProfileController } from "./controllers/OpenIdProfileController";
 import { WokaListController } from "./controllers/WokaListController";
 import { SwaggerController } from "./controllers/SwaggerController";
-import HyperExpress from "hyper-express";
-import cors from "cors";
+import HyperExpress, {Server} from "hyper-express";
+import { cors } from "./middlewares/Cors";
 import { ENABLE_OPENAPI_ENDPOINT, ALLOWED_CORS_ORIGIN } from "./enums/EnvironmentVariable";
 import { PingController } from "./controllers/PingController";
 import { IoSocketChatController } from "./controllers/IoSocketChatController";
 import { FrontController } from "./controllers/FrontController";
 import fs from "fs";
+import type * as uWebsockets from "uWebSockets.js";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LiveDirectory = require("live-directory");
 
 class App {
-    public app: HyperExpress.compressors.TemplatedApp;
+    private app: HyperExpress.compressors.TemplatedApp;
+    private webserver: Server;
 
     constructor() {
-        const webserver = new HyperExpress.Server();
-        this.app = webserver.uws_instance;
+        this.webserver = new HyperExpress.Server();
+        this.app = this.webserver.uws_instance;
 
         // Global middlewares
-        if (ALLOWED_CORS_ORIGIN) {
-            webserver.use(
-                cors({
-                    origin: (origin) => {
-                        return ALLOWED_CORS_ORIGIN === "*" ? origin : ALLOWED_CORS_ORIGIN;
-                    },
-                    allowedHeaders: [
-                        "Origin",
-                        "X-Requested-With",
-                        "Content-Type",
-                        "Accept",
-                        "Authorization",
-                        "Pragma",
-                        "Cache-Control",
-                    ],
-                    credentials: true,
-                })
-            );
-        }
+        this.webserver.use(cors);
 
         let path: string;
         if (fs.existsSync("public")) {
@@ -76,19 +60,23 @@ class App {
         new IoSocketChatController(this.app);
 
         // Http controllers
-        new AuthenticateController(webserver);
-        new MapController(webserver);
-        new PrometheusController(webserver);
-        new DebugController(webserver);
-        new AdminController(webserver);
-        new OpenIdProfileController(webserver);
-        new WokaListController(webserver);
-        new PingController(webserver);
+        new AuthenticateController(this.webserver);
+        new MapController(this.webserver);
+        new PrometheusController(this.webserver);
+        new DebugController(this.webserver);
+        new AdminController(this.webserver);
+        new OpenIdProfileController(this.webserver);
+        new WokaListController(this.webserver);
+        new PingController(this.webserver);
         if (ENABLE_OPENAPI_ENDPOINT) {
-            new SwaggerController(webserver);
+            new SwaggerController(this.webserver);
         }
-        new FrontController(webserver, liveAssets);
+        new FrontController(this.webserver, liveAssets);
+    }
+
+    public listen(port: number, host?: string): Promise<uWebsockets.us_listen_socket|string> {
+        return this.webserver.listen(port, host);
     }
 }
 
-export default new App().app;
+export default new App();

@@ -86,7 +86,10 @@ export class MetaTagsBuilder {
 
     public async getMeta(userAgent: string): Promise<RequiredMetaTagsData> {
         if (ADMIN_API_URL) {
-            return { ...MetaTagsDefaultValue, ...(await this.getMetaFromAdmin()) };
+            const metaTags = await this.getMetaFromAdmin();
+            if (metaTags) {
+                return { ...MetaTagsDefaultValue, ...metaTags };
+            }
         }
         // Let's only populate the metadata for bots. For normal users, this is useless and it wastes time
         // downloading the map from the Pusher.
