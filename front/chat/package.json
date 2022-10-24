@@ -6,6 +6,8 @@
   "devDependencies": {
     "@geprog/vite-plugin-env-config": "^4.0.3",
     "@sveltejs/vite-plugin-svelte": "^1.0.0-next.36",
+    "@esbuild-plugins/node-globals-polyfill": "^0.1.1",
+    "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
     "@tsconfig/svelte": "^1.0.10",
     "@types/debug": "^4.1.7",
     "@types/jasmine": "^3.5.10",
@@ -37,7 +39,6 @@
   },
   "dependencies": {
     "@anatine/zod-openapi": "^1.10.0",
-    "@esbuild-plugins/node-globals-polyfill": "^0.1.1",
     "@joeattardi/emoji-button": "^4.6.4",
     "@tailwindcss/forms": "^0.5.3",
     "@workadventure/tailwind": "link:../libs/tailwind",
