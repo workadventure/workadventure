@@ -117,9 +117,8 @@
     function scrollEvent() {
         if (messagesList) {
             if (
-                messagesList.scrollHeight - messagesList.offsetHeight + 25 >=
-                messagesList.scrollTop >=
-                messagesList.scrollHeight - messagesList.offsetHeight - 25
+                messagesList.scrollHeight - messagesList.offsetHeight + 25 >= messagesList.scrollTop &&
+                messagesList.scrollTop >= messagesList.scrollHeight - messagesList.offsetHeight - 25
             ) {
                 isScrolledDown = true;
                 if ($unreads > 0) {
