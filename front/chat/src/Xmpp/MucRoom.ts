@@ -11,7 +11,7 @@ import { XmppClient } from "./XmppClient";
 import * as StanzaProtocol from "stanza/protocol";
 import { WaLink, WaReceivedReactions, WaUserInfo } from "./Lib/Plugin";
 import { ParsedJID } from "stanza/JID";
-import { ChatStateMessage, JID } from "stanza";
+import {ChatStateMessage, JID, JXT} from "stanza";
 import { ChatState, MUCAffiliation } from "stanza/Constants";
 
 const _VERBOSE = true;
@@ -129,14 +129,14 @@ export class MucRoom extends AbstractRoom {
         console.log("response", response);
         if (_VERBOSE) console.warn("[XMPP]", ">> Get all subscribers sent");
     }
-    public sendRankUp(userJID: ParsedJID) {
+    public sendRankUp(userJID: string) {
         void this.sendAffiliate("admin", userJID);
     }
-    public sendRankDown(userJID: ParsedJID) {
+    public sendRankDown(userJID: string) {
         void this.sendAffiliate("none", userJID);
     }
-    private async sendAffiliate(type: MUCAffiliation, userJID: ParsedJID) {
-        const response = await this.xmppClient.socket.setRoomAffiliation(this.roomJid.bare, userJID.full, type, "test");
+    private async sendAffiliate(type: MUCAffiliation, userJID: string) {
+        const response = await this.xmppClient.socket.setRoomAffiliation(this.roomJid.bare, userJID, type, "test");
         console.warn(response);
         if (_VERBOSE) console.warn("[XMPP]", ">> Affiliation sent");
     }
@@ -221,8 +221,7 @@ export class MucRoom extends AbstractRoom {
         fileMessageManager.reset();
         mentionsUserStore.set(new Set<User>());
 
-        this.lastMessageSeen = new Date();
-        this.countMessagesToSee.set(0);
+        this.updateLastMessageSeen();
 
         if (this.sendTimeOut) {
             clearTimeout(this.sendTimeOut);

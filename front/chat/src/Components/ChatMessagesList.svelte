@@ -52,7 +52,7 @@
     let emojiContainer: HTMLElement;
 
     function needHideHeader(name: string, date: Date, i: number) {
-        let previousMsg = [...$messagesStore].sort((a, b) => a.time - b.time)[i - 1];
+        let previousMsg = [...$messagesStore].sort((a, b) => a.time.getTime() - b.time.getTime())[i - 1];
         if (!previousMsg) {
             return false;
         }
@@ -61,7 +61,7 @@
     }
 
     function showDate(date: Date, i: number) {
-        let previousMsg = [...$messagesStore].sort((a, b) => a.time - b.time)[i - 1];
+        let previousMsg = [...$messagesStore].sort((a, b) => a.time.getTime() - b.time.getTime())[i - 1];
         if (!previousMsg) {
             return true;
         }
@@ -117,9 +117,9 @@
     function scrollEvent() {
         if (
             messagesList &&
-            messagesList.scrollHeight - messagesList.offsetHeight + 25 >=
+            (messagesList.scrollHeight - messagesList.offsetHeight + 25 >=
                 messagesList.scrollTop >=
-                messagesList.scrollHeight - messagesList.offsetHeight - 25
+                messagesList.scrollHeight - messagesList.offsetHeight - 25)
         ) {
             isScrolledDown = true;
             if ($unreads > 0) {
@@ -288,7 +288,7 @@
                 {/if}
             {/if}
         </div>
-        {#each [...$messagesStore].sort((a, b) => a.time - b.time) as message, i}
+        {#each [...$messagesStore].sort((a, b) => a.time.getTime() - b.time.getTime()) as message, i}
             {#if showDate(message.time, i)}
                 <div class="wa-separator">
                     {message.time.toLocaleDateString($locale, {

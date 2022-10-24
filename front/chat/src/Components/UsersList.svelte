@@ -16,11 +16,6 @@
     let minimizeUser = true;
     const maxUsersMinimized = 7;
 
-    function openChat(user: User) {
-        return user;
-        //activeThreadStore.set(user);
-    }
-
     function showInviteMenu() {
         window.parent.postMessage({ type: "closeChat" }, "*");
         window.parent.postMessage({ type: "openInviteMenu" }, "*");
@@ -74,7 +69,7 @@
             {:else}
                 {#each roomSorted as room}
                     {#each usersByMaps.get(room) ?? [] as user}
-                        <ChatUser {mucRoom} {openChat} {user} {searchValue} />
+                        <ChatUser {mucRoom} {user} {searchValue} />
                     {/each}
                 {/each}
                 {#if usersList.filter((user) => !user.isMe).length === 0}
