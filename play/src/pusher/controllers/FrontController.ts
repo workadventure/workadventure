@@ -107,7 +107,7 @@ export class FrontController extends BaseHttpController {
             const file = this.liveAssets.get(decodeURI(filePath));
 
             if (!file) {
-                res.status(404).send();
+                res.status(404).send("404 Page not found");
                 return;
             }
 
