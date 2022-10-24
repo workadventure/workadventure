@@ -48,7 +48,7 @@ export class MucRoom extends AbstractRoom {
             local: this.roomJid.local,
             domain: this.roomJid.domain,
             resource: this.xmppClient.getPlayerName(),
-        }).toString();
+        });
     }
     get url(): string {
         return this.roomJid.bare;
