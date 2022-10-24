@@ -7,9 +7,10 @@ import { AdminController } from "./controllers/AdminController";
 import { OpenIdProfileController } from "./controllers/OpenIdProfileController";
 import { WokaListController } from "./controllers/WokaListController";
 import { SwaggerController } from "./controllers/SwaggerController";
-import HyperExpress, {Server} from "hyper-express";
+import type { Server } from "hyper-express";
+import HyperExpress from "hyper-express";
 import { cors } from "./middlewares/Cors";
-import { ENABLE_OPENAPI_ENDPOINT, ALLOWED_CORS_ORIGIN } from "./enums/EnvironmentVariable";
+import { ENABLE_OPENAPI_ENDPOINT } from "./enums/EnvironmentVariable";
 import { PingController } from "./controllers/PingController";
 import { IoSocketChatController } from "./controllers/IoSocketChatController";
 import { FrontController } from "./controllers/FrontController";
@@ -74,7 +75,7 @@ class App {
         new FrontController(this.webserver, liveAssets);
     }
 
-    public listen(port: number, host?: string): Promise<uWebsockets.us_listen_socket|string> {
+    public listen(port: number, host?: string): Promise<uWebsockets.us_listen_socket | string> {
         return this.webserver.listen(port, host);
     }
 }

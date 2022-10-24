@@ -1,8 +1,7 @@
 import { writable } from "svelte/store";
 import { ErrorScreenMessage } from "../../messages/ts-proto-generated/protos/messages";
 import Axios from "axios";
-import {isErrorApiData} from "../../messages/JsonMessages/ErrorApiData";
-import {ApiError} from "./Errors/ApiError";
+import { ApiError } from "./Errors/ApiError";
 
 /**
  * A store that contains one error of type WAError to be displayed.
@@ -72,13 +71,15 @@ function createErrorScreenStore() {
             if (error instanceof ApiError) {
                 const errorApi = error.errorApiData;
 
-                if (errorApi.type === 'error' || errorApi.type === 'redirect') {
+                if (errorApi.type === "error" || errorApi.type === "redirect") {
                     set(ErrorScreenMessage.fromPartial(errorApi));
-                } else if (errorApi.type === 'retry' || errorApi.type === 'unauthorized') {
-                    set(ErrorScreenMessage.fromPartial({
-                        ...errorApi,
-                        buttonTitle: errorApi.buttonTitle ?? undefined,
-                    }));
+                } else if (errorApi.type === "retry" || errorApi.type === "unauthorized") {
+                    set(
+                        ErrorScreenMessage.fromPartial({
+                            ...errorApi,
+                            buttonTitle: errorApi.buttonTitle ?? undefined,
+                        })
+                    );
                 } else {
                     const _exhaustiveCheck: never = errorApi;
                 }
@@ -98,7 +99,6 @@ function createErrorScreenStore() {
                 return;
             }
             throw error;
-
         },
         delete: () => {
             set(undefined);

@@ -2,7 +2,7 @@ import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi"
 import type { MapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
 import type { RoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
 import type { AdminApiData } from "../../messages/JsonMessages/AdminApiData";
-import {ErrorApiData} from "../../messages/JsonMessages/ErrorApiData";
+import type { ErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
 
 export interface AdminInterface {
     /**
@@ -26,7 +26,11 @@ export interface AdminInterface {
      * @var userId: can to be undefined or email or uuid
      * @return MapDetailsData|RoomRedirect
      */
-    fetchMapDetails(playUri: string, authToken?: string, locale?: string): Promise<MapDetailsData | RoomRedirect | ErrorApiData>;
+    fetchMapDetails(
+        playUri: string,
+        authToken?: string,
+        locale?: string
+    ): Promise<MapDetailsData | RoomRedirect | ErrorApiData>;
 
     /**
      * @param locale

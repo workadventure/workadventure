@@ -12,7 +12,7 @@ import {
 import type { AdminApiData } from "../../messages/JsonMessages/AdminApiData";
 import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
-import type {ErrorApiData} from "../../messages/JsonMessages/ErrorApiData";
+import type { ErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
 
 /**
  * A local class mocking a real admin if no admin is configured.
@@ -39,7 +39,11 @@ class LocalAdmin implements AdminInterface {
         };
     }
 
-    fetchMapDetails(playUri: string, authToken?: string, locale?: string): Promise<MapDetailsData | RoomRedirect | ErrorApiData> {
+    fetchMapDetails(
+        playUri: string,
+        authToken?: string,
+        locale?: string
+    ): Promise<MapDetailsData | RoomRedirect | ErrorApiData> {
         const roomUrl = new URL(playUri);
 
         if (roomUrl.pathname === "/") {

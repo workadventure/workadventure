@@ -6,7 +6,6 @@ import { InvalidTokenError } from "./InvalidTokenError";
 import { validateQuery } from "../services/QueryValidator";
 import { z } from "zod";
 import type { Request, Response } from "hyper-express";
-import {isErrorApiData} from "../../messages/JsonMessages/ErrorApiData";
 
 export class MapController extends BaseHttpController {
     // Returns a map mapping map name to file name of the map

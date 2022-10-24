@@ -5,10 +5,8 @@ import { axiosWithRetry } from "./AxiosUtils";
 import { isMapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
 import { isRoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
 import type { MucRoomDefinitionInterface } from "../../messages/JsonMessages/MucRoomDefinitionInterface";
-import {isErrorApiData} from "../../messages/JsonMessages/ErrorApiData";
-import {errorScreenStore} from "../Stores/ErrorScreenStore";
-import {ErrorScreenMessage} from "../../messages/ts-proto-generated/protos/messages";
-import {ApiError} from "../Stores/Errors/ApiError";
+import { isErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
+import { ApiError } from "../Stores/Errors/ApiError";
 export class MapDetail {
     constructor(public readonly mapUrl: string) {}
 }
