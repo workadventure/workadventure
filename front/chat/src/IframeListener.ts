@@ -18,7 +18,6 @@ import {
 import { setCurrentLocale } from "./i18n/locales";
 import { Locales } from "./i18n/i18n-types";
 import { mucRoomsStore } from "./Stores/MucRoomsStore";
-import { defaultUserData } from "./Xmpp/MucRoom";
 import { chatConnectionManager } from "./Connection/ChatConnectionManager";
 import { chatVisibilityStore } from "./Stores/ChatStore";
 import { NotificationType } from "./Media/MediaManager";
@@ -69,9 +68,6 @@ class IframeListener {
                             if (!get(enableChat)) {
                                 return;
                             }
-                            if (!chatConnectionManager.connection) {
-                                chatConnectionManager.start();
-                            }
                             chatConnectionManager.connectionOrFail?.joinMuc(
                                 iframeEvent.data.name,
                                 iframeEvent.data.url,
@@ -84,9 +80,6 @@ class IframeListener {
                             if (!get(enableChat)) {
                                 return;
                             }
-                            if (!chatConnectionManager.connection) {
-                                chatConnectionManager.start();
-                            }
                             chatConnectionManager.connectionOrFail?.leaveMuc(iframeEvent.data.url);
                             break;
                         }
@@ -98,31 +91,30 @@ class IframeListener {
                             if (iframeEvent.data.author == undefined || iframeEvent.data.text == undefined) {
                                 break;
                             }
-
-                            let userData = defaultUserData;
                             const mucRoomDefault = mucRoomsStore.getDefaultRoom();
                             if (mucRoomDefault) {
-                                userData = mucRoomDefault.getUserDataByUuid(iframeEvent.data.author);
-                            }
-
-                            for (const chatMessageText of iframeEvent.data.text) {
-                                chatMessagesStore.addExternalMessage(userData, chatMessageText);
+                                const userData = mucRoomDefault.getUserByJid(iframeEvent.data.author);
+                                if (userData) {
+                                    for (const chatMessageText of iframeEvent.data.text) {
+                                        chatMessagesStore.addExternalMessage(userData, chatMessageText);
+                                    }
+                                }
                             }
                             break;
                         }
                         case "comingUser": {
                             for (const target of iframeEvent.data.targets) {
-                                let userData = defaultUserData;
                                 const mucRoomDefault = mucRoomsStore.getDefaultRoom();
                                 if (mucRoomDefault) {
-                                    userData = mucRoomDefault.getUserDataByUuid(target);
-                                }
-
-                                if (ChatMessageTypes.userIncoming === iframeEvent.data.type) {
-                                    chatMessagesStore.addIncomingUser(userData);
-                                }
-                                if (ChatMessageTypes.userOutcoming === iframeEvent.data.type) {
-                                    chatMessagesStore.addOutcomingUser(userData);
+                                    const userData = mucRoomDefault.getUserByJid(target);
+                                    if (userData) {
+                                        if (ChatMessageTypes.userIncoming === iframeEvent.data.type) {
+                                            chatMessagesStore.addIncomingUser(userData);
+                                        }
+                                        if (ChatMessageTypes.userOutcoming === iframeEvent.data.type) {
+                                            chatMessagesStore.addOutcomingUser(userData);
+                                        }
+                                    }
                                 }
                             }
                             break;

@@ -97,7 +97,7 @@ function createChatMessagesStore() {
                 return list;
             });
         },
-        addPersonnalMessage(text: string) {
+        addPersonalMessage(text: string) {
             iframeListener.sendUserInputChat(text);
             _newChatMessageSubject.next(text);
             update((list) => {

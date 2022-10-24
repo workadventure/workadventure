@@ -1,71 +1,228 @@
-import { v4 as uuid } from "uuid";
 import { XmppSettingsMessage } from "../Messages/ts-proto-generated/protos/messages";
-import { EJABBERD_DOMAIN, EJABBERD_WS_URI } from "../Enum/EnvironmentVariable";
+import { EJABBERD_WS_URI } from "../Enum/EnvironmentVariable";
 import CancelablePromise from "cancelable-promise";
-import jid, { JID } from "@xmpp/jid";
-import { Client, client, xml } from "@xmpp/client/dist/xmpp";
-import { Element } from "@xmpp/xml";
 import SASLError from "@xmpp/sasl/lib/SASLError";
-import StreamError from "@xmpp/connection/lib/StreamError";
 import Debug from "debug";
 import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
-import { connectionNotAuthorized } from "../Stores/ChatStore";
-import { Subject } from "rxjs";
 import { MucRoom } from "./MucRoom";
 import { get } from "svelte/store";
 import { activeThreadStore } from "../Stores/ActiveThreadStore";
 import { userStore } from "../Stores/LocalUserStore";
-
-// @ts-ignore
-import parse from "@xmpp/xml/lib/parse";
+import * as Stanza from "stanza";
+import WaCustomPlugin, { WaReceivedArchive, WaReceivedReactions } from "./Lib/Plugin";
+import * as StanzaProtocol from "stanza/protocol";
+import { JSONData } from "stanza/jxt";
+import { ChatStateMessage, JID } from "stanza";
+import { ParsedJID } from "stanza/JID";
 
 const debug = Debug("xmppClient");
 
-class ElementExt extends Element {}
-
 export class XmppClient {
-    private address!: JID;
+    private address!: ParsedJID;
     private readonly conferenceDomain: string;
-    private clientPromise!: CancelablePromise<Client>;
-    private clientJID: JID;
+    private clientPromise!: CancelablePromise<Stanza.Agent>;
+    private clientJID: ParsedJID;
     private readonly clientID: string;
-    private clientDomain: string;
+    private readonly clientDomain: string;
     private readonly clientResource: string;
     private readonly clientPassword: string;
     private timeout: ReturnType<typeof setTimeout> | undefined;
-    private xmppSocket: Client | undefined;
+    private xmppSocket: Stanza.Agent | undefined;
     private isAuthorized = true;
 
+    private status: "disconnected" | "connected" | "online" = "disconnected";
+
     public isClosed = false;
-    private subscriptions = new Map<string, Subject<ElementExt>>();
     private rooms = new Map<string, MucRoom>();
 
     private nickCount = 0;
 
     constructor(private xmppSettingsMessages: XmppSettingsMessage) {
-        this.conferenceDomain = xmppSettingsMessages.conferenceDomain;
-        this.clientJID = jid(xmppSettingsMessages.jabberId);
-        this.clientID = this.clientJID.local;
+        this.clientJID = JID.parse(xmppSettingsMessages.jabberId);
+        this.clientID = this.clientJID.local ?? "";
         this.clientDomain = this.clientJID.domain;
-        this.clientResource = this.clientJID.resource ?? uuid().toString();
+        this.clientResource = this.clientJID.resource ?? "";
         this.clientPassword = xmppSettingsMessages.jabberPassword;
+        this.conferenceDomain = xmppSettingsMessages.conferenceDomain;
         void this.start();
     }
 
-    // FIXME: complete a scenario where ejabberd is STOPPED when a user enters the room and then started
+    private forwardToRoom(type: string, from: string, xml: JSONData) {
+        const roomJID = JID.toBare(from);
 
-    private createClient(res: (value: Client | PromiseLike<Client>) => void, rej: (reason?: unknown) => void): void {
-        if (!this.isAuthorized) return;
+        const mucRoom = this.rooms.get(roomJID.toString());
+        let handledMessage = false;
+        if (mucRoom) {
+            switch (type) {
+                case "presence": {
+                    handledMessage = mucRoom.onPresence(xml as StanzaProtocol.ReceivedPresence);
+                    break;
+                }
+                case "message": {
+                    handledMessage = mucRoom.onMessage(
+                        xml as StanzaProtocol.ReceivedMessage,
+                        xml.delay as StanzaProtocol.Delay
+                    );
+                    break;
+                }
+                case "reactions": {
+                    handledMessage = mucRoom.onReactions(xml as WaReceivedReactions);
+                    break;
+                }
+                case "archive": {
+                    handledMessage = mucRoom.onMessage(
+                        xml.item.message as StanzaProtocol.ReceivedMessage,
+                        xml.item.delay as StanzaProtocol.Delay
+                    );
+                    break;
+                }
+                case "chatState": {
+                    handledMessage = mucRoom.onChatState(xml as ChatStateMessage);
+                    break;
+                }
+            }
+            if (!handledMessage) {
+                console.warn(type, "XML Message forwarded to room but not interpreted", xml);
+            }
+        } else {
+            console.warn(type, "XML Message received but no associated room found");
+        }
+    }
+
+    private createClient(
+        res: (value: Stanza.Agent | PromiseLike<Stanza.Agent>) => void,
+        rej: (reason?: unknown) => void
+    ): void {
+        if (!this.isAuthorized) {
+            rej("not authorized");
+        } else if (this.xmppSocket) {
+            res(this.xmppSocket);
+        }
+
+        const client = Stanza.createClient({
+            credentials: {
+                // Bypass the no-escape function implemented in stanza ParseJID.local
+                username: this.clientID.replace(/@/g, "\\40"),
+                password: this.clientPassword,
+            },
+            resource: this.clientResource,
+            server: this.clientDomain,
+            transports: {
+                websocket: EJABBERD_WS_URI,
+                bosh: "http://xmpp.workadventure.localhost/bosh",
+            },
+        });
+
+        this.xmppSocket = client;
+
+        client.use(WaCustomPlugin);
+
+        client.on("connected", () => {
+            this.status = "connected";
+        });
+        client.on("disconnected", () => {
+            this.status = "disconnected";
+            console.log("disconnected");
+            xmppServerConnectionStatusStore.set(false);
+            mucRoomsStore.reset();
+            this.rooms.clear();
+
+            this.close();
+
+            // This can happen when the first connection failed for some reason.
+            // We should probably retry regularly (every 10 seconds)
+            if (this.timeout) {
+                clearTimeout(this.timeout);
+                this.timeout = undefined;
+            }
+
+            if (this.isAuthorized) {
+                this.timeout = setTimeout(() => {
+                    void this.start();
+                }, 10_000);
+            }
+        });
+        client.on("auth:success", () => {
+            this.status = "online";
+        });
+
+        client.on("--transport-disconnected", () => {
+            console.error("--transport-disconnected");
+        });
+
+        client.on("session:started", () => {
+            for (const { name, url, type, subscribe } of this.xmppSettingsMessages.rooms) {
+                if (name && url && type) {
+                    this.joinMuc(name, url, type, subscribe);
+                }
+            }
+
+            xmppServerConnectionStatusStore.set(true);
+            res(client);
+        });
+
+        client.on("presence", (presence: StanzaProtocol.ReceivedPresence) => {
+            if (!presence.legacyCapabilities) {
+                this.forwardToRoom("presence", presence.from, presence);
+            }
+        });
+        // @ts-ignore
+        client.on("chat:message", (message: StanzaProtocol.ReceivedMessage) => {
+            this.forwardToRoom("message", message.from, message);
+        });
+        // @ts-ignore
+        client.on("chat:subject", (message: StanzaProtocol.ReceivedMessage) => {
+            // Nothing to do
+        });
+        // @ts-ignore
+        client.on("message:archive", (message: WaReceivedArchive) => {
+            this.forwardToRoom("archive", message.from, message.archive);
+        });
+        // @ts-ignore
+        client.on("chat:reactions", (message: WaReceivedReactions) => {
+            this.forwardToRoom("reactions", message.from, message);
+        });
+        client.on("chat:state", (state: ChatStateMessage) => {
+            this.forwardToRoom("chatState", state.from, state);
+        });
+
+        client.on("subscribe", (subscribe: StanzaProtocol.ReceivedPresence) => {
+            console.log("subscribe", subscribe);
+        });
+        client.on("subscribed", (subscribe: StanzaProtocol.ReceivedPresence) => {
+            console.log("subscribed", subscribe);
+        });
+
+        client.on("raw:outgoing", (message) => {
+            if (message.includes("files")) {
+                console.warn(message);
+            }
+        });
+
+        client.on("auth:failed", () => {
+            console.error("auth:failed");
+            this.isAuthorized = false;
+            rej("auth:failed");
+        });
+        client.on("stream:error", (error) => {
+            console.error(error);
+            //rej(error);
+        });
+        client.on("presence:error", (error) => {
+            console.error(error);
+        });
+        client.on("muc:error", (error) => {
+            console.error(error);
+        });
+        client.on("message:error", (error) => {
+            console.error(error);
+        });
+
+        client.connect();
+
+        /*
         try {
             let status: "disconnected" | "connected" = "disconnected";
-            console.log({
-                service: `${EJABBERD_WS_URI}`,
-                domain: EJABBERD_DOMAIN,
-                username: this.clientID,
-                resource: this.clientResource, //"pusher",
-                temp: this.clientPassword,
-            });
-
             const xmpp = client({
                 service: `${EJABBERD_WS_URI}`,
                 domain: EJABBERD_DOMAIN,
@@ -212,6 +369,7 @@ export class XmppClient {
             console.trace("XmppClient => createClient => Error", err);
             rej(err);
         }
+         */
     }
 
     /*sendMessage() {
@@ -235,35 +393,13 @@ export class XmppClient {
         return (this.clientPromise = new CancelablePromise((res, rej, onCancel) => {
             this.createClient(res, rej);
             onCancel(() => {
-                void (async (): Promise<void> => {
-                    debug("clientPromise => onCancel => from xmppClient");
-                    if (this.timeout) {
-                        clearTimeout(this.timeout);
-                        this.timeout = undefined;
-                    }
-
-                    //send present unavailable
-                    try {
-                        if (this.xmppSocket?.status === "online") {
-                            await this.xmppSocket?.send(xml("presence", { type: "unavailable" }));
-                        }
-                    } catch (err) {
-                        console.info("XmppClient => onCancel => presence => err", err);
-                    }
-                    try {
-                        //stop xmpp socket client
-                        await this.xmppSocket?.close();
-                    } catch (errClose) {
-                        console.info("XmppClient => onCancel => xmppSocket => errClose", errClose);
-                        try {
-                            //stop xmpp socket client
-                            await this.xmppSocket?.stop();
-                        } catch (errStop) {
-                            console.info("XmppClient => onCancel => xmppSocket => errStop", errStop);
-                        }
-                    }
-                    this.isClosed = true;
-                })();
+                debug("clientPromise => onCancel => from xmppClient");
+                if (this.timeout) {
+                    clearTimeout(this.timeout);
+                    this.timeout = undefined;
+                }
+                this.xmppSocket?.disconnect();
+                this.isClosed = true;
             });
         }).catch((err) => {
             if (err instanceof SASLError) {
@@ -277,7 +413,7 @@ export class XmppClient {
         }));
     }
 
-    private xmlRestrictionsToEjabberd(element: ElementExt): null | ElementExt {
+    private xmlRestrictionsToEjabberd(element: string): void {
         // TODO IMPLEMENT RESTRICTIONS
         // Test body message length
         // if (element.getName() === "message" && element.getChild("body")) {
@@ -381,36 +517,15 @@ export class XmppClient {
         //         );
         //     }
         // }
-        return element;
     }
 
-    async sendPong(to: string, from: string, id: string): Promise<void> {
-        await this.sendToEjabberd(xml("iq", { from, to, id, type: "result" }).toString());
-    }
-
-    async sendToEjabberd(stanza: string): Promise<void> {
-        const ctx = parse(stanza);
+    /**
+     * @deprecated to be deleted
+     */
+    send(stanza: string): void {
         try {
-            if (ctx) {
-                const restricted = this.xmlRestrictionsToEjabberd(ctx);
-                if (restricted) {
-                    await this.xmppSocket?.send(restricted);
-                }
-            }
-        } catch (e: unknown) {
-            console.error("An error occurred while sending a message to XMPP server: ", e);
-            try {
-                this.close();
-            } catch (e2: unknown) {
-                console.error("An error occurred while closing connection to XMPP server: ", e2);
-            }
-        }
-        return;
-    }
-
-    send(stanza: ElementExt): void {
-        try {
-            void this.xmppSocket?.send(stanza);
+            console.error("XMPPClient.send is Deprecated");
+            //void this.xmppSocket?.send(stanza);
         } catch (e: unknown) {
             console.error("An error occurred while sending a message to XMPP server: ", e);
             try {
@@ -422,19 +537,21 @@ export class XmppClient {
     }
 
     public joinMuc(name: string, waRoomUrl: string, type: string, subscribe: boolean): MucRoom {
-        const roomUrl = jid(waRoomUrl, this.conferenceDomain);
-        const room = new MucRoom(this, name, roomUrl, type, subscribe, this.clientJID.toString());
-        this.rooms.set(roomUrl.toString(), room);
-        mucRoomsStore.addMucRoom(room);
+        const roomUrl = JID.parse(JID.create({ local: waRoomUrl, domain: this.conferenceDomain }));
+        let room = this.rooms.get(roomUrl.bare);
+        if (!room) {
+            room = new MucRoom(this, name, roomUrl, type, subscribe);
+            this.rooms.set(roomUrl.bare, room);
+            mucRoomsStore.addMucRoom(room);
 
-        room.connect();
-
+            room.connect();
+        }
         return room;
     }
 
     public leaveMuc(name: string): void {
-        const roomUrl = jid(name, this.conferenceDomain);
-        const room = this.rooms.get(roomUrl.toString());
+        const roomUrl = JID.parse(JID.create({ local: name, domain: this.conferenceDomain }));
+        const room = this.rooms.get(roomUrl.bare);
         if (room === undefined) {
             console.error('Cannot leave MUC room "' + name + '", room does not exist.');
             return;
@@ -443,10 +560,10 @@ export class XmppClient {
     }
 
     public removeMuc(room: MucRoom) {
-        const roomUrl = room.getUrl();
+        const roomUrl = room.url;
 
         const activeThread = get(activeThreadStore);
-        if (activeThread && activeThread.getUrl() === roomUrl.toString()) {
+        if (activeThread && activeThread.url === roomUrl.toString()) {
             activeThreadStore.reset();
         }
 
@@ -468,5 +585,24 @@ export class XmppClient {
 
     public incrementNickCount() {
         this.nickCount++;
+    }
+
+    public getMyJID(): string {
+        return this.clientJID.full;
+    }
+
+    public getMyJIDBare(): string {
+        return this.clientJID.bare;
+    }
+
+    public getMyPersonalJID(): string {
+        return JID.create({ local: this.clientID, domain: this.clientDomain, resource: this.getPlayerName() });
+    }
+
+    public get socket(): Stanza.Agent {
+        if (!this.xmppSocket) {
+            throw new Error("No socket to Ejabberd");
+        }
+        return this.xmppSocket;
     }
 }

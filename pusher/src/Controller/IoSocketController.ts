@@ -50,6 +50,7 @@ import { z } from "zod";
 import { adminService } from "../Services/AdminService";
 import { ErrorApiData, isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
+import { v4 as uuid } from "uuid";
 
 /**
  * The object passed between the "open" and the "upgrade" methods when opening a websocket
@@ -437,7 +438,7 @@ export class IoSocketController {
 
                         if (!userData.jabberId) {
                             // If there is no admin, or no user, let's log users using JWT tokens
-                            userData.jabberId = jid(userIdentifier, EJABBERD_DOMAIN).toString();
+                            userData.jabberId = jid(userIdentifier, EJABBERD_DOMAIN, uuid()).toString();
                             if (EJABBERD_JWT_SECRET) {
                                 userData.jabberPassword = Jwt.sign({ jid: userData.jabberId }, EJABBERD_JWT_SECRET, {
                                     expiresIn: "1d",

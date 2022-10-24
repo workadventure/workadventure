@@ -111,4 +111,11 @@ export class HtmlUtils {
     private static isHtmlElement<T extends HTMLElement>(elem: HTMLElement | null): elem is T {
         return elem !== null;
     }
+
+    public static convertEmoji(data: string): string {
+        return data.replace(
+            /\[e-\w+\]/gu,
+            (match) => `${String.fromCodePoint(Number("0x" + match.substring(3, match.length - 1)))}`
+        );
+    }
 }

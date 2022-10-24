@@ -1,9 +1,8 @@
-import { derived, writable } from "svelte/store";
+import { derived, get, writable } from "svelte/store";
 import { Subject } from "rxjs";
-import { userStore } from "./LocalUserStore";
-import { UserData } from "../Messages/JsonMessages/ChatData";
 import { FileExt, UploadedFile, uploadingState } from "../Services/FileMessageManager";
-import { Message, User } from "../Xmpp/MucRoom";
+import { Message, User } from "../Xmpp/AbstractRoom";
+import { mucRoomsStore } from "./MucRoomsStore";
 
 // Global config store for the whole chat
 export const enableChat = writable<boolean>(true);
@@ -27,8 +26,8 @@ export enum ChatMessageTypes {
 export interface ChatMessage {
     type: ChatMessageTypes;
     date: Date;
-    author?: UserData;
-    targets?: UserData[];
+    author?: User;
+    targets?: User[];
     text?: string[];
 }
 
@@ -37,7 +36,7 @@ function createChatMessagesStore() {
 
     return {
         subscribe,
-        addIncomingUser(user: UserData) {
+        addIncomingUser(user: User) {
             update((list) => {
                 const lastMessage = list[list.length - 1];
                 if (lastMessage && lastMessage.type === ChatMessageTypes.userIncoming && lastMessage.targets) {
@@ -52,7 +51,7 @@ function createChatMessagesStore() {
                 return list;
             });
         },
-        addOutcomingUser(user: UserData) {
+        addOutcomingUser(user: User) {
             update((list) => {
                 const lastMessage = list[list.length - 1];
                 if (lastMessage && lastMessage.type === ChatMessageTypes.userOutcoming && lastMessage.targets) {
@@ -67,24 +66,27 @@ function createChatMessagesStore() {
                 return list;
             });
         },
-        addPersonnalMessage(text: string) {
+        addPersonalMessage(text: string) {
             _newChatMessageSubject.next(text);
             update((list) => {
-                const lastMessage = list[list.length - 1];
-                if (
-                    lastMessage &&
-                    lastMessage.type === ChatMessageTypes.me &&
-                    lastMessage.text &&
-                    (((new Date().getTime() - lastMessage.date.getTime()) % 86400000) % 3600000) / 60000 < 2
-                ) {
-                    lastMessage.text.push(text);
-                } else {
-                    list.push({
-                        type: ChatMessageTypes.me,
-                        text: [text],
-                        author: userStore.get(),
-                        date: new Date(),
-                    });
+                const defaultRoom = mucRoomsStore.getDefaultRoom();
+                if (defaultRoom) {
+                    const lastMessage = list[list.length - 1];
+                    if (
+                        lastMessage &&
+                        lastMessage.type === ChatMessageTypes.me &&
+                        lastMessage.text &&
+                        (((new Date().getTime() - lastMessage.date.getTime()) % 86400000) % 3600000) / 60000 < 2
+                    ) {
+                        lastMessage.text.push(text);
+                    } else {
+                        list.push({
+                            type: ChatMessageTypes.me,
+                            text: [text],
+                            author: defaultRoom.getUserByJid(defaultRoom.myJID),
+                            date: new Date(),
+                        });
+                    }
                 }
 
                 return list;
@@ -93,7 +95,7 @@ function createChatMessagesStore() {
         /**
          * @param origin The iframe that originated this message (if triggered from the Scripting API), or undefined otherwise.
          */
-        addExternalMessage(user: UserData, text: string, origin?: Window) {
+        addExternalMessage(user: User, text: string, origin?: Window) {
             update((list) => {
                 const lastMessage = list[list.length - 1];
                 if (

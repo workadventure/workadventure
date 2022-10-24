@@ -39,7 +39,7 @@ class ChatConnectionManager {
     }
 
     public start() {
-        if (this.uuid !== "" && this.authToken && this.playUri !== "" && this.xmppSettingsMessage) {
+        if (this.uuid !== "" && this.authToken && this.playUri !== "" && this.xmppSettingsMessage && !this.xmppClient) {
             this.xmppClient = new XmppClient(this.xmppSettingsMessage);
         }
 

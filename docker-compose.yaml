@@ -24,6 +24,7 @@ services:
     networks:
       default:
         aliases:
+          - 'xmpp.workadventure.localhost'
           - 'play.workadventure.localhost'
           - 'pusher.workadventure.localhost'
           - 'maps.workadventure.localhost'
@@ -87,7 +88,7 @@ services:
       ENABLE_OPENID: "$OPID_CLIENT_ID"
       ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
       EJABBERD_DOMAIN: ejabberd
-      EJABBERD_WS_URI: ws://xmpp.workadventure.localhost:5443/ws
+      EJABBERD_WS_URI: ws://xmpp.workadventure.localhost/ws
     volumes:
       - ./front/chat:/usr/src/app
       - ./libs:/usr/src/libs
@@ -262,8 +263,9 @@ services:
 
   messages:
     image: thecodingmachine/workadventure-back-base:v1-16
+    platform: linux/amd64
     environment:
-      #STARTUP_COMMAND_0: sudo apt-get install -y inotify-tools
+      STARTUP_COMMAND_0: yarn install
       STARTUP_COMMAND_1: yarn install
       STARTUP_COMMAND_2: yarn run proto:watch
     volumes:
@@ -292,18 +294,18 @@ services:
       - "traefik.http.routers.icon.entryPoints=web"
       - "traefik.http.services.icon.loadbalancer.server.port=8080"
 
+
   ejabberd:
+    environment:
+      - CTL_ON_CREATE=register $EJABBERD_USER localhost $EJABBERD_PASSWORD
     image: ghcr.io/processone/ejabberd:22.05
-    ports:
-      - '5222:5222'
-      - '5443:5443'
     volumes:
       - ./xmpp/ejabberd.yml:/opt/ejabberd/conf/ejabberd.yml
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.xmpp.rule=Host(`xmpp.workadventure.localhost`)"
       - "traefik.http.routers.xmpp.entryPoints=web"
-      - "traefik.http.services.xmpp.loadbalancer.server.port=5380"
+      - "traefik.http.services.xmpp.loadbalancer.server.port=5443"
 
   # A mock server to test OpenID connect connectivity
   oidc-server-mock:

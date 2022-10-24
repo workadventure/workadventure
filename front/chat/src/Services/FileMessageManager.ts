@@ -4,6 +4,8 @@ import xml, { Element } from "@xmpp/xml";
 import { get } from "svelte/store";
 import { userStore } from "../Stores/LocalUserStore";
 import { ADMIN_API_URL, ENABLE_CHAT_UPLOAD } from "../Enum/EnvironmentVariable";
+import * as StanzaProtocol from "stanza/protocol";
+import path from "path";
 
 const _VERBOSE = true;
 
@@ -103,7 +105,6 @@ export class FileMessageManager {
 
         try {
             const userRoomToken = userStore.get().userRoomToken;
-            console.log("USER ROOM TOKEN :", userRoomToken, !userRoomToken, !!ADMIN_API_URL);
             if (!userRoomToken && ADMIN_API_URL) {
                 throw new NotLoggedUser();
             } else if (!ENABLE_CHAT_UPLOAD && !ADMIN_API_URL) {
@@ -160,6 +161,9 @@ export class FileMessageManager {
     get getXmlFileAttr() {
         return this.getXmlFileAttrFrom(this.files);
     }
+    get jsonFiles() {
+        return this.getJsonFrom(this.files);
+    }
 
     /**
      *
@@ -171,6 +175,16 @@ export class FileMessageManager {
             xmlObject.append(xml("file", { ...file }));
             return xmlObject;
         }, xml("files", { size: files.length }));
+    }
+
+    public getJsonFrom(files: UploadedFile[]): StanzaProtocol.Link[] {
+        return files.reduce((allFiles: Array<StanzaProtocol.Link>, file) => {
+            allFiles.push({
+                url: file.location,
+                description: file.name,
+            });
+            return allFiles;
+        }, new Array<StanzaProtocol.Link>());
     }
 
     public getFilesListFromXml(xmlFile: Element) {
@@ -197,17 +211,21 @@ export class FileMessageManager {
         filesUploadStore.set(new Map());
     }
 
-    public static isImage(extension: string) {
-        return ["png", "jpef", "gif", "svg"].includes(extension);
+    public static getName(url: string) {
+        return path.basename(url);
     }
-    public static isVideo(extension: string) {
-        return ["mov", "mp4", "m4v", "avi", "mov", "ogg", "webm"].includes(extension);
+
+    public static isImage(url: string) {
+        return [".png", ".jpeg", ".jpg", ".gif", ".svg", ".heic"].includes(this.getExtension(url));
     }
-    public static isSound(extension: string) {
-        return ["mp3", "wav"].includes(extension);
+    public static isVideo(url: string) {
+        return [".mov", ".mp4", ".m4v", ".avi", ".mov", ".ogg", ".webm"].includes(this.getExtension(url));
     }
-    public static getExtension(location: string) {
-        return location.split(".").pop()?.toLowerCase();
+    public static isSound(url: string) {
+        return [".mp3", ".wav"].includes(this.getExtension(url));
+    }
+    public static getExtension(url: string) {
+        return path.extname(url).toLocaleLowerCase();
     }
 }
 
