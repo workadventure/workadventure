@@ -64,7 +64,7 @@ const EnvironmentVariables = z.object({
     NODE_ENV: z.string().optional(),
     CONTACT_URL: z.string().url().optional(),
     POSTHOG_API_KEY: z.string().optional(),
-    POSTHOG_URL: z.string().url().optional(),
+    POSTHOG_URL: z.string().url().optional().or(z.literal("")),
     FALLBACK_LOCALE: z.string().optional(),
     CHAT_URL: z.string().url(),
 });

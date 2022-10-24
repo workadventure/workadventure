@@ -80,15 +80,15 @@
           "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
           "ENABLE_OPENAPI_ENDPOINT": "true",
           "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
-          "UPLOADER_URL": "//uploader-"+url,
+          "UPLOADER_URL": "https://uploader-"+url,
           #POSTHOG
           "POSTHOG_API_KEY": if namespace == "master" then env.POSTHOG_API_KEY else "",
           "POSTHOG_URL": if namespace == "master" then env.POSTHOG_URL else "",
           "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
           "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
           "ENABLE_FEATURE_MAP_EDITOR":"true",
-          "ICON_URL": "//icon-"+url,
-          "CHAT_URL": "//chat-"+url,
+          "ICON_URL": "https://icon-"+url,
+          "CHAT_URL": "https://chat-"+url,
         } + (if adminUrl != null then {
           # Admin
           "ADMIN_URL": adminUrl,
