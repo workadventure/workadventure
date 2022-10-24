@@ -4080,10 +4080,10 @@ restore-cursor@^3.1.0:
     onetime "^5.1.0"
     signal-exit "^3.0.2"
 
-retry-axios@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/retry-axios/-/retry-axios-3.0.0.tgz#5fd54f65330d155c36d01e3685238889375b9aa0"
-  integrity sha512-/jRv4nCDytusFZIY+zD6aKP29+wpgnbjfap5B76rqvgROWfONG5Bf7vCXx7grhxJwYGLlumraKZQUMzNgfXNCg==
+retry-axios@^2.6.0:
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/retry-axios/-/retry-axios-2.6.0.tgz#d4dc5c8a8e73982e26a705e46a33df99a28723e0"
+  integrity sha512-pOLi+Gdll3JekwuFjXO3fTq+L9lzMQGcSq7M5gIjExcl3Gu1hd4XXuf5o3+LuSBsaULQH7DiNbsqPd1chVpQGQ==
 
 reusify@^1.0.4:
   version "1.0.4"
