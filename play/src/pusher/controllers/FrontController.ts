@@ -118,17 +118,6 @@ export class FrontController extends BaseHttpController {
 
     private displayFront(req: Request, res: Response, url: string) {
         (async () => {
-            let indexPath: string;
-            if (fs.existsSync("index.html")) {
-                // In dev mode
-                indexPath = "index.html";
-            } else if (fs.existsSync("public/index.html")) {
-                // In prod mode
-                indexPath = "public/index.html";
-            } else {
-                throw new Error("Could not find index.html file");
-            }
-
             const builder = new MetaTagsBuilder(url);
 
             try {
