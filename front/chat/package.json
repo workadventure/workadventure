@@ -49,7 +49,6 @@
     "depcheck": "^1.4.3",
     "highlight-words": "^1.2.0",
     "marked": "^4.1.1",
-    "path": "^0.12.7",
     "queue-typescript": "^1.0.1",
     "rxjs": "^6.6.3",
     "stanza": "^12.18.0",

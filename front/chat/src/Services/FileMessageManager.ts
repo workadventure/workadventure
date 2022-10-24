@@ -4,7 +4,6 @@ import { get } from "svelte/store";
 import { userStore } from "../Stores/LocalUserStore";
 import { ADMIN_API_URL, ENABLE_CHAT_UPLOAD } from "../Enum/EnvironmentVariable";
 import * as StanzaProtocol from "stanza/protocol";
-import path from "path";
 
 const _VERBOSE = true;
 
@@ -175,20 +174,20 @@ export class FileMessageManager {
     }
 
     public static getName(url: string) {
-        return path.basename(url);
+        return url.split("/").pop() ?? "";
     }
 
     public static isImage(url: string) {
-        return [".png", ".jpeg", ".jpg", ".gif", ".svg", ".heic"].includes(this.getExtension(url));
+        return ["png", "jpeg", "jpg", "gif", "svg", "heic"].includes(this.getExtension(this.getName(url)));
     }
     public static isVideo(url: string) {
-        return [".mov", ".mp4", ".m4v", ".avi", ".mov", ".ogg", ".webm"].includes(this.getExtension(url));
+        return ["mov", "mp4", "m4v", "avi", "mov", "ogg", "webm"].includes(this.getExtension(this.getName(url)));
     }
     public static isSound(url: string) {
-        return [".mp3", ".wav"].includes(this.getExtension(url));
+        return ["mp3", "wav"].includes(this.getExtension(url));
     }
-    public static getExtension(url: string) {
-        return path.extname(url).toLocaleLowerCase();
+    public static getExtension(fileName: string) {
+        return fileName.split(".").pop() ?? "";
     }
 }
 
