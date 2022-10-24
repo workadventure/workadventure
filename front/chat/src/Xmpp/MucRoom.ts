@@ -369,7 +369,7 @@ export class MucRoom extends AbstractRoom {
 
                     const nickname = JID.parse(receivedMessage.from).resource;
 
-                    if (nickname && receivedMessage.jid && receivedMessage.body && receivedMessage.id) {
+                    if (nickname && receivedMessage.jid && receivedMessage.id) {
                         const message: Message = {
                             name: nickname,
                             jid: receivedMessage.jid,
