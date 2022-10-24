@@ -33,7 +33,8 @@
 </script>
 
 {#if $errorScreenStore}
-    <main class="errorScreen" transition:fly={{ y: -200, duration: 500 }}>
+    <main class="errorScreen tw-bg-dark-purple tw-pointer-events-auto tw-w-full tw-text-white tw-text-center tw-absolute tw-flex tw-flex-wrap tw-items-center tw-justify-center tw-h-full tw-top-0 tw-left-0 tw-right-0 tw-mx-auto tw-overflow-scroll tw-py-5" 
+            transition:fly={{ y: -200, duration: 500 }}>
         <div class="tw-flex tw-flex-col tw-items-center" style="width: 90%;">
             <div class="logo"><img src={logo} alt="WorkAdventure" /></div>
             <div class="icon"><img src={errorLogo} alt="Error logo" /></div>
@@ -58,8 +59,6 @@
 
 <style lang="scss">
     main.errorScreen {
-        @apply tw-bg-dark-purple tw-pointer-events-auto tw-w-full tw-text-white tw-text-center tw-absolute tw-flex tw-flex-wrap tw-items-center tw-justify-center tw-h-full tw-top-0 tw-left-0 tw-right-0 tw-mx-auto tw-overflow-scroll tw-py-5;
-
         min-width: 300px;
         z-index: 700;
         .logo {
