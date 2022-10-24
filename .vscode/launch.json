@@ -2,11 +2,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug: Pusher",
+            "name": "Debug: Play (Pusher)",
             "type": "node",
             "request": "attach",
             "remoteRoot": "/usr/src/app",
-            "localRoot": "${workspaceFolder}/pusher",
+            "localRoot": "${workspaceFolder}/play",
             "port": 9231,
             "restart": true,
             "address": "0.0.0.0",

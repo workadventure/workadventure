@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
 import { isMucRoomDefinition } from "./MucRoomDefinitionInterface";
+import { isMetaTagFavicon } from "./MetaTagFavicon";
 
 /*
  * WARNING! The original file is in /messages/JsonMessages.
@@ -40,6 +41,39 @@ const isMapThirdPartyData = z.object({
         description: "Use these settings to override default Jitsi settings.",
     }),
 });
+
+const MetaTagsData = z.object({
+    // Meta tags values
+    title: extendApi(z.string().optional(), {
+        description: "Title shown on browser tab",
+        example: "WorkAdventure - My Awesome World",
+    }),
+    description: extendApi(z.string().optional(), {
+        description: "Description of the webpage",
+        example: "My awesome world in WorkAdventure",
+    }),
+    favIcons: extendApi(isMetaTagFavicon.array().optional(), {
+        description: "Icon to load inside the index.html and on the manifest",
+    }),
+    appName: extendApi(z.string().optional(), {
+        description: "Name display on the PWA",
+        example: "WorkAdventure",
+    }),
+    shortAppName: extendApi(z.string().optional(), {
+        description: "PWA name when there not enough space",
+        example: "WA",
+    }),
+    themeColor: extendApi(z.string().optional(), {
+        description: "Color use for theme PWA icons, Windows app and android browser",
+        example: "#000000",
+    }),
+    cardImage: extendApi(z.string().optional(), {
+        description: "The URL of the image to be used on OG card tags",
+        example: "https://example.com/awesome_world.png",
+    }),
+});
+
+const RequiredMetaTagsData = MetaTagsData.required();
 
 export const isMapDetailsData = z.object({
     mapUrl: extendApi(z.string(), {
@@ -123,9 +157,14 @@ export const isMapDetailsData = z.object({
         description: "Whether the feature 'upload' in the chat is enabled or not on this room",
         example: true,
     }),
+    metatags: extendApi(MetaTagsData.nullable().optional(), {
+        description: "Data related to METATAGS / meta tags. Contains page title, favicons, og data, etc...",
+    }),
 });
 
 export type MapDetailsData = z.infer<typeof isMapDetailsData>;
 export type MapThirdPartyData = z.infer<typeof isMapThirdPartyData>;
 export type MapBbbData = z.infer<typeof isBbbData>;
 export type MapJitsiData = z.infer<typeof isJitsiData>;
+export type MetaTagsData = z.infer<typeof MetaTagsData>;
+export type RequiredMetaTagsData = z.infer<typeof RequiredMetaTagsData>;

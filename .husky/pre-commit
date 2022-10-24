@@ -6,11 +6,7 @@ cd messages || exit
 yarn run precommit
 )
 (
-cd front || exit
-yarn run precommit
-)
-(
-cd pusher || exit
+cd play || exit
 yarn run precommit
 )
 (

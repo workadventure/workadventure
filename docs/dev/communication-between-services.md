@@ -1,6 +1,6 @@
 # WorkAdventure containers explained
 
-This document explains the services that WorkAdventure is made of and the communication 
+This document explains the services that WorkAdventure is made of and the communication
 between those different components.
 
 ```mermaid
@@ -19,7 +19,7 @@ graph LR
 
 The role of the reverse-proxy is to distribute web traffic to the appropriate services. Another important role
 is to terminate SSL connections. It is the reverse-proxy that will handle HTTPS encoding/decoding.
-The front / pusher and map-storage containers don't handle the SSL certificates themselves. It is the role of the
+The play and map-storage containers don't handle the SSL certificates themselves. It is the role of the
 reverse-proxy to do so.
 
 

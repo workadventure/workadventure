@@ -1,7 +1,8 @@
-import { GameMap } from '../../GameMap/GameMap';
-import { AreaType, ITiledMapRectangleObject } from '../../types';
+import type { GameMap } from '../../GameMap/GameMap';
+import type { ITiledMapRectangleObject } from '../../types';
+import { AreaType } from '../../types';
 import { Command } from "../Command";
-import { DeleteAreaCommandConfig } from './DeleteAreaCommand';
+import type { DeleteAreaCommandConfig } from './DeleteAreaCommand';
 
 export interface CreateAreaCommandConfig {
     type: "CreateAreaCommand";
@@ -12,7 +13,7 @@ export class CreateAreaCommand extends Command {
     private areaConfig: ITiledMapRectangleObject;
 
     private gameMap: GameMap;
-    
+
     constructor(gameMap: GameMap, config: CreateAreaCommandConfig) {
         super();
         this.gameMap = gameMap;

@@ -18,7 +18,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
   front:
-    image: thecodingmachine/nodejs:16
+    image: thecodingmachine/nodejs:v2-18-bullseye
     environment:
       DEBUG_MODE: "$DEBUG_MODE"
       JITSI_URL: $JITSI_URL
@@ -43,6 +43,10 @@ services:
       TURN_USER: ""
       TURN_PASSWORD: ""
       DISABLE_ANONYMOUS: "$DISABLE_ANONYMOUS"
+            # Only used if you set up a JWT authentication mechanism in Ejabberd
+      EJABBERD_JWT_SECRET: mySecretJwtToken
+      EJABBERD_DOMAIN: ejabberd
+      EJABBERD_WS_URI: ws://ejabberd:5443/ws
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
@@ -57,7 +61,7 @@ services:
       - "traefik.http.routers.front-ssl.service=front"
 
   chat:
-    image: thecodingmachine/nodejs:16
+    image: thecodingmachine/nodejs:v2-18-bullseye
     environment:
       PUSHER_URL: /pusher
       UPLOADER_URL: /uploader
@@ -78,7 +82,7 @@ services:
       - "traefik.http.routers.chat-ssl.service=chat"
 
   pusher:
-    image: thecodingmachine/nodejs:16
+    image: thecodingmachine/nodejs:v2-18-bullseye
     command: yarn dev
     #command: yarn run prod
     #command: yarn run profile
@@ -94,7 +98,6 @@ services:
       OPID_CLIENT_ID: $OPID_CLIENT_ID
       OPID_CLIENT_SECRET: $OPID_CLIENT_SECRET
       OPID_CLIENT_ISSUER: $OPID_CLIENT_ISSUER
-      OPID_CLIENT_REDIRECT_URL: $OPID_CLIENT_REDIRECT_URL
       OPID_PROFILE_SCREEN_PROVIDER: $OPID_PROFILE_SCREEN_PROVIDER
       OPID_SCOPE: $OPID_SCOPE
       OPID_PROMPT: $OPID_PROMPT
@@ -166,7 +169,7 @@ services:
       - "traefik.http.routers.maps-ssl.service=maps"
 
   back:
-    image: thecodingmachine/nodejs:16
+    image: thecodingmachine/nodejs:v2-18-bullseye
     command: yarn dev
     #command: yarn run profile
     environment:
@@ -177,7 +180,6 @@ services:
       SECRET_KEY: yourSecretKey
       SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
       ENABLE_FEATURE_MAP_EDITOR: "$ENABLE_FEATURE_MAP_EDITOR"
-      ALLOW_ARTILLERY: "true"
       ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
@@ -206,7 +208,7 @@ services:
       - "traefik.http.routers.back-ssl.service=back"
 
   uploader:
-    image: thecodingmachine/nodejs:16
+    image: thecodingmachine/nodejs:v2-18-bullseye
     command: yarn dev
     #command: yarn run profile
     environment:

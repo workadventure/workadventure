@@ -58,8 +58,7 @@ If you don't have the precommit hook installed (or if you committed code before 
 to run code linting manually:
 
 ```console
-$ docker-compose exec front yarn run pretty
-$ docker-compose exec pusher yarn run pretty
+$ docker-compose exec play yarn run pretty
 $ docker-compose exec back yarn run pretty
 ```
 

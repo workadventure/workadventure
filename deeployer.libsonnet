@@ -62,71 +62,55 @@
               "EJABBERD_API_URI": "http://ejabberd:5443/api/",
             })
      },
-     "pusher": {
-            "replicas": 2,
-            "image": "thecodingmachine/workadventure-pusher:"+tag,
-            "host": {
-              "url": "pusher-"+url,
-            },
-            "ports": [8080],
-            "env": {
-              "SECRET_KEY": "tempSecretKeyNeedsToChange",
-              "JITSI_ISS": env.JITSI_ISS,
-              "JITSI_URL": env.JITSI_URL,
-              "API_URL": "back1:50051,back2:50051",
-              "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
-              "FRONT_URL": "https://play-"+url,
-              "PUSHER_URL": "https://pusher-"+url,
-              "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
-              "ENABLE_OPENAPI_ENDPOINT": "true",
-              "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
-            } + (if adminUrl != null then {
-              # Admin
-              "ADMIN_URL": adminUrl,
-              "ADMIN_API_URL": adminUrl,
-              "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
-              "ADMIN_SOCKETS_TOKEN": env.ADMIN_SOCKETS_TOKEN,
-              # Opid client
-              "OPID_CLIENT_ID": "auth-code-client",
-              "OPID_CLIENT_SECRET": env.ADMIN_API_TOKEN,
-              "OPID_CLIENT_ISSUER": "https://publichydra-"+url,
-              "START_ROOM_URL": "/_/global/maps-"+url+"/starter/map.json",
-              # Ejabberd
-              "EJABBERD_DOMAIN": "xmpp-"+url,
-              "EJABBERD_WS_URI": "wss://xmpp-"+url+"/ws",
-              "EJABBERD_JWT_SECRET": env.EJABBERD_JWT_SECRET,
-            } else {
-              # Ejabberd
-              "EJABBERD_DOMAIN": "ejabberd",
-              "EJABBERD_WS_URI": "ws://ejabberd:5443/ws",
-              //"EJABBERD_JWT_SECRET": env.JWT_SECRET_KEY,
-            })
-          },
-    "front": {
-      "image": "thecodingmachine/workadventure-front:"+tag,
-      "host": {
-        "url": "play-"+url,
+     "play": {
+        "replicas": 2,
+        "image": "thecodingmachine/workadventure-play:"+tag,
+        "host": {
+          "url": "play-"+url,
+        },
+        "ports": [3000],
+        "env": {
+          "SECRET_KEY": "tempSecretKeyNeedsToChange",
+          "JITSI_ISS": env.JITSI_ISS,
+          "JITSI_URL": env.JITSI_URL,
+          "API_URL": "back1:50051,back2:50051",
+          "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
+          "FRONT_URL": "https://play-"+url,
+          "PUSHER_URL": "https://play-"+url,
+          "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
+          "ENABLE_OPENAPI_ENDPOINT": "true",
+          "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
+          "UPLOADER_URL": "https://uploader-"+url,
+          #POSTHOG
+          "POSTHOG_API_KEY": if namespace == "master" then env.POSTHOG_API_KEY else "",
+          "POSTHOG_URL": if namespace == "master" then env.POSTHOG_URL else "",
+          "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
+          "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
+          "ENABLE_FEATURE_MAP_EDITOR":"true",
+          "ICON_URL": "https://icon-"+url,
+          "CHAT_URL": "https://chat-"+url,
+        } + (if adminUrl != null then {
+          # Admin
+          "ADMIN_URL": adminUrl,
+          "ADMIN_API_URL": adminUrl,
+          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
+          "ADMIN_SOCKETS_TOKEN": env.ADMIN_SOCKETS_TOKEN,
+          # Opid client
+          "OPID_CLIENT_ID": "auth-code-client",
+          "OPID_CLIENT_SECRET": env.ADMIN_API_TOKEN,
+          "OPID_CLIENT_ISSUER": "https://publichydra-"+url,
+          "START_ROOM_URL": "/_/global/maps-"+url+"/starter/map.json",
+          # Ejabberd
+          "EJABBERD_DOMAIN": "xmpp-"+url,
+          "EJABBERD_WS_URI": "wss://xmpp-"+url+"/ws",
+          "EJABBERD_JWT_SECRET": env.EJABBERD_JWT_SECRET,
+        } else {
+          # Ejabberd
+          "EJABBERD_DOMAIN": "ejabberd",
+          "EJABBERD_WS_URI": "ws://ejabberd:5443/ws",
+          //"EJABBERD_JWT_SECRET": env.JWT_SECRET_KEY,
+        })
       },
-      "ports": [80],
-      "env": {
-        "PUSHER_URL": "//pusher-"+url,
-        "UPLOADER_URL": "//uploader-"+url,
-        "JITSI_URL": env.JITSI_URL,
-        #POSTHOG
-        "POSTHOG_API_KEY": if namespace == "master" then env.POSTHOG_API_KEY else "",
-        "POSTHOG_URL": if namespace == "master" then env.POSTHOG_URL else "",
-        "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
-        "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
-        "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
-        "ENABLE_FEATURE_MAP_EDITOR":"true",
-        "ICON_URL": "//icon-"+url,
-        "CHAT_URL": "//chat-"+url,
-      } + (if adminUrl != null then {
-         # Admin
-         "ADMIN_URL": "//"+url,
-         "ENABLE_OPENID": "1",
-       } else {})
-    },
     "chat": {
       "image": "thecodingmachine/workadventure-chat:"+tag,
       "host": {
@@ -134,7 +118,7 @@
       },
       "ports": [80],
       "env": {
-        "PUSHER_URL": "//pusher-"+url,
+        "PUSHER_URL": "//play-"+url,
         "UPLOADER_URL": "//uploader-"+url,
         "CHAT_EMBEDLY_KEY": if std.objectHas(env, 'CHAT_EMBEDLY_KEY') then env.CHAT_EMBEDLY_KEY else "",
         "ICON_URL": "//icon-"+url
@@ -259,29 +243,19 @@
               }
             }
           },
-          pusher+: {
+          play+: {
             deployment+: {
               spec+: {
                 template+: {
                   metadata+: {
                     annotations+: {
-                      "prometheus.io/port": "8080",
+                      "prometheus.io/port": "3000",
                       "prometheus.io/scrape": "true"
                     }
                   }
                 }
               }
             },
-            ingress+: {
-              spec+: {
-                tls+: [{
-                  hosts: ["pusher-"+url],
-                  secretName: "certificate-tls"
-                }]
-              }
-             }
-          },
-          front+: {
             ingress+: {
               spec+: {
                 tls+: [{

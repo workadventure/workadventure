@@ -1,7 +1,3 @@
-# The building of ProtoBuf "messages" must be done out of Docker because grpc-node does not ship with ARM64 binaries.
-# See: https://github.com/grpc/grpc-node/issues/1405
-# When the issue above is closed, we can move back messages building inside Dockerfile
-
 # protobuf build
 FROM --platform=$BUILDPLATFORM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c as proto-builder
 WORKDIR /usr/src
