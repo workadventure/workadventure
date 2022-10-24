@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
 import { isMucRoomDefinition } from "./MucRoomDefinitionInterface";
+import { isMetaTagFavicon } from "./MetaTagFavicon";
 
 /*
  * WARNING! The original file is in /messages/JsonMessages.
@@ -40,6 +41,39 @@ const isMapThirdPartyData = z.object({
         description: "Use these settings to override default Jitsi settings.",
     }),
 });
+
+const MetaTagsData = z.object({
+    // Meta tags values
+    title: extendApi(z.string().optional(), {
+        description: "Title shown on browser tab",
+        example: "WorkAdventure - My Awesome World",
+    }),
+    description: extendApi(z.string().optional(), {
+        description: "Description of the webpage",
+        example: "My awesome world in WorkAdventure",
+    }),
+    favIcons: extendApi(isMetaTagFavicon.array().optional(), {
+        description: "Icon to load inside the index.html and on the manifest",
+    }),
+    appName: extendApi(z.string().optional(), {
+        description: "Name display on the PWA",
+        example: "WorkAdventure",
+    }),
+    shortAppName: extendApi(z.string().optional(), {
+        description: "PWA name when there not enough space",
+        example: "WA",
+    }),
+    themeColor: extendApi(z.string().optional(), {
+        description: "Color use for theme PWA icons, Windows app and android browser",
+        example: "#000000",
+    }),
+    cardImage: extendApi(z.string().optional(), {
+        description: "The URL of the image to be used on OG card tags",
+        example: "https://example.com/awesome_world.png",
+    }),
+});
+
+const RequiredMetaTagsData = MetaTagsData.required();
 
 const isLegalsData = z.object({
     termsOfUseUrl: extendApi(z.string().nullable().optional(), {
@@ -137,8 +171,8 @@ export const isMapDetailsData = z.object({
         example: "https://example.com/logo_login.png",
     }),
     showPoweredBy: extendApi(z.boolean().nullable().optional(), {
-        description: "The URL of the image to be used on the name scene",
-        example: "https://example.com/logo_login.png",
+        description: "Whether the logo PoweredBy is enabled or not on this room",
+        example: true,
     }),
     thirdParty: extendApi(isMapThirdPartyData.nullable().optional(), {
         description: "Configuration data for third party services",
@@ -154,6 +188,17 @@ export const isMapDetailsData = z.object({
         description:
             "The url of the page where the user can see the price to upgrade and can use the features he wants in the future.",
         example: "https://example.com/pricing",
+    }),
+    enableChat: extendApi(z.boolean().optional(), {
+        description: "Whether the chat is enabled or not on this room",
+        example: true,
+    }),
+    enableChatUpload: extendApi(z.boolean().optional(), {
+        description: "Whether the feature 'upload' in the chat is enabled or not on this room",
+        example: true,
+    }),
+    metatags: extendApi(MetaTagsData.nullable().optional(), {
+        description: "Data related to METATAGS / meta tags. Contains page title, favicons, og data, etc...",
     }),
     legals: extendApi(isLegalsData.nullable().optional(), {
         description: "Configuration of the legals link (privacy policy, etc...)",
@@ -171,5 +216,7 @@ export type MapDetailsData = z.infer<typeof isMapDetailsData>;
 export type MapThirdPartyData = z.infer<typeof isMapThirdPartyData>;
 export type MapBbbData = z.infer<typeof isBbbData>;
 export type MapJitsiData = z.infer<typeof isJitsiData>;
+export type MetaTagsData = z.infer<typeof MetaTagsData>;
+export type RequiredMetaTagsData = z.infer<typeof RequiredMetaTagsData>;
 export type LegalsData = z.infer<typeof isLegalsData>;
 export type CustomizeSceneData = z.infer<typeof CustomizeSceneData>;

@@ -1,0 +1,26 @@
+{
+  "name": "@workadventure/map-editor",
+  "version": "1.0.0",
+  "description": "Map Editor commands types",
+  "main": "./src/index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "prepare-for-prod": "jq '.main = \"./dist/index.js\"' package.json > package_tmp1.json && jq '.types = \"./dist/index.d.ts\"' package_tmp1.json > package.json && rm package_tmp1.json"
+  },
+  "author": "WorkAdventure",
+  "license": "ISC",
+  "dependencies": {
+    "@workadventure/math-utils": "link:../math-utils",
+    "@workadventure/tiled-map-type-guard": "^2.0.4",
+    "@types/uuid": "^8.3.4",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.7.17",
+    "typescript": "^4.7.2"
+  },
+  "files": [
+    "src"
+  ]
+}

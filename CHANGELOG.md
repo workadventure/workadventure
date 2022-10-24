@@ -12,7 +12,7 @@
 ## Version 1.5.0
 ### Updates
 - Added support for login with OpenID Connect
-- New scripting library available to extend WorkAdventure: see [Scripting API Extra](https://github.com/workadventure/scripting-api-extra/)  
+- New scripting library available to extend WorkAdventure: see [Scripting API Extra](https://github.com/workadventure/scripting-api-extra/)
 - New menu design!
 - New `openTab` property (#1419)
 - Possible integration with Posthog (#1458)
@@ -32,8 +32,8 @@
 
 ## Version 1.4.15
 
-### Updates 
-- New scripting API features : 
+### Updates
+- New scripting API features :
   - Use `WA.ui.registerMenuCommand(commandDescriptor: string, options: MenuOptions): Menu` to add a custom menu or an iframe to the menu.
 - New `jitsiWidth` parameter to set the width of Jitsi and Cowebsite (#1398 @tabascoeye)
 - Refactored the way videos are displayed to better cope for vertical videos (on mobile)
@@ -49,7 +49,7 @@
 ## Version 1.4.14
 
 ### Updates
-- New scripting API features : 
+- New scripting API features :
   - Use `WA.room.loadTileset(url: string) : Promise<number>` to load a tileset from a JSON file.
 - Rewrote the way authentification works: the auth jwt token can now contains an email instead of an uuid
 - Added an OpenId login flow than can be plugged to any OIDC provider.
@@ -124,14 +124,14 @@
 ### Updates
 
 - Added the emote feature to WorkAdventure. (@Kharhamel, @Tabascoeye)
-  - The emote menu can be opened by clicking on your character. 
-  -  Clicking on one of its element will close the menu and play an emote above your character. 
+  - The emote menu can be opened by clicking on your character.
+  -  Clicking on one of its element will close the menu and play an emote above your character.
   -  This emote can be seen by other players.
 - Player names were improved. (@Kharhamel)
   - We now create a GameObject.Text instead of GameObject.BitmapText
   - now use the 'Press Start 2P' font family and added an outline
   - As a result, we can now allow non-standard letters like french accents or chinese characters!
-  
+
 - Added the contact card feature. (@Kharhamel)
   - Click on another player to see its contact info.
   - Premium-only feature unfortunately. I need to find a way to make it available for all.
@@ -145,7 +145,7 @@
 - Redesigned intermediate scenes
   - Redesigned Select Companion scene
   - Redesigned Enter Your Name scene
-    - Added a new `DISPLAY_TERMS_OF_USE` environment variable to trigger the display of terms of use  
+    - Added a new `DISPLAY_TERMS_OF_USE` environment variable to trigger the display of terms of use
 - New scripting API features:
   - Use `WA.loadSound(): Sound` to load / play / stop a sound
 

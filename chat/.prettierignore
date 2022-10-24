@@ -1,0 +1,4 @@
+src/Messages/ts-proto-generated
+src/Messages/JsonMessages
+src/i18n/i18n-*.ts
+public

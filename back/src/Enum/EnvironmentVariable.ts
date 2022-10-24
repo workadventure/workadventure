@@ -1,6 +1,5 @@
 const MINIMUM_DISTANCE = process.env.MINIMUM_DISTANCE ? Number(process.env.MINIMUM_DISTANCE) : 64;
 const GROUP_RADIUS = process.env.GROUP_RADIUS ? Number(process.env.GROUP_RADIUS) : 48;
-const ALLOW_ARTILLERY = process.env.ALLOW_ARTILLERY ? process.env.ALLOW_ARTILLERY == "true" : false;
 const ADMIN_API_URL = process.env.ADMIN_API_URL || "";
 const ADMIN_API_TOKEN = process.env.ADMIN_API_TOKEN || "";
 const CPU_OVERHEAT_THRESHOLD = Number(process.env.CPU_OVERHEAT_THRESHOLD) || 80;
@@ -30,6 +29,9 @@ export const EJABBERD_PASSWORD = process.env.EJABBERD_PASSWORD || "";
 // Note that anonymous players don't have any TTL limit because their data is stored in local storage, not in Redis database.
 export const PLAYER_VARIABLES_MAX_TTL = parseInt(process.env.PLAYER_VARIABLES_MAX_TTL || "-1") || -1;
 
+export const ENABLE_CHAT = process.env.ENABLE_CHAT !== "false";
+export const ENABLE_CHAT_UPLOAD = process.env.ENABLE_CHAT_UPLOAD !== "false";
+
 export {
     MINIMUM_DISTANCE,
     ADMIN_API_URL,
@@ -37,7 +39,6 @@ export {
     HTTP_PORT,
     GRPC_PORT,
     GROUP_RADIUS,
-    ALLOW_ARTILLERY,
     CPU_OVERHEAT_THRESHOLD,
     JITSI_URL,
     JITSI_ISS,

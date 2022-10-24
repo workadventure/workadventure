@@ -47,6 +47,11 @@ message CharacterLayerMessage {
   string layer = 3;
 }
 
+message ApplicationMessage {
+  string name = 1;
+  string script = 2;
+}
+
 message CompanionMessage {
   string name = 1;
 }
@@ -107,12 +112,45 @@ message LockGroupPromptMessage {
   bool lock = 1;
 }
 
+/*********** MAP EDITOR MESSAGES *************/
+
+message EditMapMessage {
+  oneof message {
+    ModifyAreaMessage modifyAreaMessage = 1;
+    CreateAreaMessage createAreaMessage = 2;
+    DeleteAreaMessage deleteAreaMessage = 3;
+  }
+}
+
+message EditMapCommandMessage {
+  string id = 1;
+  EditMapMessage editMapMessage = 2;
+}
+
+message EditMapCommandWithKeyMessage {
+  string mapKey = 1;
+  EditMapCommandMessage editMapCommandMessage = 2;
+}
+
 message ModifyAreaMessage {
   int32 id = 1;
-  google.protobuf.UInt32Value x = 2;
-  google.protobuf.UInt32Value y = 3;
-  google.protobuf.UInt32Value width = 4;
-  google.protobuf.UInt32Value height = 5;
+  optional uint32 x = 2;
+  optional uint32 y = 3;
+  optional uint32 width = 4;
+  optional uint32 height = 5;
+}
+
+message DeleteAreaMessage {
+  int32 id = 1;
+}
+
+message CreateAreaMessage {
+  int32 id = 1;
+  uint32 x = 2;
+  uint32 y = 3;
+  uint32 width = 4;
+  uint32 height = 5;
+  string name = 6;
 }
 
 message ClientToServerMessage {
@@ -136,7 +174,7 @@ message ClientToServerMessage {
     PingMessage pingMessage = 21;
     //XmppMessage xmppMessage = 22;
     AskPositionMessage askPositionMessage = 23;
-    EditMapMessage editMapMessage = 24;
+    EditMapCommandMessage editMapCommandMessage = 24;
   }
 }
 
@@ -264,7 +302,7 @@ message SubMessage {
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
     PingMessage pingMessage = 11;
     //XmppMessage xmppMessage = 12;
-    EditMapMessage editMapMessage = 13;
+    EditMapCommandMessage editMapCommandMessage = 13;
   }
 }
 
@@ -347,6 +385,7 @@ message RoomJoinedMessage {
   repeated CharacterLayerMessage characterLayer = 8;
   bool activatedInviteUser = 9;
   repeated VariableMessage playerVariable = 10;
+  repeated ApplicationMessage applications = 11;
 }
 
 message WebRtcStartMessage {
@@ -462,6 +501,7 @@ message JoinRoomMessage {
   AvailabilityStatus availabilityStatus = 11;
   bool activatedInviteUser = 12;
   bool isLogged = 13;
+  repeated ApplicationMessage applications = 14;
 }
 
 message UserJoinedZoneMessage {
@@ -536,7 +576,7 @@ message PusherToBackMessage {
     LockGroupPromptMessage lockGroupPromptMessage = 19;
     QueryMessage queryMessage = 21;
     AskPositionMessage askPositionMessage = 22;
-    EditMapMessage editMapMessage = 23;
+    EditMapCommandWithKeyMessage editMapCommandWithKeyMessage = 23;
   }
 }
 
@@ -568,16 +608,9 @@ message SubToPusherRoomMessage {
   oneof message {
     VariableWithTagMessage variableMessage = 1;
     ErrorMessage errorMessage = 2;
-    EditMapMessage editMapMessage = 3;
+    EditMapCommandMessage editMapCommandMessage = 3;
   }
 }
-
-message EditMapMessage {
-  oneof message {
-    ModifyAreaMessage modifyAreaMessage = 1;
-  }
-}
-
 
 /*message BatchToAdminPusherMessage {
   repeated SubToAdminPusherMessage payload = 2;
@@ -751,4 +784,5 @@ service RoomManager {
  */
 service MapStorage {
   rpc ping(PingMessage) returns (PingMessage);
+  rpc handleEditMapCommandWithKeyMessage(EditMapCommandWithKeyMessage) returns (EditMapCommandMessage);
 }

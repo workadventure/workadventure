@@ -18,7 +18,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
   front:
-    image: thecodingmachine/nodejs:16
+    image: thecodingmachine/nodejs:v2-18-bullseye
     environment:
       DEBUG_MODE: "$DEBUG_MODE"
       JITSI_URL: $JITSI_URL
@@ -44,6 +44,10 @@ services:
       TURN_PASSWORD: ""
       OPID_LOGOUT_REDIRECT_URL: "$OPID_LOGOUT_REDIRECT_URL"
       DISABLE_ANONYMOUS: "$DISABLE_ANONYMOUS"
+            # Only used if you set up a JWT authentication mechanism in Ejabberd
+      EJABBERD_JWT_SECRET: mySecretJwtToken
+      EJABBERD_DOMAIN: ejabberd
+      EJABBERD_WS_URI: ws://ejabberd:5443/ws
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
@@ -58,7 +62,7 @@ services:
       - "traefik.http.routers.front-ssl.service=front"
 
   chat:
-    image: thecodingmachine/nodejs:16
+    image: thecodingmachine/nodejs:v2-18-bullseye
     environment:
       PUSHER_URL: /pusher
       UPLOADER_URL: /uploader
@@ -79,7 +83,7 @@ services:
       - "traefik.http.routers.chat-ssl.service=chat"
 
   pusher:
-    image: thecodingmachine/nodejs:16
+    image: thecodingmachine/nodejs:v2-18-bullseye
     command: yarn dev
     #command: yarn run prod
     #command: yarn run profile
@@ -95,7 +99,6 @@ services:
       OPID_CLIENT_ID: $OPID_CLIENT_ID
       OPID_CLIENT_SECRET: $OPID_CLIENT_SECRET
       OPID_CLIENT_ISSUER: $OPID_CLIENT_ISSUER
-      OPID_CLIENT_REDIRECT_URL: $OPID_CLIENT_REDIRECT_URL
       OPID_PROFILE_SCREEN_PROVIDER: $OPID_PROFILE_SCREEN_PROVIDER
       OPID_SCOPE: $OPID_SCOPE
       OPID_PROMPT: $OPID_PROMPT
@@ -103,6 +106,8 @@ services:
       OPID_LOCALE_CLAIM: $OPID_LOCALE_CLAIM
       DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
       START_ROOM_URL: "$START_ROOM_URL"
+      ENABLE_CHAT: "$ENABLE_CHAT"
+      ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
       # Only used if you set up a JWT authentication mechanism in Ejabberd
       EJABBERD_JWT_SECRET: mySecretJwtToken
       EJABBERD_DOMAIN: ejabberd
@@ -165,7 +170,7 @@ services:
       - "traefik.http.routers.maps-ssl.service=maps"
 
   back:
-    image: thecodingmachine/nodejs:16
+    image: thecodingmachine/nodejs:v2-18-bullseye
     command: yarn dev
     #command: yarn run profile
     environment:
@@ -176,7 +181,6 @@ services:
       SECRET_KEY: yourSecretKey
       SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
       ENABLE_FEATURE_MAP_EDITOR: "$ENABLE_FEATURE_MAP_EDITOR"
-      ALLOW_ARTILLERY: "true"
       ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
@@ -187,6 +191,8 @@ services:
       NODE_ENV: development
       EJABBERD_API_URI: $EJABBERD_API_URI
       EJABBERD_DOMAIN: $EJABBERD_DOMAIN
+      ENABLE_CHAT: "$ENABLE_CHAT"
+      ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
     volumes:
       - ./back:/usr/src/app
     labels:
@@ -203,7 +209,7 @@ services:
       - "traefik.http.routers.back-ssl.service=back"
 
   uploader:
-    image: thecodingmachine/nodejs:16
+    image: thecodingmachine/nodejs:v2-18-bullseye
     command: yarn dev
     #command: yarn run profile
     environment:
@@ -222,6 +228,7 @@ services:
       REDIS_PORT: $UPLOADER_REDIS_PORT
       #CHAT
       ADMIN_API_URL: $ADMIN_API_URL
+      ENABLE_CHAT: $ENABLE_CHAT
       ENABLE_CHAT_UPLOAD: $ENABLE_CHAT_UPLOAD
       UPLOAD_MAX_FILESIZE: $UPLOAD_MAX_FILESIZE
     volumes:

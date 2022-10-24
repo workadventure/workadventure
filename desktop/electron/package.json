@@ -27,7 +27,7 @@
         "electron-updater": "^4.6.5",
         "electron-util": "^0.17.2",
         "electron-window-state": "^5.0.3",
-        "node-fetch": "^3.2.0"
+        "node-fetch": "^3.2.10"
     },
     "devDependencies": {
         "@types/auto-launch": "^5.0.2",

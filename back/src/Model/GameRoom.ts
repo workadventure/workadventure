@@ -34,6 +34,8 @@ import {
     ADMIN_API_URL,
     BBB_SECRET,
     BBB_URL,
+    ENABLE_CHAT,
+    ENABLE_CHAT_UPLOAD,
     ENABLE_FEATURE_MAP_EDITOR,
     JITSI_ISS,
     JITSI_URL,
@@ -45,7 +47,6 @@ import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { MapBbbData, MapJitsiData } from "../Messages/JsonMessages/MapDetailsData";
-import { MapEditorMessagesHandler } from "./MapEditorMessagesHandler";
 import { MapLoadingError } from "../Services/MapLoadingError";
 import { MucManager } from "../Services/MucManager";
 import { BrothersFinder } from "./BrothersFinder";
@@ -68,7 +69,6 @@ export class GameRoom implements BrothersFinder {
     private nextUserId = 1;
 
     private roomListeners: Set<RoomSocket> = new Set<RoomSocket>();
-    private mapEditorMessagesHandler = new MapEditorMessagesHandler(this.roomListeners);
 
     private constructor(
         public readonly roomUrl: string,
@@ -142,7 +142,7 @@ export class GameRoom implements BrothersFinder {
         gameRoom
             .getMucManager()
             .then((mucManager) => {
-                mucManager.init().catch((err) => console.error(err));
+                mucManager.init(mapDetails).catch((err) => console.error(err));
             })
             .catch((err) => console.error(err));
         return gameRoom;
@@ -150,6 +150,16 @@ export class GameRoom implements BrothersFinder {
 
     public getUsers(): Map<number, User> {
         return this.users;
+    }
+
+    public dispatchRoomMessage(message: SubToPusherRoomMessage): void {
+        const batchMessage = new BatchToPusherRoomMessage();
+        batchMessage.addPayload(message);
+
+        // Dispatch the message on the room listeners
+        for (const socket of this.roomListeners) {
+            socket.write(batchMessage);
+        }
     }
 
     public getUserByUuid(uuid: string): User | undefined {
@@ -193,7 +203,8 @@ export class GameRoom implements BrothersFinder {
             joinRoomMessage.getCompanion(),
             undefined,
             undefined,
-            joinRoomMessage.getActivatedinviteuser()
+            joinRoomMessage.getActivatedinviteuser(),
+            joinRoomMessage.getApplicationsList()
         );
         this.nextUserId++;
         this.users.set(user.id, user);
@@ -627,6 +638,8 @@ export class GameRoom implements BrothersFinder {
                 group: null,
                 mucRooms: null,
                 showPoweredBy: true,
+                enableChat: ENABLE_CHAT,
+                enableChatUpload: ENABLE_CHAT_UPLOAD,
             };
         }
 
@@ -848,10 +861,6 @@ export class GameRoom implements BrothersFinder {
             };
         }
         return undefined;
-    }
-
-    public getMapEditorMessagesHandler(): MapEditorMessagesHandler {
-        return this.mapEditorMessagesHandler;
     }
 
     /**
