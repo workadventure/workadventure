@@ -7,13 +7,19 @@ import {
 } from "@workadventure/map-editor";
 import { Unsubscriber } from "svelte/store";
 import { RoomConnection } from "../../../Connexion/RoomConnection";
-import { mapEditorModeDragCameraPointerDownStore, mapEditorModeStore } from "../../../Stores/MapEditorStore";
+import {
+    mapEditorModeDragCameraPointerDownStore,
+    mapEditorModeStore,
+    mapEditorSelectedToolStore,
+} from "../../../Stores/MapEditorStore";
 import { GameScene } from "../GameScene";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
+import { FloorEditorTool } from "./Tools/FloorEditorTool";
 import { MapEditorTool } from "./Tools/MapEditorTool";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
+    FloorEditor = "FloorEditor",
 }
 
 export class MapEditorModeManager {
@@ -32,7 +38,7 @@ export class MapEditorModeManager {
     /**
      * Tools that we can work with inside Editor
      */
-    private editorTools: Map<EditorToolName, MapEditorTool>;
+    private editorTools: Record<EditorToolName, MapEditorTool>;
 
     /**
      * What tool are we using right now
@@ -72,9 +78,10 @@ export class MapEditorModeManager {
         this.active = false;
         this.pointerDown = false;
 
-        this.editorTools = new Map<EditorToolName, MapEditorTool>([
-            [EditorToolName.AreaEditor, new AreaEditorTool(this)],
-        ]);
+        this.editorTools = {
+            [EditorToolName.AreaEditor]: new AreaEditorTool(this),
+            [EditorToolName.FloorEditor]: new FloorEditorTool(this),
+        };
         this.activeTool = undefined;
 
         this.subscribeToStores();
@@ -199,7 +206,9 @@ export class MapEditorModeManager {
     }
 
     public destroy(): void {
-        this.editorTools.forEach((tool) => tool.destroy());
+        for (const key of Object.keys(this.editorTools)) {
+            this.editorTools[key as EditorToolName].destroy();
+        }
         this.unsubscribeFromStores();
         this.pointerDownUnsubscriber();
     }
@@ -213,6 +222,10 @@ export class MapEditorModeManager {
             }
             case "1": {
                 this.equipTool(EditorToolName.AreaEditor);
+                break;
+            }
+            case "2": {
+                this.equipTool(EditorToolName.FloorEditor);
                 break;
             }
             case "z": {
@@ -237,7 +250,9 @@ export class MapEditorModeManager {
                 this.revertPendingCommands();
             }
 
-            this.editorTools.forEach((tool) => tool.handleIncomingCommandMessage(editMapCommandMessage));
+            for (const key of Object.keys(this.editorTools)) {
+                this.editorTools[key as EditorToolName].handleIncomingCommandMessage(editMapCommandMessage);
+            }
         });
     }
 
@@ -266,6 +281,7 @@ export class MapEditorModeManager {
         if (tool !== undefined) {
             this.activateTool();
         }
+        mapEditorSelectedToolStore.set(tool);
     }
 
     private emitMapEditorUpdate(commandId: string, commandConfig: CommandConfig, delay = 0): void {
@@ -328,9 +344,11 @@ export class MapEditorModeManager {
     }
 
     private subscribeToGameMapFrontWrapperEvents(): void {
-        this.editorTools.forEach((tool) =>
-            tool.subscribeToGameMapFrontWrapperEvents(this.scene.getGameMapFrontWrapper())
-        );
+        for (const key of Object.keys(this.editorTools)) {
+            this.editorTools[key as EditorToolName].subscribeToGameMapFrontWrapperEvents(
+                this.scene.getGameMapFrontWrapper()
+            );
+        }
     }
 
     private unsubscribeFromStores(): void {
@@ -338,7 +356,7 @@ export class MapEditorModeManager {
     }
 
     private get currentlyActiveTool(): MapEditorTool | undefined {
-        return this.activeTool ? this.editorTools.get(this.activeTool) : undefined;
+        return this.activeTool ? this.editorTools[this.activeTool] : undefined;
     }
 
     public getScene(): GameScene {
