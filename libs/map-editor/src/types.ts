@@ -1,7 +1,7 @@
-import { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
-import { CreateAreaCommandConfig } from './Commands/Area/CreateAreaCommand';
-import { DeleteAreaCommandConfig } from './Commands/Area/DeleteAreaCommand';
-import { UpdateAreaCommandConfig } from './Commands/Area/UpdateAreaCommand';
+import type { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
+import type { CreateAreaCommandConfig } from './Commands/Area/CreateAreaCommand';
+import type { DeleteAreaCommandConfig } from './Commands/Area/DeleteAreaCommand';
+import type { UpdateAreaCommandConfig } from './Commands/Area/UpdateAreaCommand';
 
 export type ITiledMapRectangleObject = ITiledMapObject & { width: number; height: number };
 

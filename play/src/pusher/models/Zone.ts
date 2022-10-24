@@ -1,0 +1,483 @@
+import type { ExSocketInterface } from "./Websocket/ExSocketInterface";
+import { apiClientRepository } from "../services/ApiClientRepository";
+import type {
+    AvailabilityStatus,
+    BatchToPusherMessage,
+    CharacterLayerMessage,
+    CompanionMessage,
+    EmoteEventMessage,
+    ErrorMessage,
+    GroupLeftZoneMessage,
+    GroupUpdateZoneMessage,
+    PlayerDetailsUpdatedMessage,
+    PointMessage,
+    PositionMessage,
+    SetPlayerDetailsMessage,
+    UserJoinedZoneMessage,
+    UserLeftZoneMessage,
+} from "../../messages/generated/messages_pb";
+import {
+    GroupUpdateMessage,
+    UserJoinedMessage,
+    UserMovedMessage,
+    ZoneMessage,
+} from "../../messages/generated/messages_pb";
+import type { ClientReadableStream } from "@grpc/grpc-js";
+import type { PositionDispatcher } from "../models/PositionDispatcher";
+import Debug from "debug";
+import { BoolValue, UInt32Value } from "google-protobuf/google/protobuf/wrappers_pb";
+import type * as jspb from "google-protobuf";
+
+const debug = Debug("zone");
+
+export interface ZoneEventListener {
+    onUserEnters(user: UserDescriptor, listener: ExSocketInterface): void;
+    onUserMoves(user: UserDescriptor, listener: ExSocketInterface): void;
+    onUserLeaves(userId: number, listener: ExSocketInterface): void;
+    onGroupEnters(group: GroupDescriptor, listener: ExSocketInterface): void;
+    onGroupMoves(group: GroupDescriptor, listener: ExSocketInterface): void;
+    onGroupLeaves(groupId: number, listener: ExSocketInterface): void;
+    onEmote(emoteMessage: EmoteEventMessage, listener: ExSocketInterface): void;
+    onError(errorMessage: ErrorMessage, listener: ExSocketInterface): void;
+    onPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: ExSocketInterface): void;
+}
+
+/*export type EntersCallback = (thing: Movable, listener: User) => void;
+export type MovesCallback = (thing: Movable, position: PositionInterface, listener: User) => void;
+export type LeavesCallback = (thing: Movable, listener: User) => void;*/
+
+export class UserDescriptor {
+    private constructor(
+        public readonly userId: number,
+        private userUuid: string,
+        private name: string,
+        private characterLayers: CharacterLayerMessage[],
+        private position: PositionMessage,
+        private availabilityStatus: AvailabilityStatus,
+        private visitCardUrl: string | null,
+        private variables: jspb.Map<string, string>,
+        private companion?: CompanionMessage,
+        private outlineColor?: number
+    ) {
+        if (!Number.isInteger(this.userId)) {
+            throw new Error("UserDescriptor.userId is not an integer: " + this.userId);
+        }
+    }
+
+    public static createFromUserJoinedZoneMessage(message: UserJoinedZoneMessage): UserDescriptor {
+        const position = message.getPosition();
+        if (position === undefined) {
+            throw new Error("Missing position");
+        }
+        return new UserDescriptor(
+            message.getUserid(),
+            message.getUseruuid(),
+            message.getName(),
+            message.getCharacterlayersList(),
+            position,
+            message.getAvailabilitystatus(),
+            message.getVisitcardurl(),
+            message.getVariablesMap(),
+            message.getCompanion(),
+            message.getHasoutline() ? message.getOutlinecolor() : undefined
+        );
+    }
+
+    public update(userMovedMessage: UserMovedMessage): void {
+        const position = userMovedMessage.getPosition();
+        if (position === undefined) {
+            throw new Error("Missing position");
+        }
+        this.position = position;
+    }
+
+    public updateDetails(playerDetails: SetPlayerDetailsMessage): void {
+        if (playerDetails.getRemoveoutlinecolor()) {
+            this.outlineColor = undefined;
+        } else {
+            this.outlineColor = playerDetails.getOutlinecolor()?.getValue();
+        }
+        const availabilityStatus = playerDetails.getAvailabilitystatus();
+        if (availabilityStatus !== undefined) {
+            this.availabilityStatus = availabilityStatus;
+        }
+        const setVariable = playerDetails.getSetvariable();
+        if (setVariable) {
+            this.variables.set(setVariable.getName(), setVariable.getValue());
+        }
+    }
+
+    public toUserJoinedMessage(): UserJoinedMessage {
+        const userJoinedMessage = new UserJoinedMessage();
+
+        userJoinedMessage.setUserid(this.userId);
+        userJoinedMessage.setName(this.name);
+        userJoinedMessage.setCharacterlayersList(this.characterLayers);
+        userJoinedMessage.setPosition(this.position);
+        userJoinedMessage.setAvailabilitystatus(this.availabilityStatus);
+        if (this.visitCardUrl) {
+            userJoinedMessage.setVisitcardurl(this.visitCardUrl);
+        }
+        userJoinedMessage.setCompanion(this.companion);
+        userJoinedMessage.setUseruuid(this.userUuid);
+        if (this.outlineColor !== undefined) {
+            userJoinedMessage.setOutlinecolor(this.outlineColor);
+            userJoinedMessage.setHasoutline(true);
+        } else {
+            userJoinedMessage.setHasoutline(false);
+        }
+        for (const entry of this.variables.entries()) {
+            userJoinedMessage.getVariablesMap().set(entry[0], entry[1]);
+        }
+
+        return userJoinedMessage;
+    }
+
+    public toUserMovedMessage(): UserMovedMessage {
+        const userMovedMessage = new UserMovedMessage();
+
+        userMovedMessage.setUserid(this.userId);
+        userMovedMessage.setPosition(this.position);
+
+        return userMovedMessage;
+    }
+}
+
+export class GroupDescriptor {
+    private constructor(
+        public readonly groupId: number,
+        private groupSize: number | undefined,
+        private position: PointMessage,
+        private locked: boolean | undefined
+    ) {}
+
+    public static createFromGroupUpdateZoneMessage(message: GroupUpdateZoneMessage): GroupDescriptor {
+        const position = message.getPosition();
+        if (position === undefined) {
+            throw new Error("Missing position");
+        }
+        return new GroupDescriptor(message.getGroupid(), message.getGroupsize(), position, message.getLocked());
+    }
+
+    public update(groupDescriptor: GroupDescriptor): void {
+        this.groupSize = groupDescriptor.groupSize;
+        this.position = groupDescriptor.position;
+        this.locked = groupDescriptor.locked;
+    }
+
+    public toGroupUpdateMessage(): GroupUpdateMessage {
+        const groupUpdateMessage = new GroupUpdateMessage();
+        if (!Number.isInteger(this.groupId)) {
+            throw new Error("GroupDescriptor.groupId is not an integer: " + this.groupId);
+        }
+        groupUpdateMessage.setGroupid(this.groupId);
+        if (this.groupSize !== undefined) {
+            groupUpdateMessage.setGroupsize(new UInt32Value().setValue(this.groupSize));
+        }
+        groupUpdateMessage.setPosition(this.position);
+        if (this.locked !== undefined) {
+            groupUpdateMessage.setLocked(new BoolValue().setValue(this.locked));
+        }
+        return groupUpdateMessage;
+    }
+}
+
+interface ZoneDescriptor {
+    x: number;
+    y: number;
+}
+
+export class Zone {
+    //private things: Set<Movable> = new Set<Movable>();
+    private users: Map<number, UserDescriptor> = new Map<number, UserDescriptor>();
+    private groups: Map<number, GroupDescriptor> = new Map<number, GroupDescriptor>();
+    private listeners: Set<ExSocketInterface> = new Set<ExSocketInterface>();
+    private backConnection!: ClientReadableStream<BatchToPusherMessage>;
+    private isClosing = false;
+
+    constructor(
+        private positionDispatcher: PositionDispatcher,
+        private socketListener: ZoneEventListener,
+        public readonly x: number,
+        public readonly y: number,
+        private onBackFailure: (e: Error | null, zone: Zone) => void
+    ) {}
+
+    /**
+     * Creates a connection to the back server to track the users.
+     */
+    public init(): void {
+        (async () => {
+            debug("Opening connection to zone %d, %d on back server", this.x, this.y);
+            try {
+                const apiClient = await apiClientRepository.getClient(this.positionDispatcher.roomId);
+                const zoneMessage = new ZoneMessage();
+                zoneMessage.setRoomid(this.positionDispatcher.roomId);
+                zoneMessage.setX(this.x);
+                zoneMessage.setY(this.y);
+                this.backConnection = apiClient.listenZone(zoneMessage);
+                this.backConnection.on("data", (batch: BatchToPusherMessage) => {
+                    for (const message of batch.getPayloadList()) {
+                        if (message.hasUserjoinedzonemessage()) {
+                            const userJoinedZoneMessage = message.getUserjoinedzonemessage() as UserJoinedZoneMessage;
+                            const userDescriptor =
+                                UserDescriptor.createFromUserJoinedZoneMessage(userJoinedZoneMessage);
+                            this.users.set(userJoinedZoneMessage.getUserid(), userDescriptor);
+
+                            const fromZone = userJoinedZoneMessage.getFromzone();
+
+                            this.notifyUserEnter(userDescriptor, fromZone?.toObject());
+                        } else if (message.hasGroupupdatezonemessage()) {
+                            const groupUpdateZoneMessage =
+                                message.getGroupupdatezonemessage() as GroupUpdateZoneMessage;
+                            const groupDescriptor =
+                                GroupDescriptor.createFromGroupUpdateZoneMessage(groupUpdateZoneMessage);
+
+                            // Do we have it already?
+                            const groupId = groupUpdateZoneMessage.getGroupid();
+                            const oldGroupDescriptor = this.groups.get(groupId);
+                            if (oldGroupDescriptor !== undefined) {
+                                oldGroupDescriptor.update(groupDescriptor);
+
+                                this.notifyGroupMove(groupDescriptor);
+                            } else {
+                                this.groups.set(groupId, groupDescriptor);
+                                const fromZone = groupUpdateZoneMessage.getFromzone();
+                                this.notifyGroupEnter(groupDescriptor, fromZone?.toObject());
+                            }
+                        } else if (message.hasUserleftzonemessage()) {
+                            const userLeftMessage = message.getUserleftzonemessage() as UserLeftZoneMessage;
+                            this.users.delete(userLeftMessage.getUserid());
+
+                            this.notifyUserLeft(userLeftMessage.getUserid(), userLeftMessage.getTozone()?.toObject());
+                        } else if (message.hasGroupleftzonemessage()) {
+                            const groupLeftMessage = message.getGroupleftzonemessage() as GroupLeftZoneMessage;
+                            this.groups.delete(groupLeftMessage.getGroupid());
+
+                            this.notifyGroupLeft(
+                                groupLeftMessage.getGroupid(),
+                                groupLeftMessage.getTozone()?.toObject()
+                            );
+                        } else if (message.hasUsermovedmessage()) {
+                            const userMovedMessage = message.getUsermovedmessage() as UserMovedMessage;
+
+                            const userId = userMovedMessage.getUserid();
+                            const userDescriptor = this.users.get(userId);
+
+                            if (userDescriptor === undefined) {
+                                console.error('Unexpected move message received for unknown user "' + userId + '"');
+                                return;
+                            }
+
+                            userDescriptor.update(userMovedMessage);
+
+                            this.notifyUserMove(userDescriptor);
+                        } else if (message.hasEmoteeventmessage()) {
+                            const emoteEventMessage = message.getEmoteeventmessage() as EmoteEventMessage;
+                            this.notifyEmote(emoteEventMessage);
+                        } else if (message.hasPlayerdetailsupdatedmessage()) {
+                            const playerDetailsUpdatedMessage =
+                                message.getPlayerdetailsupdatedmessage() as PlayerDetailsUpdatedMessage;
+
+                            const userId = playerDetailsUpdatedMessage.getUserid();
+                            const userDescriptor = this.users.get(userId);
+
+                            if (userDescriptor === undefined) {
+                                console.error('Unexpected details message received for unknown user "' + userId + '"');
+                                return;
+                            }
+
+                            const details = playerDetailsUpdatedMessage.getDetails();
+                            if (details === undefined) {
+                                console.error(
+                                    'Unexpected details message without details received for user "' + userId + '"'
+                                );
+                                return;
+                            }
+
+                            userDescriptor.updateDetails(details);
+
+                            this.notifyPlayerDetailsUpdated(playerDetailsUpdatedMessage);
+                        } else if (message.hasErrormessage()) {
+                            const errorMessage = message.getErrormessage() as ErrorMessage;
+                            this.notifyError(errorMessage);
+                        } else {
+                            throw new Error("Unexpected message");
+                        }
+                    }
+                });
+
+                this.backConnection.on("error", (e) => {
+                    if (!this.isClosing) {
+                        debug("Error on back connection");
+                        this.close();
+                        this.onBackFailure(e, this);
+                    }
+                });
+                this.backConnection.on("close", () => {
+                    if (!this.isClosing) {
+                        debug("Close on back connection");
+                        this.close();
+                        this.onBackFailure(null, this);
+                    }
+                });
+            } catch (e) {
+                if (e instanceof Error) {
+                    this.onBackFailure(e, this);
+                } else {
+                    throw e;
+                }
+            }
+        })().catch((e) => console.error(e));
+    }
+
+    public close(): void {
+        debug("Closing connection to zone %d, %d on back server", this.x, this.y);
+        this.isClosing = true;
+        this.backConnection.cancel();
+    }
+
+    public hasListeners(): boolean {
+        return this.listeners.size !== 0;
+    }
+
+    /**
+     * Notify listeners of this zone that this user entered
+     */
+    private notifyUserEnter(user: UserDescriptor, oldZone: ZoneDescriptor | undefined): void {
+        for (const listener of this.listeners) {
+            if (listener.userId === user.userId) {
+                continue;
+            }
+            if (oldZone === undefined || !this.isListeningZone(listener, oldZone.x, oldZone.y)) {
+                this.socketListener.onUserEnters(user, listener);
+            } else {
+                this.socketListener.onUserMoves(user, listener);
+            }
+        }
+    }
+
+    /**
+     * Notify listeners of this zone that this group entered
+     */
+    private notifyGroupEnter(group: GroupDescriptor, oldZone: ZoneDescriptor | undefined): void {
+        for (const listener of this.listeners) {
+            if (oldZone === undefined || !this.isListeningZone(listener, oldZone.x, oldZone.y)) {
+                this.socketListener.onGroupEnters(group, listener);
+            } else {
+                this.socketListener.onGroupMoves(group, listener);
+            }
+        }
+    }
+
+    /**
+     * Notify listeners of this zone that this user left
+     */
+    private notifyUserLeft(userId: number, newZone: ZoneDescriptor | undefined): void {
+        for (const listener of this.listeners) {
+            if (listener.userId === userId) {
+                continue;
+            }
+            if (newZone === undefined || !this.isListeningZone(listener, newZone.x, newZone.y)) {
+                this.socketListener.onUserLeaves(userId, listener);
+            } else {
+                // Do not send a signal. The move event will be triggered when joining the new room.
+            }
+        }
+    }
+
+    private notifyEmote(emoteMessage: EmoteEventMessage): void {
+        for (const listener of this.listeners) {
+            if (listener.userId === emoteMessage.getActoruserid()) {
+                continue;
+            }
+            this.socketListener.onEmote(emoteMessage, listener);
+        }
+    }
+
+    private notifyPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage): void {
+        for (const listener of this.listeners) {
+            if (listener.userId === playerDetailsUpdatedMessage.getUserid()) {
+                continue;
+            }
+            this.socketListener.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener);
+        }
+    }
+
+    private notifyError(errorMessage: ErrorMessage): void {
+        for (const listener of this.listeners) {
+            this.socketListener.onError(errorMessage, listener);
+        }
+    }
+
+    /**
+     * Notify listeners of this zone that this group left
+     */
+    private notifyGroupLeft(groupId: number, newZone: ZoneDescriptor | undefined): void {
+        for (const listener of this.listeners) {
+            if (listener.groupId === groupId) {
+                continue;
+            }
+            if (newZone === undefined || !this.isListeningZone(listener, newZone.x, newZone.y)) {
+                this.socketListener.onGroupLeaves(groupId, listener);
+            } else {
+                // Do not send a signal. The move event will be triggered when joining the new room.
+            }
+        }
+    }
+
+    private isListeningZone(socket: ExSocketInterface, x: number, y: number): boolean {
+        // TODO: improve efficiency by not doing a full scan of listened zones.
+        for (const zone of socket.listenedZones) {
+            if (zone.x === x && zone.y === y) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private notifyGroupMove(groupDescriptor: GroupDescriptor): void {
+        for (const listener of this.listeners) {
+            this.socketListener.onGroupMoves(groupDescriptor, listener);
+        }
+    }
+
+    private notifyUserMove(userDescriptor: UserDescriptor): void {
+        for (const listener of this.listeners) {
+            if (listener.userId === userDescriptor.userId) {
+                continue;
+            }
+            this.socketListener.onUserMoves(userDescriptor, listener);
+        }
+    }
+
+    public startListening(listener: ExSocketInterface): void {
+        for (const [userId, user] of this.users.entries()) {
+            if (userId !== listener.userId) {
+                this.socketListener.onUserEnters(user, listener);
+            }
+        }
+
+        for (const group of this.groups.values()) {
+            this.socketListener.onGroupEnters(group, listener);
+        }
+
+        this.listeners.add(listener);
+        listener.listenedZones.add(this);
+    }
+
+    public stopListening(listener: ExSocketInterface): void {
+        for (const userId of this.users.keys()) {
+            if (userId !== listener.userId) {
+                this.socketListener.onUserLeaves(userId, listener);
+            }
+        }
+
+        for (const groupId of this.groups.keys()) {
+            this.socketListener.onGroupLeaves(groupId, listener);
+        }
+
+        this.listeners.delete(listener);
+        listener.listenedZones.delete(this);
+    }
+}

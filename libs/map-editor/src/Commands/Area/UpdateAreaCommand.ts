@@ -1,5 +1,6 @@
-import { GameMap } from '../../GameMap/GameMap';
-import { AreaType, ITiledMapRectangleObject } from '../../types';
+import type { GameMap } from '../../GameMap/GameMap';
+import { AreaType } from '../../types';
+import type { ITiledMapRectangleObject } from '../../types';
 import { Command } from "../Command";
 
 export interface UpdateAreaCommandConfig {
@@ -12,7 +13,7 @@ export class UpdateAreaCommand extends Command {
     private newConfig: ITiledMapRectangleObject;
 
     private gameMap: GameMap;
-    
+
     constructor(gameMap: GameMap, config: UpdateAreaCommandConfig) {
         super();
         this.gameMap = gameMap;

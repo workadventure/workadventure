@@ -11,6 +11,7 @@
       "esModuleInterop": true,
       "strict": true,
       "declaration": true,
-      "sourceMap": true
+      "sourceMap": true,
+      "importsNotUsedAsValues": "error"
     }
   }
