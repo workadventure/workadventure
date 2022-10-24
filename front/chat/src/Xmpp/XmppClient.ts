@@ -1,7 +1,6 @@
 import { XmppSettingsMessage } from "../Messages/ts-proto-generated/protos/messages";
 import { EJABBERD_WS_URI } from "../Enum/EnvironmentVariable";
 import CancelablePromise from "cancelable-promise";
-import SASLError from "@xmpp/sasl/lib/SASLError";
 import Debug from "debug";
 import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
 import { MucRoom } from "./MucRoom";
@@ -402,12 +401,7 @@ export class XmppClient {
                 this.isClosed = true;
             });
         }).catch((err) => {
-            if (err instanceof SASLError) {
-                debug("clientPromise => receive => error", err.name, err.condition);
-            } else {
-                debug("clientPromise => receive => error", err);
-            }
-
+            debug("clientPromise => receive => error", err);
             console.trace("clientPromise => receive => error", err);
             this.clientPromise.cancel();
         }));

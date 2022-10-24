@@ -303,10 +303,9 @@
                     <p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
                         {$selectedMessageToReply.body}
                     </p>
-                    {#if $selectedMessageToReply && $selectedMessageToReply.files && $selectedMessageToReply.files.length > 0}
-                        {#each $selectedMessageToReply.files as file}
-                            <!-- File message -->
-                            <File {file} />
+                    {#if $selectedMessageToReply && $selectedMessageToReply.links && $selectedMessageToReply.links.length > 0}
+                        {#each $selectedMessageToReply.links as link}
+                            <File url={link.url} name={link.description} />
                         {/each}
                     {/if}
                 </div>

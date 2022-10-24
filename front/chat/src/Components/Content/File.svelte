@@ -5,7 +5,7 @@
     import { FileMessageManager } from "../../Services/FileMessageManager";
 
     export let url: string;
-    export let name: string;
+    export let name: string | undefined;
 
     function openCoWebsite() {
         iframeListener.openCoWebsite(url, true, "allowfullscreen");
@@ -22,7 +22,7 @@
                 var url = URL.createObjectURL(blob);
                 var a = document.createElement("a");
                 a.href = url;
-                a.download = name;
+                a.download = name ?? FileMessageManager.getName(url);
                 document.body.appendChild(a);
                 a.click();
                 setTimeout((_) => {
@@ -40,9 +40,9 @@
 
 <div class="file">
     {#if FileMessageManager.isImage(url)}
-        <img src={url} width="100%" height="100%" alt={name} class="tw-mt-2" />
+        <img src={url} width="100%" height="100%" alt={name ?? FileMessageManager.getName(url)} class="tw-mt-2" />
     {:else if FileMessageManager.isVideo(url)}
-        <video width="100%" height="100%" alt={name} class="tw-mt-2" controls>
+        <video width="100%" height="100%" alt={name ?? FileMessageManager.getName(url)} class="tw-mt-2" controls>
             <source src={url} type={`video/${FileMessageManager.getExtension(url)}`} />
             Sorry, your browser doesn't support <code>embedded</code> videos.
         </video>
@@ -56,7 +56,7 @@
                 <FileIcon size="30" />
             </div>
             <div class="information">
-                <p class="tw-m-0">{name}</p>
+                <p class="tw-m-0">{name ?? FileMessageManager.getName(url)}</p>
                 <!--
                 <p class="tw-text-light-purple-alt tw-mt-1 tw-m-0 tw-text-xxs">
                     {link.size ?? "0"}kb - {link.lastModified

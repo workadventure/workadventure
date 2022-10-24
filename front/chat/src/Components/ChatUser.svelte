@@ -15,8 +15,12 @@
 
     export let mucRoom: MucRoom;
     export let user: User;
-    export let openChat: Function;
     export let searchValue: string = "";
+
+    function openChat(user: User) {
+        return user;
+        // activeThreadStore.set(user);
+    }
 
     const presenceStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
 
@@ -30,8 +34,10 @@
         chatMenuActive = false;
     };
 
-    function showBusinessCard(visitCardUrl: string) {
-        iframeListener.sendShowBusinessCard(visitCardUrl);
+    function showBusinessCard(visitCardUrl: string | undefined) {
+        if (visitCardUrl) {
+            iframeListener.sendShowBusinessCard(visitCardUrl);
+        }
     }
 
     function findUserInDefault(jid: string): User | undefined {

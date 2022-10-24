@@ -14,7 +14,7 @@
 
     const me = derived(usersListStore, ($usersListStore) => $usersListStore.get(liveRoom.myJID));
 
-    function open(mucRoom) {
+    function open(mucRoom: MucRoom) {
         activeThreadStore.set(mucRoom);
     }
 

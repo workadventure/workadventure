@@ -438,7 +438,7 @@
                                                         <CopyIcon size="13" class="tw-mr-1" />
                                                         {$LL.copy()}
                                                     </span>
-                                                    {#if $me.isAdmin || isMe(message.jid)}
+                                                    {#if ($me && $me.isAdmin) || isMe(message.jid)}
                                                         <span
                                                             class="wa-dropdown-item tw-text-pop-red"
                                                             on:click={() => mucRoom.sendRemoveMessage(message.id)}
