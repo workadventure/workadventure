@@ -5,6 +5,7 @@ import {
     AWS_DEFAULT_REGION,
     AWS_ENDPOINT,
     AWS_SECRET_ACCESS_KEY,
+    UPLOADER_AWS_SIGNED_URL_EXPIRATION,
     UPLOADER_URL
 } from "../Enum/EnvironmentVariable";
 import AWS, {S3} from "aws-sdk";
@@ -90,7 +91,7 @@ export class S3StorageProvider implements StorageProvider {
     }
 
     async getExternalDownloadLink(fileId: string): Promise<string> {
-        const params = {Bucket: AWS_BUCKET, Key: fileId, Expires: 60};
+        const params = {Bucket: AWS_BUCKET, Key: fileId, Expires: UPLOADER_AWS_SIGNED_URL_EXPIRATION};
         return await this.s3.getSignedUrlPromise('getObject', params);
     }
 }

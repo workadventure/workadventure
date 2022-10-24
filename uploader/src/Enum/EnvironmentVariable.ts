@@ -8,6 +8,7 @@ const AWS_DEFAULT_REGION = process.env.AWS_DEFAULT_REGION;
 const AWS_BUCKET = process.env.AWS_BUCKET;
 const AWS_URL = process.env.AWS_URL;
 const AWS_ENDPOINT = process.env.AWS_ENDPOINT;
+const UPLOADER_AWS_SIGNED_URL_EXPIRATION = process.env.UPLOADER_AWS_SIGNED_URL_EXPIRATION || 60
 
 const REDIS_HOST = process.env.REDIS_HOST;
 const REDIS_PORT = process.env.REDIS_PORT;
@@ -31,6 +32,7 @@ export {
     AWS_BUCKET,
     AWS_URL,
     AWS_ENDPOINT,
+    UPLOADER_AWS_SIGNED_URL_EXPIRATION,
 
     REDIS_HOST,
     REDIS_PORT,
