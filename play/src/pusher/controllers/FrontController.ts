@@ -129,12 +129,6 @@ export class FrontController extends BaseHttpController {
                 throw new Error("Could not find index.html file");
             }
 
-            const file = fs.readFileSync(indexPath);
-
-            if (!file) {
-                return res.status(500).send();
-            }
-
             const builder = new MetaTagsBuilder(url);
 
             try {

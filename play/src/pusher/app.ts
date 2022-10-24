@@ -48,7 +48,7 @@ class App {
         const liveAssets = new LiveDirectory({
             path,
             keep: {
-                extensions: [".css", ".js", ".png", ".svg", ".ico", ".xml", ".mp3", ".json", ".html", ".ttf", ".woff2"],
+                extensions: [".css", ".js", ".png", ".svg", ".ico", ".xml", ".mp3", ".json", ".html", ".ttf", ".woff2", ".map"],
             },
         });
 
