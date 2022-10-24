@@ -22,7 +22,7 @@ const EnvironmentVariables = z.object({
     // Used only in development
     VITE_URL: z.string().url().optional(),
     // Use "*" to allow any domain
-    ALLOWED_CORS_ORIGIN: z.string().url().optional(),
+    ALLOWED_CORS_ORIGIN: z.string().url().or(z.literal("*")).optional(),
     PUSHER_URL: z.string().url().optional(),
     PUBLIC_MAP_STORAGE_URL: z.string().url().optional(),
     OPID_CLIENT_ID: z.string().optional(),
