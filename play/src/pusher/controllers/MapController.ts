@@ -84,7 +84,7 @@ export class MapController extends BaseHttpController {
                     res.send("The Token is invalid");
                     return;
                 } else {
-                    this.castErrorToResponse(e, res);
+                    throw e;
                 }
             }
         });

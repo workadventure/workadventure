@@ -21,24 +21,19 @@ export class OpenIdProfileController extends BaseHttpController {
 
             const { accessToken } = query;
 
-            try {
-                const resCheckTokenAuth = await openIDClient.checkTokenAuth(accessToken);
-                if (!resCheckTokenAuth.sub) {
-                    throw new Error("Email was not found");
-                }
-                res.setHeader("Content-Type", "text/html");
-                res.send(
-                    this.buildHtml(
-                        OPID_CLIENT_ISSUER,
-                        resCheckTokenAuth.sub
-                        /*resCheckTokenAuth.picture as string | undefined*/
-                    )
-                );
-                return;
-            } catch (error) {
-                console.error("profileCallback => ERROR", error);
-                this.castErrorToResponse(error, res);
+            const resCheckTokenAuth = await openIDClient.checkTokenAuth(accessToken);
+            if (!resCheckTokenAuth.sub) {
+                throw new Error("Email was not found");
             }
+            res.setHeader("Content-Type", "text/html");
+            res.send(
+                this.buildHtml(
+                    OPID_CLIENT_ISSUER,
+                    resCheckTokenAuth.sub
+                    /*resCheckTokenAuth.picture as string | undefined*/
+                )
+            );
+            return;
         });
     }
 
