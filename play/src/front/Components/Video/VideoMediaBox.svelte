@@ -7,12 +7,14 @@
     import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
+    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 
     import Woka from "../Woka/Woka.svelte";
     import { onMount } from "svelte";
-    import { isMediaBreakpointOnly } from "../../Utils/BreakpointsUtils";
+    import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import BanReportBox from "./BanReportBox.svelte";
     import microphoneOffImg from "../images/microphone-off-blue.png";
+    import { LayoutMode } from "../../WebRtc/LayoutManager";
 
     export let clickable = false;
 
@@ -28,6 +30,7 @@
     let embedScreen: EmbedScreen;
     let videoContainer: HTMLDivElement;
     let minimized = isMediaBreakpointOnly("md");
+    let isMobile = isMediaBreakpointUp("md");
 
     if (peer) {
         embedScreen = {
@@ -38,6 +41,7 @@
 
     const resizeObserver = new ResizeObserver(() => {
         minimized = isMediaBreakpointOnly("md");
+        isMobile = isMediaBreakpointUp("md");
     });
 
     onMount(() => {
@@ -47,7 +51,6 @@
 
 <div
     class="video-container"
-    class:no-clikable={!clickable}
     bind:this={videoContainer}
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
@@ -65,7 +68,11 @@
         {#if $streamStore}
             <video
                 class:no-video={!$constraintStore || $constraintStore.video === false}
+                class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
                 class="tw-h-full tw-max-w-full tw-rounded"
+                style={$embedScreenLayoutStore === LayoutMode.Presentation
+                    ? `border: solid 2px ${backGroundColor}`
+                    : ""}
                 use:srcObject={$streamStore}
                 autoplay
                 playsinline
@@ -115,5 +122,12 @@
 <style lang="scss">
     video.no-video {
         visibility: collapse;
+    }
+
+    video {
+        object-fit: cover;
+        &.object-contain {
+            object-fit: contain;
+        }
     }
 </style>

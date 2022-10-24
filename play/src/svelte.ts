@@ -129,6 +129,7 @@ const config: Phaser.Types.Core.GameConfig = {
             }
         },
     },
+    backgroundColor: "#1b1b29",
 };
 
 const game = new Game(config);

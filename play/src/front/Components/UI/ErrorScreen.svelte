@@ -33,8 +33,11 @@
 </script>
 
 {#if $errorScreenStore}
-    <main class="errorScreen" transition:fly={{ y: -200, duration: 500 }}>
-        <div style="width: 90%;">
+    <main
+        class="errorScreen tw-bg-dark-purple tw-pointer-events-auto tw-w-full tw-text-white tw-text-center tw-absolute tw-flex tw-flex-wrap tw-items-center tw-justify-center tw-h-full tw-top-0 tw-left-0 tw-right-0 tw-mx-auto tw-overflow-scroll tw-py-5"
+        transition:fly={{ y: -200, duration: 500 }}
+    >
+        <div class="tw-flex tw-flex-col tw-items-center" style="width: 90%;">
             <div class="logo"><img src={logo} alt="WorkAdventure" /></div>
             <div class="icon"><img src={errorLogo} alt="Error logo" /></div>
             {#if $errorScreenStore.type !== "retry"}<h2>{$errorScreenStore.title}</h2>{/if}
@@ -47,7 +50,7 @@
                 {/if}
             </p>
             {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || $errorScreenStore.type === "unauthorized"}
-                <button type="button" class="nes-btn is-primary button" on:click={click}>
+                <button type="button" class="light button" on:click={click}>
                     {#if $errorScreenStore.type === "retry"}<img src={reload} alt="" class="reload" />{/if}
                     {$errorScreenStore.buttonTitle}
                 </button>
@@ -58,26 +61,8 @@
 
 <style lang="scss">
     main.errorScreen {
-        pointer-events: auto;
-        width: 100%;
-        background-color: #000000;
-        color: #ffffff;
-        text-align: center;
-        position: absolute;
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        top: 0;
-        left: 0;
-        right: 0;
-        margin-left: auto;
-        margin-right: auto;
         min-width: 300px;
         z-index: 700;
-        overflow-y: scroll;
-        padding: 20px 0;
         .logo {
             width: 50%;
             max-height: 25vh;
@@ -96,12 +81,8 @@
             max-height: 100%;
         }
         h2 {
-            font-family: "Press Start 2P";
             padding: 5px;
             font-size: 30px;
-        }
-        p {
-            font-family: "Press Start 2P";
         }
         p.code {
             font-size: 12px;
@@ -148,7 +129,6 @@
 
         .button {
             cursor: pointer;
-            font-family: "Press Start 2P";
             font-size: 14px;
             .reload {
                 margin-top: -4px;

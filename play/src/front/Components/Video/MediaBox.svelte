@@ -57,7 +57,7 @@
     {:else if $constraintStore && $constraintStore.video}
         <div
             class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
-     media-box-shape-color
+     media-box-shape-color tw-pointer-events-auto screen-blocker
 "
             class:clickable={isClickable}
             class:mozaic-duo={mozaicDuo}

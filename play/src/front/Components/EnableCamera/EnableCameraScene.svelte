@@ -96,58 +96,62 @@
     }
 </script>
 
-<form class="enableCameraScene" on:submit|preventDefault={submit}>
-    <section class="text-center">
-        <h2>{$LL.camera.enable.title()}</h2>
-    </section>
-    {#if selectedCamera != undefined && $localStreamStore.type === "success" && $localStreamStore.stream}
-        <video class="myCamVideoSetup" use:srcObject={$localStreamStore.stream} autoplay muted playsinline />
-    {:else}
-        <div class="webrtcsetup">
-            <img class="background-img" src={cinemaCloseImg} alt="" />
+<form class="enableCameraScene tw-pointer-events-auto" on:submit|preventDefault={submit}>
+    <section class="tw-px-10 md:tw-px-32">
+        <div class="tw-p-8">
+            <section class="text-center">
+                <h2>{$LL.camera.enable.title()}</h2>
+            </section>
+            {#if selectedCamera != undefined && $localStreamStore.type === "success" && $localStreamStore.stream}
+                <video class="myCamVideoSetup" use:srcObject={$localStreamStore.stream} autoplay muted playsinline />
+            {:else}
+                <div class="webrtcsetup tw-rounded-lg">
+                    <img class="background-img" src={cinemaCloseImg} alt="" />
+                </div>
+            {/if}
+            {#if selectedMicrophone != undefined}
+                <HorizontalSoundMeterWidget spectrum={$localVolumeStore} />
+            {/if}
+
+            <section class="selectWebcamForm tw-flex tw-flex-col tw-justify-center tw-items-center tw-content-center">
+                <div class="control-group">
+                    <img src={cinemaImg} alt="Camera" />
+                    <div class="is-dark">
+                        <!-- svelte-ignore a11y-no-onchange -->
+                        <select bind:value={selectedCamera} on:change={selectCamera} class="tw-w-96">
+                            <!-- start with camera off -->
+                            <option value={null}>{$LL.camera.disable()}</option>
+
+                            {#each $cameraListStore as camera}
+                                <option value={camera.deviceId}>
+                                    {StringUtils.normalizeDeviceName(camera.label)}
+                                </option>
+                            {/each}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <img src={microphoneImg} alt="Microphone" />
+                    <div class="is-dark">
+                        <!-- svelte-ignore a11y-no-onchange -->
+                        <select bind:value={selectedMicrophone} on:change={selectMicrophone} class="tw-w-96">
+                            <!-- start with microphone off -->
+                            <option value={null}>{$LL.audio.disable()}</option>
+
+                            {#each $microphoneListStore as microphone}
+                                <option value={microphone.deviceId}>
+                                    {StringUtils.normalizeDeviceName(microphone.label)}
+                                </option>
+                            {/each}
+                        </select>
+                    </div>
+                </div>
+            </section>
+            <section class="action">
+                <button type="submit" class="light">{$LL.camera.enable.start()}</button>
+            </section>
         </div>
-    {/if}
-    {#if selectedMicrophone != undefined}
-        <HorizontalSoundMeterWidget spectrum={$localVolumeStore} />
-    {/if}
-
-    <section class="selectWebcamForm">
-        <div class="control-group">
-            <img src={cinemaImg} alt="Camera" />
-            <div class="is-dark">
-                <!-- svelte-ignore a11y-no-onchange -->
-                <select bind:value={selectedCamera} on:change={selectCamera}>
-                    <!-- start with camera off -->
-                    <option value={null}>{$LL.camera.disable()}</option>
-
-                    {#each $cameraListStore as camera}
-                        <option value={camera.deviceId}>
-                            {StringUtils.normalizeDeviceName(camera.label)}
-                        </option>
-                    {/each}
-                </select>
-            </div>
-        </div>
-
-        <div class="control-group">
-            <img src={microphoneImg} alt="Microphone" />
-            <div class="is-dark">
-                <!-- svelte-ignore a11y-no-onchange -->
-                <select bind:value={selectedMicrophone} on:change={selectMicrophone}>
-                    <!-- start with microphone off -->
-                    <option value={null}>{$LL.audio.disable()}</option>
-
-                    {#each $microphoneListStore as microphone}
-                        <option value={microphone.deviceId}>
-                            {StringUtils.normalizeDeviceName(microphone.label)}
-                        </option>
-                    {/each}
-                </select>
-            </div>
-        </div>
-    </section>
-    <section class="action">
-        <button type="submit" class="light">{$LL.camera.enable.start()}</button>
     </section>
 </form>
 
