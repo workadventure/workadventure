@@ -11,7 +11,7 @@ import { XmppClient } from "./XmppClient";
 import * as StanzaProtocol from "stanza/protocol";
 import { WaLink, WaReceivedReactions, WaUserInfo } from "./Lib/Plugin";
 import { ParsedJID } from "stanza/JID";
-import { ChatStateMessage, JID, JXT } from "stanza";
+import { ChatStateMessage, JID } from "stanza";
 import { ChatState, MUCAffiliation } from "stanza/Constants";
 
 const _VERBOSE = true;

@@ -43,6 +43,7 @@
         <img src={url} width="100%" height="100%" alt={name ?? FileMessageManager.getName(url)} class="tw-mt-2" />
     {:else if FileMessageManager.isVideo(url)}
         <video width="100%" height="100%" alt={name ?? FileMessageManager.getName(url)} class="tw-mt-2" controls>
+            <track kind="captions" srclang="en" label="english_captions"  src=""/>
             <source src={url} type={`video/${FileMessageManager.getExtension(url)}`} />
             Sorry, your browser doesn't support <code>embedded</code> videos.
         </video>

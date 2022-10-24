@@ -1,4 +1,4 @@
-import { derived, get, writable } from "svelte/store";
+import { derived, writable } from "svelte/store";
 import { Subject } from "rxjs";
 import { FileExt, UploadedFile, uploadingState } from "../Services/FileMessageManager";
 import { Message, User } from "../Xmpp/AbstractRoom";
