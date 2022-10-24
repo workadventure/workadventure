@@ -1,6 +1,5 @@
 import { uploaderManager } from "./UploaderManager";
 import { filesUploadStore } from "../Stores/ChatStore";
-import xml, { Element } from "@xmpp/xml";
 import { get } from "svelte/store";
 import { userStore } from "../Stores/LocalUserStore";
 import { ADMIN_API_URL, ENABLE_CHAT_UPLOAD } from "../Enum/EnvironmentVariable";
@@ -153,28 +152,8 @@ export class FileMessageManager {
         return uploaderManager.delete(file.id);
     }
 
-    /**
-     *
-     * @param files
-     * @returns
-     */
-    get getXmlFileAttr() {
-        return this.getXmlFileAttrFrom(this.files);
-    }
     get jsonFiles() {
         return this.getJsonFrom(this.files);
-    }
-
-    /**
-     *
-     * @param files
-     * @returns
-     */
-    public getXmlFileAttrFrom(files: UploadedFile[]) {
-        return files.reduce((xmlObject, file) => {
-            xmlObject.append(xml("file", { ...file }));
-            return xmlObject;
-        }, xml("files", { size: files.length }));
     }
 
     public getJsonFrom(files: UploadedFile[]): StanzaProtocol.Link[] {
@@ -185,22 +164,6 @@ export class FileMessageManager {
             });
             return allFiles;
         }, new Array<StanzaProtocol.Link>());
-    }
-
-    public getFilesListFromXml(xmlFile: Element) {
-        return xmlFile.getChildElements().reduce((list: UploadedFile[], element: Element) => {
-            const file = new UploadedFile(
-                element.getAttr("name") as string,
-                element.getAttr("id") as string,
-                element.getAttr("location") as string,
-                element.getAttr("lastModified") as number,
-                element.getAttr("webkitRelativePath") as string,
-                element.getAttr("size") as number,
-                element.getAttr("type") as string
-            );
-            list.push(file);
-            return list;
-        }, []);
     }
 
     get files(): UploadedFile[] {
