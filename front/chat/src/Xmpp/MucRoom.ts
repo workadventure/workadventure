@@ -11,7 +11,7 @@ import { XmppClient } from "./XmppClient";
 import * as StanzaProtocol from "stanza/protocol";
 import { WaLink, WaReceivedReactions, WaUserInfo } from "./Lib/Plugin";
 import { ParsedJID } from "stanza/JID";
-import {ChatStateMessage, JID, JXT} from "stanza";
+import { ChatStateMessage, JID, JXT } from "stanza";
 import { ChatState, MUCAffiliation } from "stanza/Constants";
 
 const _VERBOSE = true;
@@ -583,7 +583,7 @@ export class MucRoom extends AbstractRoom {
                 );
                 if (userReactionMessage) {
                     // If reactions of user already exists in the reactions of the message
-                    if (reactions === []) {
+                    if (reactions.length === 0) {
                         // If reactions of user is empty, delete it
                         reactionsMessages.set(
                             messageId,

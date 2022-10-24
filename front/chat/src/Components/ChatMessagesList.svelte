@@ -115,18 +115,19 @@
     let lastScrollPosition = 0;
 
     function scrollEvent() {
-        if (
-            messagesList &&
-            (messagesList.scrollHeight - messagesList.offsetHeight + 25 >=
+        if (messagesList) {
+            if (
+                messagesList.scrollHeight - messagesList.offsetHeight + 25 >=
                 messagesList.scrollTop >=
-                messagesList.scrollHeight - messagesList.offsetHeight - 25)
-        ) {
-            isScrolledDown = true;
-            if ($unreads > 0) {
-                mucRoom.updateLastMessageSeen();
+                messagesList.scrollHeight - messagesList.offsetHeight - 25
+            ) {
+                isScrolledDown = true;
+                if ($unreads > 0) {
+                    mucRoom.updateLastMessageSeen();
+                }
+            } else {
+                isScrolledDown = false;
             }
-        } else {
-            isScrolledDown = false;
         }
 
         if (document.body.scrollTop >= 0 && lastScrollPosition < 0) {
