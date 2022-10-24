@@ -1,12 +1,12 @@
 <script lang="ts">
-    import { mapEditorSelectePropertyStore } from "../../Stores/MapEditorStore";
+    import { mapEditorSelectedPropertyStore } from "../../Stores/MapEditorStore";
 </script>
 
-{#if $mapEditorSelectePropertyStore}
+{#if $mapEditorSelectedPropertyStore}
     <div class="area-details-window tw-bg-purple/95">
-        <h2>{$mapEditorSelectePropertyStore.name}</h2>
+        <h2>{$mapEditorSelectedPropertyStore.name}</h2>
         <div>
-            {#each Object.entries($mapEditorSelectePropertyStore.additionalProperties) as property}
+            {#each Object.entries($mapEditorSelectedPropertyStore.additionalProperties) as property}
                 <p>{property[0]}</p>
                 {#if typeof property[1] === "number"}
                     TODO: number input

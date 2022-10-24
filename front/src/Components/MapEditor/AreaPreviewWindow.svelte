@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { mapEditorSelectedAreaPreviewStore, mapEditorSelectePropertyStore } from "../../Stores/MapEditorStore";
+    import { mapEditorSelectedAreaPreviewStore, mapEditorSelectedPropertyStore } from "../../Stores/MapEditorStore";
     import { onDestroy } from "svelte";
     import { Unsubscriber } from "svelte/store";
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
@@ -45,7 +45,7 @@
 
     function closeAreaPreviewWindow() {
         $mapEditorSelectedAreaPreviewStore = undefined;
-        $mapEditorSelectePropertyStore = undefined;
+        $mapEditorSelectedPropertyStore = undefined;
     }
 
     function sendUpdateAreaCommand() {

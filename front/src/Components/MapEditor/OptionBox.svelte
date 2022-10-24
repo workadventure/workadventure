@@ -1,7 +1,7 @@
 <script lang="ts">
     import { PredefinedPropertyData } from "@workadventure/map-editor";
     import walk from "../../../public/static/images/logo-WA-min.png";
-    import { mapEditorSelectePropertyStore } from "../../Stores/MapEditorStore";
+    import { mapEditorSelectedPropertyStore } from "../../Stores/MapEditorStore";
 
     export let propertyData: PredefinedPropertyData = {
         name: "Name",
@@ -11,7 +11,7 @@
     };
 
     function setPropertiesData() {
-        mapEditorSelectePropertyStore.set(propertyData);
+        mapEditorSelectedPropertyStore.set(propertyData);
     }
 </script>
 

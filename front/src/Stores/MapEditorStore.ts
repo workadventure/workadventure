@@ -21,4 +21,4 @@ export const mapEditorModeDragCameraPointerDownStore = writable(false);
 
 export const mapEditorSelectedAreaPreviewStore = writable<AreaPreview | undefined>(undefined);
 
-export const mapEditorSelectePropertyStore = writable<PredefinedPropertyData | undefined>(undefined);
+export const mapEditorSelectedPropertyStore = writable<PredefinedPropertyData | undefined>(undefined);
