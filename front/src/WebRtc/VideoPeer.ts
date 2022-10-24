@@ -90,7 +90,6 @@ export class VideoPeer extends Peer {
                 }
                 timeout = setInterval(() => {
                     try {
-                        console.log("getting volume");
                         set(soundMeter?.getVolume());
                     } catch (err) {
                         if (!error) {

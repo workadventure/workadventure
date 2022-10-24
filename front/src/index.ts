@@ -130,6 +130,7 @@ const config: GameConfig = {
             }
         },
     },
+    backgroundColor: "#1b1b29",
 };
 
 const game = new Game(config);

@@ -38,172 +38,53 @@
     }
 </script>
 
-<form class="loginScene" on:submit|preventDefault={submit}>
-    <section class="text-center">
-        <img src={logo} alt="logo" class="main-logo" />
+<form
+    class="loginScene tw-w-screen tw-flex tw-flex-col tw-h-screen tw-px-10 md:tw-px-32 tw-pointer-events-auto tw-pt-20"
+    on:submit|preventDefault={submit}
+>
+    <section class="tw-h-fit tw-max-w-2xl tw-self-center">
+        <img src={logo} alt="logo" class="main-logo tw-w-full" />
     </section>
-    <section class="text-center">
-        <h2>{$LL.login.input.name.placeholder()}</h2>
-    </section>
-    <!-- svelte-ignore a11y-autofocus -->
-    <input
-        type="text"
-        name="loginSceneName"
-        class="nes-input is-dark"
-        autofocus
-        maxlength={MAX_USERNAME_LENGTH}
-        bind:value={name}
-        on:keypress={() => {
-            startValidating = true;
-        }}
-        class:is-error={(name.trim() === "" && startValidating) || errorName !== ""}
-    />
-    <section class="error-section">
-        {#if (name.trim() === "" && startValidating) || errorName !== ""}
-            <p class="err">
-                {#if errorName}{errorName}{:else}{$LL.login.input.name.empty()}{/if}
-            </p>
-        {/if}
-    </section>
-
-    {#if DISPLAY_TERMS_OF_USE}
-        <section class="terms-and-conditions">
-            <a style="display: none;" href="traduction">Need for traduction</a>
-            <p>
-                {@html $LL.login.terms()}
-            </p>
+    <div class="tw-w-full sm:tw-w-96 md:tw-w-10/12 lg:tw-w-1/2 xl:tw-w-1/3 tw-rounded tw-mx-auto tw-text-center tw-p-8">
+        <section class="text-center tw-flex tw-h-fit tw-flex-col tw-justify-center tw-items-center">
+            <h2 class="tw-text-white tw-text-2xl">{$LL.login.input.name.placeholder()}</h2>
+            <!-- svelte-ignore a11y-autofocus -->
+            <input
+                type="text"
+                name="loginSceneName"
+                class="tw-w-96 tw-text-center tw-border-white"
+                autofocus
+                maxlength={MAX_USERNAME_LENGTH}
+                bind:value={name}
+                on:keypress={() => {
+                    startValidating = true;
+                }}
+                class:is-error={(name.trim() === "" && startValidating) || errorName !== ""}
+            />
+            {#if (name.trim() === "" && startValidating) || errorName !== ""}
+                <p class="err tw-text-pop-red tw-text-sm">
+                    {#if errorName}{errorName}{:else}{$LL.login.input.name.empty()}{/if}
+                </p>
+            {/if}
         </section>
-    {/if}
-    <section class="action">
-        <button type="submit" class="nes-btn is-primary loginSceneFormSubmit">{$LL.login.continue()}</button>
-    </section>
+
+        <!-- svelte-ignore a11y-autofocus -->
+
+        {#if DISPLAY_TERMS_OF_USE}
+            <section class="terms-and-conditions tw-flex tw-h-fit">
+                <a style="display: none;" href="traduction">Need for traduction</a>
+                <p class="tw-text-white">
+                    {@html $LL.login.terms()}
+                </p>
+            </section>
+        {/if}
+        <section class="action tw-flex tw-h-fit tw-justify-center">
+            <button type="submit" class="light loginSceneFormSubmit">{$LL.login.continue()}</button>
+        </section>
+    </div>
     {#if logo !== logoImg && gameManager.currentStartedRoom.showPoweredBy !== false}
-        <section class="text-right powered-by">
-            <img src={poweredByWorkAdventureImg} alt="Powered by WorkAdventure" />
+        <section class="text-right tw-flex powered-by tw-justify-center tw-items-end">
+            <img src={poweredByWorkAdventureImg} alt="Powered by WorkAdventure" class="tw-h-14" />
         </section>
     {/if}
 </form>
-
-<style lang="scss">
-    @import "../../../style/breakpoints.scss";
-
-    .loginScene {
-        pointer-events: auto;
-        margin: 20px auto 0;
-        width: 90%;
-        color: #ebeeee;
-
-        display: flex;
-        flex-flow: column wrap;
-        align-items: center;
-
-        input {
-            text-align: center;
-            font-family: "Press Start 2P";
-            max-width: 400px;
-        }
-
-        .terms-and-conditions {
-            max-width: 400px;
-            font-size: 0.875rem;
-        }
-
-        p.err {
-            color: #ce372b;
-            text-align: center;
-        }
-
-        section {
-            margin: 5px;
-
-            &.error-section {
-                min-height: 2rem;
-                margin: 0;
-
-                p {
-                    margin: 0;
-                }
-            }
-
-            &.action {
-                text-align: center;
-            }
-
-            h2 {
-                font-family: "Press Start 2P";
-                font-size: 0.75rem;
-                margin: 0.5rem;
-            }
-
-            &.text-center {
-                text-align: center;
-            }
-
-            a {
-                text-decoration: underline;
-                color: #ebeeee;
-            }
-
-            a:hover {
-                font-weight: 700;
-            }
-
-            p {
-                text-align: left;
-                margin: 10px 10px;
-            }
-
-            img {
-                width: 100%;
-            }
-
-            &.powered-by {
-                position: fixed;
-                bottom: 0;
-                right: 10px;
-                max-height: 5rem;
-                img {
-                    height: 2rem;
-                }
-            }
-
-            .main-logo {
-                max-height: 4rem;
-            }
-        }
-    }
-
-    @include media-breakpoint-down(sm) {
-        .loginScene {
-            .terms-and-conditions {
-                font-size: 1rem;
-            }
-            section {
-                margin: 5px;
-
-                img {
-                    margin: 10px 0;
-                }
-
-                h2 {
-                    font-size: 1.5rem;
-                }
-
-                .main-logo {
-                    max-height: 10rem;
-                }
-
-                &.action {
-                    margin-top: 10px;
-                }
-
-                &.powered-by {
-                    max-height: 8rem;
-                    img {
-                        height: 3rem;
-                    }
-                }
-            }
-        }
-    }
-</style>

@@ -36,11 +36,11 @@
 </script>
 
 <div
-    class="main-ban-message tw-bg-dark-purple tw-rounded tw-text-white tw-self-center tw-m-1 tw-p-3 tw-w-full md:tw-w-2/3 tw-m-auto tw-h-full tw-py-3 tw-px-5 tw-pointer-events-auto lg:tw-py-7"
+    class="main-ban-message tw-bg-dark-purple tw-rounded tw-text-white tw-self-center tw-m-1 tw-p-3 tw-w-full md:tw-w-2/3 tw-m-auto tw-h-full tw-py-3 tw-px-5 tw-pointer-events-auto lg:tw-py-7 tw-relative"
     in:fly={{ y: -1000, duration: 500, delay: 250 }}
     out:fade={{ duration: 200 }}
 >
-    <h2 class="tw-text-lg md:tw-text-2xl">
+    <h2 class="tw-text-lg md:tw-text-2xl tw-text-center">
         <img src="resources/logos/report.svg" alt="***" class="tw-w-4 tw-h-5 md:tw-w-10 md:tw-h-10" />
         {$LL.warning.importantMessage()}
         <img src="resources/logos/report.svg" alt="***" class="tw-w-4 tw-h-5 md:tw-w-10 md:tw-h-10" />
@@ -48,7 +48,7 @@
     <div class="tw-overflow-auto tw-py-2 tw-h-3/5 xl:tw-h-fit tw-h-max-96 tw-my-0 md:tw-my-3 lg:tw-p-5">
         <p class="tw-text-sm md:tw-text-base">{message.text}</p>
     </div>
-    <div class="tw-flex tw-justify-center">
+    <div class="tw-flex tw-justify-center tw-absolute tw-bottom-2 tw-w-full">
         <button
             type="button"
             class="{nameButton === NAME_BUTTON ? 'light' : 'disabled'} tw-h-10"

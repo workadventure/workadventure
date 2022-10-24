@@ -31,26 +31,26 @@
 </script>
 
 <section class="text-center">
-    <h2>{$LL.woka.selectWoka.title()}</h2>
+    <h2 class="tw-text-white tw-text-2xl">{$LL.woka.selectWoka.title()}</h2>
 </section>
-<section class="category">
+<section class="category tw-flex tw-flex-row tw-justify-center">
     {#if $collectionsSizeStore > 1}
-        <button class="selectCharacterButton nes-btn" on:click|preventDefault={selectLeft}> &lt; </button>
+        <button class="light tw-mr-2 selectCharacterButton" on:click|preventDefault={selectLeft}> &lt; </button>
         <strong class="category-text">{$selectedCollection}</strong>
-        <button class="selectCharacterButton nes-btn" on:click|preventDefault={selectRight}> &gt; </button>
+        <button class="outline tw-ml-2 selectCharacterButton" on:click|preventDefault={selectRight}> &gt; </button>
     {/if}
 </section>
-<section class="action">
+<section class="action tw-flex tw-flex-row tw-justify-center">
     <button
         type="submit"
-        class="selectCharacterSceneFormSubmit nes-btn is-primary"
+        class="light tw-mr-2 selectCharacterSceneFormSubmit"
         on:click={() => analyticsClient.selectWoka()}
         on:click={cameraScene}>{$LL.woka.selectWoka.continue()}</button
     >
     {#if $customizeAvailableStore}
         <button
             type="submit"
-            class="selectCharacterSceneFormCustomYourOwnSubmit nes-btn"
+            class="outline tw-ml-2 selectCharacterSceneFormCustomYourOwnSubmit"
             on:click={() => analyticsClient.selectCustomWoka()}
             on:click={customizeScene}>{$LL.woka.selectWoka.customize()}</button
         >
@@ -61,7 +61,6 @@
     @import "../../../style/breakpoints.scss";
 
     section {
-        font-family: "Press Start 2P";
         color: #ebeeee;
         height: auto;
         margin: 5px;
@@ -70,7 +69,6 @@
             text-align: center;
             margin-top: 8vh;
             .category-text {
-                font-family: "Press Start 2P";
                 display: inline-block;
                 width: 65%;
             }
@@ -85,7 +83,6 @@
         }
 
         h2 {
-            font-family: "Press Start 2P";
             margin: 1px;
         }
 
@@ -99,7 +96,6 @@
     }
 
     button {
-        font-family: "Press Start 2P";
         pointer-events: auto;
     }
 </style>

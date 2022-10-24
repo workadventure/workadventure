@@ -1,6 +1,5 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
-
     import { gameManager } from "../../Phaser/Game/GameManager";
 
     export let userId: number;
@@ -40,7 +39,7 @@
     on:dragstart|preventDefault={noDrag}
 />
 
-<style>
+<style lang="scss">
     img {
         display: inline-block;
         pointer-events: auto;

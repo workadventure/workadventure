@@ -182,6 +182,9 @@
 
     .video-container {
         @apply mozaic-full-size;
+        &.video-off{
+            @apply md:tw-h-[4vh];
+        }
     }
 }
 
@@ -199,6 +202,9 @@
 
 .mozaic-full-size {
     @apply md:tw-h-[60vh] md:tw-w-[70vw];
+    &.media-box-camera-off-size{
+        @apply md:tw-h-[4vh];
+    }
 }
 
 .mozaic-duo-size {
