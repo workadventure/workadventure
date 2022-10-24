@@ -343,12 +343,19 @@ export class GameScene extends DirtyScene {
                 //remove loader in progress
                 this.loader.removeLoader();
 
-                //display an error scene
-                this.scene.start(ErrorSceneName, {
-                    title: "Network error",
-                    subTitle: "An error occurred while loading resource:",
-                    message: this.originalMapUrl ?? file.src,
-                });
+                errorScreenStore.setError(
+                    ErrorScreenMessage.fromPartial({
+                        type: "error",
+                        code: "NETWORK_ERROR",
+                        title: "Network error",
+                        subtitle: "An error occurred while loading a resource",
+                        details: 'Cannot load "' + (this.originalMapUrl ?? file.src) + '"',
+                    })
+                );
+                this.cleanupClosingScene();
+
+                this.scene.stop(this.scene.key);
+                this.scene.remove(this.scene.key);
             }
         });
 
@@ -1930,9 +1937,11 @@ ${escapedMessage}
         // stop playing audio, close any open website, stop any open Jitsi, unsubscribe
         coWebsiteManager.cleanup();
         // Stop the script, if any
-        const scripts = this.getScriptUrls(this.mapFile);
-        for (const script of scripts) {
-            iframeListener.unregisterScript(script);
+        if (this.mapFile) {
+            const scripts = this.getScriptUrls(this.mapFile);
+            for (const script of scripts) {
+                iframeListener.unregisterScript(script);
+            }
         }
 
         followUsersStore.stopFollowing();
@@ -1986,7 +1995,7 @@ ${escapedMessage}
         for (const iframeEvents of this.iframeSubscriptionList) {
             iframeEvents.unsubscribe();
         }
-        this.gameMapChangedSubscription.unsubscribe();
+        this.gameMapChangedSubscription?.unsubscribe();
         this.messageSubscription?.unsubscribe();
         gameSceneIsLoadedStore.set(false);
         this.cleanupDone = true;

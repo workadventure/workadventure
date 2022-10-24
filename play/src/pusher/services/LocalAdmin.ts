@@ -12,6 +12,7 @@ import {
 import type { AdminApiData } from "../../messages/JsonMessages/AdminApiData";
 import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
+import type {ErrorApiData} from "../../messages/JsonMessages/ErrorApiData";
 
 /**
  * A local class mocking a real admin if no admin is configured.
@@ -38,7 +39,7 @@ class LocalAdmin implements AdminInterface {
         };
     }
 
-    fetchMapDetails(playUri: string, authToken?: string, locale?: string): Promise<MapDetailsData | RoomRedirect> {
+    fetchMapDetails(playUri: string, authToken?: string, locale?: string): Promise<MapDetailsData | RoomRedirect | ErrorApiData> {
         const roomUrl = new URL(playUri);
 
         if (roomUrl.pathname === "/") {
@@ -57,7 +58,14 @@ class LocalAdmin implements AdminInterface {
         } else {
             match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);
             if (!match) {
-                throw new Error("URL format is not good : " + roomUrl.pathname);
+                return Promise.resolve({
+                    type: "error",
+                    code: "UNSUPPORTED_URL_FORMAT",
+                    title: "Unsupported URL format",
+                    details: "Unsupported path: " + roomUrl.pathname,
+                    image: "",
+                    subtitle: "",
+                });
             }
             mapUrl = roomUrl.protocol + "//" + match[1];
         }

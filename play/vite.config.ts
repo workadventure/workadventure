@@ -22,6 +22,16 @@ export default defineConfig({
     plugins: [
         svelte({
             preprocess: sveltePreprocess(),
+            onwarn(warning, defaultHandler) {
+                // don't warn on:
+                if (warning.code === 'a11y-click-events-have-key-events') return;
+                if (warning.code === 'security-anchor-rel-noreferrer') return;
+
+                // handle all other warnings normally
+                if (defaultHandler) {
+                    defaultHandler(warning);
+                }
+            },
         }),
     ],
 });

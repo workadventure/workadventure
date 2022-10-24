@@ -1,6 +1,8 @@
 import { writable } from "svelte/store";
 import { ErrorScreenMessage } from "../../messages/ts-proto-generated/protos/messages";
 import Axios from "axios";
+import {isErrorApiData} from "../../messages/JsonMessages/ErrorApiData";
+import {ApiError} from "./Errors/ApiError";
 
 /**
  * A store that contains one error of type WAError to be displayed.
@@ -32,7 +34,9 @@ function createErrorScreenStore() {
                         details: error.toString(),
                     })
                 );
-            } else if (Axios.isAxiosError(error) && error.response) {
+                return;
+            }
+            if (Axios.isAxiosError(error) && error.response) {
                 // Axios HTTP error
                 // client received an error response (5xx, 4xx)
                 console.error("Axios error. Request:", error.request, " - Response: ", error.response);
@@ -49,7 +53,9 @@ function createErrorScreenStore() {
                         details: "An error occurred while accessing URL: " + error.response.config.url,
                     })
                 );
-            } else if (Axios.isAxiosError(error)) {
+                return;
+            }
+            if (Axios.isAxiosError(error)) {
                 // Axios HTTP error
                 // client never received a response, or request never left
                 console.error("Axios error. No full HTTP response received. Request to URL:", error.config.url);
@@ -61,7 +67,24 @@ function createErrorScreenStore() {
                         subtitle: error.message,
                     })
                 );
-            } else if (error instanceof Error) {
+                return;
+            }
+            if (error instanceof ApiError) {
+                const errorApi = error.errorApiData;
+
+                if (errorApi.type === 'error' || errorApi.type === 'redirect') {
+                    set(ErrorScreenMessage.fromPartial(errorApi));
+                } else if (errorApi.type === 'retry' || errorApi.type === 'unauthorized') {
+                    set(ErrorScreenMessage.fromPartial({
+                        ...errorApi,
+                        buttonTitle: errorApi.buttonTitle ?? undefined,
+                    }));
+                } else {
+                    const _exhaustiveCheck: never = errorApi;
+                }
+                return;
+            }
+            if (error instanceof Error) {
                 // Error
                 set(
                     ErrorScreenMessage.fromPartial({
@@ -72,9 +95,10 @@ function createErrorScreenStore() {
                         details: error.message,
                     })
                 );
-            } else {
-                throw error;
+                return;
             }
+            throw error;
+
         },
         delete: () => {
             set(undefined);

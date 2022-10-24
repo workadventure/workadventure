@@ -5,6 +5,10 @@ import { axiosWithRetry } from "./AxiosUtils";
 import { isMapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
 import { isRoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
 import type { MucRoomDefinitionInterface } from "../../messages/JsonMessages/MucRoomDefinitionInterface";
+import {isErrorApiData} from "../../messages/JsonMessages/ErrorApiData";
+import {errorScreenStore} from "../Stores/ErrorScreenStore";
+import {ErrorScreenMessage} from "../../messages/ts-proto-generated/protos/messages";
+import {ApiError} from "../Stores/Errors/ApiError";
 export class MapDetail {
     constructor(public readonly mapUrl: string) {}
 }
@@ -111,6 +115,7 @@ export class Room {
 
             const roomRedirectChecking = isRoomRedirect.safeParse(data);
             const mapDetailsDataChecking = isMapDetailsData.safeParse(data);
+            const errorApiDataChecking = isErrorApiData.safeParse(data);
 
             if (roomRedirectChecking.success) {
                 return {
@@ -147,10 +152,14 @@ export class Room {
                 console.info("_enableChat", this._enableChat, "_enableChatUpload", this._enableChatUpload);
 
                 return new MapDetail(data.mapUrl);
+            } else if (errorApiDataChecking.success) {
+                const error = errorApiDataChecking.data;
+                throw new ApiError(error);
             } else {
                 console.log(data);
                 console.error("roomRedirectChecking", roomRedirectChecking.error.issues);
                 console.error("mapDetailsDataChecking", mapDetailsDataChecking.error.issues);
+                console.error("errorApiDataChecking", errorApiDataChecking.error.issues);
                 throw new Error("Data received by the /map endpoint of the Pusher is not in a valid format.");
             }
         } catch (e) {

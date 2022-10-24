@@ -6,6 +6,7 @@ import { InvalidTokenError } from "./InvalidTokenError";
 import { validateQuery } from "../services/QueryValidator";
 import { z } from "zod";
 import type { Request, Response } from "hyper-express";
+import {isErrorApiData} from "../../messages/JsonMessages/ErrorApiData";
 
 export class MapController extends BaseHttpController {
     // Returns a map mapping map name to file name of the map
@@ -31,71 +32,22 @@ export class MapController extends BaseHttpController {
          *     responses:
          *       200:
          *         description: The details of the map
-         *         content:
-         *           application/json:
-         *             schema:
-         *               type: object
-         *               required:
-         *                 - mapUrl
-         *                 - policy_type
-         *                 - tags
-         *                 - textures
-         *                 - authenticationMandatory
-         *                 - roomSlug
-         *                 - contactPage
-         *                 - group
-         *               properties:
-         *                 mapUrl:
-         *                   type: string
-         *                   description: The full URL to the JSON map file
-         *                   example: https://myuser.github.io/myrepo/map.json
-         *                 policy_type:
-         *                   type: integer
-         *                   description: ANONYMOUS_POLICY = 1, MEMBERS_ONLY_POLICY = 2, USE_TAGS_POLICY= 3
-         *                   example: 1
-         *                 tags:
-         *                   type: array
-         *                   description: The list of tags required to enter this room
-         *                   items:
-         *                     type: string
-         *                     example: speaker
-         *                 authenticationMandatory:
-         *                   type: boolean|null
-         *                   description: Whether the authentication is mandatory or not for this map.
-         *                   example: true
-         *                 roomSlug:
-         *                   type: string
-         *                   description: The slug of the room
-         *                   deprecated: true
-         *                   example: foo
-         *                 contactPage:
-         *                   type: string|null
-         *                   description: The URL to the contact page
-         *                   example: https://mycompany.com/contact-us
-         *                 group:
-         *                   type: string|null
-         *                   description: The group this room is part of (maps the notion of "world" in WorkAdventure SAAS)
-         *                   example: myorg/myworld
-         *                 iframeAuthentication:
-         *                   type: string|null
-         *                   description: The URL of the authentication Iframe
-         *                   example: https://mycompany.com/authc
-         *                 expireOn:
-         *                   type: string|undefined
-         *                   description: The date (in ISO 8601 format) at which the room will expire
-         *                   example: 2022-11-05T08:15:30-05:00
-         *                 canReport:
-         *                   type: boolean|undefined
-         *                   description: Whether the "report" feature is enabled or not on this room
-         *                   example: true
-         *                 loadingLogo:
-         *                   type: string
-         *                   description: The URL of the image to be used on the loading page
-         *                   example: https://example.com/logo.png
-         *                 loginSceneLogo:
-         *                   type: string
-         *                   description: The URL of the image to be used on the LoginScene
-         *                   example: https://example.com/logo_login.png
+         *         schema:
+         *           oneOf:
+         *            - $ref: "#/definitions/MapDetailsData"
+         *            - $ref: "#/definitions/RoomRedirect"
+         *       401:
+         *         description: Error while retrieving the data because you are not authorized
+         *         schema:
+         *             $ref: '#/definitions/ErrorApiRedirectData'
+         *       403:
+         *         description: Error while retrieving the data because you are not authorized
+         *         schema:
+         *             $ref: '#/definitions/ErrorApiUnauthorizedData'
+         *       404:
+         *         description: Error while retrieving the data
+         *         schema:
+         *             $ref: '#/definitions/ErrorApiErrorData'
          *
          */
         this.app.get("/map", async (req: Request, res: Response) => {
