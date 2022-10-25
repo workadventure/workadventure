@@ -131,7 +131,7 @@ services:
   ejabberd:
     image: ghcr.io/processone/ejabberd:22.05
     volumes:
-      - ./xmpp/ejabberd.yml:/opt/ejabberd/conf/ejabberd.yml
+      - ./xmpp/ejabberd.template.yml:/opt/ejabberd/conf/ejabberd.template.yml
     labels:
       - "traefik.enable=true"
       - "traefik.http.middlewares.strip-ejabberd-prefix.stripprefix.prefixes=/xmpp"

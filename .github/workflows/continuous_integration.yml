@@ -371,7 +371,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Copy JSON messages"
-        run: yarn run json-copy-to-front
+        run: yarn run json-copy-to-play
         working-directory: "messages"
 
       - name: "Build API typings"
