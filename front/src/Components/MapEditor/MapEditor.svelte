@@ -3,14 +3,12 @@
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import PropertyPreviewSidebar from "./PropertyPreviewSidebar.svelte";
 
-    // function close() {
-    //     mapEditorModeStore.switchMode(false);
-    // }
+
 </script>
 
+<MapEditorSideBar />
 <div class="map-editor tw-bg-dark-blue/95">
     <div class="sidebar">
-        <MapEditorSideBar />
         <AreaPreviewWindow />
         <PropertyPreviewSidebar />
     </div>
