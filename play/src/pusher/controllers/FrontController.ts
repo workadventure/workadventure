@@ -111,35 +111,36 @@ export class FrontController extends BaseHttpController {
                 return;
             }
 
-            res.type(file.extension).send(file.buffer);
+            if (filePath.startsWith("/assets")) {
+                const date = new Date();
+                date.setFullYear(date.getFullYear() + 1);
+                res.header("expires", date.toUTCString());
+                res.header("cache-control", "public");
+            }
+            if (filePath.startsWith("/resources") || filePath.startsWith("/static")) {
+                const date = new Date();
+                date.setDate(date.getDate() + 1);
+                res.header("expires", date.toUTCString());
+                res.header("cache-control", "public");
+            }
+
+            res.type(file.extension).header("etag", file.etag).send(file.buffer);
             return;
         });
     }
 
-    private displayFront(req: Request, res: Response, url: string) {
-        (async () => {
-            const builder = new MetaTagsBuilder(url);
+    private async displayFront(req: Request, res: Response, url: string) {
+        const builder = new MetaTagsBuilder(url);
 
-            try {
-                const metaTagsData = await builder.getMeta(req.header("User-Agent"));
+        const metaTagsData = await builder.getMeta(req.header("User-Agent"));
 
-                const html = Mustache.render(this.indexFile, {
-                    ...metaTagsData,
-                    msApplicationTileImage: metaTagsData.favIcons[metaTagsData.favIcons.length - 1].src,
-                    url,
-                    script: this.script,
-                });
-
-                return res.type("html").send(html);
-            } catch (e) {
-                console.error(e);
-                res.status(500).send();
-                return;
-            }
-        })().catch((e) => {
-            console.error(e);
-            res.status(500).send();
-            return;
+        const html = Mustache.render(this.indexFile, {
+            ...metaTagsData,
+            msApplicationTileImage: metaTagsData.favIcons[metaTagsData.favIcons.length - 1].src,
+            url,
+            script: this.script,
         });
+
+        return res.type("html").send(html);
     }
 }
