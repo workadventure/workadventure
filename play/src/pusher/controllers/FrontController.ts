@@ -111,7 +111,20 @@ export class FrontController extends BaseHttpController {
                 return;
             }
 
-            res.type(file.extension).send(file.buffer);
+            if (filePath.startsWith("/assets")) {
+                const date = new Date();
+                date.setFullYear(date.getFullYear() + 1);
+                res.header("expires", date.toUTCString());
+                res.header("cache-control", "public");
+            }
+            if (filePath.startsWith("/resources") || filePath.startsWith("/static")) {
+                const date = new Date();
+                date.setDate(date.getDate() + 1);
+                res.header("expires", date.toUTCString());
+                res.header("cache-control", "public");
+            }
+
+            res.type(file.extension).header("etag", file.etag).send(file.buffer);
             return;
         });
     }
