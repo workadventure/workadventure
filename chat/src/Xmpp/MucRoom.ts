@@ -373,7 +373,7 @@ export class MucRoom extends AbstractRoom {
                         const message: Message = {
                             name: nickname,
                             jid: receivedMessage.jid,
-                            body: receivedMessage.body,
+                            body: receivedMessage.body ?? '',
                             time: date,
                             id: receivedMessage.id,
                             delivered: true,

@@ -249,6 +249,8 @@ services:
 
     messages:
         image: thecodingmachine/workadventure-back-base:v1-18
+        platform:
+          linux/amd64
         environment:
             #STARTUP_COMMAND_0: sudo apt-get install -y inotify-tools
             STARTUP_COMMAND_1: yarn install
@@ -279,17 +281,17 @@ services:
             - "traefik.http.routers.icon.entryPoints=web"
             - "traefik.http.services.icon.loadbalancer.server.port=8080"
 
-  ejabberd:
-    environment:
-      - CTL_ON_CREATE=register $EJABBERD_USER localhost $EJABBERD_PASSWORD
-    image: ghcr.io/processone/ejabberd:22.05
-    volumes:
-      - ./xmpp/ejabberd.yml:/opt/ejabberd/conf/ejabberd.yml
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.xmpp.rule=Host(`xmpp.workadventure.localhost`)"
-      - "traefik.http.routers.xmpp.entryPoints=web"
-      - "traefik.http.services.xmpp.loadbalancer.server.port=5443"
+    ejabberd:
+      environment:
+        - CTL_ON_CREATE=register $EJABBERD_USER localhost $EJABBERD_PASSWORD
+      image: ghcr.io/processone/ejabberd:22.05
+      volumes:
+        - ./xmpp/ejabberd.yml:/opt/ejabberd/conf/ejabberd.yml
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.xmpp.rule=Host(`xmpp.workadventure.localhost`)"
+        - "traefik.http.routers.xmpp.entryPoints=web"
+        - "traedocfik.http.services.xmpp.loadbalancer.server.port=5443"
 
     # A mock server to test OpenID connect connectivity
     oidc-server-mock:

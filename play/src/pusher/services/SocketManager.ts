@@ -62,8 +62,8 @@ import type { compressors } from "hyper-express";
 import { adminService } from "./AdminService";
 import type { ErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
 import { BoolValue, Int32Value, StringValue } from "google-protobuf/google/protobuf/wrappers_pb";
-import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
-import { EJABBERD_DOMAIN } from "../Enum/EnvironmentVariable";
+import type { MucRoomDefinitionInterface } from "../../messages/JsonMessages/MucRoomDefinitionInterface";
+import { EJABBERD_DOMAIN } from "../enums/EnvironmentVariable";
 
 const debug = Debug("socket");
 
