@@ -16,6 +16,7 @@ import { IoSocketChatController } from "./controllers/IoSocketChatController";
 import { FrontController } from "./controllers/FrontController";
 import fs from "fs";
 import type * as uWebsockets from "uWebSockets.js";
+import { globalErrorHandler } from "./services/GlobalErrorHandler";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LiveDirectory = require("live-directory");
 
@@ -29,6 +30,8 @@ class App {
 
         // Global middlewares
         this.webserver.use(cors);
+
+        this.webserver.set_error_handler(globalErrorHandler);
 
         let path: string;
         if (fs.existsSync("public")) {
