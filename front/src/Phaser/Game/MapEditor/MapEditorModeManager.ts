@@ -271,7 +271,7 @@ export class MapEditorModeManager {
         }
     }
 
-    private equipTool(tool?: EditorToolName): void {
+    public equipTool(tool?: EditorToolName): void {
         if (this.activeTool === tool) {
             return;
         }
