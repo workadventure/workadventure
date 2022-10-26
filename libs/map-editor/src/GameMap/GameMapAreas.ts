@@ -49,9 +49,11 @@ export class GameMapAreas {
                 for (let property of properties){
                     if(property.name === 'dynamic' && property.type === "bool" && property.value){
                         this.dynamicAreas.push(area as ITiledMapRectangleObject);
+                    }else{
+                        this.staticAreas.push(area as ITiledMapRectangleObject);
                     }
                 }
-                this.staticAreas.push(area as ITiledMapRectangleObject);
+
             });
     }
 
