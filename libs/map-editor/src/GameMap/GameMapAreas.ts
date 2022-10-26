@@ -1,7 +1,8 @@
 import type { ITiledMapObject, ITiledMapObjectLayer } from "@workadventure/tiled-map-type-guard";
 import { MathUtils } from "@workadventure/math-utils";
 import type { GameMap } from "./GameMap";
-import { AreaType, ITiledMapRectangleObject } from '../types';
+import { AreaType } from '../types';
+import type { ITiledMapRectangleObject } from '../types';
 
 export type AreaChangeCallback = (
     areasChangedByAction: Array<ITiledMapObject>,
