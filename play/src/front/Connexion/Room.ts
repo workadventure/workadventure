@@ -156,8 +156,6 @@ export class Room {
                 this._enableChat = data.enableChat ?? undefined;
                 this._enableChatUpload = data.enableChatUpload ?? undefined;
 
-                console.info("_enableChat", this._enableChat, "_enableChatUpload", this._enableChatUpload);
-
                 return new MapDetail(data.mapUrl);
             } else if (errorApiDataChecking.success) {
                 const error = errorApiDataChecking.data;

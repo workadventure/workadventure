@@ -98,12 +98,6 @@ export class XmppClient {
             res(this.xmppSocket);
         }
 
-        console.log({
-            // Bypass the no-escape function implemented in stanza ParseJID.local
-            username: this.clientID.replace(/@/g, "\\40")+'@'+this.clientDomain,
-            password: this.clientPassword,
-        });
-
         const client = Stanza.createClient({
             credentials: {
                 // Bypass the no-escape function implemented in stanza ParseJID.local
