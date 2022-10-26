@@ -3,6 +3,7 @@ import {
     ITiledMapLayer,
     ITiledMapObject,
     ITiledMapProperty,
+    ITiledMapTile,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
 import { AreaChangeCallback, GameMapAreas } from "./GameMapAreas";
@@ -41,6 +42,8 @@ export class GameMap {
         this.tiledObjects = GameMap.getObjectsFromLayers(this.flatLayers);
 
         this.gameMapAreas = new GameMapAreas(this);
+
+        this.map.tilesets
 
         for (const tileset of this.map.tilesets) {
             tileset?.tiles?.forEach((tile) => {
@@ -84,6 +87,10 @@ export class GameMap {
             x: Math.floor(x / (this.map.tilewidth ?? this.defaultTileSize)),
             y: Math.floor(y / (this.map.tileheight ?? this.defaultTileSize)),
         };
+    }
+
+    public getTileInformationFromTileset(tilesetName: string, tileIndex: number): ITiledMapTile | undefined {
+        return this.map.tilesets.find(tile => tile.name === tilesetName)?.tiles?.find(tile => tile.id === tileIndex);
     }
 
     public getMap(): ITiledMap {

@@ -142,6 +142,7 @@ import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyM
 import { AreaType, GameMap, GameMapProperties } from "@workadventure/map-editor";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { GameStateEvent } from "../../Api/Events/GameStateEvent";
+import { Entity } from "../ECS/Entity";
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PositionInterface;
@@ -267,6 +268,9 @@ export class GameScene extends DirtyScene {
         this.load.image("iconTalk", "/resources/icons/icon_talking.png");
         this.load.image("iconStatusIndicatorInside", "/resources/icons/icon_status_indicator_inside.png");
         this.load.image("iconStatusIndicatorOutline", "/resources/icons/icon_status_indicator_outline.png");
+
+        // load some furniture images for testing purposes
+        this.load.image("table", "/resources/entities/table.png");
 
         if (touchScreenManager.supportTouchScreen) {
             this.load.image(joystickBaseKey, joystickBaseImg);
@@ -711,6 +715,43 @@ export class GameScene extends DirtyScene {
                     e
                 )
             );
+
+        const entity = new Entity(this, 320, 320 + 16, 0, {
+            image: "table",
+            collisionGrid: [
+                [0, 0],
+                [1, 1],
+                [1, 1],
+            ],
+            interactive: true,
+            properties: {
+                openWebsite: "https://wikipedia.org",
+            },
+        });
+
+        entity.on("moved", (oldX: number, oldY: number) => {
+            const reversedGrid = entity.getReversedCollisionGrid();
+            const grid = entity.getCollisionGrid();
+            if (reversedGrid && grid) {
+                this.gameMapFrontWrapper.modifyToCollisionsLayer(oldX, oldY, "0", reversedGrid);
+                this.gameMapFrontWrapper.modifyToCollisionsLayer(
+                    entity.getTopLeft().x,
+                    entity.getTopLeft().y,
+                    "0",
+                    grid
+                );
+            }
+        });
+
+        const colGrid = entity.getCollisionGrid();
+        if (colGrid) {
+            this.gameMapFrontWrapper.modifyToCollisionsLayer(
+                entity.getTopLeft().x,
+                entity.getTopLeft().y,
+                "0",
+                colGrid
+            );
+        }
     }
 
     /**
