@@ -121,6 +121,13 @@ It is possible to get an existing Area object.
 const area = await WA.room.area.get('MyNewArea');
 ```
 
+{.alert.alert-warning}You can only "get" areas that have been created with `WA.room.area.create`
+or that have been defined with the `dynamic` property.
+<figure class="figure">
+    <img class="figure-img img-fluid rounded" src="images/areaBindings.png" alt="" />
+    <figcaption class="figure-caption">The Dynamic custom property</figcaption>
+</figure>
+
 ### Modify Area
 
 It is possible to modify already existing Area object (currently limited to x, y, width, height).
