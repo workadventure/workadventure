@@ -303,7 +303,7 @@
               }
              }
           },
-          + (if (adminUrl == null) then {
+        } + (if (adminUrl == null) then {
              ejabberd+: {
                  ingress+: {
                    spec+: {
@@ -314,8 +314,7 @@
                    }
                  }
                },
-            } else {
-            }),
-        }
+        } else {
+        }),
   }
 }
