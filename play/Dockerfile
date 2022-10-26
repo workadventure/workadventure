@@ -34,7 +34,7 @@ FROM node:18.11-buster-slim@sha256:c3a4122a9b60c52a633b92788dec4159909158c828b56
 WORKDIR /usr/src
 COPY play/yarn.lock play/package.json ./
 ENV NODE_ENV=production
-RUN yarn install --production
+RUN yarn install --production --frozen-lockfile
 COPY --from=builder --chown=node:node /usr/src/dist /usr/src/dist
 COPY --chown=node:node play/src/pusher/data /usr/src/dist/pusher/data
 
