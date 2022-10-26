@@ -27,8 +27,8 @@
          "MAP_STORAGE_URL": "map-storage:50053",
          "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
          "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
-         "EJABBERD_USER": env.EJABBERD_USER,
-         "EJABBERD_PASSWORD": env.EJABBERD_PASSWORD,
+         "EJABBERD_USER": "admin",
+         "EJABBERD_PASSWORD": "apideo",
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -56,8 +56,8 @@
               "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
               "MAP_STORAGE_URL": "map-storage:50053",
               "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
-              "EJABBERD_USER": env.EJABBERD_USER,
-              "EJABBERD_PASSWORD": env.EJABBERD_PASSWORD,
+              "EJABBERD_USER": "admin",
+              "EJABBERD_PASSWORD": "apideo",
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -200,7 +200,7 @@
         "JWT_SECRET": env.EJABBERD_JWT_SECRET,
         "EJABBERD_DOMAIN": "xmpp-"+url,
         "EJABBERD_USER": "admin",
-        "EJABBERD_PASSWORD": "myPassword",
+        "EJABBERD_PASSWORD": "apideo",
       }
     }
   } else {
