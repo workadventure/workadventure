@@ -15,6 +15,7 @@
     import { localUserStore } from "../Connexion/LocalUserStore";
     import microphoneOffImg from "./images/microphone-off.png";
     import cameraOffImg from "./images/camera-off.png";
+    import { inExternalServiceStore } from "../Stores/MyMediaStore";
 
     let stream: MediaStream | null;
     let userName = localUserStore.getName();
@@ -64,7 +65,7 @@
         </div>
 
         <!--If we have a video to display-->
-    {:else if $localStreamStore.type === "success"}
+    {:else if $localStreamStore.type === "success" && !$inExternalServiceStore}
         {#if $requestedCameraState && $mediaStreamConstraintsStore.video}
             <div class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height">
                 <i class="tw-flex">
