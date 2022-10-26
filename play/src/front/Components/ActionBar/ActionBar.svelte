@@ -58,7 +58,7 @@
     import LL from "../../../i18n/i18n-svelte";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
     import { fly } from "svelte/transition";
-    import { ADMIN_URL, ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
+    import { ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import { mapEditorModeStore } from "../../Stores/MapEditorStore";
@@ -278,13 +278,13 @@
     }
 
     function openBo() {
-        window.open(`${ADMIN_URL}/admin`, "_blanck");
+        window.open(`https://workadventu.re/admin`, "_blanck");
     }
 
     function register() {
         modalIframeTitlelStore.set($LL.menu.icon.open.register());
         modalIframeAllowlStore.set("fullscreen");
-        modalIframeSrcStore.set(`${ADMIN_URL}/funnel/connection?roomUrl=${window.location.toString()}`);
+        modalIframeSrcStore.set(`https://workadventu.re/funnel/connection?roomUrl=${window.location.toString()}`);
         modalPositionStore.set("center");
         modalIframeAllowApi.set(true);
         modalVisibilityStore.set(true);
