@@ -193,7 +193,7 @@
       "ports": [5222, 5269, 5443, 5280, 5380, 1883],
       "host": {
           "url": "xmpp-"+url,
-          "containerPort": 5443,
+          "containerPort": 5443
       },
       "env": {
         "JWT_SECRET": env.EJABBERD_JWT_SECRET,
@@ -304,7 +304,7 @@
              }
           },
         }
-  }+ (if (adminUrl == "") then {
+  }+ (if (adminUrl == null) then {
    ejabberd+: {
        ingress+: {
          spec+: {

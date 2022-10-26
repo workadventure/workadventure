@@ -115,7 +115,7 @@ services:
             UPLOADER_URL: http://uploader.workadventure.localhost
             EMBEDLY_KEY: $EMBEDLY_KEY
             ICON_URL: http://icon.workadventure.localhost
-            EJABBERD_DOMAIN: ejabberd
+            EJABBERD_DOMAIN: $EJABBERD_DOMAIN
             EJABBERD_WS_URI: ws://xmpp.workadventure.localhost:5443/ws
             ENABLE_OPENID: "$OPID_CLIENT_ID"
             ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
@@ -179,7 +179,7 @@ services:
             PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
             PLAYER_VARIABLES_MAX_TTL: $PLAYER_VARIABLES_MAX_TTL
             EJABBERD_API_URI: http://ejabberd:5443/api/
-            EJABBERD_DOMAIN: $EJABBER_DOMAIN
+            EJABBERD_DOMAIN: $EJABBERD_DOMAIN
             EJABBERD_USER: $EJABBERD_USER
             EJABBERD_PASSWORD: $EJABBERD_PASSWORD
             ENABLE_CHAT: "$ENABLE_CHAT"

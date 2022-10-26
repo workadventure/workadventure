@@ -99,9 +99,8 @@ acl:
       - ::FFFF:172.19.0.0/16
   admin:
     user:
-      - "${EJABBERD_USER}"
       - "${EJABBERD_USER}@${EJABBERD_DOMAIN}"
-      - "${EJABBERD_USER}@localhost"
+      - "${EJABBERD_USER}"
     ip:
       - ::FFFF:172.19.0.0/16
 
