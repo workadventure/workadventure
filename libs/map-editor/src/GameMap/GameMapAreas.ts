@@ -1,7 +1,7 @@
 import type { ITiledMapObject, ITiledMapObjectLayer } from "@workadventure/tiled-map-type-guard";
 import { MathUtils } from "@workadventure/math-utils";
 import type { GameMap } from "./GameMap";
-import { AreaType, type ITiledMapRectangleObject } from '../types';
+import { AreaType, ITiledMapRectangleObject } from '../types';
 
 export type AreaChangeCallback = (
     areasChangedByAction: Array<ITiledMapObject>,
@@ -35,6 +35,7 @@ export class GameMapAreas {
             .filter((object) => ["zone", "area"].includes(object.class ?? ""))
             .forEach((area) => {
                 let name = area.name;
+                const properties = area.properties ?? [];
                 if (!name) {
                     name = `${this.staticAreaNamePrefix}${this.unnamedStaticAreasCounter}`;
                     area.name = name;
@@ -43,6 +44,11 @@ export class GameMapAreas {
                 if (area.width === undefined || area.height === undefined) {
                     console.warn(`Area name "${name}" must be a rectangle`);
                     return;
+                }
+                for (let property of properties){
+                    if(property.name === 'dynamic' && property.type === "bool" && property.value){
+                        this.dynamicAreas.push(area as ITiledMapRectangleObject);
+                    }
                 }
                 this.staticAreas.push(area as ITiledMapRectangleObject);
             });
