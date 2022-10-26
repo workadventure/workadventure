@@ -187,7 +187,7 @@
       },
       "ports": [8080]
     },
-  }+ (if (adminUrl == "") then {
+  }+ (if (adminUrl == null) then {
     "ejabberd": {
       "image": "thecodingmachine/workadventure-ejabberd:"+tag,
       "ports": [5222, 5269, 5443, 5280, 5380, 1883],
