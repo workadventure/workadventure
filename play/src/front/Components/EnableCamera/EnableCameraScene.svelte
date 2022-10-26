@@ -14,7 +14,7 @@
     } from "../../Stores/MediaStore";
     import { onDestroy, onMount } from "svelte";
     import HorizontalSoundMeterWidget from "./HorizontalSoundMeterWidget.svelte";
-    import cinemaCloseImg from "../images/cinema-close.svg";
+    import cinemaCloseImg from "../images/no-video.svg";
     import cinemaImg from "../images/cinema.svg";
     import microphoneImg from "../images/microphone.svg";
     import LL from "../../../i18n/i18n-svelte";
@@ -99,26 +99,36 @@
 <form class="enableCameraScene tw-pointer-events-auto" on:submit|preventDefault={submit}>
     <section class="tw-px-10 md:tw-px-32">
         <div class="tw-p-8">
-            <section class="text-center">
+            <section class="text-center tw-mb-4">
                 <h2>{$LL.camera.enable.title()}</h2>
             </section>
             {#if selectedCamera != undefined && $localStreamStore.type === "success" && $localStreamStore.stream}
-                <video class="myCamVideoSetup" use:srcObject={$localStreamStore.stream} autoplay muted playsinline />
+                <video
+                    class="myCamVideoSetup tw-mb-26"
+                    use:srcObject={$localStreamStore.stream}
+                    autoplay
+                    muted
+                    playsinline
+                />
             {:else}
-                <div class="webrtcsetup tw-rounded-lg">
+                <div class="webrtcsetup tw-rounded-md tw-h-28 tw-gap-x-56 tw-mb-6">
                     <img class="background-img" src={cinemaCloseImg} alt="" />
                 </div>
             {/if}
             {#if selectedMicrophone != undefined}
-                <HorizontalSoundMeterWidget spectrum={$localVolumeStore} />
+                <div class="tw-w-full tw-flex tw-flex-col tw-flex-wrap tw-content-center tw-mt-6">
+                    <HorizontalSoundMeterWidget spectrum={$localVolumeStore} />
+                </div>
             {/if}
 
-            <section class="selectWebcamForm tw-flex tw-flex-col tw-justify-center tw-items-center tw-content-center">
+            <section
+                class="selectWebcamForm tw-flex tw-flex-col tw-justify-center tw-items-center tw-content-center tw-m-2"
+            >
                 <div class="control-group">
                     <img src={cinemaImg} alt="Camera" />
                     <div class="is-dark">
                         <!-- svelte-ignore a11y-no-onchange -->
-                        <select bind:value={selectedCamera} on:change={selectCamera} class="tw-w-96">
+                        <select bind:value={selectedCamera} on:change={selectCamera} class="tw-w-52 md:tw-w-96">
                             <!-- start with camera off -->
                             <option value={null}>{$LL.camera.disable()}</option>
 
@@ -135,7 +145,7 @@
                     <img src={microphoneImg} alt="Microphone" />
                     <div class="is-dark">
                         <!-- svelte-ignore a11y-no-onchange -->
-                        <select bind:value={selectedMicrophone} on:change={selectMicrophone} class="tw-w-96">
+                        <select bind:value={selectedMicrophone} on:change={selectMicrophone} class="tw-w-52 md:tw-w-96">
                             <!-- start with microphone off -->
                             <option value={null}>{$LL.audio.disable()}</option>
 
@@ -148,7 +158,7 @@
                     </div>
                 </div>
             </section>
-            <section class="action">
+            <section class="action tw-fixed tw-bottom-2 tw-h-auto tw-w-full tw-left-0">
                 <button type="submit" class="light">{$LL.camera.enable.start()}</button>
             </section>
         </div>
@@ -162,8 +172,6 @@
         color: #ebeeee;
 
         section.selectWebcamForm {
-            margin-top: 3vh;
-            margin-bottom: 3vh;
             min-height: 10vh;
             width: 50vw;
             margin-left: auto;
@@ -225,7 +233,7 @@
             margin-left: auto;
             margin-right: auto;
             max-height: 28vh;
-            width: auto;
+            width: 100%;
             transform: scaleX(-1);
             display: flex;
             align-items: center;

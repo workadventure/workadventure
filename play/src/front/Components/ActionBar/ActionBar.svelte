@@ -671,7 +671,7 @@
                     >
                         <Tooltip text={$LL.actionbar.bo()} />
 
-                        <button id="mapEditorIcon" class:border-top-light={$menuVisiblilityStore}>
+                        <button id="mapEditorIcon">
                             <img draggable="false" src={hammerImg} style="padding: 2px" alt="toggle-map-editor" />
                         </button>
                     </div>
@@ -720,7 +720,7 @@
 {#if $emoteMenuSubStore}
     <div
         class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
-        style="margin-bottom: 64px;"
+        style="margin-bottom: 4.5rem; height: auto;"
     >
         <div class="bottom-action-bar">
             <div class="bottom-action-section tw-flex animate">

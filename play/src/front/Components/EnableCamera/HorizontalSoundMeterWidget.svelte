@@ -18,9 +18,9 @@
     }
 </script>
 
-<div class="horizontal-sound-meter" class:active={spectrum !== undefined}>
+<div class="horizontal-sound-meter tw-justify-center tw-w-80" class:active={spectrum !== undefined}>
     {#each [...Array(NB_BARS).keys()] as i (i)}
-        <div style={color(i, spectrum)} />
+        <div class="tw-rounded tw-w-1 tw-h-8 tw-mx-1" style={color(i, spectrum)} />
     {/each}
 </div>
 
@@ -28,7 +28,6 @@
     .horizontal-sound-meter {
         display: flex;
         flex-direction: row;
-        width: 50%;
         height: 30px;
         margin-left: auto;
         margin-right: auto;
@@ -36,7 +35,6 @@
     }
 
     .horizontal-sound-meter div {
-        margin-left: 5px;
         flex-grow: 1;
     }
 </style>

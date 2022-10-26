@@ -23,7 +23,7 @@
                 "--category-button-active-color": "#56eaff",
             },
             position: {
-                bottom: "118px",
+                bottom: "8rem",
             },
             emojisPerRow: isMediaBreakpointUp("md") ? 6 : 8,
             autoFocusSearch: false,
