@@ -135,7 +135,8 @@ api_permissions:
           - acl: loopback
           - acl: admin
       - oauth:
-        - scope: "ejabberd:admin"
+        - scope:
+          - "${EJABBERD_DOMAIN}:admin"
         - access:
           - allow:
             - acl: loopback

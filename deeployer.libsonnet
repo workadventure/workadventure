@@ -303,18 +303,19 @@
               }
              }
           },
+          + (if (adminUrl == null) then {
+             ejabberd+: {
+                 ingress+: {
+                   spec+: {
+                     tls+: [{
+                       hosts: ["xmpp-"+url],
+                       secretName: "certificate-tls"
+                     }]
+                   }
+                 }
+               },
+            } else {
+            }),
         }
-  }+ (if (adminUrl == null) then {
-   ejabberd+: {
-       ingress+: {
-         spec+: {
-           tls+: [{
-             hosts: ["xmpp-"+url],
-             secretName: "certificate-tls"
-           }]
-         }
-       }
-     },
-  } else {
-  }),
+  }
 }
