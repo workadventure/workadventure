@@ -194,7 +194,6 @@
       "host": {
           "url": "xmpp-"+url,
           "containerPort": 5443,
-          "https": "enable"
       },
       "env": {
         "JWT_SECRET": env.EJABBERD_JWT_SECRET,
