@@ -14,6 +14,8 @@
     import Woka from "./Woka/Woka.svelte";
     import { localUserStore } from "../Connexion/LocalUserStore";
     import microphoneOffImg from "./images/microphone-off.png";
+    import cameraOffImg from "./images/camera-off.png";
+    import { inExternalServiceStore } from "../Stores/MyMediaStore";
 
     let stream: MediaStream | null;
     let userName = localUserStore.getName();
@@ -53,14 +55,17 @@
     <!--If we are in a silent zone-->
     {#if $silentStore}
         <div
-            class="tw-flex tw-bg-dark-purple/95 tw-rounded tw-text-light-blue tw-p-1 tw-border-solid tw-border-light-blue tw-justify-center tw-h-10 tw-m-auto lg:tw-h-12 tw-items-center
-            tw-align-middle tw-absolute tw-right-0 tw-left-0 lg:tw-bottom-3 lg:tw-right-3 lg:tw-left-auto tw-text-center tw-w-64"
+            class="tw-z-[250] tw-bg-dark-blue tw-rounded tw-h-full tw-w-full tw-py-4 tw-px-3 tw-text-pop-red tw-border-2 tw-border-solid tw-border-pop-red tw-flex tw-flex-row tw-justify-center tw-items-center tw-content-center"
         >
-            {$LL.camera.my.silentZone()}
+            <div class="tw-flex tw-flex-col tw-mr-2">
+                <img draggable="false" src={microphoneOffImg} class="tw-flex tw-p-1 tw-h-8 tw-w-8" alt="Mute" />
+                <img draggable="false" src={cameraOffImg} class="tw-flex tw-p-1 tw-h-8 tw-w-8" alt="Mute" />
+            </div>
+            <p class="tw-m-0 tw-w-32">{$LL.camera.my.silentZone()}</p>
         </div>
 
         <!--If we have a video to display-->
-    {:else if $localStreamStore.type === "success"}
+    {:else if $localStreamStore.type === "success" && !$inExternalServiceStore}
         {#if $requestedCameraState && $mediaStreamConstraintsStore.video}
             <div class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height">
                 <i class="tw-flex">

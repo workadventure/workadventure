@@ -3,7 +3,7 @@
 
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import type { VideoPeer } from "../../WebRtc/VideoPeer";
-    import { getColorByString, getTextColorByBackgroundColor } from "./utils";
+    import { getColorByString, getTextColorByBackgroundColor, srcObject } from "./utils";
     import Woka from "../Woka/Woka.svelte";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import { onMount } from "svelte";
@@ -18,6 +18,7 @@
     export let peer: VideoPeer;
     export let clickable = false;
 
+    let streamStore = peer.streamStore;
     let name = peer.userName;
     let backGroundColor = getColorByString(peer.userName);
     let textColor = getTextColorByBackgroundColor(backGroundColor);
@@ -53,6 +54,18 @@
         class="tw-items-center tw-px-3 tw-w-full tw-rounded tw-flex tw-flex-row tw-relative"
     >
         <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
+        <!-- svelte-ignore a11y-media-has-caption &ndash;&gt;-->
+        {#if $streamStore}
+            <video
+                class="tw-h-0 tw-w-0"
+                style={$embedScreenLayoutStore === LayoutMode.Presentation
+                    ? `border: solid 2px ${backGroundColor}`
+                    : ""}
+                use:srcObject={$streamStore}
+                autoplay
+                playsinline
+            />
+        {/if}
         <span
             style={$embedScreenLayoutStore === LayoutMode.VideoChat
                 ? `background-color: ${backGroundColor}; color: ${textColor}`

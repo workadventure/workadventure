@@ -45,6 +45,7 @@
             autoplay
             playsinline
             class="tw-h-full tw-max-w-full tw-mx-auto tw-rounded"
+            muted
         />
         <div
             class="nametag-screenshare-container container-end tw-flex media-box-camera-on-size video-on-responsive-height"
