@@ -82,7 +82,7 @@
             <input
                 type="text"
                 name="loginSceneName"
-                class="tw-w-96 tw-text-center tw-border-white"
+                class="tw-w-52 md:tw-w-96 tw-text-center tw-border-white"
                 autofocus
                 maxlength={MAX_USERNAME_LENGTH}
                 bind:value={name}
