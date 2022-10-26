@@ -58,7 +58,7 @@
     import LL from "../../../i18n/i18n-svelte";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
     import { fly } from "svelte/transition";
-    import { ADMIN_URL, ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
+    import { ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import { mapEditorModeStore } from "../../Stores/MapEditorStore";
@@ -278,13 +278,13 @@
     }
 
     function openBo() {
-        window.open(`${ADMIN_URL}/admin`, "_blanck");
+        window.open(`https://workadventu.re/admin`, "_blanck");
     }
 
     function register() {
         modalIframeTitlelStore.set($LL.menu.icon.open.register());
         modalIframeAllowlStore.set("fullscreen");
-        modalIframeSrcStore.set(`${ADMIN_URL}/funnel/connection?roomUrl=${window.location.toString()}`);
+        modalIframeSrcStore.set(`https://workadventu.re/funnel/connection?roomUrl=${window.location.toString()}`);
         modalPositionStore.set("center");
         modalIframeAllowApi.set(true);
         modalVisibilityStore.set(true);
@@ -671,7 +671,7 @@
                     >
                         <Tooltip text={$LL.actionbar.bo()} />
 
-                        <button id="mapEditorIcon" class:border-top-light={$menuVisiblilityStore}>
+                        <button id="mapEditorIcon">
                             <img draggable="false" src={hammerImg} style="padding: 2px" alt="toggle-map-editor" />
                         </button>
                     </div>
@@ -720,7 +720,7 @@
 {#if $emoteMenuSubStore}
     <div
         class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
-        style="margin-bottom: 64px;"
+        style="margin-bottom: 4.5rem; height: auto;"
     >
         <div class="bottom-action-bar">
             <div class="bottom-action-section tw-flex animate">

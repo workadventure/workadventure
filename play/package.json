@@ -95,7 +95,7 @@
     "@workadventure/map-editor": "link:../libs/map-editor",
     "@workadventure/math-utils": "link:../libs/math-utils",
     "@workadventure/tailwind": "link:../libs/tailwind",
-    "@workadventure/tiled-map-type-guard": "^2.0.4",
+    "@workadventure/tiled-map-type-guard": "^2.0.6",
     "@xmpp/client": "^0.13.1",
     "@xmpp/component": "^0.13.1",
     "@xmpp/debug": "^0.13.0",

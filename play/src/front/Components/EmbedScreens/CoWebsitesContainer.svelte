@@ -19,8 +19,10 @@
         height: 100px;
         width: 100%;
         display: flex;
+        flex-wrap: wrap;
+        align-content: flex-end;
         position: absolute;
-        bottom: 5px;
+        bottom: 0px;
         left: 2%;
         overflow: visible;
 
