@@ -35,7 +35,7 @@
         <div
             class="media-container {isHightlighted
                 ? 'hightlighted tw-max-w-sm tw-mx-auto'
-                : 'tw-flex tw-m-auto tw-flex media-box-camera-off-size tw-h-12'}
+                : 'tw-flex tw-m-auto media-box-camera-off-size tw-h-12'}
      media-box-shape-color tw-pointer-events-auto tw-p-0 screen-blocker
 "
             class:clickable={isClickable}

@@ -78,7 +78,7 @@
                                     class="highlighted-cowebsite"
                                 />
                                 <div class="actions">
-                                    <button type="button" class="nes-btn is-error close" on:click={closeCoWebsite}
+                                    <button type="button" class="close-window top-right-btn" on:click={closeCoWebsite}
                                         >&times;
                                     </button>
                                 </div>
@@ -126,6 +126,7 @@
         flex: 0 0 75%;
         height: 100%;
         width: 75%;
+        padding-bottom: 4rem;
     }
 
     #main-embed-screen {
