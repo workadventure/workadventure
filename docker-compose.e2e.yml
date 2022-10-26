@@ -112,12 +112,10 @@ services:
       ENABLE_OPENAPI_ENDPOINT: "false"
       STARTUP_COMMAND_1: ""
 
-
   ejabberd:
     image: thecodingmachine/workadventure-ejabberd:${DOCKER_TAG:-develop}
     build:
-      context: ./
-      dockerfile: xmpp/Dockerfile
+      context: ./xmpp
       cache_from:
         - thecodingmachine/workadventure-ejabberd:${DOCKER_TAG:-develop}
       args:
