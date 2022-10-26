@@ -511,6 +511,7 @@ export class MucRoom extends AbstractRoom {
                     color: userInfo.userColor,
                     woka: userInfo.userWoka,
                     isMember: userInfo.userIsMember,
+                    isInSameMap: userInfo.roomPlayUri === userStore.get().playUri,
                     availabilityStatus: userInfo.userAvailabilityStatus,
                     visitCardUrl: userInfo.userVisitCardUrl,
                 });
@@ -526,6 +527,7 @@ export class MucRoom extends AbstractRoom {
                     color: userInfo.userColor,
                     woka: userInfo.userWoka,
                     isMember: userInfo.userIsMember,
+                    isInSameMap: userInfo.roomPlayUri === userStore.get().playUri,
                     availabilityStatus: userInfo.userAvailabilityStatus,
                     visitCardUrl: userInfo.userVisitCardUrl,
                 });
