@@ -309,8 +309,14 @@
                                                     ?.replace("]", "")}
                                             </span>
                                         {/if}</b
-                                    >{$LL.timeLine.incoming()}</span
-                                >
+                                    >{$LL.timeLine.incoming()}
+                                    <span class="tw-text-xss tw-text-lighter-purple">
+                                        - {message.date.toLocaleTimeString($locale, {
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                        })}
+                                    </span>
+                                </span>
                             </div>
                         {/each}
                     {/if}
@@ -332,8 +338,14 @@
                                                     ?.replace("]", "")}
                                             </span>
                                         {/if}</b
-                                    >{$LL.timeLine.outcoming()}</span
-                                >
+                                    >{$LL.timeLine.outcoming()}
+                                    <span class="tw-text-xss tw-text-lighter-purple">
+                                        - {message.date.toLocaleTimeString($locale, {
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                        })}
+                                    </span>
+                                </span>
                             </div>
                         {/each}
                     {/if}
