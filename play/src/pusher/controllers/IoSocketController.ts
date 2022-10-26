@@ -450,7 +450,11 @@ export class IoSocketController {
 
                         if (!userData.jabberId) {
                             // If there is no admin, or no user, let's log users using JWT tokens
-                            userData.jabberId = JID.create({local: userIdentifier, domain: EJABBERD_DOMAIN, resource: uuid()});
+                            userData.jabberId = JID.create({
+                                local: userIdentifier,
+                                domain: EJABBERD_DOMAIN,
+                                resource: uuid(),
+                            });
                             if (EJABBERD_JWT_SECRET) {
                                 userData.jabberPassword = Jwt.sign({ jid: userData.jabberId }, EJABBERD_JWT_SECRET, {
                                     expiresIn: "1d",
