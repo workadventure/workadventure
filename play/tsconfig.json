@@ -21,8 +21,6 @@
     "strictBindCallApply": true,
     "strictPropertyInitialization": true,
     "alwaysStrict": true,
-    "preserveValueImports": false,
-    "importsNotUsedAsValues": "remove",
   },
   "exclude": [
     "dist",
