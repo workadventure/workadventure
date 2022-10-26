@@ -120,4 +120,4 @@ services:
         - thecodingmachine/workadventure-ejabberd:${DOCKER_TAG:-develop}
       args:
         BUILDKIT_INLINE_CACHE: 1
-    volumes: [ ]
+    volumes: []

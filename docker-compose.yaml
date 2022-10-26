@@ -91,9 +91,8 @@ services:
             ENABLE_OPENAPI_ENDPOINT: "true"
             START_ROOM_URL: "$START_ROOM_URL"
             # Only used if you set up a JWT authentication mechanism in Ejabberd
-            EJABBERD_JWT_SECRET: "mySecretJwtToken"
+            EJABBERD_JWT_SECRET: $EJABBERD_JWT_SECRET
             EJABBERD_DOMAIN: $EJABBERD_DOMAIN
-            EJABBERD_WS_URI: ws://ejabberd:5443/ws
             ENABLE_CHAT: "$ENABLE_CHAT"
             ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
         labels:
@@ -287,7 +286,7 @@ services:
         - '5443:5443'
       environment:
         CTL_ON_CREATE: register $EJABBERD_USER $EJABBERD_DOMAIN $EJABBERD_PASSWORD
-        JWT_SECRET: "mySecretJwtToken"
+        JWT_SECRET: $EJABBERD_JWT_SECRET
         EJABBERD_DOMAIN: $EJABBERD_DOMAIN
         EJABBERD_USER: $EJABBERD_USER
         EJABBERD_PASSWORD: $EJABBERD_PASSWORD

@@ -197,11 +197,10 @@
           "https": "enable"
       },
       "env": {
-        "JWT_SECRET": env.EJABBERD_JWT_SECRET
+        "JWT_SECRET": env.EJABBERD_JWT_SECRET,
         "EJABBERD_DOMAIN": "xmpp-"+url,
         "EJABBERD_USER": "admin",
-        "EJABBERD_PASSWORD": "myPassword"
-
+        "EJABBERD_PASSWORD": "myPassword",
       }
     }
   } else {
