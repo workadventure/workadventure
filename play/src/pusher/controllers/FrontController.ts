@@ -78,6 +78,10 @@ export class FrontController extends BaseHttpController {
             return;
         });
 
+        this.app.get("/static/images/favicons/manifest.json", (req: Request, res: Response) => {
+            return this.displayManifestJson(req, res, req.get("url"));
+        });
+
         this.app.get("/login", (req: Request, res: Response) => {
             return this.displayFront(req, res, this.getFullUrl(req));
         });
@@ -142,5 +146,54 @@ export class FrontController extends BaseHttpController {
         });
 
         return res.type("html").send(html);
+    }
+
+    private async displayManifestJson(req: Request, res: Response, url: string) {
+        const builder = new MetaTagsBuilder(url);
+
+        const metaTagsData = await builder.getMeta(req.header("User-Agent"));
+
+        const manifest = {
+            short_name: metaTagsData.title,
+            name: metaTagsData.title,
+            icons: metaTagsData.manifestIcons,
+            start_url: "/",
+            background_color: metaTagsData.themeColor,
+            display_override: ["window-control-overlay", "minimal-ui"],
+            display: "standalone",
+            orientation: "portrait-primary",
+            scope: "/",
+            lang: "en",
+            theme_color: metaTagsData.themeColor,
+            shortcuts: [
+                {
+                    name: metaTagsData.title,
+                    short_name: metaTagsData.title,
+                    description: metaTagsData.description,
+                    url: "/",
+                    icons: [
+                        {
+                            src: "/static/images/favicons/android-icon-192x192.png",
+                            sizes: "192x192",
+                            type: "image/png",
+                        },
+                    ],
+                },
+            ],
+            description: metaTagsData.description,
+            screenshots: [],
+            related_applications: [
+                {
+                    platform: "web",
+                    url: "https://workadventu.re",
+                },
+                {
+                    platform: "play",
+                    url: "https://play.workadventu.re",
+                },
+            ],
+        };
+
+        return res.json(manifest);
     }
 }
