@@ -38,10 +38,14 @@
     import { mapEditorModeStore, mapEditorSelectedAreaPreviewStore } from "../Stores/MapEditorStore";
     import Modal from "./Modal/Modal.svelte";
     import { coWebsites } from "../Stores/CoWebsiteStore";
+    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 
     let mainLayout: HTMLDivElement;
 
-    const resizeObserver = new ResizeObserver(() => {});
+    let isMobile = isMediaBreakpointUp("md");
+    const resizeObserver = new ResizeObserver(() => {
+        isMobile = isMediaBreakpointUp("md");
+    });
 
     onMount(() => {
         resizeObserver.observe(mainLayout);
@@ -55,7 +59,7 @@
     {/if}
 
     <aside id="main-layout-left-aside">
-        <CoWebsitesContainer vertical={true} />
+        <CoWebsitesContainer vertical={isMobile} />
     </aside>
 
     <section id="main-layout-main" class="tw-pb-0">

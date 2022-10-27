@@ -82,7 +82,6 @@
             width: 100%;
             text-align: center;
         }
-
         h2 {
             margin: 1px;
         }
@@ -93,6 +92,14 @@
 
         button.selectCharacterButton {
             margin: 0;
+        }
+    }
+
+    @media all and (max-device-width: 480px) {
+        section {
+            &.action {
+                margin-top: 75vh;
+            }
         }
     }
 

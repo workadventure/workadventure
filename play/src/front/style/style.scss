@@ -608,15 +608,11 @@ div.action.danger p.action-body {
 }
 
 .popUpElement {
-    font-family: "Press Start 2P";
-    text-align: left;
-    color: white;
+    @apply tw-text-left tw-text-white tw-text-sm;
 }
 
 .popUpElement div {
-    font-family: "Press Start 2P";
-    font-size: 10px;
-    background-color: #727678;
+    @apply tw-bg-dark-purple/95 tw-text-sm;;
     white-space: pre-line;
 }
 
@@ -625,10 +621,8 @@ div.action.danger p.action-body {
 }
 
 .popUpElement button {
-    position: relative;
-    font-size: 10px;
+    @apply tw-relative tw-text-xs tw-text-black tw-ml-1 tw-px-1;
     border-image-repeat: revert;
-    margin-right: 5px;
 }
 
 .popUpElement .buttonContainer {
