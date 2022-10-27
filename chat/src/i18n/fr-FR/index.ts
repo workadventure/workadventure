@@ -51,7 +51,7 @@ const fr_FR: Translation = {
     timeLine: {
         title: "Votre historique",
         open: "Ouvrir votre historique de conversation !",
-        description: "Historique de vos conversations sur WorkAdventure!",
+        description: "Historique de vos conversations",
         incoming: " a rejoint la conversation",
         outcoming: " a quitté la conversation",
     },
