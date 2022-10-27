@@ -5,6 +5,8 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import AreaToolImg from "../images/icon-tool-area.png";
     import FloorToolImg from "../images/icon-tool-floor.png";
+    import ZoomInImg from "../images/zoom-in-icons.svg";
+    import ZoomOutImg from "../images/zoom-out-icons.svg";
     
     const gameScene = gameManager.getCurrentGameScene();
     
@@ -28,11 +30,27 @@
         console.log("switche tool "+newTool);
         gameScene.getMapEditorModeManager().equipTool(newTool);
     }
+
+    const zoomDelta = 10;
+    function zoomIn()
+    {
+        gameScene.zoomByFactor(1 + (zoomDelta / 53) * 0.1);
+    }
+    function zoomOut()
+    {
+        gameScene.zoomByFactor(1 - (zoomDelta / 53) * 0.1);
+    }
 </script>
 
 
 <section class="side-bar-container" style="pointer-events:auto;"> <!--put a section to avoid lower div to be affected by some css-->
-    <div class="side-bar  " style="pointer-events:auto;">
+    <div class="side-bar" style="pointer-events:auto;">
+        <div class="tool-button" style="pointer-events:auto;">
+            <button on:click|preventDefault={zoomIn} type="button" ><img src={ZoomInImg} alt="Zoom In"/></button>
+        </div>
+        <div class="tool-button" style="pointer-events:auto;">
+            <button on:click|preventDefault={zoomOut} type="button" ><img src={ZoomOutImg} alt="Zoom Out"/></button>
+        </div>
         {#each availableTools as tool (tool.toolName)}
         <div class="tool-button" style="pointer-events:auto;">
             <button class="{tool.toolName==currentTool?'active':''}" on:click|preventDefault={()=>switchTool(tool.toolName)} type="button" ><img src={tool.img} alt="open tool {tool.toolName}"/></button>
