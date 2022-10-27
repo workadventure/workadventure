@@ -285,7 +285,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
      * @returns {Promise<string>} Promise to await to known when the outline has been removed
      * {@link https://workadventu.re/map-building/api-player.md#get-the-woka-of-the-player | Website documentation}
      *
-     * @returns {Promise<string>} Promise to wait to known when the outiline has been displayed
+     * @returns {Promise<string>} Current player woka in base64
      */
     get woka(): Promise<string> {
         return queryWorkadventure({
