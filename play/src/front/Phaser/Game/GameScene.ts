@@ -150,6 +150,7 @@ import { AreaType, GameMap, GameMapProperties } from "@workadventure/map-editor"
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
+import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PositionInterface;
@@ -1838,6 +1839,14 @@ ${escapedMessage}
                 throw new Error("no path available");
             }
             return this.CurrentPlayer.setPathToFollow(path, message.speed);
+        });
+
+        iframeListener.registerAnswerer("getWoka", () => {
+            const woka = get(currentPlayerWokaStore);
+            if (!woka) {
+                throw new Error("no woka of the current player available");
+            }
+            return woka;
         });
     }
 
