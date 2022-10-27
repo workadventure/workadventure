@@ -50,6 +50,12 @@ export const setIsLogged = (_isLogged: boolean | undefined) => {
     isLogged = _isLogged === true;
 };
 
+let woka: string | undefined;
+
+export const setWoka = (_woka: string | undefined) => {
+    woka = _woka;
+};
+
 export class WorkadventurePlayerCommands extends IframeApiContribution<WorkadventurePlayerCommands> {
     readonly state = playerState;
 
@@ -272,6 +278,20 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
             );
         }
         return isLogged;
+    }
+
+    /**
+     * Get a base64 string of the woka of the current player.
+     * @returns {Promise<string>} Promise to await to known when the outline has been removed
+     * {@link https://workadventu.re/map-building/api-player.md#get-the-woka-of-the-player | Website documentation}
+     *
+     * @returns {Promise<string>} Promise to wait to known when the outiline has been displayed
+     */
+    get woka(): Promise<string> {
+        return queryWorkadventure({
+            type: "getWoka",
+            data: undefined,
+        });
     }
 }
 
