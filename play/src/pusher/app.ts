@@ -66,6 +66,7 @@ class App {
                     ".map",
                 ],
             },
+            hot_reload: process.env.NODE_ENV !== "production",
         });
 
         liveAssets.ready().then(() => {

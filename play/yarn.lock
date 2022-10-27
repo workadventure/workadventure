@@ -3228,10 +3228,9 @@ listr2@^4.0.5:
     through "^2.3.8"
     wrap-ansi "^7.0.0"
 
-live-directory@^2.3.2:
+live-directory@moufmouf/live-directory#hot_reload_param:
   version "2.3.2"
-  resolved "https://registry.yarnpkg.com/live-directory/-/live-directory-2.3.2.tgz#17945a1386ed439af24228c802f6546c0fa85a9b"
-  integrity sha512-s/QBuRkngjzUU8kVkrklqT/2/je4GYE45HiVZ8WwFNTvswXknlsC5vdgv4ycOrL/76CBMjrG7rySFpX8nX80gg==
+  resolved "https://codeload.github.com/moufmouf/live-directory/tar.gz/cc0d9127cd8ec61ec3ed9fab161e97f7fbe0db92"
   dependencies:
     chokidar "^3.5.2"
     etag "^1.8.1"
