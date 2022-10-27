@@ -17,7 +17,6 @@
     #cowebsite-thumbnail-container {
         pointer-events: all;
         height: 100px;
-        width: 100%;
         display: flex;
         flex-wrap: wrap;
         align-content: flex-end;
