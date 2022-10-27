@@ -22,7 +22,7 @@ const EnvironmentVariables = z.object({
     // Used only in development
     VITE_URL: z.string().url().optional(),
     // Use "*" to allow any domain
-    ALLOWED_CORS_ORIGIN: z.string().url().optional(),
+    ALLOWED_CORS_ORIGIN: z.string().url().optional().or(z.literal("*")),
     PUSHER_URL: z.string().url().optional(),
     PUBLIC_MAP_STORAGE_URL: z.string().url().optional(),
     OPID_CLIENT_ID: z.string().optional(),
@@ -37,9 +37,7 @@ const EnvironmentVariables = z.object({
     DISABLE_ANONYMOUS: BoolAsString.optional(),
     PROMETHEUS_AUTHORIZATION_TOKEN: z.string().optional(),
     EJABBERD_DOMAIN: z.string().optional(),
-    EJABBERD_WS_URI: z.string().optional(),
     EJABBERD_JWT_SECRET: z.string().optional(),
-    MAX_HISTORY_CHAT: PositiveIntAsString.optional(),
     ENABLE_CHAT: BoolAsString.optional(),
     ENABLE_CHAT_UPLOAD: BoolAsString.optional(),
     DEBUG_ERROR_MESSAGES: BoolAsString.optional(),
@@ -129,9 +127,7 @@ export const OPID_LOCALE_CLAIM = env.OPID_LOCALE_CLAIM || "locale";
 export const DISABLE_ANONYMOUS: boolean = toBool(env.DISABLE_ANONYMOUS, false);
 export const PROMETHEUS_AUTHORIZATION_TOKEN = env.PROMETHEUS_AUTHORIZATION_TOKEN;
 export const EJABBERD_DOMAIN: string = env.EJABBERD_DOMAIN || "";
-export const EJABBERD_WS_URI: string = env.EJABBERD_WS_URI || "";
 export const EJABBERD_JWT_SECRET: string = env.EJABBERD_JWT_SECRET || "";
-export const MAX_HISTORY_CHAT: number = toNumber(env.MAX_HISTORY_CHAT, 0);
 export const ENABLE_CHAT: boolean = toBool(env.ENABLE_CHAT, true);
 export const ENABLE_CHAT_UPLOAD: boolean = toBool(env.ENABLE_CHAT_UPLOAD, true);
 export const DEBUG_ERROR_MESSAGES = toBool(env.DEBUG_ERROR_MESSAGES, false);
