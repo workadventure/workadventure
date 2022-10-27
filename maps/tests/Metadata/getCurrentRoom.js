@@ -5,6 +5,7 @@ WA.onInit().then(() => {
     console.log('Player id: ', WA.player.id);
     console.log('Player tags: ', WA.player.tags);
     console.log('Player token: ', WA.player.userRoomToken);
+    console.log('Player woka: ', WA.player.woka);
     console.log("Metadata: ", WA.metadata);
 });
 
