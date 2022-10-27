@@ -50,12 +50,6 @@ export const setIsLogged = (_isLogged: boolean | undefined) => {
     isLogged = _isLogged === true;
 };
 
-let woka: string | undefined;
-
-export const setWoka = (_woka: string | undefined) => {
-    woka = _woka;
-};
-
 export class WorkadventurePlayerCommands extends IframeApiContribution<WorkadventurePlayerCommands> {
     readonly state = playerState;
 
