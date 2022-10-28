@@ -79,6 +79,7 @@ function createChatMessagesStore() {
                         lastMessage.text &&
                         (((new Date().getTime() - lastMessage.date.getTime()) % 86400000) % 3600000) / 60000 < 2
                     ) {
+                        lastMessage.date = new Date();
                         lastMessage.text.push(text);
                     } else {
                         list.push({
@@ -107,6 +108,7 @@ function createChatMessagesStore() {
                     (((new Date().getTime() - lastMessage.date.getTime()) % 86400000) % 3600000) / 60000 < 2
                 ) {
                     lastMessage.text.push(text);
+                    lastMessage.date = new Date();
                 } else {
                     list.push({
                         type: ChatMessageTypes.text,

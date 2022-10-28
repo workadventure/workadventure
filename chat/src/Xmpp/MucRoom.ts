@@ -9,7 +9,7 @@ import { availabilityStatusStore, filesUploadStore, mentionsUserStore } from "..
 import { AbstractRoom, Message, MessageType, User } from "./AbstractRoom";
 import { XmppClient } from "./XmppClient";
 import * as StanzaProtocol from "stanza/protocol";
-import { WaLink, WaReceivedReactions, WaSubscriptions, WaUserInfo } from "./Lib/Plugin";
+import { WaLink, WaReceivedReactions, WaUserInfo } from "./Lib/Plugin";
 import { ParsedJID } from "stanza/JID";
 import { ChatStateMessage, JID } from "stanza";
 import { ChatState, MUCAffiliation } from "stanza/Constants";

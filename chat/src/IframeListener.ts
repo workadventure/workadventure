@@ -97,7 +97,7 @@ class IframeListener {
                                 let userData = undefined;
                                 try {
                                     userData = mucRoomDefault.getUserByJid(iframeEvent.data.author);
-                                } catch (e) {
+                                } catch (_) {
                                     // Nothing to do
                                 }
                                 for (const chatMessageText of iframeEvent.data.text) {
