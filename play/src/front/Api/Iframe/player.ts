@@ -275,13 +275,14 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     }
 
     /**
-     * Get a base64 string of the woka of the current player.
+     * Get a base64 string of the Woka image of the current player.
+     * The Woka is in "still" position facing south.
      * @returns {Promise<string>} Promise to await to known when the outline has been removed
      * {@link https://workadventu.re/map-building/api-player.md#get-the-woka-of-the-player | Website documentation}
      *
      * @returns {Promise<string>} Current player woka in base64
      */
-    get woka(): Promise<string> {
+    public getWokaPicture(): Promise<string> {
         return queryWorkadventure({
             type: "getWoka",
             data: undefined,
