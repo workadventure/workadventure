@@ -185,7 +185,7 @@
         </span>
     {/if}
 
-    {#if user.active && !user.isMe && user.playUri && user.uuid}
+    {#if user.active && !user.isMe}
         <div class="wa-dropdown">
             <button class="tw-text-light-purple focus:outline-none tw-m-0" on:click|stopPropagation={openChatUserMenu}>
                 <MoreHorizontalIcon />
@@ -195,14 +195,14 @@
                 {#if user.isInSameMap}
                     <span
                         class="walk-to wa-dropdown-item"
-                        on:click|stopPropagation={() => mucRoom.goTo("user", user.playUri ?? "", user.uuid)}
+                        on:click|stopPropagation={() => mucRoom.goTo("user", user.playUri ?? "", user.uuid ?? "")}
                         ><img class="noselect" src={walk} alt="Walk to logo" height="13" width="13" />
                         {$LL.userList.walkTo()}</span
                     >
                 {:else}
                     <span
                         class="teleport wa-dropdown-item"
-                        on:click|stopPropagation={() => mucRoom.goTo("room", user.playUri ?? "", user.uuid)}
+                        on:click|stopPropagation={() => mucRoom.goTo("room", user.playUri ?? "", user.uuid ?? "")}
                         ><img class="noselect" src={teleport} alt="Teleport to logo" height="13" width="13" />
                         {$LL.userList.teleport()}</span
                     >
