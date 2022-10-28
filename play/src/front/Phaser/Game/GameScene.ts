@@ -1842,11 +1842,25 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("getWoka", () => {
-            const woka = get(currentPlayerWokaStore);
-            if (!woka) {
-                throw new Error("no woka of the current player available");
-            }
-            return woka;
+            return new Promise((res, rej) => {
+                const woka = get(currentPlayerWokaStore);
+                if (woka) {
+                    res(woka);
+                    return;
+                }
+
+                // If we could not get the Woka right away (because it is not available yet), let's subscribe to the update
+                // and resolve as soon as we have a value
+                let unsubscribe: (()=>void)|undefined;
+                unsubscribe = currentPlayerWokaStore.subscribe((woka) => {
+                    if (woka !== undefined) {
+                        if (unsubscribe) {
+                            unsubscribe();
+                        }
+                        res(woka);
+                    }
+                });
+            });
         });
     }
 
