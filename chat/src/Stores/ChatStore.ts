@@ -29,6 +29,7 @@ export interface ChatMessage {
     author?: User;
     targets?: User[];
     text?: string[];
+    authorName?: string;
 }
 
 function createChatMessagesStore() {
@@ -95,14 +96,14 @@ function createChatMessagesStore() {
         /**
          * @param origin The iframe that originated this message (if triggered from the Scripting API), or undefined otherwise.
          */
-        addExternalMessage(user: User, text: string, origin?: Window) {
+        addExternalMessage(user: User | undefined, text: string, authorName?: string, origin?: Window) {
             update((list) => {
                 const lastMessage = list[list.length - 1];
                 if (
                     lastMessage &&
                     lastMessage.type === ChatMessageTypes.text &&
                     lastMessage.text &&
-                    lastMessage?.author?.uuid === user.uuid &&
+                    ((user && lastMessage?.author?.uuid === user.uuid) || lastMessage?.authorName === authorName) &&
                     (((new Date().getTime() - lastMessage.date.getTime()) % 86400000) % 3600000) / 60000 < 2
                 ) {
                     lastMessage.text.push(text);
@@ -112,6 +113,7 @@ function createChatMessagesStore() {
                         text: [text],
                         author: user,
                         date: new Date(),
+                        authorName,
                     });
                 }
                 return list;

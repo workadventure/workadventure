@@ -18,6 +18,7 @@
     import { mucRoomsStore } from "../../Stores/MucRoomsStore";
     import { EmojiButton } from "@joeattardi/emoji-button";
     import { HtmlUtils } from "../../Utils/HtmlUtils";
+    import { defaultColor, defaultWoka } from "../../Xmpp/AbstractRoom";
 
     const dispatch = createEventDispatcher();
     const defaultMucRoom = mucRoomsStore.getDefaultRoom();
@@ -225,17 +226,15 @@
                         >
                             <div
                                 class={`${
-                                    message.type === ChatMessageTypes.me || !message.author ? "tw-opacity-0" : "tw-mt-4"
+                                    message.type === ChatMessageTypes.me ? "tw-opacity-0" : "tw-mt-4"
                                 } tw-relative wa-avatar-mini tw-mr-2`}
-                                style={`background-color: ${message.author?.color}`}
+                                style={`background-color: ${message.author?.color ?? "#56eaff"}`}
                             >
                                 <div class="wa-container">
                                     <img
                                         class="tw-w-full"
                                         style="image-rendering: pixelated;"
-                                        src={`${
-                                            message.author?.woka ? message.author?.woka : "/static/images/logo-wa-2.png"
-                                        }`}
+                                        src={`${message.author?.woka ? message.author?.woka : defaultWoka}`}
                                         alt="Avatar"
                                         loading="lazy"
                                     />
@@ -246,8 +245,10 @@
                                     style={`border-bottom-color:${message.author?.color}`}
                                     class="tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-1"
                                 >
-                                    <span class="tw-text-lighter-purple"
-                                        >{#if message.type === ChatMessageTypes.me}{$LL.me()}{:else}
+                                    <span class="tw-text-lighter-purple">
+                                        {#if message.type === ChatMessageTypes.me}
+                                            {$LL.me()}
+                                        {:else if message.author}
                                             {message.author?.name.match(/\[\d*]/)
                                                 ? message.author?.name.substring(
                                                       0,
@@ -262,8 +263,11 @@
                                                         ?.replace("[", "")
                                                         ?.replace("]", "")}
                                                 </span>
-                                            {/if}{/if}</span
-                                    >
+                                            {/if}
+                                        {:else}
+                                            {message.authorName}
+                                        {/if}
+                                    </span>
                                     <span
                                         >{message.date.toLocaleTimeString($locale, {
                                             hour: "2-digit",

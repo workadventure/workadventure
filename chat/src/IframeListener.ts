@@ -12,6 +12,7 @@ import {
     newChatMessageSubject,
     newChatMessageWritingStatusSubject,
     timelineActiveStore,
+    timelineMessagesToSee,
     timelineOpenedStore,
     writingStatusMessageStore,
 } from "./Stores/ChatStore";
@@ -93,11 +94,18 @@ class IframeListener {
                             }
                             const mucRoomDefault = mucRoomsStore.getDefaultRoom();
                             if (mucRoomDefault) {
-                                const userData = mucRoomDefault.getUserByJid(iframeEvent.data.author);
-                                if (userData) {
-                                    for (const chatMessageText of iframeEvent.data.text) {
-                                        chatMessagesStore.addExternalMessage(userData, chatMessageText);
-                                    }
+                                let userData = undefined;
+                                try {
+                                    userData = mucRoomDefault.getUserByJid(iframeEvent.data.author);
+                                } catch (e) {
+                                    // Nothing to do
+                                }
+                                for (const chatMessageText of iframeEvent.data.text) {
+                                    chatMessagesStore.addExternalMessage(
+                                        userData,
+                                        chatMessageText,
+                                        userData ? undefined : iframeEvent.data.author
+                                    );
                                 }
                             }
                             break;
@@ -130,7 +138,7 @@ class IframeListener {
                             chatVisibilityStore.set(iframeEvent.data.visibility);
                             if (!iframeEvent.data.visibility) {
                                 activeThreadStore.reset();
-                            } else if (get(chatPeerConnectionInProgress)) {
+                            } else if (get(chatPeerConnectionInProgress) || get(timelineMessagesToSee) > 0) {
                                 timelineActiveStore.set(true);
                             } else if (mucRoomsStore.getLiveRoom()) {
                                 activeThreadStore.set(mucRoomsStore.getLiveRoom());

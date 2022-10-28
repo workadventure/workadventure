@@ -116,7 +116,7 @@
                 alt="Avatar"
             />
         </div>
-        {#if user.active}
+        {#if user.active && user.availabilityStatus}
             <span
                 title={getNameOfAvailabilityStatus(user.availabilityStatus)}
                 class={`tw-w-4 tw-h-4 ${getColorOfAvailabilityStatus(
@@ -185,7 +185,7 @@
         </span>
     {/if}
 
-    {#if user.active && !user.isMe}
+    {#if user.active && !user.isMe && user.playUri && user.uuid}
         <div class="wa-dropdown">
             <button class="tw-text-light-purple focus:outline-none tw-m-0" on:click|stopPropagation={openChatUserMenu}>
                 <MoreHorizontalIcon />
