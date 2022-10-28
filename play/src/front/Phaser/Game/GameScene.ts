@@ -1851,7 +1851,8 @@ ${escapedMessage}
 
                 // If we could not get the Woka right away (because it is not available yet), let's subscribe to the update
                 // and resolve as soon as we have a value
-                let unsubscribe: (()=>void)|undefined;
+                let unsubscribe: (() => void) | undefined;
+                //eslint-disable-next-line prefer-const
                 unsubscribe = currentPlayerWokaStore.subscribe((woka) => {
                     if (woka !== undefined) {
                         if (unsubscribe) {
