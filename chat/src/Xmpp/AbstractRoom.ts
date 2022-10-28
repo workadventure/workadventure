@@ -10,14 +10,14 @@ import Timeout = NodeJS.Timeout;
 
 export type User = {
     name: string;
-    playUri: string;
-    roomName: string;
-    uuid: string;
+    playUri?: string;
+    roomName?: string;
+    uuid?: string;
     status?: string;
     active: boolean;
     isInSameMap?: boolean;
-    color: string;
-    woka: string;
+    color?: string;
+    woka?: string;
     unreads?: boolean;
     isAdmin?: boolean;
     role?: string;
@@ -25,7 +25,7 @@ export type User = {
     isMe: boolean;
     jid: string;
     isMember: boolean;
-    availabilityStatus: number;
+    availabilityStatus?: number;
     visitCardUrl?: string;
 };
 

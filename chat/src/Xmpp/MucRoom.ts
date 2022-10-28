@@ -9,7 +9,7 @@ import { availabilityStatusStore, filesUploadStore, mentionsUserStore } from "..
 import { AbstractRoom, Message, MessageType, User } from "./AbstractRoom";
 import { XmppClient } from "./XmppClient";
 import * as StanzaProtocol from "stanza/protocol";
-import { WaLink, WaReceivedReactions, WaUserInfo } from "./Lib/Plugin";
+import { WaLink, WaReceivedReactions, WaSubscriptions, WaUserInfo } from "./Lib/Plugin";
 import { ParsedJID } from "stanza/JID";
 import { ChatStateMessage, JID } from "stanza";
 import { ChatState, MUCAffiliation } from "stanza/Constants";
@@ -93,10 +93,13 @@ export class MucRoom extends AbstractRoom {
             this.subscriptions.set("firstPresence", presenceId);
         }
 
-        this.xmppClient.socket.sendPresence({
-            to: this.recipient,
-            id: presenceId,
-        });
+        this.xmppClient.socket.sendPresence({ to: this.recipient, id: presenceId });
+        if (_VERBOSE) console.warn("[XMPP]", ">> ", first && "First", "Presence sent", get(userStore).uuid);
+        if (first) {
+            this.sendUserInfo();
+        }
+    }
+    private sendUserInfo() {
         this.xmppClient.socket.sendUserInfo(this.recipient, {
             jid: this.xmppClient.getMyJID(),
             roomPlayUri: get(userStore).playUri,
@@ -109,10 +112,12 @@ export class MucRoom extends AbstractRoom {
             userAvailabilityStatus: get(availabilityStatusStore),
             userVisitCardUrl: get(userStore).visitCardUrl ?? "",
         });
-        if (_VERBOSE) console.warn("[XMPP]", ">> ", first && "First", "Presence sent", get(userStore).uuid);
+        if (_VERBOSE) console.warn("[XMPP]", ">> Presence userInfo sent");
     }
     private sendSubscribe() {
-        void this.xmppClient.socket.joinRoom(this.recipient, this.xmppClient.getPlayerName());
+        const subscribeId = uuidv4();
+        this.subscriptions.set("firstSubscribe", subscribeId);
+        void this.xmppClient.socket.joinRoom(this.recipient, this.xmppClient.getPlayerName(), { id: subscribeId });
         if (_VERBOSE)
             console.warn("[XMPP]", ">> Subscribe sent from", this.xmppClient.getPlayerName(), "to", this.roomJid.local);
     }
@@ -125,9 +130,21 @@ export class MucRoom extends AbstractRoom {
         const uuid = uuidv4();
         this.subscriptions.set("subscriptions", uuid);
         this.loadingSubscribers.set(true);
-        const response = await this.xmppClient.socket.getNodeSubscribers(this.roomJid.toString(), "");
-        console.log("response", response);
-        if (_VERBOSE) console.warn("[XMPP]", ">> Get all subscribers sent");
+        try {
+            if (_VERBOSE) console.warn("[XMPP]", ">> Get all subscribers sent");
+            const response = await this.xmppClient.socket.sendIQ({
+                type: "get",
+                to: this.url,
+                subscriptions: { usersNick: [], usersJid: [] },
+            });
+            if (_VERBOSE) console.warn("[XMPP]", "<< Get all subscribers received");
+            response.subscriptions.usersJid.forEach((userJid, i) => {
+                this.addUserInactive(userJid, response.subscriptions.usersNick[i]);
+            });
+        } catch (e) {
+            console.error("sendRequestAllSubscribers => error", e);
+        }
+        this.loadingSubscribers.set(false);
     }
     public sendRankUp(userJID: string) {
         void this.sendAffiliate("admin", userJID);
@@ -444,6 +461,10 @@ export class MucRoom extends AbstractRoom {
             if (this.type === "live") {
                 void this.sendRetrieveLastMessages(20);
             }
+        } else if (this.subscriptions.get("firstSubscribe") === presence.id) {
+            this.subscriptions.delete("firstSubscribe");
+            this.sendUserInfo();
+            void this.sendRequestAllSubscribers();
         }
 
         const from = JID.parse(presence.from);
@@ -530,6 +551,22 @@ export class MucRoom extends AbstractRoom {
                     isInSameMap: userInfo.roomPlayUri === userStore.get().playUri,
                     availabilityStatus: userInfo.userAvailabilityStatus,
                     visitCardUrl: userInfo.userVisitCardUrl,
+                });
+            }
+            return presenceStore;
+        });
+    }
+    addUserInactive(userJid: string, nickname: string) {
+        this.presenceStore.update((presenceStore: UserList) => {
+            const userJID = JID.parse(userJid);
+            const user = presenceStore.get(userJID.full);
+            if (!user) {
+                presenceStore.set(userJid, {
+                    jid: userJid,
+                    name: nickname,
+                    active: false,
+                    isMe: this.xmppClient.getMyJID() === userJid,
+                    isMember: true,
                 });
             }
             return presenceStore;

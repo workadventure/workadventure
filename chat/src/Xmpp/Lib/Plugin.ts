@@ -1,5 +1,5 @@
 import { Agent, JXT } from "stanza";
-import { MAMResult, Message, Presence, ReceivedMessage } from "stanza/protocol";
+import { IQ, MAMResult, Message, Presence, ReceivedMessage } from "stanza/protocol";
 
 // 1. Declare our new custom stanza extension type
 export interface WaUserInfo {
@@ -44,6 +44,11 @@ export interface WaLink {
     description?: string;
 }
 
+export interface WaSubscriptions {
+    usersNick: string[];
+    usersJid: string[];
+}
+
 // 2. Begin injecting our plugin's type information into StanzaJS.
 declare module "stanza" {
     // 3. Declare a new method for the StanzaJS agent
@@ -59,6 +64,7 @@ declare module "stanza" {
         messageReply: Message & { messageReply: WaMessageReply };
         remove: Message & { remove: Remove };
         reactions: Message & { reactions: WaMessageReactions };
+        subscriptions: IQ & { subscriptions: WaSubscriptions };
     }
 
     // 5. Stanza definitions MUST be placed in the Stanzas namespace
@@ -73,6 +79,10 @@ declare module "stanza" {
             messageReply?: WaMessageReply;
             remove?: Remove;
             reactions?: WaMessageReactions;
+        }
+
+        export interface IQ {
+            subscriptions?: WaSubscriptions;
         }
     }
 }
@@ -135,6 +145,15 @@ export default function (client: Agent, stanzas: JXT.Registry) {
             namespace: "urn:xmpp:reactions:0",
             path: "message.reactions",
         },
+        {
+            element: "subscriptions",
+            fields: {
+                usersJid: JXT.multipleChildAttribute(null, "subscription", "jid"),
+                usersNick: JXT.multipleChildAttribute(null, "subscription", "nick"),
+            },
+            namespace: "urn:xmpp:mucsub:0",
+            path: "iq.subscriptions",
+        },
     ]);
 
     // 9. Add API to the StanzaJS agent for sending `mystanza` data
@@ -146,7 +165,6 @@ export default function (client: Agent, stanzas: JXT.Registry) {
     };
 
     client.sendGroupChatMessage = (msg: Message) => {
-        console.warn("sendGroupChatMessage", msg);
         return client.sendMessage({
             type: "groupchat",
             ...msg,

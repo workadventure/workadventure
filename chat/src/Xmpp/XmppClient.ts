@@ -192,8 +192,14 @@ export class XmppClient {
         });
 
         client.on("raw:outgoing", (message) => {
-            if (message.includes("files")) {
-                console.warn(message);
+            if (message.includes("iq") || message.includes("presence")) {
+                //console.warn(message);
+            }
+        });
+
+        client.on("raw:incoming", (message) => {
+            if (message.includes("iq")) {
+                //console.warn(message);
             }
         });
 
