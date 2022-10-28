@@ -1,4 +1,4 @@
-import "jasmine";
+import { describe, expect, it } from "vitest";
 import type { Box } from "../../../../src/front/WebRtc/LayoutManager";
 
 describe("Biggest Area 1. Create Vertices", () => {

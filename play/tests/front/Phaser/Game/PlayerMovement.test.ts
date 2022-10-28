@@ -1,4 +1,8 @@
-import "jasmine";
+// @vitest-environment jsdom
+//@ts-ignore
+window.env = {};
+
+import { describe, expect, it } from "vitest";
 import { PlayerMovement } from "../../../../src/front/Phaser/Game/PlayerMovement";
 import { PositionMessage_Direction } from "../../../../src/messages/ts-proto-generated/protos/messages";
 

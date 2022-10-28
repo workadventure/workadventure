@@ -1,4 +1,4 @@
-import "jasmine";
+import { describe, expect, it } from "vitest";
 import { MapStore } from "../../../../src/front/Stores/Utils/MapStore";
 import type { Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
@@ -14,10 +14,10 @@ describe("Main store", () => {
             expect(map).toBe(mapStore);
         });
 
-        expect(triggered).toBeTrue();
+        expect(triggered).toBe(true);
         triggered = false;
         mapStore.set("foo", "bar");
-        expect(triggered).toBeTrue();
+        expect(triggered).toBe(true);
 
         triggered = false;
         mapStore.delete("baz");

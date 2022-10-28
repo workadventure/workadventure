@@ -1,9 +1,9 @@
-import "jasmine";
+import { describe, expect, it } from "vitest";
 import { HdpiManager } from "../../../../src/front/Phaser/Services/HdpiManager";
 
 describe("Test HdpiManager", () => {
     it("should match screen size if size is too small.", () => {
-        const hdpiManager = new HdpiManager(640*480, 64*64);
+        const hdpiManager = new HdpiManager(640 * 480, 64 * 64);
 
         const result = hdpiManager.getOptimalGameSize({ width: 320, height: 200 });
         expect(result.game.width).toEqual(320);
@@ -13,7 +13,7 @@ describe("Test HdpiManager", () => {
     });
 
     it("should match multiple just above.", () => {
-        const hdpiManager = new HdpiManager(640*480, 64*64);
+        const hdpiManager = new HdpiManager(640 * 480, 64 * 64);
 
         let result = hdpiManager.getOptimalGameSize({ width: 960, height: 600 });
         expect(result.game.width).toEqual(960);
@@ -31,7 +31,7 @@ describe("Test HdpiManager", () => {
     });
 
     it("should not zoom in too much.", () => {
-        const hdpiManager = new HdpiManager(640*480, 64*64);
+        const hdpiManager = new HdpiManager(640 * 480, 64 * 64);
 
         hdpiManager.zoomModifier = 11;
 
@@ -39,13 +39,12 @@ describe("Test HdpiManager", () => {
         expect(result.game.width).toEqual(64);
         expect(result.game.height).toEqual(64);
         expect(hdpiManager.zoomModifier).toEqual(10);
-
     });
 
     it("should not zoom out too much.", () => {
-        const hdpiManager = new HdpiManager(640*480, 64*64);
+        const hdpiManager = new HdpiManager(640 * 480, 64 * 64);
 
-        hdpiManager.zoomModifier = 1/10;
+        hdpiManager.zoomModifier = 1 / 10;
 
         const result = hdpiManager.getOptimalGameSize({ width: 1280, height: 768 });
         expect(result.game.width).toEqual(1280);
