@@ -195,14 +195,14 @@
                 {#if user.isInSameMap}
                     <span
                         class="walk-to wa-dropdown-item"
-                        on:click|stopPropagation={() => mucRoom.goTo("user", user.playUri, user.uuid)}
+                        on:click|stopPropagation={() => mucRoom.goTo("user", user.playUri ?? "", user.uuid)}
                         ><img class="noselect" src={walk} alt="Walk to logo" height="13" width="13" />
                         {$LL.userList.walkTo()}</span
                     >
                 {:else}
                     <span
                         class="teleport wa-dropdown-item"
-                        on:click|stopPropagation={() => mucRoom.goTo("room", user.playUri, user.uuid)}
+                        on:click|stopPropagation={() => mucRoom.goTo("room", user.playUri ?? "", user.uuid)}
                         ><img class="noselect" src={teleport} alt="Teleport to logo" height="13" width="13" />
                         {$LL.userList.teleport()}</span
                     >
@@ -218,7 +218,7 @@
                 {#if $me && $me.isAdmin}
                     <span
                         class="ban wa-dropdown-item tw-text-pop-red"
-                        on:click|stopPropagation={() => mucRoom.sendBan(user.jid, user.name, user.playUri)}
+                        on:click|stopPropagation={() => mucRoom.sendBan(user.jid, user.name, user.playUri ?? "")}
                         ><SlashIcon size="13" /> {$LL.ban.title()} (coming soon)</span
                     >
                     {#if user.isAdmin}

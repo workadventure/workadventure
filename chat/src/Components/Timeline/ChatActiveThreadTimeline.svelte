@@ -18,7 +18,7 @@
     import { mucRoomsStore } from "../../Stores/MucRoomsStore";
     import { EmojiButton } from "@joeattardi/emoji-button";
     import { HtmlUtils } from "../../Utils/HtmlUtils";
-    import { defaultColor, defaultWoka } from "../../Xmpp/AbstractRoom";
+    import { defaultWoka } from "../../Xmpp/AbstractRoom";
 
     const dispatch = createEventDispatcher();
     const defaultMucRoom = mucRoomsStore.getDefaultRoom();
