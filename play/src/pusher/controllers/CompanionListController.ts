@@ -1,6 +1,5 @@
 import { AuthenticatedProviderController } from "./AuthenticatedProviderController";
 import type { CompanionCollectionList } from "../../messages/JsonMessages/CompanionTextures";
-import type { Request } from "hyper-express";
 import type { CompanionServiceInterface } from "../services/CompanionServiceInterface";
 import type { Server } from "hyper-express";
 import type { JWTTokenManager } from "../services/JWTTokenManager";
