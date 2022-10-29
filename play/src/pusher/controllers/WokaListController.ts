@@ -1,6 +1,5 @@
 import { AuthenticatedProviderController } from "./AuthenticatedProviderController";
 import type { WokaList } from "../../messages/JsonMessages/PlayerTextures";
-import type { Request } from "hyper-express";
 import type { Server } from "hyper-express";
 import type { JWTTokenManager } from "../services/JWTTokenManager";
 import type { WokaServiceInterface } from "../services/WokaServiceInterface";
