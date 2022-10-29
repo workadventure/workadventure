@@ -1,14 +1,16 @@
 import {AuthenticatedProviderController} from "../../src/pusher/controllers/AuthenticatedProviderController";
 import type {Server} from "hyper-express";
 import {JWTTokenManager} from "../../src/pusher/services/JWTTokenManager";
-import type Request from "hyper-express/types/components/http/Request";
-import type Response from "hyper-express/types/components/http/Response";
+import type { Request, Response } from "hyper-express";
 
 const NOT_A_SECRET = "foo"
 class MockAuthenticatedProviderController extends AuthenticatedProviderController<string> {
     promise = Promise.resolve("success")
-    protected getData(roomUrl: string, req: Request): Promise<string | undefined> {
+    protected getData(roomUrl: string, uuid: string): Promise<string | undefined> {
         return this.promise;
+    }
+
+    protected routes(): void {
     }
 }
 

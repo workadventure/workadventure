@@ -1,4 +1,5 @@
-import { AdminCapabilities, AdminCapability } from "./AdminCapabilities";
+import type { AdminCapabilities } from "./AdminCapabilities";
+import { AdminCapability } from "./AdminCapabilities";
 
 export class RemoteCapabilities implements AdminCapabilities {
     constructor(private capabilities: Map<string, string> = new Map<string, string>()) {

@@ -9,15 +9,17 @@ import type { WokaServiceInterface } from "../services/WokaServiceInterface";
  * A controller to expose the woka list
  */
 export class WokaListController extends AuthenticatedProviderController<WokaList> {
-    constructor(
-        protected app: Server,
-        protected jwtTokenManager: JWTTokenManager,
-        private wokaService: WokaServiceInterface
-    ) {
+    private wokaService: WokaServiceInterface | undefined;
+    constructor(protected app: Server, protected jwtTokenManager: JWTTokenManager) {
         super(app, jwtTokenManager);
     }
-    protected getData(roomUrl: string, req: Request): Promise<WokaList | undefined> {
-        return this.wokaService.getWokaList(roomUrl, req.params["uuid"]);
+
+    public setWokaService(wokaService: WokaServiceInterface) {
+        this.wokaService = wokaService;
+    }
+
+    protected getData(roomUrl: string, uuid: string): Promise<WokaList | undefined> {
+        return this.wokaService?.getWokaList(roomUrl, uuid) || Promise.resolve(undefined);
     }
 
     routes(): void {

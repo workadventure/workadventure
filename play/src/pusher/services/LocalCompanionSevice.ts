@@ -1,5 +1,5 @@
-import type {CompanionCollectionList} from "../../messages/JsonMessages/CompanionTextures";
-import type {CompanionServiceInterface} from "./CompanionServiceInterface";
+import type { CompanionCollectionList } from "../../messages/JsonMessages/CompanionTextures";
+import type { CompanionServiceInterface } from "./CompanionServiceInterface";
 
 /**
  * Companion Service list that the default list of companions

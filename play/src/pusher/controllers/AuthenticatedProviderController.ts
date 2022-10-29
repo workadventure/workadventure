@@ -21,20 +21,19 @@ export abstract class AuthenticatedProviderController<T> extends BaseHttpControl
             return;
         });
 
-
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.app.get(endpoint,  async (req, res) => {
+        this.app.get(endpoint, async (req, res) => {
             const token = req.header("Authorization");
 
             if (!token) {
                 res.status(401).send("Undefined authorization header");
                 return;
             }
-
+            let uuid: string | undefined;
             try {
                 const jwtData = this.jwtTokenManager.verifyJWTToken(token);
                 // Let's set the "uuid" param
-                req.params["uuid"] = jwtData.identifier;
+                uuid = jwtData.identifier;
             } catch (e) {
                 console.error("Connection refused for token: " + token, e);
                 res.status(401).send("Invalid token sent");
@@ -48,7 +47,7 @@ export abstract class AuthenticatedProviderController<T> extends BaseHttpControl
             }
 
             roomUrl = decodeURIComponent(roomUrl);
-            const data = await this.getData(roomUrl, req);
+            const data = await this.getData(roomUrl, uuid);
 
             if (!data) {
                 return res.status(500).send("Error on getting data");
@@ -58,5 +57,5 @@ export abstract class AuthenticatedProviderController<T> extends BaseHttpControl
         });
     }
 
-    protected abstract getData(roomUrl: string, req: Request): Promise<T | undefined>;
+    protected abstract getData(roomUrl: string, uuid: string): Promise<T | undefined>;
 }

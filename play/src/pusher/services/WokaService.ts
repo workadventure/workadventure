@@ -1,7 +1,7 @@
 import { adminWokaService } from "./AdminWokaService";
 import { localWokaService } from "./LocalWokaService";
-import { AdminCapabilities } from "./AdminApi/AdminCapabilities";
-import { WokaServiceInterface } from "./WokaServiceInterface";
+import type { AdminCapabilities } from "./adminApi/AdminCapabilities";
+import type { WokaServiceInterface } from "./WokaServiceInterface";
 
 export class WokaService {
     private static instance: WokaServiceInterface | undefined;

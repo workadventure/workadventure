@@ -1,5 +1,5 @@
-import  { AdminCompanionService } from "./AdminCompanionService";
-import  { LocalCompanionSevice } from "./LocalCompanionSevice";
+import { AdminCompanionService } from "./AdminCompanionService";
+import { LocalCompanionSevice } from "./LocalCompanionSevice";
 import type { CompanionServiceInterface } from "./CompanionServiceInterface";
 import type { AdminCapabilities } from "./adminApi/AdminCapabilities";
 
