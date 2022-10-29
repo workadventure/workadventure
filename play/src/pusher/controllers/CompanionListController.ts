@@ -9,15 +9,15 @@ import type { JWTTokenManager } from "../services/JWTTokenManager";
  * A controller to expose the companion list
  */
 export class CompanionListController extends AuthenticatedProviderController<CompanionCollectionList> {
-    constructor(
-        protected app: Server,
-        protected jwtTokenManager: JWTTokenManager,
-        private companionService: CompanionServiceInterface
-    ) {
+    private companionService: CompanionServiceInterface | undefined;
+    constructor(protected app: Server, protected jwtTokenManager: JWTTokenManager) {
         super(app, jwtTokenManager);
     }
-    protected getData(roomUrl: string, req: Request): Promise<CompanionCollectionList | undefined> {
-        return this.companionService.getCompanionList(roomUrl, req.params["uuid"]);
+    public setCompanionService(companionService: CompanionServiceInterface) {
+        this.companionService = companionService;
+    }
+    protected getData(roomUrl: string, uuid: string): Promise<CompanionCollectionList | undefined> {
+        return this.companionService?.getCompanionList(roomUrl, uuid) || Promise.resolve(undefined);
     }
 
     routes(): void {

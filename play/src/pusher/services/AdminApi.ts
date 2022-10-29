@@ -1,4 +1,9 @@
-import { ADMIN_API_TOKEN, ADMIN_API_URL, OPID_PROFILE_SCREEN_PROVIDER, ADMIN_API_RETRY_DELAY } from "../enums/EnvironmentVariable";
+import {
+    ADMIN_API_TOKEN,
+    ADMIN_API_URL,
+    OPID_PROFILE_SCREEN_PROVIDER,
+    ADMIN_API_RETRY_DELAY,
+} from "../enums/EnvironmentVariable";
 import Axios from "axios";
 import type { AxiosResponse } from "axios";
 import {
@@ -21,8 +26,8 @@ import { isApplicationDefinitionInterface } from "../../messages/JsonMessages/Ap
 import type { AdminCapabilities } from "./adminApi/AdminCapabilities";
 import { RemoteCapabilities } from "./adminApi/RemoteCapabilities";
 import { LocalCapabilities } from "./adminApi/LocalCapabilities";
-import { isCapabilities} from "../../messages/JsonMessages/CapabilitiesData"
-import type {Capabilities} from "../../messages/JsonMessages/CapabilitiesData"
+import { isCapabilities } from "../../messages/JsonMessages/CapabilitiesData";
+import type { Capabilities } from "../../messages/JsonMessages/CapabilitiesData";
 
 export interface AdminBannedData {
     is_banned: boolean;

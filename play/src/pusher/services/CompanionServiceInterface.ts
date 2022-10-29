@@ -1,4 +1,4 @@
-import { CompanionCollectionList } from "../Messages/JsonMessages/CompanionTextures";
+import type { CompanionCollectionList } from "../../messages/JsonMessages/CompanionTextures";
 
 /**
  * Services that can retrieve the list of companions

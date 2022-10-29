@@ -3,10 +3,10 @@ import CancelablePromise from "cancelable-promise";
 import { companionCollectionList } from "../../../messages/JsonMessages/CompanionTextures";
 import type { CompanionCollectionList } from "../../../messages/JsonMessages/CompanionTextures";
 import type { CompanionTexture } from "../../../messages/JsonMessages/CompanionTextures";
-import {PUSHER_URL} from "../../Enum/EnvironmentVariable";
-import {gameManager} from "../Game/GameManager";
-import {localUserStore} from "../../Connexion/LocalUserStore";
-import type {SuperLoaderPlugin} from "../Services/SuperLoaderPlugin";
+import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
+import { gameManager } from "../Game/GameManager";
+import { localUserStore } from "../../Connexion/LocalUserStore";
+import type { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 
 export function companionListMetakey() {
     return "companion-list" + gameManager.currentStartedRoom.href;

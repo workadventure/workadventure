@@ -17,9 +17,9 @@ import { isRoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
 import {
     companionCollectionList,
     companionTextureCollection,
-    isCompanionDetail
+    isCompanionDetail,
 } from "../../messages/JsonMessages/CompanionTextures";
-import {isCapabilities} from "../../messages/JsonMessages/CapabilitiesData";
+import { isCapabilities } from "../../messages/JsonMessages/CapabilitiesData";
 
 class SwaggerGenerator {
     definitions(type: string | null): {
