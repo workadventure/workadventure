@@ -398,6 +398,12 @@ test.describe('API WA.players', () => {
   });
 
   test('Test that a variable changed can be listened to locally.', async ({ page, browser }) => {
+    await page.goto(
+        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+    );
+
+    await login(page, "Alice");
+
     // Test that a variable triggered locally can be listened locally
     let gotExpectedNotification = false;
 
@@ -413,7 +419,7 @@ test.describe('API WA.players', () => {
     await evaluateScript(page, async () => {
       await WA.onInit();
 
-      WA.player.state.onVariableChange('should_be_notified', () => {
+      WA.player.state.onVariableChange('should_be_notified').subscribe(() => {
         console.log('NOTIFICATION RECEIVED FOR should_be_notified VARIABLE CHANGE');
       });
 
