@@ -1,6 +1,6 @@
 import { flattenGroupLayersMap } from "@workadventure/map-editor";
 import type { ITiledMapLayer } from "@workadventure/tiled-map-type-guard";
-import "jasmine";
+import { describe, expect, it } from "vitest";
 
 describe("Layers flattener", () => {
     it("should iterate maps with no group", () => {
