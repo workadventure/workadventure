@@ -34,6 +34,13 @@ export class WorkadventurePlayerStateCommands extends AbstractWorkadventureState
         }
 
         this.variables.set(key, value);
+
+        // Let's trigger the variable change locally:
+        const subscriber = this.variableSubscribers.get(key);
+        if (subscriber) {
+            subscriber.next(value);
+        }
+
         return queryWorkadventure({
             type: "setPlayerVariable",
             data: {

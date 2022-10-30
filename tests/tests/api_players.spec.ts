@@ -397,4 +397,42 @@ test.describe('API WA.players', () => {
     await page2.close();
   });
 
+  test('Test that a variable changed can be listened to locally.', async ({ page, browser }) => {
+    await page.goto(
+        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+    );
+
+    await login(page, "Alice");
+
+    // Test that a variable triggered locally can be listened locally
+    let gotExpectedNotification = false;
+
+    await page.on('console', async (msg) => {
+      const text = msg.text();
+
+      if (text === 'NOTIFICATION RECEIVED FOR should_be_notified VARIABLE CHANGE') {
+        gotExpectedNotification = true;
+      }
+    });
+
+
+    await evaluateScript(page, async () => {
+      await WA.onInit();
+
+      WA.player.state.onVariableChange('should_be_notified').subscribe(() => {
+        console.log('NOTIFICATION RECEIVED FOR should_be_notified VARIABLE CHANGE');
+      });
+
+      await WA.player.state.saveVariable('should_be_notified', 'should_be_notified', {
+        public: false,
+        persist: true,
+        scope: "room",
+      });
+
+      return;
+    });
+
+    await expect.poll(() => gotExpectedNotification).toBe(true);
+  });
+
 });
