@@ -10,6 +10,7 @@
     "dotenv-cli": "^6.0.0",
     "eslint": "^8.26.0",
     "eslint-plugin-playwright": "^0.11.2",
+    "lint-staged": "^13.0.3",
     "typescript-eslint": "^0.0.1-alpha.0"
   },
   "scripts": {
@@ -20,6 +21,12 @@
     "test-headed-chrome": "dotenv -e ../.env -- playwright test --headed --project=chromium",
     "test-headed-firefox": "dotenv -e ../.env -- playwright test --headed --project=firefox",
     "test-headed-webkit": "dotenv -e ../.env -- playwright test --headed --project=webkit",
-    "test-prod-like": "OVERRIDE_DOCKER_COMPOSE=docker-compose.e2e.yml npm run test -- "
+    "test-prod-like": "OVERRIDE_DOCKER_COMPOSE=docker-compose.e2e.yml npm run test -- ",
+    "precommit": "lint-staged"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "node_modules/.bin/eslint --fix",
+    ]
   }
 }
