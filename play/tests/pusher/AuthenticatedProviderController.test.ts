@@ -1,5 +1,5 @@
+import {beforeEach, describe, expect, it, vi } from "vitest";
 import {AuthenticatedProviderController} from "../../src/pusher/controllers/AuthenticatedProviderController";
-// import {JWTTokenManager} from "../../src/pusher/services/JWTTokenManager";
 import type {Request, Response, Server} from "hyper-express";
 
 const NOT_A_SECRET = "foo"
@@ -89,35 +89,29 @@ describe("AuthenticatedProviderController", () => {
     beforeEach(()=> {
         mockApp = new MockApp();
         mockTokenManager = new JWTTokenManagerMock();
-        spyOn(mockApp, "options")
+        vi.spyOn(mockApp, "options")
     })
 
     function isValidToken(): void {
-        spyOn(mockTokenManager, 'verifyJWTToken').and.returnValue({identifier: "avaliduser"});
+        vi.spyOn(mockTokenManager, 'verifyJWTToken').mockReturnValue({identifier: "avaliduser"});
     }
 
-    it("should setup correct routes and execute getData with given parameters", (done) => {
+    it("should setup correct routes and execute getData with given parameters", async () => {
         isValidToken();
         const subject = new MockAuthenticatedProviderController(
             mockApp as unknown as Server,
             mockTokenManager);
 
         subject.setupRoutes("/foo/bar");
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockApp.options).toHaveBeenCalledWith("/foo/bar", jasmine.any(Function))
 
         const req = new FakeRequest("roomUrl=room")
         const res = new FakeResponse(200)
 
         // @ts-ignore
         mockApp.simulateRequest("/foo/bar", req, res)
-        subject.promise.then(()=> {
-            expect(res.lastJsonData).toEqual("success")
-            expect(subject.lastRequestParameters).toEqual(["room", "avaliduser"])
-            done()
-        }).catch(error => {
-            console.error(error)
-        })
+        await subject.promise
+        expect(res.lastJsonData).toEqual("success")
+        expect(subject.lastRequestParameters).toEqual(["room", "avaliduser"])
     });
 
     it("should fail if roomUrl is not given", () => {
@@ -151,7 +145,9 @@ describe("AuthenticatedProviderController", () => {
     })
 
     it("should fail if verifyJWTToken fails", () => {
-        spyOn(mockTokenManager, 'verifyJWTToken').and.throwError("failed to verify token")
+        vi.spyOn(mockTokenManager, 'verifyJWTToken').mockImplementation(()=> {
+            throw new Error("failed to verify token")
+        })
         const subject = new MockAuthenticatedProviderController(
             mockApp as unknown as Server,
             mockTokenManager);
