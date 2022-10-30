@@ -1,12 +1,13 @@
 import {AuthenticatedProviderController} from "../../src/pusher/controllers/AuthenticatedProviderController";
-import type {Server} from "hyper-express";
-import {JWTTokenManager} from "../../src/pusher/services/JWTTokenManager";
-import type { Request, Response } from "hyper-express";
+// import {JWTTokenManager} from "../../src/pusher/services/JWTTokenManager";
+import type {Request, Response, Server} from "hyper-express";
 
 const NOT_A_SECRET = "foo"
 class MockAuthenticatedProviderController extends AuthenticatedProviderController<string> {
     promise = Promise.resolve("success")
+    lastRequestParameters: string[] = []
     protected getData(roomUrl: string, uuid: string): Promise<string | undefined> {
+        this.lastRequestParameters = [roomUrl, uuid]
         return this.promise;
     }
 
@@ -16,10 +17,10 @@ class MockAuthenticatedProviderController extends AuthenticatedProviderControlle
 
 class MockApp {
     getRoutes: Map<string, (req: Request, res: Response) => void> = new Map<string, () => void>()
-    options(_endpoint: string, _options: unknown, _callback: unknown){
+    options(_endpoint: string, _callback: unknown){
         return
     }
-    get(endpoint: string, _options: unknown, callback: (req: Request, res: Response) => void) {
+    get(endpoint: string, callback: (req: Request, res: Response) => void) {
         this.getRoutes.set(endpoint, callback)
         return
     }
@@ -58,13 +59,36 @@ class FakeRequest {
     }
 }
 
+export interface MockAuthTokenData {
+    identifier: string;
+    accessToken?: string;
+    username?: string;
+    locale?: string;
+}
+
+export class JWTTokenManagerMock {
+    // @ts-ignore
+    public verifyAdminSocketToken(_token: string): {authorizedRoomIds: string[]} {
+        return {authorizedRoomIds:[]}
+    }
+
+    // @ts-ignore
+    public createAuthToken(identifier: string, _accessToken?: string, username?: string, _locale?: string): string {
+        return ""
+    }
+
+    public verifyJWTToken(token: string, ignoreExpiration = false): MockAuthTokenData {
+        return { identifier: ""}
+    }
+}
+
 describe("AuthenticatedProviderController", () => {
    let mockApp: MockApp;
-   let mockTokenManager: JWTTokenManager;
+   let mockTokenManager: JWTTokenManagerMock;
 
     beforeEach(()=> {
         mockApp = new MockApp();
-        mockTokenManager = new JWTTokenManager();
+        mockTokenManager = new JWTTokenManagerMock();
         spyOn(mockApp, "options")
     })
 
@@ -80,7 +104,7 @@ describe("AuthenticatedProviderController", () => {
 
         subject.setupRoutes("/foo/bar");
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockApp.options).toHaveBeenCalledWith("/foo/bar", {}, jasmine.any(Function))
+        expect(mockApp.options).toHaveBeenCalledWith("/foo/bar", jasmine.any(Function))
 
         const req = new FakeRequest("roomUrl=room")
         const res = new FakeResponse(200)
@@ -89,8 +113,7 @@ describe("AuthenticatedProviderController", () => {
         mockApp.simulateRequest("/foo/bar", req, res)
         subject.promise.then(()=> {
             expect(res.lastJsonData).toEqual("success")
-            // @ts-ignore
-            expect(req.params["uuid"]).toEqual("avaliduser")
+            expect(subject.lastRequestParameters).toEqual(["room", "avaliduser"])
             done()
         }).catch(error => {
             console.error(error)

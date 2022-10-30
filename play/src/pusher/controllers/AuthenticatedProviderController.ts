@@ -21,7 +21,6 @@ export abstract class AuthenticatedProviderController<T> extends BaseHttpControl
             return;
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get(endpoint, async (req, res) => {
             const token = req.header("Authorization");
 
