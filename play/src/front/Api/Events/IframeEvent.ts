@@ -528,6 +528,10 @@ export const iframeQueryMapTypeGuards = {
         query: isEnablePlayersTrackingEvent,
         answer: z.array(isAddPlayerEvent),
     },
+    getWoka: {
+        query: z.undefined(),
+        answer: z.string(),
+    },
 };
 
 type IframeQueryMapTypeGuardsType = typeof iframeQueryMapTypeGuards;

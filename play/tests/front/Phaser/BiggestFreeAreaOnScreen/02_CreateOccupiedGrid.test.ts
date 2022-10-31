@@ -1,7 +1,6 @@
-import "jasmine";
+import { describe, expect, it } from "vitest";
 import { getGridCoordinates } from "../../../../src/front/Stores/BiggestAvailableAreaStore";
 import type { Box } from "../../../../src/front/WebRtc/LayoutManager";
-
 
 describe("Biggest Area 2. Create Occupied Grid", () => {
     it("Should be exact as predefined occupied grid", () => {

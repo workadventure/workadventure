@@ -2,6 +2,7 @@ import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
 import { isMucRoomDefinition } from "./MucRoomDefinitionInterface";
 import { isMetaTagFavicon } from "./MetaTagFavicon";
+import { isMetaTagManifestIcon } from "./MetaTagManifestIcon";
 
 /*
  * WARNING! The original file is in /messages/JsonMessages.
@@ -55,6 +56,7 @@ const MetaTagsData = z.object({
     favIcons: extendApi(isMetaTagFavicon.array().optional(), {
         description: "Icon to load inside the index.html and on the manifest",
     }),
+    manifestIcons: isMetaTagManifestIcon.array().optional(),
     appName: extendApi(z.string().optional(), {
         description: "Name display on the PWA",
         example: "WorkAdventure",

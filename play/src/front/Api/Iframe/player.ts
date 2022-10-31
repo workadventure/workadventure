@@ -273,6 +273,21 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
         }
         return isLogged;
     }
+
+    /**
+     * Get a base64 string of the Woka image of the current player.
+     * The Woka is in "still" position facing south.
+     * @returns {Promise<string>}
+     * {@link https://workadventu.re/map-building/api-player.md#get-the-woka-of-the-player | Website documentation}
+     *
+     * @returns {Promise<string>} Current player woka in base64
+     */
+    public getWokaPicture(): Promise<string> {
+        return queryWorkadventure({
+            type: "getWoka",
+            data: undefined,
+        });
+    }
 }
 
 export type Position = {

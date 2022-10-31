@@ -6,7 +6,7 @@ import type { SetVariableEvent } from "../Events/SetVariableEvent";
 export abstract class AbstractWorkadventureStateCommands {
     protected setVariableResolvers = new Subject<SetVariableEvent>();
     protected variables = new Map<string, unknown>();
-    private variableSubscribers = new Map<string, Subject<unknown>>();
+    protected variableSubscribers = new Map<string, Subject<unknown>>();
 
     protected constructor() {
         //super();

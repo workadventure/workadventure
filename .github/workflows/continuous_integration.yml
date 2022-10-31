@@ -86,7 +86,7 @@ jobs:
         run: yarn run pretty-check
         working-directory: "play"
 
-      - name: "Jasmine"
+      - name: "Unit tests"
         run: yarn test
         working-directory: "play"
 
