@@ -1,6 +1,13 @@
 import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
 import { isMucRoomDefinition } from "./MucRoomDefinitionInterface";
+import { isMetaTagFavicon } from "./MetaTagFavicon";
+import { isMetaTagManifestIcon } from "./MetaTagManifestIcon";
+
+/*
+ * WARNING! The original file is in /messages/JsonMessages.
+ * All other files are automatically copied from this file on container startup / build
+ */
 
 const isBbbData = z.object({
     url: extendApi(z.string(), {
@@ -36,6 +43,76 @@ const isMapThirdPartyData = z.object({
     }),
 });
 
+const MetaTagsData = z.object({
+    // Meta tags values
+    title: extendApi(z.string().optional(), {
+        description: "Title shown on browser tab",
+        example: "WorkAdventure - My Awesome World",
+    }),
+    description: extendApi(z.string().optional(), {
+        description: "Description of the webpage",
+        example: "My awesome world in WorkAdventure",
+    }),
+    favIcons: extendApi(isMetaTagFavicon.array().optional(), {
+        description: "Icon to load inside the index.html and on the manifest",
+    }),
+    manifestIcons: isMetaTagManifestIcon.array().optional(),
+    appName: extendApi(z.string().optional(), {
+        description: "Name display on the PWA",
+        example: "WorkAdventure",
+    }),
+    shortAppName: extendApi(z.string().optional(), {
+        description: "PWA name when there not enough space",
+        example: "WA",
+    }),
+    themeColor: extendApi(z.string().optional(), {
+        description: "Color use for theme PWA icons, Windows app and android browser",
+        example: "#000000",
+    }),
+    cardImage: extendApi(z.string().optional(), {
+        description: "The URL of the image to be used on OG card tags",
+        example: "https://example.com/awesome_world.png",
+    }),
+});
+
+const RequiredMetaTagsData = MetaTagsData.required();
+
+const isLegalsData = z.object({
+    termsOfUseUrl: extendApi(z.string().nullable().optional(), {
+        description: "The link to the 'terms of user' page (link displayed on the 'enter your name' scene)",
+    }),
+    privacyPolicyUrl: extendApi(z.string().nullable().optional(), {
+        description: "The link to the 'privacy policy' page (link displayed on the 'enter your name' scene)",
+    }),
+    cookiePolicyUrl: extendApi(z.string().nullable().optional(), {
+        description: "The link to the 'cookie policy' page (link displayed on the 'enter your name' scene)",
+    }),
+});
+
+const CustomizeSceneData = z.object({
+    clothesIcon: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the clothes icon",
+    }),
+    accessoryIcon: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the accessory icon",
+    }),
+    hatIcon: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the hat icon",
+    }),
+    hairIcon: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the hair icon",
+    }),
+    eyesIcon: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the eyes icon",
+    }),
+    bodyIcon: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the body icon",
+    }),
+    turnIcon: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the turn icon",
+    }),
+});
+
 export const isMapDetailsData = z.object({
     mapUrl: extendApi(z.string(), {
         description: "The full URL to the JSON map file",
@@ -60,6 +137,10 @@ export const isMapDetailsData = z.object({
     iframeAuthentication: extendApi(z.string().nullable().optional(), {
         description: "The URL of the authentication Iframe",
         example: "https://mycompany.com/authc",
+    }),
+    opidLogoutRedirectUrl: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the logout redirect",
+        example: "https://mycompany.com/logout",
     }),
     // The date (in ISO 8601 format) at which the room will expire
     expireOn: extendApi(z.optional(z.string()), {
@@ -118,9 +199,26 @@ export const isMapDetailsData = z.object({
         description: "Whether the feature 'upload' in the chat is enabled or not on this room",
         example: true,
     }),
+    metatags: extendApi(MetaTagsData.nullable().optional(), {
+        description: "Data related to METATAGS / meta tags. Contains page title, favicons, og data, etc...",
+    }),
+    legals: extendApi(isLegalsData.nullable().optional(), {
+        description: "Configuration of the legals link (privacy policy, etc...)",
+    }),
+    customizeWokaScene: extendApi(CustomizeSceneData.nullable().optional(), {
+        description: "Configuration of the 'Customize your Woka' scene (WIP)",
+    }),
+    backgroundColor: extendApi(z.string().nullable().optional(), {
+        description: "The background color used on configuration scenes (enter your name, select a woka, etc...) (WIP)",
+        example: "#330033",
+    }),
 });
 
 export type MapDetailsData = z.infer<typeof isMapDetailsData>;
 export type MapThirdPartyData = z.infer<typeof isMapThirdPartyData>;
 export type MapBbbData = z.infer<typeof isBbbData>;
 export type MapJitsiData = z.infer<typeof isJitsiData>;
+export type MetaTagsData = z.infer<typeof MetaTagsData>;
+export type RequiredMetaTagsData = z.infer<typeof RequiredMetaTagsData>;
+export type LegalsData = z.infer<typeof isLegalsData>;
+export type CustomizeSceneData = z.infer<typeof CustomizeSceneData>;

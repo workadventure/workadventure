@@ -2,11 +2,7 @@
 . "$(dirname "$0")/_/husky.sh"
 
 (
-cd front || exit
-yarn run precommit
-)
-(
-cd pusher || exit
+cd play || exit
 yarn run precommit
 )
 (
@@ -15,5 +11,9 @@ yarn run precommit
 )
 (
 cd map-storage || exit
+yarn run precommit
+)
+(
+cd tests || exit
 yarn run precommit
 )

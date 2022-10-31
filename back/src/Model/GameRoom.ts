@@ -26,7 +26,7 @@ import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
 import { Admin } from "../Model/Admin";
 import { adminApi } from "../Services/AdminApi";
-import { isMapDetailsData, MapDetailsData, MapThirdPartyData } from "@workadventure/messages";
+import { isMapDetailsData, MapDetailsData, MapThirdPartyData, MapBbbData, MapJitsiData } from "@workadventure/messages";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { mapFetcher } from "../Services/MapFetcher";
 import { VariablesManager } from "../Services/VariablesManager";
@@ -46,7 +46,6 @@ import { LocalUrlError } from "../Services/LocalUrlError";
 import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
-import { MapBbbData, MapJitsiData } from "@workadventure/messages";
 import { MapLoadingError } from "../Services/MapLoadingError";
 import { MucManager } from "../Services/MucManager";
 import { BrothersFinder } from "./BrothersFinder";
@@ -203,7 +202,8 @@ export class GameRoom implements BrothersFinder {
             joinRoomMessage.getCompanion(),
             undefined,
             undefined,
-            joinRoomMessage.getActivatedinviteuser()
+            joinRoomMessage.getActivatedinviteuser(),
+            joinRoomMessage.getApplicationsList()
         );
         this.nextUserId++;
         this.users.set(user.id, user);
@@ -834,6 +834,7 @@ export class GameRoom implements BrothersFinder {
 
     public getJitsiSettings(): MapJitsiData | undefined {
         const jitsi = this.thirdParty?.jitsi;
+
         if (jitsi) {
             return jitsi;
         }

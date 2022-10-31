@@ -21,11 +21,11 @@ jobs:
 
       - name: Replace version number
         run: 'sed -i "s#VERSION_PLACEHOLDER#${GITHUB_REF/refs\/tags\//}#g" package.json'
-        working-directory: "front/packages/iframe-api-typings"
+        working-directory: "play/packages/iframe-api-typings"
 
       - name: Debug package.json
         run: cat package.json
-        working-directory: "front/packages/iframe-api-typings"
+        working-directory: "play/packages/iframe-api-typings"
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
@@ -42,34 +42,34 @@ jobs:
 
       - name: "Install dependencies"
         run: yarn install
-        working-directory: "front"
+        working-directory: "play"
 
       - name: "Install messages dependencies"
         run: yarn install
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run ts-proto && yarn run copy-to-front-ts-proto && yarn run json-copy-to-front
+        run: yarn run ts-proto && yarn run copy-to-play-ts-proto && yarn run copy-to-play && yarn run json-copy-to-play
         working-directory: "messages"
 
       - name: "Generate i18n files"
         run: yarn run typesafe-i18n
-        working-directory: "front"
+        working-directory: "play"
 
       - name: "Build"
         run: yarn run build-typings
         env:
-          PUSHER_URL: "//localhost:8080"
+          PUSHER_URL: "//localhost:3000"
           ADMIN_URL: "//localhost:80"
-        working-directory: "front"
+        working-directory: "play"
 
       - name: Install dependencies in package
         run: yarn install
-        working-directory: "front/packages/iframe-api-typings"
+        working-directory: "play/packages/iframe-api-typings"
 
       - name: Publish package
         run: yarn publish
-        working-directory: "front/packages/iframe-api-typings"
+        working-directory: "play/packages/iframe-api-typings"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         if: ${{ github.event_name == 'release' }}

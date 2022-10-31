@@ -1,5 +1,5 @@
 
-import {} from "../../front/packages/iframe-api-typings/iframe_api";
+import {} from "../../play/packages/iframe-api-typings/iframe_api";
 //import {} from "../../front/src/iframe_api";
 import {expect, test, Browser, Page} from '@playwright/test';
 import { login } from './utils/roles';
@@ -269,6 +269,7 @@ test.describe('API WA.players', () => {
   });
 
   test('Test variable persistence for logged users.', async ({ page, browser }) => {
+    test.setTimeout(120_000); // Fix Webkit that can take more than 60s
     await page.goto(
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
     );
@@ -394,6 +395,44 @@ test.describe('API WA.players', () => {
     await expect.poll(() => gotUnexpectedNotification).toBe(false);
 
     await page2.close();
+  });
+
+  test('Test that a variable changed can be listened to locally.', async ({ page, browser }) => {
+    await page.goto(
+        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+    );
+
+    await login(page, "Alice");
+
+    // Test that a variable triggered locally can be listened locally
+    let gotExpectedNotification = false;
+
+    await page.on('console', async (msg) => {
+      const text = msg.text();
+
+      if (text === 'NOTIFICATION RECEIVED FOR should_be_notified VARIABLE CHANGE') {
+        gotExpectedNotification = true;
+      }
+    });
+
+
+    await evaluateScript(page, async () => {
+      await WA.onInit();
+
+      WA.player.state.onVariableChange('should_be_notified').subscribe(() => {
+        console.log('NOTIFICATION RECEIVED FOR should_be_notified VARIABLE CHANGE');
+      });
+
+      await WA.player.state.saveVariable('should_be_notified', 'should_be_notified', {
+        public: false,
+        persist: true,
+        scope: "room",
+      });
+
+      return;
+    });
+
+    await expect.poll(() => gotExpectedNotification).toBe(true);
   });
 
 });

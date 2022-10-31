@@ -1,5 +1,5 @@
-//import {} from "../../../front/src/iframe_api";
-import {} from "../../../front/packages/iframe-api-typings/iframe_api";
+//import {} from "../../../play/src/front/iframe_api";
+import {} from "../../../play/packages/iframe-api-typings/iframe_api";
 
 import {expect, Frame, Page} from "@playwright/test";
 import {ElementHandle, JSHandle} from "playwright-core";

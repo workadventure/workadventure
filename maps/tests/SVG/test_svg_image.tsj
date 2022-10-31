@@ -1,0 +1,14 @@
+{ "columns":12,
+ "image":"test_image.svg",
+ "imageheight":390,
+ "imagewidth":390,
+ "margin":0,
+ "name":"test_image",
+ "spacing":0,
+ "tilecount":144,
+ "tiledversion":"1.9.2",
+ "tileheight":32,
+ "tilewidth":32,
+ "type":"tileset",
+ "version":"1.9"
+}

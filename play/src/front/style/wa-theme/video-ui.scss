@@ -1,0 +1,216 @@
+//* GENERAL */
+.media-box-camera-on-size {
+    @apply tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-28 md:tw-w-48 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96;
+}
+
+.media-box-camera-on-position {
+    @apply tw-absolute tw-justify-end tw-items-end;
+}
+
+.media-box-camera-off-size {
+    @apply tw-w-56 sm:tw-w-80 md:tw-w-48 lg:tw-w-44 xl:tw-w-64 2xl:tw-w-96;
+}
+
+.media-box-shape-color {
+    @apply tw-p-0 tw-bg-dark-blue/50 tw-rounded;
+}
+
+.report-ban-container-cam-off {
+    @apply tw-items-center tw-absolute tw-justify-end;
+}
+
+.media-box-screensharing-size {
+    @apply tw-w-56 sm:tw-w-80 md:tw-w-48 lg:tw-w-44 xl:tw-w-64 2xl:tw-w-96;
+}
+
+.scale-y-min {
+    transform: scaleY(0.1);
+}
+
+.other-cameras {
+    @apply tw-bottom-32 sm:tw-bottom-48 md:tw-bottom-28 lg:tw-bottom-24 xl:tw-bottom-36 2xl:tw-bottom-48 tw-mb-2 tw-max-h-[60vh] tw-overflow-y-auto tw-overflow-x-hidden;
+}
+
+.media-container {
+    @apply tw-mt-2;
+
+    &.hightlighted {
+        @apply tw-pointer-events-auto;
+        .nametag-webcam-container,
+        .woka-webcam-container,
+        .voice-meter-webcam-container,
+        .report-ban-container {
+            @apply tw-h-[32vw] md:tw-w-[58vw] lg:tw-w-[63vw] xl:tw-w-[66vw] 2xl:tw-w-[67vw];
+        }
+
+        .nametag-screenshare-container {
+            @apply tw-h-[41.25vw] tw-w-[65vw];
+        }
+
+        .report-ban-screenshare-container {
+            @apply tw-h-[41vw] tw-w-[60vw] lg:tw-w-[63vw] xl:tw-w-[66vw] 2xl:tw-w-[70vw];
+        }
+    }
+
+    &:hover {
+        .report-ban-container,
+        .report-ban-screenshare-container {
+            @apply -tw-translate-x-3 tw-opacity-100 xl:-tw-translate-x-10;
+        }
+
+        .report-ban-container-cam-off {
+            @apply -tw-translate-x-[1.37rem] tw-opacity-100 md:-tw-translate-x-4 xl:-tw-translate-x-5;
+        }
+
+        .voice-meter-cam-off {
+            @apply -tw-translate-x-8 md:-tw-translate-x-1 xl:-tw-translate-x-8;
+        }
+    }
+}
+
+.container-end {
+    @apply tw-flex tw-flex-col tw-absolute tw-justify-end;
+}
+
+.video-on-responsive-height {
+    @apply tw-h-32 sm:tw-h-48 md:tw-h-28 lg:tw-h-24 xl:tw-h-36 2xl:tw-h-48;
+}
+
+.video-container {
+    display: flex;
+    transition: all 0.2s ease;
+    cursor: url("../images/cursor_pointer.png"), pointer;
+    width: 100%;
+
+    &.no-clikable {
+        video {
+            cursor: url("../images/cursor_normal.png"), pointer;
+        }
+    }
+}
+
+/* Spinner */
+.connecting-spinner {
+    display: flex;
+    left: calc(50% - 62px);
+    top: calc(50% - 62px);
+
+    width: 3rem;
+    height: 3rem;
+    padding-top: 3rem;
+}
+
+.connecting-spinner:after {
+    content: " ";
+    display: block;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    border: 6px solid theme("colors.light-blue");
+    border-color: theme("colors.light-blue") transparent theme("colors.light-blue") transparent;
+    animation: connecting-spinner 1.2s linear infinite;
+}
+
+@keyframes connecting-spinner {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.rtc-error {
+    left: calc(50% - 68px);
+    top: calc(50% - 68px);
+
+    width: 4rem;
+    height: 4rem;
+}
+
+.rtc-error:after {
+    content: " ";
+    display: block;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    border: 6px solid #f00;
+    animation: blinker 1s linear infinite;
+}
+
+@keyframes blinker {
+    50% {
+        opacity: 0;
+    }
+}
+
+//* VOICE METER */
+.voice-meter-bar {
+    @apply tw-rounded tw-flex tw-w-1 md:tw-w-0.5 lg:tw-w-1 tw-drop-shadow-lg tw-transition-transform;
+}
+
+//* NAMETAGS */
+.nametag-text {
+    @apply tw-font-semibold tw-text-xs tw-leading-[0.875rem] tw-not-italic tw-break-words;
+}
+
+.nametag-shape {
+    @apply tw-rounded-tr-lg tw-rounded-bl tw-overflow-auto tw-max-w-full;
+}
+
+//* MY CAMERA */
+
+.my-webcam-container,
+.voice-meter-my-container {
+    @apply tw-flex media-box-camera-on-size;
+}
+
+/* MOZAIC MODE */
+
+#mozaic-layout {
+}
+
+.mozaic-full-width {
+    @apply mozaic-full-size;
+
+    .nametag-webcam-container,
+    .woka-webcam-container,
+    .voice-meter-webcam-container,
+    .report-ban-container {
+        @apply mozaic-full-size;
+    }
+
+    .video-container {
+        @apply mozaic-full-size;
+        &.video-off{
+            @apply md:tw-h-[4vh];
+        }
+    }
+}
+
+.mozaic-duo,
+.mozaic-quarter {
+    @apply mozaic-duo-size;
+
+    .nametag-webcam-container,
+    .woka-webcam-container,
+    .voice-meter-webcam-container,
+    .report-ban-container {
+        @apply mozaic-duo-size;
+    }
+}
+
+.mozaic-full-size {
+    @apply md:tw-h-[60vh] md:tw-w-[70vw];
+    &.media-box-camera-off-size{
+        @apply md:tw-h-[4vh];
+    }
+}
+
+.mozaic-duo-size {
+    @apply tw-h-[20vh] tw-w-[70vw] md:tw-h-[25vh] md:tw-w-[60vw] lg:tw-h-[30vh] lg:tw-w-[40vw];
+}
+
+.mozaic-grid {
+    @apply tw-gap-1 lg:tw-gap-4 tw-grid-cols-1 lg:tw-grid-cols-2;
+}

@@ -57,6 +57,10 @@ module.exports = {
         sans: ["Roboto", defaultTheme.fontFamily.sans],
         condensed: ["Roboto Condensed", defaultTheme.fontFamily.sans],
       },
+      scale: {
+        '01': '0.1',
+        140: "1.4",
+      },
     },
   },
   plugins: [require("@tailwindcss/forms")],

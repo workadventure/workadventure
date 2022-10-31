@@ -1,5 +1,6 @@
-import { GameMap } from '../../GameMap/GameMap';
-import { AreaData, AreaType } from '../../types';
+import type { AreaData } from '../../types';
+import type { GameMap } from '../../GameMap/GameMap';
+import { AreaType } from '../../types';
 import { Command } from "../Command";
 
 export interface UpdateAreaCommandConfig {
@@ -12,7 +13,7 @@ export class UpdateAreaCommand extends Command {
     private newConfig: AreaData;
 
     private gameMap: GameMap;
-    
+
     constructor(gameMap: GameMap, config: UpdateAreaCommandConfig) {
         super();
         this.gameMap = gameMap;

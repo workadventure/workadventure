@@ -8,7 +8,7 @@ import {createFileOfSize} from "./utils/file";
 
 const TIMEOUT_TO_GET_LIST = 30_000;
 
-test.setTimeout(300_000);
+test.setTimeout(500_000);
 
 test.describe('Chat', () => {
   test('main', async ({ page, browser, browserName }) => {
@@ -149,7 +149,7 @@ test.describe('Chat', () => {
       await startContainer(ejabberd);
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
 
-      const pusher = await findContainer('pusher');
+      const pusher = await findContainer('play');
       await stopContainer(pusher);
       await expect(page.locator('.errorScreen p.code')).toContainText('CONNECTION_');
 
