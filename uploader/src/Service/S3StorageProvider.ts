@@ -89,6 +89,7 @@ export class S3StorageProvider implements StorageProvider {
                     "ExposeHeaders": [ "Access-Control-Allow-Origin" ]
                 }
             ]
+            console.log(options);
             this.s3.putBucketCors({Bucket: bucket, CORSConfiguration: {CORSRules: corsRules}}, (err, _data)=> {
                 if (err) {
                     console.log("Could not setup CORS for S3 bucket", err);
