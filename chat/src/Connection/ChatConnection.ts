@@ -1,5 +1,4 @@
 import { PUSHER_URL } from "../Enum/EnvironmentVariable";
-import { apiVersionHash } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import ElementExt from "../Xmpp/Lib/ElementExt";
 import {
@@ -9,6 +8,7 @@ import {
     XmppConnectionStatusChangeMessage_Status,
     IframeToPusherMessage,
     XmppConnectionNotAuthorizedMessage,
+    apiVersionHash
 } from "@workadventure/messages";
 import { XmppClient } from "../Xmpp/XmppClient";
 import { Parser } from "@xmpp/xml";

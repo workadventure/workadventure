@@ -2,10 +2,8 @@ import { CONTACT_URL, PUSHER_URL, DISABLE_ANONYMOUS, OPID_LOGOUT_REDIRECT_URL } 
 import { localUserStore } from "./LocalUserStore";
 import axios from "axios";
 import { axiosWithRetry } from "./AxiosUtils";
-import { isMapDetailsData, isRoomRedirect } from "@workadventure/messages";
-import type { MucRoomDefinitionInterface } from "@workadventure/messages";
-import type { LegalsData, MapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
-import { isErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
+import type { MucRoomDefinitionInterface, MapDetailsData, LegalsData } from "@workadventure/messages";
+import { isMapDetailsData, isRoomRedirect, isErrorApiData } from "@workadventure/messages";
 import { ApiError } from "../Stores/Errors/ApiError";
 export class MapDetail {
     constructor(public readonly mapUrl: string) {}

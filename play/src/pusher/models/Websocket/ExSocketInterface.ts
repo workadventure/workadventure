@@ -12,11 +12,9 @@ import type {
 import type { ClientDuplexStream } from "@grpc/grpc-js";
 import type { Zone } from "../Zone";
 import type { compressors } from "hyper-express";
-import type { WokaDetail } from "@workadventure/messages";
+import type { WokaDetail, MucRoomDefinitionInterface, ApplicationDefinitionInterface } from "@workadventure/messages";
 import type { PusherRoom } from "../PusherRoom";
 import type { XmppClient } from "../../services/XmppClient";
-import type { MucRoomDefinitionInterface } from "@workadventure/messages";
-import type { ApplicationDefinitionInterface } from "../../../messages/JsonMessages/ApplicationDefinitionInterface";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 

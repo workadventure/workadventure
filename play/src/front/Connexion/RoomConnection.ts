@@ -24,6 +24,13 @@ import {
     warningContainerStore,
 } from "../Stores/MenuStore";
 import { localUserStore } from "./LocalUserStore";
+import {
+    apiVersionHash,
+    ClientToServerMessage as ClientToServerMessageTsProto,
+    ServerToClientMessage as ServerToClientMessageTsProto,
+    SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
+    SetPlayerVariableMessage_Scope,
+} from "@workadventure/messages";
 import type {
     AnswerMessage,
     AvailabilityStatus,
@@ -54,7 +61,6 @@ import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
-import { apiVersionHash } from "@workadventure/messages";
 import type { AreaData } from "@workadventure/map-editor";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";

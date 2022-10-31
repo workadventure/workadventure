@@ -1,4 +1,4 @@
-import type { ErrorApiData } from "../../../messages/JsonMessages/ErrorApiData";
+import type { ErrorApiData } from "@workadventure/messages";
 
 export class ApiError extends Error {
     static NAME = "ApiError";

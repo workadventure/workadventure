@@ -51,7 +51,7 @@ const en_US: BaseTranslation = {
     timeLine: {
         title: "Your Timeline",
         open: "Open your time line history!",
-        description: "WorkAdventure Timeline",
+        description: "Messages and events history",
         incoming: " join the discussion",
         outcoming: " quit the discussion",
     },

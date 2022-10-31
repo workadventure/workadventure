@@ -150,6 +150,7 @@ import { AreaType, GameMap, GameMapProperties } from "@workadventure/map-editor"
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
+import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PositionInterface;
@@ -1838,6 +1839,29 @@ ${escapedMessage}
                 throw new Error("no path available");
             }
             return this.CurrentPlayer.setPathToFollow(path, message.speed);
+        });
+
+        iframeListener.registerAnswerer("getWoka", () => {
+            return new Promise((res, rej) => {
+                const woka = get(currentPlayerWokaStore);
+                if (woka) {
+                    res(woka);
+                    return;
+                }
+
+                // If we could not get the Woka right away (because it is not available yet), let's subscribe to the update
+                // and resolve as soon as we have a value
+                let unsubscribe: (() => void) | undefined;
+                //eslint-disable-next-line prefer-const
+                unsubscribe = currentPlayerWokaStore.subscribe((woka) => {
+                    if (woka !== undefined) {
+                        if (unsubscribe) {
+                            unsubscribe();
+                        }
+                        res(woka);
+                    }
+                });
+            });
         });
     }
 

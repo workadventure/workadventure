@@ -1,5 +1,4 @@
-import type { AreaProperties, ModifyAreaMessage } from "@workadventure/messages";
-import type { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
+import type { ModifyAreaMessage } from "@workadventure/messages";
 import type { CreateAreaCommandConfig } from './Commands/Area/CreateAreaCommand';
 import type { DeleteAreaCommandConfig } from './Commands/Area/DeleteAreaCommand';
 import type { UpdateAreaCommandConfig } from './Commands/Area/UpdateAreaCommand';

@@ -1,4 +1,4 @@
-import "jasmine";
+import { describe, expect, it } from "vitest";
 import { HdpiManager } from "../../../../src/front/Phaser/Services/HdpiManager";
 
 describe("Test HdpiManager", () => {

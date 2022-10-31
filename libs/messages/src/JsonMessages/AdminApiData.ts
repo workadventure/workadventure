@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
 
+/*
+ * WARNING! The original file is in /messages/JsonMessages.
+ * All other files are automatically copied from this file on container startup / build
+ */
+
 export const isAdminApiData = z.object({
     userUuid: extendApi(z.string(), { example: "998ce839-3dea-4698-8b41-ebbdf7688ad9" }),
     email: extendApi(z.string().nullable(), {

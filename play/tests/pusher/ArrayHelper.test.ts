@@ -1,4 +1,4 @@
-import "jasmine";
+import { describe, expect, it } from "vitest";
 import { arrayIntersect } from "../../src/pusher/services/ArrayHelper";
 
 describe("RoomIdentifier", () => {

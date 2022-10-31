@@ -1,4 +1,4 @@
-import "jasmine";
+import { describe, expect, it } from "vitest";
 import { getGridCoordinates } from "../../../../src/front/Stores/BiggestAvailableAreaStore";
 import type { Box } from "../../../../src/front/WebRtc/LayoutManager";
 

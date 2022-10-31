@@ -51,9 +51,9 @@ import type HyperExpress from "hyper-express";
 import type { WebSocket } from "uWebSockets.js";
 import { z } from "zod";
 import { adminService } from "../services/AdminService";
+import type { MucRoomDefinitionInterface, ErrorApiData, WokaDetail } from "@workadventure/messages";
 import { apiVersionHash, isErrorApiData } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
-import type { MucRoomDefinitionInterface, ErrorApiData, WokaDetail } from "@workadventure/messages";
 //eslint-disable-next-line @typescript-eslint/no-var-requires
 const { jid } = require("@xmpp/client");
 

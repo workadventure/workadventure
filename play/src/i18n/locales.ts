@@ -45,8 +45,6 @@ export const setCurrentLocale = async (locale: Locales) => {
 export const displayableLocales: { id: Locales; language: string | undefined; region: string | undefined }[] =
     locales.map((locale) => {
         const [language, region] = locale.split("-");
-        console.log(region);
-        console.log(locales);
 
         // backwards compatibility
         if (!Intl.DisplayNames) {

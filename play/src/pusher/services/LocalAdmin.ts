@@ -1,6 +1,6 @@
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import type { AdminInterface } from "./AdminInterface";
-import type { MapDetailsData, RoomRedirect, AdminApiData } from "@workadventure/messages";
+import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData } from "@workadventure/messages";
 import {
     DISABLE_ANONYMOUS,
     ENABLE_CHAT,
@@ -10,7 +10,6 @@ import {
 } from "../enums/EnvironmentVariable";
 import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
-import type { ErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
 
 /**
  * A local class mocking a real admin if no admin is configured.
