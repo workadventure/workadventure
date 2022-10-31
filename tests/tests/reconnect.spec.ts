@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { findContainer, startContainer, stopContainer } from './utils/containers';
+import {findContainer, startContainer, stopContainer} from './utils/containers';
 import { login } from './utils/roles';
 
 test.setTimeout(180_000);
@@ -11,8 +11,8 @@ test.describe('Connection', () => {
 
     await login(page);
 
-    // Let's stop the pusher
-    const container = await findContainer('pusher');
+    // Let's stop the play container
+    const container = await findContainer('play');
     await stopContainer(container);
 
     await expect(page.locator('.errorScreen p.code')).toContainText('CONNECTION_');

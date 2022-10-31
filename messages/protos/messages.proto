@@ -46,6 +46,11 @@ message CharacterLayerMessage {
   string layer = 3;
 }
 
+message ApplicationMessage {
+  string name = 1;
+  string script = 2;
+}
+
 message CompanionMessage {
   string name = 1;
 }
@@ -280,6 +285,7 @@ message AnswerMessage {
 
 message JitsiJwtAnswer {
   string jwt = 1;
+  string url = 2;
 }
 
 message JoinBBBMeetingAnswer {
@@ -395,6 +401,7 @@ message RoomJoinedMessage {
   repeated CharacterLayerMessage characterLayer = 8;
   bool activatedInviteUser = 9;
   repeated VariableMessage playerVariable = 10;
+  repeated ApplicationMessage applications = 11;
 }
 
 message WebRtcStartMessage {
@@ -510,6 +517,7 @@ message JoinRoomMessage {
   AvailabilityStatus availabilityStatus = 11;
   bool activatedInviteUser = 12;
   bool isLogged = 13;
+  repeated ApplicationMessage applications = 14;
 }
 
 message UserJoinedZoneMessage {

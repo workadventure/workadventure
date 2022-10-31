@@ -20,6 +20,7 @@ export async function login(
   await page.click('button.selectCharacterSceneFormSubmit');
 
   await expect(page.locator('h2', { hasText: "Turn on your camera and microphone" })).toBeVisible();
+
   await page.click("text=Let's go!");
 
   await expect(page.locator("button#menuIcon")).toBeVisible();

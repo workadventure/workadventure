@@ -139,6 +139,9 @@ export class SocketManager {
         roomJoinedMessage.setActivatedinviteuser(
             user.activatedInviteUser != undefined ? user.activatedInviteUser : true
         );
+        if (user.applications != undefined) {
+            roomJoinedMessage.setApplicationsList(user.applications);
+        }
 
         const playerVariables = user.getVariables().getVariables();
 
@@ -701,6 +704,7 @@ export class SocketManager {
 
         const jitsiJwtAnswer = new JitsiJwtAnswer();
         jitsiJwtAnswer.setJwt(jwt);
+        jitsiJwtAnswer.setUrl(jitsiSettings.url);
 
         return jitsiJwtAnswer;
     }
@@ -886,8 +890,10 @@ export class SocketManager {
     private cleanupRoomIfEmpty(room: GameRoom): void {
         if (room.isEmpty()) {
             this.roomsPromises.delete(room.roomUrl);
-            this.resolvedRooms.delete(room.roomUrl);
-            gaugeManager.decNbRoomGauge();
+            const deleted = this.resolvedRooms.delete(room.roomUrl);
+            if (deleted) {
+                gaugeManager.decNbRoomGauge();
+            }
             debug('Room is empty. Deleting room "%s"', room.roomUrl);
         }
     }

@@ -5,8 +5,10 @@ import {
     ITiledMapProperty,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
-import { AreaChangeCallback, GameMapAreas } from "./GameMapAreas";
-import { AreaData, GameMapProperties } from '../types';
+import type { AreaData } from '../types';
+import type { AreaChangeCallback } from "./GameMapAreas";
+import { GameMapAreas } from "./GameMapAreas";
+import { GameMapProperties } from '../types';
 import { flattenGroupLayersMap } from './LayersFlattener';
 
 

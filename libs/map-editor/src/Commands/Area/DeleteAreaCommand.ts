@@ -1,7 +1,8 @@
-import { GameMap } from '../../GameMap/GameMap';
-import { AreaData, AreaType } from '../../types';
+import type { AreaData } from '../../types';
+import type { GameMap } from '../../GameMap/GameMap';
+import { AreaType } from '../../types';
 import { Command } from "../Command";
-import { CreateAreaCommandConfig } from './CreateAreaCommand';
+import type { CreateAreaCommandConfig } from './CreateAreaCommand';
 
 export interface DeleteAreaCommandConfig {
     type: "DeleteAreaCommand";
@@ -12,7 +13,7 @@ export class DeleteAreaCommand extends Command {
     private areaConfig: AreaData;
 
     private gameMap: GameMap;
-    
+
     constructor(gameMap: GameMap, config: DeleteAreaCommandConfig) {
         super();
         this.gameMap = gameMap;

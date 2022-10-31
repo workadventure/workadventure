@@ -1,0 +1,26 @@
+@layer components {
+    .popUpElement {
+        @apply tw-bg-dark-purple/95 tw-rounded;
+    }
+
+    .popUpElement div {
+        @apply tw-flex tw-text-white tw-text-sm tw-flex-col tw-text-center tw-px-1 tw-py-1.5;
+    }
+
+    .popUpElement div > * + * {
+        border-top-width: 0.5px;
+        border-bottom-width: 0;
+        border-left-width: 0;
+        border-right-width: 0;
+        border-color: theme("colors.light-purple");
+        border-style: solid;
+    }
+
+    .popUpElement button {
+        @apply btn tw-bg-light-blue tw-text-dark-purple tw-mx-3 tw-font-medium tw-text-xs;
+    }
+
+    .popUpElement .buttonContainer {
+        @apply tw-flex-row tw-justify-center;
+    }
+}

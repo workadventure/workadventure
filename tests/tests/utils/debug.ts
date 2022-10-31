@@ -4,10 +4,10 @@ import * as fs from 'fs';
 const ADMIN_API_TOKEN = process.env.ADMIN_API_TOKEN;
 
 export async function getPusherDump(): Promise<Record<string, unknown>> {
-    let url = 'http://pusher.workadventure.localhost/dump?token='+ADMIN_API_TOKEN;
+    let url = 'http://play.workadventure.localhost/dump?token='+ADMIN_API_TOKEN;
     if (fs.existsSync('/project')) {
         // We are inside a container. Let's use a direct route
-        url = 'http://pusher:8080/dump?token='+ADMIN_API_TOKEN;
+        url = 'http://play:3000/dump?token='+ADMIN_API_TOKEN;
     }
 
     return (await axios({
@@ -30,10 +30,10 @@ export async function getBackDump(): Promise<Array<{roomUrl: string}>> {
 }
 
 export async function getPusherRooms(): Promise<Record<string, number>> {
-    let url = 'http://pusher.workadventure.localhost/rooms';
+    let url = 'http://play.workadventure.localhost/rooms';
     if (fs.existsSync('/project')) {
         // We are inside a container. Let's use a direct route
-        url = 'http://pusher:8080/rooms';
+        url = 'http://play:3000/rooms';
     }
 
     return (await axios({
