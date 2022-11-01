@@ -1,5 +1,12 @@
 <script lang="ts">
+    import { createEventDispatcher } from "svelte";
     import { mapEditorSelectedPropertyStore } from "../../Stores/MapEditorStore";
+
+    const dispatch = createEventDispatcher();
+
+    function emitUpdateEvent() {
+        dispatch("update");
+    }
 </script>
 
 {#if $mapEditorSelectedPropertyStore}
@@ -7,15 +14,23 @@
         <h2>{$mapEditorSelectedPropertyStore.name}</h2>
         <div>
             {#each Object.entries($mapEditorSelectedPropertyStore.additionalProperties) as property}
-                <p>{property[0]}</p>
                 {#if typeof property[1] === "number"}
-                    TODO: number input
+                    <div class="field">
+                        <p class="blue-title">{property[0]}:</p>
+                        <input bind:value={property[1]} type="number" on:change={emitUpdateEvent} />
+                    </div>
                 {:else if typeof property[1] === "string"}
-                    TODO: string inut
+                    <div class="field">
+                        <p class="blue-title">{property[0]}:</p>
+                        <input bind:value={property[1]} type="text" on:change={emitUpdateEvent} />
+                    </div>
                 {:else if typeof property[1] === "boolean"}
-                    TODO: checkbox
+                    <div class="field">
+                        <p class="blue-title">{property[0]}:</p>
+                        <input bind:value={property[1]} type="checkbox" on:change={emitUpdateEvent} />
+                    </div>
                 {:else if typeof property[1] === "object"}
-                    TODO: recursive call
+                    TODO: recursive call somehow
                 {/if}
             {/each}
         </div>
