@@ -17,17 +17,30 @@
                 {#if typeof property[1] === "number"}
                     <div class="field">
                         <p class="blue-title">{property[0]}:</p>
-                        <input bind:value={property[1]} type="number" on:change={emitUpdateEvent} />
+                        <!-- Better way of keeping the reference to the store's object? -->
+                        <input
+                            bind:value={$mapEditorSelectedPropertyStore.additionalProperties[property[0]]}
+                            type="number"
+                            on:change={emitUpdateEvent}
+                        />
                     </div>
                 {:else if typeof property[1] === "string"}
                     <div class="field">
                         <p class="blue-title">{property[0]}:</p>
-                        <input bind:value={property[1]} type="text" on:change={emitUpdateEvent} />
+                        <input
+                            bind:value={$mapEditorSelectedPropertyStore.additionalProperties[property[0]]}
+                            type="text"
+                            on:change={emitUpdateEvent}
+                        />
                     </div>
                 {:else if typeof property[1] === "boolean"}
                     <div class="field">
                         <p class="blue-title">{property[0]}:</p>
-                        <input bind:value={property[1]} type="checkbox" on:change={emitUpdateEvent} />
+                        <input
+                            bind:value={$mapEditorSelectedPropertyStore.additionalProperties[property[0]]}
+                            type="checkbox"
+                            on:change={emitUpdateEvent}
+                        />
                     </div>
                 {:else if typeof property[1] === "object"}
                     TODO: recursive call somehow

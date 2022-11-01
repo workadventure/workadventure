@@ -13,7 +13,6 @@
             mapEditorSelectedPropertyStore.set(undefined);
             return;
         }
-        console.log(propertyData);
         mapEditorSelectedPropertyStore.set(propertyData);
     }
 

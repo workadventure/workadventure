@@ -1,6 +1,5 @@
 <script lang="ts">
     import AreaPreviewWindow from "./AreaPreviewWindow.svelte";
-    import PropertyPreviewSidebar from "./PropertyPreviewSidebar.svelte";
 
     // function close() {
     //     mapEditorModeStore.switchMode(false);
@@ -10,7 +9,6 @@
 <div class="map-editor tw-bg-dark-blue/95">
     <div class="sidebar">
         <AreaPreviewWindow />
-        <PropertyPreviewSidebar />
     </div>
 </div>
 
@@ -29,7 +27,6 @@
             position: relative !important;
             display: flex;
             flex-direction: row;
-            // align-items: stretch;
             gap: 10px;
         }
     }

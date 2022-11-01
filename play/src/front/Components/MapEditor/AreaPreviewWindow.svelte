@@ -6,6 +6,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import type { AreaData, PredefinedPropertyData } from "@workadventure/map-editor";
     import PropertyField from "./PropertyField.svelte";
+    import PropertyPreviewSidebar from "./PropertyPreviewSidebar.svelte";
 
     let areaPreview: AreaPreview | undefined;
     let areaData: AreaData | undefined;
@@ -48,8 +49,8 @@
     }
 
     function sendUpdateAreaCommand() {
-        // console.log('SEND UPDATE');
-        // console.log(`focusable: ${focusablePropertyData.turnedOn}`);
+        console.log("SEND UPDATE");
+        console.log(focusablePropertyData);
         if (!areaData) {
             return;
         }
@@ -71,6 +72,7 @@
 <svelte:window on:keydown={onKeyDown} />
 
 {#if areaPreview && areaData}
+    <PropertyPreviewSidebar on:update={sendUpdateAreaCommand} />
     <div class="area-details-window tw-bg-purple/95 tw-rounded">
         <div
             class="area-details-window-name tw-bg-light-purple/40 tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple"
