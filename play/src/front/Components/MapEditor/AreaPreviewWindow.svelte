@@ -5,14 +5,12 @@
     import type { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import type { AreaData, PredefinedPropertyData } from "@workadventure/map-editor";
-    import OptionBox from "./OptionBox.svelte";
+    import PropertyField from "./PropertyField.svelte";
 
     let areaPreview: AreaPreview | undefined;
     let areaData: AreaData | undefined;
     let mapEditorSelectedAreaPreviewStoreUnsubscriber: Unsubscriber;
 
-    let propertyFocusable: boolean;
-    let propertyZoomMargin: number;
     let propertySilent: boolean;
 
     const focusablePropertyData: PredefinedPropertyData = {
@@ -29,10 +27,11 @@
     mapEditorSelectedAreaPreviewStoreUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((preview) => {
         areaPreview = preview;
         if (preview) {
-            areaData = { ...preview.getConfig() };
+            areaData = structuredClone(preview.getConfig());
 
-            propertyFocusable = areaData.properties["focusable"] as boolean;
-            propertyZoomMargin = areaData.properties["zoomMargin"] as number;
+            focusablePropertyData.turnedOn = areaData.properties["focusable"] as boolean;
+            focusablePropertyData.additionalProperties["zoomMargin"] = areaData.properties["zoomMargin"] as number;
+
             propertySilent = areaData.properties["silent"] as boolean;
         }
     });
@@ -49,12 +48,16 @@
     }
 
     function sendUpdateAreaCommand() {
+        // console.log('SEND UPDATE');
+        // console.log(`focusable: ${focusablePropertyData.turnedOn}`);
         if (!areaData) {
             return;
         }
-        areaData.properties["focusable"] = propertyFocusable;
+        areaData.properties["focusable"] = focusablePropertyData.turnedOn;
         areaData.properties["silent"] = propertySilent;
-        areaData.properties["zoomMargin"] = propertyZoomMargin;
+        areaData.properties["zoomMargin"] = focusablePropertyData.additionalProperties["zoomMargin"] as
+            | number
+            | undefined;
         gameScene.getMapEditorModeManager().executeCommand({ type: "UpdateAreaCommand", areaObjectConfig: areaData });
     }
 
@@ -92,7 +95,7 @@
                 <p class="blue-title">height:</p>
                 <input bind:value={areaData.height} on:change={sendUpdateAreaCommand} type="number" id="height" />
             </div>
-            <OptionBox propertyData={focusablePropertyData} />
+            <PropertyField propertyData={focusablePropertyData} on:update={sendUpdateAreaCommand} />
             <!-- <div class="field">
                 <p class="blue-title">focusable:</p>
                 <input
@@ -141,16 +144,10 @@
         .field {
             align-items: center;
             justify-content: space-between;
-            // padding-left: 10px;
-            // padding-right: 10px;
+            padding-left: 10px;
+            padding-right: 10px;
             display: flex;
             flex-direction: row;
         }
-
-        // h2 {
-        //     text-align: center;
-        //     margin-bottom: 20px;
-        //     // font-family: "Press Start 2P";
-        // }
     }
 </style>
