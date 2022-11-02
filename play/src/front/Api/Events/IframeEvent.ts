@@ -53,6 +53,7 @@ import { isChatVisibilityEvent } from "./ChatVisibilityEvent";
 import { isNotificationEvent } from "./NotificationEvent";
 import { isShowBusinessCardEvent } from "./ShowBusinessCardEvent";
 import { isModalEvent } from "./ModalEvent";
+import { isXmppSettingsMessageEvent } from "./XmppSettingsMessageEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -387,6 +388,10 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("availabilityStatus"),
         data: z.number(),
+    }),
+    z.object({
+        type: z.literal("xmppSettingsMessage"),
+        data: isXmppSettingsMessageEvent,
     }),
 
     // TODO will be deleted if timeline is becoming a MUC room

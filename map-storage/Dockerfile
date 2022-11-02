@@ -28,7 +28,7 @@ RUN cd /usr/libs/map-editor && yarn run build && yarn run prepare-for-prod
 COPY map-storage .
 
 COPY --from=proto-builder /usr/src/ts-proto-map-storage-generated src/Messages/ts-proto-map-storage-generated
-RUN sed -i 's/import { Observable } from "rxjs";/import type { Observable } from "rxjs";/g' src/Messages/ts-proto-map-storage-generated/protos/messages.ts
+RUN sed 's/import { Observable } from "rxjs";/import type { Observable } from "rxjs";/g' src/messages/ts-proto-generated/protos/messages.ts > tmp.ts; cat tmp.ts > src/messages/ts-proto-generated/protos/messages.ts; rm tmp.ts
 #COPY --from=proto-builder /usr/src/JsonMessages src/Messages/JsonMessages
 
 ENV NODE_ENV=production

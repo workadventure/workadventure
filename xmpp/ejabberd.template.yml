@@ -6,9 +6,9 @@
 ###       https://docs.ejabberd.im/admin/configuration
 ###
 hosts:
-  - ejabberd
+  - ${EJABBERD_DOMAIN}
 
-loglevel: 4
+loglevel: 5
 log_rotate_size: 10485760
 log_rotate_count: 1
 
@@ -25,9 +25,12 @@ ca_file: "/opt/ejabberd/conf/cacert.pem"
 ##ca_file: "/etc/letsencrypt/live/localhost/fullchain.pem"
 
 auth_method:
-  - anonymous
-anonymous_protocol: login_anon
+  - jwt
+  - internal
 allow_multiple_connections: true
+auth_use_cache: false
+jwt_key: /opt/ejabberd/conf/jwt_key
+disable_sasl_mechanisms: ["X-OAUTH2"]
 
 #jwt_jid_field: "identifier"
 #jwt_key: "/opt/ejabberd/conf/jwtKey"
@@ -93,9 +96,13 @@ acl:
       - 127.0.0.0/8
       - ::1/128
       - ::FFFF:127.0.0.1/128
+      - ::FFFF:172.19.0.0/16
   admin:
     user:
-      - "admin@ejabberd"
+      - "${EJABBERD_USER}@${EJABBERD_DOMAIN}"
+      - "${EJABBERD_USER}"
+    ip:
+      - ::FFFF:172.19.0.0/16
 
 access_rules:
   local:
@@ -128,7 +135,8 @@ api_permissions:
           - acl: loopback
           - acl: admin
       - oauth:
-        - scope: "ejabberd:admin"
+        - scope:
+          - "${EJABBERD_DOMAIN}:admin"
         - access:
           - allow:
             - acl: loopback
@@ -203,7 +211,7 @@ modules:
   mod_mqtt: {}
   mod_muc:
     hosts:
-      - conference.ejabberd
+      - conference.${EJABBERD_DOMAIN}
     access:
       - allow
     access_admin:

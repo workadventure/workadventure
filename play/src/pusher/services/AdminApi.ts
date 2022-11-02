@@ -54,7 +54,7 @@ export const isFetchMemberDataByUuidResponse = z.object({
     userRoomToken: extendApi(z.optional(z.string()), { description: "", example: "" }),
     jabberId: extendApi(z.string().nullable().optional(), {
         description: "The jid (JabberID) that can be used to connect this particular user to its XMPP server",
-        example: "john.doe@myxpppserver.example.com",
+        example: "john.doe@myxpppserver.example.com/uuid",
     }),
     jabberPassword: extendApi(z.string().nullable().optional(), {
         description: "The password to connect to the XMPP server of this user",

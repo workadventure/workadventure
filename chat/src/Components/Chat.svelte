@@ -22,7 +22,7 @@
         timelineOpenedStore,
     } from "../Stores/ChatStore";
     import { Unsubscriber, derived } from "svelte/store";
-    import { connectionManager } from "../Connection/ChatConnectionManager";
+    import { chatConnectionManager } from "../Connection/ChatConnectionManager";
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
     import { iframeListener } from "../IframeListener";
     import { fly } from "svelte/transition";
@@ -96,9 +96,6 @@
         }
     }
 
-    function handleActiveThread(event: unknown) {
-        activeThreadStore.set((event as { detail: MucRoom | undefined }).detail);
-    }
     function handleShowUsers() {
         showUsers = !showUsers;
     }
@@ -122,10 +119,10 @@
         }
     }
 
-    $: loading = !connectionManager.connection || !$xmppServerConnectionStatusStore;
+    $: loading = !chatConnectionManager.connection || !$xmppServerConnectionStatusStore;
 
     $: loadingText = $userStore
-        ? !connectionManager.connection
+        ? !chatConnectionManager.connection
             ? $LL.connecting()
             : $LL.waitingInit()
         : $LL.waitingData();
@@ -144,15 +141,7 @@
         {:else if $timelineActiveStore}
             <ChatActiveThreadTimeLine on:unactiveThreadTimeLine={() => timelineActiveStore.set(false)} />
         {:else if $activeThreadStore !== undefined}
-            <ChatActiveThread
-                activeThread={$activeThreadStore}
-                on:goTo={(event) =>
-                    $activeThreadStore?.goTo(event.detail.type, event.detail.playUri, event.detail.uuid)}
-                on:rankUp={(event) => $activeThreadStore?.sendRankUp(event.detail.jid)}
-                on:rankDown={(event) => $activeThreadStore?.sendRankDown(event.detail.jid)}
-                on:ban={(event) =>
-                    $activeThreadStore?.sendBan(event.detail.user, event.detail.name, event.detail.playUri)}
-            />
+            <ChatActiveThread activeThread={$activeThreadStore} />
         {:else}
             <div class="wa-message-bg" transition:fly={{ x: -500, duration: 400 }}>
                 <!-- searchbar -->
@@ -181,24 +170,14 @@
                     <UsersList
                         mucRoom={defaultMucRoom}
                         {showUsers}
-                        usersListStore={defaultMucRoom?.getPresenceStore()}
-                        meStore={defaultMucRoom?.getMeStore()}
                         searchValue={searchValue.toLocaleLowerCase()}
-                        on:activeThread={handleActiveThread}
                         on:showUsers={handleShowUsers}
-                        on:goTo={(event) =>
-                            defaultMucRoom?.goTo(event.detail.type, event.detail.playUri, event.detail.uuid)}
-                        on:rankUp={(event) => defaultMucRoom?.sendRankUp(event.detail.jid)}
-                        on:rankDown={(event) => defaultMucRoom?.sendRankDown(event.detail.jid)}
-                        on:ban={(event) =>
-                            defaultMucRoom?.sendBan(event.detail.user, event.detail.name, event.detail.playUri)}
                     />
                 {/if}
 
                 <ChatLiveRooms
                     {showLives}
                     searchValue={searchValue.toLocaleLowerCase()}
-                    on:activeThread={handleActiveThread}
                     on:showLives={handleShowLives}
                     liveRooms={[...$mucRoomsStore].filter(
                         (mucRoom) => mucRoom.type === "live" && mucRoom.name.toLowerCase().includes(searchValue)

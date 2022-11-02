@@ -1,43 +1,31 @@
 <script lang="ts">
-    import { MeStore, MucRoom, User, UsersStore } from "../Xmpp/MucRoom";
+    import { MucRoom } from "../Xmpp/MucRoom";
+    import { User } from "../Xmpp/AbstractRoom";
     import ChatUser from "./ChatUser.svelte";
     import { createEventDispatcher } from "svelte";
     import { ChevronUpIcon } from "svelte-feather-icons";
     import { fly } from "svelte/transition";
     import LL from "../i18n/i18n-svelte";
-    import { Ban, GoTo, RankDown, RankUp } from "../Type/CustomEvent";
     import Loader from "./Loader.svelte";
-    const dispatch = createEventDispatcher<{
-        goTo: GoTo;
-        rankUp: RankUp;
-        rankDown: RankDown;
-        ban: Ban;
-        showUsers: undefined;
-    }>();
+    import { derived } from "svelte/store";
+    const dispatch = createEventDispatcher<{ showUsers: undefined }>();
 
     export let mucRoom: MucRoom;
-    export let usersListStore: UsersStore;
-    export let meStore: MeStore;
     export let showUsers: boolean;
     export let searchValue: string;
 
     let minimizeUser = true;
     const maxUsersMinimized = 7;
 
-    function openChat(user: User) {
-        return user;
-        //dispatch('activeThread', user);
-    }
-
     function showInviteMenu() {
         window.parent.postMessage({ type: "closeChat" }, "*");
         window.parent.postMessage({ type: "openInviteMenu" }, "*");
     }
 
-    $: loadingSubscribersStore = mucRoom.getLoadingSubscribersStore();
-
-    $: usersList = [...$usersListStore.values()] as Array<User>;
-    $: me = usersList.find((user: User) => user.isMe);
+    const loadingSubscribersStore = mucRoom.getLoadingSubscribersStore();
+    const presenceStore = mucRoom.getPresenceStore();
+    $: usersList = [...$presenceStore.values()] as Array<User>;
+    const me = derived(presenceStore, ($presenceStore) => $presenceStore.get(mucRoom.myJID));
 
     $: usersByMaps = usersList
         .filter((user: User) => user.name.toLocaleLowerCase().includes(searchValue))
@@ -55,7 +43,7 @@
         }, new Map<string, User[]>());
 
     $: roomSorted = [...usersByMaps.keys()].sort((a, b) =>
-        me?.roomName === a ? -1 : me?.roomName === b ? 1 : a.localeCompare(b)
+        $me && $me.roomName === a ? -1 : $me && $me?.roomName === b ? 1 : a.localeCompare(b)
     );
 </script>
 
@@ -82,17 +70,7 @@
             {:else}
                 {#each roomSorted as room}
                     {#each usersByMaps.get(room) ?? [] as user}
-                        <ChatUser
-                            {mucRoom}
-                            {openChat}
-                            {user}
-                            on:goTo={(event) => dispatch("goTo", event.detail)}
-                            on:rankUp={(event) => dispatch("rankUp", event.detail)}
-                            on:rankDown={(event) => dispatch("rankDown", event.detail)}
-                            on:ban={(event) => dispatch("ban", event.detail)}
-                            {searchValue}
-                            {meStore}
-                        />
+                        <ChatUser {mucRoom} {user} {searchValue} />
                     {/each}
                 {/each}
                 {#if usersList.filter((user) => !user.isMe).length === 0}

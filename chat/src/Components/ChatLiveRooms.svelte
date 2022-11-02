@@ -9,10 +9,6 @@
     export let liveRooms: MucRoom[];
     export let showLives: Boolean;
     export let searchValue: string;
-
-    function open(liveRoom: MucRoom) {
-        dispatch("activeThread", liveRoom);
-    }
 </script>
 
 {#if liveRooms.length > 0}
@@ -38,13 +34,7 @@
         {#if showLives}
             <div transition:fly={{ y: -30, duration: 100 }}>
                 {#each liveRooms as liveRoom}
-                    <ChatLiveRoom
-                        {liveRoom}
-                        {searchValue}
-                        meStore={liveRoom.getMeStore()}
-                        usersListStore={liveRoom.getPresenceStore()}
-                        {open}
-                    />
+                    <ChatLiveRoom {liveRoom} {searchValue} />
                 {/each}
             </div>
         {/if}

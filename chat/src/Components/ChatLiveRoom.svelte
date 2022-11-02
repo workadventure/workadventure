@@ -3,13 +3,20 @@
     import OnlineUsers from "./OnlineUsers.svelte";
     import LL from "../i18n/i18n-svelte";
     import highlightWords from "highlight-words";
-    import { MeStore, MucRoom, UsersStore } from "../Xmpp/MucRoom";
+    import { MucRoom } from "../Xmpp/MucRoom";
+    import { activeThreadStore } from "../Stores/ActiveThreadStore";
+    import { derived } from "svelte/store";
 
     export let liveRoom: MucRoom;
-    export let meStore: MeStore;
-    export let usersListStore: UsersStore;
-    export let open: Function;
     export let searchValue: string;
+
+    const usersListStore = liveRoom.getPresenceStore();
+
+    const me = derived(usersListStore, ($usersListStore) => $usersListStore.get(liveRoom.myJID));
+
+    function open(mucRoom: MucRoom) {
+        activeThreadStore.set(mucRoom);
+    }
 
     let forumMenuActive = false;
     let openChatForumMenu = () => {
@@ -69,7 +76,7 @@
             <span class="open wa-dropdown-item" on:click|stopPropagation={() => open(liveRoom)}
                 ><EyeIcon size="12" class="tw-mr-1" /> {$LL.open()}
             </span>
-            {#if $meStore.isAdmin}
+            {#if $me && $me.isAdmin}
                 <span class="wa-dropdown-item tw-text-pop-red" on:click|stopPropagation={() => liveRoom.reInitialize()}
                     ><RefreshCwIcon size="13" class="tw-mr-1" /> {$LL.reinit()}</span
                 >

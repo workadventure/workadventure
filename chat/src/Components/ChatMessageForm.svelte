@@ -11,7 +11,8 @@
         XCircleIcon,
         ArrowRightCircleIcon,
     } from "svelte-feather-icons";
-    import { ChatStates, MucRoom, User } from "../Xmpp/MucRoom";
+    import { MucRoom } from "../Xmpp/MucRoom";
+    import { User } from "../Xmpp/AbstractRoom";
     import LL, { locale } from "../i18n/i18n-svelte";
     import { createEventDispatcher, onMount } from "svelte";
     import { EmojiButton } from "@joeattardi/emoji-button";
@@ -30,6 +31,8 @@
     import File from "./Content/File.svelte";
     import crown from "../../public/static/svg/icone-premium-crown.svg";
     import { iframeListener } from "../IframeListener";
+    import { ChatState } from "stanza/Constants";
+    import { derived } from "svelte/store";
 
     export let mucRoom: MucRoom;
 
@@ -51,7 +54,8 @@
     // const regexUserTag = /(?<![\w@])@([\w@]+(?:[.!][\w@]+)*)+$/gm;
     const regexUserTag = /@([\w@]+(?:[.!][\w@]+)*)+$/gm;
 
-    $: presenseStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
+    const presenceStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
+    const me = derived(presenceStore, ($presenceStore) => $presenceStore.get(mucRoom.myJID));
 
     function onFocus() {}
     function onBlur() {}
@@ -81,7 +85,7 @@
             sendReplyMessage();
             return false;
         }
-        mucRoom.updateComposingState(ChatStates.PAUSED);
+        mucRoom.updateComposingState(ChatState.Paused);
         mucRoom.sendMessage(newMessageText);
         newMessageText = "";
         dispatch("scrollDown");
@@ -89,14 +93,14 @@
     }
 
     function isMe(name: string) {
-        return name === mucRoom.getPlayerName();
+        return name === mucRoom.playerName;
     }
 
     function findUserInDefault(name: string): User | UserData | undefined {
         if (isMe(name)) {
             return $userStore;
         }
-        const userData = [...$presenseStore].map(([, user]) => user).find((user) => user.name === name);
+        const userData = [...$presenceStore].map(([, user]) => user).find((user) => user.name === name);
         let user = undefined;
         if (userData) {
             user = userData;
@@ -115,7 +119,7 @@
 
     function sendReplyMessage() {
         if (!$selectedMessageToReply || !newMessageText || newMessageText.replace(/\s/g, "").length === 0) return;
-        mucRoom.updateComposingState(ChatStates.PAUSED);
+        mucRoom.updateComposingState(ChatState.Paused);
         mucRoom.sendMessage(newMessageText, $selectedMessageToReply);
         selectedMessageToReply.set(null);
         newMessageText = "";
@@ -172,15 +176,15 @@
 
     function analyseText() {
         if (newMessageText === "") {
-            mucRoom.updateComposingState(ChatStates.PAUSED);
+            mucRoom.updateComposingState(ChatState.Paused);
         } else {
-            mucRoom.updateComposingState(ChatStates.COMPOSING);
+            mucRoom.updateComposingState(ChatState.Composing);
         }
 
         const values = newMessageText.match(regexUserTag);
         if (values != undefined) {
             const userNameSearching = (values.pop() as string).substring(1);
-            usersSearching = [...$presenseStore]
+            usersSearching = [...$presenceStore]
                 .map(([, user]) => user)
                 .reduce((values: User[], user) => {
                     if (user.name.toLowerCase().indexOf(userNameSearching.toLowerCase()) === -1) {
@@ -208,7 +212,7 @@
 
     function onKeyPress(): boolean {
         adjustHeight();
-        mucRoom.updateComposingState(ChatStates.COMPOSING);
+        mucRoom.updateComposingState(ChatState.Composing);
         return true;
     }
 
@@ -299,10 +303,9 @@
                     <p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
                         {$selectedMessageToReply.body}
                     </p>
-                    {#if $selectedMessageToReply && $selectedMessageToReply.files && $selectedMessageToReply.files.length > 0}
-                        {#each $selectedMessageToReply.files as file}
-                            <!-- File message -->
-                            <File {file} />
+                    {#if $selectedMessageToReply && $selectedMessageToReply.links && $selectedMessageToReply.links.length > 0}
+                        {#each $selectedMessageToReply.links as link}
+                            <File url={link.url} name={link.description} />
                         {/each}
                     {/if}
                 </div>
@@ -340,7 +343,7 @@
                     {#if fileUploaded.errorMessage !== undefined}
                         <div
                             class={`error-hover tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-4 tw-py-2 ${
-                                fileUploaded.errorCode === 423 && mucRoom.getMe()?.isAdmin
+                                fileUploaded.errorCode === 423 && $me && $me.isAdmin
                                     ? "tw-text-orange"
                                     : "tw-text-pop-red"
                             } tw-absolute tw-w-full`}
@@ -365,7 +368,7 @@
                                     <ArrowRightCircleIcon size="14" />
                                 </div>
                             {/if}
-                            {#if fileUploaded.errorCode === 423 && mucRoom.getMe()?.isAdmin}
+                            {#if fileUploaded.errorCode === 423 && $me && $me.isAdmin}
                                 <button
                                     class="tw-text-orange tw-font-bold tw-underline tw-m-auto"
                                     on:click={() => iframeListener.sendRedirectPricing()}

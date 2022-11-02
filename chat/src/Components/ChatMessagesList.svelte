@@ -1,6 +1,8 @@
 <script lang="ts">
     import { fade, fly } from "svelte/transition";
-    import { ChatStates, defaultColor, defaultWoka, Message, MucRoom, User } from "../Xmpp/MucRoom";
+    import { MucRoom } from "../Xmpp/MucRoom";
+    import { User } from "../Xmpp/AbstractRoom";
+    import { defaultColor, defaultWoka, Message } from "../Xmpp/AbstractRoom";
     import LL, { locale } from "../i18n/i18n-svelte";
     import { userStore } from "../Stores/LocalUserStore";
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
@@ -27,18 +29,22 @@
     import crown from "../../public/static/svg/icone-premium-crown.svg";
     import { iframeListener } from "../IframeListener";
     import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
+    import { ChatState } from "stanza/Constants";
+    import { JID } from "stanza";
+    import { derived } from "svelte/store";
 
     export let mucRoom: MucRoom;
 
     $: unreads = mucRoom.getCountMessagesToSee();
-    $: messagesStore = mucRoom.getMessagesStore();
-    $: deletedMessagesStore = mucRoom.getDeletedMessagesStore();
-    $: presenseStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
-    $: usersStore = mucRoom.getPresenceStore();
-    $: loadingStore = mucRoom.getLoadingStore();
-    $: meStore = mucRoom.getMeStore();
-    $: canLoadOlderMessagesStore = mucRoom.getCanLoadOlderMessagesStore();
-    $: showDisabledLoadOlderMessagesStore = mucRoom.getShowDisabledLoadOlderMessagesStore();
+    const messagesStore = mucRoom.getMessagesStore();
+    const deletedMessagesStore = mucRoom.getDeletedMessagesStore();
+    const presenceStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
+    const usersStore = mucRoom.getPresenceStore();
+    const loadingStore = mucRoom.getLoadingStore();
+    const canLoadOlderMessagesStore = mucRoom.getCanLoadOlderMessagesStore();
+    const showDisabledLoadOlderMessagesStore = mucRoom.getShowDisabledLoadOlderMessagesStore();
+
+    const me = derived(presenceStore, ($presenceStore) => $presenceStore.get(mucRoom.myJID));
 
     let isScrolledDown = false;
     let messagesList: HTMLElement;
@@ -46,7 +52,7 @@
     let emojiContainer: HTMLElement;
 
     function needHideHeader(name: string, date: Date, i: number) {
-        let previousMsg = $messagesStore[i - 1];
+        let previousMsg = [...$messagesStore].sort((a, b) => a.time.getTime() - b.time.getTime())[i - 1];
         if (!previousMsg) {
             return false;
         }
@@ -55,7 +61,7 @@
     }
 
     function showDate(date: Date, i: number) {
-        let previousMsg = $messagesStore[i - 1];
+        let previousMsg = [...$messagesStore].sort((a, b) => a.time.getTime() - b.time.getTime())[i - 1];
         if (!previousMsg) {
             return true;
         }
@@ -63,14 +69,14 @@
     }
 
     function isMe(jid: string) {
-        return jid === mucRoom.getMyJID().toString();
+        return JID.parse(jid).bare === mucRoom.myJIDBare;
     }
 
     function findUserInDefault(jid: string): User | UserData | undefined {
         if (isMe(jid)) {
             return $userStore;
         }
-        const userData = [...$presenseStore].find(([, user]) => user.jid === jid);
+        const userData = [...$presenceStore].find(([, user]) => user.jid === jid);
         let user = undefined;
         if (userData) {
             [, user] = userData;
@@ -97,14 +103,11 @@
     }
 
     export const scrollDown = () => {
-        setTimeout(() => {
-            messagesList.scroll(0, messagesList.scrollHeight);
-        }, 0);
+        setTimeout(() => messagesList.scroll(0, messagesList.scrollHeight), 10);
     };
 
     const scrollDownAndRead = () => {
-        mucRoom.lastMessageSeen = new Date();
-        mucRoom.getCountMessagesToSee().set(0);
+        mucRoom.updateLastMessageSeen();
         scrollDown();
     };
 
@@ -112,19 +115,23 @@
     let lastScrollPosition = 0;
 
     function scrollEvent() {
-        if (messagesList && messagesList.scrollTop === messagesList.scrollHeight - messagesList.offsetHeight) {
-            isScrolledDown = true;
-            if ($unreads > 0) {
-                mucRoom.lastMessageSeen = new Date();
-                mucRoom.getCountMessagesToSee().set(0);
+        if (messagesList) {
+            if (
+                messagesList.scrollHeight - messagesList.offsetHeight + 25 >= messagesList.scrollTop &&
+                messagesList.scrollTop >= messagesList.scrollHeight - messagesList.offsetHeight - 25
+            ) {
+                isScrolledDown = true;
+                if ($unreads > 0) {
+                    mucRoom.updateLastMessageSeen();
+                }
+            } else {
+                isScrolledDown = false;
             }
-        } else {
-            isScrolledDown = false;
         }
 
         if (document.body.scrollTop >= 0 && lastScrollPosition < 0) {
             //Pull to refresh ...
-            mucRoom.sendRetrieveLastMessages();
+            void mucRoom.sendRetrieveLastMessages();
         }
         lastScrollPosition = document.body.scrollTop;
     }
@@ -188,6 +195,7 @@
         if ($unreads === 0) {
             isScrolledDown = true;
             scrollDown();
+            console.info("First scroll down");
         } else {
             const message = [...$messagesStore].reverse().find((message) => message.time < mucRoom.lastMessageSeen);
             if (message) {
@@ -230,7 +238,7 @@
             if (!$selectedMessageToReact) {
                 return;
             }
-            mucRoom.sendReactMessage(emoji, $selectedMessageToReact);
+            mucRoom.sendReactionMessage(emoji, $selectedMessageToReact.id);
             selectedMessageToReact.set(null);
         });
         picker.on("hidden", () => {
@@ -268,7 +276,7 @@
                         class="tw-w-5 tw-h-5 tw-border-2 tw-border-white tw-border-solid tw-rounded-full tw-animate-spin tw-m-auto"
                     />
                 {/if}
-            {:else if $showDisabledLoadOlderMessagesStore && mucRoom.getMe()?.isAdmin}
+            {:else if $showDisabledLoadOlderMessagesStore && $me && $me.isAdmin}
                 {#if ADMIN_API_URL}
                     <button
                         class="tw-text-orange tw-font-bold tw-underline tw-m-auto tw-text-xs tw-cursor-pointer"
@@ -280,7 +288,7 @@
                 {/if}
             {/if}
         </div>
-        {#each $messagesStore as message, i}
+        {#each [...$messagesStore].sort((a, b) => a.time.getTime() - b.time.getTime()) as message, i}
             {#if showDate(message.time, i)}
                 <div class="wa-separator">
                     {message.time.toLocaleDateString($locale, {
@@ -388,9 +396,9 @@
                                     </div>
 
                                     <!-- File associated -->
-                                    {#if message.files && message.files.length > 0}
-                                        {#each message.files as file}
-                                            <File {file} />
+                                    {#if message.links && message.links.length > 0}
+                                        {#each message.links as link}
+                                            <File url={link.url} name={link.description} />
                                         {/each}
                                     {/if}
 
@@ -430,7 +438,7 @@
                                                         <CopyIcon size="13" class="tw-mr-1" />
                                                         {$LL.copy()}
                                                     </span>
-                                                    {#if $meStore.isAdmin || isMe(message.jid)}
+                                                    {#if ($me && $me.isAdmin) || isMe(message.jid)}
                                                         <span
                                                             class="wa-dropdown-item tw-text-pop-red"
                                                             on:click={() => mucRoom.sendRemoveMessage(message.id)}
@@ -446,13 +454,30 @@
                                 </div>
 
                                 <!-- React associated -->
+                                {#if message.reactionsMessage}
+                                    <div class="emojis">
+                                        {#each [...message.reactionsMessage] as [emojiStr, usersJid]}
+                                            <span
+                                                class={mucRoom.haveReaction(emojiStr, message.id) ? "active" : ""}
+                                                on:click={() => mucRoom.sendReactionMessage(emojiStr, message.id)}
+                                                title={`${usersJid
+                                                    .map((userJid) => JID.parse(userJid).resource)
+                                                    .join("\r\n")}`}
+                                            >
+                                                {emojiStr}
+                                                {usersJid.length}
+                                            </span>
+                                        {/each}
+                                    </div>
+                                {/if}
+                                <!--
                                 {#if message.targetMessageReact}
                                     <div class="emojis">
                                         {#each [...message.targetMessageReact.keys()] as emojiStr}
                                             {#if message.targetMessageReact.get(emojiStr)}
                                                 <span
-                                                    class={mucRoom.haveSelected(message.id, emojiStr) ? "active" : ""}
-                                                    on:click={() => mucRoom.sendReactMessage(emojiStr, message)}
+                                                    class={mucRoom.haveReaction(emojiStr, message.id) ? "active" : ""}
+                                                    on:click={() => mucRoom.sendReactionMessage(emojiStr, message.id)}
                                                 >
                                                     {emojiStr}
                                                     {#if message.targetMessageReact.get(emojiStr) ?? 0 > 1}
@@ -463,11 +488,12 @@
                                         {/each}
                                     </div>
                                 {/if}
+                                -->
 
                                 <!-- Reply associated -->
                                 {#if message.targetMessageReply}
                                     <div
-                                        class="message-replied tw-text-xs tw-rounded-lg tw-bg-dark tw-px-3 tw-py-2 tw-mb-2 tw-text-left tw-cursor-pointer"
+                                        class="message-replied tw-text-xs tw-rounded-lg tw-bg-dark tw-px-3 tw-py-2 tw-mt-3 tw-mb-2 tw-text-left tw-cursor-pointer"
                                         on:click={() => scrollToMessageId(message.targetMessageReply?.id ?? "")}
                                     >
                                         <div class="icon-replied">
@@ -484,10 +510,9 @@
                                         </p>
 
                                         <!-- Reply message file -->
-                                        {#if message.targetMessageReply.files}
-                                            {#each message.targetMessageReply.files as file}
-                                                <!-- File message -->
-                                                <File {file} />
+                                        {#if message.targetMessageReply.links && message.targetMessageReply.links.length > 0}
+                                            {#each message.targetMessageReply.links as link}
+                                                <File url={link.url} name={link.description} />
                                             {/each}
                                         {/if}
                                     </div>
@@ -535,7 +560,7 @@
                 </div>
             </div>
         {/each}
-        {#each [...$usersStore].filter(([, userFilter]) => userFilter.chatState === ChatStates.COMPOSING) as [nb, user]}
+        {#each [...$usersStore].filter(([, userFilter]) => !userFilter.isMe && userFilter.chatState === ChatState.Composing) as [nb, user]}
             <div class={`tw-mt-2`} id={`user-line-${nb}`}>
                 <div class={`tw-flex tw-justify-start`}>
                     <div
@@ -621,7 +646,6 @@
         margin-left: 20px;
         position: relative;
         margin-bottom: 0;
-        margin-top: 4px;
         .icon-replied {
             position: absolute;
             left: -15px;

@@ -48,6 +48,7 @@ import type {
     ViewportMessage as ViewportMessageTsProto,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnexionMessage,
+    XmppSettingsMessage,
 } from "../../messages/ts-proto-generated/protos/messages";
 import {
     ClientToServerMessage as ClientToServerMessageTsProto,
@@ -154,6 +155,7 @@ export class RoomConnection implements RoomConnection {
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
 
+    public xmppSettingsMessage: XmppSettingsMessage | null = null;
     // If this timeout triggers, we consider the connection is lost (no ping received)
     private timeout: ReturnType<typeof setInterval> | undefined = undefined;
 
@@ -547,6 +549,10 @@ export class RoomConnection implements RoomConnection {
                         query.resolve(message.answerMessage.answer);
                     }
                     this.queries.delete(queryId);
+                    break;
+                }
+                case "xmppSettingsMessage": {
+                    this.xmppSettingsMessage = message.xmppSettingsMessage;
                     break;
                 }
                 default: {
