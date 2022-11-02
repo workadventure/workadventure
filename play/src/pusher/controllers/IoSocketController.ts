@@ -463,6 +463,8 @@ export class IoSocketController {
                             } else {
                                 userData.jabberPassword = "no_password_set";
                             }
+                        } else {
+                            userData.jabberId = `${userData.jabberId}/${uuid()}`;
                         }
 
                         // Generate characterLayers objects from characterLayers string[]

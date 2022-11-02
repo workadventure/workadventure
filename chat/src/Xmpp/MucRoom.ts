@@ -68,7 +68,6 @@ export class MucRoom extends AbstractRoom {
         return user;
     }
 
-    // TODO REFACTOR THIS
     public reInitialize() {
         // Destroy room in ejabberd
         void this.sendDestroy();
@@ -117,7 +116,9 @@ export class MucRoom extends AbstractRoom {
     private sendSubscribe() {
         const subscribeId = uuidv4();
         this.subscriptions.set("firstSubscribe", subscribeId);
+        //this.xmppClient.socket.subscribe(this.recipient);
         void this.xmppClient.socket.joinRoom(this.recipient, this.xmppClient.getPlayerName(), { id: subscribeId });
+        //void this.xmppClient.socket.joinRoom(this.recipient, this.xmppClient.getPlayerName(), { id: subscribeId, events: ["urn:xmpp:mucsub:nodes:subscribers", "urn:xmpp:mucsub:nodes:messages", "urn:xmpp:mucsub:nodes:config", "urn:xmpp:mucsub:nodes:presence", "urn:xmpp:mucsub:nodes:affiliations", "urn:xmpp:mucsub:nodes:system", "urn:xmpp:mucsub:nodes:subject"] });
         if (_VERBOSE)
             console.warn("[XMPP]", ">> Subscribe sent from", this.xmppClient.getPlayerName(), "to", this.roomJid.local);
     }
@@ -139,7 +140,9 @@ export class MucRoom extends AbstractRoom {
             });
             if (_VERBOSE) console.warn("[XMPP]", "<< Get all subscribers received");
             response.subscriptions.usersJid.forEach((userJid, i) => {
-                this.addUserInactive(userJid, response.subscriptions.usersNick[i]);
+                if (![...get(this.presenceStore)].find(([_userJid, _]) => _userJid.includes(userJid))) {
+                    this.addUserInactive(userJid, response.subscriptions.usersNick[i]);
+                }
             });
         } catch (e) {
             console.error("sendRequestAllSubscribers => error", e);
@@ -292,14 +295,9 @@ export class MucRoom extends AbstractRoom {
         // Recompute reactions
         this.toggleReactionsMessage(this.xmppClient.getMyPersonalJID(), messageId, newReactions);
     }
-    public async sendDestroy() {
-        const destroyId = uuidv4();
-        this.subscriptions.set("destroyRoom", destroyId);
-        const response = await this.xmppClient.socket.destroyRoom(this.roomJid.full, {
-            reason: "Destroyed by administrator",
-        });
-        console.log(response);
+    public sendDestroy() {
         if (_VERBOSE) console.warn("[XMPP]", ">> Destroy room sent");
+        void this.xmppClient.socket.destroyRoom(this.roomJid.full, { reason: "Destroyed by administrator" });
     }
     public async sendRetrieveLastMessages(max: number = 50) {
         const firstMessage = get(this.messageStore).shift();
@@ -327,7 +325,7 @@ export class MucRoom extends AbstractRoom {
             },
         });
         if (_VERBOSE) console.warn("[XMPP]", "<< Retrieve last messages received");
-        if (response.paging && response.paging.count && response.paging.count > 0) {
+        if (response.paging && response.paging.count !== undefined) {
             response.results?.forEach((result) => {
                 if (result.item.message) {
                     this.onMessage(result.item.message as StanzaProtocol.ReceivedMessage, result.item.delay);
@@ -470,18 +468,21 @@ export class MucRoom extends AbstractRoom {
         const from = JID.parse(presence.from);
         if (!from.resource) {
             // Signify that this presence is coming from the room and not from a user
+            if (presence.type === "unavailable") {
+                this.xmppClient.removeMuc(this);
+                response = true;
+            }
         } else {
+            if (presence.userInfo) {
+                this.updateUserInfo(from.resource, presence.userInfo);
+                response = true;
+            }
             const muc = presence.muc as StanzaProtocol.MUCInfo;
             if (muc && muc.jid) {
                 this.updateActive(JID.parse(muc.jid), muc.reason !== "User removed");
                 if (muc.role) {
                     this.updateRole(JID.parse(muc.jid), muc.role);
                 }
-                response = true;
-            }
-
-            if (presence.userInfo) {
-                this.updateUserInfo(from.resource, presence.userInfo);
                 response = true;
             }
         }

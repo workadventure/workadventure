@@ -84,7 +84,7 @@ export class XmppClient {
                 console.warn(type, "XML Message forwarded to room but not interpreted", xml);
             }
         } else {
-            console.warn(type, "XML Message received but no associated room found");
+            console.warn(type, "XML Message received but no associated room found", xml);
         }
     }
 
@@ -192,15 +192,23 @@ export class XmppClient {
         });
 
         client.on("raw:outgoing", (message) => {
-            if (message.includes("iq") || message.includes("presence")) {
+            if (message.includes("presence")) {
                 //console.warn(message);
             }
         });
 
+        client.on("*", (message) => {
+            //console.log(message);
+        });
+
+        client.on("iq:set:roster", (message) => {
+            //console.warn(message);
+        });
+
         client.on("raw:incoming", (message) => {
-            if (message.includes("iq")) {
-                //console.warn(message);
-            }
+            //if (message.includes("iq")) {
+            //console.warn(message);
+            //}
         });
 
         client.on("auth:failed", () => {
@@ -295,7 +303,6 @@ export class XmppClient {
                 debug("XmppClient => createClient => online");
                 xmpp.reconnect.stop();
                 status = "connected";
-                //TODO
                 // define if MUC must persistent or not
                 // if persistent, send subscribe MUC
                 // Admin can create presence and subscribe MUC with members
@@ -303,7 +310,6 @@ export class XmppClient {
             });
             xmpp.on("status", (status: string) => {
                 debug("XmppClient => createClient => status => status", status);
-                // FIXME: the client keeps trying to reconnect.... even if the pusher is disconnected!
             });
 
             xmpp.start()
