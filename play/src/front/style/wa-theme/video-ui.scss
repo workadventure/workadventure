@@ -27,8 +27,12 @@
     transform: scaleY(0.1);
 }
 
+.cameras-container{
+    @apply tw-max-h-full sm:tw-max-h-[60vh] tw-pointer-events-auto tw-overflow-x-hidden tw-overflow-y-auto tw-flex tw-z-[150] tw-gap-5 tw-self-end tw-relative;
+}
+
 .other-cameras {
-    @apply tw-bottom-32 sm:tw-bottom-48 md:tw-bottom-28 lg:tw-bottom-24 xl:tw-bottom-36 2xl:tw-bottom-48 tw-mb-2 tw-max-h-[60vh] tw-overflow-y-auto tw-overflow-x-hidden;
+    @apply tw-bottom-32 sm:tw-bottom-48 md:tw-bottom-28 lg:tw-bottom-24 xl:tw-bottom-36 2xl:tw-bottom-48 tw-mb-2 tw-overflow-y-auto tw-overflow-x-hidden tw-h-fit;
 }
 
 .media-container {
