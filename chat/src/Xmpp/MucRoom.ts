@@ -411,7 +411,7 @@ export class MucRoom extends AbstractRoom {
                         response = true;
                     } else {
                         console.error("Message format is not good", {
-                            nickname: !!nickname,
+                            received: !!received,
                             jid: !!receivedMessage.jid,
                             body: !!receivedMessage.body,
                             id: !!receivedMessage.id,
