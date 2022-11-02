@@ -47,7 +47,7 @@ export class XmppClient {
         this.clientResource = this.clientJID.resource;
         this.clientPassword = clientSocket.jabberPassword;
         this.start().catch((err) => {
-            throw err;
+            console.info("XmppClient => constructor => start", err);
         });
     }
 
