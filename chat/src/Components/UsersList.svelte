@@ -7,6 +7,7 @@
     import { fly } from "svelte/transition";
     import LL from "../i18n/i18n-svelte";
     import Loader from "./Loader.svelte";
+    import { derived } from "svelte/store";
     const dispatch = createEventDispatcher<{ showUsers: undefined }>();
 
     export let mucRoom: MucRoom;
@@ -22,9 +23,9 @@
     }
 
     const loadingSubscribersStore = mucRoom.getLoadingSubscribersStore();
-    const usersListStore = mucRoom.getPresenceStore();
-    $: usersList = [...$usersListStore.values()] as Array<User>;
-    $: me = usersList.find((user: User) => user.isMe);
+    const presenceStore = mucRoom.getPresenceStore();
+    $: usersList = [...$presenceStore.values()] as Array<User>;
+    const me = derived(presenceStore, ($presenceStore) => $presenceStore.get(mucRoom.myJID));
 
     $: usersByMaps = usersList
         .filter((user: User) => user.name.toLocaleLowerCase().includes(searchValue))
@@ -42,7 +43,7 @@
         }, new Map<string, User[]>());
 
     $: roomSorted = [...usersByMaps.keys()].sort((a, b) =>
-        me?.roomName === a ? -1 : me?.roomName === b ? 1 : a.localeCompare(b)
+        $me.roomName === a ? -1 : $me?.roomName === b ? 1 : a.localeCompare(b)
     );
 </script>
 

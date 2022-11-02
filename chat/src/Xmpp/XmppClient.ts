@@ -604,6 +604,10 @@ export class XmppClient {
         return JID.create({ local: this.clientID, domain: this.clientDomain, resource: this.getPlayerName() });
     }
 
+    public getMyResource(): string {
+        return this.clientResource;
+    }
+
     public get socket(): Stanza.Agent {
         if (!this.xmppSocket) {
             throw new Error("No socket to Ejabberd");

@@ -6,6 +6,7 @@ export interface WaUserInfo {
     jid: string;
     roomPlayUri: string;
     roomName: string;
+    name: string;
     userUuid: string;
     userColor: string;
     userWoka: string;
@@ -97,6 +98,7 @@ export default function (client: Agent, stanzas: JXT.Registry) {
                 jid: JXT.attribute("jid"),
                 roomPlayUri: JXT.attribute("roomPlayUri"),
                 roomName: JXT.attribute("roomName"),
+                name: JXT.attribute("name"),
                 userUuid: JXT.attribute("userUuid"),
                 userColor: JXT.attribute("userColor"),
                 userWoka: JXT.attribute("userWoka"),

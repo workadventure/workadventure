@@ -47,7 +47,7 @@ export class MucRoom extends AbstractRoom {
         return JID.create({
             local: this.roomJid.local,
             domain: this.roomJid.domain,
-            resource: this.xmppClient.getPlayerName(),
+            resource: this.xmppClient.getMyResource(),
         });
     }
     get url(): string {
@@ -81,15 +81,16 @@ export class MucRoom extends AbstractRoom {
         // if (userStore.get().isLogged && this.subscribe && this.type !== "live") {
         //     this.sendSubscribe();
         // } else {
-        this.sendPresence(true);
+        void this.sendPresence(true);
         // }
     }
 
     // Functions used to send message to the server
-    public sendPresence(first: boolean = false) {
+    public async sendPresence(first: boolean = false) {
         const presenceId = uuidv4();
         if (first) {
             this.subscriptions.set("firstPresence", presenceId);
+            await this.xmppClient.socket.subscribe(this.url);
         }
 
         this.xmppClient.socket.sendUserInfo(this.recipient, presenceId, {
@@ -99,6 +100,7 @@ export class MucRoom extends AbstractRoom {
             userUuid: get(userStore).uuid,
             userColor: get(userStore).color,
             userWoka: get(userStore).woka,
+            name: this.playerName,
             // If you can subscribe to the default muc room, this is that you are a member
             userIsMember: mucRoomsStore.getDefaultRoom()?.subscribe ?? false,
             userAvailabilityStatus: get(availabilityStatusStore),
@@ -439,25 +441,23 @@ export class MucRoom extends AbstractRoom {
         return true;
     }
     onPresence(presence: StanzaProtocol.ReceivedPresence): boolean {
-        if (_VERBOSE) console.warn("[XMPP]", "<< Presence received", presence);
+        if (_VERBOSE) console.warn("[XMPP]", "<< Presence received");
         let response = false;
-        if (!presence.id) {
-            throw new Error("No presence id");
-        }
 
-        // If last registered presence received
-        if (this.subscriptions.get("firstPresence") === presence.id) {
-            this.subscriptions.delete("firstPresence");
-            this.readyStore.set(true);
-            if (this.type === "live") {
-                void this.sendRetrieveLastMessages(20);
+        if (presence.id) {
+            // If last registered presence received
+            if (this.subscriptions.get("firstPresence") === presence.id) {
+                this.subscriptions.delete("firstPresence");
+                this.readyStore.set(true);
+                if (this.type === "live") {
+                    void this.sendRetrieveLastMessages(20);
+                }
+            } else if (this.subscriptions.get("firstSubscribe") === presence.id) {
+                this.subscriptions.delete("firstSubscribe");
+                void this.sendPresence(true);
+                void this.sendRequestAllSubscribers();
             }
-        } else if (this.subscriptions.get("firstSubscribe") === presence.id) {
-            this.subscriptions.delete("firstSubscribe");
-            this.sendPresence(true);
-            void this.sendRequestAllSubscribers();
         }
-
         const from = JID.parse(presence.from);
         if (!from.resource) {
             // Signify that this presence is coming from the room and not from a user
@@ -467,12 +467,12 @@ export class MucRoom extends AbstractRoom {
             }
         } else {
             if (presence.userInfo) {
-                this.updateUserInfo(from.resource, presence.userInfo);
+                this.updateUserInfo(presence.userInfo);
                 response = true;
             }
             const muc = presence.muc as StanzaProtocol.MUCInfo;
             if (muc && muc.jid) {
-                this.updateActive(JID.parse(muc.jid), muc.reason !== "User removed");
+                this.updateActive(JID.parse(muc.jid), presence.type !== "unavailable");
                 if (muc.role) {
                     this.updateRole(JID.parse(muc.jid), muc.role);
                 }
@@ -488,7 +488,11 @@ export class MucRoom extends AbstractRoom {
         this.presenceStore.update((presenceStore: UserList) => {
             const user = presenceStore.get(jid.full);
             if (user) {
-                presenceStore.set(jid.full, { ...user, active });
+                if (!active && [...presenceStore.keys()].filter((userJid) => userJid.includes(jid.bare)).length > 1) {
+                    presenceStore.delete(jid.full);
+                } else {
+                    presenceStore.set(jid.full, { ...user, active });
+                }
             }
             return presenceStore;
         });
@@ -511,7 +515,7 @@ export class MucRoom extends AbstractRoom {
             return presenceStore;
         });
     }
-    updateUserInfo(nickname: string, userInfo: WaUserInfo) {
+    updateUserInfo(userInfo: WaUserInfo) {
         this.presenceStore.update((presenceStore: UserList) => {
             const userJID = JID.parse(userInfo.jid);
             const user = presenceStore.get(userJID.full);
@@ -519,7 +523,7 @@ export class MucRoom extends AbstractRoom {
                 presenceStore.set(userJID.full, {
                     ...user,
                     jid: userJID.full,
-                    name: nickname,
+                    name: userInfo.name,
                     playUri: userInfo.roomPlayUri,
                     roomName: userInfo.roomName,
                     uuid: userInfo.userUuid,
@@ -533,7 +537,7 @@ export class MucRoom extends AbstractRoom {
             } else {
                 presenceStore.set(userJID.full, {
                     jid: userJID.full,
-                    name: nickname,
+                    name: userInfo.name,
                     active: true,
                     isMe: this.xmppClient.getMyJID() === userJID.full,
                     playUri: userInfo.roomPlayUri,
