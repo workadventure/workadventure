@@ -19,7 +19,7 @@ import { MapEditorTool } from "./Tools/MapEditorTool";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
-    FloorEditor = "FloorEditor",
+    FloorEditor = "FloorEditor"
 }
 
 export class MapEditorModeManager {

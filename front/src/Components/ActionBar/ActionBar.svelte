@@ -68,6 +68,7 @@
     import { peerStore } from "../../Stores/PeerStore";
     import { StringUtils } from "../../Utils/StringUtils";
     import Tooltip from "../Util/Tooltip.svelte";
+    import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -608,7 +609,7 @@
                         <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
                     </button>
                 </div>
-                {#if gameManager.getCurrentGameScene().isMapEditorEnabled()}
+                {#if $gameSceneIsLoadedStore && gameManager.getCurrentGameScene().isMapEditorEnabled()}
                     <div
                         on:dragstart|preventDefault={noDrag}
                         on:click={toggleMapEditorMode}

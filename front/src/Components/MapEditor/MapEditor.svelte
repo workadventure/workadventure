@@ -2,13 +2,14 @@
     import AreaPreviewWindow from "./AreaPreviewWindow.svelte";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import PropertyPreviewSidebar from "./PropertyPreviewSidebar.svelte";
-
-
+    import ItemPicker from "./ItemPicker.svelte";
+    import { mapEditorSelectedToolStore  } from "../../Stores/MapEditorStore";
 </script>
 
 <MapEditorSideBar />
 <div class="map-editor tw-bg-dark-blue/95">
     <div class="sidebar">
+        <ItemPicker/>
         <AreaPreviewWindow />
         <PropertyPreviewSidebar />
     </div>

@@ -13,7 +13,7 @@
     let currentTool : EditorToolName | undefined ;
     
     let availableTools = [
-        {toolName: EditorToolName.AreaEditor, img : AreaToolImg},
+        {toolName : EditorToolName.AreaEditor, img : AreaToolImg},
         {toolName : EditorToolName.FloorEditor, img : FloorToolImg}
     ]
 
@@ -27,7 +27,6 @@
     });
 
     function switchTool(newTool: EditorToolName){
-        console.log("switche tool "+newTool);
         gameScene.getMapEditorModeManager().equipTool(newTool);
     }
 
@@ -43,16 +42,16 @@
 </script>
 
 
-<section class="side-bar-container" style="pointer-events:auto;"> <!--put a section to avoid lower div to be affected by some css-->
-    <div class="side-bar" style="pointer-events:auto;">
-        <div class="tool-button" style="pointer-events:auto;">
+<section class="side-bar-container"> <!--put a section to avoid lower div to be affected by some css-->
+    <div class="side-bar">
+        <div class="tool-button">
             <button on:click|preventDefault={zoomIn} type="button" ><img src={ZoomInImg} alt="Zoom In"/></button>
         </div>
-        <div class="tool-button" style="pointer-events:auto;">
+        <div class="tool-button">
             <button on:click|preventDefault={zoomOut} type="button" ><img src={ZoomOutImg} alt="Zoom Out"/></button>
         </div>
         {#each availableTools as tool (tool.toolName)}
-        <div class="tool-button" style="pointer-events:auto;">
+        <div class="tool-button">
             <button class="{tool.toolName==currentTool?'active':''}" on:click|preventDefault={()=>switchTool(tool.toolName)} type="button" ><img src={tool.img} alt="open tool {tool.toolName}"/></button>
         </div>
         {/each}
@@ -79,7 +78,6 @@
         .tool-button{
             position: relative !important;
             display : flex;
-            //height: fit-content;
             padding: 0;
             button{
                 height: 3em;
