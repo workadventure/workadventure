@@ -37,6 +37,10 @@ export class LoginScene extends ResizableScene {
             loginSceneVisibleIframeStore.set(true);
         }
         loginSceneVisibleStore.set(true);
+
+        if (gameManager.currentStartedRoom.backgroundColor != undefined) {
+            this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
+        }
     }
 
     public login(name: string): void {

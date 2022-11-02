@@ -1,4 +1,5 @@
 import { Scene } from "phaser";
+import { gameManager } from "../Game/GameManager";
 
 export const EmptySceneName = "EmptyScene";
 
@@ -11,7 +12,11 @@ export class EmptyScene extends Scene {
 
     preload() {}
 
-    create() {}
+    create() {
+        if (gameManager.currentStartedRoom.backgroundColor != undefined) {
+            this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
+        }
+    }
 
     update(time: number, delta: number): void {}
 }

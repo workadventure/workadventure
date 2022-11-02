@@ -40,6 +40,7 @@ export class Room {
     private _enableChat: boolean | undefined;
     private _enableChatUpload: boolean | undefined;
     private _legals: LegalsData | undefined;
+    private _backgroundColor: string | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -145,6 +146,7 @@ export class Room {
                 this._loadingLogo = data.loadingLogo ?? undefined;
                 this._loginSceneLogo = data.loginSceneLogo ?? undefined;
                 this._showPoweredBy = data.showPoweredBy ?? true;
+                this._backgroundColor = data.backgroundColor ?? undefined;
                 this._metadata = data.metadata ?? undefined;
 
                 this._mucRooms = data.mucRooms ?? undefined;
@@ -308,5 +310,9 @@ export class Room {
 
     get legals(): LegalsData | undefined {
         return this._legals;
+    }
+
+    get backgroundColor(): string | undefined {
+        return this._backgroundColor;
     }
 }

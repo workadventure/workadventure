@@ -86,6 +86,10 @@ export class Loader {
         const resizeFunction = this.resize.bind(this);
         this.scene.scale.on(Phaser.Scale.Events.RESIZE, resizeFunction);
 
+        if (gameManager.currentStartedRoom && gameManager.currentStartedRoom.backgroundColor != undefined) {
+            this.scene.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
+        }
+
         this.scene.load.on("complete", () => {
             if (this.loadingText) {
                 this.loadingText.destroy();

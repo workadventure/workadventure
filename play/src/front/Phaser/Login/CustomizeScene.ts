@@ -97,6 +97,8 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public create(): void {
+        super.create();
+
         this.selectedLayers = [0, 0, 0, 0, 0, 0];
         this.tryLoadLastUsedWokaLayers();
         waScaleManager.zoomModifier = 1;
