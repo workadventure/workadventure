@@ -81,16 +81,16 @@ export class MucRoom extends AbstractRoom {
         // if (userStore.get().isLogged && this.subscribe && this.type !== "live") {
         //     this.sendSubscribe();
         // } else {
-        void this.sendPresence(true);
+        this.sendPresence(true);
         // }
     }
 
     // Functions used to send message to the server
-    public async sendPresence(first: boolean = false) {
+    public sendPresence(first: boolean = false) {
         const presenceId = uuidv4();
         if (first) {
             this.subscriptions.set("firstPresence", presenceId);
-            await this.xmppClient.socket.subscribe(this.url);
+            void this.xmppClient.socket.subscribe(this.url);
         }
 
         this.xmppClient.socket.sendUserInfo(this.recipient, presenceId, {
@@ -454,7 +454,7 @@ export class MucRoom extends AbstractRoom {
                 }
             } else if (this.subscriptions.get("firstSubscribe") === presence.id) {
                 this.subscriptions.delete("firstSubscribe");
-                void this.sendPresence(true);
+                this.sendPresence(true);
                 void this.sendRequestAllSubscribers();
             }
         }
