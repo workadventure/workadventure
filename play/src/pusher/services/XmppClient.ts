@@ -399,7 +399,7 @@ export class XmppClient {
 
     sendPong(to: string, from: string, id: string): void {
         this.sendToEjabberd(xml("iq", { from, to, id, type: "result" }).toString()).catch((err) => {
-            throw err;
+            console.info("XmppClients => sendPong => error", err);
         });
     }
 
