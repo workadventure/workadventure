@@ -4,6 +4,7 @@ import {
     ITiledMapLayer,
     ITiledMapObject,
     ITiledMapProperty,
+    ITiledMapTile,
     ITiledMapTileLayer,
 } from "@workadventure/tiled-map-type-guard";
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
@@ -40,7 +41,13 @@ export class GameMapFrontWrapper {
      */
     private position: { x: number; y: number } | undefined;
 
+    public readonly phaserMap: Phaser.Tilemaps.Tilemap;
     public readonly phaserLayers: TilemapLayer[] = [];
+
+    /**
+     * Stores information about walls and every object that modifies collision grid on certain tile
+     */
+    public readonly collisionTilesHistogram: string[][][];
 
     private perLayerCollisionGridCache: Map<number, (0 | 2 | 1)[][]> = new Map<number, (0 | 2 | 1)[][]>();
 
@@ -58,6 +65,7 @@ export class GameMapFrontWrapper {
 
     constructor(gameMap: GameMap, phaserMap: Phaser.Tilemaps.Tilemap, terrains: Array<Phaser.Tilemaps.Tileset>) {
         this.gameMap = gameMap;
+        this.phaserMap = phaserMap;
 
         let depth = -2;
         for (const layer of this.gameMap.flatLayers) {
@@ -76,6 +84,22 @@ export class GameMapFrontWrapper {
                 depth = DEPTH_OVERLAY_INDEX;
             }
         }
+
+        this.collisionTilesHistogram = [];
+        const collisionsLayer = this.phaserLayers.find((phaserLayer) => phaserLayer.layer.name === "collisions");
+        for (let y = 0; y < this.phaserMap.height; y += 1) {
+            this.collisionTilesHistogram.push([]);
+            for (let x = 0; x < this.phaserMap.width; x += 1) {
+                if (this.phaserLayers)
+                    if (collisionsLayer && collisionsLayer.layer.data[y][x].index !== -1) {
+                        this.collisionTilesHistogram[y].push(["predefined"]);
+                    } else {
+                        this.collisionTilesHistogram[y].push([]);
+                    }
+            }
+        }
+        console.log(collisionsLayer);
+        console.log(this.collisionTilesHistogram);
     }
 
     public setLayerVisibility(layerName: string, visible: boolean): void {
@@ -104,8 +128,54 @@ export class GameMapFrontWrapper {
         this.mapChangedSubject.next(collisionGrid);
     }
 
+    /**
+     *
+     * @param x Top left of the starting position in world coordinates
+     * @param y Top left of the starting position in world coordinates
+     * @param name The key to differentiate between different collisionGrid modificators
+     * @param collisionGrid Collisions map representing tiles
+     * @returns
+     */
+    public modifyToCollisionsLayer(x: number, y: number, name: string, collisionGrid: number[][]): void {
+        const collisionsLayer = this.phaserLayers.find((phaserLayer) => phaserLayer.layer.name === "collisions");
+        const specialZonesTileset = this.phaserMap.tilesets.find((tileset) => tileset.name === "Special_Zones");
+        if (!specialZonesTileset || !collisionsLayer) {
+            return;
+        }
+        const coords = collisionsLayer.worldToTileXY(x, y, true);
+        for (let y = 0; y < collisionGrid.length; y += 1) {
+            for (let x = 0; x < collisionGrid[y].length; x += 1) {
+                // add tiles
+                if (collisionGrid[y][x] === 1) {
+                    const tile = collisionsLayer.putTileAt(specialZonesTileset.firstgid, coords.x + x, coords.y + y);
+                    this.collisionTilesHistogram[coords.y + y][coords.x + x].push(name);
+                    tile.properties["collides"] = true;
+                    continue;
+                }
+                // remove tiles
+                if (collisionGrid[y][x] === -1) {
+                    const tagNameIndex = this.collisionTilesHistogram[coords.y + y][coords.x + x].findIndex(
+                        (tagName) => tagName === name
+                    );
+                    if (tagNameIndex !== -1) {
+                        this.collisionTilesHistogram[coords.y + y][coords.x + x].splice(tagNameIndex, 1);
+                        if (this.collisionTilesHistogram[coords.y + y][coords.x + x].length === 0) {
+                            collisionsLayer.removeTileAt(coords.x + x, coords.y + y, false);
+                        }
+                    }
+                }
+            }
+        }
+        collisionsLayer.setCollisionByProperty({ collides: true });
+        this.mapChangedSubject.next(this.getCollisionGrid(collisionsLayer, false));
+    }
+
     public getPropertiesForIndex(index: number): Array<ITiledMapProperty> {
         return this.gameMap.getPropertiesForIndex(index);
+    }
+
+    public getTileInformationFromTileset(tilesetName: string, tileIndex: number): ITiledMapTile | undefined {
+        return this.gameMap.getTileInformationFromTileset(tilesetName, tileIndex);
     }
 
     public getCollisionGrid(modifiedLayer?: TilemapLayer, useCache = true): number[][] {
