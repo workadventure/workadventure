@@ -187,7 +187,7 @@ export class MucRoom extends AbstractRoom {
             this.xmppClient.socket.sendGroupChatMessage({
                 to: this.roomJid.full,
                 id: idMessage,
-                jid: this.xmppClient.getMyJID(),
+                jid: this.xmppClient.getMyPersonalJID(),
                 body: text,
                 messageReply: {
                     to: messageReply.from,
@@ -202,7 +202,7 @@ export class MucRoom extends AbstractRoom {
             this.xmppClient.socket.sendGroupChatMessage({
                 to: this.roomJid.full,
                 id: idMessage,
-                jid: this.xmppClient.getMyJID(),
+                jid: this.xmppClient.getMyPersonalJID(),
                 body: text,
                 ...links,
             });
@@ -211,7 +211,7 @@ export class MucRoom extends AbstractRoom {
         this.messageStore.update((messages) => {
             messages.push({
                 name: this.xmppClient.getPlayerName(),
-                jid: this.xmppClient.getMyJID(),
+                jid: this.xmppClient.getMyPersonalJID(),
                 body: text,
                 time: new Date(),
                 id: idMessage,
@@ -377,12 +377,16 @@ export class MucRoom extends AbstractRoom {
                         }
                     }
 
-                    const nickname = JID.parse(receivedMessage.from).resource;
+                    const received = JID.parse(receivedMessage.jid);
 
-                    if (nickname && receivedMessage.jid && receivedMessage.id) {
+                    if (received && receivedMessage.jid && receivedMessage.id) {
                         const message: Message = {
-                            name: nickname,
-                            jid: receivedMessage.jid,
+                            name: received.resource ?? "unknown",
+                            jid: JID.create({
+                                local: received.local,
+                                domain: received.domain,
+                                resource: JID.parse(receivedMessage.from).resource,
+                            }),
                             body: receivedMessage.body ?? "",
                             time: date,
                             id: receivedMessage.id,
