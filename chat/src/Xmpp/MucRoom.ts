@@ -78,11 +78,11 @@ export class MucRoom extends AbstractRoom {
     }
 
     public connect() {
-        if (userStore.get().isLogged && this.subscribe && this.type !== "live") {
-            this.sendSubscribe();
-        } else {
-            this.sendPresence(true);
-        }
+        // if (userStore.get().isLogged && this.subscribe && this.type !== "live") {
+        //     this.sendSubscribe();
+        // } else {
+        this.sendPresence(true);
+        // }
     }
 
     // Functions used to send message to the server
@@ -105,18 +105,16 @@ export class MucRoom extends AbstractRoom {
             userVisitCardUrl: get(userStore).visitCardUrl ?? "",
         });
 
-        //this.xmppClient.socket.sendPresence({ to: this.recipient, id: presenceId });
+        //this.xmppClient.socket.sendPresence({ to: this.recipient, id: presenceId, muc: {type: 'info', affiliation: "none", role: "participant"} });
         if (_VERBOSE) console.warn("[XMPP]", ">> ", first && "First", "Presence sent", get(userStore).uuid);
     }
-    private sendSubscribe() {
-        const subscribeId = uuidv4();
-        this.subscriptions.set("firstSubscribe", subscribeId);
-        //this.xmppClient.socket.subscribe(this.recipient);
-        void this.xmppClient.socket.joinRoom(this.recipient, this.xmppClient.getPlayerName(), { id: subscribeId });
-        //void this.xmppClient.socket.joinRoom(this.recipient, this.xmppClient.getPlayerName(), { id: subscribeId, events: ["urn:xmpp:mucsub:nodes:subscribers", "urn:xmpp:mucsub:nodes:messages", "urn:xmpp:mucsub:nodes:config", "urn:xmpp:mucsub:nodes:presence", "urn:xmpp:mucsub:nodes:affiliations", "urn:xmpp:mucsub:nodes:system", "urn:xmpp:mucsub:nodes:subject"] });
-        if (_VERBOSE)
-            console.warn("[XMPP]", ">> Subscribe sent from", this.xmppClient.getPlayerName(), "to", this.roomJid.local);
-    }
+    // private async sendSubscribe() {
+    //     const subscribeId = uuidv4();
+    //     this.subscriptions.set("firstSubscribe", subscribeId);
+    //     void this.xmppClient.socket.joinRoom(this.recipient, this.xmppClient.getPlayerName(), {id: subscribeId});
+    //     if (_VERBOSE)
+    //         console.warn("[XMPP]", ">> Subscribe sent from", this.xmppClient.getPlayerName(), "to", this.roomJid.local);
+    // }
     public sendDisconnect() {
         void this.xmppClient.socket.leaveRoom(this.recipient);
         if (_VERBOSE) console.warn("[XMPP]", ">> Disconnect sent");
@@ -155,13 +153,13 @@ export class MucRoom extends AbstractRoom {
         console.warn(response);
         if (_VERBOSE) console.warn("[XMPP]", ">> Affiliation sent");
     }
-    public sendBan(user: string, name: string, playUri: string) {
+    public sendBan(userJID: string, name: string, playUri: string) {
         console.warn("Implement the ban method to send the message to the front > pusher (> admin)", {
-            user,
+            userJID,
             name,
             playUri,
         });
-        //this.affiliate("outcast", userJID);
+        void this.sendAffiliate("outcast", userJID);
         //this.xmppClient.getConnection().emitBanUserByUuid(playUri, userJID.local, name, "Test message de ban");
         if (_VERBOSE) console.warn("[XMPP]", ">> Ban user message sent");
     }
@@ -441,7 +439,7 @@ export class MucRoom extends AbstractRoom {
         return true;
     }
     onPresence(presence: StanzaProtocol.ReceivedPresence): boolean {
-        if (_VERBOSE) console.warn("[XMPP]", "<< Presence received");
+        if (_VERBOSE) console.warn("[XMPP]", "<< Presence received", presence);
         let response = false;
         if (!presence.id) {
             throw new Error("No presence id");

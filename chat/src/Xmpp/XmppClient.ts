@@ -192,7 +192,7 @@ export class XmppClient {
         });
 
         client.on("raw:outgoing", (message) => {
-            if (message.includes("presence")) {
+            if (message.includes("subscribe")) {
                 //console.warn(message);
             }
         });
