@@ -79,7 +79,10 @@ export class FrontController extends BaseHttpController {
         });
 
         this.app.get("/static/images/favicons/manifest.json", (req: Request, res: Response) => {
-            return this.displayManifestJson(req, res, req.get("url"));
+            if (req.query.url == undefined) {
+                return res.status(500).send("playUrl is empty in query pramater of the request");
+            }
+            return this.displayManifestJson(req, res, req.query.url.toString());
         });
 
         this.app.get("/login", (req: Request, res: Response) => {
