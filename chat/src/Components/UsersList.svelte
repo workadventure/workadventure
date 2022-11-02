@@ -43,7 +43,7 @@
         }, new Map<string, User[]>());
 
     $: roomSorted = [...usersByMaps.keys()].sort((a, b) =>
-        $me.roomName === a ? -1 : $me?.roomName === b ? 1 : a.localeCompare(b)
+        $me && $me.roomName === a ? -1 : $me && $me?.roomName === b ? 1 : a.localeCompare(b)
     );
 </script>
 
