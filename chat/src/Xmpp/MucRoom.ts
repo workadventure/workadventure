@@ -92,14 +92,7 @@ export class MucRoom extends AbstractRoom {
             this.subscriptions.set("firstPresence", presenceId);
         }
 
-        this.xmppClient.socket.sendPresence({ to: this.recipient, id: presenceId });
-        if (_VERBOSE) console.warn("[XMPP]", ">> ", first && "First", "Presence sent", get(userStore).uuid);
-        if (first) {
-            this.sendUserInfo();
-        }
-    }
-    private sendUserInfo() {
-        this.xmppClient.socket.sendUserInfo(this.recipient, {
+        this.xmppClient.socket.sendUserInfo(this.recipient, presenceId, {
             jid: this.xmppClient.getMyJID(),
             roomPlayUri: get(userStore).playUri,
             roomName: get(userStore).roomName ?? "",
@@ -111,7 +104,9 @@ export class MucRoom extends AbstractRoom {
             userAvailabilityStatus: get(availabilityStatusStore),
             userVisitCardUrl: get(userStore).visitCardUrl ?? "",
         });
-        if (_VERBOSE) console.warn("[XMPP]", ">> Presence userInfo sent");
+
+        //this.xmppClient.socket.sendPresence({ to: this.recipient, id: presenceId });
+        if (_VERBOSE) console.warn("[XMPP]", ">> ", first && "First", "Presence sent", get(userStore).uuid);
     }
     private sendSubscribe() {
         const subscribeId = uuidv4();
@@ -461,7 +456,7 @@ export class MucRoom extends AbstractRoom {
             }
         } else if (this.subscriptions.get("firstSubscribe") === presence.id) {
             this.subscriptions.delete("firstSubscribe");
-            this.sendUserInfo();
+            this.sendPresence(true);
             void this.sendRequestAllSubscribers();
         }
 

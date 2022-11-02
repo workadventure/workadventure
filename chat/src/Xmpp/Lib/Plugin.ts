@@ -53,7 +53,7 @@ export interface WaSubscriptions {
 declare module "stanza" {
     // 3. Declare a new method for the StanzaJS agent
     export interface Agent {
-        sendUserInfo(jid: string, data: WaUserInfo): void;
+        sendUserInfo(jid: string, id: string, data: WaUserInfo): void;
         sendGroupChatMessage(msg: Message): void;
     }
 
@@ -157,9 +157,10 @@ export default function (client: Agent, stanzas: JXT.Registry) {
     ]);
 
     // 9. Add API to the StanzaJS agent for sending `mystanza` data
-    client.sendUserInfo = (jid: string, data: WaUserInfo) => {
+    client.sendUserInfo = (jid: string, id: string, data: WaUserInfo) => {
         return client.sendPresence({
             to: jid,
+            id,
             userInfo: data,
         });
     };
