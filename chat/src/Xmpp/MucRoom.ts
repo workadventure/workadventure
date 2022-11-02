@@ -492,7 +492,11 @@ export class MucRoom extends AbstractRoom {
         this.presenceStore.update((presenceStore: UserList) => {
             const user = presenceStore.get(jid.full);
             if (user) {
-                if (!active && [...presenceStore.keys()].filter((userJid) => userJid.includes(jid.bare)).length > 1) {
+                if (
+                    !active &&
+                    (!user.isMember ||
+                        [...presenceStore.keys()].filter((userJid) => userJid.includes(jid.bare)).length > 1)
+                ) {
                     presenceStore.delete(jid.full);
                 } else {
                     presenceStore.set(jid.full, { ...user, active });
