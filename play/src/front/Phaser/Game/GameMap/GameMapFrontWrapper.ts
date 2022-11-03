@@ -14,6 +14,8 @@ import { Subject } from "rxjs";
 import { PathTileType } from "../../../Utils/PathfindingManager";
 import { MathUtils } from "@workadventure/math-utils";
 import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
+import type { GameScene } from "../GameScene";
+import { EntitiesManager } from "./EntitiesManager";
 
 export type LayerChangeCallback = (
     layersChangedByAction: Array<ITiledMapLayer>,
@@ -27,6 +29,7 @@ export type PropertyChangeCallback = (
 ) => void;
 
 export class GameMapFrontWrapper {
+    private scene: GameScene;
     private gameMap: GameMap;
 
     private oldKey: number | undefined;
@@ -42,6 +45,11 @@ export class GameMapFrontWrapper {
      * position is the current position of the player.
      */
     private position: { x: number; y: number } | undefined;
+
+    /**
+     * Manager for renderable, interactive objects that players can work with.
+     */
+    private entitiesManager: EntitiesManager;
 
     public readonly phaserMap: Phaser.Tilemaps.Tilemap;
     public readonly phaserLayers: TilemapLayer[] = [];
@@ -65,7 +73,13 @@ export class GameMapFrontWrapper {
     private mapChangedSubject = new Subject<number[][]>();
     private areaUpdatedSubject = new Subject<AreaData>();
 
-    constructor(gameMap: GameMap, phaserMap: Phaser.Tilemaps.Tilemap, terrains: Array<Phaser.Tilemaps.Tileset>) {
+    constructor(
+        scene: GameScene,
+        gameMap: GameMap,
+        phaserMap: Phaser.Tilemaps.Tilemap,
+        terrains: Array<Phaser.Tilemaps.Tileset>
+    ) {
+        this.scene = scene;
         this.gameMap = gameMap;
         this.phaserMap = phaserMap;
 
@@ -100,8 +114,8 @@ export class GameMapFrontWrapper {
                     }
             }
         }
-        console.log(collisionsLayer);
-        console.log(this.collisionTilesHistogram);
+
+        this.entitiesManager = new EntitiesManager(this.scene, this);
     }
 
     public setLayerVisibility(layerName: string, visible: boolean): void {

@@ -149,7 +149,6 @@ import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyM
 import { AreaType, GameMap, GameMapProperties } from "@workadventure/map-editor";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
-import { Entity } from "../ECS/Entity";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 export interface GameSceneInitInterface {
@@ -546,7 +545,7 @@ export class GameScene extends DirtyScene {
         this.embeddedWebsiteManager = new EmbeddedWebsiteManager(this);
 
         //add layer on map
-        this.gameMapFrontWrapper = new GameMapFrontWrapper(new GameMap(this.mapFile), this.Map, this.Terrains);
+        this.gameMapFrontWrapper = new GameMapFrontWrapper(this, new GameMap(this.mapFile), this.Map, this.Terrains);
         for (const layer of this.gameMapFrontWrapper.getFlatLayers()) {
             if (layer.type === "tilelayer") {
                 const exitSceneUrl = this.getExitSceneUrl(layer);
@@ -740,43 +739,6 @@ export class GameScene extends DirtyScene {
                     e
                 )
             );
-
-        const entity = new Entity(this, 320, 320 + 16, 0, {
-            image: "table",
-            collisionGrid: [
-                [0, 0],
-                [1, 1],
-                [1, 1],
-            ],
-            interactive: true,
-            properties: {
-                openWebsite: "https://wikipedia.org",
-            },
-        });
-
-        entity.on("moved", (oldX: number, oldY: number) => {
-            const reversedGrid = entity.getReversedCollisionGrid();
-            const grid = entity.getCollisionGrid();
-            if (reversedGrid && grid) {
-                this.gameMapFrontWrapper.modifyToCollisionsLayer(oldX, oldY, "0", reversedGrid);
-                this.gameMapFrontWrapper.modifyToCollisionsLayer(
-                    entity.getTopLeft().x,
-                    entity.getTopLeft().y,
-                    "0",
-                    grid
-                );
-            }
-        });
-
-        const colGrid = entity.getCollisionGrid();
-        if (colGrid) {
-            this.gameMapFrontWrapper.modifyToCollisionsLayer(
-                entity.getTopLeft().x,
-                entity.getTopLeft().y,
-                "0",
-                colGrid
-            );
-        }
     }
 
     /**
@@ -1777,6 +1739,7 @@ ${escapedMessage}
                             }
                             //Create a new GameMap with the changed file
                             this.gameMapFrontWrapper = new GameMapFrontWrapper(
+                                this,
                                 new GameMap(this.mapFile),
                                 this.Map,
                                 this.Terrains

@@ -1,7 +1,12 @@
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import type { GameScene } from "../Game/GameScene";
 
+export enum EntityEvent {
+    Moved = "Moved",
+}
+
 export interface EntityConfig {
+    id: number;
     image: string;
     collisionGrid?: number[][];
     interactive?: boolean;
@@ -18,14 +23,14 @@ export class Entity extends Phaser.GameObjects.Image {
 
     private oldPositionTopLeft: { x: number; y: number };
 
-    constructor(scene: GameScene, x: number, y: number, id: number, config: EntityConfig) {
+    constructor(scene: GameScene, x: number, y: number, config: EntityConfig) {
         super(scene, x, y, config.image);
 
         this.oldPositionTopLeft = this.getTopLeft();
         this.outlined = false;
         this.beingRepositioned = false;
 
-        this.id = id;
+        this.id = config.id;
         this.collisionGrid = config.collisionGrid;
 
         this.setDepth(this.y + this.displayHeight * 0.5);
@@ -82,7 +87,7 @@ export class Entity extends Phaser.GameObjects.Image {
 
         this.on(Phaser.Input.Events.DRAG_END, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             (this.scene as GameScene).markDirty();
-            this.emit("moved", this.oldPositionTopLeft.x, this.oldPositionTopLeft.y);
+            this.emit(EntityEvent.Moved, this.oldPositionTopLeft.x, this.oldPositionTopLeft.y);
         });
     }
 
