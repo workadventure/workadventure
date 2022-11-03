@@ -218,13 +218,7 @@ export class MetaTagsBuilder {
         const fetchedData = await adminService.fetchMapDetails(this.url);
 
         const checkMapDetails = isMapDetailsData.safeParse(fetchedData);
-        if (checkMapDetails.success === false) {
-            console.log("/api/map for url", this.url, "returned an invalid answer.");
-            console.log("Answer returned: ", fetchedData);
-            console.log("Errors: ", checkMapDetails.error.issues);
-            return undefined;
-        }
-        return checkMapDetails.data;
+        return checkMapDetails.success ? checkMapDetails.data : undefined;
     }
 
     private async getMetaFromAdmin(): Promise<MetaTagsData | undefined> {
