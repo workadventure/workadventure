@@ -89,7 +89,7 @@ export type Message = {
     files?: UploadedFile[];
     mentions?: User[];
 };
-export type MessagesList = Message[];
+export type MessagesList = Map<string, Message>;
 export type MessagesStore = Readable<MessagesList>;
 
 export type Me = {
@@ -148,7 +148,7 @@ export type DeleteMessageStore = Readable<string[]>;
 export class MucRoom {
     private presenceStore: Writable<UserList>;
     private teleportStore: Writable<Teleport>;
-    private messageStore: Writable<Message[]>;
+    private messageStore: Writable<Map<string, Message>>;
     private messageReactStore: Writable<Map<string, ReactMessage[]>>;
     private deletedMessagesStore: Writable<string[]>;
     private meStore: Writable<Me>;
@@ -177,7 +177,7 @@ export class MucRoom {
         private jid: string
     ) {
         this.presenceStore = writable<UserList>(new Map<string, User>());
-        this.messageStore = writable<Message[]>(new Array(0));
+        this.messageStore = writable<Map<string, Message>>(new Map<string, Message>());
         this.deletedMessagesStore = writable<string[]>(new Array(0));
         this.messageReactStore = writable<Map<string, ReactMessage[]>>(new Map<string, ReactMessage[]>());
         this.teleportStore = writable<Teleport>({ state: false, to: null });
@@ -193,7 +193,7 @@ export class MucRoom {
         //refrech react message
         this.messageReactStore.subscribe((reacts) => {
             this.messageStore.update((messages) => {
-                messages.forEach((message, index) => {
+                [...messages.values()].forEach((message, index) => {
                     if (!reacts.has(message.id)) return;
 
                     const reactsByMessage = reacts.get(message.id);
@@ -207,7 +207,7 @@ export class MucRoom {
                         return list;
                     }, new Map<string, number>());
 
-                    messages[index] = message;
+                    messages.set(message.id, message);
                 });
                 return messages;
             });
@@ -293,7 +293,7 @@ export class MucRoom {
         }
     }
     public sendRetrieveLastMessages() {
-        const firstMessage = get(this.messageStore).shift();
+        const firstMessage = [...get(this.messageStore).values()].shift();
         this.loadingStore.set(true);
         const now = new Date();
         const messageRetrieveLastMessages = xml(
@@ -607,7 +607,7 @@ export class MucRoom {
             this.connection.emitXmlMessage(message);
 
             this.messageStore.update((messages) => {
-                messages.push({
+                messages.set(idMessage, {
                     name: this.getPlayerName(),
                     jid: this.getMyJID().toString(),
                     body: text,
@@ -715,7 +715,12 @@ export class MucRoom {
         }
         this.sendTimeOut = setTimeout(() => {
             this.messageStore.update((messages) => {
-                messages = messages.map((message) => (!message.delivered ? { ...message, error: true } : message));
+                messages = [...messages.values()]
+                    .map((message) => (!message.delivered ? { ...message, error: true } : message))
+                    .reduce((map, message) => {
+                        map.set(message.id, message);
+                        return map;
+                    }, new Map<string, Message>());
                 return messages;
             });
         }, 10_000);
@@ -919,12 +924,15 @@ export class MucRoom {
                         });
                     } else {
                         this.messageStore.update((messages) => {
-                            if (messages.find((message) => message.id === idMessage)) {
+                            if ([...messages.values()].find((message) => message.id === idMessage)) {
                                 this.countMessagesToSee.set(0);
                                 this.lastMessageSeen = new Date();
-                                messages = messages.map((message) =>
-                                    message.id === idMessage ? { ...message, delivered: true } : message
-                                );
+                                messages = [...messages.values()].reduce((map, message) => {
+                                    const newMessage =
+                                        message.id === idMessage ? { ...message, delivered: true } : message;
+                                    map.set(message.id, newMessage);
+                                    return map;
+                                }, new Map<string, Message>());
                             } //Check if message is deleted
                             else if (xml.getChildByAttr("xmlns", "urn:xmpp:message-delete:0")?.getName() === "remove") {
                                 console.log("delete message => ", xml);
@@ -993,7 +1001,7 @@ export class MucRoom {
                                         });
                                 }
 
-                                messages.push(message);
+                                messages.set(message.id, message);
                             }
                             return messages;
                         });
@@ -1051,8 +1059,13 @@ export class MucRoom {
                 };
                 //console.warn('MAM message received not state', messageXML?.toString());
                 this.messageStore.update((messages) => {
-                    messages.unshift(message);
-                    return messages.sort((a, b) => a.time.getTime() - b.time.getTime());
+                    [...messages.values()].unshift(message);
+                    return [...messages.values()]
+                        .sort((a, b) => a.time.getTime() - b.time.getTime())
+                        .reduce((map, message) => {
+                            map.set(message.id, message);
+                            return map;
+                        }, new Map<string, Message>());
                 });
             }
             handledMessage = true;
@@ -1191,15 +1204,25 @@ export class MucRoom {
 
     public deleteMessage(idMessage: string) {
         this.messageStore.update((messages) => {
-            return messages.filter((message) => message.id !== idMessage);
+            return [...messages.values()]
+                .filter((message) => message.id !== idMessage)
+                .reduce((map, message) => {
+                    map.set(message.id, message);
+                    return map;
+                }, new Map<string, Message>());
         });
         return true;
     }
 
     public sendBack(idMessage: string) {
         this.messageStore.update((messages) => {
-            this.sendMessage(messages.find((message) => message.id === idMessage)?.body ?? "");
-            return messages.filter((message) => message.id !== idMessage);
+            this.sendMessage([...messages.values()].find((message) => message.id === idMessage)?.body ?? "");
+            return [...messages.values()]
+                .filter((message) => message.id !== idMessage)
+                .reduce((map, message) => {
+                    map.set(message.id, message);
+                    return map;
+                }, new Map<string, Message>());
         });
         return true;
     }
@@ -1255,7 +1278,7 @@ export class MucRoom {
 
     public reset(): void {
         this.presenceStore.set(new Map<string, User>());
-        this.messageStore.set([]);
+        this.messageStore.set(new Map<string, Message>());
         this.meStore.set({ isAdmin: false });
     }
 
