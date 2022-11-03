@@ -1,43 +1,25 @@
 import type { Readable, Subscriber, Unsubscriber, Writable } from "svelte/store";
 import { get, readable, writable } from "svelte/store";
 
-export class MapObjectVariant
+export interface MapEntity
 {
-    public itemPath: string ="";
-    public itemName: string ="";
-    public color: string = "";
-    public direction: Direction = Direction.none;
+    itemPath: string;
+    itemName: string;
+    color: string;
+    direction: Direction;
 }
 
-export class MapObject
-{
-    public itemName: string ="";
-    public directionVariants: DirectionVariant[] = [];
-
+export enum Direction{
+    Left = "Left",
+    Up = "Up",
+    Down = "Down",
+    Right = "Right"
 }
 
-class DirectionVariant
+export class MapObjectsStore implements Readable<MapEntity[]>
 {
-    public direction:Direction = Direction.none;
-    public colorVariants : ColorVariant[]=[];
-}
-
-class ColorVariant
-{
-    public color:string = "";
-    public itemPath:string="";
-}
-
-enum Direction{
-    left,
-    up,
-    down,
-    right,
-    none
-}
-
-export class MapObjectsStore implements Readable<MapObject[]>
-{
+    private allDirection =[Direction.Left, Direction.Up, Direction.Down, Direction.Right]
+    private allColor =["red","black", "yellow","blue", "white"]
     private objectPath = [
         'ChairGreyDown',
         'ChairGreyUp',
@@ -48,33 +30,32 @@ export class MapObjectsStore implements Readable<MapObject[]>
         'PoufOrange',
         'TableBrown'
     ];
-    private mapObjectsStore = writable<MapObject[]>([]);
+    private mapObjectsStore = writable<MapEntity[]>([]);
 
-    private mapObjects: MapObject[]=[];
+    private mapObjects: MapEntity[]=[];
     constructor()
     {
         const folder = "/src/Components/images/objects/";
-        for(var object of this.objectPath)
+        for(let object of this.objectPath)
         {
-            this.mapObjects.push(
-                {
-                    itemName:object,
-                    itemPath:folder+object+".png"
-                });
-
-            for(let i = 0; i < 10 ; i++)
+            for(let direction of this.allDirection)
             {
-                this.mapObjects.push(
-                    {
-                        itemName:object+i,
-                        itemPath:folder+object+".png"
-                    });
+                for(let color of this.allColor)
+                {
+                    this.mapObjects.push(
+                        {
+                            itemName:object,
+                            itemPath:folder+object+".png",
+                            color: color,
+                            direction: direction
+                        });
+                }
             }
-       }
+        }
         this.mapObjectsStore.set(this.mapObjects);
     }
 
-    subscribe(run: Subscriber<MapObject[]>, invalidate?: ((value?: MapObject[] | undefined) => void) | undefined): Unsubscriber {
+    subscribe(run: Subscriber<MapEntity[]>, invalidate?: ((value?: MapEntity[] | undefined) => void) | undefined): Unsubscriber {
         return this.mapObjectsStore.subscribe(run, invalidate);
     }
 

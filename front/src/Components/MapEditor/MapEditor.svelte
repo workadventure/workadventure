@@ -3,15 +3,20 @@
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import PropertyPreviewSidebar from "./PropertyPreviewSidebar.svelte";
     import ItemPicker from "./ItemPicker.svelte";
-    import { mapEditorSelectedToolStore  } from "../../Stores/MapEditorStore";
+    import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
+    import {mapEditorSelectedToolStore} from "../../Stores/MapEditorStore";
 </script>
 
 <MapEditorSideBar />
 <div class="map-editor tw-bg-dark-blue/95">
     <div class="sidebar">
-        <ItemPicker/>
-        <AreaPreviewWindow />
-        <PropertyPreviewSidebar />
+        {#if $mapEditorSelectedToolStore === EditorToolName.FloorEditor }
+            <ItemPicker/>
+        {/if}
+        {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor }
+            <AreaPreviewWindow />
+            <PropertyPreviewSidebar />
+        {/if}
     </div>
 </div>
 

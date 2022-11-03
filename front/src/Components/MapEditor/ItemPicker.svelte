@@ -1,25 +1,75 @@
 <script lang="ts">
-    import { mapObjectsStore  } from "../../Stores/MapEditorStore";
+    import { Direction, MapEntity } from "../../Stores/MapObjectsStore";
+    import { onDestroy, subscribe } from "svelte/internal";
+    import { mapEditorSelectedEntityStore, mapObjectsStore  } from "../../Stores/MapEditorStore";
+    import { object } from "zod";
+    import { map } from "rxjs/operators";
+    import AboutRoomSubMenu from "../Menu/AboutRoomSubMenu.svelte";
 
-    let pickedItem = $mapObjectsStore[0].itemName;
+    let pickedItem : MapEntity = $mapObjectsStore[0];
+    let pickedVariant : MapEntity | undefined = undefined;
 
-    function onPickItem(item : string)
+    let rootItem : MapEntity[] = []; //A sample of each object
+    let itemVariants : MapEntity[] = []
+
+
+    function onPickItemVariant(variant:MapEntity)
+    {
+        pickedVariant = variant;
+        mapEditorSelectedEntityStore.set(pickedVariant);
+    }
+
+    function onPickItem(item : MapEntity)
     {
         pickedItem = item;
+        itemVariants = $mapObjectsStore.filter((item)=>item.itemName == pickedItem.itemName)
+        pickedVariant = undefined;
     }
+
+    onPickItem(pickedItem);
+
+    let mapObjectStoreUnsubscriber = mapObjectsStore.subscribe((newMap)=>
+    {
+        let uniqId = new Set<string>();
+        for(let mapObject of newMap)
+        {
+            if(!uniqId.has(mapObject.itemName))
+            {
+                uniqId.add(mapObject.itemName);
+                rootItem.push(mapObject);
+            }
+        }
+    });
+
+    onDestroy(()=>
+    {
+        if(mapObjectStoreUnsubscriber !== undefined)
+        {
+            mapObjectStoreUnsubscriber();
+        }
+    });
 </script>
 
 <div class="item-picker">
-    <div class="item-name">{pickedItem}</div>
-    <div class="item-colour">Item colour picker</div>
-    <div class="item-name">Item Direction Picker</div>
+    <div class="item-name">{pickedItem.itemName}</div>
+    <div class="item-colour">{pickedItem.color}</div>
+    <div class="item-direction">{pickedItem.direction}</div>
     <div class="item-picker-container">
-        {#each $mapObjectsStore as item (item.itemName)}
-        <div class="pickable-item {item.itemName === pickedItem? 'active':''}" on:click={()=>onPickItem(item.itemName)}>
+        {#each rootItem as item (item.itemName) }
+        <div class="pickable-item {item.itemName === pickedItem.itemName? 'active':''}" on:click={()=>onPickItem(item)}>
             <img class="item-image" src={item.itemPath} alt={item.itemName}/>
         </div>
         {/each}
     </div>
+    <div class="separator">Select a variation</div>
+    <div class="item-picker-container">
+        {#each itemVariants as item }
+        <div class="pickable-item {item.direction === pickedVariant?.direction && item.color === pickedVariant.color? 'active':''}" on:click={()=>onPickItemVariant(item)}>
+            <img class="item-image" src={item.itemPath} alt={item.itemName}/>
+        </div>
+        {/each}
+    </div>
+
 </div>
 
 <style lang="scss">
