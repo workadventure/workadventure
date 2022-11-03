@@ -13,6 +13,7 @@ import { Subject } from "rxjs";
 import { PathTileType } from "../../../Utils/PathfindingManager";
 import { MathUtils } from "@workadventure/math-utils";
 import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
+import type { GameScene } from "../GameScene";
 
 export type LayerChangeCallback = (
     layersChangedByAction: Array<ITiledMapLayer>,
@@ -26,6 +27,7 @@ export type PropertyChangeCallback = (
 ) => void;
 
 export class GameMapFrontWrapper {
+    private scene: GameScene;
     private gameMap: GameMap;
 
     private oldKey: number | undefined;
@@ -58,7 +60,13 @@ export class GameMapFrontWrapper {
     private mapChangedSubject = new Subject<number[][]>();
     private areaUpdatedSubject = new Subject<ITiledMapRectangleObject>();
 
-    constructor(gameMap: GameMap, phaserMap: Phaser.Tilemaps.Tilemap, terrains: Array<Phaser.Tilemaps.Tileset>) {
+    constructor(
+        scene: GameScene,
+        gameMap: GameMap,
+        phaserMap: Phaser.Tilemaps.Tilemap,
+        terrains: Array<Phaser.Tilemaps.Tileset>
+    ) {
+        this.scene = scene;
         this.gameMap = gameMap;
 
         let depth = -2;

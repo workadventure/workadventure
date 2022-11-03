@@ -542,7 +542,7 @@ export class GameScene extends DirtyScene {
         this.embeddedWebsiteManager = new EmbeddedWebsiteManager(this);
 
         //add layer on map
-        this.gameMapFrontWrapper = new GameMapFrontWrapper(new GameMap(this.mapFile), this.Map, this.Terrains);
+        this.gameMapFrontWrapper = new GameMapFrontWrapper(this, new GameMap(this.mapFile), this.Map, this.Terrains);
         for (const layer of this.gameMapFrontWrapper.getFlatLayers()) {
             if (layer.type === "tilelayer") {
                 const exitSceneUrl = this.getExitSceneUrl(layer);
@@ -736,6 +736,9 @@ export class GameScene extends DirtyScene {
                     e
                 )
             );
+
+        this.gameMapFrontWrapper.putTile("chairAnimated", 5, 5, "furniture");
+        this.animatedTiles.updateAnimatedTiles();
     }
 
     /**
@@ -1655,6 +1658,7 @@ ${escapedMessage}
                 for (const eventTile of eventTiles) {
                     this.gameMapFrontWrapper.putTile(eventTile.tile, eventTile.x, eventTile.y, eventTile.layer);
                 }
+                this.animatedTiles.updateAnimatedTiles();
             })
         );
         iframeListener.registerAnswerer("enablePlayersTracking", (enablePlayersTrackingEvent, source) => {
@@ -1736,6 +1740,7 @@ ${escapedMessage}
                             }
                             //Create a new GameMap with the changed file
                             this.gameMapFrontWrapper = new GameMapFrontWrapper(
+                                this,
                                 new GameMap(this.mapFile),
                                 this.Map,
                                 this.Terrains
@@ -2716,6 +2721,10 @@ ${escapedMessage}
 
     public getActivatablesManager(): ActivatablesManager {
         return this.activatablesManager;
+    }
+
+    public getAnimatedTiles(): AnimatedTiles {
+        return this.animatedTiles;
     }
 
     public isMapEditorEnabled(): boolean {
