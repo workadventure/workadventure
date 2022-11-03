@@ -128,6 +128,7 @@ test.describe('Chat', () => {
       // A workaround to wait the end of svelte animation
       //eslint-disable-next-line playwright/no-wait-for-timeout
       await page.waitForTimeout(3_000);
+      await Chat.expandUsers(page);
       await Chat.UL_walkTo(page, nickname2);
 
       await Chat.openTimeline(page);
