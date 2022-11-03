@@ -11,6 +11,8 @@ import type { ErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
 export const MetaTagsDefaultValue: RequiredMetaTagsData = {
     title: "WorkAdventure",
     description: "Create your own digital office, Metaverse and meet online with the world.",
+    author: "WorkAdventure team",
+    provider: "WorkAdventure",
     favIcons: [
         {
             rel: "icon",
@@ -288,6 +290,8 @@ export class MetaTagsBuilder {
             description: mapDescriptionProperty?.value
                 ? String(mapDescriptionProperty.value)
                 : MetaTagsDefaultValue.description,
+            author: MetaTagsDefaultValue.author,
+            provider: MetaTagsDefaultValue.provider,
             favIcons: MetaTagsDefaultValue.favIcons,
             manifestIcons: MetaTagsDefaultValue.manifestIcons,
             appName: MetaTagsDefaultValue.appName,

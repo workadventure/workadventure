@@ -45,13 +45,24 @@ const isMapThirdPartyData = z.object({
 
 const MetaTagsData = z.object({
     // Meta tags values
-    title: extendApi(z.string().optional(), {
+    title: extendApi(z.string().optional().default("WorkAdventure"), {
         description: "Title shown on browser tab",
         example: "WorkAdventure - My Awesome World",
     }),
-    description: extendApi(z.string().optional(), {
-        description: "Description of the webpage",
-        example: "My awesome world in WorkAdventure",
+    description: extendApi(
+        z.string().optional().default("Create your own digital office, Metaverse and meet online with the world."),
+        {
+            description: "Description of the webpage",
+            example: "My awesome world in WorkAdventure",
+        }
+    ),
+    author: extendApi(z.string().optional().default("WorkAdventure team"), {
+        description: "Author of the webpage",
+        example: "My Awesome team",
+    }),
+    provider: extendApi(z.string().optional().default("WorkAdventure"), {
+        description: "Provider of the webpage",
+        example: "WorkAdventure SAAS plateform",
     }),
     favIcons: extendApi(isMetaTagFavicon.array().optional(), {
         description: "Icon to load inside the index.html and on the manifest",
