@@ -4,6 +4,14 @@ let urlsToCache = [
 ];
 
 self.addEventListener('install', function(event) {
+    // url to cache
+    if(event.target && event.target.serviceWorker && event.target.serviceWorker.scriptURL){
+        const url = new URL(event.target.serviceWorker.scriptURL);
+        const searchParams = new URLSearchParams(url.search);
+        const playUri = searchParams.get('playUri');
+        urlsToCache = [playUri];
+    }
+
     // Perform install steps
     event.waitUntil(
         caches.open(CACHE_NAME)
