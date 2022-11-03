@@ -7,7 +7,7 @@
     import LL from "../i18n/i18n-svelte";
     import Loader from "./Loader.svelte";
     import { derived } from "svelte/store";
-    import {showUsersStore} from "../Stores/ChatStore";
+    import { showUsersStore } from "../Stores/ChatStore";
 
     export let mucRoom: MucRoom;
     export let searchValue: string;

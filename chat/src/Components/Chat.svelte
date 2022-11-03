@@ -202,10 +202,7 @@
                 {/if}
                 <!-- chat users -->
                 {#if defaultMucRoom !== undefined}
-                    <UsersList
-                        mucRoom={defaultMucRoom}
-                        searchValue={searchValue.toLocaleLowerCase()}
-                    />
+                    <UsersList mucRoom={defaultMucRoom} searchValue={searchValue.toLocaleLowerCase()} />
                 {/if}
 
                 {#if $enableChat}
