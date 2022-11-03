@@ -34,8 +34,8 @@ services:
       - JITSI_URL
       - JITSI_PRIVATE_MODE
       - ENABLE_FEATURE_MAP_EDITOR
-      - PUSHER_URL=//${PUSHER_HOST}
-      - ICON_URL=//${ICON_HOST}
+      - PUSHER_URL=https://${PUSHER_HOST}
+      - ICON_URL=https://${ICON_HOST}
       - TURN_SERVER
       - TURN_USER
       - TURN_PASSWORD
@@ -54,6 +54,7 @@ services:
       - OPID_PROMPT=login
       - ENABLE_CHAT
       - ENABLE_CHAT_UPLOAD
+      - UPLOADER_URL=https://${UPLOADER_HOST}
       # Only used if you set up a JWT authentication mechanism in Ejabberd
       - EJABBERD_JWT_SECRET=${EJABBERD_JWT_SECRET}
       - EJABBERD_DOMAIN=${EJABBERD_DOMAIN}
@@ -72,8 +73,8 @@ services:
   chat:
     image: thecodingmachine/workadventure-chat:${VERSION}
     environment:
-      - PUSHER_URL=//${PUSHER_HOST}
-      - UPLOADER_URL=//${UPLOADER_HOST}
+      - PUSHER_URL=https://${PUSHER_HOST}
+      - UPLOADER_URL=https://${UPLOADER_HOST}
       - EMBEDLY_KEY=${EMBEDLY_KEY}
       - ENABLE_CHAT_UPLOAD=${ENABLE_CHAT_UPLOAD}
       - EJABBERD_DOMAIN=${EJABBERD_DOMAIN}
@@ -136,7 +137,7 @@ services:
   uploader:
     image: thecodingmachine/workadventure-uploader:${VERSION}
     environment:
-      - UPLOADER_URL=//${UPLOADER_HOST}
+      - UPLOADER_URL=https://${UPLOADER_HOST}
       #AWS
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
