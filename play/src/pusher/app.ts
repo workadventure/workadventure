@@ -12,7 +12,6 @@ import HyperExpress from "hyper-express";
 import { cors } from "./middlewares/Cors";
 import { ENABLE_OPENAPI_ENDPOINT } from "./enums/EnvironmentVariable";
 import { PingController } from "./controllers/PingController";
-import { IoSocketChatController } from "./controllers/IoSocketChatController";
 import { CompanionListController } from "./controllers/CompanionListController";
 import { FrontController } from "./controllers/FrontController";
 import fs from "fs";
