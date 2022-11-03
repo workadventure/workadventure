@@ -46,7 +46,7 @@
     let emojiContainer: HTMLElement;
 
     function needHideHeader(name: string, date: Date, i: number) {
-        let previousMsg = $messagesStore[i - 1];
+        let previousMsg = [...$messagesStore.values()][i - 1];
         if (!previousMsg) {
             return false;
         }
@@ -55,7 +55,7 @@
     }
 
     function showDate(date: Date, i: number) {
-        let previousMsg = $messagesStore[i - 1];
+        let previousMsg = [...$messagesStore.values()][i - 1];
         if (!previousMsg) {
             return true;
         }
@@ -189,7 +189,9 @@
             isScrolledDown = true;
             scrollDown();
         } else {
-            const message = [...$messagesStore].reverse().find((message) => message.time < mucRoom.lastMessageSeen);
+            const message = [...$messagesStore.values()]
+                .reverse()
+                .find((message) => message.time < mucRoom.lastMessageSeen);
             if (message) {
                 scrollToMessageId(message.id);
             }
@@ -250,7 +252,7 @@
     </div>
 
     <div
-        class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen tw-pt-14"
+        class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-justify-end tw-h-auto tw-min-h-screen tw-pt-14"
     >
         <div class="tw-mb-auto load-history">
             {#if $canLoadOlderMessagesStore}
@@ -280,7 +282,7 @@
                 {/if}
             {/if}
         </div>
-        {#each $messagesStore as message, i}
+        {#each [...$messagesStore.values()] as message, i}
             {#if showDate(message.time, i)}
                 <div class="wa-separator">
                     {message.time.toLocaleDateString($locale, {
