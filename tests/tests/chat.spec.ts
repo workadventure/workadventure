@@ -46,11 +46,11 @@ test.describe('Chat', () => {
       // Enter in liveZone
       await Map.walkTo(page, 'ArrowRight', 2_500);
       await Map.walkTo(page, 'ArrowUp', 500);
-      await Chat.expandUsers(page);
+      await Chat.expandLiveRooms(page);
       await Chat.liveRoomExist(page, 'liveZone');
       await Map.walkTo(page2, 'ArrowRight', 2_500);
       await Map.walkTo(page2, 'ArrowDown', 500);
-      await Chat.expandUsers(page2);
+      await Chat.expandLiveRooms(page2);
       await Chat.liveRoomExist(page2, 'liveZone');
 
 
