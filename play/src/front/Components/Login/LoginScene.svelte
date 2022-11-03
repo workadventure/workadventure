@@ -68,6 +68,7 @@
     }
 
     function getBackgroundColor() {
+        if (!gameManager.currentStartedRoom) return undefined;
         return gameManager.currentStartedRoom.backgroundColor;
     }
 </script>
