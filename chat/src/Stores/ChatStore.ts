@@ -191,3 +191,8 @@ export const chatSoundsStore = writable<boolean>(true);
 export const chatNotificationsStore = writable<boolean>(true);
 
 export const connectionNotAuthorized = writable<boolean>(false);
+
+export const showUsersStore = writable<boolean>(true);
+export const showLivesStore = writable<boolean>(false);
+export const showForumsStore = writable<boolean>(false);
+export const showTimelineStore = writable<boolean>(false);

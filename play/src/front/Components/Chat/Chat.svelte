@@ -17,6 +17,7 @@
     import { peerStore } from "../../Stores/PeerStore";
     import { connectionManager } from "../../Connexion/ConnectionManager";
     import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
+    import { MucRoomDefinitionMessage } from "../../../messages/ts-proto-generated/protos/messages";
 
     let chatIframe: HTMLIFrameElement;
 
@@ -134,6 +135,32 @@
                         menuIconVisiblilityStore.set(false);
                     })
                 );
+
+                subscribeListeners.push(
+                    gameSceneIsLoadedStore.subscribe((value) => {
+                        if (value) {
+                            const connection = gameManager.getCurrentGameScene().connection;
+                            if (connection) {
+                                subscribeObservers.push(
+                                    connection.joinMucRoomMessageStream.subscribe((mucRoomDefinitionMessage) => {
+                                        iframeListener.sendJoinMucEventToChatIframe(
+                                            mucRoomDefinitionMessage.url,
+                                            mucRoomDefinitionMessage.name,
+                                            mucRoomDefinitionMessage.type,
+                                            mucRoomDefinitionMessage.subscribe
+                                        );
+                                    })
+                                );
+
+                                subscribeObservers.push(
+                                    connection.leaveMucRoomMessageStream.subscribe((leaveMucRoomMessage) => {
+                                        iframeListener.sendLeaveMucEventToChatIframe(leaveMucRoomMessage.url);
+                                    })
+                                );
+                            }
+                        }
+                    })
+                );
                 //TODO delete it with new XMPP integration
                 //send list to chat iframe
                 subscribeListeners.push(
@@ -183,6 +210,7 @@
         class="tw-border-0"
     />
 </div>
+>
 
 <style lang="scss">
     @import "../../style/breakpoints.scss";

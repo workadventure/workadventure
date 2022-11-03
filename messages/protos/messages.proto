@@ -299,6 +299,8 @@ message SubMessage {
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
     PingMessage pingMessage = 11;
     EditMapCommandMessage editMapCommandMessage = 13;
+    JoinMucRoomMessage joinMucRoomMessage = 14;
+    LeaveMucRoomMessage leaveMucRoomMessage = 15;
   }
 }
 
@@ -604,6 +606,8 @@ message SubToPusherRoomMessage {
     VariableWithTagMessage variableMessage = 1;
     ErrorMessage errorMessage = 2;
     EditMapCommandMessage editMapCommandMessage = 3;
+    JoinMucRoomMessage joinMucRoomMessage = 4;
+    LeaveMucRoomMessage leaveMucRoomMessage = 5;
   }
 }
 
@@ -689,9 +693,24 @@ message EmptyMessage {
 
 
 
-/*******************************************************µ************************
+/********************************************************************************
  * Start Chat Messages
  ********************************************************************************/
+message ChatMessagePrompt{
+  string roomId = 1;
+  oneof message {
+    JoinMucRoomMessage joinMucRoomMessage = 2;
+    LeaveMucRoomMessage leaveMucRoomMessage = 3;
+  }
+}
+
+message JoinMucRoomMessage{
+  MucRoomDefinitionMessage mucRoomDefinitionMessage = 1;
+}
+
+message LeaveMucRoomMessage{
+  string url = 1;
+}
 message MucRoomDefinitionMessage {
   string url = 1;
   string name = 2;
@@ -739,6 +758,7 @@ service RoomManager {
   rpc sendAdminMessageToRoom(AdminRoomMessage) returns (EmptyMessage);
   rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (EmptyMessage);
   rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (EmptyMessage);
+  rpc sendChatMessagePrompt(ChatMessagePrompt) returns (EmptyMessage);
   rpc getRooms(EmptyMessage) returns (RoomsList);
   rpc ping(PingMessage) returns (PingMessage);
 }

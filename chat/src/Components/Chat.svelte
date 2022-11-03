@@ -17,6 +17,11 @@
     import {
         availabilityStatusStore,
         connectionNotAuthorized,
+        enableChat,
+        showForumsStore,
+        showLivesStore,
+        showTimelineStore,
+        showUsersStore,
         timelineActiveStore,
         timelineMessagesToSee,
         timelineOpenedStore,
@@ -27,6 +32,7 @@
     import { iframeListener } from "../IframeListener";
     import { fly } from "svelte/transition";
     import NeedRefresh from "./NeedRefresh.svelte";
+    import ChatForumRooms from "./ChatForumRooms.svelte";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -64,8 +70,8 @@
             })
         );
         subscribeListeners.push(
-            totalMessagesToSee.subscribe((total) => {
-                window.parent.postMessage({ type: "chatTotalMessagesToSee", data: total }, "*");
+            totalMessagesToSee.subscribe((total: number) => {
+                iframeListener.sendChatTotalMessagesToSee(total);
             })
         );
         subscribeListeners.push(
@@ -76,6 +82,42 @@
         subscribeListeners.push(
             mucRoomsStore.subscribe(() => {
                 defaultMucRoom = mucRoomsStore.getDefaultRoom();
+            })
+        );
+        subscribeListeners.push(
+            showUsersStore.subscribe((value) => {
+                if (value) {
+                    showLivesStore.set(false);
+                    showForumsStore.set(false);
+                    showTimelineStore.set(false);
+                }
+            })
+        );
+        subscribeListeners.push(
+            showLivesStore.subscribe((value) => {
+                if (value) {
+                    showUsersStore.set(false);
+                    showForumsStore.set(false);
+                    showTimelineStore.set(false);
+                }
+            })
+        );
+        subscribeListeners.push(
+            showForumsStore.subscribe((value) => {
+                if (value) {
+                    showLivesStore.set(false);
+                    showUsersStore.set(false);
+                    showTimelineStore.set(false);
+                }
+            })
+        );
+        subscribeListeners.push(
+            showTimelineStore.subscribe((value) => {
+                if (value) {
+                    showLivesStore.set(false);
+                    showForumsStore.set(false);
+                    showUsersStore.set(false);
+                }
             })
         );
     });
@@ -175,14 +217,20 @@
                     />
                 {/if}
 
-                <ChatLiveRooms
-                    {showLives}
-                    searchValue={searchValue.toLocaleLowerCase()}
-                    on:showLives={handleShowLives}
-                    liveRooms={[...$mucRoomsStore].filter(
-                        (mucRoom) => mucRoom.type === "live" && mucRoom.name.toLowerCase().includes(searchValue)
-                    )}
-                />
+                {#if $enableChat}
+                    <ChatForumRooms
+                        searchValue={searchValue.toLocaleLowerCase()}
+                        forumRooms={[...$mucRoomsStore].filter(
+                            (mucRoom) => mucRoom.type === "forum" && mucRoom.name.toLowerCase().includes(searchValue)
+                        )}
+                    />
+                    <ChatLiveRooms
+                        searchValue={searchValue.toLocaleLowerCase()}
+                        liveRooms={[...$mucRoomsStore].filter(
+                            (mucRoom) => mucRoom.type === "live" && mucRoom.name.toLowerCase().includes(searchValue)
+                        )}
+                    />
+                {/if}
 
                 <Timeline on:activeThreadTimeLine={() => timelineActiveStore.set(true)} />
             </div>

@@ -47,7 +47,7 @@ services:
             STARTUP_COMMAND_2: yarn typesafe-i18n
             STARTUP_COMMAND_3: cd ../libs/tailwind && yarn install
             STARTUP_COMMAND_4: cd ../map-editor && yarn install
-            STARTUP_COMMAND_5: while [ -f /usr/src/app/src/Messages/generate_request/need_regenerate ]; do sleep 1; done
+            STARTUP_COMMAND_5: while [ -f /usr/src/app/src/messages/generate_request/need_regenerate ]; do sleep 1; done
             DEBUG: "socket:*"
             DEBUG_ERROR_MESSAGES: "true"
             DEBUG_MODE: "$DEBUG_MODE"
