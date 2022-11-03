@@ -138,13 +138,6 @@
         }
     }
 
-    function handleShowUsers() {
-        showUsers = !showUsers;
-    }
-    function handleShowLives() {
-        showLives = !showLives;
-    }
-
     function closeChat() {
         window.parent.postMessage({ type: "closeChat" }, "*");
         //document.activeElement?.blur();
@@ -211,9 +204,7 @@
                 {#if defaultMucRoom !== undefined}
                     <UsersList
                         mucRoom={defaultMucRoom}
-                        {showUsers}
                         searchValue={searchValue.toLocaleLowerCase()}
-                        on:showUsers={handleShowUsers}
                     />
                 {/if}
 

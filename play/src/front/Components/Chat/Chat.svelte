@@ -17,7 +17,6 @@
     import { peerStore } from "../../Stores/PeerStore";
     import { connectionManager } from "../../Connexion/ConnectionManager";
     import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
-    import { MucRoomDefinitionMessage } from "../../../messages/ts-proto-generated/protos/messages";
 
     let chatIframe: HTMLIFrameElement;
 

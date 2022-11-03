@@ -47,7 +47,8 @@ import {
     AskPositionMessage,
     MoveToPositionMessage,
     SubToPusherRoomMessage,
-    EditMapCommandWithKeyMessage, ChatMessagePrompt,
+    EditMapCommandWithKeyMessage,
+    ChatMessagePrompt,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";

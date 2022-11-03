@@ -31,14 +31,15 @@ import {
     RoomsList,
     PingMessage,
     QueryMessage,
-    EditMapCommandWithKeyMessage, ChatMessagePrompt,
+    EditMapCommandWithKeyMessage,
+    ChatMessagePrompt,
 } from "./Messages/generated/messages_pb";
 import {
     sendUnaryData,
     ServerDuplexStream,
     ServerErrorResponse,
     ServerUnaryCall,
-    ServerWritableStream
+    ServerWritableStream,
 } from "@grpc/grpc-js";
 import { socketManager } from "./Services/SocketManager";
 import {
