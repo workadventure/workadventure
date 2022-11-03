@@ -57,6 +57,11 @@
     $: roomSorted = [...usersByMaps.keys()].sort((a, b) =>
         me?.roomName === a ? -1 : me?.roomName === b ? 1 : a.localeCompare(b)
     );
+
+    $: usersLenght = usersList.filter((user: User) => {
+        if (!searchValue || searchValue === "") return true;
+        return user.name.toLocaleLowerCase().includes(searchValue);
+    }).length;
 </script>
 
 <div id="users" class="users tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
@@ -111,7 +116,7 @@
                 {/if}
             {/if}
         </div>
-        {#if [...usersByMaps.values()].flat().length > maxUsersMinimized}
+        {#if usersLenght > maxUsersMinimized}
             <div class="tw-px-2 tw-mb-1  tw-flex tw-justify-end" on:click={() => (minimizeUser = !minimizeUser)}>
                 <button class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline">
                     {$LL.see()}
