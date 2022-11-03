@@ -3,12 +3,7 @@
     import { ChevronUpIcon } from "svelte-feather-icons";
     import { createEventDispatcher } from "svelte";
     import LL from "../../i18n/i18n-svelte";
-    import {
-        chatPeerConnectionInProgress,
-        timelineOpenedStore,
-        timelineMessagesToSee,
-        showTimelineStore,
-    } from "../../Stores/ChatStore";
+    import { chatPeerConnectionInProgress, timelineMessagesToSee, showTimelineStore } from "../../Stores/ChatStore";
 
     const dispatch = createEventDispatcher();
 

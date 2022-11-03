@@ -150,8 +150,6 @@ export const chatVisibilityStore = writable<boolean>(false);
 
 export const availabilityStatusStore = writable<number>(1);
 
-export const timelineOpenedStore = writable<boolean>(true);
-
 export const timelineActiveStore = writable<boolean>(false);
 
 export const lastTimelineMessageRead = writable<Date>(new Date());

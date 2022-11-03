@@ -14,7 +14,6 @@ import {
     showTimelineStore,
     timelineActiveStore,
     timelineMessagesToSee,
-    timelineOpenedStore,
     writingStatusMessageStore,
 } from "./Stores/ChatStore";
 import { setCurrentLocale } from "./i18n/locales";

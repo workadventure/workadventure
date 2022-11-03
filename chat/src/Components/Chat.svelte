@@ -24,7 +24,6 @@
         showUsersStore,
         timelineActiveStore,
         timelineMessagesToSee,
-        timelineOpenedStore,
     } from "../Stores/ChatStore";
     import { Unsubscriber, derived } from "svelte/store";
     import { chatConnectionManager } from "../Connection/ChatConnectionManager";
@@ -40,8 +39,6 @@
     let autoscroll: boolean;
 
     let searchValue = "";
-    let showUsers = true;
-    let showLives = true;
 
     beforeUpdate(() => {
         autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
@@ -186,7 +183,6 @@
                             class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
                             placeholder={$LL.search()}
                             bind:value={searchValue}
-                            on:input={() => timelineOpenedStore.set(false)}
                         />
                     </div>
                 </div>
