@@ -67,7 +67,9 @@
         <!--If we have a video to display-->
     {:else if $localStreamStore.type === "success" && !$inExternalServiceStore}
         {#if $requestedCameraState && $mediaStreamConstraintsStore.video}
-            <div class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height">
+            <div
+                class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height tw-z-[251]"
+            >
                 <i class="tw-flex">
                     <span
                         style="background-color: {backgroundColor}; color: {textColor};"
@@ -76,7 +78,7 @@
                     >
                 </i>
             </div>
-            <div class="woka-webcam-container container-end video-on-responsive-height tw-pb-1">
+            <div class="woka-webcam-container container-end video-on-responsive-height tw-pb-1 tw-z-[251]">
                 <div class="tw-flex">
                     <Woka
                         userId={-1}
@@ -89,6 +91,7 @@
             <div class="my-webcam-container tw-z-[250] tw-bg-dark-blue/50 tw-rounded tw-transition-all">
                 <video
                     class="tw-h-full tw-w-full tw-rounded md:tw-object-cover"
+                    style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}
                     autoplay
                     muted
