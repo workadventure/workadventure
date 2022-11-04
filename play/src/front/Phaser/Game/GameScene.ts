@@ -736,6 +736,10 @@ export class GameScene extends DirtyScene {
                     e
                 )
             );
+
+        if (gameManager.currentStartedRoom.backgroundColor != undefined) {
+            this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
+        }
     }
 
     /**

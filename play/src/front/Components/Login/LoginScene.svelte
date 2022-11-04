@@ -66,10 +66,16 @@
             }
         }
     }
+
+    function getBackgroundColor() {
+        if (!gameManager.currentStartedRoom) return undefined;
+        return gameManager.currentStartedRoom.backgroundColor;
+    }
 </script>
 
 <form
     class="loginScene tw-w-screen tw-flex tw-flex-col tw-h-screen tw-px-10 md:tw-px-32 tw-pointer-events-auto tw-pt-20"
+    style={getBackgroundColor() != undefined ? `background-color: ${getBackgroundColor()};` : ""}
     on:submit|preventDefault={submit}
 >
     <section class="tw-h-fit tw-max-w-2xl tw-self-center">

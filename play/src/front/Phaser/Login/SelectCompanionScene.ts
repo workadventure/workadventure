@@ -71,6 +71,10 @@ export class SelectCompanionScene extends ResizableScene {
 
         this.createCurrentCompanion();
         this.updateSelectedCompanion();
+
+        if (gameManager.currentStartedRoom.backgroundColor != undefined) {
+            this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
+        }
     }
 
     update(time: number, delta: number): void {

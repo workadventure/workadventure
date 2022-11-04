@@ -59,13 +59,21 @@ export class CustomizeScene extends AbstractCharacterScene {
     public preload(): void {
         super.preload();
 
-        this.load.image("iconClothes", "/resources/icons/icon_clothes.png");
-        this.load.image("iconAccessory", "/resources/icons/icon_accessory.png");
-        this.load.image("iconHat", "/resources/icons/icon_hat.png");
-        this.load.image("iconHair", "/resources/icons/icon_hair.png");
-        this.load.image("iconEyes", "/resources/icons/icon_eyes.png");
-        this.load.image("iconBody", "/resources/icons/icon_body.png");
-        this.load.image("iconTurn", "/resources/icons/icon_turn.png");
+        const iconClothes = gameManager.currentStartedRoom.iconClothes ?? "/resources/icons/icon_clothes.png";
+        const iconAccessory = gameManager.currentStartedRoom.iconAccessory ?? "/resources/icons/icon_accessory.png";
+        const iconHat = gameManager.currentStartedRoom.iconHat ?? "/resources/icons/icon_hat.png";
+        const iconHair = gameManager.currentStartedRoom.iconHair ?? "/resources/icons/icon_hair.png";
+        const iconEyes = gameManager.currentStartedRoom.iconEyes ?? "/resources/icons/icon_eyes.png";
+        const iconBody = gameManager.currentStartedRoom.iconBody ?? "/resources/icons/icon_body.png";
+        const iconTurn = gameManager.currentStartedRoom.iconTurn ?? "/resources/icons/icon_turn.png";
+
+        this.load.image("iconClothes", iconClothes);
+        this.load.image("iconAccessory", iconAccessory);
+        this.load.image("iconHat", iconHat);
+        this.load.image("iconHair", iconHair);
+        this.load.image("iconEyes", iconEyes);
+        this.load.image("iconBody", iconBody);
+        this.load.image("iconTurn", iconTurn);
         this.load.spritesheet("floorTiles", "/resources/tilesets/floor_tiles.png", { frameWidth: 32, frameHeight: 32 });
 
         TexturesHelper.createRectangleTexture(this, "gridEdgeShadow", this.cameras.main.width * 0.2, 115, 0x000000);
@@ -97,6 +105,8 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public create(): void {
+        super.create();
+
         this.selectedLayers = [0, 0, 0, 0, 0, 0];
         this.tryLoadLastUsedWokaLayers();
         waScaleManager.zoomModifier = 1;
