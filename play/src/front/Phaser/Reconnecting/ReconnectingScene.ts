@@ -55,5 +55,9 @@ export class ReconnectingScene extends Phaser.Scene {
             repeat: -1,
         });
         cat.play("right");
+
+        if (gameManager.currentStartedRoom.backgroundColor != undefined) {
+            this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
+        }
     }
 }

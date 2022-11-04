@@ -29,12 +29,18 @@
         onDestroy(() => clearInterval(interval));
     }
 
+    function getBackgroundColor() {
+        if (!gameManager.currentStartedRoom) return undefined;
+        return gameManager.currentStartedRoom.backgroundColor;
+    }
+
     $: detailsStylized = (details ?? "").replace("{time}", `${timeVar / 1000}`);
 </script>
 
 {#if $errorScreenStore}
     <main
         class="errorScreen tw-bg-dark-purple tw-pointer-events-auto tw-w-full tw-text-white tw-text-center tw-absolute tw-flex tw-flex-wrap tw-items-center tw-justify-center tw-h-full tw-top-0 tw-left-0 tw-right-0 tw-mx-auto tw-overflow-scroll tw-py-5"
+        style={getBackgroundColor() != undefined ? `background-color: ${getBackgroundColor()};` : ""}
         transition:fly={{ y: -200, duration: 500 }}
     >
         <div class="tw-flex tw-flex-col tw-items-center" style="width: 90%;">

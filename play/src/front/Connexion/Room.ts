@@ -40,6 +40,14 @@ export class Room {
     private _enableChat: boolean | undefined;
     private _enableChatUpload: boolean | undefined;
     private _legals: LegalsData | undefined;
+    private _backgroundColor: string | undefined;
+    private _iconClothes: string | undefined;
+    private _iconAccessory: string | undefined;
+    private _iconHat: string | undefined;
+    private _iconHair: string | undefined;
+    private _iconEyes: string | undefined;
+    private _iconBody: string | undefined;
+    private _iconTurn: string | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -145,6 +153,7 @@ export class Room {
                 this._loadingLogo = data.loadingLogo ?? undefined;
                 this._loginSceneLogo = data.loginSceneLogo ?? undefined;
                 this._showPoweredBy = data.showPoweredBy ?? true;
+                this._backgroundColor = data.backgroundColor ?? undefined;
                 this._metadata = data.metadata ?? undefined;
 
                 this._mucRooms = data.mucRooms ?? undefined;
@@ -155,6 +164,14 @@ export class Room {
 
                 this._enableChat = data.enableChat ?? undefined;
                 this._enableChatUpload = data.enableChatUpload ?? undefined;
+
+                this._iconClothes = data.customizeWokaScene?.clothesIcon ?? undefined;
+                this._iconAccessory = data.customizeWokaScene?.accessoryIcon ?? undefined;
+                this._iconBody = data.customizeWokaScene?.bodyIcon ?? undefined;
+                this._iconEyes = data.customizeWokaScene?.eyesIcon ?? undefined;
+                this._iconHair = data.customizeWokaScene?.hairIcon ?? undefined;
+                this._iconHat = data.customizeWokaScene?.hatIcon ?? undefined;
+                this._iconTurn = data.customizeWokaScene?.turnIcon ?? undefined;
 
                 return new MapDetail(data.mapUrl);
             } else if (errorApiDataChecking.success) {
@@ -306,5 +323,37 @@ export class Room {
 
     get legals(): LegalsData | undefined {
         return this._legals;
+    }
+
+    get backgroundColor(): string | undefined {
+        return this._backgroundColor;
+    }
+
+    get iconClothes(): string | undefined {
+        return this._iconClothes;
+    }
+
+    get iconAccessory(): string | undefined {
+        return this._iconAccessory;
+    }
+
+    get iconHat(): string | undefined {
+        return this._iconHat;
+    }
+
+    get iconHair(): string | undefined {
+        return this._iconHair;
+    }
+
+    get iconEyes(): string | undefined {
+        return this._iconEyes;
+    }
+
+    get iconBody(): string | undefined {
+        return this._iconBody;
+    }
+
+    get iconTurn(): string | undefined {
+        return this._iconTurn;
     }
 }
