@@ -37,7 +37,11 @@ export class FrontController extends BaseHttpController {
     }
 
     private getFullUrl(req: Request): string {
-        return `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+        let protocol = req.header("X-Forwarded-Proto");
+        if (!protocol) {
+            protocol = req.protocol;
+        }
+        return `${protocol}://${req.get("host")}${req.originalUrl}`;
     }
 
     front(): void {
