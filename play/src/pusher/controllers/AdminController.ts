@@ -272,6 +272,8 @@ export class AdminController extends BaseHttpController {
                     throw new Error("Incorrect type parameter value");
                 }
 
+                console.log("[sendChatMessagePrompt] => ChatMessagePrompt sent to rooms");
+
                 await apiClientRepository.getClient(roomId).then((roomClient) => {
                     return new Promise<void>((res, rej) => {
                         roomClient.sendChatMessagePrompt(chatMessagePrompt, (err) => {

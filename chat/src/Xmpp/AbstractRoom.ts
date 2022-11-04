@@ -58,6 +58,7 @@ export type Message = {
     mentions?: User[];
 };
 export type MessagesList = Message[];
+export type MessageMap = Map<string, Message>;
 
 export enum MessageType {
     message = 1,
@@ -84,7 +85,7 @@ export const defaultUserData: UserData = {
 };
 
 export class AbstractRoom {
-    protected messageStore: Writable<Message[]>;
+    protected messageStore: Writable<Map<string, Message>>;
     protected reactionMessageStore: Writable<Map<string, ReactionMessage[]>>;
     protected deletedMessagesStore: Writable<string[]>;
     public lastMessageSeen: Date;
@@ -99,7 +100,7 @@ export class AbstractRoom {
             throw new TypeError('Abstract class "AbstractRoom" cannot be instantiated directly');
         }
 
-        this.messageStore = writable<Message[]>(new Array(0));
+        this.messageStore = writable<Map<string, Message>>(new Map<string, Message>());
         this.deletedMessagesStore = writable<string[]>(new Array(0));
         this.reactionMessageStore = writable<Map<string, ReactionMessage[]>>(new Map<string, ReactionMessage[]>());
         this.lastMessageSeen = new Date();
@@ -147,7 +148,7 @@ export class AbstractRoom {
         }
     }
     public reset(): void {
-        this.messageStore.set([]);
+        this.messageStore.set(new Map<string, Message>());
     }
     public updateLastMessageSeen() {
         this.countMessagesToSee.set(0);
@@ -185,7 +186,7 @@ export class AbstractRoom {
     }
 
     // Get all store
-    public getMessagesStore(): Writable<MessagesList> {
+    public getMessagesStore(): Writable<MessageMap> {
         return this.messageStore;
     }
     public getDeletedMessagesStore(): Writable<string[]> {

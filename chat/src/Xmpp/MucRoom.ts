@@ -40,7 +40,7 @@ export class MucRoom extends AbstractRoom {
         this.canLoadOlderMessagesStore = writable<boolean>(true);
         this.showDisabledLoadOlderMessagesStore = writable<boolean>(false);
         this.loadingSubscribers = writable<boolean>(false);
-        this.readyStore = writable<boolean>(true);
+        this.readyStore = writable<boolean>(type === "default");
     }
 
     get recipient(): string {
@@ -209,7 +209,7 @@ export class MucRoom extends AbstractRoom {
         }
 
         this.messageStore.update((messages) => {
-            messages.push({
+            messages.set(idMessage, {
                 name: this.xmppClient.getPlayerName(),
                 jid: this.xmppClient.getMyPersonalJID(),
                 body: text,
@@ -243,8 +243,11 @@ export class MucRoom extends AbstractRoom {
         }
         this.sendTimeOut = setTimeout(() => {
             this.messageStore.update((messages) => {
-                messages = messages.map((message) => (!message.delivered ? { ...message, error: true } : message));
-                return messages;
+                const messagesUpdated = new Map<string, Message>();
+                messages.forEach((message, messageId) => {
+                    messagesUpdated.set(messageId, { ...message, error: !message.delivered });
+                });
+                return messagesUpdated;
             });
         }, 10_000);
         if (_VERBOSE) console.warn("[XMPP]", ">> Message sent");
@@ -295,7 +298,9 @@ export class MucRoom extends AbstractRoom {
         void this.xmppClient.socket.destroyRoom(this.roomJid.full, { reason: "Destroyed by administrator" });
     }
     public async sendRetrieveLastMessages(max: number = 50) {
-        const firstMessage = get(this.messageStore).shift();
+        const firstMessage = [...get(this.messageStore).values()]
+            .sort((a, b) => a.time.getTime() - b.time.getTime())
+            .shift();
         this.loadingStore.set(true);
         const now = new Date();
         if (_VERBOSE) console.warn("[XMPP]", ">> Retrieve last messages sent");
@@ -352,11 +357,10 @@ export class MucRoom extends AbstractRoom {
                 date = new Date(delay.timestamp);
             }
             this.messageStore.update((messages) => {
-                if (messages.find((message_) => message_.id === receivedMessage.id)) {
+                const thisMessage = messages.get(receivedMessage.id ?? "");
+                if (thisMessage) {
                     this.updateLastMessageSeen();
-                    messages = messages.map((message_) =>
-                        message_.id === receivedMessage.id ? { ...message_, delivered: true } : message_
-                    );
+                    messages.set(thisMessage.id, { ...thisMessage, delivered: true, error: false });
                     response = true;
                 } else if (receivedMessage.remove) {
                     const removeId = receivedMessage.remove.id;
@@ -407,7 +411,7 @@ export class MucRoom extends AbstractRoom {
                                 : undefined,
                             reactionsMessage: this.reactions(receivedMessage.id),
                         };
-                        messages.push(message);
+                        messages.set(receivedMessage.id, message);
                         response = true;
                     } else {
                         console.error("Message format is not good", {
@@ -605,12 +609,11 @@ export class MucRoom extends AbstractRoom {
     private updateMessageReactions(messageId: string) {
         // Update reactions of the message targeted
         this.messageStore.update((messages) => {
-            return messages.map((message) => {
-                if (message.id == messageId) {
-                    return { ...message, reactionsMessage: this.reactions(message.id) };
-                }
-                return message;
-            });
+            const thisMessage = messages.get(messageId);
+            if (thisMessage) {
+                messages.set(messageId, { ...thisMessage, reactionsMessage: this.reactions(messageId) });
+            }
+            return messages;
         });
     }
     private toggleReactionsMessage(userJid: string, messageId: string, reactions: Array<string>) {
@@ -658,16 +661,17 @@ export class MucRoom extends AbstractRoom {
     }
     public deleteMessage(idMessage: string): boolean {
         this.messageStore.update((messages) => {
-            return messages.filter((message) => message.id !== idMessage);
+            messages.delete(idMessage);
+            return messages;
         });
         return true;
     }
     public sendBack(idMessage: string): boolean {
-        this.messageStore.update((messages) => {
-            this.sendMessage(messages.find((message) => message.id === idMessage)?.body ?? "");
-            return messages.filter((message) => message.id !== idMessage);
-        });
-        return true;
+        throw new Error("Not implemented yet");
+        // this.messageStore.update((messages) => {
+        //     this.sendMessage(messages.find((message) => message.id === idMessage)?.body ?? "");
+        //     return messages.filter((message) => message.id !== idMessage);
+        // });
     }
 
     // Get all stores

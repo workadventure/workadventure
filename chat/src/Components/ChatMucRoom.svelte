@@ -30,6 +30,7 @@
     const presenceStore = mucRoom.getPresenceStore();
     const me = derived(presenceStore, ($presenceStore) => $presenceStore.get(mucRoom.myJID));
     const unreads = mucRoom.getCountMessagesToSee();
+    const readyStore = mucRoom.getRoomReadyStore();
 </script>
 
 <div class={`wa-chat-item`} on:mouseleave={closeChatUserMenu}>
@@ -54,7 +55,13 @@
                 <span class={`${chunk.match ? "tw-text-light-blue" : ""}`}>{chunk.text}</span>
             {/each}
         </h1>
-        <OnlineUsers {presenceStore} />
+        {#if $readyStore}
+            <OnlineUsers {presenceStore} />
+        {:else}
+            <div class={`tw-text-xs tw-text-lighter-purple tw-mt-0 tw-animate-pulse`}>
+                {$LL.loading()} ...
+            </div>
+        {/if}
     </div>
 
     {#if $unreads}

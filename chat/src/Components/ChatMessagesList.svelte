@@ -52,7 +52,7 @@
     let emojiContainer: HTMLElement;
 
     function needHideHeader(name: string, date: Date, i: number) {
-        let previousMsg = [...$messagesStore].sort((a, b) => a.time.getTime() - b.time.getTime())[i - 1];
+        let previousMsg = [...$messagesStore.values()].sort((a, b) => a.time.getTime() - b.time.getTime())[i - 1];
         if (!previousMsg) {
             return false;
         }
@@ -61,7 +61,7 @@
     }
 
     function showDate(date: Date, i: number) {
-        let previousMsg = [...$messagesStore].sort((a, b) => a.time.getTime() - b.time.getTime())[i - 1];
+        let previousMsg = [...$messagesStore.values()].sort((a, b) => a.time.getTime() - b.time.getTime())[i - 1];
         if (!previousMsg) {
             return true;
         }
@@ -197,7 +197,9 @@
             scrollDown();
             console.info("First scroll down");
         } else {
-            const message = [...$messagesStore].reverse().find((message) => message.time < mucRoom.lastMessageSeen);
+            const message = [...$messagesStore.values()]
+                .reverse()
+                .find((message) => message.time < mucRoom.lastMessageSeen);
             if (message) {
                 scrollToMessageId(message.id);
             }
@@ -288,7 +290,7 @@
                 {/if}
             {/if}
         </div>
-        {#each [...$messagesStore].sort((a, b) => a.time.getTime() - b.time.getTime()) as message, i}
+        {#each [...$messagesStore.values()].sort((a, b) => a.time.getTime() - b.time.getTime()) as message, i}
             {#if showDate(message.time, i)}
                 <div class="wa-separator">
                     {message.time.toLocaleDateString($locale, {
