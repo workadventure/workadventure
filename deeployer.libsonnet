@@ -119,7 +119,7 @@
       "env": {
         "PUSHER_URL": "//play-"+url,
         "UPLOADER_URL": "//uploader-"+url,
-        "CHAT_EMBEDLY_KEY": if std.objectHas(env, 'CHAT_EMBEDLY_KEY') then env.CHAT_EMBEDLY_KEY else "",
+        "EMBEDLY_KEY": if std.objectHas(env, 'EMBEDLY_KEY') then env.EMBEDLY_KEY else "",
         "ICON_URL": "//icon-"+url,
         "EJABBERD_WS_URI": "wss://xmpp-"+url+"/ws",
         "EJABBERD_DOMAIN": "xmpp-"+url,

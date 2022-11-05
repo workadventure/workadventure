@@ -49,6 +49,7 @@ services:
       - SECRET_KEY
       - API_URL
       - FRONT_URL=https://${FRONT_HOST}
+      - CHAT_URL=https://${CHAT_HOST}
       - PUBLIC_MAP_STORAGE_URL=https://${MAP_STORAGE_HOST}
       - START_ROOM_URL
       - OPID_PROMPT=login
