@@ -1,0 +1,243 @@
+{
+    "collectionName":"Sample basic",
+    "collection":[
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairGreyDown.png",
+            "direction":"Down",
+            "color":"grey"
+        },
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairBlueDown.png",
+            "direction":"Down",
+            "color":"blue"
+        },
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairGreenDown.png",
+            "direction":"Down",
+            "color":"green"
+        },
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairLightRedDown.png",
+            "direction":"Down",
+            "color":"light-red"
+        },
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairRedDown.png",
+            "direction":"Down",
+            "color":"red"
+        },
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairBlueUp.png",
+            "direction":"Up",
+            "color":"blue"
+        },
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairGreenUp.png",
+            "direction":"Up",
+            "color":"green"
+        },
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairGreyUp.png",
+            "direction":"Up",
+            "color":"grey"
+        },
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairLightRedUp.png",
+            "direction":"Up",
+            "color":"light-red"
+        },
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairRedUp.png",
+            "direction":"Up",
+            "color":"red"
+        },
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairBlueLeft.png",
+            "direction":"Left",
+            "color":"blue"
+        },
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairGreenLeft.png",
+            "direction":"Left",
+            "color":"green"
+        },
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairGreyLeft.png",
+            "direction":"Left",
+            "color":"grey"
+        },
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairLightRedLeft.png",
+            "direction":"Left",
+            "color":"light-red"
+        },
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairRedLeft.png",
+            "direction":"Left",
+            "color":"red"
+        },
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairBlueRight.png",
+            "direction":"Right",
+            "color":"blue"
+        },
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairGreenRight.png",
+            "direction":"Right",
+            "color":"green"
+        },
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairGreyRight.png",
+            "direction":"Right",
+            "color":"grey"
+        },
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairLightRedRight.png",
+            "direction":"Right",
+            "color":"light-red"
+        },
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairRedRight.png",
+            "direction":"Right",
+            "color":"red"
+        },
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairLightRedRight.png",
+            "direction":"Right",
+            "color":"light-red"
+        },
+        {
+            "name":"Basic Chair",
+            "tags":["seat","basic"],
+            "path":"Chair/ChairRedRight.png",
+            "direction":"Right",
+            "color":"red"
+        },
+        {
+            "name":"Plant",
+            "tags":["ornament","plant","natural", "basic"],
+            "path":"Plant/Plant.png",
+            "direction":"Down",
+            "color":"green"
+        },
+        {
+            "name":"Plant",
+            "tags":["ornament","plant","natural", "basic"],
+            "path":"Plant/PlantBlue.png",
+            "direction":"Down",
+            "color":"blue"
+        },
+        {
+            "name":"Plant",
+            "tags":["ornament","plant","natural", "basic"],
+            "path":"Plant/PlantCyan.png",
+            "direction":"Down",
+            "color":"cyan"
+        },
+        {
+            "name":"Plant",
+            "tags":["ornament","plant","natural", "basic"],
+            "path":"Plant/PlantRed.png",
+            "direction":"Down",
+            "color":"red"
+        },
+        {
+            "name":"Small Plant",
+            "tags":["ornament","plant","natural", "basic"],
+            "path":"Plant/PlantSmall.png",
+            "direction":"Down",
+            "color":"green"
+        },
+        {
+            "name":"Small Plant",
+            "tags":["ornament","plant","natural", "basic"],
+            "path":"Plant/PlantSmallBlue.png",
+            "direction":"Down",
+            "color":"blue"
+        },
+        {
+            "name":"Small Plant",
+            "tags":["ornament","plant","natural", "basic"],
+            "path":"Plant/PlantSmallCyan.png",
+            "direction":"Down",
+            "color":"cyan"
+        },
+        {
+            "name":"Small Plant",
+            "tags":["ornament","plant","natural", "basic"],
+            "path":"Plant/PlantSmallRed.png",
+            "direction":"Down",
+            "color":"red"
+        },
+        {
+            "name":"Pouf",
+            "tags":["seat"],
+            "path":"PoufBrown.png",
+            "direction":"Down",
+            "color":"brown"
+        },
+                {
+            "name":"Pouf",
+            "tags":["seat"],
+            "path":"PoufOrange.png",
+            "direction":"Down",
+            "color":"orange"
+        },
+        {
+            "name":"Table",
+            "tags":["table"],
+            "path":"TableBrown.png",
+            "direction":"Down",
+            "color":"orange"
+        },
+        {
+            "name":"Table",
+            "tags":["table"],
+            "path":"TableDarkBrown.png",
+            "direction":"Down",
+            "color":"brown"
+        }
+    ]
+}
