@@ -8,7 +8,7 @@ import {createFileOfSize, deleteFile, fileExist} from "./utils/file";
 
 const TIMEOUT_TO_GET_LIST = 60_000;
 
-test.setTimeout(500_000);
+test.setTimeout(750_000);
 
 test.describe('Chat', () => {
   test('main', async ({ page, browser, browserName }) => {
