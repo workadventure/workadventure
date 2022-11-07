@@ -4,6 +4,7 @@
     import { mapEditorSelectedEntityStore, mapObjectsStore  } from "../../Stores/MapEditorStore";
     import { object } from "zod";
     import { map } from "rxjs/operators";
+    import deleteTagButton from "../images/close.png";
     import AboutRoomSubMenu from "../Menu/AboutRoomSubMenu.svelte";
 
     let pickedItem : MapEntity = $mapObjectsStore[0];
@@ -78,7 +79,6 @@
 
     onPickItem(pickedItem);
 
-
     let mapObjectStoreUnsubscriber = mapObjectsStore.subscribe((newMap)=>
     {
         currentMapObjects = newMap;
@@ -111,9 +111,9 @@
         </select>
 
     </div>
-    <div>
+    <div class="tag-container">
         {#each tagFilter as tag (tag)}
-            <button on:click={()=>onTagDelete(tag)}>{tag}</button>
+            <button class="tag-button" on:click={()=>onTagDelete(tag)}>{tag}<img class="tag-delete" src={deleteTagButton} alt=""/></button>
         {/each}</div>
     <div class="item-name">{pickedItem.name}</div>
     <div class="item-picker-container">
@@ -139,6 +139,22 @@
 
 <style lang="scss">
     .item-picker{
+        .tag-container
+        {
+            display: flex;
+            flex-wrap: wrap;
+            .tag-button{
+                background-color: rgb(77 75 103);
+                border-radius: 1em;
+                border:  0.01rem solid grey;
+                .tag-delete
+                {
+                    margin-left: 0.5em;
+                    max-inline-size: 0.65em;
+                    margin-right: -0.25em;
+                }
+            }
+        }
         .item-picker-container{
             width: 18em;
             height: 16em;
@@ -178,6 +194,7 @@
         }
         align-content: center;
         width: 20em;
+        padding: 2em;
     }
 
 </style>
