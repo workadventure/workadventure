@@ -4,6 +4,9 @@ import { adminService } from "./AdminService";
 import axios from "axios";
 import { ADMIN_API_URL } from "../enums/EnvironmentVariable";
 import type { MetaTagsData, RequiredMetaTagsData, MapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
+import type { RoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
+import { isRoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
+import type { ErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
 
 export const MetaTagsDefaultValue: RequiredMetaTagsData = {
     title: "WorkAdventure",
@@ -188,6 +191,8 @@ export const MetaTagsDefaultValue: RequiredMetaTagsData = {
 };
 
 export class MetaTagsBuilder {
+    private mapDetails: MapDetailsData | RoomRedirect | ErrorApiData | undefined;
+
     constructor(private url: string) {}
 
     public async getMeta(userAgent: string): Promise<RequiredMetaTagsData> {
@@ -210,20 +215,33 @@ export class MetaTagsBuilder {
         return MetaTagsDefaultValue;
     }
 
-    private async fetchMapDetails(): Promise<MapDetailsData | undefined> {
+    private async fetchMapDetailsData(): Promise<MapDetailsData | undefined> {
         if (!ADMIN_API_URL) {
             return undefined;
         }
 
-        const fetchedData = await adminService.fetchMapDetails(this.url);
+        const fetchedData = await this.fetchMapDetails();
 
         const checkMapDetails = isMapDetailsData.safeParse(fetchedData);
         return checkMapDetails.success ? checkMapDetails.data : undefined;
     }
 
+    private async fetchMapDetails(): Promise<MapDetailsData | RoomRedirect | ErrorApiData | undefined> {
+        if (!ADMIN_API_URL) {
+            return undefined;
+        }
+        if (this.mapDetails) {
+            return this.mapDetails;
+        }
+
+        this.mapDetails = await adminService.fetchMapDetails(this.url);
+
+        return this.mapDetails;
+    }
+
     private async getMetaFromAdmin(): Promise<MetaTagsData | undefined> {
         try {
-            const mapDetails = await this.fetchMapDetails();
+            const mapDetails = await this.fetchMapDetailsData();
             if (mapDetails === undefined) {
                 return undefined;
             }
@@ -293,5 +311,14 @@ export class MetaTagsBuilder {
         }
 
         return this.metaValuesFromMapFile(mapFile);
+    }
+
+    public async getRedirectUrl(): Promise<string | undefined> {
+        const mapDetails = await this.fetchMapDetails();
+        const safeParse = isRoomRedirect.safeParse(mapDetails);
+        if (safeParse.success) {
+            return safeParse.data.redirectUrl;
+        }
+        return undefined;
     }
 }

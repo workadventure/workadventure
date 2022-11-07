@@ -143,6 +143,11 @@ export class FrontController extends BaseHttpController {
     private async displayFront(req: Request, res: Response, url: string) {
         const builder = new MetaTagsBuilder(url);
 
+        const redirectUrl = await builder.getRedirectUrl();
+        if (redirectUrl) {
+            return res.redirect(redirectUrl);
+        }
+
         const metaTagsData = await builder.getMeta(req.header("User-Agent"));
 
         const html = Mustache.render(this.indexFile, {
