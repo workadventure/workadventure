@@ -328,12 +328,14 @@ export class RoomConnection implements RoomConnection {
                                 break;
                             }
                             case "joinMucRoomMessage": {
+                                console.log("[sendChatMessagePrompt] RoomConnection => joinMucRoomMessage received");
                                 this._joinMucRoomMessageStream.next(
                                     subMessage.joinMucRoomMessage.mucRoomDefinitionMessage
                                 );
                                 break;
                             }
                             case "leaveMucRoomMessage": {
+                                console.log("[sendChatMessagePrompt] RoomConnection => leaveMucRoomMessage received");
                                 this._leaveMucRoomMessageStream.next(subMessage.leaveMucRoomMessage);
                                 break;
                             }

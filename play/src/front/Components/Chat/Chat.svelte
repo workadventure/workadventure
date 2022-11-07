@@ -142,6 +142,9 @@
                             if (connection) {
                                 subscribeObservers.push(
                                     connection.joinMucRoomMessageStream.subscribe((mucRoomDefinitionMessage) => {
+                                        console.log(
+                                            "[sendChatMessagePrompt] joinMucRoomMessageStream => joinMucRoomMessage received"
+                                        );
                                         iframeListener.sendJoinMucEventToChatIframe(
                                             mucRoomDefinitionMessage.url,
                                             mucRoomDefinitionMessage.name,
@@ -153,6 +156,9 @@
 
                                 subscribeObservers.push(
                                     connection.leaveMucRoomMessageStream.subscribe((leaveMucRoomMessage) => {
+                                        console.log(
+                                            "[sendChatMessagePrompt] leaveMucRoomMessageStream => leaveMucRoomMessage received"
+                                        );
                                         iframeListener.sendLeaveMucEventToChatIframe(leaveMucRoomMessage.url);
                                     })
                                 );

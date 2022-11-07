@@ -35,7 +35,7 @@ export class MucManager {
         const allMucRooms = await ejabberdClient.getAllMucRooms();
         const allMucRoomsOfWorld: string[] = [];
         if (Axios.isAxiosError(allMucRooms)) {
-            console.warn("Error to get allMucRooms (AxiosError) : ", allMucRooms.response);
+            console.warn("Error to get allMucRooms (AxiosError) : ", allMucRooms.message, allMucRooms);
         } else if (allMucRooms instanceof Error) {
             console.warn("Error to get allMucRooms : ", allMucRooms);
         } else {
