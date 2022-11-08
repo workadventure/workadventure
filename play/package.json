@@ -45,6 +45,7 @@
     ]
   },
   "devDependencies": {
+    "@fontsource/roboto": "^4.5.8",
     "@home-based-studio/phaser3-utils": "^0.4.7",
     "@sveltejs/vite-plugin-svelte": "^1.0.2",
     "@tsconfig/svelte": "^3.0.0",

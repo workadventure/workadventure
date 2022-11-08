@@ -95,7 +95,7 @@ class AdminApi implements AdminInterface {
      * Checks whether admin api is enabled
      */
     isEnabled(): boolean {
-        return ADMIN_API_URL != "";
+        return !!ADMIN_API_URL;
     }
 
     async initialise(): Promise<AdminCapabilities> {
