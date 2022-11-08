@@ -70,22 +70,15 @@
         return true;
     }
 
-    let messagesList: HTMLElement;
     let subscribers = new Array<Unsubscriber>();
 
     let emojiContainer: HTMLElement;
     let picker: EmojiButton;
 
     onMount(() => {
-        messagesList.addEventListener("scroll", () => {
-            if (messagesList && messagesList.scrollTop === messagesList.scrollHeight - messagesList.offsetHeight) {
-                lastTimelineMessageRead.set(new Date());
-            }
-        });
         subscribers.push(
             chatMessagesStore.subscribe(() => {
                 setTimeout(() => {
-                    window.scroll(0, messagesList.scrollHeight);
                     lastTimelineMessageRead.set(new Date());
                 }, 50);
             })
@@ -214,7 +207,6 @@
         <div
             id="timeLine-messageList"
             class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-pt-14 tw-pb-14 tw-justify-end tw-h-auto tw-min-h-screen"
-            bind:this={messagesList}
         >
             {#each $chatMessagesStore as message}
                 {#if message.type === ChatMessageTypes.text || message.type === ChatMessageTypes.me}

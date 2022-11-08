@@ -88,6 +88,8 @@
     "@16bits/nes.css": "^2.3.2",
     "@anatine/zod-openapi": "^1.9.8",
     "@fontsource/press-start-2p": "^4.3.0",
+    "@fontsource/roboto": "^4.5.8",
+    "@fontsource/roboto-condensed": "^4.5.9",
     "@grpc/grpc-js": "^1.7.1",
     "@joeattardi/emoji-button": "^4.6.2",
     "@tailwindcss/forms": "^0.5.0",
