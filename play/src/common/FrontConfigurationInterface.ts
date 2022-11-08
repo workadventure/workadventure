@@ -26,4 +26,6 @@ export interface FrontConfigurationInterface {
     CHAT_URL: string | undefined;
     ENABLE_CHAT_UPLOAD: boolean;
     FALLBACK_LOCALE: string | undefined;
+    PEER_VIDEO_MAX_BANDWIDTH_KBITS_PS: number;
+    PEER_SCREENSHARE_MAX_BANDWIDTH_KBITS_PS: number;
 }
