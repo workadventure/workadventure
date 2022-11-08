@@ -347,9 +347,19 @@ class LocalUserStore {
                             }
                         }
 
+                        let valueReturned;
+                        try {
+                            valueReturned = JSON.parse(value);
+                        } catch (err) {
+                            console.info(
+                                "getAllUserProperties => value cannot be parsed to JSON, undefined returned.",
+                                err
+                            );
+                            valueReturned = undefined;
+                        }
                         result.set(userKey, {
                             isPublic,
-                            value: JSON.parse(value),
+                            value: valueReturned,
                         });
                     }
                 }
