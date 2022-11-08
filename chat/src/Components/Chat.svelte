@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { afterUpdate, beforeUpdate, onDestroy, onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { HtmlUtils } from "../Utils/HtmlUtils";
     import Loader from "./Loader.svelte";
     import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
@@ -33,16 +33,10 @@
     import NeedRefresh from "./NeedRefresh.svelte";
     import ChatForumRooms from "./ChatForumRooms.svelte";
 
-    let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
     let handleFormBlur: { blur(): void };
-    let autoscroll: boolean;
 
     let searchValue = "";
-
-    beforeUpdate(() => {
-        autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
-    });
 
     let defaultMucRoom: MucRoom | undefined = undefined;
     let subscribeListeners = new Array<Unsubscriber>();
@@ -56,7 +50,6 @@
         if (!$locale) {
             await localeDetector();
         }
-        listDom.scrollTo(0, listDom.scrollHeight);
         subscribeListeners.push(
             mucRoomsStore.subscribe(() => {
                 try {
@@ -125,10 +118,6 @@
         });
     });
 
-    afterUpdate(() => {
-        if (autoscroll) listDom.scrollTo(0, listDom.scrollHeight);
-    });
-
     function onClick(event: MouseEvent) {
         if (handleFormBlur && HtmlUtils.isClickedOutside(event, chatWindowElement)) {
             handleFormBlur.blur();
@@ -165,7 +154,7 @@
 <svelte:window on:keydown={onKeyDown} on:click={onClick} />
 
 <aside class="chatWindow" bind:this={chatWindowElement}>
-    <section class="tw-p-0 tw-m-0" bind:this={listDom}>
+    <section class="tw-p-0 tw-m-0">
         {#if $connectionNotAuthorized}
             <NeedRefresh />
         {:else if loading}
