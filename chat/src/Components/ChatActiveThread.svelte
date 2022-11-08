@@ -14,10 +14,9 @@
 
     export let activeThread: MucRoom;
 
-    const me = derived(activeThread.getPresenceStore(), ($presenceStore) => $presenceStore.get(activeThread.myJID));
-
-    const usersListStore = activeThread.getPresenceStore();
+    const presenceStore = activeThread.getPresenceStore();
     const readyStore = activeThread.getRoomReadyStore();
+    const me = derived(activeThread.getPresenceStore(), ($presenceStore) => $presenceStore.get(activeThread.myJID));
 
     let messagesList: ChatMessagesList;
 
@@ -59,7 +58,7 @@
                     </div>
                 {/if}
             </div>
-            <OnlineUsers {usersListStore} />
+            <OnlineUsers {presenceStore} />
         </div>
         <div
             id="settings"
@@ -100,7 +99,7 @@
                 <p class="tw-px-5 tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
                     {$LL.users()}
                 </p>
-                {#each [...$usersListStore] as [_, user]}
+                {#each [...$presenceStore] as [_, user]}
                     <ChatUser mucRoom={activeThread} {user} searchValue="" />
                 {/each}
             </div>

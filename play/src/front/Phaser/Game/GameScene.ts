@@ -878,6 +878,18 @@ export class GameScene extends DirtyScene {
                     this.currentPlayerGroupId = message.groupId;
                 });
 
+                this.connection.joinMucRoomMessageStream.subscribe((mucRoomDefinitionMessage) => {
+                    iframeListener.sendJoinMucEventToChatIframe(
+                        mucRoomDefinitionMessage.url,
+                        mucRoomDefinitionMessage.name,
+                        mucRoomDefinitionMessage.type,
+                        mucRoomDefinitionMessage.subscribe
+                    );
+                });
+                this.connection.leaveMucRoomMessageStream.subscribe((leaveMucRoomMessage) => {
+                    iframeListener.sendLeaveMucEventToChatIframe(leaveMucRoomMessage.url);
+                });
+
                 this.messageSubscription = this.connection.worldFullMessageStream.subscribe((message) => {
                     this.showWorldFullError(message);
                 });

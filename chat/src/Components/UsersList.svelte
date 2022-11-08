@@ -2,16 +2,14 @@
     import { MucRoom } from "../Xmpp/MucRoom";
     import { User } from "../Xmpp/AbstractRoom";
     import ChatUser from "./ChatUser.svelte";
-    import { createEventDispatcher } from "svelte";
     import { ChevronUpIcon } from "svelte-feather-icons";
     import { fly } from "svelte/transition";
     import LL from "../i18n/i18n-svelte";
     import Loader from "./Loader.svelte";
     import { derived } from "svelte/store";
-    const dispatch = createEventDispatcher<{ showUsers: undefined }>();
+    import { showUsersStore } from "../Stores/ChatStore";
 
     export let mucRoom: MucRoom;
-    export let showUsers: boolean;
     export let searchValue: string;
 
     let minimizeUser = true;
@@ -64,11 +62,11 @@
         <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
             {$LL.users()}
         </p>
-        <button class="tw-text-lighter-purple" on:click={() => dispatch("showUsers")}>
-            <ChevronUpIcon class={`tw-transform tw-transition ${showUsers ? "" : "tw-rotate-180"}`} />
+        <button class="tw-text-lighter-purple" on:click={() => showUsersStore.set(!$showUsersStore)}>
+            <ChevronUpIcon class={`tw-transform tw-transition ${$showUsersStore ? "" : "tw-rotate-180"}`} />
         </button>
     </div>
-    {#if showUsers}
+    {#if $showUsersStore}
         <div transition:fly={{ y: -30, duration: 100 }}>
             {#if $loadingSubscribersStore}
                 <Loader text={$LL.loadingUsers()} height="tw-h-40" />

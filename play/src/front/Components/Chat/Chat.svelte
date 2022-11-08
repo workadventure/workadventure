@@ -134,6 +134,7 @@
                         menuIconVisiblilityStore.set(false);
                     })
                 );
+
                 //TODO delete it with new XMPP integration
                 //send list to chat iframe
                 subscribeListeners.push(
@@ -183,6 +184,7 @@
         class="tw-border-0"
     />
 </div>
+>
 
 <style lang="scss">
     @import "../../style/breakpoints.scss";

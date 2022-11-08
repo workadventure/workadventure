@@ -118,6 +118,26 @@ class Chat {
     async AT_close(page: Page){
         await this.get(page).locator('#activeThread .exit').click();
     }
+
+    async expandUsers(page: Page){
+        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).toHaveClass(/tw-rotate-180/);
+        await this.get(page).locator('#users div:has-text("Users") button > .feather-chevron-up').click();
+        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).not.toHaveClass(/tw-rotate-180/);
+    }
+
+    async expandLiveRooms(page: Page){
+        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).toHaveClass(/tw-rotate-180/);
+        await this.get(page).locator('#liveRooms div:has-text("Live zones") button > .feather-chevron-up').click();
+        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).not.toHaveClass(/tw-rotate-180/);
+    }
+
+    async expandForums(page: Page){
+        await this.get(page).locator('#forumRooms div:has-text("Forums") button > .feather-chevron-up').click();
+    }
+
+    async forumExist(page: Page, name: string) {
+        await expect(this.get(page).locator('#forumRooms')).toContainText(name);
+    }
 }
 
 export default new Chat();

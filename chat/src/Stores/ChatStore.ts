@@ -150,8 +150,6 @@ export const chatVisibilityStore = writable<boolean>(false);
 
 export const availabilityStatusStore = writable<number>(1);
 
-export const timelineOpenedStore = writable<boolean>(true);
-
 export const timelineActiveStore = writable<boolean>(false);
 
 export const lastTimelineMessageRead = writable<Date>(new Date());
@@ -191,3 +189,8 @@ export const chatSoundsStore = writable<boolean>(true);
 export const chatNotificationsStore = writable<boolean>(true);
 
 export const connectionNotAuthorized = writable<boolean>(false);
+
+export const showUsersStore = writable<boolean>(true);
+export const showLivesStore = writable<boolean>(false);
+export const showForumsStore = writable<boolean>(false);
+export const showTimelineStore = writable<boolean>(false);

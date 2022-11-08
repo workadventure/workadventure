@@ -36,7 +36,9 @@ import type {
     GroupUpdateMessage as GroupUpdateMessageTsProto,
     JitsiJwtAnswer,
     JoinBBBMeetingAnswer,
+    LeaveMucRoomMessage,
     MoveToPositionMessage as MoveToPositionMessageProto,
+    MucRoomDefinitionMessage,
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
     PositionMessage as PositionMessageTsProto,
     PositionMessage_Direction,
@@ -161,6 +163,12 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _moveToPositionMessageStream = new Subject<MoveToPositionMessageProto>();
     public readonly moveToPositionMessageStream = this._moveToPositionMessageStream.asObservable();
+
+    private readonly _joinMucRoomMessageStream = new Subject<MucRoomDefinitionMessage>();
+    public readonly joinMucRoomMessageStream = this._joinMucRoomMessageStream.asObservable();
+
+    private readonly _leaveMucRoomMessageStream = new Subject<LeaveMucRoomMessage>();
+    public readonly leaveMucRoomMessageStream = this._leaveMucRoomMessageStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -317,6 +325,18 @@ export class RoomConnection implements RoomConnection {
                             case "editMapCommandMessage": {
                                 const message = subMessage.editMapCommandMessage;
                                 this._editMapCommandMessageStream.next(message);
+                                break;
+                            }
+                            case "joinMucRoomMessage": {
+                                console.log("[sendChatMessagePrompt] RoomConnection => joinMucRoomMessage received");
+                                this._joinMucRoomMessageStream.next(
+                                    subMessage.joinMucRoomMessage.mucRoomDefinitionMessage
+                                );
+                                break;
+                            }
+                            case "leaveMucRoomMessage": {
+                                console.log("[sendChatMessagePrompt] RoomConnection => leaveMucRoomMessage received");
+                                this._leaveMucRoomMessageStream.next(subMessage.leaveMucRoomMessage);
                                 break;
                             }
                             default: {

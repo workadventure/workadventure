@@ -922,4 +922,14 @@ export class GameRoom implements BrothersFinder {
         this.mapUrl = lastMapUrl;
         return this.mucManagerPromise;
     }
+
+    public sendSubMessageToRoom(subMessage: SubToPusherRoomMessage) {
+        const batchMessage = new BatchToPusherRoomMessage();
+        batchMessage.addPayload(subMessage);
+
+        // Dispatch the message on the room listeners
+        for (const socket of this.roomListeners) {
+            socket.write(batchMessage);
+        }
+    }
 }

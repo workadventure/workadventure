@@ -11,9 +11,9 @@ import {
     enableChatUpload,
     newChatMessageSubject,
     newChatMessageWritingStatusSubject,
+    showTimelineStore,
     timelineActiveStore,
     timelineMessagesToSee,
-    timelineOpenedStore,
     writingStatusMessageStore,
 } from "./Stores/ChatStore";
 import { setCurrentLocale } from "./i18n/locales";
@@ -130,7 +130,7 @@ class IframeListener {
                         case "peerConnectionStatus": {
                             chatPeerConnectionInProgress.set(iframeEvent.data);
                             if (iframeEvent.data) {
-                                timelineOpenedStore.set(true);
+                                showTimelineStore.set(true);
                             }
                             break;
                         }
@@ -240,6 +240,16 @@ class IframeListener {
         window.parent.postMessage(
             {
                 type: "redirectPricing",
+            },
+            "*"
+        );
+    }
+
+    sendChatTotalMessagesToSee(total: number) {
+        window.parent.postMessage(
+            {
+                type: "chatTotalMessagesToSee",
+                data: total,
             },
             "*"
         );

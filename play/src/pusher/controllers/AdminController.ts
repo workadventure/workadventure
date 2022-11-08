@@ -5,6 +5,10 @@ import {
     WorldFullWarningToRoomMessage,
     RefreshRoomPromptMessage,
     EmptyMessage,
+    ChatMessagePrompt,
+    MucRoomDefinitionMessage,
+    JoinMucRoomMessage,
+    LeaveMucRoomMessage,
 } from "../../messages/generated/messages_pb";
 import { adminToken } from "../middlewares/AdminToken";
 import { BaseHttpController } from "./BaseHttpController";
@@ -16,6 +20,7 @@ export class AdminController extends BaseHttpController {
         this.receiveGlobalMessagePrompt();
         this.receiveRoomEditionPrompt();
         this.getRoomsList();
+        this.sendChatMessagePrompt();
     }
 
     /**
@@ -219,6 +224,66 @@ export class AdminController extends BaseHttpController {
             }
 
             res.setHeader("Content-Type", "application/json").send(JSON.stringify(rooms));
+            return;
+        });
+    }
+
+    sendChatMessagePrompt(): void {
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        this.app.post("/chat/message", [adminToken], async (req: Request, res: Response) => {
+            const body = await req.json();
+
+            try {
+                if (typeof body.roomId !== "string") {
+                    throw new Error("Incorrect roomId parameter");
+                } else if (typeof body.type !== "string") {
+                    throw new Error("Incorrect type parameter");
+                } else if (typeof body.mucRoomUrl !== "string") {
+                    throw new Error("Incorrect mucRoomUrl parameter");
+                } else if (typeof body.mucRoomName !== "string" && body.type === "join") {
+                    throw new Error("Incorrect mucRoomName parameter");
+                } else if (typeof body.mucRoomType !== "string" && body.type === "join") {
+                    throw new Error("Incorrect mucRoomType parameter");
+                }
+                const roomId: string = body.roomId;
+                const mucRoomUrl: string = body.mucRoomUrl;
+                const mucRoomName: string = body.mucRoomName;
+                const mucRoomType: string = body.mucRoomType;
+
+                const chatMessagePrompt = new ChatMessagePrompt();
+                chatMessagePrompt.setRoomid(body.roomId);
+
+                if (body.type === "join") {
+                    const mucRoomDefinition = new MucRoomDefinitionMessage();
+                    mucRoomDefinition.setUrl(mucRoomUrl);
+                    mucRoomDefinition.setName(mucRoomName);
+                    mucRoomDefinition.setType(mucRoomType);
+
+                    const joinMucRoomMessage = new JoinMucRoomMessage();
+                    joinMucRoomMessage.setMucroomdefinitionmessage(mucRoomDefinition);
+
+                    chatMessagePrompt.setJoinmucroommessage(joinMucRoomMessage);
+                } else if (body.type === "leave") {
+                    const leaveMucRoomMessage = new LeaveMucRoomMessage();
+                    leaveMucRoomMessage.setUrl(mucRoomUrl);
+
+                    chatMessagePrompt.setLeavemucroommessage(leaveMucRoomMessage);
+                } else {
+                    throw new Error("Incorrect type parameter value");
+                }
+
+                await apiClientRepository.getClient(roomId).then((roomClient) => {
+                    return new Promise<void>((res, rej) => {
+                        roomClient.sendChatMessagePrompt(chatMessagePrompt, (err) => {
+                            err ? rej(err) : res();
+                        });
+                    });
+                });
+            } catch (err) {
+                throw new Error("sendChatMessagePrompt => error" + err);
+            }
+
+            res.send("ok");
             return;
         });
     }

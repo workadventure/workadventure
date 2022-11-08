@@ -4,11 +4,11 @@ import {openChat} from "./utils/menu";
 import Chat from './utils/chat';
 import Map from './utils/map';
 import {findContainer, startContainer, stopContainer} from "./utils/containers";
-import {createFileOfSize} from "./utils/file";
+import {createFileOfSize, deleteFile, fileExist} from "./utils/file";
 
-const TIMEOUT_TO_GET_LIST = 30_000;
+const TIMEOUT_TO_GET_LIST = 60_000;
 
-test.setTimeout(500_000);
+test.setTimeout(750_000);
 
 test.describe('Chat', () => {
   test('main', async ({ page, browser, browserName }) => {
@@ -46,9 +46,11 @@ test.describe('Chat', () => {
       // Enter in liveZone
       await Map.walkTo(page, 'ArrowRight', 2_500);
       await Map.walkTo(page, 'ArrowUp', 500);
+      await Chat.expandLiveRooms(page);
       await Chat.liveRoomExist(page, 'liveZone');
       await Map.walkTo(page2, 'ArrowRight', 2_500);
       await Map.walkTo(page2, 'ArrowDown', 500);
+      await Chat.expandLiveRooms(page2);
       await Chat.liveRoomExist(page2, 'liveZone');
 
 
@@ -115,6 +117,9 @@ test.describe('Chat', () => {
       await expect(chat.locator('#activeThread .users .wa-chat-item', {hasText: nickname2})).toHaveClass(/user/);
       */
 
+      if(fileExist('./fileLittle.txt')) deleteFile('./fileLittle.txt');
+      if(fileExist('./fileBig.txt')) deleteFile('./fileBig.txt');
+
       // Exit forum
       await Chat.AT_close(page);
 
@@ -123,13 +128,14 @@ test.describe('Chat', () => {
       // A workaround to wait the end of svelte animation
       //eslint-disable-next-line playwright/no-wait-for-timeout
       await page.waitForTimeout(3_000);
+      await Chat.expandUsers(page);
       await Chat.UL_walkTo(page, nickname2);
 
-      await Chat.openTimeline(page);
       // FIXME After this issues is completed : https://github.com/thecodingmachine/workadventure/issues/2500
+      //await Chat.openTimeline(page);
       //await expect(chat.locator('#activeTimeline #timeLine-messageList .event').last()).toContainText(nickname2 + ' join the discussion');
       // Close timeline
-      await Chat.closeTimeline(page);
+      //await Chat.closeTimeline(page);
 
       // Exit of liveZone
       await page.locator('#game').focus();
@@ -140,8 +146,19 @@ test.describe('Chat', () => {
       await Chat.noLiveRoom(page2);
     });
 
+    await test.step('default forum exist', async () => {
+      await page.reload();
+      await openChat(page);
+
+      await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
+
+      await Chat.expandForums(page);
+      await Chat.forumExist(page, 'Welcome');
+    });
+
     await test.step('disconnect and reconnect to ejabberd and pusher', async () => {
       const chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
+      await Chat.expandUsers(page);
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
 
       await stopContainer(ejabberd);
