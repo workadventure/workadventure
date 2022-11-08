@@ -77,15 +77,9 @@
     let picker: EmojiButton;
 
     onMount(() => {
-        messagesList.addEventListener("scroll", () => {
-            if (messagesList && messagesList.scrollTop === messagesList.scrollHeight - messagesList.offsetHeight) {
-                lastTimelineMessageRead.set(new Date());
-            }
-        });
         subscribers.push(
             chatMessagesStore.subscribe(() => {
                 setTimeout(() => {
-                    window.scroll(0, messagesList.scrollHeight);
                     lastTimelineMessageRead.set(new Date());
                 }, 50);
             })
