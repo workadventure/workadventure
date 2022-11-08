@@ -50,7 +50,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run ts-proto && yarn run copy-to-play-ts-proto && yarn run proto && yarn run copy-to-play && yarn run json-copy-to-play
+        run: yarn run ts-proto && yarn run copy-to-play-ts-proto && yarn run proto && yarn run copy-to-play
         working-directory: "messages"
 
       - name: "Generate i18n files"
@@ -126,7 +126,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run ts-proto && yarn run copy-to-chat-ts-proto && yarn run json-copy-to-chat
+        run: yarn run ts-proto && yarn run copy-to-chat-ts-proto
         working-directory: "messages"
 
       - name: "Pretty"
@@ -193,7 +193,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run proto && yarn run copy-to-back && yarn run json-copy-to-back
+        run: yarn run proto && yarn run copy-to-back
         working-directory: "messages"
 
       - name: "Build"
@@ -271,7 +271,7 @@ jobs:
         working-directory: "libs/map-editor"
 
       - name: "Build proto messages"
-        run: yarn run ts-proto-map-storage && yarn run copy-to-map-storage-ts-proto
+        run: yarn run ts-proto-map-storage
         working-directory: "messages"
 
       - name: "Build"
@@ -395,10 +395,6 @@ jobs:
 
       - name: "Install messages dependencies"
         run: yarn install
-        working-directory: "messages"
-
-      - name: "Copy JSON messages"
-        run: yarn run json-copy-to-play
         working-directory: "messages"
 
       - name: "Build API typings"
