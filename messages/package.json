@@ -7,7 +7,7 @@
     "ts-proto": "grpc_tools_node_protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=ts-proto-generated --ts_proto_opt=outputServices=grpc-js --ts_proto_opt=oneof=unions --ts_proto_opt=esModuleInterop=true -I ./protos protos/*.proto",
 
     "copy-to-back": "syncdir generated/ ../back/src/Messages/generated && rm -f ../back/src/Messages/generate_request/need_regenerate",
-    "copy-to-libs-messages": "syncdir ts-proto-generated/ ../libs/messages/src/ts-proto-generated && sed -i 's/import { Observable } from \"rxjs\";/import type { Observable } from \"rxjs\";/g' ../libs/messages/src/ts-proto-generated/messages.ts",
+    "copy-to-libs-messages": "syncdir ts-proto-generated/ ../libs/messages/src/ts-proto-generated",
     "copy-to-libs-grpc-services": "syncdir ts-proto-generated/ ../libs/grpc-services/src/ts-proto-generated",
     
     "proto-all": "yarn run proto && yarn run ts-proto && yarn run copy-to-play-ts-proto && yarn run copy-to-chat-ts-proto && yarn run copy-to-back && yarn run copy-to-play && yarn run copy-to-libs-messages && yarn run copy-to-libs-grpc-services",
@@ -18,7 +18,7 @@
     "copy-to-chat-ts-proto": "syncdir ts-proto-generated/ ../chat/src/Messages/ts-proto-generated/",
     "copy-to-play": "syncdir generated/ ../play/src/messages/generated && rm -f ../play/src/messages/generate_request/need_regenerate",
 
-    "tag-version": "sed -i \"s/apiVersionHash = \\\".*\\\"/apiVersionHash = \\\"$(sha1sum protos/messages.proto JsonMessages/* | sha1sum | cut -c1-8)\\\"/g\" JsonMessages/ApiVersion.ts"
+    "tag-version": "sed -i \"s/apiVersionHash = \\\".*\\\"/apiVersionHash = \\\"$(sha1sum protos/messages.proto ../libs/messages/JsonMessages/* | sha1sum | cut -c1-8)\\\"/g\" ../libs/messages/JsonMessages/ApiVersion.ts"
   },
   "dependencies": {
     "@anatine/zod-openapi": "^1.3.0",
