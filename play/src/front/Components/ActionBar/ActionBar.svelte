@@ -74,7 +74,7 @@
         modalIframeAllowlStore,
         modalIframeSrcStore,
         modalIframeTitlelStore,
-        modalPositionStore,
+        //modalPositionStore,
         modalVisibilityStore,
     } from "../../Stores/ModalStore";
     import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
@@ -282,7 +282,7 @@
     }
 
     function register() {
-        modalIframeTitlelStore.set($LL.menu.icon.open.register());
+        /*modalIframeTitlelStore.set($LL.menu.icon.open.register());
         modalIframeAllowlStore.set("fullscreen");
         modalIframeSrcStore.set(`https://workadventu.re/funnel/connection?roomUrl=${window.location.toString()}`);
         modalPositionStore.set("center");
@@ -290,7 +290,9 @@
         modalVisibilityStore.set(true);
 
         resetMenuVisibility();
-        resetChatVisibility();
+        resetChatVisibility();*/
+
+        window.open("https://workadventu.re/getting-started", "_blank");
     }
 
     function resetModalVisibility() {
@@ -301,10 +303,10 @@
         modalIframeAllowApi.set(false);
     }
 
-    function resetMenuVisibility() {
+    /*function resetMenuVisibility() {
         menuVisiblilityStore.set(false);
         activeSubMenuStore.set(0);
-    }
+    }*/
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);

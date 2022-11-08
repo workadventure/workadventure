@@ -3,6 +3,7 @@
     import { helpCameraSettingsVisibleStore } from "../../Stores/HelpCameraSettingsStore";
     import { getNavigatorType, isAndroid as isAndroidFct, NavigatorType } from "../../WebRtc/DeviceUtils";
     import LL from "../../../i18n/i18n-svelte";
+    import { gameManager } from "../../Phaser/Game/GameManager";
 
     let isAndroid = isAndroidFct();
     let isFirefox = getNavigatorType() === NavigatorType.firefox;
@@ -15,10 +16,16 @@
     function close() {
         helpCameraSettingsVisibleStore.set(false);
     }
+
+    function getBackgroundColor() {
+        if (!gameManager.currentStartedRoom) return undefined;
+        return gameManager.currentStartedRoom.backgroundColor;
+    }
 </script>
 
 <form
     class="helpCameraSettings tw-z-[600] tw-bg-dark-purple tw-rounded tw-text-white tw-self-center tw-p-3 tw-pointer-events-auto tw-flex tw-flex-col tw-m-auto tw-w-full md:tw-w-2/3 2xl:tw-w-1/4 tw-text-sm md:tw-text-base"
+    style={getBackgroundColor() ? `background-color: ${getBackgroundColor()};` : ""}
     on:submit|preventDefault={close}
     transition:fly={{ y: -50, duration: 500 }}
 >

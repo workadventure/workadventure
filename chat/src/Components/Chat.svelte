@@ -17,16 +17,21 @@
     import {
         availabilityStatusStore,
         connectionNotAuthorized,
+        enableChat,
+        showForumsStore,
+        showLivesStore,
+        showTimelineStore,
+        showUsersStore,
         timelineActiveStore,
         timelineMessagesToSee,
-        timelineOpenedStore,
     } from "../Stores/ChatStore";
     import { Unsubscriber, derived } from "svelte/store";
-    import { connectionManager } from "../Connection/ChatConnectionManager";
+    import { chatConnectionManager } from "../Connection/ChatConnectionManager";
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
     import { iframeListener } from "../IframeListener";
     import { fly } from "svelte/transition";
     import NeedRefresh from "./NeedRefresh.svelte";
+    import ChatForumRooms from "./ChatForumRooms.svelte";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -34,8 +39,6 @@
     let autoscroll: boolean;
 
     let searchValue = "";
-    let showUsers = true;
-    let showLives = true;
 
     beforeUpdate(() => {
         autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
@@ -64,8 +67,8 @@
             })
         );
         subscribeListeners.push(
-            totalMessagesToSee.subscribe((total) => {
-                window.parent.postMessage({ type: "chatTotalMessagesToSee", data: total }, "*");
+            totalMessagesToSee.subscribe((total: number) => {
+                iframeListener.sendChatTotalMessagesToSee(total);
             })
         );
         subscribeListeners.push(
@@ -76,6 +79,42 @@
         subscribeListeners.push(
             mucRoomsStore.subscribe(() => {
                 defaultMucRoom = mucRoomsStore.getDefaultRoom();
+            })
+        );
+        subscribeListeners.push(
+            showUsersStore.subscribe((value) => {
+                if (value) {
+                    showLivesStore.set(false);
+                    showForumsStore.set(false);
+                    showTimelineStore.set(false);
+                }
+            })
+        );
+        subscribeListeners.push(
+            showLivesStore.subscribe((value) => {
+                if (value) {
+                    showUsersStore.set(false);
+                    showForumsStore.set(false);
+                    showTimelineStore.set(false);
+                }
+            })
+        );
+        subscribeListeners.push(
+            showForumsStore.subscribe((value) => {
+                if (value) {
+                    showLivesStore.set(false);
+                    showUsersStore.set(false);
+                    showTimelineStore.set(false);
+                }
+            })
+        );
+        subscribeListeners.push(
+            showTimelineStore.subscribe((value) => {
+                if (value) {
+                    showLivesStore.set(false);
+                    showForumsStore.set(false);
+                    showUsersStore.set(false);
+                }
             })
         );
     });
@@ -96,16 +135,6 @@
         }
     }
 
-    function handleActiveThread(event: unknown) {
-        activeThreadStore.set((event as { detail: MucRoom | undefined }).detail);
-    }
-    function handleShowUsers() {
-        showUsers = !showUsers;
-    }
-    function handleShowLives() {
-        showLives = !showLives;
-    }
-
     function closeChat() {
         window.parent.postMessage({ type: "closeChat" }, "*");
         //document.activeElement?.blur();
@@ -122,10 +151,10 @@
         }
     }
 
-    $: loading = !connectionManager.connection || !$xmppServerConnectionStatusStore;
+    $: loading = !chatConnectionManager.connection || !$xmppServerConnectionStatusStore;
 
     $: loadingText = $userStore
-        ? !connectionManager.connection
+        ? !chatConnectionManager.connection
             ? $LL.connecting()
             : $LL.waitingInit()
         : $LL.waitingData();
@@ -144,15 +173,7 @@
         {:else if $timelineActiveStore}
             <ChatActiveThreadTimeLine on:unactiveThreadTimeLine={() => timelineActiveStore.set(false)} />
         {:else if $activeThreadStore !== undefined}
-            <ChatActiveThread
-                activeThread={$activeThreadStore}
-                on:goTo={(event) =>
-                    $activeThreadStore?.goTo(event.detail.type, event.detail.playUri, event.detail.uuid)}
-                on:rankUp={(event) => $activeThreadStore?.sendRankUp(event.detail.jid)}
-                on:rankDown={(event) => $activeThreadStore?.sendRankDown(event.detail.jid)}
-                on:ban={(event) =>
-                    $activeThreadStore?.sendBan(event.detail.user, event.detail.name, event.detail.playUri)}
-            />
+            <ChatActiveThread activeThread={$activeThreadStore} />
         {:else}
             <div class="wa-message-bg" transition:fly={{ x: -500, duration: 400 }}>
                 <!-- searchbar -->
@@ -162,7 +183,6 @@
                             class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
                             placeholder={$LL.search()}
                             bind:value={searchValue}
-                            on:input={() => timelineOpenedStore.set(false)}
                         />
                     </div>
                 </div>
@@ -178,32 +198,23 @@
                 {/if}
                 <!-- chat users -->
                 {#if defaultMucRoom !== undefined}
-                    <UsersList
-                        mucRoom={defaultMucRoom}
-                        {showUsers}
-                        usersListStore={defaultMucRoom?.getPresenceStore()}
-                        meStore={defaultMucRoom?.getMeStore()}
-                        searchValue={searchValue.toLocaleLowerCase()}
-                        on:activeThread={handleActiveThread}
-                        on:showUsers={handleShowUsers}
-                        on:goTo={(event) =>
-                            defaultMucRoom?.goTo(event.detail.type, event.detail.playUri, event.detail.uuid)}
-                        on:rankUp={(event) => defaultMucRoom?.sendRankUp(event.detail.jid)}
-                        on:rankDown={(event) => defaultMucRoom?.sendRankDown(event.detail.jid)}
-                        on:ban={(event) =>
-                            defaultMucRoom?.sendBan(event.detail.user, event.detail.name, event.detail.playUri)}
-                    />
+                    <UsersList mucRoom={defaultMucRoom} searchValue={searchValue.toLocaleLowerCase()} />
                 {/if}
 
-                <ChatLiveRooms
-                    {showLives}
-                    searchValue={searchValue.toLocaleLowerCase()}
-                    on:activeThread={handleActiveThread}
-                    on:showLives={handleShowLives}
-                    liveRooms={[...$mucRoomsStore].filter(
-                        (mucRoom) => mucRoom.type === "live" && mucRoom.name.toLowerCase().includes(searchValue)
-                    )}
-                />
+                {#if $enableChat}
+                    <ChatForumRooms
+                        searchValue={searchValue.toLocaleLowerCase()}
+                        forumRooms={[...$mucRoomsStore].filter(
+                            (mucRoom) => mucRoom.type === "forum" && mucRoom.name.toLowerCase().includes(searchValue)
+                        )}
+                    />
+                    <ChatLiveRooms
+                        searchValue={searchValue.toLocaleLowerCase()}
+                        liveRooms={[...$mucRoomsStore].filter(
+                            (mucRoom) => mucRoom.type === "live" && mucRoom.name.toLowerCase().includes(searchValue)
+                        )}
+                    />
+                {/if}
 
                 <Timeline on:activeThreadTimeLine={() => timelineActiveStore.set(true)} />
             </div>

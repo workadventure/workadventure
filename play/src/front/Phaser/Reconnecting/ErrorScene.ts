@@ -1,4 +1,5 @@
 import { TextField } from "../Components/TextField";
+import { gameManager } from "../Game/GameManager";
 import Image = Phaser.GameObjects.Image;
 import Sprite = Phaser.GameObjects.Sprite;
 import Text = Phaser.GameObjects.Text;
@@ -69,6 +70,10 @@ export class ErrorScene extends Phaser.Scene {
 
         this.cat = this.physics.add.sprite(this.game.renderer.width / 2, this.game.renderer.height / 2 - 32, "cat", 6);
         this.cat.flipY = true;
+
+        if (gameManager.currentStartedRoom.backgroundColor != undefined) {
+            this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
+        }
     }
 
     /**

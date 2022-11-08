@@ -3,22 +3,19 @@
     import { ChevronUpIcon } from "svelte-feather-icons";
     import { createEventDispatcher } from "svelte";
     import LL from "../../i18n/i18n-svelte";
-    import { chatPeerConnectionInProgress, timelineOpenedStore, timelineMessagesToSee } from "../../Stores/ChatStore";
+    import { chatPeerConnectionInProgress, timelineMessagesToSee, showTimelineStore } from "../../Stores/ChatStore";
 
     const dispatch = createEventDispatcher();
 
     function open() {
         dispatch("activeThreadTimeLine");
     }
-    function showTimeLine() {
-        timelineOpenedStore.set(!$timelineOpenedStore);
-    }
 
     $: unreadMessages = $timelineMessagesToSee;
 </script>
 
 <div id="timeline" class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
-    <div class="tw-px-4 tw-py-1 tw-flex tw-items-center" on:click={showTimeLine}>
+    <div class="tw-px-4 tw-py-1 tw-flex tw-items-center" on:click={() => showTimelineStore.set(!$showTimelineStore)}>
         {#if unreadMessages}
             <span
                 class="tw-bg-pop-red tw-text-white tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded tw-animate-pulse"
@@ -29,12 +26,15 @@
         <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
             {$LL.timeLine.title()}
         </p>
-        <button class="tw-text-lighter-purple" on:click|stopPropagation={showTimeLine}>
-            <ChevronUpIcon class={`tw-transform tw-transition ${$timelineOpenedStore ? "" : "tw-rotate-180"}`} />
+        <button
+            class="tw-text-lighter-purple"
+            on:click|stopPropagation={() => showTimelineStore.set(!$showTimelineStore)}
+        >
+            <ChevronUpIcon class={`tw-transform tw-transition ${$showTimelineStore ? "" : "tw-rotate-180"}`} />
         </button>
     </div>
 
-    {#if $timelineOpenedStore}
+    {#if $showTimelineStore}
         <div transition:fly={{ y: -30, duration: 100 }}>
             <div class="wa-chat-item">
                 <div id="openTimeline" class="tw-relative" on:click|stopPropagation={open}>

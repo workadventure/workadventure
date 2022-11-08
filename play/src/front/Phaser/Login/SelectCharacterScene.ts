@@ -79,9 +79,14 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
         //this function must stay at the end of preload function
         this.loader.addLoader();
+        if (gameManager.currentStartedRoom.backgroundColor != undefined) {
+            this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
+        }
     }
 
     public create() {
+        super.create();
+
         waScaleManager.zoomModifier = 1;
         this.selectedWoka = null;
         this.selectedCollectionIndex = 0;

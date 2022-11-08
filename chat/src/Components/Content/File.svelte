@@ -1,30 +1,32 @@
 <script lang="ts">
-    import { UploadedFile } from "../../Services/FileMessageManager";
     import { FileIcon, EyeIcon, DownloadCloudIcon, LoaderIcon } from "svelte-feather-icons";
     import LL from "../../i18n/i18n-svelte";
     import { iframeListener } from "../../IframeListener";
-    export let file: UploadedFile;
+    import { FileMessageManager } from "../../Services/FileMessageManager";
+
+    export let url: string;
+    export let name: string | undefined;
 
     function openCoWebsite() {
-        iframeListener.openCoWebsite(file.location, true, "allowfullscreen");
+        iframeListener.openCoWebsite(url, true, "allowfullscreen");
     }
 
     let loadingDownload = false;
     function download() {
         loadingDownload = true;
-        fetch(file.location, { method: "GET" })
+        fetch(url, { method: "GET" })
             .then((res) => {
                 return res.blob();
             })
             .then((blob) => {
-                var url = window.URL.createObjectURL(blob);
+                var url = URL.createObjectURL(blob);
                 var a = document.createElement("a");
                 a.href = url;
-                a.download = file.name;
+                a.download = name ?? FileMessageManager.getName(url);
                 document.body.appendChild(a);
                 a.click();
                 setTimeout((_) => {
-                    window.URL.revokeObjectURL(url);
+                    URL.revokeObjectURL(url);
                 }, 60000);
                 a.remove();
                 loadingDownload = false;
@@ -37,16 +39,16 @@
 </script>
 
 <div class="file">
-    {#if file.isImage}
-        <img id={file.id} src={file.location} width="100%" height="100%" alt={file.name} class="tw-mt-2" />
-    {:else if file.isVideo}
-        <video width="100%" height="100%" alt={file.name} class="tw-mt-2" controls>
-            <source src={file.location} type={`video/${file.extension}`} />
-            <track kind="captions" srclang="en" label="english_captions" />
+    {#if FileMessageManager.isImage(url)}
+        <img src={url} width="100%" height="100%" alt={name ?? FileMessageManager.getName(url)} class="tw-mt-2" />
+    {:else if FileMessageManager.isVideo(url)}
+        <video width="100%" height="100%" alt={name ?? FileMessageManager.getName(url)} class="tw-mt-2" controls>
+            <track kind="captions" srclang="en" label="english_captions" src="" />
+            <source src={url} type={`video/${FileMessageManager.getExtension(url)}`} />
             Sorry, your browser doesn't support <code>embedded</code> videos.
         </video>
-    {:else if file.isSound}
-        <audio width="100%" height="100%" controls class="tw-mt-2" src={file.location}>
+    {:else if FileMessageManager.isSound(url)}
+        <audio width="100%" height="100%" controls class="tw-mt-2" src={url}>
             Your browser does not support the <code>audio</code> element.
         </audio>
     {:else}
@@ -55,12 +57,14 @@
                 <FileIcon size="30" />
             </div>
             <div class="information">
-                <p class="tw-m-0">{file.name}</p>
+                <p class="tw-m-0">{name ?? FileMessageManager.getName(url)}</p>
+                <!--
                 <p class="tw-text-light-purple-alt tw-mt-1 tw-m-0 tw-text-xxs">
-                    {file.size ?? "0"}kb - {file.lastModified
-                        ? new Date(file.lastModified).toLocaleDateString()
+                    {link.size ?? "0"}kb - {link.lastModified
+                        ? new Date(link.lastModified).toLocaleDateString()
                         : new Date().toLocaleDateString()}
                 </p>
+                -->
             </div>
         </div>
     {/if}

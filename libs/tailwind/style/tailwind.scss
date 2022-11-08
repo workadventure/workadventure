@@ -151,7 +151,7 @@
         &::after{
             right: -5px;
         }
-        @apply before:tw-content-[''] before:tw-absolute before:tw-top-1/2 before:tw-w-1/3 before:tw-h-px before:tw-bg-lighter-purple after:tw-content-[''] after:tw-absolute after:tw-top-1/2 after:tw-w-1/3 after:tw-h-px after:tw-bg-lighter-purple tw-text-light-purple-alt tw-text-xs tw-uppercase tw-text-center tw-relative;
+        @apply before:tw-content-[''] before:tw-absolute before:tw-top-1/2 before:tw-w-1/3 before:tw-h-px before:tw-bg-lighter-purple after:tw-content-[''] after:tw-absolute after:tw-top-1/2 after:tw-w-1/3 after:tw-h-px after:tw-bg-lighter-purple tw-text-light-purple-alt tw-text-xs tw-uppercase tw-text-center tw-relative tw-mt-2;
     }
 
     .wa-action{

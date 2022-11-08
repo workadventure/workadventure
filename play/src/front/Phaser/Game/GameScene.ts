@@ -736,6 +736,10 @@ export class GameScene extends DirtyScene {
                     e
                 )
             );
+
+        if (gameManager.currentStartedRoom.backgroundColor != undefined) {
+            this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
+        }
     }
 
     /**
@@ -872,6 +876,18 @@ export class GameScene extends DirtyScene {
 
                 this.connection.groupUsersUpdateMessageStream.subscribe((message) => {
                     this.currentPlayerGroupId = message.groupId;
+                });
+
+                this.connection.joinMucRoomMessageStream.subscribe((mucRoomDefinitionMessage) => {
+                    iframeListener.sendJoinMucEventToChatIframe(
+                        mucRoomDefinitionMessage.url,
+                        mucRoomDefinitionMessage.name,
+                        mucRoomDefinitionMessage.type,
+                        mucRoomDefinitionMessage.subscribe
+                    );
+                });
+                this.connection.leaveMucRoomMessageStream.subscribe((leaveMucRoomMessage) => {
+                    iframeListener.sendLeaveMucEventToChatIframe(leaveMucRoomMessage.url);
                 });
 
                 this.messageSubscription = this.connection.worldFullMessageStream.subscribe((message) => {

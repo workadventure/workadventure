@@ -395,7 +395,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: thecodingmachine/workadventure-simple-ecs
+          images: thecodingmachine/workadventure-ejabberd
 
       - name: Build and push
         uses: docker/build-push-action@v3
@@ -404,8 +404,8 @@ jobs:
           context: xmpp/
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: thecodingmachine/workadventure-simple-ecs:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          cache-from: type=registry,ref=thecodingmachine/workadventure-simple-ecs:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          tags: thecodingmachine/workadventure-ejabberd:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-ejabberd:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
 
@@ -415,8 +415,8 @@ jobs:
           context: xmpp/
           platforms: linux/amd64
           push: false
-          tags: thecodingmachine/workadventure-simple-ecs:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          cache-from: type=registry,ref=thecodingmachine/workadventure-simple-ecs:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          tags: thecodingmachine/workadventure-ejabberd:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-ejabberd:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/ejabberd.tar

@@ -20,6 +20,10 @@ export class EnableCameraScene extends ResizableScene {
         });
 
         enableCameraSceneVisibilityStore.showEnableCameraScene();
+
+        if (gameManager.currentStartedRoom.backgroundColor != undefined) {
+            this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
+        }
     }
 
     public onResize(): void {}

@@ -98,7 +98,7 @@ function createChatMessagesStore() {
                 return list;
             });
         },
-        addPersonnalMessage(text: string) {
+        addPersonalMessage(text: string) {
             iframeListener.sendUserInputChat(text);
             _newChatMessageSubject.next(text);
             update((list) => {
@@ -147,7 +147,7 @@ function createChatMessagesStore() {
                 iframeListener.sendMessageToChatIframe({
                     type: ChatMessageTypes.text,
                     text: [text],
-                    author: author.userUuid,
+                    author: author.userUuid === "dummy" ? author.name : author.userUuid,
                     date: new Date(),
                 });
 

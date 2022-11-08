@@ -23,7 +23,7 @@ RUN yarn install --network-timeout 1000000
 COPY play .
 COPY --from=proto-builder /usr/src/generated src/messages/generated
 COPY --from=proto-builder /usr/src/ts-proto-generated src/messages/ts-proto-generated
-RUN sed -i 's/import { Observable } from "rxjs";/import type { Observable } from "rxjs";/g' src/messages/ts-proto-generated/protos/messages.ts
+RUN sed 's/import { Observable } from "rxjs";/import type { Observable } from "rxjs";/g' src/messages/ts-proto-generated/protos/messages.ts > tmp.ts; cat tmp.ts > src/messages/ts-proto-generated/protos/messages.ts; rm tmp.ts
 COPY --from=proto-builder /usr/src/JsonMessages src/messages/JsonMessages
 ENV NODE_ENV=production
 # upgrade RAM available to 6G

@@ -11,15 +11,15 @@ import {
     enableChatUpload,
     newChatMessageSubject,
     newChatMessageWritingStatusSubject,
+    showTimelineStore,
     timelineActiveStore,
-    timelineOpenedStore,
+    timelineMessagesToSee,
     writingStatusMessageStore,
 } from "./Stores/ChatStore";
 import { setCurrentLocale } from "./i18n/locales";
 import { Locales } from "./i18n/i18n-types";
 import { mucRoomsStore } from "./Stores/MucRoomsStore";
-import { defaultUserData } from "./Xmpp/MucRoom";
-import { connectionManager } from "./Connection/ChatConnectionManager";
+import { chatConnectionManager } from "./Connection/ChatConnectionManager";
 import { chatVisibilityStore } from "./Stores/ChatStore";
 import { NotificationType } from "./Media/MediaManager";
 import { activeThreadStore } from "./Stores/ActiveThreadStore";
@@ -43,11 +43,15 @@ class IframeListener {
                             enableChatUpload.set(iframeEvent.data.enableChatUpload);
                             break;
                         }
+                        case "xmppSettingsMessage": {
+                            chatConnectionManager.initXmppSettings(iframeEvent.data);
+                            break;
+                        }
                         case "userData": {
                             iframeEvent.data.name = iframeEvent.data.name.replace(emojiRegex, "");
                             userStore.set(iframeEvent.data);
-                            if (!connectionManager.connection) {
-                                connectionManager.init(
+                            if (!chatConnectionManager.connection) {
+                                chatConnectionManager.initUser(
                                     iframeEvent.data.playUri,
                                     iframeEvent.data.uuid,
                                     iframeEvent.data.authToken
@@ -65,27 +69,19 @@ class IframeListener {
                             if (!get(enableChat)) {
                                 return;
                             }
-                            if (!connectionManager.connection) {
-                                connectionManager.start();
-                            }
-                            connectionManager.connectionOrFail
-                                .getXmppClient()
-                                ?.joinMuc(
-                                    iframeEvent.data.name,
-                                    iframeEvent.data.url,
-                                    iframeEvent.data.type,
-                                    iframeEvent.data.subscribe
-                                );
+                            chatConnectionManager.connectionOrFail?.joinMuc(
+                                iframeEvent.data.name,
+                                iframeEvent.data.url,
+                                iframeEvent.data.type,
+                                iframeEvent.data.subscribe
+                            );
                             break;
                         }
                         case "leaveMuc": {
                             if (!get(enableChat)) {
                                 return;
                             }
-                            if (!connectionManager.connection) {
-                                connectionManager.start();
-                            }
-                            connectionManager.connectionOrFail.getXmppClient()?.leaveMuc(iframeEvent.data.url);
+                            chatConnectionManager.connectionOrFail?.leaveMuc(iframeEvent.data.url);
                             break;
                         }
                         case "updateWritingStatusChatList": {
@@ -96,31 +92,37 @@ class IframeListener {
                             if (iframeEvent.data.author == undefined || iframeEvent.data.text == undefined) {
                                 break;
                             }
-
-                            let userData = defaultUserData;
                             const mucRoomDefault = mucRoomsStore.getDefaultRoom();
                             if (mucRoomDefault) {
-                                userData = mucRoomDefault.getUserDataByUuid(iframeEvent.data.author);
-                            }
-
-                            for (const chatMessageText of iframeEvent.data.text) {
-                                chatMessagesStore.addExternalMessage(userData, chatMessageText);
+                                let userData = undefined;
+                                try {
+                                    userData = mucRoomDefault.getUserByJid(iframeEvent.data.author);
+                                } finally {
+                                    // Nothing to do
+                                }
+                                for (const chatMessageText of iframeEvent.data.text) {
+                                    chatMessagesStore.addExternalMessage(
+                                        userData,
+                                        chatMessageText,
+                                        userData ? undefined : iframeEvent.data.author
+                                    );
+                                }
                             }
                             break;
                         }
                         case "comingUser": {
                             for (const target of iframeEvent.data.targets) {
-                                let userData = defaultUserData;
                                 const mucRoomDefault = mucRoomsStore.getDefaultRoom();
                                 if (mucRoomDefault) {
-                                    userData = mucRoomDefault.getUserDataByUuid(target);
-                                }
-
-                                if (ChatMessageTypes.userIncoming === iframeEvent.data.type) {
-                                    chatMessagesStore.addIncomingUser(userData);
-                                }
-                                if (ChatMessageTypes.userOutcoming === iframeEvent.data.type) {
-                                    chatMessagesStore.addOutcomingUser(userData);
+                                    const userData = mucRoomDefault.getUserByJid(target);
+                                    if (userData) {
+                                        if (ChatMessageTypes.userIncoming === iframeEvent.data.type) {
+                                            chatMessagesStore.addIncomingUser(userData);
+                                        }
+                                        if (ChatMessageTypes.userOutcoming === iframeEvent.data.type) {
+                                            chatMessagesStore.addOutcomingUser(userData);
+                                        }
+                                    }
                                 }
                             }
                             break;
@@ -128,7 +130,7 @@ class IframeListener {
                         case "peerConnectionStatus": {
                             chatPeerConnectionInProgress.set(iframeEvent.data);
                             if (iframeEvent.data) {
-                                timelineOpenedStore.set(true);
+                                showTimelineStore.set(true);
                             }
                             break;
                         }
@@ -136,7 +138,7 @@ class IframeListener {
                             chatVisibilityStore.set(iframeEvent.data.visibility);
                             if (!iframeEvent.data.visibility) {
                                 activeThreadStore.reset();
-                            } else if (get(chatPeerConnectionInProgress)) {
+                            } else if (get(chatPeerConnectionInProgress) || get(timelineMessagesToSee) > 0) {
                                 timelineActiveStore.set(true);
                             } else if (mucRoomsStore.getLiveRoom()) {
                                 activeThreadStore.set(mucRoomsStore.getLiveRoom());
@@ -149,7 +151,7 @@ class IframeListener {
                         }
                     }
                 } else {
-                    console.error("Message structure not conform", iframeEventGuarded);
+                    console.error("Message structure not conform", lookingLikeEvent.data, iframeEventGuarded);
                 }
             }
         });
@@ -238,6 +240,16 @@ class IframeListener {
         window.parent.postMessage(
             {
                 type: "redirectPricing",
+            },
+            "*"
+        );
+    }
+
+    sendChatTotalMessagesToSee(total: number) {
+        window.parent.postMessage(
+            {
+                type: "chatTotalMessagesToSee",
+                data: total,
             },
             "*"
         );

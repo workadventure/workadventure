@@ -1,6 +1,7 @@
 import { ResizableScene } from "./ResizableScene";
 import { PlayerTextures } from "../Entity/PlayerTextures";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
+import { gameManager } from "../Game/GameManager";
 
 export abstract class AbstractCharacterScene extends ResizableScene {
     protected playerTextures: PlayerTextures;
@@ -14,5 +15,11 @@ export abstract class AbstractCharacterScene extends ResizableScene {
 
     preload() {
         this.input.dragDistanceThreshold = 10;
+    }
+
+    create() {
+        if (gameManager.currentStartedRoom.backgroundColor != undefined) {
+            this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
+        }
     }
 }

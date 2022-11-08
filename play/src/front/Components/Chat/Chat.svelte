@@ -21,6 +21,7 @@
     let chatIframe: HTMLIFrameElement;
 
     let subscribeListeners: Array<Unsubscriber> = [];
+    let subscribeObservers: Array<Subscription> = [];
 
     const wokaDefinedStore = writable<boolean>(false);
     const iframeLoadedStore = writable<boolean>(false);
@@ -46,8 +47,6 @@
             return `[e-${codePoint.toString(16)}]`;
         }
     );
-
-    let messageStream: Subscription;
 
     onMount(() => {
         iframeListener.registerChatIframe(chatIframe);
@@ -126,13 +125,16 @@
                         iframeListener.sendChatVisibilityToChatIframe(visibility);
                     })
                 );
-                messageStream = adminMessagesService.messageStream.subscribe((message) => {
-                    if (message.type === AdminMessageEventTypes.banned) {
-                        chatIframe.remove();
-                    }
-                    chatVisibilityStore.set(false);
-                    menuIconVisiblilityStore.set(false);
-                });
+                subscribeObservers.push(
+                    adminMessagesService.messageStream.subscribe((message) => {
+                        if (message.type === AdminMessageEventTypes.banned) {
+                            chatIframe.remove();
+                        }
+                        chatVisibilityStore.set(false);
+                        menuIconVisiblilityStore.set(false);
+                    })
+                );
+
                 //TODO delete it with new XMPP integration
                 //send list to chat iframe
                 subscribeListeners.push(
@@ -149,9 +151,9 @@
         subscribeListeners.forEach((listener) => {
             listener();
         });
-        if (messageStream) {
-            messageStream.unsubscribe();
-        }
+        subscribeObservers.forEach((observer) => {
+            observer.unsubscribe();
+        });
     });
 
     function closeChat() {
@@ -182,6 +184,7 @@
         class="tw-border-0"
     />
 </div>
+>
 
 <style lang="scss">
     @import "../../style/breakpoints.scss";
