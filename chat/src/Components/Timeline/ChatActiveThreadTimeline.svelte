@@ -70,7 +70,6 @@
         return true;
     }
 
-    let messagesList: HTMLElement;
     let subscribers = new Array<Unsubscriber>();
 
     let emojiContainer: HTMLElement;
@@ -208,7 +207,6 @@
         <div
             id="timeLine-messageList"
             class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-pt-14 tw-pb-14 tw-justify-end tw-h-auto tw-min-h-screen"
-            bind:this={messagesList}
         >
             {#each $chatMessagesStore as message}
                 {#if message.type === ChatMessageTypes.text || message.type === ChatMessageTypes.me}
