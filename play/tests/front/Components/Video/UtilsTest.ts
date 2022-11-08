@@ -1,6 +1,6 @@
-import "jasmine";
-
-import { getSdpTransform } from "../../../src/front/Components/Video/utils";
+// @vitest-environment jsdom
+import { describe, expect, it } from "vitest";
+import { getSdpTransform } from "../../../../src/front/Components/Video/utils";
 
 describe("getSdpTransform()", () => {
     it("should not do anything if bandwidth = 0", () => {
