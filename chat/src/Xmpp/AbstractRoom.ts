@@ -94,6 +94,7 @@ export class AbstractRoom {
     protected sendTimeOut: Timeout | undefined;
     private composingTimeOut: Timeout | undefined;
     protected subscriptions = new Map<string, string>();
+    public closed = false;
 
     constructor(protected xmppClient: XmppClient, protected _VERBOSE: boolean) {
         if (this.constructor === AbstractRoom) {

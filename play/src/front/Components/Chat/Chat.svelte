@@ -135,37 +135,6 @@
                     })
                 );
 
-                subscribeListeners.push(
-                    gameSceneIsLoadedStore.subscribe((value) => {
-                        if (value) {
-                            const connection = gameManager.getCurrentGameScene().connection;
-                            if (connection) {
-                                subscribeObservers.push(
-                                    connection.joinMucRoomMessageStream.subscribe((mucRoomDefinitionMessage) => {
-                                        console.log(
-                                            "[sendChatMessagePrompt] joinMucRoomMessageStream => joinMucRoomMessage received"
-                                        );
-                                        iframeListener.sendJoinMucEventToChatIframe(
-                                            mucRoomDefinitionMessage.url,
-                                            mucRoomDefinitionMessage.name,
-                                            mucRoomDefinitionMessage.type,
-                                            mucRoomDefinitionMessage.subscribe
-                                        );
-                                    })
-                                );
-
-                                subscribeObservers.push(
-                                    connection.leaveMucRoomMessageStream.subscribe((leaveMucRoomMessage) => {
-                                        console.log(
-                                            "[sendChatMessagePrompt] leaveMucRoomMessageStream => leaveMucRoomMessage received"
-                                        );
-                                        iframeListener.sendLeaveMucEventToChatIframe(leaveMucRoomMessage.url);
-                                    })
-                                );
-                            }
-                        }
-                    })
-                );
                 //TODO delete it with new XMPP integration
                 //send list to chat iframe
                 subscribeListeners.push(

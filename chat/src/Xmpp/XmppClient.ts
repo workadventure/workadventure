@@ -561,7 +561,11 @@ export class XmppClient {
             console.error('Cannot leave MUC room "' + name + '", room does not exist.');
             return;
         }
-        room.sendDisconnect();
+        if (room.closed) {
+            room.sendDisconnect();
+        } else {
+            this.removeMuc(room);
+        }
     }
 
     public removeMuc(room: MucRoom) {
