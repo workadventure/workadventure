@@ -502,21 +502,12 @@ export class MucRoom extends AbstractRoom {
         return true;
     }
     onPresence(presence: StanzaProtocol.ReceivedPresence): boolean {
-        if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, "<< Presence received", presence);
+        if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, "<< Presence received");
         let response = false;
-
-        if (_VERBOSE)
-            console.warn(
-                `[XMPP][${this.name}]`,
-                this.subscriptions.get("firstPresence"),
-                presence.id,
-                this.subscriptions.get("firstPresence") === presence.id
-            );
 
         if (presence.id) {
             // If last registered presence received
             if (this.subscriptions.get("firstPresence") === presence.id) {
-                if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, "<< First presence received");
                 this.subscriptions.delete("firstPresence");
                 this.readyStore.set(true);
                 this.closed = false;
