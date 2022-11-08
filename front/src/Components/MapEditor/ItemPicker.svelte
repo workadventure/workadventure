@@ -41,20 +41,16 @@
         {
             tagFilter.push(selectedTag);
             tagFilter.sort();
-            tagAvailableFilter = tagAvailableFilter.filter(s => s !== selectedTag);
             selectedTag = "";
+            mapObjectsStore.setFilter(tagFilter);
             tagFilter = tagFilter; //send update to UI;
-            onFilterChange();
         }
     }
 
     function onTagDelete(tag: string)
     {
         tagFilter = tagFilter.filter(t => t !== tag)
-        tagAvailableFilter.push(tag);
-        tagAvailableFilter.sort();
-        tagAvailableFilter = tagAvailableFilter;
-        onFilterChange();
+        mapObjectsStore.setFilter(tagFilter);
     }
 
     function onFilterChange()
@@ -64,11 +60,7 @@
         rootItem = [];
         for(let mapObject of currentMapObjects)
         {
-            if(!uniqId.has(mapObject.name) && (currentFilter.size === 0 || mapObject.tags.some(tag=>currentFilter.has(tag))))
-            {
-                uniqId.add(mapObject.name);
-                rootItem.push(mapObject);
-            }
+
         }
         rootItem = rootItem;
         if(!pickedItem.tags.some(tag=> currentFilter.has(tag)) && rootItem.length != 0)//if the item is not available due to filtering, we change it
@@ -84,13 +76,24 @@
         currentMapObjects = newMap;
         let tags = new Set<string>();
         let uniqId = new Set<string>();
+        rootItem = [];
         for(let mapObject of newMap)
         {
             mapObject.tags.forEach(v => tags.add(v));
+            if(!uniqId.has(mapObject.name))
+            {
+                uniqId.add(mapObject.name);
+                rootItem.push(mapObject);
+            }
         }
+        tagFilter.forEach(tag => tags.delete(tag));
         tagAvailableFilter = ["",...tags];
         tagAvailableFilter.sort();
-        onFilterChange();
+        
+        if(!tagFilter.every(tag => pickedItem.tags.includes(tag)) && rootItem.length != 0)//if the item is not available due to filtering, we change it
+        {
+            onPickItem(rootItem[0]);
+        }
     });
 
     onDestroy(()=>
@@ -125,11 +128,13 @@
     </div>
     <div class="separator">Select a variation</div>
     <div class="item-picker-container">
+        {#if pickedItem !== null}
         {#each itemVariants as item }
         <div class="pickable-item {item.path === pickedVariant?.path ? 'active':''}" on:click={()=>onPickItemVariant(item)}>
             <img class="item-image" src={item.path} alt={item.name}/>
         </div>
         {/each}
+        {/if}
     </div>
     {#if pickedVariant !== undefined}
     <div class="item-colour">{pickedVariant.color}</div>
