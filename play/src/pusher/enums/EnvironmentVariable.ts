@@ -67,6 +67,8 @@ const EnvironmentVariables = z.object({
     POSTHOG_URL: z.string().url().optional().or(z.literal("")),
     FALLBACK_LOCALE: z.string().optional(),
     CHAT_URL: z.string().url(),
+    PEER_VIDEO_MAX_BANDWIDTH_KBITS_PS: PositiveIntAsString.optional(),
+    PEER_SCREENSHARE_MAX_BANDWIDTH_KBITS_PS: PositiveIntAsString.optional(),
 });
 
 type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
@@ -172,4 +174,6 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     CHAT_URL: env.CHAT_URL,
     ENABLE_CHAT_UPLOAD: toBool(env.ENABLE_CHAT_UPLOAD, true),
     FALLBACK_LOCALE: env.FALLBACK_LOCALE,
+    PEER_VIDEO_MAX_BANDWIDTH_KBITS_PS: toNumber(env.PEER_VIDEO_MAX_BANDWIDTH_KBITS_PS, 0),
+    PEER_SCREENSHARE_MAX_BANDWIDTH_KBITS_PS: toNumber(env.PEER_SCREENSHARE_MAX_BANDWIDTH_KBITS_PS, 0),
 };
