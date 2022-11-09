@@ -22,6 +22,9 @@ COPY libs ./../libs
 COPY --from=proto-builder /usr/libs/messages/src ./../libs/messages/src
 COPY play/yarn.lock play/package.json ./
 RUN yarn install --network-timeout 1000000
+RUN cd /usr/libs/math-utils && yarn run build && yarn run prepare-for-prod
+RUN cd /usr/libs/map-editor && yarn run build && yarn run prepare-for-prod
+RUN cd /usr/libs/messages && yarn run build && yarn run prepare-for-prod
 COPY play .
 COPY --from=proto-builder /usr/src/generated src/messages/generated
 ENV NODE_ENV=production
@@ -35,6 +38,7 @@ COPY play/yarn.lock play/package.json ./
 ENV NODE_ENV=production
 RUN yarn install --production
 COPY --from=builder --chown=node:node /usr/src/dist /usr/src/dist
+COPY --from=builder /usr/libs /usr/libs
 COPY --chown=node:node play/src/pusher/data /usr/src/dist/pusher/data
 
 USER node

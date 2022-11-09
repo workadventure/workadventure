@@ -5,7 +5,8 @@
   "main": "./src/index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc"
+    "build": "tsc",
+    "prepare-for-prod": "jq '.main = \"./dist/index.js\"' package.json > package_tmp1.json && jq '.types = \"./dist/index.d.ts\"' package_tmp1.json > package.json && rm package_tmp1.json"
   },
   "author": "WorkAdventure",
   "license": "ISC",
