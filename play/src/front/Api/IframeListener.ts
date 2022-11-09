@@ -37,7 +37,7 @@ import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
 import type { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
 import type { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
 import type { MessageUserJoined } from "../Connexion/ConnexionModels";
-import { availabilityStatusToJSON } from "../../messages/ts-proto-generated/protos/messages";
+import { availabilityStatusToJSON } from "@workadventure/messages";
 import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { mediaManager, NotificationType } from "../WebRtc/MediaManager";

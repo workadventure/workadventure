@@ -270,12 +270,12 @@ jobs:
         run: yarn install
         working-directory: "map-storage"
 
-      - name: "Build proto messages"
-        run: yarn run ts-proto
-        working-directory: "messages"
-
       - name: "Install messages dependencies"
         run: yarn install
+        working-directory: "messages"
+
+      - name: "Build proto messages"
+        run: yarn run ts-proto
         working-directory: "messages"
 
       - name: "Install libs/map-editor dependencies"
@@ -411,6 +411,10 @@ jobs:
 
       - name: "Install messages dependencies"
         run: yarn install
+        working-directory: "messages"
+
+      - name: "Build proto messages"
+        run: yarn run ts-proto
         working-directory: "messages"
 
       - name: "Build API typings"
