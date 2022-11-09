@@ -40,6 +40,10 @@ jobs:
         run: yarn install
         working-directory: "libs/map-editor"
 
+      - name: "Install libs/messages dependencies"
+        run: yarn install
+        working-directory: "libs/messages"
+
       - name: "Install dependencies"
         run: yarn install
         working-directory: "play"

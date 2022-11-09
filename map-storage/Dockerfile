@@ -25,9 +25,6 @@ RUN cd /usr/libs/map-editor && yarn install --network-timeout 1000000
 COPY map-storage/yarn.lock map-storage/package.json ./
 RUN cd /usr/src && yarn install
 COPY libs /usr/libs
-RUN cd /usr/libs/math-utils && yarn run build && yarn run prepare-for-prod
-RUN cd /usr/libs/messages && yarn run build && yarn run prepare-for-prod
-RUN cd /usr/libs/map-editor && yarn run build && yarn run prepare-for-prod
 COPY map-storage .
 
 ENV NODE_ENV=production
