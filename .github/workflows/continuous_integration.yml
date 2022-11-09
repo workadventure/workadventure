@@ -201,7 +201,7 @@ jobs:
         working-directory: "libs/messages"
 
       - name: "Build proto messages"
-        run: yarn run proto && yarn run copy-to-back
+        run: yarn run proto && yarn run ts-proto && yarn run copy-to-back
         working-directory: "messages"
 
       - name: "Build"
@@ -277,6 +277,10 @@ jobs:
       - name: "Install libs/map-editor dependencies"
         run: yarn install
         working-directory: "libs/map-editor"
+
+      - name: "Install libs/messages dependencies"
+        run: yarn install
+        working-directory: "libs/messages"
 
       - name: "Build"
         run: yarn run build
@@ -392,6 +396,10 @@ jobs:
       - name: "Install libs/map-editor dependencies"
         run: yarn install
         working-directory: "libs/map-editor"
+
+      - name: "Install libs/messages dependencies"
+        run: yarn install
+        working-directory: "libs/messages"
 
       - name: "Install play dependencies"
         run: yarn install --froze-lockfile

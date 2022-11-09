@@ -1,12 +1,16 @@
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
-import type { MetaTagsData, RequiredMetaTagsData, MapDetailsData } from "@workadventure/messages";
-import { isMapDetailsData } from "@workadventure/messages";
+import type {
+    MetaTagsData,
+    RequiredMetaTagsData,
+    MapDetailsData,
+    isMapDetailsData,
+    RoomRedirect,
+    isRoomRedirect,
+    ErrorApiData,
+} from "@workadventure/messages";
 import { adminService } from "./AdminService";
 import axios from "axios";
 import { ADMIN_API_URL } from "../enums/EnvironmentVariable";
-import type { RoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
-import { isRoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
-import type { ErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
 
 export const MetaTagsDefaultValue: RequiredMetaTagsData = {
     title: "WorkAdventure",
