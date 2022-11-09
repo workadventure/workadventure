@@ -9,10 +9,13 @@
 
     let pickedItem : MapEntity = $mapObjectsStore[0];
     let pickedVariant : MapEntity | undefined = undefined;
+    let currentColor : string;
 
     let currentMapObjects : MapEntity[] = [];
     let rootItem : MapEntity[] = []; //A sample of each object
     let itemVariants : MapEntity[] = [];
+    let currentVariants : MapEntity[] = [];
+    let variantColors : string[] = []; 
 
     let filter : string = "";
 
@@ -31,7 +34,21 @@
         pickedItem = item;
         itemVariants = $mapObjectsStore.filter((item)=>item.name == pickedItem.name );
         itemVariants = itemVariants.sort((a,b)=> a.direction.localeCompare(b.direction) +a.color.localeCompare(b.color) * 10 +(a.color === pickedItem.color? - 100:0) + (b.color === pickedItem.color? 100:0));
+        let variantColorSet = new Set<string>();
+        itemVariants.forEach(item => variantColorSet.add(item.color));
+        variantColors = [...variantColorSet].sort();
+        onColorChange(pickedItem.color);
         pickedVariant = undefined;
+    }
+
+    function onColorChange(color: string)
+    {
+        currentColor = color;
+        currentVariants = itemVariants.filter(item => item.color === color);
+        if(pickedVariant != undefined)
+        {
+            pickedVariant = currentVariants.find(item => item.direction === pickedVariant?.direction);
+        }
     }
 
     function onTagPick()
@@ -100,23 +117,27 @@
         {/each}
     </div>
     <div class="separator">Select a variation</div>
-    <div class="item-picker-container">
-        {#if pickedItem !== null}
-        {#each itemVariants as item }
+    {#if pickedItem !== null}
+    <div class="item-variant-picker-container">
+        {#each currentVariants as item }
         <div class="pickable-item {item.path === pickedVariant?.path ? 'active':''}" on:click={()=>onPickItemVariant(item)}>
             <img class="item-image" src={item.path} alt={item.name}/>
         </div>
         {/each}
-        {/if}
     </div>
-    {#if pickedVariant !== undefined}
-    <div class="item-colour">{pickedVariant.color}</div>
-    <div class="item-direction">{pickedVariant.direction}</div>
+    <div class="color-container">
+    {#each variantColors as color}
+    <div class="{currentColor === color ? "active" :""}"><button class="color-selector" style="background-color: {color};" on:click={()=>onColorChange(color)}/></div>
+    {/each}
+    </div>
     {/if}
+
 </div>
 
 <style lang="scss">
     .item-picker{
+        align-content: center;
+        padding: 1.5em;
         .item-filter{
             .filter-input
             {
@@ -145,17 +166,17 @@
                 }
             }
         }
-        .item-picker-container{
-            width: 18em;
+        .item-picker-container, .item-variant-picker-container{
+            width: 19em;
             height: 16em;
             padding:0.5em;
             display: flex;
             flex-wrap: wrap;
-            overflow-y: scroll;
+            overflow-y: auto;
             pointer-events: auto;
             .pickable-item{
-                flex : 0 0 5em;
-                height: 5em;
+                flex : 0 0 4em;
+                height: 4em;
                 display: flex;
                 cursor: url("/style/images/cursor_pointer.png"), pointer;
                 *{
@@ -163,28 +184,48 @@
                 }
                 .item-image {
                     margin:auto;
-                    max-width: 100%;
-                    max-height: 100%;
+                    max-width: 3.6em;
+                    max-height: 3.6em;
                 }
             }
             .pickable-item:hover
             {
                 border-radius: 0.8em;
-                border:  0.2rem solid yellow;
+                border:  0.2rem solid white;
             }
             .pickable-item.active
             {
                 border-radius: 0.8em;
-                border:  0.2rem solid white;
+                border:  0.2rem solid yellow;
+            }
+        }
+        .item-variant-picker-container
+        {
+            overflow-y: hidden;
+            height: 5em;
+        }
+        .color-container
+        {
+            display: flex;
+            flex-wrap: wrap;
+            div{
+                .color-selector
+                {
+                    border-radius: 1em;
+                    border : 0.1rem solid black;
+                    max-width: 1em;
+                }
+            }
+            .active{
+                background-color: yellow;
+                padding: 0.05em;
+                border-radius: 0.5em;
             }
         }
         div{
             margin:auto;
             width:fit-content;
         }
-        align-content: center;
-        width: 20em;
-        padding: 2em;
     }
 
 </style>

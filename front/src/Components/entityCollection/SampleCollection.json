@@ -27,7 +27,7 @@
             "tags":["seat","basic"],
             "path":"Chair/ChairLightRedDown.png",
             "direction":"Down",
-            "color":"light-red"
+            "color":"pink"
         },
         {
             "name":"Basic Chair",
@@ -62,7 +62,7 @@
             "tags":["seat","basic"],
             "path":"Chair/ChairLightRedUp.png",
             "direction":"Up",
-            "color":"light-red"
+            "color":"pink"
         },
         {
             "name":"Basic Chair",
@@ -97,7 +97,7 @@
             "tags":["seat","basic"],
             "path":"Chair/ChairLightRedLeft.png",
             "direction":"Left",
-            "color":"light-red"
+            "color":"pink"
         },
         {
             "name":"Basic Chair",
@@ -132,21 +132,7 @@
             "tags":["seat","basic"],
             "path":"Chair/ChairLightRedRight.png",
             "direction":"Right",
-            "color":"light-red"
-        },
-        {
-            "name":"Basic Chair",
-            "tags":["seat","basic"],
-            "path":"Chair/ChairRedRight.png",
-            "direction":"Right",
-            "color":"red"
-        },
-        {
-            "name":"Basic Chair",
-            "tags":["seat","basic"],
-            "path":"Chair/ChairLightRedRight.png",
-            "direction":"Right",
-            "color":"light-red"
+            "color":"pink"
         },
         {
             "name":"Basic Chair",
