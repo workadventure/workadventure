@@ -8,6 +8,7 @@ WORKDIR /usr/src
 COPY messages/yarn.lock messages/package.json ./
 RUN yarn install
 COPY messages .
+COPY libs ./../libs
 RUN yarn run tag-version && yarn run ts-proto
 
 # typescript build
@@ -25,6 +26,7 @@ RUN cd /usr/libs/map-editor && yarn install --network-timeout 1000000
 COPY map-storage/yarn.lock map-storage/package.json ./
 RUN cd /usr/src && yarn install
 COPY libs /usr/libs
+COPY --from=proto-builder /usr/libs/messages/src ./../libs/messages/src
 COPY map-storage .
 
 ENV NODE_ENV=production
