@@ -51,7 +51,13 @@ import type HyperExpress from "hyper-express";
 import type { WebSocket } from "uWebSockets.js";
 import { z } from "zod";
 import { adminService } from "../services/AdminService";
-import { MucRoomDefinitionInterface, ErrorApiData, WokaDetail, apiVersionHash, isErrorApiData } from "@workadventure/messages";
+import {
+    MucRoomDefinitionInterface,
+    ErrorApiData,
+    WokaDetail,
+    apiVersionHash,
+    isErrorApiData,
+} from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import { v4 as uuid } from "uuid";
 import { JID } from "stanza";
