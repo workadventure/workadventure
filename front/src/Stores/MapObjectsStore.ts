@@ -40,36 +40,27 @@ export class MapObjectsStore implements Readable<MapEntity[]>
     private mapObjectsStore = writable<MapEntity[]>([]);
 
     private mapObjects: MapEntity[]=[];
-    private tagFilters:string[] = [];
+    private filter:string = "";
+    public tagsStore= writable<string[]>([]);
     private currentCollection:EntityCollection = {collectionName:basicCollection.collectionName, collection:[]};
 
     constructor()
     {
         const folder = "/src/Components/images/objects/";
-        basicCollection.collection.forEach(entity => this.currentCollection.collection.push({
-            name : entity.name,
-            tags : entity.tags,
-            path : folder + entity.path,
-            direction : Direction[<keyof typeof Direction>entity.direction],
-            color : entity.color
-        }));
-        // for(let object of this.objectPath)
-        // {
-        //     for(let direction of this.allDirection)
-        //     {
-        //         for(let color of this.allColor)
-        //         {
-        //             this.mapObjects.push(
-        //                 {
-        //                     name:object,
-        //                     path:folder+object+".png",
-        //                     color: color,
-        //                     direction: direction,
-        //                     tags:[]
-        //                 });
-        //         }
-        //     }
-        // }
+        let tagSet = new Set<string>();
+        basicCollection.collection.forEach(entity => {
+            this.currentCollection.collection.push({
+                name : entity.name,
+                tags : entity.tags,
+                path : folder + entity.path,
+                direction : Direction[<keyof typeof Direction>entity.direction],
+                color : entity.color
+            });
+            entity.tags.forEach(tag => tagSet.add(tag));
+        });
+        let tags = [...tagSet]
+        tags.sort();
+        this.tagsStore.set(tags);
         this.mapObjectsStore.set(this.currentCollection.collection);
     }
 
@@ -82,11 +73,17 @@ export class MapObjectsStore implements Readable<MapEntity[]>
         return get(this.mapObjectsStore);
     }
 
-    public setFilter(filters: string[])
+    public setNameFilter(filter: string)
     {
-        this.tagFilters = filters;
+        this.filter = filter;
+        this.applyFilters();
+    }
+
+    private applyFilters()
+    {
+        let filters = this.filter.toLowerCase().split(" ").filter(v=> v.trim()!=="");
         let newCollection = this.currentCollection.collection;
-        newCollection = newCollection.filter(item => this.tagFilters.every(tag=> item.tags.includes(tag)));
+        newCollection = newCollection.filter(item => filters.every(word => item.name.toLowerCase().includes(word)) || filters.every(word => item.tags.includes(word)));
         this.mapObjectsStore.set(newCollection);
     }
 }

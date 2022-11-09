@@ -14,11 +14,11 @@
     let rootItem : MapEntity[] = []; //A sample of each object
     let itemVariants : MapEntity[] = [];
 
-    let nameFilter : string;
-    let tagAvailableFilter : string[] = [];
-    let tagFilter : string[] = [];
+    let filter : string = "";
 
     let selectedTag = "";
+
+    let tagsStore = mapObjectsStore.tagsStore;
 
     function onPickItemVariant(variant:MapEntity)
     {
@@ -29,8 +29,7 @@
     function onPickItem(item : MapEntity)
     {
         pickedItem = item;
-        let currentTagFilter = new Set<string>(tagFilter);
-        itemVariants = $mapObjectsStore.filter((item)=>item.name == pickedItem.name && (currentTagFilter.size === 0 || item.tags.some(tag=> currentTagFilter.has(tag))));
+        itemVariants = $mapObjectsStore.filter((item)=>item.name == pickedItem.name );
         itemVariants = itemVariants.sort((a,b)=> a.direction.localeCompare(b.direction) +a.color.localeCompare(b.color) * 10 +(a.color === pickedItem.color? - 100:0) + (b.color === pickedItem.color? 100:0));
         pickedVariant = undefined;
     }
@@ -39,34 +38,15 @@
     {
         if(selectedTag !== "")
         {
-            tagFilter.push(selectedTag);
-            tagFilter.sort();
+            filter = selectedTag
             selectedTag = "";
-            mapObjectsStore.setFilter(tagFilter);
-            tagFilter = tagFilter; //send update to UI;
+            onFilterChange();
         }
-    }
-
-    function onTagDelete(tag: string)
-    {
-        tagFilter = tagFilter.filter(t => t !== tag)
-        mapObjectsStore.setFilter(tagFilter);
     }
 
     function onFilterChange()
     {
-        let uniqId = new Set<string>();
-        let currentFilter = new Set<string>(tagFilter);
-        rootItem = [];
-        for(let mapObject of currentMapObjects)
-        {
-
-        }
-        rootItem = rootItem;
-        if(!pickedItem.tags.some(tag=> currentFilter.has(tag)) && rootItem.length != 0)//if the item is not available due to filtering, we change it
-        {
-            onPickItem(rootItem[0]);
-        }
+        mapObjectsStore.setNameFilter(filter);
     }
 
     onPickItem(pickedItem);
@@ -86,11 +66,8 @@
                 rootItem.push(mapObject);
             }
         }
-        tagFilter.forEach(tag => tags.delete(tag));
-        tagAvailableFilter = ["",...tags];
-        tagAvailableFilter.sort();
         
-        if(!tagFilter.every(tag => pickedItem.tags.includes(tag)) && rootItem.length != 0)//if the item is not available due to filtering, we change it
+        if(!rootItem.includes(pickedItem) && rootItem.length != 0)//if the item is not available due to filtering, we change it
         {
             onPickItem(rootItem[0]);
         }
@@ -106,18 +83,14 @@
 </script>
 
 <div class="item-picker">
-    <div>Name filter : <input/></div>
-        <div>tag filter : <select bind:value={selectedTag} on:change={()=>onTagPick()}>
-            {#each tagAvailableFilter as tag}
+    <div class="item-filter">
+        <input class="filter-input" type="search" bind:value={filter} on:input={onFilterChange} placeholder="Search for name or tags"/>
+        <select class="tag-selector" bind:value={selectedTag} on:change={()=>onTagPick()}>
+            {#each $tagsStore as tag}
             <option>{tag}</option>
             {/each}
         </select>
-
     </div>
-    <div class="tag-container">
-        {#each tagFilter as tag (tag)}
-            <button class="tag-button" on:click={()=>onTagDelete(tag)}>{tag}<img class="tag-delete" src={deleteTagButton} alt=""/></button>
-        {/each}</div>
     <div class="item-name">{pickedItem.name}</div>
     <div class="item-picker-container">
         {#each rootItem as item (item.name) }
@@ -144,6 +117,18 @@
 
 <style lang="scss">
     .item-picker{
+        .item-filter{
+            .filter-input
+            {
+                max-width: 90%;
+            }
+            .tag-selector
+            {
+                max-width: 10%;
+                margin-bottom: 0;
+                position : absolute;
+            }
+        }
         .tag-container
         {
             display: flex;

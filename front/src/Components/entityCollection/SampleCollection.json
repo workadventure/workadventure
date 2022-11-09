@@ -226,15 +226,15 @@
             "color":"orange"
         },
         {
-            "name":"Table",
-            "tags":["table"],
+            "name":"Basic Wood Table",
+            "tags":["basic", "table"],
             "path":"TableBrown.png",
             "direction":"Down",
             "color":"orange"
         },
         {
-            "name":"Table",
-            "tags":["table"],
+            "name":"Basic Wood Table",
+            "tags":["basic", "table"],
             "path":"TableDarkBrown.png",
             "direction":"Down",
             "color":"brown"

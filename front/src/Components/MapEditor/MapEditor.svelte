@@ -10,9 +10,9 @@
 <MapEditorSideBar />
 <div class="map-editor tw-bg-dark-blue/95">
     <div class="sidebar">
-        {#if $mapEditorSelectedToolStore === EditorToolName.FloorEditor }
+        <!-- {#if $mapEditorSelectedToolStore === EditorToolName.FloorEditor } -->
             <ItemPicker/>
-        {/if}
+        <!-- {/if} -->
         {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor }
             <AreaPreviewWindow />
             <PropertyPreviewSidebar />
