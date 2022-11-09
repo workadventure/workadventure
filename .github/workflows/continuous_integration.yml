@@ -54,7 +54,7 @@ jobs:
         working-directory: "libs/messages"
 
       - name: "Build proto messages"
-        run: yarn run ts-proto && yarn run copy-to-play-ts-proto && yarn run proto && yarn run copy-to-play
+        run: yarn run ts-proto && yarn run proto && yarn run copy-to-play
         working-directory: "messages"
 
       - name: "Generate i18n files"
@@ -130,7 +130,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run ts-proto && yarn run copy-to-chat-ts-proto
+        run: yarn run ts-proto
         working-directory: "messages"
 
       - name: "Pretty"

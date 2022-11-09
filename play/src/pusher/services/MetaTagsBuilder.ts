@@ -1,5 +1,5 @@
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
-import type {
+import {
     MetaTagsData,
     RequiredMetaTagsData,
     MapDetailsData,

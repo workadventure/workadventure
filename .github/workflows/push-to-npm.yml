@@ -49,7 +49,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run ts-proto && yarn run copy-to-play-ts-proto && yarn run copy-to-play
+        run: yarn run ts-proto && yarn run copy-to-play
         working-directory: "messages"
 
       - name: "Generate i18n files"

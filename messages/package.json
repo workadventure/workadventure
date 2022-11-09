@@ -8,13 +8,11 @@
 
     "copy-to-back": "syncdir generated/ ../back/src/Messages/generated && rm -f ../back/src/Messages/generate_request/need_regenerate",
     
-    "proto-all": "yarn run proto && yarn run ts-proto && yarn run copy-to-play-ts-proto && yarn run copy-to-chat-ts-proto && yarn run copy-to-back && yarn run copy-to-play",
+    "proto-all": "yarn run proto && yarn run ts-proto && yarn run copy-to-back && yarn run copy-to-play",
     "proto:watch": "yarn run proto-all; run-p proto:watch-need-regenerate proto:watch-files",
     "proto:watch-need-regenerate": "inotifywait -q -m -e create ../back/src/Messages/generate_request/ ../play/src/messages/generate_request/ | while read -r filename event; echo \"Inotify got event $event on file $filename\"; do yarn run proto-all; done",
     "proto:watch-files": "inotifywait -q -m -e close_write protos/messages.proto | while read -r filename event; echo \"Inotify got event $event on file $filename\"; do yarn run proto-all; done",
-    
-    "copy-to-play-ts-proto": "syncdir ts-proto-generated/ ../play/src/messages/ts-proto-generated/",
-    "copy-to-chat-ts-proto": "syncdir ts-proto-generated/ ../chat/src/Messages/ts-proto-generated/",
+  
     "copy-to-play": "syncdir generated/ ../play/src/messages/generated && rm -f ../play/src/messages/generate_request/need_regenerate",
 
     "tag-version": "sed -i \"s/apiVersionHash = \\\".*\\\"/apiVersionHash = \\\"$(sha1sum protos/messages.proto ../libs/messages/JsonMessages/* | sha1sum | cut -c1-8)\\\"/g\" ../libs/messages/JsonMessages/ApiVersion.ts"
@@ -24,7 +22,7 @@
     "@grpc/grpc-js": "^1.7.1",
     "google-protobuf": "^3.21.0",
     "npm-run-all": "^4.1.5",
-    "openapi3-ts": "^2.0.2",
+    "openapi3-ts": "^3.0.2",
     "ts-proto": "^1.123.1",
     "zod": "^3.19.1"
   },

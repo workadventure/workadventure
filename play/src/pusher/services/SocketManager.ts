@@ -60,9 +60,8 @@ import Debug from "debug";
 import type { ExAdminSocketInterface } from "../models/Websocket/ExAdminSocketInterface";
 import type { compressors } from "hyper-express";
 import { adminService } from "./AdminService";
-import type { ErrorApiData } from "@workadventure/messages";
+import { ErrorApiData, MucRoomDefinitionInterface } from "@workadventure/messages";
 import { BoolValue, Int32Value, StringValue } from "google-protobuf/google/protobuf/wrappers_pb";
-import type { MucRoomDefinitionInterface } from "../../messages/JsonMessages/MucRoomDefinitionInterface";
 import { EJABBERD_DOMAIN } from "../enums/EnvironmentVariable";
 
 const debug = Debug("socket");
