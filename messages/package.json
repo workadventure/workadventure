@@ -15,7 +15,7 @@
   
     "copy-to-play": "syncdir generated/ ../play/src/messages/generated && rm -f ../play/src/messages/generate_request/need_regenerate",
 
-    "tag-version": "sed -i \"s/apiVersionHash = \\\".*\\\"/apiVersionHash = \\\"$(sha1sum protos/messages.proto ../libs/messages/JsonMessages/* | sha1sum | cut -c1-8)\\\"/g\" ../libs/messages/JsonMessages/ApiVersion.ts"
+    "tag-version": "sed -i \"s/apiVersionHash = \\\".*\\\"/apiVersionHash = \\\"$(sha1sum protos/messages.proto ../libs/messages/src/JsonMessages/* | sha1sum | cut -c1-8)\\\"/g\" ../libs/messages/src/JsonMessages/ApiVersion.ts"
   },
   "dependencies": {
     "@anatine/zod-openapi": "^1.3.0",

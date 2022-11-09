@@ -8,6 +8,7 @@ WORKDIR /usr/src
 COPY messages/yarn.lock messages/package.json ./
 RUN yarn install
 COPY messages .
+COPY libs ./../libs
 RUN yarn run tag-version && yarn run ts-proto
 
 # typescript build
@@ -15,7 +16,10 @@ FROM --platform=$BUILDPLATFORM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e4
 WORKDIR /usr/src
 COPY libs/tailwind/yarn.lock libs/tailwind/package.json ./../libs/tailwind/
 RUN cd ../libs/tailwind && yarn install --network-timeout 1000000
+COPY libs/messages/yarn.lock libs/messages/package.json ./../libs/messages/
+RUN cd ../libs/messages && yarn install --network-timeout 1000000
 COPY libs ./../libs
+COPY --from=proto-builder /usr/libs/messages/src ./../libs/messages/src
 COPY chat/yarn.lock chat/package.json ./
 RUN yarn install --network-timeout 1000000
 COPY chat .
