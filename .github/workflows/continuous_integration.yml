@@ -121,6 +121,10 @@ jobs:
         run: yarn install
         working-directory: "libs/tailwind"
 
+      - name: "Install libs/messages dependencies"
+        run: yarn install
+        working-directory: "libs/messages"
+
       - name: "Install dependencies"
         run: yarn install
         working-directory: "chat"
