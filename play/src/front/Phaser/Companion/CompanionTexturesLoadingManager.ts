@@ -1,11 +1,11 @@
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import CancelablePromise from "cancelable-promise";
-import type {CompanionCollectionList, CompanionTexture} from "../../../messages/JsonMessages/CompanionTextures";
-import {companionCollectionList} from "../../../messages/JsonMessages/CompanionTextures";
-import {PUSHER_URL} from "../../Enum/EnvironmentVariable";
-import {gameManager} from "../Game/GameManager";
-import {localUserStore} from "../../Connexion/LocalUserStore";
-import type {SuperLoaderPlugin} from "../Services/SuperLoaderPlugin";
+import type { CompanionCollectionList, CompanionTexture } from "../../../messages/JsonMessages/CompanionTextures";
+import { companionCollectionList } from "../../../messages/JsonMessages/CompanionTextures";
+import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
+import { gameManager } from "../Game/GameManager";
+import { localUserStore } from "../../Connexion/LocalUserStore";
+import type { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 
 export function companionListMetakey() {
     return "companion-list" + gameManager.currentStartedRoom.href;
@@ -48,9 +48,9 @@ export class CompanionTexturesLoadingManager {
             });
 
             this.loadTextures((companionList) => {
-                const texture = companionList.flatMap(collection =>
-                    collection.textures
-                ).find((t) => t.name === textureName);
+                const texture = companionList
+                    .flatMap((collection) => collection.textures)
+                    .find((t) => t.name === textureName);
 
                 if (!texture) {
                     console.error(`Companion texture ${textureName} not found`);
