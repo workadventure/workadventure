@@ -39,11 +39,13 @@ export class SelectCompanionScene extends ResizableScene {
 
         const companionLoadingManager = new CompanionTexturesLoadingManager(this.superLoad, this.load);
 
-        companionLoadingManager.loadTextures((list: CompanionCollectionList) => {
-            list[0].textures.forEach((texture) => {
-                this.companionModels.push(texture);
-                companionLoadingManager.loadByTexture(texture);
-            });
+        companionLoadingManager.loadTextures((collections: CompanionCollectionList) => {
+            collections.forEach(list => {
+                list.textures.forEach((texture) => {
+                    this.companionModels.push(texture);
+                    companionLoadingManager.loadByTexture(texture);
+                });
+            })
         });
         this.loader.addLoader();
     }
