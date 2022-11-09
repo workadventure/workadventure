@@ -1,16 +1,18 @@
 { "compressionlevel":-1,
- "editorsettings":
-    {
-     "export":
-        {
-         "target":"."
-        }
-    },
  "height":10,
  "infinite":false,
  "layers":[
         {
-         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 52, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 52, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
          "height":10,
          "id":1,
          "name":"start",
@@ -20,9 +22,18 @@
          "width":10,
          "x":0,
          "y":0
-        },
+        }, 
         {
-         "data":[33, 34, 34, 34, 34, 34, 34, 34, 34, 35, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 49, 50, 50, 50, 50, 50, 50, 50, 50, 51],
+         "data":[33, 34, 34, 34, 34, 34, 34, 34, 34, 35,
+            41, 42, 42, 42, 42, 42, 42, 42, 42, 43,
+            41, 42, 42, 42, 42, 42, 42, 42, 42, 43,
+            41, 42, 42, 42, 42, 42, 42, 42, 42, 43,
+            41, 42, 42, 42, 42, 42, 42, 42, 42, 43,
+            41, 42, 42, 42, 42, 42, 42, 42, 42, 43,
+            41, 42, 42, 42, 42, 42, 42, 42, 42, 43,
+            41, 42, 42, 42, 42, 42, 42, 42, 42, 43,
+            41, 42, 42, 42, 42, 42, 42, 42, 42, 43,
+            49, 50, 50, 50, 50, 50, 50, 50, 50, 51],
          "height":10,
          "id":2,
          "name":"bottom",
@@ -32,9 +43,18 @@
          "width":10,
          "x":0,
          "y":0
-        },
+        }, 
         {
-         "data":[0, 0, 0, 0, 0, 0, 128, 128, 128, 128, 0, 0, 0, 0, 0, 0, 128, 128, 128, 128, 0, 0, 0, 0, 0, 0, 128, 128, 128, 128, 0, 0, 0, 0, 0, 0, 128, 128, 128, 128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         "data":[0, 0, 0, 0, 0, 0, 128, 128, 128, 128,
+            0, 0, 0, 0, 0, 0, 128, 128, 128, 128,
+            0, 0, 0, 0, 0, 0, 128, 128, 128, 128,
+            0, 0, 0, 0, 0, 0, 128, 128, 128, 128,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
          "height":10,
          "id":4,
          "name":"metadata",
@@ -44,7 +64,7 @@
                  "name":"openWebsite",
                  "type":"string",
                  "value":"setTiles.php"
-                },
+                }, 
                 {
                  "name":"openWebsiteAllowApi",
                  "type":"bool",
@@ -55,9 +75,18 @@
          "width":10,
          "x":0,
          "y":0
-        },
+        }, 
         {
-         "data":[65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 65, 65, 65, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         "data":[65, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            65, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            65, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 65, 65, 65, 65,
+            65, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            65, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            65, 0, 0, 0, 0, 0, 0, 0, 0, 0],
          "height":10,
          "id":8,
          "name":"setTiles",
@@ -67,13 +96,14 @@
          "width":10,
          "x":0,
          "y":0
-        },
+        }, 
         {
          "draworder":"topdown",
          "id":5,
          "name":"floorLayer",
          "objects":[
                 {
+                 "class":"",
                  "height":191.866671635267,
                  "id":1,
                  "name":"",
@@ -82,10 +112,9 @@
                     {
                      "fontfamily":"Sans Serif",
                      "pixelsize":9,
-                     "text":"Test : \nWalk on the grass\n\nResult : \nThe Yellow Tile opens a Jitsi with Trigger.\n\nThe Red Tile opens cowebsite Wikipedia. The highest Red Tile is found by 'name' property index, the lowest by 'number' index.\n\nThe White Tiles are silent tiles. You cannot open a bubble in it. (Even if the other player didn't activate the script.)\n\nThe Pale Tile (Lowest) is an exitUrl tile to customMenu.json.\n\nThe Blue Tile are 'collides' tile. The two tiles in the center are 'number' index. The others are 'name' property index.\n",
+                     "text":"Test : \nWalk on the grass\n\nResult : \nThe Yellow Tile opens a Jitsi with Trigger.\n\nThe Red Flashy Tile opens cowebsite Wikipedia. The highest Red Tile is found by 'name' property index, the lowest by 'number' index.\n\nThe White Tiles are silent tiles. You cannot open a bubble in it. (Even if the other player didn't activate the script.)\n\nThe Pale Tile (Lowest) is an exitUrl tile to customMenu.json.\n\nThe Blue Tile are 'collides' tile. The two tiles in the center are 'number' index. The others are 'name' property index.\n",
                      "wrap":true
                     },
-                 "type":"",
                  "visible":true,
                  "width":274.674838251912,
                  "x":32.5473600365393,
@@ -101,7 +130,7 @@
  "nextobjectid":2,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.4.3",
+ "tiledversion":"1.9.2",
  "tileheight":32,
  "tilesets":[
         {
@@ -124,7 +153,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                },
+                }, 
                 {
                  "id":1,
                  "properties":[
@@ -133,7 +162,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                },
+                }, 
                 {
                  "id":2,
                  "properties":[
@@ -142,7 +171,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                },
+                }, 
                 {
                  "id":3,
                  "properties":[
@@ -151,7 +180,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                },
+                }, 
                 {
                  "id":4,
                  "properties":[
@@ -160,7 +189,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                },
+                }, 
                 {
                  "id":8,
                  "properties":[
@@ -169,7 +198,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                },
+                }, 
                 {
                  "id":9,
                  "properties":[
@@ -178,7 +207,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                },
+                }, 
                 {
                  "id":10,
                  "properties":[
@@ -187,7 +216,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                },
+                }, 
                 {
                  "id":11,
                  "properties":[
@@ -196,7 +225,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                },
+                }, 
                 {
                  "id":12,
                  "properties":[
@@ -206,6 +235,7 @@
                          "value":true
                         }]
                 },
+            
                 {
                  "id":16,
                  "properties":[
@@ -214,7 +244,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                },
+                }, 
                 {
                  "id":17,
                  "properties":[
@@ -223,7 +253,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                },
+                }, 
                 {
                  "id":18,
                  "properties":[
@@ -232,7 +262,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                },
+                }, 
                 {
                  "id":19,
                  "properties":[
@@ -241,7 +271,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                },
+                }, 
                 {
                  "id":20,
                  "properties":[
@@ -252,7 +282,7 @@
                         }]
                 }],
          "tilewidth":32
-        },
+        }, 
         {
          "columns":8,
          "firstgid":65,
@@ -273,7 +303,7 @@
                          "type":"string",
                          "value":"customMenu.json"
                         }]
-                },
+                }, 
                 {
                  "id":27,
                  "properties":[
@@ -281,27 +311,40 @@
                          "name":"jitsiRoom",
                          "type":"string",
                          "value":"TEST"
-                        },
+                        }, 
                         {
                          "name":"jitsiTrigger",
                          "type":"string",
                          "value":"onaction"
                         }]
-                },
+                }, 
                 {
+                 "animation":[
+                        {
+                         "duration":100,
+                         "tileid":34
+                        }, 
+                        {
+                         "duration":100,
+                         "tileid":35
+                        }, 
+                        {
+                         "duration":100,
+                         "tileid":36
+                        }],
                  "id":34,
                  "properties":[
                         {
                          "name":"name",
                          "type":"string",
                          "value":"Red"
-                        },
+                        }, 
                         {
                          "name":"openWebsite",
                          "type":"string",
                          "value":"https:\/\/fr.wikipedia.org\/wiki\/Wikip%C3%A9dia:Accueil_principal"
                         }]
-                },
+                }, 
                 {
                  "id":40,
                  "properties":[
@@ -310,7 +353,7 @@
                          "type":"string",
                          "value":""
                         }]
-                },
+                }, 
                 {
                  "id":44,
                  "properties":[
@@ -318,13 +361,13 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
-                        },
+                        }, 
                         {
                          "name":"name",
                          "type":"string",
                          "value":"blue"
                         }]
-                },
+                }, 
                 {
                  "id":52,
                  "properties":[
@@ -338,6 +381,6 @@
         }],
  "tilewidth":32,
  "type":"map",
- "version":1.4,
+ "version":"1.9",
  "width":10
 }
