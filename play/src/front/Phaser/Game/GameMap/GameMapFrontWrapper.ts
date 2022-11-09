@@ -357,7 +357,7 @@ export class GameMapFrontWrapper {
         areaName: string,
         areaType: AreaType,
         propertyName: string,
-        propertyValue: string | number | boolean
+        propertyValue: string | number | boolean | undefined
     ): void {
         const area = this.getAreaByName(areaName, areaType);
         if (area === undefined) {

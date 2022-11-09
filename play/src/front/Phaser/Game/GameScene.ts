@@ -1896,7 +1896,7 @@ ${escapedMessage}
         areaName: string,
         areaType: AreaType,
         propertyName: string,
-        propertyValue: string | number | boolean
+        propertyValue: string | number | boolean | undefined
     ): void {
         this.gameMapFrontWrapper.setAreaProperty(areaName, areaType, propertyName, propertyValue);
     }

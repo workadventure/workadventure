@@ -140,7 +140,7 @@ export class GameMap {
     public setAreaProperty(
         area: AreaData,
         key: string,
-        value: string | number | boolean
+        value: string | number | boolean | undefined
     ): void {
         this.gameMapAreas.setProperty(area, key, value);
     }
