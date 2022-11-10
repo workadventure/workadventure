@@ -9,7 +9,7 @@
         "dom",
       ],
       //"module": "CommonJS",
-      "moduleResolution": "Node",
+      "moduleResolution": "Node16",
       "esModuleInterop": true,
       "strict": true,
       "declaration": true,

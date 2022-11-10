@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import type { CommandConfig } from '../types';
+import type { CommandConfig } from "../types.js.js";
 
 export abstract class Command {
 

@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
-import { isMucRoomDefinition } from "./MucRoomDefinitionInterface";
-import { isMetaTagFavicon } from "./MetaTagFavicon";
-import { isMetaTagManifestIcon } from "./MetaTagManifestIcon";
+import { isMucRoomDefinition } from "./MucRoomDefinitionInterface.js";
+import { isMetaTagFavicon } from "./MetaTagFavicon.js";
+import { isMetaTagManifestIcon } from "./MetaTagManifestIcon.js";
 
 /*
  * WARNING! The original file is in /messages/JsonMessages.

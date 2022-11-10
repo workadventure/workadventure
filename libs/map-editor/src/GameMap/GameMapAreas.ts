@@ -1,10 +1,10 @@
 import type { AreaProperties } from "@workadventure/messages";
-import type { AreaData } from '../types';
-import { AreaType } from '../types';
+import type { AreaData } from "../types.js.js";
+import { AreaType } from "../types.js.js";
 import * as _ from "lodash";
 import type { ITiledMapObject, ITiledMapObjectLayer, ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
 import { MathUtils } from "@workadventure/math-utils";
-import type { GameMap } from "./GameMap";
+import type { GameMap } from "./GameMap.js";
 
 export type AreaChangeCallback = (
     areasChangedByAction: Array<AreaData>,

@@ -5,11 +5,11 @@ import {
     ITiledMapProperty,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
-import type { AreaData } from '../types';
-import type { AreaChangeCallback } from "./GameMapAreas";
-import { GameMapAreas } from "./GameMapAreas";
-import { GameMapProperties } from '../types';
-import { flattenGroupLayersMap } from './LayersFlattener';
+import type { AreaData } from "../types.js.js";
+import type { AreaChangeCallback } from "./GameMapAreas.js";
+import { GameMapAreas } from "./GameMapAreas.js";
+import { GameMapProperties } from "../types.js.js";
+import { flattenGroupLayersMap } from "./LayersFlattener.js.js";
 
 
 

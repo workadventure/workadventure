@@ -1,8 +1,8 @@
-import type { AreaData } from '../../types';
-import type { GameMap } from '../../GameMap/GameMap';
-import { AreaType } from '../../types';
-import { Command } from "../Command";
-import type { CreateAreaCommandConfig } from './CreateAreaCommand';
+import type { AreaData } from "../../types.js.js";
+import type { GameMap } from "../../GameMap/GameMap.js.js";
+import { AreaType } from "../../types.js.js";
+import { Command } from "../Command.js";
+import type { CreateAreaCommandConfig } from "./CreateAreaCommand.js.js";
 
 export interface DeleteAreaCommandConfig {
     type: "DeleteAreaCommand";

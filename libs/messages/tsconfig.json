@@ -8,8 +8,7 @@
       "es2019",
     ],
     //"module": "CommonJS",
-    "moduleResolution": "Node",
-    "esModuleInterop": true,
+    "moduleResolution": "Node16",
     "strict": true,
     "declaration": true,
     "sourceMap": true

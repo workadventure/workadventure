@@ -1,1 +1,1 @@
-export * from './MathUtils';
+export * from "./MathUtils.js";

@@ -1,7 +1,7 @@
 import type { ModifyAreaMessage } from "@workadventure/messages";
-import type { CreateAreaCommandConfig } from './Commands/Area/CreateAreaCommand';
-import type { DeleteAreaCommandConfig } from './Commands/Area/DeleteAreaCommand';
-import type { UpdateAreaCommandConfig } from './Commands/Area/UpdateAreaCommand';
+import type { CreateAreaCommandConfig } from "./Commands/Area/CreateAreaCommand.js.js";
+import type { DeleteAreaCommandConfig } from "./Commands/Area/DeleteAreaCommand.js.js";
+import type { UpdateAreaCommandConfig } from "./Commands/Area/UpdateAreaCommand.js.js";
 
 
 export type CommandConfig =
