@@ -1,7 +1,7 @@
-import { App } from "../Server/sifrr.server";
+import { App } from "../Server/sifrr.server.js";
 import { HttpRequest, HttpResponse } from "uWebSockets.js";
 import { register, collectDefaultMetrics } from "prom-client";
-import { PROMETHEUS_AUTHORIZATION_TOKEN } from "../Enum/EnvironmentVariable";
+import { PROMETHEUS_AUTHORIZATION_TOKEN } from "../Enum/EnvironmentVariable.js";
 
 export class PrometheusController {
     constructor(private App: App) {

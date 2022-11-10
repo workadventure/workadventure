@@ -1,4 +1,4 @@
-import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable";
+import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable.js";
 import Axios from "axios";
 import { isMapDetailsData, MapDetailsData, isRoomRedirect, RoomRedirect } from "@workadventure/messages";
 

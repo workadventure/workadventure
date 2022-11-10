@@ -1,4 +1,4 @@
-import { mapFetcher } from "../src/Services/MapFetcher";
+import { mapFetcher } from "../src/Services/MapFetcher.js";
 
 describe("MapFetcher", () => {
     it("should return true on localhost ending URLs", async () => {

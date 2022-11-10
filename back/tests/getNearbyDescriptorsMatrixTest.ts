@@ -1,5 +1,5 @@
 import "jasmine";
-import { getNearbyDescriptorsMatrix } from "../src/Model/PositionNotifier";
+import { getNearbyDescriptorsMatrix } from "../src/Model/PositionNotifier.js";
 
 describe("getNearbyDescriptorsMatrix", () => {
     it("should create a matrix of coordinates in a square around the parameter", () => {

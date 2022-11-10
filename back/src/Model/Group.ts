@@ -1,10 +1,10 @@
-import { ConnectCallback, DisconnectCallback, GameRoom } from "./GameRoom";
-import { User } from "./User";
-import { PositionInterface } from "../Model/PositionInterface";
-import { Movable } from "../Model/Movable";
-import { PositionNotifier } from "../Model/PositionNotifier";
-import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
-import type { Zone } from "../Model/Zone";
+import { ConnectCallback, DisconnectCallback, GameRoom } from "./GameRoom.js";
+import { User } from "./User.js";
+import { PositionInterface } from "../Model/PositionInterface.js";
+import { Movable } from "../Model/Movable.js";
+import { PositionNotifier } from "../Model/PositionNotifier.js";
+import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable.js";
+import type { Zone } from "../Model/Zone.js";
 
 export class Group implements Movable {
     private static nextId = 1;

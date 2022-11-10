@@ -3,9 +3,9 @@
 import { Readable } from "stream";
 import { us_listen_socket_close, TemplatedApp, HttpResponse, HttpRequest } from "uWebSockets.js";
 
-import formData from "./formdata";
-import { stob } from "./utils";
-import { Handler } from "./types";
+import formData from "./formdata.js";
+import { stob } from "./utils.js";
+import { Handler } from "./types.js";
 import { join } from "path";
 
 const contTypes = ["application/x-www-form-urlencoded", "multipart/form-data"];

@@ -1,8 +1,8 @@
-import { Group } from "./Group";
-import { PointInterface } from "./Websocket/PointInterface";
-import { Zone } from "../Model/Zone";
-import { Movable } from "../Model/Movable";
-import { PositionNotifier } from "../Model/PositionNotifier";
+import { Group } from "./Group.js";
+import { PointInterface } from "./Websocket/PointInterface.js";
+import { Zone } from "../Model/Zone.js";
+import { Movable } from "../Model/Movable.js";
+import { PositionNotifier } from "../Model/PositionNotifier.js";
 import { ServerDuplexStream } from "@grpc/grpc-js";
 import {
     ApplicationMessage,
@@ -17,11 +17,11 @@ import {
     SetPlayerDetailsMessage,
     SetPlayerVariableMessage,
     SubMessage,
-} from "../Messages/generated/messages_pb";
-import { CharacterLayer } from "../Model/Websocket/CharacterLayer";
-import { PlayerVariables } from "../Services/PlayersRepository/PlayerVariables";
-import { getPlayersVariablesRepository } from "../Services/PlayersRepository/PlayersVariablesRepository";
-import { BrothersFinder } from "./BrothersFinder";
+} from "../Messages/generated/messages_pb.js";
+import { CharacterLayer } from "../Model/Websocket/CharacterLayer.js";
+import { PlayerVariables } from "../Services/PlayersRepository/PlayerVariables.js";
+import { getPlayersVariablesRepository } from "../Services/PlayersRepository/PlayersVariablesRepository.js";
+import { BrothersFinder } from "./BrothersFinder.js";
 
 export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 

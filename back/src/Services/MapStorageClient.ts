@@ -1,6 +1,6 @@
-import { MapStorageClient } from "../Messages/generated/services_grpc_pb";
+import { MapStorageClient } from "../Messages/generated/services_grpc_pb.js";
 import * as grpc from "@grpc/grpc-js";
-import { ENABLE_FEATURE_MAP_EDITOR, MAP_STORAGE_URL } from "../Enum/EnvironmentVariable";
+import { ENABLE_FEATURE_MAP_EDITOR, MAP_STORAGE_URL } from "../Enum/EnvironmentVariable.js";
 
 if (ENABLE_FEATURE_MAP_EDITOR) {
     console.log(`%%%%%%%%% MAP STORAGE URL: ${MAP_STORAGE_URL}`);

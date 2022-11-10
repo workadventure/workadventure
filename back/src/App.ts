@@ -1,8 +1,8 @@
 // lib/app.ts
-import { PrometheusController } from "./Controller/PrometheusController";
-import { DebugController } from "./Controller/DebugController";
-import { App as uwsApp } from "./Server/sifrr.server";
-import { PingController } from "./Controller/PingController";
+import { PrometheusController } from "./Controller/PrometheusController.js";
+import { DebugController } from "./Controller/DebugController.js";
+import { App as uwsApp } from "./Server/sifrr.server.js";
+import { PingController } from "./Controller/PingController.js";
 
 class App {
     public app: uwsApp;

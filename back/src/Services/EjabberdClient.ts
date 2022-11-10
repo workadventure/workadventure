@@ -1,7 +1,7 @@
 import Axios, { AxiosError, AxiosInstance } from "axios";
-import { EJABBERD_DOMAIN, EJABBERD_PASSWORD, EJABBERD_API_URI, EJABBERD_USER } from "../Enum/EnvironmentVariable";
-import { ChatZone } from "./MucManager";
-import { ChatClient } from "./ChatClient";
+import { EJABBERD_DOMAIN, EJABBERD_PASSWORD, EJABBERD_API_URI, EJABBERD_USER } from "../Enum/EnvironmentVariable.js";
+import { ChatZone } from "./MucManager.js";
+import { ChatClient } from "./ChatClient.js";
 
 export class EjabberdClient implements ChatClient {
     private axios: AxiosInstance | undefined;

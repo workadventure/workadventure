@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import "jasmine";
-import { PositionNotifier } from "../src/Model/PositionNotifier";
-import { User, UserSocket } from "../src/Model/User";
-import { Zone } from "../src/Model/Zone";
-import { Movable } from "../src/Model/Movable";
-import { PositionInterface } from "../src/Model/PositionInterface";
-import { ZoneSocket } from "../src/RoomManager";
-import { AvailabilityStatus } from "../src/Messages/generated/messages_pb";
-import { BrothersFinder } from "../src/Model/BrothersFinder";
+import { PositionNotifier } from "../src/Model/PositionNotifier.js";
+import { User, UserSocket } from "../src/Model/User.js";
+import { Zone } from "../src/Model/Zone.js";
+import { Movable } from "../src/Model/Movable.js";
+import { PositionInterface } from "../src/Model/PositionInterface.js";
+import { ZoneSocket } from "../src/RoomManager.js";
+import { AvailabilityStatus } from "../src/Messages/generated/messages_pb.js";
+import { BrothersFinder } from "../src/Model/BrothersFinder.js";
 
 class VoidBrothersFinder implements BrothersFinder {
     getBrothers(user: User): Iterable<User> {

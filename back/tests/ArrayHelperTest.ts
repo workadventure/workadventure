@@ -1,4 +1,4 @@
-import {arrayIntersect} from "../src/Services/ArrayHelper";
+import {arrayIntersect} from "../src/Services/ArrayHelper.js";
 
 
 describe("RoomIdentifier", () => {

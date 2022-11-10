@@ -6,9 +6,9 @@ import {
     ServerToClientMessage,
     SubToPusherMessage,
     SubToPusherRoomMessage,
-} from "../Messages/generated/messages_pb";
-import { UserSocket } from "../Model/User";
-import { AdminSocket, RoomSocket, ZoneSocket } from "../RoomManager";
+} from "../Messages/generated/messages_pb.js";
+import { UserSocket } from "../Model/User.js";
+import { AdminSocket, RoomSocket, ZoneSocket } from "../RoomManager.js";
 
 function getMessageFromError(error: unknown): string {
     if (error instanceof Error) {

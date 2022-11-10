@@ -1,7 +1,7 @@
-import { PointInterface } from "./Websocket/PointInterface";
-import { Group } from "./Group";
-import { User, UserSocket } from "./User";
-import { PositionInterface } from "../Model/PositionInterface";
+import { PointInterface } from "./Websocket/PointInterface.js";
+import { Group } from "./Group.js";
+import { User, UserSocket } from "./User.js";
+import { PositionInterface } from "../Model/PositionInterface.js";
 import {
     EmoteCallback,
     EntersCallback,
@@ -9,9 +9,9 @@ import {
     LockGroupCallback,
     MovesCallback,
     PlayerDetailsUpdatedCallback,
-} from "../Model/Zone";
-import { PositionNotifier } from "./PositionNotifier";
-import { Movable } from "../Model/Movable";
+} from "../Model/Zone.js";
+import { PositionNotifier } from "./PositionNotifier.js";
+import { Movable } from "../Model/Movable.js";
 import {
     BatchToPusherRoomMessage,
     EmoteEventMessage,
@@ -21,15 +21,15 @@ import {
     VariableWithTagMessage,
     ServerToClientMessage,
     PingMessage,
-} from "../Messages/generated/messages_pb";
-import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
-import { RoomSocket, ZoneSocket } from "../RoomManager";
-import { Admin } from "../Model/Admin";
-import { adminApi } from "../Services/AdminApi";
+} from "../Messages/generated/messages_pb.js";
+import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils.js";
+import { RoomSocket, ZoneSocket } from "../RoomManager.js";
+import { Admin } from "../Model/Admin.js";
+import { adminApi } from "../Services/AdminApi.js";
 import { isMapDetailsData, MapDetailsData, MapThirdPartyData, MapBbbData, MapJitsiData } from "@workadventure/messages";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
-import { mapFetcher } from "../Services/MapFetcher";
-import { VariablesManager } from "../Services/VariablesManager";
+import { mapFetcher } from "../Services/MapFetcher.js";
+import { VariablesManager } from "../Services/VariablesManager.js";
 import {
     ADMIN_API_URL,
     BBB_SECRET,
@@ -41,15 +41,15 @@ import {
     JITSI_URL,
     PUBLIC_MAP_STORAGE_URL,
     SECRET_JITSI_KEY,
-} from "../Enum/EnvironmentVariable";
-import { LocalUrlError } from "../Services/LocalUrlError";
-import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
-import { VariableError } from "../Services/VariableError";
-import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
-import { MapLoadingError } from "../Services/MapLoadingError";
-import { MucManager } from "../Services/MucManager";
-import { BrothersFinder } from "./BrothersFinder";
-import { getMapStorageClient } from "../Services/MapStorageClient";
+} from "../Enum/EnvironmentVariable.js";
+import { LocalUrlError } from "../Services/LocalUrlError.js";
+import { emitErrorOnRoomSocket } from "../Services/MessageHelpers.js";
+import { VariableError } from "../Services/VariableError.js";
+import { ModeratorTagFinder } from "../Services/ModeratorTagFinder.js";
+import { MapLoadingError } from "../Services/MapLoadingError.js";
+import { MucManager } from "../Services/MucManager.js";
+import { BrothersFinder } from "./BrothersFinder.js";
+import { getMapStorageClient } from "../Services/MapStorageClient.js";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;

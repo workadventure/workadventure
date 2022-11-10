@@ -16,12 +16,12 @@ import {
     MovesCallback,
     PlayerDetailsUpdatedCallback,
     Zone,
-} from "./Zone";
-import { Movable } from "../Model/Movable";
-import { PositionInterface } from "../Model/PositionInterface";
-import { ZoneSocket } from "../RoomManager";
-import { User } from "../Model/User";
-import { EmoteEventMessage, SetPlayerDetailsMessage } from "../Messages/generated/messages_pb";
+} from "./Zone.js";
+import { Movable } from "../Model/Movable.js";
+import { PositionInterface } from "../Model/PositionInterface.js";
+import { ZoneSocket } from "../RoomManager.js";
+import { User } from "../Model/User.js";
+import { EmoteEventMessage, SetPlayerDetailsMessage } from "../Messages/generated/messages_pb.js";
 
 interface ZoneDescriptor {
     i: number;

@@ -1,4 +1,4 @@
-import { CPU_OVERHEAT_THRESHOLD } from "../Enum/EnvironmentVariable";
+import { CPU_OVERHEAT_THRESHOLD } from "../Enum/EnvironmentVariable.js";
 
 function secNSec2ms(secNSec: Array<number> | number) {
     if (Array.isArray(secNSec)) {

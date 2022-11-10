@@ -2,8 +2,8 @@ import {
     ServerToAdminClientMessage,
     UserJoinedRoomMessage,
     UserLeftRoomMessage,
-} from "../Messages/generated/messages_pb";
-import { AdminSocket } from "../RoomManager";
+} from "../Messages/generated/messages_pb.js";
+import { AdminSocket } from "../RoomManager.js";
 
 export class Admin {
     public constructor(private readonly socket: AdminSocket) {}

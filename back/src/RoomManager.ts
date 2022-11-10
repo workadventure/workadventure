@@ -1,4 +1,4 @@
-import { IRoomManagerServer } from "./Messages/generated/services_grpc_pb";
+import { IRoomManagerServer } from "./Messages/generated/services_grpc_pb.js";
 import {
     AdminGlobalMessage,
     AdminMessage,
@@ -33,7 +33,7 @@ import {
     QueryMessage,
     EditMapCommandWithKeyMessage,
     ChatMessagePrompt,
-} from "./Messages/generated/messages_pb";
+} from "./Messages/generated/messages_pb.js";
 import {
     sendUnaryData,
     ServerDuplexStream,
@@ -41,17 +41,17 @@ import {
     ServerUnaryCall,
     ServerWritableStream,
 } from "@grpc/grpc-js";
-import { socketManager } from "./Services/SocketManager";
+import { socketManager } from "./Services/SocketManager.js";
 import {
     emitError,
     emitErrorOnAdminSocket,
     emitErrorOnRoomSocket,
     emitErrorOnZoneSocket,
-} from "./Services/MessageHelpers";
-import { User, UserSocket } from "./Model/User";
-import { GameRoom } from "./Model/GameRoom";
+} from "./Services/MessageHelpers.js";
+import { User, UserSocket } from "./Model/User.js";
+import { GameRoom } from "./Model/GameRoom.js";
 import Debug from "debug";
-import { Admin } from "./Model/Admin";
+import { Admin } from "./Model/Admin.js";
 
 const debug = Debug("roommanager");
 

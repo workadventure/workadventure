@@ -1,9 +1,9 @@
-import { ADMIN_API_TOKEN } from "../Enum/EnvironmentVariable";
+import { ADMIN_API_TOKEN } from "../Enum/EnvironmentVariable.js";
 import { stringify } from "circular-json";
 import { HttpRequest, HttpResponse } from "uWebSockets.js";
 import { parse } from "query-string";
-import { App } from "../Server/sifrr.server";
-import { socketManager } from "../Services/SocketManager";
+import { App } from "../Server/sifrr.server.js";
+import { socketManager } from "../Services/SocketManager.js";
 
 export class DebugController {
     constructor(private App: App) {

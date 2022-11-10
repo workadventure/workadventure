@@ -1,7 +1,7 @@
 import { App as _App, AppOptions } from "uWebSockets.js";
-import BaseApp from "./baseapp";
-import { extend } from "./utils";
-import { UwsApp } from "./types";
+import BaseApp from "./baseapp.js";
+import { extend } from "./utils.js";
+import { UwsApp } from "./types.js";
 
 class App extends (<UwsApp>_App) {
     constructor(options: AppOptions = {}) {

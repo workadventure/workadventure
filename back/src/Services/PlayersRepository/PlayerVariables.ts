@@ -5,8 +5,8 @@ import {
     LoadVariablesReturn,
     PlayersVariablesRepositoryInterface,
     VariableWithScope,
-} from "./PlayersVariablesRepositoryInterface";
-import { PLAYER_VARIABLES_MAX_TTL } from "../../Enum/EnvironmentVariable";
+} from "./PlayersVariablesRepositoryInterface.js";
+import { PLAYER_VARIABLES_MAX_TTL } from "../../Enum/EnvironmentVariable.js";
 
 export class PlayerVariables {
     private roomVariables!: Map<string, VariableWithScope>;

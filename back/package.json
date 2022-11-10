@@ -2,6 +2,7 @@
   "name": "workadventureback",
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "tsc": "tsc",
@@ -58,7 +59,7 @@
     "query-string": "^6.13.3",
     "redis": "^4.3.1",
     "source-map-support": "^0.5.21",
-    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.10.0",
+    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.15.0",
     "uuidv4": "^6.0.7",
     "zod": "^3.19.1"
   },

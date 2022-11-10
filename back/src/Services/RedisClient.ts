@@ -1,5 +1,5 @@
 import { createClient } from "redis";
-import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT } from "../Enum/EnvironmentVariable";
+import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT } from "../Enum/EnvironmentVariable.js";
 import { RedisClientOptions } from "@redis/client";
 
 const config: RedisClientOptions = {

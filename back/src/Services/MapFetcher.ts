@@ -2,9 +2,9 @@ import Axios from "axios";
 import ipaddr from "ipaddr.js";
 import { Resolver } from "dns";
 import { promisify } from "util";
-import { LocalUrlError } from "./LocalUrlError";
+import { LocalUrlError } from "./LocalUrlError.js";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
-import { STORE_VARIABLES_FOR_LOCAL_MAPS } from "../Enum/EnvironmentVariable";
+import { STORE_VARIABLES_FOR_LOCAL_MAPS } from "../Enum/EnvironmentVariable.js";
 
 class MapFetcher {
     async fetchMap(mapUrl: string, canLoadLocalUrl = false): Promise<ITiledMap> {

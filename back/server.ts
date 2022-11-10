@@ -1,9 +1,9 @@
 // lib/server.ts
-import App from "./src/App";
+import App from "./src/App.js";
 import * as grpc from "@grpc/grpc-js";
-import { roomManager } from "./src/RoomManager";
-import { RoomManagerService } from "./src/Messages/generated/services_grpc_pb";
-import { HTTP_PORT, GRPC_PORT } from "./src/Enum/EnvironmentVariable";
+import { roomManager } from "./src/RoomManager.js";
+import { RoomManagerService } from "./src/Messages/generated/services_grpc_pb.js";
+import { HTTP_PORT, GRPC_PORT } from "./src/Enum/EnvironmentVariable.js";
 
 App.listen(HTTP_PORT, () => console.log(`WorkAdventure HTTP API starting on port %d!`, HTTP_PORT));
 

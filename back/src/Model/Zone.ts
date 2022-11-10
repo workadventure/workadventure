@@ -1,13 +1,13 @@
-import { User } from "./User";
-import { PositionInterface } from "../Model/PositionInterface";
-import { Movable } from "./Movable";
-import { Group } from "./Group";
-import { ZoneSocket } from "../RoomManager";
+import { User } from "./User.js";
+import { PositionInterface } from "../Model/PositionInterface.js";
+import { Movable } from "./Movable.js";
+import { Group } from "./Group.js";
+import { ZoneSocket } from "../RoomManager.js";
 import {
     EmoteEventMessage,
     SetPlayerDetailsMessage,
     PlayerDetailsUpdatedMessage,
-} from "../Messages/generated/messages_pb";
+} from "../Messages/generated/messages_pb.js";
 
 export type EntersCallback = (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) => void;
 export type MovesCallback = (thing: Movable, position: PositionInterface, listener: ZoneSocket) => void;

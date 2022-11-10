@@ -1,4 +1,4 @@
-import { GameRoom } from "../Model/GameRoom";
+import { GameRoom } from "../Model/GameRoom.js";
 import {
     AnswerMessage,
     BanUserMessage,
@@ -50,26 +50,26 @@ import {
     EditMapCommandWithKeyMessage,
     EditMapCommandMessage,
     ChatMessagePrompt,
-} from "../Messages/generated/messages_pb";
-import { User, UserSocket } from "../Model/User";
-import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
-import { Group } from "../Model/Group";
-import { cpuTracker } from "./CpuTracker";
-import { GROUP_RADIUS, MINIMUM_DISTANCE, TURN_STATIC_AUTH_SECRET } from "../Enum/EnvironmentVariable";
-import { Movable } from "../Model/Movable";
-import { PositionInterface } from "../Model/PositionInterface";
+} from "../Messages/generated/messages_pb.js";
+import { User, UserSocket } from "../Model/User.js";
+import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils.js";
+import { Group } from "../Model/Group.js";
+import { cpuTracker } from "./CpuTracker.js";
+import { GROUP_RADIUS, MINIMUM_DISTANCE, TURN_STATIC_AUTH_SECRET } from "../Enum/EnvironmentVariable.js";
+import { Movable } from "../Model/Movable.js";
+import { PositionInterface } from "../Model/PositionInterface.js";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
-import { clientEventsEmitter } from "./ClientEventsEmitter";
-import { gaugeManager } from "./GaugeManager";
-import { RoomSocket, ZoneSocket } from "../RoomManager";
-import { Zone } from "../Model/Zone";
+import { clientEventsEmitter } from "./ClientEventsEmitter.js";
+import { gaugeManager } from "./GaugeManager.js";
+import { RoomSocket, ZoneSocket } from "../RoomManager.js";
+import { Zone } from "../Model/Zone.js";
 import Debug from "debug";
-import { Admin } from "../Model/Admin";
+import { Admin } from "../Model/Admin.js";
 import crypto from "crypto";
 import QueryCase = QueryMessage.QueryCase;
-import { getMapStorageClient } from "./MapStorageClient";
-import { emitError } from "./MessageHelpers";
+import { getMapStorageClient } from "./MapStorageClient.js";
+import { emitError } from "./MessageHelpers.js";
 
 const debug = Debug("sockermanager");
 

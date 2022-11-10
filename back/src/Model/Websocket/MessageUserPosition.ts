@@ -1,4 +1,4 @@
-import { PointInterface } from "./PointInterface";
+import { PointInterface } from "./PointInterface.js";
 
 export class Point implements PointInterface {
     constructor(

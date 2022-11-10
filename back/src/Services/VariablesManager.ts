@@ -2,10 +2,10 @@
  * Handles variables shared between the scripting API and the server.
  */
 import { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
-import { User } from "../Model/User";
-import { getVariablesRepository } from "./Repository/VariablesRepository";
-import { VariableError } from "./VariableError";
-import { VariablesRepositoryInterface } from "./Repository/VariablesRepositoryInterface";
+import { User } from "../Model/User.js";
+import { getVariablesRepository } from "./Repository/VariablesRepository.js";
+import { VariableError } from "./VariableError.js";
+import { VariablesRepositoryInterface } from "./Repository/VariablesRepositoryInterface.js";
 
 interface Variable {
     defaultValue?: string;

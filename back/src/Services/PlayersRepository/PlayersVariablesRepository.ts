@@ -1,7 +1,7 @@
-import { RedisPlayersVariablesRepository } from "./RedisPlayersVariablesRepository";
-import { getRedisClient } from "../RedisClient";
-import { VoidPlayersVariablesRepository } from "./VoidPlayersVariablesRepository";
-import { PlayersVariablesRepositoryInterface } from "./PlayersVariablesRepositoryInterface";
+import { RedisPlayersVariablesRepository } from "./RedisPlayersVariablesRepository.js";
+import { getRedisClient } from "../RedisClient.js";
+import { VoidPlayersVariablesRepository } from "./VoidPlayersVariablesRepository.js";
+import { PlayersVariablesRepositoryInterface } from "./PlayersVariablesRepositoryInterface.js";
 
 let playerVariablesRepository: PlayersVariablesRepositoryInterface | undefined;
 

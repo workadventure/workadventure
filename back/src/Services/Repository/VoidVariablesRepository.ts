@@ -1,4 +1,4 @@
-import { VariablesRepositoryInterface } from "./VariablesRepositoryInterface";
+import { VariablesRepositoryInterface } from "./VariablesRepositoryInterface.js";
 
 /**
  * Mock class in charge of NOT saving/loading variables from the data store

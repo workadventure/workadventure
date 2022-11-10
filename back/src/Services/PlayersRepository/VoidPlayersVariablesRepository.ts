@@ -2,7 +2,7 @@ import {
     LoadVariablesReturn,
     PlayersVariablesRepositoryInterface,
     VariableWithScope,
-} from "./PlayersVariablesRepositoryInterface";
+} from "./PlayersVariablesRepositoryInterface.js";
 
 /**
  * Mock class in charge of NOT saving/loading variables from the data store

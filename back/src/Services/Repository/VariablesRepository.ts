@@ -1,7 +1,7 @@
-import { RedisVariablesRepository } from "./RedisVariablesRepository";
-import { getRedisClient } from "../RedisClient";
-import { VoidVariablesRepository } from "./VoidVariablesRepository";
-import { VariablesRepositoryInterface } from "./VariablesRepositoryInterface";
+import { RedisVariablesRepository } from "./RedisVariablesRepository.js";
+import { getRedisClient } from "../RedisClient.js";
+import { VoidVariablesRepository } from "./VoidVariablesRepository.js";
+import { VariablesRepositoryInterface } from "./VariablesRepositoryInterface.js";
 
 let variablesRepository: VariablesRepositoryInterface | undefined;
 

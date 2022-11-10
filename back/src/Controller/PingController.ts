@@ -1,4 +1,4 @@
-import { App } from "../Server/sifrr.server";
+import { App } from "../Server/sifrr.server.js";
 import { HttpRequest, HttpResponse } from "uWebSockets.js";
 
 export class PingController {

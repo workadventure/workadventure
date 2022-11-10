@@ -1,14 +1,14 @@
-import { PointInterface } from "./PointInterface";
+import { PointInterface } from "./PointInterface.js";
 import {
     CharacterLayerMessage,
     ItemEventMessage,
     PointMessage,
     PositionMessage,
-} from "../../Messages/generated/messages_pb";
-import { CharacterLayer } from "../../Model/Websocket/CharacterLayer";
+} from "../../Messages/generated/messages_pb.js";
+import { CharacterLayer } from "../../Model/Websocket/CharacterLayer.js";
 import Direction = PositionMessage.Direction;
-import { ItemEventMessageInterface } from "../../Model/Websocket/ItemEventMessage";
-import { PositionInterface } from "../../Model/PositionInterface";
+import { ItemEventMessageInterface } from "../../Model/Websocket/ItemEventMessage.js";
+import { PositionInterface } from "../../Model/PositionInterface.js";
 
 export class ProtobufUtils {
     public static toPositionMessage(point: PointInterface): PositionMessage {

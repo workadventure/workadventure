@@ -2,6 +2,7 @@
   "name": "workadventure-play",
   "version": "1.0.0",
   "license": "SEE LICENSE IN LICENSE.txt",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/thecodingmachine/workadventure.git"

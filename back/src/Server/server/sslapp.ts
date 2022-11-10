@@ -1,7 +1,7 @@
 import { SSLApp as _SSLApp, AppOptions } from "uWebSockets.js";
-import BaseApp from "./baseapp";
-import { extend } from "./utils";
-import { UwsApp } from "./types";
+import BaseApp from "./baseapp.js";
+import { extend } from "./utils.js";
+import { UwsApp } from "./types.js";
 
 class SSLApp extends (<UwsApp>_SSLApp) {
     constructor(options: AppOptions) {
