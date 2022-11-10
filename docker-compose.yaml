@@ -203,7 +203,7 @@ services:
             DEBUG: "*"
             STARTUP_COMMAND_1: yarn install
             STARTUP_COMMAND_2: cd ../libs/map-editor && yarn install
-            STARTUP_COMMAND_3: cd ../libs/messages && yarn install
+            STARTUP_COMMAND_3: cd ../messages && yarn install
             NODE_ENV: development
             PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
         volumes:

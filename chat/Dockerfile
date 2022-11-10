@@ -23,9 +23,8 @@ COPY libs ./../libs
 COPY --from=proto-builder /usr/libs/messages/src ./../libs/messages/src
 COPY chat/yarn.lock chat/package.json ./
 RUN yarn install --network-timeout 1000000
-RUN cd /usr/libs/messages && yarn run build && yarn run prepare-for-prod
+RUN cd /usr/libs/messages && yarn run build
 COPY chat .
-
 # upgrade RAM available to 6G
 RUN yarn run typesafe-i18n && NODE_OPTIONS="--max-old-space-size=6144" yarn build
 
