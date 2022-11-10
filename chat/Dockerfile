@@ -14,6 +14,7 @@ RUN yarn run tag-version && yarn run ts-proto
 # typescript build
 FROM --platform=$BUILDPLATFORM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c as builder
 WORKDIR /usr/src
+RUN apt-get update && apt-get install -y jq
 COPY libs/tailwind/yarn.lock libs/tailwind/package.json ./../libs/tailwind/
 RUN cd ../libs/tailwind && yarn install --network-timeout 1000000
 COPY libs/messages/yarn.lock libs/messages/package.json ./../libs/messages/
