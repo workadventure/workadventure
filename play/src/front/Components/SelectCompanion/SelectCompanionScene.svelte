@@ -27,7 +27,7 @@
 
 <form class="selectCompanionScene">
     <section class="text-center">
-        <h2 class="tw-text-white tw-text-2xl">{$LL.companion.select.title()}</h2>
+        <h2 class="text-white text-2xl">{$LL.companion.select.title()}</h2>
         <button class="outline selectCharacterButton selectCharacterButtonLeft" on:click|preventDefault={selectLeft}>
             &lt;
         </button>
@@ -35,13 +35,13 @@
             &gt;
         </button>
     </section>
-    <section class="action tw-flex tw-flex-row tw-justify-center">
-        <button href="/" class="outline tw-mr-2 selectCompanionSceneFormBack" on:click|preventDefault={noCompanion}
+    <section class="action flex flex-row justify-center">
+        <button href="/" class="outline mr-2 selectCompanionSceneFormBack" on:click|preventDefault={noCompanion}
             >{$LL.companion.select.any()}</button
         >
         <button
             type="submit"
-            class="light tw-ml-2 selectCompanionSceneFormSubmit"
+            class="light ml-2 selectCompanionSceneFormSubmit"
             on:click|preventDefault={selectCompanion}>{$LL.companion.select.continue()}</button
         >
     </section>

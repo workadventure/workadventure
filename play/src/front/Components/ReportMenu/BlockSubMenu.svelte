@@ -29,9 +29,9 @@
     }
 </script>
 
-<div class="tw-flex tw-flex-col tw-text-left tw-p-3">
-    <section class="tw-w-full">
-        <h3 class="blue-title tw-justify-start">{$LL.report.block.title()}</h3>
+<div class="flex flex-col text-left p-3">
+    <section class="w-full">
+        <h3 class="blue-title justify-start">{$LL.report.block.title()}</h3>
         <p>{$LL.report.block.content({ userName })}</p>
         <button type="button" class="btn danger" on:click|preventDefault={blockUser}>
             {userIsBlocked ? $LL.report.block.unblock() : $LL.report.block.block()}

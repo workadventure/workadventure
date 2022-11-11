@@ -48,7 +48,7 @@
     {#if !canShare}
         <section class="share-url not-mobile">
             <h3 class="blue-title">{$LL.menu.invite.description()}</h3>
-            <input type="text" readonly id="input-share-link" class="tw-w-full" value={location.toString()} />
+            <input type="text" readonly id="input-share-link" class="w-full" value={location.toString()} />
             <div class="centered-column">
                 <button type="button" class="light" on:click={copyLink}>{$LL.menu.invite.copy()}</button>
             </div>
@@ -63,7 +63,7 @@
     <h3 class="blue-title">{$LL.menu.invite.selectEntryPoint()}</h3>
     <section>
         <select
-            class="tw-w-full"
+            class="w-full"
             bind:value={entryPoint}
             on:blur={() => {
                 updateInputFieldValue();

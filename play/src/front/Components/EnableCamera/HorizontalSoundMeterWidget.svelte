@@ -18,9 +18,9 @@
     }
 </script>
 
-<div class="horizontal-sound-meter tw-justify-center tw-w-80" class:active={spectrum !== undefined}>
+<div class="horizontal-sound-meter justify-center w-80" class:active={spectrum !== undefined}>
     {#each [...Array(NB_BARS).keys()] as i (i)}
-        <div class="tw-rounded tw-w-1 tw-h-8 tw-mx-1" style={color(i, spectrum)} />
+        <div class="rounded w-1 h-8 mx-1" style={color(i, spectrum)} />
     {/each}
 </div>
 

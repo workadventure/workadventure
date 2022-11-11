@@ -128,7 +128,7 @@
 <div on:submit|preventDefault={saveSetting} bind:this={divContainer}>
     <section class="bottom-separator">
         <h3 class="blue-title">{$LL.menu.settings.videoQuality.title()}</h3>
-        <select bind:value={valueVideo} class="tw-w-full">
+        <select bind:value={valueVideo} class="w-full">
             <option value={30}
                 >{isMobile
                     ? $LL.menu.settings.videoQuality.short.high()
@@ -151,7 +151,7 @@
             >
         </select>
         <h3 class="blue-title">{$LL.menu.settings.language.title()}</h3>
-        <select class="tw-w-full languages-switcher" bind:value={valueLocale}>
+        <select class="w-full languages-switcher" bind:value={valueLocale}>
             {#each displayableLocales as locale (locale.id)}
                 <option value={locale.id}>
                     {`${locale.language ? locale.language.charAt(0).toUpperCase() + locale.language.slice(1) : ""} (${
@@ -168,13 +168,13 @@
             >
         </div>
     </section>
-    <section class="bottom-separator tw-flex tw-flex-col">
-        <div class="tooltip tw-w-fit">
-            <h3 class="blue-title tw-underline tw-decoration-light-blue tw-decoration-dotted">
+    <section class="bottom-separator flex flex-col">
+        <div class="tooltip w-fit">
+            <h3 class="blue-title underline decoration-light-blue decoration-dotted">
                 {$LL.menu.settings.privacySettings.title()}
                 <img draggable="false" src={infoImg} alt="info icon" width="18px" height="18px" />
             </h3>
-            <span class="tooltiptext sm:tw-w-56 md:tw-w-96">{$LL.menu.settings.privacySettings.explanation()}</span>
+            <span class="tooltiptext sm:w-56 md:w-96">{$LL.menu.settings.privacySettings.explanation()}</span>
         </div>
         <label>
             <input type="checkbox" bind:checked={valueCameraPrivacySettings} />
@@ -185,7 +185,7 @@
             {$LL.menu.settings.privacySettings.microphoneToggle()}
         </label>
     </section>
-    <section class="tw-flex tw-flex-col">
+    <section class="flex flex-col">
         <label>
             <input type="checkbox" bind:checked={fullscreen} on:change={changeFullscreen} />
             <span>{$LL.menu.settings.fullscreen()}</span>

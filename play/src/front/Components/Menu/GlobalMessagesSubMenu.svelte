@@ -32,7 +32,7 @@
 
 <div>
     <div class="global-message-subOptions">
-        <section class="tw-flex tw-justify-center">
+        <section class="flex justify-center">
             <button
                 type="button"
                 class=" {inputSendTextActive ? 'light' : 'outline'}"

@@ -51,35 +51,35 @@
     });
 </script>
 
-<div class="tw-transition-all tw-self-end" bind:this={cameraContainer}>
+<div class="transition-all self-end" bind:this={cameraContainer}>
     <!--If we are in a silent zone-->
     {#if $silentStore}
         <div
-            class="tw-z-[250] tw-bg-dark-blue tw-rounded tw-h-full tw-py-4 tw-px-3 tw-text-pop-red tw-border-2 tw-border-solid tw-border-pop-red tw-flex tw-flex-col tw-justify-center tw-items-center tw-content-center media-box-camera-on-size video-on-responsive-height "
+            class="z-[250] bg-dark-blue rounded h-full py-4 px-3 text-pop-red border-2 border-solid border-pop-red flex flex-col justify-center items-center content-center media-box-camera-on-size video-on-responsive-height "
         >
-            <div class="tw-flex tw-flex-row tw-mr-2">
-                <img draggable="false" src={microphoneOffImg} class="tw-flex tw-p-1 tw-h-8 tw-w-8" alt="Mute" />
-                <img draggable="false" src={cameraOffImg} class="tw-flex tw-p-1 tw-h-8 tw-w-8" alt="Mute" />
+            <div class="flex flex-row mr-2">
+                <img draggable="false" src={microphoneOffImg} class="flex p-1 h-8 w-8" alt="Mute" />
+                <img draggable="false" src={cameraOffImg} class="flex p-1 h-8 w-8" alt="Mute" />
             </div>
-            <p class="tw-m-0 tw-w-32 tw-text-center">{$LL.camera.my.silentZone()}</p>
+            <p class="m-0 w-32 text-center">{$LL.camera.my.silentZone()}</p>
         </div>
 
         <!--If we have a video to display-->
     {:else if $localStreamStore.type === "success" && !$inExternalServiceStore}
         {#if $requestedCameraState && $mediaStreamConstraintsStore.video}
             <div
-                class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height tw-z-[251]"
+                class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height z-[251]"
             >
-                <i class="tw-flex">
+                <i class="flex">
                     <span
                         style="background-color: {backgroundColor}; color: {textColor};"
-                        class="nametag-text nametag-shape tw-pr-3 tw-pl-5 tw-h-4 tw-max-h-8"
+                        class="nametag-text nametag-shape pr-3 pl-5 h-4 max-h-8"
                         >{$LL.camera.my.nameTag()}</span
                     >
                 </i>
             </div>
-            <div class="woka-webcam-container container-end video-on-responsive-height tw-pb-1 tw-z-[251]">
-                <div class="tw-flex">
+            <div class="woka-webcam-container container-end video-on-responsive-height pb-1 z-[251]">
+                <div class="flex">
                     <Woka
                         userId={-1}
                         placeholderSrc={""}
@@ -88,9 +88,9 @@
                     />
                 </div>
             </div>
-            <div class="my-webcam-container tw-z-[250] tw-bg-dark-blue/50 tw-rounded tw-transition-all">
+            <div class="my-webcam-container z-[250] bg-dark-blue/50 rounded transition-all">
                 <video
-                    class="tw-h-full tw-w-full tw-rounded md:tw-object-cover"
+                    class="h-full w-full rounded md:object-cover"
                     style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}
                     autoplay
@@ -98,11 +98,11 @@
                     playsinline
                 />
 
-                <div class="voice-meter-my-container tw-justify-end tw-z-[251] tw-pr-2 tw-absolute">
+                <div class="voice-meter-my-container justify-end z-[251] pr-2 absolute">
                     {#if $mediaStreamConstraintsStore.audio}
-                        <SoundMeterWidget volume={$localVolumeStore} classcss="tw-absolute" barColor="blue" />
+                        <SoundMeterWidget volume={$localVolumeStore} classcss="absolute" barColor="blue" />
                     {:else}
-                        <img draggable="false" src={microphoneOffImg} class="tw-flex tw-p-1 tw-h-8 tw-w-8" alt="Mute" />
+                        <img draggable="false" src={microphoneOffImg} class="flex p-1 h-8 w-8" alt="Mute" />
                     {/if}
                 </div>
             </div>
@@ -110,27 +110,27 @@
         {:else if !$requestedCameraState && !$cameraEnergySavingStore}
             <div
                 style="background-color: {backgroundColor}; color: {textColor}"
-                class="tw-w-full tw-rounded tw-px-3 tw-flex tw-flex-row tw-items-center media-box-camera-off-size tw-h-12"
+                class="w-full rounded px-3 flex flex-row items-center media-box-camera-off-size h-12"
             >
                 <Woka userId={-1} placeholderSrc={""} customHeight="32px" customWidth="32px" />
                 <span
-                    class="tw-font-semibold tw-text-sm tw-not-italic tw-break-words tw-px-2 tw-overflow-y-auto tw-max-h-10"
+                    class="font-semibold text-sm not-italic break-words px-2 overflow-y-auto max-h-10"
                     >{$LL.camera.my.nameTag()}</span
                 >
                 {#if $mediaStreamConstraintsStore.audio}
                     <SoundMeterWidget
                         volume={$localVolumeStore}
-                        classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+                        classcss="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
                         barColor={textColor}
                     />
                 {:else}
                     <img
                         draggable="false"
                         src={microphoneOffImg}
-                        class="tw-flex tw-p-1 tw-h-8 tw-w-8 voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+                        class="flex p-1 h-8 w-8 voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
                         alt="Mute"
-                        class:tw-brightness-0={textColor === "black"}
-                        class:tw-brightness-100={textColor === "white"}
+                        class:brightness-0={textColor === "black"}
+                        class:brightness-100={textColor === "white"}
                     />
                 {/if}
             </div>

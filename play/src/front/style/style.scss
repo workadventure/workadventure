@@ -608,11 +608,11 @@ div.action.danger p.action-body {
 }
 
 .popUpElement {
-    @apply tw-text-left tw-text-white tw-text-sm;
+    @apply text-left text-white text-sm;
 }
 
 .popUpElement div {
-    @apply tw-bg-dark-purple/95 tw-text-sm;;
+    @apply bg-dark-purple/95 text-sm;;
     white-space: pre-line;
 }
 
@@ -621,7 +621,7 @@ div.action.danger p.action-body {
 }
 
 .popUpElement button {
-    @apply tw-relative tw-text-xs tw-text-black tw-ml-1 tw-px-1;
+    @apply relative text-xs text-black ml-1 px-1;
     border-image-repeat: revert;
 }
 

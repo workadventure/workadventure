@@ -365,21 +365,21 @@
 <svelte:window on:keydown={onKeyDown} />
 
 <div
-    class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
+    class="flex justify-center m-auto absolute left-0 right-0 bottom-0"
     class:animated={$bottomActionBarVisibilityStore}
 >
-    <div class="bottom-action-bar tw-absolute">
+    <div class="bottom-action-bar absolute">
         {#if $bottomActionBarVisibilityStore}
             <div
-                class="bottom-action-section tw-flex animate"
+                class="bottom-action-section flex animate"
                 id="bubble-menu"
                 in:fly={{ y: 70, duration: 100, delay: 200 }}
                 out:fly={{ y: 70, duration: 100, delay: 0 }}
-                class:tw-translate-x-0={$bottomActionBarVisibilityStore}
+                class:translate-x-0={$bottomActionBarVisibilityStore}
                 class:translate-right={!$bottomActionBarVisibilityStore}
             >
                 <div
-                    class="tw-transition-all bottom-action-button"
+                    class="transition-all bottom-action-button"
                     class:disabled={$followStateStore !== "off"}
                     on:click={() => analyticsClient.follow()}
                     on:click={followClick}
@@ -392,7 +392,7 @@
                 </div>
 
                 <div
-                    class="tw-transition-all bottom-action-button"
+                    class="transition-all bottom-action-button"
                     on:click={() => analyticsClient.layoutPresentChange()}
                     on:click={switchLayoutMode}
                 >
@@ -418,7 +418,7 @@
                 </div>
 
                 <div
-                    class="tw-transition-all bottom-action-button"
+                    class="transition-all bottom-action-button"
                     class:disabled={$currentPlayerGroupLockStateStore}
                     on:click={() => analyticsClient.lockDiscussion()}
                     on:click={lockClick}
@@ -440,7 +440,7 @@
                 </div>
 
                 <div
-                    class="tw-transition-all bottom-action-button"
+                    class="transition-all bottom-action-button"
                     on:click={() => analyticsClient.screenSharing()}
                     on:click={screenSharingClick}
                     class:enabled={$requestedScreenSharingState}
@@ -468,12 +468,12 @@
             </div>
         {/if}
 
-        <div class="tw-flex tw-flex-row base-section animated">
-            <div class="bottom-action-section tw-flex tw-flex-initial">
+        <div class="flex flex-row base-section animated">
+            <div class="bottom-action-section flex flex-initial">
                 {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
                     {#if $myCameraStore}
                         <div
-                            class="bottom-action-button tw-relative"
+                            class="bottom-action-button relative"
                             on:click={() => analyticsClient.camera()}
                             on:click={cameraClick}
                             class:disabled={!$requestedCameraState || $silentStore}
@@ -481,7 +481,7 @@
                             <Tooltip text={$LL.actionbar.camera()} />
 
                             <button
-                                class="tooltiptext sm:tw-w-56 md:tw-w-96"
+                                class="tooltiptext sm:w-56 md:w-96"
                                 class:border-top-light={$requestedCameraState}
                             >
                                 {#if $requestedCameraState && !$silentStore}
@@ -503,7 +503,7 @@
 
                             {#if $requestedCameraState && $cameraListStore.length > 1}
                                 <button
-                                    class="camera tw-absolute tw-text-light-purple focus:outline-none tw-m-0"
+                                    class="camera absolute text-light-purple focus:outline-none m-0"
                                     on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
                                 >
                                     {#if cameraActive}
@@ -515,19 +515,19 @@
 
                                 <!-- camera list -->
                                 <div
-                                    class={`wa-dropdown-menu ${cameraActive ? "" : "tw-invisible"}`}
+                                    class={`wa-dropdown-menu ${cameraActive ? "" : "invisible"}`}
                                     style="bottom: 15px;right: 0;"
                                     on:mouseleave={() => (cameraActive = false)}
                                 >
                                     {#each $cameraListStore as camera}
                                         <span
-                                            class="wa-dropdown-item tw-flex"
+                                            class="wa-dropdown-item flex"
                                             on:click|stopPropagation|preventDefault={() =>
                                                 selectCamera(camera.deviceId)}
                                         >
                                             {StringUtils.normalizeDeviceName(camera.label)}
                                             {#if selectedCamera === camera.deviceId}
-                                                <CheckIcon size="13" class="tw-ml-1" />
+                                                <CheckIcon size="13" class="ml-1" />
                                             {/if}
                                         </span>
                                     {/each}
@@ -538,7 +538,7 @@
 
                     {#if $myMicrophoneStore}
                         <div
-                            class="bottom-action-button tw-relative"
+                            class="bottom-action-button relative"
                             on:click={() => analyticsClient.microphone()}
                             on:click={microphoneClick}
                             class:disabled={!$requestedMicrophoneState || $silentStore}
@@ -565,7 +565,7 @@
 
                             {#if $requestedMicrophoneState && $microphoneListStore.length > 1}
                                 <button
-                                    class="microphone tw-absolute tw-text-light-purple focus:outline-none tw-m-0"
+                                    class="microphone absolute text-light-purple focus:outline-none m-0"
                                     on:click|stopPropagation|preventDefault={() =>
                                         (microphoneActive = !microphoneActive)}
                                 >
@@ -578,7 +578,7 @@
 
                                 <!-- microphone list -->
                                 <div
-                                    class={`wa-dropdown-menu ${microphoneActive ? "" : "tw-invisible"}`}
+                                    class={`wa-dropdown-menu ${microphoneActive ? "" : "invisible"}`}
                                     style="bottom: 15px;right: 0;"
                                     on:mouseleave={() => (microphoneActive = false)}
                                 >
@@ -603,7 +603,7 @@
                 <div
                     on:click={() => analyticsClient.openedChat()}
                     on:click={toggleChat}
-                    class="bottom-action-button tw-relative"
+                    class="bottom-action-button relative"
                 >
                     <Tooltip text={$LL.actionbar.chat()} />
 
@@ -611,21 +611,21 @@
                         <img draggable="false" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
                     </button>
                     {#if $chatZoneLiveStore || $peerStore.size > 0}
-                        <div class="tw-absolute tw-top-1 tw-right-0.5">
+                        <div class="absolute top-1 right-0.5">
                             <span
-                                class={`tw-w-4 tw-h-4 ${
-                                    $peerStore.size > 0 ? "tw-bg-pop-green" : "tw-bg-pop-red"
-                                } tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping`}
+                                class={`w-4 h-4 ${
+                                    $peerStore.size > 0 ? "bg-pop-green" : "bg-pop-red"
+                                } block rounded-full absolute top-0 right-0 animate-ping`}
                             />
                             <span
-                                class={`tw-w-3 tw-h-3 ${
-                                    $peerStore.size > 0 ? "tw-bg-pop-green" : "tw-bg-pop-red"
-                                } tw-block tw-rounded-full tw-absolute tw-top-0.5 tw-right-0.5`}
+                                class={`w-3 h-3 ${
+                                    $peerStore.size > 0 ? "bg-pop-green" : "bg-pop-red"
+                                } block rounded-full absolute top-0.5 right-0.5`}
                             />
                         </div>
                     {:else if $totalMessagesToSee > 0}
                         <span
-                            class="tw-absolute tw-top-1.5 tw-right-1 tw-items-center tw-justify-center tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none tw-text-white tw-bg-pop-red tw-rounded-full"
+                            class="absolute top-1.5 right-1 items-center justify-center px-1 py-0.5 text-xxs font-bold leading-none text-white bg-pop-red rounded-full"
                         >
                             {$totalMessagesToSee}
                         </span>
@@ -640,7 +640,7 @@
                 </div>
             </div>
 
-            <div class="bottom-action-section tw-flex tw-flex-initial">
+            <div class="bottom-action-section flex flex-initial">
                 <div
                     on:dragstart|preventDefault={noDrag}
                     on:click={() => analyticsClient.openedMenu()}
@@ -682,14 +682,14 @@
 
             {#if $inviteUserActivated}
                 <div
-                    class="bottom-action-section tw-flex tw-flex-initial"
+                    class="bottom-action-section flex flex-initial"
                     in:fly={{}}
                     on:dragstart|preventDefault={noDrag}
                     on:click={() => analyticsClient.openInvite()}
                     on:click={showInvite}
                 >
                     <button
-                        class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base"
+                        class="btn light m-0 font-bold text-xs sm:text-base"
                         id="invite-btn"
                         class:border-top-light={$menuVisiblilityStore}
                     >
@@ -700,14 +700,14 @@
 
             {#if ENABLE_OPENID && !$userIsConnected}
                 <div
-                    class="bottom-action-section tw-flex tw-flex-initial"
+                    class="bottom-action-section flex flex-initial"
                     in:fly={{}}
                     on:dragstart|preventDefault={noDrag}
                     on:click={() => analyticsClient.openRegister()}
                     on:click={register}
                 >
                     <button
-                        class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base"
+                        class="btn light m-0 font-bold text-xs sm:text-base"
                         id="register-btn"
                         class:border-top-light={$menuVisiblilityStore}
                     >
@@ -721,13 +721,13 @@
 
 {#if $emoteMenuSubStore}
     <div
-        class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
+        class="flex justify-center m-auto absolute left-0 right-0 bottom-0"
         style="margin-bottom: 4.5rem; height: auto;"
     >
         <div class="bottom-action-bar">
-            <div class="bottom-action-section tw-flex animate">
+            <div class="bottom-action-section flex animate">
                 {#each [...$emoteDataStore.keys()] as key}
-                    <div class="tw-transition-all bottom-action-button">
+                    <div class="transition-all bottom-action-button">
                         <button
                             on:click={() => {
                                 clickEmoji(key);
@@ -745,16 +745,16 @@
                                 src={$emoteDataStore.get(key)?.url}
                             />
                             {#if !isMobile}
-                                <span class="tw-text-white">{key}</span>
+                                <span class="text-white">{key}</span>
                             {/if}
                         </button>
                     </div>
                 {/each}
 
-                <div class="tw-transition-all bottom-action-button">
+                <div class="transition-all bottom-action-button">
                     <button on:click={() => analyticsClient.editEmote()} on:click|preventDefault={edit}>
                         {#if $emoteDataStoreLoading}
-                            <div class="tw-rounded-lg tw-bg-dark tw-text-xs">
+                            <div class="rounded-lg bg-dark text-xs">
                                 <!-- loading animation -->
                                 <div class="loading-group">
                                     <span class="loading-dot" />
@@ -772,7 +772,7 @@
                         {/if}
                     </button>
                 </div>
-                <div class="tw-transition-all bottom-action-button">
+                <div class="transition-all bottom-action-button">
                     <button on:click|preventDefault={close}>
                         <img
                             draggable="false"

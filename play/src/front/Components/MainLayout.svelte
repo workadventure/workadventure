@@ -55,14 +55,14 @@
 <!-- Components ordered by z-index -->
 <div id="main-layout" class={[...$coWebsites.values()].length === 0 ? "not-cowebsite" : ""} bind:this={mainLayout}>
     {#if $modalVisibilityStore}
-        <div class="tw-bg-black/60 tw-w-full tw-h-full tw-fixed tw-left-0 tw-right-0" />
+        <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
     {/if}
 
     <aside id="main-layout-left-aside">
         <CoWebsitesContainer vertical={isMobile} />
     </aside>
 
-    <section id="main-layout-main" class="tw-pb-0">
+    <section id="main-layout-main" class="pb-0">
         <Lazy
             when={$showDesktopCapturerSourcePicker}
             component={() => import("./Video/DesktopCapturerSourcePicker.svelte")}

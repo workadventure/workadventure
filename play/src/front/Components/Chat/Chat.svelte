@@ -181,7 +181,7 @@
         allow="fullscreen; clipboard-read; clipboard-write"
         title="WorkAdventureChat"
         src={CHAT_URL}
-        class="tw-border-0"
+        class="border-0"
     />
 </div>
 >

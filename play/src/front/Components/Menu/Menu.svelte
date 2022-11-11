@@ -128,15 +128,15 @@
 <svelte:window on:keydown={onKeyDown} />
 
 <div class="menu-container">
-    <div class="menu-nav-sidebar tw-min-w-[160px]" transition:fly={{ x: -1000, duration: 500 }}>
-        <h2 class="tw-p-5 blue-title">{$LL.menu.title()}</h2>
+    <div class="menu-nav-sidebar min-w-[160px]" transition:fly={{ x: -1000, duration: 500 }}>
+        <h2 class="p-5 blue-title">{$LL.menu.title()}</h2>
         <nav>
             {#each $subMenusStore as submenu, i}
                 <div
                     class="menu-item-container {activeSubMenu === submenu ? 'active' : ''}"
                     on:click|preventDefault={() => switchMenu(submenu)}
                 >
-                    <button type="button" class="tw-flex menu-item">
+                    <button type="button" class="flex menu-item">
                         {subMenuTranslations[i]}
                     </button>
                     <img src={chevronImg} class="menu-icon" alt="open submenu" draggable="false" />
@@ -144,7 +144,7 @@
             {/each}
         </nav>
     </div>
-    <div class="menu-submenu-container tw-bg-dark-purple/95 tw-rounded" transition:fly={{ y: -1000, duration: 500 }}>
+    <div class="menu-submenu-container bg-dark-purple/95 rounded" transition:fly={{ y: -1000, duration: 500 }}>
         <button type="button" class="close-window" on:click={closeMenu}>&times;</button>
         <h2>{activeSubMenuTranslation}</h2>
         <svelte:component this={activeComponent} {...props} />

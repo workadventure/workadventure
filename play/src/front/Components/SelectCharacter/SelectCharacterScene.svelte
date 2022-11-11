@@ -32,26 +32,26 @@
 </script>
 
 <section class="text-center">
-    <h2 class="tw-text-white tw-text-2xl">{$LL.woka.selectWoka.title()}</h2>
+    <h2 class="text-white text-2xl">{$LL.woka.selectWoka.title()}</h2>
 </section>
-<section class="category tw-flex tw-flex-row tw-justify-center">
+<section class="category flex flex-row justify-center">
     {#if $collectionsSizeStore > 1}
-        <button class="light tw-mr-2 selectCharacterButton" on:click|preventDefault={selectLeft}> &lt; </button>
+        <button class="light mr-2 selectCharacterButton" on:click|preventDefault={selectLeft}> &lt; </button>
         <strong class="category-text">{$selectedCollection}</strong>
-        <button class="outline tw-ml-2 selectCharacterButton" on:click|preventDefault={selectRight}> &gt; </button>
+        <button class="outline ml-2 selectCharacterButton" on:click|preventDefault={selectRight}> &gt; </button>
     {/if}
 </section>
-<section class="action tw-flex tw-flex-row tw-justify-center">
+<section class="action flex flex-row justify-center">
     <button
         type="submit"
-        class="light tw-mr-2 selectCharacterSceneFormSubmit"
+        class="light mr-2 selectCharacterSceneFormSubmit"
         on:click={() => analyticsClient.selectWoka()}
         on:click={cameraScene}>{$LL.woka.selectWoka.continue()}</button
     >
     {#if $customizeAvailableStore}
         <button
             type="submit"
-            class="outline tw-ml-2 selectCharacterSceneFormCustomYourOwnSubmit"
+            class="outline ml-2 selectCharacterSceneFormCustomYourOwnSubmit"
             on:click={() => analyticsClient.selectCustomWoka()}
             on:click={customizeScene}>{$LL.woka.selectWoka.customize()}</button
         >
