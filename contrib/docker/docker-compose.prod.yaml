@@ -183,13 +183,17 @@ services:
       - redisdata:/data
 
   ejabberd:
-    image: thecodingmachine/workadventure-ejabberd:${VERSION}
+    image: workadventure/ejabberd:v1
+    ports:
+      - '5443:5443'
     environment:
       - CTL_ON_CREATE=register ${EJABBERD_USER} ${EJABBERD_DOMAIN} ${EJABBERD_PASSWORD}
       - JWT_SECRET=${EJABBERD_JWT_SECRET}
       - EJABBERD_DOMAIN=${EJABBERD_DOMAIN}
       - EJABBERD_USER=${EJABBERD_USER}
       - EJABBERD_PASSWORD=${EJABBERD_PASSWORD}
+    volumes:
+      - ../../xmpp/ejabberd.template.yml:/opt/ejabberd/conf/ejabberd.template.yml
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ejabberd.rule=Host(`${EJABBERD_HOST}`)"
