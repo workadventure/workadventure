@@ -17,7 +17,6 @@ COPY back/yarn.lock back/package.json ./
 RUN yarn install
 COPY libs ./../libs
 COPY --from=proto-builder /usr/libs/messages/src ./../libs/messages/src
-RUN cd /usr/libs/messages && yarn run build && yarn run prepare-for-prod
 COPY back .
 COPY --from=proto-builder /usr/src/generated src/Messages/generated
 ENV NODE_ENV=production
