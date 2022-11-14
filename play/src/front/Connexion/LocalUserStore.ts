@@ -347,9 +347,19 @@ class LocalUserStore {
                             }
                         }
 
+                        let valueReturned;
+                        try {
+                            valueReturned = JSON.parse(value);
+                        } catch (err) {
+                            console.info(
+                                "getAllUserProperties => value cannot be parsed to JSON, undefined returned.",
+                                err
+                            );
+                            valueReturned = undefined;
+                        }
                         result.set(userKey, {
                             isPublic,
-                            value: JSON.parse(value),
+                            value: valueReturned,
                         });
                     }
                 }
@@ -365,10 +375,15 @@ class LocalUserStore {
         isPublic: boolean,
         expire: number | undefined
     ): void {
+        const key = userProperties + "_" + context + "__|__" + name;
+
+        if (value === undefined) {
+            localStorage.removeItem(key);
+            return;
+        }
+
         const storedValue =
             (expire !== undefined ? expire : "") + ":" + (isPublic ? "1" : "0") + ":" + JSON.stringify(value);
-
-        const key = userProperties + "_" + context + "__|__" + name;
 
         localStorage.setItem(key, storedValue);
     }
