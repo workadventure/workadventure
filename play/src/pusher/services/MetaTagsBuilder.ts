@@ -50,7 +50,7 @@ export const MetaTagsDefaultValue: RequiredMetaTagsData = {
         {
             rel: "apple-touch-icon",
             sizes: "114x114",
-            src: "static/images/favicons/apple-icon-114x114.png",
+            src: "/static/images/favicons/apple-icon-114x114.png",
         },
         {
             rel: "apple-touch-icon",
