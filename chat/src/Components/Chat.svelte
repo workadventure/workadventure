@@ -21,7 +21,6 @@
         navChat,
         showForumsStore,
         showLivesStore,
-        shownRoomListStore,
         showTimelineStore,
         timelineActiveStore,
         timelineMessagesToSee,

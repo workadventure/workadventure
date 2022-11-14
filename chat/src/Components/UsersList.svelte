@@ -24,10 +24,8 @@
     $: usersByMaps = [...$presenceStore.values()]
         .filter((user: User) => user.name.toLocaleLowerCase().includes(searchValue))
         .reduce((reduced, user: User) => {
-            let group: string;
-            if (!user.active || !user.roomName) {
-                group = "ZZZZ-Disconnected";
-            } else if (user.roomName) {
+            let group = "ZZZZ-Disconnected";
+            if (user.roomName && user.active) {
                 group = user.roomName;
             }
             if (!reduced.has(group)) {
