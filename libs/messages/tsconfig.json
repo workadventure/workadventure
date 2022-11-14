@@ -6,8 +6,9 @@
     "target": "es2019",
     "lib": [
       "es2019",
+      "dom",
     ],
-    //"module": "CommonJS",
+    "module": "CommonJS",
     "moduleResolution": "Node",
     "esModuleInterop": true,
     "strict": true,
