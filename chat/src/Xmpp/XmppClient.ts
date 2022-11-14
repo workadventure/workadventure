@@ -150,7 +150,7 @@ export class XmppClient {
 
         client.on("session:started", () => {
             for (const { name, url, type, subscribe } of this.xmppSettingsMessages.rooms) {
-                if (name && url && type) {
+                if (name && url) {
                     this.joinMuc(name, url, type, subscribe);
                 }
             }
@@ -192,9 +192,9 @@ export class XmppClient {
         });
 
         client.on("raw:outgoing", (message) => {
-            if (message.includes("subscribe")) {
-                //console.warn(message);
-            }
+            //if (message.includes("subscribe")) {
+            //    console.warn(message);
+            //}
         });
 
         client.on("*", (message) => {

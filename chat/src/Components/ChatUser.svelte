@@ -174,11 +174,12 @@
             {#if user.isMe}
                 {$LL.you()}
             {:else if user.active}
-                {@html user.isInSameMap
+                <!--{@html user.isInSameMap
                     ? $LL.userList.isHere()
                     : user.roomName
                     ? `${$LL.userList.in()} <span class="tw-font-medium">${user.roomName}</span>`
-                    : $LL.userList.inAnotherMap()}
+                    : $LL.userList.inAnotherMap()}-->
+                {getNameOfAvailabilityStatus(user.availabilityStatus)}
             {:else}
                 {$LL.userList.disconnected()}
             {/if}

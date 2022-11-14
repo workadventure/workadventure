@@ -33,7 +33,7 @@
 >
     <div class="wa-thread-head">
         <div
-            class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
+            class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-w-14 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
         >
             <button
                 class="exit tw-text-lighter-purple tw-m-0"
@@ -44,7 +44,7 @@
                 <ArrowLeftIcon />
             </button>
         </div>
-        <div class="tw-text-center tw-pt-1 tw-pb-2">
+        <div class="tw-text-center tw-pt-2 tw-pb-3">
             <div class="tw-flex">
                 <b>{activeThread.name}</b>
                 {#if activeThread.type === "live"}
@@ -62,9 +62,10 @@
         </div>
         <div
             id="settings"
-            class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-pl-2 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
+            class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-w-14 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
             on:click={() => settingsViewStore.set(!$settingsViewStore)}
         >
+            <!--
             <button class="tw-text-lighter-purple tw-m-0">
                 {#if $settingsViewStore}
                     <MessageCircleIcon />
@@ -72,6 +73,7 @@
                     <SettingsIcon />
                 {/if}
             </button>
+            -->
         </div>
     </div>
     {#if !$readyStore}

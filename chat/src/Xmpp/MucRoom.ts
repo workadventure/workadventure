@@ -14,7 +14,7 @@ import { ParsedJID } from "stanza/JID";
 import { ChatStateMessage, JID } from "stanza";
 import { ChatState, MUCAffiliation } from "stanza/Constants";
 
-const _VERBOSE = true;
+let _VERBOSE = true;
 
 export type UserList = Map<string, User>;
 export type UsersStore = Readable<UserList>;
@@ -35,7 +35,6 @@ export class MucRoom extends AbstractRoom {
         public subscribe: boolean
     ) {
         super(xmppClient, _VERBOSE);
-
         this.presenceStore = writable<UserList>(new Map<string, User>());
         this.canLoadOlderMessagesStore = writable<boolean>(true);
         this.showDisabledLoadOlderMessagesStore = writable<boolean>(false);
@@ -78,11 +77,11 @@ export class MucRoom extends AbstractRoom {
     }
 
     public connect() {
-        // if (userStore.get().isLogged && this.subscribe && this.type !== "live") {
-        //     this.sendSubscribe();
-        // } else {
+        //if (userStore.get().isLogged && this.subscribe && this.type !== "live") {
+        //    this.sendSubscribe();
+        //} else {
         this.sendPresence(true);
-        // }
+        //}
     }
 
     // Functions used to send message to the server
@@ -93,9 +92,39 @@ export class MucRoom extends AbstractRoom {
         const presenceId = uuid();
         if (first) {
             this.subscriptions.set("firstPresence", presenceId);
-            void this.xmppClient.socket.subscribe(this.url);
         }
+        this.xmppClient.socket.sendPresence({ to: this.recipient, id: presenceId });
+        if (_VERBOSE)
+            console.warn(
+                `[XMPP][${this.name}]`,
+                ">> ",
+                first && "First",
+                "Presence sent",
+                get(userStore).uuid,
+                presenceId
+            );
+    }
+    private async sendSubscribe() {
+        const subscribeId = uuid();
+        this.subscriptions.set("firstSubscribe", subscribeId);
+        this.sendPresence(true);
+        console.log("SENDING SUBSCRIBE");
+        const response = await this.xmppClient.socket.joinRoom(this.recipient, this.xmppClient.getPlayerName(), {
+            id: subscribeId,
+        });
+        console.log("SEND SUBSCRIBE", response);
+        if (_VERBOSE)
+            console.warn(
+                `[XMPP][${this.name}]`,
+                ">> Subscribe sent from",
+                this.xmppClient.getPlayerName(),
+                "to",
+                this.roomJid.local
+            );
 
+        //this.sendUserInfo();
+    }
+    private sendUserInfo(presenceId: string = uuid()) {
         this.xmppClient.socket.sendUserInfo(this.recipient, presenceId, {
             jid: this.xmppClient.getMyJID(),
             roomPlayUri: get(userStore).playUri,
@@ -109,25 +138,8 @@ export class MucRoom extends AbstractRoom {
             userAvailabilityStatus: get(availabilityStatusStore),
             userVisitCardUrl: get(userStore).visitCardUrl ?? "",
         });
-
-        //this.xmppClient.socket.sendPresence({ to: this.recipient, id: presenceId, muc: {type: 'info', affiliation: "none", role: "participant"} });
-        if (_VERBOSE)
-            console.warn(
-                `[XMPP][${this.name}]`,
-                ">> ",
-                first && "First",
-                "Presence sent",
-                get(userStore).uuid,
-                presenceId
-            );
+        if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, ">> UserInfo sent");
     }
-    // private async sendSubscribe() {
-    //     const subscribeId = uuidv4();
-    //     this.subscriptions.set("firstSubscribe", subscribeId);
-    //     void this.xmppClient.socket.joinRoom(this.recipient, this.xmppClient.getPlayerName(), {id: subscribeId});
-    //     if (_VERBOSE)
-    //         console.warn(`[XMPP][${this.name}]`, ">> Subscribe sent from", this.xmppClient.getPlayerName(), "to", this.roomJid.local);
-    // }
     public sendDisconnect() {
         if (this.closed) {
             this.xmppClient.removeMuc(this);
@@ -502,7 +514,7 @@ export class MucRoom extends AbstractRoom {
         return true;
     }
     onPresence(presence: StanzaProtocol.ReceivedPresence): boolean {
-        if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, "<< Presence received");
+        if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, "<< Presence received", presence);
         let response = false;
 
         if (presence.id) {
@@ -511,14 +523,20 @@ export class MucRoom extends AbstractRoom {
                 this.subscriptions.delete("firstPresence");
                 this.readyStore.set(true);
                 this.closed = false;
+                this.sendUserInfo();
                 if (this.type === "live") {
                     void this.sendRetrieveLastMessages(20);
+                }
+                if (userStore.get().isLogged && this.subscribe && this.type === "default") {
+                    void this.sendRequestAllSubscribers();
                 }
             } else if (this.subscriptions.get("firstSubscribe") === presence.id) {
                 this.subscriptions.delete("firstSubscribe");
                 this.closed = false;
-                this.sendPresence(true);
-                void this.sendRequestAllSubscribers();
+                //this.sendPresence(true);
+                if (this.type === "default") {
+                    //void this.sendRequestAllSubscribers();
+                }
             }
         }
         const from = JID.parse(presence.from);

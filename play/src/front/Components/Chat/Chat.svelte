@@ -174,7 +174,9 @@
 
 <svelte:window on:keydown={onKeyDown} />
 <div id="chatWindow" class:show={$chatVisibilityStore}>
-    {#if $chatVisibilityStore}<button class="hide" on:click={closeChat}>&#215;</button>{/if}
+    {#if $chatVisibilityStore}<div class="hide">
+            <button class="close-window" on:click={closeChat}>&#215;</button>
+        </div>{/if}
     <iframe
         id="chatWorkAdventure"
         bind:this={chatIframe}
@@ -184,7 +186,6 @@
         class="tw-border-0"
     />
 </div>
->
 
 <style lang="scss">
     @import "../../style/breakpoints.scss";
@@ -218,16 +219,31 @@
             height: 100%;
         }
         .hide {
-            top: 1%;
-            padding: 0 5px 0 3px;
-            min-height: fit-content;
+            top: 13px;
             position: absolute;
-            right: -21px;
-            z-index: -1;
-            font-size: 21px;
-            border-bottom-left-radius: 0;
-            border-top-left-radius: 0;
-            background: rgba(27, 27, 41, 0.95);
+            right: 12px;
+            //background: rgba(27, 27, 41, 0.95);
+            //border-radius: 7px;
+            //border-bottom-left-radius: 0;
+            //border-top-left-radius: 0;
+            //padding: 4px 6px 4px 4px;
+            width: fit-content;
+            height: fit-content;
+            .close-window {
+                height: 1.6rem;
+                width: 1.6rem;
+                position: initial;
+            }
+            //top: 1%;
+            //padding: 0 5px 0 3px;
+            //min-height: fit-content;
+            //position: absolute;
+            //right: -21px;
+            //z-index: -1;
+            //font-size: 21px;
+            //border-bottom-left-radius: 0;
+            //border-top-left-radius: 0;
+            //background: rgba(27, 27, 41, 0.95);
         }
     }
 </style>
