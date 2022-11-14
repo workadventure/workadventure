@@ -70,7 +70,7 @@
                 {/if}
                 <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
                     {#if $me && $me.roomName === room}
-                        {$LL.userList.isHere()} ({room})
+                        {$LL.userList.isHere()} <!--({room})-->
                     {:else}
                         {room.replace("ZZZZ-", "")}
                     {/if}

@@ -91,7 +91,7 @@
                                         woka: wokaSrc,
                                         isLogged: localUserStore.isLogged(),
                                         availabilityStatus: get(availabilityStatusStore),
-                                        roomName: connectionManager.currentRoom?.roomName ?? null,
+                                        roomName: connectionManager.currentRoom?.roomName ?? "default",
                                         visitCardUrl: gameManager.myVisitCardUrl,
                                         userRoomToken: gameManager.getCurrentGameScene().connection?.userRoomToken,
                                     },

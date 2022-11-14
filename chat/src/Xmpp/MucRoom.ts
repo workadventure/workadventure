@@ -620,9 +620,11 @@ export class MucRoom extends AbstractRoom {
         });
     }
     updateUserInfo(userInfo: WaUserInfo) {
+        console.log("updateUserInfo", userInfo);
         this.presenceStore.update((presenceStore: UserList) => {
             const userJID = JID.parse(userInfo.jid);
             const user = presenceStore.get(userJID.full);
+            console.log(presenceStore);
             if (user) {
                 presenceStore.set(userJID.full, {
                     ...user,
@@ -655,6 +657,7 @@ export class MucRoom extends AbstractRoom {
                     visitCardUrl: userInfo.userVisitCardUrl,
                 });
             }
+            console.log(presenceStore);
             return presenceStore;
         });
     }
