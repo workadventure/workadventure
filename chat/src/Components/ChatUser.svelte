@@ -179,7 +179,7 @@
                     : user.roomName
                     ? `${$LL.userList.in()} <span class="tw-font-medium">${user.roomName}</span>`
                     : $LL.userList.inAnotherMap()}-->
-                {getNameOfAvailabilityStatus(user.availabilityStatus)}
+                {getNameOfAvailabilityStatus(user.availabilityStatus ?? 0)}
             {:else}
                 {$LL.userList.disconnected()}
             {/if}

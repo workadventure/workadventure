@@ -184,11 +184,7 @@
                 {#if $navChat === "users"}
                     <!-- chat users -->
                     {#if defaultMucRoom !== undefined}
-                        <UsersList
-                            mucRoom={defaultMucRoom}
-                            searchValue={searchValue.toLocaleLowerCase()}
-                            shownRoomList={shownRoomListStore}
-                        />
+                        <UsersList mucRoom={defaultMucRoom} searchValue={searchValue.toLocaleLowerCase()} />
                     {/if}
                 {:else if $navChat === "chat"}
                     {#if $enableChat}

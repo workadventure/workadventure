@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { SettingsIcon, ArrowLeftIcon, MessageCircleIcon, RefreshCwIcon } from "svelte-feather-icons";
+    import { ArrowLeftIcon, RefreshCwIcon } from "svelte-feather-icons";
     import ChatMessageForm from "./ChatMessageForm.svelte";
     import LL from "../i18n/i18n-svelte";
     import { activeThreadStore, settingsViewStore } from "../Stores/ActiveThreadStore";
