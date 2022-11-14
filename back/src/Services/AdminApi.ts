@@ -12,7 +12,7 @@ class AdminApi {
             playUri,
         };
 
-        const res = await Axios.get(ADMIN_API_URL + "/api/map", {
+        const res = await Axios.default.get(ADMIN_API_URL + "/api/map", {
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
             params,
         });

@@ -2,7 +2,7 @@ import {
     ServerToAdminClientMessage,
     UserJoinedRoomMessage,
     UserLeftRoomMessage,
-} from "../Messages/generated/messages_pb.js";
+} from "@workadventure/legacy-proto-messages/dist/messages_pb.js";
 import { AdminSocket } from "../RoomManager.js";
 
 export class Admin {

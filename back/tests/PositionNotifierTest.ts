@@ -6,7 +6,7 @@ import { Zone } from "../src/Model/Zone.js";
 import { Movable } from "../src/Model/Movable.js";
 import { PositionInterface } from "../src/Model/PositionInterface.js";
 import { ZoneSocket } from "../src/RoomManager.js";
-import { AvailabilityStatus } from "../src/Messages/generated/messages_pb.js";
+import { AvailabilityStatus } from "@workadventure/legacy-proto-messages/dist/messages_pb.js";
 import { BrothersFinder } from "../src/Model/BrothersFinder.js";
 
 class VoidBrothersFinder implements BrothersFinder {

@@ -50,7 +50,7 @@ import {
     EditMapCommandWithKeyMessage,
     EditMapCommandMessage,
     ChatMessagePrompt,
-} from "../Messages/generated/messages_pb.js";
+} from "@workadventure/legacy-proto-messages/dist/messages_pb.js";
 import { User, UserSocket } from "../Model/User.js";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils.js";
 import { Group } from "../Model/Group.js";

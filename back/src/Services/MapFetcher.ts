@@ -15,13 +15,13 @@ class MapFetcher {
         }
 
         // Note: mapUrl is provided by the client. A possible attack vector would be to use a rogue DNS server that
-        // returns local URLs. Alas, Axios cannot pin a URL to a given IP. So "isLocalUrl" and Axios.get could potentially
-        // target to different servers (and one could trick Axios.get into loading resources on the internal network
+        // returns local URLs. Alas, Axios cannot pin a URL to a given IP. So "isLocalUrl" and Axios.default.get could potentially
+        // target to different servers (and one could trick Axios.default.get into loading resources on the internal network
         // despite isLocalUrl checking that.
         // We can deem this problem not that important because:
         // - We make sure we are only passing "GET" requests
         // - The result of the query is never displayed to the end user
-        const res = await Axios.get(mapUrl, {
+        const res = await Axios.default.get(mapUrl, {
             maxContentLength: 50 * 1024 * 1024, // Max content length: 50MB. Maps should not be bigger
             timeout: 10000, // Timeout after 10 seconds
         });

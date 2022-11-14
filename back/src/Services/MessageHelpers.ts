@@ -6,7 +6,7 @@ import {
     ServerToClientMessage,
     SubToPusherMessage,
     SubToPusherRoomMessage,
-} from "../Messages/generated/messages_pb.js";
+} from "@workadventure/legacy-proto-messages/dist/messages_pb.js";
 import { UserSocket } from "../Model/User.js";
 import { AdminSocket, RoomSocket, ZoneSocket } from "../RoomManager.js";
 

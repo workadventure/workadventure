@@ -8,7 +8,7 @@ export class EjabberdClient implements ChatClient {
 
     constructor() {
         const auth = Buffer.from(EJABBERD_USER + "@" + EJABBERD_DOMAIN + ":" + EJABBERD_PASSWORD).toString("base64");
-        this.axios = Axios.create({
+        this.axios = Axios.default.create({
             baseURL: EJABBERD_API_URI + "/",
             headers: {
                 Authorization: "Basic " + auth,

@@ -1,4 +1,4 @@
-import { IRoomManagerServer } from "./Messages/generated/services_grpc_pb.js";
+import { IRoomManagerServer } from "@workadventure/legacy-proto-messages/dist/services_grpc_pb.js";
 import {
     AdminGlobalMessage,
     AdminMessage,
@@ -33,7 +33,7 @@ import {
     QueryMessage,
     EditMapCommandWithKeyMessage,
     ChatMessagePrompt,
-} from "./Messages/generated/messages_pb.js";
+} from "@workadventure/legacy-proto-messages/dist/messages_pb.js";
 import {
     sendUnaryData,
     ServerDuplexStream,

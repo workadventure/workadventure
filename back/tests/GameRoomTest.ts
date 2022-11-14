@@ -4,7 +4,7 @@ import { ConnectCallback, DisconnectCallback, GameRoom } from "../src/Model/Game
 import { Point } from "../src/Model/Websocket/MessageUserPosition.js";
 import { Group } from "../src/Model/Group.js";
 import { User, UserSocket } from "../src/Model/User.js";
-import { JoinRoomMessage, PositionMessage } from "../src/Messages/generated/messages_pb.js";
+import { JoinRoomMessage, PositionMessage } from "@workadventure/legacy-proto-messages/dist/messages_pb.js";
 import Direction = PositionMessage.Direction;
 import { EmoteCallback } from "../src/Model/Zone.js";
 

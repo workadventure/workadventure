@@ -4,7 +4,7 @@ import {
     ItemEventMessage,
     PointMessage,
     PositionMessage,
-} from "../../Messages/generated/messages_pb.js";
+} from "@workadventure/legacy-proto-messages/dist/messages_pb.js";
 import { CharacterLayer } from "../../Model/Websocket/CharacterLayer.js";
 import Direction = PositionMessage.Direction;
 import { ItemEventMessageInterface } from "../../Model/Websocket/ItemEventMessage.js";

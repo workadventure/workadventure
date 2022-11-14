@@ -21,7 +21,7 @@ import { Movable } from "../Model/Movable.js";
 import { PositionInterface } from "../Model/PositionInterface.js";
 import { ZoneSocket } from "../RoomManager.js";
 import { User } from "../Model/User.js";
-import { EmoteEventMessage, SetPlayerDetailsMessage } from "../Messages/generated/messages_pb.js";
+import { EmoteEventMessage, SetPlayerDetailsMessage } from "@workadventure/legacy-proto-messages/dist/messages_pb.js";
 
 interface ZoneDescriptor {
     i: number;

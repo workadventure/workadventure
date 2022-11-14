@@ -4,7 +4,7 @@ import { Zone } from "../Model/Zone.js";
 import { Movable } from "../Model/Movable.js";
 import { PositionNotifier } from "../Model/PositionNotifier.js";
 import { ServerDuplexStream } from "@grpc/grpc-js";
-import {
+/*import {
     ApplicationMessage,
     AvailabilityStatus,
     BatchMessage,
@@ -17,7 +17,33 @@ import {
     SetPlayerDetailsMessage,
     SetPlayerVariableMessage,
     SubMessage,
-} from "../Messages/generated/messages_pb.js";
+} from "@workadventure/legacy-proto-messages/dist/messages_pb.js";*/
+import pkg from '@workadventure/legacy-proto-messages/dist/messages_pb.js';
+type ApplicationMessage = pkg.ApplicationMessage;
+const ApplicationMessage = pkg.ApplicationMessage;
+type AvailabilityStatus = pkg.AvailabilityStatus;
+const AvailabilityStatus = pkg.AvailabilityStatus;
+type BatchMessage = pkg.BatchMessage;
+const BatchMessage = pkg.BatchMessage;
+type CompanionMessage = pkg.CompanionMessage;
+const CompanionMessage = pkg.CompanionMessage;
+type FollowAbortMessage = pkg.FollowAbortMessage;
+const FollowAbortMessage = pkg.FollowAbortMessage;
+type FollowConfirmationMessage = pkg.FollowConfirmationMessage;
+const FollowConfirmationMessage = pkg.FollowConfirmationMessage;
+type PlayerDetailsUpdatedMessage = pkg.PlayerDetailsUpdatedMessage;
+const PlayerDetailsUpdatedMessage = pkg.PlayerDetailsUpdatedMessage;
+type PusherToBackMessage = pkg.PusherToBackMessage;
+const PusherToBackMessage = pkg.PusherToBackMessage;
+type ServerToClientMessage = pkg.ServerToClientMessage;
+const ServerToClientMessage = pkg.ServerToClientMessage;
+type SetPlayerDetailsMessage = pkg.SetPlayerDetailsMessage;
+const SetPlayerDetailsMessage = pkg.SetPlayerDetailsMessage;
+type SetPlayerVariableMessage = pkg.SetPlayerVariableMessage;
+const SetPlayerVariableMessage = pkg.SetPlayerVariableMessage;
+type SubMessage = pkg.SubMessage;
+const SubMessage = pkg.SubMessage;
+
 import { CharacterLayer } from "../Model/Websocket/CharacterLayer.js";
 import { PlayerVariables } from "../Services/PlayersRepository/PlayerVariables.js";
 import { getPlayersVariablesRepository } from "../Services/PlayersRepository/PlayersVariablesRepository.js";

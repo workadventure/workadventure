@@ -7,7 +7,7 @@ import {
     EmoteEventMessage,
     SetPlayerDetailsMessage,
     PlayerDetailsUpdatedMessage,
-} from "../Messages/generated/messages_pb.js";
+} from "@workadventure/legacy-proto-messages/dist/messages_pb.js";
 
 export type EntersCallback = (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) => void;
 export type MovesCallback = (thing: Movable, position: PositionInterface, listener: ZoneSocket) => void;

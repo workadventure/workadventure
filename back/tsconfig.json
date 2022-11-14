@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "module": "ES2020",
     "experimentalDecorators": true,
     /* Basic Options */
     // "incremental": true,                   /* Enable incremental compilation */

@@ -21,7 +21,7 @@ import {
     VariableWithTagMessage,
     ServerToClientMessage,
     PingMessage,
-} from "../Messages/generated/messages_pb.js";
+} from "@workadventure/legacy-proto-messages/dist/messages_pb.js";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils.js";
 import { RoomSocket, ZoneSocket } from "../RoomManager.js";
 import { Admin } from "../Model/Admin.js";
