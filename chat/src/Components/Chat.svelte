@@ -210,7 +210,6 @@
 </aside>
 
 <audio id="newMessageSound" src="/static/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
-
 <style lang="scss">
     aside.chatWindow {
         pointer-events: auto;
