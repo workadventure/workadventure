@@ -14,7 +14,7 @@ import { ParsedJID } from "stanza/JID";
 import { ChatStateMessage, JID } from "stanza";
 import { ChatState, MUCAffiliation } from "stanza/Constants";
 
-let _VERBOSE = true;
+const _VERBOSE = true;
 
 export type UserList = Map<string, User>;
 export type UsersStore = Readable<UserList>;
