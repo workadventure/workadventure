@@ -12,7 +12,6 @@
   "author": "WorkAdventure",
   "license": "ISC",
   "dependencies": {
-    "protobufjs": "^6.11.3",
     "@anatine/zod-openapi": "^1.3.0",
     "@grpc/grpc-js": "^1.7.1",
     "google-protobuf": "^3.21.0",
