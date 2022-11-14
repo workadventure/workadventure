@@ -10,7 +10,6 @@ RUN yarn run tag-version && yarn proto && yarn ts-proto
 # typescript build
 FROM --platform=$BUILDPLATFORM node:18.11-buster-slim@sha256:c3a4122a9b60c52a633b92788dec4159909158c828b56e11a3dc0284814a81f2 as builder
 WORKDIR /usr/src
-RUN apt-get update && apt-get install -y jq
 COPY libs/tailwind/yarn.lock libs/tailwind/package.json ./../libs/tailwind/
 RUN cd ../libs/tailwind && yarn install --network-timeout 1000000
 COPY libs/map-editor/yarn.lock libs/map-editor/package.json ./../libs/map-editor/
