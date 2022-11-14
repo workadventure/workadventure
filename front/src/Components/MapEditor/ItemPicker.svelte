@@ -38,7 +38,6 @@
         itemVariants.forEach(item => variantColorSet.add(item.color));
         variantColors = [...variantColorSet].sort();
         onColorChange(pickedItem.color);
-        pickedVariant = undefined;
     }
 
     function onColorChange(color: string)
@@ -48,6 +47,14 @@
         if(pickedVariant != undefined)
         {
             pickedVariant = currentVariants.find(item => item.direction === pickedVariant?.direction);
+        }
+        else
+        {
+            pickedVariant = currentVariants.find(item => item.direction === pickedItem?.direction);
+        }
+        if(pickedVariant === undefined)
+        {
+            pickedVariant = currentVariants[0];
         }
     }
 
