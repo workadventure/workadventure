@@ -184,7 +184,6 @@
         class="tw-border-0"
     />
 </div>
->
 
 <style lang="scss">
     @import "../../style/breakpoints.scss";
