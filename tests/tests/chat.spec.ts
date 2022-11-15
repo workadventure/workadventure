@@ -46,14 +46,17 @@ test.describe('Chat', () => {
       await Chat.checkNameInChat(page2, nickname2, TIMEOUT_TO_GET_LIST);
 
       // Enter in liveZone
+      await Chat.slideToChat(page);
+      await page.locator('#game').focus();
       await Map.walkTo(page, 'ArrowRight', 2_500);
       await Map.walkTo(page, 'ArrowUp', 500);
-      await Chat.slideToChat(page);
       await Chat.expandLiveRooms(page);
       await Chat.liveRoomExist(page, 'liveZone');
+      
+      await Chat.slideToChat(page2);
+      await page2.locator('#game').focus();
       await Map.walkTo(page2, 'ArrowRight', 2_500);
       await Map.walkTo(page2, 'ArrowDown', 500);
-      await Chat.slideToChat(page2);
       await Chat.expandLiveRooms(page2);
       await Chat.liveRoomExist(page2, 'liveZone');
 
