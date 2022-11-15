@@ -1,3 +1,5 @@
+import type { OpidWokaNamePolicy } from "../messages/JsonMessages/OpidWokaNamePolicy";
+
 export interface FrontConfigurationInterface {
     DEBUG_MODE: boolean;
     PUSHER_URL: string;
@@ -26,4 +28,5 @@ export interface FrontConfigurationInterface {
     CHAT_URL: string | undefined;
     ENABLE_CHAT_UPLOAD: boolean;
     FALLBACK_LOCALE: string | undefined;
+    OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy | undefined;
 }

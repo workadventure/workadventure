@@ -8,11 +8,13 @@ import {
     ENABLE_CHAT_UPLOAD,
     PUBLIC_MAP_STORAGE_URL,
     START_ROOM_URL,
+    OPID_WOKA_NAME_POLICY,
 } from "../enums/EnvironmentVariable";
 import type { AdminApiData } from "../../messages/JsonMessages/AdminApiData";
 import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
 import type { ErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
+import { OpidWokaNamePolicy } from "../../messages/JsonMessages/OpidWokaNamePolicy";
 
 /**
  * A local class mocking a real admin if no admin is configured.
@@ -74,6 +76,8 @@ class LocalAdmin implements AdminInterface {
             mapUrl = roomUrl.protocol + "//" + match[1];
         }
 
+        const opidWokaNamePolicyCheck = OpidWokaNamePolicy.safeParse(OPID_WOKA_NAME_POLICY);
+
         return Promise.resolve({
             mapUrl,
             canEdit,
@@ -83,6 +87,7 @@ class LocalAdmin implements AdminInterface {
             group: null,
             iframeAuthentication: null,
             opidLogoutRedirectUrl: null,
+            opidUsernamePolicy: opidWokaNamePolicyCheck.success ? opidWokaNamePolicyCheck.data : null,
             miniLogo: null,
             loadingLogo: null,
             loginSceneLogo: null,
