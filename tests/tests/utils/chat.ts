@@ -3,10 +3,10 @@ import {expectInViewport} from "./viewport";
 
 class Chat {
     async slideToChat(page: Page){
-        await page.click('li:has-text("Chat")');
+        await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow li:has-text("Chat")').click();
     }
     async slideToUsers(page: Page){
-        await page.click('li:has-text("Users")');
+        await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow li:has-text("Users")').click();
     }
 
     async checkNameInChat(page: Page, name: string, timeout = 30_000){
