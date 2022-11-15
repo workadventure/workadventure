@@ -11,7 +11,8 @@
   },
   "homepage": "https://github.com/thecodingmachine/workadventure#readme",
   "scripts": {
-    "start": "node -r source-map-support/register --max-old-space-size=4096 ./dist/server.js",
+    "start": "TS_NODE_PROJECT=tsconfig-pusher.json ts-node --transpileOnly ./src/server.ts",
+    "old_start": "node -r source-map-support/register --max-old-space-size=4096 ./dist/server.js",
     "dev": "cross-env concurrently \"npm:dev-front\" \"npm:typesafe-i18n-watch\" \"npm:watch-iframe-api\" \"npm:svelte-check-watch\" \"npm:dev-pusher\"",
     "dev-front": "cross-env vite",
     "dev-pusher": "TS_NODE_PROJECT=tsconfig-pusher.json ts-node-dev --inspect=0.0.0.0:9229 --exit-child --respawn ./src/server.ts",
@@ -96,6 +97,7 @@
     "@ungap/structured-clone": "^1.0.1",
     "@workadventure/map-editor": "link:../libs/map-editor",
     "@workadventure/math-utils": "link:../libs/math-utils",
+    "@workadventure/messages": "link:../libs/messages",
     "@workadventure/tailwind": "link:../libs/tailwind",
     "@workadventure/tiled-map-type-guard": "^2.0.6",
     "@xmpp/client": "^0.13.1",

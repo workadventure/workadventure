@@ -1,5 +1,5 @@
-import type { WokaDetail, WokaList } from "../../messages/JsonMessages/PlayerTextures";
-import { wokaPartNames } from "../../messages/JsonMessages/PlayerTextures";
+import type { WokaDetail, WokaList } from "@workadventure/messages";
+import { wokaPartNames } from "@workadventure/messages";
 import type { WokaServiceInterface } from "./WokaServiceInterface";
 
 class LocalWokaService implements WokaServiceInterface {

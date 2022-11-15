@@ -24,10 +24,12 @@ import {
     warningContainerStore,
 } from "../Stores/MenuStore";
 import { localUserStore } from "./LocalUserStore";
-import type {
+import {
+    apiVersionHash,
     AnswerMessage,
     AvailabilityStatus,
     CharacterLayerMessage,
+    ClientToServerMessage as ClientToServerMessageTsProto,
     EditMapCommandMessage,
     EmoteEventMessage as EmoteEventMessageTsProto,
     ErrorMessage as ErrorMessageTsProto,
@@ -42,6 +44,9 @@ import type {
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
     PositionMessage as PositionMessageTsProto,
     PositionMessage_Direction,
+    ServerToClientMessage as ServerToClientMessageTsProto,
+    SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
+    SetPlayerVariableMessage_Scope,
     QueryMessage,
     TokenExpiredMessage,
     UserJoinedMessage as UserJoinedMessageTsProto,
@@ -51,20 +56,13 @@ import type {
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnexionMessage,
     XmppSettingsMessage,
-} from "../../messages/ts-proto-generated/protos/messages";
-import {
-    ClientToServerMessage as ClientToServerMessageTsProto,
-    ServerToClientMessage as ServerToClientMessageTsProto,
-    SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
-    SetPlayerVariableMessage_Scope,
-} from "../../messages/ts-proto-generated/protos/messages";
+} from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
-import { apiVersionHash } from "../../messages/JsonMessages/ApiVersion";
-import type { ITiledMapRectangleObject } from "@workadventure/map-editor";
+import type { AreaData } from "@workadventure/map-editor";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 
@@ -1008,7 +1006,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorModifyArea(commandId: string, config: ITiledMapRectangleObject): void {
+    public emitMapEditorModifyArea(commandId: string, config: AreaData): void {
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1044,7 +1042,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorCreateArea(commandId: string, config: ITiledMapRectangleObject): void {
+    public emitMapEditorCreateArea(commandId: string, config: AreaData): void {
         this.send({
             message: {
                 $case: "editMapCommandMessage",

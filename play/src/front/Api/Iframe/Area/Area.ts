@@ -10,6 +10,7 @@ export class Area implements IArea {
 
     public readonly name: string;
     public readonly type: string = "area";
+    public readonly class: string = "area";
     private _x: number;
     private _y: number;
     private _width: number;

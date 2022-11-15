@@ -1,7 +1,7 @@
 import { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard/dist";
 import Axios from "axios";
 import { EjabberdClient, ejabberdClient } from "./EjabberdClient";
-import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
+import { MapDetailsData } from "@workadventure/messages";
 
 export interface ChatZone {
     chatName?: string;

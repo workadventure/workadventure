@@ -12,7 +12,7 @@ import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { AvailabilityStatus } from "../../messages/ts-proto-generated/protos/messages";
+import { AvailabilityStatus } from "@workadventure/messages";
 
 import deepEqual from "fast-deep-equal";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";

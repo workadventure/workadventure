@@ -1,6 +1,6 @@
 import type { Request, Response } from "hyper-express";
 import axios from "axios";
-import { isErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
+import { isErrorApiData } from "@workadventure/messages";
 import { DEBUG_ERROR_MESSAGES } from "../enums/EnvironmentVariable";
 
 export function globalErrorHandler(request: Request, response: Response, error: unknown) {

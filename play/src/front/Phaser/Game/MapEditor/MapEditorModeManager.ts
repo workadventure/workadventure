@@ -96,7 +96,6 @@ export class MapEditorModeManager {
         const delay = 0;
         switch (commandConfig.type) {
             case "UpdateAreaCommand": {
-                // delay = 5000;
                 command = new UpdateAreaCommand(this.scene.getGameMap(), commandConfig);
                 break;
             }
@@ -186,21 +185,6 @@ export class MapEditorModeManager {
         }
     }
 
-    public revertPendingCommands(): void {
-        while (this.pendingCommands.length > 0) {
-            const command = this.pendingCommands.pop();
-            if (command) {
-                command.undo();
-                // also remove from local history of commands as this is invalid
-                const index = this.localCommandsHistory.findIndex((localCommand) => localCommand.id === command.id);
-                if (index !== -1) {
-                    this.localCommandsHistory.splice(index, 1);
-                    this.currentCommandIndex -= 1;
-                }
-            }
-        }
-    }
-
     public isActive(): boolean {
         return this.active;
     }
@@ -224,11 +208,6 @@ export class MapEditorModeManager {
             }
             case "1": {
                 this.equipTool(EditorToolName.AreaEditor);
-                break;
-            }
-            case "0": {
-                console.log(`CURRENT COMMAND INDEX: ${this.currentCommandIndex}`);
-                console.log(this.localCommandsHistory);
                 break;
             }
             case "z": {
@@ -255,6 +234,21 @@ export class MapEditorModeManager {
 
             this.editorTools.forEach((tool) => tool.handleIncomingCommandMessage(editMapCommandMessage));
         });
+    }
+
+    private revertPendingCommands(): void {
+        while (this.pendingCommands.length > 0) {
+            const command = this.pendingCommands.pop();
+            if (command) {
+                command.undo();
+                // also remove from local history of commands as this is invalid
+                const index = this.localCommandsHistory.findIndex((localCommand) => localCommand.id === command.id);
+                if (index !== -1) {
+                    this.localCommandsHistory.splice(index, 1);
+                    this.currentCommandIndex -= 1;
+                }
+            }
+        }
     }
 
     private equipTool(tool?: EditorToolName): void {

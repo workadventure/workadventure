@@ -65,7 +65,7 @@ If you want, you can add an additional property to control how much should the c
         <img class="document-img" src="images/camera/5_click_add_property.png" alt="" />
     </div>
 
-2. Add a **float** property of name *zoom_margin*:
+2. Add a **float** property of name *zoomMargin*:
 
     <div class="px-5 card rounded d-inline-block">
         <img class="document-img" src="images/camera/8_add_zoom_margin.png" alt="" />

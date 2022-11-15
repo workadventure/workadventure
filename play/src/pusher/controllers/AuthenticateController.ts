@@ -4,10 +4,10 @@ import type { AuthTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager } from "../services/JWTTokenManager";
 import { openIDClient } from "../services/OpenIDClient";
 import { DISABLE_ANONYMOUS } from "../enums/EnvironmentVariable";
-import type { RegisterData } from "../../messages/JsonMessages/RegisterData";
+import { isErrorApiData } from "@workadventure/messages";
+import type { RegisterData } from "@workadventure/messages";
 import { adminService } from "../services/AdminService";
 import Axios from "axios";
-import { isErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
 import { z } from "zod";
 import { validateQuery } from "../services/QueryValidator";
 

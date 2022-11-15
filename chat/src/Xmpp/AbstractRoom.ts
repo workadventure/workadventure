@@ -1,6 +1,6 @@
 import type { Writable } from "svelte/store";
 import { writable } from "svelte/store";
-import { UserData } from "../Messages/JsonMessages/ChatData";
+import { UserData } from "@workadventure/messages";
 import { XmppClient } from "./XmppClient";
 import * as StanzaProtocol from "stanza/protocol";
 import { ChatStateMessage } from "stanza";

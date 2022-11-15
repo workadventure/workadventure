@@ -1,8 +1,5 @@
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
-import type { MapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
-import type { RoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
-import type { AdminApiData } from "../../messages/JsonMessages/AdminApiData";
-import type { ErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
+import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData } from "@workadventure/messages";
 
 export interface AdminInterface {
     /**

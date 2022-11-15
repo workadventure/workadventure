@@ -60,9 +60,8 @@ import Debug from "debug";
 import type { ExAdminSocketInterface } from "../models/Websocket/ExAdminSocketInterface";
 import type { compressors } from "hyper-express";
 import { adminService } from "./AdminService";
-import type { ErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
+import { ErrorApiData, MucRoomDefinitionInterface } from "@workadventure/messages";
 import { BoolValue, Int32Value, StringValue } from "google-protobuf/google/protobuf/wrappers_pb";
-import type { MucRoomDefinitionInterface } from "../../messages/JsonMessages/MucRoomDefinitionInterface";
 import { EJABBERD_DOMAIN } from "../enums/EnvironmentVariable";
 
 const debug = Debug("socket");
@@ -525,7 +524,7 @@ export class SocketManager implements ZoneEventListener {
         backAdminMessage.setRoomid(roomId);
         backAdminMessage.setRecipientuuid(userUuid);
         backAdminMessage.setType(type);
-        backConnection.sendAdminMessage(backAdminMessage, (error) => {
+        backConnection.sendAdminMessage(backAdminMessage, (error: unknown) => {
             if (error !== null) {
                 console.error("Error while sending admin message", error);
             }
@@ -550,7 +549,7 @@ export class SocketManager implements ZoneEventListener {
         banMessage.setRoomid(roomId);
         banMessage.setRecipientuuid(userUuid);
         banMessage.setType(type);
-        backConnection.ban(banMessage, (error) => {
+        backConnection.ban(banMessage, (error: unknown) => {
             if (error !== null) {
                 console.error("Error while sending admin message", error);
             }

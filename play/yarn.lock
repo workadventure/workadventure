@@ -15,7 +15,7 @@
     "@jridgewell/gen-mapping" "^0.1.0"
     "@jridgewell/trace-mapping" "^0.3.9"
 
-"@anatine/zod-openapi@^1.9.8":
+"@anatine/zod-openapi@^1.3.0", "@anatine/zod-openapi@^1.9.8":
   version "1.10.0"
   resolved "https://registry.yarnpkg.com/@anatine/zod-openapi/-/zod-openapi-1.10.0.tgz#2fb5e0f1b697165e6861379a8d097241f1ffb65d"
   integrity sha512-tA9h61rKQ758g7dVp0F9QJjOG4qaVHacOfbL2p9Rzxeiz4eLMxZmF0KXgqE3aJ/0ZXQr28U5PGVnAYlP9ffNyQ==
@@ -393,9 +393,9 @@
     "@fortawesome/fontawesome-common-types" "^0.2.36"
 
 "@grpc/grpc-js@^1.7.1":
-  version "1.7.3"
-  resolved "https://registry.yarnpkg.com/@grpc/grpc-js/-/grpc-js-1.7.3.tgz#f2ea79f65e31622d7f86d4b4c9ae38f13ccab99a"
-  integrity sha512-H9l79u4kJ2PVSxUNA08HMYAnUBLj9v6KjYQ7SQ71hOZcEXhShE/y5iQCesP8+6/Ik/7i2O0a10bPquIcYfufog==
+  version "1.7.1"
+  resolved "https://registry.yarnpkg.com/@grpc/grpc-js/-/grpc-js-1.7.1.tgz#cfac092e61eac6fe0f80d22943f98e1ba45f02a2"
+  integrity sha512-GVtMU4oh/TeKkWGzXUEsyZtyvSUIT1z49RtGH1UnEGeL+sLuxKl8QH3KZTlSB329R1sWJmesm5hQ5CxXdYH9dg==
   dependencies:
     "@grpc/proto-loader" "^0.7.0"
     "@types/node" ">=12.12.47"
@@ -1160,6 +1160,10 @@
   uid ""
 
 "@workadventure/math-utils@link:../libs/math-utils":
+  version "0.0.0"
+  uid ""
+
+"@workadventure/messages@link:../libs/messages":
   version "0.0.0"
   uid ""
 
@@ -4435,6 +4439,13 @@ run-parallel@^1.1.9:
   dependencies:
     queue-microtask "^1.2.2"
 
+rxjs@6.6.3:
+  version "6.6.3"
+  resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-6.6.3.tgz#8ca84635c4daa900c0d3967a6ee7ac60271ee552"
+  integrity sha512-trsQc+xYYXZ3urjOiJOuCOa5N3jAZ3eiSpQB5hIT8zGlL2QfnHLJ2r7GMkBGuIausdJN1OneaI6gQlsqNHHmZQ==
+  dependencies:
+    tslib "^1.9.0"
+
 rxjs@^6.6.3:
   version "6.6.7"
   resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-6.6.7.tgz#90ac018acabf491bf65044235d5863c4dab804c9"
@@ -5082,7 +5093,7 @@ ts-node-dev@^2.0.0:
     ts-node "^10.4.0"
     tsconfig "^7.0.0"
 
-ts-node@^10.4.0:
+ts-node@^10.4.0, ts-node@^10.9.1:
   version "10.9.1"
   resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-10.9.1.tgz#e73de9102958af9e1f0b168a6ff320e25adcff4b"
   integrity sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==

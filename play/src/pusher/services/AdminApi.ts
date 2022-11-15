@@ -1,21 +1,21 @@
 import { ADMIN_API_TOKEN, ADMIN_API_URL, OPID_PROFILE_SCREEN_PROVIDER } from "../enums/EnvironmentVariable";
 import Axios from "axios";
 import type { AxiosResponse } from "axios";
-import type { MapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
-import { isMapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
-import type { RoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
-import { isRoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
-import type { AdminApiData } from "../../messages/JsonMessages/AdminApiData";
-import { isAdminApiData } from "../../messages/JsonMessages/AdminApiData";
+import {
+    isMapDetailsData,
+    isRoomRedirect,
+    isAdminApiData,
+    isWokaDetail,
+    isMucRoomDefinition,
+    isApplicationDefinitionInterface,
+} from "@workadventure/messages";
+import type { MapDetailsData, RoomRedirect, AdminApiData } from "@workadventure/messages";
 import { z } from "zod";
-import { isWokaDetail } from "../../messages/JsonMessages/PlayerTextures";
 import qs from "qs";
 import type { AdminInterface } from "./AdminInterface";
 import { jwtTokenManager } from "./JWTTokenManager";
 import type { AuthTokenData } from "./JWTTokenManager";
 import { extendApi } from "@anatine/zod-openapi";
-import { isMucRoomDefinition } from "../../messages/JsonMessages/MucRoomDefinitionInterface";
-import { isApplicationDefinitionInterface } from "../../messages/JsonMessages/ApplicationDefinitionInterface";
 
 export interface AdminBannedData {
     is_banned: boolean;
