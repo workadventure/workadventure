@@ -53,7 +53,7 @@ services:
       - START_ROOM_URL
       - EJABBERD_DOMAIN=ejabberd
       - OPID_PROMPT=login
-      - USERNAME_POLICY
+      - OPID_WOKA_NAME_POLICY
       - ENABLE_CHAT
       - ENABLE_CHAT_UPLOAD
       # Only used if you set up a JWT authentication mechanism in Ejabberd
