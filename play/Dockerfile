@@ -34,6 +34,7 @@ WORKDIR /usr/src
 COPY play/yarn.lock play/package.json ./
 ENV NODE_ENV=production
 RUN yarn install --production
+COPY --from=builder /usr/libs /usr/libs
 COPY --from=builder --chown=node:node /usr/src /usr/src
 COPY --chown=node:node play/src/pusher/data /usr/src/dist/pusher/data
 
