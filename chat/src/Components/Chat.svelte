@@ -3,7 +3,7 @@
     import { HtmlUtils } from "../Utils/HtmlUtils";
     import Loader from "./Loader.svelte";
     import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
-    import UsersList, { mucRoom } from "./UsersList.svelte";
+    import UsersList from "./UsersList.svelte";
     import { MucRoom } from "../Xmpp/MucRoom";
     import { userStore } from "../Stores/LocalUserStore";
     import LL from "../i18n/i18n-svelte";
@@ -160,9 +160,15 @@
                         <li
                             class:active={$navChat === "users"}
                             on:click={() => {
-                                shownRoomListStore.set(
-                                    get(defaultMucRoom.getPresenceStore()).get(defaultMucRoom.myJID).roomName
-                                );
+                                if (defaultMucRoom) {
+                                    const presenceStore = defaultMucRoom.getPresenceStore();
+                                    if (presenceStore) {
+                                        const me = get(presenceStore).get(defaultMucRoom.myJID);
+                                        if (me) {
+                                            shownRoomListStore.set(me.roomName);
+                                        }
+                                    }
+                                }
                                 navChat.set("users");
                             }}
                         >
