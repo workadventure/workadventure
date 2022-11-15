@@ -164,7 +164,7 @@
                                     const presenceStore = defaultMucRoom.getPresenceStore();
                                     if (presenceStore) {
                                         const me = get(presenceStore).get(defaultMucRoom.myJID);
-                                        if (me) {
+                                        if (me && me.roomName) {
                                             shownRoomListStore.set(me.roomName);
                                         }
                                     }
