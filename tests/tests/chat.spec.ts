@@ -47,14 +47,14 @@ test.describe('Chat', () => {
 
       // Enter in liveZone
       await Chat.slideToChat(page);
-      await page.locator('#game canvas').click();
+      await page.locator('#game canvas').focus();
       await Map.walkTo(page, 'ArrowRight', 2_500);
       await Map.walkTo(page, 'ArrowUp', 500);
       await Chat.expandLiveRooms(page);
       await Chat.liveRoomExist(page, 'liveZone');
 
       await Chat.slideToChat(page2);
-      await page2.locator('#game canvas').click();
+      await page2.locator('#game canvas').focus();
       await Map.walkTo(page2, 'ArrowRight', 2_500);
       await Map.walkTo(page2, 'ArrowDown', 500);
       await Chat.expandLiveRooms(page2);
@@ -145,11 +145,11 @@ test.describe('Chat', () => {
       //await Chat.closeTimeline(page);
 
       // Exit of liveZone
-      await page.locator('#game canvas').click();
+      await page.locator('#game canvas').focus();
       await Map.walkTo(page, 'ArrowLeft', 2_000);
       await Chat.slideToChat(page);
       await Chat.noLiveRoom(page);
-      await page2.locator('#game canvas').click();
+      await page2.locator('#game canvas').focus();
       await Map.walkTo(page2, 'ArrowLeft', 2_000);
       await Chat.slideToChat(page2);
       await Chat.noLiveRoom(page2);
