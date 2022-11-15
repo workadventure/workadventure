@@ -148,7 +148,9 @@ export class FrontController extends BaseHttpController {
 
         try {
             redirectUrl = await builder.getRedirectUrl();
-        } catch (e) {}
+        } catch (e) {
+            console.log(`Cannot get redirect URL ${url}`, e);
+        }
 
         if (redirectUrl) {
             return res.redirect(redirectUrl);
@@ -162,8 +164,8 @@ export class FrontController extends BaseHttpController {
                 url,
                 script: this.script,
             });
-        } catch(e) {
-            console.error(`Cannot render metatags on ${url}`);
+        } catch (e) {
+            console.log(`Cannot render metatags on ${url}`, e);
         }
 
         return res.type("html").send(html);
