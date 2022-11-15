@@ -29,6 +29,7 @@ test.describe('Chat', () => {
     const ejabberd = await findContainer('ejabberd');
 
     await test.step('all tests of chat', async () => {
+      await Chat.slideToUsers(page);
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
 
       // Second browser
