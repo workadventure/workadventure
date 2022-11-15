@@ -33,12 +33,12 @@ class App {
         this.webserver.set_error_handler(globalErrorHandler);
 
         let path: string;
-        if (fs.existsSync("public")) {
-            // In dev mode
-            path = "public";
-        } else if (fs.existsSync("dist/public")) {
+        if (fs.existsSync("dist/public")) {
             // In prod mode
             path = "dist/public";
+        } else if (fs.existsSync("public")) {
+            // In dev mode
+            path = "public";
         } else {
             throw new Error("Could not find public folder");
         }

@@ -11,9 +11,7 @@
   },
   "homepage": "https://github.com/thecodingmachine/workadventure#readme",
   "scripts": {
-    "start": "cross-env concurrently \"npm:start-front\" \"npm:start-pusher\"",
-    "start-front": "cross-env vite",
-    "start-pusher": "TS_NODE_PROJECT=tsconfig-pusher.json ts-node --transpileOnly ./src/server.ts",
+    "start": "TS_NODE_PROJECT=tsconfig-pusher.json ts-node --transpileOnly ./src/server.ts",
     "old_start": "node -r source-map-support/register --max-old-space-size=4096 ./dist/server.js",
     "dev": "cross-env concurrently \"npm:dev-front\" \"npm:typesafe-i18n-watch\" \"npm:watch-iframe-api\" \"npm:svelte-check-watch\" \"npm:dev-pusher\"",
     "dev-front": "cross-env vite",
