@@ -1671,6 +1671,7 @@ ${escapedMessage}
                 for (const eventTile of eventTiles) {
                     this.gameMapFrontWrapper.putTile(eventTile.tile, eventTile.x, eventTile.y, eventTile.layer);
                 }
+                this.animatedTiles.updateAnimatedTiles();
             })
         );
         iframeListener.registerAnswerer("enablePlayersTracking", (enablePlayersTrackingEvent, source) => {

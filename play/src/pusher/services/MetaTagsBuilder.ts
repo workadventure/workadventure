@@ -15,6 +15,8 @@ import { ADMIN_API_URL } from "../enums/EnvironmentVariable";
 export const MetaTagsDefaultValue: RequiredMetaTagsData = {
     title: "WorkAdventure",
     description: "Create your own digital office, Metaverse and meet online with the world.",
+    author: "WorkAdventure team",
+    provider: "WorkAdventure",
     favIcons: [
         {
             rel: "icon",
@@ -54,7 +56,7 @@ export const MetaTagsDefaultValue: RequiredMetaTagsData = {
         {
             rel: "apple-touch-icon",
             sizes: "114x114",
-            src: "static/images/favicons/apple-icon-114x114.png",
+            src: "/static/images/favicons/apple-icon-114x114.png",
         },
         {
             rel: "apple-touch-icon",
@@ -292,6 +294,8 @@ export class MetaTagsBuilder {
             description: mapDescriptionProperty?.value
                 ? String(mapDescriptionProperty.value)
                 : MetaTagsDefaultValue.description,
+            author: MetaTagsDefaultValue.author,
+            provider: MetaTagsDefaultValue.provider,
             favIcons: MetaTagsDefaultValue.favIcons,
             manifestIcons: MetaTagsDefaultValue.manifestIcons,
             appName: MetaTagsDefaultValue.appName,
