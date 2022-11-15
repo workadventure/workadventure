@@ -1,6 +1,7 @@
 {
   "name": "workadventure-play",
   "version": "1.0.0",
+  "type": "module",
   "license": "SEE LICENSE IN LICENSE.txt",
   "repository": {
     "type": "git",
