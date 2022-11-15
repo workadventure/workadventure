@@ -155,7 +155,7 @@ export const isMapDetailsData = z.object({
     }),
     opidWokaNamePolicy: extendApi(isOpidWokaNamePolicy.nullable().optional(), {
         description: "Username policy",
-        example: "USER_INPUT",
+        example: "user_input",
     }),
     // The date (in ISO 8601 format) at which the room will expire
     expireOn: extendApi(z.optional(z.string()), {
