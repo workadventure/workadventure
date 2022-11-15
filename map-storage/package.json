@@ -27,7 +27,7 @@
     "prebuild": "rimraf dist",
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
-    "start": "node dist/index.js",
+    "start": "ts-node --transpileOnly ./src/index.ts",
     "start:dev": "ts-node-dev --exit-child --respawn ./src/index.ts",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "precommit": "lint-staged",
