@@ -28,7 +28,7 @@ WORKDIR /usr/src
 COPY back/yarn.lock back/package.json ./
 ENV NODE_ENV=production
 RUN yarn install --production
-COPY --from=builder /usr/src/dist /usr/src/dist
+COPY --from=builder /usr/src /usr/src
 
 USER node
 CMD ["yarn", "run", "runprod"]
