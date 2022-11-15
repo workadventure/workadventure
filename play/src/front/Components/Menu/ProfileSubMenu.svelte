@@ -58,27 +58,33 @@
         enableCameraSceneVisibilityStore.showEnableCameraScene();
         gameManager.leaveGame(EnableCameraSceneName, new EnableCameraScene());
     }
+
+    function showWokaNameButton() {
+        return connectionManager.currentRoom?.opidWokaNamePolicy !== "force_opid";
+    }
 </script>
 
 <div class="customize-main">
     <div class="submenu">
         <section class="centered-column resizing-width tw-m-auto resizing-text">
-            <button
-                type="button"
-                class="tw-w-full outline tw-min-w-[220px]"
-                on:click={() => analyticsClient.editName()}
-                on:click={openEditNameScene}
-            >
-                <img
-                    draggable="false"
-                    src={btnProfileSubMenuIdentity}
-                    alt={$LL.menu.profile.edit.name()}
-                    width="26px"
-                    height="26px"
-                    class="darken-icon"
-                />
-                <span class="">{$LL.menu.profile.edit.name()}</span>
-            </button>
+            {#if showWokaNameButton()}
+                <button
+                    type="button"
+                    class="tw-w-full outline tw-min-w-[220px]"
+                    on:click={() => analyticsClient.editName()}
+                    on:click={openEditNameScene}
+                >
+                    <img
+                        draggable="false"
+                        src={btnProfileSubMenuIdentity}
+                        alt={$LL.menu.profile.edit.name()}
+                        width="26px"
+                        height="26px"
+                        class="darken-icon"
+                    />
+                    <span class="">{$LL.menu.profile.edit.name()}</span>
+                </button>
+            {/if}
             <button
                 type="button"
                 class="tw-w-full outline tw-min-w-[220px]"

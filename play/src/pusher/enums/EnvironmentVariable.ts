@@ -1,3 +1,4 @@
+import { OpidWokaNamePolicy } from "../../messages/JsonMessages/OpidWokaNamePolicy";
 import { z, ZodError } from "zod";
 import type { FrontConfigurationInterface } from "../../common/FrontConfigurationInterface";
 
@@ -68,6 +69,7 @@ const EnvironmentVariables = z.object({
     POSTHOG_URL: z.string().url().optional().or(z.literal("")),
     FALLBACK_LOCALE: z.string().optional(),
     CHAT_URL: z.string().url(),
+    OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy.optional(),
 });
 
 type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
@@ -127,7 +129,7 @@ export const OPID_SCOPE = env.OPID_SCOPE || "openid email";
 export const OPID_PROMPT = env.OPID_PROMPT || "login";
 export const OPID_USERNAME_CLAIM = env.OPID_USERNAME_CLAIM || "username";
 export const OPID_LOCALE_CLAIM = env.OPID_LOCALE_CLAIM || "locale";
-export const USERNAME_POLICY = env.USERNAME_POLICY || "user_input";
+export const OPID_WOKA_NAME_POLICY = env.OPID_WOKA_NAME_POLICY || "user_input";
 export const DISABLE_ANONYMOUS: boolean = toBool(env.DISABLE_ANONYMOUS, false);
 export const PROMETHEUS_AUTHORIZATION_TOKEN = env.PROMETHEUS_AUTHORIZATION_TOKEN;
 export const EJABBERD_DOMAIN: string = env.EJABBERD_DOMAIN || "";
@@ -174,4 +176,5 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     CHAT_URL: env.CHAT_URL,
     ENABLE_CHAT_UPLOAD: toBool(env.ENABLE_CHAT_UPLOAD, true),
     FALLBACK_LOCALE: env.FALLBACK_LOCALE,
+    OPID_WOKA_NAME_POLICY: env.OPID_WOKA_NAME_POLICY,
 };

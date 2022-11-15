@@ -1,4 +1,10 @@
-import { CONTACT_URL, PUSHER_URL, DISABLE_ANONYMOUS, OPID_LOGOUT_REDIRECT_URL } from "../Enum/EnvironmentVariable";
+import {
+    CONTACT_URL,
+    PUSHER_URL,
+    DISABLE_ANONYMOUS,
+    OPID_LOGOUT_REDIRECT_URL,
+    OPID_WOKA_NAME_POLICY,
+} from "../Enum/EnvironmentVariable";
 import { localUserStore } from "./LocalUserStore";
 import axios from "axios";
 import { axiosWithRetry } from "./AxiosUtils";
@@ -148,7 +154,7 @@ export class Room {
                 if (data.expireOn) {
                     this._expireOn = new Date(data.expireOn);
                 }
-                this._opidWokaNamePolicy = data.opidWokaNamePolicy ?? undefined;
+                this._opidWokaNamePolicy = data.opidWokaNamePolicy ?? OPID_WOKA_NAME_POLICY;
                 this._canReport = data.canReport ?? false;
                 this._canEditMap = data.canEdit ?? false;
                 this._miniLogo = data.miniLogo ?? undefined;
@@ -280,7 +286,7 @@ export class Room {
         return this._loadingCowebsiteLogo;
     }
 
-    get opidWokaNamePolicy(): UsernamePolicy | undefined {
+    get opidWokaNamePolicy(): OpidWokaNamePolicy | undefined {
         return this._opidWokaNamePolicy;
     }
 

@@ -3,7 +3,7 @@ import { extendApi } from "@anatine/zod-openapi";
 import { isMucRoomDefinition } from "./MucRoomDefinitionInterface";
 import { isMetaTagFavicon } from "./MetaTagFavicon";
 import { isMetaTagManifestIcon } from "./MetaTagManifestIcon";
-import { isOpidWokaNamePolicy } from "./OpidWokaNamePolicy";
+import { OpidWokaNamePolicy } from "./OpidWokaNamePolicy";
 
 /*
  * WARNING! The original file is in /messages/JsonMessages.
@@ -153,7 +153,7 @@ export const isMapDetailsData = z.object({
         description: "The URL of the logout redirect",
         example: "https://mycompany.com/logout",
     }),
-    opidWokaNamePolicy: extendApi(isOpidWokaNamePolicy.nullable().optional(), {
+    opidWokaNamePolicy: extendApi(OpidWokaNamePolicy.nullable().optional(), {
         description: "Username policy",
         example: "user_input",
     }),
