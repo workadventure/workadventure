@@ -34,6 +34,7 @@ const EnvironmentVariables = z.object({
     OPID_USERNAME_CLAIM: z.string().optional(),
     OPID_LOCALE_CLAIM: z.string().optional(),
     OPID_LOGOUT_REDIRECT_URL: z.string().optional(),
+    USERNAME_POLICY: z.string().optional(),
     DISABLE_ANONYMOUS: BoolAsString.optional(),
     PROMETHEUS_AUTHORIZATION_TOKEN: z.string().optional(),
     EJABBERD_DOMAIN: z.string().optional(),
@@ -126,6 +127,7 @@ export const OPID_SCOPE = env.OPID_SCOPE || "openid email";
 export const OPID_PROMPT = env.OPID_PROMPT || "login";
 export const OPID_USERNAME_CLAIM = env.OPID_USERNAME_CLAIM || "username";
 export const OPID_LOCALE_CLAIM = env.OPID_LOCALE_CLAIM || "locale";
+export const USERNAME_POLICY = env.USERNAME_POLICY || "USER_INPUT";
 export const DISABLE_ANONYMOUS: boolean = toBool(env.DISABLE_ANONYMOUS, false);
 export const PROMETHEUS_AUTHORIZATION_TOKEN = env.PROMETHEUS_AUTHORIZATION_TOKEN;
 export const EJABBERD_DOMAIN: string = env.EJABBERD_DOMAIN || "";

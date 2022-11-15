@@ -381,7 +381,13 @@ class ConnectionManager {
         if (visitCardUrl) {
             gameManager.setVisitCardurl(visitCardUrl);
         }
-        if (username) {
+
+        const usernamePolicy = this.currentRoom?.opidcUsernamePolicy;
+
+        if (usernamePolicy && username && (
+            usernamePolicy === "FORCE_OPID" ||
+            (usernamePolicy === "CAN_OVERRIDE_OPID" && !localUserStore.getName())
+        )) {
             gameManager.setPlayerName(username);
         }
 

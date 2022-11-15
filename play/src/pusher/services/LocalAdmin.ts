@@ -1,6 +1,6 @@
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import type { AdminInterface } from "./AdminInterface";
-import type { MapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
+import { isMapDetailsData, MapDetailsData, UsernamePolicy } from "../../messages/JsonMessages/MapDetailsData";
 import type { RoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
 import {
     DISABLE_ANONYMOUS,
@@ -8,6 +8,7 @@ import {
     ENABLE_CHAT_UPLOAD,
     PUBLIC_MAP_STORAGE_URL,
     START_ROOM_URL,
+    USERNAME_POLICY,
 } from "../enums/EnvironmentVariable";
 import type { AdminApiData } from "../../messages/JsonMessages/AdminApiData";
 import { localWokaService } from "./LocalWokaService";
@@ -74,6 +75,8 @@ class LocalAdmin implements AdminInterface {
             mapUrl = roomUrl.protocol + "//" + match[1];
         }
 
+        const usernamePolicyCheck = UsernamePolicy.safeParse(USERNAME_POLICY);
+
         return Promise.resolve({
             mapUrl,
             canEdit,
@@ -83,6 +86,7 @@ class LocalAdmin implements AdminInterface {
             group: null,
             iframeAuthentication: null,
             opidLogoutRedirectUrl: null,
+            opidUsernamePolicy: usernamePolicyCheck.success ? usernamePolicyCheck.data : null,
             miniLogo: null,
             loadingLogo: null,
             loginSceneLogo: null,
