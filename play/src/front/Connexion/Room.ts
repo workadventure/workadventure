@@ -2,8 +2,9 @@ import { CONTACT_URL, PUSHER_URL, DISABLE_ANONYMOUS, OPID_LOGOUT_REDIRECT_URL } 
 import { localUserStore } from "./LocalUserStore";
 import axios from "axios";
 import { axiosWithRetry } from "./AxiosUtils";
-import { isMapDetailsData, UsernamePolicy } from "../../messages/JsonMessages/MapDetailsData";
+import { isMapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
 import type { LegalsData, MapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
+import type { OpidWokaNamePolicy } from "../../messages/JsonMessages/OpidWokaNamePolicy";
 import { isRoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
 import type { MucRoomDefinitionInterface } from "../../messages/JsonMessages/MucRoomDefinitionInterface";
 import { isErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
@@ -21,7 +22,7 @@ export class Room {
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
     private _iframeAuthentication?: string = PUSHER_URL + "/login-screen";
     private _opidLogoutRedirectUrl = "/";
-    private _opidUsernamePolicy: UsernamePolicy | undefined;
+    private _opidWokaNamePolicy: OpidWokaNamePolicy | undefined;
     private _mapUrl: string | undefined;
     private readonly _search: URLSearchParams;
     private _contactPage: string | undefined;
@@ -147,7 +148,7 @@ export class Room {
                 if (data.expireOn) {
                     this._expireOn = new Date(data.expireOn);
                 }
-                this._opidUsernamePolicy = data.opidUsernamePolicy ?? undefined;
+                this._opidWokaNamePolicy = data.opidWokaNamePolicy ?? undefined;
                 this._canReport = data.canReport ?? false;
                 this._canEditMap = data.canEdit ?? false;
                 this._miniLogo = data.miniLogo ?? undefined;
@@ -279,8 +280,8 @@ export class Room {
         return this._loadingCowebsiteLogo;
     }
 
-    get opidcUsernamePolicy(): UsernamePolicy | undefined {
-        return this._opidUsernamePolicy;
+    get opidWokaNamePolicy(): UsernamePolicy | undefined {
+        return this._opidWokaNamePolicy;
     }
 
     get loadingLogo(): string | undefined {

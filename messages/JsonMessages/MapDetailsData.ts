@@ -3,6 +3,7 @@ import { extendApi } from "@anatine/zod-openapi";
 import { isMucRoomDefinition } from "./MucRoomDefinitionInterface";
 import { isMetaTagFavicon } from "./MetaTagFavicon";
 import { isMetaTagManifestIcon } from "./MetaTagManifestIcon";
+import { isOpidWokaNamePolicy } from "./OpidWokaNamePolicy";
 
 /*
  * WARNING! The original file is in /messages/JsonMessages.
@@ -140,7 +141,6 @@ export const isMapDetailsData = z.object({
     mucRooms: extendApi(isMucRoomDefinition.array().nullable(), {
         description: "The MUC room is a room of message",
     }),
-
     contactPage: extendApi(z.string().nullable().optional(), {
         description: "The URL to the contact page",
         example: "https://mycompany.com/contact-us",
@@ -152,6 +152,10 @@ export const isMapDetailsData = z.object({
     opidLogoutRedirectUrl: extendApi(z.string().nullable().optional(), {
         description: "The URL of the logout redirect",
         example: "https://mycompany.com/logout",
+    }),
+    opidWokaNamePolicy: extendApi(isOpidWokaNamePolicy.nullable().optional(), {
+        description: "Username policy",
+        example: "USER_INPUT",
     }),
     // The date (in ISO 8601 format) at which the room will expire
     expireOn: extendApi(z.optional(z.string()), {
