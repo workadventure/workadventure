@@ -2,6 +2,13 @@ import {expect, Page} from "@playwright/test";
 import {expectInViewport} from "./viewport";
 
 class Chat {
+    async slideToChat(page: Page){
+        await page.click('li:has-text("Chat")');
+    }
+    async slideToUsers(page: Page){
+        await page.click('li:has-text("Users")');
+    }
+
     async checkNameInChat(page: Page, name: string, timeout = 30_000){
         await expect(page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow div.users')).toContainText(name, {timeout});
     }

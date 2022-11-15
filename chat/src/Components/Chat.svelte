@@ -3,7 +3,7 @@
     import { HtmlUtils } from "../Utils/HtmlUtils";
     import Loader from "./Loader.svelte";
     import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
-    import UsersList from "./UsersList.svelte";
+    import UsersList, { mucRoom } from "./UsersList.svelte";
     import { MucRoom } from "../Xmpp/MucRoom";
     import { userStore } from "../Stores/LocalUserStore";
     import LL from "../i18n/i18n-svelte";
@@ -21,11 +21,12 @@
         navChat,
         showForumsStore,
         showLivesStore,
+        shownRoomListStore,
         showTimelineStore,
         timelineActiveStore,
         timelineMessagesToSee,
     } from "../Stores/ChatStore";
-    import { Unsubscriber, derived } from "svelte/store";
+    import { Unsubscriber, derived, get } from "svelte/store";
     import { chatConnectionManager } from "../Connection/ChatConnectionManager";
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
     import { iframeListener } from "../IframeListener";
@@ -156,7 +157,17 @@
                 <nav class="nav">
                     <div class="background" class:chat={$navChat === "chat"} />
                     <ul>
-                        <li class:active={$navChat === "users"} on:click={() => navChat.set("users")}>{$LL.users()}</li>
+                        <li
+                            class:active={$navChat === "users"}
+                            on:click={() => {
+                                shownRoomListStore.set(
+                                    get(defaultMucRoom.getPresenceStore()).get(defaultMucRoom.myJID).roomName
+                                );
+                                navChat.set("users");
+                            }}
+                        >
+                            {$LL.users()}
+                        </li>
                         <li class:active={$navChat === "chat"} on:click={() => navChat.set("chat")}>Chat</li>
                     </ul>
                 </nav>
