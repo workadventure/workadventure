@@ -28,6 +28,7 @@ WORKDIR /usr/src
 COPY back/yarn.lock back/package.json ./
 ENV NODE_ENV=production
 RUN yarn install --production
+COPY --from=builder /usr/libs /usr/libs
 COPY --from=builder /usr/src /usr/src
 
 USER node
