@@ -43,7 +43,9 @@ test.describe('Chat', () => {
       );
       const nickname2 = getUniqueNickname('B');
       await login(page2, nickname2, 3);
-      await hideNoCamera(page2);
+      if(browserName === 'chromium') {
+          await hideNoCamera(page2);
+      }
       await openChat(page2);
       await Chat.slideToUsers(page2);
       await Chat.checkNameInChat(page2, nickname, TIMEOUT_TO_GET_LIST);
