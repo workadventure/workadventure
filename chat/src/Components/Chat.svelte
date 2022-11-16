@@ -25,7 +25,7 @@
         timelineActiveStore,
         timelineMessagesToSee,
     } from "../Stores/ChatStore";
-    import { Unsubscriber, derived, get } from "svelte/store";
+    import { Unsubscriber, derived } from "svelte/store";
     import { chatConnectionManager } from "../Connection/ChatConnectionManager";
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
     import { iframeListener } from "../IframeListener";

@@ -6,7 +6,7 @@
     import { fly } from "svelte/transition";
     import LL from "../i18n/i18n-svelte";
     import Loader from "./Loader.svelte";
-    import { derived, get, Unsubscriber } from "svelte/store";
+    import { derived, Unsubscriber } from "svelte/store";
     import { shownRoomListStore } from "../Stores/ChatStore";
     import { onDestroy, onMount } from "svelte";
 
