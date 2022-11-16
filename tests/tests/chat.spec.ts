@@ -146,6 +146,7 @@ test.describe('Chat', () => {
       // Close timeline
       //await Chat.closeTimeline(page);
 
+      
       // Exit of liveZone
       await page.locator('#game canvas').click();
       await Map.walkTo(page, 'ArrowLeft', 2_000);
