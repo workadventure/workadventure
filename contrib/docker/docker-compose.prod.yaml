@@ -53,6 +53,7 @@ services:
       - PUBLIC_MAP_STORAGE_URL=https://${MAP_STORAGE_HOST}
       - START_ROOM_URL
       - OPID_PROMPT=login
+      - OPID_WOKA_NAME_POLICY
       - ENABLE_CHAT
       - ENABLE_CHAT_UPLOAD
       - UPLOADER_URL=https://${UPLOADER_HOST}
