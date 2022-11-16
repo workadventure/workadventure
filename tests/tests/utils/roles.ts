@@ -28,5 +28,6 @@ export async function login(
 
 
 export async function hideNoCamera(page: Page){
+  await page.locator('p', {hasText: 'Camera access denied'}).click();
   await page.locator('form.helpCameraSettings button[type="submit"]').click();
 }

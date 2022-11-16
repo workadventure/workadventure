@@ -195,7 +195,6 @@
         if ($unreads === 0) {
             isScrolledDown = true;
             scrollDown();
-            console.info("First scroll down");
         } else {
             const message = [...$messagesStore.values()]
                 .reverse()

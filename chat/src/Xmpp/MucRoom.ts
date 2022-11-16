@@ -514,7 +514,7 @@ export class MucRoom extends AbstractRoom {
         return true;
     }
     onPresence(presence: StanzaProtocol.ReceivedPresence): boolean {
-        if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, "<< Presence received", presence);
+        if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, "<< Presence received");
         let response = false;
 
         if (presence.id) {
@@ -620,11 +620,9 @@ export class MucRoom extends AbstractRoom {
         });
     }
     updateUserInfo(userInfo: WaUserInfo) {
-        console.log("updateUserInfo", userInfo);
         this.presenceStore.update((presenceStore: UserList) => {
             const userJID = JID.parse(userInfo.jid);
             const user = presenceStore.get(userJID.full);
-            console.log(presenceStore);
             if (user) {
                 presenceStore.set(userJID.full, {
                     ...user,
@@ -657,7 +655,6 @@ export class MucRoom extends AbstractRoom {
                     visitCardUrl: userInfo.userVisitCardUrl,
                 });
             }
-            console.log(presenceStore);
             return presenceStore;
         });
     }
