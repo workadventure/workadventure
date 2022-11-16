@@ -25,7 +25,7 @@
     let unsubscribe: Unsubscriber;
 
     onMount(() => {
-        presenceStore.subscribe((usersList) => {
+        unsubscribe = presenceStore.subscribe((usersList) => {
             const me = usersList.get(mucRoom.myJID);
             if (me && me.roomName && $shownRoomListStore === "") {
                 shownRoomListStore.set(me.roomName);
