@@ -52,7 +52,6 @@ test.describe('Chat', () => {
       await page.locator('#game canvas').click();
       await Map.walkTo(page, 'ArrowRight', 2_500);
       await Map.walkTo(page, 'ArrowUp', 500);
-      await page.pause();
       await Chat.expandLiveRooms(page);
       await Chat.liveRoomExist(page, 'liveZone');
 
