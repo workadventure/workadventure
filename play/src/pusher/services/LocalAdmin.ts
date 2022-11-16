@@ -1,7 +1,7 @@
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import type { AdminInterface } from "./AdminInterface";
 import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData } from "@workadventure/messages";
-import type { OpidWokaNamePolicy } from "@workadventure/messages";
+import { OpidWokaNamePolicy } from "@workadventure/messages";
 import {
     DISABLE_ANONYMOUS,
     ENABLE_CHAT,

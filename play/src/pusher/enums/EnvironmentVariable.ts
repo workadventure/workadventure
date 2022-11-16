@@ -1,4 +1,4 @@
-import { OpidWokaNamePolicy } from "../../messages/JsonMessages/OpidWokaNamePolicy";
+import { OpidWokaNamePolicy } from "@workadventure/messages";
 import { z, ZodError } from "zod";
 import type { FrontConfigurationInterface } from "../../common/FrontConfigurationInterface";
 
