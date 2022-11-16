@@ -74,21 +74,21 @@
 </script>
 
 <form
-    class="loginScene tw-w-screen tw-flex tw-flex-col tw-h-screen tw-px-10 md:tw-px-32 tw-pointer-events-auto tw-pt-20"
+    class="loginScene w-screen flex flex-col h-screen px-10 md:px-32 pointer-events-auto pt-20"
     style={getBackgroundColor() != undefined ? `background-color: ${getBackgroundColor()};` : ""}
     on:submit|preventDefault={submit}
 >
-    <section class="tw-h-fit tw-max-w-2xl tw-self-center">
-        <img src={logo} alt="logo" class="main-logo tw-w-full" />
+    <section class="h-fit max-w-2xl self-center">
+        <img src={logo} alt="logo" class="main-logo w-full" />
     </section>
-    <div class="tw-w-full sm:tw-w-96 md:tw-w-10/12 lg:tw-w-1/2 xl:tw-w-1/3 tw-rounded tw-mx-auto tw-text-center tw-p-8">
-        <section class="text-center tw-flex tw-h-fit tw-flex-col tw-justify-center tw-items-center">
-            <h2 class="tw-text-white tw-text-2xl">{$LL.login.input.name.placeholder()}</h2>
+    <div class="w-full sm:w-96 md:w-10/12 lg:w-1/2 xl:w-1/3 rounded mx-auto text-center p-8">
+        <section class="text-center flex h-fit flex-col justify-center items-center">
+            <h2 class="text-white text-2xl">{$LL.login.input.name.placeholder()}</h2>
             <!-- svelte-ignore a11y-autofocus -->
             <input
                 type="text"
                 name="loginSceneName"
-                class="tw-w-52 md:tw-w-96 tw-text-center tw-border-white"
+                class="w-52 md:w-96 text-center border-white"
                 autofocus
                 maxlength={MAX_USERNAME_LENGTH}
                 bind:value={name}
@@ -98,7 +98,7 @@
                 class:is-error={(name.trim() === "" && startValidating) || errorName !== ""}
             />
             {#if (name.trim() === "" && startValidating) || errorName !== ""}
-                <p class="err tw-text-pop-red tw-text-sm">
+                <p class="err text-pop-red text-sm">
                     {#if errorName}{errorName}{:else}{$LL.login.input.name.empty()}{/if}
                 </p>
             {/if}
@@ -107,22 +107,22 @@
         <!-- svelte-ignore a11y-autofocus -->
 
         {#if legalString}
-            <section class="terms-and-conditions tw-flex tw-h-fit">
+            <section class="terms-and-conditions flex h-fit">
                 <a style="display: none;" href="traduction">Need for traduction</a>
-                <p class="tw-text-white">
+                <p class="text-white">
                     {@html $LL.login.terms({
                         links: legalString,
                     })}
                 </p>
             </section>
         {/if}
-        <section class="action tw-flex tw-h-fit tw-justify-center">
+        <section class="action flex h-fit justify-center">
             <button type="submit" class="light loginSceneFormSubmit">{$LL.login.continue()}</button>
         </section>
     </div>
     {#if logo !== logoImg && gameManager.currentStartedRoom.showPoweredBy !== false}
-        <section class="text-right tw-flex powered-by tw-justify-center tw-items-end">
-            <img src={poweredByWorkAdventureImg} alt="Powered by WorkAdventure" class="tw-h-14" />
+        <section class="text-right flex powered-by justify-center items-end">
+            <img src={poweredByWorkAdventureImg} alt="Powered by WorkAdventure" class="h-14" />
         </section>
     {/if}
 </form>

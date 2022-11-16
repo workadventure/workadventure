@@ -35,10 +35,10 @@
 {#if $followStateStore === "requesting" && $followRoleStore === "follower"}
     <div
         class="interact-menu blue-dialog-box outline-light
-    tw-text-center tw-w-72 tw-absolute tw-bottom-36 tw-left-0 tw-right-0 tw-pointer-events-auto tw-z-[150] tw-right-0 tw-left-0 tw-m-auto"
+    text-center w-72 absolute bottom-36 left-0 right-0 pointer-events-auto z-[150] right-0 left-0 m-auto"
     >
-        <p class="tw-mt-2">{$LL.follow.interactMenu.title.follow({ leader: name($followUsersStore[0]) })}</p>
-        <div class="tw-flex tw-flex-row tw-justify-evenly">
+        <p class="mt-2">{$LL.follow.interactMenu.title.follow({ leader: name($followUsersStore[0]) })}</p>
+        <div class="flex flex-row justify-evenly">
             <button type="button" class="btn light" on:click|preventDefault={acceptFollowRequest}
                 >{$LL.follow.interactMenu.yes()}</button
             >
@@ -52,15 +52,15 @@
 {#if $followStateStore === "ending"}
     <div
         class="blue-dialog-box outline-light
-    tw-w-56 tw-min-h-10 tw-absolute tw-bottom-36 tw-text-center tw-m-auto tw-right-0 tw-left-0 tw-z-[150]"
+    w-56 min-h-10 absolute bottom-36 text-center m-auto right-0 left-0 z-[150]"
     >
         <p>{$LL.follow.interactMenu.title.interact()}</p>
         {#if $followRoleStore === "follower"}
-            <p class="tw-m-1">{$LL.follow.interactMenu.stop.follower({ leader: name($followUsersStore[0]) })}</p>
+            <p class="m-1">{$LL.follow.interactMenu.stop.follower({ leader: name($followUsersStore[0]) })}</p>
         {:else if $followRoleStore === "leader"}
-            <p class="tw-m-1">{$LL.follow.interactMenu.stop.leader()}</p>
+            <p class="m-1">{$LL.follow.interactMenu.stop.leader()}</p>
         {/if}
-        <div class="tw-flex tw-flex-row tw-justify-evenly">
+        <div class="flex flex-row justify-evenly">
             <button type="button" class="btn light" on:click|preventDefault={reset}
                 >{$LL.follow.interactMenu.yes()}</button
             >
@@ -74,16 +74,16 @@
 {#if $followStateStore === "active" || $followStateStore === "ending"}
     <div
         class="blue-dialog-box outline-light
-    tw-w-56 tw-min-h-10 tw-absolute tw-bottom-36 tw-text-center tw-m-auto tw-right-0 tw-left-0 tw-z-[150]"
+    w-56 min-h-10 absolute bottom-36 text-center m-auto right-0 left-0 z-[150]"
     >
         {#if $followRoleStore === "follower"}
-            <p class="tw-m-1">{$LL.follow.interactStatus.following({ leader: name($followUsersStore[0]) })}</p>
+            <p class="m-1">{$LL.follow.interactStatus.following({ leader: name($followUsersStore[0]) })}</p>
         {:else if $followUsersStore.length === 0}
-            <p class="tw-m-1">{$LL.follow.interactStatus.waitingFollowers()}</p>
+            <p class="m-1">{$LL.follow.interactStatus.waitingFollowers()}</p>
         {:else if $followUsersStore.length === 1}
-            <p class="tw-m-1">{$LL.follow.interactStatus.followed.one({ follower: name($followUsersStore[0]) })}</p>
+            <p class="m-1">{$LL.follow.interactStatus.followed.one({ follower: name($followUsersStore[0]) })}</p>
         {:else if $followUsersStore.length === 2}
-            <p class="tw-m-1">
+            <p class="m-1">
                 {$LL.follow.interactStatus.followed.two({
                     firstFollower: name($followUsersStore[0]),
                     secondFollower: name($followUsersStore[1]),

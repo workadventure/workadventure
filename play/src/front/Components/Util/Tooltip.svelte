@@ -24,7 +24,7 @@
     });
 </script>
 
-<div bind:this={tooltipElement} class="tooltip tw-w-fit">
+<div bind:this={tooltipElement} class="tooltip w-fit">
     <span bind:this={textElement} class="tooltiptext">{text}</span>
 </div>
 
@@ -39,15 +39,15 @@
             bottom: 10px;
             align-items: center;
             border-radius: 0.25rem;
-            --tw-bg-opacity: 1;
-            background-color: rgb(56 56 74 / var(--tw-bg-opacity));
+            --bg-opacity: 1;
+            background-color: rgb(56 56 74 / var(--bg-opacity));
             padding-left: 0.75rem;
             padding-right: 0.75rem;
             padding-top: 0.25rem;
             padding-bottom: 0.25rem;
             text-align: center;
-            --tw-text-opacity: 1;
-            color: rgb(255 255 255 / var(--tw-text-opacity));
+            --text-opacity: 1;
+            color: rgb(255 255 255 / var(--text-opacity));
             &::after {
                 left: 1.5rem;
             }

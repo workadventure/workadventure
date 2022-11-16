@@ -22,14 +22,14 @@
     }
 </script>
 
-<div class="tw-flex tw-flex-col tw-text-left tw-p-3">
+<div class="flex flex-col text-left p-3">
     <h3 class="blue-title">{$LL.report.title()}</h3>
     <p>{$LL.report.content()}</p>
     <form>
         <section>
-            <label class="tw-w-full">
+            <label class="w-full">
                 <span>{$LL.report.message.title()}</span>
-                <textarea type="text" class="tw-w-full" bind:value={reportMessage} />
+                <textarea type="text" class="w-full" bind:value={reportMessage} />
             </label>
             <p hidden={hiddenError}>{$LL.report.message.empty()}</p>
         </section>

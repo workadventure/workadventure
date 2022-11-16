@@ -20,11 +20,11 @@
     });
 </script>
 
-<div id="mozaic-layout" class="tw-flex tw-justify-center lg:tw-pt-9" bind:this={layoutDom}>
+<div id="mozaic-layout" class="flex justify-center lg:pt-9" bind:this={layoutDom}>
     <div
-        class="media-container tw-grid mozaic-grid tw-content-start"
-        class:tw-grid-cols-1={$streamableCollectionStore.size === 1}
-        class:tw-grid-cols-2={$streamableCollectionStore.size >= 2}
+        class="media-container grid mozaic-grid content-start"
+        class:grid-cols-1={$streamableCollectionStore.size === 1}
+        class:grid-cols-2={$streamableCollectionStore.size >= 2}
     >
         {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
             <MediaBox
@@ -38,7 +38,7 @@
             <MyCamera />
         {/if}
     </div>
-    <div class="tw-absolute tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4 tw-right-5 ">
+    <div class="absolute self-end z-[300] bottom-6 md:bottom-4 right-5 ">
         {#if $myCameraStore && !displayFullMedias}
             <MyCamera />
         {/if}

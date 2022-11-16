@@ -60,20 +60,20 @@
 
 <div
     class="report-menu-main
-    tw-text-center tw-absolute tw-left-0 tw-right-0 tw-bg-dark-purple/95 tw-rounded tw-text-white tw-p-3 tw-pointer-events-auto
-    md:tw-top-14 tw-w-full md:tw-w-1/2 tw-m-auto tw-z-[650]"
+    text-center absolute left-0 right-0 bg-dark-purple/95 rounded text-white p-3 pointer-events-auto
+    md:top-14 w-full md:w-1/2 m-auto z-[650]"
 >
     <section>
         <button type="button" class="close-window" on:click|preventDefault={close}>&times;</button>
         <h2>{$LL.report.moderate.title({ userName })}</h2>
     </section>
-    <section class="report-menu-action {disableReport ? 'tw-hidden' : ''}">
-        <section class="tw-flex tw-justify-center">
+    <section class="report-menu-action {disableReport ? 'hidden' : ''}">
+        <section class="flex justify-center">
             <button type="button" class={blockActive ? "disabled" : "light"} on:click|preventDefault={activateBlock}
                 >{$LL.report.moderate.block()}</button
             >
         </section>
-        <section class="tw-flex tw-justify-center">
+        <section class="flex justify-center">
             <button type="button" class={reportActive ? "disabled" : "light"} on:click|preventDefault={activateReport}
                 >{$LL.report.moderate.report()}</button
             >

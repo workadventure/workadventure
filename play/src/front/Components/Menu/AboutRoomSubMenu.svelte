@@ -66,22 +66,22 @@
     <h2>{$LL.menu.about.mapInfo()}</h2>
     <section class="container-overflow">
         <h3 class="blue-title">{mapName}</h3>
-        <p class="tw-whitespace-pre-line">{mapDescription}</p>
+        <p class="whitespace-pre-line">{mapDescription}</p>
         {#if mapLink}
-            <p class="tw-whitespace-pre-line">
+            <p class="whitespace-pre-line">
                 &gt; <a href={mapLink} target="_blank">{$LL.menu.about.mapLink()}</a> &lt;
             </p>
         {/if}
         <h3 class="blue-title" on:click={() => (expandedMapCopyright = !expandedMapCopyright)}>
             {$LL.menu.about.copyrights.map.title()}
         </h3>
-        <p class="tw-whitespace-pre-line" hidden={!expandedMapCopyright}>{mapCopyright}</p>
+        <p class="whitespace-pre-line" hidden={!expandedMapCopyright}>{mapCopyright}</p>
         <h3 class="blue-title" on:click={() => (expandedTilesetCopyright = !expandedTilesetCopyright)}>
             {$LL.menu.about.copyrights.tileset.title()}
         </h3>
         <section hidden={!expandedTilesetCopyright}>
             {#each tilesetCopyright as copyright}
-                <p class="tw-whitespace-pre-line">{copyright}</p>
+                <p class="whitespace-pre-line">{copyright}</p>
             {:else}
                 <p>{$LL.menu.about.copyrights.tileset.empty()}</p>
             {/each}
@@ -91,7 +91,7 @@
         </h3>
         <section hidden={!expandedAudioCopyright}>
             {#each audioCopyright as copyright}
-                <p class="tw-whitespace-pre-line">{copyright}</p>
+                <p class="whitespace-pre-line">{copyright}</p>
             {:else}
                 <p>{$LL.menu.about.copyrights.audio.empty()}</p>
             {/each}

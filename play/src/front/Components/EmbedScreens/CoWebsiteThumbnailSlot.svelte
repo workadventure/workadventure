@@ -112,7 +112,7 @@
     on:click={onClick}
 >
     <img
-        class="cowebsite-icon noselect clickable tw-bg-dark-blue/50 tw-p-0 tw-border-medium-purple tw-border-solid tw-rounded tw-pointer-events-auto hover:tw-border-light-purple hover:tw-bg-dark-blue/75 hover:tw-scale-105 tw-transition-all"
+        class="cowebsite-icon noselect clickable bg-dark-blue/50 p-0 border-medium-purple border-solid rounded pointer-events-auto hover:border-light-purple hover:bg-dark-blue/75 hover:scale-105 transition-all"
         class:hide={!iconLoaded}
         class:meeting={isMeeting}
         bind:this={icon}
@@ -219,7 +219,7 @@
     </svg>
 
     <!-- TODO use trigger message property -->
-    <div class="cowebsite-hover tw-opacity-1 md:tw-opacity-0" style="width: max-content;">
+    <div class="cowebsite-hover opacity-1 md:opacity-0" style="width: max-content;">
         <p>{$LL.cowebsite.open()} / {$LL.cowebsite.close()} <b>{cowebsiteName}</b></p>
     </div>
 </div>
