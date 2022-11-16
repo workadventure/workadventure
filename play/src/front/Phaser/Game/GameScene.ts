@@ -739,6 +739,10 @@ export class GameScene extends DirtyScene {
                     e
                 )
             );
+
+        if (gameManager.currentStartedRoom.backgroundColor != undefined) {
+            this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
+        }
     }
 
     /**
@@ -875,6 +879,18 @@ export class GameScene extends DirtyScene {
 
                 this.connection.groupUsersUpdateMessageStream.subscribe((message) => {
                     this.currentPlayerGroupId = message.groupId;
+                });
+
+                this.connection.joinMucRoomMessageStream.subscribe((mucRoomDefinitionMessage) => {
+                    iframeListener.sendJoinMucEventToChatIframe(
+                        mucRoomDefinitionMessage.url,
+                        mucRoomDefinitionMessage.name,
+                        mucRoomDefinitionMessage.type,
+                        mucRoomDefinitionMessage.subscribe
+                    );
+                });
+                this.connection.leaveMucRoomMessageStream.subscribe((leaveMucRoomMessage) => {
+                    iframeListener.sendLeaveMucEventToChatIframe(leaveMucRoomMessage.url);
                 });
 
                 this.messageSubscription = this.connection.worldFullMessageStream.subscribe((message) => {
@@ -1658,6 +1674,7 @@ ${escapedMessage}
                 for (const eventTile of eventTiles) {
                     this.gameMapFrontWrapper.putTile(eventTile.tile, eventTile.x, eventTile.y, eventTile.layer);
                 }
+                this.animatedTiles.updateAnimatedTiles();
             })
         );
         iframeListener.registerAnswerer("enablePlayersTracking", (enablePlayersTrackingEvent, source) => {
@@ -1884,7 +1901,7 @@ ${escapedMessage}
         areaName: string,
         areaType: AreaType,
         propertyName: string,
-        propertyValue: string | number | boolean
+        propertyValue: string | number | boolean | undefined
     ): void {
         this.gameMapFrontWrapper.setAreaProperty(areaName, areaType, propertyName, propertyValue);
     }
@@ -2260,11 +2277,10 @@ ${escapedMessage}
     public update(time: number, delta: number): void {
         this.dirty = false;
         this.currentTick = time;
-        if (!this.mapEditorModeManager?.isActive()) {
-            this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
-        } else {
+
+        this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
+        if (this.mapEditorModeManager?.isActive()) {
             this.mapEditorModeManager.update(time, delta);
-            this.cameraManager.move(this.userInputManager.getEventListForGameTick());
         }
 
         for (const addedPlayer of this.remotePlayersRepository.getAddedPlayers()) {

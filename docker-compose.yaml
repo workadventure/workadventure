@@ -29,6 +29,7 @@ services:
                     - 'maps.workadventure.localhost'
                     - 'oidc.workadventure.localhost'
                     - 'map-storage.workadventure.localhost'
+                    - 'xmpp.workadventure.localhost'
 
     play:
         image: thecodingmachine/nodejs:v2-18-bullseye
@@ -46,7 +47,7 @@ services:
             STARTUP_COMMAND_2: yarn typesafe-i18n
             STARTUP_COMMAND_3: cd ../libs/tailwind && yarn install
             STARTUP_COMMAND_4: cd ../map-editor && yarn install
-            STARTUP_COMMAND_5: while [ -f /usr/src/app/src/Messages/generate_request/need_regenerate ]; do sleep 1; done
+            STARTUP_COMMAND_5: while [ -f /usr/src/app/src/messages/generate_request/need_regenerate ]; do sleep 1; done
             DEBUG: "socket:*"
             DEBUG_ERROR_MESSAGES: "true"
             DEBUG_MODE: "$DEBUG_MODE"
@@ -90,9 +91,8 @@ services:
             ENABLE_OPENAPI_ENDPOINT: "true"
             START_ROOM_URL: "$START_ROOM_URL"
             # Only used if you set up a JWT authentication mechanism in Ejabberd
-            EJABBERD_JWT_SECRET: mySecretJwtToken
-            EJABBERD_DOMAIN: ejabberd
-            EJABBERD_WS_URI: ws://ejabberd:5443/ws
+            EJABBERD_JWT_SECRET: $EJABBERD_JWT_SECRET
+            EJABBERD_DOMAIN: $EJABBERD_DOMAIN
             ENABLE_CHAT: "$ENABLE_CHAT"
             ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
         labels:
@@ -115,7 +115,8 @@ services:
             UPLOADER_URL: http://uploader.workadventure.localhost
             EMBEDLY_KEY: $EMBEDLY_KEY
             ICON_URL: http://icon.workadventure.localhost
-            EJABBERD_DOMAIN: ejabberd
+            EJABBERD_DOMAIN: $EJABBERD_DOMAIN
+            EJABBERD_WS_URI: ws://xmpp.workadventure.localhost:5443/ws
             ENABLE_OPENID: "$OPID_CLIENT_ID"
             ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
         volumes:
@@ -178,6 +179,9 @@ services:
             PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
             PLAYER_VARIABLES_MAX_TTL: $PLAYER_VARIABLES_MAX_TTL
             EJABBERD_API_URI: http://ejabberd:5443/api/
+            EJABBERD_DOMAIN: $EJABBERD_DOMAIN
+            EJABBERD_USER: $EJABBERD_USER
+            EJABBERD_PASSWORD: $EJABBERD_PASSWORD
             ENABLE_CHAT: "$ENABLE_CHAT"
             ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
         volumes:
@@ -199,7 +203,7 @@ services:
             DEBUG: "*"
             STARTUP_COMMAND_1: yarn install
             STARTUP_COMMAND_2: cd ../libs/map-editor && yarn install
-            STARTUP_COMMAND_3: cd ../grpc-services && yarn install
+            STARTUP_COMMAND_3: cd ../messages && yarn install
             NODE_ENV: development
             PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
         volumes:
@@ -246,6 +250,8 @@ services:
 
     messages:
         image: thecodingmachine/workadventure-back-base:v1-18
+        platform:
+          linux/amd64
         environment:
             #STARTUP_COMMAND_0: sudo apt-get install -y inotify-tools
             STARTUP_COMMAND_1: yarn install
@@ -278,14 +284,22 @@ services:
             - "traefik.http.services.icon.loadbalancer.server.port=8080"
 
     ejabberd:
-        image: ghcr.io/processone/ejabberd:22.05
-        volumes:
-            - ./xmpp/ejabberd.yml:/opt/ejabberd/conf/ejabberd.yml
-        labels:
-            - "traefik.enable=true"
-            - "traefik.http.routers.xmpp.rule=Host(`xmpp.workadventure.localhost`)"
-            - "traefik.http.routers.xmpp.entryPoints=web"
-            - "traefik.http.services.xmpp.loadbalancer.server.port=5380"
+      image: workadventure/ejabberd:v1
+      ports:
+        - '5443:5443'
+      environment:
+        CTL_ON_CREATE: register $EJABBERD_USER $EJABBERD_DOMAIN $EJABBERD_PASSWORD
+        JWT_SECRET: $EJABBERD_JWT_SECRET
+        EJABBERD_DOMAIN: $EJABBERD_DOMAIN
+        EJABBERD_USER: $EJABBERD_USER
+        EJABBERD_PASSWORD: $EJABBERD_PASSWORD
+      volumes:
+        - ./xmpp/ejabberd.template.yml:/opt/ejabberd/conf/ejabberd.template.yml
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.xmpp.rule=Host(`xmpp.workadventure.localhost`)"
+        - "traefik.http.routers.xmpp.entryPoints=web"
+        - "traedocfik.http.services.xmpp.loadbalancer.server.port=5443"
 
     # A mock server to test OpenID connect connectivity
     oidc-server-mock:

@@ -14,12 +14,12 @@ export class FrontController extends BaseHttpController {
         super(app);
 
         let indexPath: string;
-        if (fs.existsSync("index.html")) {
-            // In dev mode
-            indexPath = "index.html";
-        } else if (fs.existsSync("dist/public/index.html")) {
+        if (fs.existsSync("dist/public/index.html")) {
             // In prod mode
             indexPath = "dist/public/index.html";
+        } else if (fs.existsSync("index.html")) {
+            // In dev mode
+            indexPath = "index.html";
         } else {
             throw new Error("Could not find index.html file");
         }
@@ -37,7 +37,11 @@ export class FrontController extends BaseHttpController {
     }
 
     private getFullUrl(req: Request): string {
-        return `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+        let protocol = req.header("X-Forwarded-Proto");
+        if (!protocol) {
+            protocol = req.protocol;
+        }
+        return `${protocol}://${req.get("host")}${req.originalUrl}`;
     }
 
     front(): void {
@@ -79,7 +83,10 @@ export class FrontController extends BaseHttpController {
         });
 
         this.app.get("/static/images/favicons/manifest.json", (req: Request, res: Response) => {
-            return this.displayManifestJson(req, res, req.get("url"));
+            if (req.query.url == undefined) {
+                return res.status(500).send("playUrl is empty in query pramater of the request");
+            }
+            return this.displayManifestJson(req, res, req.query.url.toString());
         });
 
         this.app.get("/login", (req: Request, res: Response) => {
@@ -135,6 +142,11 @@ export class FrontController extends BaseHttpController {
 
     private async displayFront(req: Request, res: Response, url: string) {
         const builder = new MetaTagsBuilder(url);
+
+        const redirectUrl = await builder.getRedirectUrl();
+        if (redirectUrl) {
+            return res.redirect(redirectUrl);
+        }
 
         const metaTagsData = await builder.getMeta(req.header("User-Agent"));
 

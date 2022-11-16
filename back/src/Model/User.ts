@@ -224,6 +224,8 @@ export class User implements Movable {
                         setVariable.getPersist()
                     )
                     .catch((e) => console.error("An error occurred while saving world variable: ", e));
+
+                this.updateDataUserSameUUID(setVariable, details);
             } else if (scope === SetPlayerVariableMessage.Scope.ROOM) {
                 this.variables
                     .saveRoomVariable(
@@ -235,37 +237,7 @@ export class User implements Movable {
                     )
                     .catch((e) => console.error("An error occurred while saving room variable: ", e));
 
-                // Very special case: if we are updating a player variable AND if if the variable is persisted, we must also
-                // update the variable of all other users with the same UUID!
-                if (setVariable.getPersist()) {
-                    // Let's have a look at all other users sharing the same UUID
-                    const brothers = this.brothersFinder.getBrothers(this);
-                    for (const brother of brothers) {
-                        brother.variables
-                            .saveRoomVariable(
-                                setVariable.getName(),
-                                setVariable.getValue(),
-                                setVariable.getPublic(),
-                                setVariable.getTtl()?.getValue(),
-                                // We don't need to persist this for every player as this will write in the same place in DB.
-                                false
-                            )
-                            .catch((e) =>
-                                console.error(
-                                    "An error occurred while saving room variable for a user with same UUID: ",
-                                    e
-                                )
-                            );
-
-                        // Let's dispatch the message to the user.
-                        const playerDetailsUpdatedMessage = new PlayerDetailsUpdatedMessage();
-                        playerDetailsUpdatedMessage.setUserid(brother.id);
-                        playerDetailsUpdatedMessage.setDetails(details);
-                        const subMessage = new SubMessage();
-                        subMessage.setPlayerdetailsupdatedmessage(playerDetailsUpdatedMessage);
-                        brother.emitInBatch(subMessage);
-                    }
-                }
+                this.updateDataUserSameUUID(setVariable, details);
             } else {
                 const _exhaustiveCheck: never = scope;
             }
@@ -290,5 +262,40 @@ export class User implements Movable {
 
     public getVariables(): PlayerVariables {
         return this.variables;
+    }
+
+    private updateDataUserSameUUID(
+        setVariable: SetPlayerVariableMessage,
+        details: SetPlayerDetailsMessage | undefined
+    ) {
+        // Very special case: if we are updating a player variable AND if if the variable is persisted, we must also
+        // update the variable of all other users with the same UUID!
+        if (setVariable.getPersist()) {
+            // Let's have a look at all other users sharing the same UUID
+            const brothers = this.brothersFinder.getBrothers(this);
+
+            for (const brother of brothers) {
+                brother.variables
+                    .saveRoomVariable(
+                        setVariable.getName(),
+                        setVariable.getValue(),
+                        setVariable.getPublic(),
+                        setVariable.getTtl()?.getValue(),
+                        // We don't need to persist this for every player as this will write in the same place in DB.
+                        false
+                    )
+                    .catch((e) =>
+                        console.error("An error occurred while saving room variable for a user with same UUID: ", e)
+                    );
+
+                // Let's dispatch the message to the user.
+                const playerDetailsUpdatedMessage = new PlayerDetailsUpdatedMessage();
+                playerDetailsUpdatedMessage.setUserid(brother.id);
+                playerDetailsUpdatedMessage.setDetails(details);
+                const subMessage = new SubMessage();
+                subMessage.setPlayerdetailsupdatedmessage(playerDetailsUpdatedMessage);
+                brother.emitInBatch(subMessage);
+            }
+        }
     }
 }

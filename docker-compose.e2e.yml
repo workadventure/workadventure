@@ -113,11 +113,11 @@ services:
       STARTUP_COMMAND_1: ""
 
   ejabberd:
-    image: thecodingmachine/workadventure-simple-ecs:${DOCKER_TAG:-develop}
+    image: thecodingmachine/workadventure-ejabberd:${DOCKER_TAG:-develop}
     build:
-      context: xmpp/
+      context: ./xmpp
       cache_from:
-        - thecodingmachine/workadventure-simple-ecs:${DOCKER_TAG:-develop}
+        - thecodingmachine/workadventure-ejabberd:${DOCKER_TAG:-develop}
       args:
         BUILDKIT_INLINE_CACHE: 1
     volumes: []

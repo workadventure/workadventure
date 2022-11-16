@@ -34,8 +34,8 @@ services:
       - JITSI_URL
       - JITSI_PRIVATE_MODE
       - ENABLE_FEATURE_MAP_EDITOR
-      - PUSHER_URL=//${PUSHER_HOST}
-      - ICON_URL=//${ICON_HOST}
+      - PUSHER_URL=https://${PUSHER_HOST}
+      - ICON_URL=https://${ICON_HOST}
       - TURN_SERVER
       - TURN_USER
       - TURN_PASSWORD
@@ -49,16 +49,16 @@ services:
       - SECRET_KEY
       - API_URL
       - FRONT_URL=https://${FRONT_HOST}
+      - CHAT_URL=https://${CHAT_HOST}
       - PUBLIC_MAP_STORAGE_URL=https://${MAP_STORAGE_HOST}
       - START_ROOM_URL
-      - EJABBERD_DOMAIN=ejabberd
       - OPID_PROMPT=login
       - ENABLE_CHAT
       - ENABLE_CHAT_UPLOAD
+      - UPLOADER_URL=https://${UPLOADER_HOST}
       # Only used if you set up a JWT authentication mechanism in Ejabberd
-      - EJABBERD_JWT_SECRET
-      - EJABBERD_DOMAIN
-      - EJABBERD_WS_URI
+      - EJABBERD_JWT_SECRET=${EJABBERD_JWT_SECRET}
+      - EJABBERD_DOMAIN=${EJABBERD_DOMAIN}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.play.rule=Host(`${FRONT_HOST}`)"
@@ -74,10 +74,12 @@ services:
   chat:
     image: thecodingmachine/workadventure-chat:${VERSION}
     environment:
-      - PUSHER_URL=//${PUSHER_HOST}
-      - UPLOADER_URL=//${UPLOADER_HOST}
+      - PUSHER_URL=https://${PUSHER_HOST}
+      - UPLOADER_URL=https://${UPLOADER_HOST}
       - EMBEDLY_KEY=${EMBEDLY_KEY}
       - ENABLE_CHAT_UPLOAD=${ENABLE_CHAT_UPLOAD}
+      - EJABBERD_DOMAIN=${EJABBERD_DOMAIN}
+      - EJABBERD_WS_URI=${EJABBERD_WS_URI}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.chat.rule=Host(`${CHAT_HOST}`)"
@@ -116,7 +118,9 @@ services:
       - PUBLIC_MAP_STORAGE_URL=https://${MAP_STORAGE_HOST}
       - PLAYER_VARIABLES_MAX_TTL
       - EJABBERD_API_URI
-      - EJABBERD_DOMAIN
+      - EJABBERD_DOMAIN=${EJABBERD_DOMAIN}
+      - EJABBERD_USER=${EJABBERD_USER}
+      - EJABBERD_PASSWORD=${EJABBERD_PASSWORD}
       - ENABLE_CHAT
       - ENABLE_CHAT_UPLOAD
     labels:
@@ -134,7 +138,7 @@ services:
   uploader:
     image: thecodingmachine/workadventure-uploader:${VERSION}
     environment:
-      - UPLOADER_URL=//${UPLOADER_HOST}
+      - UPLOADER_URL=https://${UPLOADER_HOST}
       #AWS
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
@@ -179,7 +183,27 @@ services:
       - redisdata:/data
 
   ejabberd:
-    image: thecodingmachine/workadventure-simple-ecs:${VERSION}
+    image: workadventure/ejabberd:v1
+    ports:
+      - '5443:5443'
+    environment:
+      - CTL_ON_CREATE=register ${EJABBERD_USER} ${EJABBERD_DOMAIN} ${EJABBERD_PASSWORD}
+      - JWT_SECRET=${EJABBERD_JWT_SECRET}
+      - EJABBERD_DOMAIN=${EJABBERD_DOMAIN}
+      - EJABBERD_USER=${EJABBERD_USER}
+      - EJABBERD_PASSWORD=${EJABBERD_PASSWORD}
+    volumes:
+      - ../../xmpp/ejabberd.template.yml:/opt/ejabberd/conf/ejabberd.template.yml
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ejabberd.rule=Host(`${EJABBERD_HOST}`)"
+      - "traefik.http.routers.ejabberd.entryPoints=web"
+      - "traefik.http.services.ejabberd.loadbalancer.server.port=5443"
+      - "traefik.http.routers.ejabberd-ssl.rule=Host(`${EJABBERD_HOST}`)"
+      - "traefik.http.routers.ejabberd-ssl.entryPoints=websecure"
+      - "traefik.http.routers.ejabberd-ssl.service=ejabberd"
+      - "traefik.http.routers.ejabberd-ssl.tls=true"
+      - "traefik.http.routers.ejabberd-ssl.tls.certresolver=myresolver"
 
   map-storage:
     image: thecodingmachine/workadventure-map-storage:${VERSION}

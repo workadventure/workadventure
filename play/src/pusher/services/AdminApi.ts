@@ -27,6 +27,10 @@ export const isFetchMemberDataByUuidResponse = z.object({
         description: "The email of the fetched user, it can be an email, an uuid or null.",
         example: "example@workadventu.re",
     }),
+    username: extendApi(z.string().optional().nullable(), {
+        description: "The name of the fetched user.",
+        example: "Greg",
+    }),
     userUuid: extendApi(z.string(), {
         description: "The uuid of the fetched user, it can be an email, an uuid.",
         example: "998ce839-3dea-4698-8b41-ebbdf7688ad9",
@@ -54,7 +58,7 @@ export const isFetchMemberDataByUuidResponse = z.object({
     userRoomToken: extendApi(z.optional(z.string()), { description: "", example: "" }),
     jabberId: extendApi(z.string().nullable().optional(), {
         description: "The jid (JabberID) that can be used to connect this particular user to its XMPP server",
-        example: "john.doe@myxpppserver.example.com",
+        example: "john.doe@myxpppserver.example.com/uuid",
     }),
     jabberPassword: extendApi(z.string().nullable().optional(), {
         description: "The password to connect to the XMPP server of this user",

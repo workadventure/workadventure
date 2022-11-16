@@ -229,9 +229,6 @@ message SetPlayerVariableMessage {
   google.protobuf.Value value = 2;
 }*/
 
-message XmppMessage {
-  string stanza = 1;
-}
 
 /**
  * A variable, along the tag describing who it is targeted at
@@ -317,8 +314,9 @@ message SubMessage {
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
     PingMessage pingMessage = 11;
-    //XmppMessage xmppMessage = 12;
     EditMapCommandMessage editMapCommandMessage = 13;
+    JoinMucRoomMessage joinMucRoomMessage = 14;
+    LeaveMucRoomMessage leaveMucRoomMessage = 15;
   }
 }
 
@@ -494,8 +492,7 @@ message ServerToClientMessage {
     GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
     ErrorScreenMessage errorScreenMessage = 26;
     AnswerMessage answerMessage = 28;
-    //XmppSettingsMessage xmppSettingsMessage = 29;
-    //XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 30;
+    XmppSettingsMessage xmppSettingsMessage = 29;
     MoveToPositionMessage moveToPositionMessage = 31;
   }
 }
@@ -625,6 +622,8 @@ message SubToPusherRoomMessage {
     VariableWithTagMessage variableMessage = 1;
     ErrorMessage errorMessage = 2;
     EditMapCommandMessage editMapCommandMessage = 3;
+    JoinMucRoomMessage joinMucRoomMessage = 4;
+    LeaveMucRoomMessage leaveMucRoomMessage = 5;
   }
 }
 
@@ -710,25 +709,24 @@ message EmptyMessage {
 
 
 
-/*******************************************************µ************************
+/********************************************************************************
  * Start Chat Messages
  ********************************************************************************/
-message IframeToPusherMessage{
+message ChatMessagePrompt{
+  string roomId = 1;
   oneof message {
-    XmppMessage xmppMessage = 1;
-    BanUserByUuidMessage banUserByUuidMessage = 2;
-  }
-}
-message PusherToIframeMessage{
-  oneof message {
-    XmppSettingsMessage xmppSettingsMessage = 1;
-    XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 2;
-    XmppMessage xmppMessage = 3;
-    XmppConnectionNotAuthorizedMessage xmppConnectionNotAuthorized= 4;
-    ErrorMessage errorMessage = 5;
+    JoinMucRoomMessage joinMucRoomMessage = 2;
+    LeaveMucRoomMessage leaveMucRoomMessage = 3;
   }
 }
 
+message JoinMucRoomMessage{
+  MucRoomDefinitionMessage mucRoomDefinitionMessage = 1;
+}
+
+message LeaveMucRoomMessage{
+  string url = 1;
+}
 message MucRoomDefinitionMessage {
   string url = 1;
   string name = 2;
@@ -740,23 +738,8 @@ message XmppSettingsMessage{
   string jid = 1;
   string conferenceDomain = 2;
   repeated MucRoomDefinitionMessage rooms = 3;
-}
-
-message XmppConnectionNotAuthorizedMessage{
-
-}
-
-
-/**
- * Status of the connection to the XMPP server.
- * In case something goes wrong with the XMPP server, we are notified here.
- */
-message XmppConnectionStatusChangeMessage{
-  enum Status {
-    DISCONNECTED = 0;
-  }
-
-  Status status = 1;
+  string jabberId = 4;
+  string jabberPassword = 5;
 }
 
 message BanUserByUuidMessage{

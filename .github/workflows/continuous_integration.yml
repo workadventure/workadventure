@@ -49,8 +49,12 @@ jobs:
         run: yarn install
         working-directory: "messages"
 
+      - name: "Install libs dependencies"
+        run: yarn install
+        working-directory: "libs/messages"
+
       - name: "Build proto messages"
-        run: yarn run ts-proto && yarn run copy-to-play-ts-proto && yarn run proto && yarn run copy-to-play && yarn run json-copy-to-play
+        run: yarn run ts-proto && yarn run proto && yarn run copy-to-play
         working-directory: "messages"
 
       - name: "Generate i18n files"
@@ -117,6 +121,10 @@ jobs:
         run: yarn install
         working-directory: "libs/tailwind"
 
+      - name: "Install libs/messages dependencies"
+        run: yarn install
+        working-directory: "libs/messages"
+
       - name: "Install dependencies"
         run: yarn install
         working-directory: "chat"
@@ -126,7 +134,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run ts-proto && yarn run copy-to-chat-ts-proto && yarn run json-copy-to-chat
+        run: yarn run ts-proto
         working-directory: "messages"
 
       - name: "Pretty"
@@ -137,15 +145,14 @@ jobs:
         run: yarn run typesafe-i18n
         working-directory: "chat"
 
-      # TODO active
-      #- name: "Build"
-      #  run: yarn run build
-      #  env:
-      #    PUSHER_URL: "//localhost:8080"
-      #    ADMIN_URL: "//localhost:80"
-      #    # upgrade RAM available to 6GB
-      #    NODE_OPTIONS: --max-old-space-size=6144
-      #  working-directory: "chat"
+      - name: "Build"
+        run: yarn run build
+        env:
+          PUSHER_URL: "//localhost:8080"
+          ADMIN_URL: "//localhost:80"
+          # upgrade RAM available to 6GB
+          NODE_OPTIONS: --max-old-space-size=6144
+        working-directory: "chat"
 
       - name: "Svelte check"
         run: yarn run svelte-check
@@ -192,8 +199,12 @@ jobs:
         run: yarn install
         working-directory: "messages"
 
+      - name: "Install libs dependencies"
+        run: yarn install
+        working-directory: "libs/messages"
+
       - name: "Build proto messages"
-        run: yarn run proto && yarn run copy-to-back && yarn run json-copy-to-back
+        run: yarn run proto && yarn run ts-proto && yarn run copy-to-back
         working-directory: "messages"
 
       - name: "Build"
@@ -266,13 +277,17 @@ jobs:
         run: yarn install
         working-directory: "messages"
 
+      - name: "Build proto messages"
+        run: yarn run ts-proto
+        working-directory: "messages"
+
       - name: "Install libs/map-editor dependencies"
         run: yarn install
         working-directory: "libs/map-editor"
 
-      - name: "Build proto messages"
-        run: yarn run ts-proto-map-storage && yarn run copy-to-map-storage-ts-proto
-        working-directory: "messages"
+      - name: "Install libs/messages dependencies"
+        run: yarn install
+        working-directory: "libs/messages"
 
       - name: "Build"
         run: yarn run build
@@ -380,6 +395,7 @@ jobs:
         with:
           node-version: 16
 
+
       - name: "Install dependencies"
         run: npm ci
         working-directory: "tests"
@@ -388,9 +404,21 @@ jobs:
         run: yarn install
         working-directory: "libs/map-editor"
 
+      - name: "Install libs/messages dependencies"
+        run: yarn install
+        working-directory: "libs/messages"
+
       - name: "Install play dependencies"
         run: yarn install --froze-lockfile
         working-directory: "play"
+
+      - name: "Install messages dependencies"
+        run: yarn install
+        working-directory: "messages"
+
+      - name: "Build proto messages"
+        run: yarn run ts-proto
+        working-directory: "messages"
 
       - name: "Build API typings"
         run: yarn run build-typings

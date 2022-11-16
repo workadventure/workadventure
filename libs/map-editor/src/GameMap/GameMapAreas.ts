@@ -391,23 +391,23 @@ export class GameMapAreas {
     public setProperty(
         area: AreaData,
         key: string,
-        value: string | number | boolean,
+        value: string | number | boolean | undefined,
     ): void {
         switch (key) {
             case "focusable": {
-                if (typeof value === "boolean") {
+                if (typeof value === "boolean" || value === undefined) {
                     area.properties.focusable = value;
                 }
                 break;
             }
             case "zoomMargin": {
-                if (typeof value === "number") {
+                if (typeof value === "number" || value === undefined) {
                     area.properties.zoomMargin = value;
                 }
                 break;
             }
             case "silent": {
-                if (typeof value === "boolean") {
+                if (typeof value === "boolean" || value === undefined) {
                     area.properties.silent = value;
                 }
                 break;

@@ -217,17 +217,22 @@ export class AuthenticateController extends BaseHttpController {
                 if (authTokenData.accessToken == undefined) {
                     //if not nonce and code, user connected in anonymous
                     //get data with identifier and return token
-                    res.json({ ...resUserData, authToken: token });
+                    res.json({
+                        authToken: token,
+                        username: authTokenData?.username,
+                        locale: authTokenData?.locale,
+                        ...resUserData,
+                    });
                     return;
                 }
 
                 const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
                 res.json({
-                    ...resCheckTokenAuth,
-                    ...resUserData,
-                    authToken: token,
                     username: authTokenData?.username,
+                    authToken: token,
                     locale: authTokenData?.locale,
+                    ...resUserData,
+                    ...resCheckTokenAuth,
                 });
                 return;
             } catch (err) {

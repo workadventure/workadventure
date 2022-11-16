@@ -5,33 +5,20 @@
     import LL from "../i18n/i18n-svelte";
     import { activeThreadStore, settingsViewStore } from "../Stores/ActiveThreadStore";
     import ChatUser from "./ChatUser.svelte";
-    import { createEventDispatcher } from "svelte";
     import ChatMessagesList from "./ChatMessagesList.svelte";
     import OnlineUsers from "./OnlineUsers.svelte";
-    import { MucRoom, User } from "../Xmpp/MucRoom";
-    import { Ban, GoTo, RankDown, RankUp } from "../Type/CustomEvent";
+    import { MucRoom } from "../Xmpp/MucRoom";
     import { onDestroy } from "svelte";
     import Loader from "./Loader.svelte";
-
-    const dispatch = createEventDispatcher<{
-        goTo: GoTo;
-        rankUp: RankUp;
-        rankDown: RankDown;
-        ban: Ban;
-    }>();
+    import { derived } from "svelte/store";
 
     export let activeThread: MucRoom;
 
-    const usersListStore = activeThread.getPresenceStore();
-    const meStore = activeThread.getMeStore();
+    const presenceStore = activeThread.getPresenceStore();
     const readyStore = activeThread.getRoomReadyStore();
+    const me = derived(activeThread.getPresenceStore(), ($presenceStore) => $presenceStore.get(activeThread.myJID));
 
     let messagesList: ChatMessagesList;
-
-    function openChat(user: User) {
-        return user;
-        //dispatch('activeThread', user);
-    }
 
     onDestroy(() => {
         settingsViewStore.set(false);
@@ -71,7 +58,7 @@
                     </div>
                 {/if}
             </div>
-            <OnlineUsers {usersListStore} />
+            <OnlineUsers {presenceStore} />
         </div>
         <div
             id="settings"
@@ -99,7 +86,7 @@
             <div
                 class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5 tw-pb-0.5"
             >
-                {#if $meStore.isAdmin}
+                {#if $me && $me.isAdmin}
                     <button class="wa-action" type="button" on:click|stopPropagation={() => activeThread.reInitialize()}
                         ><RefreshCwIcon size="13" class="tw-mr-2" /> {$LL.reinit()}
                     </button>
@@ -112,18 +99,8 @@
                 <p class="tw-px-5 tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
                     {$LL.users()}
                 </p>
-                {#each [...$usersListStore] as [_, user]}
-                    <ChatUser
-                        mucRoom={activeThread}
-                        {openChat}
-                        {user}
-                        on:goTo={(event) => dispatch("goTo", event.detail)}
-                        on:rankUp={(event) => dispatch("rankUp", event.detail)}
-                        on:rankDown={(event) => dispatch("rankDown", event.detail)}
-                        on:ban={(event) => dispatch("ban", event.detail)}
-                        searchValue=""
-                        {meStore}
-                    />
+                {#each [...$presenceStore] as [_, user]}
+                    <ChatUser mucRoom={activeThread} {user} searchValue="" />
                 {/each}
             </div>
         </div>

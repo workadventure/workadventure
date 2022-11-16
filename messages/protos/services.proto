@@ -15,6 +15,7 @@ service RoomManager {
   rpc sendAdminMessageToRoom(AdminRoomMessage) returns (EmptyMessage);
   rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (EmptyMessage);
   rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (EmptyMessage);
+  rpc sendChatMessagePrompt(ChatMessagePrompt) returns (EmptyMessage);
   rpc getRooms(EmptyMessage) returns (RoomsList);
   rpc ping(PingMessage) returns (PingMessage);
 }

@@ -207,7 +207,6 @@ export class FileController {
                     addCorsHeaders(res);
                     return res.end(JSON.stringify(uploadedFile));
                 }catch(err){
-                    console.error("FILE upload error", err);
                     if(err instanceof ByteLenghtBufferException){
                         res.writeStatus("413 Request Entity Too Large");
                         addCorsHeaders(res);
@@ -242,6 +241,7 @@ export class FileController {
                         addCorsHeaders(res);
                         return res.end(JSON.stringify({message: 'not-logged'}));
                     }
+                    console.error("FILE upload error", err);
                     res.writeStatus("500 Internal Server Error");
                     addCorsHeaders(res);
                     return res.end('An error happened');

@@ -24,12 +24,13 @@ import { WokaSlot } from "../Components/SelectWoka/WokaSlot";
 import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
 import { wokaList } from "@workadventure/messages";
 import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
+import { get } from "svelte/store";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
 
 export class SelectCharacterScene extends AbstractCharacterScene {
-    protected selectedWoka!: Phaser.GameObjects.Sprite | null; // null if we are selecting the "customize" option
+    protected selectedWoka: Phaser.GameObjects.Sprite | null = null; // null if we are selecting the "customize" option
     protected playerModels!: BodyResourceDescriptionInterface[];
 
     private charactersDraggableGrid!: DraggableGrid;
@@ -79,9 +80,14 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
         //this function must stay at the end of preload function
         this.loader.addLoader();
+        if (gameManager.currentStartedRoom.backgroundColor != undefined) {
+            this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
+        }
     }
 
     public create() {
+        super.create();
+
         waScaleManager.zoomModifier = 1;
         this.selectedWoka = null;
         this.selectedCollectionIndex = 0;
@@ -115,6 +121,10 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.bindEventHandlers();
 
         this.onResize();
+
+        if (get(collectionsSizeStore) < 1) {
+            this.nextSceneToCustomizeScene();
+        }
     }
 
     public nextSceneToCameraScene(): void {

@@ -32,8 +32,15 @@ import {
     PingMessage,
     QueryMessage,
     EditMapCommandWithKeyMessage,
+    ChatMessagePrompt,
 } from "./Messages/generated/messages_pb";
-import { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
+import {
+    sendUnaryData,
+    ServerDuplexStream,
+    ServerErrorResponse,
+    ServerUnaryCall,
+    ServerWritableStream,
+} from "@grpc/grpc-js";
 import { socketManager } from "./Services/SocketManager";
 import {
     emitError,
@@ -360,6 +367,20 @@ const roomManager: IRoomManagerServer = {
     },
     ping(call: ServerUnaryCall<PingMessage, EmptyMessage>, callback: sendUnaryData<PingMessage>): void {
         callback(null, call.request);
+    },
+    sendChatMessagePrompt(
+        call: ServerUnaryCall<ChatMessagePrompt, EmptyMessage>,
+        callback: sendUnaryData<EmptyMessage>
+    ): void {
+        socketManager
+            .dispatchChatMessagePrompt(call.request)
+            .then(() => {
+                callback(null, new EmptyMessage());
+            })
+            .catch((err) => {
+                console.error(err);
+                callback(err as ServerErrorResponse, new EmptyMessage());
+            });
     },
 };
 

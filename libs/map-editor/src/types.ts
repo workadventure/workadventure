@@ -20,7 +20,7 @@ export interface PredefinedPropertyData {
     name: string;
     description: string;
     turnedOn: boolean;
-    additionalProperties: Record<string, string | number | boolean | {}>;
+    additionalProperties: Record<string, string | number | boolean | {} | undefined>;
 }
 
 export enum GameMapProperties {

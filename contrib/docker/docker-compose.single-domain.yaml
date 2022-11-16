@@ -44,10 +44,6 @@ services:
       TURN_PASSWORD: ""
       OPID_LOGOUT_REDIRECT_URL: "$OPID_LOGOUT_REDIRECT_URL"
       DISABLE_ANONYMOUS: "$DISABLE_ANONYMOUS"
-            # Only used if you set up a JWT authentication mechanism in Ejabberd
-      EJABBERD_JWT_SECRET: mySecretJwtToken
-      EJABBERD_DOMAIN: ejabberd
-      EJABBERD_WS_URI: ws://ejabberd:5443/ws
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
@@ -69,6 +65,9 @@ services:
       EMBEDLY_KEY: $EMBEDLY_KEY
       ADMIN_API_URL: $ADMIN_API_URL
       ENABLE_CHAT_UPLOAD: $ENABLE_CHAT_UPLOAD
+      EJABBERD_DOMAIN: $EJABBERD_DOMAIN
+      # Must be defined to wss:yourdomainname.com/ejabberd
+      EJABBERD_WS_URI: $EJABBERD_WS_URI
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
@@ -106,12 +105,11 @@ services:
       OPID_LOCALE_CLAIM: $OPID_LOCALE_CLAIM
       DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
       START_ROOM_URL: "$START_ROOM_URL"
+      # Only used if you set up a JWT authentication mechanism in Ejabberd
+      EJABBERD_JWT_SECRET: $EJABBERD_JWT_SECRET
+      EJABBERD_DOMAIN: $EJABBERD_DOMAIN
       ENABLE_CHAT: "$ENABLE_CHAT"
       ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
-      # Only used if you set up a JWT authentication mechanism in Ejabberd
-      EJABBERD_JWT_SECRET: mySecretJwtToken
-      EJABBERD_DOMAIN: ejabberd
-      EJABBERD_WS_URI: ws://ejabberd:5443/ws
     volumes:
       - ./pusher:/usr/src/app
     labels:
@@ -128,18 +126,28 @@ services:
       - "traefik.http.routers.pusher-ssl.service=pusher"
 
   ejabberd:
-    image: ghcr.io/processone/ejabberd:22.05
+    image: workadventure/ejabberd:v1
+    environment:
+      CTL_ON_CREATE: register $EJABBERD_USER $EJABBERD_DOMAIN $EJABBERD_PASSWORD
+      JWT_SECRET: $EJABBERD_JWT_SECRET
+      EJABBERD_DOMAIN: $EJABBERD_DOMAIN
+      EJABBERD_USER: $EJABBERD_USER
+      EJABBERD_PASSWORD: $EJABBERD_PASSWORD
     volumes:
-      - ./xmpp/ejabberd.yml:/opt/ejabberd/conf/ejabberd.yml
+      - ./xmpp/ejabberd.template.yml:/opt/ejabberd/conf/ejabberd.template.yml
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.xmpp.rule=Host(`xmpp.workadventure.localhost`)"
-      - "traefik.http.routers.xmpp.entryPoints=web"
-      - "traefik.http.services.xmpp.loadbalancer.server.port=5380"
-      - "traefik.http.routers.xmpp-ssl.rule=Host(`xmpp.workadventure.localhost`)"
-      - "traefik.http.routers.xmpp-ssl.entryPoints=websecure"
-      - "traefik.http.routers.xmpp-ssl.tls=true"
-      - "traefik.http.routers.xmpp-ssl.service=xmpp"
+      - "traefik.http.middlewares.strip-ejabberd-prefix.stripprefix.prefixes=/ejabberd"
+      - "traefik.http.routers.ejabberd.rule=PathPrefix(`/ejabberd`)"
+      - "traefik.http.routers.ejabberd.middlewares=strip-ejabberd-prefix@docker"
+      - "traefik.http.routers.ejabberd.entryPoints=web,traefik"
+      - "traefik.http.services.ejabberd.loadbalancer.server.port=5443"
+      - "traefik.http.routers.ejabberd-ssl.rule=PathPrefix(`/ejabberd`)"
+      - "traefik.http.routers.ejabberd-ssl.middlewares=strip-ejabberd-prefix@docker"
+      - "traefik.http.routers.ejabberd-ssl.entryPoints=websecure"
+      - "traefik.http.routers.ejabberd-ssl.tls=true"
+      - "traefik.http.routers.ejabberd-ssl.service=ejabberd"
+
 
   maps:
     image: thecodingmachine/php:8.1-v4-apache-node12
@@ -191,6 +199,8 @@ services:
       NODE_ENV: development
       EJABBERD_API_URI: $EJABBERD_API_URI
       EJABBERD_DOMAIN: $EJABBERD_DOMAIN
+      EJABBERD_USER: $EJABBERD_USER
+      EJABBERD_PASSWORD: $EJABBERD_PASSWORD
       ENABLE_CHAT: "$ENABLE_CHAT"
       ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
     volumes:

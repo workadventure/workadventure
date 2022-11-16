@@ -12,7 +12,6 @@ import HyperExpress from "hyper-express";
 import { cors } from "./middlewares/Cors";
 import { ENABLE_OPENAPI_ENDPOINT } from "./enums/EnvironmentVariable";
 import { PingController } from "./controllers/PingController";
-import { IoSocketChatController } from "./controllers/IoSocketChatController";
 import { FrontController } from "./controllers/FrontController";
 import fs from "fs";
 import type * as uWebsockets from "uWebSockets.js";
@@ -34,12 +33,12 @@ class App {
         this.webserver.set_error_handler(globalErrorHandler);
 
         let path: string;
-        if (fs.existsSync("public")) {
-            // In dev mode
-            path = "public";
-        } else if (fs.existsSync("dist/public")) {
+        if (fs.existsSync("dist/public")) {
             // In prod mode
             path = "dist/public";
+        } else if (fs.existsSync("public")) {
+            // In dev mode
+            path = "public";
         } else {
             throw new Error("Could not find public folder");
         }
@@ -75,7 +74,6 @@ class App {
 
         // Socket controllers
         new IoSocketController(this.app);
-        new IoSocketChatController(this.app);
 
         // Http controllers
         new AuthenticateController(this.webserver);

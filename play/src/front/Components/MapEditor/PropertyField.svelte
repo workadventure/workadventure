@@ -1,30 +1,42 @@
 <script lang="ts">
     import type { PredefinedPropertyData } from "@workadventure/map-editor";
-    // import walk from "../../../../public/static/images/logo-WA-min.png";
+    import { createEventDispatcher } from "svelte";
+    import walk from "../../../../public/static/images/logo-WA-min.png";
     import { mapEditorSelectedPropertyStore } from "../../Stores/MapEditorStore";
 
-    export let propertyData: PredefinedPropertyData = {
-        name: "Name",
-        description: "Description",
-        turnedOn: false,
-        additionalProperties: {},
-    };
+    export let propertyData: PredefinedPropertyData;
 
-    function setPropertiesData() {
+    const dispatch = createEventDispatcher();
+
+    function setAsCurrentlySelectedPropertiesData() {
+        if ($mapEditorSelectedPropertyStore) {
+            mapEditorSelectedPropertyStore.set(undefined);
+            return;
+        }
         mapEditorSelectedPropertyStore.set(propertyData);
+    }
+
+    function emitUpdateEvent() {
+        dispatch("update");
     }
 </script>
 
 <div
     class="map-editor-property-option-box tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple tw-cursor-pointer"
-    on:click={setPropertiesData}
+    on:click={setAsCurrentlySelectedPropertiesData}
 >
-    <!-- <img src={walk} alt="icon" class="option-box-icon" /> -->
+    <img src={walk} alt="icon" class="option-box-icon" />
     <div class="option-box-text">
         <h3>{propertyData.name}</h3>
         <p>{propertyData.description}</p>
     </div>
-    <input type="checkbox" id="silent" />
+    <input
+        type="checkbox"
+        id="silent"
+        bind:checked={propertyData.turnedOn}
+        on:change={emitUpdateEvent}
+        on:click|stopPropagation
+    />
 </div>
 
 <style lang="scss">

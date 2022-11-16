@@ -1,14 +1,15 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   //  "include": ["src/**/*"],
   "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist/",
     "sourceMap": true,
     "moduleResolution": "node",
-    "types": ["node"],
     //"module": "CommonJS",
     "module": "ESNext",
     "target": "ES2020",
+    "baseUrl": "./",
     "declaration": false,
     "downlevelIteration": true,
     "jsx": "react",

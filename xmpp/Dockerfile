@@ -1,3 +1,5 @@
-FROM ghcr.io/processone/ejabberd:22.05
+FROM workadventure/ejabberd:v1
 
-COPY --chown=ejabberd ./ejabberd.yml /opt/ejabberd/conf/ejabberd.yml
+USER root
+
+COPY ejabberd.template.yml /opt/ejabberd/conf/ejabberd.template.yml

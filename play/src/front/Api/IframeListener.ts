@@ -37,7 +37,7 @@ import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
 import type { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
 import type { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
 import type { MessageUserJoined } from "../Connexion/ConnexionModels";
-import { availabilityStatusToJSON } from "../../messages/ts-proto-generated/protos/messages";
+import { availabilityStatusToJSON } from "@workadventure/messages";
 import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
@@ -53,6 +53,7 @@ import {
     modalVisibilityStore,
 } from "../Stores/ModalStore";
 import { connectionManager } from "../Connexion/ConnectionManager";
+import { gameManager } from "../Phaser/Game/GameManager";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -304,7 +305,6 @@ class IframeListener {
                     }
 
                     const iframeEvent = iframeEventGuarded.data;
-                    console.info("iframeEvent.type", iframeEvent.type);
                     if (iframeEvent.type === "showLayer") {
                         this._showLayerStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "hideLayer") {
@@ -801,6 +801,13 @@ class IframeListener {
         if (!connectionManager.currentRoom) {
             throw new Error("Race condition : Current room is not defined yet");
         }
+        const xmppSettingsMessage = gameManager.getCurrentGameScene().connection?.xmppSettingsMessage;
+        if (xmppSettingsMessage) {
+            this.postMessageToChat({
+                type: "xmppSettingsMessage",
+                data: xmppSettingsMessage,
+            });
+        }
         this.postMessageToChat({
             type: "settings",
             data: {
@@ -889,7 +896,7 @@ class IframeListener {
             this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
         }
         try {
-            if (!this.chatIframe) {
+            if (!this.chatIframe || !this.chatIframe.contentWindow || !this.chatIframe.contentWindow.postMessage) {
                 throw new Error("No chat iFrame registered");
             } else {
                 this.chatIframe.contentWindow?.postMessage(message, this.chatIframe?.src);

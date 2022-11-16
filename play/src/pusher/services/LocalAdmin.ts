@@ -23,6 +23,10 @@ class LocalAdmin implements AdminInterface {
         characterLayers: string[],
         locale?: string
     ): Promise<FetchMemberDataByUuidResponse> {
+        const mucRooms = [{ name: "Connected users", url: playUri, type: "default", subscribe: false }];
+        if (ENABLE_CHAT) {
+            mucRooms.push({ name: "Welcome", url: `${playUri}/forum/welcome`, type: "forum", subscribe: false });
+        }
         return {
             email: userIdentifier,
             userUuid: userIdentifier,
@@ -31,7 +35,7 @@ class LocalAdmin implements AdminInterface {
             visitCardUrl: null,
             textures: (await localWokaService.fetchWokaDetails(characterLayers)) ?? [],
             userRoomToken: undefined,
-            mucRooms: [{ name: "Connected users", url: playUri, type: "default", subscribe: false }],
+            mucRooms,
             activatedInviteUser: true,
         };
     }

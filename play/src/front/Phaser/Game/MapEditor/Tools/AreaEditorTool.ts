@@ -1,10 +1,10 @@
-import type { CommandConfig } from "@workadventure/map-editor";
+import type { AreaData, CommandConfig } from "@workadventure/map-editor";
 import { AreaType } from "@workadventure/map-editor";
 import type { Subscription } from "rxjs";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import type { EditMapCommandMessage } from "@workadventure/messages";
-import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
+import { mapEditorSelectedAreaPreviewStore, mapEditorSelectedPropertyStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import type { GameScene } from "../../GameScene";
@@ -78,7 +78,9 @@ export class AreaEditorTool extends MapEditorTool {
                 const config: AreaData = {
                     ...data,
                     visible: true,
-                    properties: {},
+                    properties: {
+                        customProperties: {},
+                    },
                 };
                 // execute command locally
                 this.mapEditorModeManager.executeCommand(
@@ -176,7 +178,9 @@ export class AreaEditorTool extends MapEditorTool {
                         id: newAreaId,
                         name: `STATIC_AREA_${newAreaId}`,
                         visible: true,
-                        properties: {},
+                        properties: {
+                            customProperties: {},
+                        },
                         width: 100,
                         height: 100,
                         x: this.scene.input.activePointer.worldX - 50,

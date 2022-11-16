@@ -49,6 +49,7 @@ import {
     SubToPusherRoomMessage,
     EditMapCommandWithKeyMessage,
     EditMapCommandMessage,
+    ChatMessagePrompt,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -1130,6 +1131,24 @@ export class SocketManager {
                 // TODO delete room;
             }
         }
+    }
+
+    async dispatchChatMessagePrompt(chatMessagePrompt: ChatMessagePrompt): Promise<boolean> {
+        const room = await this.roomsPromises.get(chatMessagePrompt.getRoomid());
+        console.log(chatMessagePrompt.getRoomid());
+        if (!room) {
+            return false;
+        }
+
+        const subMessage = new SubToPusherRoomMessage();
+        if (chatMessagePrompt.hasJoinmucroommessage()) {
+            subMessage.setJoinmucroommessage(chatMessagePrompt.getJoinmucroommessage());
+        } else if (chatMessagePrompt.hasLeavemucroommessage()) {
+            subMessage.setLeavemucroommessage(chatMessagePrompt.getLeavemucroommessage());
+        }
+        room.sendSubMessageToRoom(subMessage);
+
+        return true;
     }
 }
 

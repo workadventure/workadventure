@@ -1,6 +1,9 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
-
+(
+cd messages || exit
+yarn run precommit
+)
 (
 cd play || exit
 yarn run precommit

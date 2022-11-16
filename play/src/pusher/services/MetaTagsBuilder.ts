@@ -1,6 +1,13 @@
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
-import type { MetaTagsData, RequiredMetaTagsData, MapDetailsData } from "@workadventure/messages";
-import { isMapDetailsData } from "@workadventure/messages";
+import {
+    MetaTagsData,
+    RequiredMetaTagsData,
+    MapDetailsData,
+    isMapDetailsData,
+    RoomRedirect,
+    isRoomRedirect,
+    ErrorApiData,
+} from "@workadventure/messages";
 import { adminService } from "./AdminService";
 import axios from "axios";
 import { ADMIN_API_URL } from "../enums/EnvironmentVariable";
@@ -8,6 +15,8 @@ import { ADMIN_API_URL } from "../enums/EnvironmentVariable";
 export const MetaTagsDefaultValue: RequiredMetaTagsData = {
     title: "WorkAdventure",
     description: "Create your own digital office, Metaverse and meet online with the world.",
+    author: "WorkAdventure team",
+    provider: "WorkAdventure",
     favIcons: [
         {
             rel: "icon",
@@ -47,7 +56,7 @@ export const MetaTagsDefaultValue: RequiredMetaTagsData = {
         {
             rel: "apple-touch-icon",
             sizes: "114x114",
-            src: "static/images/favicons/apple-icon-114x114.png",
+            src: "/static/images/favicons/apple-icon-114x114.png",
         },
         {
             rel: "apple-touch-icon",
@@ -188,6 +197,8 @@ export const MetaTagsDefaultValue: RequiredMetaTagsData = {
 };
 
 export class MetaTagsBuilder {
+    private mapDetails: MapDetailsData | RoomRedirect | ErrorApiData | undefined;
+
     constructor(private url: string) {}
 
     public async getMeta(userAgent: string): Promise<RequiredMetaTagsData> {
@@ -210,20 +221,33 @@ export class MetaTagsBuilder {
         return MetaTagsDefaultValue;
     }
 
-    private async fetchMapDetails(): Promise<MapDetailsData | undefined> {
+    private async fetchMapDetailsData(): Promise<MapDetailsData | undefined> {
         if (!ADMIN_API_URL) {
             return undefined;
         }
 
-        const fetchedData = await adminService.fetchMapDetails(this.url);
+        const fetchedData = await this.fetchMapDetails();
 
         const checkMapDetails = isMapDetailsData.safeParse(fetchedData);
         return checkMapDetails.success ? checkMapDetails.data : undefined;
     }
 
+    private async fetchMapDetails(): Promise<MapDetailsData | RoomRedirect | ErrorApiData | undefined> {
+        if (!ADMIN_API_URL) {
+            return undefined;
+        }
+        if (this.mapDetails) {
+            return this.mapDetails;
+        }
+
+        this.mapDetails = await adminService.fetchMapDetails(this.url);
+
+        return this.mapDetails;
+    }
+
     private async getMetaFromAdmin(): Promise<MetaTagsData | undefined> {
         try {
-            const mapDetails = await this.fetchMapDetails();
+            const mapDetails = await this.fetchMapDetailsData();
             if (mapDetails === undefined) {
                 return undefined;
             }
@@ -270,6 +294,8 @@ export class MetaTagsBuilder {
             description: mapDescriptionProperty?.value
                 ? String(mapDescriptionProperty.value)
                 : MetaTagsDefaultValue.description,
+            author: MetaTagsDefaultValue.author,
+            provider: MetaTagsDefaultValue.provider,
             favIcons: MetaTagsDefaultValue.favIcons,
             manifestIcons: MetaTagsDefaultValue.manifestIcons,
             appName: MetaTagsDefaultValue.appName,
@@ -293,5 +319,14 @@ export class MetaTagsBuilder {
         }
 
         return this.metaValuesFromMapFile(mapFile);
+    }
+
+    public async getRedirectUrl(): Promise<string | undefined> {
+        const mapDetails = await this.fetchMapDetails();
+        const safeParse = isRoomRedirect.safeParse(mapDetails);
+        if (safeParse.success) {
+            return safeParse.data.redirectUrl;
+        }
+        return undefined;
     }
 }
