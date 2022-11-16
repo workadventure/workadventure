@@ -146,7 +146,7 @@ test.describe('Chat', () => {
       // Close timeline
       //await Chat.closeTimeline(page);
 
-      
+
       // Exit of liveZone
       await page.locator('#game canvas').click();
       await Map.walkTo(page, 'ArrowLeft', 2_000);
@@ -185,6 +185,7 @@ test.describe('Chat', () => {
       await expect(page.locator('.errorScreen p.code')).toContainText('CONNECTION_');
 
       await startContainer(pusher);
+      await page.waitForSelector('#game canvas', {timeout: TIMEOUT_TO_GET_LIST});
       await Chat.slideToUsers(page);
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
     });

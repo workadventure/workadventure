@@ -16,3 +16,4 @@ function createActiveThreadStore() {
 
 export const activeThreadStore = createActiveThreadStore();
 export const settingsViewStore = writable<boolean>(false);
+export const usersListViewStore = writable<boolean>(false);

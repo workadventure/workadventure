@@ -7,7 +7,9 @@
 
 <div
     class={`tw-text-xs ${
-        [...$presenceStore].filter(([, user]) => user.active).length > 0 ? "tw-text-green" : "tw-text-lighter-purple"
+        [...$presenceStore].filter(([, user]) => user.active).length > 0
+            ? "tw-text-pop-green"
+            : "tw-text-lighter-purple"
     } tw-mt-0`}
 >
     <b>{[...$presenceStore].filter(([, user]) => user.active).length}</b>
