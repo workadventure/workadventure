@@ -67,6 +67,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         if (this.gameScene.getMapEditorModeManager()?.isActive()) {
             mapEditorModeDragCameraPointerDownStore.set(true);
         }
+        this.gameScene.getActivatablesManager().handlePointerDownEvent();
     }
 
     public handlePointerMoveEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
@@ -95,10 +96,6 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         switch (event.code) {
             case "KeyE": {
                 mapEditorModeStore.switchMode(!get(mapEditorModeStore));
-                break;
-            }
-            case "KeyI": {
-                console.log(this.gameScene.getGameMap().getNextObjectId());
                 break;
             }
             default: {

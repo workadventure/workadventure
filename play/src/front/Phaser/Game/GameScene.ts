@@ -635,6 +635,7 @@ export class GameScene extends DirtyScene {
         );
 
         this.subscribeToGameMapChanged();
+        this.subscribeToEntitiesManagerObservables();
 
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
@@ -1763,6 +1764,7 @@ ${escapedMessage}
                             );
                             // Unsubscribe if needed and subscribe to GameMapChanged event again
                             this.subscribeToGameMapChanged();
+                            this.subscribeToEntitiesManagerObservables();
                             //Destroy the colliders of the old tilemapLayer
                             this.physics.add.world.colliders.destroy();
                             //Create new colliders with the new GameMap
@@ -2166,6 +2168,7 @@ ${escapedMessage}
         this.activatablesManager.updateActivatableObjectsDistances([
             ...Array.from(this.MapPlayersByKey.values()),
             ...this.actionableItems.values(),
+            ...this.gameMapFrontWrapper.getEntities().filter((entity) => entity.isActivatable()),
         ]);
         this.activatablesManager.deduceSelectedActivatableObjectByDistance();
     }
@@ -2441,6 +2444,23 @@ ${escapedMessage}
                         })
                         .catch((reason) => console.warn(reason));
                 }
+            });
+    }
+
+    private subscribeToEntitiesManagerObservables(): void {
+        this.gameMapFrontWrapper
+            .getEntitiesManager()
+            .getPointerOverEntityObservable()
+            .subscribe((entity) => {
+                this.activatablesManager.handlePointerOverActivatableObject(entity);
+                this.markDirty();
+            });
+        this.gameMapFrontWrapper
+            .getEntitiesManager()
+            .getPointerOutEntityObservable()
+            .subscribe((entity) => {
+                this.activatablesManager.handlePointerOutActivatableObject();
+                this.markDirty();
             });
     }
 

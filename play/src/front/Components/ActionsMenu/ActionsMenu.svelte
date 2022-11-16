@@ -51,7 +51,7 @@
 {#if actionsMenuData}
     <div class="actions-menu nes-container is-rounded">
         <button type="button" class="nes-btn is-error close" on:click={closeActionsMenu}>&times;</button>
-        <h2>{actionsMenuData.playerName}</h2>
+        <h2>{actionsMenuData.menuName}</h2>
         <div class="actions">
             {#each sortedActions ?? [] as action}
                 <button

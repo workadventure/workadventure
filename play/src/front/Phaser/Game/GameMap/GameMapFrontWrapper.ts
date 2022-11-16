@@ -16,6 +16,7 @@ import { MathUtils } from "@workadventure/math-utils";
 import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
 import type { GameScene } from "../GameScene";
 import { EntitiesManager } from "./EntitiesManager";
+import { Entity } from "../../ECS/Entity";
 
 export type LayerChangeCallback = (
     layersChangedByAction: Array<ITiledMapLayer>,
@@ -115,6 +116,7 @@ export class GameMapFrontWrapper {
             }
         }
 
+        // TODO: Load up entities from JSON
         this.entitiesManager = new EntitiesManager(this.scene, this);
     }
 
@@ -543,6 +545,14 @@ export class GameMapFrontWrapper {
 
     public getGameMap(): GameMap {
         return this.gameMap;
+    }
+
+    public getEntitiesManager(): EntitiesManager {
+        return this.entitiesManager;
+    }
+
+    public getEntities(): Entity[] {
+        return this.entitiesManager.getEntities();
     }
 
     private triggerAllProperties(): void {

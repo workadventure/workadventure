@@ -1,5 +1,10 @@
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
+import { get, Unsubscriber } from "svelte/store";
+import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
+import { createColorStore } from "../../Stores/OutlineColorStore";
+import { ActivatableInterface } from "../Game/ActivatableInterface";
 import type { GameScene } from "../Game/GameScene";
+import { OutlineableInterface } from "../Game/OutlineableInterface";
 
 export enum EntityEvent {
     Moved = "Moved",
@@ -14,12 +19,17 @@ export interface EntityConfig {
 }
 
 // NOTE: Tiles-based entity for now. Individual images later on
-export class Entity extends Phaser.GameObjects.Image {
+export class Entity extends Phaser.GameObjects.Image implements ActivatableInterface, OutlineableInterface {
+    public readonly activationRadius: number = 96;
+    private readonly outlineColorStore = createColorStore();
+    private readonly outlineColorStoreUnsubscribe: Unsubscriber;
+
     private id: number;
     private collisionGrid?: number[][];
 
-    private outlined: boolean;
     private beingRepositioned: boolean;
+
+    private activatable: boolean;
 
     private oldPositionTopLeft: { x: number; y: number };
 
@@ -27,13 +37,27 @@ export class Entity extends Phaser.GameObjects.Image {
         super(scene, x, y, config.image);
 
         this.oldPositionTopLeft = this.getTopLeft();
-        this.outlined = false;
         this.beingRepositioned = false;
+
+        this.activatable = config.interactive ?? false;
 
         this.id = config.id;
         this.collisionGrid = config.collisionGrid;
 
         this.setDepth(this.y + this.displayHeight * 0.5);
+
+        this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
+            if (color === undefined) {
+                this.getOutlinePlugin()?.remove(this);
+            } else {
+                this.getOutlinePlugin()?.remove(this);
+                this.getOutlinePlugin()?.add(this, {
+                    thickness: 2,
+                    outlineColor: color,
+                });
+            }
+            (this.scene as GameScene).markDirty();
+        });
 
         if (config.interactive) {
             this.setInteractive({ cursor: "pointer" });
@@ -45,6 +69,19 @@ export class Entity extends Phaser.GameObjects.Image {
         this.scene.add.existing(this);
     }
 
+    public destroy(fromScene?: boolean | undefined): void {
+        this.outlineColorStoreUnsubscribe();
+        super.destroy();
+    }
+
+    public getPosition(): { x: number; y: number } {
+        return { x: this.x, y: this.y };
+    }
+
+    public activate(): void {
+        this.toggleActionsMenu();
+    }
+
     public getCollisionGrid(): number[][] | undefined {
         return this.collisionGrid;
     }
@@ -53,28 +90,39 @@ export class Entity extends Phaser.GameObjects.Image {
         return this.collisionGrid?.map((row) => row.map((value) => (value === 1 ? -1 : value)));
     }
 
+    public setFollowOutlineColor(color: number): void {
+        this.outlineColorStore.setFollowColor(color);
+    }
+
+    public removeFollowOutlineColor(): void {
+        this.outlineColorStore.removeFollowColor();
+    }
+
+    public setApiOutlineColor(color: number): void {
+        this.outlineColorStore.setApiColor(color);
+    }
+
+    public removeApiOutlineColor(): void {
+        this.outlineColorStore.removeApiColor();
+    }
+
+    public pointerOverOutline(color: number): void {
+        this.outlineColorStore.pointerOver(color);
+    }
+
+    public pointerOutOutline(): void {
+        this.outlineColorStore.pointerOut();
+    }
+
+    public characterCloseByOutline(color: number): void {
+        this.outlineColorStore.characterCloseBy(color);
+    }
+
+    public characterFarAwayOutline(): void {
+        this.outlineColorStore.characterFarAway();
+    }
+
     private bindEventHandlers(): void {
-        this.on(Phaser.Input.Events.POINTER_OVER, () => {
-            if (this.outlined) {
-                return;
-            }
-            this.getOutlinePlugin()?.add(this, {
-                thickness: 1,
-                outlineColor: 0x0000ff,
-            });
-            (this.scene as GameScene).markDirty();
-            this.outlined = true;
-        });
-
-        this.on(Phaser.Input.Events.POINTER_OUT, () => {
-            if (!this.outlined) {
-                return;
-            }
-            this.getOutlinePlugin()?.remove(this);
-            (this.scene as GameScene).markDirty();
-            this.outlined = false;
-        });
-
         this.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             this.x = Math.floor(dragX / 32) * 32;
             this.y = Math.floor(dragY / 32) * 32;
@@ -93,5 +141,35 @@ export class Entity extends Phaser.GameObjects.Image {
 
     private getOutlinePlugin(): OutlinePipelinePlugin | undefined {
         return this.scene.plugins.get("rexOutlinePipeline") as unknown as OutlinePipelinePlugin | undefined;
+    }
+
+    private toggleActionsMenu(): void {
+        if (get(actionsMenuStore) !== undefined) {
+            actionsMenuStore.clear();
+            return;
+        }
+        // actionsMenuStore.initialize(`${this.id}`);
+        actionsMenuStore.initialize("Cheapest Table you can find");
+        for (const action of this.getDefaultActionsMenuActions()) {
+            actionsMenuStore.addAction(action);
+        }
+    }
+
+    private getDefaultActionsMenuActions(): ActionsMenuAction[] {
+        const actions: ActionsMenuAction[] = [];
+        actions.push({
+            actionName: "Appreciate table",
+            protected: true,
+            priority: 1,
+            callback: () => {
+                console.log("THIS TABLE WAS APPRECIATED");
+            },
+        });
+
+        return actions;
+    }
+
+    public isActivatable(): boolean {
+        return this.activatable;
     }
 }

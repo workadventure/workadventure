@@ -46,6 +46,10 @@ export class ActivatablesManager {
         }
     }
 
+    public handlePointerDownEvent(): void {
+        this.selectedActivatableObjectByPointer?.activate();
+    }
+
     public getSelectedActivatableObject(): ActivatableInterface | undefined {
         return this.selectedActivatableObjectByPointer ?? this.selectedActivatableObjectByDistance;
     }
