@@ -163,6 +163,7 @@ test.describe('Chat', () => {
       await Chat.slideToUsers(page);
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
 
+      await Chat.slideToChat(page);
       await Chat.expandForums(page);
       await Chat.forumExist(page, 'Welcome');
     });
