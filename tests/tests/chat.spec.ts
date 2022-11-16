@@ -185,7 +185,6 @@ test.describe('Chat', () => {
       await expect(page.locator('.errorScreen p.code')).toContainText('CONNECTION_');
 
       await startContainer(pusher);
-      await page.waitForSelector('#game canvas', {timeout: TIMEOUT_TO_GET_LIST});
       await Chat.slideToUsers(page);
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
     });
