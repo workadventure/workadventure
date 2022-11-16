@@ -6,8 +6,9 @@
     import { fly } from "svelte/transition";
     import LL from "../i18n/i18n-svelte";
     import Loader from "./Loader.svelte";
-    import { derived } from "svelte/store";
+    import { derived, get, Unsubscriber } from "svelte/store";
     import { shownRoomListStore } from "../Stores/ChatStore";
+    import { onDestroy, onMount } from "svelte";
 
     export let mucRoom: MucRoom;
     export let searchValue: string;
@@ -20,6 +21,21 @@
     const loadingSubscribersStore = mucRoom.getLoadingSubscribersStore();
     const presenceStore = mucRoom.getPresenceStore();
     const me = derived(presenceStore, ($presenceStore) => $presenceStore.get(mucRoom.myJID));
+
+    let unsubscribe: Unsubscriber;
+
+    onMount(() => {
+        presenceStore.subscribe((usersList) => {
+            const me = usersList.get(mucRoom.myJID);
+            if (me && me.roomName && $shownRoomListStore === "") {
+                shownRoomListStore.set(me.roomName);
+            }
+        });
+    });
+
+    onDestroy(() => {
+        unsubscribe();
+    });
 
     $: usersByMaps = [...$presenceStore.values()]
         .filter((user: User) => user.name.toLocaleLowerCase().includes(searchValue))

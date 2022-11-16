@@ -21,7 +21,6 @@
         navChat,
         showForumsStore,
         showLivesStore,
-        shownRoomListStore,
         showTimelineStore,
         timelineActiveStore,
         timelineMessagesToSee,
@@ -157,21 +156,7 @@
                 <nav class="nav">
                     <div class="background" class:chat={$navChat === "chat"} />
                     <ul>
-                        <li
-                            class:active={$navChat === "users"}
-                            on:click={() => {
-                                if (defaultMucRoom) {
-                                    const presenceStore = defaultMucRoom.getPresenceStore();
-                                    if (presenceStore) {
-                                        const me = get(presenceStore).get(defaultMucRoom.myJID);
-                                        if (me && me.roomName) {
-                                            shownRoomListStore.set(me.roomName);
-                                        }
-                                    }
-                                }
-                                navChat.set("users");
-                            }}
-                        >
+                        <li class:active={$navChat === "users"} on:click={() => navChat.set("users")}>
                             {$LL.users()}
                         </li>
                         <li class:active={$navChat === "chat"} on:click={() => navChat.set("chat")}>Chat</li>
