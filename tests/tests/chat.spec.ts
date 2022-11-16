@@ -25,7 +25,9 @@ test.describe('Chat', () => {
     );
     const nickname = getUniqueNickname('A');
     await login(page, nickname, 2);
-    await hideNoCamera(page);
+    if(browserName === 'chromium') {
+      await hideNoCamera(page);
+    }
     await openChat(page);
     const ejabberd = await findContainer('ejabberd');
 
