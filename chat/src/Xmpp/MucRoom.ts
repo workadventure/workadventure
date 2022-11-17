@@ -100,24 +100,6 @@ export class MucRoom extends AbstractRoom {
                 presenceId
             );
     }
-    private async sendSubscribe() {
-        const subscribeId = uuid();
-        this.subscriptions.set("firstSubscribe", subscribeId);
-        this.sendPresence(true);
-        const response = await this.xmppClient.socket.joinRoom(this.recipient, this.xmppClient.getPlayerName(), {
-            id: subscribeId,
-        });
-        if (_VERBOSE)
-            console.warn(
-                `[XMPP][${this.name}]`,
-                ">> Subscribe sent from",
-                this.xmppClient.getPlayerName(),
-                "to",
-                this.roomJid.local
-            );
-
-        //this.sendUserInfo();
-    }
     private sendUserInfo(presenceId: string = uuid()) {
         this.xmppClient.socket.sendUserInfo(this.recipient, presenceId, {
             jid: this.xmppClient.getMyJID(),
