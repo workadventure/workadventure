@@ -26,6 +26,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     private id: number;
     private collisionGrid?: number[][];
+    private properties: { [key: string]: unknown | undefined };
 
     private beingRepositioned: boolean;
 
@@ -43,6 +44,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
         this.id = config.id;
         this.collisionGrid = config.collisionGrid;
+        this.properties = config.properties ?? {};
 
         this.setDepth(this.y + this.displayHeight * 0.5);
 
@@ -148,7 +150,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             actionsMenuStore.clear();
             return;
         }
-        // actionsMenuStore.initialize(`${this.id}`);
         actionsMenuStore.initialize("Cheapest Table you can find");
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
@@ -157,15 +158,25 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     private getDefaultActionsMenuActions(): ActionsMenuAction[] {
         const actions: ActionsMenuAction[] = [];
-        actions.push({
-            actionName: "Appreciate table",
-            protected: true,
-            priority: 1,
-            callback: () => {
-                console.log("THIS TABLE WAS APPRECIATED");
-            },
-        });
-
+        for (const key of Object.keys(this.properties)) {
+            switch (key) {
+                case "openWebsite": {
+                    actions.push({
+                        actionName: "Open Website",
+                        protected: true,
+                        priority: 1,
+                        callback: () => {
+                            console.log("TRY TO OPEN WEBSITE");
+                            console.log(this.properties[key]);
+                        },
+                    });
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+        }
         return actions;
     }
 
