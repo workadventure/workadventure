@@ -77,11 +77,7 @@ export class MucRoom extends AbstractRoom {
     }
 
     public connect() {
-        //if (userStore.get().isLogged && this.subscribe && this.type !== "live") {
-        //    this.sendSubscribe();
-        //} else {
         this.sendPresence(true);
-        //}
     }
 
     // Functions used to send message to the server
@@ -108,11 +104,9 @@ export class MucRoom extends AbstractRoom {
         const subscribeId = uuid();
         this.subscriptions.set("firstSubscribe", subscribeId);
         this.sendPresence(true);
-        console.log("SENDING SUBSCRIBE");
         const response = await this.xmppClient.socket.joinRoom(this.recipient, this.xmppClient.getPlayerName(), {
             id: subscribeId,
         });
-        console.log("SEND SUBSCRIBE", response);
         if (_VERBOSE)
             console.warn(
                 `[XMPP][${this.name}]`,
@@ -533,10 +527,6 @@ export class MucRoom extends AbstractRoom {
             } else if (this.subscriptions.get("firstSubscribe") === presence.id) {
                 this.subscriptions.delete("firstSubscribe");
                 this.closed = false;
-                //this.sendPresence(true);
-                if (this.type === "default") {
-                    //void this.sendRequestAllSubscribers();
-                }
             }
         }
         const from = JID.parse(presence.from);

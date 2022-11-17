@@ -208,7 +208,6 @@
         transition: all 0.2s ease-in-out;
         pointer-events: none;
         visibility: hidden;
-        //display: none;
         &.show {
             left: 0;
             pointer-events: auto;
@@ -222,11 +221,6 @@
             top: 13px;
             position: absolute;
             right: 12px;
-            //background: rgba(27, 27, 41, 0.95);
-            //border-radius: 7px;
-            //border-bottom-left-radius: 0;
-            //border-top-left-radius: 0;
-            //padding: 4px 6px 4px 4px;
             width: fit-content;
             height: fit-content;
             .close-window {
@@ -234,16 +228,6 @@
                 width: 1.6rem;
                 position: initial;
             }
-            //top: 1%;
-            //padding: 0 5px 0 3px;
-            //min-height: fit-content;
-            //position: absolute;
-            //right: -21px;
-            //z-index: -1;
-            //font-size: 21px;
-            //border-bottom-left-radius: 0;
-            //border-top-left-radius: 0;
-            //background: rgba(27, 27, 41, 0.95);
         }
     }
 </style>
