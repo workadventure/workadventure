@@ -24,7 +24,7 @@ export enum Direction{
     Down = "Down",
     Right = "Right"
 }
-export class MapObjectsStore implements Readable<MapEntity[]>
+export class MapEntitiesStore implements Readable<MapEntity[]>
 {
     private allDirection =[Direction.Left, Direction.Up, Direction.Down, Direction.Right]
     private mapObjectsStore = writable<MapEntity[]>([]);
@@ -37,7 +37,7 @@ export class MapObjectsStore implements Readable<MapEntity[]>
     constructor()
     {
         let allCollections = [furnitureCollection, officeCollection];
-        const folder = "/src/Components/images/objects/";
+        const folder = "/src/front/Components/images/objects/";
         let tagSet = new Set<string>();
         allCollections.forEach(collection => {
             collection.collection.forEach(entity => {

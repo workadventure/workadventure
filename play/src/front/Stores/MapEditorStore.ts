@@ -4,7 +4,7 @@ import { connectionManager } from "../Connexion/ConnectionManager";
 import { ENABLE_FEATURE_MAP_EDITOR } from "../Enum/EnvironmentVariable";
 import type { AreaPreview } from "../Phaser/Components/MapEditor/AreaPreview";
 import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
-import { MapEntity, MapObjectsStore } from "./MapObjectsStore";
+import { MapEntity, MapEntitiesStore } from "./MapObjectsStore";
 
 function createMapEditorModeStore() {
     const { set, subscribe } = writable(false);
@@ -27,6 +27,6 @@ export const mapEditorSelectedPropertyStore = writable<PredefinedPropertyData | 
 
 export const mapEditorSelectedToolStore = writable<EditorToolName | undefined>(undefined);
 
-export const mapObjectsStore = new MapObjectsStore();
+export const mapObjectsStore = new MapEntitiesStore();
 
 export const mapEditorSelectedEntityStore = writable<MapEntity | undefined>(undefined);
