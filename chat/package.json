@@ -42,6 +42,7 @@
     "@joeattardi/emoji-button": "^4.6.4",
     "@tailwindcss/forms": "^0.5.3",
     "@workadventure/tailwind": "link:../libs/tailwind",
+    "@workadventure/messages": "link:../libs/messages",
     "@fontsource/roboto": "^4.5.8",
     "@fontsource/roboto-condensed": "^4.5.9",
     "axios": "^0.21.2",

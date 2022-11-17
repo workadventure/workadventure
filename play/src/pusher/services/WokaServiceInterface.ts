@@ -1,4 +1,4 @@
-import type { WokaList } from "../../messages/JsonMessages/PlayerTextures";
+import type { WokaList } from "@workadventure/messages";
 
 export interface WokaServiceInterface {
     /**

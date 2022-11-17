@@ -1,10 +1,9 @@
 syntax = "proto3";
 
 import "google/protobuf/wrappers.proto";
+import "google/protobuf/struct.proto";
 
 /*********** PARTIAL MESSAGES **************/
-
-package workadventure;
 
 enum AvailabilityStatus {
   UNCHANGED = 0;
@@ -134,10 +133,27 @@ message EditMapCommandWithKeyMessage {
 
 message ModifyAreaMessage {
   int32 id = 1;
-  optional uint32 x = 2;
-  optional uint32 y = 3;
-  optional uint32 width = 4;
-  optional uint32 height = 5;
+  optional string name = 2;
+  optional uint32 x = 3;
+  optional uint32 y = 4;
+  optional uint32 width = 5;
+  optional uint32 height = 6;
+  optional AreaProperties properties = 7;
+}
+
+message AreaProperties {
+  optional bool focusable = 1;
+  optional float zoom_margin = 2;
+  optional bool silent = 3;
+  map<string, google.protobuf.Value> customProperties = 4;
+}
+
+message CustomAreaProperty {
+  oneof value {
+    bool boolVal = 1;
+    float numberVal = 2;
+    string stringVal = 3;
+  }
 }
 
 message DeleteAreaMessage {
@@ -736,37 +752,3 @@ message BanUserByUuidMessage{
 /*********************************************************************************
  * End Chat Messages
  *********************************************************************************/
-
-
-
-
-
-
-
-
-/**
- * Service handled by the "back". Pusher servers connect to this service.
- */
-service RoomManager {
-  rpc joinRoom(stream PusherToBackMessage) returns (stream ServerToClientMessage); // Holds a connection between one given client and the back
-  rpc listenZone(ZoneMessage) returns (stream BatchToPusherMessage); // Connection used to send to a pusher messages related to a given zone of a given room
-  rpc listenRoom(RoomMessage) returns (stream BatchToPusherRoomMessage); // Connection used to send to a pusher messages related to a given room
-  rpc adminRoom(stream AdminPusherToBackMessage) returns (stream ServerToAdminClientMessage);
-  rpc sendAdminMessage(AdminMessage) returns (EmptyMessage);
-  rpc sendGlobalAdminMessage(AdminGlobalMessage) returns (EmptyMessage);
-  rpc ban(BanMessage) returns (EmptyMessage);
-  rpc sendAdminMessageToRoom(AdminRoomMessage) returns (EmptyMessage);
-  rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (EmptyMessage);
-  rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (EmptyMessage);
-  rpc sendChatMessagePrompt(ChatMessagePrompt) returns (EmptyMessage);
-  rpc getRooms(EmptyMessage) returns (RoomsList);
-  rpc ping(PingMessage) returns (PingMessage);
-}
-
-/**
- * Service handled by the "map-storage". Back servers connect to this service.
- */
-service MapStorage {
-  rpc ping(PingMessage) returns (PingMessage);
-  rpc handleEditMapCommandWithKeyMessage(EditMapCommandWithKeyMessage) returns (EditMapCommandMessage);
-}

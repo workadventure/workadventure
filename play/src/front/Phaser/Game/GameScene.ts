@@ -120,7 +120,7 @@ import {
     AvailabilityStatus,
     ErrorScreenMessage,
     PositionMessage_Direction,
-} from "../../../messages/ts-proto-generated/protos/messages";
+} from "@workadventure/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
@@ -1671,6 +1671,7 @@ ${escapedMessage}
                 for (const eventTile of eventTiles) {
                     this.gameMapFrontWrapper.putTile(eventTile.tile, eventTile.x, eventTile.y, eventTile.layer);
                 }
+                this.animatedTiles.updateAnimatedTiles();
             })
         );
         iframeListener.registerAnswerer("enablePlayersTracking", (enablePlayersTrackingEvent, source) => {
@@ -2272,11 +2273,10 @@ ${escapedMessage}
     public update(time: number, delta: number): void {
         this.dirty = false;
         this.currentTick = time;
-        if (!this.mapEditorModeManager?.isActive()) {
-            this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
-        } else {
+
+        this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
+        if (this.mapEditorModeManager?.isActive()) {
             this.mapEditorModeManager.update(time, delta);
-            this.cameraManager.move(this.userInputManager.getEventListForGameTick());
         }
 
         for (const addedPlayer of this.remotePlayersRepository.getAddedPlayers()) {

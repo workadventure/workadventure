@@ -6,7 +6,7 @@
     import LL, { locale } from "../i18n/i18n-svelte";
     import { userStore } from "../Stores/LocalUserStore";
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
-    import { UserData } from "../Messages/JsonMessages/ChatData";
+    import { UserData } from "@workadventure/messages";
     import { onDestroy, onMount } from "svelte";
     import {
         AlertCircleIcon,

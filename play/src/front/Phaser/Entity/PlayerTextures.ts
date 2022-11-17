@@ -1,6 +1,6 @@
 //The list of all the player textures, both the default models and the partial textures used for customization
 
-import type { WokaList, WokaPartType } from "../../../messages/JsonMessages/PlayerTextures";
+import type { WokaList, WokaPartType } from "@workadventure/messages";
 
 export interface BodyResourceDescriptionListInterface {
     [key: string]: BodyResourceDescriptionInterface;

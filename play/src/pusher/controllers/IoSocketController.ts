@@ -49,14 +49,16 @@ import Axios from "axios";
 import { InvalidTokenError } from "./InvalidTokenError";
 import type HyperExpress from "hyper-express";
 import type { WebSocket } from "uWebSockets.js";
-import type { WokaDetail } from "../../messages/JsonMessages/PlayerTextures";
 import { z } from "zod";
 import { adminService } from "../services/AdminService";
-import { isErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
-import type { ErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
-import { apiVersionHash } from "../../messages/JsonMessages/ApiVersion";
+import {
+    MucRoomDefinitionInterface,
+    ErrorApiData,
+    WokaDetail,
+    apiVersionHash,
+    isErrorApiData,
+} from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
-import type { MucRoomDefinitionInterface } from "../../messages/JsonMessages/MucRoomDefinitionInterface";
 import { v4 as uuid } from "uuid";
 import { JID } from "stanza";
 

@@ -50,7 +50,6 @@ module.exports = {
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/ban-ts-comment": "off",
         "@typescript-eslint/ban-ts-ignore": "off",
-        "@typescript-eslint/consistent-type-imports": "error",
     },
     "settings": {
         "svelte3/typescript": true,

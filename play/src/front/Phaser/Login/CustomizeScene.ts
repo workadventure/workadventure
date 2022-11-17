@@ -21,7 +21,7 @@ import type { WokaBodyPartSlotConfig } from "../Components/CustomizeWoka/WokaBod
 import { WokaBodyPartSlot } from "../Components/CustomizeWoka/WokaBodyPartSlot";
 import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
 import { Button } from "../Components/Ui/Button";
-import { wokaList } from "../../../messages/JsonMessages/PlayerTextures";
+import { wokaList } from "@workadventure/messages";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
 import type { IconButtonConfig } from "../Components/Ui/IconButton";
 import { IconButton, IconButtonEvent } from "../Components/Ui/IconButton";

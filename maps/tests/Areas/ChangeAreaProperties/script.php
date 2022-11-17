@@ -21,11 +21,13 @@
 
                 const area = WA.room.area.create({
                         name: 'Center',
-                        x: 224,
-                        y: 256,
+                        x: 0,
+                        y: 0,
                         width: 514,
                         height: 288,
                     });
+
+                    area.setProperty('focusable', true);
 
                 WA.room.area.onEnter('Center').subscribe(() => {
                     console.log(onAreaEnterField.value || 'default area enter message');
@@ -48,7 +50,7 @@
     </script>
 </head>
 <body style="color: #ffffff">
-focusaaaable: <input type="checkbox" id="focusable" value=1 checked /><br/>
+focusable: <input type="checkbox" id="focusable" value=1 checked /><br/>
 zoom_margin: <input type="text" id="zoom_margin" value=0 /><br/>
 silent: <input type="checkbox" id="silent" value=0 /><br/>
 openWebsite: <input type="text" id="openWebiste" value="https://workadventu.re/" /><br/>

@@ -11,14 +11,14 @@ import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { userIsConnected, warningContainerStore } from "../Stores/MenuStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { axiosWithRetry } from "./AxiosUtils";
-import { isRegisterData } from "../../messages/JsonMessages/RegisterData";
+import type { AvailabilityStatus } from "@workadventure/messages";
+import { isRegisterData } from "@workadventure/messages";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { locales } from "../../i18n/i18n-util";
 import type { Locales } from "../../i18n/i18n-types";
 import { setCurrentLocale } from "../../i18n/locales";
-import type { AvailabilityStatus } from "../../messages/ts-proto-generated/protos/messages";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -381,8 +381,14 @@ class ConnectionManager {
         if (visitCardUrl) {
             gameManager.setVisitCardurl(visitCardUrl);
         }
-        if (username) {
-            gameManager.setPlayerName(username);
+
+        const opidWokaNamePolicy = this.currentRoom?.opidWokaNamePolicy;
+        if (username != undefined && opidWokaNamePolicy != undefined) {
+            if (opidWokaNamePolicy === "force_opid") {
+                gameManager.setPlayerName(username);
+            } else if (opidWokaNamePolicy === "allow_override_opid" && localUserStore.getName() == undefined) {
+                gameManager.setPlayerName(username);
+            }
         }
 
         if (locale) {

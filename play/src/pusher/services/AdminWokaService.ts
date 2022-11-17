@@ -1,8 +1,8 @@
 import type { AxiosResponse } from "axios";
 import axios from "axios";
 import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../enums/EnvironmentVariable";
-import type { WokaList } from "../../messages/JsonMessages/PlayerTextures";
-import { wokaList } from "../../messages/JsonMessages/PlayerTextures";
+import type { WokaList } from "@workadventure/messages";
+import { wokaList } from "@workadventure/messages";
 import type { WokaServiceInterface } from "./WokaServiceInterface";
 
 class AdminWokaService implements WokaServiceInterface {

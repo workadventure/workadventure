@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isMucRoomDefinition } from "../../../messages/JsonMessages/MucRoomDefinitionInterface";
+import { isMucRoomDefinition } from "@workadventure/messages";
 
 export const isXmppSettingsMessageEvent = z.object({
     jid: z.string(),

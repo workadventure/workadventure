@@ -1,13 +1,15 @@
 import { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
-import { AreaType, ITiledMapRectangleObject } from "@workadventure/map-editor";
+import * as _ from "lodash";
+import { AreaData, AreaType } from "@workadventure/map-editor";
 import { mapsManager } from "./MapsManager";
 import {
     EditMapCommandMessage,
     EditMapCommandWithKeyMessage,
     EmptyMessage,
-    MapStorageServer,
     PingMessage,
-} from "./Messages/ts-proto-map-storage-generated/protos/messages";
+} from "@workadventure/messages";
+
+import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
 
 const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, EmptyMessage>, callback: sendUnaryData<PingMessage>): void {
@@ -36,12 +38,11 @@ const mapStorageServer: MapStorageServer = {
             switch (editMapMessage.$case) {
                 case "modifyAreaMessage": {
                     const message = editMapMessage.modifyAreaMessage;
+                    console.log(message);
                     const area = gameMap.getGameMapAreas().getArea(message.id, AreaType.Static);
                     if (area) {
-                        const areaObjectConfig: ITiledMapRectangleObject = {
-                            ...area,
-                            ...message,
-                        };
+                        const areaObjectConfig: AreaData = structuredClone(area);
+                        _.merge(areaObjectConfig, message);
                         validCommand = mapsManager.executeCommand(call.request.mapKey, {
                             type: "UpdateAreaCommand",
                             areaObjectConfig,
@@ -53,10 +54,12 @@ const mapStorageServer: MapStorageServer = {
                 }
                 case "createAreaMessage": {
                     const message = editMapMessage.createAreaMessage;
-                    const areaObjectConfig: ITiledMapRectangleObject = {
+                    const areaObjectConfig: AreaData = {
                         ...message,
+                        properties: {
+                            customProperties: {},
+                        },
                         visible: true,
-                        class: "area",
                     };
                     validCommand = mapsManager.executeCommand(call.request.mapKey, {
                         areaObjectConfig,

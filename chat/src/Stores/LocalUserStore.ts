@@ -1,4 +1,4 @@
-import { UserData } from "../Messages/JsonMessages/ChatData";
+import { UserData } from "@workadventure/messages";
 import { get, writable } from "svelte/store";
 
 const uuidKey = "uuid";

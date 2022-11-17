@@ -3,6 +3,7 @@ import { extendApi } from "@anatine/zod-openapi";
 import { isMucRoomDefinition } from "./MucRoomDefinitionInterface";
 import { isMetaTagFavicon } from "./MetaTagFavicon";
 import { isMetaTagManifestIcon } from "./MetaTagManifestIcon";
+import { OpidWokaNamePolicy } from "./OpidWokaNamePolicy";
 
 /*
  * WARNING! The original file is in /messages/JsonMessages.
@@ -45,13 +46,24 @@ const isMapThirdPartyData = z.object({
 
 const MetaTagsData = z.object({
     // Meta tags values
-    title: extendApi(z.string().optional(), {
+    title: extendApi(z.string().optional().default("WorkAdventure"), {
         description: "Title shown on browser tab",
         example: "WorkAdventure - My Awesome World",
     }),
-    description: extendApi(z.string().optional(), {
-        description: "Description of the webpage",
-        example: "My awesome world in WorkAdventure",
+    description: extendApi(
+        z.string().optional().default("Create your own digital office, Metaverse and meet online with the world."),
+        {
+            description: "Description of the webpage",
+            example: "My awesome world in WorkAdventure",
+        }
+    ),
+    author: extendApi(z.string().optional().default("WorkAdventure team"), {
+        description: "Author of the webpage",
+        example: "My Awesome team",
+    }),
+    provider: extendApi(z.string().optional().default("WorkAdventure"), {
+        description: "Provider of the webpage",
+        example: "WorkAdventure SAAS plateform",
     }),
     favIcons: extendApi(isMetaTagFavicon.array().optional(), {
         description: "Icon to load inside the index.html and on the manifest",
@@ -129,7 +141,6 @@ export const isMapDetailsData = z.object({
     mucRooms: extendApi(isMucRoomDefinition.array().nullable(), {
         description: "The MUC room is a room of message",
     }),
-
     contactPage: extendApi(z.string().nullable().optional(), {
         description: "The URL to the contact page",
         example: "https://mycompany.com/contact-us",
@@ -141,6 +152,10 @@ export const isMapDetailsData = z.object({
     opidLogoutRedirectUrl: extendApi(z.string().nullable().optional(), {
         description: "The URL of the logout redirect",
         example: "https://mycompany.com/logout",
+    }),
+    opidWokaNamePolicy: extendApi(OpidWokaNamePolicy.nullable().optional(), {
+        description: "Username policy",
+        example: "user_input",
     }),
     // The date (in ISO 8601 format) at which the room will expire
     expireOn: extendApi(z.optional(z.string()), {
