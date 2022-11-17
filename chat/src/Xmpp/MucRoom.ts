@@ -1,6 +1,5 @@
 import type { Readable, Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
-import { mucRoomsStore } from "../Stores/MucRoomsStore";
 import { v4 as uuid } from "uuid";
 import { userStore } from "../Stores/LocalUserStore";
 import { fileMessageManager } from "../Services/FileMessageManager";
@@ -96,19 +95,7 @@ export class MucRoom extends AbstractRoom {
             void this.xmppClient.socket.subscribe(this.url);
         }
 
-        this.xmppClient.socket.sendUserInfo(this.recipient, presenceId, {
-            jid: this.xmppClient.getMyJID(),
-            roomPlayUri: get(userStore).playUri,
-            roomName: get(userStore).roomName ?? "",
-            userUuid: get(userStore).uuid,
-            userColor: get(userStore).color,
-            userWoka: get(userStore).woka,
-            name: this.playerName,
-            // If you can subscribe to the default muc room, this is that you are a member
-            userIsMember: mucRoomsStore.getDefaultRoom()?.subscribe ?? false,
-            userAvailabilityStatus: get(availabilityStatusStore),
-            userVisitCardUrl: get(userStore).visitCardUrl ?? "",
-        });
+        this.sendUserInfo(presenceId);
 
         //this.xmppClient.socket.sendPresence({ to: this.recipient, id: presenceId, muc: {type: 'info', affiliation: "none", role: "participant"} });
         if (_VERBOSE)

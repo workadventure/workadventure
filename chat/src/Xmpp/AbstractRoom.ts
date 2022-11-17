@@ -3,10 +3,15 @@ import { writable } from "svelte/store";
 import { UserData } from "@workadventure/messages";
 import { XmppClient } from "./XmppClient";
 import * as StanzaProtocol from "stanza/protocol";
-import { ChatStateMessage } from "stanza";
+import {ChatStateMessage} from "stanza";
 import { WaLink, WaReceivedReactions } from "./Lib/Plugin";
 import { ChatState } from "stanza/Constants";
 import Timeout = NodeJS.Timeout;
+import {get} from "svelte/store";
+import {userStore} from "../Stores/LocalUserStore";
+import {mucRoomsStore} from "../Stores/MucRoomsStore";
+import {availabilityStatusStore} from "../Stores/ChatStore";
+import { v4 as uuid } from "uuid";
 
 export type User = {
     name: string;
@@ -109,11 +114,33 @@ export class AbstractRoom {
         this.loadingStore = writable<boolean>(false);
     }
 
+    get recipient(): string {
+        throw new TypeError(
+            'Can\'t use recipient get from Abstract class "AbstractRoom", need to be implemented.'
+        );
+    }
+
     // Functions used to send message to the server
     public sendChatState(state: ChatState): void {
         throw new TypeError(
             'Can\'t use sendChatState function from Abstract class "AbstractRoom", need to be implemented.'
         );
+    }
+
+    public sendUserInfo(presenceId: string = uuid()){
+        this.xmppClient.socket.sendUserInfo(this.recipient, presenceId, {
+            jid: this.xmppClient.getMyJID(),
+            roomPlayUri: get(userStore).playUri,
+            roomName: get(userStore).roomName ?? "",
+            userUuid: get(userStore).uuid,
+            userColor: get(userStore).color,
+            userWoka: get(userStore).woka,
+            name: this.playerName,
+            // If you can subscribe to the default muc room, this is that you are a member
+            userIsMember: mucRoomsStore.getDefaultRoom()?.subscribe ?? false,
+            userAvailabilityStatus: get(availabilityStatusStore),
+            userVisitCardUrl: get(userStore).visitCardUrl ?? "",
+        });
     }
 
     // Function used to interpret message from the server

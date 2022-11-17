@@ -13,6 +13,9 @@ import * as StanzaProtocol from "stanza/protocol";
 import { JSONData } from "stanza/jxt";
 import { ChatStateMessage, JID } from "stanza";
 import { ParsedJID } from "stanza/JID";
+import {SingleRoom} from "./SingleRoom";
+import {User} from "./AbstractRoom";
+import {singleRoomsStore} from "../Stores/SingleRoomsStore";
 
 const debug = Debug("xmppClient");
 
@@ -33,6 +36,7 @@ export class XmppClient {
 
     public isClosed = false;
     private rooms = new Map<string, MucRoom>();
+    private singles = new Map<string, SingleRoom>();
 
     private nickCount = 0;
 
@@ -541,13 +545,26 @@ export class XmppClient {
         }
     }
 
+    public joinSingle(user: User): SingleRoom {
+        const userJid = JID.parse(user.jid);
+        let singleRoom = this.singles.get(userJid.bare);
+        if (!singleRoom) {
+            singleRoom = new SingleRoom(this, user, userJid);
+            this.singles.set(userJid.bare, singleRoom);
+            singleRoomsStore.addSingleRoom(singleRoom);
+
+            singleRoom.connect();
+        }
+        return singleRoom;
+    }
+
     public joinMuc(name: string, waRoomUrl: string, type: string, subscribe: boolean): MucRoom {
         const roomUrl = JID.parse(JID.create({ local: waRoomUrl, domain: this.conferenceDomain }));
         let room = this.rooms.get(roomUrl.bare);
         if (!room) {
             room = new MucRoom(this, name, roomUrl, type, subscribe);
             this.rooms.set(roomUrl.bare, room);
-            mucRoomsStore.addMucRoom(room);
+            mucRoomsStore.addSingleRoom(room);
 
             room.connect();
         }
@@ -572,18 +589,18 @@ export class XmppClient {
         const roomUrl = room.url;
 
         const activeThread = get(activeThreadStore);
-        if (activeThread && activeThread.url === roomUrl.toString()) {
+        if (activeThread && activeThread instanceof MucRoom && activeThread.url === roomUrl.toString()) {
             activeThreadStore.reset();
         }
 
         this.rooms.delete(roomUrl.toString());
-        mucRoomsStore.removeMucRoom(room);
+        mucRoomsStore.removeSingleRoom(room);
     }
 
     public close() {
         for (const [, room] of this.rooms) {
             room.sendDisconnect();
-            mucRoomsStore.removeMucRoom(room);
+            mucRoomsStore.removeSingleRoom(room);
         }
         this.clientPromise.cancel();
     }

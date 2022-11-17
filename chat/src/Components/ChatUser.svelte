@@ -12,14 +12,14 @@
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
     import { iframeListener } from "../IframeListener";
     import { derived } from "svelte/store";
+    import {chatConnectionManager} from "../Connection/ChatConnectionManager";
 
     export let mucRoom: MucRoom;
     export let user: User;
     export let searchValue: string = "";
 
     function openChat(user: User) {
-        return user;
-        // activeThreadStore.set(user);
+        chatConnectionManager.connection?.joinSingle(user);
     }
 
     const presenceStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
@@ -243,8 +243,8 @@
                         >
                     {/if}
                 {/if}
-                <!--<span class="wa-dropdown-item" on:click|stopPropagation={() => openChat(user)}> Open Chat </span>
-                <div class="wa-dropdown-item">Delete chat</div>-->
+                <span class="wa-dropdown-item" on:click|stopPropagation={() => openChat(user)}> {$LL.open()} </span>
+                <!--<div class="wa-dropdown-item">Delete chat</div>-->
             </div>
         </div>
     {/if}
