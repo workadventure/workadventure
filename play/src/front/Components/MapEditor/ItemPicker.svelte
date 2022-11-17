@@ -185,9 +185,9 @@
                 flex : 0 0 4em;
                 height: 4em;
                 display: flex;
-                cursor: url("/style/images/cursor_pointer.png"), pointer;
+                cursor: url("src/front/style/images/cursor_pointer.png"), pointer;
                 *{
-                    cursor: url("/style/images/cursor_pointer.png"), pointer;
+                    cursor: url("src/front/style/images/cursor_pointer.png"), pointer;
                 }
                 .item-image {
                     margin:auto;

@@ -1,5 +1,6 @@
 <script lang="ts">
     import AreaPreviewWindow from "./AreaPreviewWindow.svelte";
+    import PropertyPreviewSidebar from "./PropertyPreviewSidebar.svelte";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import ItemPicker from "./ItemPicker.svelte";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
@@ -9,9 +10,9 @@
 <MapEditorSideBar />
 <div class="map-editor tw-bg-dark-blue/95">
     <div class="sidebar">
-        <!-- {#if $mapEditorSelectedToolStore === EditorToolName.FloorEditor } -->
+        {#if $mapEditorSelectedToolStore === EditorToolName.FloorEditor }
             <ItemPicker/>
-        <!-- {/if} -->
+        {/if}
         {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor }
             <AreaPreviewWindow />
             <PropertyPreviewSidebar />

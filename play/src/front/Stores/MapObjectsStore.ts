@@ -27,7 +27,7 @@ export enum Direction{
 export class MapEntitiesStore implements Readable<MapEntity[]>
 {
     private allDirection =[Direction.Left, Direction.Up, Direction.Down, Direction.Right]
-    private mapObjectsStore = writable<MapEntity[]>([]);
+    private mapEntitiesStore = writable<MapEntity[]>([]);
 
     private mapObjects: MapEntity[]=[];
     private filter:string = "";
@@ -55,16 +55,16 @@ export class MapEntitiesStore implements Readable<MapEntity[]>
         let tags = [...tagSet]
         tags.sort();
         this.tagsStore.set(tags);
-        this.mapObjectsStore.set(this.currentCollection.collection);
+        this.mapEntitiesStore.set(this.currentCollection.collection);
     }
 
     subscribe(run: Subscriber<MapEntity[]>, invalidate?: ((value?: MapEntity[] | undefined) => void) | undefined): Unsubscriber {
-        return this.mapObjectsStore.subscribe(run, invalidate);
+        return this.mapEntitiesStore.subscribe(run, invalidate);
     }
 
     public getObjects()
     {
-        return get(this.mapObjectsStore);
+        return get(this.mapEntitiesStore);
     }
 
     public setNameFilter(filter: string)
@@ -78,6 +78,6 @@ export class MapEntitiesStore implements Readable<MapEntity[]>
         let filters = this.filter.toLowerCase().split(" ").filter(v=> v.trim()!=="");
         let newCollection = this.currentCollection.collection;
         newCollection = newCollection.filter(item => filters.every(word => item.name.toLowerCase().includes(word)) || filters.every(word => item.tags.includes(word)));
-        this.mapObjectsStore.set(newCollection);
+        this.mapEntitiesStore.set(newCollection);
     }
 }
