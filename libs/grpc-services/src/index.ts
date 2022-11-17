@@ -1,1 +1,0 @@
-export * from './ts-proto-generated/services';

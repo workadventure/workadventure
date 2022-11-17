@@ -6,8 +6,10 @@ import {
     ITiledMapTile,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
-import { AreaChangeCallback, GameMapAreas } from "./GameMapAreas";
-import { AreaData, GameMapProperties } from '../types';
+import type { AreaData } from '../types';
+import type { AreaChangeCallback } from "./GameMapAreas";
+import { GameMapAreas } from "./GameMapAreas";
+import { GameMapProperties } from '../types';
 import { flattenGroupLayersMap } from './LayersFlattener';
 
 
@@ -145,7 +147,7 @@ export class GameMap {
     public setAreaProperty(
         area: AreaData,
         key: string,
-        value: string | number | boolean
+        value: string | number | boolean | undefined
     ): void {
         this.gameMapAreas.setProperty(area, key, value);
     }

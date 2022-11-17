@@ -7,7 +7,7 @@
 WA.metadata: unknown | undefined
 ```
 
-The metadata is an object generated from the administration. The pusher and the front must be agnostic of the data on this object.
+The metadata is an object generated from the administration. The play service and the front must be agnostic of the data on this object.
 
 In the SAAS case we send the list of NFTS own by the user:
 ```ts

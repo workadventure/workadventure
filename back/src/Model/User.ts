@@ -5,6 +5,7 @@ import { Movable } from "../Model/Movable";
 import { PositionNotifier } from "../Model/PositionNotifier";
 import { ServerDuplexStream } from "@grpc/grpc-js";
 import {
+    ApplicationMessage,
     AvailabilityStatus,
     BatchMessage,
     CompanionMessage,
@@ -48,7 +49,8 @@ export class User implements Movable {
         public readonly companion?: CompanionMessage,
         private outlineColor?: number,
         private voiceIndicatorShown?: boolean,
-        public readonly activatedInviteUser?: boolean
+        public readonly activatedInviteUser?: boolean,
+        public readonly applications?: ApplicationMessage[]
     ) {
         this.listenedZones = new Set<Zone>();
 
@@ -74,7 +76,8 @@ export class User implements Movable {
         companion?: CompanionMessage,
         outlineColor?: number,
         voiceIndicatorShown?: boolean,
-        activatedInviteUser?: boolean
+        activatedInviteUser?: boolean,
+        applications?: ApplicationMessage[]
     ): Promise<User> {
         const playersVariablesRepository = await getPlayersVariablesRepository();
         const variables = new PlayerVariables(uuid, roomUrl, roomGroup, playersVariablesRepository, isLogged);
@@ -98,7 +101,8 @@ export class User implements Movable {
             companion,
             outlineColor,
             voiceIndicatorShown,
-            activatedInviteUser
+            activatedInviteUser,
+            applications
         );
     }
 
@@ -220,6 +224,8 @@ export class User implements Movable {
                         setVariable.getPersist()
                     )
                     .catch((e) => console.error("An error occurred while saving world variable: ", e));
+
+                this.updateDataUserSameUUID(setVariable, details);
             } else if (scope === SetPlayerVariableMessage.Scope.ROOM) {
                 this.variables
                     .saveRoomVariable(
@@ -231,37 +237,7 @@ export class User implements Movable {
                     )
                     .catch((e) => console.error("An error occurred while saving room variable: ", e));
 
-                // Very special case: if we are updating a player variable AND if if the variable is persisted, we must also
-                // update the variable of all other users with the same UUID!
-                if (setVariable.getPersist()) {
-                    // Let's have a look at all other users sharing the same UUID
-                    const brothers = this.brothersFinder.getBrothers(this);
-                    for (const brother of brothers) {
-                        brother.variables
-                            .saveRoomVariable(
-                                setVariable.getName(),
-                                setVariable.getValue(),
-                                setVariable.getPublic(),
-                                setVariable.getTtl()?.getValue(),
-                                // We don't need to persist this for every player as this will write in the same place in DB.
-                                false
-                            )
-                            .catch((e) =>
-                                console.error(
-                                    "An error occurred while saving room variable for a user with same UUID: ",
-                                    e
-                                )
-                            );
-
-                        // Let's dispatch the message to the user.
-                        const playerDetailsUpdatedMessage = new PlayerDetailsUpdatedMessage();
-                        playerDetailsUpdatedMessage.setUserid(brother.id);
-                        playerDetailsUpdatedMessage.setDetails(details);
-                        const subMessage = new SubMessage();
-                        subMessage.setPlayerdetailsupdatedmessage(playerDetailsUpdatedMessage);
-                        brother.emitInBatch(subMessage);
-                    }
-                }
+                this.updateDataUserSameUUID(setVariable, details);
             } else {
                 const _exhaustiveCheck: never = scope;
             }
@@ -286,5 +262,40 @@ export class User implements Movable {
 
     public getVariables(): PlayerVariables {
         return this.variables;
+    }
+
+    private updateDataUserSameUUID(
+        setVariable: SetPlayerVariableMessage,
+        details: SetPlayerDetailsMessage | undefined
+    ) {
+        // Very special case: if we are updating a player variable AND if if the variable is persisted, we must also
+        // update the variable of all other users with the same UUID!
+        if (setVariable.getPersist()) {
+            // Let's have a look at all other users sharing the same UUID
+            const brothers = this.brothersFinder.getBrothers(this);
+
+            for (const brother of brothers) {
+                brother.variables
+                    .saveRoomVariable(
+                        setVariable.getName(),
+                        setVariable.getValue(),
+                        setVariable.getPublic(),
+                        setVariable.getTtl()?.getValue(),
+                        // We don't need to persist this for every player as this will write in the same place in DB.
+                        false
+                    )
+                    .catch((e) =>
+                        console.error("An error occurred while saving room variable for a user with same UUID: ", e)
+                    );
+
+                // Let's dispatch the message to the user.
+                const playerDetailsUpdatedMessage = new PlayerDetailsUpdatedMessage();
+                playerDetailsUpdatedMessage.setUserid(brother.id);
+                playerDetailsUpdatedMessage.setDetails(details);
+                const subMessage = new SubMessage();
+                subMessage.setPlayerdetailsupdatedmessage(playerDetailsUpdatedMessage);
+                brother.emitInBatch(subMessage);
+            }
+        }
     }
 }

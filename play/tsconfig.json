@@ -1,0 +1,32 @@
+{
+  "extends": "@tsconfig/svelte/tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2020",
+    "baseUrl": "./",
+    "downlevelIteration": true,
+    "module": "ES2020",
+    "allowJs": true,
+    "sourceMap": true,
+    "outDir": "./dist/public",
+    "strict": true,
+    "noImplicitThis": false,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": false,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "alwaysStrict": true,
+    "preserveValueImports": false,
+    "importsNotUsedAsValues": "remove",
+  },
+  "exclude": [
+    "dist",
+    "public/iframe_api.js",
+    "packages/iframe-api-typings",
+  ]
+}

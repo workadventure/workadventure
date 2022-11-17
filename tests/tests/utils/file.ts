@@ -9,3 +9,9 @@ export async function createFileOfSize(filePath: string, size: number): Promise<
 export function fileExist(filePath: string){
     return fs.existsSync(filePath);
 }
+
+export function deleteFile(filePath: string) {
+    fs.rmSync(filePath, {
+        force: true,
+    });
+}

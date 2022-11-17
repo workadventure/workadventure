@@ -1,9 +1,10 @@
-import { ITiledMapObject, ITiledMapObjectLayer, ITiledMapProperty as zoomMargin } from "@workadventure/tiled-map-type-guard";
-import { MathUtils } from "@workadventure/math-utils";
-import { GameMap } from "./GameMap";
-import { AreaProperties } from "@workadventure/messages";
-import { AreaData, AreaType } from '../types';
+import type { AreaProperties } from "@workadventure/messages";
+import type { AreaData } from '../types';
+import { AreaType } from '../types';
 import * as _ from "lodash";
+import type { ITiledMapObject, ITiledMapObjectLayer, ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
+import { MathUtils } from "@workadventure/math-utils";
+import type { GameMap } from "./GameMap";
 
 export type AreaChangeCallback = (
     areasChangedByAction: Array<AreaData>,
@@ -111,8 +112,8 @@ export class GameMapAreas {
         return properties;
     }
 
-    private mapAreaPropertiesToTiledProperties(areaProperties: AreaProperties): zoomMargin[] {
-        const properties: zoomMargin[] = [];
+    private mapAreaPropertiesToTiledProperties(areaProperties: AreaProperties): ITiledMapProperty[] {
+        const properties: ITiledMapProperty[] = [];
 
         const focusable = areaProperties.focusable;
         const zoomMargin = areaProperties.zoomMargin;
@@ -138,7 +139,7 @@ export class GameMapAreas {
         return properties;
     }
 
-    private mapAreaPropertyToTiledProperty(key: string, value: string | boolean | number): zoomMargin {
+    private mapAreaPropertyToTiledProperty(key: string, value: string | boolean | number): ITiledMapProperty {
         switch (typeof value) {
             case "string": {
                 return {
@@ -390,23 +391,23 @@ export class GameMapAreas {
     public setProperty(
         area: AreaData,
         key: string,
-        value: string | number | boolean,
+        value: string | number | boolean | undefined,
     ): void {
         switch (key) {
             case "focusable": {
-                if (typeof value === "boolean") {
+                if (typeof value === "boolean" || value === undefined) {
                     area.properties.focusable = value;
                 }
                 break;
             }
             case "zoomMargin": {
-                if (typeof value === "number") {
+                if (typeof value === "number" || value === undefined) {
                     area.properties.zoomMargin = value;
                 }
                 break;
             }
             case "silent": {
-                if (typeof value === "boolean") {
+                if (typeof value === "boolean" || value === undefined) {
                     area.properties.silent = value;
                 }
                 break;

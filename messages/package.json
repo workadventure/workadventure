@@ -4,24 +4,27 @@
   "description": "",
   "scripts": {
     "proto": "grpc_tools_node_protoc --grpc_out=grpc_js:generated  --js_out=\"import_style=commonjs,binary:generated\" --ts_out=grpc_js:generated -I ./protos protos/*.proto",
-    "ts-proto": "grpc_tools_node_protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=ts-proto-generated --ts_proto_opt=outputServices=grpc-js --ts_proto_opt=oneof=unions --ts_proto_opt=esModuleInterop=true -I ./protos protos/*.proto",
+    "ts-proto": "grpc_tools_node_protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=../libs/messages/src/ts-proto-generated --ts_proto_opt=outputServices=grpc-js --ts_proto_opt=oneof=unions --ts_proto_opt=esModuleInterop=true -I ./protos protos/*.proto",
 
     "copy-to-back": "syncdir generated/ ../back/src/Messages/generated && rm -f ../back/src/Messages/generate_request/need_regenerate",
-    "copy-to-pusher": "syncdir generated/ ../pusher/src/Messages/generated && rm -f ../pusher/src/Messages/generate_request/need_regenerate",
-    "copy-to-libs-messages": "syncdir ts-proto-generated/ ../libs/messages/src/ts-proto-generated && sed -i 's/import { Observable } from \"rxjs\";/import type { Observable } from \"rxjs\";/g' ../libs/messages/src/ts-proto-generated/messages.ts",
-    "copy-to-libs-grpc-services": "syncdir ts-proto-generated/ ../libs/grpc-services/src/ts-proto-generated",
     
-    "proto-all": "yarn run proto && yarn run ts-proto && yarn run copy-to-back && yarn run copy-to-pusher && yarn run copy-to-libs-messages && yarn run copy-to-libs-grpc-services",
+    "proto-all": "yarn run proto && yarn run ts-proto && yarn run copy-to-back && yarn run copy-to-play",
     "proto:watch": "yarn run proto-all; run-p proto:watch-need-regenerate proto:watch-files",
-    "proto:watch-need-regenerate": "inotifywait -q -m -e create ../back/src/Messages/generate_request/ ../pusher/src/Messages/generate_request/ | while read -r filename event; echo \"Inotify got event $event on file $filename\"; do yarn run proto-all; done",
-    "proto:watch-files": "inotifywait -q -m -e close_write protos/messages.proto | while read -r filename event; echo \"Inotify got event $event on file $filename\"; do yarn run proto-all; done"
+    "proto:watch-need-regenerate": "inotifywait -q -m -e create ../back/src/Messages/generate_request/ ../play/src/messages/generate_request/ | while read -r filename event; echo \"Inotify got event $event on file $filename\"; do yarn run proto-all; done",
+    "proto:watch-files": "inotifywait -q -m -e close_write protos/messages.proto | while read -r filename event; echo \"Inotify got event $event on file $filename\"; do yarn run proto-all; done",
+  
+    "copy-to-play": "syncdir generated/ ../play/src/messages/generated && rm -f ../play/src/messages/generate_request/need_regenerate",
+
+    "tag-version": "sed -i \"s/apiVersionHash = \\\".*\\\"/apiVersionHash = \\\"$(sha1sum protos/messages.proto ../libs/messages/src/JsonMessages/* | sha1sum | cut -c1-8)\\\"/g\" ../libs/messages/src/JsonMessages/ApiVersion.ts",
+    "precommit": "lint-staged",
+    "pretty": "yarn prettier --write '../libs/messages/src/JsonMessages/**/*.ts'"
   },
   "dependencies": {
     "@anatine/zod-openapi": "^1.3.0",
     "@grpc/grpc-js": "^1.7.1",
     "google-protobuf": "^3.21.0",
     "npm-run-all": "^4.1.5",
-    "openapi3-ts": "^2.0.2",
+    "openapi3-ts": "^3.0.2",
     "ts-proto": "^1.123.1",
     "zod": "^3.19.1"
   },
@@ -30,13 +33,15 @@
     "@types/node": "^14.14.7",
     "@typescript-eslint/eslint-plugin": "^4.7.0",
     "@typescript-eslint/parser": "^4.7.0",
+    "chokidar-cli": "^3.0.0",
     "dtslint": "^4.0.5",
     "eslint": "^7.13.0",
     "eslint-config-airbnb-typescript": "^12.0.0",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-sonarjs": "^0.5.0",
-    "grpc-tools": "^1.11.2",
+    "grpc-tools": "^1.11.3",
     "grpc_tools_node_protoc_ts": "^5.3.2",
+    "lint-staged": "^11.0.0",
     "prettier": "^2.3.1",
     "protobufjs": "^6.11.3",
     "rimraf": "^3.0.2",
@@ -55,5 +60,10 @@
   ],
   "homepage": "https://github.com/thecodingmachine/workadventure",
   "author": "David Négrier",
-  "license": "SEE LICENSE IN LICENSE.txt"
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "lint-staged": {
+    "*.ts": [
+      "yarn run pretty"
+    ]
+  }
 }

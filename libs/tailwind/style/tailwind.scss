@@ -13,8 +13,8 @@
     .menu-container {
         pointer-events: auto;
         z-index: 900;
-        @apply tw-flex tw-h-3/4 tw-w-full tw-text-white tw-pointer-events-auto tw-z-[900] tw-right-0 tw-left-0 tw-m-auto;
-        @apply md:tw-w-4/5 md:tw-top-14 md:tw-m-auto md:tw-absolute;
+        @apply tw-flex tw-h-3/4 tw-w-full tw-text-white tw-pointer-events-auto tw-z-[900] tw-right-0 tw-left-0 tw-m-auto tw-absolute tw-top-14;
+        @apply md:tw-w-4/5;
 
         .menu-nav-sidebar {
             @apply tw-bg-dark-purple/95 tw-rounded tw-overflow-auto tw-w-1/5;
@@ -151,7 +151,7 @@
         &::after{
             right: -5px;
         }
-        @apply before:tw-content-[''] before:tw-absolute before:tw-top-1/2 before:tw-w-1/3 before:tw-h-px before:tw-bg-lighter-purple after:tw-content-[''] after:tw-absolute after:tw-top-1/2 after:tw-w-1/3 after:tw-h-px after:tw-bg-lighter-purple tw-text-light-purple-alt tw-text-xs tw-uppercase tw-text-center tw-relative;
+        @apply before:tw-content-[''] before:tw-absolute before:tw-top-1/2 before:tw-w-1/3 before:tw-h-px before:tw-bg-lighter-purple after:tw-content-[''] after:tw-absolute after:tw-top-1/2 after:tw-w-1/3 after:tw-h-px after:tw-bg-lighter-purple tw-text-light-purple-alt tw-text-xs tw-uppercase tw-text-center tw-relative tw-mt-2;
     }
 
     .wa-action{

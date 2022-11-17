@@ -5,8 +5,7 @@
   "main": "./src/index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
-    "prepare-for-prod": "jq '.main = \"./dist/index.js\"' package.json > package_tmp1.json && jq '.types = \"./dist/index.d.ts\"' package_tmp1.json > package.json && rm package_tmp1.json"
+    "build": "tsc"
   },
   "author": "WorkAdventure",
   "license": "ISC",
@@ -14,6 +13,7 @@
     "@anatine/zod-openapi": "^1.3.0",
     "@grpc/grpc-js": "^1.7.1",
     "google-protobuf": "^3.21.0",
+    "openapi3-ts": "^3.0.2",
     "rxjs": "6.6.3",
     "zod": "^3.19.1"
   },

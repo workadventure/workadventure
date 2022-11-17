@@ -49,6 +49,7 @@ import {
     SubToPusherRoomMessage,
     EditMapCommandWithKeyMessage,
     EditMapCommandMessage,
+    ChatMessagePrompt,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -139,6 +140,9 @@ export class SocketManager {
         roomJoinedMessage.setActivatedinviteuser(
             user.activatedInviteUser != undefined ? user.activatedInviteUser : true
         );
+        if (user.applications != undefined) {
+            roomJoinedMessage.setApplicationsList(user.applications);
+        }
 
         const playerVariables = user.getVariables().getVariables();
 
@@ -701,6 +705,7 @@ export class SocketManager {
 
         const jitsiJwtAnswer = new JitsiJwtAnswer();
         jitsiJwtAnswer.setJwt(jwt);
+        jitsiJwtAnswer.setUrl(jitsiSettings.url);
 
         return jitsiJwtAnswer;
     }
@@ -886,8 +891,10 @@ export class SocketManager {
     private cleanupRoomIfEmpty(room: GameRoom): void {
         if (room.isEmpty()) {
             this.roomsPromises.delete(room.roomUrl);
-            this.resolvedRooms.delete(room.roomUrl);
-            gaugeManager.decNbRoomGauge();
+            const deleted = this.resolvedRooms.delete(room.roomUrl);
+            if (deleted) {
+                gaugeManager.decNbRoomGauge();
+            }
             debug('Room is empty. Deleting room "%s"', room.roomUrl);
         }
     }
@@ -1124,6 +1131,24 @@ export class SocketManager {
                 // TODO delete room;
             }
         }
+    }
+
+    async dispatchChatMessagePrompt(chatMessagePrompt: ChatMessagePrompt): Promise<boolean> {
+        const room = await this.roomsPromises.get(chatMessagePrompt.getRoomid());
+        console.log(chatMessagePrompt.getRoomid());
+        if (!room) {
+            return false;
+        }
+
+        const subMessage = new SubToPusherRoomMessage();
+        if (chatMessagePrompt.hasJoinmucroommessage()) {
+            subMessage.setJoinmucroommessage(chatMessagePrompt.getJoinmucroommessage());
+        } else if (chatMessagePrompt.hasLeavemucroommessage()) {
+            subMessage.setLeavemucroommessage(chatMessagePrompt.getLeavemucroommessage());
+        }
+        room.sendSubMessageToRoom(subMessage);
+
+        return true;
     }
 }
 

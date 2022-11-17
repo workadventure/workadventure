@@ -42,6 +42,7 @@ const config: PlaywrightTestConfig = {
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'retain-on-failure',
     // process.env.CI ? 'on-first-retry' : 'retain-on-failure'
+    navigationTimeout: 60_000,
   },
 
   /* Configure projects for major browsers */
@@ -50,6 +51,10 @@ const config: PlaywrightTestConfig = {
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
+        permissions: ["microphone","camera"],
+        launchOptions: {
+          args: ['--use-fake-ui-for-media-stream'],
+        },
       },
     },
 

@@ -9,7 +9,7 @@ import {
     PingMessage,
 } from "@workadventure/messages";
 
-import { MapStorageServer } from "@workadventure/grpc-services";
+import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
 
 const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, EmptyMessage>, callback: sendUnaryData<PingMessage>): void {

@@ -1,7 +1,7 @@
-import { AreaProperties, ModifyAreaMessage } from "@workadventure/messages";
-import { CreateAreaCommandConfig } from './Commands/Area/CreateAreaCommand';
-import { DeleteAreaCommandConfig } from './Commands/Area/DeleteAreaCommand';
-import { UpdateAreaCommandConfig } from './Commands/Area/UpdateAreaCommand';
+import type { ModifyAreaMessage } from "@workadventure/messages";
+import type { CreateAreaCommandConfig } from './Commands/Area/CreateAreaCommand';
+import type { DeleteAreaCommandConfig } from './Commands/Area/DeleteAreaCommand';
+import type { UpdateAreaCommandConfig } from './Commands/Area/UpdateAreaCommand';
 
 
 export type CommandConfig =
@@ -20,7 +20,7 @@ export interface PredefinedPropertyData {
     name: string;
     description: string;
     turnedOn: boolean;
-    additionalProperties: Record<string, string | number | boolean | {}>;
+    additionalProperties: Record<string, string | number | boolean | {} | undefined>;
 }
 
 export enum GameMapProperties {

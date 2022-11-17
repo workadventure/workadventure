@@ -25,7 +25,7 @@ We provide a production ready `docker-compose` file that you can use as a good s
 
 ## Setting up a development environment
 
-> **Note**  
+> **Note**
 > These installation instructions are for local development only. They will not work on
 > remote servers as local environments do not have HTTPS certificates.
 
@@ -47,7 +47,7 @@ Note: on some OSes, you will need to add this line to your `/etc/hosts` file:
 
 **/etc/hosts**
 ```
-127.0.0.1 workadventure.localhost
+127.0.0.1 oidc.workadventure.localhost redis.workadventure.localhost play.workadventure.localhost chat.workadventure.localhost traefik.workadventure.localhost xmpp.workadventure.localhost extra.workadventure.localhost icon.workadventure.localhost map-storage.workadventure.localhost uploader.workadventure.localhost maps.workadventure.localhost api.workadventure.localhost front.workadventure.localhost
 ```
 
 You can also start WorkAdventure + a test OpenID connect server using:
@@ -86,11 +86,11 @@ Then, delete the WorkAdventure directory and check it out again.
 
 #### CORS error / HTTP 502 error
 
-If you see a CORS error or an HTTP 502 error when trying to load WorkAdventure, check the logs from the `pusher`
+If you see a CORS error or an HTTP 502 error when trying to load WorkAdventure, check the logs from the `play`
 and from the `back` container. If you see an error, you can simply try to restart them.
-Sometimes, a rare race condition prevents those containers from starting correctly in dev. 
+Sometimes, a rare race condition prevents those containers from starting correctly in dev.
 
 ```console
-docker-compose restart pusher
+docker-compose restart play
 docker-compose restart back
 ```
