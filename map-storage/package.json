@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "map-storage",
   "version": "1.0.0",
   "description": "",
@@ -41,8 +42,8 @@
     "@grpc/grpc-js": "^1.7.1",
     "@grpc/proto-loader": "^0.6.13",
     "@types/cors": "^2.8.12",
-    "@workadventure/map-editor": "link:../libs/map-editor",
-    "@workadventure/messages": "link:../libs/messages",
+    "@workadventure/map-editor": "1.0.0",
+    "@workadventure/messages": "1.0.0",
     "@workadventure/tiled-map-type-guard": "^1.0.3",
     "concurrently": "^7.3.0",
     "cors": "^2.8.5",

@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "workadventureback",
   "version": "1.0.0",
   "description": "",
@@ -43,7 +44,7 @@
   "dependencies": {
     "@anatine/zod-openapi": "^1.3.0",
     "@grpc/grpc-js": "^1.7.1",
-    "@workadventure/messages": "link:../libs/messages",
+    "@workadventure/messages": "1.0.0",
     "@workadventure/tiled-map-type-guard": "^2.0.6",
     "axios": "^0.21.2",
     "bigbluebutton-js": "^0.1.1",

@@ -10,8 +10,8 @@
   "author": "WorkAdventure",
   "license": "ISC",
   "dependencies": {
-    "@workadventure/math-utils": "link:../math-utils",
-    "@workadventure/messages": "link:../messages",
+    "@workadventure/math-utils": "1.0.0",
+    "@workadventure/messages": "1.0.0",
     "@workadventure/tiled-map-type-guard": "^2.0.6",
     "@types/uuid": "^8.3.4",
     "uuid": "^9.0.0",
