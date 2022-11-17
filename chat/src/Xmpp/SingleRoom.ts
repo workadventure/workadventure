@@ -1,9 +1,10 @@
 import {AbstractRoom, User} from "./AbstractRoom";
 import {XmppClient} from "./XmppClient";
 import {ParsedJID} from "stanza/JID";
-import {get, Writable, writable} from "svelte/store";
+import {get, Writable, writable, derived} from "svelte/store";
 import {v4 as uuid} from "uuid";
 import {userStore} from "../Stores/LocalUserStore";
+import {mucRoomsStore} from "../Stores/MucRoomsStore";
 
 const _VERBOSE = true;
 
@@ -24,6 +25,14 @@ export class SingleRoom extends AbstractRoom {
 
     get recipient(): string {
         return this.userJid.full;
+    }
+
+    get name(): string {
+        return this.user.name;
+    }
+
+    public connect() {
+        this.sendPresence(true);
     }
 
     public sendPresence(first: boolean = false) {
@@ -48,5 +57,13 @@ export class SingleRoom extends AbstractRoom {
                 get(userStore).uuid,
                 presenceId
             );
+    }
+
+    public getMe() {
+        const defaultRoom = mucRoomsStore.getDefaultRoom();
+        if(!defaultRoom){
+            throw new Error('No default muc Room');
+        }
+        return derived(defaultRoom.getPresenceStore(), ($presenceStore) => $presenceStore.get(this.myJID));
     }
 }

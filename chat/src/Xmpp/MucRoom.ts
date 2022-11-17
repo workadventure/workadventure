@@ -12,6 +12,7 @@ import { WaLink, WaReceivedReactions, WaUserInfo } from "./Lib/Plugin";
 import { ParsedJID } from "stanza/JID";
 import { ChatStateMessage, JID } from "stanza";
 import { ChatState, MUCAffiliation } from "stanza/Constants";
+import {derived} from "svelte/store";
 
 const _VERBOSE = true;
 
@@ -24,7 +25,6 @@ export class MucRoom extends AbstractRoom {
     private showDisabledLoadOlderMessagesStore: Writable<boolean>;
     private description: string = "";
     private loadingSubscribers: Writable<boolean>;
-    private readyStore: Writable<boolean>;
 
     constructor(
         xmppClient: XmppClient,
@@ -117,12 +117,12 @@ export class MucRoom extends AbstractRoom {
     // }
     public sendDisconnect() {
         if (this.closed) {
-            this.xmppClient.removeMuc(this);
+            this.xmppClient.removeMucRoom(this);
             return;
         }
         void this.xmppClient.socket.leaveRoom(this.recipient);
         if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, ">> Disconnect sent");
-        this.xmppClient.removeMuc(this);
+        this.xmppClient.removeMucRoom(this);
     }
     private async sendRequestAllSubscribers() {
         if (this.closed) {
@@ -748,7 +748,7 @@ export class MucRoom extends AbstractRoom {
     public getShowDisabledLoadOlderMessagesStore() {
         return this.showDisabledLoadOlderMessagesStore;
     }
-    public getRoomReadyStore() {
-        return this.readyStore;
+    public getMe() {
+        return derived(this.presenceStore, ($presenceStore) => $presenceStore.get(this.myJID));
     }
 }

@@ -100,6 +100,7 @@ export class AbstractRoom {
     private composingTimeOut: Timeout | undefined;
     protected subscriptions = new Map<string, string>();
     public closed = false;
+    protected readyStore: Writable<boolean>;
 
     constructor(protected xmppClient: XmppClient, protected _VERBOSE: boolean) {
         if (this.constructor === AbstractRoom) {
@@ -112,6 +113,7 @@ export class AbstractRoom {
         this.lastMessageSeen = new Date();
         this.countMessagesToSee = writable<number>(0);
         this.loadingStore = writable<boolean>(false);
+        this.readyStore = writable<boolean>(false);
     }
 
     get recipient(): string {
@@ -225,6 +227,9 @@ export class AbstractRoom {
     }
     public getLoadingStore(): Writable<boolean> {
         return this.loadingStore;
+    }
+    public getRoomReadyStore(): Writable<boolean> {
+        return this.readyStore;
     }
 
     // DO NOT USE BUT CAN BE USEFUL

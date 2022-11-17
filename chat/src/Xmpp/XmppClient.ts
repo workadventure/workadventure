@@ -155,7 +155,7 @@ export class XmppClient {
         client.on("session:started", () => {
             for (const { name, url, type, subscribe } of this.xmppSettingsMessages.rooms) {
                 if (name && url && type) {
-                    this.joinMuc(name, url, type, subscribe);
+                    this.joinMucRoom(name, url, type, subscribe);
                 }
             }
 
@@ -545,7 +545,7 @@ export class XmppClient {
         }
     }
 
-    public joinSingle(user: User): SingleRoom {
+    public openSingleRoom(user: User): SingleRoom {
         const userJid = JID.parse(user.jid);
         let singleRoom = this.singles.get(userJid.bare);
         if (!singleRoom) {
@@ -555,10 +555,11 @@ export class XmppClient {
 
             singleRoom.connect();
         }
+        activeThreadStore.set(singleRoom);
         return singleRoom;
     }
 
-    public joinMuc(name: string, waRoomUrl: string, type: string, subscribe: boolean): MucRoom {
+    public joinMucRoom(name: string, waRoomUrl: string, type: string, subscribe: boolean): MucRoom {
         const roomUrl = JID.parse(JID.create({ local: waRoomUrl, domain: this.conferenceDomain }));
         let room = this.rooms.get(roomUrl.bare);
         if (!room) {
@@ -571,7 +572,7 @@ export class XmppClient {
         return room;
     }
 
-    public leaveMuc(name: string): void {
+    public leaveMucRoom(name: string): void {
         const roomUrl = JID.parse(JID.create({ local: name, domain: this.conferenceDomain }));
         const room = this.rooms.get(roomUrl.bare);
         if (room === undefined) {
@@ -581,11 +582,11 @@ export class XmppClient {
         if (room.closed) {
             room.sendDisconnect();
         } else {
-            this.removeMuc(room);
+            this.removeMucRoom(room);
         }
     }
 
-    public removeMuc(room: MucRoom) {
+    public removeMucRoom(room: MucRoom) {
         const roomUrl = room.url;
 
         const activeThread = get(activeThreadStore);

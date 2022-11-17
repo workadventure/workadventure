@@ -69,7 +69,7 @@ class IframeListener {
                             if (!get(enableChat)) {
                                 return;
                             }
-                            chatConnectionManager.connectionOrFail?.joinMuc(
+                            chatConnectionManager.connectionOrFail?.joinMucRoom(
                                 iframeEvent.data.name,
                                 iframeEvent.data.url,
                                 iframeEvent.data.type,
@@ -81,7 +81,7 @@ class IframeListener {
                             if (!get(enableChat)) {
                                 return;
                             }
-                            chatConnectionManager.connectionOrFail?.leaveMuc(iframeEvent.data.url);
+                            chatConnectionManager.connectionOrFail?.leaveMucRoom(iframeEvent.data.url);
                             break;
                         }
                         case "updateWritingStatusChatList": {

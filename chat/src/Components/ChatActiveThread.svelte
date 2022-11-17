@@ -10,13 +10,13 @@
     import { MucRoom } from "../Xmpp/MucRoom";
     import { onDestroy } from "svelte";
     import Loader from "./Loader.svelte";
-    import { derived } from "svelte/store";
+    import {SingleRoom} from "../Xmpp/SingleRoom";
 
-    export let activeThread: MucRoom;
+    export let activeThread: MucRoom | SingleRoom;
 
-    const presenceStore = activeThread.getPresenceStore();
+    const presenceStore = activeThread instanceof MucRoom ? activeThread.getPresenceStore() : undefined;
     const readyStore = activeThread.getRoomReadyStore();
-    const me = derived(activeThread.getPresenceStore(), ($presenceStore) => $presenceStore.get(activeThread.myJID));
+    const me = activeThread.getMe();
 
     let messagesList: ChatMessagesList;
 
@@ -47,7 +47,7 @@
         <div class="tw-text-center tw-pt-1 tw-pb-2">
             <div class="tw-flex">
                 <b>{activeThread.name}</b>
-                {#if activeThread.type === "live"}
+                {#if activeThread instanceof MucRoom && activeThread.type === "live"}
                     <div class="tw-block tw-relative tw-ml-7 tw-mt-1">
                         <span
                             class="tw-w-4 tw-h-4 tw-bg-pop-red tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-animate-ping"
@@ -58,7 +58,9 @@
                     </div>
                 {/if}
             </div>
-            <OnlineUsers {presenceStore} />
+            {#if activeThread instanceof MucRoom}
+                <OnlineUsers {presenceStore} />
+            {/if}
         </div>
         <div
             id="settings"

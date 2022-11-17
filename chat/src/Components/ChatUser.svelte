@@ -19,7 +19,7 @@
     export let searchValue: string = "";
 
     function openChat(user: User) {
-        chatConnectionManager.connection?.joinSingle(user);
+        chatConnectionManager.connection?.openSingleRoom(user);
     }
 
     const presenceStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
