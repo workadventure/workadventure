@@ -4,7 +4,7 @@ export const isModalEvent = z.object({
     src: z.string(),
     allow: z.string().optional().nullable().default(null),
     tiltle: z.string().optional().default("WorkAdventure modal iframe"),
-    position: z.string().optional().default("right"),
+    position: z.enum(["right", "left", "center"]).optional().default("right"),
     allowApi: z.boolean().optional().default(false),
 });
 
