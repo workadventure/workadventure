@@ -26,7 +26,8 @@ test.describe('Chat', () => {
     const nickname = getUniqueNickname('A');
     await login(page, nickname, 2);
 
-    if(browserName !== "firefox"){
+    if(browserName === "webkit"){
+      // Because webkit in playwright does not support Camera/Microphone Permission by settings
       await hideNoCamera(page);
     }
 
@@ -46,7 +47,8 @@ test.describe('Chat', () => {
       const nickname2 = getUniqueNickname('B');
       await login(page2, nickname2, 3);
 
-      if(browserName !== "firefox"){
+      if(browserName === "webkit"){
+        // Because webkit in playwright does not support Camera/Microphone Permission by settings
         await hideNoCamera(page2);
       }
       
