@@ -26,7 +26,9 @@ test.describe('Chat', () => {
     const nickname = getUniqueNickname('A');
     await login(page, nickname, 2);
 
-    await hideNoCamera(page);
+    if(browserName !== "firefox"){
+      await hideNoCamera(page);
+    }
 
     await openChat(page);
     const ejabberd = await findContainer('ejabberd');
@@ -43,7 +45,10 @@ test.describe('Chat', () => {
       );
       const nickname2 = getUniqueNickname('B');
       await login(page2, nickname2, 3);
-      await hideNoCamera(page2);
+
+      if(browserName !== "firefox"){
+        await hideNoCamera(page2);
+      }
       
       await openChat(page2);
       await Chat.slideToUsers(page2);

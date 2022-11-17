@@ -53,7 +53,7 @@ const config: PlaywrightTestConfig = {
         ...devices['Desktop Chrome'],
         permissions: ["microphone","camera"],
         launchOptions: {
-          args: ['--use-fake-ui-for-media-stream'],
+          args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
         },
       },
     },
@@ -76,7 +76,6 @@ const config: PlaywrightTestConfig = {
     {
       name: 'webkit',
       use: {
-        permissions: ["microphone","camera"],
         ...devices['Desktop Safari'],
       },
     },
