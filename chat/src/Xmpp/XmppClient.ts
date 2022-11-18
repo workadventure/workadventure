@@ -150,7 +150,7 @@ export class XmppClient {
 
         client.on("session:started", () => {
             for (const { name, url, type, subscribe } of this.xmppSettingsMessages.rooms) {
-                if (name && url && type) {
+                if (name && url) {
                     this.joinMuc(name, url, type, subscribe);
                 }
             }
@@ -184,33 +184,6 @@ export class XmppClient {
             this.forwardToRoom("chatState", state.from, state);
         });
 
-        client.on("subscribe", (subscribe: StanzaProtocol.ReceivedPresence) => {
-            console.log("subscribe", subscribe);
-        });
-        client.on("subscribed", (subscribe: StanzaProtocol.ReceivedPresence) => {
-            console.log("subscribed", subscribe);
-        });
-
-        client.on("raw:outgoing", (message) => {
-            if (message.includes("subscribe")) {
-                //console.warn(message);
-            }
-        });
-
-        client.on("*", (message) => {
-            //console.log(message);
-        });
-
-        client.on("iq:set:roster", (message) => {
-            //console.warn(message);
-        });
-
-        client.on("raw:incoming", (message) => {
-            //if (message.includes("iq")) {
-            //console.warn(message);
-            //}
-        });
-
         client.on("auth:failed", () => {
             console.error("auth:failed");
             this.isAuthorized = false;
@@ -218,7 +191,7 @@ export class XmppClient {
         });
         client.on("stream:error", (error) => {
             console.error(error);
-            //rej(error);
+            rej(error);
         });
         client.on("presence:error", (error) => {
             console.error(error);

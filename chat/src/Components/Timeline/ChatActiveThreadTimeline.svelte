@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fade, fly } from "svelte/transition";
-    import { SettingsIcon, ArrowLeftIcon, MessageCircleIcon, RefreshCwIcon, SmileIcon } from "svelte-feather-icons";
+    import { ArrowLeftIcon, RefreshCwIcon, SmileIcon } from "svelte-feather-icons";
     import { SendIcon } from "svelte-feather-icons";
     import {
         chatMessagesStore,
@@ -144,13 +144,13 @@
 >
     <div class="wa-thread-head">
         <div
-            class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2 tw-self-stretch tw-flex tw-justify-center tw-align-middle tw-border-t-0"
+            class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-w-14 tw-self-stretch tw-flex tw-justify-center tw-align-middle tw-border-t-0"
         >
             <button class="exit tw-text-lighter-purple tw-m-0" on:click={backToThreadList}>
                 <ArrowLeftIcon />
             </button>
         </div>
-        <div class="tw-text-center">
+        <div class="tw-text-center tw-pb-3 tw-pt-2">
             <div class="tw-flex tw-justify-center">
                 <b>{$LL.timeLine.title()}</b>
                 <!-- Have a event when user is in spountanéous discussion -->
@@ -170,16 +170,17 @@
             </div>
         </div>
         <div
-            class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-pl-2 tw-self-stretch tw-flex tw-justify-center tw-align-middle tw-border-t-0"
+            class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-pl-2 tw-w-14 tw-self-stretch tw-flex tw-justify-center tw-align-middle tw-border-t-0"
             on:click={() => (settingsView = !settingsView)}
         >
-            <button class="tw-text-lighter-purple tw-m-0">
+            <!--<button class="tw-text-lighter-purple tw-m-0">
                 {#if settingsView}
                     <MessageCircleIcon />
                 {:else}
                     <SettingsIcon />
                 {/if}
             </button>
+            -->
         </div>
     </div>
 

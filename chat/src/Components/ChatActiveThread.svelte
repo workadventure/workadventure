@@ -1,9 +1,9 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { SettingsIcon, ArrowLeftIcon, MessageCircleIcon, RefreshCwIcon } from "svelte-feather-icons";
+    import { ArrowLeftIcon, RefreshCwIcon, EyeIcon, EyeOffIcon } from "svelte-feather-icons";
     import ChatMessageForm from "./ChatMessageForm.svelte";
     import LL from "../i18n/i18n-svelte";
-    import { activeThreadStore, settingsViewStore } from "../Stores/ActiveThreadStore";
+    import { activeThreadStore, settingsViewStore, usersListViewStore } from "../Stores/ActiveThreadStore";
     import ChatUser from "./ChatUser.svelte";
     import ChatMessagesList from "./ChatMessagesList.svelte";
     import OnlineUsers from "./OnlineUsers.svelte";
@@ -22,6 +22,7 @@
 
     onDestroy(() => {
         settingsViewStore.set(false);
+        usersListViewStore.set(false);
     });
 </script>
 
@@ -33,7 +34,7 @@
 >
     <div class="wa-thread-head">
         <div
-            class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
+            class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-w-14 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
         >
             <button
                 class="exit tw-text-lighter-purple tw-m-0"
@@ -44,8 +45,8 @@
                 <ArrowLeftIcon />
             </button>
         </div>
-        <div class="tw-text-center tw-pt-1 tw-pb-2">
-            <div class="tw-flex">
+        <div class="tw-text-center tw-pt-2 tw-pb-3">
+            <div class="tw-flex tw-justify-center">
                 <b>{activeThread.name}</b>
                 {#if activeThread.type === "live"}
                     <div class="tw-block tw-relative tw-ml-7 tw-mt-1">
@@ -58,13 +59,19 @@
                     </div>
                 {/if}
             </div>
-            <OnlineUsers {presenceStore} />
+            <div
+                class="tw-flex tw-flex-wrap tw-gap-x-1 tw-text-pop-green tw-cursor-pointer tw-items-center"
+                on:click={() => usersListViewStore.set(!$usersListViewStore)}
+            >
+                <OnlineUsers {presenceStore} />
+                {#if $usersListViewStore}<EyeOffIcon size="13" />{:else}<EyeIcon size="13" />{/if}
+            </div>
         </div>
         <div
             id="settings"
-            class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-pl-2 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
-            on:click={() => settingsViewStore.set(!$settingsViewStore)}
+            class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-w-14 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
         >
+            <!--
             <button class="tw-text-lighter-purple tw-m-0">
                 {#if $settingsViewStore}
                     <MessageCircleIcon />
@@ -72,10 +79,28 @@
                     <SettingsIcon />
                 {/if}
             </button>
+            -->
         </div>
     </div>
     {#if !$readyStore}
         <Loader text={$LL.loading()} />
+    {:else if $usersListViewStore}
+        <div
+            in:fly={{ y: -100, duration: 100, delay: 200 }}
+            out:fly={{ y: -100, duration: 100 }}
+            class="tw-flex tw-flex-col tw-flex-auto tw-w-full"
+        >
+            <div
+                class="users tw-pt-16 wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid"
+            >
+                <p class="tw-px-5 tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
+                    {$LL.users()}
+                </p>
+                {#each [...$presenceStore] as [_, user]}
+                    <ChatUser mucRoom={activeThread} {user} searchValue="" />
+                {/each}
+            </div>
+        </div>
     {:else if $settingsViewStore}
         <div
             in:fly={{ y: -100, duration: 100, delay: 200 }}
@@ -95,22 +120,15 @@
             <div class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5">
                 <p class="tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">Chatzone</p>
             </div>
-            <div class="users wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
-                <p class="tw-px-5 tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
-                    {$LL.users()}
-                </p>
-                {#each [...$presenceStore] as [_, user]}
-                    <ChatUser mucRoom={activeThread} {user} searchValue="" />
-                {/each}
-            </div>
-        </div>
-    {:else}
-        <ChatMessagesList mucRoom={activeThread} bind:this={messagesList} />
-
-        <div class="messageForm">
-            <ChatMessageForm mucRoom={activeThread} on:scrollDown={messagesList.scrollDown} />
         </div>
     {/if}
+    <div class:tw-hidden={$usersListViewStore} in:fly={{ y: 100, duration: 100, delay: 200 }}>
+        <ChatMessagesList mucRoom={activeThread} bind:this={messagesList} />
+
+        <div class="messageForm" transition:fly={{ y: 100, duration: 100 }}>
+            <ChatMessageForm mucRoom={activeThread} on:scrollDown={messagesList.scrollDown} />
+        </div>
+    </div>
 </div>
 
 <style lang="scss">

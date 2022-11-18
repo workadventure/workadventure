@@ -18,10 +18,10 @@
         availabilityStatusStore,
         connectionNotAuthorized,
         enableChat,
+        navChat,
         showForumsStore,
         showLivesStore,
         showTimelineStore,
-        showUsersStore,
         timelineActiveStore,
         timelineMessagesToSee,
     } from "../Stores/ChatStore";
@@ -75,18 +75,8 @@
             })
         );
         subscribeListeners.push(
-            showUsersStore.subscribe((value) => {
-                if (value) {
-                    showLivesStore.set(false);
-                    showForumsStore.set(false);
-                    showTimelineStore.set(false);
-                }
-            })
-        );
-        subscribeListeners.push(
             showLivesStore.subscribe((value) => {
                 if (value) {
-                    showUsersStore.set(false);
                     showForumsStore.set(false);
                     showTimelineStore.set(false);
                 }
@@ -96,7 +86,6 @@
             showForumsStore.subscribe((value) => {
                 if (value) {
                     showLivesStore.set(false);
-                    showUsersStore.set(false);
                     showTimelineStore.set(false);
                 }
             })
@@ -106,7 +95,6 @@
                 if (value) {
                     showLivesStore.set(false);
                     showForumsStore.set(false);
-                    showUsersStore.set(false);
                 }
             })
         );
@@ -164,7 +152,16 @@
         {:else if $activeThreadStore !== undefined}
             <ChatActiveThread activeThread={$activeThreadStore} />
         {:else}
-            <div class="wa-message-bg" transition:fly={{ x: -500, duration: 400 }}>
+            <div class="wa-message-bg tw-pt-3" transition:fly={{ x: -500, duration: 400 }}>
+                <nav class="nav">
+                    <div class="background" class:chat={$navChat === "chat"} />
+                    <ul>
+                        <li class:active={$navChat === "users"} on:click={() => navChat.set("users")}>
+                            {$LL.users()}
+                        </li>
+                        <li class:active={$navChat === "chat"} on:click={() => navChat.set("chat")}>Chat</li>
+                    </ul>
+                </nav>
                 <!-- searchbar -->
                 <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
                     <div class="tw-p-3">
@@ -185,27 +182,30 @@
                         </div>
                     </div>
                 {/if}
-                <!-- chat users -->
-                {#if defaultMucRoom !== undefined}
-                    <UsersList mucRoom={defaultMucRoom} searchValue={searchValue.toLocaleLowerCase()} />
-                {/if}
+                {#if $navChat === "users"}
+                    <!-- chat users -->
+                    {#if defaultMucRoom !== undefined}
+                        <UsersList mucRoom={defaultMucRoom} searchValue={searchValue.toLocaleLowerCase()} />
+                    {/if}
+                {:else if $navChat === "chat"}
+                    {#if $enableChat}
+                        <ChatForumRooms
+                            searchValue={searchValue.toLocaleLowerCase()}
+                            forumRooms={[...$mucRoomsStore].filter(
+                                (mucRoom) =>
+                                    mucRoom.type === "forum" && mucRoom.name.toLowerCase().includes(searchValue)
+                            )}
+                        />
+                        <ChatLiveRooms
+                            searchValue={searchValue.toLocaleLowerCase()}
+                            liveRooms={[...$mucRoomsStore].filter(
+                                (mucRoom) => mucRoom.type === "live" && mucRoom.name.toLowerCase().includes(searchValue)
+                            )}
+                        />
+                    {/if}
 
-                {#if $enableChat}
-                    <ChatForumRooms
-                        searchValue={searchValue.toLocaleLowerCase()}
-                        forumRooms={[...$mucRoomsStore].filter(
-                            (mucRoom) => mucRoom.type === "forum" && mucRoom.name.toLowerCase().includes(searchValue)
-                        )}
-                    />
-                    <ChatLiveRooms
-                        searchValue={searchValue.toLocaleLowerCase()}
-                        liveRooms={[...$mucRoomsStore].filter(
-                            (mucRoom) => mucRoom.type === "live" && mucRoom.name.toLowerCase().includes(searchValue)
-                        )}
-                    />
+                    <Timeline on:activeThreadTimeLine={() => timelineActiveStore.set(true)} />
                 {/if}
-
-                <Timeline on:activeThreadTimeLine={() => timelineActiveStore.set(true)} />
             </div>
         {/if}
     </section>
