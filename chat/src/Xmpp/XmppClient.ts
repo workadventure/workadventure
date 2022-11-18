@@ -538,7 +538,7 @@ export class XmppClient {
         if (!room) {
             room = new MucRoom(this, name, roomUrl, type, subscribe);
             this.rooms.set(roomUrl.bare, room);
-            mucRoomsStore.addSingleRoom(room);
+            mucRoomsStore.addMucRoom(room);
 
             room.connect();
         }
@@ -568,13 +568,13 @@ export class XmppClient {
         }
 
         this.rooms.delete(roomUrl.toString());
-        mucRoomsStore.removeSingleRoom(room);
+        mucRoomsStore.removeMucRoom(room);
     }
 
     public close() {
         for (const [, room] of this.rooms) {
             room.sendDisconnect();
-            mucRoomsStore.removeSingleRoom(room);
+            mucRoomsStore.removeMucRoom(room);
         }
         this.clientPromise.cancel();
     }

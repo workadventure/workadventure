@@ -12,13 +12,13 @@ function createMucRoomsStore() {
 
     return {
         subscribe,
-        addSingleRoom(mucRoom: MucRoom) {
+        addMucRoom(mucRoom: MucRoom) {
             update((set) => {
                 set.add(mucRoom);
                 return set;
             });
         },
-        removeSingleRoom(mucRoom: MucRoom) {
+        removeMucRoom(mucRoom: MucRoom) {
             update((set) => {
                 set.delete(mucRoom);
                 return set;

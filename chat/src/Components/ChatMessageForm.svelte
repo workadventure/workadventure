@@ -11,7 +11,7 @@
         XCircleIcon,
         ArrowRightCircleIcon,
     } from "svelte-feather-icons";
-    import { MucRoom } from "../Xmpp/MucRoom";
+    import {MucRoom, UserList} from "../Xmpp/MucRoom";
     import { User } from "../Xmpp/AbstractRoom";
     import LL, { locale } from "../i18n/i18n-svelte";
     import { createEventDispatcher, onMount } from "svelte";
@@ -32,9 +32,10 @@
     import crown from "../../public/static/svg/icone-premium-crown.svg";
     import { iframeListener } from "../IframeListener";
     import { ChatState } from "stanza/Constants";
-    import { derived } from "svelte/store";
+    import {SingleRoom} from "../Xmpp/SingleRoom";
+    import {writable,} from "svelte/store";
 
-    export let mucRoom: MucRoom;
+    export let activeThread: MucRoom | SingleRoom;
 
     const dispatch = createEventDispatcher();
 
@@ -54,8 +55,8 @@
     // const regexUserTag = /(?<![\w@])@([\w@]+(?:[.!][\w@]+)*)+$/gm;
     const regexUserTag = /@([\w@]+(?:[.!][\w@]+)*)+$/gm;
 
-    const presenceStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
-    const me = derived(presenceStore, ($presenceStore) => $presenceStore.get(mucRoom.myJID));
+    const presenceStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? (activeThread instanceof MucRoom ? activeThread.getPresenceStore():writable<UserList>(new Map<string, User>()));
+    const me = activeThread.getMe();
 
     function onFocus() {}
     function onBlur() {}
@@ -85,15 +86,15 @@
             sendReplyMessage();
             return false;
         }
-        mucRoom.updateComposingState(ChatState.Paused);
-        mucRoom.sendMessage(newMessageText);
+        activeThread.updateComposingState(ChatState.Paused);
+        activeThread.sendMessage(newMessageText);
         newMessageText = "";
         dispatch("scrollDown");
         return false;
     }
 
     function isMe(name: string) {
-        return name === mucRoom.playerName;
+        return name === activeThread.playerName;
     }
 
     function findUserInDefault(name: string): User | UserData | undefined {
@@ -119,8 +120,8 @@
 
     function sendReplyMessage() {
         if (!$selectedMessageToReply || !newMessageText || newMessageText.replace(/\s/g, "").length === 0) return;
-        mucRoom.updateComposingState(ChatState.Paused);
-        mucRoom.sendMessage(newMessageText, $selectedMessageToReply);
+        activeThread.updateComposingState(ChatState.Paused);
+        activeThread.sendMessage(newMessageText, $selectedMessageToReply);
         selectedMessageToReply.set(null);
         newMessageText = "";
         dispatch("scrollDown");
@@ -176,9 +177,9 @@
 
     function analyseText() {
         if (newMessageText === "") {
-            mucRoom.updateComposingState(ChatState.Paused);
+            activeThread.updateComposingState(ChatState.Paused);
         } else {
-            mucRoom.updateComposingState(ChatState.Composing);
+            activeThread.updateComposingState(ChatState.Composing);
         }
 
         const values = newMessageText.match(regexUserTag);
@@ -212,7 +213,7 @@
 
     function onKeyPress(): boolean {
         adjustHeight();
-        mucRoom.updateComposingState(ChatState.Composing);
+        activeThread.updateComposingState(ChatState.Composing);
         return true;
     }
 

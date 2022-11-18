@@ -65,6 +65,10 @@ export class SingleRoom extends AbstractRoom {
             );
     }
 
+    public sendMessage(text: string){
+        // TODO IMPLEMENT
+    }
+
     public getMe() {
         const defaultRoom = mucRoomsStore.getDefaultRoom();
         if(!defaultRoom){
