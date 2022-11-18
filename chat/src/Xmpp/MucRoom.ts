@@ -13,6 +13,7 @@ import { ParsedJID } from "stanza/JID";
 import { ChatStateMessage, JID } from "stanza";
 import { ChatState, MUCAffiliation } from "stanza/Constants";
 import {derived} from "svelte/store";
+import * as StanzaConstants from "stanza/Constants";
 
 const _VERBOSE = true;
 
@@ -41,6 +42,16 @@ export class MucRoom extends AbstractRoom {
         this.readyStore = writable<boolean>(type === "default");
     }
 
+    private console(text: string){
+        if (_VERBOSE){
+            console.warn(
+                `[XMPP]%c[MR](${this.name})%c ${text}`,
+                "color: LightSkyBlue;",
+                "color: inherit;",
+            );
+        }
+    }
+
     get recipient(): string {
         return JID.create({
             local: this.roomJid.local,
@@ -48,8 +59,14 @@ export class MucRoom extends AbstractRoom {
             resource: this.xmppClient.getMyResource(),
         });
     }
+    get rawRecipient(): string {
+        return this.roomJid.full;
+    }
     get url(): string {
         return this.roomJid.bare;
+    }
+    get chatType(): StanzaConstants.MessageType {
+        return "groupchat";
     }
 
     public getUserByJid(jid: string): User {
@@ -81,26 +98,8 @@ export class MucRoom extends AbstractRoom {
 
     // Functions used to send message to the server
     public sendPresence(first: boolean = false) {
-        if (this.closed) {
-            return;
-        }
-        const presenceId = uuid();
-        if (first) {
-            this.subscriptions.set("firstPresence", presenceId);
-        }
-
-        this.sendUserInfo(presenceId);
-
-        //this.xmppClient.socket.sendPresence({ to: this.recipient, id: presenceId, muc: {type: 'info', affiliation: "none", role: "participant"} });
-        if (_VERBOSE)
-            console.warn(
-                `[XMPP][MucRoom - ${this.name}]`,
-                ">> ",
-                first && "First",
-                "Presence sent",
-                get(userStore).uuid,
-                presenceId
-            );
+        super.sendPresence(first);
+        this.console(`>> ${first?'First ':''}Presence sent`);
     }
     public sendDisconnect() {
         if (this.closed) {
@@ -108,7 +107,7 @@ export class MucRoom extends AbstractRoom {
             return;
         }
         void this.xmppClient.socket.leaveRoom(this.recipient);
-        if (_VERBOSE) console.warn(`[XMPP][MucRoom - ${this.name}]`, ">> Disconnect sent");
+        this.console('>> Disconnect sent');
         this.xmppClient.removeMucRoom(this);
     }
     private async sendRequestAllSubscribers() {
@@ -119,13 +118,13 @@ export class MucRoom extends AbstractRoom {
         this.subscriptions.set("subscriptions", iqId);
         this.loadingSubscribers.set(true);
         try {
-            if (_VERBOSE) console.warn(`[XMPP][MucRoom - ${this.name}]`, ">> Get all subscribers sent");
+            this.console('>> Get all subscribers sent');
             const response = await this.xmppClient.socket.sendIQ({
                 type: "get",
                 to: this.url,
                 subscriptions: { usersNick: [], usersJid: [] },
             });
-            if (_VERBOSE) console.warn(`[XMPP][MucRoom - ${this.name}]`, "<< Get all subscribers received");
+            this.console('<< Get all subscribers received');
             response.subscriptions.usersJid.forEach((userJid, i) => {
                 if (![...get(this.presenceStore)].find(([_userJid, _]) => _userJid.includes(userJid))) {
                     this.addUserInactive(userJid, response.subscriptions.usersNick[i]);
@@ -146,9 +145,8 @@ export class MucRoom extends AbstractRoom {
         if (this.closed) {
             return;
         }
-        const response = await this.xmppClient.socket.setRoomAffiliation(this.roomJid.bare, userJID, type, "test");
-        console.warn(response);
-        if (_VERBOSE) console.warn(`[XMPP][MucRoom - ${this.name}]`, ">> Affiliation sent");
+        await this.xmppClient.socket.setRoomAffiliation(this.roomJid.bare, userJID, type, "Made by an administrator");
+        this.console('>> Affiliation sent');
     }
     public sendBan(userJID: string, name: string, playUri: string) {
         if (this.closed) {
@@ -161,107 +159,31 @@ export class MucRoom extends AbstractRoom {
         });
         void this.sendAffiliate("outcast", userJID);
         //this.xmppClient.getConnection().emitBanUserByUuid(playUri, userJID.local, name, "Test message de ban");
-        if (_VERBOSE) console.warn(`[XMPP][MucRoom - ${this.name}]`, ">> Ban user message sent");
+        this.console('>> Ban user message sent');
     }
     public sendChatState(state: ChatState) {
         if (this.closed) {
             return;
         }
-        this.xmppClient.socket.sendGroupChatMessage({
-            to: this.roomJid.full,
+        this.xmppClient.socket.sendMessage({
+            type: "groupchat",
+            to: this.rawRecipient,
             chatState: state,
             jid: this.xmppClient.getMyPersonalJID(),
         });
-        if (_VERBOSE) console.warn(`[XMPP][MucRoom - ${this.name}]`, ">> Chat state sent");
+        this.console('>> Chat state sent');
     }
     public sendMessage(text: string, messageReply?: Message) {
-        if (this.closed) {
-            return;
-        }
-        const idMessage = uuid();
-        let links = {};
-        if (get(filesUploadStore).size > 0) {
-            links = { links: fileMessageManager.jsonFiles };
-        }
-        if (messageReply) {
-            let messageReplyLinks = {};
-            if (messageReply.links != undefined) {
-                messageReplyLinks = { links: JSON.stringify(messageReply.links) };
-            }
-            this.xmppClient.socket.sendGroupChatMessage({
-                to: this.roomJid.full,
-                id: idMessage,
-                jid: this.xmppClient.getMyPersonalJID(),
-                body: text,
-                messageReply: {
-                    to: messageReply.from,
-                    id: messageReply.id,
-                    senderName: messageReply.name,
-                    body: messageReply.body,
-                    ...messageReplyLinks,
-                },
-                ...links,
-            });
-        } else {
-            this.xmppClient.socket.sendGroupChatMessage({
-                to: this.roomJid.full,
-                id: idMessage,
-                jid: this.xmppClient.getMyPersonalJID(),
-                body: text,
-                ...links,
-            });
-        }
-
-        this.messageStore.update((messages) => {
-            messages.set(idMessage, {
-                name: this.xmppClient.getPlayerName(),
-                jid: this.xmppClient.getMyPersonalJID(),
-                body: text,
-                time: new Date(),
-                id: idMessage,
-                delivered: false,
-                error: false,
-                from: this.xmppClient.getMyJID(),
-                type: messageReply ? MessageType.reply : MessageType.message,
-                ...links,
-                targetMessageReply: messageReply
-                    ? {
-                          id: messageReply.id,
-                          senderName: messageReply.name,
-                          body: messageReply.body,
-                          links: messageReply.links,
-                      }
-                    : undefined,
-                mentions: [...get(mentionsUserStore).values()],
-            });
-            return messages;
-        });
-
-        fileMessageManager.reset();
-        mentionsUserStore.set(new Set<User>());
-
-        this.updateLastMessageSeen();
-
-        if (this.sendTimeOut) {
-            clearTimeout(this.sendTimeOut);
-        }
-        this.sendTimeOut = setTimeout(() => {
-            this.messageStore.update((messages) => {
-                const messagesUpdated = new Map<string, Message>();
-                messages.forEach((message, messageId) => {
-                    messagesUpdated.set(messageId, { ...message, error: !message.delivered });
-                });
-                return messagesUpdated;
-            });
-        }, 10_000);
-        if (_VERBOSE) console.warn(`[XMPP][MucRoom - ${this.name}]`, ">> Message sent");
+        super.sendMessage(text, messageReply);
+        this.console('>> Message sent');
     }
     public sendRemoveMessage(messageId: string) {
         if (this.closed) {
             return;
         }
-        this.xmppClient.socket.sendGroupChatMessage({
-            to: this.roomJid.full,
+        this.xmppClient.socket.sendMessage({
+            type: "groupchat",
+            to: this.rawRecipient,
             id: uuid(),
             jid: this.xmppClient.getMyPersonalJID(),
             body: "",
@@ -269,7 +191,7 @@ export class MucRoom extends AbstractRoom {
                 id: messageId,
             },
         });
-        if (_VERBOSE) console.warn(`[XMPP][MucRoom - ${this.name}]`, ">> Remove message sent");
+        this.console('>> Remove message sent');
     }
     public sendReactionMessage(emojiTargeted: string, messageId: string) {
         if (this.closed) {
@@ -288,8 +210,9 @@ export class MucRoom extends AbstractRoom {
         } else {
             newReactions.push(emojiTargeted);
         }
-        this.xmppClient.socket.sendGroupChatMessage({
-            to: this.roomJid.full,
+        this.xmppClient.socket.sendMessage({
+            type: "groupchat",
+            to: this.rawRecipient,
             id: uuid(),
             jid: this.xmppClient.getMyPersonalJID(),
             body: "",
@@ -298,7 +221,7 @@ export class MucRoom extends AbstractRoom {
                 reaction: newReactions,
             },
         });
-        if (_VERBOSE) console.warn(`[XMPP][MucRoom - ${this.name}]`, ">> Reaction message sent");
+        this.console('>> Reaction message sent');
 
         // Recompute reactions
         this.toggleReactionsMessage(this.xmppClient.getMyPersonalJID(), messageId, newReactions);
@@ -309,10 +232,10 @@ export class MucRoom extends AbstractRoom {
         }
         const destroyId = uuid();
         this.subscriptions.set("destroy", destroyId);
-        if (_VERBOSE) console.warn(`[XMPP][MucRoom - ${this.name}]`, ">> Destroy room sent");
+        this.console('>> Destroy room sent');
         this.readyStore.set(false);
         try {
-            void this.xmppClient.socket.destroyRoom(this.roomJid.full, {
+            void this.xmppClient.socket.destroyRoom(this.rawRecipient, {
                 reason: `Re initialisation by administrator (${destroyId})`,
             });
         } catch (e) {
@@ -330,7 +253,7 @@ export class MucRoom extends AbstractRoom {
             .shift();
         this.loadingStore.set(true);
         const now = new Date();
-        if (_VERBOSE) console.warn(`[XMPP][MucRoom - ${this.name}]`, ">> Retrieve last messages sent");
+        this.console('>> Retrieve last messages sent');
         const response = await this.xmppClient.socket.searchHistory(this.roomJid.bare, {
             version: "2",
             form: {
@@ -351,7 +274,7 @@ export class MucRoom extends AbstractRoom {
                 max,
             },
         });
-        if (_VERBOSE) console.warn(`[XMPP][MucRoom - ${this.name}]`, "<< Retrieve last messages received");
+        this.console('<< Retrieve last messages received');
         if (response.paging && response.paging.count !== undefined) {
             response.results?.forEach((result) => {
                 if (result.item.message) {
@@ -377,7 +300,7 @@ export class MucRoom extends AbstractRoom {
             // If subject message, we do nothing for the moment
             response = true;
         } else {
-            if (_VERBOSE) console.warn(`[XMPP][MucRoom - ${this.name}]`, "<< Message received");
+            this.console('<< Message received');
             let date = new Date();
             if (delay) {
                 // Only in case where the message received is an archive (a message automatically sent by the server when joining a room)
@@ -458,7 +381,8 @@ export class MucRoom extends AbstractRoom {
         if (!receivedMessage.jid) {
             throw new Error("No JID set for the message");
         }
-        if (_VERBOSE) console.warn(`[XMPP][MucRoom - ${this.name}]`, "<< Reaction message received");
+
+        this.console('<< Reaction message received');
         this.toggleReactionsMessage(
             receivedMessage.jid,
             receivedMessage.reactions.id,
@@ -467,7 +391,7 @@ export class MucRoom extends AbstractRoom {
         return true;
     }
     onChatState(chatState: ChatStateMessage): boolean {
-        if (_VERBOSE) console.warn(`[XMPP][MucRoom - ${this.name}]`, "<< Chat state received");
+        this.console('<< Chat state received');
         if (!chatState.jid) {
             throw new Error("No jid");
         }
@@ -476,7 +400,7 @@ export class MucRoom extends AbstractRoom {
         return true;
     }
     onPresence(presence: StanzaProtocol.ReceivedPresence): boolean {
-        if (_VERBOSE) console.warn(`[XMPP][MucRoom - ${this.name}]`, "<< Presence received");
+        this.console('<< Presence received');
         let response = false;
 
         if (presence.id) {

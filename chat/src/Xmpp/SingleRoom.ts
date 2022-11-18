@@ -1,16 +1,22 @@
-import {AbstractRoom, User} from "./AbstractRoom";
+import {AbstractRoom, Message, MessageType, User} from "./AbstractRoom";
 import {XmppClient} from "./XmppClient";
 import {ParsedJID} from "stanza/JID";
 import {get, Writable, writable, derived} from "svelte/store";
 import {v4 as uuid} from "uuid";
 import {userStore} from "../Stores/LocalUserStore";
 import {mucRoomsStore} from "../Stores/MucRoomsStore";
+import {ChatState} from "stanza/Constants";
+import {ChatStateMessage, JID} from "stanza";
+import {filesUploadStore, mentionsUserStore} from "../Stores/ChatStore";
+import {fileMessageManager} from "../Services/FileMessageManager";
+import * as StanzaConstants from "stanza/Constants";
 
 const _VERBOSE = true;
 
 export class SingleRoom extends AbstractRoom {
     private canLoadOlderMessagesStore: Writable<boolean>;
     private showDisabledLoadOlderMessagesStore: Writable<boolean>;
+    private chatStateStore: Writable<ChatState>;
 
     constructor(
         xmppClient: XmppClient,
@@ -21,18 +27,33 @@ export class SingleRoom extends AbstractRoom {
 
         this.canLoadOlderMessagesStore = writable<boolean>(true);
         this.showDisabledLoadOlderMessagesStore = writable<boolean>(false);
+        this.chatStateStore = writable<ChatState>();
+    }
+
+    private console(text: string){
+        if (_VERBOSE){
+            console.warn(
+                `[XMPP]%c[SR](${this.name})%c ${text}`,
+                "color: LightGreen;",
+                "color: inherit;",
+            );
+        }
     }
 
     get recipient(): string {
         return this.userJid.full;
     }
-
+    get rawRecipient(): string {
+        return this.userJid.full;
+    }
     get name(): string {
         return this.user.name;
     }
-
     get availabilityStatus(): number {
         return this.user.availabilityStatus ?? 0;
+    }
+    get chatType(): StanzaConstants.MessageType {
+        return "chat";
     }
 
     public connect() {
@@ -40,33 +61,29 @@ export class SingleRoom extends AbstractRoom {
             this.sendPresence(true);
         }
     }
-
     public sendPresence(first: boolean = false) {
+        if (first) {
+            void this.xmppClient.socket.subscribe(this.userJid.bare);
+        }
+        super.sendPresence(first);
+        this.console(`>> ${first?'First ':''}Presence sent to ${this.userJid.bare}`);
+    }
+    public sendMessage(text: string, messageReply?: Message) {
+        super.sendMessage(text, messageReply);
+        this.console('>> Message sent');
+    }
+    public sendChatState(state: ChatState) {
         if (this.closed) {
             return;
         }
-        const presenceId = uuid();
-        if (first) {
-            this.subscriptions.set("firstPresence", presenceId);
-            void this.xmppClient.socket.subscribe(this.userJid.bare);
-        }
-
-        this.sendUserInfo(presenceId);
-
-        //this.xmppClient.socket.sendPresence({ to: this.recipient, id: presenceId, muc: {type: 'info', affiliation: "none", role: "participant"} });
-        if (_VERBOSE)
-            console.warn(
-                `[XMPP][${this.user.name}]`,
-                ">> ",
-                first && "First",
-                "Presence sent",
-                get(userStore).uuid,
-                presenceId
-            );
+        this.xmppClient.socket.sendMessage({ to: this.recipient, chatState: state});
+        this.console('>> Chat state sent');
     }
 
-    public sendMessage(text: string){
-        // TODO IMPLEMENT
+    onChatState(chatState: ChatStateMessage): boolean {
+        this.console('<< Chat state received');
+        this.chatStateStore.set(chatState.chatState as ChatState);
+        return true;
     }
 
     public getMe() {

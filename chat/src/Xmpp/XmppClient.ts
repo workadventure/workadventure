@@ -53,34 +53,44 @@ export class XmppClient {
     private forwardToRoom(type: string, from: string, xml: JSONData) {
         const roomJID = JID.toBare(from);
 
-        const mucRoom = this.rooms.get(roomJID.toString());
+        let room: MucRoom | SingleRoom | undefined;
+        room = this.rooms.get(roomJID.toString());
+        if(!room){
+            const defaultMucRoom = mucRoomsStore.getDefaultRoom();
+            if(defaultMucRoom) {
+                const user = get(defaultMucRoom.getPresenceStore()).get(from);
+                if(user){
+                    room = this.addSingleRoom(user);
+                }
+            }
+        }
         let handledMessage = false;
-        if (mucRoom) {
+        if (room) {
             switch (type) {
                 case "presence": {
-                    handledMessage = mucRoom.onPresence(xml as StanzaProtocol.ReceivedPresence);
+                    handledMessage = room.onPresence(xml as StanzaProtocol.ReceivedPresence);
                     break;
                 }
                 case "message": {
-                    handledMessage = mucRoom.onMessage(
+                    handledMessage = room.onMessage(
                         xml as StanzaProtocol.ReceivedMessage,
                         xml.delay as StanzaProtocol.Delay
                     );
                     break;
                 }
                 case "reactions": {
-                    handledMessage = mucRoom.onReactions(xml as WaReceivedReactions);
+                    handledMessage = room.onReactions(xml as WaReceivedReactions);
                     break;
                 }
                 case "archive": {
-                    handledMessage = mucRoom.onMessage(
+                    handledMessage = room.onMessage(
                         xml.item.message as StanzaProtocol.ReceivedMessage,
                         xml.item.delay as StanzaProtocol.Delay
                     );
                     break;
                 }
                 case "chatState": {
-                    handledMessage = mucRoom.onChatState(xml as ChatStateMessage);
+                    handledMessage = room.onChatState(xml as ChatStateMessage);
                     break;
                 }
             }
@@ -522,13 +532,19 @@ export class XmppClient {
         const userJid = JID.parse(user.jid);
         let singleRoom = this.singles.get(userJid.bare);
         if (!singleRoom) {
-            singleRoom = new SingleRoom(this, user, userJid);
-            this.singles.set(userJid.bare, singleRoom);
-            singleRoomsStore.addSingleRoom(singleRoom);
-
-            singleRoom.connect();
+            singleRoom = this.addSingleRoom(user);
         }
         activeThreadStore.set(singleRoom);
+        return singleRoom;
+    }
+
+    public addSingleRoom(user: User): SingleRoom {
+        const userJid = JID.parse(user.jid);
+        let singleRoom = new SingleRoom(this, user, userJid);
+        this.singles.set(userJid.bare, singleRoom);
+        singleRoomsStore.addSingleRoom(singleRoom);
+
+        singleRoom.connect();
         return singleRoom;
     }
 

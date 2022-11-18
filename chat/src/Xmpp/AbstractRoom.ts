@@ -5,13 +5,15 @@ import { XmppClient } from "./XmppClient";
 import * as StanzaProtocol from "stanza/protocol";
 import {ChatStateMessage} from "stanza";
 import { WaLink, WaReceivedReactions } from "./Lib/Plugin";
-import { ChatState } from "stanza/Constants";
+import * as StanzaConstants from "stanza/Constants";
 import Timeout = NodeJS.Timeout;
 import {get} from "svelte/store";
 import {userStore} from "../Stores/LocalUserStore";
 import {mucRoomsStore} from "../Stores/MucRoomsStore";
-import {availabilityStatusStore} from "../Stores/ChatStore";
+import {availabilityStatusStore, filesUploadStore, mentionsUserStore} from "../Stores/ChatStore";
 import { v4 as uuid } from "uuid";
+import {fileMessageManager} from "../Services/FileMessageManager";
+import {ChatState} from "stanza/Constants";
 
 export type User = {
     name: string;
@@ -26,7 +28,7 @@ export type User = {
     unreads?: boolean;
     isAdmin?: boolean;
     role?: string;
-    chatState?: ChatState;
+    chatState?: StanzaConstants.ChatState;
     isMe: boolean;
     jid: string;
     isMember: boolean;
@@ -121,14 +123,28 @@ export class AbstractRoom {
             'Can\'t use recipient get from Abstract class "AbstractRoom", need to be implemented.'
         );
     }
-
-    // Functions used to send message to the server
-    public sendChatState(state: ChatState): void {
+    get rawRecipient(): string {
         throw new TypeError(
-            'Can\'t use sendChatState function from Abstract class "AbstractRoom", need to be implemented.'
+            'Can\'t use rawRecipient get from Abstract class "AbstractRoom", need to be implemented.'
+        );
+    }
+    get chatType(): StanzaConstants.MessageType {
+        throw new TypeError(
+            'Can\'t use chatType get from Abstract class "AbstractRoom", need to be implemented.'
         );
     }
 
+    // Functions used to send message to the server
+    protected sendPresence(first: boolean = false) {
+        if (this.closed) {
+            return;
+        }
+        const presenceId = uuid();
+        if (first) {
+            this.subscriptions.set("firstPresence", presenceId);
+        }
+        this.sendUserInfo(presenceId);
+    }
     public sendUserInfo(presenceId: string = uuid()){
         this.xmppClient.socket.sendUserInfo(this.recipient, presenceId, {
             jid: this.xmppClient.getMyJID(),
@@ -144,27 +160,121 @@ export class AbstractRoom {
             userVisitCardUrl: get(userStore).visitCardUrl ?? "",
         });
     }
+    protected sendChatState(state: ChatState) {
+        if (this.closed) {
+            return;
+        }
+        this.xmppClient.socket.sendMessage({
+            type: this.chatType,
+            to: this.rawRecipient,
+            chatState: state,
+            jid: this.xmppClient.getMyPersonalJID(),
+        });
+    }
+    protected sendMessage(text: string, messageReply?: Message) {
+        if (this.closed) {
+            return;
+        }
+        const idMessage = uuid();
+        let links = {};
+        if (get(filesUploadStore).size > 0) {
+            links = { links: fileMessageManager.jsonFiles };
+        }
+        if (messageReply) {
+            let messageReplyLinks = {};
+            if (messageReply.links != undefined) {
+                messageReplyLinks = { links: JSON.stringify(messageReply.links) };
+            }
+            this.xmppClient.socket.sendMessage({
+                type: this.chatType,
+                to: this.rawRecipient,
+                id: idMessage,
+                jid: this.xmppClient.getMyPersonalJID(),
+                body: text,
+                messageReply: {
+                    to: messageReply.from,
+                    id: messageReply.id,
+                    senderName: messageReply.name,
+                    body: messageReply.body,
+                    ...messageReplyLinks,
+                },
+                ...links,
+            });
+        } else {
+            this.xmppClient.socket.sendMessage({
+                type: this.chatType,
+                to: this.rawRecipient,
+                id: idMessage,
+                jid: this.xmppClient.getMyPersonalJID(),
+                body: text,
+                ...links,
+            });
+        }
+
+        this.messageStore.update((messages) => {
+            messages.set(idMessage, {
+                name: this.xmppClient.getPlayerName(),
+                jid: this.xmppClient.getMyPersonalJID(),
+                body: text,
+                time: new Date(),
+                id: idMessage,
+                delivered: false,
+                error: false,
+                from: this.xmppClient.getMyJID(),
+                type: messageReply ? MessageType.reply : MessageType.message,
+                ...links,
+                targetMessageReply: messageReply
+                    ? {
+                        id: messageReply.id,
+                        senderName: messageReply.name,
+                        body: messageReply.body,
+                        links: messageReply.links,
+                    }
+                    : undefined,
+                mentions: [...get(mentionsUserStore).values()],
+            });
+            return messages;
+        });
+
+        fileMessageManager.reset();
+        mentionsUserStore.set(new Set<User>());
+
+        this.updateLastMessageSeen();
+
+        if (this.sendTimeOut) {
+            clearTimeout(this.sendTimeOut);
+        }
+        this.sendTimeOut = setTimeout(() => {
+            this.messageStore.update((messages) => {
+                const messagesUpdated = new Map<string, Message>();
+                messages.forEach((message, messageId) => {
+                    messagesUpdated.set(messageId, { ...message, error: !message.delivered });
+                });
+                return messagesUpdated;
+            });
+        }, 10_000);
+    }
 
     // Function used to interpret message from the server
     public connect() {
         throw new TypeError('Can\'t use connect function from Abstract class "AbstractRoom", need to be implemented.');
     }
-    onMessage(message: StanzaProtocol.ReceivedMessage): void {
+    onMessage(message: StanzaProtocol.ReceivedMessage): boolean {
         throw new TypeError(
             'Can\'t use onMessage function from Abstract class "AbstractRoom", need to be implemented.'
         );
     }
-    onReactions(message: WaReceivedReactions): void {
+    onReactions(message: WaReceivedReactions): boolean {
         throw new TypeError(
             'Can\'t use onReactions function from Abstract class "AbstractRoom", need to be implemented.'
         );
     }
-    onChatState(chatState: ChatStateMessage): void {
+    onChatState(chatState: ChatStateMessage): boolean {
         throw new TypeError(
             'Can\'t use onChatState function from Abstract class "AbstractRoom", need to be implemented.'
         );
     }
-    onPresence(presence: StanzaProtocol.ReceivedPresence) {
+    onPresence(presence: StanzaProtocol.ReceivedPresence): boolean {
         throw new TypeError(
             'Can\'t use onPresence function from Abstract class "AbstractRoom", need to be implemented.'
         );
@@ -184,15 +294,15 @@ export class AbstractRoom {
         this.countMessagesToSee.set(0);
         this.lastMessageSeen = new Date();
     }
-    public updateComposingState(state: ChatState) {
-        if (state === ChatState.Composing) {
+    public updateComposingState(state: StanzaConstants.ChatState) {
+        if (state === StanzaConstants.ChatState.Composing) {
             if (this.composingTimeOut) {
                 clearTimeout(this.composingTimeOut);
             } else {
-                this.sendChatState(ChatState.Composing);
+                this.sendChatState(StanzaConstants.ChatState.Composing);
             }
             this.composingTimeOut = setTimeout(() => {
-                this.sendChatState(ChatState.Paused);
+                this.sendChatState(StanzaConstants.ChatState.Paused);
                 if (this.composingTimeOut) {
                     clearTimeout(this.composingTimeOut);
                 }
@@ -201,7 +311,7 @@ export class AbstractRoom {
             if (this.composingTimeOut) {
                 clearTimeout(this.composingTimeOut);
             }
-            this.sendChatState(ChatState.Paused);
+            this.sendChatState(StanzaConstants.ChatState.Paused);
         }
     }
 

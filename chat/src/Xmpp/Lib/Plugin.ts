@@ -55,7 +55,6 @@ declare module "stanza" {
     // 3. Declare a new method for the StanzaJS agent
     export interface Agent {
         sendUserInfo(jid: string, id: string, data: WaUserInfo): void;
-        sendGroupChatMessage(msg: Message): void;
     }
 
     // 4. Declare our event types. (Event names are the fields in AgentEvents.)
@@ -164,13 +163,6 @@ export default function (client: Agent, stanzas: JXT.Registry) {
             to: jid,
             id,
             userInfo: data,
-        });
-    };
-
-    client.sendGroupChatMessage = (msg: Message) => {
-        return client.sendMessage({
-            type: "groupchat",
-            ...msg,
         });
     };
 

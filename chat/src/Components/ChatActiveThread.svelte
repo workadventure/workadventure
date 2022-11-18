@@ -8,7 +8,6 @@
     import ChatMessagesList from "./ChatMessagesList.svelte";
     import OnlineUsers from "./OnlineUsers.svelte";
     import { MucRoom } from "../Xmpp/MucRoom";
-    import { onDestroy } from "svelte";
     import Loader from "./Loader.svelte";
     import {SingleRoom} from "../Xmpp/SingleRoom";
     import {userStore} from "../Stores/LocalUserStore";
