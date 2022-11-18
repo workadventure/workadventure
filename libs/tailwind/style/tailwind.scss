@@ -16,6 +16,13 @@
         @apply tw-flex tw-h-3/4 tw-w-full tw-text-white tw-pointer-events-auto tw-z-[900] tw-right-0 tw-left-0 tw-m-auto tw-absolute tw-top-14;
         @apply md:tw-w-4/5;
 
+        &.right{
+            @apply tw-w-1/3 tw-top-0 tw-left-auto tw-right-0 tw-h-full
+        }
+        &.left{
+            @apply tw-w-1/3 tw-top-0 tw-left-0 tw-right-auto tw-h-full
+        }
+        
         .menu-nav-sidebar {
             @apply tw-bg-dark-purple/95 tw-rounded tw-overflow-auto tw-w-1/5;
         }
