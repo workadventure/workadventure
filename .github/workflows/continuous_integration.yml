@@ -34,23 +34,23 @@ jobs:
           version: '3.x'
 
       - name: "Install libs/tailwind dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "libs/tailwind"
 
       - name: "Install libs/map-editor dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "libs/map-editor"
 
       - name: "Install dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "play"
 
       - name: "Install messages dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "messages"
 
       - name: "Install libs dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "libs/messages"
 
       - name: "Build proto messages"
@@ -118,19 +118,19 @@ jobs:
       #   working-directory: "libs"
 
       - name: "Install libs/tailwind dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "libs/tailwind"
 
       - name: "Install libs/messages dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "libs/messages"
 
       - name: "Install dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "chat"
 
       - name: "Install messages dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "messages"
 
       - name: "Build proto messages"
@@ -192,15 +192,15 @@ jobs:
           version: '3.x'
 
       - name: "Install dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "back"
 
       - name: "Install messages dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "messages"
 
       - name: "Install libs dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "libs/messages"
 
       - name: "Build proto messages"
@@ -238,7 +238,7 @@ jobs:
           node-version: 16
 
       - name: "Install dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "uploader"
 
       - name: "Lint"
@@ -270,11 +270,11 @@ jobs:
           version: '3.x'
 
       - name: "Install dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "map-storage"
 
       - name: "Install messages dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "messages"
 
       - name: "Build proto messages"
@@ -282,11 +282,11 @@ jobs:
         working-directory: "messages"
 
       - name: "Install libs/map-editor dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "libs/map-editor"
 
       - name: "Install libs/messages dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "libs/messages"
 
       - name: "Build"
@@ -320,7 +320,7 @@ jobs:
           node-version: 16
 
       - name: "Install dependencies"
-        run: yarn install --froze-lockfile
+        run: yarn install  --immutable
         working-directory: "desktop/electron"
 
       - name: "Build"
@@ -358,7 +358,7 @@ jobs:
           node-version: 16
 
       - name: "Install dependencies"
-        run: yarn install --froze-lockfile
+        run: yarn install  --immutable
         working-directory: "desktop/local-app"
 
       - name: "Build"
@@ -401,19 +401,19 @@ jobs:
         working-directory: "tests"
 
       - name: "Install libs/map-editor dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "libs/map-editor"
 
       - name: "Install libs/messages dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "libs/messages"
 
       - name: "Install play dependencies"
-        run: yarn install --froze-lockfile
+        run: yarn install  --immutable
         working-directory: "play"
 
       - name: "Install messages dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "messages"
 
       - name: "Build proto messages"
