@@ -91,7 +91,7 @@
                                         woka: wokaSrc,
                                         isLogged: localUserStore.isLogged(),
                                         availabilityStatus: get(availabilityStatusStore),
-                                        roomName: connectionManager.currentRoom?.roomName ?? null,
+                                        roomName: connectionManager.currentRoom?.roomName ?? "default",
                                         visitCardUrl: gameManager.myVisitCardUrl,
                                         userRoomToken: gameManager.getCurrentGameScene().connection?.userRoomToken,
                                     },
@@ -174,7 +174,9 @@
 
 <svelte:window on:keydown={onKeyDown} />
 <div id="chatWindow" class:show={$chatVisibilityStore}>
-    {#if $chatVisibilityStore}<button class="hide" on:click={closeChat}>&#215;</button>{/if}
+    {#if $chatVisibilityStore}<div class="hide">
+            <button class="close-window" on:click={closeChat}>&#215;</button>
+        </div>{/if}
     <iframe
         id="chatWorkAdventure"
         bind:this={chatIframe}
@@ -206,7 +208,6 @@
         transition: all 0.2s ease-in-out;
         pointer-events: none;
         visibility: hidden;
-        //display: none;
         &.show {
             left: 0;
             pointer-events: auto;
@@ -217,16 +218,16 @@
             height: 100%;
         }
         .hide {
-            top: 1%;
-            padding: 0 5px 0 3px;
-            min-height: fit-content;
+            top: 13px;
             position: absolute;
-            right: -21px;
-            z-index: -1;
-            font-size: 21px;
-            border-bottom-left-radius: 0;
-            border-top-left-radius: 0;
-            background: rgba(27, 27, 41, 0.95);
+            right: 12px;
+            width: fit-content;
+            height: fit-content;
+            .close-window {
+                height: 1.6rem;
+                width: 1.6rem;
+                position: initial;
+            }
         }
     }
 </style>

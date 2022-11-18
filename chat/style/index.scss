@@ -48,3 +48,32 @@
         }
     }
 }
+
+
+aside.chatWindow nav{
+    @apply tw-bg-dark-purple tw-p-1 tw-mx-3 tw-mb-1 tw-rounded-2xl tw-border-solid tw-border tw-border-light-purple tw-relative;
+    width: calc( 100% - 65px );
+}
+aside.chatWindow nav .background{
+    @apply tw-rounded-xl tw-transition-transform tw-transform tw-bg-light-blue tw-absolute;
+    height: 26px;
+    width: 48.9%;
+}
+aside.chatWindow nav .background.chat{
+    @apply tw-translate-x-full;
+}
+aside.chatWindow nav ul{
+    @apply tw-flex tw-list-none tw-justify-between tw-w-full tw-p-0 tw-m-0;
+}
+aside.chatWindow nav ul li{
+    @apply tw-text-center tw-rounded tw-font-bold tw-transition-transform tw-transform tw-cursor-pointer tw-rounded-2xl;
+    padding: 1px 0;
+    width: 48.5%;
+}
+aside.chatWindow nav ul li:not(.active):hover{
+    background-color: rgba(146, 142, 187, .3);
+}
+
+aside.chatWindow nav ul li.active{
+    @apply tw-text-black tw-cursor-default;
+}

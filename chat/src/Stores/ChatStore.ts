@@ -190,7 +190,9 @@ export const chatNotificationsStore = writable<boolean>(true);
 
 export const connectionNotAuthorized = writable<boolean>(false);
 
-export const showUsersStore = writable<boolean>(true);
+export const navChat = writable<string>("chat");
+
+export const shownRoomListStore = writable<string>("");
 export const showLivesStore = writable<boolean>(false);
 export const showForumsStore = writable<boolean>(false);
 export const showTimelineStore = writable<boolean>(false);

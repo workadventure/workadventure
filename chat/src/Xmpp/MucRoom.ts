@@ -34,7 +34,6 @@ export class MucRoom extends AbstractRoom {
         public subscribe: boolean
     ) {
         super(xmppClient, _VERBOSE);
-
         this.presenceStore = writable<UserList>(new Map<string, User>());
         this.canLoadOlderMessagesStore = writable<boolean>(true);
         this.showDisabledLoadOlderMessagesStore = writable<boolean>(false);
@@ -77,11 +76,7 @@ export class MucRoom extends AbstractRoom {
     }
 
     public connect() {
-        // if (userStore.get().isLogged && this.subscribe && this.type !== "live") {
-        //     this.sendSubscribe();
-        // } else {
         this.sendPresence(true);
-        // }
     }
 
     // Functions used to send message to the server
@@ -92,7 +87,6 @@ export class MucRoom extends AbstractRoom {
         const presenceId = uuid();
         if (first) {
             this.subscriptions.set("firstPresence", presenceId);
-            void this.xmppClient.socket.subscribe(this.url);
         }
 
         this.sendUserInfo(presenceId);
@@ -108,13 +102,6 @@ export class MucRoom extends AbstractRoom {
                 presenceId
             );
     }
-    // private async sendSubscribe() {
-    //     const subscribeId = uuidv4();
-    //     this.subscriptions.set("firstSubscribe", subscribeId);
-    //     void this.xmppClient.socket.joinRoom(this.recipient, this.xmppClient.getPlayerName(), {id: subscribeId});
-    //     if (_VERBOSE)
-    //         console.warn(`[XMPP][${this.name}]`, ">> Subscribe sent from", this.xmppClient.getPlayerName(), "to", this.roomJid.local);
-    // }
     public sendDisconnect() {
         if (this.closed) {
             this.xmppClient.removeMucRoom(this);
@@ -498,14 +485,16 @@ export class MucRoom extends AbstractRoom {
                 this.subscriptions.delete("firstPresence");
                 this.readyStore.set(true);
                 this.closed = false;
+                this.sendUserInfo();
                 if (this.type === "live") {
                     void this.sendRetrieveLastMessages(20);
+                }
+                if (userStore.get().isLogged && this.subscribe && this.type === "default") {
+                    void this.sendRequestAllSubscribers();
                 }
             } else if (this.subscriptions.get("firstSubscribe") === presence.id) {
                 this.subscriptions.delete("firstSubscribe");
                 this.closed = false;
-                this.sendPresence(true);
-                void this.sendRequestAllSubscribers();
             }
         }
         const from = JID.parse(presence.from);
