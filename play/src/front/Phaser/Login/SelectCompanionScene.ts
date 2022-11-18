@@ -8,8 +8,7 @@ import { PinchManager } from "../UserInput/PinchManager";
 import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-import type { CompanionCollectionList } from "../../../messages/JsonMessages/CompanionTextures";
-import type { CompanionTexture } from "../../../messages/JsonMessages/CompanionTextures";
+import { CompanionTexture, CompanionCollectionList } from "@workadventure/messages";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { companionListMetakey, CompanionTexturesLoadingManager } from "../Companion/CompanionTexturesLoadingManager";
 

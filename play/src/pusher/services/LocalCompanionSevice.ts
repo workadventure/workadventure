@@ -1,4 +1,4 @@
-import type { CompanionCollectionList } from "../../messages/JsonMessages/CompanionTextures";
+import { CompanionCollectionList } from "@workadventure/messages";
 import type { CompanionServiceInterface } from "./CompanionServiceInterface";
 
 /**

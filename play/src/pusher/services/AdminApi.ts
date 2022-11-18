@@ -13,6 +13,8 @@ import {
     isWokaDetail,
     isMucRoomDefinition,
     isApplicationDefinitionInterface,
+    isCapabilities,
+    Capabilities,
 } from "@workadventure/messages";
 import type { MapDetailsData, RoomRedirect, AdminApiData } from "@workadventure/messages";
 import { z } from "zod";
@@ -24,8 +26,6 @@ import { extendApi } from "@anatine/zod-openapi";
 import type { AdminCapabilities } from "./adminApi/AdminCapabilities";
 import { RemoteCapabilities } from "./adminApi/RemoteCapabilities";
 import { LocalCapabilities } from "./adminApi/LocalCapabilities";
-import { isCapabilities } from "../../messages/JsonMessages/CapabilitiesData";
-import type { Capabilities } from "../../messages/JsonMessages/CapabilitiesData";
 
 export interface AdminBannedData {
     is_banned: boolean;

@@ -17,8 +17,8 @@ import {
     companionCollectionList,
     companionTextureCollection,
     isCompanionDetail,
-} from "../../messages/JsonMessages/CompanionTextures";
-import { isCapabilities } from "../../messages/JsonMessages/CapabilitiesData";
+    isCapabilities,
+} from "@workadventure/messages";
 
 class SwaggerGenerator {
     definitions(type: string | null): {

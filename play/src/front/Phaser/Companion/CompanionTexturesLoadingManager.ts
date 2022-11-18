@@ -1,7 +1,6 @@
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import CancelablePromise from "cancelable-promise";
-import type { CompanionCollectionList, CompanionTexture } from "../../../messages/JsonMessages/CompanionTextures";
-import { companionCollectionList } from "../../../messages/JsonMessages/CompanionTextures";
+import { CompanionTexture, CompanionCollectionList, companionCollectionList } from "@workadventure/messages";
 import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
 import { gameManager } from "../Game/GameManager";
 import { localUserStore } from "../../Connexion/LocalUserStore";
