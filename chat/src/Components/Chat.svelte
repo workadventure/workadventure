@@ -10,7 +10,7 @@
     import { localeDetector } from "../i18n/locales";
     import { locale } from "../i18n/i18n-svelte";
     import ChatLiveRooms from "./ChatLiveRooms.svelte";
-    import {activeThreadStore, settingsViewStore} from "../Stores/ActiveThreadStore";
+    import {activeThreadStore, settingsViewStore, usersListViewStore} from "../Stores/ActiveThreadStore";
     import ChatActiveThread from "./ChatActiveThread.svelte";
     import ChatActiveThreadTimeLine from "./Timeline/ChatActiveThreadTimeline.svelte";
     import Timeline from "./Timeline/Timeline.svelte";
@@ -100,6 +100,7 @@
         );
         subscribeListeners.push(
             activeThreadStore.subscribe(() => {
+                usersListViewStore.set(false);
                 settingsViewStore.set(false);
             })
         );

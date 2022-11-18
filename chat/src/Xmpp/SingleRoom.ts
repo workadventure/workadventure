@@ -31,8 +31,14 @@ export class SingleRoom extends AbstractRoom {
         return this.user.name;
     }
 
+    get availabilityStatus(): number {
+        return this.user.availabilityStatus ?? 0;
+    }
+
     public connect() {
-        this.sendPresence(true);
+        if(get(userStore).isLogged) {
+            this.sendPresence(true);
+        }
     }
 
     public sendPresence(first: boolean = false) {

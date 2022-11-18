@@ -11,6 +11,9 @@
     import { onDestroy } from "svelte";
     import Loader from "./Loader.svelte";
     import {SingleRoom} from "../Xmpp/SingleRoom";
+    import {userStore} from "../Stores/LocalUserStore";
+    import NeedLogin from "./NeedLogin.svelte";
+    import AvailabilityStatus from "./AvailabilityStatus.svelte";
 
     export let activeThread: MucRoom | SingleRoom;
 
@@ -67,6 +70,8 @@
                     <OnlineUsers {presenceStore} />
                     {#if $usersListViewStore}<EyeOffIcon size="13" />{:else}<EyeIcon size="13" />{/if}
                 </div>
+            {:else}
+                <AvailabilityStatus status={activeThread.availabilityStatus} />
             {/if}
         </div>
         <div
@@ -85,7 +90,11 @@
         </div>
     </div>
     {#if !$readyStore}
-        <Loader text={$LL.loading()} />
+        {#if activeThread instanceof SingleRoom && !$userStore.isLogged}
+            <NeedLogin />
+        {:else}
+            <Loader text={$LL.loading()} />
+        {/if}
     {:else if $usersListViewStore}
         <div
             in:fly={{ y: -100, duration: 100, delay: 200 }}
@@ -125,11 +134,11 @@
         </div>
     {/if}
     <div class:tw-hidden={$usersListViewStore} in:fly={{ y: 100, duration: 100, delay: 200 }}>
-        <ChatMessagesList mucRoom={activeThread} bind:this={messagesList} />
+        <!--<ChatMessagesList mucRoom={activeThread} bind:this={messagesList} />--
 
         <div class="messageForm" transition:fly={{ y: 100, duration: 100 }}>
             <ChatMessageForm mucRoom={activeThread} on:scrollDown={messagesList.scrollDown} />
-        </div>
+        </div>-->
     </div>
 </div>
 
