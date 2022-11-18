@@ -10,7 +10,7 @@
     import { localeDetector } from "../i18n/locales";
     import { locale } from "../i18n/i18n-svelte";
     import ChatLiveRooms from "./ChatLiveRooms.svelte";
-    import { activeThreadStore } from "../Stores/ActiveThreadStore";
+    import {activeThreadStore, settingsViewStore} from "../Stores/ActiveThreadStore";
     import ChatActiveThread from "./ChatActiveThread.svelte";
     import ChatActiveThreadTimeLine from "./Timeline/ChatActiveThreadTimeline.svelte";
     import Timeline from "./Timeline/Timeline.svelte";
@@ -108,6 +108,11 @@
                     showForumsStore.set(false);
                     showUsersStore.set(false);
                 }
+            })
+        );
+        subscribeListeners.push(
+            activeThreadStore.subscribe(() => {
+                settingsViewStore.set(false);
             })
         );
     });
