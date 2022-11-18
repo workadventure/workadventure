@@ -13,7 +13,6 @@ import {
 } from "@workadventure/messages";
 import { isFetchMemberDataByUuidResponse } from "./AdminApi";
 import type { SchemaObject } from "openapi3-ts";
-import { isRoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
 import {
     companionCollectionList,
     companionTextureCollection,
