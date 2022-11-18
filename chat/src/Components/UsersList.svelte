@@ -40,7 +40,7 @@
     $: usersByMaps = [...$presenceStore.values()]
         .filter((user: User) => user.name.toLocaleLowerCase().includes(searchValue))
         .reduce((reduced, user: User) => {
-            let group = "ZZZZ-Disconnected";
+            let group = "disconnected";
             if (user.roomName && user.active) {
                 group = user.roomName;
             }
@@ -54,9 +54,12 @@
             return reduced;
         }, new Map<string, User[]>());
 
-    $: roomSorted = [...usersByMaps.keys()].sort((a, b) =>
-        $me && $me.roomName === a ? -1 : $me && $me?.roomName === b ? 1 : a.localeCompare(b)
-    );
+    $: roomSorted = [
+        ...[...usersByMaps.keys()]
+            .sort((a, b) => ($me && $me.roomName === a ? -1 : $me && $me?.roomName === b ? 1 : a.localeCompare(b)))
+            .filter((roomName) => roomName !== "disconnected"),
+        ...([...usersByMaps.keys()].find((roomName) => roomName === "disconnected") ? ["disconnected"] : []),
+    ];
 </script>
 
 {#if [...$presenceStore.values()].filter((user) => !user.isMe && user.active).length === 0}
@@ -77,7 +80,7 @@
             <div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
                 {#if !$loadingSubscribersStore}
                     <span
-                        class="{room !== 'ZZZZ-Disconnected'
+                        class="{room !== 'disconnected'
                             ? 'tw-bg-light-blue'
                             : 'tw-bg-gray'} tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
                     >
@@ -88,7 +91,7 @@
                     {#if $me && $me.roomName === room}
                         {$LL.userList.isHere()}
                     {:else}
-                        {room.replace("ZZZZ-", "")}
+                        {room}
                     {/if}
                 </p>
                 <button
