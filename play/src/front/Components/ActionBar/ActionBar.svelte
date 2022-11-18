@@ -698,7 +698,9 @@
                 </div>
             {/if}
 
-            {#if ENABLE_OPENID && !$userIsConnected}
+            <!-- TODO button must displayed by scripting API -->
+            <!--
+            {#if ENABLE_OPENID && !$userIsConnected && }
                 <div
                     class="bottom-action-section tw-flex tw-flex-initial"
                     in:fly={{}}
@@ -715,6 +717,7 @@
                     </button>
                 </div>
             {/if}
+            -->
         </div>
     </div>
 </div>
