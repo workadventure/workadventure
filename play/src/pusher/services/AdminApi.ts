@@ -21,8 +21,6 @@ import type { AdminInterface } from "./AdminInterface";
 import { jwtTokenManager } from "./JWTTokenManager";
 import type { AuthTokenData } from "./JWTTokenManager";
 import { extendApi } from "@anatine/zod-openapi";
-import { isMucRoomDefinition } from "../../messages/JsonMessages/MucRoomDefinitionInterface";
-import { isApplicationDefinitionInterface } from "../../messages/JsonMessages/ApplicationDefinitionInterface";
 import type { AdminCapabilities } from "./adminApi/AdminCapabilities";
 import { RemoteCapabilities } from "./adminApi/RemoteCapabilities";
 import { LocalCapabilities } from "./adminApi/LocalCapabilities";
