@@ -12,10 +12,15 @@ import HyperExpress from "hyper-express";
 import { cors } from "./middlewares/Cors";
 import { ENABLE_OPENAPI_ENDPOINT } from "./enums/EnvironmentVariable";
 import { PingController } from "./controllers/PingController";
+import { CompanionListController } from "./controllers/CompanionListController";
 import { FrontController } from "./controllers/FrontController";
 import fs from "fs";
 import type * as uWebsockets from "uWebSockets.js";
 import { globalErrorHandler } from "./services/GlobalErrorHandler";
+import { adminApi } from "./services/AdminApi";
+import { jwtTokenManager } from "./services/JWTTokenManager";
+import { CompanionService } from "./services/CompanionService";
+import { WokaService } from "./services/WokaService";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LiveDirectory = require("live-directory");
 
@@ -82,12 +87,23 @@ class App {
         new DebugController(this.webserver);
         new AdminController(this.webserver);
         new OpenIdProfileController(this.webserver);
-        new WokaListController(this.webserver);
         new PingController(this.webserver);
         if (ENABLE_OPENAPI_ENDPOINT) {
             new SwaggerController(this.webserver);
         }
         new FrontController(this.webserver, liveAssets);
+        const companionListController = new CompanionListController(this.webserver, jwtTokenManager);
+        const wokaListController = new WokaListController(this.webserver, jwtTokenManager);
+        adminApi
+            .initialise()
+            .then((capabilities) => {
+                companionListController.setCompanionService(CompanionService.get(capabilities));
+                wokaListController.setWokaService(WokaService.get(capabilities));
+                console.debug("Initialized companion and woka services");
+            })
+            .catch((reason) => {
+                console.error(`Failed to initialized companion and woka services : ${reason}`);
+            });
     }
 
     public listen(port: number, host?: string): Promise<uWebsockets.us_listen_socket | string> {

@@ -1,23 +1,25 @@
-import type { AxiosResponse } from "axios";
 import axios from "axios";
+import type { AxiosResponse } from "axios";
 import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../enums/EnvironmentVariable";
-import type { WokaList } from "@workadventure/messages";
-import { wokaList } from "@workadventure/messages";
-import type { WokaServiceInterface } from "./WokaServiceInterface";
+import { companionCollectionList, CompanionCollectionList } from "@workadventure/messages";
 import type { AdminCapabilities } from "./adminApi/AdminCapabilities";
 import { AdminCapability } from "./adminApi/AdminCapabilities";
+import type { CompanionServiceInterface } from "./CompanionServiceInterface";
 
-class AdminWokaService implements WokaServiceInterface {
+export class AdminCompanionService implements CompanionServiceInterface {
+    static isEnabled(capabilities: AdminCapabilities): boolean {
+        return capabilities.has(AdminCapability.CompanionsList);
+    }
     /**
-     * Returns the list of all available Wokas for the current user.
+     * Returns the list of all companions for the current user.
      */
-    getWokaList(roomUrl: string, token: string): Promise<WokaList | undefined> {
+    getCompanionList(roomUrl: string, token: string): Promise<CompanionCollectionList | undefined> {
         /**
          * @openapi
-         * /api/woka/list:
+         * /api/companion/list:
          *   get:
          *     tags: ["AdminAPI"]
-         *     description: Get all the woka from the world specified
+         *     description: Get all the companions
          *     security:
          *      - Bearer: []
          *     produces:
@@ -37,18 +39,18 @@ class AdminWokaService implements WokaServiceInterface {
          *        example: "998ce839-3dea-4698-8b41-ebbdf7688ad8"
          *     responses:
          *       200:
-         *         description: The list of the woka
+         *         description: The list of the companions
          *         schema:
          *             type: array
          *             items:
-         *                 $ref: '#/definitions/WokaList'
+         *                 $ref: '#/definitions/CompanionCollection'
          *       404:
          *         description: Error while retrieving the data
          *         schema:
          *             $ref: '#/definitions/ErrorApiErrorData'
          */
         return axios
-            .get<unknown, AxiosResponse<unknown>>(`${ADMIN_API_URL}/api/woka/list`, {
+            .get<unknown, AxiosResponse<unknown>>(`${ADMIN_API_URL}/api/companion/list`, {
                 headers: { Authorization: `${ADMIN_API_TOKEN}` },
                 params: {
                     roomUrl,
@@ -56,17 +58,11 @@ class AdminWokaService implements WokaServiceInterface {
                 },
             })
             .then((res) => {
-                return wokaList.parse(res.data);
+                return companionCollectionList.parse(res.data);
             })
             .catch((err) => {
-                console.error(`Cannot get woka list from admin API with token: ${token}`, err);
+                console.error(`Cannot get companion list from admin API with token: ${token}`, err);
                 return undefined;
             });
     }
-
-    isEnabled(capabilities: AdminCapabilities): boolean {
-        return capabilities.has(AdminCapability.WokaList);
-    }
 }
-
-export const adminWokaService = new AdminWokaService();
