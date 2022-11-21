@@ -16,6 +16,16 @@ export enum AreaType {
     Dynamic = "Dynamic",
 }
 
+export interface EntityData {
+    id: number;
+    image: string;
+    x: number;
+    y: number;
+    collisionGrid?: number[][];
+    interactive?: boolean;
+    properties?: { [key: string]: unknown | undefined };
+}
+
 export interface PredefinedPropertyData {
     name: string;
     description: string;
