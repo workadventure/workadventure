@@ -118,6 +118,9 @@ export class GameMapFrontWrapper {
 
         // TODO: Load up entities from JSON
         this.entitiesManager = new EntitiesManager(this.scene, this);
+        for (const entityData of this.gameMap.getGameMapEntities().getEntities()) {
+            this.entitiesManager.addEntity(entityData);
+        }
     }
 
     public setLayerVisibility(layerName: string, visible: boolean): void {

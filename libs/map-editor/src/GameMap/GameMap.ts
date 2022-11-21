@@ -11,6 +11,7 @@ import type { AreaChangeCallback } from "./GameMapAreas";
 import { GameMapAreas } from "./GameMapAreas";
 import { GameMapProperties } from '../types';
 import { flattenGroupLayersMap } from './LayersFlattener';
+import { GameMapEntities } from './GameMapEntities';
 
 
 
@@ -22,6 +23,10 @@ export class GameMap {
      * Component responsible for holding gameMap Areas related logic
      */
     private gameMapAreas: GameMapAreas;
+    /**
+     * Component responsible for holding gameMap entities related logic
+     */
+    private gameMapEntities: GameMapEntities;
 
 
     private readonly map: ITiledMap;
@@ -44,8 +49,7 @@ export class GameMap {
         this.tiledObjects = GameMap.getObjectsFromLayers(this.flatLayers);
 
         this.gameMapAreas = new GameMapAreas(this);
-
-        this.map.tilesets
+        this.gameMapEntities = new GameMapEntities(this);
 
         for (const tileset of this.map.tilesets) {
             tileset?.tiles?.forEach((tile) => {
@@ -231,6 +235,10 @@ export class GameMap {
 
     public getGameMapAreas(): GameMapAreas {
         return this.gameMapAreas;
+    }
+
+    public getGameMapEntities(): GameMapEntities {
+        return this.gameMapEntities;
     }
 
     // NOTE: Flat layers are deep copied so we cannot operate on them

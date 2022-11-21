@@ -1,5 +1,5 @@
+import { EntityData } from "@workadventure/map-editor";
 import { Observable, Subject } from "rxjs";
-import type { EntityConfig } from "../../ECS/Entity";
 import { Entity, EntityEvent } from "../../ECS/Entity";
 import type { GameScene } from "../GameScene";
 import type { GameMapFrontWrapper } from "./GameMapFrontWrapper";
@@ -20,23 +20,10 @@ export class EntitiesManager {
         this.scene = scene;
         this.gameMapFrontWrapper = gameMapFrontWrapper;
         this.entities = [];
-        this.addEntity(320, 336, {
-            id: 0,
-            image: "table",
-            collisionGrid: [
-                [0, 0],
-                [1, 1],
-                [1, 1],
-            ],
-            interactive: true,
-            properties: {
-                openWebsite: "https://wikipedia.org",
-            },
-        });
     }
 
-    public addEntity(x: number, y: number, config: EntityConfig): void {
-        const entity = new Entity(this.scene, x, y, config);
+    public addEntity(data: EntityData): void {
+        const entity = new Entity(this.scene, data);
 
         this.bindEntityEventHandlers(entity);
 
