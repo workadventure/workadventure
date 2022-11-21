@@ -5,6 +5,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import AreaToolImg from "../images/icon-tool-area.png";
     import FloorToolImg from "../images/icon-tool-floor.png";
+    import EntityToolImg from "../images/icon-tool-entity.svg";
     import ZoomInImg from "../images/zoom-in-icons.svg";
     import ZoomOutImg from "../images/zoom-out-icons.svg";
     
@@ -14,6 +15,7 @@
     
     let availableTools = [
         {toolName : EditorToolName.AreaEditor, img : AreaToolImg},
+        {toolName : EditorToolName.EntityEditor, img : EntityToolImg},
         {toolName : EditorToolName.FloorEditor, img : FloorToolImg}
     ]
 
