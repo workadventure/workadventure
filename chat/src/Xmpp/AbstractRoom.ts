@@ -3,17 +3,18 @@ import { writable } from "svelte/store";
 import { UserData } from "@workadventure/messages";
 import { XmppClient } from "./XmppClient";
 import * as StanzaProtocol from "stanza/protocol";
-import {ChatStateMessage} from "stanza";
+import { ChatStateMessage } from "stanza";
 import { WaLink, WaReceivedReactions } from "./Lib/Plugin";
 import * as StanzaConstants from "stanza/Constants";
 import Timeout = NodeJS.Timeout;
-import {get} from "svelte/store";
-import {userStore} from "../Stores/LocalUserStore";
-import {mucRoomsStore} from "../Stores/MucRoomsStore";
-import {availabilityStatusStore, filesUploadStore, mentionsUserStore} from "../Stores/ChatStore";
+import { get } from "svelte/store";
+import { userStore } from "../Stores/LocalUserStore";
+import { mucRoomsStore } from "../Stores/MucRoomsStore";
+import { availabilityStatusStore, filesUploadStore, mentionsUserStore } from "../Stores/ChatStore";
 import { v4 as uuid } from "uuid";
-import {fileMessageManager} from "../Services/FileMessageManager";
-import {ChatState} from "stanza/Constants";
+import { fileMessageManager } from "../Services/FileMessageManager";
+import { ChatState } from "stanza/Constants";
+import { UserList, UsersStore } from "./MucRoom";
 
 export type User = {
     name: string;
@@ -92,6 +93,7 @@ export const defaultUserData: UserData = {
 };
 
 export class AbstractRoom {
+    protected presenceStore: Writable<UserList>;
     protected messageStore: Writable<Map<string, Message>>;
     protected reactionMessageStore: Writable<Map<string, ReactionMessage[]>>;
     protected deletedMessagesStore: Writable<string[]>;
@@ -103,12 +105,14 @@ export class AbstractRoom {
     protected subscriptions = new Map<string, string>();
     public closed = false;
     protected readyStore: Writable<boolean>;
+    protected canLoadOlderMessagesStore: Writable<boolean>;
 
     constructor(protected xmppClient: XmppClient, protected _VERBOSE: boolean) {
         if (this.constructor === AbstractRoom) {
             throw new TypeError('Abstract class "AbstractRoom" cannot be instantiated directly');
         }
 
+        this.presenceStore = writable<UserList>(new Map<string, User>());
         this.messageStore = writable<Map<string, Message>>(new Map<string, Message>());
         this.deletedMessagesStore = writable<string[]>(new Array(0));
         this.reactionMessageStore = writable<Map<string, ReactionMessage[]>>(new Map<string, ReactionMessage[]>());
@@ -116,22 +120,17 @@ export class AbstractRoom {
         this.countMessagesToSee = writable<number>(0);
         this.loadingStore = writable<boolean>(false);
         this.readyStore = writable<boolean>(false);
+        this.canLoadOlderMessagesStore = writable<boolean>(true);
     }
 
     get recipient(): string {
-        throw new TypeError(
-            'Can\'t use recipient get from Abstract class "AbstractRoom", need to be implemented.'
-        );
+        throw new TypeError('Can\'t use recipient get from Abstract class "AbstractRoom", need to be implemented.');
     }
     get rawRecipient(): string {
-        throw new TypeError(
-            'Can\'t use rawRecipient get from Abstract class "AbstractRoom", need to be implemented.'
-        );
+        throw new TypeError('Can\'t use rawRecipient get from Abstract class "AbstractRoom", need to be implemented.');
     }
     get chatType(): StanzaConstants.MessageType {
-        throw new TypeError(
-            'Can\'t use chatType get from Abstract class "AbstractRoom", need to be implemented.'
-        );
+        throw new TypeError('Can\'t use chatType get from Abstract class "AbstractRoom", need to be implemented.');
     }
 
     // Functions used to send message to the server
@@ -145,7 +144,7 @@ export class AbstractRoom {
         }
         this.sendUserInfo(presenceId);
     }
-    public sendUserInfo(presenceId: string = uuid()){
+    public sendUserInfo(presenceId: string = uuid()) {
         this.xmppClient.socket.sendUserInfo(this.recipient, presenceId, {
             jid: this.xmppClient.getMyJID(),
             roomPlayUri: get(userStore).playUri,
@@ -225,11 +224,11 @@ export class AbstractRoom {
                 ...links,
                 targetMessageReply: messageReply
                     ? {
-                        id: messageReply.id,
-                        senderName: messageReply.name,
-                        body: messageReply.body,
-                        links: messageReply.links,
-                    }
+                          id: messageReply.id,
+                          senderName: messageReply.name,
+                          body: messageReply.body,
+                          links: messageReply.links,
+                      }
                     : undefined,
                 mentions: [...get(mentionsUserStore).values()],
             });
@@ -254,12 +253,56 @@ export class AbstractRoom {
             });
         }, 10_000);
     }
+    public sendReactionMessage(emojiTargeted: string, messageId: string) {
+        if (this.closed) {
+            return;
+        }
+        let newReactions = [];
+        const myReaction = get(this.reactionMessageStore)
+            .get(messageId)
+            ?.find((reactionMessage) => reactionMessage.userJid === this.xmppClient.getMyPersonalJID());
+        if (myReaction) {
+            if (myReaction.userReactions.find((emoji) => emoji === emojiTargeted)) {
+                newReactions = myReaction.userReactions.filter((emoji) => emoji !== emojiTargeted);
+            } else {
+                newReactions = [...myReaction.userReactions, emojiTargeted];
+            }
+        } else {
+            newReactions.push(emojiTargeted);
+        }
+        this.xmppClient.socket.sendMessage({
+            type: this.chatType,
+            to: this.rawRecipient,
+            id: uuid(),
+            jid: this.xmppClient.getMyPersonalJID(),
+            body: "",
+            reactions: {
+                id: messageId,
+                reaction: newReactions,
+            },
+        });
+
+        // Recompute reactions
+        this.toggleReactionsMessage(this.xmppClient.getMyPersonalJID(), messageId, newReactions);
+    }
+    public sendRetrieveLastMessages() {
+        throw new TypeError(
+            'Can\'t use sendRetrieveLastMessages function from Abstract class "AbstractRoom", need to be implemented.'
+        );
+    }
+    public sendBack(idMessage: string) {
+        this.messageStore.update((messages) => {
+            this.sendMessage(messages.get(idMessage)?.body ?? "");
+            messages.delete(idMessage);
+            return messages;
+        });
+    }
 
     // Function used to interpret message from the server
     public connect() {
         throw new TypeError('Can\'t use connect function from Abstract class "AbstractRoom", need to be implemented.');
     }
-    onMessage(message: StanzaProtocol.ReceivedMessage): boolean {
+    onMessage(message: StanzaProtocol.ReceivedMessage, delay: StanzaProtocol.Delay): boolean {
         throw new TypeError(
             'Can\'t use onMessage function from Abstract class "AbstractRoom", need to be implemented.'
         );
@@ -315,6 +358,89 @@ export class AbstractRoom {
         }
     }
 
+    public haveReaction(emojiTargeted: string, messageId: string): boolean {
+        const reactionsMessage = get(this.reactionMessageStore).get(messageId);
+        if (!reactionsMessage) return false;
+        const myReaction =
+            reactionsMessage.find(
+                (reactionMessage) => reactionMessage.userJid === this.xmppClient.getMyPersonalJID()
+            ) ?? null;
+        if (!myReaction) return false;
+        return !!myReaction.userReactions.find((emoji) => emoji === emojiTargeted);
+    }
+    public deleteMessage(idMessage: string): boolean {
+        this.messageStore.update((messages) => {
+            messages.delete(idMessage);
+            return messages;
+        });
+        return true;
+    }
+    protected reactions(messageId: string): Map<string, Array<string>> {
+        const reactions = new Map<string, Array<string>>();
+        const reactionsMessage = get(this.reactionMessageStore).get(messageId);
+        if (reactionsMessage) {
+            reactionsMessage.forEach((reactionMessage) => {
+                reactionMessage.userReactions.forEach((reaction) => {
+                    reactions.set(reaction, [...(reactions.get(reaction) ?? []), reactionMessage.userJid]);
+                });
+            });
+        }
+        return reactions;
+    }
+    private updateMessageReactions(messageId: string) {
+        // Update reactions of the message targeted
+        this.messageStore.update((messages) => {
+            const thisMessage = messages.get(messageId);
+            if (thisMessage) {
+                messages.set(messageId, { ...thisMessage, reactionsMessage: this.reactions(messageId) });
+            }
+            return messages;
+        });
+    }
+    protected toggleReactionsMessage(userJid: string, messageId: string, reactions: Array<string>) {
+        const newUserReaction = {
+            userJid: userJid,
+            userReactions: reactions,
+        };
+
+        this.reactionMessageStore.update((reactionsMessages) => {
+            const reactionsMessage = reactionsMessages.get(messageId);
+            if (reactionsMessage) {
+                // If message has reactions
+                const userReactionMessage = reactionsMessage.find(
+                    (reactionMessage) => reactionMessage.userJid === userJid
+                );
+                if (userReactionMessage) {
+                    // If reactions of user already exists in the reactions of the message
+                    if (reactions.length === 0) {
+                        // If reactions of user is empty, delete it
+                        reactionsMessages.set(
+                            messageId,
+                            reactionsMessage.filter((reactionMessage) => reactionMessage.userJid !== userJid)
+                        );
+                    } else {
+                        // If reactions of user is new, update it
+                        reactionsMessages.set(
+                            messageId,
+                            reactionsMessage.map((userReactions) =>
+                                userReactions.userJid === userJid ? newUserReaction : userReactions
+                            )
+                        );
+                    }
+                } else {
+                    // If reactions of user doesn't exist in the reactions of the message
+                    reactionsMessage.push(newUserReaction);
+                    reactionsMessages.set(messageId, reactionsMessage);
+                }
+            } else {
+                // If message hasn't reactions, add it
+                reactionsMessages.set(messageId, [newUserReaction]);
+            }
+            return reactionsMessages;
+        });
+        this.updateMessageReactions(messageId);
+    }
+
     get playerName(): string {
         return this.xmppClient.getPlayerName() ?? "unknown";
     }
@@ -326,6 +452,9 @@ export class AbstractRoom {
     }
 
     // Get all store
+    public getPresenceStore(): UsersStore {
+        return this.presenceStore;
+    }
     public getMessagesStore(): Writable<MessageMap> {
         return this.messageStore;
     }
@@ -340,6 +469,9 @@ export class AbstractRoom {
     }
     public getRoomReadyStore(): Writable<boolean> {
         return this.readyStore;
+    }
+    public getCanLoadOlderMessagesStore() {
+        return this.canLoadOlderMessagesStore;
     }
 
     // DO NOT USE BUT CAN BE USEFUL

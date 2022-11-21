@@ -1,9 +1,5 @@
 import { get, writable } from "svelte/store";
 import type { SingleRoom } from "../Xmpp/SingleRoom";
-import {ParsedJID} from "stanza/JID";
-import {activeThreadStore} from "./ActiveThreadStore";
-import {chatConnectionManager} from "../Connection/ChatConnectionManager";
-import {JID} from "stanza";
 
 function createSingleRoomsStore() {
     const { subscribe, update, set } = writable<Set<SingleRoom>>(new Set<SingleRoom>());

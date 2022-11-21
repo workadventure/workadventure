@@ -2,9 +2,8 @@ import type { Readable, Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
 import { v4 as uuid } from "uuid";
 import { userStore } from "../Stores/LocalUserStore";
-import { fileMessageManager } from "../Services/FileMessageManager";
 import { mediaManager, NotificationType } from "../Media/MediaManager";
-import { availabilityStatusStore, filesUploadStore, mentionsUserStore } from "../Stores/ChatStore";
+import { availabilityStatusStore } from "../Stores/ChatStore";
 import { AbstractRoom, Message, MessageType, User } from "./AbstractRoom";
 import { XmppClient } from "./XmppClient";
 import * as StanzaProtocol from "stanza/protocol";
@@ -12,17 +11,15 @@ import { WaLink, WaReceivedReactions, WaUserInfo } from "./Lib/Plugin";
 import { ParsedJID } from "stanza/JID";
 import { ChatStateMessage, JID } from "stanza";
 import { ChatState, MUCAffiliation } from "stanza/Constants";
-import {derived} from "svelte/store";
+import { derived } from "svelte/store";
 import * as StanzaConstants from "stanza/Constants";
 
-const _VERBOSE = true;
+const _VERBOSE = false;
 
 export type UserList = Map<string, User>;
 export type UsersStore = Readable<UserList>;
 
 export class MucRoom extends AbstractRoom {
-    private presenceStore: Writable<UserList>;
-    private canLoadOlderMessagesStore: Writable<boolean>;
     private showDisabledLoadOlderMessagesStore: Writable<boolean>;
     private description: string = "";
     private loadingSubscribers: Writable<boolean>;
@@ -35,20 +32,14 @@ export class MucRoom extends AbstractRoom {
         public subscribe: boolean
     ) {
         super(xmppClient, _VERBOSE);
-        this.presenceStore = writable<UserList>(new Map<string, User>());
-        this.canLoadOlderMessagesStore = writable<boolean>(true);
         this.showDisabledLoadOlderMessagesStore = writable<boolean>(false);
         this.loadingSubscribers = writable<boolean>(false);
         this.readyStore = writable<boolean>(type === "default");
     }
 
-    private console(text: string){
-        if (_VERBOSE){
-            console.warn(
-                `[XMPP]%c[MR](${this.name})%c ${text}`,
-                "color: LightSkyBlue;",
-                "color: inherit;",
-            );
+    private console(text: string) {
+        if (_VERBOSE) {
+            console.warn(`[XMPP]%c[MR](${this.name})%c ${text}`, "color: LightSkyBlue;", "color: inherit;");
         }
     }
 
@@ -72,7 +63,7 @@ export class MucRoom extends AbstractRoom {
     public getUserByJid(jid: string): User {
         let user = undefined;
         get(this.presenceStore).forEach((user_, key) => {
-            // WORKAROUND BECAUSE WE DON'T SEND THE JID FROM THE OTHER USERS IN THE FRONT
+            // WORKAROUND BECAUSE WE DON'T SEND THE JID FROM THE OTHER USERS IN THE FRONT, ONLY THE UUID AND JID IS CONSTRUCT FROM THE UUID
             if (JID.parse(key).local == jid || JID.parse(key).local == JID.parse(jid).local) {
                 user = user_;
             }
@@ -99,7 +90,7 @@ export class MucRoom extends AbstractRoom {
     // Functions used to send message to the server
     public sendPresence(first: boolean = false) {
         super.sendPresence(first);
-        this.console(`>> ${first?'First ':''}Presence sent`);
+        this.console(`>> ${first ? "First " : ""}Presence sent`);
     }
     public sendDisconnect() {
         if (this.closed) {
@@ -107,7 +98,7 @@ export class MucRoom extends AbstractRoom {
             return;
         }
         void this.xmppClient.socket.leaveRoom(this.recipient);
-        this.console('>> Disconnect sent');
+        this.console(">> Disconnect sent");
         this.xmppClient.removeMucRoom(this);
     }
     private async sendRequestAllSubscribers() {
@@ -117,14 +108,16 @@ export class MucRoom extends AbstractRoom {
         const iqId = uuid();
         this.subscriptions.set("subscriptions", iqId);
         this.loadingSubscribers.set(true);
+
+        // await this.xmppClient.socket.getRoomMembers(this.url);
         try {
-            this.console('>> Get all subscribers sent');
+            this.console(">> Get all subscribers sent");
             const response = await this.xmppClient.socket.sendIQ({
                 type: "get",
                 to: this.url,
                 subscriptions: { usersNick: [], usersJid: [] },
             });
-            this.console('<< Get all subscribers received');
+            this.console("<< Get all subscribers received");
             response.subscriptions.usersJid.forEach((userJid, i) => {
                 if (![...get(this.presenceStore)].find(([_userJid, _]) => _userJid.includes(userJid))) {
                     this.addUserInactive(userJid, response.subscriptions.usersNick[i]);
@@ -146,7 +139,7 @@ export class MucRoom extends AbstractRoom {
             return;
         }
         await this.xmppClient.socket.setRoomAffiliation(this.roomJid.bare, userJID, type, "Made by an administrator");
-        this.console('>> Affiliation sent');
+        this.console(">> Affiliation sent");
     }
     public sendBan(userJID: string, name: string, playUri: string) {
         if (this.closed) {
@@ -159,7 +152,7 @@ export class MucRoom extends AbstractRoom {
         });
         void this.sendAffiliate("outcast", userJID);
         //this.xmppClient.getConnection().emitBanUserByUuid(playUri, userJID.local, name, "Test message de ban");
-        this.console('>> Ban user message sent');
+        this.console(">> Ban user message sent");
     }
     public sendChatState(state: ChatState) {
         if (this.closed) {
@@ -171,11 +164,11 @@ export class MucRoom extends AbstractRoom {
             chatState: state,
             jid: this.xmppClient.getMyPersonalJID(),
         });
-        this.console('>> Chat state sent');
+        this.console(">> Chat state sent");
     }
     public sendMessage(text: string, messageReply?: Message) {
         super.sendMessage(text, messageReply);
-        this.console('>> Message sent');
+        this.console(">> Message sent");
     }
     public sendRemoveMessage(messageId: string) {
         if (this.closed) {
@@ -191,40 +184,11 @@ export class MucRoom extends AbstractRoom {
                 id: messageId,
             },
         });
-        this.console('>> Remove message sent');
+        this.console(">> Remove message sent");
     }
     public sendReactionMessage(emojiTargeted: string, messageId: string) {
-        if (this.closed) {
-            return;
-        }
-        let newReactions = [];
-        const myReaction = get(this.reactionMessageStore)
-            .get(messageId)
-            ?.find((reactionMessage) => reactionMessage.userJid === this.xmppClient.getMyPersonalJID());
-        if (myReaction) {
-            if (myReaction.userReactions.find((emoji) => emoji === emojiTargeted)) {
-                newReactions = myReaction.userReactions.filter((emoji) => emoji !== emojiTargeted);
-            } else {
-                newReactions = [...myReaction.userReactions, emojiTargeted];
-            }
-        } else {
-            newReactions.push(emojiTargeted);
-        }
-        this.xmppClient.socket.sendMessage({
-            type: "groupchat",
-            to: this.rawRecipient,
-            id: uuid(),
-            jid: this.xmppClient.getMyPersonalJID(),
-            body: "",
-            reactions: {
-                id: messageId,
-                reaction: newReactions,
-            },
-        });
-        this.console('>> Reaction message sent');
-
-        // Recompute reactions
-        this.toggleReactionsMessage(this.xmppClient.getMyPersonalJID(), messageId, newReactions);
+        super.sendReactionMessage(emojiTargeted, messageId);
+        this.console(">> Reaction message sent");
     }
     public sendDestroy() {
         if (this.closed) {
@@ -232,7 +196,7 @@ export class MucRoom extends AbstractRoom {
         }
         const destroyId = uuid();
         this.subscriptions.set("destroy", destroyId);
-        this.console('>> Destroy room sent');
+        this.console(">> Destroy room sent");
         this.readyStore.set(false);
         try {
             void this.xmppClient.socket.destroyRoom(this.rawRecipient, {
@@ -253,7 +217,7 @@ export class MucRoom extends AbstractRoom {
             .shift();
         this.loadingStore.set(true);
         const now = new Date();
-        this.console('>> Retrieve last messages sent');
+        this.console(">> Retrieve last messages sent");
         const response = await this.xmppClient.socket.searchHistory(this.roomJid.bare, {
             version: "2",
             form: {
@@ -274,7 +238,7 @@ export class MucRoom extends AbstractRoom {
                 max,
             },
         });
-        this.console('<< Retrieve last messages received');
+        this.console("<< Retrieve last messages received");
         if (response.paging && response.paging.count !== undefined) {
             response.results?.forEach((result) => {
                 if (result.item.message) {
@@ -300,7 +264,7 @@ export class MucRoom extends AbstractRoom {
             // If subject message, we do nothing for the moment
             response = true;
         } else {
-            this.console('<< Message received');
+            this.console("<< Message received");
             let date = new Date();
             if (delay) {
                 // Only in case where the message received is an archive (a message automatically sent by the server when joining a room)
@@ -382,7 +346,7 @@ export class MucRoom extends AbstractRoom {
             throw new Error("No JID set for the message");
         }
 
-        this.console('<< Reaction message received');
+        this.console("<< Reaction message received");
         this.toggleReactionsMessage(
             receivedMessage.jid,
             receivedMessage.reactions.id,
@@ -391,7 +355,7 @@ export class MucRoom extends AbstractRoom {
         return true;
     }
     onChatState(chatState: ChatStateMessage): boolean {
-        this.console('<< Chat state received');
+        this.console("<< Chat state received");
         if (!chatState.jid) {
             throw new Error("No jid");
         }
@@ -400,7 +364,7 @@ export class MucRoom extends AbstractRoom {
         return true;
     }
     onPresence(presence: StanzaProtocol.ReceivedPresence): boolean {
-        this.console('<< Presence received');
+        this.console("<< Presence received");
         let response = false;
 
         if (presence.id) {
@@ -558,88 +522,6 @@ export class MucRoom extends AbstractRoom {
     }
 
     // Update reaction and messages
-    public haveReaction(emojiTargeted: string, messageId: string): boolean {
-        const reactionsMessage = get(this.reactionMessageStore).get(messageId);
-        if (!reactionsMessage) return false;
-        const myReaction =
-            reactionsMessage.find(
-                (reactionMessage) => reactionMessage.userJid === this.xmppClient.getMyPersonalJID()
-            ) ?? null;
-        if (!myReaction) return false;
-        return !!myReaction.userReactions.find((emoji) => emoji === emojiTargeted);
-    }
-    private reactions(messageId: string): Map<string, Array<string>> {
-        const reactions = new Map<string, Array<string>>();
-        const reactionsMessage = get(this.reactionMessageStore).get(messageId);
-        if (reactionsMessage) {
-            reactionsMessage.forEach((reactionMessage) => {
-                reactionMessage.userReactions.forEach((reaction) => {
-                    reactions.set(reaction, [...(reactions.get(reaction) ?? []), reactionMessage.userJid]);
-                });
-            });
-        }
-        return reactions;
-    }
-    private updateMessageReactions(messageId: string) {
-        // Update reactions of the message targeted
-        this.messageStore.update((messages) => {
-            const thisMessage = messages.get(messageId);
-            if (thisMessage) {
-                messages.set(messageId, { ...thisMessage, reactionsMessage: this.reactions(messageId) });
-            }
-            return messages;
-        });
-    }
-    private toggleReactionsMessage(userJid: string, messageId: string, reactions: Array<string>) {
-        const newUserReaction = {
-            userJid: userJid,
-            userReactions: reactions,
-        };
-
-        this.reactionMessageStore.update((reactionsMessages) => {
-            const reactionsMessage = reactionsMessages.get(messageId);
-            if (reactionsMessage) {
-                // If message has reactions
-                const userReactionMessage = reactionsMessage.find(
-                    (reactionMessage) => reactionMessage.userJid === userJid
-                );
-                if (userReactionMessage) {
-                    // If reactions of user already exists in the reactions of the message
-                    if (reactions.length === 0) {
-                        // If reactions of user is empty, delete it
-                        reactionsMessages.set(
-                            messageId,
-                            reactionsMessage.filter((reactionMessage) => reactionMessage.userJid !== userJid)
-                        );
-                    } else {
-                        // If reactions of user is new, update it
-                        reactionsMessages.set(
-                            messageId,
-                            reactionsMessage.map((userReactions) =>
-                                userReactions.userJid === userJid ? newUserReaction : userReactions
-                            )
-                        );
-                    }
-                } else {
-                    // If reactions of user doesn't exist in the reactions of the message
-                    reactionsMessage.push(newUserReaction);
-                    reactionsMessages.set(messageId, reactionsMessage);
-                }
-            } else {
-                // If message hasn't reactions, add it
-                reactionsMessages.set(messageId, [newUserReaction]);
-            }
-            return reactionsMessages;
-        });
-        this.updateMessageReactions(messageId);
-    }
-    public deleteMessage(idMessage: string): boolean {
-        this.messageStore.update((messages) => {
-            messages.delete(idMessage);
-            return messages;
-        });
-        return true;
-    }
     public sendBack(idMessage: string): boolean {
         throw new Error("Not implemented yet");
         // this.messageStore.update((messages) => {
@@ -649,14 +531,8 @@ export class MucRoom extends AbstractRoom {
     }
 
     // Get all stores
-    public getPresenceStore(): UsersStore {
-        return this.presenceStore;
-    }
     public getLoadingSubscribersStore() {
         return this.loadingSubscribers;
-    }
-    public getCanLoadOlderMessagesStore() {
-        return this.canLoadOlderMessagesStore;
     }
     public getShowDisabledLoadOlderMessagesStore() {
         return this.showDisabledLoadOlderMessagesStore;

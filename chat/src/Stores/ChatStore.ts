@@ -195,4 +195,5 @@ export const navChat = writable<string>("chat");
 export const shownRoomListStore = writable<string>("");
 export const showLivesStore = writable<boolean>(false);
 export const showForumsStore = writable<boolean>(false);
+export const showChatUsersStore = writable<boolean>(false);
 export const showTimelineStore = writable<boolean>(false);

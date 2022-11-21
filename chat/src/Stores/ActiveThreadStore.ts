@@ -1,9 +1,9 @@
 import { writable } from "svelte/store";
 import { MucRoom } from "../Xmpp/MucRoom";
-import {SingleRoom} from "../Xmpp/SingleRoom";
+import { SingleRoom } from "../Xmpp/SingleRoom";
 
 function createActiveThreadStore() {
-    const { subscribe, update, set } = writable<MucRoom | SingleRoom| undefined>();
+    const { subscribe, update, set } = writable<MucRoom | SingleRoom | undefined>();
 
     return {
         subscribe,

@@ -72,51 +72,50 @@
         </button>
     </div>
 {/if}
+{#each roomSorted as room}
+    <div class="users tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
+        <div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
+            {#if !$loadingSubscribersStore}
+                <span
+                    class="{room !== 'disconnected'
+                        ? 'tw-bg-light-blue'
+                        : 'tw-bg-gray'} tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
+                >
+                    {usersByMaps.get(room)?.length}
+                </span>
+            {/if}
+            <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
+                {#if $me && $me.roomName === room}
+                    {$LL.userList.isHere()}
+                {:else}
+                    {room}
+                {/if}
+            </p>
+            <button
+                class="tw-text-lighter-purple"
+                on:click={() => shownRoomListStore.set($shownRoomListStore === room ? "" : room)}
+            >
+                <ChevronUpIcon
+                    class={`tw-transform tw-transition ${$shownRoomListStore === room ? "" : "tw-rotate-180"}`}
+                />
+            </button>
+        </div>
+        {#if $shownRoomListStore === room}
+            <div transition:fly={{ y: -30, duration: 100 }}>
+                {#if $loadingSubscribersStore}
+                    <Loader text={$LL.loadingUsers()} height="tw-h-40" />
+                {:else}
+                    {#if $me && room === $me.roomName}
+                        <ChatUser {mucRoom} user={$me} {searchValue} />
+                    {/if}
+                    {#each (usersByMaps.get(room) ?? []).filter((user) => !user.isMe) as user}
+                        <ChatUser {mucRoom} {user} {searchValue} />
+                    {/each}
+                {/if}
+            </div>
+        {/if}
+    </div>
+{/each}
 {#if $loadingSubscribersStore}
     <Loader text={$LL.loadingUsers()} height="tw-h-40" />
-{:else}
-    {#each roomSorted as room}
-        <div class="users tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
-            <div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
-                {#if !$loadingSubscribersStore}
-                    <span
-                        class="{room !== 'disconnected'
-                            ? 'tw-bg-light-blue'
-                            : 'tw-bg-gray'} tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
-                    >
-                        {usersByMaps.get(room)?.length}
-                    </span>
-                {/if}
-                <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
-                    {#if $me && $me.roomName === room}
-                        {$LL.userList.isHere()}
-                    {:else}
-                        {room}
-                    {/if}
-                </p>
-                <button
-                    class="tw-text-lighter-purple"
-                    on:click={() => shownRoomListStore.set($shownRoomListStore === room ? "" : room)}
-                >
-                    <ChevronUpIcon
-                        class={`tw-transform tw-transition ${$shownRoomListStore === room ? "" : "tw-rotate-180"}`}
-                    />
-                </button>
-            </div>
-            {#if $shownRoomListStore === room}
-                <div transition:fly={{ y: -30, duration: 100 }}>
-                    {#if $loadingSubscribersStore}
-                        <Loader text={$LL.loadingUsers()} height="tw-h-40" />
-                    {:else}
-                        {#if $me && room === $me.roomName}
-                            <ChatUser {mucRoom} user={$me} {searchValue} />
-                        {/if}
-                        {#each (usersByMaps.get(room) ?? []).filter((user) => !user.isMe) as user}
-                            <ChatUser {mucRoom} {user} {searchValue} />
-                        {/each}
-                    {/if}
-                </div>
-            {/if}
-        </div>
-    {/each}
 {/if}

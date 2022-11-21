@@ -12,7 +12,7 @@
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
     import { iframeListener } from "../IframeListener";
     import { derived } from "svelte/store";
-    import {chatConnectionManager} from "../Connection/ChatConnectionManager";
+    import { chatConnectionManager } from "../Connection/ChatConnectionManager";
 
     export let mucRoom: MucRoom;
     export let user: User;

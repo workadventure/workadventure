@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fade, fly } from "svelte/transition";
-    import { MucRoom } from "../Xmpp/MucRoom";
+    import { MucRoom, UserList } from "../Xmpp/MucRoom";
     import { User } from "../Xmpp/AbstractRoom";
     import { defaultColor, defaultWoka, Message } from "../Xmpp/AbstractRoom";
     import LL, { locale } from "../i18n/i18n-svelte";
@@ -20,7 +20,7 @@
         ArrowUpIcon,
         CopyIcon,
     } from "svelte-feather-icons";
-    import { get, Unsubscriber } from "svelte/store";
+    import { get, Unsubscriber, writable } from "svelte/store";
     import { chatVisibilityStore, selectedMessageToReact, selectedMessageToReply } from "../Stores/ChatStore";
     import { EmojiButton } from "@joeattardi/emoji-button";
     import { HtmlUtils } from "../Utils/HtmlUtils";
@@ -31,20 +31,20 @@
     import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
     import { ChatState } from "stanza/Constants";
     import { JID } from "stanza";
-    import { derived } from "svelte/store";
+    import { SingleRoom } from "../Xmpp/SingleRoom";
 
-    export let mucRoom: MucRoom;
+    export let activeThread: MucRoom | SingleRoom;
 
-    $: unreads = mucRoom.getCountMessagesToSee();
-    const messagesStore = mucRoom.getMessagesStore();
-    const deletedMessagesStore = mucRoom.getDeletedMessagesStore();
-    const presenceStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
-    const usersStore = mucRoom.getPresenceStore();
-    const loadingStore = mucRoom.getLoadingStore();
-    const canLoadOlderMessagesStore = mucRoom.getCanLoadOlderMessagesStore();
-    const showDisabledLoadOlderMessagesStore = mucRoom.getShowDisabledLoadOlderMessagesStore();
-
-    const me = derived(presenceStore, ($presenceStore) => $presenceStore.get(mucRoom.myJID));
+    $: unreads = activeThread.getCountMessagesToSee();
+    const messagesStore = activeThread.getMessagesStore();
+    const deletedMessagesStore = activeThread.getDeletedMessagesStore();
+    const presenceStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? activeThread.getPresenceStore();
+    const usersStore = activeThread.getPresenceStore();
+    const loadingStore = activeThread.getLoadingStore();
+    const canLoadOlderMessagesStore = activeThread.getCanLoadOlderMessagesStore();
+    const showDisabledLoadOlderMessagesStore =
+        activeThread instanceof MucRoom ? activeThread.getShowDisabledLoadOlderMessagesStore() : undefined;
+    const me = activeThread.getMe();
 
     let isScrolledDown = false;
     let messagesList: HTMLElement;
@@ -69,7 +69,7 @@
     }
 
     function isMe(jid: string) {
-        return JID.parse(jid).bare === mucRoom.myJIDBare;
+        return JID.parse(jid).bare === activeThread.myJIDBare;
     }
 
     function findUserInDefault(jid: string): User | UserData | undefined {
@@ -107,7 +107,7 @@
     };
 
     const scrollDownAndRead = () => {
-        mucRoom.updateLastMessageSeen();
+        activeThread.updateLastMessageSeen();
         scrollDown();
     };
 
@@ -122,7 +122,7 @@
             ) {
                 isScrolledDown = true;
                 if ($unreads > 0) {
-                    mucRoom.updateLastMessageSeen();
+                    activeThread.updateLastMessageSeen();
                 }
             } else {
                 isScrolledDown = false;
@@ -131,7 +131,7 @@
 
         if (document.body.scrollTop >= 0 && lastScrollPosition < 0) {
             //Pull to refresh ...
-            void mucRoom.sendRetrieveLastMessages();
+            void activeThread.sendRetrieveLastMessages();
         }
         lastScrollPosition = document.body.scrollTop;
     }
@@ -185,7 +185,7 @@
     onMount(() => {
         messagesList.addEventListener("scroll", scrollEvent);
         subscribers.push(
-            mucRoom.getMessagesStore().subscribe(() => {
+            activeThread.getMessagesStore().subscribe(() => {
                 if (isScrolledDown && $chatVisibilityStore) {
                     scrollDownAndRead();
                 }
@@ -198,7 +198,7 @@
         } else {
             const message = [...$messagesStore.values()]
                 .reverse()
-                .find((message) => message.time < mucRoom.lastMessageSeen);
+                .find((message) => message.time < activeThread.lastMessageSeen);
             if (message) {
                 scrollToMessageId(message.id);
             }
@@ -239,7 +239,7 @@
             if (!$selectedMessageToReact) {
                 return;
             }
-            mucRoom.sendReactionMessage(emoji, $selectedMessageToReact.id);
+            activeThread.sendReactionMessage(emoji, $selectedMessageToReact.id);
             selectedMessageToReact.set(null);
         });
         picker.on("hidden", () => {
@@ -266,7 +266,7 @@
                 {#if !$loadingStore}
                     <button
                         class="tw-m-auto tw-cursor-pointer tw-text-xs"
-                        on:click={() => mucRoom.sendRetrieveLastMessages()}
+                        on:click={() => activeThread.sendRetrieveLastMessages()}
                         >{$LL.load()}
                         {$LL.more()}
                         <ArrowUpIcon size="13" class="tw-ml-1" /></button
@@ -442,7 +442,7 @@
                                                     {#if ($me && $me.isAdmin) || isMe(message.jid)}
                                                         <span
                                                             class="wa-dropdown-item tw-text-pop-red"
-                                                            on:click={() => mucRoom.sendRemoveMessage(message.id)}
+                                                            on:click={() => activeThread.sendRemoveMessage(message.id)}
                                                         >
                                                             <Trash2Icon size="13" class="tw-mr-1" />
                                                             {$LL.delete()}
@@ -459,8 +459,8 @@
                                     <div class="emojis">
                                         {#each [...message.reactionsMessage] as [emojiStr, usersJid]}
                                             <span
-                                                class={mucRoom.haveReaction(emojiStr, message.id) ? "active" : ""}
-                                                on:click={() => mucRoom.sendReactionMessage(emojiStr, message.id)}
+                                                class={activeThread.haveReaction(emojiStr, message.id) ? "active" : ""}
+                                                on:click={() => activeThread.sendReactionMessage(emojiStr, message.id)}
                                                 title={`${usersJid
                                                     .map((userJid) => JID.parse(userJid).resource)
                                                     .join("\r\n")}`}
@@ -540,7 +540,7 @@
                                 <span
                                     class="wa-dropdown-item"
                                     on:click={() =>
-                                        mucRoom.sendBack(message.id) &&
+                                        activeThread.sendBack(message.id) &&
                                         document.getElementById(`error_${message.id}`)?.classList.add("tw-invisible")}
                                 >
                                     <RefreshCwIcon size="13" class="tw-mr-1" />
@@ -549,7 +549,7 @@
                                 <span
                                     class="wa-dropdown-item tw-text-pop-red"
                                     on:click={() =>
-                                        mucRoom.deleteMessage(message.id) &&
+                                        activeThread.deleteMessage(message.id) &&
                                         document.getElementById(`error_${message.id}`)?.classList.add("tw-invisible")}
                                 >
                                     <Trash2Icon size="13" class="tw-mr-1" />
@@ -561,7 +561,7 @@
                 </div>
             </div>
         {/each}
-        {#each [...$usersStore].filter(([, userFilter]) => !userFilter.isMe && userFilter.chatState === ChatState.Composing) as [nb, user]}
+        {#each [...$usersStore].filter(([, userFilter]) => ((activeThread instanceof MucRoom && !userFilter.isMe) || activeThread instanceof SingleRoom) && userFilter.chatState === ChatState.Composing) as [nb, user]}
             <div class={`tw-mt-2`} id={`user-line-${nb}`}>
                 <div class={`tw-flex tw-justify-start`}>
                     <div

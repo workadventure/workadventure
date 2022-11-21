@@ -2,7 +2,6 @@
     import LL from "../i18n/i18n-svelte";
     import { iframeListener } from "../IframeListener";
 
-
     function login() {
         if (window.location !== window.parent?.location) {
             iframeListener.sendLogin();

@@ -1,42 +1,35 @@
-import {AbstractRoom, Message, MessageType, User} from "./AbstractRoom";
-import {XmppClient} from "./XmppClient";
-import {ParsedJID} from "stanza/JID";
-import {get, Writable, writable, derived} from "svelte/store";
-import {v4 as uuid} from "uuid";
-import {userStore} from "../Stores/LocalUserStore";
-import {mucRoomsStore} from "../Stores/MucRoomsStore";
-import {ChatState} from "stanza/Constants";
-import {ChatStateMessage, JID} from "stanza";
-import {filesUploadStore, mentionsUserStore} from "../Stores/ChatStore";
-import {fileMessageManager} from "../Services/FileMessageManager";
+import { AbstractRoom, Message, MessageType, User } from "./AbstractRoom";
+import { XmppClient } from "./XmppClient";
+import { ParsedJID } from "stanza/JID";
+import { get, Writable, writable, derived } from "svelte/store";
+import { v4 as uuid } from "uuid";
+import { userStore } from "../Stores/LocalUserStore";
+import { mucRoomsStore } from "../Stores/MucRoomsStore";
+import { ChatState } from "stanza/Constants";
+import { ChatStateMessage, JID } from "stanza";
+import { filesUploadStore, mentionsUserStore } from "../Stores/ChatStore";
+import { fileMessageManager } from "../Services/FileMessageManager";
 import * as StanzaConstants from "stanza/Constants";
+import { UserList } from "./MucRoom";
+import * as StanzaProtocol from "stanza/protocol";
 
 const _VERBOSE = true;
 
 export class SingleRoom extends AbstractRoom {
-    private canLoadOlderMessagesStore: Writable<boolean>;
     private showDisabledLoadOlderMessagesStore: Writable<boolean>;
     private chatStateStore: Writable<ChatState>;
+    private subscriptionAccepted = false;
 
-    constructor(
-        xmppClient: XmppClient,
-        public readonly user: User,
-        protected userJid: ParsedJID,
-    ) {
+    constructor(xmppClient: XmppClient, public readonly user: User, protected userJid: ParsedJID) {
         super(xmppClient, _VERBOSE);
 
-        this.canLoadOlderMessagesStore = writable<boolean>(true);
         this.showDisabledLoadOlderMessagesStore = writable<boolean>(false);
         this.chatStateStore = writable<ChatState>();
     }
 
-    private console(text: string){
-        if (_VERBOSE){
-            console.warn(
-                `[XMPP]%c[SR](${this.name})%c ${text}`,
-                "color: LightGreen;",
-                "color: inherit;",
-            );
+    private console(text: string) {
+        if (_VERBOSE) {
+            console.warn(`[XMPP]%c[SR](${this.name})%c ${text}`, "color: LightGreen;", "color: inherit;");
         }
     }
 
@@ -44,7 +37,7 @@ export class SingleRoom extends AbstractRoom {
         return this.userJid.full;
     }
     get rawRecipient(): string {
-        return this.userJid.full;
+        return this.userJid.bare;
     }
     get name(): string {
         return this.user.name;
@@ -57,7 +50,7 @@ export class SingleRoom extends AbstractRoom {
     }
 
     public connect() {
-        if(get(userStore).isLogged) {
+        if (get(userStore).isLogged) {
             this.sendPresence(true);
         }
     }
@@ -65,31 +58,48 @@ export class SingleRoom extends AbstractRoom {
         if (first) {
             void this.xmppClient.socket.subscribe(this.userJid.bare);
         }
-        super.sendPresence(first);
-        this.console(`>> ${first?'First ':''}Presence sent to ${this.userJid.bare}`);
+        this.xmppClient.socket.sendPresence({ to: this.recipient });
+        this.console(`>> ${first ? "First " : ""}Presence sent to ${this.userJid.bare}`);
+        this.readyStore.set(true);
     }
     public sendMessage(text: string, messageReply?: Message) {
         super.sendMessage(text, messageReply);
-        this.console('>> Message sent');
+        this.console(">> Message sent");
     }
     public sendChatState(state: ChatState) {
         if (this.closed) {
             return;
         }
-        this.xmppClient.socket.sendMessage({ to: this.recipient, chatState: state});
-        this.console('>> Chat state sent');
+        this.xmppClient.socket.sendMessage({ to: this.recipient, chatState: state });
+        this.console(">> Chat state sent");
+    }
+    public sendRetrieveLastMessages() {
+        throw new TypeError("Not yet implemented");
     }
 
     onChatState(chatState: ChatStateMessage): boolean {
-        this.console('<< Chat state received');
+        this.console("<< Chat state received");
         this.chatStateStore.set(chatState.chatState as ChatState);
+        this.user.chatState = chatState.chatState;
+        this.presenceStore.update((presenceStore: UserList) => {
+            presenceStore.set(this.user.jid, { ...this.user, chatState: this.user.chatState });
+            return presenceStore;
+        });
+        return true;
+    }
+    onPresence(presence: StanzaProtocol.ReceivedPresence): boolean {
+        if (!this.subscriptionAccepted) {
+            this.xmppClient.socket.acceptSubscription(this.rawRecipient);
+            this.subscriptionAccepted = true;
+        }
+        this.console("<< Presence received");
         return true;
     }
 
     public getMe() {
         const defaultRoom = mucRoomsStore.getDefaultRoom();
-        if(!defaultRoom){
-            throw new Error('No default muc Room');
+        if (!defaultRoom) {
+            throw new Error("No default muc Room");
         }
         return derived(defaultRoom.getPresenceStore(), ($presenceStore) => $presenceStore.get(this.myJID));
     }

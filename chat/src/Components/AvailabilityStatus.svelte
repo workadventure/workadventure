@@ -28,8 +28,6 @@
     }
 </script>
 
-<div
-    class={`tw-text-xs ${getColorOfAvailabilityStatus(status)} tw-mt-0`}
->
+<div class={`tw-text-xs ${getColorOfAvailabilityStatus(status)} tw-mt-0`}>
     {getNameOfAvailabilityStatus(status)}
 </div>

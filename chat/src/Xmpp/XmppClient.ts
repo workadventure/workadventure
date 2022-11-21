@@ -13,9 +13,9 @@ import * as StanzaProtocol from "stanza/protocol";
 import { JSONData } from "stanza/jxt";
 import { ChatStateMessage, JID } from "stanza";
 import { ParsedJID } from "stanza/JID";
-import {SingleRoom} from "./SingleRoom";
-import {User} from "./AbstractRoom";
-import {singleRoomsStore} from "../Stores/SingleRoomsStore";
+import { SingleRoom } from "./SingleRoom";
+import { User } from "./AbstractRoom";
+import { singleRoomsStore } from "../Stores/SingleRoomsStore";
 
 const debug = Debug("xmppClient");
 
@@ -54,13 +54,19 @@ export class XmppClient {
         const roomJID = JID.toBare(from);
 
         let room: MucRoom | SingleRoom | undefined;
-        room = this.rooms.get(roomJID.toString());
-        if(!room){
-            const defaultMucRoom = mucRoomsStore.getDefaultRoom();
-            if(defaultMucRoom) {
-                const user = get(defaultMucRoom.getPresenceStore()).get(from);
-                if(user){
-                    room = this.addSingleRoom(user);
+        room = this.rooms.get(roomJID);
+        if (!room) {
+            room = this.singles.get(roomJID);
+            if (!room) {
+                const defaultMucRoom = mucRoomsStore.getDefaultRoom();
+                if (defaultMucRoom) {
+                    const user = get(defaultMucRoom.getPresenceStore()).get(from);
+                    if (user) {
+                        console.warn("[XMPP] << First message received, accept the subscription ...");
+                        this.socket.acceptSubscription(JID.toBare(user.jid));
+                        console.warn("[XMPP] << Creating the singleRoom ...");
+                        room = this.addSingleRoom(user);
+                    }
                 }
             }
         }
@@ -196,6 +202,10 @@ export class XmppClient {
         });
         client.on("chat:state", (state: ChatStateMessage) => {
             this.forwardToRoom("chatState", state.from, state);
+        });
+
+        client.on("subscribe", (presence: StanzaProtocol.ReceivedPresence) => {
+            console.log(presence);
         });
 
         client.on("auth:failed", () => {

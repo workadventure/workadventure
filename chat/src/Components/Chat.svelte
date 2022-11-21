@@ -10,7 +10,7 @@
     import { localeDetector } from "../i18n/locales";
     import { locale } from "../i18n/i18n-svelte";
     import ChatLiveRooms from "./ChatLiveRooms.svelte";
-    import {activeThreadStore, settingsViewStore, usersListViewStore} from "../Stores/ActiveThreadStore";
+    import { activeThreadStore, settingsViewStore, usersListViewStore } from "../Stores/ActiveThreadStore";
     import ChatActiveThread from "./ChatActiveThread.svelte";
     import ChatActiveThreadTimeLine from "./Timeline/ChatActiveThreadTimeline.svelte";
     import Timeline from "./Timeline/Timeline.svelte";
@@ -32,6 +32,7 @@
     import { fly } from "svelte/transition";
     import NeedRefresh from "./NeedRefresh.svelte";
     import ChatForumRooms from "./ChatForumRooms.svelte";
+    import ChatUsers from "./ChatUsers.svelte";
 
     let chatWindowElement: HTMLElement;
     let handleFormBlur: { blur(): void };
@@ -208,6 +209,7 @@
                                 (mucRoom) => mucRoom.type === "live" && mucRoom.name.toLowerCase().includes(searchValue)
                             )}
                         />
+                        <ChatUsers searchValue={searchValue.toLocaleLowerCase()} />
                     {/if}
 
                     <Timeline on:activeThreadTimeLine={() => timelineActiveStore.set(true)} />

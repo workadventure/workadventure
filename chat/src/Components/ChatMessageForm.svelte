@@ -11,7 +11,7 @@
         XCircleIcon,
         ArrowRightCircleIcon,
     } from "svelte-feather-icons";
-    import {MucRoom, UserList} from "../Xmpp/MucRoom";
+    import { MucRoom, UserList } from "../Xmpp/MucRoom";
     import { User } from "../Xmpp/AbstractRoom";
     import LL, { locale } from "../i18n/i18n-svelte";
     import { createEventDispatcher, onMount } from "svelte";
@@ -32,8 +32,8 @@
     import crown from "../../public/static/svg/icone-premium-crown.svg";
     import { iframeListener } from "../IframeListener";
     import { ChatState } from "stanza/Constants";
-    import {SingleRoom} from "../Xmpp/SingleRoom";
-    import {writable,} from "svelte/store";
+    import { SingleRoom } from "../Xmpp/SingleRoom";
+    import { writable } from "svelte/store";
 
     export let activeThread: MucRoom | SingleRoom;
 
@@ -55,7 +55,11 @@
     // const regexUserTag = /(?<![\w@])@([\w@]+(?:[.!][\w@]+)*)+$/gm;
     const regexUserTag = /@([\w@]+(?:[.!][\w@]+)*)+$/gm;
 
-    const presenceStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? (activeThread instanceof MucRoom ? activeThread.getPresenceStore():writable<UserList>(new Map<string, User>()));
+    const presenceStore =
+        mucRoomsStore.getDefaultRoom()?.getPresenceStore() ??
+        (activeThread instanceof MucRoom
+            ? activeThread.getPresenceStore()
+            : writable<UserList>(new Map<string, User>()));
     const me = activeThread.getMe();
 
     function onFocus() {}
