@@ -8,12 +8,8 @@ import {
 import { localUserStore } from "./LocalUserStore";
 import axios from "axios";
 import { axiosWithRetry } from "./AxiosUtils";
-import { isMapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
-import type { LegalsData, MapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
-import type { OpidWokaNamePolicy } from "../../messages/JsonMessages/OpidWokaNamePolicy";
-import { isRoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
-import type { MucRoomDefinitionInterface } from "../../messages/JsonMessages/MucRoomDefinitionInterface";
-import { isErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
+import type { MucRoomDefinitionInterface, MapDetailsData, LegalsData } from "@workadventure/messages";
+import { isMapDetailsData, isRoomRedirect, isErrorApiData, OpidWokaNamePolicy } from "@workadventure/messages";
 import { ApiError } from "../Stores/Errors/ApiError";
 export class MapDetail {
     constructor(public readonly mapUrl: string) {}
@@ -181,8 +177,6 @@ export class Room {
                 this._iconHair = data.customizeWokaScene?.hairIcon ?? undefined;
                 this._iconHat = data.customizeWokaScene?.hatIcon ?? undefined;
                 this._iconTurn = data.customizeWokaScene?.turnIcon ?? undefined;
-
-                console.info("_enableChat", this._enableChat, "_enableChatUpload", this._enableChatUpload);
 
                 return new MapDetail(data.mapUrl);
             } else if (errorApiDataChecking.success) {

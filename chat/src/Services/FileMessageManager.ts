@@ -1,9 +1,9 @@
 import { uploaderManager } from "./UploaderManager";
 import { filesUploadStore } from "../Stores/ChatStore";
-import xml, { Element } from "@xmpp/xml";
 import { get } from "svelte/store";
 import { userStore } from "../Stores/LocalUserStore";
 import { ADMIN_API_URL, ENABLE_CHAT_UPLOAD } from "../Enum/EnvironmentVariable";
+import * as StanzaProtocol from "stanza/protocol";
 
 const _VERBOSE = true;
 
@@ -103,7 +103,6 @@ export class FileMessageManager {
 
         try {
             const userRoomToken = userStore.get().userRoomToken;
-            console.log("USER ROOM TOKEN :", userRoomToken, !userRoomToken, !!ADMIN_API_URL);
             if (!userRoomToken && ADMIN_API_URL) {
                 throw new NotLoggedUser();
             } else if (!ENABLE_CHAT_UPLOAD && !ADMIN_API_URL) {
@@ -152,41 +151,18 @@ export class FileMessageManager {
         return uploaderManager.delete(file.id);
     }
 
-    /**
-     *
-     * @param files
-     * @returns
-     */
-    get getXmlFileAttr() {
-        return this.getXmlFileAttrFrom(this.files);
+    get jsonFiles() {
+        return this.getJsonFrom(this.files);
     }
 
-    /**
-     *
-     * @param files
-     * @returns
-     */
-    public getXmlFileAttrFrom(files: UploadedFile[]) {
-        return files.reduce((xmlObject, file) => {
-            xmlObject.append(xml("file", { ...file }));
-            return xmlObject;
-        }, xml("files", { size: files.length }));
-    }
-
-    public getFilesListFromXml(xmlFile: Element) {
-        return xmlFile.getChildElements().reduce((list: UploadedFile[], element: Element) => {
-            const file = new UploadedFile(
-                element.getAttr("name") as string,
-                element.getAttr("id") as string,
-                element.getAttr("location") as string,
-                element.getAttr("lastModified") as number,
-                element.getAttr("webkitRelativePath") as string,
-                element.getAttr("size") as number,
-                element.getAttr("type") as string
-            );
-            list.push(file);
-            return list;
-        }, []);
+    public getJsonFrom(files: UploadedFile[]): StanzaProtocol.Link[] {
+        return files.reduce((allFiles: Array<StanzaProtocol.Link>, file) => {
+            allFiles.push({
+                url: file.location,
+                description: file.name,
+            });
+            return allFiles;
+        }, new Array<StanzaProtocol.Link>());
     }
 
     get files(): UploadedFile[] {
@@ -197,17 +173,21 @@ export class FileMessageManager {
         filesUploadStore.set(new Map());
     }
 
-    public static isImage(extension: string) {
-        return ["png", "jpef", "gif", "svg"].includes(extension);
+    public static getName(url: string) {
+        return url.split("/").pop() ?? "";
     }
-    public static isVideo(extension: string) {
-        return ["mov", "mp4", "m4v", "avi", "mov", "ogg", "webm"].includes(extension);
+
+    public static isImage(url: string) {
+        return ["png", "jpeg", "jpg", "gif", "svg", "heic"].includes(this.getExtension(this.getName(url)));
     }
-    public static isSound(extension: string) {
-        return ["mp3", "wav"].includes(extension);
+    public static isVideo(url: string) {
+        return ["mov", "mp4", "m4v", "avi", "mov", "ogg", "webm"].includes(this.getExtension(this.getName(url)));
     }
-    public static getExtension(location: string) {
-        return location.split(".").pop()?.toLowerCase();
+    public static isSound(url: string) {
+        return ["mp3", "wav"].includes(this.getExtension(url));
+    }
+    public static getExtension(fileName: string) {
+        return fileName.split(".").pop() ?? "";
     }
 }
 

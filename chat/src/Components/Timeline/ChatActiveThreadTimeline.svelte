@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fade, fly } from "svelte/transition";
-    import { SettingsIcon, ArrowLeftIcon, MessageCircleIcon, RefreshCwIcon, SmileIcon } from "svelte-feather-icons";
+    import { ArrowLeftIcon, RefreshCwIcon, SmileIcon } from "svelte-feather-icons";
     import { SendIcon } from "svelte-feather-icons";
     import {
         chatMessagesStore,
@@ -18,6 +18,7 @@
     import { mucRoomsStore } from "../../Stores/MucRoomsStore";
     import { EmojiButton } from "@joeattardi/emoji-button";
     import { HtmlUtils } from "../../Utils/HtmlUtils";
+    import { defaultWoka } from "../../Xmpp/AbstractRoom";
 
     const dispatch = createEventDispatcher();
     const defaultMucRoom = mucRoomsStore.getDefaultRoom();
@@ -39,7 +40,7 @@
     }
     function saveMessage() {
         if (!newMessageText) return;
-        chatMessagesStore.addPersonnalMessage(newMessageText);
+        chatMessagesStore.addPersonalMessage(newMessageText);
         newMessageText = "";
         return false;
     }
@@ -69,22 +70,15 @@
         return true;
     }
 
-    let messagesList: HTMLElement;
     let subscribers = new Array<Unsubscriber>();
 
     let emojiContainer: HTMLElement;
     let picker: EmojiButton;
 
     onMount(() => {
-        messagesList.addEventListener("scroll", () => {
-            if (messagesList && messagesList.scrollTop === messagesList.scrollHeight - messagesList.offsetHeight) {
-                lastTimelineMessageRead.set(new Date());
-            }
-        });
         subscribers.push(
             chatMessagesStore.subscribe(() => {
                 setTimeout(() => {
-                    window.scroll(0, messagesList.scrollHeight);
                     lastTimelineMessageRead.set(new Date());
                 }, 50);
             })
@@ -150,13 +144,13 @@
 >
     <div class="wa-thread-head">
         <div
-            class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2 tw-self-stretch tw-flex tw-justify-center tw-align-middle tw-border-t-0"
+            class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-w-14 tw-self-stretch tw-flex tw-justify-center tw-align-middle tw-border-t-0"
         >
             <button class="exit tw-text-lighter-purple tw-m-0" on:click={backToThreadList}>
                 <ArrowLeftIcon />
             </button>
         </div>
-        <div class="tw-text-center">
+        <div class="tw-text-center tw-pb-3 tw-pt-2">
             <div class="tw-flex tw-justify-center">
                 <b>{$LL.timeLine.title()}</b>
                 <!-- Have a event when user is in spountanéous discussion -->
@@ -176,16 +170,17 @@
             </div>
         </div>
         <div
-            class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-pl-2 tw-self-stretch tw-flex tw-justify-center tw-align-middle tw-border-t-0"
+            class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-pl-2 tw-w-14 tw-self-stretch tw-flex tw-justify-center tw-align-middle tw-border-t-0"
             on:click={() => (settingsView = !settingsView)}
         >
-            <button class="tw-text-lighter-purple tw-m-0">
+            <!--<button class="tw-text-lighter-purple tw-m-0">
                 {#if settingsView}
                     <MessageCircleIcon />
                 {:else}
                     <SettingsIcon />
                 {/if}
             </button>
+            -->
         </div>
     </div>
 
@@ -213,7 +208,6 @@
         <div
             id="timeLine-messageList"
             class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-pt-14 tw-pb-14 tw-justify-end tw-h-auto tw-min-h-screen"
-            bind:this={messagesList}
         >
             {#each $chatMessagesStore as message}
                 {#if message.type === ChatMessageTypes.text || message.type === ChatMessageTypes.me}
@@ -225,17 +219,15 @@
                         >
                             <div
                                 class={`${
-                                    message.type === ChatMessageTypes.me || !message.author ? "tw-opacity-0" : "tw-mt-4"
+                                    message.type === ChatMessageTypes.me ? "tw-opacity-0" : "tw-mt-4"
                                 } tw-relative wa-avatar-mini tw-mr-2`}
-                                style={`background-color: ${message.author?.color}`}
+                                style={`background-color: ${message.author?.color ?? "#56eaff"}`}
                             >
                                 <div class="wa-container">
                                     <img
                                         class="tw-w-full"
                                         style="image-rendering: pixelated;"
-                                        src={`${
-                                            message.author?.woka ? message.author?.woka : "/static/images/logo-wa-2.png"
-                                        }`}
+                                        src={`${message.author?.woka ? message.author?.woka : defaultWoka}`}
                                         alt="Avatar"
                                         loading="lazy"
                                     />
@@ -246,8 +238,10 @@
                                     style={`border-bottom-color:${message.author?.color}`}
                                     class="tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-1"
                                 >
-                                    <span class="tw-text-lighter-purple"
-                                        >{#if message.type === ChatMessageTypes.me}{$LL.me()}{:else}
+                                    <span class="tw-text-lighter-purple">
+                                        {#if message.type === ChatMessageTypes.me}
+                                            {$LL.me()}
+                                        {:else if message.author}
                                             {message.author?.name.match(/\[\d*]/)
                                                 ? message.author?.name.substring(
                                                       0,
@@ -262,8 +256,11 @@
                                                         ?.replace("[", "")
                                                         ?.replace("]", "")}
                                                 </span>
-                                            {/if}{/if}</span
-                                    >
+                                            {/if}
+                                        {:else}
+                                            {message.authorName}
+                                        {/if}
+                                    </span>
                                     <span
                                         >{message.date.toLocaleTimeString($locale, {
                                             hour: "2-digit",
@@ -309,8 +306,14 @@
                                                     ?.replace("]", "")}
                                             </span>
                                         {/if}</b
-                                    >{$LL.timeLine.incoming()}</span
-                                >
+                                    >{$LL.timeLine.incoming()}
+                                    <span class="tw-text-xss tw-text-lighter-purple">
+                                        - {message.date.toLocaleTimeString($locale, {
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                        })}
+                                    </span>
+                                </span>
                             </div>
                         {/each}
                     {/if}
@@ -332,8 +335,14 @@
                                                     ?.replace("]", "")}
                                             </span>
                                         {/if}</b
-                                    >{$LL.timeLine.outcoming()}</span
-                                >
+                                    >{$LL.timeLine.outcoming()}
+                                    <span class="tw-text-xss tw-text-lighter-purple">
+                                        - {message.date.toLocaleTimeString($locale, {
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                        })}
+                                    </span>
+                                </span>
                             </div>
                         {/each}
                     {/if}
@@ -346,14 +355,14 @@
                         <div class={`tw-flex tw-justify-start`}>
                             <div
                                 class={`tw-mt-4 tw-relative wa-avatar-mini tw-mr-2 tw-z-10`}
-                                style={`background-color: ${defaultMucRoom?.getUserDataByUuid(userUuid).color}`}
+                                style={`background-color: ${defaultMucRoom?.getUserByJid(userUuid).color}`}
                                 in:fade={{ duration: 100 }}
                                 out:fade={{ delay: 200, duration: 100 }}
                             >
                                 <div class="wa-container">
                                     <img
                                         class="tw-w-full"
-                                        src={defaultMucRoom.getUserDataByUuid(userUuid).woka}
+                                        src={defaultMucRoom.getUserByJid(userUuid).woka}
                                         alt="Avatar"
                                     />
                                 </div>
@@ -365,26 +374,22 @@
                             >
                                 <div class="tw-w-fit">
                                     <div
-                                        style={`border-bottom-color:${
-                                            defaultMucRoom.getUserDataByUuid(userUuid).color
-                                        }`}
+                                        style={`border-bottom-color:${defaultMucRoom.getUserByJid(userUuid).color}`}
                                         class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-pb-1`}
                                     >
                                         <span class="tw-text-lighter-purple tw-text-xxs">
-                                            {defaultMucRoom.getUserDataByUuid(userUuid).name.match(/\[\d*]/)
+                                            {defaultMucRoom.getUserByJid(userUuid).name.match(/\[\d*]/)
                                                 ? defaultMucRoom
-                                                      .getUserDataByUuid(userUuid)
+                                                      .getUserByJid(userUuid)
                                                       .name.substring(
                                                           0,
-                                                          defaultMucRoom
-                                                              .getUserDataByUuid(userUuid)
-                                                              .name.search(/\[\d*]/)
+                                                          defaultMucRoom.getUserByJid(userUuid).name.search(/\[\d*]/)
                                                       )
-                                                : defaultMucRoom.getUserDataByUuid(userUuid).name}
-                                            {#if defaultMucRoom.getUserDataByUuid(userUuid).name.match(/\[\d*]/)}
+                                                : defaultMucRoom.getUserByJid(userUuid).name}
+                                            {#if defaultMucRoom.getUserByJid(userUuid).name.match(/\[\d*]/)}
                                                 <span class="tw-font-light tw-text-xs tw-text-gray">
                                                     #{defaultMucRoom
-                                                        .getUserDataByUuid(userUuid)
+                                                        .getUserByJid(userUuid)
                                                         .name.match(/\[\d*]/)
                                                         ?.join()
                                                         ?.replace("[", "")

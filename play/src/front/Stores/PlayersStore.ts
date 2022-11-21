@@ -1,7 +1,7 @@
 import { writable } from "svelte/store";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import type { RoomConnection } from "../Connexion/RoomConnection";
-import { AvailabilityStatus } from "../../messages/ts-proto-generated/protos/messages";
+import { AvailabilityStatus } from "@workadventure/messages";
 import { getColorByString } from "../Components/Video/utils";
 import { localUserStore } from "../Connexion/LocalUserStore";
 

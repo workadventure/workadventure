@@ -1,5 +1,13 @@
-import { ADMIN_API_URL } from "../enums/EnvironmentVariable";
 import { adminWokaService } from "./AdminWokaService";
 import { localWokaService } from "./LocalWokaService";
+import type { AdminCapabilities } from "./adminApi/AdminCapabilities";
+import type { WokaServiceInterface } from "./WokaServiceInterface";
 
-export const wokaService = ADMIN_API_URL ? adminWokaService : localWokaService;
+export class WokaService {
+    private static instance: WokaServiceInterface | undefined;
+    static get(capabilities: AdminCapabilities): WokaServiceInterface {
+        if (!WokaService.instance)
+            WokaService.instance = adminWokaService.isEnabled(capabilities) ? adminWokaService : localWokaService;
+        return WokaService.instance;
+    }
+}

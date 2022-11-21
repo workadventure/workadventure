@@ -3,7 +3,7 @@
 window.env = {
     MAX_USERNAME_LENGTH: 10,
     DEBUG_MODE: true,
-}
+};
 
 import { describe, expect, it } from "vitest";
 import { areCharacterLayersValid, isUserNameValid, maxUserNameLength } from "../../../../src/front/Connexion/LocalUser";

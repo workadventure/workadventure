@@ -57,7 +57,7 @@ jobs:
             ${{ runner.OS }}-yarn-
 
       - name: "local-app: Install dependencies"
-        run: yarn install --froze-lockfile
+        run: yarn install  --immutable
         working-directory: "desktop/local-app"
 
       - name: "local-app: Build"
@@ -69,7 +69,7 @@ jobs:
         working-directory: "desktop/electron"
 
       - name: "Install dependencies"
-        run: yarn install --froze-lockfile
+        run: yarn install  --immutable
         working-directory: "desktop/electron"
 
       - name: "Build typescript"

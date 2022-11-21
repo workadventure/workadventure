@@ -33,23 +33,27 @@ jobs:
           version: '3.x'
 
       - name: "Install tailwind dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "libs/tailwind"
 
       - name: "Install map-editor dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "libs/map-editor"
 
+      - name: "Install libs/messages dependencies"
+        run: yarn install  --immutable
+        working-directory: "libs/messages"
+
       - name: "Install dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "play"
 
       - name: "Install messages dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run ts-proto && yarn run copy-to-play-ts-proto && yarn run copy-to-play && yarn run json-copy-to-play
+        run: yarn run ts-proto && yarn run copy-to-play
         working-directory: "messages"
 
       - name: "Generate i18n files"
@@ -64,7 +68,7 @@ jobs:
         working-directory: "play"
 
       - name: Install dependencies in package
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "play/packages/iframe-api-typings"
 
       - name: Publish package

@@ -1,7 +1,7 @@
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import type { AdminInterface } from "./AdminInterface";
-import type { MapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
-import type { RoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
+import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData } from "@workadventure/messages";
+import { OpidWokaNamePolicy } from "@workadventure/messages";
 import {
     DISABLE_ANONYMOUS,
     ENABLE_CHAT,
@@ -10,11 +10,8 @@ import {
     START_ROOM_URL,
     OPID_WOKA_NAME_POLICY,
 } from "../enums/EnvironmentVariable";
-import type { AdminApiData } from "../../messages/JsonMessages/AdminApiData";
 import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
-import type { ErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
-import { OpidWokaNamePolicy } from "../../messages/JsonMessages/OpidWokaNamePolicy";
 
 /**
  * A local class mocking a real admin if no admin is configured.
@@ -28,6 +25,10 @@ class LocalAdmin implements AdminInterface {
         characterLayers: string[],
         locale?: string
     ): Promise<FetchMemberDataByUuidResponse> {
+        const mucRooms = [{ name: "Connected users", url: playUri, type: "default", subscribe: false }];
+        if (ENABLE_CHAT) {
+            mucRooms.push({ name: "Welcome", url: `${playUri}/forum/welcome`, type: "forum", subscribe: false });
+        }
         return {
             email: userIdentifier,
             userUuid: userIdentifier,
@@ -36,7 +37,7 @@ class LocalAdmin implements AdminInterface {
             visitCardUrl: null,
             textures: (await localWokaService.fetchWokaDetails(characterLayers)) ?? [],
             userRoomToken: undefined,
-            mucRooms: [{ name: "Connected users", url: playUri, type: "default", subscribe: false }],
+            mucRooms,
             activatedInviteUser: true,
         };
     }

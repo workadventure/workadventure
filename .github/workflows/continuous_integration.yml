@@ -34,23 +34,27 @@ jobs:
           version: '3.x'
 
       - name: "Install libs/tailwind dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "libs/tailwind"
 
       - name: "Install libs/map-editor dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "libs/map-editor"
 
       - name: "Install dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "play"
 
       - name: "Install messages dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "messages"
 
+      - name: "Install libs dependencies"
+        run: yarn install  --immutable
+        working-directory: "libs/messages"
+
       - name: "Build proto messages"
-        run: yarn run ts-proto && yarn run copy-to-play-ts-proto && yarn run proto && yarn run copy-to-play && yarn run json-copy-to-play
+        run: yarn run ts-proto && yarn run proto && yarn run copy-to-play
         working-directory: "messages"
 
       - name: "Generate i18n files"
@@ -114,19 +118,23 @@ jobs:
       #   working-directory: "libs"
 
       - name: "Install libs/tailwind dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "libs/tailwind"
 
+      - name: "Install libs/messages dependencies"
+        run: yarn install  --immutable
+        working-directory: "libs/messages"
+
       - name: "Install dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "chat"
 
       - name: "Install messages dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run ts-proto && yarn run copy-to-chat-ts-proto && yarn run json-copy-to-chat
+        run: yarn run ts-proto
         working-directory: "messages"
 
       - name: "Pretty"
@@ -137,15 +145,14 @@ jobs:
         run: yarn run typesafe-i18n
         working-directory: "chat"
 
-      # TODO active
-      #- name: "Build"
-      #  run: yarn run build
-      #  env:
-      #    PUSHER_URL: "//localhost:8080"
-      #    ADMIN_URL: "//localhost:80"
-      #    # upgrade RAM available to 6GB
-      #    NODE_OPTIONS: --max-old-space-size=6144
-      #  working-directory: "chat"
+      - name: "Build"
+        run: yarn run build
+        env:
+          PUSHER_URL: "//localhost:8080"
+          ADMIN_URL: "//localhost:80"
+          # upgrade RAM available to 6GB
+          NODE_OPTIONS: --max-old-space-size=6144
+        working-directory: "chat"
 
       - name: "Svelte check"
         run: yarn run svelte-check
@@ -185,15 +192,19 @@ jobs:
           version: '3.x'
 
       - name: "Install dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "back"
 
       - name: "Install messages dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "messages"
 
+      - name: "Install libs dependencies"
+        run: yarn install  --immutable
+        working-directory: "libs/messages"
+
       - name: "Build proto messages"
-        run: yarn run proto && yarn run copy-to-back && yarn run json-copy-to-back
+        run: yarn run proto && yarn run ts-proto && yarn run copy-to-back
         working-directory: "messages"
 
       - name: "Build"
@@ -211,6 +222,33 @@ jobs:
       - name: "Prettier"
         run: yarn run pretty-check
         working-directory: "back"
+
+  continuous-integration-uploader:
+    name: "Continuous Integration Uploader"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: "Install dependencies"
+        run: yarn install  --immutable
+        working-directory: "uploader"
+
+      - name: "Lint"
+        run: yarn run lint
+        working-directory: "uploader"
+
+      - name: "jest"
+        run: yarn test
+        working-directory: "uploader"
+
 
   continuous-integration-map-storage:
     name: "Continuous Integration Map Storage"
@@ -232,20 +270,24 @@ jobs:
           version: '3.x'
 
       - name: "Install dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "map-storage"
 
       - name: "Install messages dependencies"
-        run: yarn install
+        run: yarn install  --immutable
+        working-directory: "messages"
+
+      - name: "Build proto messages"
+        run: yarn run ts-proto
         working-directory: "messages"
 
       - name: "Install libs/map-editor dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "libs/map-editor"
 
-      - name: "Build proto messages"
-        run: yarn run ts-proto-map-storage && yarn run copy-to-map-storage-ts-proto
-        working-directory: "messages"
+      - name: "Install libs/messages dependencies"
+        run: yarn install  --immutable
+        working-directory: "libs/messages"
 
       - name: "Build"
         run: yarn run build
@@ -278,7 +320,7 @@ jobs:
           node-version: 16
 
       - name: "Install dependencies"
-        run: yarn install --froze-lockfile
+        run: yarn install  --immutable
         working-directory: "desktop/electron"
 
       - name: "Build"
@@ -316,7 +358,7 @@ jobs:
           node-version: 16
 
       - name: "Install dependencies"
-        run: yarn install --froze-lockfile
+        run: yarn install  --immutable
         working-directory: "desktop/local-app"
 
       - name: "Build"
@@ -353,17 +395,30 @@ jobs:
         with:
           node-version: 16
 
+
       - name: "Install dependencies"
         run: npm ci
         working-directory: "tests"
 
       - name: "Install libs/map-editor dependencies"
-        run: yarn install
+        run: yarn install  --immutable
         working-directory: "libs/map-editor"
 
+      - name: "Install libs/messages dependencies"
+        run: yarn install  --immutable
+        working-directory: "libs/messages"
+
       - name: "Install play dependencies"
-        run: yarn install --froze-lockfile
+        run: yarn install  --immutable
         working-directory: "play"
+
+      - name: "Install messages dependencies"
+        run: yarn install  --immutable
+        working-directory: "messages"
+
+      - name: "Build proto messages"
+        run: yarn run ts-proto
+        working-directory: "messages"
 
       - name: "Build API typings"
         run: yarn run build-typings

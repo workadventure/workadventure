@@ -1,10 +1,9 @@
 syntax = "proto3";
 
 import "google/protobuf/wrappers.proto";
+import "google/protobuf/struct.proto";
 
 /*********** PARTIAL MESSAGES **************/
-
-package workadventure;
 
 enum AvailabilityStatus {
   UNCHANGED = 0;
@@ -134,10 +133,27 @@ message EditMapCommandWithKeyMessage {
 
 message ModifyAreaMessage {
   int32 id = 1;
-  optional uint32 x = 2;
-  optional uint32 y = 3;
-  optional uint32 width = 4;
-  optional uint32 height = 5;
+  optional string name = 2;
+  optional uint32 x = 3;
+  optional uint32 y = 4;
+  optional uint32 width = 5;
+  optional uint32 height = 6;
+  optional AreaProperties properties = 7;
+}
+
+message AreaProperties {
+  optional bool focusable = 1;
+  optional float zoom_margin = 2;
+  optional bool silent = 3;
+  map<string, google.protobuf.Value> customProperties = 4;
+}
+
+message CustomAreaProperty {
+  oneof value {
+    bool boolVal = 1;
+    float numberVal = 2;
+    string stringVal = 3;
+  }
 }
 
 message DeleteAreaMessage {
@@ -213,9 +229,6 @@ message SetPlayerVariableMessage {
   google.protobuf.Value value = 2;
 }*/
 
-message XmppMessage {
-  string stanza = 1;
-}
 
 /**
  * A variable, along the tag describing who it is targeted at
@@ -301,8 +314,9 @@ message SubMessage {
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
     PingMessage pingMessage = 11;
-    //XmppMessage xmppMessage = 12;
     EditMapCommandMessage editMapCommandMessage = 13;
+    JoinMucRoomMessage joinMucRoomMessage = 14;
+    LeaveMucRoomMessage leaveMucRoomMessage = 15;
   }
 }
 
@@ -478,8 +492,7 @@ message ServerToClientMessage {
     GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
     ErrorScreenMessage errorScreenMessage = 26;
     AnswerMessage answerMessage = 28;
-    //XmppSettingsMessage xmppSettingsMessage = 29;
-    //XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 30;
+    XmppSettingsMessage xmppSettingsMessage = 29;
     MoveToPositionMessage moveToPositionMessage = 31;
   }
 }
@@ -609,6 +622,8 @@ message SubToPusherRoomMessage {
     VariableWithTagMessage variableMessage = 1;
     ErrorMessage errorMessage = 2;
     EditMapCommandMessage editMapCommandMessage = 3;
+    JoinMucRoomMessage joinMucRoomMessage = 4;
+    LeaveMucRoomMessage leaveMucRoomMessage = 5;
   }
 }
 
@@ -694,25 +709,24 @@ message EmptyMessage {
 
 
 
-/*******************************************************µ************************
+/********************************************************************************
  * Start Chat Messages
  ********************************************************************************/
-message IframeToPusherMessage{
+message ChatMessagePrompt{
+  string roomId = 1;
   oneof message {
-    XmppMessage xmppMessage = 1;
-    BanUserByUuidMessage banUserByUuidMessage = 2;
-  }
-}
-message PusherToIframeMessage{
-  oneof message {
-    XmppSettingsMessage xmppSettingsMessage = 1;
-    XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 2;
-    XmppMessage xmppMessage = 3;
-    XmppConnectionNotAuthorizedMessage xmppConnectionNotAuthorized= 4;
-    ErrorMessage errorMessage = 5;
+    JoinMucRoomMessage joinMucRoomMessage = 2;
+    LeaveMucRoomMessage leaveMucRoomMessage = 3;
   }
 }
 
+message JoinMucRoomMessage{
+  MucRoomDefinitionMessage mucRoomDefinitionMessage = 1;
+}
+
+message LeaveMucRoomMessage{
+  string url = 1;
+}
 message MucRoomDefinitionMessage {
   string url = 1;
   string name = 2;
@@ -724,23 +738,8 @@ message XmppSettingsMessage{
   string jid = 1;
   string conferenceDomain = 2;
   repeated MucRoomDefinitionMessage rooms = 3;
-}
-
-message XmppConnectionNotAuthorizedMessage{
-
-}
-
-
-/**
- * Status of the connection to the XMPP server.
- * In case something goes wrong with the XMPP server, we are notified here.
- */
-message XmppConnectionStatusChangeMessage{
-  enum Status {
-    DISCONNECTED = 0;
-  }
-
-  Status status = 1;
+  string jabberId = 4;
+  string jabberPassword = 5;
 }
 
 message BanUserByUuidMessage{
@@ -753,36 +752,3 @@ message BanUserByUuidMessage{
 /*********************************************************************************
  * End Chat Messages
  *********************************************************************************/
-
-
-
-
-
-
-
-
-/**
- * Service handled by the "back". Pusher servers connect to this service.
- */
-service RoomManager {
-  rpc joinRoom(stream PusherToBackMessage) returns (stream ServerToClientMessage); // Holds a connection between one given client and the back
-  rpc listenZone(ZoneMessage) returns (stream BatchToPusherMessage); // Connection used to send to a pusher messages related to a given zone of a given room
-  rpc listenRoom(RoomMessage) returns (stream BatchToPusherRoomMessage); // Connection used to send to a pusher messages related to a given room
-  rpc adminRoom(stream AdminPusherToBackMessage) returns (stream ServerToAdminClientMessage);
-  rpc sendAdminMessage(AdminMessage) returns (EmptyMessage);
-  rpc sendGlobalAdminMessage(AdminGlobalMessage) returns (EmptyMessage);
-  rpc ban(BanMessage) returns (EmptyMessage);
-  rpc sendAdminMessageToRoom(AdminRoomMessage) returns (EmptyMessage);
-  rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (EmptyMessage);
-  rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (EmptyMessage);
-  rpc getRooms(EmptyMessage) returns (RoomsList);
-  rpc ping(PingMessage) returns (PingMessage);
-}
-
-/**
- * Service handled by the "map-storage". Back servers connect to this service.
- */
-service MapStorage {
-  rpc ping(PingMessage) returns (PingMessage);
-  rpc handleEditMapCommandWithKeyMessage(EditMapCommandWithKeyMessage) returns (EditMapCommandMessage);
-}

@@ -2,30 +2,29 @@
     import highlightWords from "highlight-words";
     import { MoreHorizontalIcon, ShieldOffIcon, ShieldIcon, SlashIcon, UsersIcon } from "svelte-feather-icons";
     import LL from "../i18n/i18n-svelte";
-    import { createEventDispatcher } from "svelte";
-    import { defaultColor, defaultWoka, MeStore, MucRoom, User } from "../Xmpp/MucRoom";
+    import { defaultColor, defaultWoka } from "../Xmpp/AbstractRoom";
+    import { MucRoom } from "../Xmpp/MucRoom";
+    import { User } from "../Xmpp/AbstractRoom";
     import walk from "../../public/static/images/walk.svg";
     import teleport from "../../public/static/images/teleport.svg";
     import businessCard from "../../public/static/images/business-cards.svg";
-    import { GoTo, RankUp, RankDown, Ban } from "../Type/CustomEvent";
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
     import { iframeListener } from "../IframeListener";
-
-    const dispatch = createEventDispatcher<{
-        goTo: GoTo;
-        rankUp: RankUp;
-        rankDown: RankDown;
-        ban: Ban;
-    }>();
+    import { derived } from "svelte/store";
 
     export let mucRoom: MucRoom;
     export let user: User;
-    export let openChat: Function;
     export let searchValue: string = "";
-    export let meStore: MeStore;
 
-    $: presenseStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
+    function openChat(user: User) {
+        return user;
+        // activeThreadStore.set(user);
+    }
+
+    const presenceStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
+
+    const me = derived(presenceStore, ($presenceStore) => $presenceStore.get(mucRoom.myJID));
 
     let chatMenuActive = false;
     let openChatUserMenu = () => {
@@ -34,35 +33,23 @@
     let closeChatUserMenu = () => {
         chatMenuActive = false;
     };
-    function goTo(type: string, playUri: string, uuid: string) {
-        dispatch("goTo", { type, playUri, uuid });
+
+    function showBusinessCard(visitCardUrl: string | undefined) {
+        if (visitCardUrl) {
+            iframeListener.sendShowBusinessCard(visitCardUrl);
+        }
         closeChatUserMenu();
     }
-    function rankUp(jid: string) {
-        console.info("Rank up feature from workadventure chat coming soon!", jid);
-        return;
-        /*dispatch("rankUp", { jid });
-        closeChatUserMenu();*/
-    }
-    function rankDown(jid: string) {
-        console.info("Rank down feature from workadventure chat coming soon!", jid);
-        return;
-        /*dispatch("rankDown", { jid });
-        closeChatUserMenu();*/
-    }
-    function ban(user: string, name: string, playUri: string) {
-        console.info("ban feature from workadventure chat coming soon!", user, name, playUri);
-        return;
-        //dispatch("ban", { user, name, playUri });
-        //closeChatUserMenu();
-    }
-    function showBusinessCard(visitCardUrl?: string | null) {
-        if (!visitCardUrl) return;
-        iframeListener.sendShowBusinessCard(visitCardUrl);
+
+    function goTo(type: string, playUri: string, uuid: string) {
+        if (playUri !== "" && uuid !== "") {
+            mucRoom.goTo(type, playUri, uuid);
+        }
+        closeChatUserMenu();
     }
 
     function findUserInDefault(jid: string): User | undefined {
-        const userData = [...$presenseStore].find(([, user]) => user.jid === jid);
+        const userData = [...$presenceStore].find(([, user]) => user.jid === jid);
         let user = undefined;
         if (userData) {
             [, user] = userData;
@@ -73,7 +60,7 @@
     function getWoka(jid: string) {
         const user = findUserInDefault(jid);
         if (user) {
-            return user.woka;
+            return user.woka ?? defaultWoka;
         } else {
             return defaultWoka;
         }
@@ -137,7 +124,7 @@
                 alt="Avatar"
             />
         </div>
-        {#if user.active}
+        {#if user.active && user.availabilityStatus}
             <span
                 title={getNameOfAvailabilityStatus(user.availabilityStatus)}
                 class={`tw-w-4 tw-h-4 ${getColorOfAvailabilityStatus(
@@ -187,11 +174,7 @@
             {#if user.isMe}
                 {$LL.you()}
             {:else if user.active}
-                {@html user.isInSameMap
-                    ? $LL.userList.isHere()
-                    : user.roomName
-                    ? `${$LL.userList.in()} <span class="tw-font-medium">${user.roomName}</span>`
-                    : $LL.userList.inAnotherMap()}
+                {getNameOfAvailabilityStatus(user.availabilityStatus ?? 0)}
             {:else}
                 {$LL.userList.disconnected()}
             {/if}
@@ -216,14 +199,14 @@
                 {#if user.isInSameMap}
                     <span
                         class="walk-to wa-dropdown-item"
-                        on:click|stopPropagation={() => goTo("user", user.playUri, user.uuid)}
+                        on:click|stopPropagation={() => goTo("user", user.playUri ?? "", user.uuid ?? "")}
                         ><img class="noselect" src={walk} alt="Walk to logo" height="13" width="13" />
                         {$LL.userList.walkTo()}</span
                     >
                 {:else}
                     <span
                         class="teleport wa-dropdown-item"
-                        on:click|stopPropagation={() => goTo("room", user.playUri, user.uuid)}
+                        on:click|stopPropagation={() => goTo("room", user.playUri ?? "", user.uuid ?? "")}
                         ><img class="noselect" src={teleport} alt="Teleport to logo" height="13" width="13" />
                         {$LL.userList.teleport()}</span
                     >
@@ -236,22 +219,22 @@
                         {$LL.userList.businessCard()}</span
                     >
                 {/if}
-                {#if $meStore.isAdmin}
+                {#if $me && $me.isAdmin}
                     <span
                         class="ban wa-dropdown-item tw-text-pop-red"
-                        on:click|stopPropagation={() => ban(user.jid, user.name, user.playUri)}
+                        on:click|stopPropagation={() => mucRoom.sendBan(user.jid, user.name, user.playUri ?? "")}
                         ><SlashIcon size="13" /> {$LL.ban.title()} (coming soon)</span
                     >
                     {#if user.isAdmin}
                         <span
                             class="rank-down wa-dropdown-item tw-text-orange"
-                            on:click|stopPropagation={() => rankDown(user.jid)}
+                            on:click|stopPropagation={() => mucRoom.sendRankDown(user.jid)}
                             ><ShieldOffIcon size="13" /> {$LL.rankDown()} (coming soon)</span
                         >
                     {:else}
                         <span
                             class="rank-up wa-dropdown-item tw-text-orange"
-                            on:click|stopPropagation={() => rankUp(user.jid)}
+                            on:click|stopPropagation={() => mucRoom.sendRankUp(user.jid)}
                             ><ShieldIcon size="13" /> {$LL.rankUp()} (coming soon)</span
                         >
                     {/if}

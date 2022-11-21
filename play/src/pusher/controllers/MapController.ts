@@ -1,5 +1,5 @@
 import { DISABLE_ANONYMOUS } from "../enums/EnvironmentVariable";
-import { isMapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
+import { isMapDetailsData } from "@workadventure/messages";
 import { BaseHttpController } from "./BaseHttpController";
 import { adminService } from "../services/AdminService";
 import { InvalidTokenError } from "./InvalidTokenError";

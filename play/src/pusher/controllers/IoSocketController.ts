@@ -49,16 +49,18 @@ import Axios from "axios";
 import { InvalidTokenError } from "./InvalidTokenError";
 import type HyperExpress from "hyper-express";
 import type { WebSocket } from "uWebSockets.js";
-import type { WokaDetail } from "../../messages/JsonMessages/PlayerTextures";
 import { z } from "zod";
 import { adminService } from "../services/AdminService";
-import { isErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
-import type { ErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
-import { apiVersionHash } from "../../messages/JsonMessages/ApiVersion";
+import {
+    MucRoomDefinitionInterface,
+    ErrorApiData,
+    WokaDetail,
+    apiVersionHash,
+    isErrorApiData,
+} from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
-import type { MucRoomDefinitionInterface } from "../../messages/JsonMessages/MucRoomDefinitionInterface";
-//eslint-disable-next-line @typescript-eslint/no-var-requires
-const { jid } = require("@xmpp/client");
+import { v4 as uuid } from "uuid";
+import { JID } from "stanza";
 
 /**
  * The object passed between the "open" and the "upgrade" methods when opening a websocket
@@ -450,7 +452,11 @@ export class IoSocketController {
 
                         if (!userData.jabberId) {
                             // If there is no admin, or no user, let's log users using JWT tokens
-                            userData.jabberId = jid(userIdentifier, EJABBERD_DOMAIN).toString();
+                            userData.jabberId = JID.create({
+                                local: userIdentifier,
+                                domain: EJABBERD_DOMAIN,
+                                resource: uuid(),
+                            });
                             if (EJABBERD_JWT_SECRET) {
                                 userData.jabberPassword = Jwt.sign({ jid: userData.jabberId }, EJABBERD_JWT_SECRET, {
                                     expiresIn: "1d",
@@ -459,6 +465,8 @@ export class IoSocketController {
                             } else {
                                 userData.jabberPassword = "no_password_set";
                             }
+                        } else {
+                            userData.jabberId = `${userData.jabberId}/${uuid()}`;
                         }
 
                         // Generate characterLayers objects from characterLayers string[]
@@ -584,6 +592,7 @@ export class IoSocketController {
                     // Let's join the room
                     const client = this.initClient(ws);
                     await socketManager.handleJoinRoom(client);
+                    socketManager.emitXMPPSettings(client);
 
                     //get data information and show messages
                     if (client.messages && Array.isArray(client.messages)) {

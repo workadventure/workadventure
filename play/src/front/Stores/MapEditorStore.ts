@@ -1,3 +1,4 @@
+import type { PredefinedPropertyData } from "@workadventure/map-editor";
 import { writable } from "svelte/store";
 import { connectionManager } from "../Connexion/ConnectionManager";
 import { ENABLE_FEATURE_MAP_EDITOR } from "../Enum/EnvironmentVariable";
@@ -19,3 +20,5 @@ export const mapEditorModeStore = createMapEditorModeStore();
 export const mapEditorModeDragCameraPointerDownStore = writable(false);
 
 export const mapEditorSelectedAreaPreviewStore = writable<AreaPreview | undefined>(undefined);
+
+export const mapEditorSelectedPropertyStore = writable<PredefinedPropertyData | undefined>(undefined);

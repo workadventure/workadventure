@@ -1,4 +1,4 @@
-import { OpidWokaNamePolicy } from "../../messages/JsonMessages/OpidWokaNamePolicy";
+import { OpidWokaNamePolicy } from "@workadventure/messages";
 import { z, ZodError } from "zod";
 import type { FrontConfigurationInterface } from "../../common/FrontConfigurationInterface";
 
@@ -39,9 +39,7 @@ const EnvironmentVariables = z.object({
     DISABLE_ANONYMOUS: BoolAsString.optional(),
     PROMETHEUS_AUTHORIZATION_TOKEN: z.string().optional(),
     EJABBERD_DOMAIN: z.string().optional(),
-    EJABBERD_WS_URI: z.string().optional(),
     EJABBERD_JWT_SECRET: z.string().optional(),
-    MAX_HISTORY_CHAT: PositiveIntAsString.optional(),
     ENABLE_CHAT: BoolAsString.optional(),
     ENABLE_CHAT_UPLOAD: BoolAsString.optional(),
     DEBUG_ERROR_MESSAGES: BoolAsString.optional(),
@@ -106,6 +104,7 @@ function toBool(value: BoolAsString | undefined, defaultValue: boolean): boolean
 export const SECRET_KEY = env.SECRET_KEY;
 export const API_URL = env.API_URL;
 export const ADMIN_API_URL = env.ADMIN_API_URL;
+export const ADMIN_API_RETRY_DELAY = parseInt(process.env.ADMIN_API_RETRY_DELAY || "500");
 export const ADMIN_URL = env.ADMIN_URL;
 export const ADMIN_API_TOKEN = env.ADMIN_API_TOKEN;
 export const ADMIN_SOCKETS_TOKEN = env.ADMIN_SOCKETS_TOKEN;
@@ -133,9 +132,7 @@ export const OPID_WOKA_NAME_POLICY = env.OPID_WOKA_NAME_POLICY || "user_input";
 export const DISABLE_ANONYMOUS: boolean = toBool(env.DISABLE_ANONYMOUS, false);
 export const PROMETHEUS_AUTHORIZATION_TOKEN = env.PROMETHEUS_AUTHORIZATION_TOKEN;
 export const EJABBERD_DOMAIN: string = env.EJABBERD_DOMAIN || "";
-export const EJABBERD_WS_URI: string = env.EJABBERD_WS_URI || "";
 export const EJABBERD_JWT_SECRET: string = env.EJABBERD_JWT_SECRET || "";
-export const MAX_HISTORY_CHAT: number = toNumber(env.MAX_HISTORY_CHAT, 0);
 export const ENABLE_CHAT: boolean = toBool(env.ENABLE_CHAT, true);
 export const ENABLE_CHAT_UPLOAD: boolean = toBool(env.ENABLE_CHAT_UPLOAD, true);
 export const DEBUG_ERROR_MESSAGES = toBool(env.DEBUG_ERROR_MESSAGES, false);

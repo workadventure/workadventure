@@ -1,7 +1,7 @@
 import axios from "axios";
 import { EMBEDLY_KEY } from "../Enum/EnvironmentVariable";
 import { HtmlUtils } from "../Utils/HtmlUtils";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuid } from "uuid";
 import LL from "../i18n/i18n-svelte";
 import { get } from "svelte/store";
 import { FileMessageManager } from "./FileMessageManager";
@@ -19,7 +19,7 @@ export class WebLink {
         this.link = HtmlUtils.htmlDecode(link);
     }
     private rendererFromHtml(html: string): string {
-        const elementId = uuidv4();
+        const elementId = uuid();
         const virtualDom = new DOMParser().parseFromString(html, "text/html");
         const iframe = virtualDom.getElementsByTagName("iframe").item(0);
         if (iframe == undefined) {
@@ -215,26 +215,26 @@ export class WebLink {
                     } else if (data.type === "photo") {
                         return (
                             this.getHyperLinkHTMLElement(false).outerHTML +
-                            this.imageRendererHtml(uuidv4(), data.provider_name)
+                            this.imageRendererHtml(uuid(), data.provider_name)
                         );
                     } else {
                         const extension = FileMessageManager.getExtension(data.url);
                         if (extension != undefined && FileMessageManager.isImage(extension)) {
                             return (
                                 this.getHyperLinkHTMLElement(false).outerHTML +
-                                this.imageRendererHtml(uuidv4(), data.provider_name)
+                                this.imageRendererHtml(uuid(), data.provider_name)
                             );
                         }
                         if (extension != undefined && FileMessageManager.isVideo(extension)) {
                             return (
                                 this.getHyperLinkHTMLElement(false).outerHTML +
-                                this.videoRendererHtml(uuidv4(), data.provider_name, extension)
+                                this.videoRendererHtml(uuid(), data.provider_name, extension)
                             );
                         }
                         if (extension != undefined && FileMessageManager.isSound(extension)) {
                             return (
                                 this.getHyperLinkHTMLElement(false).outerHTML +
-                                this.audioRendererHtml(uuidv4(), data.provider_name)
+                                this.audioRendererHtml(uuid(), data.provider_name)
                             );
                         }
 

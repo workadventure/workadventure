@@ -3,7 +3,7 @@ import express from "express";
 import cors from "cors";
 import { mapStorageServer } from "./MapStorageServer";
 import { mapsManager } from "./MapsManager";
-import { MapStorageService } from "./Messages/ts-proto-map-storage-generated/protos/messages";
+import { MapStorageService } from "@workadventure/messages/src/ts-proto-generated/services";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment

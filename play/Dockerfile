@@ -4,6 +4,7 @@ WORKDIR /usr/src
 COPY messages/yarn.lock messages/package.json ./
 RUN yarn install
 COPY messages .
+COPY libs ./../libs
 RUN yarn run tag-version && yarn proto && yarn ts-proto
 
 # typescript build
@@ -15,16 +16,14 @@ COPY libs/map-editor/yarn.lock libs/map-editor/package.json ./../libs/map-editor
 RUN cd ../libs/map-editor && yarn install --network-timeout 1000000
 COPY libs/math-utils/yarn.lock libs/math-utils/package.json ./../libs/math-utils/
 RUN cd ../libs/math-utils && yarn install --network-timeout 1000000
+COPY libs/messages/yarn.lock libs/messages/package.json ./../libs/messages/
+RUN cd ../libs/messages && yarn install --network-timeout 1000000
 COPY libs ./../libs
-COPY play/yarn.lock play/package.json ./
-RUN yarn install
+COPY --from=proto-builder /usr/libs/messages/src ./../libs/messages/src
 COPY play/yarn.lock play/package.json ./
 RUN yarn install --network-timeout 1000000
 COPY play .
 COPY --from=proto-builder /usr/src/generated src/messages/generated
-COPY --from=proto-builder /usr/src/ts-proto-generated src/messages/ts-proto-generated
-RUN sed -i 's/import { Observable } from "rxjs";/import type { Observable } from "rxjs";/g' src/messages/ts-proto-generated/protos/messages.ts
-COPY --from=proto-builder /usr/src/JsonMessages src/messages/JsonMessages
 ENV NODE_ENV=production
 # upgrade RAM available to 6G
 RUN yarn run typesafe-i18n && yarn run build-iframe-api && NODE_OPTIONS="--max-old-space-size=6144" yarn build
@@ -35,7 +34,8 @@ WORKDIR /usr/src
 COPY play/yarn.lock play/package.json ./
 ENV NODE_ENV=production
 RUN yarn install --production
-COPY --from=builder --chown=node:node /usr/src/dist /usr/src/dist
+COPY --from=builder /usr/libs /usr/libs
+COPY --from=builder --chown=node:node /usr/src /usr/src
 COPY --chown=node:node play/src/pusher/data /usr/src/dist/pusher/data
 
 USER node

@@ -14,12 +14,12 @@ export class FrontController extends BaseHttpController {
         super(app);
 
         let indexPath: string;
-        if (fs.existsSync("index.html")) {
-            // In dev mode
-            indexPath = "index.html";
-        } else if (fs.existsSync("dist/public/index.html")) {
+        if (fs.existsSync("dist/public/index.html")) {
             // In prod mode
             indexPath = "dist/public/index.html";
+        } else if (fs.existsSync("index.html")) {
+            // In dev mode
+            indexPath = "index.html";
         } else {
             throw new Error("Could not find index.html file");
         }

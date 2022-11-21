@@ -3,7 +3,7 @@
     import { onDestroy, onMount, beforeUpdate } from "svelte";
     import { linkFunction } from "../../Services/WebLinkManager";
     import { marked } from "marked";
-    import { Message } from "../../Xmpp/MucRoom";
+    import { Message } from "../../Xmpp/AbstractRoom";
     import { HtmlUtils } from "../../Utils/HtmlUtils";
     import { settingsViewStore } from "../../Stores/ActiveThreadStore";
 

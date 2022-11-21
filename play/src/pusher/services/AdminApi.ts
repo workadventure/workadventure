@@ -1,21 +1,31 @@
-import { ADMIN_API_TOKEN, ADMIN_API_URL, OPID_PROFILE_SCREEN_PROVIDER } from "../enums/EnvironmentVariable";
+import {
+    ADMIN_API_TOKEN,
+    ADMIN_API_URL,
+    OPID_PROFILE_SCREEN_PROVIDER,
+    ADMIN_API_RETRY_DELAY,
+} from "../enums/EnvironmentVariable";
 import Axios from "axios";
 import type { AxiosResponse } from "axios";
-import type { MapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
-import { isMapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
-import type { RoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
-import { isRoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
-import type { AdminApiData } from "../../messages/JsonMessages/AdminApiData";
-import { isAdminApiData } from "../../messages/JsonMessages/AdminApiData";
+import {
+    isMapDetailsData,
+    isRoomRedirect,
+    isAdminApiData,
+    isWokaDetail,
+    isMucRoomDefinition,
+    isApplicationDefinitionInterface,
+    isCapabilities,
+    Capabilities,
+} from "@workadventure/messages";
+import type { MapDetailsData, RoomRedirect, AdminApiData } from "@workadventure/messages";
 import { z } from "zod";
-import { isWokaDetail } from "../../messages/JsonMessages/PlayerTextures";
 import qs from "qs";
 import type { AdminInterface } from "./AdminInterface";
 import { jwtTokenManager } from "./JWTTokenManager";
 import type { AuthTokenData } from "./JWTTokenManager";
 import { extendApi } from "@anatine/zod-openapi";
-import { isMucRoomDefinition } from "../../messages/JsonMessages/MucRoomDefinitionInterface";
-import { isApplicationDefinitionInterface } from "../../messages/JsonMessages/ApplicationDefinitionInterface";
+import type { AdminCapabilities } from "./adminApi/AdminCapabilities";
+import { RemoteCapabilities } from "./adminApi/RemoteCapabilities";
+import { LocalCapabilities } from "./adminApi/LocalCapabilities";
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -58,7 +68,7 @@ export const isFetchMemberDataByUuidResponse = z.object({
     userRoomToken: extendApi(z.optional(z.string()), { description: "", example: "" }),
     jabberId: extendApi(z.string().nullable().optional(), {
         description: "The jid (JabberID) that can be used to connect this particular user to its XMPP server",
-        example: "john.doe@myxpppserver.example.com",
+        example: "john.doe@myxpppserver.example.com/uuid",
     }),
     jabberPassword: extendApi(z.string().nullable().optional(), {
         description: "The password to connect to the XMPP server of this user",
@@ -77,6 +87,83 @@ export const isFetchMemberDataByUuidResponse = z.object({
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
 
 class AdminApi implements AdminInterface {
+    private capabilities: AdminCapabilities = new LocalCapabilities();
+
+    /**
+     * Checks whether admin api is enabled
+     */
+    isEnabled(): boolean {
+        return !!ADMIN_API_URL;
+    }
+
+    async initialise(): Promise<AdminCapabilities> {
+        if (!this.isEnabled()) {
+            console.info("Admin API not configured. Will use local implementations");
+            return this.capabilities;
+        }
+
+        console.log(`Admin api is enabled at ${ADMIN_API_URL}. Will check connection and capabilities`);
+        let warnIssued = false;
+        const queryCapabilities = async (resolve: (_v: unknown) => void): Promise<void> => {
+            try {
+                const capabilities = await this.fetchCapabilities();
+                this.capabilities = new RemoteCapabilities(new Map<string, string>(Object.entries(capabilities)));
+                console.info(`Capabilities query successful. Found capabilities: ${this.capabilities.info()}`);
+                resolve(0);
+            } catch (ex) {
+                // ignore errors when querying capabilities
+                const status = (ex as { response: { status: number } })?.response?.status;
+                if (status === 404) {
+                    // 404 probably means and older api version
+                    resolve(0);
+                    console.warn(`Admin API server does not implement capabilities, default to basic capabilities`);
+                    return;
+                }
+                // if we get here, it might be due to connectivity issues
+                if (!warnIssued)
+                    console.warn(
+                        `Could not reach Admin API server at ${ADMIN_API_URL}, will retry in ${ADMIN_API_RETRY_DELAY} ms`,
+                        ex
+                    );
+
+                warnIssued = true;
+
+                setTimeout(() => {
+                    void queryCapabilities(resolve);
+                }, ADMIN_API_RETRY_DELAY);
+            }
+        };
+        await new Promise((resolve) => {
+            void queryCapabilities(resolve);
+        });
+        console.log(`Remote admin api connection successful at ${ADMIN_API_URL}`);
+        return this.capabilities;
+    }
+
+    private async fetchCapabilities(): Promise<Capabilities> {
+        /**
+         * @openapi
+         * /api/capabilities:
+         *   get:
+         *     tags: ["AdminAPI"]
+         *     description: Get admin api capabilties
+         *     produces:
+         *      - "application/json"
+         *     responses:
+         *       200:
+         *         description: a map of capabilities and versions
+         *         schema:
+         *             type: object
+         *             items:
+         *                 $ref: '#/definitions/Capabilities'
+         *       404:
+         *         description: Endpoint not found. If the admin api does not implement, will use default capabilities
+         */
+        const res = await Axios.get<unknown, AxiosResponse<string[]>>(ADMIN_API_URL + "/api/capabilities");
+
+        return isCapabilities.parse(res.data);
+    }
+
     async fetchMapDetails(
         playUri: string,
         authToken?: string,

@@ -6,7 +6,7 @@ import type { Writable } from "svelte/store";
 import { writable } from "svelte/store";
 import type { PictureStore } from "../../Stores/PictureStore";
 import type CancelablePromise from "cancelable-promise";
-import { PositionMessage_Direction } from "../../../messages/ts-proto-generated/protos/messages";
+import { PositionMessage_Direction } from "@workadventure/messages";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 
 export interface CompanionStatus {

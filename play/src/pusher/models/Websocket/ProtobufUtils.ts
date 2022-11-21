@@ -8,7 +8,7 @@ import {
 import Direction = PositionMessage.Direction;
 import type { ItemEventMessageInterface } from "../../models/Websocket/ItemEventMessage";
 import type { PositionInterface } from "../../models/PositionInterface";
-import type { WokaDetail } from "../../../messages/JsonMessages/PlayerTextures";
+import type { WokaDetail } from "@workadventure/messages";
 
 export class ProtobufUtils {
     public static toPositionMessage(point: PointInterface): PositionMessage {

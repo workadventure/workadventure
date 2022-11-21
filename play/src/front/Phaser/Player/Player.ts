@@ -7,7 +7,7 @@ import { get } from "svelte/store";
 import { userMovingStore } from "../../Stores/GameStore";
 import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
 import type CancelablePromise from "cancelable-promise";
-import { PositionMessage_Direction } from "../../../messages/ts-proto-generated/protos/messages";
+import { PositionMessage_Direction } from "@workadventure/messages";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";

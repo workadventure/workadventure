@@ -12,11 +12,8 @@ import type {
 import type { ClientDuplexStream } from "@grpc/grpc-js";
 import type { Zone } from "../Zone";
 import type { compressors } from "hyper-express";
-import type { WokaDetail } from "../../../messages/JsonMessages/PlayerTextures";
+import type { WokaDetail, MucRoomDefinitionInterface, ApplicationDefinitionInterface } from "@workadventure/messages";
 import type { PusherRoom } from "../PusherRoom";
-import type { XmppClient } from "../../services/XmppClient";
-import type { MucRoomDefinitionInterface } from "../../../messages/JsonMessages/MucRoomDefinitionInterface";
-import type { ApplicationDefinitionInterface } from "../../../messages/JsonMessages/ApplicationDefinitionInterface";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
@@ -55,7 +52,6 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable 
     pongTimeoutId: NodeJS.Timeout | undefined;
     resetPongTimeout: () => void;
     pusherRoom: PusherRoom | undefined;
-    xmppClient: XmppClient | undefined;
     jabberId: string;
     jabberPassword: string;
     activatedInviteUser: boolean | undefined;

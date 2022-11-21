@@ -5,6 +5,7 @@ import {
     ITiledMapProperty,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
+import type { AreaData } from '../types';
 import type { AreaChangeCallback } from "./GameMapAreas";
 import { GameMapAreas } from "./GameMapAreas";
 import { GameMapProperties } from '../types';
@@ -107,7 +108,7 @@ export class GameMap {
         return this.tileNameMap.get(tile);
     }
 
-    public setProperty(
+    public setTiledObjectProperty(
         holder: { properties?: ITiledMapProperty[] },
         propertyName: string,
         propertyValue: string | number | undefined | boolean
@@ -136,7 +137,15 @@ export class GameMap {
         property.value = propertyValue;
     }
 
-    public getObjectProperty(
+    public setAreaProperty(
+        area: AreaData,
+        key: string,
+        value: string | number | boolean | undefined
+    ): void {
+        this.gameMapAreas.setProperty(area, key, value);
+    }
+
+    public getTiledObjectProperty(
         object: { properties?: ITiledMapProperty[] },
         propertyName: string
     ): string | boolean | number | undefined {

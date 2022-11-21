@@ -1,16 +1,16 @@
-import type { GameMap } from '../../GameMap/GameMap';
-import type { ITiledMapRectangleObject } from '../../types';
+import type { AreaData } from '../../types';
 import { AreaType } from '../../types';
+import type { GameMap } from '../../GameMap/GameMap';
 import { Command } from "../Command";
 import type { DeleteAreaCommandConfig } from './DeleteAreaCommand';
 
 export interface CreateAreaCommandConfig {
     type: "CreateAreaCommand";
-    areaObjectConfig: ITiledMapRectangleObject;
+    areaObjectConfig: AreaData;
 }
 
 export class CreateAreaCommand extends Command {
-    private areaConfig: ITiledMapRectangleObject;
+    private areaConfig: AreaData;
 
     private gameMap: GameMap;
 

@@ -1,0 +1,31 @@
+[
+    {
+        "name": "default",
+        "textures": [
+            {
+                "name": "dog1",
+                "img": "resources/characters/pipoya/Dog 01-1.png"
+            },
+            {
+                "name": "dog2",
+                "img": "resources/characters/pipoya/Dog 01-2.png"
+            },
+            {
+                "name": "dog3",
+                "img": "resources/characters/pipoya/Dog 01-3.png"
+            },
+            {
+                "name": "cat1",
+                "img": "resources/characters/pipoya/Cat 01-1.png"
+            },
+            {
+                "name": "cat2",
+                "img": "resources/characters/pipoya/Cat 01-2.png"
+            },
+            {
+                "name": "cat3",
+                "img": "resources/characters/pipoya/Cat 01-3.png"
+            }
+        ]
+    }
+]

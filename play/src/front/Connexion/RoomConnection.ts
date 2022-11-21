@@ -24,10 +24,12 @@ import {
     warningContainerStore,
 } from "../Stores/MenuStore";
 import { localUserStore } from "./LocalUserStore";
-import type {
+import {
+    apiVersionHash,
     AnswerMessage,
     AvailabilityStatus,
     CharacterLayerMessage,
+    ClientToServerMessage as ClientToServerMessageTsProto,
     EditMapCommandMessage,
     EmoteEventMessage as EmoteEventMessageTsProto,
     ErrorMessage as ErrorMessageTsProto,
@@ -36,10 +38,15 @@ import type {
     GroupUpdateMessage as GroupUpdateMessageTsProto,
     JitsiJwtAnswer,
     JoinBBBMeetingAnswer,
+    LeaveMucRoomMessage,
     MoveToPositionMessage as MoveToPositionMessageProto,
+    MucRoomDefinitionMessage,
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
     PositionMessage as PositionMessageTsProto,
     PositionMessage_Direction,
+    ServerToClientMessage as ServerToClientMessageTsProto,
+    SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
+    SetPlayerVariableMessage_Scope,
     QueryMessage,
     TokenExpiredMessage,
     UserJoinedMessage as UserJoinedMessageTsProto,
@@ -48,20 +55,14 @@ import type {
     ViewportMessage as ViewportMessageTsProto,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnexionMessage,
-} from "../../messages/ts-proto-generated/protos/messages";
-import {
-    ClientToServerMessage as ClientToServerMessageTsProto,
-    ServerToClientMessage as ServerToClientMessageTsProto,
-    SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
-    SetPlayerVariableMessage_Scope,
-} from "../../messages/ts-proto-generated/protos/messages";
+    XmppSettingsMessage,
+} from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
-import { apiVersionHash } from "../../messages/JsonMessages/ApiVersion";
-import type { ITiledMapRectangleObject } from "@workadventure/map-editor";
+import type { AreaData } from "@workadventure/map-editor";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 
@@ -154,11 +155,18 @@ export class RoomConnection implements RoomConnection {
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
 
+    public xmppSettingsMessage: XmppSettingsMessage | null = null;
     // If this timeout triggers, we consider the connection is lost (no ping received)
     private timeout: ReturnType<typeof setInterval> | undefined = undefined;
 
     private readonly _moveToPositionMessageStream = new Subject<MoveToPositionMessageProto>();
     public readonly moveToPositionMessageStream = this._moveToPositionMessageStream.asObservable();
+
+    private readonly _joinMucRoomMessageStream = new Subject<MucRoomDefinitionMessage>();
+    public readonly joinMucRoomMessageStream = this._joinMucRoomMessageStream.asObservable();
+
+    private readonly _leaveMucRoomMessageStream = new Subject<LeaveMucRoomMessage>();
+    public readonly leaveMucRoomMessageStream = this._leaveMucRoomMessageStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -315,6 +323,18 @@ export class RoomConnection implements RoomConnection {
                             case "editMapCommandMessage": {
                                 const message = subMessage.editMapCommandMessage;
                                 this._editMapCommandMessageStream.next(message);
+                                break;
+                            }
+                            case "joinMucRoomMessage": {
+                                console.log("[sendChatMessagePrompt] RoomConnection => joinMucRoomMessage received");
+                                this._joinMucRoomMessageStream.next(
+                                    subMessage.joinMucRoomMessage.mucRoomDefinitionMessage
+                                );
+                                break;
+                            }
+                            case "leaveMucRoomMessage": {
+                                console.log("[sendChatMessagePrompt] RoomConnection => leaveMucRoomMessage received");
+                                this._leaveMucRoomMessageStream.next(subMessage.leaveMucRoomMessage);
                                 break;
                             }
                             default: {
@@ -547,6 +567,10 @@ export class RoomConnection implements RoomConnection {
                         query.resolve(message.answerMessage.answer);
                     }
                     this.queries.delete(queryId);
+                    break;
+                }
+                case "xmppSettingsMessage": {
+                    this.xmppSettingsMessage = message.xmppSettingsMessage;
                     break;
                 }
                 default: {
@@ -982,7 +1006,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorModifyArea(commandId: string, config: ITiledMapRectangleObject): void {
+    public emitMapEditorModifyArea(commandId: string, config: AreaData): void {
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1018,7 +1042,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorCreateArea(commandId: string, config: ITiledMapRectangleObject): void {
+    public emitMapEditorCreateArea(commandId: string, config: AreaData): void {
         this.send({
             message: {
                 $case: "editMapCommandMessage",

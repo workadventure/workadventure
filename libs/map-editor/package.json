@@ -5,20 +5,22 @@
   "main": "./src/index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
-    "prepare-for-prod": "jq '.main = \"./dist/index.js\"' package.json > package_tmp1.json && jq '.types = \"./dist/index.d.ts\"' package_tmp1.json > package.json && rm package_tmp1.json"
+    "build": "tsc"
   },
   "author": "WorkAdventure",
   "license": "ISC",
   "dependencies": {
     "@workadventure/math-utils": "link:../math-utils",
+    "@workadventure/messages": "link:../messages",
     "@workadventure/tiled-map-type-guard": "^2.0.6",
     "@types/uuid": "^8.3.4",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@types/node": "^18.7.17",
-    "typescript": "^4.7.2"
+    "typescript": "^4.7.2",
+    "@types/lodash": "^4.14.186"
   },
   "files": [
     "src"

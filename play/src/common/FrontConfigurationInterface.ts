@@ -1,4 +1,4 @@
-import type { OpidWokaNamePolicy } from "../messages/JsonMessages/OpidWokaNamePolicy";
+import type { OpidWokaNamePolicy } from "@workadventure/messages";
 
 export interface FrontConfigurationInterface {
     DEBUG_MODE: boolean;

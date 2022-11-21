@@ -1,11 +1,13 @@
 import { z } from "zod";
 import { isNotification } from "./Notification";
-import { isUserData } from "../Messages/JsonMessages/ChatData";
+import { isUserData } from "@workadventure/messages";
 import { isLocale } from "./Locale";
 import { isLeaveMucEvent } from "./LeaveMucEvent";
 import { isJoinMucEvent } from "./JoinMucEvent";
 import { isChatVisibility } from "./ChatVisibility";
 import { isSettings } from "./SettingsEvent";
+import { isXmppSettingsMessageEvent } from "./XmppSettingsMessageEvent";
+import { isOpenCoWebsite } from "./OpenCoWebsite";
 
 export const isIframeEventWrapper = z.union([
     z.object({
@@ -39,6 +41,14 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("availabilityStatus"),
         data: z.number(),
+    }),
+    z.object({
+        type: z.literal("xmppSettingsMessage"),
+        data: isXmppSettingsMessageEvent,
+    }),
+    z.object({
+        type: z.literal("openCoWebsite"),
+        data: isOpenCoWebsite,
     }),
 
     //TODO delete with chat XMPP integration for the discussion circle
