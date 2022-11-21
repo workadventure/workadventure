@@ -78,7 +78,7 @@ export class MapEditorModeManager {
         this.editorTools = {
             [EditorToolName.AreaEditor]: new AreaEditorTool(this),
             [EditorToolName.EntityEditor]: new EntityEditorTool(this),
-            [EditorToolName.FloorEditor]: new FloorEditorTool(this),
+            [EditorToolName.FloorEditor]: new FloorEditorTool(this)
         };
         this.activeTool = undefined;
 
