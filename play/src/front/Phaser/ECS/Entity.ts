@@ -2,6 +2,7 @@ import { EntityData } from "@workadventure/map-editor";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { get, Unsubscriber } from "svelte/store";
 import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
+import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import { ActivatableInterface } from "../Game/ActivatableInterface";
 import type { GameScene } from "../Game/GameScene";
@@ -119,16 +120,25 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     private bindEventHandlers(): void {
         this.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+            if (get(mapEditorModeStore)) {
+                return;
+            }
             this.x = Math.floor(dragX / 32) * 32;
             this.y = Math.floor(dragY / 32) * 32;
             (this.scene as GameScene).markDirty();
         });
 
         this.on(Phaser.Input.Events.DRAG_START, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+            if (get(mapEditorModeStore)) {
+                return;
+            }
             this.oldPositionTopLeft = this.getTopLeft();
         });
 
         this.on(Phaser.Input.Events.DRAG_END, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+            if (get(mapEditorModeStore)) {
+                return;
+            }
             (this.scene as GameScene).markDirty();
             this.emit(EntityEvent.Moved, this.oldPositionTopLeft.x, this.oldPositionTopLeft.y);
         });

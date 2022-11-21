@@ -3,6 +3,7 @@ import { writable } from "svelte/store";
 import { connectionManager } from "../Connexion/ConnectionManager";
 import { ENABLE_FEATURE_MAP_EDITOR } from "../Enum/EnvironmentVariable";
 import type { AreaPreview } from "../Phaser/Components/MapEditor/AreaPreview";
+import { Entity } from "../Phaser/ECS/Entity";
 
 function createMapEditorModeStore() {
     const { set, subscribe } = writable(false);
@@ -20,5 +21,7 @@ export const mapEditorModeStore = createMapEditorModeStore();
 export const mapEditorModeDragCameraPointerDownStore = writable(false);
 
 export const mapEditorSelectedAreaPreviewStore = writable<AreaPreview | undefined>(undefined);
+
+export const mapEditorSelectedEntityStore = writable<Entity | undefined>(undefined);
 
 export const mapEditorSelectedPropertyStore = writable<PredefinedPropertyData | undefined>(undefined);
