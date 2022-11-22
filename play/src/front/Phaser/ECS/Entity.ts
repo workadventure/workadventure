@@ -2,7 +2,7 @@ import { EntityData } from "@workadventure/map-editor";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { get, Unsubscriber } from "svelte/store";
 import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
-import { mapEditorModeStore } from "../../Stores/MapEditorStore";
+import { mapEditorModeStore, mapEditorSelectedEntityStore, MapEntityEditorMode, mapEntityEditorModeStore } from "../../Stores/MapEditorStore";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import { ActivatableInterface } from "../Game/ActivatableInterface";
 import type { GameScene } from "../Game/GameScene";
@@ -120,27 +120,31 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     private bindEventHandlers(): void {
         this.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore)) {
-                return;
-            }
+            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
             this.x = Math.floor(dragX / 32) * 32;
             this.y = Math.floor(dragY / 32) * 32;
             (this.scene as GameScene).markDirty();
-        });
+        }
+    });
 
         this.on(Phaser.Input.Events.DRAG_START, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore)) {
-                return;
+            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
+                this.oldPositionTopLeft = this.getTopLeft();
             }
-            this.oldPositionTopLeft = this.getTopLeft();
         });
 
         this.on(Phaser.Input.Events.DRAG_END, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore)) {
-                return;
+            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
+                (this.scene as GameScene).markDirty();
+                this.emit(EntityEvent.Moved, this.oldPositionTopLeft.x, this.oldPositionTopLeft.y);
             }
-            (this.scene as GameScene).markDirty();
-            this.emit(EntityEvent.Moved, this.oldPositionTopLeft.x, this.oldPositionTopLeft.y);
+    });
+
+        this.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
+                mapEditorSelectedEntityStore.set(this);
+                console.log("test");
+            }
         });
     }
 
@@ -184,6 +188,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public isActivatable(): boolean {
-        return this.activatable;
+        return false;//this.activatable;
     }
 }

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Direction, MapEntity } from "../../Stores/MapObjectsStore";
     import { onDestroy, subscribe } from "svelte/internal";
-    import { mapEditorSelectedEntityStore, mapObjectsStore  } from "../../Stores/MapEditorStore";
+    import { mapEditorSelectedMapEntityStore, mapObjectsStore  } from "../../Stores/MapEditorStore";
     import { object } from "zod";
     import { map } from "rxjs/operators";
     import deleteTagButton from "../images/close.png";
@@ -26,7 +26,7 @@
     function onPickItemVariant(variant:MapEntity)
     {
         pickedVariant = variant;
-        mapEditorSelectedEntityStore.set(pickedVariant);
+        mapEditorSelectedMapEntityStore.set(pickedVariant);
     }
 
     function onPickItem(item : MapEntity)
@@ -144,7 +144,6 @@
 <style lang="scss">
     .item-picker{
         align-content: center;
-        padding: 1.5em;
         .item-filter{
             .filter-input
             {

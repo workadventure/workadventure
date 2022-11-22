@@ -18,6 +18,12 @@ function createMapEditorModeStore() {
     };
 }
 
+export enum MapEntityEditorMode{
+    AddMode ="AddMode",
+    EditMode ="EditMode",
+    RemoveMode ="RemoveMode"
+}
+
 export const mapEditorModeStore = createMapEditorModeStore();
 
 export const mapEditorModeDragCameraPointerDownStore = writable(false);
@@ -32,4 +38,6 @@ export const mapEditorSelectedToolStore = writable<EditorToolName | undefined>(u
 
 export const mapObjectsStore = new MapEntitiesStore();
 
-export const mapEditorSelectedEntityStore = writable<MapEntity | undefined>(undefined);
+export const mapEditorSelectedMapEntityStore = writable<MapEntity | undefined>(undefined);
+
+export const mapEntityEditorModeStore = writable<MapEntityEditorMode>(MapEntityEditorMode.AddMode);
