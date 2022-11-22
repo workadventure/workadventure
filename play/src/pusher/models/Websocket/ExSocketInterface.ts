@@ -23,6 +23,7 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable 
     //userId: number;   // A temporary (autoincremented) identifier for this user
     userUuid: string; // A unique identifier for this user
     userIdentifier: string;
+    userJid: string;
     isLogged: boolean;
     IPAddress: string; // IP address
     name: string;

@@ -860,7 +860,7 @@ class IframeListener {
     // << TODO delete with chat XMPP integration for the discussion circle
     sendWritingStatusToChatIframe(list: Set<PlayerInterface>) {
         const usersTyping: Array<string> = [];
-        list.forEach((user) => usersTyping.push(user.userUuid));
+        list.forEach((user) => usersTyping.push(user.userJid));
         this.postMessageToChat({
             type: "updateWritingStatusChatList",
             data: usersTyping,

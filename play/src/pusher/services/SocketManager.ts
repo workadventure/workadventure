@@ -179,6 +179,7 @@ export class SocketManager implements ZoneEventListener {
         try {
             const joinRoomMessage = new JoinRoomMessage();
             joinRoomMessage.setUseruuid(client.userUuid);
+            joinRoomMessage.setUserjid(client.userJid);
             joinRoomMessage.setIpaddress(client.IPAddress);
             joinRoomMessage.setRoomid(client.roomId);
             joinRoomMessage.setName(client.name);

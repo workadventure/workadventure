@@ -3,6 +3,7 @@ import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures"
 
 export interface PlayerInterface {
     userId: number;
+    userJid: string;
     name: string;
     characterLayers: BodyResourceDescriptionInterface[];
     visitCardUrl: string | null;
