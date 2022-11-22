@@ -606,6 +606,10 @@ export class GameMapFrontWrapper {
             ? this.gameMap.getGameMapAreas().getProperties(this.position)
             : new Map<string, string | boolean | number>();
 
+        for (const property of this.entitiesManager.getProperties()) {
+            properties.set(property[0], property[1]);
+        }
+
         for (const layer of this.getFlatLayers()) {
             if (layer.type !== "tilelayer") {
                 continue;

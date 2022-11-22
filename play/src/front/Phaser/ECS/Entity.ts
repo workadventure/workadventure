@@ -2,7 +2,7 @@ import { EntityData } from "@workadventure/map-editor";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { get, Unsubscriber } from "svelte/store";
 import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
-import { mapEditorModeStore } from "../../Stores/MapEditorStore";
+import { mapEditorModeStore, mapEditorSelectedEntityStore } from "../../Stores/MapEditorStore";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import { ActivatableInterface } from "../Game/ActivatableInterface";
 import type { GameScene } from "../Game/GameScene";
@@ -10,6 +10,8 @@ import { OutlineableInterface } from "../Game/OutlineableInterface";
 
 export enum EntityEvent {
     Moved = "Moved",
+    Activated = "Activated",
+    Deactivated = "Deactivated",
 }
 
 // NOTE: Tiles-based entity for now. Individual images later on
@@ -18,14 +20,11 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     private readonly outlineColorStore = createColorStore();
     private readonly outlineColorStoreUnsubscribe: Unsubscriber;
 
-    private id: number;
-    private collisionGrid?: number[][];
+    private entityData: EntityData;
     private properties: { [key: string]: unknown | undefined };
 
     private beingRepositioned: boolean;
-
     private activatable: boolean;
-
     private oldPositionTopLeft: { x: number; y: number };
 
     constructor(scene: GameScene, data: EntityData) {
@@ -36,8 +35,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
         this.activatable = data.interactive ?? false;
 
-        this.id = data.id;
-        this.collisionGrid = data.collisionGrid;
+        this.entityData = data;
         this.properties = data.properties ?? {};
 
         this.setDepth(this.y + this.displayHeight * 0.5);
@@ -79,11 +77,11 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public getCollisionGrid(): number[][] | undefined {
-        return this.collisionGrid;
+        return this.entityData.collisionGrid;
     }
 
     public getReversedCollisionGrid(): number[][] | undefined {
-        return this.collisionGrid?.map((row) => row.map((value) => (value === 1 ? -1 : value)));
+        return this.entityData.collisionGrid?.map((row) => row.map((value) => (value === 1 ? -1 : value)));
     }
 
     public setFollowOutlineColor(color: number): void {
@@ -142,6 +140,12 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             (this.scene as GameScene).markDirty();
             this.emit(EntityEvent.Moved, this.oldPositionTopLeft.x, this.oldPositionTopLeft.y);
         });
+
+        this.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+            if (get(mapEditorModeStore)) {
+                mapEditorSelectedEntityStore.set(this);
+            }
+        });
     }
 
     private getOutlinePlugin(): OutlinePipelinePlugin | undefined {
@@ -151,8 +155,10 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     private toggleActionsMenu(): void {
         if (get(actionsMenuStore) !== undefined) {
             actionsMenuStore.clear();
+            this.emit(EntityEvent.Deactivated);
             return;
         }
+        this.emit(EntityEvent.Activated);
         actionsMenuStore.initialize("Cheapest Table you can find");
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
@@ -185,5 +191,9 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     public isActivatable(): boolean {
         return this.activatable;
+    }
+
+    public getEntityData(): EntityData {
+        return this.entityData;
     }
 }

@@ -9,6 +9,7 @@ export class EntitiesManager {
     private gameMapFrontWrapper: GameMapFrontWrapper;
 
     private entities: Entity[];
+    private activeEntity: Entity | undefined;
 
     /**
      * Firing on map change, containing newest collision grid array
@@ -40,6 +41,19 @@ export class EntitiesManager {
         this.entities.push(entity);
     }
 
+    // TODO: Somehow get the activated properties from the current active entity
+    public getProperties(): Map<string, string | boolean | number> {
+        const properties = new Map<string, string | boolean | number>();
+
+        if (!this.activeEntity) {
+            return properties;
+        }
+
+        properties.set("openWebsite", "https://wikipedia.org");
+
+        return properties;
+    }
+
     private bindEntityEventHandlers(entity: Entity): void {
         entity.on(EntityEvent.Moved, (oldX: number, oldY: number) => {
             const reversedGrid = entity.getReversedCollisionGrid();
@@ -53,6 +67,12 @@ export class EntitiesManager {
                     grid
                 );
             }
+        });
+        entity.on(EntityEvent.Activated, () => {
+            this.setActiveEntity(entity);
+        });
+        entity.on(EntityEvent.Deactivated, () => {
+            this.clearActiveEntity();
         });
         entity.on(Phaser.Input.Events.POINTER_OVER, () => {
             this.pointerOverEntitySubject.next(entity);
@@ -72,5 +92,13 @@ export class EntitiesManager {
 
     public getPointerOutEntityObservable(): Observable<Entity> {
         return this.pointerOutEntitySubject.asObservable();
+    }
+
+    public setActiveEntity(entity: Entity): void {
+        this.activeEntity = entity;
+    }
+
+    public clearActiveEntity(): void {
+        this.activeEntity = undefined;
     }
 }
