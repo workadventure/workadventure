@@ -558,6 +558,10 @@ export class GameMapFrontWrapper {
         return this.entitiesManager.getEntities();
     }
 
+    public handleEntityActionTrigger(): void {
+        this.triggerAllProperties();
+    }
+
     private triggerAllProperties(): void {
         const newProps = this.getProperties(this.key ?? 0);
         const oldProps = this.lastProperties;
@@ -605,6 +609,12 @@ export class GameMapFrontWrapper {
         const properties = this.position
             ? this.gameMap.getGameMapAreas().getProperties(this.position)
             : new Map<string, string | boolean | number>();
+
+        if (this.entitiesManager) {
+            for (const property of this.entitiesManager.getProperties()) {
+                properties.set(property[0], property[1]);
+            }
+        }
 
         for (const layer of this.getFlatLayers()) {
             if (layer.type !== "tilelayer") {

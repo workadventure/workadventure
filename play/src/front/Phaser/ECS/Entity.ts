@@ -9,7 +9,8 @@ import type { GameScene } from "../Game/GameScene";
 import { OutlineableInterface } from "../Game/OutlineableInterface";
 
 export enum EntityEvent {
-    Moved = "Moved",
+    Moved = "EntityEvent:Moved",
+    PropertySet = "EntityEvent:PropertySet",
 }
 
 // NOTE: Tiles-based entity for now. Individual images later on
@@ -18,14 +19,11 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     private readonly outlineColorStore = createColorStore();
     private readonly outlineColorStoreUnsubscribe: Unsubscriber;
 
-    private id: number;
-    private collisionGrid?: number[][];
+    private entityData: EntityData;
     private properties: { [key: string]: unknown | undefined };
 
     private beingRepositioned: boolean;
-
     private activatable: boolean;
-
     private oldPositionTopLeft: { x: number; y: number };
 
     constructor(scene: GameScene, data: EntityData) {
@@ -36,8 +34,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
         this.activatable = data.interactive ?? false;
 
-        this.id = data.id;
-        this.collisionGrid = data.collisionGrid;
+        this.entityData = data;
         this.properties = data.properties ?? {};
 
         this.setDepth(this.y + this.displayHeight * 0.5);
@@ -79,11 +76,11 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public getCollisionGrid(): number[][] | undefined {
-        return this.collisionGrid;
+        return this.entityData.collisionGrid;
     }
 
     public getReversedCollisionGrid(): number[][] | undefined {
-        return this.collisionGrid?.map((row) => row.map((value) => (value === 1 ? -1 : value)));
+        return this.entityData.collisionGrid?.map((row) => row.map((value) => (value === 1 ? -1 : value)));
     }
 
     public setFollowOutlineColor(color: number): void {
@@ -146,6 +143,12 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                 console.log("test");
             }
         });
+
+        this.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+            if (get(mapEditorModeStore)) {
+                mapEditorSelectedEntityStore.set(this);
+            }
+        });
     }
 
     private getOutlinePlugin(): OutlinePipelinePlugin | undefined {
@@ -167,14 +170,44 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         const actions: ActionsMenuAction[] = [];
         for (const key of Object.keys(this.properties)) {
             switch (key) {
-                case "openWebsite": {
+                case "jitsiRoom": {
                     actions.push({
-                        actionName: "Open Website",
+                        actionName: "Open Jitsi",
                         protected: true,
                         priority: 1,
                         callback: () => {
-                            console.log("TRY TO OPEN WEBSITE");
-                            console.log(this.properties[key]);
+                            this.emit(EntityEvent.PropertySet, {
+                                propertyName: key,
+                                propertyValue: this.properties[key],
+                            });
+                        },
+                    });
+                    break;
+                }
+                case "playAudio": {
+                    actions.push({
+                        actionName: "Play campfire sound",
+                        protected: true,
+                        priority: 1,
+                        callback: () => {
+                            this.emit(EntityEvent.PropertySet, {
+                                propertyName: key,
+                                propertyValue: this.properties[key],
+                            });
+                        },
+                    });
+                    break;
+                }
+                case "openTab": {
+                    actions.push({
+                        actionName: "Show me some kitties!",
+                        protected: true,
+                        priority: 1,
+                        callback: () => {
+                            this.emit(EntityEvent.PropertySet, {
+                                propertyName: key,
+                                propertyValue: this.properties[key],
+                            });
                         },
                     });
                     break;
@@ -189,5 +222,9 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     public isActivatable(): boolean {
         return false;//this.activatable;
+    }
+
+    public getEntityData(): EntityData {
+        return this.entityData;
     }
 }

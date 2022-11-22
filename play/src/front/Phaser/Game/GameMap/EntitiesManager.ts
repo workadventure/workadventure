@@ -1,5 +1,6 @@
 import { EntityData } from "@workadventure/map-editor";
 import { Observable, Subject } from "rxjs";
+import { actionsMenuStore } from "../../../Stores/ActionsMenuStore";
 import { Entity, EntityEvent } from "../../ECS/Entity";
 import type { GameScene } from "../GameScene";
 import type { GameMapFrontWrapper } from "./GameMapFrontWrapper";
@@ -9,6 +10,8 @@ export class EntitiesManager {
     private gameMapFrontWrapper: GameMapFrontWrapper;
 
     private entities: Entity[];
+
+    private properties: Map<string, string | boolean | number>;
 
     /**
      * Firing on map change, containing newest collision grid array
@@ -20,6 +23,13 @@ export class EntitiesManager {
         this.scene = scene;
         this.gameMapFrontWrapper = gameMapFrontWrapper;
         this.entities = [];
+        this.properties = new Map<string, string | boolean | number>();
+
+        // clear properties immediately on every ActionsMenu change
+        actionsMenuStore.subscribe((data) => {
+            this.clearProperties();
+            this.gameMapFrontWrapper.handleEntityActionTrigger();
+        });
     }
 
     public addEntity(data: EntityData): void {
@@ -40,6 +50,10 @@ export class EntitiesManager {
         this.entities.push(entity);
     }
 
+    public getProperties(): Map<string, string | boolean | number> {
+        return this.properties;
+    }
+
     private bindEntityEventHandlers(entity: Entity): void {
         entity.on(EntityEvent.Moved, (oldX: number, oldY: number) => {
             const reversedGrid = entity.getReversedCollisionGrid();
@@ -53,6 +67,11 @@ export class EntitiesManager {
                     grid
                 );
             }
+        });
+        // get the type! Switch to rxjs?
+        entity.on(EntityEvent.PropertySet, (data) => {
+            this.properties.set(data.propertyName, data.propertyValue);
+            this.gameMapFrontWrapper.handleEntityActionTrigger();
         });
         entity.on(Phaser.Input.Events.POINTER_OVER, () => {
             this.pointerOverEntitySubject.next(entity);
@@ -72,5 +91,9 @@ export class EntitiesManager {
 
     public getPointerOutEntityObservable(): Observable<Entity> {
         return this.pointerOutEntitySubject.asObservable();
+    }
+
+    public clearProperties(): void {
+        this.properties.clear();
     }
 }
