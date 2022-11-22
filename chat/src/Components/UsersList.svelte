@@ -82,7 +82,7 @@
                     <span
                         class="{room !== 'disconnected'
                             ? 'tw-bg-light-blue'
-                            : 'tw-bg-gray'} tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
+                            : 'tw-bg-gray'} tw-text-dark-purple tw-min-w-[20px] tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
                     >
                         {usersByMaps.get(room)?.length}
                     </span>

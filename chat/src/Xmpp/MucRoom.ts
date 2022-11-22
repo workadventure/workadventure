@@ -83,7 +83,8 @@ export class MucRoom extends AbstractRoom {
         if (first) {
             this.subscriptions.set("firstPresence", presenceId);
         }
-        this.xmppClient.socket.sendPresence({ to: this.recipient, id: presenceId });
+        //this.xmppClient.socket.sendPresence({ to: this.recipient, id: presenceId });
+        this.sendUserInfo(presenceId);
         if (_VERBOSE)
             console.warn(
                 `[XMPP][${this.name}]`,
