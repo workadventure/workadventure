@@ -54,7 +54,7 @@ export class MucRoom extends AbstractRoom {
     }
 
     public getUserByJid(jid: string): User {
-        let user = get(this.presenceStore).get(jid);
+        const user = get(this.presenceStore).get(jid);
         if (!user) {
             throw new Error("No user found for this JID");
         }
