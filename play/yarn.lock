@@ -4031,9 +4031,9 @@ pathval@^1.1.1:
   resolved "https://registry.yarnpkg.com/pathval/-/pathval-1.1.1.tgz#8534e77a77ce7ac5a2512ea21e0fdb8fcf6c3d8d"
   integrity sha512-Dp6zGqpTdETdR63lehJYPeIOqpiNBNtc7BpWSLrOje7UaIsE5aY92r/AunQA7rsXvet3lrJ3JnZX29UPTKXyKQ==
 
-phaser-animated-tiles@workadventure/phaser-animated-tiles#da68bbededd605925621dd4f03bd27e69284b254:
+phaser-animated-tiles@workadventure/phaser-animated-tiles#2621dcf192b135e37b34868c0d5e6bf8b8d29b48:
   version "2.0.2"
-  resolved "https://codeload.github.com/workadventure/phaser-animated-tiles/tar.gz/da68bbededd605925621dd4f03bd27e69284b254"
+  resolved "https://codeload.github.com/workadventure/phaser-animated-tiles/tar.gz/2621dcf192b135e37b34868c0d5e6bf8b8d29b48"
 
 phaser3-rex-plugins@^1.1.42:
   version "1.1.74"
@@ -5123,7 +5123,7 @@ ts-node-dev@^2.0.0:
     ts-node "^10.4.0"
     tsconfig "^7.0.0"
 
-ts-node@^10.4.0, ts-node@^10.9.1:
+ts-node@^10.4.0:
   version "10.9.1"
   resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-10.9.1.tgz#e73de9102958af9e1f0b168a6ff320e25adcff4b"
   integrity sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==
