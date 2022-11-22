@@ -5,224 +5,224 @@
         {
             "name":"Basic Chair",
             "tags":["seat","basic"],
-            "path":"Furniture/Chair/ChairGreyDown.png",
+            "imagePath":"Furniture/Chair/ChairGreyDown.png",
             "direction":"Down",
             "color":"grey"
         },
         {
             "name":"Basic Chair",
             "tags":["seat","basic"],
-            "path":"Furniture/Chair/ChairBlueDown.png",
+            "imagePath":"Furniture/Chair/ChairBlueDown.png",
             "direction":"Down",
             "color":"blue"
         },
         {
             "name":"Basic Chair",
             "tags":["seat","basic"],
-            "path":"Furniture/Chair/ChairGreenDown.png",
+            "imagePath":"Furniture/Chair/ChairGreenDown.png",
             "direction":"Down",
             "color":"green"
         },
         {
             "name":"Basic Chair",
             "tags":["seat","basic"],
-            "path":"Furniture/Chair/ChairLightRedDown.png",
+            "imagePath":"Furniture/Chair/ChairLightRedDown.png",
             "direction":"Down",
             "color":"pink"
         },
         {
             "name":"Basic Chair",
             "tags":["seat","basic"],
-            "path":"Furniture/Chair/ChairRedDown.png",
+            "imagePath":"Furniture/Chair/ChairRedDown.png",
             "direction":"Down",
             "color":"red"
         },
         {
             "name":"Basic Chair",
             "tags":["seat","basic"],
-            "path":"Furniture/Chair/ChairBlueUp.png",
+            "imagePath":"Furniture/Chair/ChairBlueUp.png",
             "direction":"Up",
             "color":"blue"
         },
         {
             "name":"Basic Chair",
             "tags":["seat","basic"],
-            "path":"Furniture/Chair/ChairGreenUp.png",
+            "imagePath":"Furniture/Chair/ChairGreenUp.png",
             "direction":"Up",
             "color":"green"
         },
         {
             "name":"Basic Chair",
             "tags":["seat","basic"],
-            "path":"Furniture/Chair/ChairGreyUp.png",
+            "imagePath":"Furniture/Chair/ChairGreyUp.png",
             "direction":"Up",
             "color":"grey"
         },
         {
             "name":"Basic Chair",
             "tags":["seat","basic"],
-            "path":"Furniture/Chair/ChairLightRedUp.png",
+            "imagePath":"Furniture/Chair/ChairLightRedUp.png",
             "direction":"Up",
             "color":"pink"
         },
         {
             "name":"Basic Chair",
             "tags":["seat","basic"],
-            "path":"Furniture/Chair/ChairRedUp.png",
+            "imagePath":"Furniture/Chair/ChairRedUp.png",
             "direction":"Up",
             "color":"red"
         },
         {
             "name":"Basic Chair",
             "tags":["seat","basic"],
-            "path":"Furniture/Chair/ChairBlueLeft.png",
+            "imagePath":"Furniture/Chair/ChairBlueLeft.png",
             "direction":"Left",
             "color":"blue"
         },
         {
             "name":"Basic Chair",
             "tags":["seat","basic"],
-            "path":"Furniture/Chair/ChairGreenLeft.png",
+            "imagePath":"Furniture/Chair/ChairGreenLeft.png",
             "direction":"Left",
             "color":"green"
         },
         {
             "name":"Basic Chair",
             "tags":["seat","basic"],
-            "path":"Furniture/Chair/ChairGreyLeft.png",
+            "imagePath":"Furniture/Chair/ChairGreyLeft.png",
             "direction":"Left",
             "color":"grey"
         },
         {
             "name":"Basic Chair",
             "tags":["seat","basic"],
-            "path":"Furniture/Chair/ChairLightRedLeft.png",
+            "imagePath":"Furniture/Chair/ChairLightRedLeft.png",
             "direction":"Left",
             "color":"pink"
         },
         {
             "name":"Basic Chair",
             "tags":["seat","basic"],
-            "path":"Furniture/Chair/ChairRedLeft.png",
+            "imagePath":"Furniture/Chair/ChairRedLeft.png",
             "direction":"Left",
             "color":"red"
         },
         {
             "name":"Basic Chair",
             "tags":["seat","basic"],
-            "path":"Furniture/Chair/ChairBlueRight.png",
+            "imagePath":"Furniture/Chair/ChairBlueRight.png",
             "direction":"Right",
             "color":"blue"
         },
         {
             "name":"Basic Chair",
             "tags":["seat","basic"],
-            "path":"Furniture/Chair/ChairGreenRight.png",
+            "imagePath":"Furniture/Chair/ChairGreenRight.png",
             "direction":"Right",
             "color":"green"
         },
         {
             "name":"Basic Chair",
             "tags":["seat","basic"],
-            "path":"Furniture/Chair/ChairGreyRight.png",
+            "imagePath":"Furniture/Chair/ChairGreyRight.png",
             "direction":"Right",
             "color":"grey"
         },
         {
             "name":"Basic Chair",
             "tags":["seat","basic"],
-            "path":"Furniture/Chair/ChairLightRedRight.png",
+            "imagePath":"Furniture/Chair/ChairLightRedRight.png",
             "direction":"Right",
             "color":"pink"
         },
         {
             "name":"Basic Chair",
             "tags":["seat","basic"],
-            "path":"Furniture/Chair/ChairRedRight.png",
+            "imagePath":"Furniture/Chair/ChairRedRight.png",
             "direction":"Right",
             "color":"red"
         },
         {
             "name":"Pouf",
             "tags":["seat"],
-            "path":"Furniture/PoufBrown.png",
+            "imagePath":"Furniture/PoufBrown.png",
             "direction":"Down",
             "color":"brown"
         },
                 {
             "name":"Pouf",
             "tags":["seat"],
-            "path":"Furniture/PoufOrange.png",
+            "imagePath":"Furniture/PoufOrange.png",
             "direction":"Down",
             "color":"orange"
         },
         {
             "name":"Basic Wood Table",
             "tags":["basic", "table"],
-            "path":"Furniture/Table/TableBrown.png",
+            "imagePath":"Furniture/Table/TableBrown.png",
             "direction":"Down",
             "color":"orange"
         },
         {
             "name":"Basic Wood Table",
             "tags":["basic", "table"],
-            "path":"Furniture/Table/TableDarkBrown.png",
+            "imagePath":"Furniture/Table/TableDarkBrown.png",
             "direction":"Down",
             "color":"brown"
         },
         {
             "name":"Basic Narrow Wood Table",
             "tags":["basic", "table"],
-            "path":"Furniture/Table/TableNarrowBrown.png",
+            "imagePath":"Furniture/Table/TableNarrowBrown.png",
             "direction":"Down",
             "color":"orange"
         },
         {
             "name":"Basic Narrow Wood Table",
             "tags":["basic", "table"],
-            "path":"Furniture/Table/TableNarrowDarkBrown.png",
+            "imagePath":"Furniture/Table/TableNarrowDarkBrown.png",
             "direction":"Down",
             "color":"brown"
         },
         {
             "name":"Basic Small Table",
             "tags":["basic", "table"],
-            "path":"Furniture/Table/TableSmallGrey.png",
+            "imagePath":"Furniture/Table/TableSmallGrey.png",
             "direction":"Down",
             "color":"grey"
         },
         {
             "name":"Basic Small Table",
             "tags":["basic", "table"],
-            "path":"Furniture/Table/TableSmallWhite.png",
+            "imagePath":"Furniture/Table/TableSmallWhite.png",
             "direction":"Down",
             "color":"white"
         },
         {
             "name":"Armchair",
             "tags":["seat" ],
-            "path":"Furniture/Armchair/ArmchairGreyDown.png",
+            "imagePath":"Furniture/Armchair/ArmchairGreyDown.png",
             "direction":"Down",
             "color":"grey"
         },
         {
             "name":"Armchair",
             "tags":["seat" ],
-            "path":"Furniture/Armchair/ArmchairBlackDown.png",
+            "imagePath":"Furniture/Armchair/ArmchairBlackDown.png",
             "direction":"Down",
             "color":"black"
         },
         {
             "name":"Armchair",
             "tags":["seat" ],
-            "path":"Furniture/Armchair/ArmchairBlueDown.png",
+            "imagePath":"Furniture/Armchair/ArmchairBlueDown.png",
             "direction":"Down",
             "color":"blue"
         },
         {
             "name":"Armchair",
             "tags":["seat" ],
-            "path":"Furniture/Armchair/ArmchairGreenDown.png",
+            "imagePath":"Furniture/Armchair/ArmchairGreenDown.png",
             "direction":"Down",
             "color":"green"
         },
@@ -230,287 +230,287 @@
         {
             "name":"Armchair",
             "tags":["seat" ],
-            "path":"Furniture/Armchair/ArmchairRedDown.png",
+            "imagePath":"Furniture/Armchair/ArmchairRedDown.png",
             "direction":"Down",
             "color":"red"
         },
         {
             "name":"Armchair",
             "tags":["seat"],
-            "path":"Furniture/Armchair/ArmchairBlackLeft.png",
+            "imagePath":"Furniture/Armchair/ArmchairBlackLeft.png",
             "direction":"Left",
             "color":"black"
         },
         {
             "name":"Armchair",
             "tags":["seat"],
-            "path":"Furniture/Armchair/ArmchairBlueLeft.png",
+            "imagePath":"Furniture/Armchair/ArmchairBlueLeft.png",
             "direction":"Left",
             "color":"blue"
         },
         {
             "name":"Armchair",
             "tags":["seat"],
-            "path":"Furniture/Armchair/ArmchairGreenLeft.png",
+            "imagePath":"Furniture/Armchair/ArmchairGreenLeft.png",
             "direction":"Left",
             "color":"green"
         },
         {
             "name":"Armchair",
             "tags":["seat"],
-            "path":"Furniture/Armchair/ArmchairGreyLeft.png",
+            "imagePath":"Furniture/Armchair/ArmchairGreyLeft.png",
             "direction":"Left",
             "color":"grey"
         },
         {
             "name":"Armchair",
             "tags":["seat"],
-            "path":"Furniture/Armchair/ArmchairRedLeft.png",
+            "imagePath":"Furniture/Armchair/ArmchairRedLeft.png",
             "direction":"Left",
             "color":"red"
         },
         {
             "name":"Armchair",
             "tags":["seat"],
-            "path":"Furniture/Armchair/ArmchairBlackRight.png",
+            "imagePath":"Furniture/Armchair/ArmchairBlackRight.png",
             "direction":"Right",
             "color":"black"
         },
         {
             "name":"Armchair",
             "tags":["seat"],
-            "path":"Furniture/Armchair/ArmchairBlueRight.png",
+            "imagePath":"Furniture/Armchair/ArmchairBlueRight.png",
             "direction":"Right",
             "color":"blue"
         },
         {
             "name":"Armchair",
             "tags":["seat"],
-            "path":"Furniture/Armchair/ArmchairGreenRight.png",
+            "imagePath":"Furniture/Armchair/ArmchairGreenRight.png",
             "direction":"Right",
             "color":"green"
         },
         {
             "name":"Armchair",
             "tags":["seat"],
-            "path":"Furniture/Armchair/ArmchairGreyRight.png",
+            "imagePath":"Furniture/Armchair/ArmchairGreyRight.png",
             "direction":"Right",
             "color":"grey"
         },
         {
             "name":"Armchair",
             "tags":["seat"],
-            "path":"Furniture/Armchair/ArmchairRedRight.png",
+            "imagePath":"Furniture/Armchair/ArmchairRedRight.png",
             "direction":"Right",
             "color":"red"
         },
         {
             "name":"Armchair",
             "tags":["seat"],
-            "path":"Furniture/Armchair/ArmchairBlackUp.png",
+            "imagePath":"Furniture/Armchair/ArmchairBlackUp.png",
             "direction":"Up",
             "color":"black"
         },
         {
             "name":"Armchair",
             "tags":["seat"],
-            "path":"Furniture/Armchair/ArmchairBlueUp.png",
+            "imagePath":"Furniture/Armchair/ArmchairBlueUp.png",
             "direction":"Up",
             "color":"blue"
         },
         {
             "name":"Armchair",
             "tags":["seat"],
-            "path":"Furniture/Armchair/ArmchairGreenUp.png",
+            "imagePath":"Furniture/Armchair/ArmchairGreenUp.png",
             "direction":"Up",
             "color":"green"
         },
         {
             "name":"Armchair",
             "tags":["seat"],
-            "path":"Furniture/Armchair/ArmchairGreyUp.png",
+            "imagePath":"Furniture/Armchair/ArmchairGreyUp.png",
             "direction":"Up",
             "color":"grey"
         },
         {
             "name":"Armchair",
             "tags":["seat"],
-            "path":"Furniture/Armchair/ArmchairRedUp.png",
+            "imagePath":"Furniture/Armchair/ArmchairRedUp.png",
             "direction":"Up",
             "color":"red"
         },
         {
             "name":"Couch",
             "tags":["seat"],
-            "path":"Furniture/Couch/CouchGreyDown.png",
+            "imagePath":"Furniture/Couch/CouchGreyDown.png",
             "direction":"Down",
             "color":"grey"
         },
         {
             "name":"Couch",
             "tags":["seat"],
-            "path":"Furniture/Couch/CouchGreenDown.png",
+            "imagePath":"Furniture/Couch/CouchGreenDown.png",
             "direction":"Down",
             "color":"green"
         },
         {
             "name":"Couch",
             "tags":["seat"],
-            "path":"Furniture/Couch/CouchBrownDown.png",
+            "imagePath":"Furniture/Couch/CouchBrownDown.png",
             "direction":"Down",
             "color":"saddlebrown"
         },
         {
             "name":"Couch",
             "tags":["seat"],
-            "path":"Furniture/Couch/CouchRedDown.png",
+            "imagePath":"Furniture/Couch/CouchRedDown.png",
             "direction":"Down",
             "color":"red"
         },
         {
             "name":"Couch",
             "tags":["seat"],
-            "path":"Furniture/Couch/CouchBlueDown.png",
+            "imagePath":"Furniture/Couch/CouchBlueDown.png",
             "direction":"Down",
             "color":"blue"
         },
         {
             "name":"Couch",
             "tags":["seat"],
-            "path":"Furniture/Couch/CouchGreyRight.png",
+            "imagePath":"Furniture/Couch/CouchGreyRight.png",
             "direction":"Right",
             "color":"grey"
         },
         {
             "name":"Couch",
             "tags":["seat"],
-            "path":"Furniture/Couch/CouchGreenRight.png",
+            "imagePath":"Furniture/Couch/CouchGreenRight.png",
             "direction":"Right",
             "color":"green"
         },
         {
             "name":"Couch",
             "tags":["seat"],
-            "path":"Furniture/Couch/CouchBrownRight.png",
+            "imagePath":"Furniture/Couch/CouchBrownRight.png",
             "direction":"Right",
             "color":"saddlebrown"
         },
         {
             "name":"Couch",
             "tags":["seat"],
-            "path":"Furniture/Couch/CouchRedRight.png",
+            "imagePath":"Furniture/Couch/CouchRedRight.png",
             "direction":"Right",
             "color":"red"
         },
         {
             "name":"Couch",
             "tags":["seat"],
-            "path":"Furniture/Couch/CouchBlueRight.png",
+            "imagePath":"Furniture/Couch/CouchBlueRight.png",
             "direction":"Right",
             "color":"blue"
         },
         {
             "name":"Couch",
             "tags":["seat"],
-            "path":"Furniture/Couch/CouchGreyUp.png",
+            "imagePath":"Furniture/Couch/CouchGreyUp.png",
             "direction":"Up",
             "color":"grey"
         },
         {
             "name":"Couch",
             "tags":["seat"],
-            "path":"Furniture/Couch/CouchGreenUp.png",
+            "imagePath":"Furniture/Couch/CouchGreenUp.png",
             "direction":"Up",
             "color":"green"
         },
         {
             "name":"Couch",
             "tags":["seat"],
-            "path":"Furniture/Couch/CouchBrownUp.png",
+            "imagePath":"Furniture/Couch/CouchBrownUp.png",
             "direction":"Up",
             "color":"saddlebrown"
         },
         {
             "name":"Couch",
             "tags":["seat"],
-            "path":"Furniture/Couch/CouchRedUp.png",
+            "imagePath":"Furniture/Couch/CouchRedUp.png",
             "direction":"Up",
             "color":"red"
         },
         {
             "name":"Couch",
             "tags":["seat"],
-            "path":"Furniture/Couch/CouchBlueUp.png",
+            "imagePath":"Furniture/Couch/CouchBlueUp.png",
             "direction":"Up",
             "color":"blue"
         },
         {
             "name":"Couch",
             "tags":["seat"],
-            "path":"Furniture/Couch/CouchGreyLeft.png",
+            "imagePath":"Furniture/Couch/CouchGreyLeft.png",
             "direction":"Left",
             "color":"grey"
         },
         {
             "name":"Couch",
             "tags":["seat"],
-            "path":"Furniture/Couch/CouchGreenLeft.png",
+            "imagePath":"Furniture/Couch/CouchGreenLeft.png",
             "direction":"Left",
             "color":"green"
         },
         {
             "name":"Couch",
             "tags":["seat"],
-            "path":"Furniture/Couch/CouchBrownLeft.png",
+            "imagePath":"Furniture/Couch/CouchBrownLeft.png",
             "direction":"Left",
             "color":"saddlebrown"
         },
         {
             "name":"Couch",
             "tags":["seat"],
-            "path":"Furniture/Couch/CouchRedLeft.png",
+            "imagePath":"Furniture/Couch/CouchRedLeft.png",
             "direction":"Left",
             "color":"red"
         },
         {
             "name":"Couch",
             "tags":["seat"],
-            "path":"Furniture/Couch/CouchBlueLeft.png",
+            "imagePath":"Furniture/Couch/CouchBlueLeft.png",
             "direction":"Left",
             "color":"blue"
         },
         {
             "name":"Mural Shelf",
             "tags":["mural","shelf"],
-            "path":"Furniture/Shelf/MuralShelf.png",
+            "imagePath":"Furniture/Shelf/MuralShelf.png",
             "direction":"Down",
             "color":"saddlebrown"
         },
         {
             "name":"Shelf",
             "tags":["basic", "shelf"],
-            "path":"Furniture/Shelf/Shelf.png",
+            "imagePath":"Furniture/Shelf/Shelf.png",
             "direction":"Down",
             "color":"saddlebrown"
         },
         {
             "name":"Big Shelf",
             "tags":["basic", "shelf"],
-            "path":"Furniture/Shelf/ShelfBig.png",
+            "imagePath":"Furniture/Shelf/ShelfBig.png",
             "direction":"Down",
             "color":"saddlebrown"
         },
         {
             "name":"Bathroom Sink",
             "tags":["basic", "bathroom"],
-            "path":"Furniture/Bathroom/Sink.png",
+            "imagePath":"Furniture/Bathroom/Sink.png",
             "direction":"Down",
             "color":"brown"
         },
         {
             "name":"Toilet",
             "tags":["basic", "bathroom"],
-            "path":"Furniture/Bathroom/Toilet.png",
+            "imagePath":"Furniture/Bathroom/Toilet.png",
             "direction":"Down",
             "color":"white"
         }

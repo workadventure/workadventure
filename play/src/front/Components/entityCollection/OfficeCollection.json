@@ -5,245 +5,245 @@
         {
             "name":"Plant",
             "tags":["ornament","plant","natural", "basic"],
-            "path":"Office/Plant/Plant.png",
+            "imagePath":"Office/Plant/Plant.png",
             "direction":"Down",
             "color":"green"
         },
         {
             "name":"Plant",
             "tags":["ornament","plant","natural", "basic"],
-            "path":"Office/Plant/PlantBlue.png",
+            "imagePath":"Office/Plant/PlantBlue.png",
             "direction":"Down",
             "color":"blue"
         },
         {
             "name":"Plant",
             "tags":["ornament","plant","natural", "basic"],
-            "path":"Office/Plant/PlantCyan.png",
+            "imagePath":"Office/Plant/PlantCyan.png",
             "direction":"Down",
             "color":"cyan"
         },
         {
             "name":"Plant",
             "tags":["ornament","plant","natural", "basic"],
-            "path":"Office/Plant/PlantRed.png",
+            "imagePath":"Office/Plant/PlantRed.png",
             "direction":"Down",
             "color":"red"
         },
         {
             "name":"Small Plant",
             "tags":["ornament","plant","natural", "basic"],
-            "path":"Office/Plant/PlantSmall.png",
+            "imagePath":"Office/Plant/PlantSmall.png",
             "direction":"Down",
             "color":"green"
         },
         {
             "name":"Small Plant",
             "tags":["ornament","plant","natural", "basic"],
-            "path":"Office/Plant/PlantSmallBlue.png",
+            "imagePath":"Office/Plant/PlantSmallBlue.png",
             "direction":"Down",
             "color":"blue"
         },
         {
             "name":"Small Plant",
             "tags":["ornament","plant","natural", "basic"],
-            "path":"Office/Plant/PlantSmallCyan.png",
+            "imagePath":"Office/Plant/PlantSmallCyan.png",
             "direction":"Down",
             "color":"cyan"
         },
         {
             "name":"Small Plant",
             "tags":["ornament","plant","natural", "basic"],
-            "path":"Office/Plant/PlantSmallRed.png",
+            "imagePath":"Office/Plant/PlantSmallRed.png",
             "direction":"Down",
             "color":"red"
         },
         {
             "name":"Suspended Plant",
             "tags":["ornament","plant","mural", "basic"],
-            "path":"Office/Plant/MuralPlant.png",
+            "imagePath":"Office/Plant/MuralPlant.png",
             "direction":"Down",
             "color":"green"
         },
         {
             "name":"Large Plant",
             "tags":["ornament","plant", "basic"],
-            "path":"Office/Plant/PlantLarge.png",
+            "imagePath":"Office/Plant/PlantLarge.png",
             "direction":"Down",
             "color":"green"
         },
         {
             "name":"Computer Screen",
             "tags":["equipment", "electronic"],
-            "path":"Office/Computer/ScreenBlackDown.png",
+            "imagePath":"Office/Computer/ScreenBlackDown.png",
             "direction":"Down",
             "color":"black"
         },
         {
             "name":"Computer Screen",
             "tags":["equipment", "electronic"],
-            "path":"Office/Computer/ScreenBlackUp.png",
+            "imagePath":"Office/Computer/ScreenBlackUp.png",
             "direction":"Down",
             "color":"black"
         },
         {
             "name":"Computer Screen",
             "tags":["equipment", "electronic"],
-            "path":"Office/Computer/ScreenWhiteDown.png",
+            "imagePath":"Office/Computer/ScreenWhiteDown.png",
             "direction":"Down",
             "color":"white"
         },
         {
             "name":"Computer Screen",
             "tags":["equipment", "electronic"],
-            "path":"Office/Computer/ScreenWhiteUp.png",
+            "imagePath":"Office/Computer/ScreenWhiteUp.png",
             "direction":"Down",
             "color":"white"
         },
         {
             "name":"Computer Screen (Big)",
             "tags":["equipment", "electronic"],
-            "path":"Office/Computer/BigScreenBlackDown.png",
+            "imagePath":"Office/Computer/BigScreenBlackDown.png",
             "direction":"Down",
             "color":"black"
         },
         {
             "name":"Computer Screen (Big)",
             "tags":["equipment", "electronic"],
-            "path":"Office/Computer/BigScreenBlackUp.png",
+            "imagePath":"Office/Computer/BigScreenBlackUp.png",
             "direction":"Down",
             "color":"black"
         },
         {
             "name":"Computer Screen (Big)",
             "tags":["equipment", "electronic"],
-            "path":"Office/Computer/BigScreenWhiteDown.png",
+            "imagePath":"Office/Computer/BigScreenWhiteDown.png",
             "direction":"Down",
             "color":"white"
         },
         {
             "name":"Computer Screen (Big)",
             "tags":["equipment", "electronic"],
-            "path":"Office/Computer/BigScreenWhiteUp.png",
+            "imagePath":"Office/Computer/BigScreenWhiteUp.png",
             "direction":"Upv",
             "color":"white"
         },
         {
             "name":"Laptop",
             "tags":["equipment", "electronic"],
-            "path":"Office/Computer/LaptopBlackDown.png",
+            "imagePath":"Office/Computer/LaptopBlackDown.png",
             "direction":"Down",
             "color":"black"
         },
         {
             "name":"Laptop",
             "tags":["equipment", "electronic"],
-            "path":"Office/Computer/LaptopBlackRight.png",
+            "imagePath":"Office/Computer/LaptopBlackRight.png",
             "direction":"Right",
             "color":"black"
         },
         {
             "name":"Printer",
             "tags":["equipment", "electronic"],
-            "path":"Office/Computer/Printer.png",
+            "imagePath":"Office/Computer/Printer.png",
             "direction":"Down",
             "color":"white"
         },
         {
             "name":"Bin",
             "tags":["container"],
-            "path":"Office/Props/Bin.png",
+            "imagePath":"Office/Props/Bin.png",
             "direction":"Down",
             "color":"grey"
         },
         {
             "name":"Basket",
             "tags":["props", "container"],
-            "path":"Office/Props/Basket.png",
+            "imagePath":"Office/Props/Basket.png",
             "direction":"Down",
             "color":"saddlebrown"
         },
         {
             "name":"Books (Variant 1)",
             "tags":["props", "book"],
-            "path":"Office/Props/Book1.png",
+            "imagePath":"Office/Props/Book1.png",
             "direction":"Down",
             "color":"black"
         },
         {
             "name":"Books (Variant 2)",
             "tags":["props", "book"],
-            "path":"Office/Props/Book2.png",
+            "imagePath":"Office/Props/Book2.png",
             "direction":"Down",
             "color":"black"
         },
         {
             "name":"Books (Variant 3)",
             "tags":["props", "book"],
-            "path":"Office/Props/Book3.png",
+            "imagePath":"Office/Props/Book3.png",
             "direction":"Down",
             "color":"black"
         },
         {
             "name":"Books (Variant 4)",
             "tags":["props", "book"],
-            "path":"Office/Props/Book4.png",
+            "imagePath":"Office/Props/Book4.png",
             "direction":"Down",
             "color":"black"
         },
         {
             "name":"Books (Variant 5)",
             "tags":["props", "book"],
-            "path":"Office/Props/Book5.png",
+            "imagePath":"Office/Props/Book5.png",
             "direction":"Down",
             "color":"black"
         },
         {
             "name":"Round Mural Clock",
             "tags":["props", "mural", "clock"],
-            "path":"Office/Props/Clock.png",
+            "imagePath":"Office/Props/Clock.png",
             "direction":"Down",
             "color":"white"
         },
         {
             "name":"Coffee Dispenser",
             "tags":["props"],
-            "path":"Office/Props/CoffeeDispenser.png",
+            "imagePath":"Office/Props/CoffeeDispenser.png",
             "direction":"Down",
             "color":"black"
         },
         {
             "name":"Folders",
             "tags":["props", "book"],
-            "path":"Office/Props/Folders.png",
+            "imagePath":"Office/Props/Folders.png",
             "direction":"Down",
             "color":"black"
         },
         {
             "name":"Mural Mirror",
             "tags":["props", "mural"],
-            "path":"Office/Props/Mirror.png",
+            "imagePath":"Office/Props/Mirror.png",
             "direction":"Down",
             "color":"black"
         },
         {
             "name":"Mugs",
             "tags":["props"],
-            "path":"Office/Props/Mugs.png",
+            "imagePath":"Office/Props/Mugs.png",
             "direction":"Down",
             "color":"white"
         },
         {
             "name":"Toilet Brush",
             "tags":["props", "bathroom"],
-            "path":"Office/Props/ToiletBrush.png",
+            "imagePath":"Office/Props/ToiletBrush.png",
             "direction":"Down",
             "color":"white"
         },
         {
             "name":"Toilet Paper",
             "tags":["props", "bathroom", "mural"],
-            "path":"Office/Props/ToiletPaper.png",
+            "imagePath":"Office/Props/ToiletPaper.png",
             "direction":"Down",
             "color":"white"
         }

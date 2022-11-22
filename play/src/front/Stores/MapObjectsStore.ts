@@ -1,35 +1,23 @@
+import { EntityPrefab, Direction } from "@workadventure/map-editor";
 import type { Readable, Subscriber, Unsubscriber, Writable } from "svelte/store";
 import { get, readable, writable } from "svelte/store";
 import furnitureCollection from "../Components/entityCollection/FurnitureCollection.json"
 import officeCollection from "../Components/entityCollection/OfficeCollection.json"
 
-export interface MapEntity
-{
-    name: string;
-    tags: string[];
-    path: string;
-    direction: Direction;
-    color: string;
-}
 
 export interface EntityCollection
 {
     collectionName: string;
-    collection:MapEntity[];
+    collection:EntityPrefab[];
 }
 
-export enum Direction{
-    Left = "Left",
-    Up = "Up",
-    Down = "Down",
-    Right = "Right"
-}
-export class MapEntitiesStore implements Readable<MapEntity[]>
+
+export class MapEntitiesStore implements Readable<EntityPrefab[]>
 {
     private allDirection =[Direction.Left, Direction.Up, Direction.Down, Direction.Right]
-    private mapEntitiesStore = writable<MapEntity[]>([]);
+    private mapEntitiesStore = writable<EntityPrefab[]>([]);
 
-    private mapObjects: MapEntity[]=[];
+    private mapObjects: EntityPrefab[]=[];
     private filter:string = "";
     public tagsStore= writable<string[]>([]);
     private currentCollection:EntityCollection = {collectionName:"All Object Collection", collection:[]};
@@ -40,15 +28,16 @@ export class MapEntitiesStore implements Readable<MapEntity[]>
         const folder = "/src/front/Components/images/objects/";
         let tagSet = new Set<string>();
         allCollections.forEach(collection => {
-            collection.collection.forEach(entity => {
+            collection.collection.forEach((entity:EntityPrefab) => {
                 this.currentCollection.collection.push({
                     name : entity.name,
                     tags : [...entity.tags, ...collection.tags],
-                    path : folder + entity.path,
+                    imagePath : folder + entity.imagePath,
                     direction : Direction[<keyof typeof Direction>entity.direction],
-                    color : entity.color
+                    color : entity.color,
+                    collisionGrid : entity.collisionGrid
                 });
-                entity.tags.forEach(tag => tagSet.add(tag));
+                entity.tags.forEach((tag:string) => tagSet.add(tag));
             });
         });
 
@@ -58,7 +47,7 @@ export class MapEntitiesStore implements Readable<MapEntity[]>
         this.mapEntitiesStore.set(this.currentCollection.collection);
     }
 
-    subscribe(run: Subscriber<MapEntity[]>, invalidate?: ((value?: MapEntity[] | undefined) => void) | undefined): Unsubscriber {
+    subscribe(run: Subscriber<EntityPrefab[]>, invalidate?: ((value?: EntityPrefab[] | undefined) => void) | undefined): Unsubscriber {
         return this.mapEntitiesStore.subscribe(run, invalidate);
     }
 

@@ -27,7 +27,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     private oldPositionTopLeft: { x: number; y: number };
 
     constructor(scene: GameScene, data: EntityData) {
-        super(scene, data.x, data.y, data.image);
+        super(scene, data.x, data.y, data.prefab.imagePath);
 
         this.oldPositionTopLeft = this.getTopLeft();
         this.beingRepositioned = false;
@@ -76,11 +76,11 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public getCollisionGrid(): number[][] | undefined {
-        return this.entityData.collisionGrid;
+        return this.entityData.prefab.collisionGrid;
     }
 
     public getReversedCollisionGrid(): number[][] | undefined {
-        return this.entityData.collisionGrid?.map((row) => row.map((value) => (value === 1 ? -1 : value)));
+        return this.entityData.prefab.collisionGrid?.map((row) => row.map((value) => (value === 1 ? -1 : value)));
     }
 
     public setFollowOutlineColor(color: number): void {
@@ -122,7 +122,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             this.y = Math.floor(dragY / 32) * 32;
             (this.scene as GameScene).markDirty();
         }
-    });
+        });
 
         this.on(Phaser.Input.Events.DRAG_START, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
@@ -135,17 +135,10 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                 (this.scene as GameScene).markDirty();
                 this.emit(EntityEvent.Moved, this.oldPositionTopLeft.x, this.oldPositionTopLeft.y);
             }
-    });
-
-        this.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
-                mapEditorSelectedEntityStore.set(this);
-                console.log("test");
-            }
         });
 
         this.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore)) {
+            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
                 mapEditorSelectedEntityStore.set(this);
             }
         });

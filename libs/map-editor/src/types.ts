@@ -16,14 +16,30 @@ export enum AreaType {
     Dynamic = "Dynamic",
 }
 
+export enum Direction{
+    Left = "Left",
+    Up = "Up",
+    Down = "Down",
+    Right = "Right"
+}
+
+export interface EntityPrefab
+{
+    name: string;
+    tags: string[];
+    imagePath: string;
+    direction: Direction;
+    color: string;
+    collisionGrid?:number[][];
+}
+
 export interface EntityData {
     id: number;
-    image: string;
     x: number;
     y: number;
-    collisionGrid?: number[][];
     interactive?: boolean;
     properties?: { [key: string]: unknown | undefined };
+    prefab:EntityPrefab;
 }
 
 export interface PredefinedPropertyData {

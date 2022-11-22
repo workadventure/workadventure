@@ -5,7 +5,8 @@
 {#if $mapEditorSelectedEntityStore === undefined}
 Select an object modify its property
 {:else}
-<div>name : {$mapEditorSelectedEntityStore}</div> 
+<div>x : {$mapEditorSelectedEntityStore.getEntityData().x}</div> 
+<div>y : {$mapEditorSelectedEntityStore.getEntityData().y}</div> 
 <button>Test Interaction</button>
 <button>Delete</button>
 {/if}

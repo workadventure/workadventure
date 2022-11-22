@@ -1,20 +1,16 @@
 <script lang="ts">
-    import { Direction, MapEntity } from "../../Stores/MapObjectsStore";
+    import type { Direction, EntityPrefab } from "@workadventure/map-editor";
     import { onDestroy, subscribe } from "svelte/internal";
     import { mapEditorSelectedMapEntityStore, mapObjectsStore  } from "../../Stores/MapEditorStore";
-    import { object } from "zod";
-    import { map } from "rxjs/operators";
-    import deleteTagButton from "../images/close.png";
-    import AboutRoomSubMenu from "../Menu/AboutRoomSubMenu.svelte";
 
-    let pickedItem : MapEntity = $mapObjectsStore[0];
-    let pickedVariant : MapEntity | undefined = undefined;
+    let pickedItem : EntityPrefab = $mapObjectsStore[0];
+    let pickedVariant : EntityPrefab | undefined = undefined;
     let currentColor : string;
 
-    let currentMapObjects : MapEntity[] = [];
-    let rootItem : MapEntity[] = []; //A sample of each object
-    let itemVariants : MapEntity[] = [];
-    let currentVariants : MapEntity[] = [];
+    let currentMapObjects : EntityPrefab[] = [];
+    let rootItem : EntityPrefab[] = []; //A sample of each object
+    let itemVariants : EntityPrefab[] = [];
+    let currentVariants : EntityPrefab[] = [];
     let variantColors : string[] = []; 
 
     let filter : string = "";
@@ -23,13 +19,13 @@
 
     let tagsStore = mapObjectsStore.tagsStore;
 
-    function onPickItemVariant(variant:MapEntity)
+    function onPickItemVariant(variant:EntityPrefab)
     {
         pickedVariant = variant;
         mapEditorSelectedMapEntityStore.set(pickedVariant);
     }
 
-    function onPickItem(item : MapEntity)
+    function onPickItem(item : EntityPrefab)
     {
         pickedItem = item;
         itemVariants = $mapObjectsStore.filter((item)=>item.name == pickedItem.name );
@@ -83,7 +79,7 @@
         rootItem = [];
         for(let mapObject of newMap)
         {
-            mapObject.tags.forEach(v => tags.add(v));
+            mapObject.tags.forEach((v:string) => tags.add(v));
             if(!uniqId.has(mapObject.name))
             {
                 uniqId.add(mapObject.name);
@@ -119,7 +115,7 @@
     <div class="item-picker-container">
         {#each rootItem as item (item.name) }
         <div class="pickable-item {item.name === pickedItem.name? 'active':''}" on:click={()=>onPickItem(item)}>
-            <img class="item-image" src={item.path} alt={item.name}/>
+            <img class="item-image" src={item.imagePath} alt={item.name}/>
         </div>
         {/each}
     </div>
@@ -127,8 +123,8 @@
     {#if pickedItem !== null}
     <div class="item-variant-picker-container">
         {#each currentVariants as item }
-        <div class="pickable-item {item.path === pickedVariant?.path ? 'active':''}" on:click={()=>onPickItemVariant(item)}>
-            <img class="item-image" src={item.path} alt={item.name}/>
+        <div class="pickable-item {item.imagePath === pickedVariant?.imagePath ? 'active':''}" on:click={()=>onPickItemVariant(item)}>
+            <img class="item-image" src={item.imagePath} alt={item.name}/>
         </div>
         {/each}
     </div>
@@ -154,22 +150,6 @@
                 max-width: 10%;
                 margin-bottom: 0;
                 position : absolute;
-            }
-        }
-        .tag-container
-        {
-            display: flex;
-            flex-wrap: wrap;
-            .tag-button{
-                background-color: rgb(77 75 103);
-                border-radius: 1em;
-                border:  0.01rem solid grey;
-                .tag-delete
-                {
-                    margin-left: 0.5em;
-                    max-inline-size: 0.65em;
-                    margin-right: -0.25em;
-                }
             }
         }
         .item-picker-container, .item-variant-picker-container{
