@@ -15,7 +15,7 @@ export class DebugController {
             (async () => {
                 const query = parse(req.getQuery());
 
-                if (ADMIN_API_TOKEN === "") {
+                if (!ADMIN_API_TOKEN) {
                     return res.writeStatus("401 Unauthorized").end("No token configured!");
                 }
                 if (query.token !== ADMIN_API_TOKEN) {
