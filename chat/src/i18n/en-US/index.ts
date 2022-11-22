@@ -16,7 +16,8 @@ const en_US: BaseTranslation = {
     connecting: "Connection to presence server ...",
     waitingInit: "Waiting for server initialization ...",
     waitingData: "Waiting user data ...",
-    search: "Search for user, message, channel, etc.",
+    searchUser: "Search for user, map, etc ...",
+    searchChat: "Search for channel, message, etc ...",
     role: {
         admin: "Administrator",
         member: "Member",
@@ -70,7 +71,7 @@ const en_US: BaseTranslation = {
     more: "more",
     sendBack: "Send back",
     delete: "Delete",
-    messageDeleted: "This message has been deleted by ",
+    messageDeleted: "This message was deleted by ",
     emoji: {
         icon: "Icon to open or close emoji selected popup",
         search: "Search emojis...",
@@ -108,6 +109,8 @@ const en_US: BaseTranslation = {
     upgradeToSeeMore: "Upgrade to see more messages",
     disabled: "This feature is disabled.",
     disabledByAdmin: "This feature is disabled by the administrator.",
+    anAdmin: "an administrator",
+    messageDeletedByYou: "You deleted this message",
 };
 
 export default en_US;

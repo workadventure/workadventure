@@ -29,7 +29,6 @@
     import { chatConnectionManager } from "../Connection/ChatConnectionManager";
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
     import { iframeListener } from "../IframeListener";
-    import { fly } from "svelte/transition";
     import NeedRefresh from "./NeedRefresh.svelte";
     import ChatForumRooms from "./ChatForumRooms.svelte";
 
@@ -40,8 +39,9 @@
 
     let defaultMucRoom: MucRoom | undefined = undefined;
     let subscribeListeners = new Array<Unsubscriber>();
+    let subscribeTotalMessagesToSee: Unsubscriber;
 
-    $: totalMessagesToSee = derived(
+    let totalMessagesToSee = derived(
         [...[...$mucRoomsStore].map((mucRoom) => mucRoom.getCountMessagesToSee()), timelineMessagesToSee],
         ($totalMessagesToSee) => $totalMessagesToSee.reduce((sum, number) => sum + number, 0)
     );
@@ -50,28 +50,26 @@
         if (!$locale) {
             await localeDetector();
         }
+        subscribeTotalMessagesToSee = totalMessagesToSee.subscribe((total: number) => {
+            iframeListener.sendChatTotalMessagesToSee(total);
+        });
         subscribeListeners.push(
-            mucRoomsStore.subscribe(() => {
-                try {
-                    defaultMucRoom = mucRoomsStore.getDefaultRoom();
-                } catch (e: unknown) {
-                    console.error("Error get default room =>", e);
-                }
-            })
-        );
-        subscribeListeners.push(
-            totalMessagesToSee.subscribe((total: number) => {
-                iframeListener.sendChatTotalMessagesToSee(total);
+            mucRoomsStore.subscribe((mucRooms) => {
+                subscribeTotalMessagesToSee();
+                totalMessagesToSee = derived(
+                    [...mucRooms].map((mucRoom) => mucRoom.getCountMessagesToSee()),
+                    ($totalMessagesToSee) => $totalMessagesToSee.reduce((sum, number) => sum + number, 0)
+                );
+                subscribeTotalMessagesToSee = totalMessagesToSee.subscribe((total: number) =>
+                    iframeListener.sendChatTotalMessagesToSee(total)
+                );
+
+                defaultMucRoom = mucRoomsStore.getDefaultRoom();
             })
         );
         subscribeListeners.push(
             availabilityStatusStore.subscribe(() => {
                 mucRoomsStore.sendUserInfos();
-            })
-        );
-        subscribeListeners.push(
-            mucRoomsStore.subscribe(() => {
-                defaultMucRoom = mucRoomsStore.getDefaultRoom();
             })
         );
         subscribeListeners.push(
@@ -104,6 +102,7 @@
         subscribeListeners.forEach((listener) => {
             listener();
         });
+        subscribeTotalMessagesToSee();
     });
 
     function onClick(event: MouseEvent) {
@@ -152,7 +151,7 @@
         {:else if $activeThreadStore !== undefined}
             <ChatActiveThread activeThread={$activeThreadStore} />
         {:else}
-            <div class="wa-message-bg tw-pt-3" transition:fly={{ x: -500, duration: 400 }}>
+            <div class="wa-message-bg tw-pt-3">
                 <nav class="nav">
                     <div class="background" class:chat={$navChat === "chat"} />
                     <ul>
@@ -167,7 +166,7 @@
                     <div class="tw-p-3">
                         <input
                             class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
-                            placeholder={$LL.search()}
+                            placeholder={$navChat === "users" ? $LL.searchUser() : $LL.searchChat()}
                             bind:value={searchValue}
                         />
                     </div>

@@ -12,7 +12,7 @@
         ArrowRightCircleIcon,
     } from "svelte-feather-icons";
     import { MucRoom } from "../Xmpp/MucRoom";
-    import { User } from "../Xmpp/AbstractRoom";
+    import { defaultWoka, User } from "../Xmpp/AbstractRoom";
     import LL, { locale } from "../i18n/i18n-svelte";
     import { createEventDispatcher, onMount } from "svelte";
     import { EmojiButton } from "@joeattardi/emoji-button";
@@ -222,7 +222,7 @@
 
     function addUserTag(user: User) {
         const values = newMessageText.match(regexUserTag) as string[];
-        newMessageText = newMessageText.replace(values.pop() as string, `@${user.name} `);
+        newMessageText = newMessageText.replace(values.pop() as string, `@${user.name}`);
         $mentionsUserStore.add(user);
         usersSearching = [];
         textarea.focus();
@@ -241,7 +241,6 @@
             position: "bottom",
             emojisPerRow: 5,
             autoFocusSearch: false,
-            style: "twemoji",
             showPreview: false,
             i18n: {
                 search: $LL.emoji.search(),
@@ -327,7 +326,7 @@
                     class="wa-dropdown-item user-tag"
                     on:click|stopPropagation|preventDefault={() => addUserTag(user)}
                 >
-                    <img src={user.woka} alt={`Woka svg of user: ${user.name}`} />
+                    <img src={user.woka ?? defaultWoka} alt={`Woka of user: ${user.name}`} />
                     {user.name}
                 </span>
             {/each}
@@ -427,7 +426,7 @@
                     {#if isMessageTooLong}
                         <div
                             class="tw-text-pop-red tw-text-xxxs tw-absolute tw-right-4 tw-font-bold"
-                            style="bottom: -9px;"
+                            style="bottom: -6px;"
                         >
                             {newMessageText.length}/{maxCharMessage}
                         </div>
@@ -537,10 +536,16 @@
     .wa-dropdown-menu {
         margin: 0 0 0 10px;
         position: relative;
-        width: fit-content;
-        min-width: auto;
+        width: 94%;
+        max-height: 50vh;
+        overflow-y: auto;
+        overflow-x: hidden;
 
         .wa-dropdown-item.user-tag {
+            img {
+                width: 22px;
+                margin-right: 6px;
+            }
             &:active,
             &:focus {
                 --tw-bg-opacity: 1;

@@ -214,7 +214,6 @@
             },
             emojisPerRow: 5,
             autoFocusSearch: false,
-            style: "twemoji",
             showPreview: false,
             i18n: {
                 search: $LL.emoji.search(),
@@ -312,27 +311,29 @@
                             isMe(message.jid) ? "tw-justify-end" : "tw-justify-start"
                         }`}
                     >
-                        <div
-                            class={`${
-                                isMe(message.jid) || needHideHeader(message.name, message.time, i)
-                                    ? "tw-opacity-0"
-                                    : "tw-mt-4"
-                            } tw-relative wa-avatar-mini tw-mr-2`}
-                            transition:fade={{ duration: 100 }}
-                            style={`background-color: ${getColor(message.jid)}`}
-                        >
-                            <div class="wa-container">
-                                <img
-                                    class="tw-w-full"
-                                    style="image-rendering: pixelated;"
-                                    src={getWoka(message.jid)}
-                                    alt="Avatar"
-                                    loading="lazy"
-                                />
+                        {#if !isMe(message.jid)}
+                            <div
+                                class={`${
+                                    isMe(message.jid) || needHideHeader(message.name, message.time, i)
+                                        ? "tw-opacity-0"
+                                        : "tw-mt-4"
+                                } tw-relative wa-avatar-mini tw-mr-2`}
+                                transition:fade={{ duration: 100 }}
+                                style={`background-color: ${getColor(message.jid)}`}
+                            >
+                                <div class="wa-container">
+                                    <img
+                                        class="tw-w-full"
+                                        style="image-rendering: pixelated;"
+                                        src={getWoka(message.jid)}
+                                        alt="Avatar"
+                                        loading="lazy"
+                                    />
+                                </div>
                             </div>
-                        </div>
+                        {/if}
                         <div
-                            style="max-width: 75%"
+                            style={`${isMe(message.jid) ? "" : "max-width: 75%"}`}
                             transition:fly={{
                                 x: isMe(message.jid) ? 10 : -10,
                                 delay: 100,
@@ -372,14 +373,17 @@
                             </div>
 
                             <!-- Delete message -->
-                            {#if [...$deletedMessagesStore].find((deleted) => deleted === message.id)}
+                            {#if $deletedMessagesStore.has(message.id)}
                                 <div class="wa-message-body">
                                     <p class="tw-italic">
-                                        {$LL.messageDeleted()}
-                                        {#if isMe(message.jid)}
-                                            {$LL.me()}.
+                                        {#if JID.toBare(message.jid) === $deletedMessagesStore.get(message.id)}
+                                            {#if isMe(message.jid)}
+                                                {$LL.messageDeletedByYou()}.
+                                            {:else}
+                                                {$LL.messageDeleted()}{message.name}.
+                                            {/if}
                                         {:else}
-                                            {message.name}.
+                                            {$LL.messageDeleted()}{$LL.anAdmin()}.
                                         {/if}
                                     </p>
                                 </div>
@@ -675,7 +679,8 @@
     .wa-message-body {
         position: relative;
         min-width: 75px;
-        word-break: break-all;
+        word-break: break-word;
+        text-align: justify;
         .actions {
             display: none;
             position: absolute;

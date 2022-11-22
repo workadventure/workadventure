@@ -62,14 +62,12 @@ test.describe('Chat', () => {
       await page.locator('#game canvas').click();
       await Map.walkTo(page, 'ArrowRight', 2_500);
       await Map.walkTo(page, 'ArrowUp', 500);
-      await Chat.expandLiveRooms(page);
       await Chat.liveRoomExist(page, 'liveZone');
 
       await Chat.slideToChat(page2);
       await page2.locator('#game canvas').click();
       await Map.walkTo(page2, 'ArrowRight', 2_500);
       await Map.walkTo(page2, 'ArrowDown', 500);
-      await Chat.expandLiveRooms(page2);
       await Chat.liveRoomExist(page2, 'liveZone');
 
 
@@ -175,7 +173,6 @@ test.describe('Chat', () => {
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
 
       await Chat.slideToChat(page);
-      await Chat.expandForums(page);
       await Chat.forumExist(page, 'Welcome');
     });
 
