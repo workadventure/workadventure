@@ -17,17 +17,15 @@ const _VERBOSE = true;
 
 export class SingleRoom extends AbstractRoom {
     private showDisabledLoadOlderMessagesStore: Writable<boolean>;
-    private chatStateStore: Writable<ChatState>;
     private subscriptionAccepted = false;
 
     constructor(xmppClient: XmppClient, public readonly user: User, protected userJid: ParsedJID) {
         super(xmppClient, _VERBOSE);
 
         this.showDisabledLoadOlderMessagesStore = writable<boolean>(false);
-        this.chatStateStore = writable<ChatState>();
     }
 
-    private console(text: string) {
+    protected console(text: string) {
         if (_VERBOSE) {
             console.warn(`[XMPP]%c[SR](${this.name})%c ${text}`, "color: LightGreen;", "color: inherit;");
         }
@@ -62,10 +60,6 @@ export class SingleRoom extends AbstractRoom {
         this.console(`>> ${first ? "First " : ""}Presence sent to ${this.userJid.bare}`);
         this.readyStore.set(true);
     }
-    public sendMessage(text: string, messageReply?: Message) {
-        super.sendMessage(text, messageReply);
-        this.console(">> Message sent");
-    }
     public sendChatState(state: ChatState) {
         if (this.closed) {
             return;
@@ -79,7 +73,6 @@ export class SingleRoom extends AbstractRoom {
 
     onChatState(chatState: ChatStateMessage): boolean {
         this.console("<< Chat state received");
-        this.chatStateStore.set(chatState.chatState as ChatState);
         this.user.chatState = chatState.chatState;
         this.presenceStore.update((presenceStore: UserList) => {
             presenceStore.set(this.user.jid, { ...this.user, chatState: this.user.chatState });
@@ -88,11 +81,12 @@ export class SingleRoom extends AbstractRoom {
         return true;
     }
     onPresence(presence: StanzaProtocol.ReceivedPresence): boolean {
+        this.console("<< Presence received");
         if (!this.subscriptionAccepted) {
+            this.console("<< Subscription accepted");
             this.xmppClient.socket.acceptSubscription(this.rawRecipient);
             this.subscriptionAccepted = true;
         }
-        this.console("<< Presence received");
         return true;
     }
 

@@ -57,14 +57,12 @@ export class XmppClient {
         room = this.rooms.get(roomJID);
         if (!room) {
             room = this.singles.get(roomJID);
-            if (!room) {
+            if (type === "presence" && !room) {
                 const defaultMucRoom = mucRoomsStore.getDefaultRoom();
                 if (defaultMucRoom) {
                     const user = get(defaultMucRoom.getPresenceStore()).get(from);
                     if (user) {
-                        console.warn("[XMPP] << First message received, accept the subscription ...");
                         this.socket.acceptSubscription(JID.toBare(user.jid));
-                        console.warn("[XMPP] << Creating the singleRoom ...");
                         room = this.addSingleRoom(user);
                     }
                 }

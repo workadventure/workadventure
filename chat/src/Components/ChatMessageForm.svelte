@@ -55,11 +55,7 @@
     // const regexUserTag = /(?<![\w@])@([\w@]+(?:[.!][\w@]+)*)+$/gm;
     const regexUserTag = /@([\w@]+(?:[.!][\w@]+)*)+$/gm;
 
-    const presenceStore =
-        mucRoomsStore.getDefaultRoom()?.getPresenceStore() ??
-        (activeThread instanceof MucRoom
-            ? activeThread.getPresenceStore()
-            : writable<UserList>(new Map<string, User>()));
+    const presenceStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? activeThread.getPresenceStore();
     const me = activeThread.getMe();
 
     function onFocus() {}
@@ -215,9 +211,12 @@
         return true;
     }
 
-    function onKeyPress(): boolean {
+    function onKeyPress(key: KeyboardEvent): boolean {
+        console.log(key);
         adjustHeight();
-        activeThread.updateComposingState(ChatState.Composing);
+        if (!(key.key === "Enter" && !key.shiftKey)) {
+            activeThread.updateComposingState(ChatState.Composing);
+        }
         return true;
     }
 

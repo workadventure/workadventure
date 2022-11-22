@@ -37,7 +37,7 @@ export class MucRoom extends AbstractRoom {
         this.readyStore = writable<boolean>(type === "default");
     }
 
-    private console(text: string) {
+    protected console(text: string) {
         if (_VERBOSE) {
             console.warn(`[XMPP]%c[MR](${this.name})%c ${text}`, "color: LightSkyBlue;", "color: inherit;");
         }
@@ -166,10 +166,6 @@ export class MucRoom extends AbstractRoom {
         });
         this.console(">> Chat state sent");
     }
-    public sendMessage(text: string, messageReply?: Message) {
-        super.sendMessage(text, messageReply);
-        this.console(">> Message sent");
-    }
     public sendRemoveMessage(messageId: string) {
         if (this.closed) {
             return;
@@ -185,10 +181,6 @@ export class MucRoom extends AbstractRoom {
             },
         });
         this.console(">> Remove message sent");
-    }
-    public sendReactionMessage(emojiTargeted: string, messageId: string) {
-        super.sendReactionMessage(emojiTargeted, messageId);
-        this.console(">> Reaction message sent");
     }
     public sendDestroy() {
         if (this.closed) {

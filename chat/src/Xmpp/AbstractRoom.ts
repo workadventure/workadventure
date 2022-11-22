@@ -133,6 +133,12 @@ export class AbstractRoom {
         throw new TypeError('Can\'t use chatType get from Abstract class "AbstractRoom", need to be implemented.');
     }
 
+    protected console(text: string) {
+        if (this._VERBOSE) {
+            console.warn(`[XMPP]%c[AR]%c ${text}`, "color: orangered;", "color: inherit;");
+        }
+    }
+
     // Functions used to send message to the server
     protected sendPresence(first: boolean = false) {
         if (this.closed) {
@@ -159,18 +165,7 @@ export class AbstractRoom {
             userVisitCardUrl: get(userStore).visitCardUrl ?? "",
         });
     }
-    protected sendChatState(state: ChatState) {
-        if (this.closed) {
-            return;
-        }
-        this.xmppClient.socket.sendMessage({
-            type: this.chatType,
-            to: this.rawRecipient,
-            chatState: state,
-            jid: this.xmppClient.getMyPersonalJID(),
-        });
-    }
-    protected sendMessage(text: string, messageReply?: Message) {
+    public sendMessage(text: string, messageReply?: Message) {
         if (this.closed) {
             return;
         }
@@ -242,6 +237,7 @@ export class AbstractRoom {
 
         if (this.sendTimeOut) {
             clearTimeout(this.sendTimeOut);
+            this.sendTimeOut = undefined;
         }
         this.sendTimeOut = setTimeout(() => {
             this.messageStore.update((messages) => {
@@ -251,7 +247,10 @@ export class AbstractRoom {
                 });
                 return messagesUpdated;
             });
+            this.sendTimeOut = undefined;
         }, 10_000);
+
+        this.console(">> Message sent");
     }
     public sendReactionMessage(emojiTargeted: string, messageId: string) {
         if (this.closed) {
@@ -282,6 +281,8 @@ export class AbstractRoom {
             },
         });
 
+        this.console(">> Reaction message sent");
+
         // Recompute reactions
         this.toggleReactionsMessage(this.xmppClient.getMyPersonalJID(), messageId, newReactions);
     }
@@ -296,6 +297,11 @@ export class AbstractRoom {
             messages.delete(idMessage);
             return messages;
         });
+    }
+    public sendChatState(state: StanzaConstants.ChatState): boolean {
+        throw new TypeError(
+            'Can\'t use sendChatState function from Abstract class "AbstractRoom", need to be implemented.'
+        );
     }
 
     // Function used to interpret message from the server
@@ -338,23 +344,20 @@ export class AbstractRoom {
         this.lastMessageSeen = new Date();
     }
     public updateComposingState(state: StanzaConstants.ChatState) {
+        if (this.composingTimeOut) {
+            clearTimeout(this.composingTimeOut);
+            this.composingTimeOut = undefined;
+        } else {
+            this.sendChatState(state);
+        }
+
         if (state === StanzaConstants.ChatState.Composing) {
-            if (this.composingTimeOut) {
-                clearTimeout(this.composingTimeOut);
-            } else {
-                this.sendChatState(StanzaConstants.ChatState.Composing);
-            }
             this.composingTimeOut = setTimeout(() => {
                 this.sendChatState(StanzaConstants.ChatState.Paused);
-                if (this.composingTimeOut) {
-                    clearTimeout(this.composingTimeOut);
-                }
+                this.composingTimeOut = undefined;
             }, 5_000);
         } else {
-            if (this.composingTimeOut) {
-                clearTimeout(this.composingTimeOut);
-            }
-            this.sendChatState(StanzaConstants.ChatState.Paused);
+            this.sendChatState(state);
         }
     }
 
