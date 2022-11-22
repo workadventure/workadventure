@@ -28,7 +28,9 @@ export class GameMapEntities {
                 ],
                 interactive: true,
                 properties: {
-                    openWebsite: "https://wikipedia.org",
+                    jitsiRoom: "ChillZone",
+                    playAudio: "../assets/audio/campfire.ogg",
+                    openTab: "https://img-9gag-fun.9cache.com/photo/ay2DNzM_460svav1.mp4",
                 },
             }
         ];

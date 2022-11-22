@@ -47,6 +47,7 @@ export class GameMapPropertiesListener {
     constructor(private scene: GameScene, private gameMapFrontWrapper: GameMapFrontWrapper) {}
 
     register() {
+        console.log("REGISTER PROPERTIES CALLBACKS");
         // Website on new tab
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.OPEN_TAB, (newValue, oldValue, allProps) => {
             if (newValue === undefined) {

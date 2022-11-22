@@ -1,5 +1,6 @@
 import { EntityData } from "@workadventure/map-editor";
 import { Observable, Subject } from "rxjs";
+import { actionsMenuStore } from "../../../Stores/ActionsMenuStore";
 import { Entity, EntityEvent } from "../../ECS/Entity";
 import type { GameScene } from "../GameScene";
 import type { GameMapFrontWrapper } from "./GameMapFrontWrapper";
@@ -9,7 +10,8 @@ export class EntitiesManager {
     private gameMapFrontWrapper: GameMapFrontWrapper;
 
     private entities: Entity[];
-    private activeEntity: Entity | undefined;
+
+    private properties: Map<string, string | boolean | number>;
 
     /**
      * Firing on map change, containing newest collision grid array
@@ -21,6 +23,13 @@ export class EntitiesManager {
         this.scene = scene;
         this.gameMapFrontWrapper = gameMapFrontWrapper;
         this.entities = [];
+        this.properties = new Map<string, string | boolean | number>();
+
+        // clear properties immediately on every ActionsMenu change
+        actionsMenuStore.subscribe((data) => {
+            this.clearProperties();
+            this.gameMapFrontWrapper.handleEntityActionTrigger();
+        });
     }
 
     public addEntity(data: EntityData): void {
@@ -41,17 +50,8 @@ export class EntitiesManager {
         this.entities.push(entity);
     }
 
-    // TODO: Somehow get the activated properties from the current active entity
     public getProperties(): Map<string, string | boolean | number> {
-        const properties = new Map<string, string | boolean | number>();
-
-        if (!this.activeEntity) {
-            return properties;
-        }
-
-        properties.set("openWebsite", "https://wikipedia.org");
-
-        return properties;
+        return this.properties;
     }
 
     private bindEntityEventHandlers(entity: Entity): void {
@@ -68,11 +68,10 @@ export class EntitiesManager {
                 );
             }
         });
-        entity.on(EntityEvent.Activated, () => {
-            this.setActiveEntity(entity);
-        });
-        entity.on(EntityEvent.Deactivated, () => {
-            this.clearActiveEntity();
+        // get the type! Switch to rxjs?
+        entity.on(EntityEvent.PropertySet, (data) => {
+            this.properties.set(data.propertyName, data.propertyValue);
+            this.gameMapFrontWrapper.handleEntityActionTrigger();
         });
         entity.on(Phaser.Input.Events.POINTER_OVER, () => {
             this.pointerOverEntitySubject.next(entity);
@@ -94,11 +93,7 @@ export class EntitiesManager {
         return this.pointerOutEntitySubject.asObservable();
     }
 
-    public setActiveEntity(entity: Entity): void {
-        this.activeEntity = entity;
-    }
-
-    public clearActiveEntity(): void {
-        this.activeEntity = undefined;
+    public clearProperties(): void {
+        this.properties.clear();
     }
 }

@@ -9,9 +9,8 @@ import type { GameScene } from "../Game/GameScene";
 import { OutlineableInterface } from "../Game/OutlineableInterface";
 
 export enum EntityEvent {
-    Moved = "Moved",
-    Activated = "Activated",
-    Deactivated = "Deactivated",
+    Moved = "EntityEvent:Moved",
+    PropertySet = "EntityEvent:PropertySet",
 }
 
 // NOTE: Tiles-based entity for now. Individual images later on
@@ -118,7 +117,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     private bindEventHandlers(): void {
         this.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore)) {
+            if (!get(mapEditorModeStore)) {
                 return;
             }
             this.x = Math.floor(dragX / 32) * 32;
@@ -127,14 +126,14 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         });
 
         this.on(Phaser.Input.Events.DRAG_START, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore)) {
+            if (!get(mapEditorModeStore)) {
                 return;
             }
             this.oldPositionTopLeft = this.getTopLeft();
         });
 
         this.on(Phaser.Input.Events.DRAG_END, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore)) {
+            if (!get(mapEditorModeStore)) {
                 return;
             }
             (this.scene as GameScene).markDirty();
@@ -155,10 +154,8 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     private toggleActionsMenu(): void {
         if (get(actionsMenuStore) !== undefined) {
             actionsMenuStore.clear();
-            this.emit(EntityEvent.Deactivated);
             return;
         }
-        this.emit(EntityEvent.Activated);
         actionsMenuStore.initialize("Cheapest Table you can find");
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
@@ -169,14 +166,44 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         const actions: ActionsMenuAction[] = [];
         for (const key of Object.keys(this.properties)) {
             switch (key) {
-                case "openWebsite": {
+                case "jitsiRoom": {
                     actions.push({
-                        actionName: "Open Website",
+                        actionName: "Open Jitsi",
                         protected: true,
                         priority: 1,
                         callback: () => {
-                            console.log("TRY TO OPEN WEBSITE");
-                            console.log(this.properties[key]);
+                            this.emit(EntityEvent.PropertySet, {
+                                propertyName: key,
+                                propertyValue: this.properties[key],
+                            });
+                        },
+                    });
+                    break;
+                }
+                case "playAudio": {
+                    actions.push({
+                        actionName: "Play campfire sound",
+                        protected: true,
+                        priority: 1,
+                        callback: () => {
+                            this.emit(EntityEvent.PropertySet, {
+                                propertyName: key,
+                                propertyValue: this.properties[key],
+                            });
+                        },
+                    });
+                    break;
+                }
+                case "openTab": {
+                    actions.push({
+                        actionName: "Show me some kitties!",
+                        protected: true,
+                        priority: 1,
+                        callback: () => {
+                            this.emit(EntityEvent.PropertySet, {
+                                propertyName: key,
+                                propertyValue: this.properties[key],
+                            });
                         },
                     });
                     break;
