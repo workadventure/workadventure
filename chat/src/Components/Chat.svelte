@@ -66,7 +66,7 @@
         );
         subscribeListeners.push(
             availabilityStatusStore.subscribe(() => {
-                mucRoomsStore.sendPresences();
+                mucRoomsStore.sendUserInfos();
             })
         );
         subscribeListeners.push(

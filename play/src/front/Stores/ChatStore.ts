@@ -66,7 +66,7 @@ function createChatMessagesStore() {
                 /* @deprecated with new chat service */
                 iframeListener.sendComingUserToChatIframe({
                     type: ChatMessageTypes.userIncoming,
-                    targets: [getAuthor(authorId).userUuid],
+                    targets: [getAuthor(authorId).userJid],
                     date: new Date(),
                 });
 
@@ -89,7 +89,7 @@ function createChatMessagesStore() {
                 /* @deprecated with new chat service */
                 iframeListener.sendComingUserToChatIframe({
                     type: ChatMessageTypes.userOutcoming,
-                    targets: [getAuthor(authorId).userUuid],
+                    targets: [getAuthor(authorId).userJid],
                     date: new Date(),
                 });
 
@@ -147,7 +147,7 @@ function createChatMessagesStore() {
                 iframeListener.sendMessageToChatIframe({
                     type: ChatMessageTypes.text,
                     text: [text],
-                    author: author.userUuid === "dummy" ? author.name : author.userUuid,
+                    author: author.userUuid === "dummy" ? author.name : author.userJid,
                     date: new Date(),
                 });
 

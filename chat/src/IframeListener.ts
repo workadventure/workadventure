@@ -50,14 +50,13 @@ class IframeListener {
                         case "userData": {
                             iframeEvent.data.name = iframeEvent.data.name.replace(emojiRegex, "");
                             userStore.set(iframeEvent.data);
-                            if (!chatConnectionManager.connection) {
-                                chatConnectionManager.initUser(
-                                    iframeEvent.data.playUri,
-                                    iframeEvent.data.uuid,
-                                    iframeEvent.data.authToken
-                                );
-                            } else {
-                                mucRoomsStore.sendPresences();
+                            chatConnectionManager.initUser(
+                                iframeEvent.data.playUri,
+                                iframeEvent.data.uuid,
+                                iframeEvent.data.authToken
+                            );
+                            if (chatConnectionManager.connection) {
+                                mucRoomsStore.sendUserInfos();
                             }
                             break;
                         }

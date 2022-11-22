@@ -753,6 +753,7 @@ export class RoomConnection implements RoomConnection {
 
         return {
             userId: message.userId,
+            userJid: message.userJid,
             name: message.name,
             characterLayers,
             visitCardUrl: message.visitCardUrl,

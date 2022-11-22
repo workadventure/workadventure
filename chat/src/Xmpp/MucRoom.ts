@@ -54,13 +54,7 @@ export class MucRoom extends AbstractRoom {
     }
 
     public getUserByJid(jid: string): User {
-        let user = undefined;
-        get(this.presenceStore).forEach((user_, key) => {
-            // WORKAROUND BECAUSE WE DON'T SEND THE JID FROM THE OTHER USERS IN THE FRONT
-            if (JID.parse(key).local == jid || JID.parse(key).local == JID.parse(jid).local) {
-                user = user_;
-            }
-        });
+        const user = get(this.presenceStore).get(jid);
         if (!user) {
             throw new Error("No user found for this JID");
         }
@@ -89,7 +83,8 @@ export class MucRoom extends AbstractRoom {
         if (first) {
             this.subscriptions.set("firstPresence", presenceId);
         }
-        this.xmppClient.socket.sendPresence({ to: this.recipient, id: presenceId });
+        //this.xmppClient.socket.sendPresence({ to: this.recipient, id: presenceId });
+        this.sendUserInfo(presenceId);
         if (_VERBOSE)
             console.warn(
                 `[XMPP][${this.name}]`,
@@ -100,7 +95,7 @@ export class MucRoom extends AbstractRoom {
                 presenceId
             );
     }
-    private sendUserInfo(presenceId: string = uuid()) {
+    sendUserInfo(presenceId: string = uuid()) {
         this.xmppClient.socket.sendUserInfo(this.recipient, presenceId, {
             jid: this.xmppClient.getMyJID(),
             roomPlayUri: get(userStore).playUri,

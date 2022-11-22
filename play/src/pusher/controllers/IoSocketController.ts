@@ -70,6 +70,7 @@ interface UpgradeData {
     rejected: false;
     token: string;
     userUuid: string;
+    userJid: string;
     IPAddress: string;
     roomId: string;
     name: string;
@@ -486,6 +487,7 @@ export class IoSocketController {
                                 rejected: false,
                                 token,
                                 userUuid: userData.userUuid,
+                                userJid: userData.jabberId,
                                 IPAddress,
                                 userIdentifier,
                                 roomId,
@@ -747,6 +749,7 @@ export class IoSocketController {
         const client: ExSocketInterface = ws;
         client.userId = this.nextUserId;
         this.nextUserId++;
+        client.userJid = ws.userJid;
         client.userUuid = ws.userUuid;
         client.IPAddress = ws.IPAddress;
         client.token = ws.token;

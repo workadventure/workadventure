@@ -10,6 +10,7 @@ export interface MessageUserMovedInterface {
 
 export interface MessageUserJoined {
     userId: number;
+    userJid: string;
     name: string;
     characterLayers: BodyResourceDescriptionInterface[];
     position: PositionMessage;
