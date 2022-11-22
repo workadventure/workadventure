@@ -27,11 +27,7 @@
 </script>
 
 <!-- thread -->
-<div
-    id="activeThread"
-    class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-w-full"
-    transition:fly={{ x: 500, duration: 400 }}
->
+<div id="activeThread" class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-w-full">
     <div class="wa-thread-head">
         <div
             class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-w-14 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
@@ -96,7 +92,7 @@
                 <p class="tw-px-5 tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
                     {$LL.users()}
                 </p>
-                {#each [...$presenceStore] as [_, user]}
+                {#each [...$presenceStore.values()].filter((user) => user.active) as user}
                     <ChatUser mucRoom={activeThread} {user} searchValue="" />
                 {/each}
             </div>

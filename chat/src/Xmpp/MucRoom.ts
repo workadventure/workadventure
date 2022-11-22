@@ -399,8 +399,11 @@ export class MucRoom extends AbstractRoom {
                     messages.set(thisMessage.id, { ...thisMessage, delivered: true, error: false });
                     response = true;
                 } else if (receivedMessage.remove) {
-                    const removeId = receivedMessage.remove.id;
-                    this.deletedMessagesStore.update((deletedMessages) => [...deletedMessages, removeId]);
+                    const removedId = receivedMessage.remove.id;
+                    this.deletedMessagesStore.update((deletedMessages) => {
+                        deletedMessages.set(removedId, JID.toBare(receivedMessage.jid));
+                        return deletedMessages;
+                    });
                     response = true;
                 } else {
                     if (date !== null && date > this.lastMessageSeen && !delay) {
@@ -555,14 +558,18 @@ export class MucRoom extends AbstractRoom {
         this.presenceStore.update((presenceStore: UserList) => {
             const user = presenceStore.get(jid.full);
             if (user) {
+                // If disconnected user : [1) It's the default room, 2) I'm a member, 3) The user is a member, 4) The user is not connected with another ressource] else if the user is connected
                 if (
-                    !active &&
-                    (!user.isMember ||
-                        [...presenceStore.keys()].filter((userJid) => userJid.includes(jid.bare)).length > 1)
+                    (this.type === "default" &&
+                        !active &&
+                        this.subscribe &&
+                        user.isMember &&
+                        [...presenceStore.keys()].filter((userJid) => JID.toBare(userJid) === jid.bare).length <= 1) ||
+                    active
                 ) {
-                    presenceStore.delete(jid.full);
-                } else {
                     presenceStore.set(jid.full, { ...user, active });
+                } else {
+                    presenceStore.delete(jid.full);
                 }
             }
             return presenceStore;
@@ -606,6 +613,11 @@ export class MucRoom extends AbstractRoom {
                     visitCardUrl: userInfo.userVisitCardUrl,
                 });
             } else {
+                presenceStore.forEach((user, jid) => {
+                    if (JID.toBare(jid) === userJID.bare) {
+                        presenceStore.delete(jid);
+                    }
+                });
                 presenceStore.set(userJID.full, {
                     jid: userJID.full,
                     name: userInfo.name,

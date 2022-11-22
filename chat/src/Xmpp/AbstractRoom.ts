@@ -87,7 +87,7 @@ export const defaultUserData: UserData = {
 export class AbstractRoom {
     protected messageStore: Writable<Map<string, Message>>;
     protected reactionMessageStore: Writable<Map<string, ReactionMessage[]>>;
-    protected deletedMessagesStore: Writable<string[]>;
+    protected deletedMessagesStore: Writable<Map<string, string>>;
     public lastMessageSeen: Date;
     protected countMessagesToSee: Writable<number>;
     protected loadingStore: Writable<boolean>;
@@ -102,7 +102,7 @@ export class AbstractRoom {
         }
 
         this.messageStore = writable<Map<string, Message>>(new Map<string, Message>());
-        this.deletedMessagesStore = writable<string[]>(new Array(0));
+        this.deletedMessagesStore = writable<Map<string, string>>(new Map<string, string>());
         this.reactionMessageStore = writable<Map<string, ReactionMessage[]>>(new Map<string, ReactionMessage[]>());
         this.lastMessageSeen = new Date();
         this.countMessagesToSee = writable<number>(0);
@@ -190,7 +190,7 @@ export class AbstractRoom {
     public getMessagesStore(): Writable<MessageMap> {
         return this.messageStore;
     }
-    public getDeletedMessagesStore(): Writable<string[]> {
+    public getDeletedMessagesStore(): Writable<Map<string, string>> {
         return this.deletedMessagesStore;
     }
     public getCountMessagesToSee(): Writable<number> {
