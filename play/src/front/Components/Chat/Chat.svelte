@@ -192,7 +192,7 @@
 
     @include media-breakpoint-up(sm) {
         #chatWindow {
-            width: calc(100% - 20px) !important;
+            width: 100% !important;
         }
     }
 
