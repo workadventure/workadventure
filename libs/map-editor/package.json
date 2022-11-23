@@ -10,17 +10,17 @@
   "author": "WorkAdventure",
   "license": "ISC",
   "dependencies": {
+    "@types/uuid": "^8.3.4",
     "@workadventure/math-utils": "1.0.0",
     "@workadventure/messages": "1.0.0",
     "@workadventure/tiled-map-type-guard": "^2.0.6",
-    "@types/uuid": "^8.3.4",
-    "uuid": "^9.0.0",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.186",
     "@types/node": "^18.7.17",
-    "typescript": "^4.7.2",
-    "@types/lodash": "^4.14.186"
+    "typescript": "^4.7.2"
   },
   "files": [
     "src"

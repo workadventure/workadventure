@@ -6,7 +6,6 @@
   "scripts": {
     "prepare": "husky install"
   },
-  "dependencies": {},
   "workspaces": [
     "play",
     "back",
@@ -18,5 +17,6 @@
     "libs/tailwind",
     "benchmark",
     "uploader"
-  ]
+  ],
+  "packageManager": "yarn@3.3.0"
 }

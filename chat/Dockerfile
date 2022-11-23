@@ -14,20 +14,24 @@ RUN yarn run tag-version && yarn run ts-proto
 # typescript build
 FROM --platform=$BUILDPLATFORM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c as builder
 WORKDIR /usr/src
-COPY libs/tailwind/yarn.lock libs/tailwind/package.json ./../libs/tailwind/
-RUN cd ../libs/tailwind && yarn install --network-timeout 1000000
-COPY libs/messages/yarn.lock libs/messages/package.json ./../libs/messages/
-RUN cd ../libs/messages && yarn install --network-timeout 1000000
-COPY libs ./../libs
+RUN apt-get update && apt-get install -y git
+RUN yarn set version stable
+RUN yarn plugin import workspace-tools
+COPY package.json yarn.lock .yarnrc.yml ./
+COPY chat/package.json chat/package.json
+COPY libs/messages/package.json libs/messages/package.json
+COPY libs/map-editor/package.json libs/map-editor/package.json
+COPY libs/math-utils/package.json libs/math-utils/package.json
+COPY libs/tailwind/package.json libs/tailwind/package.json
+RUN yarn workspaces focus workadventurechat
+COPY libs ./libs
 COPY --from=proto-builder /usr/libs/messages/src ./../libs/messages/src
-COPY chat/yarn.lock chat/package.json ./
-RUN yarn install --network-timeout 1000000
-COPY chat .
+COPY chat ./chat
 
 # upgrade RAM available to 6G
-RUN yarn run typesafe-i18n && NODE_OPTIONS="--max-old-space-size=6144" yarn build
+RUN cd chat && yarn run typesafe-i18n && NODE_OPTIONS="--max-old-space-size=6144" yarn build
 
-RUN mv /usr/src/dist/index.html /usr/src/dist/index.tpl.html
+RUN mv /usr/src/chat/dist/index.html /usr/src/chat/dist/index.tpl.html
 
 # final production image
 FROM nginx:1.21.6-alpine
@@ -37,8 +41,8 @@ COPY chat/nginx.conf /etc/nginx/conf.d/default.conf
 COPY chat/templater.sh /
 COPY chat/start_nginx.sh /start_nginx.sh
 
-COPY --from=builder /usr/src/dist /usr/share/nginx/html
-COPY --from=builder /usr/src/server.template.json /usr/share/nginx/html/server.template.json
+COPY --from=builder /usr/src/chat/dist /usr/share/nginx/html
+COPY --from=builder /usr/src/chat/server.template.json /usr/share/nginx/html/server.template.json
 
 EXPOSE 80
 CMD ["/start_nginx.sh"]

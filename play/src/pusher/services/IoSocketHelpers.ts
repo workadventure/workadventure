@@ -1,7 +1,7 @@
 import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
 import type { SubMessage } from "../../messages/generated/messages_pb";
 import { BatchMessage, ErrorMessage, ServerToClientMessage } from "../../messages/generated/messages_pb";
-import type { WebSocket } from "uWebSockets.js";
+//import HyperExpress from "hyper-express";
 
 export function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
     socket.batchedMessages.addPayload(payload);
@@ -22,7 +22,7 @@ export function emitInBatch(socket: ExSocketInterface, payload: SubMessage): voi
     }
 }
 
-export function emitError(Client: WebSocket, message: string): void {
+/*export function emitError(Client: HyperExpress.compressors.WebSocket, message: string): void {
     const errorMessage = new ErrorMessage();
     errorMessage.setMessage(message);
 
@@ -33,4 +33,4 @@ export function emitError(Client: WebSocket, message: string): void {
         Client.send(serverToClientMessage.serializeBinary().buffer, true);
     }
     console.warn(message);
-}
+}*/
