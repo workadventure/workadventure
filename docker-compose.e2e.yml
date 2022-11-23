@@ -13,6 +13,7 @@ services:
         - thecodingmachine/workadventure-play:${DOCKER_TAG:-develop}
       args:
         BUILDKIT_INLINE_CACHE: 1
+    working_dir: /usr/src/play
     command: yarn run start
     volumes: []
     environment:
@@ -61,6 +62,7 @@ services:
       args:
         BUILDKIT_INLINE_CACHE: 1
     command: yarn run runprod
+    working_dir: /usr/src/back
     volumes: []
     environment:
       ENABLE_OPENAPI_ENDPOINT: "false"

@@ -73,7 +73,7 @@ class App {
         });
 
         liveAssets.ready().then(() => {
-            console.info("All static assets has been loaded!");
+            console.info("All static assets have been loaded!");
         });
 
         // Socket controllers
