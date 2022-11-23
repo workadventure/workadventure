@@ -1,6 +1,5 @@
-import { createClient } from "redis";
+import { createClient, RedisClientOptions } from "redis";
 import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT } from "../Enum/EnvironmentVariable";
-import { RedisClientOptions } from "@redis/client";
 
 const config: RedisClientOptions = {
     socket: {

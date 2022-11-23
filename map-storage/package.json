@@ -22,7 +22,6 @@
     "type": "git",
     "url": "git+https://github.com/thecodingmachine/workadventure.git"
   },
-  "private": true,
   "license": "SEE LICENSE IN LICENSE.txt",
   "scripts": {
     "prebuild": "rimraf dist",
