@@ -34,8 +34,9 @@
     import { derived } from "svelte/store";
 
     export let mucRoom: MucRoom;
+    export let formHeight: number;
 
-    $: unreads = mucRoom.getCountMessagesToSee();
+    const unreads = mucRoom.getCountMessagesToSee();
     const messagesStore = mucRoom.getMessagesStore();
     const deletedMessagesStore = mucRoom.getDeletedMessagesStore();
     const presenceStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
@@ -252,7 +253,11 @@
     });
 </script>
 
-<div class="wa-messages-list-container" bind:this={messagesList}>
+<div
+    class="wa-messages-list-container"
+    bind:this={messagesList}
+    style={`margin-bottom: ${formHeight - 7}px; max-height: calc( 100vh - ${formHeight - 7}px );`}
+>
     <div class="emote-menu-container">
         <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
     </div>
@@ -305,7 +310,10 @@
             ${isMe(message.jid) ? (message.delivered ? "sent" : "sending") : "received"}
             `}
             >
-                <div class="tw-flex tw-flex-row tw-items-center  tw-max-w-full">
+                <div
+                    class="tw-flex tw-flex-row tw-items-center  tw-max-w-full"
+                    style={`${isMe(message.jid) ? "max-width: 75%; " : ""}`}
+                >
                     <div
                         class={`tw-flex tw-flex-wrap tw-max-w-full ${
                             isMe(message.jid) ? "tw-justify-end" : "tw-justify-start"
@@ -421,20 +429,13 @@
                                             <div class="action more-option">
                                                 <MoreHorizontalIcon size="17" />
 
-                                                <div class="wa-dropdown-menu tw-invisible">
+                                                <div class="wa-dropdown-menu tw-hidden">
                                                     <span
                                                         class="wa-dropdown-item"
                                                         on:click={() => selectMessage(message)}
                                                     >
                                                         <CornerDownLeftIcon size="13" class="tw-mr-1" />
                                                         {$LL.reply()}
-                                                    </span>
-                                                    <span
-                                                        class="wa-dropdown-item"
-                                                        on:click={() => reactMessage(message)}
-                                                    >
-                                                        <SmileIcon size="13" class="tw-mr-1" />
-                                                        {$LL.react()}
                                                     </span>
                                                     <span
                                                         class="wa-dropdown-item"
@@ -680,7 +681,6 @@
         position: relative;
         min-width: 75px;
         word-break: break-word;
-        text-align: justify;
         .actions {
             display: none;
             position: absolute;
@@ -727,7 +727,7 @@
             }
             &:hover {
                 .wa-dropdown-menu {
-                    visibility: visible;
+                    display: flex;
                 }
             }
         }
