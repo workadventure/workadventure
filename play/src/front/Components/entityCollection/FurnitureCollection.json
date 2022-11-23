@@ -161,42 +161,48 @@
             "tags":["basic", "table"],
             "imagePath":"Furniture/Table/TableBrown.png",
             "direction":"Down",
-            "color":"orange"
+            "color":"orange",
+            "collisionGrid":[[0,0],[1,1],[1,1]]
         },
         {
             "name":"Basic Wood Table",
             "tags":["basic", "table"],
             "imagePath":"Furniture/Table/TableDarkBrown.png",
             "direction":"Down",
-            "color":"brown"
+            "color":"brown",
+            "collisionGrid":[[0,0],[1,1],[1,1]]
         },
         {
             "name":"Basic Narrow Wood Table",
             "tags":["basic", "table"],
             "imagePath":"Furniture/Table/TableNarrowBrown.png",
             "direction":"Down",
-            "color":"orange"
+            "color":"orange",
+            "collisionGrid":[[0],[1],[1]]
         },
         {
             "name":"Basic Narrow Wood Table",
             "tags":["basic", "table"],
             "imagePath":"Furniture/Table/TableNarrowDarkBrown.png",
             "direction":"Down",
-            "color":"brown"
+            "color":"brown",
+            "collisionGrid":[[0],[1],[1]]
         },
         {
             "name":"Basic Small Table",
             "tags":["basic", "table"],
             "imagePath":"Furniture/Table/TableSmallGrey.png",
             "direction":"Down",
-            "color":"grey"
+            "color":"grey",
+            "collisionGrid":[[0],[1]]
         },
         {
             "name":"Basic Small Table",
             "tags":["basic", "table"],
             "imagePath":"Furniture/Table/TableSmallWhite.png",
             "direction":"Down",
-            "color":"white"
+            "color":"white",
+            "collisionGrid":[[0],[1]]
         },
         {
             "name":"Armchair",
@@ -484,21 +490,24 @@
             "tags":["mural","shelf"],
             "imagePath":"Furniture/Shelf/MuralShelf.png",
             "direction":"Down",
-            "color":"saddlebrown"
+            "color":"saddlebrown",
+            "collisionGrid":[[0,0],[1,1]]
         },
         {
             "name":"Shelf",
             "tags":["basic", "shelf"],
             "imagePath":"Furniture/Shelf/Shelf.png",
             "direction":"Down",
-            "color":"saddlebrown"
+            "color":"saddlebrown",
+            "collisionGrid":[[0,0],[1,1],[0,0]]
         },
         {
             "name":"Big Shelf",
             "tags":["basic", "shelf"],
             "imagePath":"Furniture/Shelf/ShelfBig.png",
             "direction":"Down",
-            "color":"saddlebrown"
+            "color":"saddlebrown",
+            "collisionGrid":[[0,0],[1,1],[1,1]]
         },
         {
             "name":"Bathroom Sink",
