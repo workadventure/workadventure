@@ -14,6 +14,7 @@ const report: DeepPartial<Translation["report"]> = {
     message: {
         title: "Deine Nachricht: ",
         empty: "Bitte Text eingeben.",
+        error: "Meldungsfehler melden, Sie können sich an den Administrator wenden.",
     },
     submit: "Diesen Nutzer melden",
     moderate: {
