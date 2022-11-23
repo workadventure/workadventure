@@ -27,7 +27,6 @@
 
     let newMessageText = "";
     let htmlMessageText = "";
-    let textarea: HTMLElement;
 
     function reInitialize() {
         chatMessagesStore.reInitialize();
@@ -433,7 +432,6 @@
                 <div class="tw-w-full tw-px-2 tw-pb-2">
                     <div
                         contenteditable="true"
-                        bind:this={textarea}
                         bind:textContent={newMessageText}
                         bind:innerHTML={htmlMessageText}
                         data-placeholder={$LL.enterText()}
