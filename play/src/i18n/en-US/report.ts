@@ -12,6 +12,7 @@ const report: BaseTranslation = {
     message: {
         title: "Your message: ",
         empty: "Report message cannot to be empty.",
+        error: "Report message error, you can contact the administrator.",
     },
     submit: "Report this user",
     moderate: {

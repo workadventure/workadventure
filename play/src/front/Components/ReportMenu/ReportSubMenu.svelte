@@ -6,13 +6,17 @@
     export let userUUID: string | undefined;
     let reportMessage: string;
     let hiddenError = true;
+    let hiddenUuidError = true;
 
     function submitReport() {
+        hiddenUuidError = false;
+        hiddenError = true;
+
         if (reportMessage === "") {
-            hiddenError = true;
-        } else {
             hiddenError = false;
+        } else {
             if (userUUID === undefined) {
+                hiddenUuidError = false;
                 console.error("User UUID is not valid.");
                 return;
             }
@@ -32,9 +36,12 @@
                 <textarea type="text" class="tw-w-full" bind:value={reportMessage} />
             </label>
             <p hidden={hiddenError}>{$LL.report.message.empty()}</p>
+            <p hidden={hiddenUuidError}>{$LL.report.message.error()}</p>
         </section>
         <section>
-            <button type="submit" class="btn danger" on:click={submitReport}>{$LL.report.submit()}</button>
+            <button type="submit" class="btn danger" on:click|preventDefault|stopPropagation={submitReport}
+                >{$LL.report.submit()}</button
+            >
         </section>
     </form>
 </div>

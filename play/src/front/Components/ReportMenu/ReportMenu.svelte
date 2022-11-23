@@ -10,7 +10,6 @@
     import LL from "../../../i18n/i18n-svelte";
 
     let blockActive = true;
-    let reportActive = !blockActive;
     let disableReport = false;
     let userUUID: string | undefined = playersStore.getPlayerById(get(showReportScreenStore).userId)?.userUuid;
     let userName = "No name";
@@ -41,12 +40,10 @@
 
     function activateBlock() {
         blockActive = true;
-        reportActive = false;
     }
 
     function activateReport() {
         blockActive = false;
-        reportActive = true;
     }
 
     function onKeyDown(e: KeyboardEvent) {
@@ -74,7 +71,7 @@
             >
         </section>
         <section class="tw-flex tw-justify-center">
-            <button type="button" class={reportActive ? "disabled" : "light"} on:click|preventDefault={activateReport}
+            <button type="button" class={blockActive ? "disabled" : "light"} on:click|preventDefault={activateReport}
                 >{$LL.report.moderate.report()}</button
             >
         </section>
@@ -83,7 +80,6 @@
     <section>
         {#if blockActive}
             <BlockSubMenu {userUUID} {userName} />
-        {:else if reportActive}
             <ReportSubMenu {userUUID} />
         {:else}
             <p>{$LL.report.moderate.noSelect()}</p>
