@@ -4,16 +4,16 @@
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import MapEntityEditor from "./MapEntityEditor.svelte";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
-    import {mapEditorSelectedToolStore} from "../../Stores/MapEditorStore";
+    import { mapEditorSelectedToolStore } from "../../Stores/MapEditorStore";
 </script>
 
 <MapEditorSideBar />
 <div class="map-editor tw-bg-dark-blue/95">
     <div class="sidebar">
-        <!--{#if $mapEditorSelectedToolStore === EditorToolName.EntityEditor }-->
-            <MapEntityEditor/>
-       <!-- {/if}-->
-        {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor }
+        {#if $mapEditorSelectedToolStore === EditorToolName.EntityEditor}
+            <MapEntityEditor />
+        {/if}
+        {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor}
             <AreaPreviewWindow />
             <PropertyPreviewSidebar />
         {/if}

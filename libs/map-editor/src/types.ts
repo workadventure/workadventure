@@ -16,15 +16,14 @@ export enum AreaType {
     Dynamic = "Dynamic",
 }
 
-export enum Direction{
+export enum Direction {
     Left = "Left",
     Up = "Up",
     Down = "Down",
     Right = "Right"
 }
 
-export interface EntityPrefab
-{
+export interface EntityPrefab {
     name: string;
     tags: string[];
     imagePath: string;
@@ -39,7 +38,7 @@ export interface EntityData {
     y: number;
     interactive?: boolean;
     properties?: { [key: string]: unknown | undefined };
-    prefab:EntityPrefab;
+    prefab: EntityPrefab;
 }
 
 export interface PredefinedPropertyData {
