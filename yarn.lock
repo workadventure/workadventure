@@ -14707,6 +14707,7 @@ __metadata:
     tailwindcss: ^3.1.8
     ts-deepmerge: ^2.0.4
     ts-deferred: ^1.0.4
+    ts-node: ^10.9.1
     ts-node-dev: ^2.0.0
     ts-proto-descriptors: ^1.7.1
     tslib: ^2.4.0
