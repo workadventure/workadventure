@@ -53,7 +53,7 @@ class Chat {
     }
 
     async AT_sendMessage(page: Page, text: string){
-        await this.get(page).locator('#activeThread .wa-message-form textarea').fill(text);
+        await this.get(page).locator('#activeThread .wa-message-form div[contenteditable=true]').fill(text);
         await this.get(page).locator('#activeThread #send').click();
     }
 
