@@ -162,6 +162,11 @@
         {
             "name":"Basic Wood Table",
             "tags":["basic", "table"],
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ],
+                [ 1, 1 ]
+            ],
             "imagePath":"Furniture/Table/TableBrown.png",
             "direction":"Down",
             "color":"orange"
@@ -169,6 +174,11 @@
         {
             "name":"Basic Wood Table",
             "tags":["basic", "table"],
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ],
+                [ 1, 1 ]
+            ],
             "imagePath":"Furniture/Table/TableDarkBrown.png",
             "direction":"Down",
             "color":"brown"
