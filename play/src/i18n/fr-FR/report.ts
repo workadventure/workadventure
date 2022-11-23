@@ -13,6 +13,7 @@ const report: DeepPartial<Translation["report"]> = {
     message: {
         title: "Votre message: ",
         empty: "Le message du signalement ne peut pas être vide.",
+        error: "Erreur d'envoi du message, veullez contacter l'administrateur.",
     },
     submit: "Signaler cet utilisateur",
     moderate: {
