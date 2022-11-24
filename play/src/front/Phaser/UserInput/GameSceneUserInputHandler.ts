@@ -66,6 +66,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
         if (this.gameScene.getMapEditorModeManager()?.isActive()) {
             mapEditorModeDragCameraPointerDownStore.set(true);
+            return;
         }
         this.gameScene.getActivatablesManager().handlePointerDownEvent();
     }

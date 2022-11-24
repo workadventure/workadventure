@@ -54,7 +54,22 @@ export class EntitiesManager {
         return this.properties;
     }
 
+    public makeAllEntitiesNonInteractive(): void {
+        this.entities.forEach((entity) => entity.disableInteractive());
+    }
+
+    public clearAllEntitiesTint(): void {
+        this.entities.forEach((entity) => entity.clearTint());
+    }
+
+    public makeAllEntitiesInteractive(): void {
+        this.entities.forEach((entity) => entity.setInteractive({ pixelPerfect: true, cursor: "pointer" }));
+    }
+
     private bindEntityEventHandlers(entity: Entity): void {
+        entity.on(EntityEvent.Removed, () => {
+            this.scene.markDirty();
+        });
         entity.on(EntityEvent.Moved, (oldX: number, oldY: number) => {
             const reversedGrid = entity.getReversedCollisionGrid();
             const grid = entity.getCollisionGrid();

@@ -50,6 +50,11 @@ export class ActivatablesManager {
         this.selectedActivatableObjectByPointer?.activate();
     }
 
+    public deactivateSelectedObject(): void {
+        this.selectedActivatableObjectByPointer?.deactivate();
+        this.selectedActivatableObjectByDistance?.deactivate();
+    }
+
     public getSelectedActivatableObject(): ActivatableInterface | undefined {
         return this.selectedActivatableObjectByPointer ?? this.selectedActivatableObjectByDistance;
     }

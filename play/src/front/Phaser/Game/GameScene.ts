@@ -151,6 +151,7 @@ import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
+import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PositionInterface;
@@ -201,6 +202,7 @@ export class GameScene extends DirtyScene {
     private highlightedEmbedScreenUnsubscriber!: Unsubscriber;
     private embedScreenLayoutStoreUnsubscriber!: Unsubscriber;
     private availabilityStatusStoreUnsubscriber!: Unsubscriber;
+    private mapEditorModeStoreUnsubscriber!: Unsubscriber;
 
     private modalVisibilityStoreUnsubscriber!: Unsubscriber;
 
@@ -1017,7 +1019,8 @@ export class GameScene extends DirtyScene {
             this.emoteUnsubscriber != undefined ||
             this.emoteMenuUnsubscriber != undefined ||
             this.followUsersColorStoreUnsubscriber != undefined ||
-            this.peerStoreUnsubscriber != undefined
+            this.peerStoreUnsubscriber != undefined ||
+            this.mapEditorModeStoreUnsubscriber != undefined
         ) {
             console.error(
                 "subscribeToStores => Check all subscriber undefined ",
@@ -1027,7 +1030,8 @@ export class GameScene extends DirtyScene {
                 this.emoteUnsubscriber,
                 this.emoteMenuUnsubscriber,
                 this.followUsersColorStoreUnsubscriber,
-                this.peerStoreUnsubscriber
+                this.peerStoreUnsubscriber,
+                this.mapEditorModeStoreUnsubscriber
             );
 
             throw new Error("One store is already subscribed.");
@@ -1169,6 +1173,19 @@ export class GameScene extends DirtyScene {
 
             oldUsers = newUsers;
             oldPeersNumber = newPeerNumber;
+        });
+
+        this.mapEditorModeStoreUnsubscriber = mapEditorModeStore.subscribe((isOn) => {
+            if (isOn) {
+                this.activatablesManager.deactivateSelectedObject();
+                this.activatablesManager.handlePointerOutActivatableObject();
+                this.activatablesManager.disableSelectingByDistance();
+                this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesNonInteractive();
+            } else {
+                this.activatablesManager.enableSelectingByDistance();
+                this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesInteractive();
+            }
+            this.markDirty();
         });
     }
 
@@ -2006,6 +2023,7 @@ ${escapedMessage}
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
         this.peerStoreUnsubscriber?.();
+        this.mapEditorModeStoreUnsubscriber?.();
         this.emoteUnsubscriber?.();
         this.emoteMenuUnsubscriber?.();
         this.followUsersColorStoreUnsubscriber?.();
@@ -2452,6 +2470,9 @@ ${escapedMessage}
             .getEntitiesManager()
             .getPointerOverEntityObservable()
             .subscribe((entity) => {
+                if (get(mapEditorModeStore)) {
+                    return;
+                }
                 this.activatablesManager.handlePointerOverActivatableObject(entity);
                 this.markDirty();
             });
@@ -2459,6 +2480,9 @@ ${escapedMessage}
             .getEntitiesManager()
             .getPointerOutEntityObservable()
             .subscribe((entity) => {
+                if (get(mapEditorModeStore)) {
+                    return;
+                }
                 this.activatablesManager.handlePointerOutActivatableObject();
                 this.markDirty();
             });

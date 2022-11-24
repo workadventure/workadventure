@@ -1,7 +1,13 @@
 import { CommandConfig, EntityPrefab } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
-import { Unsubscriber } from "svelte/store";
-import { mapEditorSelectedEntityPrefabStore } from "../../../../Stores/MapEditorStore";
+import { get, Unsubscriber } from "svelte/store";
+import {
+    mapEditorModeStore,
+    mapEditorSelectedEntityPrefabStore,
+    MapEntityEditorMode,
+    mapEntityEditorModeStore,
+} from "../../../../Stores/MapEditorStore";
+import { EntitiesManager } from "../../GameMap/EntitiesManager";
 import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { GameScene } from "../../GameScene";
 import { MapEditorModeManager } from "../MapEditorModeManager";
@@ -11,15 +17,20 @@ export class EntityEditorTool extends MapEditorTool {
     private scene: GameScene;
     private mapEditorModeManager: MapEditorModeManager;
 
+    private entitiesManager: EntitiesManager;
+
     private entityPrefab: EntityPrefab | undefined;
     private entityPrefabPreview: Phaser.GameObjects.Image | undefined;
 
     private mapEditorSelectedEntityPrefabStoreUnsubscriber!: Unsubscriber;
+    private mapEntityEditorModeStoreUnsubscriber!: Unsubscriber;
 
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super();
         this.mapEditorModeManager = mapEditorModeManager;
         this.scene = this.mapEditorModeManager.getScene();
+
+        this.entitiesManager = this.scene.getGameMapFrontWrapper().getEntitiesManager();
 
         this.entityPrefab = undefined;
         this.entityPrefabPreview = undefined;
@@ -29,6 +40,8 @@ export class EntityEditorTool extends MapEditorTool {
 
     public update(time: number, dt: number): void {}
     public clear(): void {
+        mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
+        this.entitiesManager.clearAllEntitiesTint();
         this.cleanPreview();
         this.unbindEventHandlers();
     }
@@ -39,6 +52,7 @@ export class EntityEditorTool extends MapEditorTool {
         this.cleanPreview();
         this.unbindEventHandlers();
         this.mapEditorSelectedEntityPrefabStoreUnsubscriber();
+        this.mapEntityEditorModeStoreUnsubscriber();
     }
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
         console.log("EntityEditorTool subscribeToGameMapFrontWrapperEvents");
@@ -82,6 +96,26 @@ export class EntityEditorTool extends MapEditorTool {
                 this.scene.markDirty();
             }
         );
+
+        this.mapEntityEditorModeStoreUnsubscriber = mapEntityEditorModeStore.subscribe((mode) => {
+            if (!get(mapEditorModeStore)) {
+                return;
+            }
+            switch (mode) {
+                case MapEntityEditorMode.AddMode: {
+                    this.entitiesManager.makeAllEntitiesNonInteractive();
+                    break;
+                }
+                case MapEntityEditorMode.EditMode: {
+                    this.entitiesManager.makeAllEntitiesInteractive();
+                    break;
+                }
+                case MapEntityEditorMode.RemoveMode: {
+                    this.entitiesManager.makeAllEntitiesInteractive();
+                    break;
+                }
+            }
+        });
     }
 
     private async loadEntityImage(key: string, url: string): Promise<void> {
@@ -139,7 +173,7 @@ export class EntityEditorTool extends MapEditorTool {
                 y = Math.floor(pointer.worldY / 32) * 32 + offsets.y;
             }
 
-            this.scene.getGameMapFrontWrapper().getEntitiesManager().addEntity({
+            this.entitiesManager.addEntity({
                 x,
                 y,
                 id: 1,

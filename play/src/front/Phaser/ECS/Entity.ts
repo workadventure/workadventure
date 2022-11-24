@@ -15,6 +15,7 @@ import { OutlineableInterface } from "../Game/OutlineableInterface";
 
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
+    Removed = "EntityEvent:Removed",
     PropertySet = "EntityEvent:PropertySet",
 }
 
@@ -69,6 +70,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     public destroy(fromScene?: boolean | undefined): void {
         this.outlineColorStoreUnsubscribe();
+        this.emit(EntityEvent.Removed);
         super.destroy();
     }
 
@@ -78,6 +80,11 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     public activate(): void {
         this.toggleActionsMenu();
+    }
+
+    public deactivate(): void {
+        console.log("DEACTIVATE");
+        actionsMenuStore.clear();
     }
 
     public getCollisionGrid(): number[][] | undefined {
@@ -148,8 +155,45 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         });
 
         this.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
-                mapEditorSelectedEntityStore.set(this);
+            if (get(mapEditorModeStore)) {
+                const entityEditorMode = get(mapEntityEditorModeStore);
+                switch (entityEditorMode) {
+                    case MapEntityEditorMode.EditMode: {
+                        mapEditorSelectedEntityStore.set(this);
+                        break;
+                    }
+                    case MapEntityEditorMode.RemoveMode: {
+                        this.destroy();
+                        break;
+                    }
+                }
+            }
+        });
+
+        this.on(Phaser.Input.Events.POINTER_OVER, () => {
+            if (get(mapEditorModeStore)) {
+                const entityEditorMode = get(mapEntityEditorModeStore);
+                switch (entityEditorMode) {
+                    case MapEntityEditorMode.AddMode: {
+                        break;
+                    }
+                    case MapEntityEditorMode.RemoveMode: {
+                        this.setTint(0xff0000);
+                        break;
+                    }
+                    case MapEntityEditorMode.EditMode: {
+                        this.setTint(0x3498db);
+                        break;
+                    }
+                }
+                (this.scene as GameScene).markDirty();
+            }
+        });
+
+        this.on(Phaser.Input.Events.POINTER_OUT, () => {
+            if (get(mapEditorModeStore)) {
+                this.clearTint();
+                (this.scene as GameScene).markDirty();
             }
         });
     }
@@ -234,7 +278,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public isActivatable(): boolean {
-        return false; //this.activatable;
+        return this.activatable;
     }
 
     public getEntityData(): EntityData {

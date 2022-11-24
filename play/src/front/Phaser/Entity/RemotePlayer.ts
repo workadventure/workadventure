@@ -83,6 +83,10 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         this.toggleActionsMenu();
     }
 
+    public deactivate(): void {
+        actionsMenuStore.clear();
+    }
+
     public destroy(): void {
         actionsMenuStore.clear();
         super.destroy();
