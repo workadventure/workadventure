@@ -80,7 +80,9 @@
     <section>
         {#if blockActive}
             <BlockSubMenu {userUUID} {userName} />
-            <ReportSubMenu {userUUID} />
+            {#if connectionManager.currentRoom?.canReport}
+                <ReportSubMenu {userUUID} {userName} />
+            {/if}
         {:else}
             <p>{$LL.report.moderate.noSelect()}</p>
         {/if}
