@@ -108,7 +108,7 @@
                     {#if $loadingSubscribersStore}
                         <Loader text={$LL.loadingUsers()} height="tw-h-40" />
                     {:else}
-                        {#if $me && room === $me.roomName}
+                        {#if $me && room === $me.roomName && $me.name.toLocaleLowerCase().includes(searchValue)}
                             <ChatUser {mucRoom} user={$me} {searchValue} />
                         {/if}
                         {#each (usersByMaps.get(room) ?? []).filter((user) => !user.isMe) as user}

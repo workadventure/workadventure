@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
     import {
         SendIcon,
         SmileIcon,
@@ -265,15 +264,7 @@
 
 <div class="wa-message-form" bind:this={messageForm}>
     {#if $selectedMessageToReply}
-        <div
-            class="replyMessage"
-            on:click={() => selectedMessageToReply.set(null)}
-            transition:fly={{
-                x: isMe($selectedMessageToReply.name) ? 10 : -10,
-                delay: 100,
-                duration: 200,
-            }}
-        >
+        <div class="replyMessage" on:click={() => selectedMessageToReply.set(null)}>
             <div
                 style={`border-bottom-color:${getColor($selectedMessageToReply.name)}`}
                 class={`tw-mr-9 tw-flex tw-items-end tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-0.5 ${
