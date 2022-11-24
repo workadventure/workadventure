@@ -54,7 +54,7 @@
 
     let showPart = derived(
         [connectionNotAuthorizedStore, timelineActiveStore, activeThreadStore, loading],
-        ([$connectionNotAuthorized, $timelineActiveStore, $activeThreadStore, $loading]) => {
+        ([$connectionNotAuthorizedStore, $timelineActiveStore, $activeThreadStore, $loading]) => {
             if ($connectionNotAuthorizedStore) {
                 return "connectionNotAuthorized";
             } else if ($loading) {
@@ -169,7 +169,9 @@
         {:else if $showPart === "activeTimeline"}
             <ChatActiveThreadTimeLine on:unactiveThreadTimeLine={() => timelineActiveStore.set(false)} />
         {:else if $showPart === "activeThread"}
-            <ChatActiveThread activeThread={$activeThreadStore} />
+            {#if $activeThreadStore !== undefined}
+                <ChatActiveThread activeThread={$activeThreadStore} />
+            {/if}
         {:else if $showPart === "home"}
             <div class="wa-message-bg tw-pt-3">
                 <nav class="nav">

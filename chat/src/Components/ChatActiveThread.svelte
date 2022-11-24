@@ -22,7 +22,7 @@
 
     let messagesList: ChatMessagesList;
 
-    function handleFormHeight(event) {
+    function handleFormHeight(event: unknown) {
         formHeight = event.detail;
     }
 
