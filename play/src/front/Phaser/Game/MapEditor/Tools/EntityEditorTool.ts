@@ -1,4 +1,5 @@
-import { CommandConfig, EntityPrefab } from "@workadventure/map-editor";
+import { CommandConfig, EntityData, EntityPrefab } from "@workadventure/map-editor";
+import { GameMapEntities } from "@workadventure/map-editor/src/GameMap/GameMapEntities";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { get, Unsubscriber } from "svelte/store";
 import {
@@ -18,6 +19,7 @@ export class EntityEditorTool extends MapEditorTool {
     private mapEditorModeManager: MapEditorModeManager;
 
     private entitiesManager: EntitiesManager;
+    private gameMapEntities: GameMapEntities;
 
     private entityPrefab: EntityPrefab | undefined;
     private entityPrefabPreview: Phaser.GameObjects.Image | undefined;
@@ -31,6 +33,7 @@ export class EntityEditorTool extends MapEditorTool {
         this.scene = this.mapEditorModeManager.getScene();
 
         this.entitiesManager = this.scene.getGameMapFrontWrapper().getEntitiesManager();
+        this.gameMapEntities = this.scene.getGameMap().getGameMapEntities();
 
         this.entityPrefab = undefined;
         this.entityPrefabPreview = undefined;
@@ -173,13 +176,15 @@ export class EntityEditorTool extends MapEditorTool {
                 y = Math.floor(pointer.worldY / 32) * 32 + offsets.y;
             }
 
-            this.entitiesManager.addEntity({
+            const entityData: EntityData = {
                 x,
                 y,
-                id: 1,
+                id: this.gameMapEntities.getNextEntityId(),
                 prefab: this.entityPrefab,
                 interactive: true,
-            });
+            };
+            this.gameMapEntities.addEntity(entityData);
+            this.entitiesManager.addEntity(entityData);
             this.scene.markDirty();
         }
     }

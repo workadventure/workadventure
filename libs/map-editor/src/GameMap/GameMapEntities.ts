@@ -7,11 +7,28 @@ export class GameMapEntities {
 
     private entities: EntityData[] = [];
 
+    private nextEntityId: number = 0;
+
     constructor(gameMap: GameMap) {
         this.gameMap = gameMap;
 
         // TODO: Get entities from the map file
-        this.entities = this.loadMockEntities();
+        for (const entityData of this.loadMockEntities()) {
+            this.addEntity(entityData);
+        };
+    }
+
+    public addEntity(entityData: EntityData): void {
+        this.entities.push(entityData);
+        this.nextEntityId = Math.max(this.nextEntityId, entityData.id);
+        console.log(this.nextEntityId);
+    }
+
+    public removEntity(id: number): void {
+        const index = this.entities.findIndex(entityData => entityData.id === id);
+        if (index !== -1) {
+            this.entities.splice(index, 1);
+        }
     }
 
     private loadMockEntities(): EntityData[] {
@@ -44,5 +61,9 @@ export class GameMapEntities {
 
     public getEntities(): EntityData[] {
         return this.entities;
+    }
+
+    public getNextEntityId(): number {
+        return this.nextEntityId + 1;
     }
 }
