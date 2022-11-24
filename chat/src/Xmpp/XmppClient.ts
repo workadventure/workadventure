@@ -8,7 +8,7 @@ import { get } from "svelte/store";
 import { activeThreadStore } from "../Stores/ActiveThreadStore";
 import { userStore } from "../Stores/LocalUserStore";
 import * as Stanza from "stanza";
-import WaCustomPlugin, { WaReceivedArchive, WaReceivedReactions } from "./Lib/Plugin";
+import WaCustomPlugin, { WaReceivedReactions } from "./Lib/Plugin";
 import * as StanzaProtocol from "stanza/protocol";
 import { JSONData } from "stanza/jxt";
 import { ChatStateMessage, JID } from "stanza";
