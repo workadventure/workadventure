@@ -220,31 +220,29 @@ export class MucRoom extends AbstractRoom {
                 ...links,
             });
         }
+        const message = {
+            name: this.xmppClient.getPlayerName(),
+            jid: this.xmppClient.getMyPersonalJID(),
+            body: text,
+            time: new Date(),
+            id: idMessage,
+            delivered: false,
+            error: false,
+            from: this.xmppClient.getMyJID(),
+            type: messageReply ? MessageType.reply : MessageType.message,
+            ...links,
+            targetMessageReply: messageReply
+                ? {
+                      id: messageReply.id,
+                      senderName: messageReply.name,
+                      body: messageReply.body,
+                      links: messageReply.links,
+                  }
+                : undefined,
+            mentions: [...get(mentionsUserStore).values()],
+        };
 
-        this.messageStore.update((messages) => {
-            messages.set(idMessage, {
-                name: this.xmppClient.getPlayerName(),
-                jid: this.xmppClient.getMyPersonalJID(),
-                body: text,
-                time: new Date(),
-                id: idMessage,
-                delivered: false,
-                error: false,
-                from: this.xmppClient.getMyJID(),
-                type: messageReply ? MessageType.reply : MessageType.message,
-                ...links,
-                targetMessageReply: messageReply
-                    ? {
-                          id: messageReply.id,
-                          senderName: messageReply.name,
-                          body: messageReply.body,
-                          links: messageReply.links,
-                      }
-                    : undefined,
-                mentions: [...get(mentionsUserStore).values()],
-            });
-            return messages;
-        });
+        this.appendMessage(message);
 
         fileMessageManager.reset();
         mentionsUserStore.set(new Set<User>());
@@ -254,15 +252,7 @@ export class MucRoom extends AbstractRoom {
         if (this.sendTimeOut) {
             clearTimeout(this.sendTimeOut);
         }
-        this.sendTimeOut = setTimeout(() => {
-            this.messageStore.update((messages) => {
-                const messagesUpdated = new Map<string, Message>();
-                messages.forEach((message, messageId) => {
-                    messagesUpdated.set(messageId, { ...message, error: !message.delivered });
-                });
-                return messagesUpdated;
-            });
-        }, 10_000);
+        this.sendTimeOut = setTimeout(() => this.updateMessagePart(message.id, { error: false }), 10_000);
         if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, ">> Message sent");
     }
     public sendRemoveMessage(messageId: string) {
@@ -362,9 +352,10 @@ export class MucRoom extends AbstractRoom {
         });
         if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, "<< Retrieve last messages received");
         if (response.paging && response.paging.count !== undefined) {
+            response.results?.reverse();
             response.results?.forEach((result) => {
                 if (result.item.message) {
-                    this.onMessage(result.item.message as StanzaProtocol.ReceivedMessage, result.item.delay);
+                    this.onMessage(result.item.message as StanzaProtocol.ReceivedMessage, result.item.delay, true);
                 }
             });
             if (response.paging.count < 50) {
@@ -375,7 +366,11 @@ export class MucRoom extends AbstractRoom {
     }
 
     // Function used to interpret message from the server
-    onMessage(receivedMessage: StanzaProtocol.ReceivedMessage, delay: StanzaProtocol.Delay | null = null): boolean {
+    onMessage(
+        receivedMessage: StanzaProtocol.ReceivedMessage,
+        delay: StanzaProtocol.Delay | null = null,
+        prepend: boolean = false
+    ): boolean {
         if (!receivedMessage.jid) {
             throw new Error("No JID set for the message");
         } else if (!receivedMessage.id) {
@@ -392,77 +387,74 @@ export class MucRoom extends AbstractRoom {
                 // Only in case where the message received is an archive (a message automatically sent by the server when joining a room)
                 date = new Date(delay.timestamp);
             }
-            this.messageStore.update((messages) => {
-                const thisMessage = messages.get(receivedMessage.id ?? "");
-                if (thisMessage) {
-                    this.updateLastMessageSeen();
-                    messages.set(thisMessage.id, { ...thisMessage, delivered: true, error: false });
-                    response = true;
-                } else if (receivedMessage.remove) {
-                    const removedId = receivedMessage.remove.id;
-                    this.deletedMessagesStore.update((deletedMessages) => {
-                        deletedMessages.set(removedId, JID.toBare(receivedMessage.jid));
-                        return deletedMessages;
-                    });
-                    response = true;
-                } else {
-                    if (date !== null && date > this.lastMessageSeen && !delay) {
-                        this.countMessagesToSee.update((last) => last + 1);
-                        if (/*get(activeThreadStore) !== this ||*/ get(availabilityStatusStore) !== 1) {
-                            if (receivedMessage.nick) {
-                                mediaManager.playNewMessageNotification();
-                                mediaManager.createNotification(
-                                    receivedMessage.nick,
-                                    NotificationType.message,
-                                    this.name
-                                );
-                            }
+            const messageId = receivedMessage.id ?? "";
+            if (this.messageMap.has(messageId)) {
+                this.updateLastMessageSeen();
+                this.updateMessagePart(messageId, { delivered: true, error: false });
+                response = true;
+            } else if (receivedMessage.remove) {
+                const removedId = receivedMessage.remove.id;
+                this.deletedMessagesStore.update((deletedMessages) => {
+                    deletedMessages.set(removedId, JID.toBare(receivedMessage.jid));
+                    return deletedMessages;
+                });
+                response = true;
+            } else {
+                if (date !== null && date > this.lastMessageSeen && !delay) {
+                    this.countMessagesToSee.update((last) => last + 1);
+                    if (/*get(activeThreadStore) !== this ||*/ get(availabilityStatusStore) !== 1) {
+                        if (receivedMessage.nick) {
+                            mediaManager.playNewMessageNotification();
+                            mediaManager.createNotification(receivedMessage.nick, NotificationType.message, this.name);
                         }
                     }
-
-                    const received = JID.parse(receivedMessage.jid);
-
-                    if (received && receivedMessage.jid && receivedMessage.id) {
-                        const message: Message = {
-                            name: received.resource ?? "unknown",
-                            jid: JID.create({
-                                local: received.local,
-                                domain: received.domain,
-                                resource: JID.parse(receivedMessage.from).resource,
-                            }),
-                            body: receivedMessage.body ?? "",
-                            time: date,
-                            id: receivedMessage.id,
-                            delivered: true,
-                            error: false,
-                            from: receivedMessage.from,
-                            type: receivedMessage.messageReply ? MessageType.message : MessageType.reply,
-                            links: receivedMessage.links as WaLink[],
-                            targetMessageReply: receivedMessage.messageReply
-                                ? {
-                                      id: receivedMessage.messageReply.id,
-                                      senderName: receivedMessage.messageReply.senderName,
-                                      body: receivedMessage.messageReply.body,
-                                      links: receivedMessage.messageReply.links
-                                          ? JSON.parse(receivedMessage.messageReply.links)
-                                          : undefined,
-                                  }
-                                : undefined,
-                            reactionsMessage: this.reactions(receivedMessage.id),
-                        };
-                        messages.set(receivedMessage.id, message);
-                        response = true;
-                    } else {
-                        console.error("Message format is not good", {
-                            received: !!received,
-                            jid: !!receivedMessage.jid,
-                            body: !!receivedMessage.body,
-                            id: !!receivedMessage.id,
-                        });
-                    }
                 }
-                return messages;
-            });
+
+                const receivedJid = JID.parse(receivedMessage.jid);
+
+                if (receivedJid && receivedMessage.jid && receivedMessage.id) {
+                    const message: Message = {
+                        name: receivedJid.resource ?? "unknown",
+                        jid: JID.create({
+                            local: receivedJid.local,
+                            domain: receivedJid.domain,
+                            resource: JID.parse(receivedMessage.from).resource,
+                        }),
+                        body: receivedMessage.body ?? "",
+                        time: date,
+                        id: receivedMessage.id,
+                        delivered: true,
+                        error: false,
+                        from: receivedMessage.from,
+                        type: receivedMessage.messageReply ? MessageType.message : MessageType.reply,
+                        links: receivedMessage.links as WaLink[],
+                        targetMessageReply: receivedMessage.messageReply
+                            ? {
+                                  id: receivedMessage.messageReply.id,
+                                  senderName: receivedMessage.messageReply.senderName,
+                                  body: receivedMessage.messageReply.body,
+                                  links: receivedMessage.messageReply.links
+                                      ? JSON.parse(receivedMessage.messageReply.links)
+                                      : undefined,
+                              }
+                            : undefined,
+                        reactionsMessage: this.reactions(receivedMessage.id),
+                    };
+                    if (prepend) {
+                        this.prependMessage(message);
+                    } else {
+                        this.appendMessage(message);
+                    }
+                    response = true;
+                } else {
+                    console.error("Message format is not good", {
+                        received: !!receivedJid,
+                        jid: !!receivedMessage.jid,
+                        body: !!receivedMessage.body,
+                        id: !!receivedMessage.id,
+                    });
+                }
+            }
         }
         return response;
     }
@@ -679,13 +671,7 @@ export class MucRoom extends AbstractRoom {
     }
     private updateMessageReactions(messageId: string) {
         // Update reactions of the message targeted
-        this.messageStore.update((messages) => {
-            const thisMessage = messages.get(messageId);
-            if (thisMessage) {
-                messages.set(messageId, { ...thisMessage, reactionsMessage: this.reactions(messageId) });
-            }
-            return messages;
-        });
+        this.updateMessagePart(messageId, { reactionsMessage: this.reactions(messageId) });
     }
     private toggleReactionsMessage(userJid: string, messageId: string, reactions: Array<string>) {
         const newUserReaction = {
@@ -729,13 +715,6 @@ export class MucRoom extends AbstractRoom {
             return reactionsMessages;
         });
         this.updateMessageReactions(messageId);
-    }
-    public deleteMessage(idMessage: string): boolean {
-        this.messageStore.update((messages) => {
-            messages.delete(idMessage);
-            return messages;
-        });
-        return true;
     }
     public sendBack(idMessage: string): boolean {
         throw new Error("Not implemented yet");

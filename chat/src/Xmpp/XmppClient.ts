@@ -172,10 +172,12 @@ export class XmppClient {
         client.on("chat:subject", (message: StanzaProtocol.ReceivedMessage) => {
             // Nothing to do
         });
-        // @ts-ignore
-        client.on("message:archive", (message: WaReceivedArchive) => {
-            this.forwardToRoom("archive", message.from, message.archive);
-        });
+
+        // Archived messages comes from sendRetrieveLastMessages directly so let this call process the messages by himeself
+        // client.on("message:archive", (message: WaReceivedArchive) => {
+        //     this.forwardToRoom("archive", message.from, message.archive);
+        // });
+
         // @ts-ignore
         client.on("chat:reactions", (message: WaReceivedReactions) => {
             this.forwardToRoom("reactions", message.from, message);

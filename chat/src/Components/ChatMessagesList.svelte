@@ -295,7 +295,7 @@
                 {/if}
             {/if}
         </div>
-        {#each [...$messagesStore.values()].sort((a, b) => a.time.getTime() - b.time.getTime()) as message, i}
+        {#each $messagesStore as message, i (message.id)}
             {#if showDate(message.time, i)}
                 <div class="wa-separator">
                     {message.time.toLocaleDateString($locale, {
