@@ -77,6 +77,9 @@
             return $userStore;
         }
         const userData = [...$presenceStore].find(([, user]) => user.jid === jid);
+        if(!userData){
+            [...$presenceStore].find(([, user]) => JID.toBare(user.jid) === JID.toBare(jid));
+        }
         let user = undefined;
         if (userData) {
             [, user] = userData;
