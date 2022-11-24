@@ -26,6 +26,7 @@
     export let settingsView = false;
 
     let newMessageText = "";
+    let htmlMessageText = "";
 
     function reInitialize() {
         chatMessagesStore.reInitialize();
@@ -55,6 +56,9 @@
             _newChatMessageWritingStatusSubject.next(ChatMessageTypes.userWriting);
         } else {
             _newChatMessageWritingStatusSubject.next(ChatMessageTypes.userStopWriting);
+        }
+        if (htmlMessageText === "<br>") {
+            htmlMessageText = "";
         }
     }
 
@@ -236,7 +240,9 @@
                             <div class="tw-w-3/4">
                                 <div
                                     style={`border-bottom-color:${message.author?.color}`}
-                                    class="tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-1"
+                                    class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-1 ${
+                                        message.type === ChatMessageTypes.me ? "tw-flex-row-reverse" : ""
+                                    }`}
                                 >
                                     <span class="tw-text-lighter-purple">
                                         {#if message.type === ChatMessageTypes.me}
@@ -272,7 +278,9 @@
                                 {#if message.text}
                                     <div class="wa-message-body">
                                         {#each message.text as text}
-                                            <div class="tw-text-ellipsis tw-overflow-y-auto tw-whitespace-normal">
+                                            <div
+                                                class="tw-text-ellipsis tw-overflow-y-auto tw-whitespace-normal tw-break-words"
+                                            >
                                                 {#await HtmlUtils.urlify(text)}
                                                     <p>...waiting</p>
                                                 {:then html}
@@ -421,6 +429,39 @@
             </div>
 
             <form on:submit|preventDefault={saveMessage}>
+                <div class="tw-w-full tw-px-2 tw-pb-2">
+                    <div
+                        contenteditable="true"
+                        bind:textContent={newMessageText}
+                        bind:innerHTML={htmlMessageText}
+                        data-placeholder={$LL.enterText()}
+                        on:keydown={handlerKeyDown}
+                        on:input={writing}
+                        on:focus={onFocus}
+                        on:blur={onBlur}
+                    />
+                    <div class="actions tw-absolute tw-right-6">
+                        <div class="tw-flex tw-items-center tw-space-x-1">
+                            <button
+                                class={`tw-bg-transparent tw-p-0 tw-m-0 tw-inline-flex tw-justify-center tw-items-center ${
+                                    emojiOpened ? "tw-text-light-blue" : ""
+                                }`}
+                                on:click|preventDefault|stopPropagation={openEmoji}
+                            >
+                                <SmileIcon size="17" />
+                            </button>
+                            <button
+                                id="send"
+                                type="submit"
+                                class="can-send tw-bg-transparent tw-p-0 tw-m-0 tw-inline-flex tw-justify-center tw-items-center tw-text-light-blue"
+                                on:click|stopPropagation={saveMessage}
+                            >
+                                <SendIcon size="17" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!--
                 <div class="tw-w-full tw-p-2">
                     <div class="tw-flex tw-items-center tw-relative">
                         <textarea
@@ -450,6 +491,7 @@
                         </button>
                     </div>
                 </div>
+                -->
             </form>
         </div>
     {/if}
@@ -465,5 +507,11 @@
         overflow-y: scroll;
         min-height: calc(100vh - 40px);
         padding: 60px 0;
+    }
+    form .actions {
+        top: 10px;
+    }
+    form [contenteditable="true"] {
+        padding-right: 4rem;
     }
 </style>

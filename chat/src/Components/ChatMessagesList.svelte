@@ -16,7 +16,6 @@
         CornerDownLeftIcon,
         CornerLeftUpIcon,
         SmileIcon,
-        MoreHorizontalIcon,
         ArrowUpIcon,
         CopyIcon,
     } from "svelte-feather-icons";
@@ -34,8 +33,9 @@
     import { derived } from "svelte/store";
 
     export let mucRoom: MucRoom;
+    export let formHeight: number;
 
-    $: unreads = mucRoom.getCountMessagesToSee();
+    const unreads = mucRoom.getCountMessagesToSee();
     const messagesStore = mucRoom.getMessagesStore();
     const deletedMessagesStore = mucRoom.getDeletedMessagesStore();
     const presenceStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
@@ -174,7 +174,7 @@
                     setTimeout(() => {
                         target.innerHTML = originalText;
                         target.classList.remove("tw-text-pop-green");
-                    }, 2_000);
+                    }, 1_000);
                 }
             })
             .catch((err) => {
@@ -252,7 +252,11 @@
     });
 </script>
 
-<div class="wa-messages-list-container" bind:this={messagesList}>
+<div
+    class="wa-messages-list-container"
+    bind:this={messagesList}
+    style={`margin-bottom: ${formHeight - 7}px; max-height: calc( 100vh - ${formHeight - 7}px );`}
+>
     <div class="emote-menu-container">
         <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
     </div>
@@ -307,7 +311,7 @@
             >
                 <div class="tw-flex tw-flex-row tw-items-center  tw-max-w-full">
                     <div
-                        class={`tw-flex tw-flex-wrap tw-max-w-full ${
+                        class={`tw-flex tw-max-w-full tw-items-center ${
                             isMe(message.jid) ? "tw-justify-end" : "tw-justify-start"
                         }`}
                     >
@@ -317,7 +321,7 @@
                                     isMe(message.jid) || needHideHeader(message.name, message.time, i)
                                         ? "tw-opacity-0"
                                         : "tw-mt-4"
-                                } tw-relative wa-avatar-mini tw-mr-2`}
+                                } tw-relative wa-avatar-mini tw-mr-2 tw-self-start`}
                                 transition:fade={{ duration: 100 }}
                                 style={`background-color: ${getColor(message.jid)}`}
                             >
@@ -332,8 +336,41 @@
                                 </div>
                             </div>
                         {/if}
+                        {#if !message.error && !$deletedMessagesStore.has(message.id)}
+                            <!-- Action bar -->
+                            <div
+                                class={`actions tw-rounded-lg tw-text-xs tw-text-left tw-flex ${
+                                    needHideHeader(message.name, message.time, i) ? "" : "tw-pt-4"
+                                } ${
+                                    isMe(message.jid) ? "tw-pr-2 tw-flex-row-reverse" : "tw-order-3 tw-pl-2 tw-flex-row"
+                                }`}
+                                style={($me && $me.isAdmin) || isMe(message.jid) ? "width: 92px;" : "width: 72px;"}
+                            >
+                                <div class="action reply" on:click={() => selectMessage(message)}>
+                                    <CornerDownLeftIcon size="17" />
+                                    <div class="caption">{$LL.reply()}</div>
+                                </div>
+                                <div class="action react" on:click={() => reactMessage(message)}>
+                                    <SmileIcon size="17" />
+                                    <div class="caption">{$LL.react()}</div>
+                                </div>
+                                <div class="action copy" on:click={(e) => copyMessage(e, message)}>
+                                    <CopyIcon size="17" />
+                                    <div class="caption">{$LL.copy()}</div>
+                                </div>
+                                {#if ($me && $me.isAdmin) || isMe(message.jid)}
+                                    <div
+                                        class="action delete tw-text-pop-red"
+                                        on:click={() => mucRoom.sendRemoveMessage(message.id)}
+                                    >
+                                        <Trash2Icon size="17" />
+                                        <div class="caption">{$LL.delete()}</div>
+                                    </div>
+                                {/if}
+                            </div>
+                        {/if}
                         <div
-                            style={`${isMe(message.jid) ? "" : "max-width: 75%"}`}
+                            style={`${$deletedMessagesStore.has(message.id) ? "" : "max-width: 70%;"}`}
                             transition:fly={{
                                 x: isMe(message.jid) ? 10 : -10,
                                 delay: 100,
@@ -407,8 +444,9 @@
                                         {/each}
                                     {/if}
 
+                                    <!--
                                     {#if !message.error}
-                                        <!-- Action bar -->
+                                        <-- Action bar ->
                                         <div
                                             class="actions tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
                                         >
@@ -421,20 +459,13 @@
                                             <div class="action more-option">
                                                 <MoreHorizontalIcon size="17" />
 
-                                                <div class="wa-dropdown-menu tw-invisible">
+                                                <div class="wa-dropdown-menu tw-hidden">
                                                     <span
                                                         class="wa-dropdown-item"
                                                         on:click={() => selectMessage(message)}
                                                     >
                                                         <CornerDownLeftIcon size="13" class="tw-mr-1" />
                                                         {$LL.reply()}
-                                                    </span>
-                                                    <span
-                                                        class="wa-dropdown-item"
-                                                        on:click={() => reactMessage(message)}
-                                                    >
-                                                        <SmileIcon size="13" class="tw-mr-1" />
-                                                        {$LL.react()}
                                                     </span>
                                                     <span
                                                         class="wa-dropdown-item"
@@ -455,7 +486,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    {/if}
+                                    {/if} -->
                                 </div>
 
                                 <!-- React associated -->
@@ -680,8 +711,8 @@
         position: relative;
         min-width: 75px;
         word-break: break-word;
-        text-align: justify;
-        .actions {
+        /*
+      .actions {
             display: none;
             position: absolute;
             right: -16px;
@@ -727,10 +758,11 @@
             }
             &:hover {
                 .wa-dropdown-menu {
-                    visibility: visible;
+                    display: flex;
                 }
             }
         }
+         */
     }
     .emojis {
         display: flex;
@@ -739,6 +771,7 @@
         position: relative;
         flex-direction: row-reverse;
         margin-right: -5px;
+        min-height: 8px;
         span {
             font-size: 0.65rem;
             border-radius: 1.5rem;

@@ -16,7 +16,8 @@
     import Timeline from "./Timeline/Timeline.svelte";
     import {
         availabilityStatusStore,
-        connectionNotAuthorized,
+        connectionEstablishedStore,
+        connectionNotAuthorizedStore,
         enableChat,
         navChat,
         showForumsStore,
@@ -26,7 +27,6 @@
         timelineMessagesToSee,
     } from "../Stores/ChatStore";
     import { Unsubscriber, derived } from "svelte/store";
-    import { chatConnectionManager } from "../Connection/ChatConnectionManager";
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
     import { iframeListener } from "../IframeListener";
     import NeedRefresh from "./NeedRefresh.svelte";
@@ -41,9 +41,31 @@
     let subscribeListeners = new Array<Unsubscriber>();
     let subscribeTotalMessagesToSee: Unsubscriber;
 
+    const loading = derived(
+        [connectionEstablishedStore, xmppServerConnectionStatusStore],
+        ([$connectionEstablishedStore, $xmppServerConnectionStatusStore]) =>
+            !$connectionEstablishedStore || !$xmppServerConnectionStatusStore
+    );
+
     let totalMessagesToSee = derived(
         [...[...$mucRoomsStore].map((mucRoom) => mucRoom.getCountMessagesToSee()), timelineMessagesToSee],
         ($totalMessagesToSee) => $totalMessagesToSee.reduce((sum, number) => sum + number, 0)
+    );
+
+    let showPart = derived(
+        [connectionNotAuthorizedStore, timelineActiveStore, activeThreadStore, loading],
+        ([$connectionNotAuthorizedStore, $timelineActiveStore, $activeThreadStore, $loading]) => {
+            if ($connectionNotAuthorizedStore) {
+                return "connectionNotAuthorized";
+            } else if ($loading) {
+                return "loading";
+            } else if ($timelineActiveStore) {
+                return "activeTimeline";
+            } else if ($activeThreadStore) {
+                return "activeThread";
+            }
+            return "home";
+        }
     );
 
     onMount(async () => {
@@ -127,10 +149,8 @@
         }
     }
 
-    $: loading = !chatConnectionManager.connection || !$xmppServerConnectionStatusStore;
-
     $: loadingText = $userStore
-        ? !chatConnectionManager.connection
+        ? !$connectionEstablishedStore
             ? $LL.connecting()
             : $LL.waitingInit()
         : $LL.waitingData();
@@ -142,15 +162,17 @@
 
 <aside class="chatWindow" bind:this={chatWindowElement}>
     <section class="tw-p-0 tw-m-0">
-        {#if $connectionNotAuthorized}
+        {#if $showPart === "connectionNotAuthorized"}
             <NeedRefresh />
-        {:else if loading}
+        {:else if $showPart === "loading"}
             <Loader text={loadingText} />
-        {:else if $timelineActiveStore}
+        {:else if $showPart === "activeTimeline"}
             <ChatActiveThreadTimeLine on:unactiveThreadTimeLine={() => timelineActiveStore.set(false)} />
-        {:else if $activeThreadStore !== undefined}
-            <ChatActiveThread activeThread={$activeThreadStore} />
-        {:else}
+        {:else if $showPart === "activeThread"}
+            {#if $activeThreadStore !== undefined}
+                <ChatActiveThread activeThread={$activeThreadStore} />
+            {/if}
+        {:else if $showPart === "home"}
             <div class="wa-message-bg tw-pt-3">
                 <nav class="nav">
                     <div class="background" class:chat={$navChat === "chat"} />
@@ -188,17 +210,17 @@
                     {/if}
                 {:else if $navChat === "chat"}
                     {#if $enableChat}
+                        <ChatLiveRooms
+                            searchValue={searchValue.toLocaleLowerCase()}
+                            liveRooms={[...$mucRoomsStore].filter(
+                                (mucRoom) => mucRoom.type === "live" && mucRoom.name.toLowerCase().includes(searchValue)
+                            )}
+                        />
                         <ChatForumRooms
                             searchValue={searchValue.toLocaleLowerCase()}
                             forumRooms={[...$mucRoomsStore].filter(
                                 (mucRoom) =>
                                     mucRoom.type === "forum" && mucRoom.name.toLowerCase().includes(searchValue)
-                            )}
-                        />
-                        <ChatLiveRooms
-                            searchValue={searchValue.toLocaleLowerCase()}
-                            liveRooms={[...$mucRoomsStore].filter(
-                                (mucRoom) => mucRoom.type === "live" && mucRoom.name.toLowerCase().includes(searchValue)
                             )}
                         />
                     {/if}

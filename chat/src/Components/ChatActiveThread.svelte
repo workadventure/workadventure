@@ -14,11 +14,17 @@
 
     export let activeThread: MucRoom;
 
+    let formHeight = 0;
+
     const presenceStore = activeThread.getPresenceStore();
     const readyStore = activeThread.getRoomReadyStore();
     const me = derived(activeThread.getPresenceStore(), ($presenceStore) => $presenceStore.get(activeThread.myJID));
 
     let messagesList: ChatMessagesList;
+
+    function handleFormHeight(height: number) {
+        formHeight = height;
+    }
 
     onDestroy(() => {
         settingsViewStore.set(false);
@@ -118,11 +124,15 @@
             </div>
         </div>
     {/if}
-    <div class:tw-hidden={$usersListViewStore} in:fly={{ y: 100, duration: 100, delay: 200 }}>
-        <ChatMessagesList mucRoom={activeThread} bind:this={messagesList} />
+    <div class:tw-hidden={$usersListViewStore}>
+        <ChatMessagesList mucRoom={activeThread} bind:this={messagesList} {formHeight} />
 
         <div class="messageForm" transition:fly={{ y: 100, duration: 100 }}>
-            <ChatMessageForm mucRoom={activeThread} on:scrollDown={messagesList.scrollDown} />
+            <ChatMessageForm
+                mucRoom={activeThread}
+                on:formHeight={(event) => handleFormHeight(event.detail)}
+                on:scrollDown={messagesList.scrollDown}
+            />
         </div>
     </div>
 </div>

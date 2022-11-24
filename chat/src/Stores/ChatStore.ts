@@ -188,7 +188,8 @@ export const hasInProgressUploadingFile = derived([filesUploadStore], ([$filesUp
 export const chatSoundsStore = writable<boolean>(true);
 export const chatNotificationsStore = writable<boolean>(true);
 
-export const connectionNotAuthorized = writable<boolean>(false);
+export const connectionNotAuthorizedStore = writable<boolean>(false);
+export const connectionEstablishedStore = writable<boolean>(false);
 
 export const navChat = writable<string>("chat");
 

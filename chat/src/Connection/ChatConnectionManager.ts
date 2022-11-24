@@ -1,5 +1,6 @@
 import { XmppSettingsMessage } from "../Messages/ts-proto-generated/protos/messages";
 import { XmppClient } from "../Xmpp/XmppClient";
+import { connectionEstablishedStore } from "../Stores/ChatStore";
 
 class ChatConnectionManager {
     private uuid: string;
@@ -41,6 +42,7 @@ class ChatConnectionManager {
     public start() {
         if (this.uuid !== "" && this.authToken && this.playUri !== "" && this.xmppSettingsMessage && !this.xmppClient) {
             this.xmppClient = new XmppClient(this.xmppSettingsMessage);
+            connectionEstablishedStore.set(true);
         }
 
         /*this.chatConnection.xmppConnectionNotAuthorizedStream.subscribe(() => {

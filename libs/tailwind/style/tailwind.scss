@@ -193,25 +193,42 @@
                 margin: 0 2px;
             }
 
-            textarea {
-                @apply tw-flex-1 tw-text-sm tw-ml-2 tw-bg-transparent tw-outline-1 focus:tw-ring-1 tw-mb-0 tw-min-h-[35px] tw-resize-none tw-border-0 placeholder:tw-italic placeholder:tw-text-light-purple tw-rounded-3xl tw-bg-dark-purple/95;
+            [contenteditable=true] {
+                @apply tw-text-sm tw-py-2 tw-pl-4 tw-pr-[5.5rem] tw-ml-2 tw-bg-transparent tw-outline-none focus:tw-ring-1 tw-mb-0 tw-resize-none tw-border-0 placeholder:tw-italic placeholder:tw-text-light-purple tw-rounded-xl tw-bg-dark-purple/95;
                 margin-bottom: 0;
                 margin-left: 0;
                 border-color: #4d4b67;
                 max-height: 50vh;
+                overflow-y: auto;
+                line-break: normal;
+                word-break: normal;
+                overflow-wrap: break-word;
+                overflow-x: hidden;
+                *{
+                    line-break: normal;
+                    word-break: normal;
+                    overflow-wrap: break-word;
+                    overflow-x: hidden;
+                }
+                &::-webkit-scrollbar {
+                    right:-100px;
+                }
+            }
+            [contenteditable=true]:empty:before{
+                @apply tw-text-lighter-purple;
+                content: attr(data-placeholder);
+                pointer-events: none;
+                display: block;
             }
         }
     }
 
     .wa-messages-list-container{
-        @apply tw-overflow-x-scroll tw-mb-10;
-        max-height: calc( 100vh - 2.8rem );
-        -webkit-mask-image: linear-gradient(180deg, black 0%, black 97%, transparent 100%);
-        mask-image: linear-gradient(180deg, black 0%, black 97%, transparent 100%);
+        @apply tw-overflow-y-scroll tw-overflow-x-hidden;
         -ms-overflow-style: none;
         scrollbar-width: none;
         &::-webkit-scrollbar {
-            display: none;
+            //display: none;
         }
 
         .wa-messages-list{
@@ -258,7 +275,8 @@
     input[type="tel"],
     select,
     textarea,
-    textarea[type="text"] {
+    textarea[type="text"],
+    [contenteditable=true]{
         @apply tw-bg-dark-blue tw-text-white tw-border-light-purple tw-rounded-lg focus:tw-border-lighter-purple focus:tw-ring-lighter-purple tw-mb-5 tw-transition-all tw-duration-300;
         @apply placeholder:tw-text-lighter-purple;
     }
