@@ -39,7 +39,7 @@ jobs:
         run: yarn workspaces focus workadventure-play
 
       - name: "Install messages dependencies"
-        run: yarn install --no-immutable
+        run: yarn set version classic && yarn install --frozen-lockfile && yarn set version 3.x
         working-directory: "messages"
 
       - name: "Build proto messages"
