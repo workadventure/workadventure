@@ -19,7 +19,7 @@ export class GameMapEntities {
             {
                 id: 0,
                 x: 320,
-                y: 336,
+                y: 304,
                 interactive: true,
                 properties: {
                     jitsiRoom: "ChillZone",

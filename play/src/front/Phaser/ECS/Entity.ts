@@ -2,7 +2,12 @@ import { EntityData } from "@workadventure/map-editor";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { get, Unsubscriber } from "svelte/store";
 import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
-import { mapEditorModeStore, mapEditorSelectedEntityStore, MapEntityEditorMode, mapEntityEditorModeStore } from "../../Stores/MapEditorStore";
+import {
+    mapEditorModeStore,
+    mapEditorSelectedEntityStore,
+    MapEntityEditorMode,
+    mapEntityEditorModeStore,
+} from "../../Stores/MapEditorStore";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import { ActivatableInterface } from "../Game/ActivatableInterface";
 import type { GameScene } from "../Game/GameScene";
@@ -53,7 +58,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         });
 
         if (data.interactive) {
-            this.setInteractive({ cursor: "pointer" });
+            this.setInteractive({ pixelPerfect: true, cursor: "pointer" });
             this.scene.input.setDraggable(this);
         }
 
@@ -118,10 +123,15 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     private bindEventHandlers(): void {
         this.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
-            this.x = Math.floor(dragX / 32) * 32;
-            this.y = Math.floor(dragY / 32) * 32;
-            (this.scene as GameScene).markDirty();
-        }
+                const offsets = this.getPositionOffset(this.entityData.prefab.collisionGrid);
+                this.x = this.entityData.prefab.collisionGrid
+                    ? Math.floor(dragX / 32) * 32 + offsets.x
+                    : Math.floor(dragX);
+                this.y = this.entityData.prefab.collisionGrid
+                    ? Math.floor(dragY / 32) * 32 + offsets.y
+                    : Math.floor(dragY);
+                (this.scene as GameScene).markDirty();
+            }
         });
 
         this.on(Phaser.Input.Events.DRAG_START, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
@@ -153,7 +163,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             actionsMenuStore.clear();
             return;
         }
-        actionsMenuStore.initialize("Cheapest Table you can find");
+        actionsMenuStore.initialize(this.entityData.prefab.name);
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
         }
@@ -213,8 +223,18 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         return actions;
     }
 
+    private getPositionOffset(collisionGrid?: number[][]): { x: number; y: number } {
+        if (!collisionGrid || collisionGrid.length === 0) {
+            return { x: 0, y: 0 };
+        }
+        return {
+            x: collisionGrid[0].length % 2 === 1 ? 16 : 0,
+            y: collisionGrid.length % 2 === 1 ? 16 : 0,
+        };
+    }
+
     public isActivatable(): boolean {
-        return false;//this.activatable;
+        return false; //this.activatable;
     }
 
     public getEntityData(): EntityData {
