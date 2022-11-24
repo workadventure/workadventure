@@ -325,7 +325,7 @@
                                         ? "tw-opacity-0"
                                         : "tw-mt-4"
                                 } tw-relative wa-avatar-mini tw-mr-2 tw-self-start`}
-                                transition:fade={{ duration: 100 }}
+                                in:fade={{ duration: 100 }}
                                 style={`background-color: ${getColor(message.jid)}`}
                             >
                                 <div class="wa-container">
@@ -374,7 +374,7 @@
                         {/if}
                         <div
                             style={`${$deletedMessagesStore.has(message.id) ? "" : "max-width: 62%;"}`}
-                            transition:fly={{
+                            in:fly={{
                                 x: isMe(message.jid) ? 10 : -10,
                                 delay: 100,
                                 duration: 200,
@@ -606,17 +606,12 @@
                         class={`tw-mt-4 tw-relative wa-avatar-mini tw-mr-2 tw-z-10`}
                         style={`background-color: ${getColor(user.jid)}`}
                         in:fade={{ duration: 100 }}
-                        out:fade={{ delay: 200, duration: 100 }}
                     >
                         <div class="wa-container">
                             <img class="tw-w-full" src={getWoka(user.jid)} alt="Avatar" />
                         </div>
                     </div>
-                    <div
-                        class={`tw-w-3/4`}
-                        in:fly={{ x: -10, delay: 100, duration: 200 }}
-                        out:fly={{ x: -10, duration: 200 }}
-                    >
+                    <div class={`tw-w-3/4`} in:fly={{ x: -10, delay: 100, duration: 200 }}>
                         <div class="tw-w-fit">
                             <div
                                 style={`border-bottom-color:${getColor(user.jid)}`}
@@ -642,7 +637,7 @@
         {#if $unreads > 0}
             <div class="tw-w-full tw-fixed tw-left-0 tw-bottom-14 tw-animate-bounce tw-cursor-pointer">
                 <div
-                    transition:fly={{ y: 10, duration: 200 }}
+                    in:fly={{ y: 10, duration: 200 }}
                     style="margin: auto"
                     class="tw-bg-lighter-purple tw-rounded-xl tw-h-5 tw-px-2 tw-w-fit tw-text-xs tw-flex tw-justify-center tw-items-center tw-shadow-grey"
                     role="button"

@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
     import { ArrowLeftIcon, RefreshCwIcon, EyeIcon, EyeOffIcon } from "svelte-feather-icons";
     import ChatMessageForm from "./ChatMessageForm.svelte";
     import LL from "../i18n/i18n-svelte";
@@ -87,11 +86,7 @@
     {#if !$readyStore}
         <Loader text={$LL.loading()} />
     {:else if $usersListViewStore}
-        <div
-            in:fly={{ y: -100, duration: 100, delay: 200 }}
-            out:fly={{ y: -100, duration: 100 }}
-            class="tw-flex tw-flex-col tw-flex-auto tw-w-full"
-        >
+        <div class="tw-flex tw-flex-col tw-flex-auto tw-w-full">
             <div
                 class="users tw-pt-16 wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid"
             >
@@ -106,12 +101,7 @@
             </div>
         </div>
     {:else if $settingsViewStore}
-        <div
-            in:fly={{ y: -100, duration: 100, delay: 200 }}
-            out:fly={{ y: -100, duration: 100 }}
-            class="tw-flex tw-flex-col tw-flex-auto tw-w-full"
-            style="margin-top: 52px"
-        >
+        <div class="tw-flex tw-flex-col tw-flex-auto tw-w-full" style="margin-top: 52px">
             <div
                 class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5 tw-pb-0.5"
             >
@@ -129,7 +119,7 @@
     <div class:tw-hidden={$usersListViewStore}>
         <ChatMessagesList mucRoom={activeThread} bind:this={messagesList} {formHeight} />
 
-        <div class="messageForm" transition:fly={{ y: 100, duration: 100 }}>
+        <div class="messageForm">
             <ChatMessageForm
                 mucRoom={activeThread}
                 on:formHeight={(event) => handleFormHeight(event.detail)}
