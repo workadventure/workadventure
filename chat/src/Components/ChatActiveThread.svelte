@@ -98,7 +98,7 @@
                 <p class="tw-px-5 tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
                     {$LL.users()}
                 </p>
-                {#each [...$presenceStore.values()].filter((user) => user.active) as user}
+                {#each [...$presenceStore.values()].filter((user) => user.active).sort((a, b) =>a.name.localeCompare(b.name)) as user}
                     <ChatUser mucRoom={activeThread} {user} searchValue="" />
                 {/each}
             </div>
