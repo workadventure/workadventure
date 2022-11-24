@@ -27,31 +27,26 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+          cache: "yarn"
+          cache-dependency-path: '**/yarn.lock'
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
           version: '3.x'
 
-      - name: "Install libs/tailwind dependencies"
-        run: yarn install  --immutable
-        working-directory: "libs/tailwind"
-
-      - name: "Install libs/map-editor dependencies"
-        run: yarn install  --immutable
-        working-directory: "libs/map-editor"
+      - name: "Setup Yarn"
+        run: |
+          yarn set version stable
+          yarn plugin import workspace-tools
 
       - name: "Install dependencies"
-        run: yarn install  --immutable
+        run: yarn install --immutable
         working-directory: "play"
 
       - name: "Install messages dependencies"
-        run: yarn install  --immutable
+        run: yarn install --immutable
         working-directory: "messages"
-
-      - name: "Install libs dependencies"
-        run: yarn install  --immutable
-        working-directory: "libs/messages"
 
       - name: "Build proto messages"
         run: yarn run ts-proto && yarn run proto && yarn run copy-to-play
