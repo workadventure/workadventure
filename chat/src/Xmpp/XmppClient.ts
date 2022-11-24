@@ -8,7 +8,7 @@ import { get } from "svelte/store";
 import { activeThreadStore } from "../Stores/ActiveThreadStore";
 import { userStore } from "../Stores/LocalUserStore";
 import * as Stanza from "stanza";
-import WaCustomPlugin, { WaReceivedArchive, WaReceivedReactions } from "./Lib/Plugin";
+import WaCustomPlugin, { WaReceivedReactions } from "./Lib/Plugin";
 import * as StanzaProtocol from "stanza/protocol";
 import { JSONData } from "stanza/jxt";
 import { ChatStateMessage, JID } from "stanza";
@@ -172,10 +172,12 @@ export class XmppClient {
         client.on("chat:subject", (message: StanzaProtocol.ReceivedMessage) => {
             // Nothing to do
         });
-        // @ts-ignore
-        client.on("message:archive", (message: WaReceivedArchive) => {
-            this.forwardToRoom("archive", message.from, message.archive);
-        });
+
+        // Archived messages comes from sendRetrieveLastMessages directly so let this call process the messages by himeself
+        // client.on("message:archive", (message: WaReceivedArchive) => {
+        //     this.forwardToRoom("archive", message.from, message.archive);
+        // });
+
         // @ts-ignore
         client.on("chat:reactions", (message: WaReceivedReactions) => {
             this.forwardToRoom("reactions", message.from, message);

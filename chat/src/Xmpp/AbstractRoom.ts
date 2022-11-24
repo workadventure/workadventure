@@ -85,7 +85,8 @@ export const defaultUserData: UserData = {
 };
 
 export class AbstractRoom {
-    protected messageStore: Writable<Map<string, Message>>;
+    protected messageMap: Map<string, Message>;
+    protected messageStore: Writable<Message[]>;
     protected reactionMessageStore: Writable<Map<string, ReactionMessage[]>>;
     protected deletedMessagesStore: Writable<Map<string, string>>;
     public lastMessageSeen: Date;
@@ -100,8 +101,8 @@ export class AbstractRoom {
         if (this.constructor === AbstractRoom) {
             throw new TypeError('Abstract class "AbstractRoom" cannot be instantiated directly');
         }
-
-        this.messageStore = writable<Map<string, Message>>(new Map<string, Message>());
+        this.messageMap = new Map<string, Message>();
+        this.messageStore = writable<Message[]>([]);
         this.deletedMessagesStore = writable<Map<string, string>>(new Map<string, string>());
         this.reactionMessageStore = writable<Map<string, ReactionMessage[]>>(new Map<string, ReactionMessage[]>());
         this.lastMessageSeen = new Date();
@@ -149,7 +150,8 @@ export class AbstractRoom {
         }
     }
     public reset(): void {
-        this.messageStore.set(new Map<string, Message>());
+        this.messageStore.set([]);
+        this.messageMap = new Map<string, Message>();
     }
     public updateLastMessageSeen() {
         this.countMessagesToSee.set(0);
@@ -187,7 +189,7 @@ export class AbstractRoom {
     }
 
     // Get all store
-    public getMessagesStore(): Writable<MessageMap> {
+    public getMessagesStore(): Writable<Message[]> {
         return this.messageStore;
     }
     public getDeletedMessagesStore(): Writable<Map<string, string>> {
@@ -198,6 +200,41 @@ export class AbstractRoom {
     }
     public getLoadingStore(): Writable<boolean> {
         return this.loadingStore;
+    }
+
+    // Function used to manage Messages
+    protected appendMessage(message: Message) {
+        this.addMessage(message);
+        this.messageStore.update((messages) => [...messages, message]);
+    }
+    protected prependMessage(message: Message) {
+        this.addMessage(message);
+        this.messageStore.update((messages) => [message, ...messages]);
+    }
+    protected addMessage(message: Message) {
+        this.messageMap.set(message.id, message);
+    }
+    protected updateMessagePart(messageId: string, part: Object) {
+        const message = this.messageMap.get(messageId);
+        if (message) {
+            this.messageMap.set(messageId, { ...message, ...part });
+        } else {
+            throw new Error(`AbstractRoom => updateMessagePart => No message found (${messageId})`);
+        }
+        this.messageStore.update((messages) =>
+            messages.map((message) => {
+                if (message.id === messageId) {
+                    return { ...message, ...part };
+                } else {
+                    return message;
+                }
+            })
+        );
+    }
+    public deleteMessage(messageId: string): boolean {
+        this.messageMap.delete(messageId);
+        this.messageStore.update((messages) => messages.filter((message) => message.id !== messageId));
+        return true;
     }
 
     // DO NOT USE BUT CAN BE USEFUL
