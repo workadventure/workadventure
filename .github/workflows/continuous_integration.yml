@@ -35,17 +35,11 @@ jobs:
         with:
           version: '3.x'
 
-      - name: "Setup Yarn"
-        run: |
-          yarn set version stable
-          yarn plugin import workspace-tools
-
       - name: "Install dependencies"
-        run: yarn install --immutable
-        working-directory: "play"
+        run: yarn workspaces focus workadventure-play
 
       - name: "Install messages dependencies"
-        run: yarn install --immutable
+        run: yarn install --no-immutable
         working-directory: "messages"
 
       - name: "Build proto messages"
@@ -101,7 +95,9 @@ jobs:
       - name: "Setup NodeJS"
         uses: actions/setup-node@v1
         with:
-          node-version: '14.x'
+          node-version: '16.x'
+          cache: "yarn"
+          cache-dependency-path: '**/yarn.lock'
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
@@ -112,20 +108,11 @@ jobs:
       #   run: mkdir -p ./../front/libs/tailwind && cp -R ./* ./../front/libs
       #   working-directory: "libs"
 
-      - name: "Install libs/tailwind dependencies"
-        run: yarn install  --immutable
-        working-directory: "libs/tailwind"
-
-      - name: "Install libs/messages dependencies"
-        run: yarn install  --immutable
-        working-directory: "libs/messages"
-
       - name: "Install dependencies"
-        run: yarn install  --immutable
-        working-directory: "chat"
+        run: yarn workspaces focus workadventurechat
 
       - name: "Install messages dependencies"
-        run: yarn install  --immutable
+        run: yarn install  --no-immutable
         working-directory: "messages"
 
       - name: "Build proto messages"
@@ -180,6 +167,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
+          cache: "yarn"
+          cache-dependency-path: '**/yarn.lock'
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
@@ -187,16 +176,11 @@ jobs:
           version: '3.x'
 
       - name: "Install dependencies"
-        run: yarn install  --immutable
-        working-directory: "back"
+        run: yarn workspaces focus workadventureback
 
       - name: "Install messages dependencies"
-        run: yarn install  --immutable
+        run: yarn install  --no-immutable
         working-directory: "messages"
-
-      - name: "Install libs dependencies"
-        run: yarn install  --immutable
-        working-directory: "libs/messages"
 
       - name: "Build proto messages"
         run: yarn run proto && yarn run ts-proto && yarn run copy-to-back
@@ -231,10 +215,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
+          cache: "yarn"
+          cache-dependency-path: '**/yarn.lock'
 
       - name: "Install dependencies"
-        run: yarn install  --immutable
-        working-directory: "uploader"
+        run: yarn workspaces focus workadventureuploader
 
       - name: "Lint"
         run: yarn run lint
@@ -258,6 +243,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
+          cache: "yarn"
+          cache-dependency-path: '**/yarn.lock'
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
@@ -265,24 +252,15 @@ jobs:
           version: '3.x'
 
       - name: "Install dependencies"
-        run: yarn install  --immutable
-        working-directory: "map-storage"
+        run: yarn workspaces focus map-storage
 
       - name: "Install messages dependencies"
-        run: yarn install  --immutable
+        run: yarn install  --no-immutable
         working-directory: "messages"
 
       - name: "Build proto messages"
         run: yarn run ts-proto
         working-directory: "messages"
-
-      - name: "Install libs/map-editor dependencies"
-        run: yarn install  --immutable
-        working-directory: "libs/map-editor"
-
-      - name: "Install libs/messages dependencies"
-        run: yarn install  --immutable
-        working-directory: "libs/messages"
 
       - name: "Build"
         run: yarn run build
@@ -313,6 +291,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
+          cache: "yarn"
+          cache-dependency-path: '**/yarn.lock'
 
       - name: "Install dependencies"
         run: yarn install  --immutable
@@ -351,6 +331,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
+          cache: "yarn"
+          cache-dependency-path: '**/yarn.lock'
 
       - name: "Install dependencies"
         run: yarn install  --immutable
@@ -389,7 +371,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
-
+          cache: "npm"
+          cache-dependency-path: '**/yarn.lock'
 
       - name: "Install dependencies"
         run: npm ci
@@ -400,7 +383,7 @@ jobs:
         working-directory: "libs/map-editor"
 
       - name: "Install libs/messages dependencies"
-        run: yarn install  --immutable
+        run: yarn install  --no-immutable
         working-directory: "libs/messages"
 
       - name: "Install play dependencies"

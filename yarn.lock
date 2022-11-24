@@ -6190,7 +6190,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"etag@npm:^1.8.1, etag@npm:~1.8.1":
+"etag@npm:~1.8.1":
   version: 1.8.1
   resolution: "etag@npm:1.8.1"
   checksum: 571aeb3dbe0f2bbd4e4fadbdb44f325fc75335cd5f6f6b6a091e6a06a9f25ed5392f0863c5442acb0646787446e816f13cbfc6edce5b07658541dff573cab1ff
@@ -9381,13 +9381,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"live-directory@moufmouf/live-directory#hot_reload_param":
-  version: 2.3.2
-  resolution: "live-directory@https://github.com/moufmouf/live-directory.git#commit=cc0d9127cd8ec61ec3ed9fab161e97f7fbe0db92"
+"live-directory@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "live-directory@npm:3.0.1"
   dependencies:
     chokidar: ^3.5.2
-    etag: ^1.8.1
-  checksum: 79087d5d20c1e718d001c6e17142689c8f20a3f516a1623e229bf3765f0410bc2be472ce91f6ba94506c7b8e640b4dff3ed728932931bb8ca9d05d1b24335e65
+  checksum: 7178a8e03b2f627efcb41ee4a28d750ffb23f9ca18269c4d93c947691471ed552f2fc0d001f4f58347b223f5d48a3c23390435c8fbe930164b5650c4a3ebf082
   languageName: node
   linkType: hard
 
@@ -14675,7 +14674,7 @@ __metadata:
     jsdom: ^20.0.1
     jsonwebtoken: ^8.5.1
     lint-staged: ^12.3.7
-    live-directory: "moufmouf/live-directory#hot_reload_param"
+    live-directory: ^3.0.1
     mustache: ^4.2.0
     openapi3-ts: ^3.0.2
     openid-client: ^5.1.10
