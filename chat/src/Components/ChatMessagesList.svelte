@@ -16,7 +16,6 @@
         CornerDownLeftIcon,
         CornerLeftUpIcon,
         SmileIcon,
-        MoreHorizontalIcon,
         ArrowUpIcon,
         CopyIcon,
     } from "svelte-feather-icons";
