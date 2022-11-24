@@ -370,7 +370,7 @@
                             </div>
                         {/if}
                         <div
-                            style={`${$deletedMessagesStore.has(message.id) ? "" : "max-width: 70%;"}`}
+                            style={`${$deletedMessagesStore.has(message.id) ? "" : "max-width: 62%;"}`}
                             transition:fly={{
                                 x: isMe(message.jid) ? 10 : -10,
                                 delay: 100,
