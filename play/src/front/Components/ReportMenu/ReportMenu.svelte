@@ -80,7 +80,7 @@
     <section>
         {#if blockActive}
             <BlockSubMenu {userUUID} {userName} />
-            {#if connectionManager.currentRoom?.key.includes("/@/")}
+            {#if connectionManager.currentRoom?.canReport}
                 <ReportSubMenu {userUUID} {userName} />
             {/if}
         {:else}
