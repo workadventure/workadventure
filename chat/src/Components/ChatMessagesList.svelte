@@ -175,7 +175,7 @@
                     setTimeout(() => {
                         target.innerHTML = originalText;
                         target.classList.remove("tw-text-pop-green");
-                    }, 2_000);
+                    }, 1_000);
                 }
             })
             .catch((err) => {
@@ -310,12 +310,9 @@
             ${isMe(message.jid) ? (message.delivered ? "sent" : "sending") : "received"}
             `}
             >
-                <div
-                    class="tw-flex tw-flex-row tw-items-center  tw-max-w-full"
-                    style={`${isMe(message.jid) ? "max-width: 75%; " : ""}`}
-                >
+                <div class="tw-flex tw-flex-row tw-items-center  tw-max-w-full">
                     <div
-                        class={`tw-flex tw-flex-wrap tw-max-w-full ${
+                        class={`tw-flex tw-max-w-full tw-items-center ${
                             isMe(message.jid) ? "tw-justify-end" : "tw-justify-start"
                         }`}
                     >
@@ -325,7 +322,7 @@
                                     isMe(message.jid) || needHideHeader(message.name, message.time, i)
                                         ? "tw-opacity-0"
                                         : "tw-mt-4"
-                                } tw-relative wa-avatar-mini tw-mr-2`}
+                                } tw-relative wa-avatar-mini tw-mr-2 tw-self-start`}
                                 transition:fade={{ duration: 100 }}
                                 style={`background-color: ${getColor(message.jid)}`}
                             >
@@ -340,8 +337,41 @@
                                 </div>
                             </div>
                         {/if}
+                        {#if !message.error && !$deletedMessagesStore.has(message.id)}
+                            <!-- Action bar -->
+                            <div
+                                class={`actions tw-rounded-lg tw-text-xs tw-text-left tw-flex ${
+                                    needHideHeader(message.name, message.time, i) ? "" : "tw-pt-4"
+                                } ${
+                                    isMe(message.jid) ? "tw-pr-2 tw-flex-row-reverse" : "tw-order-3 tw-pl-2 tw-flex-row"
+                                }`}
+                                style={($me && $me.isAdmin) || isMe(message.jid) ? "width: 92px;" : "width: 72px;"}
+                            >
+                                <div class="action reply" on:click={() => selectMessage(message)}>
+                                    <CornerDownLeftIcon size="17" />
+                                    <div class="caption">{$LL.reply()}</div>
+                                </div>
+                                <div class="action react" on:click={() => reactMessage(message)}>
+                                    <SmileIcon size="17" />
+                                    <div class="caption">{$LL.react()}</div>
+                                </div>
+                                <div class="action copy" on:click={(e) => copyMessage(e, message)}>
+                                    <CopyIcon size="17" />
+                                    <div class="caption">{$LL.copy()}</div>
+                                </div>
+                                {#if ($me && $me.isAdmin) || isMe(message.jid)}
+                                    <div
+                                        class="action delete tw-text-pop-red"
+                                        on:click={() => mucRoom.sendRemoveMessage(message.id)}
+                                    >
+                                        <Trash2Icon size="17" />
+                                        <div class="caption">{$LL.delete()}</div>
+                                    </div>
+                                {/if}
+                            </div>
+                        {/if}
                         <div
-                            style={`${isMe(message.jid) ? "" : "max-width: 75%"}`}
+                            style={`${$deletedMessagesStore.has(message.id) ? "" : "max-width: 70%;"}`}
                             transition:fly={{
                                 x: isMe(message.jid) ? 10 : -10,
                                 delay: 100,
@@ -415,8 +445,9 @@
                                         {/each}
                                     {/if}
 
+                                    <!--
                                     {#if !message.error}
-                                        <!-- Action bar -->
+                                        <-- Action bar ->
                                         <div
                                             class="actions tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
                                         >
@@ -456,7 +487,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    {/if}
+                                    {/if} -->
                                 </div>
 
                                 <!-- React associated -->
@@ -681,7 +712,8 @@
         position: relative;
         min-width: 75px;
         word-break: break-word;
-        .actions {
+        /*
+      .actions {
             display: none;
             position: absolute;
             right: -16px;
@@ -731,6 +763,7 @@
                 }
             }
         }
+         */
     }
     .emojis {
         display: flex;
@@ -739,6 +772,7 @@
         position: relative;
         flex-direction: row-reverse;
         margin-right: -5px;
+        min-height: 8px;
         span {
             font-size: 0.65rem;
             border-radius: 1.5rem;
