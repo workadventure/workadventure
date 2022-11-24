@@ -22,8 +22,8 @@
 
     let messagesList: ChatMessagesList;
 
-    function handleFormHeight(event: unknown) {
-        formHeight = event.detail;
+    function handleFormHeight(height: number) {
+        formHeight = height;
     }
 
     onDestroy(() => {
@@ -130,7 +130,7 @@
         <div class="messageForm" transition:fly={{ y: 100, duration: 100 }}>
             <ChatMessageForm
                 mucRoom={activeThread}
-                on:formHeight={handleFormHeight}
+                on:formHeight={(event) => handleFormHeight(event.detail)}
                 on:scrollDown={messagesList.scrollDown}
             />
         </div>
