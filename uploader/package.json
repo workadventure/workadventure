@@ -56,6 +56,8 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@jest/transform": "^29.3.1",
+    "@jest/types": "^29.3.1",
     "@types/busboy": "^0.2.3",
     "@types/circular-json": "^0.4.0",
     "@types/debug": "^4.1.5",
@@ -63,6 +65,7 @@
     "@types/jest": "^29.1.1",
     "@types/jsonwebtoken": "^8.3.8",
     "@types/mkdirp": "^1.0.1",
+    "@types/node": "^18.11.9",
     "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",

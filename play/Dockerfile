@@ -21,9 +21,9 @@ COPY libs/math-utils/package.json libs/math-utils/package.json
 COPY libs/tailwind/package.json libs/tailwind/package.json
 RUN yarn workspaces focus workadventure-play
 COPY libs ./libs
-COPY --from=proto-builder /usr/libs/messages/src ./../libs/messages/src
+COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
 COPY play ./play
-COPY --from=proto-builder /usr/src/generated src/messages/generated
+COPY --from=proto-builder /usr/src/generated play/src/messages/generated
 ENV NODE_ENV=production
 # upgrade RAM available to 6G
 RUN cd play && yarn run typesafe-i18n && yarn run build-iframe-api && NODE_OPTIONS="--max-old-space-size=6144" yarn build
