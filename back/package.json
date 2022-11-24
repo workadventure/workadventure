@@ -8,6 +8,7 @@
     "dev": "ts-node-dev --inspect=0.0.0.0:9229 --exit-child --respawn ./server.ts",
     "runprod": "ts-node --transpileOnly ./server.ts",
     "profile": "tsc && node --prof ./dist/server.js",
+    "typecheck": "tsc --noEmit",
     "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
     "lint": "DEBUG= node_modules/.bin/eslint src/ . --ext .ts",
     "fix": "DEBUG= node_modules/.bin/eslint --fix src/ . --ext .ts",

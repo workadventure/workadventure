@@ -178,6 +178,15 @@ jobs:
       - name: "Install dependencies"
         run: yarn workspaces focus workadventureback
 
+      - name: "DEBUG"
+        run: ls -al back
+
+      - name: "DEBUG"
+        run: ls -al back/node_modules
+
+      - name: "DEBUG"
+        run: ls -al back/node_modules/.bin
+
       - name: "Install messages dependencies"
         run: npm install
         working-directory: "messages"
@@ -186,8 +195,8 @@ jobs:
         run: npm run proto && npm run ts-proto && npm run copy-to-back
         working-directory: "messages"
 
-      - name: "Build"
-        run: yarn run tsc
+      - name: "Typecheck"
+        run: yarn run typecheck
         working-directory: "back"
 
       - name: "Lint"
