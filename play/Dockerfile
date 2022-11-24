@@ -11,8 +11,8 @@ RUN yarn run tag-version && yarn proto && yarn ts-proto
 FROM --platform=$BUILDPLATFORM node:18.11-buster-slim@sha256:c3a4122a9b60c52a633b92788dec4159909158c828b56e11a3dc0284814a81f2 as builder
 WORKDIR /usr/src
 RUN apt-get update && apt-get install -y git
-RUN yarn set version stable
-RUN yarn plugin import workspace-tools
+COPY .yarn/releases .yarn/releases
+COPY .yarn/plugins .yarn/plugins
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY play/package.json play/package.json
 COPY libs/messages/package.json libs/messages/package.json
@@ -32,9 +32,9 @@ RUN cd play && yarn run typesafe-i18n && yarn run build-iframe-api && NODE_OPTIO
 FROM node:18.11-buster-slim@sha256:c3a4122a9b60c52a633b92788dec4159909158c828b56e11a3dc0284814a81f2
 WORKDIR /usr/src
 RUN apt-get update && apt-get install -y git
-RUN yarn set version stable
-RUN yarn plugin import workspace-tools
-COPY package.json yarn.lock ./
+COPY .yarn/releases .yarn/releases
+COPY .yarn/plugins .yarn/plugins
+COPY package.json yarn.lock .yarnrc.yml ./
 COPY play/package.json play/package.json
 COPY libs/messages/package.json libs/messages/package.json
 COPY libs/map-editor/package.json libs/map-editor/package.json

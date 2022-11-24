@@ -1,7 +1,9 @@
 **/node_modules/**
 **/Dockerfile
 /install.lock
-/.yarn
+/.yarn/*
+!/.yarn/releases
+!/.yarn/plugins
 /libs/messages/src/ts-proto-generated/**
 /play/src/messages/generated/**
 /back/src/messages/generated/**

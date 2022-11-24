@@ -15,8 +15,8 @@ RUN yarn run tag-version && yarn run ts-proto
 FROM node:18.9.1@sha256:48c6c0054de0a80275f9ff67010ab7b555848e126bc35893bba8a77bf871550a
 WORKDIR /usr/src
 RUN apt-get update && apt-get install -y git
-RUN yarn set version stable
-RUN yarn plugin import workspace-tools
+COPY .yarn/releases .yarn/releases
+COPY .yarn/plugins .yarn/plugins
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY map-storage/package.json map-storage/package.json
 COPY libs/messages/package.json libs/messages/package.json
