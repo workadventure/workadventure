@@ -231,7 +231,7 @@ export class AbstractRoom {
             })
         );
     }
-    protected deleteMessage(messageId: string): boolean {
+    public deleteMessage(messageId: string): boolean {
         this.messageMap.delete(messageId);
         this.messageStore.update((messages) => messages.filter((message) => message.id !== messageId));
         return true;
