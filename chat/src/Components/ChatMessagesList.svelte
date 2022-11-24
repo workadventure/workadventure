@@ -532,7 +532,7 @@
                                 <!-- Reply associated -->
                                 {#if message.targetMessageReply}
                                     <div
-                                        class="message-replied tw-text-xs tw-rounded-lg tw-bg-dark tw-px-3 tw-py-2 tw-mt-3 tw-mb-2 tw-text-left tw-cursor-pointer"
+                                        class="message-replied tw-text-xs tw-rounded-lg tw-bg-dark tw-px-3 tw-py-2 tw-mt-1 tw-mb-2 tw-text-left tw-cursor-pointer"
                                         on:click={() => scrollToMessageId(message.targetMessageReply?.id ?? "")}
                                     >
                                         <div class="icon-replied">
