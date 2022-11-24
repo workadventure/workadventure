@@ -15,7 +15,7 @@ import { OutlineableInterface } from "../Game/OutlineableInterface";
 
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
-    Removed = "EntityEvent:Removed",
+    Remove = "EntityEvent:Removed",
     PropertySet = "EntityEvent:PropertySet",
 }
 
@@ -70,7 +70,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     public destroy(fromScene?: boolean | undefined): void {
         this.outlineColorStoreUnsubscribe();
-        this.emit(EntityEvent.Removed);
         super.destroy();
     }
 
@@ -163,7 +162,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                         break;
                     }
                     case MapEntityEditorMode.RemoveMode: {
-                        this.destroy();
+                        this.emit(EntityEvent.Remove);
                         break;
                     }
                 }

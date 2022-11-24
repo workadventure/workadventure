@@ -50,6 +50,24 @@ export class EntitiesManager {
         this.entities.push(entity);
     }
 
+    public removeEntity(entity: Entity): void {
+        const index = this.entities.findIndex((ent) => ent === entity);
+        this.entities.splice(index, 1);
+
+        const colGrid = entity.getReversedCollisionGrid();
+        if (colGrid) {
+            this.gameMapFrontWrapper.modifyToCollisionsLayer(
+                entity.getTopLeft().x,
+                entity.getTopLeft().y,
+                "0",
+                colGrid
+            );
+        }
+
+        entity.destroy();
+        this.scene.markDirty();
+    }
+
     public getProperties(): Map<string, string | boolean | number> {
         return this.properties;
     }
@@ -67,8 +85,8 @@ export class EntitiesManager {
     }
 
     private bindEntityEventHandlers(entity: Entity): void {
-        entity.on(EntityEvent.Removed, () => {
-            this.scene.markDirty();
+        entity.on(EntityEvent.Remove, () => {
+            this.removeEntity(entity);
         });
         entity.on(EntityEvent.Moved, (oldX: number, oldY: number) => {
             const reversedGrid = entity.getReversedCollisionGrid();
