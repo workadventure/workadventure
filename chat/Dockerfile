@@ -25,7 +25,7 @@ COPY libs/math-utils/package.json libs/math-utils/package.json
 COPY libs/tailwind/package.json libs/tailwind/package.json
 RUN yarn workspaces focus workadventurechat
 COPY libs ./libs
-COPY --from=proto-builder /usr/libs/messages/src ./../libs/messages/src
+COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
 COPY chat ./chat
 
 # upgrade RAM available to 6G
