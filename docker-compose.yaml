@@ -250,8 +250,8 @@ services:
           linux/amd64
         environment:
             #STARTUP_COMMAND_0: sudo apt-get install -y inotify-tools
-            STARTUP_COMMAND_1: yarn install
-            STARTUP_COMMAND_2: yarn run proto:watch
+            STARTUP_COMMAND_1: npm install
+            STARTUP_COMMAND_2: npm run proto:watch
         volumes:
             - ./messages:/usr/src/app
             - ./back:/usr/src/back

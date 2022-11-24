@@ -49,11 +49,11 @@ jobs:
         working-directory: "play"
 
       - name: "Install messages dependencies"
-        run: yarn install  --immutable
+        run: npm install
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run ts-proto && yarn run copy-to-play
+        run: npm run ts-proto && npm run copy-to-play
         working-directory: "messages"
 
       - name: "Generate i18n files"
