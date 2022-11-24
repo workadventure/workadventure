@@ -39,11 +39,11 @@ jobs:
         run: yarn workspaces focus workadventure-play
 
       - name: "Install messages dependencies"
-        run: yarn set version classic && yarn install --frozen-lockfile && yarn set version 3.x
+        run: npm install
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run ts-proto && yarn run proto && yarn run copy-to-play
+        run: npm run ts-proto && npm run proto && npm run copy-to-play
         working-directory: "messages"
 
       - name: "Generate i18n files"
@@ -112,11 +112,11 @@ jobs:
         run: yarn workspaces focus workadventurechat
 
       - name: "Install messages dependencies"
-        run: yarn install  --no-immutable
+        run: npm install
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run ts-proto
+        run: npm run ts-proto
         working-directory: "messages"
 
       - name: "Pretty"
@@ -179,11 +179,11 @@ jobs:
         run: yarn workspaces focus workadventureback
 
       - name: "Install messages dependencies"
-        run: yarn install  --no-immutable
+        run: npm install
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run proto && yarn run ts-proto && yarn run copy-to-back
+        run: npm run proto && npm run ts-proto && npm run copy-to-back
         working-directory: "messages"
 
       - name: "Build"
@@ -255,11 +255,11 @@ jobs:
         run: yarn workspaces focus map-storage
 
       - name: "Install messages dependencies"
-        run: yarn install  --no-immutable
+        run: npm install
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run ts-proto
+        run: npm run ts-proto
         working-directory: "messages"
 
       - name: "Build"
@@ -391,11 +391,11 @@ jobs:
         working-directory: "play"
 
       - name: "Install messages dependencies"
-        run: yarn install  --immutable
+        run: npm install
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run ts-proto
+        run: npm run ts-proto
         working-directory: "messages"
 
       - name: "Build API typings"

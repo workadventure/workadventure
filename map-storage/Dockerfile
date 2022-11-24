@@ -6,10 +6,10 @@
 FROM --platform=$BUILDPLATFORM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c as proto-builder
 WORKDIR /usr/src
 COPY messages/yarn.lock messages/package.json ./
-RUN yarn install
+RUN npm install
 COPY messages .
 COPY libs ./../libs
-RUN yarn run tag-version && yarn run ts-proto
+RUN npm run tag-version && npm run ts-proto
 
 # final production image
 FROM node:18.9.1@sha256:48c6c0054de0a80275f9ff67010ab7b555848e126bc35893bba8a77bf871550a
