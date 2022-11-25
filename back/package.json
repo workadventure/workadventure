@@ -10,8 +10,8 @@
     "profile": "tsc && node --prof ./dist/server.js",
     "typecheck": "tsc --noEmit",
     "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
-    "lint": "DEBUG= node_modules/.bin/eslint src/ . --ext .ts",
-    "fix": "DEBUG= node_modules/.bin/eslint --fix src/ . --ext .ts",
+    "lint": "DEBUG= eslint src/ . --ext .ts",
+    "fix": "DEBUG= eslint --fix src/ . --ext .ts",
     "precommit": "lint-staged",
     "pretty": "yarn prettier --write 'src/**/*.{ts,tsx}'",
     "pretty-check": "yarn prettier --check 'src/**/*.{ts,tsx}'"
@@ -85,7 +85,7 @@
   },
   "lint-staged": {
     "*.ts": [
-      "node_modules/.bin/eslint --fix",
+      "eslint --fix",
       "prettier --write"
     ]
   }

@@ -27,8 +27,8 @@
     "test": "vitest",
     "svelte-check-watch": "svelte-check --fail-on-warnings --threshold error --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore,a11y-click-events-have-key-events:ignore,security-anchor-rel-noreferrer:ignore\" --watch",
     "svelte-check": "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore,a11y-click-events-have-key-events:ignore,security-anchor-rel-noreferrer:ignore\"",
-    "lint": "node_modules/.bin/eslint src/ tests/ --ext .ts,.svelte",
-    "lint-fix": "node_modules/.bin/eslint --fix src/ tests/ --ext .ts,.svelte",
+    "lint": "eslint src/ tests/ --ext .ts,.svelte",
+    "lint-fix": "eslint --fix src/ tests/ --ext .ts,.svelte",
     "pretty": "yarn prettier --write 'src/**/*.{ts,svelte}'",
     "pretty-check": "yarn prettier --check 'src/**/*.{ts,svelte}'",
     "typesafe-i18n": "typesafe-i18n --no-watch",
@@ -39,7 +39,7 @@
       "yarn run svelte-check"
     ],
     "*.{ts,svelte}": [
-      "node_modules/.bin/eslint --fix",
+      "eslint --fix",
       "prettier --write"
     ]
   },
