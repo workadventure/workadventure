@@ -11,6 +11,7 @@
     "runprod": "node --max-old-space-size=4096 ./dist/server.js",
     "profile": "tsc && node --prof ./dist/server.js",
     "test": "jest --forceExit",
+    "startTestServer": "ts-node tests/testServer.ts",
     "lint": "eslint src/ . --ext .ts",
     "fix": "eslint --fix src/ . --ext .ts"
   },
