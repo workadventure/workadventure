@@ -262,8 +262,8 @@ jobs:
         run: npm run ts-proto
         working-directory: "messages"
 
-      - name: "Build"
-        run: yarn run build
+      - name: "Typecheck"
+        run: yarn run typecheck
         working-directory: "map-storage"
 
       - name: "Lint"
@@ -372,22 +372,14 @@ jobs:
         with:
           node-version: 16
           cache: "npm"
-          cache-dependency-path: '**/yarn.lock'
+          cache-dependency-path: 'tests/package-lock.json'
 
       - name: "Install dependencies"
         run: npm ci
         working-directory: "tests"
 
-      - name: "Install libs/map-editor dependencies"
-        run: yarn install  --immutable
-        working-directory: "libs/map-editor"
-
-      - name: "Install libs/messages dependencies"
-        run: yarn install  --no-immutable
-        working-directory: "libs/messages"
-
       - name: "Install play dependencies"
-        run: yarn install  --immutable
+        run: yarn workspaces focus workadventure-play
         working-directory: "play"
 
       - name: "Install messages dependencies"
@@ -403,5 +395,5 @@ jobs:
         working-directory: "play"
 
       - name: "Lint"
-        run: yarn lint
+        run: npm run lint
         working-directory: "tests"
