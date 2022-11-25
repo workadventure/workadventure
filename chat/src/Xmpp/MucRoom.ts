@@ -352,12 +352,22 @@ export class MucRoom extends AbstractRoom {
         });
         if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, "<< Retrieve last messages received");
         if (response.paging && response.paging.count !== undefined) {
+            const newMessages: Message[] = [];
             response.results?.reverse();
             response.results?.forEach((result) => {
                 if (result.item.message) {
-                    this.onMessage(result.item.message as StanzaProtocol.ReceivedMessage, result.item.delay, true);
+                    const message = result.item.message as StanzaProtocol.ReceivedMessage;
+                    this.parseMessageType(message);
+                    if(this.parseMessageType(message) !== 'new'){
+                        this.onMessage(message, result.item.delay);
+                    } else {
+                        newMessages.push(this.parseMessage(message, result.item.delay));
+                    }
                 }
             });
+            if(newMessages.length > 0){
+                this.prependMessages(newMessages);
+            }
             if (response.paging.count < 50) {
                 this.canLoadOlderMessagesStore.set(false);
             }
@@ -366,40 +376,44 @@ export class MucRoom extends AbstractRoom {
     }
 
     // Function used to interpret message from the server
-    onMessage(
-        receivedMessage: StanzaProtocol.ReceivedMessage,
-        delay: StanzaProtocol.Delay | null = null,
-        prepend: boolean = false
-    ): boolean {
+    onMessage(receivedMessage: StanzaProtocol.ReceivedMessage, delay: StanzaProtocol.Delay | null = null): boolean {
+        if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, "<< Message received");
         if (!receivedMessage.jid) {
             throw new Error("No JID set for the message");
         } else if (!receivedMessage.id) {
             throw new Error("No id set for the message");
         }
         let response = false;
-        if (receivedMessage.hasSubject === true) {
-            // If subject message, we do nothing for the moment
-            response = true;
-        } else {
-            if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, "<< Message received");
-            let date = new Date();
-            if (delay) {
-                // Only in case where the message received is an archive (a message automatically sent by the server when joining a room)
-                date = new Date(delay.timestamp);
+        const messageId = receivedMessage.id ?? "";
+        switch (this.parseMessageType(receivedMessage)) {
+            case 'subject': {
+                // If subject message, we do nothing for the moment
+                response = true;
+                break;
             }
-            const messageId = receivedMessage.id ?? "";
-            if (this.messageMap.has(messageId)) {
+            case 'exist': {
                 this.updateLastMessageSeen();
                 this.updateMessagePart(messageId, { delivered: true, error: false });
                 response = true;
-            } else if (receivedMessage.remove) {
-                const removedId = receivedMessage.remove.id;
-                this.deletedMessagesStore.update((deletedMessages) => {
-                    deletedMessages.set(removedId, JID.toBare(receivedMessage.jid));
-                    return deletedMessages;
-                });
-                response = true;
-            } else {
+                break;
+            }
+            case 'remove': {
+                const removedId = receivedMessage.remove?.id;
+                if(removedId) {
+                    this.deletedMessagesStore.update((deletedMessages) => {
+                        deletedMessages.set(removedId, JID.toBare(receivedMessage.jid));
+                        return deletedMessages;
+                    });
+                    response = true;
+                }
+                break;
+            }
+            case 'new': {
+                let date = new Date();
+                if (delay) {
+                    // Only in case where the message received is an archive (a message automatically sent by the server when joining a room)
+                    date = new Date(delay.timestamp);
+                }
                 if (date !== null && date > this.lastMessageSeen && !delay) {
                     this.countMessagesToSee.update((last) => last + 1);
                     if (/*get(activeThreadStore) !== this ||*/ get(availabilityStatusStore) !== 1) {
@@ -410,50 +424,10 @@ export class MucRoom extends AbstractRoom {
                     }
                 }
 
-                const receivedJid = JID.parse(receivedMessage.jid);
-
-                if (receivedJid && receivedMessage.jid && receivedMessage.id) {
-                    const message: Message = {
-                        name: receivedJid.resource ?? "unknown",
-                        jid: JID.create({
-                            local: receivedJid.local,
-                            domain: receivedJid.domain,
-                            resource: JID.parse(receivedMessage.from).resource,
-                        }),
-                        body: receivedMessage.body ?? "",
-                        time: date,
-                        id: receivedMessage.id,
-                        delivered: true,
-                        error: false,
-                        from: receivedMessage.from,
-                        type: receivedMessage.messageReply ? MessageType.message : MessageType.reply,
-                        links: receivedMessage.links as WaLink[],
-                        targetMessageReply: receivedMessage.messageReply
-                            ? {
-                                  id: receivedMessage.messageReply.id,
-                                  senderName: receivedMessage.messageReply.senderName,
-                                  body: receivedMessage.messageReply.body,
-                                  links: receivedMessage.messageReply.links
-                                      ? JSON.parse(receivedMessage.messageReply.links)
-                                      : undefined,
-                              }
-                            : undefined,
-                        reactionsMessage: this.reactions(receivedMessage.id),
-                    };
-                    if (prepend) {
-                        this.prependMessage(message);
-                    } else {
-                        this.appendMessage(message);
-                    }
-                    response = true;
-                } else {
-                    console.error("Message format is not good", {
-                        received: !!receivedJid,
-                        jid: !!receivedMessage.jid,
-                        body: !!receivedMessage.body,
-                        id: !!receivedMessage.id,
-                    });
-                }
+                const message = this.parseMessage(receivedMessage, delay);
+                this.appendMessage(message);
+                response = true;
+                break;
             }
         }
         return response;
@@ -647,75 +621,6 @@ export class MucRoom extends AbstractRoom {
     }
 
     // Update reaction and messages
-    public haveReaction(emojiTargeted: string, messageId: string): boolean {
-        const reactionsMessage = get(this.reactionMessageStore).get(messageId);
-        if (!reactionsMessage) return false;
-        const myReaction =
-            reactionsMessage.find(
-                (reactionMessage) => reactionMessage.userJid === this.xmppClient.getMyPersonalJID()
-            ) ?? null;
-        if (!myReaction) return false;
-        return !!myReaction.userReactions.find((emoji) => emoji === emojiTargeted);
-    }
-    private reactions(messageId: string): Map<string, Array<string>> {
-        const reactions = new Map<string, Array<string>>();
-        const reactionsMessage = get(this.reactionMessageStore).get(messageId);
-        if (reactionsMessage) {
-            reactionsMessage.forEach((reactionMessage) => {
-                reactionMessage.userReactions.forEach((reaction) => {
-                    reactions.set(reaction, [...(reactions.get(reaction) ?? []), reactionMessage.userJid]);
-                });
-            });
-        }
-        return reactions;
-    }
-    private updateMessageReactions(messageId: string) {
-        // Update reactions of the message targeted
-        this.updateMessagePart(messageId, { reactionsMessage: this.reactions(messageId) });
-    }
-    private toggleReactionsMessage(userJid: string, messageId: string, reactions: Array<string>) {
-        const newUserReaction = {
-            userJid: userJid,
-            userReactions: reactions,
-        };
-
-        this.reactionMessageStore.update((reactionsMessages) => {
-            const reactionsMessage = reactionsMessages.get(messageId);
-            if (reactionsMessage) {
-                // If message has reactions
-                const userReactionMessage = reactionsMessage.find(
-                    (reactionMessage) => reactionMessage.userJid === userJid
-                );
-                if (userReactionMessage) {
-                    // If reactions of user already exists in the reactions of the message
-                    if (reactions.length === 0) {
-                        // If reactions of user is empty, delete it
-                        reactionsMessages.set(
-                            messageId,
-                            reactionsMessage.filter((reactionMessage) => reactionMessage.userJid !== userJid)
-                        );
-                    } else {
-                        // If reactions of user is new, update it
-                        reactionsMessages.set(
-                            messageId,
-                            reactionsMessage.map((userReactions) =>
-                                userReactions.userJid === userJid ? newUserReaction : userReactions
-                            )
-                        );
-                    }
-                } else {
-                    // If reactions of user doesn't exist in the reactions of the message
-                    reactionsMessage.push(newUserReaction);
-                    reactionsMessages.set(messageId, reactionsMessage);
-                }
-            } else {
-                // If message hasn't reactions, add it
-                reactionsMessages.set(messageId, [newUserReaction]);
-            }
-            return reactionsMessages;
-        });
-        this.updateMessageReactions(messageId);
-    }
     public sendBack(idMessage: string): boolean {
         throw new Error("Not implemented yet");
         // this.messageStore.update((messages) => {
