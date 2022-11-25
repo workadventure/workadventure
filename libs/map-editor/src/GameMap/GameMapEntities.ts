@@ -22,9 +22,9 @@ export class GameMapEntities {
                 y: 336,
                 interactive: true,
                 properties: {
-                    jitsiRoom: "ChillZone",
-                    playAudio: "../assets/audio/campfire.ogg",
-                    openTab: "https://img-9gag-fun.9cache.com/photo/ay2DNzM_460svav1.mp4",
+                    jitsiRoom: {roomName : "ChillZone", buttonLabel :"Open Jitsi"},
+                    playAudio: {audioLink : "../assets/audio/campfire.ogg", buttonLabel:"Play campfire sound"},
+                    openTab: {link:"https://img-9gag-fun.9cache.com/photo/ay2DNzM_460svav1.mp4", buttonLabel:"Show me some kitties!"},
                 },
                 prefab:{
                     name:"table",

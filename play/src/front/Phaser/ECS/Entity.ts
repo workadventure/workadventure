@@ -20,7 +20,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     private readonly outlineColorStoreUnsubscribe: Unsubscriber;
 
     private entityData: EntityData;
-    private properties: { [key: string]: unknown | undefined };
 
     private beingRepositioned: boolean;
     private activatable: boolean;
@@ -35,7 +34,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.activatable = data.interactive ?? false;
 
         this.entityData = data;
-        this.properties = data.properties ?? {};
 
         this.setDepth(this.y + this.displayHeight * 0.5);
 
@@ -72,6 +70,14 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public activate(): void {
+        if(!(get(mapEditorModeStore) && get(mapEntityEditorModeStore) == MapEntityEditorMode.EditMode))
+        {
+            this.toggleActionsMenu();
+        }
+    }
+
+    public TestActivation() : void
+    {
         this.toggleActionsMenu();
     }
 
@@ -161,52 +167,55 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     private getDefaultActionsMenuActions(): ActionsMenuAction[] {
         const actions: ActionsMenuAction[] = [];
-        for (const key of Object.keys(this.properties)) {
-            switch (key) {
-                case "jitsiRoom": {
-                    actions.push({
-                        actionName: "Open Jitsi",
-                        protected: true,
-                        priority: 1,
-                        callback: () => {
-                            this.emit(EntityEvent.PropertySet, {
-                                propertyName: key,
-                                propertyValue: this.properties[key],
-                            });
-                        },
-                    });
-                    break;
-                }
-                case "playAudio": {
-                    actions.push({
-                        actionName: "Play campfire sound",
-                        protected: true,
-                        priority: 1,
-                        callback: () => {
-                            this.emit(EntityEvent.PropertySet, {
-                                propertyName: key,
-                                propertyValue: this.properties[key],
-                            });
-                        },
-                    });
-                    break;
-                }
-                case "openTab": {
-                    actions.push({
-                        actionName: "Show me some kitties!",
-                        protected: true,
-                        priority: 1,
-                        callback: () => {
-                            this.emit(EntityEvent.PropertySet, {
-                                propertyName: key,
-                                propertyValue: this.properties[key],
-                            });
-                        },
-                    });
-                    break;
-                }
-                default: {
-                    break;
+        for (const key of Object.keys(this.entityData.properties)) {
+            if(this.entityData.properties[key])
+            {
+                switch (key) {
+                    case "jitsiRoom": {
+                        actions.push({
+                            actionName: this.entityData.properties[key].buttonLabel,
+                            protected: true,
+                            priority: 1,
+                            callback: () => {
+                                this.emit(EntityEvent.PropertySet, {
+                                    propertyName: key,
+                                    propertyValue: this.entityData.properties[key].roomName,
+                                });
+                            },
+                        });
+                        break;
+                    }
+                    case "playAudio": {
+                        actions.push({
+                            actionName: this.entityData.properties[key].buttonLabel,
+                            protected: true,
+                            priority: 1,
+                            callback: () => {
+                                this.emit(EntityEvent.PropertySet, {
+                                    propertyName: key,
+                                    propertyValue: this.entityData.properties[key].audioLink,
+                                });
+                            },
+                        });
+                        break;
+                    }
+                    case "openTab": {
+                        actions.push({
+                            actionName: this.entityData.properties[key].buttonLabel,
+                            protected: true,
+                            priority: 1,
+                            callback: () => {
+                                this.emit(EntityEvent.PropertySet, {
+                                    propertyName: key,
+                                    propertyValue: this.entityData.properties[key].link,
+                                });
+                            },
+                        });
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
                 }
             }
         }
@@ -214,7 +223,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public isActivatable(): boolean {
-        return false;//this.activatable;
+        return this.activatable;
     }
 
     public getEntityData(): EntityData {
