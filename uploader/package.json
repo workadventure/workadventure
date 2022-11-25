@@ -11,8 +11,8 @@
     "runprod": "node --max-old-space-size=4096 ./dist/server.js",
     "profile": "tsc && node --prof ./dist/server.js",
     "test": "jest --forceExit",
-    "lint": "node_modules/.bin/eslint src/ . --ext .ts",
-    "fix": "node_modules/.bin/eslint --fix src/ . --ext .ts"
+    "lint": "eslint src/ . --ext .ts",
+    "fix": "eslint --fix src/ . --ext .ts"
   },
   "repository": {
     "type": "git",

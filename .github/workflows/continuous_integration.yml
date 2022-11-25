@@ -178,15 +178,6 @@ jobs:
       - name: "Install dependencies"
         run: yarn workspaces focus workadventureback
 
-      - name: "DEBUG"
-        run: ls -al back
-
-      - name: "DEBUG"
-        run: ls -al back/node_modules
-
-      - name: "DEBUG"
-        run: ls -al back/node_modules/.bin
-
       - name: "Install messages dependencies"
         run: npm install
         working-directory: "messages"
