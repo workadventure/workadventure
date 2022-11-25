@@ -38,14 +38,6 @@
         showReportScreenStore.set(userReportEmpty);
     }
 
-    function activateBlock() {
-        blockActive = true;
-    }
-
-    function activateReport() {
-        blockActive = false;
-    }
-
     function onKeyDown(e: KeyboardEvent) {
         if (e.key === "Escape") {
             close();
@@ -64,23 +56,11 @@
         <button type="button" class="close-window" on:click|preventDefault={close}>&times;</button>
         <h2>{$LL.report.moderate.title({ userName })}</h2>
     </section>
-    <section class="report-menu-action {disableReport ? 'tw-hidden' : ''}">
-        <section class="tw-flex tw-justify-center">
-            <button type="button" class={blockActive ? "disabled" : "light"} on:click|preventDefault={activateBlock}
-                >{$LL.report.moderate.block()}</button
-            >
-        </section>
-        <section class="tw-flex tw-justify-center">
-            <button type="button" class={blockActive ? "disabled" : "light"} on:click|preventDefault={activateReport}
-                >{$LL.report.moderate.report()}</button
-            >
-        </section>
-    </section>
 
     <section>
         {#if blockActive}
             <BlockSubMenu {userUUID} {userName} />
-            {#if connectionManager.currentRoom?.canReport}
+            {#if !disableReport}
                 <ReportSubMenu {userUUID} {userName} />
             {/if}
         {:else}

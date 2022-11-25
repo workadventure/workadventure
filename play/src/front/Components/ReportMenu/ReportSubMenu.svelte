@@ -12,10 +12,10 @@
     let hiddenUuidError = true;
 
     function submitReport() {
-        hiddenUuidError = false;
+        hiddenUuidError = true;
         hiddenError = true;
 
-        if (reportMessage === "") {
+        if (reportMessage == undefined || reportMessage === "") {
             hiddenError = false;
         } else {
             if (userUUID === undefined) {
@@ -39,13 +39,22 @@
     <h3 class="blue-title">{$LL.report.title()}</h3>
     <p>{$LL.report.content()}</p>
     <form>
-        <section>
+        <section class="tw-mb-0 tw-pb-0">
             <label class="tw-w-full">
                 <span>{$LL.report.message.title()}</span>
-                <textarea type="text" class="tw-w-full" bind:value={reportMessage} />
+                <textarea
+                    type="text"
+                    class="tw-w-full tw-mb-0 tw-pb-0"
+                    style="margin-bottom: 0;"
+                    bind:value={reportMessage}
+                />
             </label>
-            <p hidden={hiddenError}>{$LL.report.message.empty()}</p>
-            <p hidden={hiddenUuidError}>{$LL.report.message.error()}</p>
+            {#if !hiddenError}
+                <p class="tw-text-pop-red tw-mb-0 tw-pb-0">{$LL.report.message.empty()}</p>
+            {/if}
+            {#if !hiddenUuidError}
+                <p class="tw-text-pop-red tw-mb-0 tw-pb-0">{$LL.report.message.error()}</p>
+            {/if}
         </section>
         <section>
             <button type="submit" class="btn danger" on:click|preventDefault|stopPropagation={submitReport}
