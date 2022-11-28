@@ -136,6 +136,8 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                 this.y = this.entityData.prefab.collisionGrid
                     ? Math.floor(dragY / 32) * 32 + offsets.y
                     : Math.floor(dragY);
+
+                this.setDepth(this.y + this.displayHeight * 0.5);
                 (this.scene as GameScene).markDirty();
             }
         });
@@ -146,6 +148,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             }
         });
 
+        // TODO: DO NOT ALLOW FOR ENTITIES TO BE PLACED ON PREOCUPIED SPACES / OTHER PLAYERS
         this.on(Phaser.Input.Events.DRAG_END, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
                 (this.scene as GameScene).markDirty();

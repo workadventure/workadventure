@@ -111,10 +111,12 @@ export class EntityEditorTool extends MapEditorTool {
                 }
                 case MapEntityEditorMode.EditMode: {
                     this.entitiesManager.makeAllEntitiesInteractive();
+                    this.cleanPreview();
                     break;
                 }
                 case MapEntityEditorMode.RemoveMode: {
                     this.entitiesManager.makeAllEntitiesInteractive();
+                    this.cleanPreview();
                     break;
                 }
             }
@@ -193,6 +195,7 @@ export class EntityEditorTool extends MapEditorTool {
         this.entityPrefabPreview?.destroy();
         this.entityPrefabPreview = undefined;
         this.entityPrefab = undefined;
+        this.scene.markDirty();
     }
 
     private getPositionOffset(collisionGrid?: number[][]): { x: number; y: number } {
