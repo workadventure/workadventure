@@ -430,7 +430,7 @@ class IframeListener {
                     } else if (iframeEvent.type == "showBusinessCard") {
                         requestVisitCardsStore.set(iframeEvent.data.visitCardUrl);
                     } else if (iframeEvent.type == "openModal") {
-                        modalIframeTitlelStore.set(iframeEvent.data.tiltle);
+                        modalIframeTitlelStore.set(iframeEvent.data.title);
                         modalIframeAllowlStore.set(iframeEvent.data.allow);
                         modalIframeSrcStore.set(iframeEvent.data.src);
                         modalPositionStore.set(iframeEvent.data.position);
