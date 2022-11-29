@@ -1,11 +1,12 @@
 <script lang="ts">
     import ItemPicker from "./ItemPicker.svelte"
     import MapEntityPropertyEditor from "./MapEntityPropertyEditor.svelte"
-    import {MapEntityEditorMode, mapEntityEditorModeStore} from "../../Stores/MapEditorStore"
+    import {mapEditorSelectedEntityStore, MapEntityEditorMode, mapEntityEditorModeStore} from "../../Stores/MapEditorStore"
 
     function changeStore(editorMode : MapEntityEditorMode)
     {
         mapEntityEditorModeStore.set(editorMode)
+        mapEditorSelectedEntityStore.set(undefined);
     }
 </script>
 

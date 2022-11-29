@@ -171,7 +171,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                         break;
                     }
                     case MapEntityEditorMode.RemoveMode: {
-                        this.emit(EntityEvent.Remove);
+                        this.delete();
                         break;
                     }
                 }
@@ -204,6 +204,11 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                 (this.scene as GameScene).markDirty();
             }
         });
+    }
+
+    public delete()
+    {
+        this.emit(EntityEvent.Remove);
     }
 
     private getOutlinePlugin(): OutlinePipelinePlugin | undefined {

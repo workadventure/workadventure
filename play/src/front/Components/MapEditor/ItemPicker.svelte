@@ -51,6 +51,7 @@
         if (pickedVariant === undefined) {
             pickedVariant = currentVariants[0];
         }
+        mapEditorSelectedEntityPrefabStore.set(pickedVariant);
     }
 
     function onTagPick() {

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onDestroy } from "svelte";
+    import { onDestroy, SvelteComponent } from "svelte";
     import {mapEditorSelectedEntityStore} from "../../Stores/MapEditorStore"
     import PropertyField from "./PropertyField.svelte";
     import { slide } from 'svelte/transition';
@@ -8,9 +8,18 @@
     import NewTabPropertyEditor from "./PropertyEditor/NewTabPropertyEditor.svelte"
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte"
 
-    let possibleProperties = [
+  interface EntityPropertyDescription{
+    key:string,
+    name:string,
+    active:boolean,
+    currentValue:any,
+    component:any,
+    defaultValue:any
+  };
+
+    let possibleProperties:EntityPropertyDescription[] = [
         {key:"jitsiRoom",name:"jitsi room", active:false, currentValue:undefined, component:JitsiRoomPropertyEditor, defaultValue:{buttonLabel:"Open Jitsi", roomName:"" }},
-        {key:"playAudio",name:"audio file",  buttonLabel:"", active:false, currentValue:undefined,component:PlayAudioPropertyEditor, defaultValue:{buttonLabel:"Play Audio", audioLink:"" }},
+        {key:"playAudio",name:"audio file",  active:false, currentValue:undefined,component:PlayAudioPropertyEditor, defaultValue:{buttonLabel:"Play Audio", audioLink:"" }},
         {key:"openTab",name : "link", active:false, currentValue:undefined, component:NewTabPropertyEditor, defaultValue:{buttonLabel:"Open Tab", link:"" }}]
 
     let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe(currentEntity=>
@@ -21,9 +30,13 @@
             {
                 property.active = currentEntity.getEntityData().properties[property.key] !== undefined;
                 property.currentValue = currentEntity.getEntityData().properties[property.key];
-                console.log("porepte p "+property.currentValue);
+                if(!property.currentValue)
+                {
+                    property.currentValue = property.defaultValue;
+                }
             }
         }
+        possibleProperties = possibleProperties;
     });
     
     onDestroy(()=>
@@ -41,11 +54,11 @@
                 {
                     property.currentValue = possibleProperties.find(v=>v.key === property.key)?.defaultValue;//initialize here the property value
                 }
+
                 $mapEditorSelectedEntityStore.getEntityData().properties[property.key] = property.currentValue;
             }
             else
             {
-                property.currentValue = $mapEditorSelectedEntityStore.getEntityData().properties[property.key];
                 $mapEditorSelectedEntityStore.getEntityData().properties[property.key] = undefined;
             }
         }
@@ -66,6 +79,15 @@
           $mapEditorSelectedEntityStore.TestActivation();
       }
     }
+
+    function onDeleteEntity()
+    {
+      if($mapEditorSelectedEntityStore)
+      {
+        $mapEditorSelectedEntityStore.delete();
+        mapEditorSelectedEntityStore.set(undefined);
+      }
+    }
 </script>
 <div>
 {#if $mapEditorSelectedEntityStore === undefined}
@@ -83,7 +105,7 @@ Select an object modify its properties
 {/each}
 <div class="action-button">
     <button on:click={onTestInteraction}>Test Interaction</button>
-    <button class="delete-button"><div>Delete</div><img src={crossImg} alt=""/></button>
+    <button class="delete-button" on:click={onDeleteEntity}><div>Delete</div><img src={crossImg} alt=""/></button>
 </div>
 {/if}
 </div>

@@ -21,7 +21,6 @@ export class GameMapEntities {
     public addEntity(entityData: EntityData): void {
         this.entities.push(entityData);
         this.nextEntityId = Math.max(this.nextEntityId, entityData.id);
-        console.log(this.nextEntityId);
     }
 
     public removEntity(id: number): void {

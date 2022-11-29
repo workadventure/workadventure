@@ -184,6 +184,7 @@ export class EntityEditorTool extends MapEditorTool {
                 id: this.gameMapEntities.getNextEntityId(),
                 prefab: this.entityPrefab,
                 interactive: true,
+                properties:[]
             };
             this.gameMapEntities.addEntity(entityData);
             this.entitiesManager.addEntity(entityData);
