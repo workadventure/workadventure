@@ -26,12 +26,15 @@ export class AreaEditorTool extends MapEditorTool {
 
     private selectedAreaPreviewStoreSubscriber!: Unsubscriber;
 
+    private active: boolean;
+
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super();
         this.mapEditorModeManager = mapEditorModeManager;
         this.scene = this.mapEditorModeManager.getScene();
 
         this.areaPreviews = this.createAreaPreviews();
+        this.active = false;
 
         this.subscribeToStores();
     }
@@ -41,12 +44,14 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     public clear(): void {
+        this.active = false;
         mapEditorSelectedAreaPreviewStore.set(undefined);
         mapEditorSelectedPropertyStore.set(undefined);
         this.setAreaPreviewsVisibility(false);
     }
 
     public activate(): void {
+        this.active = true;
         this.updateAreaPreviews();
         this.setAreaPreviewsVisibility(true);
         this.scene.markDirty();
@@ -110,6 +115,10 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     public handleCommandExecution(commandConfig: CommandConfig): void {
+        // We do not need to make any visual changes if AreaEditorTool is not active
+        if (!this.active) {
+            return;
+        }
         switch (commandConfig.type) {
             case "CreateAreaCommand": {
                 this.handleAreaPreviewCreation(commandConfig.areaObjectConfig);
@@ -195,14 +204,14 @@ export class AreaEditorTool extends MapEditorTool {
         }
     }
 
-    public handleAreaPreviewDeletion(id: number): void {
+    private handleAreaPreviewDeletion(id: number): void {
         this.deleteAreaPreview(id);
         this.scene.markDirty();
         mapEditorSelectedAreaPreviewStore.set(undefined);
         mapEditorSelectedPropertyStore.set(undefined);
     }
 
-    public handleAreaPreviewCreation(config: AreaData): void {
+    private handleAreaPreviewCreation(config: AreaData): void {
         const areaPreview = new AreaPreview(this.scene, structuredClone(config));
         this.bindAreaPreviewEventHandlers(areaPreview);
         this.areaPreviews.push(areaPreview);

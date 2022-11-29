@@ -8,7 +8,8 @@ import {
     MapEntityEditorMode,
     mapEntityEditorModeStore,
 } from "../../../../Stores/MapEditorStore";
-import { EntitiesManager } from "../../GameMap/EntitiesManager";
+import { Entity } from "../../../ECS/Entity";
+import { EntitiesManager, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
 import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { GameScene } from "../../GameScene";
 import { MapEditorModeManager } from "../MapEditorModeManager";
@@ -39,6 +40,7 @@ export class EntityEditorTool extends MapEditorTool {
         this.entityPrefabPreview = undefined;
 
         this.subscribeToStores();
+        this.bindEntitiesManagerEventHandlers();
     }
 
     public update(time: number, dt: number): void {}
@@ -67,13 +69,34 @@ export class EntityEditorTool extends MapEditorTool {
      * Perform actions needed to see the changes instantly
      */
     public handleCommandExecution(commandConfig: CommandConfig): void {
-        console.log("EntityEditorTool handleCommandExecution");
+        switch (commandConfig.type) {
+            case "CreateEntityCommand": {
+                this.handleEntityCreation(commandConfig.entityData);
+                break;
+            }
+            case "DeleteEntityCommand": {
+                this.handleEntityDeletion(commandConfig.id);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
     }
     /**
      * React on commands coming from the outside
      */
     public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): void {
         console.log("EntityEditorTool handleIncomingCommandMessage");
+    }
+
+    private handleEntityCreation(config: EntityData): void {
+        this.entitiesManager.addEntity(structuredClone(config));
+    }
+
+    private handleEntityDeletion(id: number): void {
+        this.entitiesManager.deleteEntity(id);
+        this.gameMapEntities.deleteEntity(id);
     }
 
     private subscribeToStores(): void {
@@ -120,6 +143,15 @@ export class EntityEditorTool extends MapEditorTool {
                     break;
                 }
             }
+        });
+    }
+
+    private bindEntitiesManagerEventHandlers(): void {
+        this.entitiesManager.on(EntitiesManagerEvent.RemoveEntity, (entity: Entity) => {
+            this.mapEditorModeManager.executeCommand({
+                id: entity.getEntityData().id,
+                type: "DeleteEntityCommand",
+            });
         });
     }
 
@@ -185,9 +217,10 @@ export class EntityEditorTool extends MapEditorTool {
                 prefab: this.entityPrefab,
                 interactive: true,
             };
-            this.gameMapEntities.addEntity(entityData);
-            this.entitiesManager.addEntity(entityData);
-            this.scene.markDirty();
+            this.mapEditorModeManager.executeCommand({
+                entityData,
+                type: "CreateEntityCommand",
+            });
         }
     }
 
