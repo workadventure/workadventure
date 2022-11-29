@@ -3,9 +3,9 @@
     import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
     import {
-        modalIframeAllowlStore,
+        modalIframeAllowStore,
         modalIframeSrcStore,
-        modalIframeTitlelStore,
+        modalIframeTitleStore,
         modalVisibilityStore,
         modalPositionStore,
         modalIframeAllowApi,
@@ -47,8 +47,8 @@
                 bind:this={modalIframe}
                 height="100%"
                 width="100%"
-                allow={$modalIframeAllowlStore}
-                title={$modalIframeTitlelStore}
+                allow={$modalIframeAllowStore}
+                title={$modalIframeTitleStore}
                 src={$modalIframeSrcStore}
                 class="tw-border-0"
             />

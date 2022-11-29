@@ -4031,9 +4031,9 @@ pathval@^1.1.1:
   resolved "https://registry.yarnpkg.com/pathval/-/pathval-1.1.1.tgz#8534e77a77ce7ac5a2512ea21e0fdb8fcf6c3d8d"
   integrity sha512-Dp6zGqpTdETdR63lehJYPeIOqpiNBNtc7BpWSLrOje7UaIsE5aY92r/AunQA7rsXvet3lrJ3JnZX29UPTKXyKQ==
 
-phaser-animated-tiles@workadventure/phaser-animated-tiles#2621dcf192b135e37b34868c0d5e6bf8b8d29b48:
+phaser-animated-tiles@workadventure/phaser-animated-tiles#7e02ce91a100338a27f75f7b443bacd12459fd0f:
   version "2.0.2"
-  resolved "https://codeload.github.com/workadventure/phaser-animated-tiles/tar.gz/2621dcf192b135e37b34868c0d5e6bf8b8d29b48"
+  resolved "https://codeload.github.com/workadventure/phaser-animated-tiles/tar.gz/7e02ce91a100338a27f75f7b443bacd12459fd0f"
 
 phaser3-rex-plugins@^1.1.42:
   version "1.1.74"

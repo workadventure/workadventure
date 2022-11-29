@@ -202,8 +202,6 @@ export class AbstractRoom {
         return this.loadingStore;
     }
 
-
-
     // Function used to manage Reactions
     public haveReaction(emojiTargeted: string, messageId: string): boolean {
         const reactionsMessage = get(this.reactionMessageStore).get(messageId);
@@ -281,9 +279,9 @@ export class AbstractRoom {
         this.addMessage(message);
         this.messageStore.update((messages) => [...messages, message]);
     }
-    protected prependMessages(messages: Message[]) {
-        messages.forEach(message => this.addMessage(message));
-        this.messageStore.update((_messages) => [...messages, ..._messages]);
+    protected prependMessage(message: Message) {
+        this.addMessage(message);
+        this.messageStore.update((messages) => [message, ...messages]);
     }
     protected addMessage(message: Message) {
         this.messageMap.set(message.id, message);
