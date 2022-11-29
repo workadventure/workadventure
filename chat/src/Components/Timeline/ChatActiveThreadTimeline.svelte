@@ -285,7 +285,7 @@
                                                 {#await HtmlUtils.urlify(text)}
                                                     <p>...waiting</p>
                                                 {:then html}
-                                                    <HtmlMessage {html} {message} />
+                                                    {@html html}
                                                 {/await}
                                             </div>
                                         {/each}
