@@ -19,6 +19,7 @@
     import { EmojiButton } from "@joeattardi/emoji-button";
     import { HtmlUtils } from "../../Utils/HtmlUtils";
     import { defaultWoka } from "../../Xmpp/AbstractRoom";
+    import HtmlMessage from "../Content/HtmlMessage.svelte";
 
     const dispatch = createEventDispatcher();
     const defaultMucRoom = mucRoomsStore.getDefaultRoom();
@@ -284,7 +285,7 @@
                                                 {#await HtmlUtils.urlify(text)}
                                                     <p>...waiting</p>
                                                 {:then html}
-                                                    {@html html}
+                                                    <HtmlMessage {html} {message} />
                                                 {/await}
                                             </div>
                                         {/each}
