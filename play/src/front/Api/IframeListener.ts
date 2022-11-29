@@ -17,7 +17,7 @@ import type { LayerEvent } from "./Events/LayerEvent";
 import type { SetTilesEvent } from "./Events/SetTilesEvent";
 import type { SetVariableEvent } from "./Events/SetVariableEvent";
 import type { ModifyEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
-import { handleMenuRegistrationEvent, handleMenuUnregisterEvent } from "../Stores/MenuStore";
+import { additionnalButtonsMenu, handleMenuRegistrationEvent, handleMenuUnregisterEvent } from "../Stores/MenuStore";
 import type { ChangeLayerEvent } from "./Events/ChangeLayerEvent";
 import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
 import type { ChangeAreaEvent } from "./Events/ChangeAreaEvent";
@@ -184,6 +184,9 @@ class IframeListener {
 
     private readonly _chatTotalMessagesToSeeStream: Subject<number> = new Subject();
     public readonly chatTotalMessagesToSeeStream = this._chatTotalMessagesToSeeStream.asObservable();
+
+    private readonly _addButtonActionBarStream: Subject<AddActionsMenuKeyToRemotePlayerEvent> = new Subject();
+    public readonly addButtonActionBarStream = this._addButtonActionBarStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
@@ -438,6 +441,10 @@ class IframeListener {
                         modalVisibilityStore.set(true);
                     } else if (iframeEvent.type == "closeModal") {
                         modalVisibilityStore.set(false);
+                    } else if (iframeEvent.type == "addButtonActionBar") {
+                        additionnalButtonsMenu.addAdditionnalButtonActionBar(iframeEvent.data);
+                    } else if (iframeEvent.type == "removeButtonActionBar") {
+                        additionnalButtonsMenu.removeAdditionnalButtonActionBar(iframeEvent.data);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;

@@ -44,6 +44,7 @@
         inviteUserActivated,
         SubMenusInterface,
         subMenusStore,
+        additionnalButtonsMenu,
     } from "../../Stores/MenuStore";
     import type { Emoji } from "../../Stores/EmoteStore";
     import {
@@ -715,6 +716,17 @@
                 </div>
             {/if}
             -->
+            {#each [...$additionnalButtonsMenu.values()] as button}
+                <div
+                    class="bottom-action-section tw-flex tw-flex-initial"
+                    in:fly={{}}
+                    on:dragstart|preventDefault={noDrag}
+                >
+                    <button class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base" id={button.id}>
+                        {button.label}
+                    </button>
+                </div>
+            {/each}
         </div>
     </div>
 </div>

@@ -4,6 +4,7 @@ import { CONTACT_URL, OPID_PROFILE_SCREEN_PROVIDER, PUSHER_URL } from "../Enum/E
 import type { Translation } from "../../i18n/i18n-types";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { connectionManager } from "../Connexion/ConnectionManager";
+import { AddButtonActionBarEvent, RemoveButtonActionBarEvent } from "../Api/Events/Ui/ButtonActionBarEvent";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
@@ -202,3 +203,26 @@ export function getProfileUrl() {
         `/profile-callback?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`
     );
 }
+
+function createAdditionalButtonsMenu() {
+    const { subscribe, update } = writable<Map<string, AddButtonActionBarEvent>>(
+        new Map<string, AddButtonActionBarEvent>()
+    );
+    return {
+        subscribe,
+        addAdditionnalButtonActionBar(button: AddButtonActionBarEvent) {
+            console.log("MenuStore => additionnalButtonsMenu => addAdditionnalButtonActionBar => button", button);
+            update((additionnalButtonsMenu) => {
+                additionnalButtonsMenu.set(button.id, button);
+                return additionnalButtonsMenu;
+            });
+        },
+        removeAdditionnalButtonActionBar(button: RemoveButtonActionBarEvent) {
+            update((additionnalButtonsMenu) => {
+                additionnalButtonsMenu.delete(button.id);
+                return additionnalButtonsMenu;
+            });
+        },
+    };
+}
+export const additionnalButtonsMenu = createAdditionalButtonsMenu();
