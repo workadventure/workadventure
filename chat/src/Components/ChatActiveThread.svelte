@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
     import { ArrowLeftIcon, RefreshCwIcon, EyeIcon, EyeOffIcon } from "svelte-feather-icons";
     import ChatMessageForm from "./ChatMessageForm.svelte";
     import LL from "../i18n/i18n-svelte";
@@ -14,11 +13,17 @@
 
     export let activeThread: MucRoom;
 
+    let formHeight = 0;
+
     const presenceStore = activeThread.getPresenceStore();
     const readyStore = activeThread.getRoomReadyStore();
     const me = derived(activeThread.getPresenceStore(), ($presenceStore) => $presenceStore.get(activeThread.myJID));
 
     let messagesList: ChatMessagesList;
+
+    function handleFormHeight(height: number) {
+        formHeight = height;
+    }
 
     onDestroy(() => {
         settingsViewStore.set(false);
@@ -27,11 +32,7 @@
 </script>
 
 <!-- thread -->
-<div
-    id="activeThread"
-    class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-w-full"
-    transition:fly={{ x: 500, duration: 400 }}
->
+<div id="activeThread" class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-w-full">
     <div class="wa-thread-head">
         <div
             class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-w-14 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
@@ -85,29 +86,22 @@
     {#if !$readyStore}
         <Loader text={$LL.loading()} />
     {:else if $usersListViewStore}
-        <div
-            in:fly={{ y: -100, duration: 100, delay: 200 }}
-            out:fly={{ y: -100, duration: 100 }}
-            class="tw-flex tw-flex-col tw-flex-auto tw-w-full"
-        >
+        <div class="tw-flex tw-flex-col tw-flex-auto tw-w-full">
             <div
                 class="users tw-pt-16 wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid"
             >
                 <p class="tw-px-5 tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
                     {$LL.users()}
                 </p>
-                {#each [...$presenceStore] as [_, user]}
+                {#each [...$presenceStore.values()]
+                    .filter((user) => user.active)
+                    .sort((a, b) => a.name.localeCompare(b.name)) as user}
                     <ChatUser mucRoom={activeThread} {user} searchValue="" />
                 {/each}
             </div>
         </div>
     {:else if $settingsViewStore}
-        <div
-            in:fly={{ y: -100, duration: 100, delay: 200 }}
-            out:fly={{ y: -100, duration: 100 }}
-            class="tw-flex tw-flex-col tw-flex-auto tw-w-full"
-            style="margin-top: 52px"
-        >
+        <div class="tw-flex tw-flex-col tw-flex-auto tw-w-full" style="margin-top: 52px">
             <div
                 class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5 tw-pb-0.5"
             >
@@ -122,11 +116,15 @@
             </div>
         </div>
     {/if}
-    <div class:tw-hidden={$usersListViewStore} in:fly={{ y: 100, duration: 100, delay: 200 }}>
-        <ChatMessagesList mucRoom={activeThread} bind:this={messagesList} />
+    <div class:tw-hidden={$usersListViewStore}>
+        <ChatMessagesList mucRoom={activeThread} bind:this={messagesList} {formHeight} />
 
-        <div class="messageForm" transition:fly={{ y: 100, duration: 100 }}>
-            <ChatMessageForm mucRoom={activeThread} on:scrollDown={messagesList.scrollDown} />
+        <div class="messageForm">
+            <ChatMessageForm
+                mucRoom={activeThread}
+                on:formHeight={(event) => handleFormHeight(event.detail)}
+                on:scrollDown={messagesList.scrollDown}
+            />
         </div>
     </div>
 </div>

@@ -6,10 +6,10 @@
     width: 4px;
 }
 ::-webkit-scrollbar-track {
-    background-color: rgba(27, 27, 41, 0.95);
+    background: none;
 }
 ::-webkit-scrollbar-thumb {
-    @apply tw-bg-grey;
+    @apply tw-bg-lighter-purple;
     border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:active {
@@ -27,6 +27,60 @@
     }
 }
 
+.wa-message{
+    .actions{
+        visibility: hidden;
+        justify-content: space-between;
+        .action{
+            cursor: pointer;
+            opacity: 0.8;
+            position: relative;
+            .caption{
+                @apply tw-absolute tw-bg-dark-blue tw-px-2 tw-py-1 tw-rounded-xl tw-border-lighter-purple tw-border tw-border-solid;
+                display: none;
+                top: -32px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 10;
+                &::before{
+                    @apply tw-absolute tw-border-t-lighter-purple;
+                    left: calc( 50% - 10px );
+                    top: 100%;
+                    content: '';
+                    width: 0;
+                    height: 0;
+                    border-left: 9px solid transparent;
+                    border-right: 9px solid transparent;
+                    border-top-width: 6px;
+                    border-top-style: solid;
+                }
+                &::after{
+                    @apply tw-absolute tw-border-t-dark-blue;
+                    margin-left: -50%;
+                    top: 100%;
+                    content: '';
+                    width: 0;
+                    height: 0;
+                    border-left: 7px solid transparent;
+                    border-right: 7px solid transparent;
+                    border-top-width: 5px;
+                    border-top-style: solid;
+                }
+            }
+            &:hover{
+                opacity: 1;
+                .caption{
+                    display: block;
+                }
+            }
+        }
+    }
+    &:hover{
+        .actions{
+            visibility: visible;
+        }
+    }
+}
 .wa-message-body{
     @apply tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left;
     p{

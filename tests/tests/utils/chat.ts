@@ -53,7 +53,7 @@ class Chat {
     }
 
     async AT_sendMessage(page: Page, text: string){
-        await this.get(page).locator('#activeThread .wa-message-form textarea').fill(text);
+        await this.get(page).locator('#activeThread .wa-message-form div[contenteditable=true]').fill(text);
         await this.get(page).locator('#activeThread #send').click();
     }
 
@@ -130,16 +130,6 @@ class Chat {
         //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).toHaveClass(/tw-rotate-180/);
         await this.get(page).locator('#users div:has-text("Users") button > .feather-chevron-up').click();
         //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).not.toHaveClass(/tw-rotate-180/);
-    }
-
-    async expandLiveRooms(page: Page){
-        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).toHaveClass(/tw-rotate-180/);
-        await this.get(page).locator('#liveRooms div:has-text("Live zones") button > .feather-chevron-up').click();
-        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).not.toHaveClass(/tw-rotate-180/);
-    }
-
-    async expandForums(page: Page){
-        await this.get(page).locator('#forumRooms div:has-text("Forums") button > .feather-chevron-up').click();
     }
 
     async forumExist(page: Page, name: string) {

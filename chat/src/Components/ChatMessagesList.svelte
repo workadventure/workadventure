@@ -16,7 +16,6 @@
         CornerDownLeftIcon,
         CornerLeftUpIcon,
         SmileIcon,
-        MoreHorizontalIcon,
         ArrowUpIcon,
         CopyIcon,
     } from "svelte-feather-icons";
@@ -34,8 +33,9 @@
     import { derived } from "svelte/store";
 
     export let mucRoom: MucRoom;
+    export let formHeight: number;
 
-    $: unreads = mucRoom.getCountMessagesToSee();
+    const unreads = mucRoom.getCountMessagesToSee();
     const messagesStore = mucRoom.getMessagesStore();
     const deletedMessagesStore = mucRoom.getDeletedMessagesStore();
     const presenceStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
@@ -77,6 +77,9 @@
             return $userStore;
         }
         const userData = [...$presenceStore].find(([, user]) => user.jid === jid);
+        if (!userData) {
+            [...$presenceStore].find(([, user]) => JID.toBare(user.jid) === JID.toBare(jid));
+        }
         let user = undefined;
         if (userData) {
             [, user] = userData;
@@ -174,7 +177,7 @@
                     setTimeout(() => {
                         target.innerHTML = originalText;
                         target.classList.remove("tw-text-pop-green");
-                    }, 2_000);
+                    }, 1_000);
                 }
             })
             .catch((err) => {
@@ -214,7 +217,6 @@
             },
             emojisPerRow: 5,
             autoFocusSearch: false,
-            style: "twemoji",
             showPreview: false,
             i18n: {
                 search: $LL.emoji.search(),
@@ -253,7 +255,11 @@
     });
 </script>
 
-<div class="wa-messages-list-container" bind:this={messagesList}>
+<div
+    class="wa-messages-list-container"
+    bind:this={messagesList}
+    style={`margin-bottom: ${formHeight - 7}px; max-height: calc( 100vh - ${formHeight - 7}px );`}
+>
     <div class="emote-menu-container">
         <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
     </div>
@@ -289,7 +295,7 @@
                 {/if}
             {/if}
         </div>
-        {#each [...$messagesStore.values()].sort((a, b) => a.time.getTime() - b.time.getTime()) as message, i}
+        {#each $messagesStore as message, i (message.id)}
             {#if showDate(message.time, i)}
                 <div class="wa-separator">
                     {message.time.toLocaleDateString($locale, {
@@ -308,32 +314,67 @@
             >
                 <div class="tw-flex tw-flex-row tw-items-center  tw-max-w-full">
                     <div
-                        class={`tw-flex tw-flex-wrap tw-max-w-full ${
+                        class={`tw-flex tw-max-w-full tw-items-center ${
                             isMe(message.jid) ? "tw-justify-end" : "tw-justify-start"
                         }`}
                     >
-                        <div
-                            class={`${
-                                isMe(message.jid) || needHideHeader(message.name, message.time, i)
-                                    ? "tw-opacity-0"
-                                    : "tw-mt-4"
-                            } tw-relative wa-avatar-mini tw-mr-2`}
-                            transition:fade={{ duration: 100 }}
-                            style={`background-color: ${getColor(message.jid)}`}
-                        >
-                            <div class="wa-container">
-                                <img
-                                    class="tw-w-full"
-                                    style="image-rendering: pixelated;"
-                                    src={getWoka(message.jid)}
-                                    alt="Avatar"
-                                    loading="lazy"
-                                />
+                        {#if !isMe(message.jid)}
+                            <div
+                                class={`${
+                                    isMe(message.jid) || needHideHeader(message.name, message.time, i)
+                                        ? "tw-opacity-0"
+                                        : "tw-mt-4"
+                                } tw-relative wa-avatar-mini tw-mr-2 tw-self-start`}
+                                in:fade={{ duration: 100 }}
+                                style={`background-color: ${getColor(message.jid)}`}
+                            >
+                                <div class="wa-container">
+                                    <img
+                                        class="tw-w-full"
+                                        style="image-rendering: pixelated;"
+                                        src={getWoka(message.jid)}
+                                        alt="Avatar"
+                                        loading="lazy"
+                                    />
+                                </div>
                             </div>
-                        </div>
+                        {/if}
+                        {#if !message.error && !$deletedMessagesStore.has(message.id)}
+                            <!-- Action bar -->
+                            <div
+                                class={`actions tw-rounded-lg tw-text-xs tw-text-left tw-flex ${
+                                    needHideHeader(message.name, message.time, i) ? "" : "tw-pt-4"
+                                } ${
+                                    isMe(message.jid) ? "tw-pr-2 tw-flex-row-reverse" : "tw-order-3 tw-pl-2 tw-flex-row"
+                                }`}
+                                style={($me && $me.isAdmin) || isMe(message.jid) ? "width: 92px;" : "width: 72px;"}
+                            >
+                                <div class="action reply" on:click={() => selectMessage(message)}>
+                                    <CornerDownLeftIcon size="17" />
+                                    <div class="caption">{$LL.reply()}</div>
+                                </div>
+                                <div class="action react" on:click={() => reactMessage(message)}>
+                                    <SmileIcon size="17" />
+                                    <div class="caption">{$LL.react()}</div>
+                                </div>
+                                <div class="action copy" on:click={(e) => copyMessage(e, message)}>
+                                    <CopyIcon size="17" />
+                                    <div class="caption">{$LL.copy()}</div>
+                                </div>
+                                {#if ($me && $me.isAdmin) || isMe(message.jid)}
+                                    <div
+                                        class="action delete tw-text-pop-red"
+                                        on:click={() => mucRoom.sendRemoveMessage(message.id)}
+                                    >
+                                        <Trash2Icon size="17" />
+                                        <div class="caption">{$LL.delete()}</div>
+                                    </div>
+                                {/if}
+                            </div>
+                        {/if}
                         <div
-                            style="max-width: 75%"
-                            transition:fly={{
+                            style={`${$deletedMessagesStore.has(message.id) ? "" : "max-width: 62%;"}`}
+                            in:fly={{
                                 x: isMe(message.jid) ? 10 : -10,
                                 delay: 100,
                                 duration: 200,
@@ -372,14 +413,17 @@
                             </div>
 
                             <!-- Delete message -->
-                            {#if [...$deletedMessagesStore].find((deleted) => deleted === message.id)}
+                            {#if $deletedMessagesStore.has(message.id)}
                                 <div class="wa-message-body">
                                     <p class="tw-italic">
-                                        {$LL.messageDeleted()}
-                                        {#if isMe(message.jid)}
-                                            {$LL.me()}.
+                                        {#if JID.toBare(message.jid) === $deletedMessagesStore.get(message.id)}
+                                            {#if isMe(message.jid)}
+                                                {$LL.messageDeletedByYou()}.
+                                            {:else}
+                                                {$LL.messageDeleted()}{message.name}.
+                                            {/if}
                                         {:else}
-                                            {message.name}.
+                                            {$LL.messageDeleted()}{$LL.anAdmin()}.
                                         {/if}
                                     </p>
                                 </div>
@@ -403,8 +447,9 @@
                                         {/each}
                                     {/if}
 
+                                    <!--
                                     {#if !message.error}
-                                        <!-- Action bar -->
+                                        <-- Action bar ->
                                         <div
                                             class="actions tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
                                         >
@@ -417,20 +462,13 @@
                                             <div class="action more-option">
                                                 <MoreHorizontalIcon size="17" />
 
-                                                <div class="wa-dropdown-menu tw-invisible">
+                                                <div class="wa-dropdown-menu tw-hidden">
                                                     <span
                                                         class="wa-dropdown-item"
                                                         on:click={() => selectMessage(message)}
                                                     >
                                                         <CornerDownLeftIcon size="13" class="tw-mr-1" />
                                                         {$LL.reply()}
-                                                    </span>
-                                                    <span
-                                                        class="wa-dropdown-item"
-                                                        on:click={() => reactMessage(message)}
-                                                    >
-                                                        <SmileIcon size="13" class="tw-mr-1" />
-                                                        {$LL.react()}
                                                     </span>
                                                     <span
                                                         class="wa-dropdown-item"
@@ -451,7 +489,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    {/if}
+                                    {/if} -->
                                 </div>
 
                                 <!-- React associated -->
@@ -494,7 +532,7 @@
                                 <!-- Reply associated -->
                                 {#if message.targetMessageReply}
                                     <div
-                                        class="message-replied tw-text-xs tw-rounded-lg tw-bg-dark tw-px-3 tw-py-2 tw-mt-3 tw-mb-2 tw-text-left tw-cursor-pointer"
+                                        class="message-replied tw-text-xs tw-rounded-lg tw-bg-dark tw-px-3 tw-py-2 tw-mt-1 tw-mb-2 tw-text-left tw-cursor-pointer"
                                         on:click={() => scrollToMessageId(message.targetMessageReply?.id ?? "")}
                                     >
                                         <div class="icon-replied">
@@ -568,17 +606,12 @@
                         class={`tw-mt-4 tw-relative wa-avatar-mini tw-mr-2 tw-z-10`}
                         style={`background-color: ${getColor(user.jid)}`}
                         in:fade={{ duration: 100 }}
-                        out:fade={{ delay: 200, duration: 100 }}
                     >
                         <div class="wa-container">
                             <img class="tw-w-full" src={getWoka(user.jid)} alt="Avatar" />
                         </div>
                     </div>
-                    <div
-                        class={`tw-w-3/4`}
-                        in:fly={{ x: -10, delay: 100, duration: 200 }}
-                        out:fly={{ x: -10, duration: 200 }}
-                    >
+                    <div class={`tw-w-3/4`} in:fly={{ x: -10, delay: 100, duration: 200 }}>
                         <div class="tw-w-fit">
                             <div
                                 style={`border-bottom-color:${getColor(user.jid)}`}
@@ -604,7 +637,7 @@
         {#if $unreads > 0}
             <div class="tw-w-full tw-fixed tw-left-0 tw-bottom-14 tw-animate-bounce tw-cursor-pointer">
                 <div
-                    transition:fly={{ y: 10, duration: 200 }}
+                    in:fly={{ y: 10, duration: 200 }}
                     style="margin: auto"
                     class="tw-bg-lighter-purple tw-rounded-xl tw-h-5 tw-px-2 tw-w-fit tw-text-xs tw-flex tw-justify-center tw-items-center tw-shadow-grey"
                     role="button"
@@ -675,8 +708,9 @@
     .wa-message-body {
         position: relative;
         min-width: 75px;
-        word-break: break-all;
-        .actions {
+        word-break: break-word;
+        /*
+      .actions {
             display: none;
             position: absolute;
             right: -16px;
@@ -722,10 +756,11 @@
             }
             &:hover {
                 .wa-dropdown-menu {
-                    visibility: visible;
+                    display: flex;
                 }
             }
         }
+         */
     }
     .emojis {
         display: flex;
@@ -734,6 +769,7 @@
         position: relative;
         flex-direction: row-reverse;
         margin-right: -5px;
+        min-height: 8px;
         span {
             font-size: 0.65rem;
             border-radius: 1.5rem;

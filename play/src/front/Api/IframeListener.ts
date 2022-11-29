@@ -46,9 +46,9 @@ import type { ChatMessage } from "./Events/ChatEvent";
 import { requestVisitCardsStore } from "../Stores/GameStore";
 import {
     modalIframeAllowApi,
-    modalIframeAllowlStore,
+    modalIframeAllowStore,
     modalIframeSrcStore,
-    modalIframeTitlelStore,
+    modalIframeTitleStore,
     modalPositionStore,
     modalVisibilityStore,
 } from "../Stores/ModalStore";
@@ -430,8 +430,8 @@ class IframeListener {
                     } else if (iframeEvent.type == "showBusinessCard") {
                         requestVisitCardsStore.set(iframeEvent.data.visitCardUrl);
                     } else if (iframeEvent.type == "openModal") {
-                        modalIframeTitlelStore.set(iframeEvent.data.tiltle);
-                        modalIframeAllowlStore.set(iframeEvent.data.allow);
+                        modalIframeTitleStore.set(iframeEvent.data.title);
+                        modalIframeAllowStore.set(iframeEvent.data.allow);
                         modalIframeSrcStore.set(iframeEvent.data.src);
                         modalPositionStore.set(iframeEvent.data.position);
                         modalIframeAllowApi.set(iframeEvent.data.allowApi);

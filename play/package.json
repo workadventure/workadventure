@@ -123,7 +123,7 @@
     "openapi3-ts": "^3.0.2",
     "openid-client": "^5.1.10",
     "phaser": "3.55.1",
-    "phaser-animated-tiles": "workadventure/phaser-animated-tiles#9f722b6d9949b4d8fdad1f53336a60f5728b505c",
+    "phaser-animated-tiles": "workadventure/phaser-animated-tiles#7e02ce91a100338a27f75f7b443bacd12459fd0f",
     "phaser3-rex-plugins": "^1.1.42",
     "posthog-js": "^1.14.1",
     "prom-client": "^14.1.0",

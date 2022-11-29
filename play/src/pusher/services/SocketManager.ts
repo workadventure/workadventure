@@ -414,11 +414,11 @@ export class SocketManager implements ZoneEventListener {
     async handleReportMessage(client: ExSocketInterface, reportPlayerMessage: ReportPlayerMessage): Promise<void> {
         try {
             await adminService.reportPlayer(
-                "en",
                 reportPlayerMessage.getReporteduseruuid(),
                 reportPlayerMessage.getReportcomment(),
                 client.userUuid,
-                client.roomId
+                client.roomId,
+                "en"
             );
         } catch (e) {
             console.error('An error occurred on "handleReportMessage"');
