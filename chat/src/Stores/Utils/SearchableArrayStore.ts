@@ -1,38 +1,27 @@
 import type { Readable, Subscriber, Unsubscriber, Writable } from "svelte/store";
-import { get, readable, writable } from "svelte/store";
+import { writable } from "svelte/store";
 
-
+/**
+ * Is it an array? Is it a map? Is it a Svelte store? This is all at once!
+ *
+ * The SearchableArrayStore is an array that is also a Svelte store (it will be updated each time the array is updated)
+ * Furthermore, it is searchable in O(1)
+ */
 export class SearchableArrayStore<K, V> extends Array<V> implements Readable<Array<V>> {
     private readonly store = writable(this);
-    private readonly storesByKey = new Map<K, Writable<V | undefined>>();
+    private readonly storesByKey = new Map<K, V>();
+
+    constructor(private callback: (item: V) => K) {
+        super();
+    }
 
     subscribe(run: Subscriber<Array<V>>, invalidate?: (value?: Array<V>) => void): Unsubscriber {
         return this.store.subscribe(run, invalidate);
     }
 
-    append(key: K, value: V): this {
-        super.push(value);
-        this.add(key, value);
-        return this;
-    }
-
-    prepend(key: K, value: V): this {
-        super.unshift(value);
-        this.add(key, value);
-        return this;
-    }
-
-    private add(key: K, value: V): void {
-        this.store.set(this);
-        this.storesByKey.set(key, writable(value));
-    }
-
     clear() {
         super.splice(0, this.length);
         this.store.set(this);
-        this.storesByKey.forEach((store) => {
-            store.set(undefined);
-        });
         this.storesByKey.clear();
     }
 
@@ -41,17 +30,74 @@ export class SearchableArrayStore<K, V> extends Array<V> implements Readable<Arr
         if (value) {
             super.filter(_value => _value === value);
             this.store.set(this);
-            this.storesByKey.get(key)?.set(undefined);
+            this.storesByKey.delete(key);
         }
         return !!value;
     }
 
-
-    getStore(key: K): Readable<V | undefined> {
-        const foundStore = this.storesByKey.get(key);
-        if(foundStore) {
-            return readable(get(foundStore));
+    push(...items: V[]): number {
+        const number = super.push(...items);
+        for (const item of items) {
+            this.storesByKey.set(this.callback(item), item);
         }
-        return readable(undefined);
+        this.store.set(this);
+        return number;
+    }
+
+    unshift(...items: V[]): number {
+        const number = super.unshift(...items);
+        for (const item of items) {
+            this.storesByKey.set(this.callback(item), item);
+        }
+        this.store.set(this);
+        return number;
+    }
+
+    reverse(): V[] {
+        super.reverse();
+        this.store.set(this);
+        return this;
+    }
+
+    shift(): V | undefined {
+        const item = super.shift();
+        if (item) {
+            this.storesByKey.delete(this.callback(item));
+        }
+        this.store.set(this);
+        return item;
+    }
+
+    pop(): V | undefined {
+        const item = super.pop();
+        if (item) {
+            this.storesByKey.delete(this.callback(item));
+        }
+        this.store.set(this);
+        return item;
+    }
+
+    splice(start: number, deleteCount?: number): V[];
+    splice(start: number, deleteCount: number, ...addItems: V[]): V[] {
+        let removedItems: V[];
+        if (deleteCount === undefined) {
+            removedItems = super.splice(start);
+        } else {
+            removedItems = super.splice(start, deleteCount, ...addItems);
+        }
+
+        for (const item of removedItems) {
+            this.storesByKey.delete(this.callback(item));
+        }
+        for (const item of addItems) {
+            this.storesByKey.set(this.callback(item), item);
+        }
+        this.store.set(this);
+        return removedItems;
+    }
+
+
+    get(key: K): V | undefined {
+        return this.storesByKey.get(key);
     }
 }
