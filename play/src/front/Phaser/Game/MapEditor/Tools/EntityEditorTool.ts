@@ -28,6 +28,9 @@ export class EntityEditorTool extends MapEditorTool {
     private mapEditorSelectedEntityPrefabStoreUnsubscriber!: Unsubscriber;
     private mapEntityEditorModeStoreUnsubscriber!: Unsubscriber;
 
+    private pointerMoveEventHandler: (pointer: Phaser.Input.Pointer) => void;
+    private pointerDownEventHandler: (pointer: Phaser.Input.Pointer) => void;
+
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super();
         this.mapEditorModeManager = mapEditorModeManager;
@@ -169,13 +172,20 @@ export class EntityEditorTool extends MapEditorTool {
     }
 
     private bindEventHandlers(): void {
-        this.scene.input.on(Phaser.Input.Events.POINTER_MOVE, this.handlePointerMoveEvent.bind(this), this);
-        this.scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.handlePointerDownEvent.bind(this), this);
+        this.pointerMoveEventHandler = (pointer: Phaser.Input.Pointer) => {
+            this.handlePointerMoveEvent(pointer);
+        };
+        this.pointerDownEventHandler = (pointer: Phaser.Input.Pointer) => {
+            this.handlePointerDownEvent(pointer);
+        };
+
+        this.scene.input.on(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
+        this.scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
     }
 
     private unbindEventHandlers(): void {
-        this.scene.input.off(Phaser.Input.Events.POINTER_MOVE, this.handlePointerMoveEvent.bind(this), this);
-        this.scene.input.off(Phaser.Input.Events.POINTER_DOWN, this.handlePointerDownEvent.bind(this), this);
+        this.scene.input.off(Phaser.Input.Events.POINTER_MOVE, this.pointerDownEventHandler);
+        this.scene.input.off(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
     }
 
     private handlePointerMoveEvent(pointer: Phaser.Input.Pointer): void {
