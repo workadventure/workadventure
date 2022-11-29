@@ -76,14 +76,12 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public activate(): void {
-        if(!(get(mapEditorModeStore) && get(mapEntityEditorModeStore) == MapEntityEditorMode.EditMode))
-        {
+        if (!(get(mapEditorModeStore) && get(mapEntityEditorModeStore) == MapEntityEditorMode.EditMode)) {
             this.toggleActionsMenu();
         }
     }
 
-    public TestActivation() : void
-    {
+    public TestActivation(): void {
         this.toggleActionsMenu();
     }
 
@@ -148,6 +146,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             }
         });
 
+        // TODO: Should all of these events be handled insides EntitiesManager?
         this.on(Phaser.Input.Events.DRAG_START, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
                 this.oldPositionTopLeft = this.getTopLeft();
@@ -229,8 +228,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     private getDefaultActionsMenuActions(): ActionsMenuAction[] {
         const actions: ActionsMenuAction[] = [];
         for (const key of Object.keys(this.entityData.properties)) {
-            if(this.entityData.properties[key])
-            {
+            if (this.entityData.properties[key]) {
                 switch (key) {
                     case "jitsiRoom": {
                         actions.push({

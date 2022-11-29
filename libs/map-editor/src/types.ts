@@ -2,12 +2,16 @@ import type { ModifyAreaMessage } from "@workadventure/messages";
 import type { CreateAreaCommandConfig } from './Commands/Area/CreateAreaCommand';
 import type { DeleteAreaCommandConfig } from './Commands/Area/DeleteAreaCommand';
 import type { UpdateAreaCommandConfig } from './Commands/Area/UpdateAreaCommand';
+import type { CreateEntityCommandConfig } from './Commands/Entity/CreateEntityCommand';
+import type { DeleteEntityCommandConfig } from './Commands/Entity/DeleteEntityCommand';
 
 
 export type CommandConfig =
     UpdateAreaCommandConfig |
     DeleteAreaCommandConfig |
-    CreateAreaCommandConfig;
+    CreateAreaCommandConfig |
+    CreateEntityCommandConfig |
+    DeleteEntityCommandConfig;
 
 export type AreaData = Required<ModifyAreaMessage> & { visible: boolean }; // move visible to messages also
 
@@ -22,16 +26,6 @@ export enum Direction {
     Down = "Down",
     Right = "Right"
 }
-
-export interface EntityPrefab {
-    name: string;
-    tags: string[];
-    imagePath: string;
-    direction: Direction;
-    color: string;
-    collisionGrid?:number[][];
-}
-
 export interface EntityData {
     id: number;
     x: number;
@@ -39,6 +33,14 @@ export interface EntityData {
     interactive?: boolean;
     properties?: { [key: string]: unknown | undefined };
     prefab: EntityPrefab;
+}
+export interface EntityPrefab {
+    name: string;
+    tags: string[];
+    imagePath: string;
+    direction: Direction;
+    color: string;
+    collisionGrid?:number[][];
 }
 
 export interface PredefinedPropertyData {

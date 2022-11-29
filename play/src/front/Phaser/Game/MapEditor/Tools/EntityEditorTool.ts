@@ -8,7 +8,8 @@ import {
     MapEntityEditorMode,
     mapEntityEditorModeStore,
 } from "../../../../Stores/MapEditorStore";
-import { EntitiesManager } from "../../GameMap/EntitiesManager";
+import { Entity } from "../../../ECS/Entity";
+import { EntitiesManager, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
 import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { GameScene } from "../../GameScene";
 import { MapEditorModeManager } from "../MapEditorModeManager";
@@ -27,6 +28,9 @@ export class EntityEditorTool extends MapEditorTool {
     private mapEditorSelectedEntityPrefabStoreUnsubscriber!: Unsubscriber;
     private mapEntityEditorModeStoreUnsubscriber!: Unsubscriber;
 
+    private pointerMoveEventHandler: (pointer: Phaser.Input.Pointer) => void;
+    private pointerDownEventHandler: (pointer: Phaser.Input.Pointer) => void;
+
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super();
         this.mapEditorModeManager = mapEditorModeManager;
@@ -39,6 +43,7 @@ export class EntityEditorTool extends MapEditorTool {
         this.entityPrefabPreview = undefined;
 
         this.subscribeToStores();
+        this.bindEntitiesManagerEventHandlers();
     }
 
     public update(time: number, dt: number): void {}
@@ -67,13 +72,34 @@ export class EntityEditorTool extends MapEditorTool {
      * Perform actions needed to see the changes instantly
      */
     public handleCommandExecution(commandConfig: CommandConfig): void {
-        console.log("EntityEditorTool handleCommandExecution");
+        switch (commandConfig.type) {
+            case "CreateEntityCommand": {
+                this.handleEntityCreation(commandConfig.entityData);
+                break;
+            }
+            case "DeleteEntityCommand": {
+                this.handleEntityDeletion(commandConfig.id);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
     }
     /**
      * React on commands coming from the outside
      */
     public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): void {
         console.log("EntityEditorTool handleIncomingCommandMessage");
+    }
+
+    private handleEntityCreation(config: EntityData): void {
+        this.entitiesManager.addEntity(structuredClone(config));
+    }
+
+    private handleEntityDeletion(id: number): void {
+        this.entitiesManager.deleteEntity(id);
+        this.gameMapEntities.deleteEntity(id);
     }
 
     private subscribeToStores(): void {
@@ -123,6 +149,15 @@ export class EntityEditorTool extends MapEditorTool {
         });
     }
 
+    private bindEntitiesManagerEventHandlers(): void {
+        this.entitiesManager.on(EntitiesManagerEvent.RemoveEntity, (entity: Entity) => {
+            this.mapEditorModeManager.executeCommand({
+                id: entity.getEntityData().id,
+                type: "DeleteEntityCommand",
+            });
+        });
+    }
+
     private async loadEntityImage(key: string, url: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             if (this.scene.textures.exists(key)) {
@@ -137,13 +172,20 @@ export class EntityEditorTool extends MapEditorTool {
     }
 
     private bindEventHandlers(): void {
-        this.scene.input.on(Phaser.Input.Events.POINTER_MOVE, this.handlePointerMoveEvent.bind(this), this);
-        this.scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.handlePointerDownEvent.bind(this), this);
+        this.pointerMoveEventHandler = (pointer: Phaser.Input.Pointer) => {
+            this.handlePointerMoveEvent(pointer);
+        };
+        this.pointerDownEventHandler = (pointer: Phaser.Input.Pointer) => {
+            this.handlePointerDownEvent(pointer);
+        };
+
+        this.scene.input.on(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
+        this.scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
     }
 
     private unbindEventHandlers(): void {
-        this.scene.input.off(Phaser.Input.Events.POINTER_MOVE, this.handlePointerMoveEvent.bind(this), this);
-        this.scene.input.off(Phaser.Input.Events.POINTER_DOWN, this.handlePointerDownEvent.bind(this), this);
+        this.scene.input.off(Phaser.Input.Events.POINTER_MOVE, this.pointerDownEventHandler);
+        this.scene.input.off(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
     }
 
     private handlePointerMoveEvent(pointer: Phaser.Input.Pointer): void {
@@ -186,9 +228,10 @@ export class EntityEditorTool extends MapEditorTool {
                 interactive: true,
                 properties:[]
             };
-            this.gameMapEntities.addEntity(entityData);
-            this.entitiesManager.addEntity(entityData);
-            this.scene.markDirty();
+            this.mapEditorModeManager.executeCommand({
+                entityData,
+                type: "CreateEntityCommand",
+            });
         }
     }
 

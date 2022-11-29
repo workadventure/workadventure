@@ -5,6 +5,8 @@ import {
     UpdateAreaCommand,
     DeleteAreaCommand,
     CreateAreaCommand,
+    CreateEntityCommand,
+    DeleteEntityCommand,
 } from "@workadventure/map-editor";
 import { writeFileSync } from "fs";
 import { readFile } from "fs/promises";
@@ -54,6 +56,16 @@ class MapsManager {
                 }
                 case "DeleteAreaCommand": {
                     command = new DeleteAreaCommand(gameMap, commandConfig);
+                    command.execute();
+                    break;
+                }
+                case "CreateEntityCommand": {
+                    command = new CreateEntityCommand(gameMap, commandConfig);
+                    command.execute();
+                    break;
+                }
+                case "DeleteEntityCommand": {
+                    command = new DeleteEntityCommand(gameMap, commandConfig);
                     command.execute();
                     break;
                 }

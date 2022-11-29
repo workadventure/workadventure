@@ -5,7 +5,11 @@ import { Entity, EntityEvent } from "../../ECS/Entity";
 import type { GameScene } from "../GameScene";
 import type { GameMapFrontWrapper } from "./GameMapFrontWrapper";
 
-export class EntitiesManager {
+export enum EntitiesManagerEvent {
+    RemoveEntity = "EntitiesManagerEvent:RemoveEntity",
+}
+
+export class EntitiesManager extends Phaser.Events.EventEmitter {
     private scene: GameScene;
     private gameMapFrontWrapper: GameMapFrontWrapper;
 
@@ -20,6 +24,7 @@ export class EntitiesManager {
     private pointerOutEntitySubject = new Subject<Entity>();
 
     constructor(scene: GameScene, gameMapFrontWrapper: GameMapFrontWrapper) {
+        super();
         this.scene = scene;
         this.gameMapFrontWrapper = gameMapFrontWrapper;
         this.entities = [];
@@ -48,10 +53,15 @@ export class EntitiesManager {
         }
 
         this.entities.push(entity);
+        this.scene.markDirty();
     }
 
-    public removeEntity(entity: Entity): void {
-        const index = this.entities.findIndex((ent) => ent === entity);
+    public deleteEntity(id: number): boolean {
+        const index = this.entities.findIndex((ent) => ent.getEntityData().id === id);
+        if (index === -1) {
+            return false;
+        }
+        const entity = this.entities[index];
         this.entities.splice(index, 1);
 
         const colGrid = entity.getReversedCollisionGrid();
@@ -66,6 +76,7 @@ export class EntitiesManager {
 
         entity.destroy();
         this.scene.markDirty();
+        return true;
     }
 
     public getProperties(): Map<string, string | boolean | number> {
@@ -86,7 +97,7 @@ export class EntitiesManager {
 
     private bindEntityEventHandlers(entity: Entity): void {
         entity.on(EntityEvent.Remove, () => {
-            this.removeEntity(entity);
+            this.emit(EntitiesManagerEvent.RemoveEntity, entity);
         });
         entity.on(EntityEvent.Moved, (oldX: number, oldY: number) => {
             const reversedGrid = entity.getReversedCollisionGrid();

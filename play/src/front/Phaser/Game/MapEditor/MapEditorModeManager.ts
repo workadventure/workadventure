@@ -12,11 +12,13 @@ import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
 import { EntityEditorTool } from "./Tools/EntityEditorTool";
+import { CreateEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/CreateEntityCommand";
+import { DeleteEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/DeleteEntityCommand";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
     FloorEditor = "FloorEditor",
-    EntityEditor = "EntityEditor"
+    EntityEditor = "EntityEditor",
 }
 
 export class MapEditorModeManager {
@@ -78,7 +80,7 @@ export class MapEditorModeManager {
         this.editorTools = {
             [EditorToolName.AreaEditor]: new AreaEditorTool(this),
             [EditorToolName.EntityEditor]: new EntityEditorTool(this),
-            [EditorToolName.FloorEditor]: new FloorEditorTool(this)
+            [EditorToolName.FloorEditor]: new FloorEditorTool(this),
         };
         this.activeTool = undefined;
 
@@ -117,6 +119,14 @@ export class MapEditorModeManager {
                 command = new DeleteAreaCommand(this.scene.getGameMap(), commandConfig);
                 break;
             }
+            case "CreateEntityCommand": {
+                command = new CreateEntityCommand(this.scene.getGameMap(), commandConfig);
+                break;
+            }
+            case "DeleteEntityCommand": {
+                command = new DeleteEntityCommand(this.scene.getGameMap(), commandConfig);
+                break;
+            }
             default: {
                 const _exhaustiveCheck: never = commandConfig;
                 return false;
@@ -129,7 +139,7 @@ export class MapEditorModeManager {
         const executedCommandConfig = command.execute();
 
         // do any necessary changes for active tool interface
-        this.currentlyActiveTool?.handleCommandExecution(executedCommandConfig);
+        this.handleCommandExecutionByTools(executedCommandConfig);
 
         if (emitMapEditorUpdate) {
             this.emitMapEditorUpdate(command.id, commandConfig, delay);
@@ -158,7 +168,7 @@ export class MapEditorModeManager {
             this.pendingCommands.push(command);
 
             // do any necessary changes for active tool interface
-            this.currentlyActiveTool?.handleCommandExecution(commandConfig);
+            this.handleCommandExecutionByTools(commandConfig);
 
             // this should not be called with every change. Use some sort of debounce
             this.emitMapEditorUpdate(command.id, commandConfig);
@@ -183,7 +193,7 @@ export class MapEditorModeManager {
             this.pendingCommands.push(command);
 
             // do any necessary changes for active tool interface
-            this.currentlyActiveTool?.handleCommandExecution(commandConfig);
+            this.handleCommandExecutionByTools(commandConfig);
 
             // this should not be called with every change. Use some sort of debounce
             this.emitMapEditorUpdate(command.id, commandConfig);
@@ -346,6 +356,12 @@ export class MapEditorModeManager {
             this.editorTools[key as EditorToolName].subscribeToGameMapFrontWrapperEvents(
                 this.scene.getGameMapFrontWrapper()
             );
+        }
+    }
+
+    private handleCommandExecutionByTools(commandConfig: CommandConfig): void {
+        for (const key of Object.keys(this.editorTools)) {
+            this.editorTools[key as EditorToolName].handleCommandExecution(commandConfig);
         }
     }
 

@@ -13,21 +13,31 @@ export class GameMapEntities {
         this.gameMap = gameMap;
 
         // TODO: Get entities from the map file
-        for (const entityData of this.loadMockEntities()) {
-            this.addEntity(entityData);
-        };
+        // for (const entityData of this.loadMockEntities()) {
+        //     this.addEntity(entityData);
+        // };
     }
 
-    public addEntity(entityData: EntityData): void {
+    public addEntity(entityData: EntityData): boolean {
+        if (this.entities.find(entity => entity.id === entityData.id)) {
+            return false;
+        }
         this.entities.push(entityData);
         this.nextEntityId = Math.max(this.nextEntityId, entityData.id);
+        return true;
     }
 
-    public removEntity(id: number): void {
+    public getEntity(id: number): EntityData | undefined {
+        return this.entities.find(entity => entity.id === id);
+    }
+
+    public deleteEntity(id: number): boolean {
         const index = this.entities.findIndex(entityData => entityData.id === id);
         if (index !== -1) {
             this.entities.splice(index, 1);
+            return true;
         }
+        return false;
     }
 
     private loadMockEntities(): EntityData[] {
