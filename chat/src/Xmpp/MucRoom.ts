@@ -9,7 +9,7 @@ import { availabilityStatusStore, filesUploadStore, mentionsUserStore } from "..
 import { AbstractRoom, Message, MessageType, User } from "./AbstractRoom";
 import { XmppClient } from "./XmppClient";
 import * as StanzaProtocol from "stanza/protocol";
-import { WaLink, WaReceivedReactions, WaUserInfo } from "./Lib/Plugin";
+import { WaReceivedReactions, WaUserInfo } from "./Lib/Plugin";
 import { ParsedJID } from "stanza/JID";
 import { ChatStateMessage, JID } from "stanza";
 import { ChatState, MUCAffiliation } from "stanza/Constants";
@@ -240,9 +240,9 @@ export class MucRoom extends AbstractRoom {
                   }
                 : undefined,
             mentions: [...get(mentionsUserStore).values()],
-        };
+        } as Message;
 
-        this.appendMessage(message);
+        this.messageStore.push(message);
 
         fileMessageManager.reset();
         mentionsUserStore.set(new Set<User>());
@@ -366,7 +366,7 @@ export class MucRoom extends AbstractRoom {
                 }
             });
             if(newMessages.length > 0){
-                this.prependMessages(newMessages);
+                this.messageStore.unshift(...newMessages);
             }
             if (response.paging.count < 50) {
                 this.canLoadOlderMessagesStore.set(false);
@@ -425,7 +425,7 @@ export class MucRoom extends AbstractRoom {
                 }
 
                 const message = this.parseMessage(receivedMessage, delay);
-                this.appendMessage(message);
+                this.messageStore.push(message);
                 response = true;
                 break;
             }

@@ -31,6 +31,7 @@
     import { ChatState } from "stanza/Constants";
     import { JID } from "stanza";
     import { derived } from "svelte/store";
+    import Reactions from "./Content/Reactions.svelte";
 
     export let mucRoom: MucRoom;
     export let formHeight: number;
@@ -52,7 +53,7 @@
     let emojiContainer: HTMLElement;
 
     function needHideHeader(name: string, date: Date, i: number) {
-        let previousMsg = [...$messagesStore.values()].sort((a, b) => a.time.getTime() - b.time.getTime())[i - 1];
+        let previousMsg = $messagesStore.sort((a, b) => a.time.getTime() - b.time.getTime())[i - 1];
         if (!previousMsg) {
             return false;
         }
@@ -61,7 +62,7 @@
     }
 
     function showDate(date: Date, i: number) {
-        let previousMsg = [...$messagesStore.values()].sort((a, b) => a.time.getTime() - b.time.getTime())[i - 1];
+        let previousMsg = $messagesStore.sort((a, b) => a.time.getTime() - b.time.getTime())[i - 1];
         if (!previousMsg) {
             return true;
         }
@@ -493,21 +494,8 @@
                                 </div>
 
                                 <!-- React associated -->
-                                {#if message.reactionsMessage}
-                                    <div class="emojis">
-                                        {#each [...message.reactionsMessage] as [emojiStr, usersJid]}
-                                            <span
-                                                class={mucRoom.haveReaction(emojiStr, message.id) ? "active" : ""}
-                                                on:click={() => mucRoom.sendReactionMessage(emojiStr, message.id)}
-                                                title={`${usersJid
-                                                    .map((userJid) => JID.parse(userJid).resource)
-                                                    .join("\r\n")}`}
-                                            >
-                                                {emojiStr}
-                                                {usersJid.length}
-                                            </span>
-                                        {/each}
-                                    </div>
+                                {#if message.reactions}
+                                    <Reactions mucRoom={mucRoom} messageId={message.id} reactions={message.reactions} />
                                 {/if}
                                 <!--
                                 {#if message.targetMessageReact}

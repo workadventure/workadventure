@@ -100,4 +100,14 @@ export class SearchableArrayStore<K, V> extends Array<V> implements Readable<Arr
     get(key: K): V | undefined {
         return this.storesByKey.get(key);
     }
+
+    has(key: K): boolean {
+        return this.storesByKey.has(key);
+    }
+
+    update(value: V) {
+        this.storesByKey.set(this.callback(value), value);
+        super.map(item => this.callback(item) === this.callback(value) ? value : item);
+        this.store.set(this);
+    }
 }

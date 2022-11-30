@@ -1,5 +1,5 @@
-import type {Writable} from "svelte/store";
-import {writable, get} from "svelte/store";
+import type {Readable, Writable} from "svelte/store";
+import {writable, get, readable} from "svelte/store";
 import {UserData} from "@workadventure/messages";
 import {XmppClient} from "./XmppClient";
 import * as StanzaProtocol from "stanza/protocol";
@@ -7,6 +7,8 @@ import {ChatStateMessage, JID} from "stanza";
 import {WaLink, WaReceivedReactions} from "./Lib/Plugin";
 import {ChatState} from "stanza/Constants";
 import Timeout = NodeJS.Timeout;
+import {SearchableArrayStore} from "../Stores/Utils/SearchableArrayStore";
+import {MapStore} from "../Stores/Utils/MapStore";
 
 export type User = {
     name: string;
@@ -53,7 +55,7 @@ export type Message = {
     type: MessageType;
     targetMessageReply?: ReplyMessage;
     targetMessageReact?: Map<string, number>;
-    reactionsMessage?: Map<string, Array<string>>;
+    reactions: MapStore<string, Readable<string[]>>;
     links?: WaLink[];
     mentions?: User[];
 };
@@ -85,8 +87,7 @@ export const defaultUserData: UserData = {
 };
 
 export class AbstractRoom {
-    protected messageMap: Map<string, Message>;
-    protected messageStore: Writable<Message[]>;
+    protected messageStore: SearchableArrayStore<string, Message>;
     protected reactionMessageStore: Writable<Map<string, ReactionMessage[]>>;
     protected deletedMessagesStore: Writable<Map<string, string>>;
     public lastMessageSeen: Date;
@@ -101,8 +102,7 @@ export class AbstractRoom {
         if (this.constructor === AbstractRoom) {
             throw new TypeError('Abstract class "AbstractRoom" cannot be instantiated directly');
         }
-        this.messageMap = new Map<string, Message>();
-        this.messageStore = writable<Message[]>([]);
+        this.messageStore = new SearchableArrayStore<string, Message>((message: Message) => message.id);
         this.deletedMessagesStore = writable<Map<string, string>>(new Map<string, string>());
         this.reactionMessageStore = writable<Map<string, ReactionMessage[]>>(new Map<string, ReactionMessage[]>());
         this.lastMessageSeen = new Date();
@@ -150,8 +150,7 @@ export class AbstractRoom {
         }
     }
     public reset(): void {
-        this.messageStore.set([]);
-        this.messageMap = new Map<string, Message>();
+        this.messageStore.clear();
     }
     public updateLastMessageSeen() {
         this.countMessagesToSee.set(0);
@@ -189,7 +188,7 @@ export class AbstractRoom {
     }
 
     // Get all store
-    public getMessagesStore(): Writable<Message[]> {
+    public getMessagesStore(): SearchableArrayStore<string, Message> {
         return this.messageStore;
     }
     public getDeletedMessagesStore(): Writable<Map<string, string>> {
@@ -204,22 +203,25 @@ export class AbstractRoom {
 
     // Function used to manage Reactions
     public haveReaction(emojiTargeted: string, messageId: string): boolean {
-        const reactionsMessage = get(this.reactionMessageStore).get(messageId);
-        if (!reactionsMessage) return false;
-        const myReaction =
-            reactionsMessage.find(
-                (reactionMessage) => reactionMessage.userJid === this.xmppClient.getMyPersonalJID()
-            ) ?? null;
-        if (!myReaction) return false;
-        return !!myReaction.userReactions.find((emoji) => emoji === emojiTargeted);
+        const message = this.messageStore.get(messageId);
+        if(message !== undefined){
+            const reactions = message.reactions;
+            const usersReaction = get(reactions.getNestedStore(emojiTargeted, item => item));
+            if(usersReaction) {
+                if (usersReaction.find(jid => jid === this.xmppClient.getMyPersonalJID())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
-    protected reactions(messageId: string): Map<string, Array<string>> {
-        const reactions = new Map<string, Array<string>>();
+    protected reactions(messageId: string): MapStore<string, Readable<string[]>> {
+        const reactions = new MapStore<string, Readable<string[]>>();
         const reactionsMessage = get(this.reactionMessageStore).get(messageId);
         if (reactionsMessage) {
             reactionsMessage.forEach((reactionMessage) => {
                 reactionMessage.userReactions.forEach((reaction) => {
-                    reactions.set(reaction, [...(reactions.get(reaction) ?? []), reactionMessage.userJid]);
+                    reactions.set(reaction, writable([...(get(reactions.getNestedStore(reaction, item => item)) ?? []), reactionMessage.userJid]));
                 });
             });
         }
@@ -227,7 +229,7 @@ export class AbstractRoom {
     }
     protected updateMessageReactions(messageId: string) {
         // Update reactions of the message targeted
-        this.updateMessagePart(messageId, { reactionsMessage: this.reactions(messageId) });
+        this.updateMessagePart(messageId, { reactions: this.reactions(messageId) });
     }
     protected toggleReactionsMessage(userJid: string, messageId: string, reactions: Array<string>) {
         const newUserReaction = {
@@ -275,37 +277,16 @@ export class AbstractRoom {
 
 
     // Function used to manage Messages
-    protected appendMessage(message: Message) {
-        this.addMessage(message);
-        this.messageStore.update((messages) => [...messages, message]);
-    }
-    protected prependMessage(message: Message) {
-        this.addMessage(message);
-        this.messageStore.update((messages) => [message, ...messages]);
-    }
-    protected addMessage(message: Message) {
-        this.messageMap.set(message.id, message);
-    }
     protected updateMessagePart(messageId: string, part: Object) {
-        const message = this.messageMap.get(messageId);
+        const message = this.messageStore.get(messageId);
         if (message) {
-            this.messageMap.set(messageId, { ...message, ...part });
+            this.messageStore.update({ ...message, ...part });
         } else {
             throw new Error(`AbstractRoom => updateMessagePart => No message found (${messageId})`);
         }
-        this.messageStore.update((messages) =>
-            messages.map((message) => {
-                if (message.id === messageId) {
-                    return { ...message, ...part };
-                } else {
-                    return message;
-                }
-            })
-        );
     }
     public deleteMessage(messageId: string): boolean {
-        this.messageMap.delete(messageId);
-        this.messageStore.update((messages) => messages.filter((message) => message.id !== messageId));
+        this.messageStore.delete(messageId);
         return true;
     }
     protected parseMessage(receivedMessage: StanzaProtocol.ReceivedMessage, delay: StanzaProtocol.Delay | null = null): Message{
@@ -342,7 +323,7 @@ export class AbstractRoom {
                                 : undefined,
                         }
                         : undefined,
-                    reactionsMessage: this.reactions(receivedMessage.id),
+                    reactions: this.reactions(receivedMessage.id)
                 };
             } else {
                 console.error("Message format is not good", {
@@ -359,7 +340,7 @@ export class AbstractRoom {
         const messageId = receivedMessage.id ?? "";
         if (receivedMessage.hasSubject === true) {
             return "subject";
-        } else if (this.messageMap.has(messageId)) {
+        } else if (this.messageStore.has(messageId)) {
             return "exist";
         } else if(receivedMessage.remove) {
             return "remove";
