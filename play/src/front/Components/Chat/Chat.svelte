@@ -159,9 +159,6 @@
     function closeChat() {
         chatVisibilityStore.set(false);
     }
-    function openChat() {
-        chatVisibilityStore.set(true);
-    }
     function onKeyDown(e: KeyboardEvent) {
         if (e.key === "Escape" && $chatVisibilityStore) {
             closeChat();
