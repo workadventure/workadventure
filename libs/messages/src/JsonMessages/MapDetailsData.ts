@@ -214,6 +214,10 @@ export const isMapDetailsData = z.object({
         description: "Whether the feature 'upload' in the chat is enabled or not on this room",
         example: true,
     }),
+    enableChatDisconnectedList: extendApi(z.boolean().optional(), {
+        description: "Whether the feature 'disconnected users' in the chat is enabled or not on this room",
+        example: true,
+    }),
     metatags: extendApi(MetaTagsData.nullable().optional(), {
         description: "Data related to METATAGS / meta tags. Contains page title, favicons, og data, etc...",
     }),

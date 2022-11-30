@@ -7,6 +7,7 @@ import { mucRoomsStore } from "./MucRoomsStore";
 // Global config store for the whole chat
 export const enableChat = writable<boolean>(true);
 export const enableChatUpload = writable<boolean>(false);
+export const enableChatDisconnectedListStore = writable<boolean>(false);
 
 const _newChatMessageSubject = new Subject<string>();
 export const newChatMessageSubject = _newChatMessageSubject.asObservable();

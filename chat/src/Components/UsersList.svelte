@@ -7,7 +7,7 @@
     import LL from "../i18n/i18n-svelte";
     import Loader from "./Loader.svelte";
     import { derived, Unsubscriber } from "svelte/store";
-    import { shownRoomListStore } from "../Stores/ChatStore";
+    import { enableChatDisconnectedListStore, shownRoomListStore } from "../Stores/ChatStore";
     import { onDestroy, onMount } from "svelte";
 
     export let mucRoom: MucRoom;
@@ -44,12 +44,14 @@
             if (user.roomName && user.active) {
                 group = user.roomName;
             }
-            if (!reduced.has(group)) {
-                reduced.set(group, [user]);
-            } else {
-                const usersList = [...(reduced.get(group) ?? []), user];
-                usersList.sort((a, b) => a.name.localeCompare(b.name));
-                reduced.set(group, usersList);
+            if ((group === "disconnected" && $enableChatDisconnectedListStore) || group !== "disconnected") {
+                if (!reduced.has(group)) {
+                    reduced.set(group, [user]);
+                } else {
+                    const usersList = [...(reduced.get(group) ?? []), user];
+                    usersList.sort((a, b) => a.name.localeCompare(b.name));
+                    reduced.set(group, usersList);
+                }
             }
             return reduced;
         }, new Map<string, User[]>());

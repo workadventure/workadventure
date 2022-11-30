@@ -96,6 +96,7 @@ class LocalAdmin implements AdminInterface {
             loadingCowebsiteLogo: null,
             enableChat: ENABLE_CHAT,
             enableChatUpload: ENABLE_CHAT_UPLOAD,
+            enableChatDisconnectedList: true,
             metatags: {
                 ...MetaTagsDefaultValue,
             },

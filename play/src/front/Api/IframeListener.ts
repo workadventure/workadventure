@@ -815,6 +815,7 @@ class IframeListener {
                 chatSounds: localUserStore.getChatSounds(),
                 enableChat: connectionManager.currentRoom?.enableChat,
                 enableChatUpload: connectionManager.currentRoom?.enableChatUpload,
+                enableChatDisconnectedList: connectionManager.currentRoom?.enableChatDisconnectedList,
             },
         });
     }

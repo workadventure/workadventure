@@ -5,7 +5,12 @@ import { v4 as uuid } from "uuid";
 import { userStore } from "../Stores/LocalUserStore";
 import { fileMessageManager } from "../Services/FileMessageManager";
 import { mediaManager, NotificationType } from "../Media/MediaManager";
-import { availabilityStatusStore, filesUploadStore, mentionsUserStore } from "../Stores/ChatStore";
+import {
+    availabilityStatusStore,
+    enableChatDisconnectedListStore,
+    filesUploadStore,
+    mentionsUserStore,
+} from "../Stores/ChatStore";
 import { AbstractRoom, Message, MessageType, User } from "./AbstractRoom";
 import { XmppClient } from "./XmppClient";
 import * as StanzaProtocol from "stanza/protocol";
@@ -121,7 +126,7 @@ export class MucRoom extends AbstractRoom {
         this.xmppClient.removeMuc(this);
     }
     private async sendRequestAllSubscribers() {
-        if (this.closed) {
+        if (this.closed || !get(enableChatDisconnectedListStore)) {
             return;
         }
         const iqId = uuid();
@@ -493,7 +498,12 @@ export class MucRoom extends AbstractRoom {
                 if (this.type === "live") {
                     void this.sendRetrieveLastMessages(20);
                 }
-                if (userStore.get().isLogged && this.subscribe && this.type === "default") {
+                if (
+                    userStore.get().isLogged &&
+                    this.subscribe &&
+                    this.type === "default" &&
+                    get(enableChatDisconnectedListStore)
+                ) {
                     void this.sendRequestAllSubscribers();
                 }
             } else if (this.subscriptions.get("firstSubscribe") === presence.id) {
