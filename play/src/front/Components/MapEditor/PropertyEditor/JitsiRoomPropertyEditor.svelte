@@ -1,5 +1,6 @@
 
 <script lang="ts">
+    import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
     import { createEventDispatcher } from "svelte";
 
     export let property : any;
@@ -11,8 +12,22 @@
         dispatch('change');
     }
 </script>
-<div class="value-input"><label for="roomName">Room name</label><input id="roomName" type="text" bind:value={property.roomName} on:change={onValueChange}/></div>
-<div class="value-input"><label for="jitsiButtonLabel">Button Label</label><input id="jitsiButtonLabel" type="text" bind:value={property.buttonLabel} on:change={onValueChange}/></div>
+<div class="value-input">
+    <label for="roomName">Room name</label>
+    <input id="roomName" type="text" 
+        bind:value={property.roomName}
+        on:change={onValueChange}
+        on:focus={onMapEditorInputFocus}
+        on:blur={onMapEditorInputUnfocus}/>
+</div>
+<div class="value-input">
+    <label for="jitsiButtonLabel">Button Label</label>
+    <input id="jitsiButtonLabel" type="text"
+        bind:value={property.buttonLabel}
+        on:change={onValueChange}
+        on:focus={onMapEditorInputFocus}
+        on:blur={onMapEditorInputUnfocus}/>
+</div>
 
 <style lang="scss">
     .value-input{

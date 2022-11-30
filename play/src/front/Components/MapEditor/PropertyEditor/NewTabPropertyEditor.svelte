@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
     import { createEventDispatcher } from "svelte";
 
 
@@ -11,9 +12,22 @@
         dispatch('change');
     }
 </script>
-<div class="value-input"><label for="tabLink">New Tab Link</label><input id="tabLink" type="text" bind:value={property.link} on:change={onValueChange}/></div>
-<div class="value-input"><label for="linkButtonLabel">Button Label</label><input id="linkButtonlabel" type="text" bind:value={property.buttonLabel} on:change={onValueChange}/></div>
-
+<div class="value-input">w
+    <label for="tabLink">New Tab Link</label>
+    <input id="tabLink" type="text"
+        bind:value={property.link}
+        on:change={onValueChange}
+        on:focus={onMapEditorInputFocus}
+        on:blur={onMapEditorInputUnfocus}/>
+</div>
+<div class="value-input">
+    <label for="linkButtonLabel">Button Label</label>
+    <input id="linkButtonlabel" type="text"
+        bind:value={property.buttonLabel}
+        on:change={onValueChange}
+        on:focus={onMapEditorInputFocus}
+        on:blur={onMapEditorInputUnfocus}/>
+</div>
 <style lang="scss">
     .value-input{
         display:flex;

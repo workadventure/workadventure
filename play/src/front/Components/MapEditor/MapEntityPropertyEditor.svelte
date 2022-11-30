@@ -98,7 +98,7 @@ Select an object modify its properties
       <label for={property.key}>{property.name}</label> <input id={property.key} type="checkbox" class="input-switch" bind:checked={property.active} on:change={()=>onPropertyChecked(property)}/>
   </div>
   {#if property.active}
-  <div class="property-container" transition:slide|local{{delay:1000}} >
+  <div class="property-container" transition:slide|local>
   <svelte:component this={property.component} bind:property={property.currentValue} on:change={() => onUpdateProperty(property)}/>
   </div>
   {/if}

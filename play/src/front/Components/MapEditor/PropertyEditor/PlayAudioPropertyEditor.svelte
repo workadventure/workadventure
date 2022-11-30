@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
     import { createEventDispatcher } from "svelte";
 
 
@@ -11,8 +12,22 @@
         dispatch('change');
     }
 </script>
-<div class="value-input"><label for="audioLink">Audio Link</label><input id="audioLink" type="text" bind:value={property.audioLink} on:change={onValueChange}/></div>
-<div class="value-input"><label for="audioButtonLabel">Button Label</label><input id="audioButtonLabel" type="text" bind:value={property.buttonLabel} on:change={onValueChange}/></div>
+<div class="value-input">
+    <label for="audioLink">Audio Link</label>
+    <input id="audioLink" type="text"
+        bind:value={property.audioLink}
+        on:change={onValueChange}
+        on:focus={onMapEditorInputFocus}
+        on:blur={onMapEditorInputUnfocus}/>
+</div>
+<div class="value-input">
+    <label for="audioButtonLabel">Button Label</label>
+    <input id="audioButtonLabel" type="text"
+    bind:value={property.buttonLabel}
+    on:change={onValueChange}
+    on:focus={onMapEditorInputFocus}
+    on:blur={onMapEditorInputUnfocus}/>
+</div>
 
 <style lang="scss">
     .value-input{

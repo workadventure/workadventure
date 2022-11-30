@@ -1,5 +1,6 @@
 <script lang="ts">
     import { chatVisibilityStore, writingStatusMessageStore } from "../../Stores/ChatStore";
+    import { enableUserInputsStore } from "../../Stores/UserInputStore";
     import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
     import { localUserStore } from "../../Connexion/LocalUserStore";
@@ -166,7 +167,7 @@
         if (e.key === "Escape" && $chatVisibilityStore) {
             closeChat();
             chatIframe.blur();
-        } else if (e.key === "c" && !$chatVisibilityStore) {
+        } else if (e.key === "c" && !$chatVisibilityStore && $enableUserInputsStore) {
             openChat();
         }
     }
