@@ -8,6 +8,7 @@ import {
     chatPeerConnectionInProgress,
     chatSoundsStore,
     enableChat,
+    enableChatDisconnectedListStore,
     enableChatUpload,
     newChatMessageSubject,
     newChatMessageWritingStatusSubject,
@@ -41,6 +42,7 @@ class IframeListener {
                             chatNotificationsStore.set(iframeEvent.data.notification);
                             enableChat.set(iframeEvent.data.enableChat);
                             enableChatUpload.set(iframeEvent.data.enableChatUpload);
+                            enableChatDisconnectedListStore.set(iframeEvent.data.enableChatDisconnectedList);
                             break;
                         }
                         case "xmppSettingsMessage": {
