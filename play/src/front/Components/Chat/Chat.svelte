@@ -166,8 +166,6 @@
         if (e.key === "Escape" && $chatVisibilityStore) {
             closeChat();
             chatIframe.blur();
-        } else if (e.key === "c" && !$chatVisibilityStore) {
-            openChat();
         }
     }
 </script>
