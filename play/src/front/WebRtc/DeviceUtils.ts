@@ -12,6 +12,7 @@ export enum NavigatorType {
     firefox = 1,
     chrome,
     safari,
+    jsdom,
 }
 
 export function getNavigatorType(): NavigatorType {
@@ -21,6 +22,8 @@ export function getNavigatorType(): NavigatorType {
         return NavigatorType.chrome;
     } else if (window.navigator.userAgent.includes("Safari")) {
         return NavigatorType.safari;
+    } else if (window.navigator.userAgent.includes("jsdom")) {
+        return NavigatorType.jsdom; // For running the code in NodeJS (for instance in benchmark)
     }
     throw new Error("Couldn't detect navigator type");
 }

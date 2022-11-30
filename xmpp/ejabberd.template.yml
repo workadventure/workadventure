@@ -8,7 +8,7 @@
 hosts:
   - ${EJABBERD_DOMAIN}
 
-loglevel: 5
+loglevel: 3
 log_rotate_size: 10485760
 log_rotate_count: 1
 
@@ -225,6 +225,9 @@ modules:
       mam: true
       persistent: true
       anonymous: false
+    max_user_conferences: 5000
+    max_users: 20000000
+    max_users_presence: 200
   mod_muc_admin: {}
   mod_offline:
     access_max_user_messages: max_user_offline_messages

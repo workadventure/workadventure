@@ -2,12 +2,10 @@
 import type { FrontConfigurationInterface } from "../../common/FrontConfigurationInterface";
 
 declare global {
-    interface Window {
-        env: FrontConfigurationInterface;
-    }
+    var env: FrontConfigurationInterface;
 }
 
-const env = window.env;
+const env = globalThis.env;
 export const DEBUG_MODE = env.DEBUG_MODE;
 export const PUSHER_URL = env.PUSHER_URL;
 export const ADMIN_URL = env.ADMIN_URL;
