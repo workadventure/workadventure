@@ -244,10 +244,10 @@ export class WebLink {
                 } catch (err) {
                     console.error(err);
                     console.error("Error get data from website: ", this.link);
-                    return this.getHyperLinkHTMLElement().outerHTML;
+                    return this.getHyperLinkHTMLElement(false).outerHTML;
                 }
             } else {
-                return this.getHyperLinkHTMLElement().outerHTML;
+                return this.getHyperLinkHTMLElement(false).outerHTML;
             }
         })();
     }

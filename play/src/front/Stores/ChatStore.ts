@@ -147,7 +147,8 @@ function createChatMessagesStore() {
                 iframeListener.sendMessageToChatIframe({
                     type: ChatMessageTypes.text,
                     text: [text],
-                    author: author.userUuid === "dummy" ? author.name : author.userJid,
+                    author: author.userUuid === "dummy" ? null : author.userJid,
+                    name: author.name,
                     date: new Date(),
                 });
 
