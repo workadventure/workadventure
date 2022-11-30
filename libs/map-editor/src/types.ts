@@ -26,6 +26,12 @@ export enum Direction {
     Down = "Down",
     Right = "Right"
 }
+
+export interface EntityCollection {
+    collectionName: string;
+    tags: string[];
+    collection: EntityPrefab[];
+}
 export interface EntityData {
     id: number;
     x: number;
@@ -34,13 +40,18 @@ export interface EntityData {
     properties?: { [key: string]: unknown | undefined };
     prefab: EntityPrefab;
 }
-export interface EntityPrefab {
+export interface EntityRawPrefab {
     name: string;
     tags: string[];
     imagePath: string;
     direction: Direction;
     color: string;
-    collisionGrid?:number[][];
+    collisionGrid?: number[][];
+}
+
+export interface EntityPrefab extends EntityRawPrefab {
+    collectionName: string;
+    id: string;
 }
 
 export interface PredefinedPropertyData {

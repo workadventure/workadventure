@@ -307,6 +307,14 @@ export class MapEditorModeManager {
                     this.scene.connection?.emitMapEditorDeleteArea(commandId, commandConfig.id);
                     break;
                 }
+                case "CreateEntityCommand": {
+                    this.scene.connection?.emitMapEditorCreateEntity(commandId, commandConfig.entityData);
+                    break;
+                }
+                case "DeleteEntityCommand": {
+                    this.scene.connection?.emitMapEditorDeleteEntity(commandId, commandConfig.id);
+                    break;
+                }
                 default: {
                     break;
                 }

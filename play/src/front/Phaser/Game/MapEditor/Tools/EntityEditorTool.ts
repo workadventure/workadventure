@@ -28,8 +28,8 @@ export class EntityEditorTool extends MapEditorTool {
     private mapEditorSelectedEntityPrefabStoreUnsubscriber!: Unsubscriber;
     private mapEntityEditorModeStoreUnsubscriber!: Unsubscriber;
 
-    private pointerMoveEventHandler: (pointer: Phaser.Input.Pointer) => void;
-    private pointerDownEventHandler: (pointer: Phaser.Input.Pointer) => void;
+    private pointerMoveEventHandler!: (pointer: Phaser.Input.Pointer) => void;
+    private pointerDownEventHandler!: (pointer: Phaser.Input.Pointer) => void;
 
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super();
@@ -78,6 +78,7 @@ export class EntityEditorTool extends MapEditorTool {
                 break;
             }
             case "DeleteEntityCommand": {
+                console.log("HANDLE ENTITY DELETION");
                 this.handleEntityDeletion(commandConfig.id);
                 break;
             }
@@ -99,7 +100,6 @@ export class EntityEditorTool extends MapEditorTool {
 
     private handleEntityDeletion(id: number): void {
         this.entitiesManager.deleteEntity(id);
-        this.gameMapEntities.deleteEntity(id);
     }
 
     private subscribeToStores(): void {

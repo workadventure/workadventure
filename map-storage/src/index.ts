@@ -26,7 +26,7 @@ app.get("/", (req, res) => {
     res.send("Hello World!");
 });
 
-app.get("*.json", async (req, res) => {
+app.get("/maps/*.json", async (req, res) => {
     res.send(await mapsManager.getMap(req.url));
 });
 
