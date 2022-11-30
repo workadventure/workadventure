@@ -67,7 +67,6 @@
 <style lang="scss">
     .menu-container {
         &.mobile {
-            @apply tw-pointer-events-auto;
             width: 100vw !important;
             height: 100vh !important;
             top: 0 !important;
