@@ -69,9 +69,9 @@
     import Tooltip from "../Util/Tooltip.svelte";
     import {
         modalIframeAllowApi,
-        modalIframeAllowlStore,
+        modalIframeAllowStore,
         modalIframeSrcStore,
-        modalIframeTitlelStore,
+        modalIframeTitleStore,
         modalVisibilityStore,
     } from "../../Stores/ModalStore";
     import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
@@ -279,8 +279,8 @@
     }
 
     /*function register() {
-        //modalIframeTitlelStore.set($LL.menu.icon.open.register());
-        ///modalIframeAllowlStore.set("fullscreen");
+        //modalIframeTitleStore.set($LL.menu.icon.open.register());
+        ///modalIframeAllowStore.set("fullscreen");
         //modalIframeSrcStore.set(`https://workadventu.re/funnel/connection?roomUrl=${window.location.toString()}`);
         //modalPositionStore.set("center");
         //modalIframeAllowApi.set(true);
@@ -294,8 +294,8 @@
 
     function resetModalVisibility() {
         modalVisibilityStore.set(false);
-        modalIframeTitlelStore.set(null);
-        modalIframeAllowlStore.set(null);
+        modalIframeTitleStore.set(null);
+        modalIframeAllowStore.set(null);
         modalIframeSrcStore.set(null);
         modalIframeAllowApi.set(false);
     }
