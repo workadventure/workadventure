@@ -47,8 +47,8 @@ import { requestVisitCardsStore } from "../Stores/GameStore";
 import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
 import { connectionManager } from "../Connexion/ConnectionManager";
 import { gameManager } from "../Phaser/Game/GameManager";
-import { ButtonActionBar } from "./Iframe/Ui/ButtonActionBar";
 import { ModalEvent } from "./Events/ModalEvent";
+import { AddButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -886,7 +886,7 @@ class IframeListener {
             data: status,
         });
     }
-    sendButtonActionBarTriggered(buttonActionBar: ButtonActionBar): void {
+    sendButtonActionBarTriggered(buttonActionBar: AddButtonActionBarEvent): void {
         this.postMessage({
             type: "buttonActionBarTrigger",
             data: buttonActionBar,
