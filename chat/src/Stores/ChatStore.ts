@@ -79,7 +79,7 @@ function createChatMessagesStore() {
                     lastMessage &&
                     lastMessage.type === ChatMessageTypes.me &&
                     lastMessage.text &&
-                    (((new Date().getTime() - lastMessage.date.getTime()) % 86400000) % 3600000) / 60000 < 2
+                    (((new Date().getTime() - lastMessage.date.getTime())  < 120000
                 ) {
                     lastMessage.date = new Date();
                     lastMessage.text.push(text);
