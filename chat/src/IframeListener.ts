@@ -27,7 +27,6 @@ import { NotificationType } from "./Media/MediaManager";
 import { activeThreadStore } from "./Stores/ActiveThreadStore";
 import { get } from "svelte/store";
 import { emojiRegex } from "./Utils/HtmlUtils";
-import { JID } from "stanza";
 
 class IframeListener {
     init() {
