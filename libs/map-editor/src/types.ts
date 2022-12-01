@@ -50,6 +50,20 @@ export interface PredefinedPropertyData {
     additionalProperties: Record<string, string | number | boolean | {} | undefined>;
 }
 
+export interface ActionsMenuData {
+    buttonLabel: string;
+}
+
+export interface JitsiRoomPropertyData extends ActionsMenuData {
+    roomName: string;
+}
+export interface PlayAudioPropertyData extends ActionsMenuData {
+    audioLink: string;
+}
+export interface OpenTabPropertyData extends ActionsMenuData {
+    link: string;
+}
+
 export enum GameMapProperties {
     ALLOW_API = "allowApi",
     AUDIO_LOOP = "audioLoop",

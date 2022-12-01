@@ -1,4 +1,9 @@
-import { EntityData } from "@workadventure/map-editor";
+import {
+    EntityData,
+    JitsiRoomPropertyData,
+    OpenTabPropertyData,
+    PlayAudioPropertyData,
+} from "@workadventure/map-editor";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { get, Unsubscriber } from "svelte/store";
 import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
@@ -205,8 +210,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         });
     }
 
-    public delete()
-    {
+    public delete() {
         this.emit(EntityEvent.Remove);
     }
 
@@ -226,47 +230,53 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     private getDefaultActionsMenuActions(): ActionsMenuAction[] {
+        if (!this.entityData.properties) {
+            return [];
+        }
         const actions: ActionsMenuAction[] = [];
         for (const key of Object.keys(this.entityData.properties)) {
             if (this.entityData.properties[key]) {
                 switch (key) {
                     case "jitsiRoom": {
+                        const propertyData = this.entityData.properties[key] as JitsiRoomPropertyData;
                         actions.push({
-                            actionName: this.entityData.properties[key].buttonLabel,
+                            actionName: propertyData.buttonLabel,
                             protected: true,
                             priority: 1,
                             callback: () => {
                                 this.emit(EntityEvent.PropertySet, {
                                     propertyName: key,
-                                    propertyValue: this.entityData.properties[key].roomName,
+                                    propertyValue: propertyData.roomName,
                                 });
                             },
                         });
                         break;
                     }
                     case "playAudio": {
+                        const propertyData = this.entityData.properties[key] as PlayAudioPropertyData;
                         actions.push({
-                            actionName: this.entityData.properties[key].buttonLabel,
+                            actionName: propertyData.buttonLabel,
                             protected: true,
                             priority: 1,
                             callback: () => {
                                 this.emit(EntityEvent.PropertySet, {
                                     propertyName: key,
-                                    propertyValue: this.entityData.properties[key].audioLink,
+                                    propertyValue: propertyData.audioLink,
                                 });
                             },
                         });
                         break;
                     }
                     case "openTab": {
+                        const propertyData = this.entityData.properties[key] as OpenTabPropertyData;
                         actions.push({
-                            actionName: this.entityData.properties[key].buttonLabel,
+                            actionName: propertyData.buttonLabel,
                             protected: true,
                             priority: 1,
                             callback: () => {
                                 this.emit(EntityEvent.PropertySet, {
                                     propertyName: key,
-                                    propertyValue: this.entityData.properties[key].link,
+                                    propertyValue: propertyData.link,
                                 });
                             },
                         });

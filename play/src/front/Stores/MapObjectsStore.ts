@@ -6,6 +6,7 @@ import officeCollection from "../../../public/resources/entityCollection/OfficeC
 
 export interface EntityCollection {
     collectionName: string;
+    tags: string[];
     collection: EntityPrefab[];
 }
 
@@ -16,10 +17,10 @@ export class MapEntitiesStore implements Readable<EntityPrefab[]> {
     private mapObjects: EntityPrefab[] = [];
     private filter = "";
     public tagsStore = writable<string[]>([]);
-    private currentCollection: EntityCollection = { collectionName: "All Object Collection", collection: [] };
+    private currentCollection: EntityCollection = { collectionName: "All Object Collection", collection: [], tags: [] };
 
     constructor() {
-        const allCollections = [furnitureCollection, officeCollection];
+        const allCollections = [furnitureCollection, officeCollection] as EntityCollection[];
         const folder = "/resources/entities/";
         const tagSet = new Set<string>();
         allCollections.forEach((collection) => {
@@ -28,7 +29,7 @@ export class MapEntitiesStore implements Readable<EntityPrefab[]> {
                     name: entity.name,
                     tags: [...entity.tags, ...collection.tags],
                     imagePath: folder + entity.imagePath,
-                    direction: Direction[<keyof typeof Direction>entity.direction],
+                    direction: entity.direction,
                     color: entity.color,
                     collisionGrid: entity.collisionGrid,
                 });

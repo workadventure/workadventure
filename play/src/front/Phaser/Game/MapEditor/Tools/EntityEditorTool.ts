@@ -28,8 +28,8 @@ export class EntityEditorTool extends MapEditorTool {
     private mapEditorSelectedEntityPrefabStoreUnsubscriber!: Unsubscriber;
     private mapEntityEditorModeStoreUnsubscriber!: Unsubscriber;
 
-    private pointerMoveEventHandler: (pointer: Phaser.Input.Pointer) => void;
-    private pointerDownEventHandler: (pointer: Phaser.Input.Pointer) => void;
+    private pointerMoveEventHandler!: (pointer: Phaser.Input.Pointer) => void;
+    private pointerDownEventHandler!: (pointer: Phaser.Input.Pointer) => void;
 
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super();
@@ -226,7 +226,7 @@ export class EntityEditorTool extends MapEditorTool {
                 id: this.gameMapEntities.getNextEntityId(),
                 prefab: this.entityPrefab,
                 interactive: true,
-                properties:[]
+                properties: {},
             };
             this.mapEditorModeManager.executeCommand({
                 entityData,
