@@ -30,6 +30,17 @@ app.get("/maps/*.json", async (req, res) => {
     res.send(await mapsManager.getMap(req.url));
 });
 
+app.get("/entityCollections/*", async (req, res) => {
+    // res.send("ddd");
+    res.send(mapsManager.getEntityCollection("basic furniture"));
+});
+
+app.get("/entityCollections", async (req, res) => {
+    res.send({
+        collections: mapsManager.getEntityCollectionsNames(),
+    });
+});
+
 app.use(express.static("public"));
 
 app.listen(3000, () => {

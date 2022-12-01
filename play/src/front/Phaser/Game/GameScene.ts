@@ -229,6 +229,7 @@ export class GameScene extends DirtyScene {
     private companion!: string | null;
     private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string | undefined;
+    private entityCollectionsUrlFile: string | undefined;
     private pinchManager: PinchManager | undefined;
     private mapTransitioning = false; //used to prevent transitions happening at the same time.
     private emoteManager!: EmoteManager;
@@ -265,6 +266,9 @@ export class GameScene extends DirtyScene {
 
         this.MapUrlFile = MapUrlFile;
         this.roomUrl = room.key;
+        this.entityCollectionsUrlFile = room.entityCollectionsUrl;
+
+        console.log(`Get entities collection from here: ${this.entityCollectionsUrlFile}`);
 
         this.createPromiseDeferred = new Deferred<void>();
         this.connectionAnswerPromiseDeferred = new Deferred<RoomJoinedMessageInterface>();
