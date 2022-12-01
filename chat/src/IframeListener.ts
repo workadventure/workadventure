@@ -98,9 +98,13 @@ class IframeListener {
                             }
                             const mucRoomDefault = mucRoomsStore.getDefaultRoom();
                             let userData = undefined;
-                            if (mucRoomDefault) {
-                                userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
-                            } else {
+                            try {
+                                if (mucRoomDefault) {
+                                    userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
+                                } else {
+                                    throw new Error("No defaultMucRoom");
+                                }
+                            } catch (e) {
                                 userData = iframeEvent.data.author;
                             }
                             for (const chatMessageText of iframeEvent.data.text) {
@@ -111,9 +115,13 @@ class IframeListener {
                         case "comingUser": {
                             const mucRoomDefault = mucRoomsStore.getDefaultRoom();
                             let userData = undefined;
-                            if (mucRoomDefault) {
-                                userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
-                            } else {
+                            try {
+                                if (mucRoomDefault) {
+                                    userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
+                                } else {
+                                    throw new Error("No defaultMucRoom");
+                                }
+                            } catch (e) {
                                 userData = iframeEvent.data.author;
                             }
                             if (ChatMessageTypes.userIncoming === iframeEvent.data.type) {
