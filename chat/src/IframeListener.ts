@@ -97,9 +97,7 @@ class IframeListener {
                             }
                             const mucRoomDefault = mucRoomsStore.getDefaultRoom();
                             let userData = undefined;
--                            console.log(iframeEvent.data.author);
                             if (mucRoomDefault && iframeEvent.data.author.jid !== "fake") {
--                                console.log("try found user in default");
                                 userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
                             } else {
                                 userData = iframeEvent.data.author;
