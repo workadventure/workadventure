@@ -97,13 +97,11 @@ class IframeListener {
                             }
                             const mucRoomDefault = mucRoomsStore.getDefaultRoom();
                             let userData = undefined;
-                            try {
-                                if (mucRoomDefault) {
-                                    userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
-                                } else {
-                                    throw new Error("No defaultMucRoom");
-                                }
-                            } catch (e: any) {
+                            console.log(iframeEvent.data.author);
+                            if (mucRoomDefault && iframeEvent.data.author.jid !== "fake") {
+                                console.log("try found user in default");
+                                userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
+                            } else {
                                 userData = iframeEvent.data.author;
                             }
                             for (const chatMessageText of iframeEvent.data.text) {
@@ -114,13 +112,9 @@ class IframeListener {
                         case "comingUser": {
                             const mucRoomDefault = mucRoomsStore.getDefaultRoom();
                             let userData = undefined;
-                            try {
-                                if (mucRoomDefault) {
-                                    userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
-                                } else {
-                                    throw new Error("No defaultMucRoom");
-                                }
-                            } catch (e: any) {
+                            if (mucRoomDefault && iframeEvent.data.author.jid !== "fake") {
+                                userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
+                            } else {
                                 userData = iframeEvent.data.author;
                             }
                             if (ChatMessageTypes.userIncoming === iframeEvent.data.type) {
