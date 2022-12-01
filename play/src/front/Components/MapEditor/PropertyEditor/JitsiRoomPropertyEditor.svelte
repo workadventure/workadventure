@@ -1,51 +1,56 @@
-
 <script lang="ts">
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
     import { createEventDispatcher } from "svelte";
+    import { JitsiRoomPropertyData } from "@workadventure/map-editor";
 
-    export let property : any;
+    export let property: JitsiRoomPropertyData;
 
     const dispatch = createEventDispatcher();
 
-    function onValueChange()
-    {
-        dispatch('change');
+    function onValueChange() {
+        dispatch("change");
     }
 </script>
+
 <div class="value-input">
     <label for="roomName">Room name</label>
-    <input id="roomName" type="text" 
+    <input
+        id="roomName"
+        type="text"
         bind:value={property.roomName}
         on:change={onValueChange}
         on:focus={onMapEditorInputFocus}
-        on:blur={onMapEditorInputUnfocus}/>
+        on:blur={onMapEditorInputUnfocus}
+    />
 </div>
 <div class="value-input">
     <label for="jitsiButtonLabel">Button Label</label>
-    <input id="jitsiButtonLabel" type="text"
+    <input
+        id="jitsiButtonLabel"
+        type="text"
         bind:value={property.buttonLabel}
         on:change={onValueChange}
         on:focus={onMapEditorInputFocus}
-        on:blur={onMapEditorInputUnfocus}/>
+        on:blur={onMapEditorInputUnfocus}
+    />
 </div>
 
 <style lang="scss">
-    .value-input{
-
-        display:flex;
-        width:100%;
+    .value-input {
+        display: flex;
+        width: 100%;
         margin-bottom: 0.5em;
         margin-top: 0.5em;
         align-items: center;
-        label{
+        label {
             min-width: fit-content;
             margin-right: 0.5em;
         }
-        input{
+        input {
             flex-grow: 1;
             min-width: 0;
         }
-        *{
+        * {
             margin-bottom: 0;
         }
     }

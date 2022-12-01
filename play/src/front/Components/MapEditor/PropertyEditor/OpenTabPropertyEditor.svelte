@@ -1,9 +1,9 @@
 <script lang="ts">
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
     import { createEventDispatcher } from "svelte";
-    import { PlayAudioPropertyData } from "@workadventure/map-editor";
+    import { OpenTabPropertyData } from "@workadventure/map-editor";
 
-    export let property: PlayAudioPropertyData;
+    export let property: OpenTabPropertyData;
 
     const dispatch = createEventDispatcher();
 
@@ -13,20 +13,21 @@
 </script>
 
 <div class="value-input">
-    <label for="audioLink">Audio Link</label>
+    w
+    <label for="tabLink">New Tab Link</label>
     <input
-        id="audioLink"
+        id="tabLink"
         type="text"
-        bind:value={property.audioLink}
+        bind:value={property.link}
         on:change={onValueChange}
         on:focus={onMapEditorInputFocus}
         on:blur={onMapEditorInputUnfocus}
     />
 </div>
 <div class="value-input">
-    <label for="audioButtonLabel">Button Label</label>
+    <label for="linkButtonLabel">Button Label</label>
     <input
-        id="audioButtonLabel"
+        id="linkButtonlabel"
         type="text"
         bind:value={property.buttonLabel}
         on:change={onValueChange}

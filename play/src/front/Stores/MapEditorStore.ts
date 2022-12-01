@@ -24,15 +24,12 @@ export enum MapEntityEditorMode {
     RemoveMode = "RemoveMode",
 }
 
-export function onMapEditorInputFocus()
-{
+export function onMapEditorInputFocus() {
     mapEditorInputStore.set(true);
 }
 
-export function onMapEditorInputUnfocus()
-{
+export function onMapEditorInputUnfocus() {
     mapEditorInputStore.set(false);
-
 }
 
 export const mapEditorModeStore = createMapEditorModeStore();

@@ -4,7 +4,7 @@
     import { slide } from "svelte/transition";
     import crossImg from "../images/cross-icon.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
-    import NewTabPropertyEditor from "./PropertyEditor/NewTabPropertyEditor.svelte";
+    import OpenTabPropertyEditor from "./PropertyEditor/OpenTabPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
 
     interface EntityPropertyDescription {
@@ -38,7 +38,7 @@
             name: "link",
             active: false,
             currentValue: undefined,
-            component: NewTabPropertyEditor,
+            component: OpenTabPropertyEditor,
             defaultValue: { buttonLabel: "Open Tab", link: "" },
         },
     ];
