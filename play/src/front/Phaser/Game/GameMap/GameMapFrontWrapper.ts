@@ -191,31 +191,6 @@ export class GameMapFrontWrapper {
         this.mapChangedSubject.next(this.getCollisionGrid(collisionsLayer, false));
     }
 
-    public isSpaceAvailable(xPos: number, yPos: number, size = 1): boolean {
-        // if (xPos < 0 || xPos > this.map.width || yPos < 0 || yPos > this.getMapHeightPixels()) {
-        //     return false;
-        // }
-        // const xIndex = Math.floor(xPos / GlobalConfig.TILE_SIZE);
-        // const yIndex = Math.floor(yPos / GlobalConfig.TILE_SIZE);
-        // if (yIndex >= this.height || yIndex < 0 || xIndex >= this.width || xIndex < 0) {
-        //     return false;
-        // }
-        // for (let x = xIndex; x < xIndex + size; x += 1) {
-        //     if (x >= this.width) {
-        //         return false;
-        //     }
-        //     for (let y = yIndex; y < yIndex + size; y += 1) {
-        //         if (y >= this.height) {
-        //             return false;
-        //         }
-        //         if (this.collisionGrid[y][x] === 1) {
-        //             return false;
-        //         }
-        //     }
-        // }
-        // return true;
-    }
-
     public getPropertiesForIndex(index: number): Array<ITiledMapProperty> {
         return this.gameMap.getPropertiesForIndex(index);
     }

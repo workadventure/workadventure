@@ -226,6 +226,7 @@ export class EntityEditorTool extends MapEditorTool {
                 id: this.gameMapEntities.getNextEntityId(),
                 prefab: this.entityPrefab,
                 interactive: true,
+                properties: {},
             };
             this.mapEditorModeManager.executeCommand({
                 entityData,

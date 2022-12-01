@@ -24,7 +24,17 @@ export enum MapEntityEditorMode {
     RemoveMode = "RemoveMode",
 }
 
+export function onMapEditorInputFocus() {
+    mapEditorInputStore.set(true);
+}
+
+export function onMapEditorInputUnfocus() {
+    mapEditorInputStore.set(false);
+}
+
 export const mapEditorModeStore = createMapEditorModeStore();
+
+export const mapEditorInputStore = writable(false);
 
 export const mapEditorModeDragCameraPointerDownStore = writable(false);
 

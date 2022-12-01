@@ -1,7 +1,12 @@
 <script lang="ts">
     import type { EntityPrefab } from "@workadventure/map-editor";
     import { onDestroy } from "svelte/internal";
-    import { mapEditorSelectedEntityPrefabStore, mapObjectsStore } from "../../Stores/MapEditorStore";
+    import {
+        mapEditorSelectedEntityPrefabStore,
+        mapObjectsStore,
+        onMapEditorInputFocus,
+        onMapEditorInputUnfocus,
+    } from "../../Stores/MapEditorStore";
 
     let pickedItem: EntityPrefab = $mapObjectsStore[0];
     let pickedVariant: EntityPrefab | undefined = undefined;
@@ -51,6 +56,7 @@
         if (pickedVariant === undefined) {
             pickedVariant = currentVariants[0];
         }
+        mapEditorSelectedEntityPrefabStore.set(pickedVariant);
     }
 
     function onTagPick() {
@@ -100,6 +106,8 @@
             type="search"
             bind:value={filter}
             on:input={onFilterChange}
+            on:focus={onMapEditorInputFocus}
+            on:blur={onMapEditorInputUnfocus}
             placeholder="Search for name or tags"
         />
         <select class="tag-selector" bind:value={selectedTag} on:change={() => onTagPick()}>
