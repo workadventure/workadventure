@@ -62,7 +62,7 @@ import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
-import type { AreaData } from "@workadventure/map-editor";
+import type { AreaData, EntityData } from "@workadventure/map-editor";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 
@@ -1052,6 +1052,42 @@ export class RoomConnection implements RoomConnection {
                         message: {
                             $case: "createAreaMessage",
                             createAreaMessage: config,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitMapEditorCreateEntity(commandId: string, config: EntityData): void {
+        // this.send({
+        //     message: {
+        //         $case: "editMapCommandMessage",
+        //         editMapCommandMessage: {
+        //             id: commandId,
+        //             editMapMessage: {
+        //                 message: {
+        //                     $case: "createEntityMessage",
+        //                     createEntityMessage: config,
+        //                 },
+        //             },
+        //         },
+        //     },
+        // });
+    }
+
+    public emitMapEditorDeleteEntity(commandId: string, id: number): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "deleteEntityMessage",
+                            deleteEntityMessage: {
+                                id,
+                            },
                         },
                     },
                 },

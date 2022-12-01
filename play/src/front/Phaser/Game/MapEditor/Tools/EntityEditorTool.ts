@@ -78,6 +78,7 @@ export class EntityEditorTool extends MapEditorTool {
                 break;
             }
             case "DeleteEntityCommand": {
+                console.log("HANDLE ENTITY DELETION");
                 this.handleEntityDeletion(commandConfig.id);
                 break;
             }
@@ -99,7 +100,6 @@ export class EntityEditorTool extends MapEditorTool {
 
     private handleEntityDeletion(id: number): void {
         this.entitiesManager.deleteEntity(id);
-        this.gameMapEntities.deleteEntity(id);
     }
 
     private subscribeToStores(): void {

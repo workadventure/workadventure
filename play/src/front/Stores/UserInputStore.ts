@@ -8,6 +8,11 @@ import { mapEditorInputStore } from "./MapEditorStore";
 export const enableUserInputsStore = derived(
     [menuInputFocusStore, chatInputFocusStore, showReportScreenStore, mapEditorInputStore],
     ([$menuInputFocusStore, $chatInputFocusStore, $showReportScreenStore, $mapEditorInputStore]) => {
-        return !$menuInputFocusStore && !$chatInputFocusStore && !($showReportScreenStore !== userReportEmpty) && !$mapEditorInputStore;
+        return (
+            !$menuInputFocusStore &&
+            !$chatInputFocusStore &&
+            !($showReportScreenStore !== userReportEmpty) &&
+            !$mapEditorInputStore
+        );
     }
 );

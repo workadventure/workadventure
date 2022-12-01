@@ -7,12 +7,20 @@ import {
     CreateAreaCommand,
     CreateEntityCommand,
     DeleteEntityCommand,
+    EntityCollection,
+    EntityPrefab,
+    EntityRawPrefab,
 } from "@workadventure/map-editor";
 import { writeFileSync } from "fs";
 import { readFile } from "fs/promises";
 
+// TODO: dynamic imports?
+import furnitureCollection from "./entities/collections/FurnitureCollection.json";
+import officeCollection from "./entities/collections/OfficeCollection.json";
+
 class MapsManager {
     private loadedMaps: Map<string, GameMap>;
+    private loadedCollections: Map<string, EntityCollection>;
 
     private saveMapIntervals: Map<string, NodeJS.Timer>;
     private mapLastChangeTimestamp: Map<string, number>;
@@ -30,6 +38,22 @@ class MapsManager {
         this.loadedMaps = new Map<string, GameMap>();
         this.saveMapIntervals = new Map<string, NodeJS.Timer>();
         this.mapLastChangeTimestamp = new Map<string, number>();
+
+        this.loadedCollections = new Map<string, EntityCollection>();
+
+        for (const collection of [furnitureCollection, officeCollection]) {
+            const parsedCollectionPrefabs: EntityPrefab[] = [];
+            for (const rawPrefab of collection.collection) {
+                parsedCollectionPrefabs.push(
+                    this.parseRawEntityPrefab(collection.collectionName, rawPrefab as EntityRawPrefab)
+                );
+            }
+            const parsedCollection: EntityCollection = structuredClone(collection);
+            parsedCollection.collection = parsedCollectionPrefabs;
+            this.loadedCollections.set(parsedCollection.collectionName, parsedCollection);
+        }
+
+        console.log(this.loadedCollections.get("basic furniture")?.collection[5]);
     }
 
     public executeCommand(mapKey: string, commandConfig: CommandConfig): boolean {
@@ -125,6 +149,14 @@ class MapsManager {
                 }
             }, intervalMS)
         );
+    }
+
+    private parseRawEntityPrefab(collectionName: string, rawPrefab: EntityRawPrefab): EntityPrefab {
+        return {
+            ...rawPrefab,
+            collectionName,
+            id: `${rawPrefab.name}:${rawPrefab.color}:${rawPrefab.direction}`,
+        };
     }
 }
 
