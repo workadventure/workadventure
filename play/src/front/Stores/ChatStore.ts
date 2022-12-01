@@ -63,10 +63,19 @@ function createChatMessagesStore() {
                     });
                 }
 
+                const author = getAuthor(authorId);
+
                 /* @deprecated with new chat service */
                 iframeListener.sendComingUserToChatIframe({
                     type: ChatMessageTypes.userIncoming,
-                    targets: [getAuthor(authorId).userJid],
+                    author: {
+                        name: author.name,
+                        active: true,
+                        isMe: false,
+                        jid: author.userJid,
+                        isMember: false,
+                        color: author.color,
+                    },
                     date: new Date(),
                 });
 
@@ -86,10 +95,19 @@ function createChatMessagesStore() {
                     });
                 }
 
+                const author = getAuthor(authorId);
+
                 /* @deprecated with new chat service */
                 iframeListener.sendComingUserToChatIframe({
                     type: ChatMessageTypes.userOutcoming,
-                    targets: [getAuthor(authorId).userJid],
+                    author: {
+                        name: author.name,
+                        active: true,
+                        isMe: false,
+                        jid: author.userJid,
+                        isMember: false,
+                        color: author.color,
+                    },
                     date: new Date(),
                 });
 
@@ -147,8 +165,14 @@ function createChatMessagesStore() {
                 iframeListener.sendMessageToChatIframe({
                     type: ChatMessageTypes.text,
                     text: [text],
-                    author: author.userUuid === "dummy" ? null : author.userJid,
-                    name: author.name,
+                    author: {
+                        name: author.name,
+                        active: true,
+                        isMe: false,
+                        jid: author.userJid,
+                        isMember: false,
+                        color: author.color,
+                    },
                     date: new Date(),
                 });
 
