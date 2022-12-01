@@ -3,10 +3,12 @@ import { Subject } from "rxjs";
 import { FileExt, UploadedFile, uploadingState } from "../Services/FileMessageManager";
 import { Message, User } from "../Xmpp/AbstractRoom";
 import { mucRoomsStore } from "./MucRoomsStore";
+import { userStore } from "./LocalUserStore";
 
 // Global config store for the whole chat
 export const enableChat = writable<boolean>(true);
 export const enableChatUpload = writable<boolean>(false);
+export const enableChatOnlineListStore = writable<boolean>(false);
 export const enableChatDisconnectedListStore = writable<boolean>(false);
 
 const _newChatMessageSubject = new Subject<string>();
@@ -72,24 +74,23 @@ function createChatMessagesStore() {
             _newChatMessageSubject.next(text);
             update((list) => {
                 const defaultRoom = mucRoomsStore.getDefaultRoom();
-                if (defaultRoom) {
-                    const lastMessage = list[list.length - 1];
-                    if (
-                        lastMessage &&
-                        lastMessage.type === ChatMessageTypes.me &&
-                        lastMessage.text &&
-                        (((new Date().getTime() - lastMessage.date.getTime()) % 86400000) % 3600000) / 60000 < 2
-                    ) {
-                        lastMessage.date = new Date();
-                        lastMessage.text.push(text);
-                    } else {
-                        list.push({
-                            type: ChatMessageTypes.me,
-                            text: [text],
-                            author: defaultRoom.getUserByJid(defaultRoom.myJID),
-                            date: new Date(),
-                        });
-                    }
+                const lastMessage = list[list.length - 1];
+                if (
+                    lastMessage &&
+                    lastMessage.type === ChatMessageTypes.me &&
+                    lastMessage.text &&
+                    new Date().getTime() - lastMessage.date.getTime() < 120000
+                ) {
+                    lastMessage.date = new Date();
+                    lastMessage.text.push(text);
+                } else {
+                    list.push({
+                        type: ChatMessageTypes.me,
+                        text: [text],
+                        author: defaultRoom ? defaultRoom.getUserByJid(defaultRoom.myJID) : undefined,
+                        date: new Date(),
+                        authorName: userStore.get().name,
+                    });
                 }
 
                 return list;
@@ -106,7 +107,7 @@ function createChatMessagesStore() {
                     lastMessage.type === ChatMessageTypes.text &&
                     lastMessage.text &&
                     ((user && lastMessage?.author?.uuid === user.uuid) || lastMessage?.authorName === authorName) &&
-                    (((new Date().getTime() - lastMessage.date.getTime()) % 86400000) % 3600000) / 60000 < 2
+                    new Date().getTime() - lastMessage.date.getTime() < 120000
                 ) {
                     lastMessage.text.push(text);
                     lastMessage.date = new Date();

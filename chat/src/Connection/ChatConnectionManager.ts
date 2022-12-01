@@ -1,6 +1,8 @@
 import { XmppSettingsMessage } from "../Messages/ts-proto-generated/protos/messages";
 import { XmppClient } from "../Xmpp/XmppClient";
-import { connectionEstablishedStore } from "../Stores/ChatStore";
+import { connectionEstablishedStore, enableChat } from "../Stores/ChatStore";
+import { get } from "svelte/store";
+import { xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
 
 class ChatConnectionManager {
     private uuid: string;
@@ -41,7 +43,11 @@ class ChatConnectionManager {
 
     public start() {
         if (this.uuid !== "" && this.authToken && this.playUri !== "" && this.xmppSettingsMessage && !this.xmppClient) {
-            this.xmppClient = new XmppClient(this.xmppSettingsMessage);
+            if (get(enableChat)) {
+                this.xmppClient = new XmppClient(this.xmppSettingsMessage);
+            } else {
+                xmppServerConnectionStatusStore.set(true);
+            }
             connectionEstablishedStore.set(true);
         }
 

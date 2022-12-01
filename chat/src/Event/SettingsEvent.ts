@@ -5,6 +5,7 @@ export const isSettings = z.object({
     chatSounds: z.boolean(),
     enableChat: z.boolean(),
     enableChatUpload: z.boolean(),
+    enableChatOnlineList: z.boolean(),
     enableChatDisconnectedList: z.boolean(),
 });
 

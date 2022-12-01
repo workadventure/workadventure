@@ -8,6 +8,7 @@ import {
     chatPeerConnectionInProgress,
     chatSoundsStore,
     enableChat,
+    enableChatOnlineListStore,
     enableChatDisconnectedListStore,
     enableChatUpload,
     newChatMessageSubject,
@@ -42,6 +43,7 @@ class IframeListener {
                             chatNotificationsStore.set(iframeEvent.data.notification);
                             enableChat.set(iframeEvent.data.enableChat);
                             enableChatUpload.set(iframeEvent.data.enableChatUpload);
+                            enableChatOnlineListStore.set(iframeEvent.data.enableChatOnlineList);
                             enableChatDisconnectedListStore.set(iframeEvent.data.enableChatDisconnectedList);
                             break;
                         }
@@ -94,35 +96,30 @@ class IframeListener {
                                 break;
                             }
                             const mucRoomDefault = mucRoomsStore.getDefaultRoom();
-                            if (mucRoomDefault) {
-                                let userData = undefined;
-                                if (iframeEvent.data.author) {
-                                    userData = mucRoomDefault.getUserByJid(iframeEvent.data.author);
-                                }
-                                for (const chatMessageText of iframeEvent.data.text) {
-                                    chatMessagesStore.addExternalMessage(
-                                        userData,
-                                        chatMessageText,
-                                        userData ? undefined : iframeEvent.data.name
-                                    );
-                                }
+                            let userData = undefined;
+                            if (mucRoomDefault && iframeEvent.data.author.jid !== "fake") {
+                                userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
+                            } else {
+                                userData = iframeEvent.data.author;
+                            }
+                            for (const chatMessageText of iframeEvent.data.text) {
+                                chatMessagesStore.addExternalMessage(userData, chatMessageText, userData.name);
                             }
                             break;
                         }
                         case "comingUser": {
-                            for (const target of iframeEvent.data.targets) {
-                                const mucRoomDefault = mucRoomsStore.getDefaultRoom();
-                                if (mucRoomDefault) {
-                                    const userData = mucRoomDefault.getUserByJid(target);
-                                    if (userData) {
-                                        if (ChatMessageTypes.userIncoming === iframeEvent.data.type) {
-                                            chatMessagesStore.addIncomingUser(userData);
-                                        }
-                                        if (ChatMessageTypes.userOutcoming === iframeEvent.data.type) {
-                                            chatMessagesStore.addOutcomingUser(userData);
-                                        }
-                                    }
-                                }
+                            const mucRoomDefault = mucRoomsStore.getDefaultRoom();
+                            let userData = undefined;
+                            if (mucRoomDefault && iframeEvent.data.author.jid !== "fake") {
+                                userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
+                            } else {
+                                userData = iframeEvent.data.author;
+                            }
+                            if (ChatMessageTypes.userIncoming === iframeEvent.data.type) {
+                                chatMessagesStore.addIncomingUser(userData);
+                            }
+                            if (ChatMessageTypes.userOutcoming === iframeEvent.data.type) {
+                                chatMessagesStore.addOutcomingUser(userData);
                             }
                             break;
                         }

@@ -9,6 +9,8 @@ import {
     PUBLIC_MAP_STORAGE_URL,
     START_ROOM_URL,
     OPID_WOKA_NAME_POLICY,
+    ENABLE_CHAT_ONLINE_LIST,
+    ENABLE_CHAT_DISCONNECTED_LIST,
 } from "../enums/EnvironmentVariable";
 import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
@@ -96,7 +98,8 @@ class LocalAdmin implements AdminInterface {
             loadingCowebsiteLogo: null,
             enableChat: ENABLE_CHAT,
             enableChatUpload: ENABLE_CHAT_UPLOAD,
-            enableChatDisconnectedList: true,
+            enableChatOnlineList: ENABLE_CHAT_ONLINE_LIST,
+            enableChatDisconnectedList: ENABLE_CHAT_DISCONNECTED_LIST,
             metatags: {
                 ...MetaTagsDefaultValue,
             },

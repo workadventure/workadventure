@@ -43,6 +43,7 @@ export class Room {
     private _pricingUrl: string | undefined;
     private _enableChat: boolean | undefined;
     private _enableChatUpload: boolean | undefined;
+    private _enableChatOnlineList: boolean | undefined;
     private _enableChatDisconnectedList: boolean | undefined;
     private _legals: LegalsData | undefined;
     private _backgroundColor: string | undefined;
@@ -170,6 +171,7 @@ export class Room {
 
                 this._enableChat = data.enableChat ?? undefined;
                 this._enableChatUpload = data.enableChatUpload ?? undefined;
+                this._enableChatOnlineList = data.enableChatOnlineList ?? undefined;
                 this._enableChatDisconnectedList = data.enableChatDisconnectedList ?? undefined;
 
                 this._iconClothes = data.customizeWokaScene?.clothesIcon ?? undefined;
@@ -330,6 +332,13 @@ export class Room {
             return true;
         }
         return this._enableChatUpload;
+    }
+
+    get enableChatOnlineList(): boolean {
+        if (this._enableChatOnlineList === undefined) {
+            return true;
+        }
+        return this._enableChatOnlineList;
     }
 
     get enableChatDisconnectedList(): boolean {
