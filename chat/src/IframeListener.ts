@@ -103,7 +103,7 @@ class IframeListener {
                                 } else {
                                     throw new Error("No defaultMucRoom");
                                 }
-                            } catch (e) {
+                            } catch (e: any) {
                                 userData = iframeEvent.data.author;
                             }
                             for (const chatMessageText of iframeEvent.data.text) {
@@ -120,7 +120,7 @@ class IframeListener {
                                 } else {
                                     throw new Error("No defaultMucRoom");
                                 }
-                            } catch (e) {
+                            } catch (e: any) {
                                 userData = iframeEvent.data.author;
                             }
                             if (ChatMessageTypes.userIncoming === iframeEvent.data.type) {
