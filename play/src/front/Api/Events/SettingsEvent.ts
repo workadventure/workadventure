@@ -5,6 +5,7 @@ export const isSettingsEvent = z.object({
     chatSounds: z.boolean(),
     enableChat: z.boolean(),
     enableChatUpload: z.boolean(),
+    enableChatDisconnectedList: z.boolean(),
 });
 
 export type SettingsEvent = z.infer<typeof isSettingsEvent>;

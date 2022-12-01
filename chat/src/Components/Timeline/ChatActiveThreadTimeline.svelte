@@ -65,10 +65,8 @@
     function handlerKeyDown(keyDownEvent: KeyboardEvent) {
         if (keyDownEvent.key === "Enter" && !keyDownEvent.shiftKey) {
             saveMessage();
-            setTimeout(() => {
-                newMessageText = "";
-                writing();
-            }, 10);
+            htmlMessageText = "";
+            writing();
             return false;
         }
         return true;
