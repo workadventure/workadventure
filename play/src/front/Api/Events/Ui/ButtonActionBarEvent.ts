@@ -3,7 +3,6 @@ import { z } from "zod";
 export const isAddButtonActionBarEvent = z.object({
     id: z.string(),
     label: z.string(),
-    callback: z.unknown().optional().nullable(),
 });
 export type AddButtonActionBarEvent = z.infer<typeof isAddButtonActionBarEvent>;
 export type AddActionsButtonActionBarEventCallback = (event: AddButtonActionBarEvent) => void;

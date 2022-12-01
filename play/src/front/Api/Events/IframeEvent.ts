@@ -420,6 +420,14 @@ export const isIframeResponseEvent = z.union([
         type: z.literal("updateWritingStatusChatList"),
         data: z.array(z.nullable(z.string())),
     }),
+    z.object({
+        type: z.literal("buttonActionBarTrigger"),
+        data: isAddButtonActionBarEvent,
+    }),
+    z.object({
+        type: z.literal("modalCloseTrigger"),
+        data: isModalEvent,
+    }),
 ]);
 export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;
 

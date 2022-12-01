@@ -59,7 +59,7 @@
                     {
                      "fontfamily":"Sans Serif",
                      "pixelsize":11,
-                     "text":"Test:\n - New button \"register\" in menu action bar displayed",
+                     "text":"Test:\n - New button \"register\" in menu action bar displayed,\n - Click on \"register\" button,\n - After click, the \"register\" button is hidden",
                      "wrap":true
                     },
                  "visible":true,

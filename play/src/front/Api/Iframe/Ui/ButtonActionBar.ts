@@ -1,32 +1,43 @@
-import { sendToWorkadventure } from "../IframeApiContribution";
+import { AddButtonActionBarEvent } from "../../Events/Ui/ButtonActionBarEvent";
+import { IframeApiContribution, sendToWorkadventure } from "../IframeApiContribution";
+import { apiCallback } from "../registeredCallbacks";
 
-export type ButtonActionBarClickedCallback = () => void;
+export type ButtonActionBarClickedCallback = (buttonActionBar: AddButtonActionBarEvent) => void;
 
-export interface ButtonActionBar {
-    id: string;
+export class WorkAdventureButtonActionBarCommands extends IframeApiContribution<WorkAdventureButtonActionBarCommands> {
+    private _callbacks: Map<string, ButtonActionBarClickedCallback> = new Map<string, ButtonActionBarClickedCallback>();
+
+    callbacks = [
+        apiCallback({
+            type: "buttonActionBarTrigger",
+            callback: (event) => {
+                if (this._callbacks.has(event.id)) {
+                    (this._callbacks.get(event.id) as ButtonActionBarClickedCallback)(event);
+                }
+            },
+        }),
+    ];
+
     /**
-     * The label of the button
+     *
+     * @param id
+     * @param label
+     * @param callback
      */
-    label: string;
-    /**
-     * Callback called if the button is pressed
-     */
-    callback?: ButtonActionBarClickedCallback;
-}
-
-export class WorkAdventureButtonActionBarCommands {
     addButtonActionBar(id: string, label: string, callback?: ButtonActionBarClickedCallback) {
+        if (callback != undefined) this._callbacks.set(id, callback);
         sendToWorkadventure({
             type: "addButtonActionBar",
-            data: {
-                id,
-                label,
-                callback,
-            },
+            data: { id, label },
         });
     }
 
+    /**
+     *
+     * @param id
+     */
     removeButtonActionBar(id: string) {
+        this._callbacks.delete(id);
         sendToWorkadventure({ type: "removeButtonActionBar", data: { id } });
     }
 }

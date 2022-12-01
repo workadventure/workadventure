@@ -44,16 +44,11 @@ import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import type { ChatMessage } from "./Events/ChatEvent";
 import { requestVisitCardsStore } from "../Stores/GameStore";
-import {
-    modalIframeAllowApi,
-    modalIframeAllowStore,
-    modalIframeSrcStore,
-    modalIframeTitleStore,
-    modalPositionStore,
-    modalVisibilityStore,
-} from "../Stores/ModalStore";
+import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
 import { connectionManager } from "../Connexion/ConnectionManager";
 import { gameManager } from "../Phaser/Game/GameManager";
+import { ButtonActionBar } from "./Iframe/Ui/ButtonActionBar";
+import { ModalEvent } from "./Events/ModalEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -433,14 +428,11 @@ class IframeListener {
                     } else if (iframeEvent.type == "showBusinessCard") {
                         requestVisitCardsStore.set(iframeEvent.data.visitCardUrl);
                     } else if (iframeEvent.type == "openModal") {
-                        modalIframeTitleStore.set(iframeEvent.data.title);
-                        modalIframeAllowStore.set(iframeEvent.data.allow);
-                        modalIframeSrcStore.set(iframeEvent.data.src);
-                        modalPositionStore.set(iframeEvent.data.position);
-                        modalIframeAllowApi.set(iframeEvent.data.allowApi);
+                        modalIframeStore.set(iframeEvent.data);
                         modalVisibilityStore.set(true);
                     } else if (iframeEvent.type == "closeModal") {
                         modalVisibilityStore.set(false);
+                        modalIframeStore.set(null);
                     } else if (iframeEvent.type == "addButtonActionBar") {
                         additionnalButtonsMenu.addAdditionnalButtonActionBar(iframeEvent.data);
                     } else if (iframeEvent.type == "removeButtonActionBar") {
@@ -892,6 +884,18 @@ class IframeListener {
         this.postMessageToChat({
             type: "peerConnectionStatus",
             data: status,
+        });
+    }
+    sendButtonActionBarTriggered(buttonActionBar: ButtonActionBar): void {
+        this.postMessage({
+            type: "buttonActionBarTrigger",
+            data: buttonActionBar,
+        });
+    }
+    sendModalCloseTriggered(modal: ModalEvent): void {
+        this.postMessage({
+            type: "modalCloseTrigger",
+            data: modal,
         });
     }
     // end delete >>
