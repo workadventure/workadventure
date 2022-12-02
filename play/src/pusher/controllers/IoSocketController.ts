@@ -629,7 +629,14 @@ export class IoSocketController {
                         }
 
                         client.pongTimeoutId = setTimeout(() => {
-                            console.log("Connexion lost with user ", client.userUuid);
+                            console.log(
+                                "Connection lost with user ",
+                                client.userUuid,
+                                client.name,
+                                client.userJid,
+                                "in room",
+                                client.roomId
+                            );
                             client.close();
                         }, PONG_TIMEOUT);
                     }, PING_INTERVAL);

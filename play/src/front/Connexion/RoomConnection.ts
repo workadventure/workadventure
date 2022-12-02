@@ -588,7 +588,7 @@ export class RoomConnection implements RoomConnection {
             this.timeout = undefined;
         }
         this.timeout = setTimeout(() => {
-            console.warn("Timeout detected server-side. Is your connexion down? Closing connexion.");
+            console.warn("Timeout detected server-side. Is your connection down? Closing connection.");
             this.socket.close();
         }, manualPingDelay);
     }
