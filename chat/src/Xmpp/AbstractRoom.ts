@@ -1,14 +1,15 @@
-import type {Readable, Writable} from "svelte/store";
-import {writable, get, readable} from "svelte/store";
-import {UserData} from "@workadventure/messages";
-import {XmppClient} from "./XmppClient";
+import type { Readable, Writable } from "svelte/store";
+import { writable, get, readable } from "svelte/store";
+import { UserData } from "@workadventure/messages";
+import { XmppClient } from "./XmppClient";
 import * as StanzaProtocol from "stanza/protocol";
-import {ChatStateMessage, JID} from "stanza";
-import {WaLink, WaReceivedReactions} from "./Lib/Plugin";
-import {ChatState} from "stanza/Constants";
+import { ChatStateMessage, JID } from "stanza";
+import { WaLink, WaReceivedReactions } from "./Lib/Plugin";
+import { ChatState } from "stanza/Constants";
 import Timeout = NodeJS.Timeout;
-import {SearchableArrayStore} from "../Stores/Utils/SearchableArrayStore";
-import {MapStore} from "../Stores/Utils/MapStore";
+import { SearchableArrayStore } from "../Stores/Utils/SearchableArrayStore";
+import { MapStore } from "../Stores/Utils/MapStore";
+import { Message } from "../Model/Message";
 
 export type User = {
     name: string;
@@ -43,22 +44,6 @@ export type ReactionMessage = {
     userReactions: Array<string>;
 };
 
-export type Message = {
-    body: string;
-    name: string;
-    jid: string;
-    time: Date;
-    id: string;
-    delivered: boolean;
-    error: boolean;
-    from: string;
-    type: MessageType;
-    targetMessageReply?: ReplyMessage;
-    targetMessageReact?: Map<string, number>;
-    reactions: MapStore<string, Readable<string[]>>;
-    links?: WaLink[];
-    mentions?: User[];
-};
 export type MessagesList = Message[];
 export type MessageMap = Map<string, Message>;
 
@@ -88,7 +73,7 @@ export const defaultUserData: UserData = {
 
 export class AbstractRoom {
     protected messageStore: SearchableArrayStore<string, Message>;
-    protected reactionMessageStore: Writable<Map<string, ReactionMessage[]>>;
+    protected reactionMessageStore: Map<string, ReactionMessage[]>;
     protected deletedMessagesStore: Writable<Map<string, string>>;
     public lastMessageSeen: Date;
     protected countMessagesToSee: Writable<number>;
@@ -104,7 +89,7 @@ export class AbstractRoom {
         }
         this.messageStore = new SearchableArrayStore<string, Message>((message: Message) => message.id);
         this.deletedMessagesStore = writable<Map<string, string>>(new Map<string, string>());
-        this.reactionMessageStore = writable<Map<string, ReactionMessage[]>>(new Map<string, ReactionMessage[]>());
+        this.reactionMessageStore = new Map<string, ReactionMessage[]>();
         this.lastMessageSeen = new Date();
         this.countMessagesToSee = writable<number>(0);
         this.loadingStore = writable<boolean>(false);
@@ -202,26 +187,30 @@ export class AbstractRoom {
     }
 
     // Function used to manage Reactions
-    public haveReaction(emojiTargeted: string, messageId: string): boolean {
+    public haveReaction(
+        emojiTargeted: string,
+        messageId: string,
+        userJid: string = this.xmppClient.getMyPersonalJID()
+    ): boolean {
         const message = this.messageStore.get(messageId);
-        if(message !== undefined){
+        if (message !== undefined) {
             const reactions = message.reactions;
-            const usersReaction = get(reactions.getNestedStore(emojiTargeted, item => item));
-            if(usersReaction) {
-                if (usersReaction.find(jid => jid === this.xmppClient.getMyPersonalJID())) {
+            const usersReaction = get(reactions.getNestedStore(emojiTargeted, (item) => item));
+            if (usersReaction) {
+                if (usersReaction.find((jid) => jid === userJid)) {
                     return true;
                 }
             }
         }
         return false;
     }
-    protected reactions(messageId: string): MapStore<string, Readable<string[]>> {
-        const reactions = new MapStore<string, Readable<string[]>>();
-        const reactionsMessage = get(this.reactionMessageStore).get(messageId);
+    protected reactions(messageId: string): Map<string, string[]> {
+        const reactions = new Map<string, string[]>();
+        const reactionsMessage = this.reactionMessageStore.get(messageId);
         if (reactionsMessage) {
             reactionsMessage.forEach((reactionMessage) => {
                 reactionMessage.userReactions.forEach((reaction) => {
-                    reactions.set(reaction, writable([...(get(reactions.getNestedStore(reaction, item => item)) ?? []), reactionMessage.userJid]));
+                    reactions.set(reaction, [...(reactions.get(reaction) ?? []), reactionMessage.userJid]);
                 });
             });
         }
@@ -229,7 +218,7 @@ export class AbstractRoom {
     }
     protected updateMessageReactions(messageId: string) {
         // Update reactions of the message targeted
-        this.updateMessagePart(messageId, { reactions: this.reactions(messageId) });
+        this.messageStore.get(messageId)?.setReactions(this.reactions(messageId));
     }
     protected toggleReactionsMessage(userJid: string, messageId: string, reactions: Array<string>) {
         const newUserReaction = {
@@ -237,59 +226,65 @@ export class AbstractRoom {
             userReactions: reactions,
         };
 
-        this.reactionMessageStore.update((reactionsMessages) => {
-            const reactionsMessage = reactionsMessages.get(messageId);
-            if (reactionsMessage) {
-                // If message has reactions
-                const userReactionMessage = reactionsMessage.find(
-                    (reactionMessage) => reactionMessage.userJid === userJid
-                );
-                if (userReactionMessage) {
-                    // If reactions of user already exists in the reactions of the message
-                    if (reactions.length === 0) {
-                        // If reactions of user is empty, delete it
-                        reactionsMessages.set(
-                            messageId,
-                            reactionsMessage.filter((reactionMessage) => reactionMessage.userJid !== userJid)
-                        );
-                    } else {
-                        // If reactions of user is new, update it
-                        reactionsMessages.set(
-                            messageId,
-                            reactionsMessage.map((userReactions) =>
-                                userReactions.userJid === userJid ? newUserReaction : userReactions
-                            )
-                        );
-                    }
+        const reactionsMessage = this.reactionMessageStore.get(messageId);
+        if (reactionsMessage) {
+            // If message has reactions
+            const userReactionMessage = reactionsMessage.find((reactionMessage) => reactionMessage.userJid === userJid);
+            if (userReactionMessage) {
+                // If reactions of user already exists in the reactions of the message
+                if (reactions.length === 0) {
+                    // If reactions of user is empty, delete it
+                    this.reactionMessageStore.set(
+                        messageId,
+                        reactionsMessage.filter((reactionMessage) => reactionMessage.userJid !== userJid)
+                    );
                 } else {
-                    // If reactions of user doesn't exist in the reactions of the message
-                    reactionsMessage.push(newUserReaction);
-                    reactionsMessages.set(messageId, reactionsMessage);
+                    // If reactions of user is new, update it
+                    this.reactionMessageStore.set(
+                        messageId,
+                        reactionsMessage.map((userReactions) =>
+                            userReactions.userJid === userJid ? newUserReaction : userReactions
+                        )
+                    );
                 }
             } else {
-                // If message hasn't reactions, add it
-                reactionsMessages.set(messageId, [newUserReaction]);
+                // If reactions of user doesn't exist in the reactions of the message
+                reactionsMessage.push(newUserReaction);
+                this.reactionMessageStore.set(messageId, reactionsMessage);
             }
-            return reactionsMessages;
-        });
-        this.updateMessageReactions(messageId);
-    }
+        } else {
+            // If message hasn't reactions, add it
+            this.reactionMessageStore.set(messageId, [newUserReaction]);
+        }
 
-
-    // Function used to manage Messages
-    protected updateMessagePart(messageId: string, part: Object) {
         const message = this.messageStore.get(messageId);
         if (message) {
-            this.messageStore.update({ ...message, ...part });
-        } else {
-            throw new Error(`AbstractRoom => updateMessagePart => No message found (${messageId})`);
+            newUserReaction.userReactions.forEach((emoji) => {
+                if (!this.haveReaction(emoji, messageId, userJid)) {
+                    message.addReaction(emoji, userJid);
+                }
+            });
+
+            message.reactions.forEach((userReactions, emoji) => {
+                if (
+                    get(userReactions).find((userJid_) => userJid_ === userJid) &&
+                    !newUserReaction.userReactions.find((reaction) => reaction === emoji)
+                ) {
+                    message.removeReaction(emoji, userJid);
+                }
+            });
         }
     }
+
+    // Function used to manage Messages
     public deleteMessage(messageId: string): boolean {
         this.messageStore.delete(messageId);
         return true;
     }
-    protected parseMessage(receivedMessage: StanzaProtocol.ReceivedMessage, delay: StanzaProtocol.Delay | null = null): Message{
+    protected parseMessage(
+        receivedMessage: StanzaProtocol.ReceivedMessage,
+        delay: StanzaProtocol.Delay | null = null
+    ): Message {
         let date = new Date();
         if (delay) {
             // Only in case where the message received is an archive (a message automatically sent by the server when joining a room)
@@ -298,33 +293,36 @@ export class AbstractRoom {
         if (!receivedMessage.remove) {
             const receivedJid = JID.parse(receivedMessage.jid);
             if (receivedJid && receivedMessage.jid && receivedMessage.id) {
-                return {
-                    name: receivedJid.resource ?? "unknown",
-                    jid: JID.create({
+                const message = new Message(
+                    receivedMessage.body ?? "",
+                    receivedJid.resource ?? "unknown",
+                    JID.create({
                         local: receivedJid.local,
                         domain: receivedJid.domain,
                         resource: JID.parse(receivedMessage.from).resource,
                     }),
-                    body: receivedMessage.body ?? "",
-                    time: date,
-                    id: receivedMessage.id,
-                    delivered: true,
-                    error: false,
-                    from: receivedMessage.from,
-                    type: receivedMessage.messageReply ? MessageType.message : MessageType.reply,
-                    links: receivedMessage.links as WaLink[],
-                    targetMessageReply: receivedMessage.messageReply
-                        ? {
-                            id: receivedMessage.messageReply.id,
-                            senderName: receivedMessage.messageReply.senderName,
-                            body: receivedMessage.messageReply.body,
-                            links: receivedMessage.messageReply.links
-                                ? JSON.parse(receivedMessage.messageReply.links)
-                                : undefined,
-                        }
+                    date,
+                    receivedMessage.id,
+                    false,
+                    false,
+                    receivedMessage.from,
+                    receivedMessage.messageReply ? MessageType.message : MessageType.reply,
+                    receivedMessage.messageReply
+                        ? ({
+                              id: receivedMessage.messageReply.id,
+                              senderName: receivedMessage.messageReply.senderName,
+                              body: receivedMessage.messageReply.body,
+                              links: receivedMessage.messageReply.links
+                                  ? JSON.parse(receivedMessage.messageReply.links)
+                                  : undefined,
+                          } as ReplyMessage)
                         : undefined,
-                    reactions: this.reactions(receivedMessage.id)
-                };
+                    undefined,
+                    receivedMessage.links as WaLink[],
+                    []
+                );
+                message.setReactions(this.reactions(receivedMessage.id));
+                return message;
             } else {
                 console.error("Message format is not good", {
                     received: !!receivedJid,
@@ -336,13 +334,13 @@ export class AbstractRoom {
         }
         throw new Error("Message not parsed");
     }
-    protected parseMessageType(receivedMessage: StanzaProtocol.ReceivedMessage): string{
+    protected parseMessageType(receivedMessage: StanzaProtocol.ReceivedMessage): string {
         const messageId = receivedMessage.id ?? "";
         if (receivedMessage.hasSubject === true) {
             return "subject";
         } else if (this.messageStore.has(messageId)) {
             return "exist";
-        } else if(receivedMessage.remove) {
+        } else if (receivedMessage.remove) {
             return "remove";
         }
         return "new";

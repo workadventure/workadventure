@@ -28,7 +28,7 @@ export class SearchableArrayStore<K, V> extends Array<V> implements Readable<Arr
     delete(key: K): boolean {
         const value = this.storesByKey.get(key);
         if (value) {
-            super.filter(_value => _value === value);
+            super.filter((_value) => _value === value);
             this.store.set(this);
             this.storesByKey.delete(key);
         }
@@ -96,7 +96,6 @@ export class SearchableArrayStore<K, V> extends Array<V> implements Readable<Arr
         return removedItems;
     }
 
-
     get(key: K): V | undefined {
         return this.storesByKey.get(key);
     }
@@ -107,7 +106,8 @@ export class SearchableArrayStore<K, V> extends Array<V> implements Readable<Arr
 
     update(value: V) {
         this.storesByKey.set(this.callback(value), value);
-        super.map(item => this.callback(item) === this.callback(value) ? value : item);
+        const index = super.findIndex((item) => this.callback(item) === this.callback(value));
+        this[index] = value;
         this.store.set(this);
     }
 }

@@ -6,13 +6,14 @@ import { userStore } from "../Stores/LocalUserStore";
 import { fileMessageManager } from "../Services/FileMessageManager";
 import { mediaManager, NotificationType } from "../Media/MediaManager";
 import { availabilityStatusStore, filesUploadStore, mentionsUserStore } from "../Stores/ChatStore";
-import { AbstractRoom, Message, MessageType, User } from "./AbstractRoom";
+import { AbstractRoom, MessageType, User } from "./AbstractRoom";
 import { XmppClient } from "./XmppClient";
 import * as StanzaProtocol from "stanza/protocol";
-import { WaReceivedReactions, WaUserInfo } from "./Lib/Plugin";
+import { WaLink, WaReceivedReactions, WaUserInfo } from "./Lib/Plugin";
 import { ParsedJID } from "stanza/JID";
 import { ChatStateMessage, JID } from "stanza";
 import { ChatState, MUCAffiliation } from "stanza/Constants";
+import { Message } from "../Model/Message";
 
 const _VERBOSE = true;
 
@@ -188,9 +189,11 @@ export class MucRoom extends AbstractRoom {
             return;
         }
         const idMessage = uuid();
+        let links_: WaLink[] = [];
         let links = {};
         if (get(filesUploadStore).size > 0) {
             links = { links: fileMessageManager.jsonFiles };
+            links_ = fileMessageManager.jsonFiles;
         }
         if (messageReply) {
             let messageReplyLinks = {};
@@ -220,18 +223,18 @@ export class MucRoom extends AbstractRoom {
                 ...links,
             });
         }
-        const message = {
-            name: this.xmppClient.getPlayerName(),
-            jid: this.xmppClient.getMyPersonalJID(),
-            body: text,
-            time: new Date(),
-            id: idMessage,
-            delivered: false,
-            error: false,
-            from: this.xmppClient.getMyJID(),
-            type: messageReply ? MessageType.reply : MessageType.message,
-            ...links,
-            targetMessageReply: messageReply
+
+        const message = new Message(
+            text,
+            this.xmppClient.getPlayerName(),
+            this.xmppClient.getMyPersonalJID(),
+            new Date(),
+            idMessage,
+            false,
+            false,
+            this.xmppClient.getMyJID(),
+            messageReply ? MessageType.reply : MessageType.message,
+            messageReply
                 ? {
                       id: messageReply.id,
                       senderName: messageReply.name,
@@ -239,8 +242,10 @@ export class MucRoom extends AbstractRoom {
                       links: messageReply.links,
                   }
                 : undefined,
-            mentions: [...get(mentionsUserStore).values()],
-        } as Message;
+            undefined,
+            links_,
+            [...get(mentionsUserStore).values()]
+        );
 
         this.messageStore.push(message);
 
@@ -251,8 +256,9 @@ export class MucRoom extends AbstractRoom {
 
         if (this.sendTimeOut) {
             clearTimeout(this.sendTimeOut);
+            this.sendTimeOut = undefined;
         }
-        this.sendTimeOut = setTimeout(() => this.updateMessagePart(message.id, { error: false }), 10_000);
+        this.sendTimeOut = setTimeout(() => this.messageStore.get(message.id)?.setError(true), 10_000);
         if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, ">> Message sent");
     }
     public sendRemoveMessage(messageId: string) {
@@ -275,7 +281,7 @@ export class MucRoom extends AbstractRoom {
             return;
         }
         let newReactions = [];
-        const myReaction = get(this.reactionMessageStore)
+        const myReaction = this.reactionMessageStore
             .get(messageId)
             ?.find((reactionMessage) => reactionMessage.userJid === this.xmppClient.getMyPersonalJID());
         if (myReaction) {
@@ -299,7 +305,6 @@ export class MucRoom extends AbstractRoom {
         });
         if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, ">> Reaction message sent");
 
-        // Recompute reactions
         this.toggleReactionsMessage(this.xmppClient.getMyPersonalJID(), messageId, newReactions);
     }
     public sendDestroy() {
@@ -358,14 +363,14 @@ export class MucRoom extends AbstractRoom {
                 if (result.item.message) {
                     const message = result.item.message as StanzaProtocol.ReceivedMessage;
                     this.parseMessageType(message);
-                    if(this.parseMessageType(message) !== 'new'){
+                    if (this.parseMessageType(message) !== "new") {
                         this.onMessage(message, result.item.delay);
                     } else {
                         newMessages.push(this.parseMessage(message, result.item.delay));
                     }
                 }
             });
-            if(newMessages.length > 0){
+            if (newMessages.length > 0) {
                 this.messageStore.unshift(...newMessages);
             }
             if (response.paging.count < 50) {
@@ -386,20 +391,21 @@ export class MucRoom extends AbstractRoom {
         let response = false;
         const messageId = receivedMessage.id ?? "";
         switch (this.parseMessageType(receivedMessage)) {
-            case 'subject': {
+            case "subject": {
                 // If subject message, we do nothing for the moment
                 response = true;
                 break;
             }
-            case 'exist': {
+            case "exist": {
                 this.updateLastMessageSeen();
-                this.updateMessagePart(messageId, { delivered: true, error: false });
+                this.messageStore.get(messageId)?.setError(false);
+                this.messageStore.get(messageId)?.setDelivered(true);
                 response = true;
                 break;
             }
-            case 'remove': {
+            case "remove": {
                 const removedId = receivedMessage.remove?.id;
-                if(removedId) {
+                if (removedId) {
                     this.deletedMessagesStore.update((deletedMessages) => {
                         deletedMessages.set(removedId, JID.toBare(receivedMessage.jid));
                         return deletedMessages;
@@ -408,7 +414,7 @@ export class MucRoom extends AbstractRoom {
                 }
                 break;
             }
-            case 'new': {
+            case "new": {
                 let date = new Date();
                 if (delay) {
                     // Only in case where the message received is an archive (a message automatically sent by the server when joining a room)
