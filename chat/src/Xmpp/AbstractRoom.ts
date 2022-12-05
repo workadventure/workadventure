@@ -1,5 +1,5 @@
-import type { Readable, Writable } from "svelte/store";
-import { writable, get, readable } from "svelte/store";
+import type { Writable } from "svelte/store";
+import { writable, get } from "svelte/store";
 import { UserData } from "@workadventure/messages";
 import { XmppClient } from "./XmppClient";
 import * as StanzaProtocol from "stanza/protocol";
@@ -8,7 +8,6 @@ import { WaLink, WaReceivedReactions } from "./Lib/Plugin";
 import { ChatState } from "stanza/Constants";
 import Timeout = NodeJS.Timeout;
 import { SearchableArrayStore } from "../Stores/Utils/SearchableArrayStore";
-import { MapStore } from "../Stores/Utils/MapStore";
 import { Message } from "../Model/Message";
 
 export type User = {
