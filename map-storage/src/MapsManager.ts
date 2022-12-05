@@ -118,7 +118,6 @@ class MapsManager {
     }
 
     public getEntityCollection(collectionName: string): EntityCollection | undefined {
-        console.log(this.loadedCollections.get(collectionName));
         return this.loadedCollections.get(collectionName);
     }
 
