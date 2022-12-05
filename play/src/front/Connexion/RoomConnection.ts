@@ -66,7 +66,8 @@ import type { AreaData } from "@workadventure/map-editor";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 
-const manualPingDelay = 20000;
+// This must be greater than IoSocketController's PING_INTERVAL
+const manualPingDelay = 100000;
 
 export class RoomConnection implements RoomConnection {
     private readonly socket: WebSocket;
