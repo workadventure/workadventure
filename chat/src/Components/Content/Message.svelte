@@ -21,7 +21,6 @@
     import File from "./File.svelte";
     import Reactions from "./Reactions.svelte";
     import { User } from "../../Xmpp/AbstractRoom";
-    import scrollToMessageId from "../ChatMessagesList.svelte";
 
     export let mucRoom: MucRoom;
     export let message: Message;
@@ -31,7 +30,7 @@
     export let color: string;
     export let woka: string;
     export let needHideHeader: boolean;
-    export let me: Readable<User>;
+    export let me: Readable<User | undefined>;
 
     const deletedMessagesStore = mucRoom.getDeletedMessagesStore();
 
@@ -252,7 +251,6 @@
                     {#if message.targetMessageReply}
                         <div
                             class="message-replied tw-text-xs tw-rounded-lg tw-bg-dark tw-px-3 tw-py-2 tw-mt-1 tw-mb-2 tw-text-left tw-cursor-pointer"
-                            on:click={() => scrollToMessageId(message.targetMessageReply?.id ?? "")}
                         >
                             <div class="icon-replied">
                                 <CornerLeftUpIcon size="14" />
