@@ -77,7 +77,7 @@
     function getWoka(jid: string): string {
         const user = findUserInDefault(jid);
         if (user) {
-            return user.woka;
+            return user.woka ?? defaultWoka;
         } else {
             return defaultWoka;
         }
@@ -86,7 +86,7 @@
     function getColor(jid: string): string {
         const user = findUserInDefault(jid);
         if (user) {
-            return user.color;
+            return user.color ?? defaultColor;
         } else {
             return defaultColor;
         }
@@ -126,7 +126,7 @@
         lastScrollPosition = document.body.scrollTop;
     }
 
-    export function scrollToMessageId(messageId: string) {
+    export const scrollToMessageId = (messageId: string) => {
         const messageElement = document.getElementById(`message_${messageId}`);
         if (messageElement) {
             messageElement.classList.add("selected");
@@ -140,7 +140,7 @@
                 );
             }, 0);
         }
-    }
+    };
 
     onMount(() => {
         messagesList.addEventListener("scroll", scrollEvent);
