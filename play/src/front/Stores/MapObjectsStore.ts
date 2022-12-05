@@ -1,8 +1,6 @@
 import { EntityPrefab, Direction } from "@workadventure/map-editor";
 import type { Readable, Subscriber, Unsubscriber } from "svelte/store";
 import { get, writable } from "svelte/store";
-import furnitureCollection from "../../../public/resources/entityCollection/FurnitureCollection.json";
-import officeCollection from "../../../public/resources/entityCollection/OfficeCollection.json";
 
 export interface EntityCollection {
     collectionName: string;
@@ -20,27 +18,42 @@ export class MapEntitiesStore implements Readable<EntityPrefab[]> {
     private currentCollection: EntityCollection = { collectionName: "All Object Collection", collection: [], tags: [] };
 
     constructor() {
-        const allCollections = [furnitureCollection, officeCollection] as EntityCollection[];
-        const folder = "/resources/entities/";
-        const tagSet = new Set<string>();
-        allCollections.forEach((collection) => {
-            collection.collection.forEach((entity: EntityPrefab) => {
-                this.currentCollection.collection.push({
-                    name: entity.name,
-                    tags: [...entity.tags, ...collection.tags],
-                    imagePath: folder + entity.imagePath,
-                    direction: entity.direction,
-                    color: entity.color,
-                    collisionGrid: entity.collisionGrid,
-                });
-                entity.tags.forEach((tag: string) => tagSet.add(tag));
-            });
-        });
+        this.fetchCollectionsNames()
+            .then((collectionsNames) => {
+                console.log(collectionsNames);
+                this.fetchCollections(collectionsNames.collections)
+                    .then((entityCollections: EntityCollection[]) => {
+                        const folder = "/resources/entities/";
+                        const tagSet = new Set<string>();
+                        entityCollections.forEach((collection) => {
+                            collection.collection.forEach((entity: EntityPrefab) => {
+                                this.currentCollection.collection.push({
+                                    name: entity.name,
+                                    id: entity.id,
+                                    collectionName: entity.collectionName,
+                                    // TODO: Merge tags on map-storage side?
+                                    tags: [...entity.tags, ...collection.tags],
+                                    imagePath: folder + entity.imagePath,
+                                    direction: entity.direction,
+                                    color: entity.color,
+                                    collisionGrid: entity.collisionGrid,
+                                });
+                                entity.tags.forEach((tag: string) => tagSet.add(tag));
+                            });
+                        });
 
-        const tags = [...tagSet];
-        tags.sort();
-        this.tagsStore.set(tags);
-        this.mapEntitiesStore.set(this.currentCollection.collection);
+                        const tags = [...tagSet];
+                        tags.sort();
+                        this.tagsStore.set(tags);
+                        this.mapEntitiesStore.set(this.currentCollection.collection);
+                    })
+                    .catch((reason) => {
+                        console.error(reason);
+                    });
+            })
+            .catch((reason) => {
+                console.error(reason);
+            });
     }
 
     subscribe(
@@ -71,5 +84,18 @@ export class MapEntitiesStore implements Readable<EntityPrefab[]> {
                 filters.every((word) => item.tags.includes(word))
         );
         this.mapEntitiesStore.set(newCollection);
+    }
+
+    private async fetchCollections(collectionsNames: string[]): Promise<EntityCollection[]> {
+        const promises: Promise<EntityCollection>[] = [];
+        for (const name of collectionsNames) {
+            // TODO: Get this url from GameScene..?
+            promises.push((await fetch(`http://map-storage.workadventure.localhost/entityCollections/${name}`)).json());
+        }
+        return await Promise.all(promises);
+    }
+
+    private async fetchCollectionsNames(): Promise<{ collections: string[] }> {
+        return (await fetch("http://map-storage.workadventure.localhost/entityCollections")).json();
     }
 }

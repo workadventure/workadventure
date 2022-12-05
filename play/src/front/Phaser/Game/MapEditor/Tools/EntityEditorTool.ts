@@ -106,6 +106,7 @@ export class EntityEditorTool extends MapEditorTool {
         this.mapEditorSelectedEntityPrefabStoreUnsubscriber = mapEditorSelectedEntityPrefabStore.subscribe(
             (entityPrefab: EntityPrefab | undefined): void => {
                 this.entityPrefab = entityPrefab;
+                console.log(this.entityPrefab);
                 if (!entityPrefab) {
                     this.entityPrefabPreview?.destroy();
                     this.entityPrefabPreview = undefined;
