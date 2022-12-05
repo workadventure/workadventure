@@ -660,6 +660,7 @@
                         on:click={toggleMapEditorMode}
                         class="bottom-action-button"
                     >
+                        <Tooltip text={$LL.actionbar.mapEditor()} />
                         <button id="mapEditorIcon" class:border-top-light={$menuVisiblilityStore}>
                             <img draggable="false" src={logoRegister} style="padding: 2px" alt="toggle-map-editor" />
                         </button>

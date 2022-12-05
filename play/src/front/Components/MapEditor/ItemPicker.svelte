@@ -1,4 +1,5 @@
 <script lang="ts">
+    import LL from "../../../i18n/i18n-svelte";
     import type { EntityPrefab } from "@workadventure/map-editor";
     import { onDestroy } from "svelte/internal";
     import {
@@ -108,7 +109,7 @@
             on:input={onFilterChange}
             on:focus={onMapEditorInputFocus}
             on:blur={onMapEditorInputUnfocus}
-            placeholder="Search for name or tags"
+            placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}
         />
         <select class="tag-selector" bind:value={selectedTag} on:change={() => onTagPick()}>
             {#each $tagsStore as tag}
@@ -127,7 +128,7 @@
             </div>
         {/each}
     </div>
-    <div class="separator">Select a variation</div>
+    <div class="separator">{$LL.mapEditor.entityEditor.itemPicker.selectVariationInstructions()}</div>
     {#if pickedItem !== null}
         <div class="item-variant-picker-container">
             {#each currentVariants as item}

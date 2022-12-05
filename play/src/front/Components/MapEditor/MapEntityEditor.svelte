@@ -1,4 +1,5 @@
 <script lang="ts">
+    import LL from "../../../i18n/i18n-svelte";
     import ItemPicker from "./ItemPicker.svelte";
     import MapEntityPropertyEditor from "./MapEntityPropertyEditor.svelte";
     import {
@@ -16,15 +17,15 @@
 <div class="mode-button-container">
     <button
         class={$mapEntityEditorModeStore === MapEntityEditorMode.AddMode ? "active" : ""}
-        on:click={() => changeStore(MapEntityEditorMode.AddMode)}>Add</button
+        on:click={() => changeStore(MapEntityEditorMode.AddMode)}>{$LL.mapEditor.entityEditor.addButton()}</button
     >
     <button
         class={$mapEntityEditorModeStore === MapEntityEditorMode.EditMode ? "active" : ""}
-        on:click={() => changeStore(MapEntityEditorMode.EditMode)}>Edit</button
+        on:click={() => changeStore(MapEntityEditorMode.EditMode)}>{$LL.mapEditor.entityEditor.editButton()}</button
     >
     <button
         class={$mapEntityEditorModeStore === MapEntityEditorMode.RemoveMode ? "active" : ""}
-        on:click={() => changeStore(MapEntityEditorMode.RemoveMode)}>Remove</button
+        on:click={() => changeStore(MapEntityEditorMode.RemoveMode)}>{$LL.mapEditor.entityEditor.deleteButton()}</button
     >
 </div>
 {#if $mapEntityEditorModeStore === MapEntityEditorMode.AddMode}
@@ -34,7 +35,7 @@
     <MapEntityPropertyEditor />
 {/if}
 {#if $mapEntityEditorModeStore === MapEntityEditorMode.RemoveMode}
-    Click on an object to remove it
+    {$LL.mapEditor.entityEditor.removeInstructions()}
 {/if}
 
 <style lang="scss">
