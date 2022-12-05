@@ -375,10 +375,10 @@ If the user is in mobile definition, the modal will open in full screen:
 
 ## Action bar button API
 
-### Add action bar
+### Add a button in the action bar
 
 ```ts
-WA.ui.actionBar.addButtonActionBar(id: sring, label: string, clickCallback: (buttonActionBar: AddButtonActionBar)): void
+WA.ui.actionBar.addButton(id: string, label: string, clickCallback: (buttonActionBar: AddButtonActionBar) => void): void
 ```
 - id: the id of the button action bar defined.
 - label: the label to display in button action bar.
@@ -399,19 +399,19 @@ interface AddButtonActionBar{
 }
 ```
 
-### Remove action bar
+### Remove a button from the action bar
 ```ts
-    WA.ui.actionBar.removeButtonActionBar(id: string);
+    WA.ui.actionBar.removeButton(id: string);
 ```
 - id: the id of the button action bar previously defined.
 
 ### Example of action bar button
 ```ts
     // Add action bar button 'Register'.
-    WA.ui.actionBar.addButtonActionBar('register-btn', 'Regsiter', (event) => {
+    WA.ui.actionBar.addButton('register-btn', 'Regsiter', (event) => {
         console.log('Button registered triggered', event);
         // When user click on the action bar button 'Register', we remove it.
-        WA.ui.actionBar.removeButtonActionBar('register-btn');
+        WA.ui.actionBar.removeButton('register-btn');
     });
 ```
 

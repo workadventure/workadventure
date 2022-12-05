@@ -14,8 +14,8 @@ test.describe('Button action bar', () => {
 
         // Use script to add new button
         await evaluateScript(page, async () => {
-            return WA.ui.actionBar.addButtonActionBar('register-btn', 'Regsiter', () => {
-                WA.ui.actionBar.removeButtonActionBar('register-btn');
+            return WA.ui.actionBar.addButton('register-btn', 'Register', () => {
+                WA.ui.actionBar.removeButton('register-btn');
             });
         });
 

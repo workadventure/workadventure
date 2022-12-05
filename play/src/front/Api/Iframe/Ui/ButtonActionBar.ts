@@ -26,7 +26,7 @@ export class WorkAdventureButtonActionBarCommands extends IframeApiContribution<
      * @param label
      * @param callback
      */
-    addButtonActionBar(id: string, label: string, callback?: ButtonActionBarClickedCallback) {
+    addButton(id: string, label: string, callback?: ButtonActionBarClickedCallback) {
         if (callback != undefined) this._callbacks.set(id, callback);
         sendToWorkadventure({
             type: "addButtonActionBar",
@@ -40,7 +40,7 @@ export class WorkAdventureButtonActionBarCommands extends IframeApiContribution<
      *
      * @param id
      */
-    removeButtonActionBar(id: string) {
+    removeButton(id: string) {
         this._callbacks.delete(id);
         sendToWorkadventure({ type: "removeButtonActionBar", data: { id } });
     }
