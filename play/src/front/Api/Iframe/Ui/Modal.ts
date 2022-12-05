@@ -18,7 +18,7 @@ export class WorkadventureModalCommands extends IframeApiContribution<Workadvent
 
     /**
      * Open instantly the modal window.
-     * {@link https://workadventu.re/map-building/api-chat.md#open-the-modal-window | Website documentation}
+     * {@link http://workadventure.localhost/map-building/api-ui.md#open-the-modal-iframe | Website documentation}
      */
     openModal(modalEvent: ModalEvent, closeCallback?: (arg: ModalEvent) => void): void {
         this._closeCallback = closeCallback;
@@ -27,7 +27,7 @@ export class WorkadventureModalCommands extends IframeApiContribution<Workadvent
 
     /**
      * Close instantly the modal window.
-     * {@link https://workadventu.re/map-building/api-chat.md#close-the-modal-window | Website documentation}
+     * {@link http://workadventure.localhost/map-building/api-ui.md#close-the-chat-window | Website documentation}
      */
     closeModal(): void {
         this._closeCallback = undefined;
