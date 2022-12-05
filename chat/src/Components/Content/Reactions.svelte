@@ -11,7 +11,7 @@
     function getUsersName(emoji: string): string {
         const emojiStore = reactions.get(emoji);
         if (emojiStore) {
-            return $emojiStore.map((userJid) => JID.parse(userJid).resource).join("\r\n") ?? "";
+            return get(emojiStore).map((userJid) => JID.parse(userJid).resource).join("\r\n") ?? "";
         }
         return "";
     }
@@ -19,7 +19,7 @@
     function getNumberReactions(emoji: string): number {
         const emojiStore = reactions.get(emoji);
         if (emojiStore) {
-            return $emojiStore.length;
+            return get(emojiStore).length;
         }
         return 0;
     }
