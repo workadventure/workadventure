@@ -376,8 +376,6 @@
                 class:tw-translate-x-0={$bottomActionBarVisibilityStore}
                 class:translate-right={!$bottomActionBarVisibilityStore}
             >
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="tw-transition-all bottom-action-button"
                     class:disabled={$followStateStore !== "off"}
@@ -390,7 +388,6 @@
                         <img draggable="false" src={followImg} style="padding: 2px" alt="Toggle follow" />
                     </button>
                 </div>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
 
                 <div
                     class="tw-transition-all bottom-action-button"
@@ -418,8 +415,6 @@
                     </button>
                 </div>
 
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="tw-transition-all bottom-action-button"
                     class:disabled={$currentPlayerGroupLockStateStore}
@@ -441,7 +436,6 @@
                         {/if}
                     </button>
                 </div>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
 
                 <div
                     class="tw-transition-all bottom-action-button"
@@ -476,7 +470,6 @@
             <div class="bottom-action-section tw-flex tw-flex-initial">
                 {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
                     {#if $myCameraStore}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
                             class="bottom-action-button tw-relative"
                             on:click={() => analyticsClient.camera()}
@@ -525,8 +518,6 @@
                                     on:mouseleave={() => (cameraActive = false)}
                                 >
                                     {#each $cameraListStore as camera}
-                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                                         <span
                                             class="wa-dropdown-item tw-flex"
                                             on:click|stopPropagation|preventDefault={() =>
@@ -544,7 +535,6 @@
                     {/if}
 
                     {#if $myMicrophoneStore}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
                             class="bottom-action-button tw-relative"
                             on:click={() => analyticsClient.microphone()}
@@ -591,7 +581,6 @@
                                     on:mouseleave={() => (microphoneActive = false)}
                                 >
                                     {#each $microphoneListStore as microphone}
-                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                                         <span
                                             class="wa-dropdown-item"
                                             on:click|stopPropagation|preventDefault={() =>
@@ -609,7 +598,6 @@
                     {/if}
                 {/if}
 
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     on:click={() => analyticsClient.openedChat()}
                     on:click={toggleChat}
@@ -641,7 +629,6 @@
                         </span>
                     {/if}
                 </div>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div on:click={toggleEmojiPicker} class="bottom-action-button">
                     <Tooltip text={$LL.actionbar.emoji()} />
 
@@ -652,7 +639,6 @@
             </div>
 
             <div class="bottom-action-section tw-flex tw-flex-initial">
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     on:dragstart|preventDefault={noDrag}
                     on:click={() => analyticsClient.openedMenu()}
@@ -666,7 +652,6 @@
                     </button>
                 </div>
                 {#if gameManager.getCurrentGameScene().isMapEditorEnabled()}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         on:dragstart|preventDefault={noDrag}
                         on:click={toggleMapEditorMode}
@@ -678,7 +663,6 @@
                     </div>
                 {/if}
                 {#if $userHasAccessToBackOfficeStore}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         on:dragstart|preventDefault={noDrag}
                         on:click={() => analyticsClient.openBackOffice()}
@@ -695,7 +679,6 @@
             </div>
 
             {#if $inviteUserActivated}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="bottom-action-section tw-flex tw-flex-initial"
                     in:fly={{}}
@@ -734,7 +717,6 @@
             {/if}
             -->
             {#each [...$additionnalButtonsMenu.values()] as button}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="bottom-action-section tw-flex tw-flex-initial"
                     in:fly={{}}
@@ -819,6 +801,7 @@
         </div>
     </div>
 {/if}
+F
 
 <style lang="scss">
     @import "../../style/breakpoints.scss";
