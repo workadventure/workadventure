@@ -31,7 +31,7 @@
 
     function onPickItem(item: EntityPrefab) {
         pickedItem = item;
-        itemVariants = $mapObjectsStore.filter((item) => item.name == pickedItem.name);
+        itemVariants = $mapObjectsStore.filter((item:EntityPrefab) => item.name == pickedItem.name);
         itemVariants = itemVariants.sort(
             (a, b) =>
                 a.direction.localeCompare(b.direction) +
@@ -73,7 +73,7 @@
 
     onPickItem(pickedItem);
 
-    let mapObjectStoreUnsubscriber = mapObjectsStore.subscribe((newMap) => {
+    let mapObjectStoreUnsubscriber = mapObjectsStore.subscribe((newMap:EntityPrefab[]) => {
         // currentMapObjects = newMap;
         let tags = new Set<string>();
         let uniqId = new Set<string>();

@@ -49,7 +49,7 @@
                 property.active = currentEntity.getEntityData().properties?.[property.key] !== undefined;
                 property.currentValue = currentEntity.getEntityData().properties?.[property.key];
                 if (!property.currentValue) {
-                    property.currentValue = property.defaultValue;
+                    property.currentValue = structuredClone(property.defaultValue);
                 }
             }
         }
