@@ -285,3 +285,138 @@ You can get all websites with the `WA.ui.website.getAll()` method. It returns an
 ```ts
 WA.ui.website.getAll();
 ```
+
+## The modal iframe API
+### Open the modal iframe
+
+```ts
+WA.ui.modal.openModal({
+    title: string,// mandatory, title of the iframe modal.
+    src: string, // mandatory, url of the iframe modal.
+    allow?: string, // optional by default null.
+    allowApi?: boolean, // optional by default false.
+    position?: string, // optional by default right. Reference for position: center / left / right.
+    closeCallback?: Function // optionall, function when the user close the modal.
+}): void
+```
+
+
+### Close the chat window
+
+```ts
+WA.ui.modal.closeModal(): void
+```
+
+### Example of mofal opened
+
+```ts
+WA.ui.modal.openModal({
+    title: "WorkAdventure website",
+    src: 'https://workadventu.re',
+    allow: "fullscreen",
+    allowApi: true,
+    position: "center",
+    () => {
+        console.info('The modal was closed');
+    }
+});
+```
+
+Open modal to the center position:
+
+<div class="row">
+    <div class="col text-center">
+        <img src="images/modal/modal-center.png" class="figure-img img-fluid rounded" alt="" />
+    </div>
+</div>
+
+```ts
+    WA.ui.modal.openModal({
+        title: "WorkAdventure website",
+        src: 'https://workadventu.re',
+        allow: "fullscreen",
+        position: "right"
+    });
+```
+
+Open modal to the right position:
+
+<div class="row">
+    <div class="col text-center">
+        <img src="images/modal/modal-right.png" class="figure-img img-fluid rounded" alt="" />
+    </div>
+</div>
+
+Open modal to the left position:
+
+```ts
+    WA.ui.modal.openModal({
+        title: "WorkAdventure website",
+        src: 'https://workadventu.re',
+        position: "left"
+    });
+```
+
+<div class="row">
+    <div class="col text-center">
+        <img src="images/modal/modal-left.png" class="figure-img img-fluid rounded" alt="" />
+    </div>
+</div>
+
+### Mobile example
+
+If the user is in mobile definition, the modal will open in full screen:
+
+<div class="row">
+    <div class="col text-center">
+        <img src="images/modal/modal-mobile.png" class="figure-img img-fluid rounded" alt="" />
+    </div>
+</div>
+
+## Action bar button API
+
+### Add action bar
+
+```ts
+WA.ui.actionBar.addButtonActionBar(id: sring, label: string, clickCallback: (buttonActionBar: AddButtonActionBar)): void
+```
+- id: the id of the button action bar defined.
+- label: the label to display in button action bar.
+- clickCallback: the callback when user click on the button. The callback have `AddButtonActionBar` class in parameter.
+
+The `ButtonActionBar` is defined:
+```ts
+interface AddButtonActionBar{
+    /* 
+    *   the id of the button action bar defined.
+    */
+    id: string,
+
+    /* 
+    *   the label to display in button action bar.
+    */
+    label: string
+}
+```
+
+### Remove action bar
+```ts
+    WA.ui.actionBar.removeButtonActionBar(id: string);
+```
+- id: the id of the button action bar previously defined.
+
+### Example of action bar button
+```ts
+    // Add action bar button 'Register'.
+    WA.ui.actionBar.addButtonActionBar('register-btn', 'Regsiter', (event) => {
+        console.log('Button registered triggered', event);
+        // When user click on the action bar button 'Register', we remove it.
+        WA.ui.actionBar.removeButtonActionBar('register-btn');
+    });
+```
+
+<div class="row">
+    <div class="col text-center">
+        <img src="images/action_bar/button_action_bar.png" class="figure-img img-fluid rounded" alt="" />
+    </div>
+</div>

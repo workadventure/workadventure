@@ -54,6 +54,7 @@ import { isNotificationEvent } from "./NotificationEvent";
 import { isShowBusinessCardEvent } from "./ShowBusinessCardEvent";
 import { isModalEvent } from "./ModalEvent";
 import { isXmppSettingsMessageEvent } from "./XmppSettingsMessageEvent";
+import { isAddButtonActionBarEvent, isRemoveButtonActionBarEvent } from "./Ui/ButtonActionBarEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -268,6 +269,14 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("redirectPricing"),
         data: z.undefined(),
     }),
+    z.object({
+        type: z.literal("addButtonActionBar"),
+        data: isAddButtonActionBarEvent,
+    }),
+    z.object({
+        type: z.literal("removeButtonActionBar"),
+        data: isRemoveButtonActionBarEvent,
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;
@@ -410,6 +419,14 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("updateWritingStatusChatList"),
         data: z.array(z.nullable(z.string())),
+    }),
+    z.object({
+        type: z.literal("buttonActionBarTrigger"),
+        data: isAddButtonActionBarEvent,
+    }),
+    z.object({
+        type: z.literal("modalCloseTrigger"),
+        data: isModalEvent,
     }),
 ]);
 export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;

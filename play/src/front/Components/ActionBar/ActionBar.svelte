@@ -44,6 +44,7 @@
         inviteUserActivated,
         SubMenusInterface,
         subMenusStore,
+        additionnalButtonsMenu,
     } from "../../Stores/MenuStore";
     import type { Emoji } from "../../Stores/EmoteStore";
     import {
@@ -67,14 +68,9 @@
     import { peerStore } from "../../Stores/PeerStore";
     import { StringUtils } from "../../Utils/StringUtils";
     import Tooltip from "../Util/Tooltip.svelte";
-    import {
-        modalIframeAllowApi,
-        modalIframeAllowStore,
-        modalIframeSrcStore,
-        modalIframeTitleStore,
-        modalVisibilityStore,
-    } from "../../Stores/ModalStore";
+    import { modalIframeStore, modalVisibilityStore } from "../../Stores/ModalStore";
     import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
+    import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -279,12 +275,15 @@
     }
 
     /*function register() {
-        //modalIframeTitleStore.set($LL.menu.icon.open.register());
-        ///modalIframeAllowStore.set("fullscreen");
-        //modalIframeSrcStore.set(`https://workadventu.re/funnel/connection?roomUrl=${window.location.toString()}`);
-        //modalPositionStore.set("center");
-        //modalIframeAllowApi.set(true);
-        //modalVisibilityStore.set(true);
+        modalIframeStore.set(
+            {
+                src: https://workadventu.re/funnel/connection?roomUrl=${window.location.toString()},
+                allow: "fullscreen",
+                allowApi: true,
+                position: "center",
+                title: $LL.menu.icon.open.register()
+            }
+        );
 
         //resetMenuVisibility();
         //resetChatVisibility();
@@ -294,10 +293,7 @@
 
     function resetModalVisibility() {
         modalVisibilityStore.set(false);
-        modalIframeTitleStore.set(null);
-        modalIframeAllowStore.set(null);
-        modalIframeSrcStore.set(null);
-        modalIframeAllowApi.set(false);
+        modalIframeStore.set(null);
     }
 
     /*function resetMenuVisibility() {
@@ -357,6 +353,11 @@
     });
 
     const isMobile = isMediaBreakpointUp("md");
+
+    function buttonActionBarTrigger(id: string) {
+        const button = $additionnalButtonsMenu.get(id) as AddButtonActionBarEvent;
+        return iframeListener.sendButtonActionBarTriggered(button);
+    }
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -375,6 +376,8 @@
                 class:tw-translate-x-0={$bottomActionBarVisibilityStore}
                 class:translate-right={!$bottomActionBarVisibilityStore}
             >
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="tw-transition-all bottom-action-button"
                     class:disabled={$followStateStore !== "off"}
@@ -387,6 +390,7 @@
                         <img draggable="false" src={followImg} style="padding: 2px" alt="Toggle follow" />
                     </button>
                 </div>
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
 
                 <div
                     class="tw-transition-all bottom-action-button"
@@ -414,6 +418,8 @@
                     </button>
                 </div>
 
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="tw-transition-all bottom-action-button"
                     class:disabled={$currentPlayerGroupLockStateStore}
@@ -435,6 +441,7 @@
                         {/if}
                     </button>
                 </div>
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
 
                 <div
                     class="tw-transition-all bottom-action-button"
@@ -469,6 +476,7 @@
             <div class="bottom-action-section tw-flex tw-flex-initial">
                 {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
                     {#if $myCameraStore}
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
                             class="bottom-action-button tw-relative"
                             on:click={() => analyticsClient.camera()}
@@ -517,6 +525,8 @@
                                     on:mouseleave={() => (cameraActive = false)}
                                 >
                                     {#each $cameraListStore as camera}
+                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                                         <span
                                             class="wa-dropdown-item tw-flex"
                                             on:click|stopPropagation|preventDefault={() =>
@@ -534,6 +544,7 @@
                     {/if}
 
                     {#if $myMicrophoneStore}
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
                             class="bottom-action-button tw-relative"
                             on:click={() => analyticsClient.microphone()}
@@ -580,6 +591,7 @@
                                     on:mouseleave={() => (microphoneActive = false)}
                                 >
                                     {#each $microphoneListStore as microphone}
+                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                                         <span
                                             class="wa-dropdown-item"
                                             on:click|stopPropagation|preventDefault={() =>
@@ -597,6 +609,7 @@
                     {/if}
                 {/if}
 
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     on:click={() => analyticsClient.openedChat()}
                     on:click={toggleChat}
@@ -628,6 +641,7 @@
                         </span>
                     {/if}
                 </div>
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div on:click={toggleEmojiPicker} class="bottom-action-button">
                     <Tooltip text={$LL.actionbar.emoji()} />
 
@@ -638,6 +652,7 @@
             </div>
 
             <div class="bottom-action-section tw-flex tw-flex-initial">
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     on:dragstart|preventDefault={noDrag}
                     on:click={() => analyticsClient.openedMenu()}
@@ -651,6 +666,7 @@
                     </button>
                 </div>
                 {#if gameManager.getCurrentGameScene().isMapEditorEnabled()}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         on:dragstart|preventDefault={noDrag}
                         on:click={toggleMapEditorMode}
@@ -662,6 +678,7 @@
                     </div>
                 {/if}
                 {#if $userHasAccessToBackOfficeStore}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         on:dragstart|preventDefault={noDrag}
                         on:click={() => analyticsClient.openBackOffice()}
@@ -678,6 +695,7 @@
             </div>
 
             {#if $inviteUserActivated}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="bottom-action-section tw-flex tw-flex-initial"
                     in:fly={{}}
@@ -715,6 +733,21 @@
                 </div>
             {/if}
             -->
+            {#each [...$additionnalButtonsMenu.values()] as button}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <div
+                    class="bottom-action-section tw-flex tw-flex-initial"
+                    in:fly={{}}
+                    on:dragstart|preventDefault={noDrag}
+                    on:click={() => {
+                        buttonActionBarTrigger(button.id);
+                    }}
+                >
+                    <button class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base" id={button.id}>
+                        {button.label}
+                    </button>
+                </div>
+            {/each}
         </div>
     </div>
 </div>
