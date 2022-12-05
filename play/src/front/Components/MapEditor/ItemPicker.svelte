@@ -3,12 +3,12 @@
     import { onDestroy } from "svelte/internal";
     import {
         mapEditorSelectedEntityPrefabStore,
-        mapObjectsStore,
+        mapEntitiesPrefabsStore,
         onMapEditorInputFocus,
         onMapEditorInputUnfocus,
     } from "../../Stores/MapEditorStore";
 
-    let pickedItem: EntityPrefab = $mapObjectsStore[0];
+    let pickedItem: EntityPrefab = $mapEntitiesPrefabsStore[0];
     let pickedVariant: EntityPrefab | undefined = undefined;
     let currentColor: string;
 
@@ -22,7 +22,7 @@
 
     let selectedTag = "";
 
-    let tagsStore = mapObjectsStore.tagsStore;
+    let tagsStore = mapEntitiesPrefabsStore.tagsStore;
 
     function onPickItemVariant(variant: EntityPrefab) {
         pickedVariant = variant;
@@ -31,7 +31,7 @@
 
     function onPickItem(item: EntityPrefab) {
         pickedItem = item;
-        itemVariants = $mapObjectsStore.filter((item:EntityPrefab) => item.name == pickedItem.name);
+        itemVariants = $mapEntitiesPrefabsStore.filter((item: EntityPrefab) => item.name == pickedItem.name);
         itemVariants = itemVariants.sort(
             (a, b) =>
                 a.direction.localeCompare(b.direction) +
@@ -68,12 +68,12 @@
     }
 
     function onFilterChange() {
-        mapObjectsStore.setNameFilter(filter);
+        mapEntitiesPrefabsStore.setNameFilter(filter);
     }
 
     onPickItem(pickedItem);
 
-    let mapObjectStoreUnsubscriber = mapObjectsStore.subscribe((newMap:EntityPrefab[]) => {
+    let mapObjectStoreUnsubscriber = mapEntitiesPrefabsStore.subscribe((newMap: EntityPrefab[]) => {
         // currentMapObjects = newMap;
         let tags = new Set<string>();
         let uniqId = new Set<string>();

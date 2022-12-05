@@ -1,3 +1,4 @@
+import { ITiledMapProperty } from '@workadventure/tiled-map-type-guard';
 import { Direction, EntityData } from '../types';
 import type { GameMap } from './GameMap';
 
@@ -9,13 +10,14 @@ export class GameMapEntities {
 
     private nextEntityId: number = 0;
 
+    private readonly MAP_PROPERTY_ENTITIES_NAME: string = 'entities';
+
     constructor(gameMap: GameMap) {
         this.gameMap = gameMap;
 
-        // TODO: Get entities from the map file
-        // for (const entityData of this.loadMockEntities()) {
-        //     this.addEntity(entityData);
-        // };
+        for (const entityData of JSON.parse(JSON.stringify(this.getEntitiesMapProperty()?.value)) as EntityData[] ?? []) {
+            this.addEntity(entityData);
+        };
     }
 
     public addEntity(entityData: EntityData): boolean {
@@ -24,6 +26,8 @@ export class GameMapEntities {
         }
         this.entities.push(entityData);
         this.nextEntityId = Math.max(this.nextEntityId, entityData.id);
+        this.addEntityToMapProperties(entityData);
+
         return true;
     }
 
@@ -38,6 +42,32 @@ export class GameMapEntities {
             return true;
         }
         return false;
+    }
+
+    private addEntityToMapProperties(entityData: EntityData): void {
+        if (this.gameMap.getMap().properties === undefined) {
+            this.gameMap.getMap().properties = [];
+        }
+        if (!this.getEntitiesMapProperty()) {
+            this.gameMap.getMap().properties?.push({
+                name: this.MAP_PROPERTY_ENTITIES_NAME,
+                type: "string",
+                propertytype: "string",
+                value: JSON.parse(JSON.stringify([])),
+            });
+        }
+        const entitiesPropertyValues = JSON.parse(JSON.stringify(this.getEntitiesMapProperty()?.value)) as EntityData[];
+
+        entitiesPropertyValues.push(entityData);
+
+        const entitiesMapProperty = this.getEntitiesMapProperty();
+        if (entitiesMapProperty !== undefined) {
+            entitiesMapProperty.value = JSON.parse(JSON.stringify(entitiesPropertyValues));
+        }
+    }
+
+    private getEntitiesMapProperty(): ITiledMapProperty | undefined {
+        return this.gameMap.getMap().properties?.find(property => property.name === this.MAP_PROPERTY_ENTITIES_NAME);
     }
 
     // private loadMockEntities(): EntityData[] {

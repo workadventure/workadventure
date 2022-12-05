@@ -151,7 +151,7 @@ import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import { mapEditorModeStore } from "../../Stores/MapEditorStore";
+import { mapEditorModeStore, mapEntitiesPrefabsStore } from "../../Stores/MapEditorStore";
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PositionInterface;
@@ -268,7 +268,15 @@ export class GameScene extends DirtyScene {
         this.roomUrl = room.key;
         this.entityCollectionsUrlFile = room.entityCollectionsUrl;
 
-        console.log(`Get entities collection from here: ${this.entityCollectionsUrlFile}`);
+        this.fetchCollectionsNames()
+            .then((names) => {
+                for (const name of names.collections) {
+                    mapEntitiesPrefabsStore.loadCollection(`${this.room.entityCollectionsUrl}/${name}`);
+                }
+            })
+            .catch((reason) => {
+                console.warn(reason);
+            });
 
         this.createPromiseDeferred = new Deferred<void>();
         this.connectionAnswerPromiseDeferred = new Deferred<RoomJoinedMessageInterface>();
@@ -2732,6 +2740,10 @@ ${escapedMessage}
                 throw new Error("Scene destroyed without cleanup!");
             }
         });
+    }
+
+    private async fetchCollectionsNames(): Promise<{ collections: string[] }> {
+        return (await fetch(this.room.entityCollectionsUrl)).json();
     }
 
     zoomByFactor(zoomFactor: number) {

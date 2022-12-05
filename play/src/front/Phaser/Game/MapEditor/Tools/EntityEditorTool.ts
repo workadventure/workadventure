@@ -7,7 +7,7 @@ import {
     mapEditorSelectedEntityPrefabStore,
     MapEntityEditorMode,
     mapEntityEditorModeStore,
-    mapObjectsStore,
+    mapEntitiesPrefabsStore,
 } from "../../../../Stores/MapEditorStore";
 import { Entity } from "../../../ECS/Entity";
 import { EntitiesManager, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
@@ -96,7 +96,7 @@ export class EntityEditorTool extends MapEditorTool {
             case "createEntityMessage": {
                 console.log("create entity message");
                 const data = editMapCommandMessage.editMapMessage?.message.createEntityMessage;
-                const entityPrefab = mapObjectsStore.getEntityPrefab(data.collecionName, data.prefabId);
+                const entityPrefab = mapEntitiesPrefabsStore.getEntityPrefab(data.collecionName, data.prefabId);
 
                 if (!entityPrefab) {
                     console.warn(`NO PREFAB WAS FOUND FOR: ${data.collecionName} ${data.prefabId}`);
