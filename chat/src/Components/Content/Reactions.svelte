@@ -11,7 +11,11 @@
     function getUsersName(emoji: string): string {
         const emojiStore = reactions.get(emoji);
         if (emojiStore) {
-            return get(emojiStore).map((userJid) => JID.parse(userJid).resource).join("\r\n") ?? "";
+            return (
+                get(emojiStore)
+                    .map((userJid) => JID.parse(userJid).resource)
+                    .join("\r\n") ?? ""
+            );
         }
         return "";
     }
