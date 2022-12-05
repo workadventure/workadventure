@@ -20,7 +20,6 @@ export class MapEntitiesStore implements Readable<EntityPrefab[]> {
     constructor() {
         this.fetchCollectionsNames()
             .then((collectionsNames) => {
-                console.log(collectionsNames);
                 this.fetchCollections(collectionsNames.collections)
                     .then((entityCollections: EntityCollection[]) => {
                         const folder = "/resources/entities/";
@@ -65,6 +64,12 @@ export class MapEntitiesStore implements Readable<EntityPrefab[]> {
 
     public getObjects() {
         return get(this.mapEntitiesStore);
+    }
+
+    public getEntityPrefab(collectionName: string, entityPrefabId: string): EntityPrefab | undefined {
+        return get(this.mapEntitiesStore).find(
+            (prefab) => prefab.collectionName === collectionName && prefab.id === entityPrefabId
+        );
     }
 
     public setNameFilter(filter: string) {

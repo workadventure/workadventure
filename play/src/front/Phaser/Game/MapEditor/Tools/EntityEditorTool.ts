@@ -7,6 +7,7 @@ import {
     mapEditorSelectedEntityPrefabStore,
     MapEntityEditorMode,
     mapEntityEditorModeStore,
+    mapObjectsStore,
 } from "../../../../Stores/MapEditorStore";
 import { Entity } from "../../../ECS/Entity";
 import { EntitiesManager, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
@@ -91,7 +92,45 @@ export class EntityEditorTool extends MapEditorTool {
      * React on commands coming from the outside
      */
     public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): void {
-        console.log("EntityEditorTool handleIncomingCommandMessage");
+        switch (editMapCommandMessage.editMapMessage?.message?.$case) {
+            case "createEntityMessage": {
+                console.log("create entity message");
+                const data = editMapCommandMessage.editMapMessage?.message.createEntityMessage;
+                const entityPrefab = mapObjectsStore.getEntityPrefab(data.collecionName, data.prefabId);
+
+                if (!entityPrefab) {
+                    console.warn(`NO PREFAB WAS FOUND FOR: ${data.collecionName} ${data.prefabId}`);
+                    return;
+                }
+
+                this.loadEntityImage(entityPrefab.imagePath, `${entityPrefab.imagePath}`)
+                    .then(() => {
+                        const entityData: EntityData = {
+                            x: data.x,
+                            y: data.y,
+                            id: data.id,
+                            interactive: true,
+                            prefab: entityPrefab,
+                            properties: {
+                                customProperties: {},
+                            },
+                        };
+                        // execute command locally
+                        this.mapEditorModeManager.executeCommand(
+                            {
+                                type: "CreateEntityCommand",
+                                entityData,
+                            },
+                            false,
+                            false
+                        );
+                    })
+                    .catch((reason) => {
+                        console.warn(reason);
+                    });
+                break;
+            }
+        }
     }
 
     private handleEntityCreation(config: EntityData): void {
@@ -106,7 +145,6 @@ export class EntityEditorTool extends MapEditorTool {
         this.mapEditorSelectedEntityPrefabStoreUnsubscriber = mapEditorSelectedEntityPrefabStore.subscribe(
             (entityPrefab: EntityPrefab | undefined): void => {
                 this.entityPrefab = entityPrefab;
-                console.log(this.entityPrefab);
                 if (!entityPrefab) {
                     this.entityPrefabPreview?.destroy();
                     this.entityPrefabPreview = undefined;

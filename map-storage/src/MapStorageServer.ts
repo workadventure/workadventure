@@ -75,6 +75,24 @@ const mapStorageServer: MapStorageServer = {
                     });
                     break;
                 }
+                case "createEntityMessage": {
+                    const message = editMapMessage.createEntityMessage;
+                    const entityPrefab = mapsManager.getEntityPrefab(message.collecionName, message.prefabId);
+                    if (!entityPrefab) {
+                        throw new Error(`CANNOT FIND PREFAB FOR: ${message.collecionName} ${message.prefabId}`);
+                    }
+                    validCommand = mapsManager.executeCommand(call.request.mapKey, {
+                        type: "CreateEntityCommand",
+                        entityData: {
+                            id: message.id,
+                            prefab: entityPrefab,
+                            x: message.x,
+                            y: message.y,
+                            interactive: true,
+                        },
+                    });
+                    break;
+                }
                 default: {
                     throw new Error(`UNKNOWN EDIT MAP MESSAGE CASE. THIS SHOULD NOT BE POSSIBLE`);
                 }

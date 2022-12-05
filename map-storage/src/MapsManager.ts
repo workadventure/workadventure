@@ -129,6 +129,10 @@ class MapsManager {
         return names;
     }
 
+    public getEntityPrefab(collectionName: string, entityId: string): EntityPrefab | undefined {
+        return this.loadedCollections.get(collectionName)?.collection.find((entity) => entity.id === entityId);
+    }
+
     private clearSaveMapInterval(key: string): boolean {
         const interval = this.saveMapIntervals.get(key);
         if (interval) {
