@@ -8,30 +8,16 @@
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
     import { UserData } from "@workadventure/messages";
     import { onDestroy, onMount } from "svelte";
-    import {
-        AlertCircleIcon,
-        Trash2Icon,
-        RefreshCwIcon,
-        ArrowDownIcon,
-        CornerDownLeftIcon,
-        CornerLeftUpIcon,
-        SmileIcon,
-        ArrowUpIcon,
-        CopyIcon,
-    } from "svelte-feather-icons";
-    import { get, Unsubscriber } from "svelte/store";
-    import { chatVisibilityStore, selectedMessageToReact, selectedMessageToReply } from "../Stores/ChatStore";
+    import { ArrowDownIcon, ArrowUpIcon } from "svelte-feather-icons";
+    import { Unsubscriber } from "svelte/store";
+    import { chatVisibilityStore, selectedMessageToReact } from "../Stores/ChatStore";
     import { EmojiButton } from "@joeattardi/emoji-button";
-    import { HtmlUtils } from "../Utils/HtmlUtils";
-    import File from "./Content/File.svelte";
-    import HtmlMessage from "./Content/HtmlMessage.svelte";
     import crown from "../../public/static/svg/icone-premium-crown.svg";
     import { iframeListener } from "../IframeListener";
     import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
     import { ChatState } from "stanza/Constants";
     import { JID } from "stanza";
     import { derived } from "svelte/store";
-    import Reactions from "./Content/Reactions.svelte";
     import Message from "./Content/Message.svelte";
 
     export let mucRoom: MucRoom;
@@ -39,7 +25,6 @@
 
     const unreads = mucRoom.getCountMessagesToSee();
     const messagesStore = mucRoom.getMessagesStore();
-    const deletedMessagesStore = mucRoom.getDeletedMessagesStore();
     const presenceStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
     const usersStore = mucRoom.getPresenceStore();
     const loadingStore = mucRoom.getLoadingStore();
@@ -89,7 +74,7 @@
         return user;
     }
 
-    function getWoka(jid: string) {
+    function getWoka(jid: string): string {
         const user = findUserInDefault(jid);
         if (user) {
             return user.woka;
@@ -98,7 +83,7 @@
         }
     }
 
-    function getColor(jid: string) {
+    function getColor(jid: string): string {
         const user = findUserInDefault(jid);
         if (user) {
             return user.color;
@@ -141,7 +126,7 @@
         lastScrollPosition = document.body.scrollTop;
     }
 
-    function scrollToMessageId(messageId: string) {
+    export function scrollToMessageId(messageId: string) {
         const messageElement = document.getElementById(`message_${messageId}`);
         if (messageElement) {
             messageElement.classList.add("selected");

@@ -4,7 +4,7 @@
     import { Message } from "../../Model/Message";
     import LL, { locale } from "../../i18n/i18n-svelte";
     import { selectedMessageToReact, selectedMessageToReply } from "../../Stores/ChatStore";
-    import { get } from "svelte/store";
+    import { get, Readable } from "svelte/store";
     import { EmojiButton } from "@joeattardi/emoji-button";
     import { JID } from "stanza";
     import {
@@ -21,6 +21,7 @@
     import File from "./File.svelte";
     import Reactions from "./Reactions.svelte";
     import { User } from "../../Xmpp/AbstractRoom";
+    import scrollToMessageId from "../ChatMessagesList.svelte";
 
     export let mucRoom: MucRoom;
     export let message: Message;
@@ -30,7 +31,7 @@
     export let color: string;
     export let woka: string;
     export let needHideHeader: boolean;
-    export let me: User;
+    export let me: Readable<User>;
 
     const deletedMessagesStore = mucRoom.getDeletedMessagesStore();
 

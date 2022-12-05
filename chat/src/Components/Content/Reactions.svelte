@@ -7,6 +7,22 @@
     export let mucRoom: MucRoom;
     export let messageId: string;
     export let reactions: MapStore<string, Readable<string[]>>;
+
+    function getUsersName(emoji: string): string {
+        const emojiStore = reactions.get(emoji);
+        if (emojiStore) {
+            return $emojiStore.map((userJid) => JID.parse(userJid).resource).join("\r\n") ?? "";
+        }
+        return "";
+    }
+
+    function getNumberReactions(emoji: string): number {
+        const emojiStore = reactions.get(emoji);
+        if (emojiStore) {
+            return $emojiStore.length;
+        }
+        return 0;
+    }
 </script>
 
 <div class="emojis">
@@ -14,12 +30,10 @@
         <span
             class={mucRoom.haveReaction(emojiStr, messageId) ? "active" : ""}
             on:click={() => mucRoom.sendReactionMessage(emojiStr, messageId)}
-            title={`${get(reactions.get(emojiStr))
-                .map((userJid) => JID.parse(userJid).resource)
-                .join("\r\n")}`}
+            title={`${getUsersName(emojiStr)}`}
         >
             {emojiStr}
-            {get(reactions.get(emojiStr)).length}
+            {getNumberReactions(emojiStr)}
         </span>
     {/each}
 </div>
