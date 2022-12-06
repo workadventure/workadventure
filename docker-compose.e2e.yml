@@ -110,7 +110,7 @@ services:
       args:
         BUILDKIT_INLINE_CACHE: 1
     working_dir: /usr/src/uploader
-    command: yarn run runprod
+    command: yarn run start
     volumes: []
     environment:
       ENABLE_OPENAPI_ENDPOINT: "false"
