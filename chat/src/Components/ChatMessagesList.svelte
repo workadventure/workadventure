@@ -272,7 +272,7 @@
                 needHideHeader={needHideHeader(message.name, message.time, i)}
             />
         {/each}
-        {#each $usersStore.filter((userFilter) => !get(userFilter).isMe && get(userFilter).chatState === ChatState.Composing) as user}
+        {#each $usersStore.filter((userFilter) => !get(userFilter).isMe && get(userFilter).chatState === ChatState.Composing).map(user => get(user)) as user (user.jid)}
             <div class={`tw-mt-2`}>
                 <div class={`tw-flex tw-justify-start`}>
                     <div

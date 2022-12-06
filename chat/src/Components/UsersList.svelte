@@ -27,7 +27,7 @@
             let group = "disconnected";
             const user_ = get(user);
             if (user_.roomName && user_.active) {
-                group = get(user).roomName;
+                group = user_.roomName;
             }
             if ((group === "disconnected" && $enableChatDisconnectedListStore) || group !== "disconnected") {
                 if (!reduced.has(group)) {
