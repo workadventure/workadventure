@@ -2909,6 +2909,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@workadventure/iframe-api-typings@workspace:play/packages/iframe-api-typings":
+  version: 0.0.0-use.local
+  resolution: "@workadventure/iframe-api-typings@workspace:play/packages/iframe-api-typings"
+  dependencies:
+    rxjs: ^6.6.3
+    zod: ^3.14.3
+  languageName: unknown
+  linkType: soft
+
 "@workadventure/map-editor@1.0.0, @workadventure/map-editor@workspace:libs/map-editor":
   version: 0.0.0-use.local
   resolution: "@workadventure/map-editor@workspace:libs/map-editor"

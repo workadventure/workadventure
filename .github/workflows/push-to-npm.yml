@@ -32,21 +32,8 @@ jobs:
         with:
           version: '3.x'
 
-      - name: "Install tailwind dependencies"
-        run: yarn install  --immutable
-        working-directory: "libs/tailwind"
-
-      - name: "Install map-editor dependencies"
-        run: yarn install  --immutable
-        working-directory: "libs/map-editor"
-
-      - name: "Install libs/messages dependencies"
-        run: yarn install  --immutable
-        working-directory: "libs/messages"
-
-      - name: "Install dependencies"
-        run: yarn install  --immutable
-        working-directory: "play"
+      - name: "Install play dependencies"
+        run: yarn workspaces focus workadventure-play
 
       - name: "Install messages dependencies"
         run: npm install
@@ -68,7 +55,7 @@ jobs:
         working-directory: "play"
 
       - name: Install dependencies in package
-        run: yarn install  --immutable
+        run: yarn workspaces focus @workadventure/iframe-api-typings
         working-directory: "play/packages/iframe-api-typings"
 
       - name: Publish package

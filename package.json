@@ -16,7 +16,8 @@
     "libs/messages",
     "libs/tailwind",
     "benchmark",
-    "uploader"
+    "uploader",
+    "play/packages/iframe-api-typings"
   ],
   "packageManager": "yarn@3.3.0"
 }
