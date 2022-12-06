@@ -4,7 +4,7 @@ import { FileExt, UploadedFile, uploadingState } from "../Services/FileMessageMa
 import { User } from "../Xmpp/AbstractRoom";
 import { mucRoomsStore } from "./MucRoomsStore";
 import { userStore } from "./LocalUserStore";
-import {Message} from "../Model/Message";
+import { Message } from "../Model/Message";
 
 // Global config store for the whole chat
 export const enableChat = writable<boolean>(true);

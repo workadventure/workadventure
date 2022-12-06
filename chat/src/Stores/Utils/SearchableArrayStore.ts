@@ -104,6 +104,10 @@ export class SearchableArrayStore<K, V> extends Array<V> implements Readable<Arr
         return this.storesByKey.has(key);
     }
 
+    getKeys(): IterableIterator<K> {
+        return this.storesByKey.keys();
+    }
+
     update(value: V) {
         this.storesByKey.set(this.callback(value), value);
         const index = super.findIndex((item) => this.callback(item) === this.callback(value));

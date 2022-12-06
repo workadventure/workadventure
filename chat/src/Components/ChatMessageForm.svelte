@@ -56,7 +56,7 @@
     const regexUserTag = /@([\w@]+(?:[.!][\w@]+)*)+$/gm;
 
     const presenceStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
-    const me = derived(presenceStore, ($presenceStore) => $presenceStore.get(mucRoom.myJID));
+    const me = presenceStore.get(mucRoom.myJID);
 
     function onInput() {
         analyseText();

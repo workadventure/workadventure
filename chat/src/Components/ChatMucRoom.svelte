@@ -28,7 +28,7 @@
     });
 
     const presenceStore = mucRoom.getPresenceStore();
-    const me = derived(presenceStore, ($presenceStore) => $presenceStore.get(mucRoom.myJID));
+    const me = presenceStore.get(mucRoom.myJID);
     const unreads = mucRoom.getCountMessagesToSee();
     const readyStore = mucRoom.getRoomReadyStore();
 </script>

@@ -9,7 +9,7 @@
     import { UserData } from "@workadventure/messages";
     import { onDestroy, onMount } from "svelte";
     import { ArrowDownIcon, ArrowUpIcon } from "svelte-feather-icons";
-    import { Unsubscriber } from "svelte/store";
+    import { get, Unsubscriber } from "svelte/store";
     import { chatVisibilityStore, selectedMessageToReact } from "../Stores/ChatStore";
     import { EmojiButton } from "@joeattardi/emoji-button";
     import crown from "../../public/static/svg/icone-premium-crown.svg";
@@ -31,8 +31,7 @@
     const canLoadOlderMessagesStore = mucRoom.getCanLoadOlderMessagesStore();
     const showDisabledLoadOlderMessagesStore = mucRoom.getShowDisabledLoadOlderMessagesStore();
 
-    const me = derived(presenceStore, ($presenceStore) => $presenceStore.get(mucRoom.myJID));
-    const messages = derived(messagesStore, ($messagesStore) => $messagesStore);
+    const me = presenceStore.get(mucRoom.myJID);
 
     let isScrolledDown = false;
     let messagesList: HTMLElement;
@@ -112,7 +111,7 @@
                 if ($unreads > 0) {
                     mucRoom.updateLastMessageSeen();
                 }
-            } else if(messagesList.scrollTop === 0 && $canLoadOlderMessagesStore && !$loadingStore){
+            } else if (messagesList.scrollTop === 0 && $canLoadOlderMessagesStore && !$loadingStore) {
                 mucRoom.sendRetrieveLastMessages();
             } else {
                 isScrolledDown = false;
@@ -274,7 +273,7 @@
                 needHideHeader={needHideHeader(message.name, message.time, i)}
             />
         {/each}
-        {#each [...$usersStore].filter(([, userFilter]) => !userFilter.isMe && userFilter.chatState === ChatState.Composing) as [nb, user]}
+        {#each $usersStore.filter((userFilter) => !get(userFilter).isMe && get(userFilter).chatState === ChatState.Composing) as [nb, user]}
             <div class={`tw-mt-2`} id={`user-line-${nb}`}>
                 <div class={`tw-flex tw-justify-start`}>
                     <div
@@ -328,10 +327,10 @@
         {/if}
         <div class="tw-w-full tw-fixed tw-left-0 tw-bottom-14 tw-animate-bounce tw-cursor-pointer">
             <div
-                    in:fly={{ y: 10, duration: 200 }}
-                    style="margin: auto"
-                    class="tw-bg-lighter-purple tw-rounded-xl tw-h-5 tw-px-2 tw-w-fit tw-text-xs tw-flex tw-justify-center tw-items-center tw-shadow-grey"
-                    role="button"
+                in:fly={{ y: 10, duration: 200 }}
+                style="margin: auto"
+                class="tw-bg-lighter-purple tw-rounded-xl tw-h-5 tw-px-2 tw-w-fit tw-text-xs tw-flex tw-justify-center tw-items-center tw-shadow-grey"
+                role="button"
             >
                 <p class="tw-m-0">
                     {$messagesStore.length}
