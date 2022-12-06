@@ -3347,7 +3347,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"acorn-walk@npm:^8.0.2, acorn-walk@npm:^8.1.1":
+"acorn-walk@npm:^8.0.2, acorn-walk@npm:^8.1.1, acorn-walk@npm:^8.2.0":
   version: 8.2.0
   resolution: "acorn-walk@npm:8.2.0"
   checksum: 1715e76c01dd7b2d4ca472f9c58968516a4899378a63ad5b6c2d668bba8da21a71976c14ec5f5b75f887b6317c4ae0b897ab141c831d741dc76024d8745f1ad1
@@ -3363,7 +3363,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"acorn@npm:^8.1.0, acorn@npm:^8.4.1, acorn@npm:^8.8.0":
+"acorn@npm:^8.1.0, acorn@npm:^8.4.1, acorn@npm:^8.8.0, acorn@npm:^8.8.1":
   version: 8.8.1
   resolution: "acorn@npm:8.8.1"
   bin:
@@ -5054,6 +5054,13 @@ __metadata:
   version: 10.4.2
   resolution: "decimal.js@npm:10.4.2"
   checksum: 536cd6816a3197f2e1aa3da4860856cb5a2db73f6fafe8cb3b924ccc63f9b7d78296acc13dccbd419bd958ccc6357921fb15467f883b37cab04bfba7044cada2
+  languageName: node
+  linkType: hard
+
+"decimal.js@npm:^10.4.2":
+  version: 10.4.3
+  resolution: "decimal.js@npm:10.4.3"
+  checksum: 796404dcfa9d1dbfdc48870229d57f788b48c21c603c3f6554a1c17c10195fc1024de338b0cf9e1efe0c7c167eeb18f04548979bcc5fdfabebb7cc0ae3287bae
   languageName: node
   linkType: hard
 
@@ -8958,6 +8965,45 @@ __metadata:
   bin:
     js-yaml: bin/js-yaml.js
   checksum: c7830dfd456c3ef2c6e355cc5a92e6700ceafa1d14bba54497b34a99f0376cecbb3e9ac14d3e5849b426d5a5140709a66237a8c991c675431271c4ce5504151a
+  languageName: node
+  linkType: hard
+
+"jsdom@npm:*":
+  version: 20.0.3
+  resolution: "jsdom@npm:20.0.3"
+  dependencies:
+    abab: ^2.0.6
+    acorn: ^8.8.1
+    acorn-globals: ^7.0.0
+    cssom: ^0.5.0
+    cssstyle: ^2.3.0
+    data-urls: ^3.0.2
+    decimal.js: ^10.4.2
+    domexception: ^4.0.0
+    escodegen: ^2.0.0
+    form-data: ^4.0.0
+    html-encoding-sniffer: ^3.0.0
+    http-proxy-agent: ^5.0.0
+    https-proxy-agent: ^5.0.1
+    is-potential-custom-element-name: ^1.0.1
+    nwsapi: ^2.2.2
+    parse5: ^7.1.1
+    saxes: ^6.0.0
+    symbol-tree: ^3.2.4
+    tough-cookie: ^4.1.2
+    w3c-xmlserializer: ^4.0.0
+    webidl-conversions: ^7.0.0
+    whatwg-encoding: ^2.0.0
+    whatwg-mimetype: ^3.0.0
+    whatwg-url: ^11.0.0
+    ws: ^8.11.0
+    xml-name-validator: ^4.0.0
+  peerDependencies:
+    canvas: ^2.5.0
+  peerDependenciesMeta:
+    canvas:
+      optional: true
+  checksum: 6e2ae21db397133a061b270c26d2dbc0b9051733ea3b896a7ece78d79f475ff0974f766a413c1198a79c793159119169f2335ddb23150348fbfdcfa6f3105536
   languageName: node
   linkType: hard
 
@@ -13003,12 +13049,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"strip-literal@npm:^0.4.2":
-  version: 0.4.2
-  resolution: "strip-literal@npm:0.4.2"
+"strip-literal@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "strip-literal@npm:1.0.0"
   dependencies:
-    acorn: ^8.8.0
-  checksum: 831cdcaba61bc82c14ef5ca423a64bb8044b3b128abd15dff454d3fd05b0dbc7b4403760a7a636923d3c2e71a8e65174cef28ee9aef61f9a66819f865da4fdda
+    acorn: ^8.8.1
+  checksum: ada9b60f322ce3e3fd167b65a186ab77a8c76b8f9074dcdbad4c1a810b46f21c9dca30d4d807e98af580cbe99bfbccd6d8176f69183a454ae2868d8ddd6d4f88
   languageName: node
   linkType: hard
 
@@ -14437,17 +14483,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vitest@npm:^0.24.3":
-  version: 0.24.5
-  resolution: "vitest@npm:0.24.5"
+"vitest@npm:^0.25.5":
+  version: 0.25.5
+  resolution: "vitest@npm:0.25.5"
   dependencies:
     "@types/chai": ^4.3.3
     "@types/chai-subset": ^1.3.3
     "@types/node": "*"
+    acorn: ^8.8.0
+    acorn-walk: ^8.2.0
     chai: ^4.3.6
     debug: ^4.3.4
     local-pkg: ^0.4.2
-    strip-literal: ^0.4.2
+    source-map: ^0.6.1
+    strip-literal: ^1.0.0
     tinybench: ^2.3.1
     tinypool: ^0.3.0
     tinyspy: ^1.0.2
@@ -14471,7 +14520,7 @@ __metadata:
       optional: true
   bin:
     vitest: vitest.mjs
-  checksum: 801d153082ec9d237d8720783dc939aa8c8a4cdd71625ddac997f99a98664b055a0e3efbcb3af648d44f0b8b80c014d48150b2c281870023628c1bdffa336d08
+  checksum: f3e6cbe53f41ccdcf9d4a6dc71f22678007197388b4f1094c04ce28f778b99fce6cd7b2f35049aeffa8cd80cb25c0683f14dd008fdf0a54c6bc39fa3f2cb38a0
   languageName: node
   linkType: hard
 
@@ -14481,6 +14530,15 @@ __metadata:
   dependencies:
     xml-name-validator: ^4.0.0
   checksum: 0af8589942eeb11c9fe29eb31a1a09f3d5dd136aea53a9848dfbabff79ac0dd26fe13eb54d330d5555fe27bb50b28dca0715e09f9cc2bfa7670ccc8b7f919ca2
+  languageName: node
+  linkType: hard
+
+"w3c-xmlserializer@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "w3c-xmlserializer@npm:4.0.0"
+  dependencies:
+    xml-name-validator: ^4.0.0
+  checksum: eba070e78deb408ae8defa4d36b429f084b2b47a4741c4a9be3f27a0a3d1845e277e3072b04391a138f7e43776842627d1334e448ff13ff90ad9fb1214ee7091
   languageName: node
   linkType: hard
 
@@ -14756,7 +14814,7 @@ __metadata:
     uuid: ^9.0.0
     vite: ^3.1.4
     vite-tsconfig-paths: ^3.5.1
-    vitest: ^0.24.3
+    vitest: ^0.25.5
     zod: ^3.19.1
   languageName: unknown
   linkType: soft
@@ -15001,7 +15059,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ws@npm:^8.2.2, ws@npm:^8.4.0, ws@npm:^8.9.0":
+"ws@npm:^8.11.0, ws@npm:^8.2.2, ws@npm:^8.4.0, ws@npm:^8.9.0":
   version: 8.11.0
   resolution: "ws@npm:8.11.0"
   peerDependencies:
