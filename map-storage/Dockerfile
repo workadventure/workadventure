@@ -3,7 +3,7 @@
 # When the issue above is closed, we can move back messages building inside Dockerfile
 
 # protobuf build
-FROM --platform=$BUILDPLATFORM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c as proto-builder
+FROM --platform=$BUILDPLATFORM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d as proto-builder
 WORKDIR /usr/src
 COPY messages/package-lock.json messages/package.json ./
 RUN npm install
@@ -12,7 +12,7 @@ COPY libs ./../libs
 RUN npm run tag-version && npm run ts-proto
 
 # final production image
-FROM node:18.9.1@sha256:48c6c0054de0a80275f9ff67010ab7b555848e126bc35893bba8a77bf871550a
+FROM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d
 WORKDIR /usr/src
 RUN apt-get update && apt-get install -y git
 COPY .yarn/releases .yarn/releases
