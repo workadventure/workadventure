@@ -42,6 +42,8 @@ const EnvironmentVariables = z.object({
     EJABBERD_JWT_SECRET: z.string().optional(),
     ENABLE_CHAT: BoolAsString.optional(),
     ENABLE_CHAT_UPLOAD: BoolAsString.optional(),
+    ENABLE_CHAT_ONLINE_LIST: BoolAsString.optional(),
+    ENABLE_CHAT_DISCONNECTED_LIST: BoolAsString.optional(),
     DEBUG_ERROR_MESSAGES: BoolAsString.optional(),
     ENABLE_OPENAPI_ENDPOINT: BoolAsString.optional(),
     START_ROOM_URL: z.string().optional(),
@@ -135,6 +137,8 @@ export const EJABBERD_DOMAIN: string = env.EJABBERD_DOMAIN || "";
 export const EJABBERD_JWT_SECRET: string = env.EJABBERD_JWT_SECRET || "";
 export const ENABLE_CHAT: boolean = toBool(env.ENABLE_CHAT, true);
 export const ENABLE_CHAT_UPLOAD: boolean = toBool(env.ENABLE_CHAT_UPLOAD, true);
+export const ENABLE_CHAT_ONLINE_LIST: boolean = toBool(env.ENABLE_CHAT_UPLOAD, true);
+export const ENABLE_CHAT_DISCONNECTED_LIST: boolean = toBool(env.ENABLE_CHAT_DISCONNECTED_LIST, true);
 export const DEBUG_ERROR_MESSAGES = toBool(env.DEBUG_ERROR_MESSAGES, false);
 
 // If set to the string "true", the /openapi route will return the OpenAPI definition and the swagger-ui/ route will display the documentation

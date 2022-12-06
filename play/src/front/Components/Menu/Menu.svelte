@@ -108,8 +108,8 @@
     }
 
     function closeMenu() {
-        menuVisiblilityStore.set(false);
         activeSubMenuStore.set(0);
+        menuVisiblilityStore.set(false);
     }
 
     function onKeyDown(e: KeyboardEvent) {
