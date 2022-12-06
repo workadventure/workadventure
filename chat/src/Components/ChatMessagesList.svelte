@@ -32,6 +32,7 @@
     const showDisabledLoadOlderMessagesStore = mucRoom.getShowDisabledLoadOlderMessagesStore();
 
     const me = derived(presenceStore, ($presenceStore) => $presenceStore.get(mucRoom.myJID));
+    const messages = derived(messagesStore, ($messagesStore) => $messagesStore);
 
     let isScrolledDown = false;
     let messagesList: HTMLElement;
@@ -106,14 +107,13 @@
 
     function scrollEvent() {
         if (messagesList) {
-            if (
-                messagesList.scrollHeight - messagesList.offsetHeight + 25 >= messagesList.scrollTop &&
-                messagesList.scrollTop >= messagesList.scrollHeight - messagesList.offsetHeight - 25
-            ) {
+            if (messagesList.scrollTop + messagesList.offsetHeight >= messagesList.scrollHeight) {
                 isScrolledDown = true;
                 if ($unreads > 0) {
                     mucRoom.updateLastMessageSeen();
                 }
+            } else if(messagesList.scrollTop === 0 && $canLoadOlderMessagesStore && !$loadingStore){
+                mucRoom.sendRetrieveLastMessages();
             } else {
                 isScrolledDown = false;
             }
@@ -215,7 +215,7 @@
 <div
     class="wa-messages-list-container"
     bind:this={messagesList}
-    style={`margin-bottom: ${formHeight - 7}px; max-height: calc( 100vh - 6rem - ${formHeight - 7}px );`}
+    style={`max-height: calc( 100vh - 6rem - ${formHeight - 7}px );`}
 >
     <div class="emote-menu-container">
         <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
@@ -326,5 +326,17 @@
                 </div>
             </div>
         {/if}
+        <div class="tw-w-full tw-fixed tw-left-0 tw-bottom-14 tw-animate-bounce tw-cursor-pointer">
+            <div
+                    in:fly={{ y: 10, duration: 200 }}
+                    style="margin: auto"
+                    class="tw-bg-lighter-purple tw-rounded-xl tw-h-5 tw-px-2 tw-w-fit tw-text-xs tw-flex tw-justify-center tw-items-center tw-shadow-grey"
+                    role="button"
+            >
+                <p class="tw-m-0">
+                    {$messagesStore.length}
+                </p>
+            </div>
+        </div>
     </div>
 </div>

@@ -45,7 +45,7 @@
                 &::before{
                     @apply tw-absolute tw-border-t-lighter-purple;
                     left: calc( 50% - 10px );
-                    top: 100%;
+                    top: 100.5%;
                     content: '';
                     width: 0;
                     height: 0;
@@ -84,6 +84,7 @@
 .wa-message-body{
     @apply tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left;
     p{
+        @apply tw-whitespace-pre-line;
         margin: 0;
         .mention{
             margin: 0 2px;

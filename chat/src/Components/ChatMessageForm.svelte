@@ -69,7 +69,6 @@
     function onKeyDown(key: KeyboardEvent): boolean {
         if (key.key === "Enter" && !key.shiftKey) {
             sendMessage();
-            setTimeout(() => (newMessageText = ""), 10);
             return false;
         }
         return true;
@@ -93,7 +92,7 @@
         }
         if (
             fileMessageManager.files.length === 0 &&
-            (!newMessageText || newMessageText.replace(/\s/g, "").length === 0)
+            (!htmlMessageText || htmlMessageText.replace(/\s/g, "").length === 0)
         )
             return false;
         if ($selectedMessageToReply) {
@@ -101,7 +100,8 @@
             return false;
         }
         mucRoom.updateComposingState(ChatState.Paused);
-        mucRoom.sendMessage(newMessageText);
+        const message = htmlMessageText.replace(/<div>/g, "\n").replace(/(<([^>]+)>)/gi, "");
+        mucRoom.sendMessage(message);
         newMessageText = "";
         htmlMessageText = "";
         dispatch("scrollDown");
@@ -255,7 +255,7 @@
         });
 
         picker.on("emoji", ({ emoji }) => {
-            newMessageText += emoji;
+            htmlMessageText += emoji;
         });
         picker.on("hidden", () => {
             emojiOpened = false;
