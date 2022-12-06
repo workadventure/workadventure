@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy, onMount } from "svelte";
+  import { onDestroy } from "svelte";
   import { useParams } from "svelte-navigator";
 
   import { selectServer, servers } from "~/store";

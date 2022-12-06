@@ -16,7 +16,9 @@
     "libs/messages",
     "libs/tailwind",
     "benchmark",
-    "uploader"
+    "uploader",
+    "desktop/electron",
+    "desktop/local-app"
   ],
   "packageManager": "yarn@3.3.0"
 }

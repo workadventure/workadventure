@@ -57,8 +57,7 @@ jobs:
             ${{ runner.OS }}-yarn-
 
       - name: "local-app: Install dependencies"
-        run: yarn install  --immutable
-        working-directory: "desktop/local-app"
+        run: yarn workspaces focus desktop-local-app
 
       - name: "local-app: Build"
         run: yarn build
@@ -69,8 +68,7 @@ jobs:
         working-directory: "desktop/electron"
 
       - name: "Install dependencies"
-        run: yarn install  --immutable
-        working-directory: "desktop/electron"
+        run: yarn workspaces focus workadventure-desktop
 
       - name: "Build typescript"
         run: yarn build

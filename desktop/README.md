@@ -14,7 +14,7 @@ The desktop component is an electron app inside `./electron/`. It uses a hybrid 
 cd local-app && yarn dev
 
 # start electron app in watch mode
-cd electron && LOCAL_APP_URL=http://localhost:3000 yarn dev
+cd electron && LOCAL_APP_URL=http://localhost:5173 yarn dev
 
 # or create an executable by running:
 cd electron && yarn bundle
