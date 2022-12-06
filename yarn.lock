@@ -10974,10 +10974,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"phaser-animated-tiles@workadventure/phaser-animated-tiles#9f722b6d9949b4d8fdad1f53336a60f5728b505c":
+"phaser-animated-tiles@workadventure/phaser-animated-tiles#7e02ce91a100338a27f75f7b443bacd12459fd0f":
   version: 2.0.2
-  resolution: "phaser-animated-tiles@https://github.com/workadventure/phaser-animated-tiles.git#commit=9f722b6d9949b4d8fdad1f53336a60f5728b505c"
-  checksum: b70b4987039f8bbd3ea6440913b8e7887a45d62938bda9f9f320d72bd01fdda6550b84ddeea015a8b64c865c7cf8ffcee9ba1925b773ce779a74551864b2cc23
+  resolution: "phaser-animated-tiles@https://github.com/workadventure/phaser-animated-tiles.git#commit=7e02ce91a100338a27f75f7b443bacd12459fd0f"
+  checksum: 512e3a967449b423f3bc7cb41a32c069cba3ac13add49530bebeeb3cbbfa9ca20cfe32bb0b2363be7d5cf3fbcf6d5938ddf696d149a5fd4d0843c1193936ff64
   languageName: node
   linkType: hard
 
@@ -11215,7 +11215,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier-plugin-svelte@npm:^2.7.0, prettier-plugin-svelte@npm:^2.7.1":
+"prettier-plugin-svelte@npm:^2.7.1":
   version: 2.8.0
   resolution: "prettier-plugin-svelte@npm:2.8.0"
   peerDependencies:
@@ -11225,12 +11225,31 @@ __metadata:
   languageName: node
   linkType: hard
 
+"prettier-plugin-svelte@npm:^2.8.1":
+  version: 2.8.1
+  resolution: "prettier-plugin-svelte@npm:2.8.1"
+  peerDependencies:
+    prettier: ^1.16.4 || ^2.0.0
+    svelte: ^3.2.0
+  checksum: b2a6bffbacd32597a9be37ceda33361d99348ccc6cc890ff53f9e4da0a74a769a7781b08f14751394c4c98315d84bce87444069384e37131c2264b04f1e3bc4b
+  languageName: node
+  linkType: hard
+
 "prettier@npm:^2.3.1, prettier@npm:^2.3.2, prettier@npm:^2.7.1":
   version: 2.7.1
   resolution: "prettier@npm:2.7.1"
   bin:
     prettier: bin-prettier.js
   checksum: 55a4409182260866ab31284d929b3cb961e5fdb91fe0d2e099dac92eaecec890f36e524b4c19e6ceae839c99c6d7195817579cdffc8e2c80da0cb794463a748b
+  languageName: node
+  linkType: hard
+
+"prettier@npm:^2.8.0":
+  version: 2.8.0
+  resolution: "prettier@npm:2.8.0"
+  bin:
+    prettier: bin-prettier.js
+  checksum: 72004ce0cc9bb097daf3e3833f62495768724392c1d5b178dd47372337616e9e50ecbb0804f236596223f7b5eb1bbe69cefc8957dca21112c5777e77ef73a564
   languageName: node
   linkType: hard
 
@@ -13096,7 +13115,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"svelte-check@npm:^2.1.0, svelte-check@npm:^2.9.1":
+"svelte-check@npm:^2.9.1":
   version: 2.9.2
   resolution: "svelte-check@npm:2.9.2"
   dependencies:
@@ -13113,6 +13132,26 @@ __metadata:
   bin:
     svelte-check: bin/svelte-check
   checksum: a0a933034bb07fd8949b5aa8925ca2704bd3e8a4bd83543e53889fb9d0995a94187e98660088a2f4705f87c904a065b2adea2efee608d8bbaee7e60635b34522
+  languageName: node
+  linkType: hard
+
+"svelte-check@npm:^2.9.2":
+  version: 2.10.1
+  resolution: "svelte-check@npm:2.10.1"
+  dependencies:
+    "@jridgewell/trace-mapping": ^0.3.9
+    chokidar: ^3.4.1
+    fast-glob: ^3.2.7
+    import-fresh: ^3.2.1
+    picocolors: ^1.0.0
+    sade: ^1.7.4
+    svelte-preprocess: ^4.0.0
+    typescript: "*"
+  peerDependencies:
+    svelte: ^3.24.0
+  bin:
+    svelte-check: bin/svelte-check
+  checksum: 2281bfacbacfbd75827d35450ed2f5fc0175d0863b69cc41c497585f8e5b9654c1c1b7acd70093a59729635f7c37e063239466105e75d59d3d3daf828dfc784a
   languageName: node
   linkType: hard
 
@@ -13134,7 +13173,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"svelte-preprocess@npm:^4.0.0, svelte-preprocess@npm:^4.10.2, svelte-preprocess@npm:^4.10.7":
+"svelte-preprocess@npm:^4.0.0, svelte-preprocess@npm:^4.10.7":
   version: 4.10.7
   resolution: "svelte-preprocess@npm:4.10.7"
   dependencies:
@@ -13183,7 +13222,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"svelte@npm:^3.38.2, svelte@npm:^3.46.3, svelte@npm:^3.50.1":
+"svelte@npm:^3.38.2, svelte@npm:^3.50.1, svelte@npm:^3.53.1":
   version: 3.53.1
   resolution: "svelte@npm:3.53.1"
   checksum: addf72d3d5daec3af0a37fcd9e1549ad2362cb631b32060674e0a6ed1e45388c459f8b7eeebf486fc411fbd9b882c5fcd70c017ddac94942d86f87888fc13102
@@ -14680,7 +14719,7 @@ __metadata:
     openapi3-ts: ^3.0.2
     openid-client: ^5.1.10
     phaser: 3.55.1
-    phaser-animated-tiles: "workadventure/phaser-animated-tiles#9f722b6d9949b4d8fdad1f53336a60f5728b505c"
+    phaser-animated-tiles: "workadventure/phaser-animated-tiles#7e02ce91a100338a27f75f7b443bacd12459fd0f"
     phaser3-rex-plugins: ^1.1.42
     postcss: ^8.4.17
     posthog-js: ^1.14.1
@@ -14808,17 +14847,17 @@ __metadata:
     marked: ^4.1.1
     npm-run-all: ^4.1.5
     postcss: ^8.4.12
-    prettier: ^2.3.1
-    prettier-plugin-svelte: ^2.7.0
+    prettier: ^2.8.0
+    prettier-plugin-svelte: ^2.8.1
     queue-typescript: ^1.0.1
     rollup-plugin-node-polyfills: ^0.2.1
     rxjs: ^6.6.3
     sass: ^1.49.7
     stanza: ^12.18.0
-    svelte: ^3.46.3
-    svelte-check: ^2.1.0
+    svelte: ^3.53.1
+    svelte-check: ^2.9.2
     svelte-feather-icons: ^4.0.0
-    svelte-preprocess: ^4.10.2
+    svelte-preprocess: ^4.10.7
     tailwindcss: ^3.0.23
     ts-deferred: ^1.0.4
     ts-node: ^10.8.0
