@@ -1,6 +1,7 @@
 import { EntityPrefab, Direction } from "@workadventure/map-editor";
 import type { Readable, Subscriber, Unsubscriber } from "svelte/store";
 import { get, writable } from "svelte/store";
+import { TexturesHelper } from "../Phaser/Helpers/TexturesHelper";
 
 export interface EntityCollection {
     collectionName: string;
@@ -58,7 +59,6 @@ export class MapEntitiesPrefabsStore implements Readable<EntityPrefab[]> {
     public loadCollection(url: string): void {
         this.fetchCollection(url)
             .then((entityCollection: EntityCollection) => {
-                const folder = "/resources/entities/";
                 const tagSet = new Set<string>();
                 entityCollection.collection.forEach((entity: EntityPrefab) => {
                     this.currentCollection.collection.push({
@@ -67,7 +67,7 @@ export class MapEntitiesPrefabsStore implements Readable<EntityPrefab[]> {
                         collectionName: entity.collectionName,
                         // TODO: Merge tags on map-storage side?
                         tags: [...entity.tags, ...entityCollection.tags],
-                        imagePath: folder + entity.imagePath,
+                        imagePath: `${TexturesHelper.ENTITIES_TEXTURES_DIRECTORY}${entity.imagePath}`,
                         direction: entity.direction,
                         color: entity.color,
                         collisionGrid: entity.collisionGrid,

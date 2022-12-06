@@ -293,9 +293,6 @@ export class GameScene extends DirtyScene {
         this.load.image("iconStatusIndicatorInside", "/resources/icons/icon_status_indicator_inside.png");
         this.load.image("iconStatusIndicatorOutline", "/resources/icons/icon_status_indicator_outline.png");
 
-        // load some furniture images for testing purposes
-        this.load.image("table", "/resources/entities/Furniture/Table/TableBrown.png");
-
         if (touchScreenManager.supportTouchScreen) {
             this.load.image(joystickBaseKey, joystickBaseImg);
             this.load.image(joystickThumbKey, joystickThumbImg);

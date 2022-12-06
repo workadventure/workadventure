@@ -1,5 +1,5 @@
 import { ITiledMapProperty } from '@workadventure/tiled-map-type-guard';
-import { Direction, EntityData } from '../types';
+import { EntityData } from '../types';
 import type { GameMap } from './GameMap';
 
 export class GameMapEntities {
@@ -15,7 +15,7 @@ export class GameMapEntities {
     constructor(gameMap: GameMap) {
         this.gameMap = gameMap;
 
-        for (const entityData of JSON.parse(JSON.stringify(this.getEntitiesMapProperty()?.value)) as EntityData[] ?? []) {
+        for (const entityData of JSON.parse(JSON.stringify(this.getEntitiesMapProperty()?.value ?? [])) as EntityData[] ?? []) {
             this.addEntity(entityData);
         };
     }

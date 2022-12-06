@@ -10,6 +10,7 @@ import {
     mapEntitiesPrefabsStore,
 } from "../../../../Stores/MapEditorStore";
 import { Entity } from "../../../ECS/Entity";
+import { TexturesHelper } from "../../../Helpers/TexturesHelper";
 import { EntitiesManager, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
 import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { GameScene } from "../../GameScene";
@@ -103,7 +104,7 @@ export class EntityEditorTool extends MapEditorTool {
                     return;
                 }
 
-                this.loadEntityImage(entityPrefab.imagePath, `${entityPrefab.imagePath}`)
+                TexturesHelper.loadEntityImage(this.scene, entityPrefab.imagePath, entityPrefab.imagePath)
                     .then(() => {
                         const entityData: EntityData = {
                             x: data.x,
@@ -134,7 +135,7 @@ export class EntityEditorTool extends MapEditorTool {
     }
 
     private handleEntityCreation(config: EntityData): void {
-        this.entitiesManager.addEntity(structuredClone(config));
+        void this.entitiesManager.addEntity(structuredClone(config));
     }
 
     private handleEntityDeletion(id: number): void {
@@ -149,7 +150,7 @@ export class EntityEditorTool extends MapEditorTool {
                     this.entityPrefabPreview?.destroy();
                     this.entityPrefabPreview = undefined;
                 } else {
-                    this.loadEntityImage(entityPrefab.imagePath, `${entityPrefab.imagePath}`)
+                    TexturesHelper.loadEntityImage(this.scene, entityPrefab.imagePath, entityPrefab.imagePath)
                         .then(() => {
                             if (this.entityPrefabPreview) {
                                 this.entityPrefabPreview.setTexture(entityPrefab.imagePath);
@@ -194,19 +195,6 @@ export class EntityEditorTool extends MapEditorTool {
                 id: entity.getEntityData().id,
                 type: "DeleteEntityCommand",
             });
-        });
-    }
-
-    private async loadEntityImage(key: string, url: string): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            if (this.scene.textures.exists(key)) {
-                resolve();
-            }
-            this.scene.load.once(`filecomplete-image-${url}`, () => {
-                resolve();
-            });
-            this.scene.load.image(key, url);
-            this.scene.load.start();
         });
     }
 

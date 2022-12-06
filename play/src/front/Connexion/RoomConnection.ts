@@ -1060,7 +1060,6 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitMapEditorCreateEntity(commandId: string, config: EntityData): void {
-        console.log(config);
         this.send({
             message: {
                 $case: "editMapCommandMessage",
