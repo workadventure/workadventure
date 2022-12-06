@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import {expect, test} from '@playwright/test';
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 
@@ -14,15 +14,19 @@ test.describe('Button action bar', () => {
 
         // Use script to add new button
         await evaluateScript(page, async () => {
-            return WA.ui.actionBar.addButton('register-btn', 'Register', () => {
-                WA.ui.actionBar.removeButton('register-btn');
+            return WA.ui.actionBar.addButton({
+                id: 'register-btn',
+                label: 'Register',
+                callback: () => {
+                    WA.ui.actionBar.removeButton('register-btn');
+                }
             });
         });
 
         // Click on the register button
-        await page.locator("#register-btn").click();
+        await page.getByText('Register').click();
 
         // Check if the register button is hidden
-        await page.locator("#register-btn").isHidden();
+        await expect(page.getByText('Register')).toHaveCount(0);
     });
 });

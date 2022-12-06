@@ -4,6 +4,12 @@ import { apiCallback } from "../registeredCallbacks";
 
 export type ButtonActionBarClickedCallback = (buttonActionBar: AddButtonActionBarEvent) => void;
 
+export type ActionBarButtonDescriptor = {
+    id: string;
+    label: string;
+    callback?: ButtonActionBarClickedCallback;
+};
+
 export class WorkAdventureButtonActionBarCommands extends IframeApiContribution<WorkAdventureButtonActionBarCommands> {
     private _callbacks: Map<string, ButtonActionBarClickedCallback> = new Map<string, ButtonActionBarClickedCallback>();
 
@@ -21,24 +27,20 @@ export class WorkAdventureButtonActionBarCommands extends IframeApiContribution<
     /**
      * Add action bar button
      * {@link http://workadventure.localhost/map-building/api-ui.md#add-action-bar | Website documentation}
-     *
-     * @param id
-     * @param label
-     * @param callback
      */
-    addButton(id: string, label: string, callback?: ButtonActionBarClickedCallback) {
-        if (callback != undefined) this._callbacks.set(id, callback);
+    addButton(descriptor: ActionBarButtonDescriptor) {
+        if (descriptor.callback != undefined) {
+            this._callbacks.set(descriptor.id, descriptor.callback);
+        }
         sendToWorkadventure({
             type: "addButtonActionBar",
-            data: { id, label },
+            data: { id: descriptor.id, label: descriptor.label },
         });
     }
 
     /**
      * Remove action bar button
      * {@link http://workadventure.localhost/map-building/api-ui.md#remove-action-bar | Website documentation}
-     *
-     * @param id
      */
     removeButton(id: string) {
         this._callbacks.delete(id);

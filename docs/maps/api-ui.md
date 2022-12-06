@@ -378,15 +378,20 @@ If the user is in mobile definition, the modal will open in full screen:
 ### Add a button in the action bar
 
 ```ts
-WA.ui.actionBar.addButton(id: string, label: string, clickCallback: (buttonActionBar: AddButtonActionBar) => void): void
+WA.ui.actionBar.addButton(descriptor: {
+    id: string, 
+    label: string,
+    clickCallback: (buttonActionBar: AddButtonActionBar) => void
+}): void
 ```
-- id: the id of the button action bar defined.
-- label: the label to display in button action bar.
-- clickCallback: the callback when user click on the button. The callback have `AddButtonActionBar` class in parameter.
 
-The `ButtonActionBar` is defined:
+- id: the id of the button action bar defined.
+- label: the label to display in the button.
+- clickCallback: function called when the user clicks on the button. The callback is passed a `AddButtonActionBar` instance in parameter.
+
+With `AddButtonActionBar` defined as:
 ```ts
-interface AddButtonActionBar{
+interface AddButtonActionBar {
     /* 
     *   the id of the button action bar defined.
     */
@@ -403,15 +408,19 @@ interface AddButtonActionBar{
 ```ts
     WA.ui.actionBar.removeButton(id: string);
 ```
-- id: the id of the button action bar previously defined.
+- id: the id of the action bar button previously defined.
 
-### Example of action bar button
+### Example of an action bar button
 ```ts
     // Add action bar button 'Register'.
-    WA.ui.actionBar.addButton('register-btn', 'Regsiter', (event) => {
-        console.log('Button registered triggered', event);
-        // When user click on the action bar button 'Register', we remove it.
-        WA.ui.actionBar.removeButton('register-btn');
+    WA.ui.actionBar.addButton({
+        id: 'register-btn',
+        label: 'Register', 
+        callback: (event) => {
+            console.log('Button clicked', event);
+            // When a user clicks on the action bar button 'Register', we remove it.
+            WA.ui.actionBar.removeButton('register-btn');
+        }
     });
 ```
 
