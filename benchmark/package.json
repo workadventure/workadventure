@@ -4,7 +4,8 @@
   "description": "Load testing for WorkAdventure",
   "scripts": {
     "start": "ts-node ./index.ts",
-    "start-chat": "ts-node ./index_chat.ts"
+    "start-chat": "ts-node ./index_chat.ts",
+    "start-message": "ts-node ./index_chat_message.ts"
   },
   "contributors": [
     {
