@@ -4,7 +4,7 @@
     import { Message } from "../../Model/Message";
     import LL, { locale } from "../../i18n/i18n-svelte";
     import { selectedMessageToReact, selectedMessageToReply } from "../../Stores/ChatStore";
-    import { get, Readable } from "svelte/store";
+    import { get, Readable, Writable } from "svelte/store";
     import { EmojiButton } from "@joeattardi/emoji-button";
     import { JID } from "stanza";
     import {
@@ -30,7 +30,7 @@
     export let color: string;
     export let woka: string;
     export let needHideHeader: boolean;
-    export let me: Readable<User | undefined>;
+    export let me: Writable<User> | undefined;
 
     const deletedMessagesStore = mucRoom.getDeletedMessagesStore();
 

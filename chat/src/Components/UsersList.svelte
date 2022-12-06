@@ -6,9 +6,8 @@
     import { fly } from "svelte/transition";
     import LL from "../i18n/i18n-svelte";
     import Loader from "./Loader.svelte";
-    import { derived, get, Unsubscriber, Writable } from "svelte/store";
+    import { get, Writable } from "svelte/store";
     import { enableChatDisconnectedListStore, shownRoomListStore } from "../Stores/ChatStore";
-    import { onDestroy, onMount } from "svelte";
 
     export let mucRoom: MucRoom;
     export let searchValue: string;
@@ -26,7 +25,8 @@
         .filter((user: Writable<User>) => get(user).name.toLocaleLowerCase().includes(searchValue))
         .reduce((reduced, user: Writable<User>) => {
             let group = "disconnected";
-            if (get(user).roomName && get(user).active) {
+            const user_ = get(user);
+            if (user_.roomName && user_.active) {
                 group = get(user).roomName;
             }
             if ((group === "disconnected" && $enableChatDisconnectedListStore) || group !== "disconnected") {
@@ -98,7 +98,7 @@
                         {#if $me && room === $me.roomName && $me.name.toLocaleLowerCase().includes(searchValue)}
                             <ChatUser {mucRoom} user={$me} {searchValue} />
                         {/if}
-                        {#each (usersByMaps.get(room) ?? []).filter((user) => !get(user).isMe) as user (user.jid)}
+                        {#each (usersByMaps.get(room) ?? []).filter((user) => !get(user).isMe) as user (get(user).jid)}
                             <ChatUser {mucRoom} user={get(user)} {searchValue} />
                         {/each}
                     {/if}

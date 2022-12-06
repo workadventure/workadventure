@@ -11,7 +11,7 @@
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
     import { iframeListener } from "../IframeListener";
-    import { derived, get } from "svelte/store";
+    import { get } from "svelte/store";
 
     export let mucRoom: MucRoom;
     export let user: User;

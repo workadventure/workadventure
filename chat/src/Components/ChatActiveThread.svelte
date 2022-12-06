@@ -9,7 +9,7 @@
     import { MucRoom } from "../Xmpp/MucRoom";
     import { onDestroy } from "svelte";
     import Loader from "./Loader.svelte";
-    import { derived, get } from "svelte/store";
+    import { get } from "svelte/store";
 
     export let activeThread: MucRoom;
 
@@ -101,7 +101,7 @@
                 </p>
                 {#each $presenceStore
                     .filter((user) => get(user).active)
-                    .sort((a, b) => get(a).name.localeCompare(get(b).name)) as user (user.jid)}
+                    .sort((a, b) => get(a).name.localeCompare(get(b).name)) as user (get(user).jid)}
                     <ChatUser mucRoom={activeThread} user={get(user)} searchValue="" />
                 {/each}
             </div>

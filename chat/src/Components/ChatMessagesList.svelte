@@ -17,7 +17,6 @@
     import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
     import { ChatState } from "stanza/Constants";
     import { JID } from "stanza";
-    import { derived } from "svelte/store";
     import Message from "./Content/Message.svelte";
 
     export let mucRoom: MucRoom;
@@ -63,13 +62,13 @@
         if (isMe(jid)) {
             return $userStore;
         }
-        const userData = [...$presenceStore].find(([, user]) => user.jid === jid);
+        const userData = $presenceStore.find((user) => get(user).jid === jid);
         if (!userData) {
-            [...$presenceStore].find(([, user]) => JID.toBare(user.jid) === JID.toBare(jid));
+            $presenceStore.find((user) => JID.toBare(get(user).jid) === JID.toBare(jid));
         }
         let user = undefined;
         if (userData) {
-            [, user] = userData;
+            user = get(userData);
         }
         return user;
     }
@@ -273,8 +272,8 @@
                 needHideHeader={needHideHeader(message.name, message.time, i)}
             />
         {/each}
-        {#each $usersStore.filter((userFilter) => !get(userFilter).isMe && get(userFilter).chatState === ChatState.Composing) as [nb, user]}
-            <div class={`tw-mt-2`} id={`user-line-${nb}`}>
+        {#each $usersStore.filter((userFilter) => !get(userFilter).isMe && get(userFilter).chatState === ChatState.Composing) as user}
+            <div class={`tw-mt-2`}>
                 <div class={`tw-flex tw-justify-start`}>
                     <div
                         class={`tw-mt-4 tw-relative wa-avatar-mini tw-mr-2 tw-z-10`}

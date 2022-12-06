@@ -31,7 +31,7 @@
     import crown from "../../public/static/svg/icone-premium-crown.svg";
     import { iframeListener } from "../IframeListener";
     import { ChatState } from "stanza/Constants";
-    import { derived } from "svelte/store";
+    import { get } from "svelte/store";
 
     export let mucRoom: MucRoom;
 
@@ -117,7 +117,7 @@
         if (isMe(name)) {
             return $userStore;
         }
-        const userData = [...$presenceStore].map(([, user]) => user).find((user) => user.name === name);
+        const userData = $presenceStore.map((user) => get(user)).find((user) => user.name === name);
         let user = undefined;
         if (userData) {
             user = userData;
@@ -198,8 +198,8 @@
         const values = newMessageText.match(regexUserTag);
         if (values != undefined) {
             const userNameSearching = (values.pop() as string).substring(1);
-            usersSearching = [...$presenceStore]
-                .map(([, user]) => user)
+            usersSearching = $presenceStore
+                .map((user) => get(user))
                 .reduce((values: User[], user) => {
                     if (user.name.toLowerCase().indexOf(userNameSearching.toLowerCase()) === -1) {
                         return values;
