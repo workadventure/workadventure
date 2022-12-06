@@ -1,18 +1,24 @@
 import {spawn} from "child_process";
 
 export default function(env: {}) {
-    const process = spawn("yarn", ['startTestServer']);
+    const testServer = spawn("yarn", ['startTestServer'], {
+        env: {
+            ...process.env,
+            ...env
+        },
+        cwd: __dirname + "/..",
+    });
 
     /*process.stdout.on('data', (data) => {
         console.log(data.toString());
     });*/
-    process.stderr.on('data', (data) => {
+    testServer.stderr.on('data', (data) => {
         console.warn(data.toString());
     });
-    process.on('error', (err) => {
+    testServer.on('error', (err) => {
         console.error('Failed to start subprocess.', err);
     });
-    return process;
+    return testServer;
     /*return fork("tests/testServer.ts", {
         execArgv: ["yarn"],
         env: env

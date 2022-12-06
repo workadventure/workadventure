@@ -1,13 +1,24 @@
 // lib/app.ts
 import {FileController} from "./Controller/FileController";
-import {App as uwsApp} from "./Server/sifrr.server";
+import {Server} from "hyper-express";
+import {cors} from "./Middlewares/Cors";
+import {globalErrorHandler} from "./Service/GlobalErrorHandler";
 
 class App {
-    public app: uwsApp;
+    public app: Server;
     public fileController: FileController;
 
     constructor() {
-        this.app = new uwsApp();
+        this.app = new Server();
+
+        // Global middlewares
+        this.app.use(cors);
+
+        this.app.set_error_handler(globalErrorHandler);
+
+        this.app.set_not_found_handler(((request, response) => {
+            response.status(404).send("Uploader - Page not found");
+        }));
 
         this.fileController = new FileController(this.app);
     }
