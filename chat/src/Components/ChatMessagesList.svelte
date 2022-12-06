@@ -19,7 +19,7 @@
         ArrowUpIcon,
         CopyIcon,
     } from "svelte-feather-icons";
-    import { get, Unsubscriber } from "svelte/store";
+    import { Unsubscriber } from "svelte/store";
     import { chatVisibilityStore, selectedMessageToReact, selectedMessageToReply } from "../Stores/ChatStore";
     import { EmojiButton } from "@joeattardi/emoji-button";
     import { HtmlUtils } from "../Utils/HtmlUtils";
@@ -173,7 +173,7 @@
                 if (target) {
                     target.classList.add("tw-text-pop-green");
                     const originalText = target.innerHTML;
-                    target.innerHTML = originalText.replace(get(LL).copy(), get(LL).copied());
+                    target.innerHTML = originalText.replace($LL.copy(), $LL.copied());
                     setTimeout(() => {
                         target.innerHTML = originalText;
                         target.classList.remove("tw-text-pop-green");
