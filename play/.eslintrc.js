@@ -52,7 +52,7 @@ module.exports = {
         "@typescript-eslint/ban-ts-ignore": "off",
     },
     "settings": {
-        "svelte3/typescript": true,
+        "svelte3/typescript": () => require('typescript'),
         "svelte3/ignore-styles": () => true,
         "svelte3/ignore-warnings": (warning) => {
             return  (warning.code === "a11y-click-events-have-key-events" || warning.code === "security-anchor-rel-noreferrer");

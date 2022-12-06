@@ -1,6 +1,6 @@
 import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
 import type { SubMessage } from "../../messages/generated/messages_pb";
-import { BatchMessage, ErrorMessage, ServerToClientMessage } from "../../messages/generated/messages_pb";
+import { BatchMessage, ServerToClientMessage } from "../../messages/generated/messages_pb";
 //import HyperExpress from "hyper-express";
 
 export function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
