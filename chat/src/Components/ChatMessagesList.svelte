@@ -111,7 +111,7 @@
                     mucRoom.updateLastMessageSeen();
                 }
             } else if (messagesList.scrollTop === 0 && $canLoadOlderMessagesStore && !$loadingStore) {
-                mucRoom.sendRetrieveLastMessages();
+                void mucRoom.sendRetrieveLastMessages();
             } else {
                 isScrolledDown = false;
             }
