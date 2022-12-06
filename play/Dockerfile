@@ -1,7 +1,7 @@
 # protobuf build
 FROM --platform=$BUILDPLATFORM node:18.11-buster-slim@sha256:c3a4122a9b60c52a633b92788dec4159909158c828b56e11a3dc0284814a81f2 as proto-builder
 WORKDIR /usr/src
-COPY messages/yarn.lock messages/package.json ./
+COPY messages/package-lock.json messages/package.json ./
 RUN yarn install
 COPY messages .
 COPY libs ./../libs
