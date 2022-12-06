@@ -121,24 +121,7 @@ export class XmppClient {
         client.on("disconnected", () => {
             this.status = "disconnected";
             console.log("disconnected");
-            xmppServerConnectionStatusStore.set(false);
-            mucRoomsStore.reset();
-            this.rooms.clear();
-
-            this.close();
-
-            // This can happen when the first connection failed for some reason.
-            // We should probably retry regularly (every 10 seconds)
-            if (this.timeout) {
-                clearTimeout(this.timeout);
-                this.timeout = undefined;
-            }
-
-            if (this.isAuthorized) {
-                this.timeout = setTimeout(() => {
-                    void this.start();
-                }, 10_000);
-            }
+            this.restart();
         });
         client.on("auth:success", () => {
             this.status = "online";
@@ -146,6 +129,7 @@ export class XmppClient {
 
         client.on("--transport-disconnected", () => {
             console.error("--transport-disconnected");
+            this.restart();
         });
 
         client.on("session:started", () => {
@@ -561,6 +545,28 @@ export class XmppClient {
             mucRoomsStore.removeMucRoom(room);
         }
         this.clientPromise.cancel();
+    }
+
+    public restart() {
+        console.log("Restart launched");
+        xmppServerConnectionStatusStore.set(false);
+        mucRoomsStore.reset();
+        this.rooms.clear();
+
+        this.close();
+
+        // This can happen when the first connection failed for some reason.
+        // We should probably retry regularly (every 10 seconds)
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = undefined;
+        }
+
+        if (this.isAuthorized) {
+            this.timeout = setTimeout(() => {
+                void this.start();
+            }, 10_000);
+        }
     }
 
     public getPlayerName() {

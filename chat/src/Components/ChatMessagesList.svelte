@@ -215,14 +215,14 @@
 <div
     class="wa-messages-list-container"
     bind:this={messagesList}
-    style={`margin-bottom: ${formHeight - 7}px; max-height: calc( 100vh - ${formHeight - 7}px );`}
+    style={`margin-bottom: ${formHeight - 7}px; max-height: calc( 100vh - 6rem - ${formHeight - 7}px );`}
 >
     <div class="emote-menu-container">
         <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
     </div>
 
     <div
-        class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen tw-pt-14"
+        class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen"
     >
         <div class="tw-mb-auto load-history">
             {#if $canLoadOlderMessagesStore}

@@ -32,10 +32,11 @@
 </script>
 
 <!-- thread -->
-<div id="activeThread" class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-w-full">
+<div id="activeThread" class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-w-full tw-pt-24">
     <div class="wa-thread-head">
+        <div class="title">
         <div
-            class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-w-14 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
+            class="tw-py-1 tw-w-14 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
         >
             <button
                 class="exit tw-text-lighter-purple tw-m-0"
@@ -70,7 +71,7 @@
         </div>
         <div
             id="settings"
-            class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-w-14 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
+            class="tw-py-1 tw-w-14 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
         >
             <!--
             <button class="tw-text-lighter-purple tw-m-0">
@@ -82,13 +83,25 @@
             </button>
             -->
         </div>
+        </div>
+        {#if $me && $me.isAdmin}
+            <div class="tw-flex tw-flex-col tw-flex-auto tw-w-full">
+                <div
+                        class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5 tw-pb-0.5"
+                >
+                        <button class="wa-action" type="button" on:click|stopPropagation={() => activeThread.reInitialize()}
+                        ><RefreshCwIcon size="13" class="tw-mr-2" /> {$LL.reinit()}
+                        </button>
+                </div>
+            </div>
+        {/if}
     </div>
     {#if !$readyStore}
         <Loader text={$LL.loading()} />
     {:else if $usersListViewStore}
         <div class="tw-flex tw-flex-col tw-flex-auto tw-w-full">
             <div
-                class="users tw-pt-16 wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid"
+                class="users wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid"
             >
                 <p class="tw-px-5 tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
                     {$LL.users()}
@@ -100,25 +113,9 @@
                 {/each}
             </div>
         </div>
-    {:else if $settingsViewStore}
-        <div class="tw-flex tw-flex-col tw-flex-auto tw-w-full" style="margin-top: 52px">
-            <div
-                class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5 tw-pb-0.5"
-            >
-                {#if $me && $me.isAdmin}
-                    <button class="wa-action" type="button" on:click|stopPropagation={() => activeThread.reInitialize()}
-                        ><RefreshCwIcon size="13" class="tw-mr-2" /> {$LL.reinit()}
-                    </button>
-                {/if}
-            </div>
-            <div class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5">
-                <p class="tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">Chatzone</p>
-            </div>
-        </div>
     {/if}
     <div class:tw-hidden={$usersListViewStore}>
         <ChatMessagesList mucRoom={activeThread} bind:this={messagesList} {formHeight} />
-
         <div class="messageForm">
             <ChatMessageForm
                 mucRoom={activeThread}
