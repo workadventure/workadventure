@@ -45,16 +45,16 @@
          "y":0
         }, 
         {
-         "data":[0, 0, 0, 0, 0, 23, 23, 23, 23, 23,
-            0, 0, 0, 0, 0, 23, 23, 23, 23, 23,
-            0, 0, 0, 0, 0, 23, 23, 23, 23, 23,
-            0, 0, 0, 0, 0, 23, 23, 23, 23, 23,
-            0, 0, 0, 0, 0, 23, 23, 23, 23, 23,
-            0, 0, 0, 0, 0, 23, 23, 23, 23, 23,
-            0, 0, 0, 0, 0, 23, 23, 23, 23, 23,
-            0, 0, 0, 0, 0, 23, 23, 23, 23, 23,
-            0, 0, 0, 0, 0, 23, 23, 23, 23, 23,
-            0, 0, 0, 0, 0, 23, 23, 23, 23, 23],
+         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
          "height":10,
          "id":5,
          "name":"first_website",
@@ -71,11 +71,11 @@
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 12, 12, 12, 12, 12,
-            0, 0, 0, 0, 0, 12, 12, 12, 12, 12,
-            0, 0, 0, 0, 0, 12, 12, 12, 12, 12,
-            0, 0, 0, 0, 0, 12, 12, 12, 12, 12,
-            0, 0, 0, 0, 0, 12, 12, 12, 12, 12],
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
          "height":10,
          "id":7,
          "name":"second_website",
@@ -93,44 +93,44 @@
          "objects":[
                 {
                  "class":"",
-                 "height":120.725985914819,
+                 "height":88.0302510924354,
                  "id":1,
-                 "name":"Tests",
+                 "name":"Result",
                  "rotation":0,
                  "text":
                     {
-                     "fontfamily":"Sans Serif",
-                     "pixelsize":8,
-                     "text":"Test 1:\nMove on the white carpet to display a first UIWebsite.\n\nTest 2:\nMove on the blue carpet to display a second UIWebsite above the first.\n\nTest 3:\nGo to the other map with the grey carpet to check if the third UIWebsite already open is deleted",
+                     "fontfamily":".AppleSystemUIFont",
+                     "pixelsize":24,
+                     "text":"Expected result: \nThere are no open UIWebsite",
                      "wrap":true
                     },
                  "visible":true,
-                 "width":158.381128664136,
-                 "x":1.64026713939023,
-                 "y":196.981754994692
+                 "width":204.509994847653,
+                 "x":3.41445430029474,
+                 "y":209.147609812323
                 }, 
                 {
                  "class":"area",
                  "height":27.6266286483704,
-                 "id":6,
-                 "name":"exitToOlderMap",
+                 "id":3,
+                 "name":"exitToMap",
                  "properties":[
                         {
                          "name":"exitUrl",
                          "type":"string",
-                         "value":"uiwebsiteother.json#entryFromUIWebsite"
+                         "value":"uiwebsite.json#entryFromUIWebsiteOther"
                         }],
                  "rotation":0,
                  "visible":true,
-                 "width":63.1103718664607,
-                 "x":32.6957348223833,
-                 "y":0.253455308700604
+                 "width":64.1241931012633,
+                 "x":31.6819135875807,
+                 "y":1.26727654350323
                 }, 
                 {
                  "class":"area",
-                 "height":22.3040671656568,
-                 "id":8,
-                 "name":"entryFromUIWebsiteOther",
+                 "height":29.9077264266762,
+                 "id":6,
+                 "name":"entryFromUIWebsite",
                  "properties":[
                         {
                          "name":"start",
@@ -139,9 +139,9 @@
                         }],
                  "rotation":0,
                  "visible":true,
-                 "width":62.0965506316582,
-                 "x":32.9491901310839,
-                 "y":32.188824204982
+                 "width":61.8430953229575,
+                 "x":33.9630113658865,
+                 "y":29.4008158092749
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -150,10 +150,10 @@
          "y":0
         }, 
         {
-         "data":[0, 111, 111, 0, 0, 0, 0, 0, 82, 0,
-            0, 0, 0, 0, 0, 0, 0, 8, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 19, 27, 0,
-            0, 0, 0, 0, 0, 0, 0, 30, 0, 0,
+         "data":[0, 111, 111, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -171,14 +171,8 @@
          "y":0
         }],
  "nextlayerid":9,
- "nextobjectid":9,
+ "nextobjectid":7,
  "orientation":"orthogonal",
- "properties":[
-        {
-         "name":"script",
-         "type":"string",
-         "value":"script.js"
-        }],
  "renderorder":"right-down",
  "tiledversion":"1.9.2",
  "tileheight":32,
