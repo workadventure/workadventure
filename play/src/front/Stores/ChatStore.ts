@@ -207,5 +207,4 @@ function createChatSubMenuVisibilityStore() {
 
 export const chatSubMenuVisibilityStore = createChatSubMenuVisibilityStore();
 
-
 export const chatReadyStore = writable<boolean>(false);

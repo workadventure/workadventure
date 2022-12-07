@@ -120,13 +120,15 @@ export class XmppClient {
 
         client.on("connected", () => {
             this.status = "connected";
-            this.ping = setInterval(async () => {
-                try {
-                    await client.ping();
-                } catch (e) {
-                    debug("client => onConnected => ping => error =>", e);
-                    this.restart();
-                }
+            this.ping = setInterval(() => {
+                async () => {
+                    try {
+                        await client.ping();
+                    } catch (e) {
+                        debug("client => onConnected => ping => error =>", e);
+                        this.restart();
+                    }
+                };
             }, 25_000);
         });
         client.on("disconnected", (message) => {

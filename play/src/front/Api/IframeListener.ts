@@ -469,7 +469,7 @@ class IframeListener {
         this.registerIframe(iframe);
         this.chatIframe = iframe;
         chatReadyStore.subscribe((value) => {
-            if(value){
+            if (value) {
                 if (this.messagesToChatQueue.size > 0) {
                     this.messagesToChatQueue.forEach((message, time) => {
                         this.postMessageToChat(message);
@@ -917,7 +917,12 @@ class IframeListener {
             this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
         }
         try {
-            if (!this.chatIframe || !this.chatIframe.contentWindow || !this.chatIframe.contentWindow.postMessage || !get(chatReadyStore)) {
+            if (
+                !this.chatIframe ||
+                !this.chatIframe.contentWindow ||
+                !this.chatIframe.contentWindow.postMessage ||
+                !get(chatReadyStore)
+            ) {
                 throw new Error("No chat iFrame registered");
             } else {
                 this.chatIframe.contentWindow?.postMessage(message, this.chatIframe?.src);
