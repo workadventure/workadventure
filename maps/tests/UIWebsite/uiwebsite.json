@@ -101,7 +101,7 @@
                     {
                      "fontfamily":"Sans Serif",
                      "pixelsize":8,
-                     "text":"Test 1:\nMove on the white carpet to display a UIWebsite.\n\nTest 2:\nMove on the blue carpet to display an other UIWebsite above the first.\n\nTest 3:\nGo to the other map with the grey carpet to check if the UIWebsite is deleted",
+                     "text":"Test 1:\nMove on the white carpet to display a first UIWebsite.\n\nTest 2:\nMove on the blue carpet to display a second UIWebsite above the first.\n\nTest 3:\nGo to the other map with the grey carpet to check if the third UIWebsite already open is deleted",
                      "wrap":true
                     },
                  "visible":true,
