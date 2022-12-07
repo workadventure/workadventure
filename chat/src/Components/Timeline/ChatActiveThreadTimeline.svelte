@@ -222,7 +222,13 @@
         >
             {#each $chatMessagesStore as message, i}
                 {#if message.type === ChatMessageTypes.text || message.type === ChatMessageTypes.me}
-                    <div class={`${needHideHeader(message.authorName, message.date, i) ? "tw-mt-0.5" : "tw-mt-2"}`}>
+                    <div
+                        class={`${
+                            needHideHeader(message.author?.name ?? message.authorName ?? "", message.date, i)
+                                ? "tw-mt-0.5"
+                                : "tw-mt-2"
+                        }`}
+                    >
                         <div
                             class={`tw-flex ${
                                 message.type === ChatMessageTypes.me ? "tw-justify-end" : "tw-justify-start"
@@ -245,7 +251,7 @@
                                 </div>
                             </div>
                             <div class="tw-w-3/4">
-                                {#if !needHideHeader(message.authorName, message.date, i)}
+                                {#if !needHideHeader(message.author?.name ?? message.authorName ?? "", message.date, i)}
                                     <div
                                         style={`border-bottom-color:${message.author?.color}`}
                                         class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-1 ${
