@@ -26,9 +26,12 @@
 
     onMount(() => {
         unsubscribe = presenceStore.subscribe((usersList) => {
-            const me = usersList.find((users) => get(users).jid === mucRoom.myJID);
-            if (me && get(me).roomName && $shownRoomListStore === "") {
-                shownRoomListStore.set(get(me).roomName);
+            const meStore = usersList.find((users) => get(users).jid === mucRoom.myJID);
+            if(meStore) {
+                const me = get(meStore);
+                if (me && me.roomName && $shownRoomListStore === "") {
+                    shownRoomListStore.set(me.roomName);
+                }
             }
         });
     });
