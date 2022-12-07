@@ -71,6 +71,13 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.scene.add.existing(this);
     }
 
+    public updateEntity(entityData: EntityData): void {
+        this.entityData = entityData;
+
+        this.setPosition(entityData.x, entityData.y);
+        // TODO: Add more visual changes on Entity Update
+    }
+
     public destroy(fromScene?: boolean | undefined): void {
         this.outlineColorStoreUnsubscribe();
         super.destroy();

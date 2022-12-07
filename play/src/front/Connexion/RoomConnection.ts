@@ -1059,6 +1059,23 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitMapEditorModifyEntity(commandId: string, config: EntityData): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "modifyEntityMessage",
+                            modifyEntityMessage: config,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
     public emitMapEditorCreateEntity(commandId: string, config: EntityData): void {
         this.send({
             message: {

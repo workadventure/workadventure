@@ -1,4 +1,5 @@
 import { ITiledMapProperty } from '@workadventure/tiled-map-type-guard';
+import _ from 'lodash';
 import { EntityData } from '../types';
 import type { GameMap } from './GameMap';
 
@@ -43,6 +44,18 @@ export class GameMapEntities {
             return this.deleteEntityFromMapProperties(id);
         }
         return false;
+    }
+
+    public updateEntity(id: number, config: Partial<EntityData>): EntityData {
+        const entity = this.getEntity(id);
+        if (!entity) {
+            throw new Error(`Entity of id: ${id} does not exists!`);
+        }
+        if (config.properties) {
+            _.merge(entity, config);
+        }
+        return entity;
+        // TODO: Update entities saved in the map file
     }
 
     private addEntityToMapProperties(entityData: EntityData): boolean {

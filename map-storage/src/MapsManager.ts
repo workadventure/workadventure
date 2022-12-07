@@ -4,6 +4,7 @@ import {
     GameMap,
     UpdateAreaCommand,
     DeleteAreaCommand,
+    UpdateEntityCommand,
     CreateAreaCommand,
     CreateEntityCommand,
     DeleteEntityCommand,
@@ -78,6 +79,11 @@ class MapsManager {
                 }
                 case "DeleteAreaCommand": {
                     command = new DeleteAreaCommand(gameMap, commandConfig);
+                    command.execute();
+                    break;
+                }
+                case "UpdateEntityCommand": {
+                    command = new UpdateEntityCommand(gameMap, commandConfig);
                     command.execute();
                     break;
                 }

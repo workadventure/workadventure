@@ -118,8 +118,9 @@ message EditMapMessage {
     ModifyAreaMessage modifyAreaMessage = 1;
     CreateAreaMessage createAreaMessage = 2;
     DeleteAreaMessage deleteAreaMessage = 3;
-    CreateEntityMessage createEntityMessage = 4;
-    DeleteEntityMessage deleteEntityMessage = 5;
+    ModifyEntityMessage modifyEntityMessage = 4;
+    CreateEntityMessage createEntityMessage = 5;
+    DeleteEntityMessage deleteEntityMessage = 6;
   }
 }
 
@@ -171,29 +172,6 @@ message CreateAreaMessage {
   string name = 6;
 }
 
-message EntityCollisionGridRow {
-  repeated int32 row = 1;
-}
-
-message EntityCollisionGrid {
-  repeated EntityCollisionGridRow row = 1;
-}
-
-message EntityPrefab {
-  string name = 1;
-  repeated string tags = 2;
-  string imagePath = 3;
-  enum Direction {
-    Left = 0;
-    Up = 1;
-    Down = 2;
-    Right = 3;
-  }
-  Direction direction = 4;
-  string color = 5;
-  optional EntityCollisionGrid collisionGrid = 6;
-}
-
 message CreateEntityMessage {
   int32 id = 1;
   uint32 x = 2;
@@ -204,6 +182,12 @@ message CreateEntityMessage {
 
 message DeleteEntityMessage {
   int32 id = 1;
+}
+
+message ModifyEntityMessage {
+  int32 id = 1;
+  optional uint32 x = 2;
+  optional uint32 y = 3;
 }
 
 message ClientToServerMessage {

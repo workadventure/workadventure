@@ -75,6 +75,10 @@ export class EntityEditorTool extends MapEditorTool {
      */
     public handleCommandExecution(commandConfig: CommandConfig): void {
         switch (commandConfig.type) {
+            case "UpdateEntityCommand": {
+                this.handleEntityUpdate(commandConfig.entityData);
+                break;
+            }
             case "CreateEntityCommand": {
                 this.handleEntityCreation(commandConfig.entityData);
                 break;
@@ -141,7 +145,27 @@ export class EntityEditorTool extends MapEditorTool {
                 );
                 break;
             }
+            case "modifyEntityMessage": {
+                const data = editMapCommandMessage.editMapMessage?.message.modifyEntityMessage;
+                this.mapEditorModeManager.executeCommand(
+                    {
+                        type: "UpdateEntityCommand",
+                        entityData: data as EntityData,
+                    },
+                    false,
+                    false
+                );
+                break;
+            }
         }
+    }
+
+    private handleEntityUpdate(config: EntityData): void {
+        const entity = this.entitiesManager.getEntities().find((entity) => entity.getEntityData().id === config.id);
+        console.log(entity?.getEntityData().x, entity?.getEntityData().y);
+        console.log(config);
+        entity?.updateEntity(config);
+        this.scene.markDirty();
     }
 
     private handleEntityCreation(config: EntityData): void {
@@ -204,6 +228,13 @@ export class EntityEditorTool extends MapEditorTool {
             this.mapEditorModeManager.executeCommand({
                 id: entity.getEntityData().id,
                 type: "DeleteEntityCommand",
+            });
+        });
+        this.entitiesManager.on(EntitiesManagerEvent.UpdateEntity, (entityData: EntityData) => {
+            // TODO: Where to update the grid?
+            this.mapEditorModeManager.executeCommand({
+                entityData,
+                type: "UpdateEntityCommand",
             });
         });
     }

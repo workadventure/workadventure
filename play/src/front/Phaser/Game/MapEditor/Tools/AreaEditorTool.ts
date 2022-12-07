@@ -219,7 +219,7 @@ export class AreaEditorTool extends MapEditorTool {
 
     private handleAreaPreviewUpdate(config: AreaData): void {
         this.areaPreviews.find((area) => area.getConfig().id === config.id)?.updatePreview(config);
-        this.scene.getGameMapFrontWrapper().updateAreaById(config.id, AreaType.Static, config);
+        this.scene.getGameMapFrontWrapper().updateAreaById(config.id, AreaType.Static, config); // TODO: is this line needed?
         this.scene.markDirty();
     }
 
