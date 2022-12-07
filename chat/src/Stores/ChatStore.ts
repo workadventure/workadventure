@@ -42,31 +42,21 @@ function createChatMessagesStore() {
         subscribe,
         addIncomingUser(user: User) {
             update((list) => {
-                const lastMessage = list[list.length - 1];
-                if (lastMessage && lastMessage.type === ChatMessageTypes.userIncoming && lastMessage.targets) {
-                    lastMessage.targets.push(user);
-                } else {
-                    list.push({
-                        type: ChatMessageTypes.userIncoming,
-                        targets: [user],
-                        date: new Date(),
-                    });
-                }
+                list.push({
+                    type: ChatMessageTypes.userIncoming,
+                    targets: [user],
+                    date: new Date(),
+                });
                 return list;
             });
         },
         addOutcomingUser(user: User) {
             update((list) => {
-                const lastMessage = list[list.length - 1];
-                if (lastMessage && lastMessage.type === ChatMessageTypes.userOutcoming && lastMessage.targets) {
-                    lastMessage.targets.push(user);
-                } else {
-                    list.push({
-                        type: ChatMessageTypes.userOutcoming,
-                        targets: [user],
-                        date: new Date(),
-                    });
-                }
+                list.push({
+                    type: ChatMessageTypes.userOutcoming,
+                    targets: [user],
+                    date: new Date(),
+                });
                 return list;
             });
         },
@@ -74,25 +64,13 @@ function createChatMessagesStore() {
             _newChatMessageSubject.next(text);
             update((list) => {
                 const defaultRoom = mucRoomsStore.getDefaultRoom();
-                const lastMessage = list[list.length - 1];
-                if (
-                    lastMessage &&
-                    lastMessage.type === ChatMessageTypes.me &&
-                    lastMessage.text &&
-                    new Date().getTime() - lastMessage.date.getTime() < 120000
-                ) {
-                    lastMessage.date = new Date();
-                    lastMessage.text.push(text);
-                } else {
-                    list.push({
-                        type: ChatMessageTypes.me,
-                        text: [text],
-                        author: defaultRoom ? defaultRoom.getUserByJid(defaultRoom.myJID) : undefined,
-                        date: new Date(),
-                        authorName: userStore.get().name,
-                    });
-                }
-
+                list.push({
+                    type: ChatMessageTypes.me,
+                    text: [text],
+                    author: defaultRoom ? defaultRoom.getUserByJid(defaultRoom.myJID) : undefined,
+                    date: new Date(),
+                    authorName: userStore.get().name,
+                });
                 return list;
             });
         },
@@ -101,25 +79,13 @@ function createChatMessagesStore() {
          */
         addExternalMessage(user: User | undefined, text: string, authorName?: string, origin?: Window) {
             update((list) => {
-                const lastMessage = list[list.length - 1];
-                if (
-                    lastMessage &&
-                    lastMessage.type === ChatMessageTypes.text &&
-                    lastMessage.text &&
-                    ((user && lastMessage?.author?.uuid === user.uuid) || lastMessage?.authorName === authorName) &&
-                    new Date().getTime() - lastMessage.date.getTime() < 120000
-                ) {
-                    lastMessage.text.push(text);
-                    lastMessage.date = new Date();
-                } else {
-                    list.push({
-                        type: ChatMessageTypes.text,
-                        text: [text],
-                        author: user,
-                        date: new Date(),
-                        authorName,
-                    });
-                }
+                list.push({
+                    type: ChatMessageTypes.text,
+                    text: [text],
+                    author: user,
+                    date: new Date(),
+                    authorName,
+                });
                 return list;
             });
         },

@@ -49,6 +49,8 @@ import { connectionManager } from "../Connexion/ConnectionManager";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { ModalEvent } from "./Events/ModalEvent";
 import { AddButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
+import { chatReadyStore } from "../Stores/ChatStore";
+import { get } from "svelte/store";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -437,6 +439,8 @@ class IframeListener {
                         additionnalButtonsMenu.addAdditionnalButtonActionBar(iframeEvent.data);
                     } else if (iframeEvent.type == "removeButtonActionBar") {
                         additionnalButtonsMenu.removeAdditionnalButtonActionBar(iframeEvent.data);
+                    } else if (iframeEvent.type == "chatReady") {
+                        chatReadyStore.set(true);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
@@ -464,12 +468,16 @@ class IframeListener {
     registerChatIframe(iframe: HTMLIFrameElement): void {
         this.registerIframe(iframe);
         this.chatIframe = iframe;
-        if (this.messagesToChatQueue.size > 0) {
-            this.messagesToChatQueue.forEach((message, time) => {
-                this.postMessageToChat(message);
-                this.messagesToChatQueue.delete(time);
-            });
-        }
+        chatReadyStore.subscribe((value) => {
+            if(value){
+                if (this.messagesToChatQueue.size > 0) {
+                    this.messagesToChatQueue.forEach((message, time) => {
+                        this.postMessageToChat(message);
+                        this.messagesToChatQueue.delete(time);
+                    });
+                }
+            }
+        });
     }
 
     unregisterIframe(iframe: HTMLIFrameElement): void {
@@ -909,7 +917,7 @@ class IframeListener {
             this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
         }
         try {
-            if (!this.chatIframe || !this.chatIframe.contentWindow || !this.chatIframe.contentWindow.postMessage) {
+            if (!this.chatIframe || !this.chatIframe.contentWindow || !this.chatIframe.contentWindow.postMessage || !get(chatReadyStore)) {
                 throw new Error("No chat iFrame registered");
             } else {
                 this.chatIframe.contentWindow?.postMessage(message, this.chatIframe?.src);
