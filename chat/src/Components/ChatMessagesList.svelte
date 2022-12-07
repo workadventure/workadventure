@@ -110,7 +110,7 @@
                 if ($unreads > 0) {
                     mucRoom.updateLastMessageSeen();
                 }
-            } else if (messagesList.scrollTop === 0 && $canLoadOlderMessagesStore && !$loadingStore) {
+            } else if (messagesList.scrollTop <= 15 && $canLoadOlderMessagesStore && !$loadingStore) {
                 void mucRoom.sendRetrieveLastMessages();
             } else {
                 isScrolledDown = false;

@@ -222,7 +222,7 @@
                 height: 1.6rem;
                 width: 1.6rem;
                 position: initial;
-              cursor: pointer;
+                cursor: pointer;
             }
         }
     }
