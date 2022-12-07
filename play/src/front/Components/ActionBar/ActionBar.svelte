@@ -5,10 +5,12 @@
         cameraListStore,
         localStreamStore,
         microphoneListStore,
+        speakerListStore,
         requestedCameraState,
         requestedMicrophoneState,
         silentStore,
         videoConstraintStore,
+        speakerSelectedStore,
     } from "../../Stores/MediaStore";
     import { ChevronDownIcon, ChevronUpIcon, CheckIcon } from "svelte-feather-icons";
     import cameraImg from "../images/camera.png";
@@ -319,6 +321,10 @@
         microphoneActive = false;
     }
 
+    function selectSpeaker(deviceId: string) {
+        speakerSelectedStore.set(deviceId);
+    }
+
     let subscribers = new Array<Unsubscriber>();
     let totalMessagesToSee = writable<number>(0);
     onMount(() => {
@@ -342,7 +348,13 @@
                 }
                 const audioTracks = stream.getAudioTracks();
                 if (audioTracks.length > 0) {
+                    // set first track
                     selectedMicrophone = audioTracks[0].getSettings().deviceId;
+
+                    // set default speaker selected
+                    if ($speakerListStore.length > 0) {
+                        speakerSelectedStore.set($speakerListStore[0].deviceId);
+                    }
                 }
             }
         } else {
@@ -376,6 +388,8 @@
                 class:tw-translate-x-0={$bottomActionBarVisibilityStore}
                 class:translate-right={!$bottomActionBarVisibilityStore}
             >
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="tw-transition-all bottom-action-button"
                     class:disabled={$followStateStore !== "off"}
@@ -388,6 +402,7 @@
                         <img draggable="false" src={followImg} style="padding: 2px" alt="Toggle follow" />
                     </button>
                 </div>
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
 
                 <div
                     class="tw-transition-all bottom-action-button"
@@ -415,6 +430,8 @@
                     </button>
                 </div>
 
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="tw-transition-all bottom-action-button"
                     class:disabled={$currentPlayerGroupLockStateStore}
@@ -436,6 +453,7 @@
                         {/if}
                     </button>
                 </div>
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
 
                 <div
                     class="tw-transition-all bottom-action-button"
@@ -470,6 +488,7 @@
             <div class="bottom-action-section tw-flex tw-flex-initial">
                 {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
                     {#if $myCameraStore}
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
                             class="bottom-action-button tw-relative"
                             on:click={() => analyticsClient.camera()}
@@ -518,6 +537,7 @@
                                     on:mouseleave={() => (cameraActive = false)}
                                 >
                                     {#each $cameraListStore as camera}
+                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                                         <span
                                             class="wa-dropdown-item tw-flex"
                                             on:click|stopPropagation|preventDefault={() =>
@@ -535,6 +555,8 @@
                     {/if}
 
                     {#if $myMicrophoneStore}
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
                             class="bottom-action-button tw-relative"
                             on:click={() => analyticsClient.microphone()}
@@ -574,30 +596,58 @@
                                     {/if}
                                 </button>
 
-                                <!-- microphone list -->
                                 <div
                                     class={`wa-dropdown-menu ${microphoneActive ? "" : "tw-invisible"}`}
                                     style="bottom: 15px;right: 0;"
                                     on:mouseleave={() => (microphoneActive = false)}
                                 >
-                                    {#each $microphoneListStore as microphone}
-                                        <span
-                                            class="wa-dropdown-item"
-                                            on:click|stopPropagation|preventDefault={() =>
-                                                selectMicrophone(microphone.deviceId)}
+                                    {#if $microphoneListStore.length > 0}
+                                        <!-- microphone list -->
+                                        <span class="tw-underline tw-font-bold tw-text-xs tw-p-1"
+                                            >{$LL.actionbar.subtitle.microphone()} 🎙️</span
                                         >
-                                            {StringUtils.normalizeDeviceName(microphone.label)}
-                                            {#if selectedMicrophone === microphone.deviceId}
-                                                <CheckIcon size="13" />
-                                            {/if}
-                                        </span>
-                                    {/each}
+                                        {#each $microphoneListStore as microphone}
+                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                            <span
+                                                class="wa-dropdown-item"
+                                                on:click|stopPropagation|preventDefault={() =>
+                                                    selectMicrophone(microphone.deviceId)}
+                                            >
+                                                {StringUtils.normalizeDeviceName(microphone.label)}
+                                                {#if selectedMicrophone === microphone.deviceId}
+                                                    <CheckIcon size="13" />
+                                                {/if}
+                                            </span>
+                                        {/each}
+                                    {/if}
+
+                                    <!-- speaker list -->
+                                    {#if $speakerSelectedStore != undefined && $speakerListStore.length > 0}
+                                        <span class="tw-underline tw-font-bold tw-text-xs tw-p-1"
+                                            >{$LL.actionbar.subtitle.speaker()} 🔈</span
+                                        >
+                                        {#each $speakerListStore as speaker}
+                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                            <span
+                                                class="wa-dropdown-item"
+                                                on:click|stopPropagation|preventDefault={() =>
+                                                    selectSpeaker(speaker.deviceId)}
+                                            >
+                                                {StringUtils.normalizeDeviceName(speaker.label)}
+                                                {#if $speakerSelectedStore === speaker.deviceId}
+                                                    <CheckIcon size="13" />
+                                                {/if}
+                                            </span>
+                                        {/each}
+                                    {/if}
                                 </div>
                             {/if}
                         </div>
                     {/if}
                 {/if}
 
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     on:click={() => analyticsClient.openedChat()}
                     on:click={toggleChat}
@@ -628,7 +678,10 @@
                             {$totalMessagesToSee}
                         </span>
                     {/if}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                 </div>
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div on:click={toggleEmojiPicker} class="bottom-action-button">
                     <Tooltip text={$LL.actionbar.emoji()} />
 
@@ -638,6 +691,8 @@
                 </div>
             </div>
 
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div class="bottom-action-section tw-flex tw-flex-initial">
                 <div
                     on:dragstart|preventDefault={noDrag}
@@ -678,6 +733,8 @@
                 {/if}
             </div>
 
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
             {#if $inviteUserActivated}
                 <div
                     class="bottom-action-section tw-flex tw-flex-initial"
