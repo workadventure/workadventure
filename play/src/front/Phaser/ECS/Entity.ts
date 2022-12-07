@@ -94,7 +94,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public deactivate(): void {
-        console.log("DEACTIVATE");
         actionsMenuStore.clear();
     }
 

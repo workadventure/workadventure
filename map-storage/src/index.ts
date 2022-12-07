@@ -30,6 +30,23 @@ app.get("/maps/*.json", async (req, res) => {
     res.send(await mapsManager.getMap(req.url));
 });
 
+app.get("/entityCollections/*", async (req, res) => {
+    const url = new URL(req.protocol + "://" + req.get("host") + req.originalUrl);
+    const collectionName = decodeURI(url.pathname).split("/").pop() ?? "";
+    const collection = mapsManager.getEntityCollection(collectionName);
+    if (collection) {
+        res.send(collection);
+    } else {
+        res.send(`COULD NOT FIND COLLECTION: ${collectionName}`);
+    }
+});
+
+app.get("/entityCollections", async (req, res) => {
+    res.send({
+        collections: mapsManager.getEntityCollectionsNames(),
+    });
+});
+
 app.use(express.static("public"));
 
 app.listen(3000, () => {

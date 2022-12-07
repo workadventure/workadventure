@@ -47,7 +47,6 @@ export class GameMapPropertiesListener {
     constructor(private scene: GameScene, private gameMapFrontWrapper: GameMapFrontWrapper) {}
 
     register() {
-        console.log("REGISTER PROPERTIES CALLBACKS");
         // Website on new tab
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.OPEN_TAB, (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
@@ -424,7 +423,6 @@ export class GameMapPropertiesListener {
             return;
         }
         if (place.x === undefined || place.y === undefined || !place.height || !place.width) {
-            console.log(place);
             return;
         }
         const focusable = place.properties.find((property) => property.name === GameMapProperties.FOCUSABLE);

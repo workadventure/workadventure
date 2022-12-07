@@ -38,7 +38,6 @@ const mapStorageServer: MapStorageServer = {
             switch (editMapMessage.$case) {
                 case "modifyAreaMessage": {
                     const message = editMapMessage.modifyAreaMessage;
-                    console.log(message);
                     const area = gameMap.getGameMapAreas().getArea(message.id, AreaType.Static);
                     if (area) {
                         const areaObjectConfig: AreaData = structuredClone(area);
@@ -71,6 +70,32 @@ const mapStorageServer: MapStorageServer = {
                     const message = editMapMessage.deleteAreaMessage;
                     validCommand = mapsManager.executeCommand(call.request.mapKey, {
                         type: "DeleteAreaCommand",
+                        id: message.id,
+                    });
+                    break;
+                }
+                case "createEntityMessage": {
+                    const message = editMapMessage.createEntityMessage;
+                    const entityPrefab = mapsManager.getEntityPrefab(message.collecionName, message.prefabId);
+                    if (!entityPrefab) {
+                        throw new Error(`CANNOT FIND PREFAB FOR: ${message.collecionName} ${message.prefabId}`);
+                    }
+                    validCommand = mapsManager.executeCommand(call.request.mapKey, {
+                        type: "CreateEntityCommand",
+                        entityData: {
+                            id: message.id,
+                            prefab: entityPrefab,
+                            x: message.x,
+                            y: message.y,
+                            interactive: true,
+                        },
+                    });
+                    break;
+                }
+                case "deleteEntityMessage": {
+                    const message = editMapMessage.deleteEntityMessage;
+                    validCommand = mapsManager.executeCommand(call.request.mapKey, {
+                        type: "DeleteEntityCommand",
                         id: message.id,
                     });
                     break;

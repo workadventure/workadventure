@@ -2,6 +2,7 @@ import { EntityData } from "@workadventure/map-editor";
 import { Observable, Subject } from "rxjs";
 import { actionsMenuStore } from "../../../Stores/ActionsMenuStore";
 import { Entity, EntityEvent } from "../../ECS/Entity";
+import { TexturesHelper } from "../../Helpers/TexturesHelper";
 import type { GameScene } from "../GameScene";
 import type { GameMapFrontWrapper } from "./GameMapFrontWrapper";
 
@@ -37,7 +38,12 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         });
     }
 
-    public addEntity(data: EntityData): void {
+    public async addEntity(data: EntityData, imagePathPrefix?: string): Promise<void> {
+        await TexturesHelper.loadEntityImage(
+            this.scene,
+            data.prefab.imagePath,
+            `${imagePathPrefix ?? ""}${data.prefab.imagePath}`
+        );
         const entity = new Entity(this.scene, data);
 
         this.bindEntityEventHandlers(entity);

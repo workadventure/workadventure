@@ -198,7 +198,7 @@ message CreateEntityMessage {
   int32 id = 1;
   uint32 x = 2;
   uint32 y = 3;
-  string collecionId = 4;
+  string collecionName = 4;
   string prefabId = 5;
 }
 

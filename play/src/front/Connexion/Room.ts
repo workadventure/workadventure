@@ -45,7 +45,7 @@ export class Room {
     private _iconEyes: string | undefined;
     private _iconBody: string | undefined;
     private _iconTurn: string | undefined;
-    private _entityCollectionsUrls: Array<string> | undefined;
+    private _entityCollectionsUrl: string | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -171,7 +171,7 @@ export class Room {
                 this._iconHat = data.customizeWokaScene?.hatIcon ?? undefined;
                 this._iconTurn = data.customizeWokaScene?.turnIcon ?? undefined;
 
-                this._entityCollectionsUrls = data.entityCollectionsUrls ?? undefined;
+                this._entityCollectionsUrl = data.entityCollectionsUrl ?? undefined;
 
                 return new MapDetail(data.mapUrl);
             } else if (errorApiDataChecking.success) {
@@ -357,7 +357,7 @@ export class Room {
         return this._iconTurn;
     }
 
-    get entityCollectionsUrls(): string[] | undefined {
-        return this._entityCollectionsUrls;
+    get entityCollectionsUrl(): string | undefined {
+        return this._entityCollectionsUrl;
     }
 }

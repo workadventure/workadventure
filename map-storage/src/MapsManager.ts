@@ -52,8 +52,6 @@ class MapsManager {
             parsedCollection.collection = parsedCollectionPrefabs;
             this.loadedCollections.set(parsedCollection.collectionName, parsedCollection);
         }
-
-        console.log(this.loadedCollections.get("basic furniture")?.collection[5]);
     }
 
     public executeCommand(mapKey: string, commandConfig: CommandConfig): boolean {
@@ -117,6 +115,22 @@ class MapsManager {
         const map = JSON.parse(file);
         this.loadedMaps.set(path, new GameMap(map));
         return map;
+    }
+
+    public getEntityCollection(collectionName: string): EntityCollection | undefined {
+        return this.loadedCollections.get(collectionName);
+    }
+
+    public getEntityCollectionsNames(): string[] {
+        const names: string[] = [];
+        for (const collection of this.loadedCollections.values()) {
+            names.push(collection.collectionName);
+        }
+        return names;
+    }
+
+    public getEntityPrefab(collectionName: string, entityId: string): EntityPrefab | undefined {
+        return this.loadedCollections.get(collectionName)?.collection.find((entity) => entity.id === entityId);
     }
 
     private clearSaveMapInterval(key: string): boolean {

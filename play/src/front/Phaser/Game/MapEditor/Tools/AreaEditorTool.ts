@@ -78,7 +78,6 @@ export class AreaEditorTool extends MapEditorTool {
                 break;
             }
             case "createAreaMessage": {
-                console.log("create area message");
                 const data = editMapCommandMessage.editMapMessage?.message.createAreaMessage;
                 const config: AreaData = {
                     ...data,

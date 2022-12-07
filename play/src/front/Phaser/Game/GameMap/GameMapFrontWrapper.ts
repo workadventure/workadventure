@@ -17,6 +17,7 @@ import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
 import type { GameScene } from "../GameScene";
 import { EntitiesManager } from "./EntitiesManager";
 import { Entity } from "../../ECS/Entity";
+import { TexturesHelper } from "../../Helpers/TexturesHelper";
 
 export type LayerChangeCallback = (
     layersChangedByAction: Array<ITiledMapLayer>,
@@ -119,7 +120,7 @@ export class GameMapFrontWrapper {
         // TODO: Load up entities from JSON
         this.entitiesManager = new EntitiesManager(this.scene, this);
         for (const entityData of this.gameMap.getGameMapEntities().getEntities()) {
-            this.entitiesManager.addEntity(entityData);
+            void this.entitiesManager.addEntity(entityData, TexturesHelper.ENTITIES_TEXTURES_DIRECTORY);
         }
     }
 

@@ -1060,20 +1060,26 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitMapEditorCreateEntity(commandId: string, config: EntityData): void {
-        // this.send({
-        //     message: {
-        //         $case: "editMapCommandMessage",
-        //         editMapCommandMessage: {
-        //             id: commandId,
-        //             editMapMessage: {
-        //                 message: {
-        //                     $case: "createEntityMessage",
-        //                     createEntityMessage: config,
-        //                 },
-        //             },
-        //         },
-        //     },
-        // });
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "createEntityMessage",
+                            createEntityMessage: {
+                                id: config.id,
+                                x: config.x,
+                                y: config.y,
+                                collecionName: config.prefab.collectionName,
+                                prefabId: config.prefab.id,
+                            },
+                        },
+                    },
+                },
+            },
+        });
     }
 
     public emitMapEditorDeleteEntity(commandId: string, id: number): void {

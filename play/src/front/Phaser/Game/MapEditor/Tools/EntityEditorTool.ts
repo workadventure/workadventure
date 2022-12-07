@@ -7,8 +7,10 @@ import {
     mapEditorSelectedEntityPrefabStore,
     MapEntityEditorMode,
     mapEntityEditorModeStore,
+    mapEntitiesPrefabsStore,
 } from "../../../../Stores/MapEditorStore";
 import { Entity } from "../../../ECS/Entity";
+import { TexturesHelper } from "../../../Helpers/TexturesHelper";
 import { EntitiesManager, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
 import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { GameScene } from "../../GameScene";
@@ -78,7 +80,6 @@ export class EntityEditorTool extends MapEditorTool {
                 break;
             }
             case "DeleteEntityCommand": {
-                console.log("HANDLE ENTITY DELETION");
                 this.handleEntityDeletion(commandConfig.id);
                 break;
             }
@@ -91,11 +92,60 @@ export class EntityEditorTool extends MapEditorTool {
      * React on commands coming from the outside
      */
     public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): void {
-        console.log("EntityEditorTool handleIncomingCommandMessage");
+        switch (editMapCommandMessage.editMapMessage?.message?.$case) {
+            case "createEntityMessage": {
+                const data = editMapCommandMessage.editMapMessage?.message.createEntityMessage;
+                const entityPrefab = mapEntitiesPrefabsStore.getEntityPrefab(data.collecionName, data.prefabId);
+
+                if (!entityPrefab) {
+                    console.warn(`NO PREFAB WAS FOUND FOR: ${data.collecionName} ${data.prefabId}`);
+                    return;
+                }
+
+                TexturesHelper.loadEntityImage(this.scene, entityPrefab.imagePath, entityPrefab.imagePath)
+                    .then(() => {
+                        const entityData: EntityData = {
+                            x: data.x,
+                            y: data.y,
+                            id: data.id,
+                            interactive: true,
+                            prefab: entityPrefab,
+                            properties: {
+                                customProperties: {},
+                            },
+                        };
+                        // execute command locally
+                        this.mapEditorModeManager.executeCommand(
+                            {
+                                type: "CreateEntityCommand",
+                                entityData,
+                            },
+                            false,
+                            false
+                        );
+                    })
+                    .catch((reason) => {
+                        console.warn(reason);
+                    });
+                break;
+            }
+            case "deleteEntityMessage": {
+                const id = editMapCommandMessage.editMapMessage?.message.deleteEntityMessage.id;
+                this.mapEditorModeManager.executeCommand(
+                    {
+                        type: "DeleteEntityCommand",
+                        id,
+                    },
+                    false,
+                    false
+                );
+                break;
+            }
+        }
     }
 
     private handleEntityCreation(config: EntityData): void {
-        this.entitiesManager.addEntity(structuredClone(config));
+        void this.entitiesManager.addEntity(structuredClone(config));
     }
 
     private handleEntityDeletion(id: number): void {
@@ -110,7 +160,7 @@ export class EntityEditorTool extends MapEditorTool {
                     this.entityPrefabPreview?.destroy();
                     this.entityPrefabPreview = undefined;
                 } else {
-                    this.loadEntityImage(entityPrefab.imagePath, `${entityPrefab.imagePath}`)
+                    TexturesHelper.loadEntityImage(this.scene, entityPrefab.imagePath, entityPrefab.imagePath)
                         .then(() => {
                             if (this.entityPrefabPreview) {
                                 this.entityPrefabPreview.setTexture(entityPrefab.imagePath);
@@ -155,19 +205,6 @@ export class EntityEditorTool extends MapEditorTool {
                 id: entity.getEntityData().id,
                 type: "DeleteEntityCommand",
             });
-        });
-    }
-
-    private async loadEntityImage(key: string, url: string): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            if (this.scene.textures.exists(key)) {
-                resolve();
-            }
-            this.scene.load.once(`filecomplete-image-${url}`, () => {
-                resolve();
-            });
-            this.scene.load.image(key, url);
-            this.scene.load.start();
         });
     }
 

@@ -151,7 +151,7 @@ import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import { mapEditorModeStore } from "../../Stores/MapEditorStore";
+import { mapEditorModeStore, mapEntitiesPrefabsStore } from "../../Stores/MapEditorStore";
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PositionInterface;
@@ -229,6 +229,7 @@ export class GameScene extends DirtyScene {
     private companion!: string | null;
     private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string | undefined;
+    private entityCollectionsUrlFile: string | undefined;
     private pinchManager: PinchManager | undefined;
     private mapTransitioning = false; //used to prevent transitions happening at the same time.
     private emoteManager!: EmoteManager;
@@ -265,6 +266,17 @@ export class GameScene extends DirtyScene {
 
         this.MapUrlFile = MapUrlFile;
         this.roomUrl = room.key;
+        this.entityCollectionsUrlFile = room.entityCollectionsUrl;
+
+        this.fetchCollectionsNames()
+            .then((names) => {
+                for (const name of names.collections) {
+                    mapEntitiesPrefabsStore.loadCollection(`${this.room.entityCollectionsUrl}/${name}`);
+                }
+            })
+            .catch((reason) => {
+                console.warn(reason);
+            });
 
         this.createPromiseDeferred = new Deferred<void>();
         this.connectionAnswerPromiseDeferred = new Deferred<RoomJoinedMessageInterface>();
@@ -280,9 +292,6 @@ export class GameScene extends DirtyScene {
         this.load.image("iconTalk", "/resources/icons/icon_talking.png");
         this.load.image("iconStatusIndicatorInside", "/resources/icons/icon_status_indicator_inside.png");
         this.load.image("iconStatusIndicatorOutline", "/resources/icons/icon_status_indicator_outline.png");
-
-        // load some furniture images for testing purposes
-        this.load.image("table", "/resources/entities/Furniture/Table/TableBrown.png");
 
         if (touchScreenManager.supportTouchScreen) {
             this.load.image(joystickBaseKey, joystickBaseImg);
@@ -2728,6 +2737,10 @@ ${escapedMessage}
                 throw new Error("Scene destroyed without cleanup!");
             }
         });
+    }
+
+    private async fetchCollectionsNames(): Promise<{ collections: string[] }> {
+        return (await fetch(this.room.entityCollectionsUrl)).json();
     }
 
     zoomByFactor(zoomFactor: number) {
