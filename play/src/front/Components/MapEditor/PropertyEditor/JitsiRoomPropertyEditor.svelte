@@ -1,4 +1,5 @@
 <script lang="ts">
+    import LL from "../../../../i18n/i18n-svelte";
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
     import { createEventDispatcher } from "svelte";
     import { JitsiRoomPropertyData } from "@workadventure/map-editor";
@@ -13,10 +14,11 @@
 </script>
 
 <div class="value-input">
-    <label for="roomName">Room name</label>
+    <label for="roomName">{$LL.mapEditor.entityEditor.jitsiProperties.roomNameLabel()}</label>
     <input
         id="roomName"
         type="text"
+        placeholder={$LL.mapEditor.entityEditor.jitsiProperties.roomNamePlaceholder()}
         bind:value={property.roomName}
         on:change={onValueChange}
         on:focus={onMapEditorInputFocus}
@@ -24,7 +26,7 @@
     />
 </div>
 <div class="value-input">
-    <label for="jitsiButtonLabel">Button Label</label>
+    <label for="jitsiButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
     <input
         id="jitsiButtonLabel"
         type="text"

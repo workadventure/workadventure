@@ -1,4 +1,5 @@
 <script lang="ts">
+    import LL from "../../../i18n/i18n-svelte";
     import { onDestroy } from "svelte";
     import { mapEditorSelectedEntityStore } from "../../Stores/MapEditorStore";
     import { slide } from "svelte/transition";
@@ -19,27 +20,27 @@
     let possibleProperties: EntityPropertyDescription[] = [
         {
             key: "jitsiRoom",
-            name: "jitsi room",
+            name: $LL.mapEditor.entityEditor.jitsiProperties.label(),
             active: false,
             currentValue: undefined,
             component: JitsiRoomPropertyEditor,
-            defaultValue: { buttonLabel: "Open Jitsi", roomName: "" },
+            defaultValue: { buttonLabel: $LL.mapEditor.entityEditor.jitsiProperties.defaultButtonLabel(), roomName: "" },
         },
         {
             key: "playAudio",
-            name: "audio file",
+            name: $LL.mapEditor.entityEditor.audioProperties.label(),
             active: false,
             currentValue: undefined,
             component: PlayAudioPropertyEditor,
-            defaultValue: { buttonLabel: "Play Audio", audioLink: "" },
+            defaultValue: { buttonLabel: $LL.mapEditor.entityEditor.audioProperties.defaultButtonLabel(), audioLink: "" },
         },
         {
             key: "openTab",
-            name: "link",
+            name:  $LL.mapEditor.entityEditor.linkProperties.label(),
             active: false,
             currentValue: undefined,
             component: OpenTabPropertyEditor,
-            defaultValue: { buttonLabel: "Open Tab", link: "" },
+            defaultValue: { buttonLabel: $LL.mapEditor.entityEditor.linkProperties.defaultButtonLabel(), link: "" },
         },
     ];
 
@@ -103,7 +104,7 @@
 
 <div>
     {#if $mapEditorSelectedEntityStore === undefined}
-        Select an object modify its properties
+        {$LL.mapEditor.entityEditor.editInstructions()}
     {:else}
         {#each possibleProperties as property (property.key)}
             <div class="property-enabler">
@@ -127,9 +128,9 @@
             {/if}
         {/each}
         <div class="action-button">
-            <button on:click={onTestInteraction}>Test Interaction</button>
+            <button on:click={onTestInteraction}>{$LL.mapEditor.entityEditor.testInteractionButton()}</button>
             <button class="delete-button" on:click={onDeleteEntity}
-                ><div>Delete</div>
+                ><div>{$LL.mapEditor.entityEditor.deleteButton()}</div>
                 <img src={crossImg} alt="" /></button
             >
         </div>

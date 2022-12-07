@@ -16,6 +16,7 @@ import muc from "./muc";
 import notification from "./notification";
 import cowebsite from "./cowebsite";
 import actionbar from "./actionbar";
+import mapEditor from "./mapEditor";
 
 const en_US: BaseTranslation = {
     audio,
@@ -35,6 +36,7 @@ const en_US: BaseTranslation = {
     notification,
     cowebsite,
     actionbar,
+    mapEditor
 };
 
 export default en_US;

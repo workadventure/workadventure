@@ -1,4 +1,6 @@
 <script lang="ts">
+    import Tooltip from "../Util/Tooltip.svelte";
+    import LL from "../../../i18n/i18n-svelte";
     import { onDestroy } from "svelte";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import { mapEditorSelectedToolStore } from "../../Stores/MapEditorStore";
@@ -14,9 +16,9 @@
     let currentTool: EditorToolName | undefined;
 
     let availableTools = [
-        { toolName: EditorToolName.AreaEditor, img: AreaToolImg },
-        { toolName: EditorToolName.EntityEditor, img: EntityToolImg },
-        { toolName: EditorToolName.FloorEditor, img: FloorToolImg },
+        { toolName: EditorToolName.AreaEditor, img: AreaToolImg, tooltiptext: $LL.mapEditor.sideBar.areaEditor()},
+        { toolName: EditorToolName.EntityEditor, img: EntityToolImg, tooltiptext: $LL.mapEditor.sideBar.entityEditor()},
+        { toolName: EditorToolName.FloorEditor, img: FloorToolImg, tooltiptext: $LL.mapEditor.sideBar.tileEditor() },
     ];
 
     let mapEditorSelectToolStoreUnsubscriber = mapEditorSelectedToolStore.subscribe(
@@ -30,6 +32,7 @@
     });
 
     function switchTool(newTool: EditorToolName) {
+        console.log(JSON.stringify($LL));
         gameScene.getMapEditorModeManager().equipTool(newTool);
     }
 
@@ -46,13 +49,16 @@
     <!--put a section to avoid lower div to be affected by some css-->
     <div class="side-bar">
         <div class="tool-button">
-            <button on:click|preventDefault={zoomIn} type="button"><img src={ZoomInImg} alt="Zoom In" /></button>
+            <!-- <Tooltip text={$LL.mapEditor.sideBar.zoomIn()} /> --><!--do not work yet-->
+            <button on:click|preventDefault={zoomIn} type="button"><img src={ZoomInImg} alt={$LL.mapEditor.zoomIn()} /></button>
         </div>
         <div class="tool-button">
-            <button on:click|preventDefault={zoomOut} type="button"><img src={ZoomOutImg} alt="Zoom Out" /></button>
+            <!-- <Tooltip text={$LL.mapEditor.sideBar.zoomOut()} /> --><!--do not work yet-->
+            <button on:click|preventDefault={zoomOut} type="button"><img src={ZoomOutImg} alt={$LL.mapEditor.zoomOut()} /></button>
         </div>
         {#each availableTools as tool (tool.toolName)}
             <div class="tool-button">
+            <!-- <Tooltip text={tool.tooltiptext} /> --><!--do not work yet-->
                 <button
                     class={tool.toolName == currentTool ? "active" : ""}
                     on:click|preventDefault={() => switchTool(tool.toolName)}

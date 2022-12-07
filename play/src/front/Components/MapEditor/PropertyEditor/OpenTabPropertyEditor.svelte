@@ -1,4 +1,5 @@
 <script lang="ts">
+    import LL from "../../../../i18n/i18n-svelte";
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
     import { createEventDispatcher } from "svelte";
     import { OpenTabPropertyData } from "@workadventure/map-editor";
@@ -14,10 +15,11 @@
 
 <div class="value-input">
     w
-    <label for="tabLink">New Tab Link</label>
+    <label for="tabLink">{$LL.mapEditor.entityEditor.linkProperties.linkLabel()}</label>
     <input
         id="tabLink"
         type="text"
+        placeholder={$LL.mapEditor.entityEditor.linkProperties.linkPlaceholder()}
         bind:value={property.link}
         on:change={onValueChange}
         on:focus={onMapEditorInputFocus}
@@ -25,7 +27,7 @@
     />
 </div>
 <div class="value-input">
-    <label for="linkButtonLabel">Button Label</label>
+    <label for="linkButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
     <input
         id="linkButtonlabel"
         type="text"
