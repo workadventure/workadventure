@@ -36,6 +36,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         linkProperties:{
             label:"Ouvrir un lien",
             linkLabel:"URL du Lien",
+            newTabLabel:"Ouvrir dans un nouvel onglet",
             linkPlaceholder:"https://play.staging.workadventu.re/",
             defaultButtonLabel :"Ouvrir le lien",
         }

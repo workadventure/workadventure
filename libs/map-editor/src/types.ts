@@ -73,6 +73,7 @@ export interface PlayAudioPropertyData extends ActionsMenuData {
 }
 export interface OpenTabPropertyData extends ActionsMenuData {
     link: string;
+    inNewTab: boolean;
 }
 
 export enum GameMapProperties {

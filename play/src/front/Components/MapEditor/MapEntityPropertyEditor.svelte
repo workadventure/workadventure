@@ -40,7 +40,7 @@
             active: false,
             currentValue: undefined,
             component: OpenTabPropertyEditor,
-            defaultValue: { buttonLabel: $LL.mapEditor.entityEditor.linkProperties.defaultButtonLabel(), link: "" },
+            defaultValue: { buttonLabel: $LL.mapEditor.entityEditor.linkProperties.defaultButtonLabel(), link: "", inNewTab:true },
         },
     ];
 

@@ -35,6 +35,7 @@ const mapEditor: BaseTranslation = {
         linkProperties:{
             label:"Open Link",
             linkLabel:"Link URL",
+            newTabLabel:"Open in new tab",
             linkPlaceholder:"https://play.staging.workadventu.re/",
             defaultButtonLabel :"Open Link",
         }
