@@ -52,6 +52,8 @@ HTTP server (nginx / Apache, ...) and properly configure the [CORS settings as e
 The install proposed in [`docker-compose.prod.yaml`](docker-compose.prod.yaml) uses many domain names (one for each service).
 If you want to run WorkAdventure on a single domain name, you can override the settings using [`docker-compose.single-domain.yaml`](docker-compose.single-domain.yaml).
 
+In this case, you can configure the only domain used with the `DOMAIN` environment variable in the ".env" file.
+
 Usage:
 
 ```console
