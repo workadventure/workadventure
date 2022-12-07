@@ -69,7 +69,6 @@
     let constraintStore = peer.constraintsStore;
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     class="video-container video-off"
     bind:this={videoContainer}

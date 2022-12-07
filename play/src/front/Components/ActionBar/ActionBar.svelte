@@ -388,8 +388,6 @@
                 class:tw-translate-x-0={$bottomActionBarVisibilityStore}
                 class:translate-right={!$bottomActionBarVisibilityStore}
             >
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="tw-transition-all bottom-action-button"
                     class:disabled={$followStateStore !== "off"}
@@ -402,7 +400,6 @@
                         <img draggable="false" src={followImg} style="padding: 2px" alt="Toggle follow" />
                     </button>
                 </div>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
 
                 <div
                     class="tw-transition-all bottom-action-button"
@@ -430,8 +427,6 @@
                     </button>
                 </div>
 
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="tw-transition-all bottom-action-button"
                     class:disabled={$currentPlayerGroupLockStateStore}
@@ -453,7 +448,6 @@
                         {/if}
                     </button>
                 </div>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
 
                 <div
                     class="tw-transition-all bottom-action-button"
@@ -488,7 +482,6 @@
             <div class="bottom-action-section tw-flex tw-flex-initial">
                 {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
                     {#if $myCameraStore}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
                             class="bottom-action-button tw-relative"
                             on:click={() => analyticsClient.camera()}
@@ -537,7 +530,6 @@
                                     on:mouseleave={() => (cameraActive = false)}
                                 >
                                     {#each $cameraListStore as camera}
-                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                                         <span
                                             class="wa-dropdown-item tw-flex"
                                             on:click|stopPropagation|preventDefault={() =>
@@ -555,8 +547,6 @@
                     {/if}
 
                     {#if $myMicrophoneStore}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
                             class="bottom-action-button tw-relative"
                             on:click={() => analyticsClient.microphone()}
@@ -607,7 +597,6 @@
                                             >{$LL.actionbar.subtitle.microphone()} 🎙️</span
                                         >
                                         {#each $microphoneListStore as microphone}
-                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                                             <span
                                                 class="wa-dropdown-item"
                                                 on:click|stopPropagation|preventDefault={() =>
@@ -627,7 +616,6 @@
                                             >{$LL.actionbar.subtitle.speaker()} 🔈</span
                                         >
                                         {#each $speakerListStore as speaker}
-                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                                             <span
                                                 class="wa-dropdown-item"
                                                 on:click|stopPropagation|preventDefault={() =>
@@ -646,8 +634,6 @@
                     {/if}
                 {/if}
 
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     on:click={() => analyticsClient.openedChat()}
                     on:click={toggleChat}
@@ -678,10 +664,7 @@
                             {$totalMessagesToSee}
                         </span>
                     {/if}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                 </div>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div on:click={toggleEmojiPicker} class="bottom-action-button">
                     <Tooltip text={$LL.actionbar.emoji()} />
 
@@ -691,8 +674,6 @@
                 </div>
             </div>
 
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div class="bottom-action-section tw-flex tw-flex-initial">
                 <div
                     on:dragstart|preventDefault={noDrag}
@@ -733,8 +714,6 @@
                 {/if}
             </div>
 
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
             {#if $inviteUserActivated}
                 <div
                     class="bottom-action-section tw-flex tw-flex-initial"
