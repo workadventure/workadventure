@@ -5,8 +5,8 @@ import { MessageType, ReplyMessage, User } from "../Xmpp/AbstractRoom";
 import { get, Writable, writable } from "svelte/store";
 
 export class Message {
-    readonly _delivered: Writable<boolean>;
-    readonly _error: Writable<boolean>;
+    public readonly delivered: Writable<boolean>;
+    public readonly error: Writable<boolean>;
     private readonly _reactions: MapStore<string, Writable<string[]>>;
 
     constructor(
@@ -24,27 +24,19 @@ export class Message {
         public readonly links?: WaLink[],
         public readonly mentions?: User[]
     ) {
-        this._delivered = writable(delivered);
-        this._error = writable(delivered);
+        this.delivered = writable(delivered);
+        this.error = writable(error);
         this._reactions = new MapStore<string, Writable<string[]>>();
     }
 
     public setDelivered(value: boolean) {
-        this._delivered.set(value);
-    }
-
-    get delivered(): boolean {
-        return get(this._delivered);
+        this.delivered.set(value);
     }
 
     public setError(value: boolean) {
-        if (!get(this._delivered)) {
-            this._error.set(value);
+        if (!get(this.delivered)) {
+            this.error.set(value);
         }
-    }
-
-    get error(): boolean {
-        return get(this._error);
     }
 
     public setReactions(value: Map<string, string[]>) {

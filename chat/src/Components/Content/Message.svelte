@@ -34,6 +34,9 @@
 
     const deletedMessagesStore = mucRoom.getDeletedMessagesStore();
 
+    const delivered = message.delivered;
+    const error = message.error;
+
     function selectMessage(message: Message) {
         selectedMessageToReply.set(message);
     }
@@ -69,7 +72,7 @@
     id={`message_${message.id}`}
     class={`wa-message tw-flex ${isMe ? "tw-justify-end" : "tw-justify-start"}
             ${needHideHeader ? "tw-mt-0.5" : "tw-mt-2"}
-            ${isMe ? (message.delivered ? "sent" : "sending") : "received"}
+            ${isMe ? ($delivered ? "sent" : "sending") : "received"}
             `}
 >
     <div class="tw-flex tw-flex-row tw-items-center  tw-max-w-full">
@@ -93,7 +96,7 @@
                     </div>
                 </div>
             {/if}
-            {#if !message.error && !$deletedMessagesStore.has(message.id)}
+            {#if !$error && !$deletedMessagesStore.has(message.id)}
                 <!-- Action bar -->
                 <div
                     class={`actions tw-rounded-lg tw-text-xs tw-text-left tw-flex ${needHideHeader ? "" : "tw-pt-4"} ${
@@ -196,50 +199,6 @@
                                 <File url={link.url} name={link.description} />
                             {/each}
                         {/if}
-
-                        <!--
-                        {#if !message.error}
-                            <-- Action bar ->
-                            <div
-                                class="actions tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
-                            >
-                                <div class="action reply" on:click={() => selectMessage(message)}>
-                                    <CornerDownLeftIcon size="17" />
-                                </div>
-                                <div class="action react" on:click={() => reactMessage(message)}>
-                                    <SmileIcon size="17" />
-                                </div>
-                                <div class="action more-option">
-                                    <MoreHorizontalIcon size="17" />
-
-                                    <div class="wa-dropdown-menu tw-hidden">
-                                        <span
-                                            class="wa-dropdown-item"
-                                            on:click={() => selectMessage(message)}
-                                        >
-                                            <CornerDownLeftIcon size="13" class="tw-mr-1" />
-                                            {$LL.reply()}
-                                        </span>
-                                        <span
-                                            class="wa-dropdown-item"
-                                            on:click={(e) => copyMessage(e, message)}
-                                        >
-                                            <CopyIcon size="13" class="tw-mr-1" />
-                                            {$LL.copy()}
-                                        </span>
-                                        {#if ($me && $me.isAdmin) || isMe}
-                                            <span
-                                                class="wa-dropdown-item tw-text-pop-red"
-                                                on:click={() => mucRoom.sendRemoveMessage(message.id)}
-                                            >
-                                                <Trash2Icon size="13" class="tw-mr-1" />
-                                                {$LL.delete()}
-                                            </span>
-                                        {/if}
-                                    </div>
-                                </div>
-                            </div>
-                        {/if} -->
                     </div>
 
                     <!-- React associated -->
@@ -276,7 +235,7 @@
                 {/if}
             </div>
         </div>
-        {#if message.error}
+        {#if $error}
             <div
                 class="wa-error-message"
                 on:mouseleave={() => document.getElementById(`error_${message.id}`)?.classList.add("tw-invisible")}

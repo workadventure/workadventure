@@ -326,17 +326,5 @@
                 </div>
             </div>
         {/if}
-        <div class="tw-w-full tw-fixed tw-left-0 tw-bottom-14 tw-animate-bounce tw-cursor-pointer">
-            <div
-                in:fly={{ y: 10, duration: 200 }}
-                style="margin: auto"
-                class="tw-bg-lighter-purple tw-rounded-xl tw-h-5 tw-px-2 tw-w-fit tw-text-xs tw-flex tw-justify-center tw-items-center tw-shadow-grey"
-                role="button"
-            >
-                <p class="tw-m-0">
-                    {$messagesStore.length}
-                </p>
-            </div>
-        </div>
     </div>
 </div>
