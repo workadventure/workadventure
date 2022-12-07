@@ -38,7 +38,6 @@ const mapStorageServer: MapStorageServer = {
             switch (editMapMessage.$case) {
                 case "modifyAreaMessage": {
                     const message = editMapMessage.modifyAreaMessage;
-                    console.log(message);
                     const area = gameMap.getGameMapAreas().getArea(message.id, AreaType.Static);
                     if (area) {
                         const areaObjectConfig: AreaData = structuredClone(area);
@@ -90,6 +89,14 @@ const mapStorageServer: MapStorageServer = {
                             y: message.y,
                             interactive: true,
                         },
+                    });
+                    break;
+                }
+                case "deleteEntityMessage": {
+                    const message = editMapMessage.deleteEntityMessage;
+                    validCommand = mapsManager.executeCommand(call.request.mapKey, {
+                        type: "DeleteEntityCommand",
+                        id: message.id,
                     });
                     break;
                 }

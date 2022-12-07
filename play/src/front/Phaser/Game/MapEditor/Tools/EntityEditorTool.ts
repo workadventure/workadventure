@@ -80,7 +80,6 @@ export class EntityEditorTool extends MapEditorTool {
                 break;
             }
             case "DeleteEntityCommand": {
-                console.log("HANDLE ENTITY DELETION");
                 this.handleEntityDeletion(commandConfig.id);
                 break;
             }
@@ -95,7 +94,6 @@ export class EntityEditorTool extends MapEditorTool {
     public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): void {
         switch (editMapCommandMessage.editMapMessage?.message?.$case) {
             case "createEntityMessage": {
-                console.log("create entity message");
                 const data = editMapCommandMessage.editMapMessage?.message.createEntityMessage;
                 const entityPrefab = mapEntitiesPrefabsStore.getEntityPrefab(data.collecionName, data.prefabId);
 
@@ -129,6 +127,18 @@ export class EntityEditorTool extends MapEditorTool {
                     .catch((reason) => {
                         console.warn(reason);
                     });
+                break;
+            }
+            case "deleteEntityMessage": {
+                const id = editMapCommandMessage.editMapMessage?.message.deleteEntityMessage.id;
+                this.mapEditorModeManager.executeCommand(
+                    {
+                        type: "DeleteEntityCommand",
+                        id,
+                    },
+                    false,
+                    false
+                );
                 break;
             }
         }
