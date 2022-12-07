@@ -124,13 +124,14 @@ export class XmppClient {
                 try {
                     await client.ping();
                 } catch (e) {
+                    debug("client => onConnected => ping => error =>", e);
                     this.restart();
                 }
             }, 25_000);
         });
-        client.on("disconnected", () => {
+        client.on("disconnected", (message) => {
             this.status = "disconnected";
-            console.log("disconnected");
+            console.log("disconnected", message);
             this.restart();
         });
         client.on("auth:success", () => {
