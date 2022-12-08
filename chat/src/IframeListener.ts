@@ -250,6 +250,15 @@ class IframeListener {
             "*"
         );
     }
+
+    sendChatIsReady() {
+        window.parent.postMessage(
+            {
+                type: "chatReady",
+            },
+            "*"
+        );
+    }
 }
 
 export const iframeListener = new IframeListener();

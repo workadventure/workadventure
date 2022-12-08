@@ -15,7 +15,6 @@ import { PingController } from "./controllers/PingController";
 import { CompanionListController } from "./controllers/CompanionListController";
 import { FrontController } from "./controllers/FrontController";
 import fs from "fs";
-import type * as uWebsockets from "uWebSockets.js";
 import { globalErrorHandler } from "./services/GlobalErrorHandler";
 import { adminApi } from "./services/AdminApi";
 import { jwtTokenManager } from "./services/JWTTokenManager";
@@ -74,7 +73,7 @@ class App {
         });
 
         liveAssets.ready().then(() => {
-            console.info("All static assets has been loaded!");
+            console.info("All static assets have been loaded!");
         });
 
         // Socket controllers
@@ -106,7 +105,7 @@ class App {
             });
     }
 
-    public listen(port: number, host?: string): Promise<uWebsockets.us_listen_socket | string> {
+    public listen(port: number, host?: string): Promise<HyperExpress.compressors.us_listen_socket | string> {
         return this.webserver.listen(port, host);
     }
 }

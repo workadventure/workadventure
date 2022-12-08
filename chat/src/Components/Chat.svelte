@@ -73,6 +73,7 @@
         if (!$locale) {
             await localeDetector();
         }
+        iframeListener.sendChatIsReady();
         subscribeTotalMessagesToSee = totalMessagesToSee.subscribe((total: number) => {
             iframeListener.sendChatTotalMessagesToSee(total);
         });

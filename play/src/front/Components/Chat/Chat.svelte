@@ -17,6 +17,7 @@
     import { peerStore } from "../../Stores/PeerStore";
     import { connectionManager } from "../../Connexion/ConnectionManager";
     import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
+    import { Locales } from "../../../i18n/i18n-types";
 
     let chatIframe: HTMLIFrameElement;
 
@@ -55,7 +56,7 @@
             if (chatIframe && chatIframe.contentWindow && "postMessage" in chatIframe.contentWindow) {
                 iframeLoadedStore.set(true);
                 subscribeListeners.push(
-                    locale.subscribe((value) => {
+                    locale.subscribe((value: Locales) => {
                         chatIframe?.contentWindow?.postMessage(
                             {
                                 type: "setLocale",

@@ -68,11 +68,15 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/play.tar
 
+      - name: Zip image
+        run: gzip play.tar
+        working-directory: /tmp
+
       - name: Upload image as artifact
         uses: actions/upload-artifact@v3
         with:
           name: play
-          path: /tmp/play.tar
+          path: /tmp/play.tar.gz
 
   build-chat:
     runs-on: ubuntu-latest
@@ -129,11 +133,15 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/chat.tar
 
+      - name: Zip image
+        run: gzip chat.tar
+        working-directory: /tmp
+
       - name: Upload image as artifact
         uses: actions/upload-artifact@v3
         with:
           name: chat
-          path: /tmp/chat.tar
+          path: /tmp/chat.tar.gz
 
   build-back:
     runs-on: ubuntu-latest
@@ -190,11 +198,15 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/back.tar
 
+      - name: Zip image
+        run: gzip back.tar
+        working-directory: /tmp
+
       - name: Upload image as artifact
         uses: actions/upload-artifact@v3
         with:
           name: back
-          path: /tmp/back.tar
+          path: /tmp/back.tar.gz
 
   build-uploader:
     runs-on: ubuntu-latest
@@ -243,11 +255,15 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/uploader.tar
 
+      - name: Zip image
+        run: gzip uploader.tar
+        working-directory: /tmp
+
       - name: Upload image as artifact
         uses: actions/upload-artifact@v3
         with:
           name: uploader
-          path: /tmp/uploader.tar
+          path: /tmp/uploader.tar.gz
 
   build-maps:
     runs-on: ubuntu-latest
@@ -301,11 +317,15 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/maps.tar
 
+      - name: Zip image
+        run: gzip maps.tar
+        working-directory: /tmp
+
       - name: Upload image as artifact
         uses: actions/upload-artifact@v3
         with:
           name: maps
-          path: /tmp/maps.tar
+          path: /tmp/maps.tar.gz
 
   build-map-storage:
     runs-on: ubuntu-latest
@@ -362,11 +382,15 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/map-storage.tar
 
+      - name: Zip image
+        run: gzip map-storage.tar
+        working-directory: /tmp
+
       - name: Upload image as artifact
         uses: actions/upload-artifact@v3
         with:
           name: map-storage
-          path: /tmp/map-storage.tar
+          path: /tmp/map-storage.tar.gz
 
   build-ejabberd:
     runs-on: ubuntu-latest
@@ -421,11 +445,15 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/ejabberd.tar
 
+      - name: Zip image
+        run: gzip ejabberd.tar
+        working-directory: /tmp
+
       - name: Upload image as artifact
         uses: actions/upload-artifact@v3
         with:
           name: ejabberd
-          path: /tmp/ejabberd.tar
+          path: /tmp/ejabberd.tar.gz
 
   end-to-end-tests:
     name: "End to end tests with ${{ matrix.browser }}"
@@ -507,13 +535,13 @@ jobs:
       -
         name: Load image
         run: |
-          docker load --input /tmp/play.tar
-          docker load --input /tmp/chat.tar
-          docker load --input /tmp/back.tar
-          docker load --input /tmp/maps.tar
-          docker load --input /tmp/map-storage.tar
-          docker load --input /tmp/uploader.tar
-          docker load --input /tmp/ejabberd.tar
+          docker load --input /tmp/play.tar.gz
+          docker load --input /tmp/chat.tar.gz
+          docker load --input /tmp/back.tar.gz
+          docker load --input /tmp/maps.tar.gz
+          docker load --input /tmp/map-storage.tar.gz
+          docker load --input /tmp/uploader.tar.gz
+          docker load --input /tmp/ejabberd.tar.gz
           docker image ls -a
 
 #      - name: Download images

@@ -42,12 +42,16 @@ describe("Redis Uploader tests", () => {
     })
 
     afterAll(async ()=> {
-        server?.kill()
-        await new Promise(resolve => {
-            server?.on("close", ()=> {
-                resolve(0)
-            })
-        })
+        if (server) {
+            const serverToKill = server;
+            const promise = new Promise(resolve => {
+                serverToKill.on("exit", ()=> {
+                    resolve(0)
+                })
+            });
+            serverToKill.kill("SIGKILL")
+            await promise;
+        }
         await redisContainer?.stop()
     })
 
