@@ -11,6 +11,10 @@ const actionbar: BaseTranslation = {
     emoji: "Open / Close emoji",
     menu: "Open / Close menu",
     bo: "Open back office",
+    subtitle: {
+        microphone: "Microphone",
+        speaker: "Speaker",
+    },
 };
 
 export default actionbar;

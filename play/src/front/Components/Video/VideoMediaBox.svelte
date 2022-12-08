@@ -10,11 +10,13 @@
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 
     import Woka from "../Woka/Woka.svelte";
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import BanReportBox from "./BanReportBox.svelte";
     import microphoneOffImg from "../images/microphone-off-blue.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
+    import { speakerSelectedStore } from "../../Stores/MediaStore";
+    import { Unsubscriber } from "svelte/store";
 
     export let clickable = false;
 
@@ -26,9 +28,11 @@
     let textColor = getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
     let constraintStore = peer.constraintsStore;
+    let subscribeChangeOutput: Unsubscriber;
 
     let embedScreen: EmbedScreen;
     let videoContainer: HTMLDivElement;
+    let videoElement: HTMLVideoElement;
     let minimized = isMediaBreakpointOnly("md");
     let isMobile = isMediaBreakpointUp("md");
 
@@ -46,6 +50,27 @@
 
     onMount(() => {
         resizeObserver.observe(videoContainer);
+        subscribeChangeOutput = speakerSelectedStore.subscribe((deviceId) => {
+            // Check HTMLMediaElement.setSinkId() compatibility for browser
+            // @ts-ignore
+            if (videoElement.setSinkId != undefined) {
+                try {
+                    // @ts-ignore
+                    videoElement.setSinkId(deviceId);
+                } catch (err) {
+                    console.info(
+                        "Your browser is not compatible for updating your speaker over a video element. Try to change the default audio output in your computer settings. Error: ",
+                        err
+                    );
+                }
+            }
+        });
+    });
+
+    onDestroy(() => {
+        if (subscribeChangeOutput) {
+            subscribeChangeOutput();
+        }
     });
 </script>
 
@@ -67,6 +92,7 @@
         <!-- svelte-ignore a11y-media-has-caption &ndash;&gt;-->
         {#if $streamStore}
             <video
+                bind:this={videoElement}
                 class:no-video={!$constraintStore || $constraintStore.video === false}
                 class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
                 class="tw-h-full tw-max-w-full tw-rounded"
