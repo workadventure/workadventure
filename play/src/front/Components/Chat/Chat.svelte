@@ -50,6 +50,19 @@
 
     onMount(() => {
         iframeListener.registerChatIframe(chatIframe);
+        subscribeObservers.push(
+            iframeListener.chatReadyStream.subscribe((value) => {
+                if (value) {
+                    chatReadyStore.set(true);
+                    if (iframeListener.messagesToChatQueue.size > 0) {
+                        iframeListener.messagesToChatQueue.forEach((message, time) => {
+                            iframeListener.postMessageToChat(message);
+                            iframeListener.messagesToChatQueue.delete(time);
+                        });
+                    }
+                }
+            })
+        );
         chatIframe.addEventListener("load", () => {
             iframeLoadedStore.set(false);
             if (chatIframe && chatIframe.contentWindow && "postMessage" in chatIframe.contentWindow) {
@@ -142,19 +155,6 @@
                 );
                 subscribeListeners.push(
                     peerStore.subscribe((list) => iframeListener.sendPeerConnexionStatusToChatIframe(list.size > 0))
-                );
-                subscribeObservers.push(
-                    iframeListener.chatReadyStream.subscribe((value) => {
-                        if (value) {
-                            chatReadyStore.set(true);
-                            if (iframeListener.messagesToChatQueue.size > 0) {
-                                iframeListener.messagesToChatQueue.forEach((message, time) => {
-                                    iframeListener.postMessageToChat(message);
-                                    iframeListener.messagesToChatQueue.delete(time);
-                                });
-                            }
-                        }
-                    })
                 );
             }
         });
