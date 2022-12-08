@@ -93,15 +93,17 @@
         if (
             fileMessageManager.files.length === 0 &&
             (!htmlMessageText || htmlMessageText.replace(/\s/g, "").length === 0)
-        )
-            return false;
-        if ($selectedMessageToReply) {
-            sendReplyMessage();
+        ) {
             return false;
         }
+
         mucRoom.updateComposingState(ChatState.Paused);
         const message = htmlMessageText.replace(/<div>/g, "\n").replace(/(<([^>]+)>)/gi, "");
-        mucRoom.sendMessage(message);
+        if ($selectedMessageToReply) {
+            sendReplyMessage(message);
+        } else {
+            mucRoom.sendMessage(message);
+        }
         newMessageText = "";
         htmlMessageText = "";
         dispatch("scrollDown");
@@ -134,13 +136,10 @@
         }
     }
 
-    function sendReplyMessage() {
-        if (!$selectedMessageToReply || !newMessageText || newMessageText.replace(/\s/g, "").length === 0) return;
-        mucRoom.updateComposingState(ChatState.Paused);
-        mucRoom.sendMessage(newMessageText, $selectedMessageToReply);
+    function sendReplyMessage(message: string) {
+        if (!$selectedMessageToReply) return;
+        mucRoom.sendMessage(message, $selectedMessageToReply);
         selectedMessageToReply.set(null);
-        newMessageText = "";
-        dispatch("scrollDown");
         return false;
     }
 
