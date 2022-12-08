@@ -160,15 +160,10 @@
     function closeChat() {
         chatVisibilityStore.set(false);
     }
-    function openChat() {
-        chatVisibilityStore.set(true);
-    }
     function onKeyDown(e: KeyboardEvent) {
         if (e.key === "Escape" && $chatVisibilityStore) {
             closeChat();
             chatIframe.blur();
-        } else if (e.key === "c" && !$chatVisibilityStore) {
-            openChat();
         }
     }
 </script>

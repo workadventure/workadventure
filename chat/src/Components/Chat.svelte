@@ -19,6 +19,7 @@
         connectionEstablishedStore,
         connectionNotAuthorizedStore,
         enableChat,
+        enableChatOnlineListStore,
         navChat,
         showForumsStore,
         showLivesStore,
@@ -72,6 +73,7 @@
         if (!$locale) {
             await localeDetector();
         }
+        iframeListener.sendChatIsReady();
         subscribeTotalMessagesToSee = totalMessagesToSee.subscribe((total: number) => {
             iframeListener.sendChatTotalMessagesToSee(total);
         });
@@ -174,26 +176,30 @@
             {/if}
         {:else if $showPart === "home"}
             <div class="wa-message-bg tw-pt-3">
-                <nav class="nav">
-                    <div class="background" class:chat={$navChat === "chat"} />
-                    <ul>
-                        <li class:active={$navChat === "users"} on:click={() => navChat.set("users")}>
-                            {$LL.users()}
-                        </li>
-                        <li class:active={$navChat === "chat"} on:click={() => navChat.set("chat")}>Chat</li>
-                    </ul>
-                </nav>
-                <!-- searchbar -->
-                <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
-                    <div class="tw-p-3">
-                        <input
-                            class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
-                            placeholder={$navChat === "users" ? $LL.searchUser() : $LL.searchChat()}
-                            bind:value={searchValue}
-                        />
+                {#if $enableChatOnlineListStore}
+                    <nav class="nav">
+                        <div class="background" class:chat={$navChat === "chat"} />
+                        <ul>
+                            <li class:active={$navChat === "users"} on:click={() => navChat.set("users")}>
+                                {$LL.users()}
+                            </li>
+                            <li class:active={$navChat === "chat"} on:click={() => navChat.set("chat")}>Chat</li>
+                        </ul>
+                    </nav>
+                    <!-- searchbar -->
+                    <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
+                        <div class="tw-p-3">
+                            <input
+                                class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
+                                placeholder={$navChat === "users" ? $LL.searchUser() : $LL.searchChat()}
+                                bind:value={searchValue}
+                            />
+                        </div>
                     </div>
-                </div>
-                {#if !userStore.get().isLogged && ENABLE_OPENID}
+                {:else}
+                    <div class="tw-mt-11 tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid" />
+                {/if}
+                {#if !userStore.get().isLogged && ENABLE_OPENID && $enableChat}
                     <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
                         <div class="tw-p-3 tw-text-sm tw-text-center">
                             <p>{$LL.signIn()}</p>
@@ -203,12 +209,12 @@
                         </div>
                     </div>
                 {/if}
-                {#if $navChat === "users"}
+                {#if $enableChatOnlineListStore && $navChat === "users"}
                     <!-- chat users -->
                     {#if defaultMucRoom !== undefined}
                         <UsersList mucRoom={defaultMucRoom} searchValue={searchValue.toLocaleLowerCase()} />
                     {/if}
-                {:else if $navChat === "chat"}
+                {:else}
                     {#if $enableChat}
                         <ChatLiveRooms
                             searchValue={searchValue.toLocaleLowerCase()}

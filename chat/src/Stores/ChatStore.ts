@@ -3,10 +3,13 @@ import { Subject } from "rxjs";
 import { FileExt, UploadedFile, uploadingState } from "../Services/FileMessageManager";
 import { Message, User } from "../Xmpp/AbstractRoom";
 import { mucRoomsStore } from "./MucRoomsStore";
+import { userStore } from "./LocalUserStore";
 
 // Global config store for the whole chat
 export const enableChat = writable<boolean>(true);
 export const enableChatUpload = writable<boolean>(false);
+export const enableChatOnlineListStore = writable<boolean>(false);
+export const enableChatDisconnectedListStore = writable<boolean>(false);
 
 const _newChatMessageSubject = new Subject<string>();
 export const newChatMessageSubject = _newChatMessageSubject.asObservable();
@@ -39,31 +42,21 @@ function createChatMessagesStore() {
         subscribe,
         addIncomingUser(user: User) {
             update((list) => {
-                const lastMessage = list[list.length - 1];
-                if (lastMessage && lastMessage.type === ChatMessageTypes.userIncoming && lastMessage.targets) {
-                    lastMessage.targets.push(user);
-                } else {
-                    list.push({
-                        type: ChatMessageTypes.userIncoming,
-                        targets: [user],
-                        date: new Date(),
-                    });
-                }
+                list.push({
+                    type: ChatMessageTypes.userIncoming,
+                    targets: [user],
+                    date: new Date(),
+                });
                 return list;
             });
         },
         addOutcomingUser(user: User) {
             update((list) => {
-                const lastMessage = list[list.length - 1];
-                if (lastMessage && lastMessage.type === ChatMessageTypes.userOutcoming && lastMessage.targets) {
-                    lastMessage.targets.push(user);
-                } else {
-                    list.push({
-                        type: ChatMessageTypes.userOutcoming,
-                        targets: [user],
-                        date: new Date(),
-                    });
-                }
+                list.push({
+                    type: ChatMessageTypes.userOutcoming,
+                    targets: [user],
+                    date: new Date(),
+                });
                 return list;
             });
         },
@@ -71,26 +64,13 @@ function createChatMessagesStore() {
             _newChatMessageSubject.next(text);
             update((list) => {
                 const defaultRoom = mucRoomsStore.getDefaultRoom();
-                if (defaultRoom) {
-                    const lastMessage = list[list.length - 1];
-                    if (
-                        lastMessage &&
-                        lastMessage.type === ChatMessageTypes.me &&
-                        lastMessage.text &&
-                        (((new Date().getTime() - lastMessage.date.getTime()) % 86400000) % 3600000) / 60000 < 2
-                    ) {
-                        lastMessage.date = new Date();
-                        lastMessage.text.push(text);
-                    } else {
-                        list.push({
-                            type: ChatMessageTypes.me,
-                            text: [text],
-                            author: defaultRoom.getUserByJid(defaultRoom.myJID),
-                            date: new Date(),
-                        });
-                    }
-                }
-
+                list.push({
+                    type: ChatMessageTypes.me,
+                    text: [text],
+                    author: defaultRoom ? defaultRoom.getUserByJid(defaultRoom.myJID) : undefined,
+                    date: new Date(),
+                    authorName: userStore.get().name,
+                });
                 return list;
             });
         },
@@ -99,25 +79,13 @@ function createChatMessagesStore() {
          */
         addExternalMessage(user: User | undefined, text: string, authorName?: string, origin?: Window) {
             update((list) => {
-                const lastMessage = list[list.length - 1];
-                if (
-                    lastMessage &&
-                    lastMessage.type === ChatMessageTypes.text &&
-                    lastMessage.text &&
-                    ((user && lastMessage?.author?.uuid === user.uuid) || lastMessage?.authorName === authorName) &&
-                    (((new Date().getTime() - lastMessage.date.getTime()) % 86400000) % 3600000) / 60000 < 2
-                ) {
-                    lastMessage.text.push(text);
-                    lastMessage.date = new Date();
-                } else {
-                    list.push({
-                        type: ChatMessageTypes.text,
-                        text: [text],
-                        author: user,
-                        date: new Date(),
-                        authorName,
-                    });
-                }
+                list.push({
+                    type: ChatMessageTypes.text,
+                    text: [text],
+                    author: user,
+                    date: new Date(),
+                    authorName,
+                });
                 return list;
             });
         },

@@ -65,10 +65,8 @@
     function handlerKeyDown(keyDownEvent: KeyboardEvent) {
         if (keyDownEvent.key === "Enter" && !keyDownEvent.shiftKey) {
             saveMessage();
-            setTimeout(() => {
-                newMessageText = "";
-                writing();
-            }, 10);
+            htmlMessageText = "";
+            writing();
             return false;
         }
         return true;
@@ -128,6 +126,15 @@
             emojiOpened = false;
         });
     });
+
+    function needHideHeader(authorName: string, date: Date, i: number) {
+        let previousMsg = $chatMessagesStore[i - 1];
+        if (!previousMsg) {
+            return false;
+        }
+        const minutesBetween = (date.getTime() - previousMsg.date.getTime()) / 60000;
+        return previousMsg.authorName === authorName && minutesBetween < 2;
+    }
 
     onDestroy(() => {
         subscribers.forEach((subscriber) => subscriber());
@@ -213,9 +220,15 @@
             id="timeLine-messageList"
             class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-pt-14 tw-pb-14 tw-justify-end tw-h-auto tw-min-h-screen"
         >
-            {#each $chatMessagesStore as message}
+            {#each $chatMessagesStore as message, i}
                 {#if message.type === ChatMessageTypes.text || message.type === ChatMessageTypes.me}
-                    <div class="tw-mt-2">
+                    <div
+                        class={`${
+                            needHideHeader(message.author?.name ?? message.authorName ?? "", message.date, i)
+                                ? "tw-mt-0.5"
+                                : "tw-mt-2"
+                        }`}
+                    >
                         <div
                             class={`tw-flex ${
                                 message.type === ChatMessageTypes.me ? "tw-justify-end" : "tw-justify-start"
@@ -238,43 +251,45 @@
                                 </div>
                             </div>
                             <div class="tw-w-3/4">
-                                <div
-                                    style={`border-bottom-color:${message.author?.color}`}
-                                    class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-1 ${
-                                        message.type === ChatMessageTypes.me ? "tw-flex-row-reverse" : ""
-                                    }`}
-                                >
-                                    <span class="tw-text-lighter-purple">
-                                        {#if message.type === ChatMessageTypes.me}
-                                            {$LL.me()}
-                                        {:else if message.author}
-                                            {message.author?.name.match(/\[\d*]/)
-                                                ? message.author?.name.substring(
-                                                      0,
-                                                      message.author?.name.search(/\[\d*]/)
-                                                  )
-                                                : message.author?.name}
-                                            {#if message.author?.name.match(/\[\d*]/)}
-                                                <span class="tw-font-light tw-text-xs tw-text-gray">
-                                                    #{message.author?.name
-                                                        .match(/\[\d*]/)
-                                                        ?.join()
-                                                        ?.replace("[", "")
-                                                        ?.replace("]", "")}
-                                                </span>
-                                            {/if}
-                                        {:else}
-                                            {message.authorName}
-                                        {/if}
-                                    </span>
-                                    <span
-                                        >{message.date.toLocaleTimeString($locale, {
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                            second: "2-digit",
-                                        })}</span
+                                {#if !needHideHeader(message.author?.name ?? message.authorName ?? "", message.date, i)}
+                                    <div
+                                        style={`border-bottom-color:${message.author?.color}`}
+                                        class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-1 ${
+                                            message.type === ChatMessageTypes.me ? "tw-flex-row-reverse" : ""
+                                        }`}
                                     >
-                                </div>
+                                        <span class="tw-text-lighter-purple">
+                                            {#if message.type === ChatMessageTypes.me}
+                                                {$LL.me()}
+                                            {:else if message.author}
+                                                {message.author?.name.match(/\[\d*]/)
+                                                    ? message.author?.name.substring(
+                                                          0,
+                                                          message.author?.name.search(/\[\d*]/)
+                                                      )
+                                                    : message.author?.name}
+                                                {#if message.author?.name.match(/\[\d*]/)}
+                                                    <span class="tw-font-light tw-text-xs tw-text-gray">
+                                                        #{message.author?.name
+                                                            .match(/\[\d*]/)
+                                                            ?.join()
+                                                            ?.replace("[", "")
+                                                            ?.replace("]", "")}
+                                                    </span>
+                                                {/if}
+                                            {:else}
+                                                {message.authorName}
+                                            {/if}
+                                        </span>
+                                        <span
+                                            >{message.date.toLocaleTimeString($locale, {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                                second: "2-digit",
+                                            })}</span
+                                        >
+                                    </div>
+                                {/if}
                                 {#if message.text}
                                     <div class="wa-message-body">
                                         {#each message.text as text}
