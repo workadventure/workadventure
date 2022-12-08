@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { chatReadyStore, chatVisibilityStore, writingStatusMessageStore } from "../../Stores/ChatStore";
+    import { chatVisibilityStore, writingStatusMessageStore } from "../../Stores/ChatStore";
     import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
     import { localUserStore } from "../../Connexion/LocalUserStore";
@@ -50,19 +50,6 @@
 
     onMount(() => {
         iframeListener.registerChatIframe(chatIframe);
-        subscribeObservers.push(
-            iframeListener.chatReadyStream.subscribe((value) => {
-                if (value) {
-                    chatReadyStore.set(true);
-                    if (iframeListener.messagesToChatQueue.size > 0) {
-                        iframeListener.messagesToChatQueue.forEach((message, time) => {
-                            iframeListener.postMessageToChat(message);
-                            iframeListener.messagesToChatQueue.delete(time);
-                        });
-                    }
-                }
-            })
-        );
         chatIframe.addEventListener("load", () => {
             iframeLoadedStore.set(false);
             if (chatIframe && chatIframe.contentWindow && "postMessage" in chatIframe.contentWindow) {

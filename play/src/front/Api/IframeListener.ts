@@ -49,8 +49,7 @@ import { connectionManager } from "../Connexion/ConnectionManager";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { ModalEvent } from "./Events/ModalEvent";
 import { AddButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
-import { chatReadyStore } from "../Stores/ChatStore";
-import { get } from "svelte/store";
+import { get, Readable, readable, writable } from "svelte/store";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -182,9 +181,6 @@ class IframeListener {
     private readonly _chatTotalMessagesToSeeStream: Subject<number> = new Subject();
     public readonly chatTotalMessagesToSeeStream = this._chatTotalMessagesToSeeStream.asObservable();
 
-    private readonly _chatReadyStream: Subject<boolean> = new Subject();
-    public readonly chatReadyStream = this._chatReadyStream.asObservable();
-
     private readonly _addButtonActionBarStream: Subject<AddActionsMenuKeyToRemotePlayerEvent> = new Subject();
     public readonly addButtonActionBarStream = this._addButtonActionBarStream.asObservable();
 
@@ -194,6 +190,8 @@ class IframeListener {
 
     private chatIframe: HTMLIFrameElement | null = null;
 
+    private chatReady = false;
+
     private sendPlayerMove = false;
 
     // Note: we are forced to type this in unknown and later cast with "as" because of https://github.com/microsoft/TypeScript/issues/31904
@@ -201,7 +199,8 @@ class IframeListener {
         [str in keyof IframeQueryMap]?: unknown;
     } = {};
 
-    messagesToChatQueue = new Map<number, IframeResponseEvent>();
+    // Note: Message Queue used to store message who can't be sent to the Chat because it's not ready yet
+    private messagesToChatQueue = new Map<number, IframeResponseEvent>();
 
     init() {
         window.addEventListener(
@@ -443,7 +442,13 @@ class IframeListener {
                     } else if (iframeEvent.type == "removeButtonActionBar") {
                         additionnalButtonsMenu.removeAdditionnalButtonActionBar(iframeEvent.data);
                     } else if (iframeEvent.type == "chatReady") {
-                        this._chatReadyStream.next(true);
+                        this.chatReady = true;
+                        if (this.messagesToChatQueue.size > 0) {
+                            this.messagesToChatQueue.forEach((message, time) => {
+                                this.postMessageToChat(message);
+                                this.messagesToChatQueue.delete(time);
+                            });
+                        }
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
@@ -914,7 +919,7 @@ class IframeListener {
                 !this.chatIframe ||
                 !this.chatIframe.contentWindow ||
                 !this.chatIframe.contentWindow.postMessage ||
-                !get(chatReadyStore)
+                !get(this._chatReadyStore)
             ) {
                 throw new Error("No chat iFrame registered");
             } else {
