@@ -189,6 +189,8 @@ class IframeListener {
 
     private chatIframe: HTMLIFrameElement | null = null;
 
+    private chatReady = false;
+
     private sendPlayerMove = false;
 
     // Note: we are forced to type this in unknown and later cast with "as" because of https://github.com/microsoft/TypeScript/issues/31904
@@ -196,6 +198,7 @@ class IframeListener {
         [str in keyof IframeQueryMap]?: unknown;
     } = {};
 
+    // Note: Message Queue used to store message who can't be sent to the Chat because it's not ready yet
     private messagesToChatQueue = new Map<number, IframeResponseEvent>();
 
     init() {
@@ -437,6 +440,14 @@ class IframeListener {
                         additionnalButtonsMenu.addAdditionnalButtonActionBar(iframeEvent.data);
                     } else if (iframeEvent.type == "removeButtonActionBar") {
                         additionnalButtonsMenu.removeAdditionnalButtonActionBar(iframeEvent.data);
+                    } else if (iframeEvent.type == "chatReady") {
+                        this.chatReady = true;
+                        if (this.messagesToChatQueue.size > 0) {
+                            this.messagesToChatQueue.forEach((message, time) => {
+                                this.postMessageToChat(message);
+                                this.messagesToChatQueue.delete(time);
+                            });
+                        }
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
@@ -464,12 +475,6 @@ class IframeListener {
     registerChatIframe(iframe: HTMLIFrameElement): void {
         this.registerIframe(iframe);
         this.chatIframe = iframe;
-        if (this.messagesToChatQueue.size > 0) {
-            this.messagesToChatQueue.forEach((message, time) => {
-                this.postMessageToChat(message);
-                this.messagesToChatQueue.delete(time);
-            });
-        }
     }
 
     unregisterIframe(iframe: HTMLIFrameElement): void {
@@ -909,7 +914,12 @@ class IframeListener {
             this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
         }
         try {
-            if (!this.chatIframe || !this.chatIframe.contentWindow || !this.chatIframe.contentWindow.postMessage) {
+            if (
+                !this.chatIframe ||
+                !this.chatIframe.contentWindow ||
+                !this.chatIframe.contentWindow.postMessage ||
+                !this.chatReady
+            ) {
                 throw new Error("No chat iFrame registered");
             } else {
                 this.chatIframe.contentWindow?.postMessage(message, this.chatIframe?.src);

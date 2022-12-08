@@ -277,6 +277,10 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("removeButtonActionBar"),
         data: isRemoveButtonActionBarEvent,
     }),
+    z.object({
+        type: z.literal("chatReady"),
+        data: z.undefined(),
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;
