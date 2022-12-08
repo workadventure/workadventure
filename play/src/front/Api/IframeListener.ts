@@ -919,7 +919,7 @@ class IframeListener {
                 !this.chatIframe ||
                 !this.chatIframe.contentWindow ||
                 !this.chatIframe.contentWindow.postMessage ||
-                !get(this._chatReadyStore)
+                !this.chatReady
             ) {
                 throw new Error("No chat iFrame registered");
             } else {
