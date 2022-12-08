@@ -1986,7 +1986,7 @@ ${escapedMessage}
                 iframeListener.unregisterScript(script);
             }
         }
-
+        uiWebsiteManager.closeAll();
         followUsersStore.stopFollowing();
 
         audioManagerFileStore.unloadAudio();
