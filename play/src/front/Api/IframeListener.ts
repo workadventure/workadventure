@@ -182,6 +182,9 @@ class IframeListener {
     private readonly _chatTotalMessagesToSeeStream: Subject<number> = new Subject();
     public readonly chatTotalMessagesToSeeStream = this._chatTotalMessagesToSeeStream.asObservable();
 
+    private readonly _chatReadyStream: Subject<boolean> = new Subject();
+    public readonly chatReadyStream = this._chatReadyStream.asObservable();
+
     private readonly _addButtonActionBarStream: Subject<AddActionsMenuKeyToRemotePlayerEvent> = new Subject();
     public readonly addButtonActionBarStream = this._addButtonActionBarStream.asObservable();
 
@@ -198,7 +201,7 @@ class IframeListener {
         [str in keyof IframeQueryMap]?: unknown;
     } = {};
 
-    private messagesToChatQueue = new Map<number, IframeResponseEvent>();
+    messagesToChatQueue = new Map<number, IframeResponseEvent>();
 
     init() {
         window.addEventListener(
@@ -440,7 +443,7 @@ class IframeListener {
                     } else if (iframeEvent.type == "removeButtonActionBar") {
                         additionnalButtonsMenu.removeAdditionnalButtonActionBar(iframeEvent.data);
                     } else if (iframeEvent.type == "chatReady") {
-                        chatReadyStore.set(true);
+                        this._chatReadyStream.next(true);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
@@ -468,16 +471,6 @@ class IframeListener {
     registerChatIframe(iframe: HTMLIFrameElement): void {
         this.registerIframe(iframe);
         this.chatIframe = iframe;
-        chatReadyStore.subscribe((value) => {
-            if (value) {
-                if (this.messagesToChatQueue.size > 0) {
-                    this.messagesToChatQueue.forEach((message, time) => {
-                        this.postMessageToChat(message);
-                        this.messagesToChatQueue.delete(time);
-                    });
-                }
-            }
-        });
     }
 
     unregisterIframe(iframe: HTMLIFrameElement): void {

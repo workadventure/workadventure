@@ -132,7 +132,7 @@
         if (!previousMsg) {
             return false;
         }
-        const minutesBetween = (((date.getTime() - previousMsg.date.getTime()) % 86400000) % 3600000) / 60000;
+        const minutesBetween = (date.getTime() - previousMsg.date.getTime()) / 60000;
         return previousMsg.authorName === authorName && minutesBetween < 2;
     }
 

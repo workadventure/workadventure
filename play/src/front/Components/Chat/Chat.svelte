@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { chatVisibilityStore, writingStatusMessageStore } from "../../Stores/ChatStore";
+    import { chatReadyStore, chatVisibilityStore, writingStatusMessageStore } from "../../Stores/ChatStore";
     import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
     import { localUserStore } from "../../Connexion/LocalUserStore";
@@ -142,6 +142,19 @@
                 );
                 subscribeListeners.push(
                     peerStore.subscribe((list) => iframeListener.sendPeerConnexionStatusToChatIframe(list.size > 0))
+                );
+                subscribeObservers.push(
+                    iframeListener.chatReadyStream.subscribe((value) => {
+                        if (value) {
+                            chatReadyStore.set(true);
+                            if (iframeListener.messagesToChatQueue.size > 0) {
+                                iframeListener.messagesToChatQueue.forEach((message, time) => {
+                                    iframeListener.postMessageToChat(message);
+                                    iframeListener.messagesToChatQueue.delete(time);
+                                });
+                            }
+                        }
+                    })
                 );
             }
         });
