@@ -78,18 +78,17 @@ const menu: DeepPartial<Translation["menu"]> = {
         uploadInfo: "dataju nakładować",
         error: "Žanu dataju wuzwolili. Dyrbiš před rozpósłanjom dataju nakładować. ",
         errorUpload:
-        "Zmylki při nakładowanju dataje. Prošu přepruwujće Wašu dataju a spytajće to znowa. Jeli problem dale wobsteji, wobroćće so na administratora. ",
+            "Zmylki při nakładowanju dataje. Prošu přepruwujće Wašu dataju a spytajće to znowa. Jeli problem dale wobsteji, wobroćće so na administratora. ",
     },
     contact: {
         gettingStarted: {
             title: "prěnje kročele",
             description:
-            "Z Work Adventure móžeš onlinowy swět stworić w kotrymž móžeš so spontanje z druhimi zetkać a rozmołwjeć. Zestajej jako prěnje swójsku kartu. Steji ći wulki wuběr na hotowych kartach wot našeho teama na wuběr. ",
+                "Z Work Adventure móžeš onlinowy swět stworić w kotrymž móžeš so spontanje z druhimi zetkać a rozmołwjeć. Zestajej jako prěnje swójsku kartu. Steji ći wulki wuběr na hotowych kartach wot našeho teama na wuběr. ",
         },
         createMap: {
             title: "swójsku kartu zestajeć",
-            description:
-            "Móžeš tež swoju swójsku kartu zestajeć. Sćěhuj k tomu naš kročel-za kročel nawod. ",
+            description: "Móžeš tež swoju swójsku kartu zestajeć. Sćěhuj k tomu naš kročel-za kročel nawod. ",
         },
     },
     about: {

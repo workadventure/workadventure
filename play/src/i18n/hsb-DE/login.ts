@@ -10,7 +10,7 @@ const login: DeepPartial<Translation["login"]> = {
             notValidError: "mjeno je njepłaćiwe",
         },
     },
-    terms: 'Hdyž pokročuješ, akceptuješ {links}.',
+    terms: "Hdyž pokročuješ, akceptuješ {links}.",
     termsOfUse: "wužiwanske wuměnjenja",
     privacyPolicy: "wozjewjenje wo škiće datow",
     cookiePolicy: "cookie směrnicy",

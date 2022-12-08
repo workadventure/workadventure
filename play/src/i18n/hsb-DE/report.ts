@@ -9,8 +9,7 @@ const report: DeepPartial<Translation["report"]> = {
         block: "blokuj tutoho wužiwarja",
     },
     title: "přizjewić",
-    content:
-        "Napisaj pohóršk na administratorow tutoho ruma. Tući móža wužiwarja po tym wuzamknyć. ",
+    content: "Napisaj pohóršk na administratorow tutoho ruma. Tući móža wužiwarja po tym wuzamknyć. ",
     message: {
         title: "Twoja powěsć:",
         empty: "prošu tekst zapodać.",
