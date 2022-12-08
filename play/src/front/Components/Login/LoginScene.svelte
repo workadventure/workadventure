@@ -104,8 +104,6 @@
             {/if}
         </section>
 
-        <!-- svelte-ignore a11y-autofocus -->
-
         {#if legalString}
             <section class="terms-and-conditions tw-flex tw-h-fit">
                 <a style="display: none;" href="traduction">Need for traduction</a>
