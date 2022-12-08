@@ -3,7 +3,7 @@ import type { Translation } from "../i18n-types";
 
 const warning: DeepPartial<Translation["warning"]> = {
     title: "Warnowanje!",
-    content: `Tutón swět docpěje bórze maksimalnu kapacitu. Móžeš kapacitu wosoby <a href = "${upgradeLink}" target = "_ blank" > tule < a > powyšić`,
+    content: `Tutón swět docpěje bórze maksimalnu kapacitu. Móžeš kapacitu wosoby <a href="{upgradeLink}" target="_blank">tule<a> powyšić`,
     limit: "Tutón swět docpěje bórze maksimalnu kapacitu!",
     accessDenied: {
         camera: "Přistup ke kamerje zapowěł. Tu kliknješ, zo bychu so twoje browser woprawnjenja pruwowałi. ",
