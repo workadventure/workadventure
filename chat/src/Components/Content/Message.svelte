@@ -55,7 +55,7 @@
                 if (target) {
                     target.classList.add("tw-text-pop-green");
                     const originalText = target.innerHTML;
-                    target.innerHTML = originalText.replace(get(LL).copy(), get(LL).copied());
+                    target.innerHTML = originalText.replace($LL.copy(), $LL.copied());
                     setTimeout(() => {
                         target.innerHTML = originalText;
                         target.classList.remove("tw-text-pop-green");
