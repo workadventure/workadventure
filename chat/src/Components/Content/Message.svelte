@@ -4,7 +4,7 @@
     import { Message } from "../../Model/Message";
     import LL, { locale } from "../../i18n/i18n-svelte";
     import { selectedMessageToReact, selectedMessageToReply } from "../../Stores/ChatStore";
-    import { get, Writable } from "svelte/store";
+    import { Writable } from "svelte/store";
     import { EmojiButton } from "@joeattardi/emoji-button";
     import { JID } from "stanza";
     import {
