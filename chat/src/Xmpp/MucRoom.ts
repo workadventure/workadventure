@@ -579,7 +579,7 @@ export class MucRoom extends AbstractRoom {
             });
         } else {
             [...this.presenceStore.getKeys()].forEach((jid) => {
-                if (jid === userJID.full) {
+                if (jid === userJID.bare) {
                     this.presenceStore.delete(jid);
                 }
             });
