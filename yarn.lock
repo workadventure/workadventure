@@ -2960,6 +2960,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@workadventure/store-utils@1.0.0, @workadventure/store-utils@workspace:libs/store-utils":
+  version: 0.0.0-use.local
+  resolution: "@workadventure/store-utils@workspace:libs/store-utils"
+  dependencies:
+    "@tsconfig/svelte": ^1.0.10
+    "@types/node": ^18.7.17
+    svelte: ^3.53.1
+    svelte-check: ^2.9.2
+    typescript: ^4.7.2
+  languageName: unknown
+  linkType: soft
+
 "@workadventure/tailwind@1.0.0, @workadventure/tailwind@workspace:libs/tailwind":
   version: 0.0.0-use.local
   resolution: "@workadventure/tailwind@workspace:libs/tailwind"
@@ -14757,6 +14769,7 @@ __metadata:
     "@workadventure/map-editor": 1.0.0
     "@workadventure/math-utils": 1.0.0
     "@workadventure/messages": 1.0.0
+    "@workadventure/store-utils": 1.0.0
     "@workadventure/tailwind": 1.0.0
     "@workadventure/tiled-map-type-guard": ^2.0.6
     "@xmpp/client": ^0.13.1
@@ -14898,6 +14911,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.16.0
     "@typescript-eslint/parser": ^5.16.0
     "@workadventure/messages": 1.0.0
+    "@workadventure/store-utils": 1.0.0
     "@workadventure/tailwind": 1.0.0
     autoprefixer: ^10.4.4
     axios: ^0.21.2

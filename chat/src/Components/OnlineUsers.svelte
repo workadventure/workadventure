@@ -1,17 +1,13 @@
 <script lang="ts">
     import { UsersStore } from "../Xmpp/MucRoom";
     import LL from "../i18n/i18n-svelte";
+    import { derived, get } from "svelte/store";
 
     export let presenceStore: UsersStore;
+    const usersCount = derived(presenceStore, () => $presenceStore.filter((user) => get(user).active).length);
 </script>
 
-<div
-    class={`tw-text-xs ${
-        [...$presenceStore].filter(([, user]) => user.active).length > 0
-            ? "tw-text-pop-green"
-            : "tw-text-lighter-purple"
-    } tw-mt-0`}
->
-    <b>{[...$presenceStore].filter(([, user]) => user.active).length}</b>
-    {[...$presenceStore].filter(([, user]) => user.active).length > 1 ? $LL.usersOnline() : $LL.userOnline()}
+<div class={`tw-text-xs ${$usersCount > 0 ? "tw-text-pop-green" : "tw-text-lighter-purple"} tw-mt-0`}>
+    <b>{$usersCount}</b>
+    {$usersCount > 1 ? $LL.usersOnline() : $LL.userOnline()}
 </div>

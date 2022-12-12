@@ -1,4 +1,4 @@
-import type { Readable, Writable } from "svelte/store";
+import type { Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
 import { mucRoomsStore } from "../Stores/MucRoomsStore";
 import { v4 as uuid } from "uuid";
@@ -11,21 +11,22 @@ import {
     filesUploadStore,
     mentionsUserStore,
 } from "../Stores/ChatStore";
-import { AbstractRoom, Message, MessageType, User } from "./AbstractRoom";
+import { AbstractRoom, MessageType, User } from "./AbstractRoom";
 import { XmppClient } from "./XmppClient";
 import * as StanzaProtocol from "stanza/protocol";
 import { WaLink, WaReceivedReactions, WaUserInfo } from "./Lib/Plugin";
 import { ParsedJID } from "stanza/JID";
 import { ChatStateMessage, JID } from "stanza";
 import { ChatState, MUCAffiliation } from "stanza/Constants";
+import { Message } from "../Model/Message";
+import { SearchableArrayStore } from "@workadventure/store-utils";
 
 const _VERBOSE = true;
 
-export type UserList = Map<string, User>;
-export type UsersStore = Readable<UserList>;
+export type UsersStore = SearchableArrayStore<string, Writable<User>>;
 
 export class MucRoom extends AbstractRoom {
-    private presenceStore: Writable<UserList>;
+    private presenceStore: UsersStore;
     private canLoadOlderMessagesStore: Writable<boolean>;
     private showDisabledLoadOlderMessagesStore: Writable<boolean>;
     private description: string = "";
@@ -40,7 +41,7 @@ export class MucRoom extends AbstractRoom {
         public subscribe: boolean
     ) {
         super(xmppClient, _VERBOSE);
-        this.presenceStore = writable<UserList>(new Map<string, User>());
+        this.presenceStore = new SearchableArrayStore<string, Writable<User>>((user) => get(user).jid);
         this.canLoadOlderMessagesStore = writable<boolean>(true);
         this.showDisabledLoadOlderMessagesStore = writable<boolean>(false);
         this.loadingSubscribers = writable<boolean>(false);
@@ -59,11 +60,11 @@ export class MucRoom extends AbstractRoom {
     }
 
     public getUserByJid(jid: string): User {
-        const user = get(this.presenceStore).get(jid);
+        const user = this.presenceStore.get(jid);
         if (!user) {
             throw new Error("No user found for this JID");
         }
-        return user;
+        return get(user);
     }
 
     public reInitialize() {
@@ -141,7 +142,7 @@ export class MucRoom extends AbstractRoom {
             });
             if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, "<< Get all subscribers received");
             response.subscriptions.usersJid.forEach((userJid, i) => {
-                if (![...get(this.presenceStore)].find(([_userJid, _]) => _userJid.includes(userJid))) {
+                if (!this.presenceStore.find((user) => get(user).jid.includes(userJid))) {
                     this.addUserInactive(userJid, response.subscriptions.usersNick[i]);
                 }
             });
@@ -193,9 +194,11 @@ export class MucRoom extends AbstractRoom {
             return;
         }
         const idMessage = uuid();
+        let links_: WaLink[] = [];
         let links = {};
         if (get(filesUploadStore).size > 0) {
             links = { links: fileMessageManager.jsonFiles };
+            links_ = fileMessageManager.jsonFiles;
         }
         if (messageReply) {
             let messageReplyLinks = {};
@@ -225,18 +228,18 @@ export class MucRoom extends AbstractRoom {
                 ...links,
             });
         }
-        const message = {
-            name: this.xmppClient.getPlayerName(),
-            jid: this.xmppClient.getMyPersonalJID(),
-            body: text,
-            time: new Date(),
-            id: idMessage,
-            delivered: false,
-            error: false,
-            from: this.xmppClient.getMyJID(),
-            type: messageReply ? MessageType.reply : MessageType.message,
-            ...links,
-            targetMessageReply: messageReply
+
+        const message = new Message(
+            text,
+            this.xmppClient.getPlayerName(),
+            this.xmppClient.getMyPersonalJID(),
+            new Date(),
+            idMessage,
+            false,
+            false,
+            this.xmppClient.getMyJID(),
+            messageReply ? MessageType.reply : MessageType.message,
+            messageReply
                 ? {
                       id: messageReply.id,
                       senderName: messageReply.name,
@@ -244,10 +247,12 @@ export class MucRoom extends AbstractRoom {
                       links: messageReply.links,
                   }
                 : undefined,
-            mentions: [...get(mentionsUserStore).values()],
-        };
+            undefined,
+            links_,
+            [...get(mentionsUserStore).values()]
+        );
 
-        this.appendMessage(message);
+        this.messageStore.push(message);
 
         fileMessageManager.reset();
         mentionsUserStore.set(new Set<User>());
@@ -256,8 +261,9 @@ export class MucRoom extends AbstractRoom {
 
         if (this.sendTimeOut) {
             clearTimeout(this.sendTimeOut);
+            this.sendTimeOut = undefined;
         }
-        this.sendTimeOut = setTimeout(() => this.updateMessagePart(message.id, { error: false }), 10_000);
+        this.sendTimeOut = setTimeout(() => this.messageStore.get(message.id)?.setError(true), 10_000);
         if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, ">> Message sent");
     }
     public sendRemoveMessage(messageId: string) {
@@ -280,7 +286,7 @@ export class MucRoom extends AbstractRoom {
             return;
         }
         let newReactions = [];
-        const myReaction = get(this.reactionMessageStore)
+        const myReaction = this.reactionMessageStore
             .get(messageId)
             ?.find((reactionMessage) => reactionMessage.userJid === this.xmppClient.getMyPersonalJID());
         if (myReaction) {
@@ -304,7 +310,6 @@ export class MucRoom extends AbstractRoom {
         });
         if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, ">> Reaction message sent");
 
-        // Recompute reactions
         this.toggleReactionsMessage(this.xmppClient.getMyPersonalJID(), messageId, newReactions);
     }
     public sendDestroy() {
@@ -357,12 +362,22 @@ export class MucRoom extends AbstractRoom {
         });
         if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, "<< Retrieve last messages received");
         if (response.paging && response.paging.count !== undefined) {
+            const newMessages: Message[] = [];
             response.results?.reverse();
             response.results?.forEach((result) => {
                 if (result.item.message) {
-                    this.onMessage(result.item.message as StanzaProtocol.ReceivedMessage, result.item.delay, true);
+                    const message = result.item.message as StanzaProtocol.ReceivedMessage;
+                    this.parseMessageType(message);
+                    if (this.parseMessageType(message) !== "new") {
+                        this.onMessage(message, result.item.delay);
+                    } else {
+                        newMessages.push(this.parseMessage(message, result.item.delay));
+                    }
                 }
             });
+            if (newMessages.length > 0) {
+                this.messageStore.unshift(...newMessages);
+            }
             if (response.paging.count < 50) {
                 this.canLoadOlderMessagesStore.set(false);
             }
@@ -371,40 +386,45 @@ export class MucRoom extends AbstractRoom {
     }
 
     // Function used to interpret message from the server
-    onMessage(
-        receivedMessage: StanzaProtocol.ReceivedMessage,
-        delay: StanzaProtocol.Delay | null = null,
-        prepend: boolean = false
-    ): boolean {
+    onMessage(receivedMessage: StanzaProtocol.ReceivedMessage, delay: StanzaProtocol.Delay | null = null): boolean {
+        if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, "<< Message received");
         if (!receivedMessage.jid) {
             throw new Error("No JID set for the message");
         } else if (!receivedMessage.id) {
             throw new Error("No id set for the message");
         }
         let response = false;
-        if (receivedMessage.hasSubject === true) {
-            // If subject message, we do nothing for the moment
-            response = true;
-        } else {
-            if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, "<< Message received");
-            let date = new Date();
-            if (delay) {
-                // Only in case where the message received is an archive (a message automatically sent by the server when joining a room)
-                date = new Date(delay.timestamp);
+        const messageId = receivedMessage.id ?? "";
+        switch (this.parseMessageType(receivedMessage)) {
+            case "subject": {
+                // If subject message, we do nothing for the moment
+                response = true;
+                break;
             }
-            const messageId = receivedMessage.id ?? "";
-            if (this.messageMap.has(messageId)) {
+            case "exist": {
                 this.updateLastMessageSeen();
-                this.updateMessagePart(messageId, { delivered: true, error: false });
+                this.messageStore.get(messageId)?.setError(false);
+                this.messageStore.get(messageId)?.setDelivered(true);
                 response = true;
-            } else if (receivedMessage.remove) {
-                const removedId = receivedMessage.remove.id;
-                this.deletedMessagesStore.update((deletedMessages) => {
-                    deletedMessages.set(removedId, JID.toBare(receivedMessage.jid));
-                    return deletedMessages;
-                });
-                response = true;
-            } else {
+                break;
+            }
+            case "remove": {
+                const removedId = receivedMessage.remove?.id;
+                if (removedId) {
+                    this.deletedMessagesStore.update((deletedMessages) => {
+                        deletedMessages.set(removedId, JID.toBare(receivedMessage.jid));
+                        return deletedMessages;
+                    });
+                    response = true;
+                }
+                break;
+            }
+            case "new": {
+                let date = new Date();
+                if (delay) {
+                    // Only in case where the message received is an archive (a message automatically sent by the server when joining a room)
+                    date = new Date(delay.timestamp);
+                }
                 if (date !== null && date > this.lastMessageSeen && !delay) {
                     this.countMessagesToSee.update((last) => last + 1);
                     if (/*get(activeThreadStore) !== this ||*/ get(availabilityStatusStore) !== 1) {
@@ -415,50 +435,10 @@ export class MucRoom extends AbstractRoom {
                     }
                 }
 
-                const receivedJid = JID.parse(receivedMessage.jid);
-
-                if (receivedJid && receivedMessage.jid && receivedMessage.id) {
-                    const message: Message = {
-                        name: receivedJid.resource ?? "unknown",
-                        jid: JID.create({
-                            local: receivedJid.local,
-                            domain: receivedJid.domain,
-                            resource: JID.parse(receivedMessage.from).resource,
-                        }),
-                        body: receivedMessage.body ?? "",
-                        time: date,
-                        id: receivedMessage.id,
-                        delivered: true,
-                        error: false,
-                        from: receivedMessage.from,
-                        type: receivedMessage.messageReply ? MessageType.message : MessageType.reply,
-                        links: receivedMessage.links as WaLink[],
-                        targetMessageReply: receivedMessage.messageReply
-                            ? {
-                                  id: receivedMessage.messageReply.id,
-                                  senderName: receivedMessage.messageReply.senderName,
-                                  body: receivedMessage.messageReply.body,
-                                  links: receivedMessage.messageReply.links
-                                      ? JSON.parse(receivedMessage.messageReply.links)
-                                      : undefined,
-                              }
-                            : undefined,
-                        reactionsMessage: this.reactions(receivedMessage.id),
-                    };
-                    if (prepend) {
-                        this.prependMessage(message);
-                    } else {
-                        this.appendMessage(message);
-                    }
-                    response = true;
-                } else {
-                    console.error("Message format is not good", {
-                        received: !!receivedJid,
-                        jid: !!receivedMessage.jid,
-                        body: !!receivedMessage.body,
-                        id: !!receivedMessage.id,
-                    });
-                }
+                const message = this.parseMessage(receivedMessage, delay);
+                this.messageStore.push(message);
+                response = true;
+                break;
             }
         }
         return response;
@@ -557,70 +537,54 @@ export class MucRoom extends AbstractRoom {
 
     // Update presenceStore
     updateActive(jid: ParsedJID, active: boolean) {
-        this.presenceStore.update((presenceStore: UserList) => {
-            const user = presenceStore.get(jid.full);
-            if (user) {
-                // If disconnected user : [1) It's the default room, 2) I'm a member, 3) The user is a member, 4) The user is not connected with another ressource] else if the user is connected
-                if (
-                    (this.type === "default" &&
-                        !active &&
-                        this.subscribe &&
-                        user.isMember &&
-                        [...presenceStore.keys()].filter((userJid) => JID.toBare(userJid) === jid.bare).length <= 1) ||
-                    active
-                ) {
-                    presenceStore.set(jid.full, { ...user, active });
-                } else {
-                    presenceStore.delete(jid.full);
-                }
+        const user = this.presenceStore.get(jid.full);
+        if (user) {
+            if (
+                (this.type === "default" &&
+                    !active &&
+                    this.subscribe &&
+                    get(user).isMember &&
+                    [...this.presenceStore.getKeys()].filter((userJid) => JID.toBare(userJid) === jid.bare).length <=
+                        1) ||
+                active
+            ) {
+                this.updateUserPart(jid, { active });
+            } else {
+                this.presenceStore.delete(jid.full);
             }
-            return presenceStore;
-        });
+        }
     }
     updateRole(jid: ParsedJID, role: string) {
-        this.presenceStore.update((presenceStore: UserList) => {
-            const user = presenceStore.get(jid.full);
-            if (user) {
-                presenceStore.set(jid.full, { ...user, role, isAdmin: ["admin", "moderator", "owner"].includes(role) });
-            }
-            return presenceStore;
-        });
+        this.updateUserPart(jid, { role, isAdmin: ["admin", "moderator", "owner"].includes(role) });
     }
     updateChatState(jid: ParsedJID, state: ChatState) {
-        this.presenceStore.update((presenceStore: UserList) => {
-            const user = presenceStore.get(jid.full);
-            if (user) {
-                presenceStore.set(jid.full, { ...user, chatState: state });
-            }
-            return presenceStore;
-        });
+        this.updateUserPart(jid, { chatState: state });
     }
     updateUserInfo(userInfo: WaUserInfo) {
-        this.presenceStore.update((presenceStore: UserList) => {
-            const userJID = JID.parse(userInfo.jid);
-            const user = presenceStore.get(userJID.full);
-            if (user) {
-                presenceStore.set(userJID.full, {
-                    ...user,
-                    jid: userJID.full,
-                    name: userInfo.name,
-                    playUri: userInfo.roomPlayUri,
-                    roomName: userInfo.roomName,
-                    uuid: userInfo.userUuid,
-                    color: userInfo.userColor,
-                    woka: userInfo.userWoka,
-                    isMember: userInfo.userIsMember,
-                    isInSameMap: userInfo.roomPlayUri === userStore.get().playUri,
-                    availabilityStatus: userInfo.userAvailabilityStatus,
-                    visitCardUrl: userInfo.userVisitCardUrl,
-                });
-            } else {
-                presenceStore.forEach((user, jid) => {
-                    if (JID.toBare(jid) === userJID.bare) {
-                        presenceStore.delete(jid);
-                    }
-                });
-                presenceStore.set(userJID.full, {
+        const userJID = JID.parse(userInfo.jid);
+        const user = this.presenceStore.get(userJID.full);
+        if (user) {
+            this.updateUserPart(userJID, {
+                jid: userJID.full,
+                name: userInfo.name,
+                playUri: userInfo.roomPlayUri,
+                roomName: userInfo.roomName,
+                uuid: userInfo.userUuid,
+                color: userInfo.userColor,
+                woka: userInfo.userWoka,
+                isMember: userInfo.userIsMember,
+                isInSameMap: userInfo.roomPlayUri === userStore.get().playUri,
+                availabilityStatus: userInfo.userAvailabilityStatus,
+                visitCardUrl: userInfo.userVisitCardUrl,
+            });
+        } else {
+            [...this.presenceStore.getKeys()].forEach((jid) => {
+                if (jid === userJID.bare) {
+                    this.presenceStore.delete(jid);
+                }
+            });
+            this.presenceStore.push(
+                writable({
                     jid: userJID.full,
                     name: userInfo.name,
                     active: true,
@@ -634,98 +598,35 @@ export class MucRoom extends AbstractRoom {
                     isInSameMap: userInfo.roomPlayUri === userStore.get().playUri,
                     availabilityStatus: userInfo.userAvailabilityStatus,
                     visitCardUrl: userInfo.userVisitCardUrl,
-                });
-            }
-            return presenceStore;
-        });
+                })
+            );
+        }
     }
     addUserInactive(userJid: string, nickname: string) {
-        this.presenceStore.update((presenceStore: UserList) => {
-            const userJID = JID.parse(userJid);
-            const user = presenceStore.get(userJID.full);
-            if (!user) {
-                presenceStore.set(userJid, {
+        const userJID = JID.parse(userJid);
+        const user = this.presenceStore.get(userJID.full);
+        if (!user) {
+            this.presenceStore.push(
+                writable({
                     jid: userJid,
                     name: nickname,
                     active: false,
                     isMe: this.xmppClient.getMyJID() === userJid,
                     isMember: true,
-                });
-            }
-            return presenceStore;
-        });
+                })
+            );
+        }
+    }
+    updateUserPart(jid: ParsedJID, parts: Object) {
+        const user = this.presenceStore.get(jid.full);
+        if (user) {
+            user.update((user_) => {
+                return { ...user_, ...parts };
+            });
+        }
     }
 
     // Update reaction and messages
-    public haveReaction(emojiTargeted: string, messageId: string): boolean {
-        const reactionsMessage = get(this.reactionMessageStore).get(messageId);
-        if (!reactionsMessage) return false;
-        const myReaction =
-            reactionsMessage.find(
-                (reactionMessage) => reactionMessage.userJid === this.xmppClient.getMyPersonalJID()
-            ) ?? null;
-        if (!myReaction) return false;
-        return !!myReaction.userReactions.find((emoji) => emoji === emojiTargeted);
-    }
-    private reactions(messageId: string): Map<string, Array<string>> {
-        const reactions = new Map<string, Array<string>>();
-        const reactionsMessage = get(this.reactionMessageStore).get(messageId);
-        if (reactionsMessage) {
-            reactionsMessage.forEach((reactionMessage) => {
-                reactionMessage.userReactions.forEach((reaction) => {
-                    reactions.set(reaction, [...(reactions.get(reaction) ?? []), reactionMessage.userJid]);
-                });
-            });
-        }
-        return reactions;
-    }
-    private updateMessageReactions(messageId: string) {
-        // Update reactions of the message targeted
-        this.updateMessagePart(messageId, { reactionsMessage: this.reactions(messageId) });
-    }
-    private toggleReactionsMessage(userJid: string, messageId: string, reactions: Array<string>) {
-        const newUserReaction = {
-            userJid: userJid,
-            userReactions: reactions,
-        };
-
-        this.reactionMessageStore.update((reactionsMessages) => {
-            const reactionsMessage = reactionsMessages.get(messageId);
-            if (reactionsMessage) {
-                // If message has reactions
-                const userReactionMessage = reactionsMessage.find(
-                    (reactionMessage) => reactionMessage.userJid === userJid
-                );
-                if (userReactionMessage) {
-                    // If reactions of user already exists in the reactions of the message
-                    if (reactions.length === 0) {
-                        // If reactions of user is empty, delete it
-                        reactionsMessages.set(
-                            messageId,
-                            reactionsMessage.filter((reactionMessage) => reactionMessage.userJid !== userJid)
-                        );
-                    } else {
-                        // If reactions of user is new, update it
-                        reactionsMessages.set(
-                            messageId,
-                            reactionsMessage.map((userReactions) =>
-                                userReactions.userJid === userJid ? newUserReaction : userReactions
-                            )
-                        );
-                    }
-                } else {
-                    // If reactions of user doesn't exist in the reactions of the message
-                    reactionsMessage.push(newUserReaction);
-                    reactionsMessages.set(messageId, reactionsMessage);
-                }
-            } else {
-                // If message hasn't reactions, add it
-                reactionsMessages.set(messageId, [newUserReaction]);
-            }
-            return reactionsMessages;
-        });
-        this.updateMessageReactions(messageId);
-    }
     public sendBack(idMessage: string): boolean {
         throw new Error("Not implemented yet");
         // this.messageStore.update((messages) => {
