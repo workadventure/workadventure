@@ -6,7 +6,7 @@
     import { fly } from "svelte/transition";
     import LL from "../i18n/i18n-svelte";
     import Loader from "./Loader.svelte";
-    import { derived, Unsubscriber } from "svelte/store";
+    import { get, Unsubscriber, Writable } from "svelte/store";
     import { enableChatDisconnectedListStore, shownRoomListStore } from "../Stores/ChatStore";
     import { onDestroy, onMount } from "svelte";
 
@@ -20,15 +20,18 @@
 
     const loadingSubscribersStore = mucRoom.getLoadingSubscribersStore();
     const presenceStore = mucRoom.getPresenceStore();
-    const me = derived(presenceStore, ($presenceStore) => $presenceStore.get(mucRoom.myJID));
+    let me:  Writable<User> | undefined = presenceStore.get(mucRoom.myJID);
 
     let unsubscribe: Unsubscriber;
 
     onMount(() => {
         unsubscribe = presenceStore.subscribe((usersList) => {
-            const me = usersList.get(mucRoom.myJID);
-            if (me && me.roomName && $shownRoomListStore === "") {
-                shownRoomListStore.set(me.roomName);
+            me = usersList.find((users) => get(users).jid === mucRoom.myJID);
+            if (me && get(me)) {
+                const me_ = get(me);
+                if (me_ && me_.roomName && $shownRoomListStore === "") {
+                    shownRoomListStore.set(me_.roomName);
+                }
             }
         });
     });
@@ -37,34 +40,35 @@
         unsubscribe();
     });
 
-    $: usersByMaps = [...$presenceStore.values()]
-        .filter((user: User) => user.name.toLocaleLowerCase().includes(searchValue))
-        .reduce((reduced, user: User) => {
+    $: usersByMaps = $presenceStore
+        .filter((user: Writable<User>) => get(user).name.toLocaleLowerCase().includes(searchValue))
+        .reduce((reduced, user: Writable<User>) => {
             let group = "disconnected";
-            if (user.roomName && user.active) {
-                group = user.roomName;
+            const user_ = get(user);
+            if (user_.roomName && user_.active) {
+                group = user_.roomName;
             }
             if ((group === "disconnected" && $enableChatDisconnectedListStore) || group !== "disconnected") {
                 if (!reduced.has(group)) {
                     reduced.set(group, [user]);
                 } else {
                     const usersList = [...(reduced.get(group) ?? []), user];
-                    usersList.sort((a, b) => a.name.localeCompare(b.name));
+                    usersList.sort((a: Writable<User>, b: Writable<User>) => get(a).name.localeCompare(get(b).name));
                     reduced.set(group, usersList);
                 }
             }
             return reduced;
-        }, new Map<string, User[]>());
+        }, new Map<string, Writable<User>[]>());
 
     $: roomSorted = [
         ...[...usersByMaps.keys()]
-            .sort((a, b) => ($me && $me.roomName === a ? -1 : $me && $me?.roomName === b ? 1 : a.localeCompare(b)))
+            .sort((a, b) => ($me && $me.roomName === a ? -1 : $me && $me.roomName === b ? 1 : a.localeCompare(b)))
             .filter((roomName) => roomName !== "disconnected"),
         ...([...usersByMaps.keys()].find((roomName) => roomName === "disconnected") ? ["disconnected"] : []),
     ];
 </script>
 
-{#if [...$presenceStore.values()].filter((user) => !user.isMe && user.active).length === 0}
+{#if $presenceStore.filter((user) => !get(user).isMe && get(user).active).length === 0}
     <div
         class="tw-px-5 tw-py-4 tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple tw-text-sm tw-text-center"
     >
@@ -113,8 +117,8 @@
                         {#if $me && room === $me.roomName && $me.name.toLocaleLowerCase().includes(searchValue)}
                             <ChatUser {mucRoom} user={$me} {searchValue} />
                         {/if}
-                        {#each (usersByMaps.get(room) ?? []).filter((user) => !user.isMe) as user}
-                            <ChatUser {mucRoom} {user} {searchValue} />
+                        {#each (usersByMaps.get(room) ?? []).filter((user) => !get(user).isMe) as user (get(user).jid)}
+                            <ChatUser {mucRoom} user={get(user)} {searchValue} />
                         {/each}
                     {/if}
                 </div>

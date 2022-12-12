@@ -5,7 +5,6 @@
     import highlightWords from "highlight-words";
     import { MucRoom } from "../Xmpp/MucRoom";
     import { activeThreadStore } from "../Stores/ActiveThreadStore";
-    import { derived } from "svelte/store";
 
     export let mucRoom: MucRoom;
     export let searchValue: string;
@@ -28,7 +27,7 @@
     });
 
     const presenceStore = mucRoom.getPresenceStore();
-    const me = derived(presenceStore, ($presenceStore) => $presenceStore.get(mucRoom.myJID));
+    const me = presenceStore.get(mucRoom.myJID);
     const unreads = mucRoom.getCountMessagesToSee();
     const readyStore = mucRoom.getRoomReadyStore();
 </script>

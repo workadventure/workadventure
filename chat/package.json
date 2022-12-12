@@ -46,6 +46,7 @@
     "@joeattardi/emoji-button": "^4.6.4",
     "@tailwindcss/forms": "^0.5.3",
     "@workadventure/messages": "1.0.0",
+    "@workadventure/store-utils": "1.0.0",
     "@workadventure/tailwind": "1.0.0",
     "axios": "^0.21.2",
     "cancelable-promise": "^4.2.1",
