@@ -9,4 +9,5 @@ set -e
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 cd "$SCRIPT_DIR"
-flock ./install.lock -c "yarn install"
+
+flock ./install.lock -c "if ( cat .yarn.lock.checksum | shasum -c ); then echo 'Yarn: Nothing to install'; else yarn install && shasum yarn.lock > .yarn.lock.checksum; fi"
