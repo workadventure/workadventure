@@ -3,7 +3,6 @@ import {
     JitsiRoomPropertyData,
     OpenTabPropertyData,
     PlayAudioPropertyData,
-    GameMapProperties
 } from "@workadventure/map-editor";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
@@ -33,7 +32,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     private readonly outlineColorStore = createColorStore();
     private readonly outlineColorStoreUnsubscribe: Unsubscriber;
 
-    private entityData: EntityData;
+    private entityData: Required<EntityData>;
 
     private beingRepositioned: boolean;
     private activatable: boolean;
@@ -47,7 +46,11 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
         this.activatable = data.interactive ?? false;
 
-        this.entityData = data;
+        this.entityData = {
+            ...data,
+            interactive: data.interactive ?? true,
+            properties: data.properties ?? {},
+        };
 
         this.setDepth(this.y + this.displayHeight * 0.5);
 
@@ -75,7 +78,11 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public updateEntity(entityData: EntityData): void {
-        this.entityData = entityData;
+        this.entityData = {
+            ...entityData,
+            interactive: entityData.interactive ?? true,
+            properties: entityData.properties ?? {},
+        };
 
         this.setPosition(entityData.x, entityData.y);
         // TODO: Add more visual changes on Entity Update
@@ -326,7 +333,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         return this.activatable;
     }
 
-    public getEntityData(): EntityData {
+    public getEntityData(): Required<EntityData> {
         return this.entityData;
     }
 }

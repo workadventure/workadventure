@@ -82,9 +82,7 @@
     function onUpdateProperty(property: EntityPropertyDescription) {
         if ($mapEditorSelectedEntityStore) {
             const entityDataProperties = $mapEditorSelectedEntityStore.getEntityData().properties;
-            if (entityDataProperties) {
-                entityDataProperties[property.key] = property.currentValue;
-            }
+            entityDataProperties[property.key] = property.currentValue;
         }
     }
 
