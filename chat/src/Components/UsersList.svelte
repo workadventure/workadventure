@@ -20,17 +20,17 @@
 
     const loadingSubscribersStore = mucRoom.getLoadingSubscribersStore();
     const presenceStore = mucRoom.getPresenceStore();
-    const me = presenceStore.get(mucRoom.myJID);
+    let me:  Writable<User> | undefined = presenceStore.get(mucRoom.myJID);
 
     let unsubscribe: Unsubscriber;
 
     onMount(() => {
         unsubscribe = presenceStore.subscribe((usersList) => {
-            const meStore = usersList.find((users) => get(users).jid === mucRoom.myJID);
-            if (meStore) {
-                const me = get(meStore);
-                if (me && me.roomName && $shownRoomListStore === "") {
-                    shownRoomListStore.set(me.roomName);
+            me = usersList.find((users) => get(users).jid === mucRoom.myJID);
+            if (me && get(me)) {
+                const me_ = get(me);
+                if (me_ && me_.roomName && $shownRoomListStore === "") {
+                    shownRoomListStore.set(me_.roomName);
                 }
             }
         });

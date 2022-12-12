@@ -23,7 +23,6 @@ import { SearchableArrayStore } from "../Stores/Utils/SearchableArrayStore";
 
 const _VERBOSE = true;
 
-export type UserList = Map<string, User>;
 export type UsersStore = SearchableArrayStore<string, Writable<User>>;
 
 export class MucRoom extends AbstractRoom {
@@ -580,7 +579,7 @@ export class MucRoom extends AbstractRoom {
             });
         } else {
             [...this.presenceStore.getKeys()].forEach((jid) => {
-                if (JID.toBare(jid) === userJID.bare) {
+                if (jid === userJID.full) {
                     this.presenceStore.delete(jid);
                 }
             });
