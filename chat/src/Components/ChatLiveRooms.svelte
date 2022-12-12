@@ -1,6 +1,4 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
-    import { ChevronUpIcon } from "svelte-feather-icons";
     import ChatMucRoom from "./ChatMucRoom.svelte";
     import { MucRoom } from "../Xmpp/MucRoom";
     import { showLivesStore } from "../Stores/ChatStore";
@@ -10,11 +8,7 @@
 </script>
 
 {#if liveRooms.length > 0}
-    <div
-        id="liveRooms"
-        class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple"
-        transition:fly={{ y: -30, duration: 100 }}
-    >
+    <div id="liveRooms" class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
         <div
             class="tw-px-4 tw-py-1 tw-flex tw-items-center tw-cursor-pointer"
             on:click|stopPropagation={() => showLivesStore.set(!$showLivesStore)}
@@ -24,17 +18,16 @@
             >
                 {liveRooms.length}
             </span>
-            <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">Live zones</p>
-            <button class="tw-text-lighter-purple">
+            <p class="tw-text-light-blue tw-my-2 tw-text-sm tw-flex-auto">Live zones</p>
+            <!--<button class="tw-text-lighter-purple">
                 <ChevronUpIcon class={`tw-transform tw-transition ${$showLivesStore ? "" : "tw-rotate-180"}`} />
             </button>
+            -->
         </div>
-        {#if $showLivesStore}
-            <div transition:fly={{ y: -30, duration: 100 }}>
-                {#each liveRooms as liveRoom}
-                    <ChatMucRoom mucRoom={liveRoom} {searchValue} />
-                {/each}
-            </div>
-        {/if}
+        <div>
+            {#each liveRooms as liveRoom}
+                <ChatMucRoom mucRoom={liveRoom} {searchValue} />
+            {/each}
+        </div>
     </div>
 {/if}

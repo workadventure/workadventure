@@ -16,7 +16,8 @@ const fr_FR: Translation = {
     connecting: "Connexion au serveur ...",
     waitingInit: "Attente de l'initialisation du serveur ...",
     waitingData: "En attentes des informations de l'utilisateur ...",
-    search: "Rechercher un utilisateur, un message, un canal ...",
+    searchUser: "Rechercher un utilisateur, une map, etc ...",
+    searchChat: "Rechercher un canal, un message, etc ...",
     role: {
         admin: "Administrateur",
         member: "Membre",
@@ -108,6 +109,8 @@ const fr_FR: Translation = {
     upgradeToSeeMore: "Passez premium pour voir plus de messages",
     disabled: "Cette fonctionnalité est désactivée.",
     disabledByAdmin: "Cette fonctionnalité est désactivée par l'administrateur.",
+    anAdmin: "un administrateur",
+    messageDeletedByYou: "Vous avez supprimé ce message",
 };
 
 export default fr_FR;

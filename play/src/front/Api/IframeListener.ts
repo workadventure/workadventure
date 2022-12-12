@@ -17,7 +17,7 @@ import type { LayerEvent } from "./Events/LayerEvent";
 import type { SetTilesEvent } from "./Events/SetTilesEvent";
 import type { SetVariableEvent } from "./Events/SetVariableEvent";
 import type { ModifyEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
-import { handleMenuRegistrationEvent, handleMenuUnregisterEvent } from "../Stores/MenuStore";
+import { additionnalButtonsMenu, handleMenuRegistrationEvent, handleMenuUnregisterEvent } from "../Stores/MenuStore";
 import type { ChangeLayerEvent } from "./Events/ChangeLayerEvent";
 import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
 import type { ChangeAreaEvent } from "./Events/ChangeAreaEvent";
@@ -44,16 +44,11 @@ import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import type { ChatMessage } from "./Events/ChatEvent";
 import { requestVisitCardsStore } from "../Stores/GameStore";
-import {
-    modalIframeAllowApi,
-    modalIframeAllowlStore,
-    modalIframeSrcStore,
-    modalIframeTitlelStore,
-    modalPositionStore,
-    modalVisibilityStore,
-} from "../Stores/ModalStore";
+import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
 import { connectionManager } from "../Connexion/ConnectionManager";
 import { gameManager } from "../Phaser/Game/GameManager";
+import { ModalEvent } from "./Events/ModalEvent";
+import { AddButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -185,11 +180,16 @@ class IframeListener {
     private readonly _chatTotalMessagesToSeeStream: Subject<number> = new Subject();
     public readonly chatTotalMessagesToSeeStream = this._chatTotalMessagesToSeeStream.asObservable();
 
+    private readonly _addButtonActionBarStream: Subject<AddActionsMenuKeyToRemotePlayerEvent> = new Subject();
+    public readonly addButtonActionBarStream = this._addButtonActionBarStream.asObservable();
+
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
 
     private chatIframe: HTMLIFrameElement | null = null;
+
+    private chatReady = false;
 
     private sendPlayerMove = false;
 
@@ -198,6 +198,7 @@ class IframeListener {
         [str in keyof IframeQueryMap]?: unknown;
     } = {};
 
+    // Note: Message Queue used to store message who can't be sent to the Chat because it's not ready yet
     private messagesToChatQueue = new Map<number, IframeResponseEvent>();
 
     init() {
@@ -430,14 +431,23 @@ class IframeListener {
                     } else if (iframeEvent.type == "showBusinessCard") {
                         requestVisitCardsStore.set(iframeEvent.data.visitCardUrl);
                     } else if (iframeEvent.type == "openModal") {
-                        modalIframeTitlelStore.set(iframeEvent.data.tiltle);
-                        modalIframeAllowlStore.set(iframeEvent.data.allow);
-                        modalIframeSrcStore.set(iframeEvent.data.src);
-                        modalPositionStore.set(iframeEvent.data.position);
-                        modalIframeAllowApi.set(iframeEvent.data.allowApi);
+                        modalIframeStore.set(iframeEvent.data);
                         modalVisibilityStore.set(true);
                     } else if (iframeEvent.type == "closeModal") {
                         modalVisibilityStore.set(false);
+                        modalIframeStore.set(null);
+                    } else if (iframeEvent.type == "addButtonActionBar") {
+                        additionnalButtonsMenu.addAdditionnalButtonActionBar(iframeEvent.data);
+                    } else if (iframeEvent.type == "removeButtonActionBar") {
+                        additionnalButtonsMenu.removeAdditionnalButtonActionBar(iframeEvent.data);
+                    } else if (iframeEvent.type == "chatReady") {
+                        this.chatReady = true;
+                        if (this.messagesToChatQueue.size > 0) {
+                            this.messagesToChatQueue.forEach((message, time) => {
+                                this.postMessageToChat(message);
+                                this.messagesToChatQueue.delete(time);
+                            });
+                        }
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
@@ -465,12 +475,6 @@ class IframeListener {
     registerChatIframe(iframe: HTMLIFrameElement): void {
         this.registerIframe(iframe);
         this.chatIframe = iframe;
-        if (this.messagesToChatQueue.size > 0) {
-            this.messagesToChatQueue.forEach((message, time) => {
-                this.postMessageToChat(message);
-                this.messagesToChatQueue.delete(time);
-            });
-        }
     }
 
     unregisterIframe(iframe: HTMLIFrameElement): void {
@@ -815,6 +819,8 @@ class IframeListener {
                 chatSounds: localUserStore.getChatSounds(),
                 enableChat: connectionManager.currentRoom?.enableChat,
                 enableChatUpload: connectionManager.currentRoom?.enableChatUpload,
+                enableChatOnlineList: connectionManager.currentRoom?.enableChatOnlineList,
+                enableChatDisconnectedList: connectionManager.currentRoom?.enableChatDisconnectedList,
             },
         });
     }
@@ -860,7 +866,7 @@ class IframeListener {
     // << TODO delete with chat XMPP integration for the discussion circle
     sendWritingStatusToChatIframe(list: Set<PlayerInterface>) {
         const usersTyping: Array<string> = [];
-        list.forEach((user) => usersTyping.push(user.userUuid));
+        list.forEach((user) => usersTyping.push(user.userJid));
         this.postMessageToChat({
             type: "updateWritingStatusChatList",
             data: usersTyping,
@@ -886,6 +892,18 @@ class IframeListener {
             data: status,
         });
     }
+    sendButtonActionBarTriggered(buttonActionBar: AddButtonActionBarEvent): void {
+        this.postMessage({
+            type: "buttonActionBarTrigger",
+            data: buttonActionBar,
+        });
+    }
+    sendModalCloseTriggered(modal: ModalEvent): void {
+        this.postMessage({
+            type: "modalCloseTrigger",
+            data: modal,
+        });
+    }
     // end delete >>
 
     /**
@@ -896,7 +914,12 @@ class IframeListener {
             this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
         }
         try {
-            if (!this.chatIframe || !this.chatIframe.contentWindow || !this.chatIframe.contentWindow.postMessage) {
+            if (
+                !this.chatIframe ||
+                !this.chatIframe.contentWindow ||
+                !this.chatIframe.contentWindow.postMessage ||
+                !this.chatReady
+            ) {
                 throw new Error("No chat iFrame registered");
             } else {
                 this.chatIframe.contentWindow?.postMessage(message, this.chatIframe?.src);

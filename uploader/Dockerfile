@@ -1,19 +1,15 @@
-# typescript build
-FROM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c as builder2
-WORKDIR /usr/src
-COPY uploader/yarn.lock uploader/package.json ./
-RUN yarn install
-COPY uploader .
-ENV NODE_ENV=production
-RUN yarn run tsc
-
 # final production image
-FROM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c
+FROM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d
 WORKDIR /usr/src
-COPY uploader/yarn.lock uploader/package.json ./
+RUN apt-get update && apt-get install -y git
+COPY .yarn/releases .yarn/releases
+COPY .yarn/plugins .yarn/plugins
+COPY package.json yarn.lock .yarnrc.yml ./
+COPY uploader/package.json uploader/package.json
 ENV NODE_ENV=production
-RUN yarn install --production
-COPY --from=builder2 /usr/src/dist /usr/src/dist
+RUN yarn workspaces focus workadventureuploader --production
+COPY uploader uploader
 
+WORKDIR /usr/src/uploader
 USER node
-CMD ["yarn", "run", "runprod"]
+CMD ["yarn", "run", "start"]

@@ -39,7 +39,6 @@
         <div class="rtc-error" />
     {/if}
     {#if $streamStore !== null}
-        <!-- svelte-ignore a11y-media-has-caption -->
         <video
             use:srcObject={$streamStore}
             autoplay

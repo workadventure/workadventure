@@ -10,7 +10,6 @@
     import LL from "../../../i18n/i18n-svelte";
 
     let blockActive = true;
-    let reportActive = !blockActive;
     let disableReport = false;
     let userUUID: string | undefined = playersStore.getPlayerById(get(showReportScreenStore).userId)?.userUuid;
     let userName = "No name";
@@ -39,16 +38,6 @@
         showReportScreenStore.set(userReportEmpty);
     }
 
-    function activateBlock() {
-        blockActive = true;
-        reportActive = false;
-    }
-
-    function activateReport() {
-        blockActive = false;
-        reportActive = true;
-    }
-
     function onKeyDown(e: KeyboardEvent) {
         if (e.key === "Escape") {
             close();
@@ -67,24 +56,13 @@
         <button type="button" class="close-window" on:click|preventDefault={close}>&times;</button>
         <h2>{$LL.report.moderate.title({ userName })}</h2>
     </section>
-    <section class="report-menu-action {disableReport ? 'tw-hidden' : ''}">
-        <section class="tw-flex tw-justify-center">
-            <button type="button" class={blockActive ? "disabled" : "light"} on:click|preventDefault={activateBlock}
-                >{$LL.report.moderate.block()}</button
-            >
-        </section>
-        <section class="tw-flex tw-justify-center">
-            <button type="button" class={reportActive ? "disabled" : "light"} on:click|preventDefault={activateReport}
-                >{$LL.report.moderate.report()}</button
-            >
-        </section>
-    </section>
 
     <section>
         {#if blockActive}
             <BlockSubMenu {userUUID} {userName} />
-        {:else if reportActive}
-            <ReportSubMenu {userUUID} />
+            {#if !disableReport}
+                <ReportSubMenu {userUUID} {userName} />
+            {/if}
         {:else}
             <p>{$LL.report.moderate.noSelect()}</p>
         {/if}

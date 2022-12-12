@@ -19,7 +19,8 @@ export const isChatMessageTypes = z.nativeEnum(ChatMessageTypes);
 export const isChatMessage = z.object({
     type: isChatMessageTypes,
     date: z.date(),
-    author: z.optional(z.nullable(z.string())),
+    author: z.optional(z.nullable(z.any())),
+    name: z.optional(z.nullable(z.string())),
     targets: z.optional(z.nullable(z.array(z.nullable(z.string())))),
     text: z.optional(z.nullable(z.array(z.nullable(z.string())))),
 });

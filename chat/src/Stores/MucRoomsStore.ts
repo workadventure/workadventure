@@ -36,6 +36,9 @@ function createMucRoomsStore() {
         sendPresences() {
             [...get(this).values()].forEach((mucRoom) => mucRoom.sendPresence());
         },
+        sendUserInfos() {
+            [...get(this).values()].forEach((mucRoom) => mucRoom.sendUserInfo());
+        },
     };
 }
 export const mucRoomsStore = createMucRoomsStore();

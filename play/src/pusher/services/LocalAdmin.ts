@@ -1,12 +1,16 @@
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import type { AdminInterface } from "./AdminInterface";
 import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData } from "@workadventure/messages";
+import { OpidWokaNamePolicy } from "@workadventure/messages";
 import {
     DISABLE_ANONYMOUS,
     ENABLE_CHAT,
     ENABLE_CHAT_UPLOAD,
     PUBLIC_MAP_STORAGE_URL,
     START_ROOM_URL,
+    OPID_WOKA_NAME_POLICY,
+    ENABLE_CHAT_ONLINE_LIST,
+    ENABLE_CHAT_DISCONNECTED_LIST,
 } from "../enums/EnvironmentVariable";
 import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
@@ -77,6 +81,8 @@ class LocalAdmin implements AdminInterface {
             mapUrl = roomUrl.protocol + "//" + match[1];
         }
 
+        const opidWokaNamePolicyCheck = OpidWokaNamePolicy.safeParse(OPID_WOKA_NAME_POLICY);
+
         return Promise.resolve({
             mapUrl,
             canEdit,
@@ -87,6 +93,7 @@ class LocalAdmin implements AdminInterface {
             group: null,
             iframeAuthentication: null,
             opidLogoutRedirectUrl: null,
+            opidUsernamePolicy: opidWokaNamePolicyCheck.success ? opidWokaNamePolicyCheck.data : null,
             miniLogo: null,
             loadingLogo: null,
             loginSceneLogo: null,
@@ -94,6 +101,8 @@ class LocalAdmin implements AdminInterface {
             loadingCowebsiteLogo: null,
             enableChat: ENABLE_CHAT,
             enableChatUpload: ENABLE_CHAT_UPLOAD,
+            enableChatOnlineList: ENABLE_CHAT_ONLINE_LIST,
+            enableChatDisconnectedList: ENABLE_CHAT_DISCONNECTED_LIST,
             metatags: {
                 ...MetaTagsDefaultValue,
             },

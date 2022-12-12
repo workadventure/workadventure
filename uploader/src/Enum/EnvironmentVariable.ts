@@ -17,6 +17,8 @@ const REDIS_PASSWORD = process.env.REDIS_PASSWORD;
 const UPLOADER_URL = process.env.UPLOADER_URL;
 const CHAT_URL = process.env.CHAT_URL;
 
+export const ALLOWED_CORS_ORIGIN = process.env.ALLOWED_CORS_ORIGIN || CHAT_URL || "*";
+export const DEBUG_ERROR_MESSAGES = process.env.DEBUG_ERROR_MESSAGES || "";
 
 export {
     ENABLE_CHAT_UPLOAD,

@@ -70,7 +70,7 @@ export default defineConfig({
     },
     resolve: {
         alias: [
-            { find: 'events', replacement: 'rollup-plugin-node-polyfills/polyfills/events' },
+            { find: 'events', replacement: './node_modules/rollup-plugin-node-polyfills/polyfills/events.js' },
             { find: 'child_process', replacement: 'rollup-plugin-node-polyfills' },
             { find: 'path', replacement: 'rollup-plugin-node-polyfills/polyfills/path' },
         ],

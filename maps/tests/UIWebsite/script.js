@@ -2,9 +2,10 @@ WA.onInit().then(() => {
     initListeners();
 });
 
-function initListeners() {
+async function initListeners() {
     let first_website = undefined;
     let second_website = undefined;
+    let third_website = undefined;
 
     WA.room.onEnterLayer('first_website').subscribe(async () => {
         console.log("dfddf");
@@ -48,4 +49,18 @@ function initListeners() {
             second_website.close();
         }
     });
+
+    third_website = await WA.ui.website.open({
+        url: "https://www.wikipedia.org/",
+        position: {
+            vertical: "bottom",
+            horizontal: "left",
+        },
+        size: {
+            height: "20vh",
+            width: "50vw",
+        },
+    });
+    console.log(third_website);
+
 }

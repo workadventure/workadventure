@@ -5,10 +5,12 @@
         cameraListStore,
         localStreamStore,
         microphoneListStore,
+        speakerListStore,
         requestedCameraState,
         requestedMicrophoneState,
         silentStore,
         videoConstraintStore,
+        speakerSelectedStore,
     } from "../../Stores/MediaStore";
     import { ChevronDownIcon, ChevronUpIcon, CheckIcon } from "svelte-feather-icons";
     import cameraImg from "../images/camera.png";
@@ -44,7 +46,7 @@
         inviteUserActivated,
         SubMenusInterface,
         subMenusStore,
-        userIsConnected,
+        additionnalButtonsMenu,
     } from "../../Stores/MenuStore";
     import type { Emoji } from "../../Stores/EmoteStore";
     import {
@@ -58,7 +60,6 @@
     import LL from "../../../i18n/i18n-svelte";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
     import { fly } from "svelte/transition";
-    import { ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import { mapEditorModeStore } from "../../Stores/MapEditorStore";
@@ -71,14 +72,11 @@
     import Tooltip from "../Util/Tooltip.svelte";
     import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
     import {
-        modalIframeAllowApi,
-        modalIframeAllowlStore,
-        modalIframeSrcStore,
-        modalIframeTitlelStore,
-        //modalPositionStore,
+        modalIframeStore,
         modalVisibilityStore,
     } from "../../Stores/ModalStore";
     import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
+    import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -282,26 +280,26 @@
         window.open(`https://workadventu.re/admin`, "_blanck");
     }
 
-    function register() {
-        /*modalIframeTitlelStore.set($LL.menu.icon.open.register());
-        modalIframeAllowlStore.set("fullscreen");
-        modalIframeSrcStore.set(`https://workadventu.re/funnel/connection?roomUrl=${window.location.toString()}`);
-        modalPositionStore.set("center");
-        modalIframeAllowApi.set(true);
-        modalVisibilityStore.set(true);
+    /*function register() {
+        modalIframeStore.set(
+            {
+                src: https://workadventu.re/funnel/connection?roomUrl=${window.location.toString()},
+                allow: "fullscreen",
+                allowApi: true,
+                position: "center",
+                title: $LL.menu.icon.open.register()
+            }
+        );
 
-        resetMenuVisibility();
-        resetChatVisibility();*/
+        //resetMenuVisibility();
+        //resetChatVisibility();
 
         window.open("https://workadventu.re/getting-started", "_blank");
-    }
+    }*/
 
     function resetModalVisibility() {
         modalVisibilityStore.set(false);
-        modalIframeTitlelStore.set(null);
-        modalIframeAllowlStore.set(null);
-        modalIframeSrcStore.set(null);
-        modalIframeAllowApi.set(false);
+        modalIframeStore.set(null);
     }
 
     /*function resetMenuVisibility() {
@@ -327,6 +325,10 @@
         microphoneActive = false;
     }
 
+    function selectSpeaker(deviceId: string) {
+        speakerSelectedStore.set(deviceId);
+    }
+
     let subscribers = new Array<Unsubscriber>();
     let totalMessagesToSee = writable<number>(0);
     onMount(() => {
@@ -350,7 +352,13 @@
                 }
                 const audioTracks = stream.getAudioTracks();
                 if (audioTracks.length > 0) {
+                    // set first track
                     selectedMicrophone = audioTracks[0].getSettings().deviceId;
+
+                    // set default speaker selected
+                    if ($speakerListStore.length > 0) {
+                        speakerSelectedStore.set($speakerListStore[0].deviceId);
+                    }
                 }
             }
         } else {
@@ -361,6 +369,11 @@
     });
 
     const isMobile = isMediaBreakpointUp("md");
+
+    function buttonActionBarTrigger(id: string) {
+        const button = $additionnalButtonsMenu.get(id) as AddButtonActionBarEvent;
+        return iframeListener.sendButtonActionBarTriggered(button);
+    }
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -577,24 +590,48 @@
                                     {/if}
                                 </button>
 
-                                <!-- microphone list -->
                                 <div
                                     class={`wa-dropdown-menu ${microphoneActive ? "" : "tw-invisible"}`}
                                     style="bottom: 15px;right: 0;"
                                     on:mouseleave={() => (microphoneActive = false)}
                                 >
-                                    {#each $microphoneListStore as microphone}
-                                        <span
-                                            class="wa-dropdown-item"
-                                            on:click|stopPropagation|preventDefault={() =>
-                                                selectMicrophone(microphone.deviceId)}
+                                    {#if $microphoneListStore.length > 0}
+                                        <!-- microphone list -->
+                                        <span class="tw-underline tw-font-bold tw-text-xs tw-p-1"
+                                            >{$LL.actionbar.subtitle.microphone()} 🎙️</span
                                         >
-                                            {StringUtils.normalizeDeviceName(microphone.label)}
-                                            {#if selectedMicrophone === microphone.deviceId}
-                                                <CheckIcon size="13" />
-                                            {/if}
-                                        </span>
-                                    {/each}
+                                        {#each $microphoneListStore as microphone}
+                                            <span
+                                                class="wa-dropdown-item"
+                                                on:click|stopPropagation|preventDefault={() =>
+                                                    selectMicrophone(microphone.deviceId)}
+                                            >
+                                                {StringUtils.normalizeDeviceName(microphone.label)}
+                                                {#if selectedMicrophone === microphone.deviceId}
+                                                    <CheckIcon size="13" />
+                                                {/if}
+                                            </span>
+                                        {/each}
+                                    {/if}
+
+                                    <!-- speaker list -->
+                                    {#if $speakerSelectedStore != undefined && $speakerListStore.length > 0}
+                                        <span class="tw-underline tw-font-bold tw-text-xs tw-p-1"
+                                            >{$LL.actionbar.subtitle.speaker()} 🔈</span
+                                        >
+                                        {#each $speakerListStore as speaker}
+                                            <span
+                                                class="wa-dropdown-item"
+                                                on:click|stopPropagation|preventDefault={() =>
+                                                    selectSpeaker(speaker.deviceId)}
+                                            >
+                                                {StringUtils.normalizeDeviceName(speaker.label)}
+                                                {#if $speakerSelectedStore === speaker.deviceId}
+                                                    <CheckIcon size="13" />
+                                                {/if}
+                                            </span>
+                                        {/each}
+                                    {/if}
                                 </div>
                             {/if}
                         </div>
@@ -700,7 +737,9 @@
                 </div>
             {/if}
 
-            {#if ENABLE_OPENID && !$userIsConnected}
+            <!-- TODO button must displayed by scripting API -->
+            <!--
+            {#if ENABLE_OPENID && !$userIsConnected && }
                 <div
                     class="bottom-action-section tw-flex tw-flex-initial"
                     in:fly={{}}
@@ -717,6 +756,21 @@
                     </button>
                 </div>
             {/if}
+            -->
+            {#each [...$additionnalButtonsMenu.values()] as button}
+                <div
+                    class="bottom-action-section tw-flex tw-flex-initial"
+                    in:fly={{}}
+                    on:dragstart|preventDefault={noDrag}
+                    on:click={() => {
+                        buttonActionBarTrigger(button.id);
+                    }}
+                >
+                    <button class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base" id={button.id}>
+                        {button.label}
+                    </button>
+                </div>
+            {/each}
         </div>
     </div>
 </div>
@@ -788,6 +842,7 @@
         </div>
     </div>
 {/if}
+F
 
 <style lang="scss">
     @import "../../style/breakpoints.scss";

@@ -8,6 +8,8 @@ import {
     chatPeerConnectionInProgress,
     chatSoundsStore,
     enableChat,
+    enableChatOnlineListStore,
+    enableChatDisconnectedListStore,
     enableChatUpload,
     newChatMessageSubject,
     newChatMessageWritingStatusSubject,
@@ -41,6 +43,8 @@ class IframeListener {
                             chatNotificationsStore.set(iframeEvent.data.notification);
                             enableChat.set(iframeEvent.data.enableChat);
                             enableChatUpload.set(iframeEvent.data.enableChatUpload);
+                            enableChatOnlineListStore.set(iframeEvent.data.enableChatOnlineList);
+                            enableChatDisconnectedListStore.set(iframeEvent.data.enableChatDisconnectedList);
                             break;
                         }
                         case "xmppSettingsMessage": {
@@ -50,14 +54,13 @@ class IframeListener {
                         case "userData": {
                             iframeEvent.data.name = iframeEvent.data.name.replace(emojiRegex, "");
                             userStore.set(iframeEvent.data);
-                            if (!chatConnectionManager.connection) {
-                                chatConnectionManager.initUser(
-                                    iframeEvent.data.playUri,
-                                    iframeEvent.data.uuid,
-                                    iframeEvent.data.authToken
-                                );
-                            } else {
-                                mucRoomsStore.sendPresences();
+                            chatConnectionManager.initUser(
+                                iframeEvent.data.playUri,
+                                iframeEvent.data.uuid,
+                                iframeEvent.data.authToken
+                            );
+                            if (chatConnectionManager.connection) {
+                                mucRoomsStore.sendUserInfos();
                             }
                             break;
                         }
@@ -89,41 +92,34 @@ class IframeListener {
                             break;
                         }
                         case "addChatMessage": {
-                            if (iframeEvent.data.author == undefined || iframeEvent.data.text == undefined) {
+                            if (iframeEvent.data.text == undefined) {
                                 break;
                             }
                             const mucRoomDefault = mucRoomsStore.getDefaultRoom();
-                            if (mucRoomDefault) {
-                                let userData = undefined;
-                                try {
-                                    userData = mucRoomDefault.getUserByJid(iframeEvent.data.author);
-                                } finally {
-                                    // Nothing to do
-                                }
-                                for (const chatMessageText of iframeEvent.data.text) {
-                                    chatMessagesStore.addExternalMessage(
-                                        userData,
-                                        chatMessageText,
-                                        userData ? undefined : iframeEvent.data.author
-                                    );
-                                }
+                            let userData = undefined;
+                            if (mucRoomDefault && iframeEvent.data.author.jid !== "fake") {
+                                userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
+                            } else {
+                                userData = iframeEvent.data.author;
+                            }
+                            for (const chatMessageText of iframeEvent.data.text) {
+                                chatMessagesStore.addExternalMessage(userData, chatMessageText, userData.name);
                             }
                             break;
                         }
                         case "comingUser": {
-                            for (const target of iframeEvent.data.targets) {
-                                const mucRoomDefault = mucRoomsStore.getDefaultRoom();
-                                if (mucRoomDefault) {
-                                    const userData = mucRoomDefault.getUserByJid(target);
-                                    if (userData) {
-                                        if (ChatMessageTypes.userIncoming === iframeEvent.data.type) {
-                                            chatMessagesStore.addIncomingUser(userData);
-                                        }
-                                        if (ChatMessageTypes.userOutcoming === iframeEvent.data.type) {
-                                            chatMessagesStore.addOutcomingUser(userData);
-                                        }
-                                    }
-                                }
+                            const mucRoomDefault = mucRoomsStore.getDefaultRoom();
+                            let userData = undefined;
+                            if (mucRoomDefault && iframeEvent.data.author.jid !== "fake") {
+                                userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
+                            } else {
+                                userData = iframeEvent.data.author;
+                            }
+                            if (ChatMessageTypes.userIncoming === iframeEvent.data.type) {
+                                chatMessagesStore.addIncomingUser(userData);
+                            }
+                            if (ChatMessageTypes.userOutcoming === iframeEvent.data.type) {
+                                chatMessagesStore.addOutcomingUser(userData);
                             }
                             break;
                         }
@@ -250,6 +246,15 @@ class IframeListener {
             {
                 type: "chatTotalMessagesToSee",
                 data: total,
+            },
+            "*"
+        );
+    }
+
+    sendChatIsReady() {
+        window.parent.postMessage(
+            {
+                type: "chatReady",
             },
             "*"
         );

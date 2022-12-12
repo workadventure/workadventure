@@ -359,16 +359,17 @@ message GroupDeleteMessage {
 
 message UserJoinedMessage {
   int32 userId = 1;
-  string name = 2;
-  repeated CharacterLayerMessage characterLayers = 3;
-  PositionMessage position = 4;
-  CompanionMessage companion = 5;
-  string visitCardUrl = 6;
-  string userUuid = 7;
-  uint32 outlineColor = 8;
-  bool hasOutline = 9;
-  AvailabilityStatus availabilityStatus = 10;
-  map<string, string> variables = 11;
+  string userJid = 2;
+  string name = 3;
+  repeated CharacterLayerMessage characterLayers = 4;
+  PositionMessage position = 5;
+  CompanionMessage companion = 6;
+  string visitCardUrl = 7;
+  string userUuid = 8;
+  uint32 outlineColor = 9;
+  bool hasOutline = 10;
+  AvailabilityStatus availabilityStatus = 11;
+  map<string, string> variables = 12;
 }
 
 message UserLeftMessage {
@@ -421,6 +422,7 @@ message RoomJoinedMessage {
   bool activatedInviteUser = 9;
   repeated VariableMessage playerVariable = 10;
   repeated ApplicationMessage applications = 11;
+  string userJid = 12;
 }
 
 message WebRtcStartMessage {
@@ -484,6 +486,7 @@ message AskPositionMessage{
   string playUri = 2;
 }
 
+
 /**
  * Messages going from back and pusher to the front
  */
@@ -536,21 +539,23 @@ message JoinRoomMessage {
   bool activatedInviteUser = 12;
   bool isLogged = 13;
   repeated ApplicationMessage applications = 14;
+  string userJid = 15;
 }
 
 message UserJoinedZoneMessage {
   int32 userId = 1;
-  string name = 2;
-  repeated CharacterLayerMessage characterLayers = 3;
-  PositionMessage position = 4;
-  Zone fromZone = 5;
-  CompanionMessage companion = 6;
-  string visitCardUrl = 7;
-  string userUuid = 8;
-  uint32 outlineColor = 9;
-  bool hasOutline = 10;
-  AvailabilityStatus availabilityStatus = 11;
-  map<string, string> variables = 12;
+  string userJid = 2;
+  string name = 3;
+  repeated CharacterLayerMessage characterLayers = 4;
+  PositionMessage position = 5;
+  Zone fromZone = 6;
+  CompanionMessage companion = 7;
+  string visitCardUrl = 8;
+  string userUuid = 9;
+  uint32 outlineColor = 10;
+  bool hasOutline = 11;
+  AvailabilityStatus availabilityStatus = 12;
+  map<string, string> variables = 13;
 }
 
 message UserLeftZoneMessage {

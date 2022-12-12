@@ -3,40 +3,49 @@ import { gameManager } from "../Game/GameManager";
 import { ResizableScene } from "./ResizableScene";
 import { EnableCameraSceneName } from "./EnableCameraScene";
 import { localUserStore } from "../../Connexion/LocalUserStore";
-import type { CompanionResourceDescriptionInterface } from "../Companion/CompanionTextures";
-import { getAllCompanionResources } from "../Companion/CompanionTexturesLoadingManager";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
 import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+import { CompanionTexture, CompanionCollectionList } from "@workadventure/messages";
+import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
+import { companionListMetakey, CompanionTexturesLoadingManager } from "../Companion/CompanionTexturesLoadingManager";
 
 export const SelectCompanionSceneName = "SelectCompanionScene";
 
 export class SelectCompanionScene extends ResizableScene {
     private selectedCompanion!: Phaser.Physics.Arcade.Sprite;
     private companions: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
-    private companionModels: Array<CompanionResourceDescriptionInterface> = [];
-    private saveZoom = 0;
+    private companionModels: Array<CompanionTexture> = [];
 
     private currentCompanion = 0;
     private pointerClicked = false;
     private pointerTimer = 0;
     private loader: Loader;
+    protected superLoad: SuperLoaderPlugin;
 
     constructor() {
         super({
             key: SelectCompanionSceneName,
         });
         this.loader = new Loader(this);
+        this.superLoad = new SuperLoaderPlugin(this);
     }
 
     preload() {
-        getAllCompanionResources(this.load).forEach((model) => {
-            this.companionModels.push(model);
-        });
+        this.cache.json.remove(companionListMetakey());
 
-        //this function must stay at the end of preload function
+        const companionLoadingManager = new CompanionTexturesLoadingManager(this.superLoad, this.load);
+
+        companionLoadingManager.loadTextures((collections: CompanionCollectionList) => {
+            collections.forEach((list) => {
+                list.textures.forEach((texture) => {
+                    this.companionModels.push(texture);
+                    companionLoadingManager.loadByTexture(texture);
+                });
+            });
+        });
         this.loader.addLoader();
     }
 

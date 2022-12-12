@@ -248,26 +248,18 @@ function createAudioConstraintStore() {
         echoCancellation: true,
         noiseSuppression: true,
     } as boolean | MediaTrackConstraints);
-
-    let selectedDeviceId = null;
-
     return {
         subscribe,
         setDeviceId: (deviceId: string | undefined) =>
             update((constraints) => {
-                selectedDeviceId = deviceId;
-
                 if (typeof constraints === "boolean") {
                     constraints = {};
                 }
-                if (deviceId !== undefined) {
-                    constraints.deviceId = {
-                        exact: selectedDeviceId,
-                    };
+                if (deviceId !== undefined && navigator.mediaDevices.getSupportedConstraints().deviceId === true) {
+                    constraints.deviceId = { exact: deviceId };
                 } else {
                     delete constraints.deviceId;
                 }
-
                 return constraints;
             }),
     };
@@ -569,10 +561,21 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
         }
 
         (async () => {
-            await applyMicrophoneConstraints(currentStream, constraints.audio || false).catch((e) => console.error(e));
-            await applyCameraConstraints(currentStream, constraints.video || false).catch((e) => console.error(e));
+            let applyNewConstraintSuccess = true;
+            try {
+                await applyMicrophoneConstraints(currentStream, constraints.audio || false);
+            } catch (err) {
+                console.error("applyMicrophoneConstraints => error :", err);
+                applyNewConstraintSuccess = false;
+            }
+            try {
+                await applyCameraConstraints(currentStream, constraints.video || false);
+            } catch (err) {
+                console.error("applyCameraConstraints => error :", err);
+                applyNewConstraintSuccess = false;
+            }
 
-            if (implementCorrectTrackBehavior) {
+            if (implementCorrectTrackBehavior && applyNewConstraintSuccess) {
                 //on good navigators like firefox, we can instantiate the stream once and simply disable or enable the tracks as needed
                 if (currentStream === null) {
                     initStream(constraints).catch((e) => {
@@ -601,7 +604,9 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                 } //we reemit the stream if it was muted just to be sure
                 else if (
                     constraints.audio /* && !oldConstraints.audio*/ ||
-                    (!oldConstraints.video && constraints.video)
+                    (!oldConstraints.video && constraints.video) ||
+                    !deepEqual(oldConstraints.audio, constraints.audio) ||
+                    !deepEqual(oldConstraints.video, constraints.video)
                 ) {
                     initStream(constraints).catch((e) => {
                         set({
@@ -734,6 +739,19 @@ export const cameraListStore = derived(deviceListStore, ($deviceListStore) => {
 export const microphoneListStore = derived(deviceListStore, ($deviceListStore) => {
     return $deviceListStore.filter((device) => device.kind === "audioinput");
 });
+
+export const speakerListStore = derived(deviceListStore, ($deviceListStore) => {
+    const audiooutput = $deviceListStore.filter((device) => device.kind === "audiooutput");
+    // if the previous speaker used isn`t defined in the list, apply default speaker
+    const value = audiooutput.find((device) => device.deviceId === get(speakerSelectedStore));
+    if (value == undefined && audiooutput.length > 0) {
+        speakerSelectedStore.set(audiooutput[0].deviceId);
+    } else {
+        speakerSelectedStore.set(undefined);
+    }
+    return audiooutput;
+});
+export const speakerSelectedStore = writable<string | undefined>();
 
 function isConstrainDOMStringParameters(param: ConstrainDOMString): param is ConstrainDOMStringParameters {
     return (

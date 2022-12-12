@@ -146,7 +146,6 @@
             />
         </div>
         <section class="audio-manager-file">
-            <!-- svelte-ignore a11y-media-has-caption -->
             <audio class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer} />
         </section>
     </div>
