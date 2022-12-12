@@ -3,8 +3,11 @@ import {
     JitsiRoomPropertyData,
     OpenTabPropertyData,
     PlayAudioPropertyData,
+    GameMapProperties
 } from "@workadventure/map-editor";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
+import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
+import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { get, Unsubscriber } from "svelte/store";
 import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
 import {
@@ -280,10 +283,22 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                             protected: true,
                             priority: 1,
                             callback: () => {
-                                this.emit(EntityEvent.PropertySet, {
-                                    propertyName: key,
-                                    propertyValue: propertyData.link,
-                                });
+                                if(propertyData.inNewTab)
+                                {
+                                    this.emit(EntityEvent.PropertySet, {
+                                        propertyName: key,
+                                        propertyValue: propertyData.link,
+                                    });
+                                }
+                                else{
+                                    const coWebsite = new SimpleCoWebsite(
+                                        new URL(propertyData.link)
+                                    );
+                                    coWebsiteManager.addCoWebsiteToStore(coWebsite, undefined);
+                                    coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
+                                        console.error("Error during loading a co-website: " + coWebsite.getUrl());
+                                    });
+                                }
                             },
                         });
                         break;

@@ -50,11 +50,11 @@
     <div class="side-bar">
         <div class="tool-button">
             <!-- <Tooltip text={$LL.mapEditor.sideBar.zoomIn()} /> --><!--do not work yet-->
-            <button on:click|preventDefault={zoomIn} type="button"><img src={ZoomInImg} alt={$LL.mapEditor.zoomIn()} /></button>
+            <button on:click|preventDefault={zoomIn} type="button"><img src={ZoomInImg} alt={$LL.mapEditor.sideBar.zoomIn()} /></button>
         </div>
         <div class="tool-button">
             <!-- <Tooltip text={$LL.mapEditor.sideBar.zoomOut()} /> --><!--do not work yet-->
-            <button on:click|preventDefault={zoomOut} type="button"><img src={ZoomOutImg} alt={$LL.mapEditor.zoomOut()} /></button>
+            <button on:click|preventDefault={zoomOut} type="button"><img src={ZoomOutImg} alt={$LL.mapEditor.sideBar.zoomOut()} /></button>
         </div>
         {#each availableTools as tool (tool.toolName)}
             <div class="tool-button">
