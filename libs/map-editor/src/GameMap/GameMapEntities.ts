@@ -51,11 +51,9 @@ export class GameMapEntities {
         if (!entity) {
             throw new Error(`Entity of id: ${id} does not exists!`);
         }
-        if (config.properties) {
-            _.merge(entity, config);
-        }
+        _.merge(entity, config);
+        this.updateEntityInMapProperties(entity);
         return entity;
-        // TODO: Update entities saved in the map file
     }
 
     private addEntityToMapProperties(entityData: EntityData): boolean {
@@ -98,6 +96,26 @@ export class GameMapEntities {
             } else {
                 return false;
             }
+        }
+        return false;
+    }
+
+    private updateEntityInMapProperties(entityData: EntityData): boolean {
+        const entitiesPropertyValues = JSON.parse(JSON.stringify(this.getEntitiesMapProperty()?.value)) as EntityData[];
+
+        const entityIndex = entitiesPropertyValues.findIndex(entity => entity.id === entityData.id);
+
+        if (entityIndex === -1) {
+            console.warn(`CANNOT FIND ENTITY WITH ID: ${entityData.id} IN MAP PROPERTIES!`);
+            return false;
+        }
+
+        const entitiesMapProperty = this.getEntitiesMapProperty();
+        if (entitiesMapProperty !== undefined) {
+            entitiesPropertyValues[entityIndex] = entityData;
+            console.log(entityData.x, entityData.y);
+            entitiesMapProperty.value = JSON.parse(JSON.stringify(entitiesPropertyValues));
+            return true;
         }
         return false;
     }
