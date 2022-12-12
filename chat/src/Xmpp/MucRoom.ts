@@ -19,7 +19,7 @@ import { ParsedJID } from "stanza/JID";
 import { ChatStateMessage, JID } from "stanza";
 import { ChatState, MUCAffiliation } from "stanza/Constants";
 import { Message } from "../Model/Message";
-import { SearchableArrayStore } from "../Stores/Utils/SearchableArrayStore";
+import { SearchableArrayStore } from "@workadventure/store-utils";
 
 const _VERBOSE = true;
 

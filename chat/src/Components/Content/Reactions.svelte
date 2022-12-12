@@ -1,6 +1,6 @@
 <script lang="ts">
     import { MucRoom } from "../../Xmpp/MucRoom";
-    import { MapStore } from "../../Stores/Utils/MapStore";
+    import { MapStore } from "@workadventure/store-utils";
     import { get, Readable } from "svelte/store";
     import { JID } from "stanza";
 

@@ -1,5 +1,5 @@
 import { Readable } from "svelte/types/runtime/store";
-import { MapStore } from "../Stores/Utils/MapStore";
+import { MapStore } from "@workadventure/store-utils";
 import { WaLink } from "../Xmpp/Lib/Plugin";
 import { MessageType, ReplyMessage, User } from "../Xmpp/AbstractRoom";
 import { get, Writable, writable } from "svelte/store";

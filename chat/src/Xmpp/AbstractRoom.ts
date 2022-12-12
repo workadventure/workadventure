@@ -7,7 +7,7 @@ import { ChatStateMessage, JID } from "stanza";
 import { WaLink, WaReceivedReactions } from "./Lib/Plugin";
 import { ChatState } from "stanza/Constants";
 import Timeout = NodeJS.Timeout;
-import { SearchableArrayStore } from "../Stores/Utils/SearchableArrayStore";
+import { SearchableArrayStore } from "@workadventure/store-utils";
 import { Message } from "../Model/Message";
 
 export type User = {
