@@ -166,11 +166,11 @@
     <section class="tw-p-0 tw-m-0">
         {#if $showPart === "activeTimeline"}
             <ChatActiveThreadTimeLine on:unactiveThreadTimeLine={() => timelineActiveStore.set(false)} />
-        {:else if $showPart === "activeThread" && $showPart !== "connectionNotAuthorized" || $showPart !== "loading"}
+        {:else if $showPart === "activeThread" && !["connectionNotAuthorized", "loading"].includes($showPart)}
             {#if $activeThreadStore !== undefined}
                 <ChatActiveThread activeThread={$activeThreadStore} />
             {/if}
-        {:else if $showPart === "home" || $showPart === "connectionNotAuthorized" || $showPart === "loading"}
+        {:else if ["home", "connectionNotAuthorized", "loading"].includes($showPart)}
             <div class="wa-message-bg tw-pt-3">
                 {#if $showPart === "connectionNotAuthorized"}
                     <NeedRefresh />
