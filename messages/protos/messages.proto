@@ -188,6 +188,7 @@ message ModifyEntityMessage {
   int32 id = 1;
   optional uint32 x = 2;
   optional uint32 y = 3;
+  map<string, google.protobuf.Value> properties = 4;
 }
 
 message ClientToServerMessage {

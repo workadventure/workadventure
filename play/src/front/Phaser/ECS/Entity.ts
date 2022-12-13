@@ -23,7 +23,8 @@ import { OutlineableInterface } from "../Game/OutlineableInterface";
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
     Remove = "EntityEvent:Removed",
-    PropertySet = "EntityEvent:PropertySet",
+    PropertiesUpdated = "EntityEvent:PropertiesUpdated",
+    PropertyActivated = "EntityEvent:PropertyActivated",
 }
 
 // NOTE: Tiles-based entity for now. Individual images later on
@@ -260,7 +261,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                             protected: true,
                             priority: 1,
                             callback: () => {
-                                this.emit(EntityEvent.PropertySet, {
+                                this.emit(EntityEvent.PropertyActivated, {
                                     propertyName: key,
                                     propertyValue: propertyData.roomName,
                                 });
@@ -275,7 +276,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                             protected: true,
                             priority: 1,
                             callback: () => {
-                                this.emit(EntityEvent.PropertySet, {
+                                this.emit(EntityEvent.PropertyActivated, {
                                     propertyName: key,
                                     propertyValue: propertyData.audioLink,
                                 });
@@ -292,7 +293,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                             callback: () => {
                                 if(propertyData.inNewTab)
                                 {
-                                    this.emit(EntityEvent.PropertySet, {
+                                    this.emit(EntityEvent.PropertyActivated, {
                                         propertyName: key,
                                         propertyValue: propertyData.link,
                                     });
@@ -335,5 +336,14 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     public getEntityData(): Required<EntityData> {
         return this.entityData;
+    }
+
+    public getProperties(): { [key: string]: unknown | undefined } {
+        return this.entityData.properties;
+    }
+
+    public setProperty(key: string, value: unknown): void {
+        this.entityData.properties[key] = value;
+        this.emit(EntityEvent.PropertiesUpdated);
     }
 }

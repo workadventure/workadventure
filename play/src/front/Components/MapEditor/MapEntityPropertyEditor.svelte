@@ -47,8 +47,8 @@
     let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((currentEntity) => {
         if (currentEntity) {
             for (let property of possibleProperties) {
-                property.active = currentEntity.getEntityData().properties?.[property.key] !== undefined;
-                property.currentValue = currentEntity.getEntityData().properties?.[property.key];
+                property.active = currentEntity.getProperties()[property.key] !== undefined;
+                property.currentValue = currentEntity.getProperties()[property.key];
                 if (!property.currentValue) {
                     property.currentValue = structuredClone(property.defaultValue);
                 }
@@ -63,26 +63,20 @@
 
     function onPropertyChecked(property: EntityPropertyDescription) {
         if ($mapEditorSelectedEntityStore) {
-            const entityDataProperties = $mapEditorSelectedEntityStore.getEntityData().properties;
-            if (!entityDataProperties) {
-                return;
-            }
             if (property.active) {
                 if (!property.currentValue) {
                     property.currentValue = possibleProperties.find((v) => v.key === property.key)?.defaultValue; //initialize here the property value
                 }
-
-                entityDataProperties[property.key] = property.currentValue;
+                $mapEditorSelectedEntityStore.setProperty(property.key, property.currentValue);
             } else {
-                entityDataProperties[property.key] = undefined;
+                $mapEditorSelectedEntityStore.setProperty(property.key, undefined);
             }
         }
     }
 
     function onUpdateProperty(property: EntityPropertyDescription) {
         if ($mapEditorSelectedEntityStore) {
-            const entityDataProperties = $mapEditorSelectedEntityStore.getEntityData().properties;
-            entityDataProperties[property.key] = property.currentValue;
+            $mapEditorSelectedEntityStore.setProperty(property.key, property.currentValue);
         }
     }
 

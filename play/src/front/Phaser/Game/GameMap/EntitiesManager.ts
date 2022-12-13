@@ -125,10 +125,17 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         });
         // get the type! Switch to rxjs?
         entity.on(
-            EntityEvent.PropertySet,
+            EntityEvent.PropertyActivated,
             (data: { propertyName: string; propertyValue: string | number | boolean }) => {
                 this.properties.set(data.propertyName, data.propertyValue);
                 this.gameMapFrontWrapper.handleEntityActionTrigger();
+            }
+        );
+        entity.on(
+            EntityEvent.PropertiesUpdated,
+            () => {
+                const entityData = structuredClone(entity.getEntityData());
+                this.emit(EntitiesManagerEvent.UpdateEntity, entityData);
             }
         );
         entity.on(Phaser.Input.Events.POINTER_OVER, () => {
