@@ -267,19 +267,6 @@ export class CustomizeScene extends AbstractCharacterScene {
             )
         }
         this.bodyPartsButtons = tempBodyPartsObject;
-        // this.bodyPartsButtons = {
-        //     [CustomWokaBodyPart.Accessory]: new IconButton(
-        //         this,
-        //         0,
-        //         0,
-        //         this.getDefaultIconButtonConfig("iconAccessory")
-        //     ),
-        //     [CustomWokaBodyPart.Body]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconBody")),
-        //     [CustomWokaBodyPart.Clothes]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconClothes")),
-        //     [CustomWokaBodyPart.Eyes]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconEyes", 0.7)),
-        //     [CustomWokaBodyPart.Hair]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconHair")),
-        //     [CustomWokaBodyPart.Hat]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconHat")),
-        // };
     }
 
     private getDefaultIconButtonConfig(iconTextureKey: string, iconScale?: number): IconButtonConfig {
