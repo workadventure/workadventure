@@ -3,12 +3,21 @@
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
     import { createEventDispatcher } from "svelte";
     import { JitsiRoomPropertyData } from "@workadventure/map-editor";
+    import JitsiRoomConfigEditor from "./JitsiRoomConfigEditor.svelte";
 
     export let property: JitsiRoomPropertyData;
 
     const dispatch = createEventDispatcher();
 
     function onValueChange() {
+        dispatch("change");
+    }
+
+    let jitsiConfigModalOpened :boolean = false;
+
+    function onConfigChange(event:any)
+    {
+        property.jitsiRoomConfig = event.detail;
         dispatch("change");
     }
 </script>
@@ -36,6 +45,10 @@
         on:blur={onMapEditorInputUnfocus}
     />
 </div>
+<button on:click={()=>{jitsiConfigModalOpened = true}}>{$LL.mapEditor.entityEditor.jitsiProperties.moreOptionsLabel()}</button>
+{#if jitsiConfigModalOpened}
+    <JitsiRoomConfigEditor bind:visibilityValue={jitsiConfigModalOpened} on:change={onConfigChange} bind:config={property.jitsiRoomConfig}></JitsiRoomConfigEditor>
+{/if}
 
 <style lang="scss">
     .value-input {
@@ -55,5 +68,14 @@
         * {
             margin-bottom: 0;
         }
+    }
+
+    button {
+        flex: 1 1 0px;
+        border: 1px solid grey;
+        margin-bottom: 0.5em;
+    }
+    button:hover {
+        background-color: rgb(77 75 103);
     }
 </style>

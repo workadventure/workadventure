@@ -25,6 +25,12 @@ const mapEditor: BaseTranslation = {
             roomNameLabel:"Room Name",
             roomNamePlaceholder:"Room Name",
             defaultButtonLabel :"Open Jitsi Room",
+            audioMutedLabel :"Muted by default",
+            moreOptionsLabel:"More Options",
+            jitsiRoomConfig:{
+                startWithAudioMuted:"Start with microphone muted",
+                startWithVideoMuted:"Start with video closed"
+            }
         },
         audioProperties:{
             label:"Play Audio File",

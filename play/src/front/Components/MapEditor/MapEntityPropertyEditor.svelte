@@ -13,7 +13,7 @@
         name: string;
         active: boolean;
         currentValue: unknown;
-        component: unknown;
+        component: any;
         defaultValue: unknown;
     }
 

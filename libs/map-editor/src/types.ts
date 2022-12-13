@@ -67,7 +67,14 @@ export interface ActionsMenuData {
 
 export interface JitsiRoomPropertyData extends ActionsMenuData {
     roomName: string;
+    jitsiRoomConfig:JitsiRoomConfigData;
 }
+
+export interface JitsiRoomConfigData {
+    startWithAudioMuted?:boolean;
+    startWithVideoMuted?:boolean;
+}
+
 export interface PlayAudioPropertyData extends ActionsMenuData {
     audioLink: string;
 }

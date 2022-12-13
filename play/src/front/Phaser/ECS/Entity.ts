@@ -249,6 +249,9 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                                 this.emit(EntityEvent.PropertySet, {
                                     propertyName: key,
                                     propertyValue: propertyData.roomName,
+                                },{
+                                    propertyName: GameMapProperties.JITSI_CONFIG,
+                                    propertyValue: JSON.stringify(propertyData.jitsiRoomConfig)
                                 });
                             },
                         });

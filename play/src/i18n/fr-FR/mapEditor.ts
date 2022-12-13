@@ -26,6 +26,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             roomNameLabel:"Nom de Salle",
             roomNamePlaceholder:"Nom de la Salle",
             defaultButtonLabel :"Ouvrir la salle Jitsi",
+            audioMutedLabel :"Sourdine par défaut",
+            moreOptionsLabel:"Plus d'options",
+            jitsiRoomConfig:{
+                startWithAudioMuted:"Démarrer avec le microphone coupé",
+                startWithVideoMuted:"Démarrer avec la vidéo coupée"
+            }
         },
         audioProperties:{
             label:"Jouer un fichier audio",
