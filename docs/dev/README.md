@@ -16,6 +16,7 @@ Check out the [contributing guide](../../CONTRIBUTING.md)
 
 - [WorkAdventure containers explained](communication-between-services.md)
 - [OpenID configuration](openid.md)
+- [Chat configuration](chat.md)
 
 ## Front documentation
 
