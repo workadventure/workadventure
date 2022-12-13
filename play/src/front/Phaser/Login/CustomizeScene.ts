@@ -10,12 +10,12 @@ import { SelectCharacterSceneName } from "./SelectCharacterScene";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
+import type { CustomWokaPreviewerConfig } from "../Components/CustomizeWoka/CustomWokaPreviewer";
 import {
     CustomWokaBodyPart,
     CustomWokaBodyPartOrder,
     CustomWokaPreviewer,
 } from "../Components/CustomizeWoka/CustomWokaPreviewer";
-import type { CustomWokaPreviewerConfig } from "../Components/CustomizeWoka/CustomWokaPreviewer";
 import { DraggableGrid } from "@home-based-studio/phaser3-utils";
 import type { WokaBodyPartSlotConfig } from "../Components/CustomizeWoka/WokaBodyPartSlot";
 import { WokaBodyPartSlot } from "../Components/CustomizeWoka/WokaBodyPartSlot";
@@ -347,27 +347,31 @@ export class CustomizeScene extends AbstractCharacterScene {
         let i = 0;
         for (const layerItem of this.selectedLayers) {
             const bodyPart = CustomWokaBodyPart[CustomWokaBodyPartOrder[i] as CustomWokaBodyPart];
+            if (this.layers[i][layerItem] === undefined) {
+                continue;
+            }
             this.customWokaPreviewer.updateSprite(this.layers[i][layerItem].id, bodyPart);
             i += 1;
         }
     }
 
     private getCurrentlySelectedWokaTexturesRecord(): Record<CustomWokaBodyPart, string> {
-        return {
-            [CustomWokaBodyPart.Accessory]:
-                this.layers[CustomWokaBodyPartOrder.Accessory][this.selectedLayers[CustomWokaBodyPartOrder.Accessory]]
-                    .id,
-            [CustomWokaBodyPart.Body]:
-                this.layers[CustomWokaBodyPartOrder.Body][this.selectedLayers[CustomWokaBodyPartOrder.Body]].id,
-            [CustomWokaBodyPart.Clothes]:
-                this.layers[CustomWokaBodyPartOrder.Clothes][this.selectedLayers[CustomWokaBodyPartOrder.Clothes]].id,
-            [CustomWokaBodyPart.Eyes]:
-                this.layers[CustomWokaBodyPartOrder.Eyes][this.selectedLayers[CustomWokaBodyPartOrder.Eyes]].id,
-            [CustomWokaBodyPart.Hair]:
-                this.layers[CustomWokaBodyPartOrder.Hair][this.selectedLayers[CustomWokaBodyPartOrder.Hair]].id,
-            [CustomWokaBodyPart.Hat]:
-                this.layers[CustomWokaBodyPartOrder.Hat][this.selectedLayers[CustomWokaBodyPartOrder.Hat]].id,
-        };
+        const currentlySelectedWokaTexturesRecordObject: Record<string, string> = {};
+
+        for (const value in CustomWokaBodyPart) {
+            if (
+                this.layers[CustomWokaBodyPartOrder[value as keyof typeof CustomWokaBodyPartOrder]][
+                    this.selectedLayers[CustomWokaBodyPartOrder[value as keyof typeof CustomWokaBodyPartOrder]]
+                ] === undefined
+            ) {
+                continue;
+            }
+            currentlySelectedWokaTexturesRecordObject[value] =
+                this.layers[CustomWokaBodyPartOrder[value as keyof typeof CustomWokaBodyPartOrder]][
+                    this.selectedLayers[CustomWokaBodyPartOrder[value as keyof typeof CustomWokaBodyPartOrder]]
+                ].id;
+        }
+        return currentlySelectedWokaTexturesRecordObject;
     }
 
     private handleCustomWokaPreviewerOnResize(): void {
