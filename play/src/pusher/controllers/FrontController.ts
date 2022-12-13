@@ -29,7 +29,7 @@ export class FrontController extends BaseHttpController {
         // Pre-parse the index file for speed (and validation)
         Mustache.parse(this.indexFile);
 
-        this.script = "window.env = " + JSON.stringify(FRONT_ENVIRONMENT_VARIABLES);
+        this.script = "globalThis.env = " + JSON.stringify(FRONT_ENVIRONMENT_VARIABLES);
     }
 
     routes(): void {

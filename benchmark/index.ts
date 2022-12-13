@@ -1,11 +1,66 @@
+declare global {
+    var env: FrontConfigurationInterface;
+}
+
+globalThis.env = {
+    ADMIN_URL: undefined,
+    CHAT_URL: "http://chat.workadventure.localhost",
+    CONTACT_URL: undefined,
+    DEBUG_MODE: false,
+    DISABLE_ANONYMOUS: false,
+    DISABLE_NOTIFICATIONS: false,
+    ENABLE_CHAT_UPLOAD: false,
+    ENABLE_FEATURE_MAP_EDITOR: false,
+    ENABLE_OPENID: false,
+    FALLBACK_LOCALE: undefined,
+    ICON_URL: "http://icon.workadventure.localhost",
+    JITSI_PRIVATE_MODE: false,
+    JITSI_URL: undefined,
+    MAX_PER_GROUP: 0,
+    MAX_USERNAME_LENGTH: 0,
+    NODE_ENV: "prod",
+    OPID_LOGOUT_REDIRECT_URL: undefined,
+    OPID_PROFILE_SCREEN_PROVIDER: undefined,
+    OPID_WOKA_NAME_POLICY: undefined,
+    POSTHOG_API_KEY: undefined,
+    POSTHOG_URL: undefined,
+    PUSHER_URL: "http://pusher.workadventure.localhost",
+    SKIP_RENDER_OPTIMIZATIONS: false,
+    STUN_SERVER: undefined,
+    TURN_PASSWORD: undefined,
+    TURN_SERVER: undefined,
+    TURN_USER: undefined,
+    UPLOADER_URL: "http://uploader.workadventure.localhost"
+};
+
+import { JSDOM } from "jsdom"
+const dom = new JSDOM(``, {
+    url: "https://play.workadventure.test/",
+    //referrer: "https://example.com/",
+    contentType: "text/html",
+    includeNodeLocations: true,
+    storageQuota: 10000000,
+    userAgent: "Mozilla/5.0 (X11; Linux i686; rv:107.0) Gecko/20100101 Firefox/107.0",
+});
+globalThis.document = dom.window.document
+globalThis.localStorage = dom.window.localStorage;
+//@ts-ignore
+globalThis.window = dom.window
+
 import {RoomConnection} from "../play/src/front/Connexion/RoomConnection";
 import {connectionManager} from "../play/src/front/Connexion/ConnectionManager";
-import * as WebSocket from "ws"
-import { AvailabilityStatus } from '../play/src/messages/ts-proto-generated/protos/messages';
+import WebSocket from "ws"
+import {AvailabilityStatus} from "../libs/messages";
+import {PositionMessage_Direction} from "../libs/messages";
+import {FrontConfigurationInterface} from "../play/src/common/FrontConfigurationInterface";
+
+
+
+
 
 let userMovedCount = 0;
 
-function sleep(ms) {
+function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
@@ -14,7 +69,7 @@ RoomConnection.setWebsocketFactory((url: string) => {
 });
 
 async function startOneUser(): Promise<void> {
-    const onConnect = await connectionManager.connectToRoomSocket(process.env.ROOM_ID ? process.env.ROOM_ID : '_/global/maps.workadventure.localhost/Floor0/floor0.json', 'TEST', ['male3'],
+    const onConnect = await connectionManager.connectToRoomSocket(process.env.ROOM_ID ? process.env.ROOM_ID : '_/global/maps.workadventure.localhost/starter/map.json', 'TEST', ['male3'],
         {
             x: 783,
             y: 170
@@ -29,7 +84,7 @@ async function startOneUser(): Promise<void> {
 
     const connection = onConnect.connection;
 
-    connection.onUserMoved(() => {
+    connection.userMovedMessageStream.subscribe(() => {
         userMovedCount++;
     })
 
@@ -41,7 +96,7 @@ async function startOneUser(): Promise<void> {
         const x = Math.floor(320 + 1472/2 * (1 + Math.sin(angle)));
         const y = Math.floor(200 + 1090/2 * (1 + Math.cos(angle)));
 
-        connection.sharePosition(x, y, 'down', true, {
+        connection.sharePosition(x, y, PositionMessage_Direction.DOWN, true, {
             top: y - 200,
             bottom: y + 200,
             left: x - 320,
