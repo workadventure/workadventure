@@ -1,17 +1,18 @@
 {
+  "private": true,
   "name": "workadventureuploader",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "tsc": "tsc",
+    "typecheck": "tsc -p tsconfig-build.json --noEmit",
     "dev": "ts-node-dev --inspect=0.0.0.0:9229 --respawn ./server.ts",
-    "prod": "tsc && node --max-old-space-size=4096 ./dist/server.js",
-    "runprod": "node --max-old-space-size=4096 ./dist/server.js",
+    "start": "ts-node --transpileOnly ./server.ts",
     "profile": "tsc && node --prof ./dist/server.js",
     "test": "jest --forceExit",
-    "lint": "node_modules/.bin/eslint src/ . --ext .ts",
-    "fix": "node_modules/.bin/eslint --fix src/ . --ext .ts"
+    "startTestServer": "ts-node tests/testServer.ts",
+    "lint": "eslint src/ . --ext .ts",
+    "fix": "eslint --fix src/ . --ext .ts"
   },
   "repository": {
     "type": "git",
@@ -37,29 +38,34 @@
   },
   "homepage": "https://github.com/thecodingmachine/workadventure#readme",
   "dependencies": {
-    "@types/mime-types": "^2.1.1",
-    "@types/redis": "^4.0.11",
     "aws-sdk": "^2.1185.0",
     "axios": "^0.27.2",
-    "busboy": "^0.3.1",
     "debug": "^4.3.1",
+    "hyper-express": "^6.5.2",
     "jsonwebtoken": "^8.5.1",
     "mime-types": "^2.1.35",
     "mkdirp": "^1.0.4",
     "prom-client": "^12.0.0",
-    "query-string": "^6.13.3",
+    "qs": "^6.11.0",
     "redis": "^4.2.0",
-    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.10.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.3",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@types/busboy": "^0.2.3",
+    "@jest/transform": "^29.3.1",
+    "@jest/types": "^29.3.1",
+    "@types/busboy": "^0.3.2",
     "@types/circular-json": "^0.4.0",
     "@types/debug": "^4.1.5",
     "@types/http-status-codes": "^1.2.0",
     "@types/jest": "^29.1.1",
     "@types/jsonwebtoken": "^8.3.8",
+    "@types/mime-types": "^2.1.1",
     "@types/mkdirp": "^1.0.1",
+    "@types/node": "^18.11.9",
+    "@types/qs": "^6.9.7",
+    "@types/redis": "^4.0.11",
     "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
@@ -69,8 +75,6 @@
     "jest": "^29.1.2",
     "testcontainers": "^8.14.0",
     "ts-jest": "^29.0.3",
-    "ts-node": "^10.9.1",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^4.7.4"
+    "ts-node-dev": "^2.0.0"
   }
 }

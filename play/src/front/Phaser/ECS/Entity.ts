@@ -24,7 +24,8 @@ import { OutlineableInterface } from "../Game/OutlineableInterface";
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
     Remove = "EntityEvent:Removed",
-    PropertySet = "EntityEvent:PropertySet",
+    PropertiesUpdated = "EntityEvent:PropertiesUpdated",
+    PropertyActivated = "EntityEvent:PropertyActivated",
 }
 
 // NOTE: Tiles-based entity for now. Individual images later on
@@ -33,7 +34,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     private readonly outlineColorStore = createColorStore();
     private readonly outlineColorStoreUnsubscribe: Unsubscriber;
 
-    private entityData: EntityData;
+    private entityData: Required<EntityData>;
 
     private beingRepositioned: boolean;
     private activatable: boolean;
@@ -47,7 +48,11 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
         this.activatable = data.interactive ?? false;
 
-        this.entityData = data;
+        this.entityData = {
+            ...data,
+            interactive: data.interactive ?? true,
+            properties: data.properties ?? {},
+        };
 
         this.setDepth(this.y + this.displayHeight * 0.5);
 
@@ -72,6 +77,17 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.bindEventHandlers();
 
         this.scene.add.existing(this);
+    }
+
+    public updateEntity(entityData: EntityData): void {
+        this.entityData = {
+            ...entityData,
+            interactive: entityData.interactive ?? true,
+            properties: entityData.properties ?? {},
+        };
+
+        this.setPosition(entityData.x, entityData.y);
+        // TODO: Add more visual changes on Entity Update
     }
 
     public destroy(fromScene?: boolean | undefined): void {
@@ -246,7 +262,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                             protected: true,
                             priority: 1,
                             callback: () => {
-                                this.emit(EntityEvent.PropertySet, {
+                                this.emit(EntityEvent.PropertyActivated, {
                                     propertyName: key,
                                     propertyValue: propertyData.roomName,
                                 },{
@@ -264,7 +280,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                             protected: true,
                             priority: 1,
                             callback: () => {
-                                this.emit(EntityEvent.PropertySet, {
+                                this.emit(EntityEvent.PropertyActivated, {
                                     propertyName: key,
                                     propertyValue: propertyData.audioLink,
                                 });
@@ -281,7 +297,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                             callback: () => {
                                 if(propertyData.inNewTab)
                                 {
-                                    this.emit(EntityEvent.PropertySet, {
+                                    this.emit(EntityEvent.PropertyActivated, {
                                         propertyName: key,
                                         propertyValue: propertyData.link,
                                     });
@@ -322,7 +338,16 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         return this.activatable;
     }
 
-    public getEntityData(): EntityData {
+    public getEntityData(): Required<EntityData> {
         return this.entityData;
+    }
+
+    public getProperties(): { [key: string]: unknown | undefined } {
+        return this.entityData.properties;
+    }
+
+    public setProperty(key: string, value: unknown): void {
+        this.entityData.properties[key] = value;
+        this.emit(EntityEvent.PropertiesUpdated);
     }
 }

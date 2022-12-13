@@ -8,6 +8,7 @@ import type { GameMapFrontWrapper } from "./GameMapFrontWrapper";
 
 export enum EntitiesManagerEvent {
     RemoveEntity = "EntitiesManagerEvent:RemoveEntity",
+    UpdateEntity = "EntitiesManagerEvent:UpdateEntity",
 }
 
 export class EntitiesManager extends Phaser.Events.EventEmitter {
@@ -117,13 +118,24 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                     grid
                 );
             }
+            const entityData = structuredClone(entity.getEntityData());
+            entityData.x = entity.x;
+            entityData.y = entity.y;
+            this.emit(EntitiesManagerEvent.UpdateEntity, entityData);
         });
         // get the type! Switch to rxjs?
         entity.on(
-            EntityEvent.PropertySet,
+            EntityEvent.PropertyActivated,
             (data: { propertyName: string; propertyValue: string | number | boolean }) => {
                 this.properties.set(data.propertyName, data.propertyValue);
                 this.gameMapFrontWrapper.handleEntityActionTrigger();
+            }
+        );
+        entity.on(
+            EntityEvent.PropertiesUpdated,
+            () => {
+                const entityData = structuredClone(entity.getEntityData());
+                this.emit(EntitiesManagerEvent.UpdateEntity, entityData);
             }
         );
         entity.on(Phaser.Input.Events.POINTER_OVER, () => {

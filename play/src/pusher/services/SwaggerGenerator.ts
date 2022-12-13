@@ -13,6 +13,12 @@ import {
 } from "@workadventure/messages";
 import { isFetchMemberDataByUuidResponse } from "./AdminApi";
 import type { SchemaObject } from "openapi3-ts";
+import {
+    companionCollectionList,
+    companionTextureCollection,
+    isCompanionDetail,
+    isCapabilities,
+} from "@workadventure/messages";
 
 class SwaggerGenerator {
     definitions(type: string | null): {
@@ -35,6 +41,10 @@ class SwaggerGenerator {
             definitions: {
                 AdminApiData: generateSchema(isAdminApiData),
                 //BanBannedAdminMessageInterface: generateSchema(isBanBannedAdminMessageInterface),
+                Capabilities: generateSchema(isCapabilities),
+                CompanionCollectionList: generateSchema(companionCollectionList),
+                CompanionDetail: generateSchema(isCompanionDetail),
+                CompanionCollection: generateSchema(companionTextureCollection),
                 ErrorApiErrorData: generateSchema(isErrorApiErrorData),
                 ErrorApiRedirectData: generateSchema(isErrorApiRedirectData),
                 ErrorApiRetryData: generateSchema(isErrorApiRetryData),

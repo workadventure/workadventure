@@ -13,6 +13,7 @@ const report: DeepPartial<Translation["report"]> = {
     message: {
         title: "举报信息: ",
         empty: "举报信息不能为空.",
+        error: "报告消息错误，您可以联系管理员.",
     },
     submit: "举报该用户",
     moderate: {

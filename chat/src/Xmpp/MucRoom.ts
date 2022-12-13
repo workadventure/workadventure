@@ -5,7 +5,12 @@ import { v4 as uuid } from "uuid";
 import { userStore } from "../Stores/LocalUserStore";
 import { fileMessageManager } from "../Services/FileMessageManager";
 import { mediaManager, NotificationType } from "../Media/MediaManager";
-import { availabilityStatusStore, filesUploadStore, mentionsUserStore } from "../Stores/ChatStore";
+import {
+    availabilityStatusStore,
+    enableChatDisconnectedListStore,
+    filesUploadStore,
+    mentionsUserStore,
+} from "../Stores/ChatStore";
 import { AbstractRoom, Message, MessageType, User } from "./AbstractRoom";
 import { XmppClient } from "./XmppClient";
 import * as StanzaProtocol from "stanza/protocol";
@@ -35,7 +40,6 @@ export class MucRoom extends AbstractRoom {
         public subscribe: boolean
     ) {
         super(xmppClient, _VERBOSE);
-
         this.presenceStore = writable<UserList>(new Map<string, User>());
         this.canLoadOlderMessagesStore = writable<boolean>(true);
         this.showDisabledLoadOlderMessagesStore = writable<boolean>(false);
@@ -55,13 +59,7 @@ export class MucRoom extends AbstractRoom {
     }
 
     public getUserByJid(jid: string): User {
-        let user = undefined;
-        get(this.presenceStore).forEach((user_, key) => {
-            // WORKAROUND BECAUSE WE DON'T SEND THE JID FROM THE OTHER USERS IN THE FRONT
-            if (JID.parse(key).local == jid || JID.parse(key).local == JID.parse(jid).local) {
-                user = user_;
-            }
-        });
+        const user = get(this.presenceStore).get(jid);
         if (!user) {
             throw new Error("No user found for this JID");
         }
@@ -78,11 +76,7 @@ export class MucRoom extends AbstractRoom {
     }
 
     public connect() {
-        // if (userStore.get().isLogged && this.subscribe && this.type !== "live") {
-        //     this.sendSubscribe();
-        // } else {
         this.sendPresence(true);
-        // }
     }
 
     // Functions used to send message to the server
@@ -93,9 +87,20 @@ export class MucRoom extends AbstractRoom {
         const presenceId = uuid();
         if (first) {
             this.subscriptions.set("firstPresence", presenceId);
-            void this.xmppClient.socket.subscribe(this.url);
         }
-
+        //this.xmppClient.socket.sendPresence({ to: this.recipient, id: presenceId });
+        this.sendUserInfo(presenceId);
+        if (_VERBOSE)
+            console.warn(
+                `[XMPP][${this.name}]`,
+                ">> ",
+                first && "First",
+                "Presence sent",
+                get(userStore).uuid,
+                presenceId
+            );
+    }
+    sendUserInfo(presenceId: string = uuid()) {
         this.xmppClient.socket.sendUserInfo(this.recipient, presenceId, {
             jid: this.xmppClient.getMyJID(),
             roomPlayUri: get(userStore).playUri,
@@ -109,25 +114,8 @@ export class MucRoom extends AbstractRoom {
             userAvailabilityStatus: get(availabilityStatusStore),
             userVisitCardUrl: get(userStore).visitCardUrl ?? "",
         });
-
-        //this.xmppClient.socket.sendPresence({ to: this.recipient, id: presenceId, muc: {type: 'info', affiliation: "none", role: "participant"} });
-        if (_VERBOSE)
-            console.warn(
-                `[XMPP][${this.name}]`,
-                ">> ",
-                first && "First",
-                "Presence sent",
-                get(userStore).uuid,
-                presenceId
-            );
+        if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, ">> UserInfo sent");
     }
-    // private async sendSubscribe() {
-    //     const subscribeId = uuidv4();
-    //     this.subscriptions.set("firstSubscribe", subscribeId);
-    //     void this.xmppClient.socket.joinRoom(this.recipient, this.xmppClient.getPlayerName(), {id: subscribeId});
-    //     if (_VERBOSE)
-    //         console.warn(`[XMPP][${this.name}]`, ">> Subscribe sent from", this.xmppClient.getPlayerName(), "to", this.roomJid.local);
-    // }
     public sendDisconnect() {
         if (this.closed) {
             this.xmppClient.removeMuc(this);
@@ -138,7 +126,7 @@ export class MucRoom extends AbstractRoom {
         this.xmppClient.removeMuc(this);
     }
     private async sendRequestAllSubscribers() {
-        if (this.closed) {
+        if (this.closed || !get(enableChatDisconnectedListStore)) {
             return;
         }
         const iqId = uuid();
@@ -237,31 +225,29 @@ export class MucRoom extends AbstractRoom {
                 ...links,
             });
         }
+        const message = {
+            name: this.xmppClient.getPlayerName(),
+            jid: this.xmppClient.getMyPersonalJID(),
+            body: text,
+            time: new Date(),
+            id: idMessage,
+            delivered: false,
+            error: false,
+            from: this.xmppClient.getMyJID(),
+            type: messageReply ? MessageType.reply : MessageType.message,
+            ...links,
+            targetMessageReply: messageReply
+                ? {
+                      id: messageReply.id,
+                      senderName: messageReply.name,
+                      body: messageReply.body,
+                      links: messageReply.links,
+                  }
+                : undefined,
+            mentions: [...get(mentionsUserStore).values()],
+        };
 
-        this.messageStore.update((messages) => {
-            messages.set(idMessage, {
-                name: this.xmppClient.getPlayerName(),
-                jid: this.xmppClient.getMyPersonalJID(),
-                body: text,
-                time: new Date(),
-                id: idMessage,
-                delivered: false,
-                error: false,
-                from: this.xmppClient.getMyJID(),
-                type: messageReply ? MessageType.reply : MessageType.message,
-                ...links,
-                targetMessageReply: messageReply
-                    ? {
-                          id: messageReply.id,
-                          senderName: messageReply.name,
-                          body: messageReply.body,
-                          links: messageReply.links,
-                      }
-                    : undefined,
-                mentions: [...get(mentionsUserStore).values()],
-            });
-            return messages;
-        });
+        this.appendMessage(message);
 
         fileMessageManager.reset();
         mentionsUserStore.set(new Set<User>());
@@ -271,15 +257,7 @@ export class MucRoom extends AbstractRoom {
         if (this.sendTimeOut) {
             clearTimeout(this.sendTimeOut);
         }
-        this.sendTimeOut = setTimeout(() => {
-            this.messageStore.update((messages) => {
-                const messagesUpdated = new Map<string, Message>();
-                messages.forEach((message, messageId) => {
-                    messagesUpdated.set(messageId, { ...message, error: !message.delivered });
-                });
-                return messagesUpdated;
-            });
-        }, 10_000);
+        this.sendTimeOut = setTimeout(() => this.updateMessagePart(message.id, { error: false }), 10_000);
         if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, ">> Message sent");
     }
     public sendRemoveMessage(messageId: string) {
@@ -379,9 +357,10 @@ export class MucRoom extends AbstractRoom {
         });
         if (_VERBOSE) console.warn(`[XMPP][${this.name}]`, "<< Retrieve last messages received");
         if (response.paging && response.paging.count !== undefined) {
+            response.results?.reverse();
             response.results?.forEach((result) => {
                 if (result.item.message) {
-                    this.onMessage(result.item.message as StanzaProtocol.ReceivedMessage, result.item.delay);
+                    this.onMessage(result.item.message as StanzaProtocol.ReceivedMessage, result.item.delay, true);
                 }
             });
             if (response.paging.count < 50) {
@@ -392,7 +371,11 @@ export class MucRoom extends AbstractRoom {
     }
 
     // Function used to interpret message from the server
-    onMessage(receivedMessage: StanzaProtocol.ReceivedMessage, delay: StanzaProtocol.Delay | null = null): boolean {
+    onMessage(
+        receivedMessage: StanzaProtocol.ReceivedMessage,
+        delay: StanzaProtocol.Delay | null = null,
+        prepend: boolean = false
+    ): boolean {
         if (!receivedMessage.jid) {
             throw new Error("No JID set for the message");
         } else if (!receivedMessage.id) {
@@ -409,74 +392,74 @@ export class MucRoom extends AbstractRoom {
                 // Only in case where the message received is an archive (a message automatically sent by the server when joining a room)
                 date = new Date(delay.timestamp);
             }
-            this.messageStore.update((messages) => {
-                const thisMessage = messages.get(receivedMessage.id ?? "");
-                if (thisMessage) {
-                    this.updateLastMessageSeen();
-                    messages.set(thisMessage.id, { ...thisMessage, delivered: true, error: false });
-                    response = true;
-                } else if (receivedMessage.remove) {
-                    const removeId = receivedMessage.remove.id;
-                    this.deletedMessagesStore.update((deletedMessages) => [...deletedMessages, removeId]);
-                    response = true;
-                } else {
-                    if (date !== null && date > this.lastMessageSeen && !delay) {
-                        this.countMessagesToSee.update((last) => last + 1);
-                        if (/*get(activeThreadStore) !== this ||*/ get(availabilityStatusStore) !== 1) {
-                            if (receivedMessage.nick) {
-                                mediaManager.playNewMessageNotification();
-                                mediaManager.createNotification(
-                                    receivedMessage.nick,
-                                    NotificationType.message,
-                                    this.name
-                                );
-                            }
+            const messageId = receivedMessage.id ?? "";
+            if (this.messageMap.has(messageId)) {
+                this.updateLastMessageSeen();
+                this.updateMessagePart(messageId, { delivered: true, error: false });
+                response = true;
+            } else if (receivedMessage.remove) {
+                const removedId = receivedMessage.remove.id;
+                this.deletedMessagesStore.update((deletedMessages) => {
+                    deletedMessages.set(removedId, JID.toBare(receivedMessage.jid));
+                    return deletedMessages;
+                });
+                response = true;
+            } else {
+                if (date !== null && date > this.lastMessageSeen && !delay) {
+                    this.countMessagesToSee.update((last) => last + 1);
+                    if (/*get(activeThreadStore) !== this ||*/ get(availabilityStatusStore) !== 1) {
+                        if (receivedMessage.nick) {
+                            mediaManager.playNewMessageNotification();
+                            mediaManager.createNotification(receivedMessage.nick, NotificationType.message, this.name);
                         }
                     }
-
-                    const received = JID.parse(receivedMessage.jid);
-
-                    if (received && receivedMessage.jid && receivedMessage.id) {
-                        const message: Message = {
-                            name: received.resource ?? "unknown",
-                            jid: JID.create({
-                                local: received.local,
-                                domain: received.domain,
-                                resource: JID.parse(receivedMessage.from).resource,
-                            }),
-                            body: receivedMessage.body ?? "",
-                            time: date,
-                            id: receivedMessage.id,
-                            delivered: true,
-                            error: false,
-                            from: receivedMessage.from,
-                            type: receivedMessage.messageReply ? MessageType.message : MessageType.reply,
-                            links: receivedMessage.links as WaLink[],
-                            targetMessageReply: receivedMessage.messageReply
-                                ? {
-                                      id: receivedMessage.messageReply.id,
-                                      senderName: receivedMessage.messageReply.senderName,
-                                      body: receivedMessage.messageReply.body,
-                                      links: receivedMessage.messageReply.links
-                                          ? JSON.parse(receivedMessage.messageReply.links)
-                                          : undefined,
-                                  }
-                                : undefined,
-                            reactionsMessage: this.reactions(receivedMessage.id),
-                        };
-                        messages.set(receivedMessage.id, message);
-                        response = true;
-                    } else {
-                        console.error("Message format is not good", {
-                            received: !!received,
-                            jid: !!receivedMessage.jid,
-                            body: !!receivedMessage.body,
-                            id: !!receivedMessage.id,
-                        });
-                    }
                 }
-                return messages;
-            });
+
+                const receivedJid = JID.parse(receivedMessage.jid);
+
+                if (receivedJid && receivedMessage.jid && receivedMessage.id) {
+                    const message: Message = {
+                        name: receivedJid.resource ?? "unknown",
+                        jid: JID.create({
+                            local: receivedJid.local,
+                            domain: receivedJid.domain,
+                            resource: JID.parse(receivedMessage.from).resource,
+                        }),
+                        body: receivedMessage.body ?? "",
+                        time: date,
+                        id: receivedMessage.id,
+                        delivered: true,
+                        error: false,
+                        from: receivedMessage.from,
+                        type: receivedMessage.messageReply ? MessageType.message : MessageType.reply,
+                        links: receivedMessage.links as WaLink[],
+                        targetMessageReply: receivedMessage.messageReply
+                            ? {
+                                  id: receivedMessage.messageReply.id,
+                                  senderName: receivedMessage.messageReply.senderName,
+                                  body: receivedMessage.messageReply.body,
+                                  links: receivedMessage.messageReply.links
+                                      ? JSON.parse(receivedMessage.messageReply.links)
+                                      : undefined,
+                              }
+                            : undefined,
+                        reactionsMessage: this.reactions(receivedMessage.id),
+                    };
+                    if (prepend) {
+                        this.prependMessage(message);
+                    } else {
+                        this.appendMessage(message);
+                    }
+                    response = true;
+                } else {
+                    console.error("Message format is not good", {
+                        received: !!receivedJid,
+                        jid: !!receivedMessage.jid,
+                        body: !!receivedMessage.body,
+                        id: !!receivedMessage.id,
+                    });
+                }
+            }
         }
         return response;
     }
@@ -511,14 +494,21 @@ export class MucRoom extends AbstractRoom {
                 this.subscriptions.delete("firstPresence");
                 this.readyStore.set(true);
                 this.closed = false;
+                this.sendUserInfo();
                 if (this.type === "live") {
                     void this.sendRetrieveLastMessages(20);
+                }
+                if (
+                    userStore.get().isLogged &&
+                    this.subscribe &&
+                    this.type === "default" &&
+                    get(enableChatDisconnectedListStore)
+                ) {
+                    void this.sendRequestAllSubscribers();
                 }
             } else if (this.subscriptions.get("firstSubscribe") === presence.id) {
                 this.subscriptions.delete("firstSubscribe");
                 this.closed = false;
-                this.sendPresence(true);
-                void this.sendRequestAllSubscribers();
             }
         }
         const from = JID.parse(presence.from);
@@ -570,14 +560,18 @@ export class MucRoom extends AbstractRoom {
         this.presenceStore.update((presenceStore: UserList) => {
             const user = presenceStore.get(jid.full);
             if (user) {
+                // If disconnected user : [1) It's the default room, 2) I'm a member, 3) The user is a member, 4) The user is not connected with another ressource] else if the user is connected
                 if (
-                    !active &&
-                    (!user.isMember ||
-                        [...presenceStore.keys()].filter((userJid) => userJid.includes(jid.bare)).length > 1)
+                    (this.type === "default" &&
+                        !active &&
+                        this.subscribe &&
+                        user.isMember &&
+                        [...presenceStore.keys()].filter((userJid) => JID.toBare(userJid) === jid.bare).length <= 1) ||
+                    active
                 ) {
-                    presenceStore.delete(jid.full);
-                } else {
                     presenceStore.set(jid.full, { ...user, active });
+                } else {
+                    presenceStore.delete(jid.full);
                 }
             }
             return presenceStore;
@@ -621,6 +615,11 @@ export class MucRoom extends AbstractRoom {
                     visitCardUrl: userInfo.userVisitCardUrl,
                 });
             } else {
+                presenceStore.forEach((user, jid) => {
+                    if (JID.toBare(jid) === userJID.bare) {
+                        presenceStore.delete(jid);
+                    }
+                });
                 presenceStore.set(userJID.full, {
                     jid: userJID.full,
                     name: userInfo.name,
@@ -682,13 +681,7 @@ export class MucRoom extends AbstractRoom {
     }
     private updateMessageReactions(messageId: string) {
         // Update reactions of the message targeted
-        this.messageStore.update((messages) => {
-            const thisMessage = messages.get(messageId);
-            if (thisMessage) {
-                messages.set(messageId, { ...thisMessage, reactionsMessage: this.reactions(messageId) });
-            }
-            return messages;
-        });
+        this.updateMessagePart(messageId, { reactionsMessage: this.reactions(messageId) });
     }
     private toggleReactionsMessage(userJid: string, messageId: string, reactions: Array<string>) {
         const newUserReaction = {
@@ -732,13 +725,6 @@ export class MucRoom extends AbstractRoom {
             return reactionsMessages;
         });
         this.updateMessageReactions(messageId);
-    }
-    public deleteMessage(idMessage: string): boolean {
-        this.messageStore.update((messages) => {
-            messages.delete(idMessage);
-            return messages;
-        });
-        return true;
     }
     public sendBack(idMessage: string): boolean {
         throw new Error("Not implemented yet");

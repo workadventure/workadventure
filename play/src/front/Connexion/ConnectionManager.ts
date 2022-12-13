@@ -381,8 +381,14 @@ class ConnectionManager {
         if (visitCardUrl) {
             gameManager.setVisitCardurl(visitCardUrl);
         }
-        if (username) {
-            gameManager.setPlayerName(username);
+
+        const opidWokaNamePolicy = this.currentRoom?.opidWokaNamePolicy;
+        if (username != undefined && opidWokaNamePolicy != undefined) {
+            if (opidWokaNamePolicy === "force_opid") {
+                gameManager.setPlayerName(username);
+            } else if (opidWokaNamePolicy === "allow_override_opid" && localUserStore.getName() == undefined) {
+                gameManager.setPlayerName(username);
+            }
         }
 
         if (locale) {

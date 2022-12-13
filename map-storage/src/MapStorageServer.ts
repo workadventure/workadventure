@@ -1,6 +1,6 @@
 import { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
 import * as _ from "lodash";
-import { AreaData, AreaType } from "@workadventure/map-editor";
+import { AreaData, AreaType, EntityData } from "@workadventure/map-editor";
 import { mapsManager } from "./MapsManager";
 import {
     EditMapCommandMessage,
@@ -72,6 +72,21 @@ const mapStorageServer: MapStorageServer = {
                         type: "DeleteAreaCommand",
                         id: message.id,
                     });
+                    break;
+                }
+                case "modifyEntityMessage": {
+                    const message = editMapMessage.modifyEntityMessage;
+                    const entity = gameMap.getGameMapEntities().getEntity(message.id);
+                    if (entity) {
+                        const entityData: EntityData = structuredClone(entity);
+                        _.merge(entityData, message);
+                        validCommand = mapsManager.executeCommand(call.request.mapKey, {
+                            type: "UpdateEntityCommand",
+                            entityData,
+                        });
+                    } else {
+                        console.log(`Could not find entity with id: ${message.id}`);
+                    }
                     break;
                 }
                 case "createEntityMessage": {

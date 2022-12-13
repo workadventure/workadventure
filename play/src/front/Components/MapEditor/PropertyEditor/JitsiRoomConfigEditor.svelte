@@ -19,7 +19,7 @@
         currentConfig = {};
         if(config !== undefined)
         {
-            Object.keys(config).forEach((key)=>{
+            Object.keys(config).forEach((key:keyof typeof currentConfig)=>{
                 currentConfig[key] = config[key];
             });
             currentConfig = structuredClone(config);
@@ -103,10 +103,6 @@
     .menu-container{
         position:fixed;
         width:50%;
-    }
-    .window-content
-    {
-        padding: 3em;
     }
     .config-element-container{
         max-height: calc(100% - 10.5em);

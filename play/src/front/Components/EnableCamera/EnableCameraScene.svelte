@@ -127,7 +127,6 @@
                 <div class="control-group">
                     <img src={cinemaImg} alt="Camera" />
                     <div class="is-dark">
-                        <!-- svelte-ignore a11y-no-onchange -->
                         <select bind:value={selectedCamera} on:change={selectCamera} class="tw-w-52 md:tw-w-96">
                             <!-- start with camera off -->
                             <option value={null}>{$LL.camera.disable()}</option>
@@ -144,7 +143,6 @@
                 <div class="control-group">
                     <img src={microphoneImg} alt="Microphone" />
                     <div class="is-dark">
-                        <!-- svelte-ignore a11y-no-onchange -->
                         <select bind:value={selectedMicrophone} on:change={selectMicrophone} class="tw-w-52 md:tw-w-96">
                             <!-- start with microphone off -->
                             <option value={null}>{$LL.audio.disable()}</option>

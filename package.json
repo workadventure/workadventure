@@ -1,9 +1,23 @@
 {
+  "private": true,
   "devDependencies": {
     "husky": "^7.0.1"
   },
   "scripts": {
     "prepare": "husky install"
   },
-  "dependencies": {}
+  "workspaces": [
+    "play",
+    "back",
+    "chat",
+    "map-storage",
+    "libs/map-editor",
+    "libs/math-utils",
+    "libs/messages",
+    "libs/tailwind",
+    "benchmark",
+    "uploader",
+    "play/packages/iframe-api-typings"
+  ],
+  "packageManager": "yarn@3.3.0"
 }

@@ -12,6 +12,10 @@ const actionbar: BaseTranslation = {
     menu: "Open / Close menu",
     mapEditor: "Open / Close mapEditor",
     bo: "Open back office",
+    subtitle: {
+        microphone: "Microphone",
+        speaker: "Speaker",
+    },
 };
 
 export default actionbar;

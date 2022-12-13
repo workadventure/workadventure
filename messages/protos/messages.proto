@@ -118,8 +118,9 @@ message EditMapMessage {
     ModifyAreaMessage modifyAreaMessage = 1;
     CreateAreaMessage createAreaMessage = 2;
     DeleteAreaMessage deleteAreaMessage = 3;
-    CreateEntityMessage createEntityMessage = 4;
-    DeleteEntityMessage deleteEntityMessage = 5;
+    ModifyEntityMessage modifyEntityMessage = 4;
+    CreateEntityMessage createEntityMessage = 5;
+    DeleteEntityMessage deleteEntityMessage = 6;
   }
 }
 
@@ -171,29 +172,6 @@ message CreateAreaMessage {
   string name = 6;
 }
 
-message EntityCollisionGridRow {
-  repeated int32 row = 1;
-}
-
-message EntityCollisionGrid {
-  repeated EntityCollisionGridRow row = 1;
-}
-
-message EntityPrefab {
-  string name = 1;
-  repeated string tags = 2;
-  string imagePath = 3;
-  enum Direction {
-    Left = 0;
-    Up = 1;
-    Down = 2;
-    Right = 3;
-  }
-  Direction direction = 4;
-  string color = 5;
-  optional EntityCollisionGrid collisionGrid = 6;
-}
-
 message CreateEntityMessage {
   int32 id = 1;
   uint32 x = 2;
@@ -204,6 +182,13 @@ message CreateEntityMessage {
 
 message DeleteEntityMessage {
   int32 id = 1;
+}
+
+message ModifyEntityMessage {
+  int32 id = 1;
+  optional uint32 x = 2;
+  optional uint32 y = 3;
+  map<string, google.protobuf.Value> properties = 4;
 }
 
 message ClientToServerMessage {
@@ -375,16 +360,17 @@ message GroupDeleteMessage {
 
 message UserJoinedMessage {
   int32 userId = 1;
-  string name = 2;
-  repeated CharacterLayerMessage characterLayers = 3;
-  PositionMessage position = 4;
-  CompanionMessage companion = 5;
-  string visitCardUrl = 6;
-  string userUuid = 7;
-  uint32 outlineColor = 8;
-  bool hasOutline = 9;
-  AvailabilityStatus availabilityStatus = 10;
-  map<string, string> variables = 11;
+  string userJid = 2;
+  string name = 3;
+  repeated CharacterLayerMessage characterLayers = 4;
+  PositionMessage position = 5;
+  CompanionMessage companion = 6;
+  string visitCardUrl = 7;
+  string userUuid = 8;
+  uint32 outlineColor = 9;
+  bool hasOutline = 10;
+  AvailabilityStatus availabilityStatus = 11;
+  map<string, string> variables = 12;
 }
 
 message UserLeftMessage {
@@ -437,6 +423,7 @@ message RoomJoinedMessage {
   bool activatedInviteUser = 9;
   repeated VariableMessage playerVariable = 10;
   repeated ApplicationMessage applications = 11;
+  string userJid = 12;
 }
 
 message WebRtcStartMessage {
@@ -500,6 +487,7 @@ message AskPositionMessage{
   string playUri = 2;
 }
 
+
 /**
  * Messages going from back and pusher to the front
  */
@@ -552,21 +540,23 @@ message JoinRoomMessage {
   bool activatedInviteUser = 12;
   bool isLogged = 13;
   repeated ApplicationMessage applications = 14;
+  string userJid = 15;
 }
 
 message UserJoinedZoneMessage {
   int32 userId = 1;
-  string name = 2;
-  repeated CharacterLayerMessage characterLayers = 3;
-  PositionMessage position = 4;
-  Zone fromZone = 5;
-  CompanionMessage companion = 6;
-  string visitCardUrl = 7;
-  string userUuid = 8;
-  uint32 outlineColor = 9;
-  bool hasOutline = 10;
-  AvailabilityStatus availabilityStatus = 11;
-  map<string, string> variables = 12;
+  string userJid = 2;
+  string name = 3;
+  repeated CharacterLayerMessage characterLayers = 4;
+  PositionMessage position = 5;
+  Zone fromZone = 6;
+  CompanionMessage companion = 7;
+  string visitCardUrl = 8;
+  string userUuid = 9;
+  uint32 outlineColor = 10;
+  bool hasOutline = 11;
+  AvailabilityStatus availabilityStatus = 12;
+  map<string, string> variables = 13;
 }
 
 message UserLeftZoneMessage {

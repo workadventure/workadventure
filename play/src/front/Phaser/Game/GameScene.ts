@@ -21,7 +21,7 @@ import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 import { DynamicAreaManager } from "./DynamicAreaManager";
 
 import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoadingManager";
-import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
+import { CompanionTexturesLoadingManager } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
 import { DEBUG_MODE, ENABLE_FEATURE_MAP_EDITOR, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
 import { Room } from "../../Connexion/Room";
@@ -256,6 +256,7 @@ export class GameScene extends DirtyScene {
     private playersEventDispatcher = new IframeEventDispatcher();
     private playersMovementEventDispatcher = new IframeEventDispatcher();
     private remotePlayersRepository = new RemotePlayersRepository();
+    private companionLoadingManager: CompanionTexturesLoadingManager | undefined;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -286,6 +287,7 @@ export class GameScene extends DirtyScene {
 
     //hook preload scene
     preload(): void {
+        this.companionLoadingManager = new CompanionTexturesLoadingManager(this.superLoad, this.load);
         //initialize frame event of scripting API
         this.listenToIframeEvents();
 
@@ -1700,8 +1702,8 @@ ${escapedMessage}
             iframeListener.setTilesStream.subscribe((eventTiles) => {
                 for (const eventTile of eventTiles) {
                     this.gameMapFrontWrapper.putTile(eventTile.tile, eventTile.x, eventTile.y, eventTile.layer);
+                    this.animatedTiles.updateAnimatedTiles(eventTile.x, eventTile.y);
                 }
-                this.animatedTiles.updateAnimatedTiles();
             })
         );
         iframeListener.registerAnswerer("enablePlayersTracking", (enablePlayersTrackingEvent, source) => {
@@ -2016,7 +2018,7 @@ ${escapedMessage}
                 iframeListener.unregisterScript(script);
             }
         }
-
+        uiWebsiteManager.closeAll();
         followUsersStore.stopFollowing();
 
         audioManagerFileStore.unloadAudio();
@@ -2239,7 +2241,7 @@ ${escapedMessage}
                 PositionMessage_Direction.DOWN,
                 false,
                 this.companion,
-                this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
+                this.companionLoadingManager?.lazyLoadByName(this.companion)
             );
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOverOutline(0x365dff);
@@ -2403,7 +2405,7 @@ ${escapedMessage}
             addPlayerData.position.moving,
             addPlayerData.visitCardUrl,
             addPlayerData.companion,
-            addPlayerData.companion !== null ? lazyLoadCompanionResource(this.load, addPlayerData.companion) : undefined
+            this.companionLoadingManager?.lazyLoadByName(addPlayerData.companion)
         );
         if (addPlayerData.outlineColor !== undefined) {
             player.setApiOutlineColor(addPlayerData.outlineColor);

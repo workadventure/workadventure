@@ -4,12 +4,14 @@ import type { DeleteAreaCommandConfig } from './Commands/Area/DeleteAreaCommand'
 import type { UpdateAreaCommandConfig } from './Commands/Area/UpdateAreaCommand';
 import type { CreateEntityCommandConfig } from './Commands/Entity/CreateEntityCommand';
 import type { DeleteEntityCommandConfig } from './Commands/Entity/DeleteEntityCommand';
+import { UpdateEntityCommandConfig } from './Commands/Entity/UpdateEntityCommand';
 
 
 export type CommandConfig =
     UpdateAreaCommandConfig |
     DeleteAreaCommandConfig |
     CreateAreaCommandConfig |
+    UpdateEntityCommandConfig |
     CreateEntityCommandConfig |
     DeleteEntityCommandConfig;
 

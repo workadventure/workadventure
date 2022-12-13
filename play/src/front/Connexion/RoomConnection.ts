@@ -66,7 +66,8 @@ import type { AreaData, EntityData } from "@workadventure/map-editor";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 
-const manualPingDelay = 20000;
+// This must be greater than IoSocketController's PING_INTERVAL
+const manualPingDelay = 100000;
 
 export class RoomConnection implements RoomConnection {
     private readonly socket: WebSocket;
@@ -588,7 +589,7 @@ export class RoomConnection implements RoomConnection {
             this.timeout = undefined;
         }
         this.timeout = setTimeout(() => {
-            console.warn("Timeout detected server-side. Is your connexion down? Closing connexion.");
+            console.warn("Timeout detected server-side. Is your connection down? Closing connection.");
             this.socket.close();
         }, manualPingDelay);
     }
@@ -753,6 +754,7 @@ export class RoomConnection implements RoomConnection {
 
         return {
             userId: message.userId,
+            userJid: message.userJid,
             name: message.name,
             characterLayers,
             visitCardUrl: message.visitCardUrl,
@@ -1052,6 +1054,23 @@ export class RoomConnection implements RoomConnection {
                         message: {
                             $case: "createAreaMessage",
                             createAreaMessage: config,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitMapEditorModifyEntity(commandId: string, config: EntityData): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "modifyEntityMessage",
+                            modifyEntityMessage: config,
                         },
                     },
                 },

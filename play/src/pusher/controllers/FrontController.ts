@@ -108,7 +108,7 @@ export class FrontController extends BaseHttpController {
         // });
 
         this.app.get("/*", (req: Request, res: Response) => {
-            if (req.path.startsWith("/src") || req.path.startsWith("/node_modules")) {
+            if (req.path.startsWith("/src") || req.path.startsWith("/node_modules") || req.path.startsWith("/@fs/")) {
                 res.status(303).redirect(`${VITE_URL}${decodeURI(req.path)}`);
                 return;
             }
@@ -142,20 +142,31 @@ export class FrontController extends BaseHttpController {
 
     private async displayFront(req: Request, res: Response, url: string) {
         const builder = new MetaTagsBuilder(url);
+        let html = this.indexFile;
 
-        const redirectUrl = await builder.getRedirectUrl();
+        let redirectUrl: string | undefined;
+
+        try {
+            redirectUrl = await builder.getRedirectUrl();
+        } catch (e) {
+            console.log(`Cannot get redirect URL ${url}`, e);
+        }
+
         if (redirectUrl) {
             return res.redirect(redirectUrl);
         }
 
-        const metaTagsData = await builder.getMeta(req.header("User-Agent"));
-
-        const html = Mustache.render(this.indexFile, {
-            ...metaTagsData,
-            msApplicationTileImage: metaTagsData.favIcons[metaTagsData.favIcons.length - 1].src,
-            url,
-            script: this.script,
-        });
+        try {
+            const metaTagsData = await builder.getMeta(req.header("User-Agent"));
+            html = Mustache.render(this.indexFile, {
+                ...metaTagsData,
+                msApplicationTileImage: metaTagsData.favIcons[metaTagsData.favIcons.length - 1].src,
+                url,
+                script: this.script,
+            });
+        } catch (e) {
+            console.log(`Cannot render metatags on ${url}`, e);
+        }
 
         return res.type("html").send(html);
     }
