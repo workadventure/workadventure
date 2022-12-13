@@ -34,8 +34,8 @@ If you change the name of the container or his traefik labels, you must change i
 
 ## Chat options
 Change the following environment variables in the `.env` file to configure the chat features:
-- Enable or disable chat (this will not disable all chat, but only ChatRooms and forums; the timeline will remain active): `ENABLE CHAT=true`
-- Enable or disable the online user list: `ENABLE CHAT ONLINE LIST=true`
-- Enable or disable the disconnected user list: `ENABLE CHAT DISCONNECTED LIST=true`
-- Enable or disable file upload in chat (MUST BE TRUE ONLY IF ENABLE CHAT IS TRUE): `ENABLE CHAT UPLOAD=true`
-- Maximum uploadable file size (Byte) in chat: `UPLOAD MAX FILESIZE=10485760`
+- Enable or disable chat (this will not disable all chat, but only ChatRooms and forums; the timeline will remain active): `ENABLE_CHAT=true`
+- Enable or disable the online user list: `ENABLE_CHAT ONLINE_LIST=true`
+- Enable or disable the disconnected user list: `ENABLE_CHAT_DISCONNECTED_LIST=true`
+- Enable or disable file upload in chat (MUST BE TRUE ONLY IF ENABLE CHAT IS TRUE): `ENABLE_CHAT_UPLOAD=true`
+- Maximum uploadable file size (Byte) in chat: `UPLOAD_MAX_FILESIZE=10485760`
