@@ -6,13 +6,13 @@ import { ProtobufClientUtils } from "../../../Network/ProtobufClientUtils";
 export const WokaBodyPart = ["Body", "Eyes", "Hair", "Clothes", "Hat", "Accessory"] as const;
 
 export const WokaBodyPartOrder = {
-    "Body": 0,
-    "Eyes": 1,
-    "Hair": 2,
-    "Clothes": 3,
-    "Hat": 4,
-    "Accessory": 5
-}
+    Body: 0,
+    Eyes: 1,
+    Hair: 2,
+    Clothes: 3,
+    Hat: 4,
+    Accessory: 5,
+};
 
 /**
  * @deprecated Use WokaBodyPart instead

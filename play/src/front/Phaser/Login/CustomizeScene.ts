@@ -14,7 +14,9 @@ import type { CustomWokaPreviewerConfig } from "../Components/CustomizeWoka/Cust
 import {
     CustomWokaBodyPart,
     CustomWokaBodyPartOrder,
-    CustomWokaPreviewer, WokaBodyPart, WokaBodyPartOrder,
+    CustomWokaPreviewer,
+    WokaBodyPart,
+    WokaBodyPartOrder,
 } from "../Components/CustomizeWoka/CustomWokaPreviewer";
 import { DraggableGrid } from "@home-based-studio/phaser3-utils";
 import type { WokaBodyPartSlotConfig } from "../Components/CustomizeWoka/WokaBodyPartSlot";
@@ -252,11 +254,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     private initializeBodyPartsButtons(): void {
         const tempBodyPartsObject: Record<string, IconButton> = {};
         for (const value of WokaBodyPart) {
-            if (
-                this.layers[WokaBodyPartOrder[value]][
-                    this.selectedLayers[WokaBodyPartOrder[value]]
-                ] === undefined
-            ) {
+            if (this.layers[WokaBodyPartOrder[value]][this.selectedLayers[WokaBodyPartOrder[value]]] === undefined) {
                 continue;
             }
             tempBodyPartsObject[value] = new IconButton(this, 0, 0, this.getDefaultIconButtonConfig(`icon${value}`));
@@ -361,17 +359,11 @@ export class CustomizeScene extends AbstractCharacterScene {
         const currentlySelectedWokaTexturesRecordObject: Record<string, string> = {};
 
         for (const value of WokaBodyPart) {
-            if (
-                this.layers[WokaBodyPartOrder[value]][
-                    this.selectedLayers[WokaBodyPartOrder[value]]
-                ] === undefined
-            ) {
+            if (this.layers[WokaBodyPartOrder[value]][this.selectedLayers[WokaBodyPartOrder[value]]] === undefined) {
                 continue;
             }
             currentlySelectedWokaTexturesRecordObject[value] =
-                this.layers[WokaBodyPartOrder[value]][
-                    this.selectedLayers[WokaBodyPartOrder[value]]
-                ].id;
+                this.layers[WokaBodyPartOrder[value]][this.selectedLayers[WokaBodyPartOrder[value]]].id;
         }
         return currentlySelectedWokaTexturesRecordObject;
     }
