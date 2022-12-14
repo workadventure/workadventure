@@ -27,15 +27,15 @@ If some variables are not defined, the container will not start, and an error me
 
 
 ### _For production environments :_
-- `EJABBERD HOST=xmpp.workadventure.localhost` must be defined.
-- The variable `EJABBERD API URI=http://ejabberd:5443/api` is also defined; this variable must not be changed; it will be used only between the container Back -> Ejabberd; it will not pass through the internet, but only within Docker's local network.
+- `EJABBERD_HOST=xmpp.workadventure.localhost` must be defined.
+- The variable `EJABBERD_API_URI=http://ejabberd:5443/api` is also defined; this variable must not be changed; it will be used only between the container Back -> Ejabberd; it will not pass through the internet, but only within Docker's local network.
 If you change the name of the container or his traefik labels, you must change it.
 
 
 ## Chat options
 Change the following environment variables in the `.env` file to configure the chat features:
-- Enable or disable chat (this will not disable all chat, but only ChatRooms and forums; the timeline will remain active): `ENABLE_CHAT=true`
-- Enable or disable the online user list: `ENABLE_CHAT_ONLINE_LIST=true`
-- Enable or disable the disconnected user list: `ENABLE_CHAT_DISCONNECTED_LIST=true`
-- Enable or disable file upload in chat (MUST BE TRUE ONLY IF ENABLE CHAT IS TRUE): `ENABLE_CHAT_UPLOAD=true`
-- Maximum uploadable file size (Byte) in chat: `UPLOAD_MAX_FILESIZE=10485760`
+- Enable or disable chat (this will not disable all chat, but only ChatRooms and forums; the timeline will remain active) : `ENABLE_CHAT=true`
+- Enable or disable the online user list : `ENABLE_CHAT_ONLINE_LIST=true`
+- Enable or disable the disconnected user list : `ENABLE_CHAT_DISCONNECTED_LIST=true`
+- Enable or disable file upload in chat (MUST BE TRUE ONLY IF ENABLE CHAT IS TRUE) : `ENABLE_CHAT_UPLOAD=true`
+- Maximum uploadable file size (Byte) in chat : `UPLOAD_MAX_FILESIZE=10485760`
