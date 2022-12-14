@@ -9,7 +9,7 @@
     import LL from "../i18n/i18n-svelte";
     import { localeDetector } from "../i18n/locales";
     import { locale } from "../i18n/i18n-svelte";
-    import ChatLiveRooms from "./ChatLiveRooms.svelte";
+    import ChatZones from "./ChatZones.svelte";
     import { activeThreadStore } from "../Stores/ActiveThreadStore";
     import ChatActiveThread from "./ChatActiveThread.svelte";
     import ChatActiveThreadTimeLine from "./Timeline/ChatActiveThreadTimeline.svelte";
@@ -22,7 +22,7 @@
         enableChatOnlineListStore,
         navChat,
         showForumsStore,
-        showLivesStore,
+        showChatZonesStore,
         showTimelineStore,
         timelineActiveStore,
         timelineMessagesToSee,
@@ -31,7 +31,7 @@
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
     import { iframeListener } from "../IframeListener";
     import NeedRefresh from "./NeedRefresh.svelte";
-    import ChatForumRooms from "./ChatForumRooms.svelte";
+    import Forums from "./Forums.svelte";
 
     let chatWindowElement: HTMLElement;
     let handleFormBlur: { blur(): void };
@@ -97,7 +97,7 @@
             })
         );
         subscribeListeners.push(
-            showLivesStore.subscribe((value) => {
+            showChatZonesStore.subscribe((value) => {
                 if (value) {
                     showForumsStore.set(false);
                     showTimelineStore.set(false);
@@ -107,7 +107,7 @@
         subscribeListeners.push(
             showForumsStore.subscribe((value) => {
                 if (value) {
-                    showLivesStore.set(false);
+                    showChatZonesStore.set(false);
                     showTimelineStore.set(false);
                 }
             })
@@ -115,7 +115,7 @@
         subscribeListeners.push(
             showTimelineStore.subscribe((value) => {
                 if (value) {
-                    showLivesStore.set(false);
+                    showChatZonesStore.set(false);
                     showForumsStore.set(false);
                 }
             })
@@ -216,15 +216,15 @@
                     {/if}
                 {:else}
                     {#if $enableChat}
-                        <ChatLiveRooms
+                        <ChatZones
                             searchValue={searchValue.toLocaleLowerCase()}
-                            liveRooms={[...$mucRoomsStore].filter(
+                            chatZones={[...$mucRoomsStore].filter(
                                 (mucRoom) => mucRoom.type === "live" && mucRoom.name.toLowerCase().includes(searchValue)
                             )}
                         />
-                        <ChatForumRooms
+                        <Forums
                             searchValue={searchValue.toLocaleLowerCase()}
-                            forumRooms={[...$mucRoomsStore].filter(
+                            forums={[...$mucRoomsStore].filter(
                                 (mucRoom) =>
                                     mucRoom.type === "forum" && mucRoom.name.toLowerCase().includes(searchValue)
                             )}

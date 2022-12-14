@@ -62,18 +62,18 @@ test.describe('Chat', () => {
       await page.locator('#game canvas').click();
       await Map.walkTo(page, 'ArrowRight', 2_500);
       await Map.walkTo(page, 'ArrowUp', 500);
-      await Chat.liveRoomExist(page, 'liveZone');
+      await Chat.chatZoneExist(page, 'liveZone');
 
       await Chat.slideToChat(page2);
       await page2.locator('#game canvas').click();
       await Map.walkTo(page2, 'ArrowRight', 2_500);
       await Map.walkTo(page2, 'ArrowDown', 500);
-      await Chat.liveRoomExist(page2, 'liveZone');
+      await Chat.chatZoneExist(page2, 'liveZone');
 
 
       // Open forum
-      await Chat.openLiveRoom(page);
-      await Chat.openLiveRoom(page2);
+      await Chat.openChatZone(page);
+      await Chat.openChatZone(page2);
 
 
       // Send a message
@@ -159,11 +159,11 @@ test.describe('Chat', () => {
       await page.locator('#game canvas').click();
       await Map.walkTo(page, 'ArrowLeft', 2_000);
       await Chat.slideToChat(page);
-      await Chat.noLiveRoom(page);
+      await Chat.noChatZone(page);
       await page2.locator('#game canvas').click();
       await Map.walkTo(page2, 'ArrowLeft', 2_000);
       await Chat.slideToChat(page2);
-      await Chat.noLiveRoom(page2);
+      await Chat.noChatZone(page2);
     });
 
     await test.step('default forum exist', async () => {
