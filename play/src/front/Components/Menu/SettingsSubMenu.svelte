@@ -12,7 +12,7 @@
 
     import infoImg from "../images/info.svg";
     import { iframeListener } from "../../Api/IframeListener";
-    import { analyticsClient } from "src/front/Administration/AnalyticsClient";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification();

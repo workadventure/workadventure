@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { analyticsClient } from "src/front/Administration/AnalyticsClient";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
