@@ -241,7 +241,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             actionsMenuStore.clear();
             return;
         }
-        actionsMenuStore.initialize(this.entityData.prefab.name);
+        actionsMenuStore.initialize(this.entityData.properties["textHeader"]??"");
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
         }
@@ -255,6 +255,8 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         for (const key of Object.keys(this.entityData.properties)) {
             if (this.entityData.properties[key]) {
                 switch (key) {
+                    case "textHeader": //do nothing, handled in toggleActionsMenu
+                        break;
                     case "jitsiRoom": {
                         const propertyData = this.entityData.properties[key] as JitsiRoomPropertyData;
                         actions.push({

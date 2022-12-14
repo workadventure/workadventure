@@ -7,6 +7,7 @@
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import OpenTabPropertyEditor from "./PropertyEditor/OpenTabPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
+    import TextPropertyEditor from "./PropertyEditor/TextPropertyEditor.svelte";
 
     interface EntityPropertyDescription {
         key: string;
@@ -18,6 +19,14 @@
     }
 
     let possibleProperties: EntityPropertyDescription[] = [
+        {
+            key: "textHeader",
+            name: $LL.mapEditor.entityEditor.textProperties.label(),
+            active: false,
+            currentValue: undefined,
+            component: TextPropertyEditor,
+            defaultValue: "",
+        },
         {
             key: "jitsiRoom",
             name: $LL.mapEditor.entityEditor.jitsiProperties.label(),

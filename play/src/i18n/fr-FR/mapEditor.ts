@@ -21,6 +21,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         buttonLabel:"Texte du bouton",
         editInstructions:"Sélectionnez un objet pour modifier ses propriétés.",
         removeInstructions:"Cliquez sur un objet pour le supprimer.",
+        textProperties:{
+            label:"Texte d'Entête",
+            placeholder:"Entrez ici le texte qui sera affiché lorsque l'on interagit avec l'objet."
+        },
         jitsiProperties:{
             label:"Salle Jitsi",
             roomNameLabel:"Nom de Salle",
