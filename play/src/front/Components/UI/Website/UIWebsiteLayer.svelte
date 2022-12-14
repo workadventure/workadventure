@@ -18,13 +18,11 @@
         iframe.style.height = uiWebsite.size.height;
         iframe.style.width = uiWebsite.size.width;
         iframe.style.visibility = uiWebsite.visible ? "visible" : "hidden";
-        iframe.style.margin = uiWebsite.margin
-            ? `${uiWebsite.margin.top ? uiWebsite.margin.top : "O"} ${
-                  uiWebsite.margin.right ? uiWebsite.margin.right : "O"
-              } ${uiWebsite.margin.bottom ? uiWebsite.margin.bottom : "O"} ${
-                  uiWebsite.margin.left ? uiWebsite.margin.left : "O"
-              }`
-            : "0";
+        if (uiWebsite.margin) {
+            iframe.style.margin = `${uiWebsite.margin.top || 0} ${uiWebsite.margin.right || 0} ${
+                uiWebsite.margin.bottom || 0
+            } ${uiWebsite.margin.left || 0}`;
+        }
     }
 
     onMount(() => {
