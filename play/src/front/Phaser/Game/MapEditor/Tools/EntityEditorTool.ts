@@ -1,4 +1,4 @@
-import { CommandConfig, EntityData, EntityPrefab } from "@workadventure/map-editor";
+import { AtLeast, CommandConfig, EntityData, EntityPrefab } from "@workadventure/map-editor";
 import { GameMapEntities } from "@workadventure/map-editor/src/GameMap/GameMapEntities";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { get, Unsubscriber } from "svelte/store";
@@ -76,7 +76,7 @@ export class EntityEditorTool extends MapEditorTool {
     public handleCommandExecution(commandConfig: CommandConfig): void {
         switch (commandConfig.type) {
             case "UpdateEntityCommand": {
-                this.handleEntityUpdate(commandConfig.entityData);
+                this.handleEntityUpdate(commandConfig.dataToModify);
                 break;
             }
             case "CreateEntityCommand": {
@@ -150,7 +150,7 @@ export class EntityEditorTool extends MapEditorTool {
                 this.mapEditorModeManager.executeCommand(
                     {
                         type: "UpdateEntityCommand",
-                        entityData: data as EntityData,
+                        dataToModify: data as EntityData,
                     },
                     false,
                     false
@@ -160,7 +160,7 @@ export class EntityEditorTool extends MapEditorTool {
         }
     }
 
-    private handleEntityUpdate(config: EntityData): void {
+    private handleEntityUpdate(config: AtLeast<EntityData, "id">): void {
         const entity = this.entitiesManager.getEntities().find((entity) => entity.getEntityData().id === config.id);
         entity?.updateEntity(config);
         this.scene.markDirty();
@@ -228,10 +228,10 @@ export class EntityEditorTool extends MapEditorTool {
                 type: "DeleteEntityCommand",
             });
         });
-        this.entitiesManager.on(EntitiesManagerEvent.UpdateEntity, (entityData: EntityData) => {
+        this.entitiesManager.on(EntitiesManagerEvent.UpdateEntity, (entityData: AtLeast<EntityData, 'id'>) => {
             // TODO: Where to update the grid?
             this.mapEditorModeManager.executeCommand({
-                entityData,
+                dataToModify: entityData,
                 type: "UpdateEntityCommand",
             });
         });

@@ -15,6 +15,8 @@ export type CommandConfig =
     CreateEntityCommandConfig |
     DeleteEntityCommandConfig;
 
+export type AtLeast<T, K extends keyof T> = Partial<T> & Pick<T, K>;
+
 export type AreaData = Required<ModifyAreaMessage> & { visible: boolean }; // move visible to messages also
 
 export enum AreaType {

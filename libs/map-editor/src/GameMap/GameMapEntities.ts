@@ -101,9 +101,9 @@ export class GameMapEntities {
     }
 
     private updateEntityInMapProperties(entityData: EntityData): boolean {
-        const entitiesPropertyValues = JSON.parse(JSON.stringify(this.getEntitiesMapProperty()?.value)) as EntityData[];
+        const entitiesPropertyValue = JSON.parse(JSON.stringify(this.getEntitiesMapProperty()?.value)) as EntityData[];
 
-        const entityIndex = entitiesPropertyValues.findIndex(entity => entity.id === entityData.id);
+        const entityIndex = entitiesPropertyValue.findIndex(entity => entity.id === entityData.id);
 
         if (entityIndex === -1) {
             console.warn(`CANNOT FIND ENTITY WITH ID: ${entityData.id} IN MAP PROPERTIES!`);
@@ -112,9 +112,8 @@ export class GameMapEntities {
 
         const entitiesMapProperty = this.getEntitiesMapProperty();
         if (entitiesMapProperty !== undefined) {
-            entitiesPropertyValues[entityIndex] = entityData;
-            console.log(entityData.x, entityData.y);
-            entitiesMapProperty.value = JSON.parse(JSON.stringify(entitiesPropertyValues));
+            entitiesPropertyValue[entityIndex] = entityData;
+            entitiesMapProperty.value = JSON.parse(JSON.stringify(entitiesPropertyValue));
             return true;
         }
         return false;
@@ -123,34 +122,6 @@ export class GameMapEntities {
     private getEntitiesMapProperty(): ITiledMapProperty | undefined {
         return this.gameMap.getMap().properties?.find(property => property.name === this.MAP_PROPERTY_ENTITIES_NAME);
     }
-
-    // private loadMockEntities(): EntityData[] {
-    //     return [
-    //         {
-    //             id: 0,
-    //             x: 320,
-    //             y: 304,
-    //             interactive: true,
-    //             properties: {
-    //                 jitsiRoom: {roomName : "ChillZone", buttonLabel :"Open Jitsi"},
-    //                 playAudio: {audioLink : "../assets/audio/campfire.ogg", buttonLabel:"Play campfire sound"},
-    //                 openTab: {link:"https://img-9gag-fun.9cache.com/photo/ay2DNzM_460svav1.mp4", buttonLabel:"Show me some kitties!"},
-    //             },
-    //             prefab:{
-    //                 name:"table",
-    //                 tags:["table"],
-    //                 imagePath : "table",
-    //                 collisionGrid: [
-    //                     [0, 0],
-    //                     [1, 1],
-    //                     [1, 1],
-    //                 ],
-    //                 direction: Direction.Down,
-    //                 color: "saddlebrown",
-    //             }
-    //         }
-    //     ];
-    // }
 
     public getEntities(): EntityData[] {
         return this.entities;

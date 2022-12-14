@@ -62,7 +62,7 @@ import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
-import type { AreaData, EntityData } from "@workadventure/map-editor";
+import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 
@@ -1061,7 +1061,14 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorModifyEntity(commandId: string, config: EntityData): void {
+    public emitMapEditorModifyEntity(commandId: string, config: AtLeast<EntityData, 'id'>): void {
+        if (config.properties) {
+            for (const key of Object.keys(config.properties)) {
+                if (config.properties[key] === undefined) {
+                    config.properties[key] = null;
+                }
+            }
+        }
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1070,7 +1077,11 @@ export class RoomConnection implements RoomConnection {
                     editMapMessage: {
                         message: {
                             $case: "modifyEntityMessage",
-                            modifyEntityMessage: config,
+                            modifyEntityMessage: {
+                                ...config,
+                                // We need to declare properties due to the protobuf limitations - make new custom type to use optional flag?
+                                properties: config.properties ?? {},
+                            },
                         },
                     },
                 },

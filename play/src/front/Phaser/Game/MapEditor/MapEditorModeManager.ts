@@ -312,7 +312,7 @@ export class MapEditorModeManager {
                     break;
                 }
                 case "UpdateEntityCommand": {
-                    this.scene.connection?.emitMapEditorModifyEntity(commandId, commandConfig.entityData);
+                    this.scene.connection?.emitMapEditorModifyEntity(commandId, commandConfig.dataToModify);
                     break;
                 }
                 case "CreateEntityCommand": {

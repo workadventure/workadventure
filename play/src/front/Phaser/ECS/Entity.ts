@@ -1,4 +1,5 @@
 import {
+    AtLeast,
     EntityData,
     JitsiRoomPropertyData,
     OpenTabPropertyData,
@@ -19,6 +20,8 @@ import { createColorStore } from "../../Stores/OutlineColorStore";
 import { ActivatableInterface } from "../Game/ActivatableInterface";
 import type { GameScene } from "../Game/GameScene";
 import { OutlineableInterface } from "../Game/OutlineableInterface";
+
+import * as _ from "lodash";
 
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
@@ -78,14 +81,10 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.scene.add.existing(this);
     }
 
-    public updateEntity(entityData: EntityData): void {
-        this.entityData = {
-            ...entityData,
-            interactive: entityData.interactive ?? true,
-            properties: entityData.properties ?? {},
-        };
+    public updateEntity(dataToModify: AtLeast<EntityData, "id">): void {
+        _.merge(this.entityData, dataToModify);
 
-        this.setPosition(entityData.x, entityData.y);
+        this.setPosition(this.entityData.x, this.entityData.y);
         // TODO: Add more visual changes on Entity Update
     }
 
@@ -344,6 +343,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     public setProperty(key: string, value: unknown): void {
         this.entityData.properties[key] = value;
-        this.emit(EntityEvent.PropertiesUpdated);
+        this.emit(EntityEvent.PropertiesUpdated, key, value);
     }
 }

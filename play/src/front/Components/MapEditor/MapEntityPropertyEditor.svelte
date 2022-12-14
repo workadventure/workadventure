@@ -47,7 +47,9 @@
     let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((currentEntity) => {
         if (currentEntity) {
             for (let property of possibleProperties) {
-                property.active = currentEntity.getProperties()[property.key] !== undefined;
+                property.active =
+                    currentEntity.getProperties()[property.key] !== undefined &&
+                    currentEntity.getProperties()[property.key] !== null;
                 property.currentValue = currentEntity.getProperties()[property.key];
                 if (!property.currentValue) {
                     property.currentValue = structuredClone(property.defaultValue);

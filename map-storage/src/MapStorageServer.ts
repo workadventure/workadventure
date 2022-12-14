@@ -78,11 +78,9 @@ const mapStorageServer: MapStorageServer = {
                     const message = editMapMessage.modifyEntityMessage;
                     const entity = gameMap.getGameMapEntities().getEntity(message.id);
                     if (entity) {
-                        const entityData: EntityData = structuredClone(entity);
-                        _.merge(entityData, message);
                         validCommand = mapsManager.executeCommand(call.request.mapKey, {
                             type: "UpdateEntityCommand",
-                            entityData,
+                            dataToModify: message,
                         });
                     } else {
                         console.log(`Could not find entity with id: ${message.id}`);

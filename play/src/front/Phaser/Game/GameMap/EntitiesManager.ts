@@ -1,4 +1,4 @@
-import { EntityData } from "@workadventure/map-editor";
+import { AtLeast, EntityData } from "@workadventure/map-editor";
 import { Observable, Subject } from "rxjs";
 import { actionsMenuStore } from "../../../Stores/ActionsMenuStore";
 import { Entity, EntityEvent } from "../../ECS/Entity";
@@ -118,10 +118,12 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                     grid
                 );
             }
-            const entityData = structuredClone(entity.getEntityData());
-            entityData.x = entity.x;
-            entityData.y = entity.y;
-            this.emit(EntitiesManagerEvent.UpdateEntity, entityData);
+            const data: AtLeast<EntityData, 'id'> = {
+                id: entity.getEntityData().id,
+                x: entity.x,
+                y: entity.y,
+            };
+            this.emit(EntitiesManagerEvent.UpdateEntity, data);
         });
         // get the type! Switch to rxjs?
         entity.on(
@@ -133,9 +135,12 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         );
         entity.on(
             EntityEvent.PropertiesUpdated,
-            () => {
-                const entityData = structuredClone(entity.getEntityData());
-                this.emit(EntitiesManagerEvent.UpdateEntity, entityData);
+            (key: string, value: unknown) => {
+                const data: AtLeast<EntityData, 'id'> = {
+                    id: entity.getEntityData().id,
+                    properties: { [key]: value },
+                }
+                this.emit(EntitiesManagerEvent.UpdateEntity, data);
             }
         );
         entity.on(Phaser.Input.Events.POINTER_OVER, () => {
