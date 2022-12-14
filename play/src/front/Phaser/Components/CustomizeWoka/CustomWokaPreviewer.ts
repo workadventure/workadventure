@@ -3,6 +3,20 @@ import { getPlayerAnimations, PlayerAnimationTypes } from "../../Player/Animatio
 import { PositionMessage_Direction } from "@workadventure/messages";
 import { ProtobufClientUtils } from "../../../Network/ProtobufClientUtils";
 
+export const WokaBodyPart = ["Body", "Eyes", "Hair", "Clothes", "Hat", "Accessory"] as const;
+
+export const WokaBodyPartOrder = {
+    "Body": 0,
+    "Eyes": 1,
+    "Hair": 2,
+    "Clothes": 3,
+    "Hat": 4,
+    "Accessory": 5
+}
+
+/**
+ * @deprecated Use WokaBodyPart instead
+ */
 export enum CustomWokaBodyPart {
     Body = "Body",
     Eyes = "Eyes",
@@ -12,6 +26,9 @@ export enum CustomWokaBodyPart {
     Accessory = "Accessory",
 }
 
+/**
+ * @deprecated Use WokaBodyPartOrder instead
+ */
 export enum CustomWokaBodyPartOrder {
     Body,
     Eyes,
