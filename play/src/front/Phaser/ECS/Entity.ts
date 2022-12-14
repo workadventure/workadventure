@@ -4,6 +4,7 @@ import {
     JitsiRoomPropertyData,
     OpenTabPropertyData,
     PlayAudioPropertyData,
+    GameMapProperties
 } from "@workadventure/map-editor";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
@@ -239,7 +240,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             actionsMenuStore.clear();
             return;
         }
-        actionsMenuStore.initialize(this.entityData.prefab.name);
+        actionsMenuStore.initialize(this.entityData.properties["textHeader"]??"");
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
         }
@@ -253,6 +254,8 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         for (const key of Object.keys(this.entityData.properties)) {
             if (this.entityData.properties[key]) {
                 switch (key) {
+                    case "textHeader": //do nothing, handled in toggleActionsMenu
+                        break;
                     case "jitsiRoom": {
                         const propertyData = this.entityData.properties[key] as JitsiRoomPropertyData;
                         actions.push({
@@ -263,6 +266,9 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                                 this.emit(EntityEvent.PropertyActivated, {
                                     propertyName: key,
                                     propertyValue: propertyData.roomName,
+                                },{
+                                    propertyName: GameMapProperties.JITSI_CONFIG,
+                                    propertyValue: JSON.stringify(propertyData.jitsiRoomConfig)
                                 });
                             },
                         });

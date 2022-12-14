@@ -20,11 +20,21 @@ const mapEditor: BaseTranslation = {
         buttonLabel:"Button Label",
         editInstructions:"Click an object to modify its properties.",
         removeInstructions:"Click an object to delete it.",
+        textProperties:{
+            label:"Header Text",
+            placeholder:"Input here text which will be displayed when interacting with the object"
+        },
         jitsiProperties:{
             label:"Jitsi Room",
             roomNameLabel:"Room Name",
             roomNamePlaceholder:"Room Name",
             defaultButtonLabel :"Open Jitsi Room",
+            audioMutedLabel :"Muted by default",
+            moreOptionsLabel:"More Options",
+            jitsiRoomConfig:{
+                startWithAudioMuted:"Start with microphone muted",
+                startWithVideoMuted:"Start with video closed"
+            }
         },
         audioProperties:{
             label:"Play Audio File",

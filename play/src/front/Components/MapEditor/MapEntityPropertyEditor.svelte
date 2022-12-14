@@ -7,17 +7,26 @@
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import OpenTabPropertyEditor from "./PropertyEditor/OpenTabPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
+    import TextPropertyEditor from "./PropertyEditor/TextPropertyEditor.svelte";
 
     interface EntityPropertyDescription {
         key: string;
         name: string;
         active: boolean;
         currentValue: unknown;
-        component: unknown;
+        component: any;
         defaultValue: unknown;
     }
 
     let possibleProperties: EntityPropertyDescription[] = [
+        {
+            key: "textHeader",
+            name: $LL.mapEditor.entityEditor.textProperties.label(),
+            active: false,
+            currentValue: undefined,
+            component: TextPropertyEditor,
+            defaultValue: "",
+        },
         {
             key: "jitsiRoom",
             name: $LL.mapEditor.entityEditor.jitsiProperties.label(),
@@ -96,67 +105,72 @@
     }
 </script>
 
-<div>
-    {#if $mapEditorSelectedEntityStore === undefined}
-        {$LL.mapEditor.entityEditor.editInstructions()}
-    {:else}
-        {#each possibleProperties as property (property.key)}
-            <div class="property-enabler">
-                <label for={property.key}>{property.name}</label>
-                <input
-                    id={property.key}
-                    type="checkbox"
-                    class="input-switch"
-                    bind:checked={property.active}
-                    on:change={() => onPropertyChecked(property)}
+{#if $mapEditorSelectedEntityStore === undefined}
+    {$LL.mapEditor.entityEditor.editInstructions()}
+{:else}
+<div class="entity-properties">
+    {#each possibleProperties as property (property.key)}
+        <div class="property-enabler">
+            <label for={property.key}>{property.name}</label>
+            <input
+                id={property.key}
+                type="checkbox"
+                class="input-switch"
+                bind:checked={property.active}
+                on:change={() => onPropertyChecked(property)}
+            />
+        </div>
+        {#if property.active}
+            <div class="property-container" transition:slide|local>
+                <svelte:component
+                    this={property.component}
+                    bind:property={property.currentValue}
+                    on:change={() => onUpdateProperty(property)}
                 />
             </div>
-            {#if property.active}
-                <div class="property-container" transition:slide|local>
-                    <svelte:component
-                        this={property.component}
-                        bind:property={property.currentValue}
-                        on:change={() => onUpdateProperty(property)}
-                    />
-                </div>
-            {/if}
-        {/each}
-        <div class="action-button">
-            <button on:click={onTestInteraction}>{$LL.mapEditor.entityEditor.testInteractionButton()}</button>
-            <button class="delete-button" on:click={onDeleteEntity}
-                ><div>{$LL.mapEditor.entityEditor.deleteButton()}</div>
-                <img src={crossImg} alt="" /></button
-            >
-        </div>
-    {/if}
+        {/if}
+    {/each}
 </div>
+<div class="action-button">
+        <button on:click={onTestInteraction}>{$LL.mapEditor.entityEditor.testInteractionButton()}</button>
+        <button class="delete-button" on:click={onDeleteEntity}
+            ><div>{$LL.mapEditor.entityEditor.deleteButton()}</div>
+            <img src={crossImg} alt="" /></button
+        >
+    </div>
+{/if}
 
 <style lang="scss">
-    .property-enabler {
-        border-radius: 0.1em;
-        display: flex;
-        background-color: rgb(77 75 103);
-        margin-top: 1px;
-        margin-top: 1px;
-        align-items: center;
-        padding-right: 1em;
-        label {
-            padding-top: 1em;
-            padding-bottom: 1em;
-            padding-left: 1em;
-            flex-grow: 1;
-            margin: 0;
+    .entity-properties
+    {
+        overflow-y:auto;
+        overflow-x:hidden;
+        .property-enabler {
+            border-radius: 0.1em;
+            display: flex;
+            background-color: rgb(77 75 103);
+            margin-top: 1px;
+            margin-top: 1px;
+            align-items: center;
+            padding-right: 1em;
+            label {
+                padding-top: 1em;
+                padding-bottom: 1em;
+                padding-left: 1em;
+                flex-grow: 1;
+                margin: 0;
+            }
         }
-    }
-    .property-enabler:hover {
-        background-color: rgb(85 85 113);
-    }
-    .property-container {
-        padding-left: 1em;
+        .property-enabler:hover {
+            background-color: rgb(85 85 113);
+        }
+        .property-container {
+            padding-left: 1em;
+        }
     }
 
     .action-button {
-        margin-top: 2em;
+        margin-top: 1em;
         display: flex;
         button {
             flex: 1 1 0px;
