@@ -1,4 +1,4 @@
-<<script lang="ts">
+<script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { HtmlUtils } from "../Utils/HtmlUtils";
     import Loader from "./Loader.svelte";
@@ -249,4 +249,3 @@
     flex-direction: column;
   }
 </style>
->
