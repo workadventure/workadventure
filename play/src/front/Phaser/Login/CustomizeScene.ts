@@ -148,7 +148,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         let i = 0;
         for (const layerItem of this.selectedLayers) {
             if (layerItem !== undefined) {
-                if(this.layers[i][layerItem] === undefined){
+                if (this.layers[i][layerItem] === undefined) {
                     continue;
                 }
                 layers.push(this.layers[i][layerItem].id);
@@ -255,16 +255,11 @@ export class CustomizeScene extends AbstractCharacterScene {
             if (
                 this.layers[CustomWokaBodyPartOrder[value as keyof typeof CustomWokaBodyPartOrder]][
                     this.selectedLayers[CustomWokaBodyPartOrder[value as keyof typeof CustomWokaBodyPartOrder]]
-                    ] === undefined
+                ] === undefined
             ) {
                 continue;
             }
-            tempBodyPartsObject[value] = new IconButton(
-                this,
-                0,
-                0,
-                this.getDefaultIconButtonConfig(`icon${value}`)
-            )
+            tempBodyPartsObject[value] = new IconButton(this, 0, 0, this.getDefaultIconButtonConfig(`icon${value}`));
         }
         this.bodyPartsButtons = tempBodyPartsObject;
     }
@@ -406,23 +401,23 @@ export class CustomizeScene extends AbstractCharacterScene {
             );
             const bottom = Math.floor(top + slotSize + 23);
 
-            if(this.bodyPartsButtons.Body !== undefined){
+            if (this.bodyPartsButtons.Body !== undefined) {
                 this.bodyPartsButtons.Body.setPosition(left, top);
             }
 
-            if(this.bodyPartsButtons.Eyes !== undefined){
+            if (this.bodyPartsButtons.Eyes !== undefined) {
                 this.bodyPartsButtons.Eyes.setPosition(middle, top);
             }
-            if(this.bodyPartsButtons.Hair !== undefined){
+            if (this.bodyPartsButtons.Hair !== undefined) {
                 this.bodyPartsButtons.Hair.setPosition(right, top);
             }
-            if(this.bodyPartsButtons.Clothes !== undefined){
+            if (this.bodyPartsButtons.Clothes !== undefined) {
                 this.bodyPartsButtons.Clothes.setPosition(left, bottom);
             }
-            if(this.bodyPartsButtons.Hat !== undefined){
+            if (this.bodyPartsButtons.Hat !== undefined) {
                 this.bodyPartsButtons.Hat.setPosition(middle, bottom);
             }
-            if(this.bodyPartsButtons.Accessory !== undefined){
+            if (this.bodyPartsButtons.Accessory !== undefined) {
                 this.bodyPartsButtons.Accessory.setPosition(right, bottom);
             }
 
@@ -439,22 +434,22 @@ export class CustomizeScene extends AbstractCharacterScene {
         const middle = Math.floor(top + slotSize + 24);
         const bottom = Math.floor(middle + slotSize + 24);
 
-        if(this.bodyPartsButtons.Body !== undefined){
+        if (this.bodyPartsButtons.Body !== undefined) {
             this.bodyPartsButtons.Body.setPosition(left, top);
         }
-        if(this.bodyPartsButtons.Eyes !== undefined){
+        if (this.bodyPartsButtons.Eyes !== undefined) {
             this.bodyPartsButtons.Eyes.setPosition(left, middle);
         }
-        if(this.bodyPartsButtons.Hair !== undefined){
+        if (this.bodyPartsButtons.Hair !== undefined) {
             this.bodyPartsButtons.Hair.setPosition(left, bottom);
         }
-        if(this.bodyPartsButtons.Clothes !== undefined){
+        if (this.bodyPartsButtons.Clothes !== undefined) {
             this.bodyPartsButtons.Clothes.setPosition(right, top);
         }
-        if(this.bodyPartsButtons.Hat !== undefined){
+        if (this.bodyPartsButtons.Hat !== undefined) {
             this.bodyPartsButtons.Hat.setPosition(right, middle);
         }
-        if(this.bodyPartsButtons.Accessory !== undefined){
+        if (this.bodyPartsButtons.Accessory !== undefined) {
             this.bodyPartsButtons.Accessory.setPosition(right, bottom);
         }
     }
@@ -562,7 +557,7 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         for (const bodyPart in CustomWokaBodyPart) {
             const button = this.bodyPartsButtons[bodyPart as CustomWokaBodyPart];
-            if(button === undefined){
+            if (button === undefined) {
                 continue;
             }
             button.on(IconButtonEvent.Clicked, (selected: boolean) => {
@@ -744,7 +739,7 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private deselectAllButtons(): void {
         for (const bodyPart in CustomWokaBodyPart) {
-            if(this.bodyPartsButtons[bodyPart as CustomWokaBodyPart] === undefined){
+            if (this.bodyPartsButtons[bodyPart as CustomWokaBodyPart] === undefined) {
                 continue;
             }
             this.bodyPartsButtons[bodyPart as CustomWokaBodyPart].select(false);
