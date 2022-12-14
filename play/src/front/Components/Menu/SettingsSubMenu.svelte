@@ -12,6 +12,7 @@
 
     import infoImg from "../images/info.svg";
     import { iframeListener } from "../../Api/IframeListener";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification();
@@ -64,6 +65,9 @@
     }
 
     function changeFullscreen() {
+        // Analytics Client
+        analyticsClient.settingFullscreen(fullscreen ? "true" : "false");
+
         const body = HtmlUtils.querySelectorOrFail("body");
         if (body) {
             if (document.fullscreenElement !== null && !fullscreen) {
@@ -76,6 +80,9 @@
     }
 
     function changeNotification() {
+        // Analytics Client
+        analyticsClient.settingNotification(notification ? "true" : "false");
+
         if (Notification.permission === "granted") {
             localUserStore.setNotification(notification);
             iframeListener.sendSettingsToChatIframe();
@@ -100,19 +107,48 @@
     }
 
     function changeForceCowebsiteTrigger() {
+        // Analytics Client
+        analyticsClient.settingAskWebsite(forceCowebsiteTrigger ? "true" : "false");
+
         localUserStore.setForceCowebsiteTrigger(forceCowebsiteTrigger);
     }
 
     function changeIgnoreFollowRequests() {
+        // Analytics Client
+        analyticsClient.settingRequestFollow(ignoreFollowRequests ? "true" : "false");
+
         localUserStore.setIgnoreFollowRequests(ignoreFollowRequests);
     }
 
     function changeDecreaseAudioPlayerVolumeWhileTalking() {
+        // Analytics Client
+        analyticsClient.settingDecreaseAudioVolume(decreaseAudioPlayerVolumeWhileTalking ? "true" : "false");
+
         localUserStore.setDecreaseAudioPlayerVolumeWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
     }
 
     function closeMenu() {
         menuVisiblilityStore.set(false);
+    }
+
+    function changeCameraPrivacySettings() {
+        // Analytics Client
+        analyticsClient.settingMicrophone(valueCameraPrivacySettings ? "true" : "false");
+
+        if (valueCameraPrivacySettings !== previewCameraPrivacySettings) {
+            previewCameraPrivacySettings = valueCameraPrivacySettings;
+            localUserStore.setCameraPrivacySettings(valueCameraPrivacySettings);
+        }
+    }
+
+    function changeMicrophonePrivacySettings() {
+        // Analytics Client
+        analyticsClient.settingCamera(valueMicrophonePrivacySettings ? "true" : "false");
+
+        if (valueMicrophonePrivacySettings !== previewMicrophonePrivacySettings) {
+            previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
+            localUserStore.setMicrophonePrivacySettings(valueMicrophonePrivacySettings);
+        }
     }
 
     let isMobile = isMediaBreakpointUp("md");
@@ -177,11 +213,15 @@
             <span class="tooltiptext sm:tw-w-56 md:tw-w-96">{$LL.menu.settings.privacySettings.explanation()}</span>
         </div>
         <label>
-            <input type="checkbox" bind:checked={valueCameraPrivacySettings} />
+            <input type="checkbox" bind:checked={valueCameraPrivacySettings} on:change={changeCameraPrivacySettings} />
             {$LL.menu.settings.privacySettings.cameraToggle()}
         </label>
         <label>
-            <input type="checkbox" bind:checked={valueMicrophonePrivacySettings} />
+            <input
+                type="checkbox"
+                bind:checked={valueMicrophonePrivacySettings}
+                on:change={changeMicrophonePrivacySettings}
+            />
             {$LL.menu.settings.privacySettings.microphoneToggle()}
         </label>
     </section>
