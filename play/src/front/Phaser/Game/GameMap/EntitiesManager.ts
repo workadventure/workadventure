@@ -128,8 +128,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         // get the type! Switch to rxjs?
         entity.on(
             EntityEvent.PropertyActivated,
-            (data: { propertyName: string; propertyValue: string | number | boolean }) => {
-                this.properties.set(data.propertyName, data.propertyValue);
+            (...datas: { propertyName: string; propertyValue: string | number | boolean }[]) => {
+                datas.forEach((data)=>this.properties.set(data.propertyName, data.propertyValue));
                 this.gameMapFrontWrapper.handleEntityActionTrigger();
             }
         );
