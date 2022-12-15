@@ -242,7 +242,13 @@ export class GameRoom implements BrothersFinder {
         }
 
         this.users.delete(user.id);
-        this.usersByUuid.delete(user.uuid);
+        const set = this.usersByUuid.get(user.uuid);
+        if (set !== undefined) {
+            set.delete(user);
+            if (set.size === 0) {
+                this.usersByUuid.delete(user.uuid);
+            }
+        }
 
         if (user !== undefined) {
             this.positionNotifier.leave(user);
