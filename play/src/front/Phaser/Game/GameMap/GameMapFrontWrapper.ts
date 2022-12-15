@@ -61,6 +61,8 @@ export class GameMapFrontWrapper {
      */
     public readonly collisionTilesHistogram: string[][][];
 
+    public collisionGrid: number[][];
+
     private perLayerCollisionGridCache: Map<number, (0 | 2 | 1)[][]> = new Map<number, (0 | 2 | 1)[][]>();
 
     private lastProperties = new Map<string, string | boolean | number>();
@@ -104,6 +106,7 @@ export class GameMapFrontWrapper {
         }
 
         this.collisionTilesHistogram = [];
+        this.collisionGrid = [];
         const collisionsLayer = this.phaserLayers.find((phaserLayer) => phaserLayer.layer.name === "collisions");
         for (let y = 0; y < this.phaserMap.height; y += 1) {
             this.collisionTilesHistogram.push([]);
@@ -122,15 +125,16 @@ export class GameMapFrontWrapper {
         for (const entityData of this.gameMap.getGameMapEntities().getEntities()) {
             void this.entitiesManager.addEntity(entityData, TexturesHelper.ENTITIES_TEXTURES_DIRECTORY);
         }
+
+        this.updateCollisionGrid();
     }
 
     public setLayerVisibility(layerName: string, visible: boolean): void {
         const phaserLayer = this.findPhaserLayer(layerName);
-        let collisionGrid: number[][] = [];
         if (phaserLayer != undefined) {
             phaserLayer.setVisible(visible);
             phaserLayer.setCollisionByProperty({ collides: true }, visible);
-            collisionGrid = this.getCollisionGrid(phaserLayer);
+            this.updateCollisionGrid(phaserLayer);
         } else {
             const phaserLayers = this.findPhaserLayers(layerName + "/");
             if (phaserLayers.length === 0) {
@@ -145,9 +149,8 @@ export class GameMapFrontWrapper {
                 phaserLayers[i].setVisible(visible);
                 phaserLayers[i].setCollisionByProperty({ collides: true }, visible);
             }
-            collisionGrid = this.getCollisionGrid(undefined, false);
+            this.updateCollisionGrid(undefined, false);
         }
-        this.mapChangedSubject.next(collisionGrid);
     }
 
     /**
@@ -189,7 +192,7 @@ export class GameMapFrontWrapper {
             }
         }
         collisionsLayer.setCollisionByProperty({ collides: true });
-        this.mapChangedSubject.next(this.getCollisionGrid(collisionsLayer, false));
+        this.updateCollisionGrid(collisionsLayer, false);
     }
 
     public getPropertiesForIndex(index: number): Array<ITiledMapProperty> {
@@ -200,11 +203,16 @@ export class GameMapFrontWrapper {
         return this.gameMap.getTileInformationFromTileset(tilesetName, tileIndex);
     }
 
-    public getCollisionGrid(modifiedLayer?: TilemapLayer, useCache = true): number[][] {
+    public getCollisionGrid(): number[][] {
+        return this.collisionGrid;
+    }
+
+    private updateCollisionGrid(modifiedLayer?: TilemapLayer, useCache = true): void {
         const map = this.gameMap.getMap();
         // initialize collision grid to write on
         if (map.height === undefined || map.width === undefined) {
-            return [];
+            this.collisionGrid = [];
+            return;
         }
         const grid: number[][] = Array.from(Array(map.height), (_) => Array(map.width).fill(PathTileType.Walkable));
         if (modifiedLayer) {
@@ -239,7 +247,8 @@ export class GameMapFrontWrapper {
                 }
             }
         }
-        return grid;
+        this.collisionGrid = grid;
+        this.mapChangedSubject.next(this.collisionGrid);
     }
 
     public getTileDimensions(): { width: number; height: number } {
@@ -361,10 +370,32 @@ export class GameMapFrontWrapper {
                     }
                 }
             }
-            this.mapChangedSubject.next(this.getCollisionGrid(phaserLayer));
+            this.updateCollisionGrid(phaserLayer);
         } else {
             console.error("The layer '" + layer + "' does not exist (or is not a tilelaye).");
         }
+    }
+
+    public isSpaceAvailable(xPos: number, yPos: number): boolean {
+        if (this.collisionGrid.length === 0) {
+            return false;
+        }
+        const height = this.collisionGrid.length;
+        const width  = this.collisionGrid[0].length;
+        if (xPos < 0 || xPos > width * this.getTileDimensions().width ||
+            yPos < 0 || yPos > height * this.getTileDimensions().height
+        ) {
+            return false;
+        }
+        const xIndex = Math.floor(xPos / this.getTileDimensions().width);
+        const yIndex = Math.floor(yPos / this.getTileDimensions().height);
+        if (yIndex >= height || yIndex < 0 || xIndex >= width || xIndex < 0) {
+            return false;
+        }
+        if (this.collisionGrid[yIndex][xIndex] !== 0) {
+            return false;
+        }
+        return true;
     }
 
     public setLayerProperty(

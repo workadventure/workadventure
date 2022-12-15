@@ -643,7 +643,7 @@ export class GameScene extends DirtyScene {
 
         this.pathfindingManager = new PathfindingManager(
             this,
-            this.gameMapFrontWrapper.getCollisionGrid(undefined, false),
+            this.gameMapFrontWrapper.getCollisionGrid(),
             this.gameMapFrontWrapper.getTileDimensions()
         );
 
@@ -2460,6 +2460,7 @@ ${escapedMessage}
         this.gameMapChangedSubscription = this.gameMapFrontWrapper
             .getMapChangedObservable()
             .subscribe((collisionGrid) => {
+                console.log('set collision grid');
                 this.pathfindingManager.setCollisionGrid(collisionGrid);
                 this.markDirty();
                 const playerDestination = this.CurrentPlayer.getCurrentPathDestinationPoint();

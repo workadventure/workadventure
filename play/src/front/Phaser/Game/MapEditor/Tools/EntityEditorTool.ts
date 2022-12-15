@@ -206,7 +206,7 @@ export class EntityEditorTool extends MapEditorTool {
                             if (this.entityPrefabPreview) {
                                 this.entityPrefabPreview.setTexture(entityPrefab.imagePath);
                             } else {
-                                this.entityPrefabPreview = this.scene.add.image(300, 300, entityPrefab.imagePath);
+                                this.entityPrefabPreview = this.scene.add.image(0, 0, entityPrefab.imagePath);
                             }
                         })
                         .catch(() => {
@@ -286,37 +286,51 @@ export class EntityEditorTool extends MapEditorTool {
             this.entityPrefabPreview.setDepth(
                 this.entityPrefabPreview.y + this.entityPrefabPreview.displayHeight * 0.5
             );
+            if (!this.isSpaceAvailable(this.entityPrefabPreview.x, this.entityPrefabPreview.y)) {
+                this.entityPrefabPreview.setTint(0xFF0000);
+            } else {
+                this.entityPrefabPreview.clearTint();
+            }
             this.scene.markDirty();
         }
     }
 
     private handlePointerDownEvent(pointer: Phaser.Input.Pointer): void {
+        if (!this.entityPrefabPreview || !this.entityPrefab) {
+            return
+        }
+        if (!this.isSpaceAvailable(this.entityPrefabPreview.x, this.entityPrefabPreview.y)) {
+            return;
+        }
         if (pointer.rightButtonDown()) {
             this.cleanPreview();
+            return;
         }
-        if (this.entityPrefabPreview && this.entityPrefab) {
-            let x = Math.floor(pointer.worldX);
-            let y = Math.floor(pointer.worldY);
+        let x = Math.floor(pointer.worldX);
+        let y = Math.floor(pointer.worldY);
 
-            if (this.entityPrefab.collisionGrid) {
-                const offsets = this.getPositionOffset(this.entityPrefab.collisionGrid);
-                x = Math.floor(pointer.worldX / 32) * 32 + offsets.x;
-                y = Math.floor(pointer.worldY / 32) * 32 + offsets.y;
-            }
-
-            const entityData: EntityData = {
-                x,
-                y,
-                id: this.gameMapEntities.getNextEntityId(),
-                prefab: this.entityPrefab,
-                interactive: true,
-                properties: {},
-            };
-            this.mapEditorModeManager.executeCommand({
-                entityData,
-                type: "CreateEntityCommand",
-            });
+        if (this.entityPrefab.collisionGrid) {
+            const offsets = this.getPositionOffset(this.entityPrefab.collisionGrid);
+            x = Math.floor(pointer.worldX / 32) * 32 + offsets.x;
+            y = Math.floor(pointer.worldY / 32) * 32 + offsets.y;
         }
+
+        const entityData: EntityData = {
+            x,
+            y,
+            id: this.gameMapEntities.getNextEntityId(),
+            prefab: this.entityPrefab,
+            interactive: true,
+            properties: {},
+        };
+        this.mapEditorModeManager.executeCommand({
+            entityData,
+            type: "CreateEntityCommand",
+        });
+    }
+
+    private isSpaceAvailable(x: number, y: number): boolean {
+        return this.scene.getGameMapFrontWrapper().isSpaceAvailable(x, y);
     }
 
     private cleanPreview(): void {
