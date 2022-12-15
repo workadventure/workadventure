@@ -11,8 +11,8 @@ export class Group implements Movable {
 
     private id: number;
     private users: Set<User>;
-    private x!: number;
-    private y!: number;
+    private x: number;
+    private y: number;
     private wasDestroyed = false;
     private locked = false;
     private roomId: string;
@@ -39,7 +39,11 @@ export class Group implements Movable {
             this.join(user);
         });
 
-        this.updatePosition();
+        const { x, y } = this.previewGroupPosition();
+        this.x = x;
+        this.y = y;
+
+        this.currentZone = this.positionNotifier.enter(this);
     }
 
     getUsers(): User[] {
@@ -65,20 +69,29 @@ export class Group implements Movable {
      * Useful to compute the position of the group if a follower is "trapped" far away from the the leader.
      */
     getGroupHeads(): User[] {
-        return Array.from(this.users).filter((user) => user.group?.leader === user || !user.following);
+        if (this.users.size === 0) {
+            throw new Error("The user list in a group cannot be empty");
+        }
+        let users = Array.from(this.users).filter((user) => user.group?.leader === user || !user.following);
+        if (users.length === 0) {
+            // If the array is empty, we are in a weird scenario where a Group is containing ONLY followers.
+            // The only case where this could happen is if a leader is entering a silent zone.
+            users = Array.from(this.users);
+        }
+        return users;
     }
 
     /**
      * Preview the position of the group but don't update it
      */
-    previewGroupPosition(): { x: number; y: number } | undefined {
+    previewGroupPosition(): { x: number; y: number } {
         const users = this.getGroupHeads();
 
         let x = 0;
         let y = 0;
 
         if (users.length === 0) {
-            return undefined;
+            throw new Error('The group cannot have no "group heads".');
         }
 
         users.forEach((user: User) => {
@@ -101,13 +114,7 @@ export class Group implements Movable {
         const oldY = this.y;
 
         // Let's compute the barycenter of all users.
-        const newPosition = this.previewGroupPosition();
-
-        if (!newPosition) {
-            return;
-        }
-
-        const { x, y } = newPosition;
+        const { x, y } = this.previewGroupPosition();
 
         this.x = x;
         this.y = y;
@@ -116,11 +123,7 @@ export class Group implements Movable {
             return;
         }
 
-        if (oldX === undefined) {
-            this.currentZone = this.positionNotifier.enter(this);
-        } else {
-            this.currentZone = this.positionNotifier.updatePosition(this, { x, y }, { x: oldX, y: oldY });
-        }
+        this.currentZone = this.positionNotifier.updatePosition(this, { x, y }, { x: oldX, y: oldY });
     }
 
     searchForNearbyUsers(): void {
