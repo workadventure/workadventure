@@ -6,7 +6,7 @@
 It is possible to define special regions (zones) on the map that can allow any user who is inside to access a specified chat. We call them "chat zones". When player gets inside, a new room will be added in his chat :
 
 <div class="px-5 card rounded d-inline-block">
-    <img class="document-img" src="images/chat/zones/0_chat_zones.gif" alt="" />
+    <video class="document-img" src="images/chat/zones/0_chat_zones.mp4" autoplay loop muted></video>
 </div>
 
 ### Adding new **chat zone**
