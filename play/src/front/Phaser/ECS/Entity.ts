@@ -86,6 +86,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         _.merge(this.entityData, dataToModify);
 
         this.setPosition(this.entityData.x, this.entityData.y);
+        this.oldPositionTopLeft = this.getTopLeft();
         // TODO: Add more visual changes on Entity Update
     }
 
@@ -169,11 +170,11 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         });
 
         // TODO: Should all of these events be handled insides EntitiesManager?
-        this.on(Phaser.Input.Events.DRAG_START, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
-                this.oldPositionTopLeft = this.getTopLeft();
-            }
-        });
+        // this.on(Phaser.Input.Events.DRAG_START, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+        //     if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
+        //         this.oldPositionTopLeft = this.getTopLeft();
+        //     }
+        // });
 
         // TODO: DO NOT ALLOW FOR ENTITIES TO BE PLACED ON PREOCUPIED SPACES / OTHER PLAYERS
         this.on(Phaser.Input.Events.DRAG_END, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
@@ -349,5 +350,13 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     public setProperty(key: string, value: unknown): void {
         this.entityData.properties[key] = value;
         this.emit(EntityEvent.PropertiesUpdated, key, value);
+    }
+
+    public getOldPositionTopLeft(): { x: number, y: number } {
+        return this.oldPositionTopLeft;
+    }
+
+    public setOldPositionTopLeft(x: number, y: number): void {
+        this.oldPositionTopLeft = { x, y };
     }
 }

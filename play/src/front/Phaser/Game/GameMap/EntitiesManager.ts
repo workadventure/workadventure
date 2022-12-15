@@ -107,17 +107,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             this.emit(EntitiesManagerEvent.RemoveEntity, entity);
         });
         entity.on(EntityEvent.Moved, (oldX: number, oldY: number) => {
-            const reversedGrid = entity.getReversedCollisionGrid();
-            const grid = entity.getCollisionGrid();
-            if (reversedGrid && grid) {
-                this.gameMapFrontWrapper.modifyToCollisionsLayer(oldX, oldY, "0", reversedGrid);
-                this.gameMapFrontWrapper.modifyToCollisionsLayer(
-                    entity.getTopLeft().x,
-                    entity.getTopLeft().y,
-                    "0",
-                    grid
-                );
-            }
             const data: AtLeast<EntityData, 'id'> = {
                 id: entity.getEntityData().id,
                 x: entity.x,

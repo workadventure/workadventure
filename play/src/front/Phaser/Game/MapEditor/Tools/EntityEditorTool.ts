@@ -162,7 +162,12 @@ export class EntityEditorTool extends MapEditorTool {
 
     private handleEntityUpdate(config: AtLeast<EntityData, "id">): void {
         const entity = this.entitiesManager.getEntities().find((entity) => entity.getEntityData().id === config.id);
+        if (!entity) {
+            return;
+        }
+        const { x: oldX, y: oldY } = entity.getOldPositionTopLeft();
         entity?.updateEntity(config);
+        this.updateCollisionGrid(entity, oldX, oldY);
         this.scene.markDirty();
     }
 
@@ -172,6 +177,20 @@ export class EntityEditorTool extends MapEditorTool {
 
     private handleEntityDeletion(id: number): void {
         this.entitiesManager.deleteEntity(id);
+    }
+
+    private updateCollisionGrid(entity: Entity, oldX: number, oldY: number): void {
+        const reversedGrid = entity.getReversedCollisionGrid();
+        const grid = entity.getCollisionGrid();
+        if (reversedGrid && grid) {
+            this.scene.getGameMapFrontWrapper().modifyToCollisionsLayer(oldX, oldY, "0", reversedGrid);
+            this.scene.getGameMapFrontWrapper().modifyToCollisionsLayer(
+                entity.getTopLeft().x,
+                entity.getTopLeft().y,
+                "0",
+                grid
+            );
+        }
     }
 
     private subscribeToStores(): void {
@@ -229,7 +248,6 @@ export class EntityEditorTool extends MapEditorTool {
             });
         });
         this.entitiesManager.on(EntitiesManagerEvent.UpdateEntity, (entityData: AtLeast<EntityData, 'id'>) => {
-            // TODO: Where to update the grid?
             this.mapEditorModeManager.executeCommand({
                 dataToModify: entityData,
                 type: "UpdateEntityCommand",
