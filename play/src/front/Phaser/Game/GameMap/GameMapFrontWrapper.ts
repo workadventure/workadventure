@@ -378,11 +378,9 @@ export class GameMapFrontWrapper {
 
     public isSpaceAvailable(topLeftX: number, topLeftY: number): boolean {
         if (this.collisionGrid.length === 0) {
-            console.log('R1');
             return false;
         }
         if (this.isOutOfMapBounds(topLeftX, topLeftY, this.getTileDimensions().width, this.getTileDimensions().height)) {
-            console.log('R2');
             return false;
         }
         const height = this.collisionGrid.length;
@@ -390,11 +388,9 @@ export class GameMapFrontWrapper {
         const xIndex = Math.floor(topLeftX / this.getTileDimensions().width);
         const yIndex = Math.floor(topLeftY / this.getTileDimensions().height);
         if (yIndex >= height || yIndex < 0 || xIndex >= width || xIndex < 0) {
-            console.log('R3');
             return false;
         }
         if (this.collisionGrid[yIndex][xIndex] !== 0) {
-            console.log('R4');
             return false;
         }
         return true;
@@ -403,7 +399,6 @@ export class GameMapFrontWrapper {
     public isOutOfMapBounds(topLeftX: number, topLeftY: number, width: number = 0, height: number = 0): boolean {
         const mapWidth = this.collisionGrid[0].length * this.getTileDimensions().width;
         const mapHeight = this.collisionGrid.length * this.getTileDimensions().height;
-        console.log(topLeftY + height, mapHeight);
         if (topLeftX < 0 || topLeftX + width > mapWidth || topLeftY < 0 || topLeftY + height > mapHeight) {
             return true;
         }

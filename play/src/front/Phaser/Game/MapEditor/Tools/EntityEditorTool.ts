@@ -340,7 +340,20 @@ export class EntityEditorTool extends MapEditorTool {
         if (!collisionGrid) {
             return this.scene.getGameMapFrontWrapper().isOutOfMapBounds(topLeftX, topLeftY);
         }
-        return this.scene.getGameMapFrontWrapper().isSpaceAvailable(topLeftX, topLeftY);
+        const tileDim = this.scene.getGameMapFrontWrapper().getTileDimensions();
+        for (let y = 0; y < collisionGrid.length; y += 1) {
+            for (let x = 0; x < collisionGrid[y].length; x += 1) {
+                if (collisionGrid[y][x] === 0) {
+                    continue;
+                }
+                if (!this.scene.getGameMapFrontWrapper().isSpaceAvailable(
+                    topLeftX + x * tileDim.width, topLeftY + y * tileDim.height,
+                )) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private cleanPreview(): void {

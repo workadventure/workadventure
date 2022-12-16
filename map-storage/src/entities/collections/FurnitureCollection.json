@@ -165,7 +165,7 @@
             "collisionGrid": [
                 [ 0, 0 ],
                 [ 1, 1 ],
-                [ 0, 0 ]
+                [ 1, 1 ]
             ],
             "imagePath":"Furniture/Table/TableBrown.png",
             "direction":"Down",
@@ -177,7 +177,7 @@
             "collisionGrid": [
                 [ 0, 0 ],
                 [ 1, 1 ],
-                [ 0, 0 ]
+                [ 1, 1 ]
             ],
             "imagePath":"Furniture/Table/TableDarkBrown.png",
             "direction":"Down",
