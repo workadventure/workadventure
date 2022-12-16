@@ -58,6 +58,12 @@ return [
         'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/camera.md',
     ],
     [
+        'title' => 'Chat zones',
+        'url' => '/map-building/chat-zones.md',
+        'markdown' => 'maps.chat-zones',
+        'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/chat-zones.md',
+    ],
+    [
         'title' => 'Variables',
         'url' => '/map-building/variables.md',
         'markdown' => 'maps.variables',

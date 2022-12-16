@@ -154,67 +154,53 @@
     transition:fly={{ x: 500, duration: 400 }}
 >
     <div class="wa-thread-head">
-        <div
-            class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-w-14 tw-self-stretch tw-flex tw-justify-center tw-align-middle tw-border-t-0"
-        >
-            <button class="exit tw-text-lighter-purple tw-m-0" on:click={backToThreadList}>
-                <ArrowLeftIcon />
-            </button>
-        </div>
-        <div class="tw-text-center tw-pb-3 tw-pt-2">
-            <div class="tw-flex tw-justify-center">
-                <b>{$LL.timeLine.title()}</b>
-                <!-- Have a event when user is in spountanéous discussion -->
-                {#if $chatPeerConnectionInProgress}
-                    <div class="tw-block tw-relative tw-ml-7 tw-mt-1">
-                        <span
-                            class="tw-w-4 tw-h-4 tw-bg-pop-green tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-animate-ping"
-                        />
-                        <span
-                            class="tw-w-3 tw-h-3 tw-bg-pop-green tw-block tw-rounded-full tw-absolute tw-right-0.5 tw-top-0.5"
-                        />
-                    </div>
-                {/if}
+        <div class="title">
+            <div class="tw-py-1 tw-w-14 tw-self-stretch tw-flex tw-justify-center tw-align-middle">
+                <button class="exit tw-text-lighter-purple tw-m-0" on:click={backToThreadList}>
+                    <ArrowLeftIcon />
+                </button>
             </div>
-            <div class="tw-text-xs tw-text-lighter-purple tw-mt-0">
-                {$LL.timeLine.description()}
+            <div class="tw-text-center tw-pt-2 tw-pb-3">
+                <div class="tw-flex tw-justify-center">
+                    <b>{$LL.timeLine.title()}</b>
+                    {#if $chatPeerConnectionInProgress}
+                        <div class="tw-block tw-relative tw-ml-7 tw-mt-1">
+                        <span
+                                class="tw-w-4 tw-h-4 tw-bg-pop-green tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-animate-ping"
+                        />
+                            <span
+                                    class="tw-w-3 tw-h-3 tw-bg-pop-green tw-block tw-rounded-full tw-absolute tw-right-0.5 tw-top-0.5"
+                            />
+                        </div>
+                    {/if}
+                </div>
+                <div class="tw-flex tw-flex-wrap tw-gap-x-1 tw-items-center tw-text-xs tw-text-lighter-purple">
+                    {$LL.timeLine.description()}
+                </div>
             </div>
-        </div>
-        <div
-            class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-pl-2 tw-w-14 tw-self-stretch tw-flex tw-justify-center tw-align-middle tw-border-t-0"
-            on:click={() => (settingsView = !settingsView)}
-        >
-            <!--<button class="tw-text-lighter-purple tw-m-0">
-                {#if settingsView}
+            <div id="settings" class="tw-py-1 tw-w-14 tw-self-stretch tw-flex tw-justify-center tw-align-middle">
+                <!--
+            <button class="tw-text-lighter-purple tw-m-0">
+                {#if $settingsViewStore}
                     <MessageCircleIcon />
                 {:else}
                     <SettingsIcon />
                 {/if}
             </button>
             -->
+            </div>
+        </div>
+        <div class="tw-flex tw-flex-col tw-flex-auto tw-w-full">
+            <div
+                    class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5 tw-pb-0.5"
+            >
+                <button class="wa-action" type="button" on:click|stopPropagation={reInitialize}
+                ><RefreshCwIcon size="13" class="tw-mr-2" /> {$LL.reinit()}
+                </button>
+            </div>
         </div>
     </div>
 
-    {#if settingsView}
-        <div
-            transition:fly={{ y: -100, duration: 100 }}
-            class="tw-flex tw-flex-col tw-flex-auto tw-overflow-auto tw-w-full"
-            style="margin-top: 56px"
-        >
-            <div
-                class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5 tw-pb-0.5"
-            >
-                <button class="wa-action" type="button" on:click|stopPropagation={reInitialize}>
-                    <RefreshCwIcon size="13" class="tw-mr-2" />
-                    {$LL.reinit()}
-                </button>
-            </div>
-            <div class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5">
-                <p class="tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">Description</p>
-                <p>{$LL.timeLine.description()}</p>
-            </div>
-        </div>
-    {:else}
         <!-- MESSAGE LIST-->
         <div
             id="timeLine-messageList"
@@ -509,7 +495,6 @@
                 -->
             </form>
         </div>
-    {/if}
 </div>
 
 <style lang="scss">

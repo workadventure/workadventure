@@ -4,7 +4,7 @@
 </script>
 
 <div id="ui-website-container">
-    {#each $uiWebsitesStore.reverse() as uiWebsite (uiWebsite.id)}
+    {#each $uiWebsitesStore as uiWebsite (uiWebsite.id)}
         <UiWebsiteLayer {uiWebsite} />
     {/each}
 </div>

@@ -536,6 +536,9 @@
                                     {#each $cameraListStore as camera}
                                         <span
                                             class="wa-dropdown-item tw-flex"
+                                            on:click={() => {
+                                                analyticsClient.selectCamera();
+                                            }}
                                             on:click|stopPropagation|preventDefault={() =>
                                                 selectCamera(camera.deviceId)}
                                         >
@@ -603,6 +606,9 @@
                                         {#each $microphoneListStore as microphone}
                                             <span
                                                 class="wa-dropdown-item"
+                                                on:click={() => {
+                                                    analyticsClient.selectMicrophone();
+                                                }}
                                                 on:click|stopPropagation|preventDefault={() =>
                                                     selectMicrophone(microphone.deviceId)}
                                             >
@@ -622,6 +628,9 @@
                                         {#each $speakerListStore as speaker}
                                             <span
                                                 class="wa-dropdown-item"
+                                                on:click={() => {
+                                                    analyticsClient.selectSpeaker();
+                                                }}
                                                 on:click|stopPropagation|preventDefault={() =>
                                                     selectSpeaker(speaker.deviceId)}
                                             >

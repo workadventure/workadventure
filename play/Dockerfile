@@ -20,6 +20,7 @@ COPY libs/messages/package.json libs/messages/package.json
 COPY libs/map-editor/package.json libs/map-editor/package.json
 COPY libs/math-utils/package.json libs/math-utils/package.json
 COPY libs/tailwind/package.json libs/tailwind/package.json
+COPY libs/store-utils/package.json libs/store-utils/package.json
 RUN yarn workspaces focus workadventure-play @workadventure/iframe-api-typings
 COPY libs ./libs
 COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
@@ -42,6 +43,7 @@ COPY libs/messages/package.json libs/messages/package.json
 COPY libs/map-editor/package.json libs/map-editor/package.json
 COPY libs/math-utils/package.json libs/math-utils/package.json
 COPY libs/tailwind/package.json libs/tailwind/package.json
+COPY libs/store-utils/package.json libs/store-utils/package.json
 ENV NODE_ENV=production
 RUN yarn workspaces focus workadventure-play --production
 COPY --from=builder /usr/src/libs /usr/src/libs

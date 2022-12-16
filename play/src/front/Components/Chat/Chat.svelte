@@ -191,7 +191,7 @@
 
     @include media-breakpoint-up(sm) {
         #chatWindow {
-            width: calc(100% - 20px) !important;
+            width: 100% !important;
         }
     }
 
@@ -202,7 +202,7 @@
         top: 0;
         left: -100%;
         height: 100%;
-        width: 28%;
+        width: 22%;
         min-width: 335px;
         transition: all 0.2s ease-in-out;
         pointer-events: none;
@@ -226,6 +226,7 @@
                 height: 1.6rem;
                 width: 1.6rem;
                 position: initial;
+                cursor: pointer;
             }
         }
     }
