@@ -1332,7 +1332,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jridgewell/sourcemap-codec@npm:1.4.14, @jridgewell/sourcemap-codec@npm:^1.4.10":
+"@jridgewell/sourcemap-codec@npm:1.4.14, @jridgewell/sourcemap-codec@npm:^1.4.10, @jridgewell/sourcemap-codec@npm:^1.4.13":
   version: 1.4.14
   resolution: "@jridgewell/sourcemap-codec@npm:1.4.14"
   checksum: 61100637b6d173d3ba786a5dff019e1a74b1f394f323c1fee337ff390239f053b87266c7a948777f4b1ee68c01a8ad0ab61e5ff4abb5a012a0b091bec391ab97
@@ -2294,7 +2294,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/pug@npm:^2.0.4":
+"@types/pug@npm:^2.0.4, @types/pug@npm:^2.0.6":
   version: 2.0.6
   resolution: "@types/pug@npm:2.0.6"
   checksum: e8d09c3ddc7e6b87050a16d73694518f259a8ed74a0ab79b81b847baf89d92d44959ed68199966ac6f4a218c715c9bb3e4c86c8800d4868a4a674f4b21d2f01d
@@ -2347,7 +2347,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/sass@npm:^1.16.0":
+"@types/sass@npm:^1.16.0, @types/sass@npm:^1.43.1":
   version: 1.43.1
   resolution: "@types/sass@npm:1.43.1"
   dependencies:
@@ -5258,7 +5258,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"detect-indent@npm:^6.0.0":
+"detect-indent@npm:^6.0.0, detect-indent@npm:^6.1.0":
   version: 6.1.0
   resolution: "detect-indent@npm:6.1.0"
   checksum: ab953a73c72dbd4e8fc68e4ed4bfd92c97eb6c43734af3900add963fd3a9316f3bc0578b018b24198d4c31a358571eff5f0656e81a1f3b9ad5c547d58b2d093d
@@ -9725,6 +9725,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"magic-string@npm:^0.27.0":
+  version: 0.27.0
+  resolution: "magic-string@npm:0.27.0"
+  dependencies:
+    "@jridgewell/sourcemap-codec": ^1.4.13
+  checksum: 273faaa50baadb7a2df6e442eac34ad611304fc08fe16e24fe2e472fd944bfcb73ffb50d2dc972dc04e92784222002af46868cb9698b1be181c81830fd95a13e
+  languageName: node
+  linkType: hard
+
 "make-dir@npm:^2.0.0, make-dir@npm:^2.1.0":
   version: 2.1.0
   resolution: "make-dir@npm:2.1.0"
@@ -11282,16 +11291,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier-plugin-svelte@npm:^2.7.1":
-  version: 2.8.0
-  resolution: "prettier-plugin-svelte@npm:2.8.0"
-  peerDependencies:
-    prettier: ^1.16.4 || ^2.0.0
-    svelte: ^3.2.0
-  checksum: 3c49d46406b3b5a94c8b67fe139190b7ef1054532e3ae1852813729cdb5c19ba996b9c02f32af877cabb39fb42a7a87f4c9451da1a8c8d82098878e6bce3aba8
-  languageName: node
-  linkType: hard
-
 "prettier-plugin-svelte@npm:^2.8.1":
   version: 2.8.1
   resolution: "prettier-plugin-svelte@npm:2.8.1"
@@ -11299,6 +11298,16 @@ __metadata:
     prettier: ^1.16.4 || ^2.0.0
     svelte: ^3.2.0
   checksum: b2a6bffbacd32597a9be37ceda33361d99348ccc6cc890ff53f9e4da0a74a769a7781b08f14751394c4c98315d84bce87444069384e37131c2264b04f1e3bc4b
+  languageName: node
+  linkType: hard
+
+"prettier-plugin-svelte@npm:^2.9.0":
+  version: 2.9.0
+  resolution: "prettier-plugin-svelte@npm:2.9.0"
+  peerDependencies:
+    prettier: ^1.16.4 || ^2.0.0
+    svelte: ^3.2.0
+  checksum: 2d74a960783a1974a4818ebac25145ee26095c5652a777584b7eb8f08907702160263538396c03dce7f9bcd5b313f914b234eb809ccc1550a5933fc5e919ca88
   languageName: node
   linkType: hard
 
@@ -13182,9 +13191,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"svelte-check@npm:^2.9.1":
-  version: 2.9.2
-  resolution: "svelte-check@npm:2.9.2"
+"svelte-check@npm:^2.10.2":
+  version: 2.10.2
+  resolution: "svelte-check@npm:2.10.2"
   dependencies:
     "@jridgewell/trace-mapping": ^0.3.9
     chokidar: ^3.4.1
@@ -13198,7 +13207,7 @@ __metadata:
     svelte: ^3.24.0
   bin:
     svelte-check: bin/svelte-check
-  checksum: a0a933034bb07fd8949b5aa8925ca2704bd3e8a4bd83543e53889fb9d0995a94187e98660088a2f4705f87c904a065b2adea2efee608d8bbaee7e60635b34522
+  checksum: 687274f0926e5dc240edfe65fbdd70168c0fc750126b0021a375749c8a6abc0d08c7965e794362aa6bea1a49d11bc914aca97fdf78ae0bcc99c78d3e560ff726
   languageName: node
   linkType: hard
 
@@ -13289,10 +13298,64 @@ __metadata:
   languageName: node
   linkType: hard
 
-"svelte@npm:^3.38.2, svelte@npm:^3.50.1, svelte@npm:^3.53.1":
+"svelte-preprocess@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "svelte-preprocess@npm:5.0.0"
+  dependencies:
+    "@types/pug": ^2.0.6
+    "@types/sass": ^1.43.1
+    detect-indent: ^6.1.0
+    magic-string: ^0.27.0
+    sorcery: ^0.10.0
+    strip-indent: ^3.0.0
+  peerDependencies:
+    "@babel/core": ^7.10.2
+    coffeescript: ^2.5.1
+    less: ^3.11.3 || ^4.0.0
+    postcss: ^7 || ^8
+    postcss-load-config: ^2.1.0 || ^3.0.0 || ^4.0.0
+    pug: ^3.0.0
+    sass: ^1.26.8
+    stylus: ^0.55.0
+    sugarss: ^2.0.0 || ^3.0.0 || ^4.0.0
+    svelte: ^3.23.0
+    typescript: ^3.9.5 || ^4.0.0
+  peerDependenciesMeta:
+    "@babel/core":
+      optional: true
+    coffeescript:
+      optional: true
+    less:
+      optional: true
+    postcss:
+      optional: true
+    postcss-load-config:
+      optional: true
+    pug:
+      optional: true
+    sass:
+      optional: true
+    stylus:
+      optional: true
+    sugarss:
+      optional: true
+    typescript:
+      optional: true
+  checksum: ef70e6286942d291f6063e3aa10f2f00e33fc36a5fbee765c4abfbfc01a817ceaf6a395d0b4ad163c5849aceea027dfc181f50205bd53772444781a41cec8e38
+  languageName: node
+  linkType: hard
+
+"svelte@npm:^3.38.2, svelte@npm:^3.53.1":
   version: 3.53.1
   resolution: "svelte@npm:3.53.1"
   checksum: addf72d3d5daec3af0a37fcd9e1549ad2362cb631b32060674e0a6ed1e45388c459f8b7eeebf486fc411fbd9b882c5fcd70c017ddac94942d86f87888fc13102
+  languageName: node
+  linkType: hard
+
+"svelte@npm:^3.55.0":
+  version: 3.55.0
+  resolution: "svelte@npm:3.55.0"
+  checksum: 0b182973a4152fec8baa59cc168ca4528d63faba130bc83063a7d55d1732a81303b48745f4bffe53436b875b9c98960b0265d45473e5b3d25c77b116fdc274f0
   languageName: node
   linkType: hard
 
@@ -14804,7 +14867,7 @@ __metadata:
     postcss: ^8.4.17
     posthog-js: ^1.14.1
     prettier: ^2.7.1
-    prettier-plugin-svelte: ^2.7.1
+    prettier-plugin-svelte: ^2.9.0
     prom-client: ^14.1.0
     qs: ^6.11.0
     query-string: ^7.1.1
@@ -14818,10 +14881,10 @@ __metadata:
     source-map-support: ^0.5.21
     standardized-audio-context: ^25.2.4
     stanza: ^12.18.0
-    svelte: ^3.50.1
-    svelte-check: ^2.9.1
+    svelte: ^3.55.0
+    svelte-check: ^2.10.2
     svelte-feather-icons: ^4.0.0
-    svelte-preprocess: ^4.10.7
+    svelte-preprocess: ^5.0.0
     swagger-jsdoc: ^6.2.5
     swagger-ui-dist: ^4.14.2
     tailwindcss: ^3.1.8
