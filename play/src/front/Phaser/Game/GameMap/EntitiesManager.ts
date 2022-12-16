@@ -1,6 +1,8 @@
 import { AtLeast, EntityData } from "@workadventure/map-editor";
 import { Observable, Subject } from "rxjs";
+import { get } from 'svelte/store';
 import { actionsMenuStore } from "../../../Stores/ActionsMenuStore";
+import { mapEditorModeStore, mapEditorSelectedEntityStore, MapEntityEditorMode, mapEntityEditorModeStore } from '../../../Stores/MapEditorStore';
 import { Entity, EntityEvent } from "../../ECS/Entity";
 import { TexturesHelper } from "../../Helpers/TexturesHelper";
 import type { GameScene } from "../GameScene";
@@ -106,14 +108,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         entity.on(EntityEvent.Remove, () => {
             this.emit(EntitiesManagerEvent.RemoveEntity, entity);
         });
-        entity.on(EntityEvent.Moved, (oldX: number, oldY: number) => {
-            const data: AtLeast<EntityData, 'id'> = {
-                id: entity.getEntityData().id,
-                x: entity.x,
-                y: entity.y,
-            };
-            this.emit(EntitiesManagerEvent.UpdateEntity, data);
-        });
         // get the type! Switch to rxjs?
         entity.on(
             EntityEvent.PropertyActivated,
@@ -138,6 +132,96 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         entity.on(Phaser.Input.Events.POINTER_OUT, () => {
             this.pointerOutEntitySubject.next(entity);
         });
+        entity.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
+                const collisitonGrid = entity.getEntityData().prefab.collisionGrid;
+                const offsets = this.getPositionOffset(collisitonGrid);
+                const tileDim = this.scene.getGameMapFrontWrapper().getTileDimensions();
+                entity.x = collisitonGrid
+                    ? Math.floor(dragX / tileDim.width) * tileDim.width + offsets.x
+                    : Math.floor(dragX);
+                entity.y = collisitonGrid
+                    ? Math.floor(dragY / tileDim.height) * tileDim.height + offsets.y
+                    : Math.floor(dragY);
+                entity.setDepth(entity.y + entity.displayHeight * 0.5);
+
+                if (!this.scene.getGameMapFrontWrapper().canEntityBePlaced(
+                    entity.getTopLeft().x,
+                    entity.getTopLeft().y,
+                    entity.displayWidth,
+                    entity.displayHeight,
+                    entity.getCollisionGrid(),
+                )) {
+                    entity.setTint(0xff0000);
+                } else {
+                    entity.clearTint();
+                }
+
+                (this.scene as GameScene).markDirty();
+            }
+        });
+        entity.on(Phaser.Input.Events.DRAG_END, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
+                if (!this.scene.getGameMapFrontWrapper().canEntityBePlaced(
+                    entity.getTopLeft().x,
+                    entity.getTopLeft().y,
+                    entity.displayWidth,
+                    entity.displayHeight,
+                    entity.getCollisionGrid(),
+                )) {
+                    const oldPos = entity.getOldPositionTopLeft();
+                    entity.setPosition(oldPos.x + entity.displayWidth * 0.5, oldPos.y + entity.displayHeight * 0.5);
+                } else {
+                    const data: AtLeast<EntityData, 'id'> = {
+                        id: entity.getEntityData().id,
+                        x: entity.x,
+                        y: entity.y,
+                    };
+                    this.emit(EntitiesManagerEvent.UpdateEntity, data);
+                }
+                (this.scene as GameScene).markDirty();
+            }
+        });
+        entity.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+            if (get(mapEditorModeStore)) {
+                const entityEditorMode = get(mapEntityEditorModeStore);
+                switch (entityEditorMode) {
+                    case MapEntityEditorMode.EditMode: {
+                        mapEditorSelectedEntityStore.set(entity);
+                        break;
+                    }
+                    case MapEntityEditorMode.RemoveMode: {
+                        entity.delete();
+                        break;
+                    }
+                }
+            }
+        });
+        entity.on(Phaser.Input.Events.POINTER_OVER, () => {
+            if (get(mapEditorModeStore)) {
+                const entityEditorMode = get(mapEntityEditorModeStore);
+                switch (entityEditorMode) {
+                    case MapEntityEditorMode.AddMode: {
+                        break;
+                    }
+                    case MapEntityEditorMode.RemoveMode: {
+                        entity.setTint(0xff0000);
+                        break;
+                    }
+                    case MapEntityEditorMode.EditMode: {
+                        entity.setTint(0x3498db);
+                        break;
+                    }
+                }
+                (this.scene as GameScene).markDirty();
+            }
+        });
+        entity.on(Phaser.Input.Events.POINTER_OUT, () => {
+            if (get(mapEditorModeStore)) {
+                entity.clearTint();
+                (this.scene as GameScene).markDirty();
+            }
+        });
     }
 
     public getEntities(): Entity[] {
@@ -154,5 +238,15 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
     public clearProperties(): void {
         this.properties.clear();
+    }
+
+    private getPositionOffset(collisionGrid?: number[][]): { x: number; y: number } {
+        if (!collisionGrid || collisionGrid.length === 0) {
+            return { x: 0, y: 0 };
+        }
+        return {
+            x: collisionGrid[0].length % 2 === 1 ? 16 : 0,
+            y: collisionGrid.length % 2 === 1 ? 16 : 0,
+        };
     }
 }

@@ -288,7 +288,13 @@ export class EntityEditorTool extends MapEditorTool {
         this.entityPrefabPreview.setDepth(
             this.entityPrefabPreview.y + this.entityPrefabPreview.displayHeight * 0.5
         );
-        if (!this.canEntityBePlaced()) {
+        if (!this.scene.getGameMapFrontWrapper().canEntityBePlaced(
+            this.entityPrefabPreview.getTopLeft().x,
+            this.entityPrefabPreview.getTopLeft().y,
+            this.entityPrefabPreview.displayWidth,
+            this.entityPrefabPreview.displayHeight,
+            this.entityPrefab.collisionGrid,
+        )) {
             this.entityPrefabPreview.setTint(0xFF0000);
         } else {
             this.entityPrefabPreview.clearTint();
@@ -300,7 +306,13 @@ export class EntityEditorTool extends MapEditorTool {
         if (!this.entityPrefabPreview || !this.entityPrefab) {
             return
         }
-        if (!this.canEntityBePlaced()) {
+        if (!this.scene.getGameMapFrontWrapper().canEntityBePlaced(
+            this.entityPrefabPreview.getTopLeft().x,
+            this.entityPrefabPreview.getTopLeft().y,
+            this.entityPrefabPreview.displayWidth,
+            this.entityPrefabPreview.displayHeight,
+            this.entityPrefab.collisionGrid,
+        )) {
             return;
         }
         if (pointer.rightButtonDown()) {
@@ -328,37 +340,6 @@ export class EntityEditorTool extends MapEditorTool {
             entityData,
             type: "CreateEntityCommand",
         });
-    }
-
-    private canEntityBePlaced(): boolean {
-        if (!this.entityPrefab || !this.entityPrefabPreview) {
-            return false;
-        }
-        const topLeftX = this.entityPrefabPreview.getTopLeft().x;
-        const topLeftY = this.entityPrefabPreview.getTopLeft().y;
-        const collisionGrid = this.entityPrefab?.collisionGrid;
-        if (!collisionGrid) {
-            return !this.scene.getGameMapFrontWrapper().isOutOfMapBounds(
-                topLeftX,
-                topLeftY,
-                this.entityPrefabPreview.displayWidth,
-                this.entityPrefabPreview.displayHeight,
-            );
-        }
-        const tileDim = this.scene.getGameMapFrontWrapper().getTileDimensions();
-        for (let y = 0; y < collisionGrid.length; y += 1) {
-            for (let x = 0; x < collisionGrid[y].length; x += 1) {
-                if (collisionGrid[y][x] === 0) {
-                    continue;
-                }
-                if (!this.scene.getGameMapFrontWrapper().isSpaceAvailable(
-                    topLeftX + x * tileDim.width, topLeftY + y * tileDim.height,
-                )) {
-                    return false;
-                }
-            }
-        }
-        return true;
     }
 
     private cleanPreview(): void {

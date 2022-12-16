@@ -376,6 +376,31 @@ export class GameMapFrontWrapper {
         }
     }
 
+    public canEntityBePlaced(topLeftX: number, topLeftY: number, width: number, height: number, collisionGrid?: number[][]): boolean {
+        if (!collisionGrid) {
+            return !this.scene.getGameMapFrontWrapper().isOutOfMapBounds(
+                topLeftX,
+                topLeftY,
+                width,
+                height,
+            );
+        }
+        const tileDim = this.scene.getGameMapFrontWrapper().getTileDimensions();
+        for (let y = 0; y < collisionGrid.length; y += 1) {
+            for (let x = 0; x < collisionGrid[y].length; x += 1) {
+                if (collisionGrid[y][x] === 0) {
+                    continue;
+                }
+                if (!this.scene.getGameMapFrontWrapper().isSpaceAvailable(
+                    topLeftX + x * tileDim.width, topLeftY + y * tileDim.height,
+                )) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     public isSpaceAvailable(topLeftX: number, topLeftY: number): boolean {
         if (this.collisionGrid.length === 0) {
             return false;

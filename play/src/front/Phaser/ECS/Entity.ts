@@ -13,7 +13,6 @@ import { get, Unsubscriber } from "svelte/store";
 import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
 import {
     mapEditorModeStore,
-    mapEditorSelectedEntityStore,
     MapEntityEditorMode,
     mapEntityEditorModeStore,
 } from "../../Stores/MapEditorStore";
@@ -76,8 +75,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             this.setInteractive({ pixelPerfect: true, cursor: "pointer" });
             this.scene.input.setDraggable(this);
         }
-
-        this.bindEventHandlers();
 
         this.scene.add.existing(this);
     }
@@ -151,81 +148,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     public characterFarAwayOutline(): void {
         this.outlineColorStore.characterFarAway();
-    }
-
-    private bindEventHandlers(): void {
-        this.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
-                const offsets = this.getPositionOffset(this.entityData.prefab.collisionGrid);
-                this.x = this.entityData.prefab.collisionGrid
-                    ? Math.floor(dragX / 32) * 32 + offsets.x
-                    : Math.floor(dragX);
-                this.y = this.entityData.prefab.collisionGrid
-                    ? Math.floor(dragY / 32) * 32 + offsets.y
-                    : Math.floor(dragY);
-
-                this.setDepth(this.y + this.displayHeight * 0.5);
-                (this.scene as GameScene).markDirty();
-            }
-        });
-
-        // TODO: Should all of these events be handled insides EntitiesManager?
-        // this.on(Phaser.Input.Events.DRAG_START, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-        //     if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
-        //         this.oldPositionTopLeft = this.getTopLeft();
-        //     }
-        // });
-
-        // TODO: DO NOT ALLOW FOR ENTITIES TO BE PLACED ON PREOCUPIED SPACES / OTHER PLAYERS
-        this.on(Phaser.Input.Events.DRAG_END, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
-                (this.scene as GameScene).markDirty();
-                this.emit(EntityEvent.Moved, this.oldPositionTopLeft.x, this.oldPositionTopLeft.y);
-            }
-        });
-
-        this.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore)) {
-                const entityEditorMode = get(mapEntityEditorModeStore);
-                switch (entityEditorMode) {
-                    case MapEntityEditorMode.EditMode: {
-                        mapEditorSelectedEntityStore.set(this);
-                        break;
-                    }
-                    case MapEntityEditorMode.RemoveMode: {
-                        this.delete();
-                        break;
-                    }
-                }
-            }
-        });
-
-        this.on(Phaser.Input.Events.POINTER_OVER, () => {
-            if (get(mapEditorModeStore)) {
-                const entityEditorMode = get(mapEntityEditorModeStore);
-                switch (entityEditorMode) {
-                    case MapEntityEditorMode.AddMode: {
-                        break;
-                    }
-                    case MapEntityEditorMode.RemoveMode: {
-                        this.setTint(0xff0000);
-                        break;
-                    }
-                    case MapEntityEditorMode.EditMode: {
-                        this.setTint(0x3498db);
-                        break;
-                    }
-                }
-                (this.scene as GameScene).markDirty();
-            }
-        });
-
-        this.on(Phaser.Input.Events.POINTER_OUT, () => {
-            if (get(mapEditorModeStore)) {
-                this.clearTint();
-                (this.scene as GameScene).markDirty();
-            }
-        });
     }
 
     public delete() {
@@ -323,16 +245,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             }
         }
         return actions;
-    }
-
-    private getPositionOffset(collisionGrid?: number[][]): { x: number; y: number } {
-        if (!collisionGrid || collisionGrid.length === 0) {
-            return { x: 0, y: 0 };
-        }
-        return {
-            x: collisionGrid[0].length % 2 === 1 ? 16 : 0,
-            y: collisionGrid.length % 2 === 1 ? 16 : 0,
-        };
     }
 
     public isActivatable(): boolean {
