@@ -181,6 +181,30 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    selectCamera(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_select_camera");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    selectMicrophone(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_select_microphone");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    selectSpeaker(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_select_speaker");
+            })
+            .catch((e) => console.error(e));
+    }
+
     settingMicrophone(value: string): void {
         this.posthogPromise
             ?.then((posthog) => {

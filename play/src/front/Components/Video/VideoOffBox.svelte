@@ -27,6 +27,7 @@
     let textColor = getTextColorByBackgroundColor(backGroundColor);
     let volumeStore = peer.volumeStore;
     let subscribeChangeOutput: Unsubscriber;
+    let subscribeStreamStore: Unsubscriber;
 
     let embedScreen: EmbedScreen;
 
@@ -44,27 +45,35 @@
     onMount(() => {
         resizeObserver.observe(videoContainer);
         subscribeChangeOutput = speakerSelectedStore.subscribe((deviceId) => {
-            // Check HTMLMediaElement.setSinkId() compatibility for browser
-            // @ts-ignore
-            if (videoElement.setSinkId != undefined) {
-                try {
-                    // @ts-ignore
-                    videoElement.setSinkId(deviceId);
-                } catch (err) {
-                    console.info(
-                        "Your browser is not compatible for updating your speaker over a video element. Try to change the default audio output in your computer settings. Error: ",
-                        err
-                    );
-                }
-            }
+            if (deviceId != undefined) setAudioOutPut(deviceId);
+        });
+
+        subscribeStreamStore = streamStore.subscribe(() => {
+            if ($speakerSelectedStore != undefined) setAudioOutPut($speakerSelectedStore);
         });
     });
 
     onDestroy(() => {
-        if (subscribeChangeOutput) {
-            subscribeChangeOutput();
-        }
+        if (subscribeChangeOutput) subscribeChangeOutput();
+        if (subscribeStreamStore) subscribeStreamStore();
     });
+
+    //sets the ID of the audio device to use for output
+    function setAudioOutPut(deviceId: string) {
+        // Check HTMLMediaElement.setSinkId() compatibility for browser => https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
+        try {
+            // @ts-ignore
+            if (videoElement != undefined && videoElement.setSinkId != undefined) {
+                // @ts-ignore
+                videoElement.setSinkId(deviceId);
+            }
+        } catch (err) {
+            console.info(
+                "Your browser is not compatible for updating your speaker over a video element. Try to change the default audio output in your computer settings. Error: ",
+                err
+            );
+        }
+    }
 
     let constraintStore = peer.constraintsStore;
 </script>

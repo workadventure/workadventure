@@ -4,15 +4,15 @@
     import { MucRoom } from "../Xmpp/MucRoom";
 
     export let searchValue: string;
-    export let forumRooms: MucRoom[];
+    export let forums: MucRoom[];
 
     const unread = derived(
-        forumRooms.map((forum) => forum.getCountMessagesToSee()),
+        forums.map((forum) => forum.getCountMessagesToSee()),
         ($unread) => $unread.reduce((sum, number) => sum + number, 0)
     );
 </script>
 
-{#if forumRooms.length > 0}
+{#if forums.length > 0}
     <div id="forumRooms" class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
         <div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
             {#if $unread > 0}
@@ -28,8 +28,8 @@
             </button>-->
         </div>
         <div>
-            {#each forumRooms as forumRoom}
-                <ChatMucRoom mucRoom={forumRoom} {searchValue} />
+            {#each forums as forum}
+                <ChatMucRoom mucRoom={forum} {searchValue} />
             {/each}
         </div>
     </div>

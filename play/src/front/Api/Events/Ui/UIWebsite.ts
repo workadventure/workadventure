@@ -45,7 +45,7 @@ export const isCreateUIWebsiteEvent = z.object({
     allowPolicy: z.optional(z.string()),
     position: isUIWebsitePosition,
     size: isUIWebsiteSize,
-    margin: isUIWebsiteMargin.optional(),
+    margin: isUIWebsiteMargin.partial().optional(),
 });
 
 export type CreateUIWebsiteEvent = z.infer<typeof isCreateUIWebsiteEvent>;
@@ -56,7 +56,7 @@ export const isModifyUIWebsiteEvent = z.object({
     visible: z.boolean().optional(),
     position: isUIWebsitePosition.optional(),
     size: isUIWebsiteSize.optional(),
-    margin: isUIWebsiteMargin.optional(),
+    margin: isUIWebsiteMargin.partial().optional(),
 });
 
 export type ModifyUIWebsiteEvent = z.infer<typeof isModifyUIWebsiteEvent>;
@@ -69,7 +69,7 @@ export const isUIWebsite = z.object({
     allowPolicy: z.string(),
     position: isUIWebsitePosition,
     size: isUIWebsiteSize,
-    margin: isUIWebsiteMargin.optional(),
+    margin: isUIWebsiteMargin.partial().optional(),
 });
 
 export type UIWebsite = z.infer<typeof isUIWebsite>;
