@@ -338,7 +338,12 @@ export class EntityEditorTool extends MapEditorTool {
         const topLeftY = this.entityPrefabPreview.getTopLeft().y;
         const collisionGrid = this.entityPrefab?.collisionGrid;
         if (!collisionGrid) {
-            return this.scene.getGameMapFrontWrapper().isOutOfMapBounds(topLeftX, topLeftY);
+            return !this.scene.getGameMapFrontWrapper().isOutOfMapBounds(
+                topLeftX,
+                topLeftY,
+                this.entityPrefabPreview.displayWidth,
+                this.entityPrefabPreview.displayHeight,
+            );
         }
         const tileDim = this.scene.getGameMapFrontWrapper().getTileDimensions();
         for (let y = 0; y < collisionGrid.length; y += 1) {
