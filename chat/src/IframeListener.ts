@@ -136,8 +136,8 @@ class IframeListener {
                                 activeThreadStore.reset();
                             } else if (get(chatPeerConnectionInProgress) || get(timelineMessagesToSee) > 0) {
                                 timelineActiveStore.set(true);
-                            } else if (mucRoomsStore.getLiveRoom()) {
-                                activeThreadStore.set(mucRoomsStore.getLiveRoom());
+                            } else if (mucRoomsStore.getChatZones()) {
+                                activeThreadStore.set(mucRoomsStore.getChatZones());
                             }
                             break;
                         }

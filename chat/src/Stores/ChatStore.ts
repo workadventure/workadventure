@@ -163,6 +163,6 @@ export const connectionEstablishedStore = writable<boolean>(false);
 export const navChat = writable<string>("chat");
 
 export const shownRoomListStore = writable<string>("");
-export const showLivesStore = writable<boolean>(false);
+export const showChatZonesStore = writable<boolean>(false);
 export const showForumsStore = writable<boolean>(false);
 export const showTimelineStore = writable<boolean>(false);

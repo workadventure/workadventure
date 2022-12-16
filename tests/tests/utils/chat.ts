@@ -25,17 +25,17 @@ class Chat {
         return page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
     }
 
-    async liveRoomExist(page: Page, name: string){
-        await expect(this.get(page).locator('#liveRooms')).toContainText('liveZone');
+    async chatZoneExist(page: Page, name: string){
+        await expect(this.get(page).locator('#chatZones')).toContainText('liveZone');
     }
 
-    async noLiveRoom(page: Page){
-        await expect(this.get(page)).not.toContain('#liveRooms');
+    async noChatZone(page: Page){
+        await expect(this.get(page)).not.toContain('#chatZones');
     }
 
-    async openLiveRoom(page: Page){
-        await this.get(page).locator('#liveRooms .wa-chat-item .wa-dropdown button').click();
-        await this.get(page).locator('#liveRooms .wa-chat-item .wa-dropdown .open').click();
+    async openChatZone(page: Page){
+        await this.get(page).locator('#chatZones .wa-chat-item .wa-dropdown button').click();
+        await this.get(page).locator('#chatZones .wa-chat-item .wa-dropdown .open').click();
     }
 
     async openTimeline(page: Page){

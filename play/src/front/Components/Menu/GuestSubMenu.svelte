@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
@@ -9,6 +10,9 @@
     const playerPos = { x: Math.floor(currentPlayer.x), y: Math.floor(currentPlayer.y) };
 
     function copyLink() {
+        // Analytics Client
+        analyticsClient.inviteCopyLink();
+
         const input: HTMLInputElement = document.getElementById("input-share-link") as HTMLInputElement;
         input.focus();
         input.select();
@@ -26,13 +30,20 @@
     function updateInputFieldValue() {
         const input = document.getElementById("input-share-link");
         if (input) {
-            (input as HTMLInputElement).value = getLink();
+            const value = getLink();
+            // Analytics Client
+            analyticsClient.inviteCopyLinkWalk(value);
+
+            (input as HTMLInputElement).value = value;
         }
     }
 
     let canShare = navigator.share !== undefined;
 
     async function shareLink() {
+        // Analytics Client
+        analyticsClient.inviteCopyLink();
+
         const shareData = { url: getLink() };
 
         try {

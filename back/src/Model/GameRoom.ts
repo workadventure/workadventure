@@ -225,14 +225,11 @@ export class GameRoom implements BrothersFinder {
     }
 
     public leave(user: User) {
-        const userObj = this.users.get(user.id);
-        if (userObj === undefined) {
+        if (!this.users.has(user.id)) {
             console.warn("User ", user.id, "does not belong to this game room! It should!");
         }
-        if (userObj !== undefined && typeof userObj.group !== "undefined") {
-            this.leaveGroup(userObj);
-        }
 
+        // If a user leaves the group, it cannot lead or follow anymore.
         if (user.hasFollowers()) {
             user.stopLeading();
         }
@@ -240,11 +237,21 @@ export class GameRoom implements BrothersFinder {
             user.following.delFollower(user);
         }
 
-        this.users.delete(user.id);
-        this.usersByUuid.delete(user.uuid);
+        if (user.group !== undefined) {
+            this.leaveGroup(user);
+        }
 
-        if (userObj !== undefined) {
-            this.positionNotifier.leave(userObj);
+        this.users.delete(user.id);
+        const set = this.usersByUuid.get(user.uuid);
+        if (set !== undefined) {
+            set.delete(user);
+            if (set.size === 0) {
+                this.usersByUuid.delete(user.uuid);
+            }
+        }
+
+        if (user !== undefined) {
+            this.positionNotifier.leave(user);
         }
 
         // Notify admins
@@ -415,6 +422,7 @@ export class GameRoom implements BrothersFinder {
         if (group === undefined) {
             throw new Error("The user is part of no group");
         }
+
         group.leave(user);
         if (group.isEmpty()) {
             group.destroy();

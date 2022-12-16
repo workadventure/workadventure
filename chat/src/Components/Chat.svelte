@@ -9,7 +9,7 @@
     import LL from "../i18n/i18n-svelte";
     import { localeDetector } from "../i18n/locales";
     import { locale } from "../i18n/i18n-svelte";
-    import ChatLiveRooms from "./ChatLiveRooms.svelte";
+    import ChatZones from "./ChatZones.svelte";
     import { activeThreadStore } from "../Stores/ActiveThreadStore";
     import ChatActiveThread from "./ChatActiveThread.svelte";
     import ChatActiveThreadTimeLine from "./Timeline/ChatActiveThreadTimeline.svelte";
@@ -22,7 +22,7 @@
         enableChatOnlineListStore,
         navChat,
         showForumsStore,
-        showLivesStore,
+        showChatZonesStore,
         showTimelineStore,
         timelineActiveStore,
         timelineMessagesToSee,
@@ -31,7 +31,7 @@
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
     import { iframeListener } from "../IframeListener";
     import NeedRefresh from "./NeedRefresh.svelte";
-    import ChatForumRooms from "./ChatForumRooms.svelte";
+    import Forums from "./Forums.svelte";
 
     let chatWindowElement: HTMLElement;
     let handleFormBlur: { blur(): void };
@@ -97,7 +97,7 @@
             })
         );
         subscribeListeners.push(
-            showLivesStore.subscribe((value) => {
+            showChatZonesStore.subscribe((value) => {
                 if (value) {
                     showForumsStore.set(false);
                     showTimelineStore.set(false);
@@ -107,7 +107,7 @@
         subscribeListeners.push(
             showForumsStore.subscribe((value) => {
                 if (value) {
-                    showLivesStore.set(false);
+                    showChatZonesStore.set(false);
                     showTimelineStore.set(false);
                 }
             })
@@ -115,7 +115,7 @@
         subscribeListeners.push(
             showTimelineStore.subscribe((value) => {
                 if (value) {
-                    showLivesStore.set(false);
+                    showChatZonesStore.set(false);
                     showForumsStore.set(false);
                 }
             })
@@ -191,9 +191,9 @@
                         <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
                             <div class="tw-p-3">
                                 <input
-                                    class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
-                                    placeholder={$navChat === "users" ? $LL.searchUser() : $LL.searchChat()}
-                                    bind:value={searchValue}
+                                        class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
+                                        placeholder={$navChat === "users" ? $LL.searchUser() : $LL.searchChat()}
+                                        bind:value={searchValue}
                                 />
                             </div>
                         </div>
@@ -217,24 +217,23 @@
                         {/if}
                     {:else}
                         {#if $enableChat}
-                            <ChatLiveRooms
-                                searchValue={searchValue.toLocaleLowerCase()}
-                                liveRooms={[...$mucRoomsStore].filter(
-                                    (mucRoom) => mucRoom.type === "live" && mucRoom.name.toLowerCase().includes(searchValue)
-                                )}
+                            <ChatZones
+                                    searchValue={searchValue.toLocaleLowerCase()}
+                                    chatZones={[...$mucRoomsStore].filter(
+                                (mucRoom) => mucRoom.type === "live" && mucRoom.name.toLowerCase().includes(searchValue)
+                            )}
                             />
-                            <ChatForumRooms
-                                searchValue={searchValue.toLocaleLowerCase()}
-                                forumRooms={[...$mucRoomsStore].filter(
-                                    (mucRoom) =>
-                                        mucRoom.type === "forum" && mucRoom.name.toLowerCase().includes(searchValue)
-                                )}
+                            <Forums
+                                    searchValue={searchValue.toLocaleLowerCase()}
+                                    forums={[...$mucRoomsStore].filter(
+                                (mucRoom) =>
+                                    mucRoom.type === "forum" && mucRoom.name.toLowerCase().includes(searchValue)
+                            )}
                             />
                         {/if}
+                        <Timeline on:activeThreadTimeLine={() => timelineActiveStore.set(true)} />
                     {/if}
                 {/if}
-
-                <Timeline on:activeThreadTimeLine={() => timelineActiveStore.set(true)} />
             </div>
         {/if}
     </section>
@@ -243,10 +242,10 @@
 <audio id="newMessageSound" src="/static/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
 
 <style lang="scss">
-    aside.chatWindow {
-        pointer-events: auto;
-        color: whitesmoke;
-        display: flex;
-        flex-direction: column;
-    }
+  aside.chatWindow {
+    pointer-events: auto;
+    color: whitesmoke;
+    display: flex;
+    flex-direction: column;
+  }
 </style>
