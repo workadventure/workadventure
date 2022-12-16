@@ -273,33 +273,34 @@ export class EntityEditorTool extends MapEditorTool {
     }
 
     private handlePointerMoveEvent(pointer: Phaser.Input.Pointer): void {
-        if (this.entityPrefabPreview && this.entityPrefab) {
-            if (this.entityPrefab.collisionGrid) {
-                const offsets = this.getPositionOffset(this.entityPrefab.collisionGrid);
-                this.entityPrefabPreview.setPosition(
-                    Math.floor(pointer.worldX / 32) * 32 + offsets.x,
-                    Math.floor(pointer.worldY / 32) * 32 + offsets.y
-                );
-            } else {
-                this.entityPrefabPreview.setPosition(Math.floor(pointer.worldX), Math.floor(pointer.worldY));
-            }
-            this.entityPrefabPreview.setDepth(
-                this.entityPrefabPreview.y + this.entityPrefabPreview.displayHeight * 0.5
-            );
-            if (!this.isSpaceAvailable(this.entityPrefabPreview.x, this.entityPrefabPreview.y)) {
-                this.entityPrefabPreview.setTint(0xFF0000);
-            } else {
-                this.entityPrefabPreview.clearTint();
-            }
-            this.scene.markDirty();
+        if (!this.entityPrefabPreview || !this.entityPrefab) {
+            return
         }
+        if (this.entityPrefab.collisionGrid) {
+            const offsets = this.getPositionOffset(this.entityPrefab.collisionGrid);
+            this.entityPrefabPreview.setPosition(
+                Math.floor(pointer.worldX / 32) * 32 + offsets.x,
+                Math.floor(pointer.worldY / 32) * 32 + offsets.y
+            );
+        } else {
+            this.entityPrefabPreview.setPosition(Math.floor(pointer.worldX), Math.floor(pointer.worldY));
+        }
+        this.entityPrefabPreview.setDepth(
+            this.entityPrefabPreview.y + this.entityPrefabPreview.displayHeight * 0.5
+        );
+        if (!this.canEntityBePlaced()) {
+            this.entityPrefabPreview.setTint(0xFF0000);
+        } else {
+            this.entityPrefabPreview.clearTint();
+        }
+        this.scene.markDirty();
     }
 
     private handlePointerDownEvent(pointer: Phaser.Input.Pointer): void {
         if (!this.entityPrefabPreview || !this.entityPrefab) {
             return
         }
-        if (!this.isSpaceAvailable(this.entityPrefabPreview.x, this.entityPrefabPreview.y)) {
+        if (!this.canEntityBePlaced()) {
             return;
         }
         if (pointer.rightButtonDown()) {
@@ -329,8 +330,17 @@ export class EntityEditorTool extends MapEditorTool {
         });
     }
 
-    private isSpaceAvailable(x: number, y: number): boolean {
-        return this.scene.getGameMapFrontWrapper().isSpaceAvailable(x, y);
+    private canEntityBePlaced(): boolean {
+        if (!this.entityPrefab || !this.entityPrefabPreview) {
+            return false;
+        }
+        const topLeftX = this.entityPrefabPreview.getTopLeft().x;
+        const topLeftY = this.entityPrefabPreview.getTopLeft().y;
+        const collisionGrid = this.entityPrefab?.collisionGrid;
+        if (!collisionGrid) {
+            return this.scene.getGameMapFrontWrapper().isOutOfMapBounds(topLeftX, topLeftY);
+        }
+        return this.scene.getGameMapFrontWrapper().isSpaceAvailable(topLeftX, topLeftY);
     }
 
     private cleanPreview(): void {
