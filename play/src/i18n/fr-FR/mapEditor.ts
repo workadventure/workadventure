@@ -33,8 +33,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             audioMutedLabel :"Sourdine par défaut",
             moreOptionsLabel:"Plus d'options",
             jitsiRoomConfig:{
+                addConfig:"Ajouter une option",
                 startWithAudioMuted:"Démarrer avec le microphone coupé",
-                startWithVideoMuted:"Démarrer avec la vidéo coupée"
+                startWithVideoMuted:"Démarrer avec la vidéo coupée",
+                cancel:"Annuler",
+                validate:"Valider"
             }
         },
         audioProperties:{

@@ -5,10 +5,10 @@
         {
             "name":"Basic Chair",
             "tags":["seat","basic"],
+            "imagePath":"Furniture/Chair/ChairGreyDown.png",
             "collisionGrid": [
                 [ 1 ]
             ],
-            "imagePath":"Furniture/Chair/ChairGreyDown.png",
             "direction":"Down",
             "color":"grey"
         },
@@ -165,7 +165,7 @@
             "collisionGrid": [
                 [ 0, 0 ],
                 [ 1, 1 ],
-                [ 0, 0 ]
+                [ 1, 1 ]
             ],
             "imagePath":"Furniture/Table/TableBrown.png",
             "direction":"Down",
@@ -177,7 +177,7 @@
             "collisionGrid": [
                 [ 0, 0 ],
                 [ 1, 1 ],
-                [ 0, 0 ]
+                [ 1, 1 ]
             ],
             "imagePath":"Furniture/Table/TableDarkBrown.png",
             "direction":"Down",
@@ -187,6 +187,11 @@
             "name":"Basic Narrow Wood Table",
             "tags":["basic", "table"],
             "imagePath":"Furniture/Table/TableNarrowBrown.png",
+            "collisionGrid": [
+                [ 0],
+                [ 1],
+                [ 1]
+            ],
             "direction":"Down",
             "color":"orange"
         },
@@ -194,6 +199,11 @@
             "name":"Basic Narrow Wood Table",
             "tags":["basic", "table"],
             "imagePath":"Furniture/Table/TableNarrowDarkBrown.png",
+            "collisionGrid": [
+                [ 0],
+                [ 1],
+                [ 1]
+            ],
             "direction":"Down",
             "color":"brown"
         },
@@ -201,6 +211,10 @@
             "name":"Basic Small Table",
             "tags":["basic", "table"],
             "imagePath":"Furniture/Table/TableSmallGrey.png",
+            "collisionGrid": [
+                [ 0],
+                [ 1]
+            ],
             "direction":"Down",
             "color":"grey"
         },
@@ -208,6 +222,10 @@
             "name":"Basic Small Table",
             "tags":["basic", "table"],
             "imagePath":"Furniture/Table/TableSmallWhite.png",
+            "collisionGrid": [
+                [ 0],
+                [ 1]
+            ],
             "direction":"Down",
             "color":"white"
         },
