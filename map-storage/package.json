@@ -38,6 +38,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.231.0",
     "@grpc/grpc-js": "^1.7.1",
     "@grpc/proto-loader": "^0.6.13",
     "@types/cors": "^2.8.12",

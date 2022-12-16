@@ -4,6 +4,8 @@ import cors from "cors";
 import { mapStorageServer } from "./MapStorageServer";
 import { mapsManager } from "./MapsManager";
 import { MapStorageService } from "@workadventure/messages/src/ts-proto-generated/services";
+import {proxyS3Files} from "./FileFetcher/S3Fetcher";
+import {AWS_BUCKET} from "./Enum/EnvironmentVariable";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -48,6 +50,10 @@ app.get("/entityCollections", async (req, res) => {
 });
 
 app.use(express.static("public"));
+
+if (AWS_BUCKET) {
+    app.use(proxyS3Files(AWS_BUCKET));
+}
 
 app.listen(3000, () => {
     console.log("Application is running on port 3000");

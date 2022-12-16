@@ -204,6 +204,14 @@ services:
             STARTUP_COMMAND_1: ../yarn-install.sh
             NODE_ENV: development
             PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
+            #AWS
+            AWS_ACCESS_KEY_ID: "$AWS_ACCESS_KEY_ID"
+            AWS_SECRET_ACCESS_KEY: "$AWS_SECRET_ACCESS_KEY"
+            AWS_DEFAULT_REGION: "$AWS_DEFAULT_REGION"
+            AWS_BUCKET: "$AWS_BUCKET"
+            AWS_ENDPOINT: "$AWS_ENDPOINT"
+            UPLOADER_AWS_SIGNED_URL_EXPIRATION: "$UPLOADER_AWS_SIGNED_URL_EXPIRATION"
+
         volumes:
             - .:/usr/src/app
         ports:
@@ -371,6 +379,26 @@ services:
         healthcheck:
             #disable: true
             timeout: 5s
+
+    minio:
+        image: bitnami/minio:2022.9.7
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.minio.rule=Host(`minio.workadventure.localhost`)"
+            - "traefik.http.routers.minio.entryPoints=web"
+            - "traefik.http.services.minio.loadbalancer.server.port=9001"
+            - "traefik.http.routers.minio.service=minio"
+            - "traefik.http.routers.cdn.rule=Host(`cdn.workadventure.localhost`)"
+            - "traefik.http.routers.cdn.entryPoints=web"
+            - "traefik.http.services.cdn.loadbalancer.server.port=9000"
+            - "traefik.http.routers.cdn.service=cdn"
+        environment:
+            MINIO_ROOT_USER: "$AWS_ACCESS_KEY_ID"
+            MINIO_ROOT_PASSWORD: "$AWS_SECRET_ACCESS_KEY"
+            MINIO_DEFAULT_BUCKETS: "${AWS_BUCKET}:public"
+            MINIO_SITE_REGION: "$AWS_DEFAULT_REGION"
+        volumes:
+            - ./map-storage/public:/data
 
 #  coturn:
 #    image: coturn/coturn:4.5.2
