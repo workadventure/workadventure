@@ -19,6 +19,7 @@ COPY libs/messages/package.json libs/messages/package.json
 COPY libs/map-editor/package.json libs/map-editor/package.json
 COPY libs/math-utils/package.json libs/math-utils/package.json
 COPY libs/tailwind/package.json libs/tailwind/package.json
+COPY libs/store-utils/package.json libs/store-utils/package.json
 ENV NODE_ENV=production
 RUN yarn workspaces focus workadventureback --production
 COPY libs ./libs

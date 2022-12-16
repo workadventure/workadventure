@@ -170,7 +170,10 @@
     }
 
     .wa-thread-head{
-        @apply wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-flex tw-justify-between tw-items-center tw-border-t-0 tw-fixed tw-w-full tw-z-20;
+        @apply tw-border-t-0 tw-fixed tw-w-full tw-z-20 tw-top-0;
+        .title {
+            @apply wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-flex tw-justify-between tw-items-center;
+        }
     }
 
     .wa-message-form {
@@ -233,7 +236,7 @@
 
         .wa-messages-list{
             @apply tw-pb-6;
-            min-height: calc(100vh - 2.8rem);
+            min-height: calc(100vh - 8.8rem);
         }
 
         p span.nice-a{

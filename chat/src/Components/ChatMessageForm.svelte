@@ -31,7 +31,7 @@
     import crown from "../../public/static/svg/icone-premium-crown.svg";
     import { iframeListener } from "../IframeListener";
     import { ChatState } from "stanza/Constants";
-    import { derived } from "svelte/store";
+    import { get } from "svelte/store";
 
     export let mucRoom: MucRoom;
 
@@ -56,7 +56,7 @@
     const regexUserTag = /@([\w@]+(?:[.!][\w@]+)*)+$/gm;
 
     const presenceStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
-    const me = derived(presenceStore, ($presenceStore) => $presenceStore.get(mucRoom.myJID));
+    const me = presenceStore.get(mucRoom.myJID);
 
     function onInput() {
         analyseText();
@@ -69,7 +69,6 @@
     function onKeyDown(key: KeyboardEvent): boolean {
         if (key.key === "Enter" && !key.shiftKey) {
             sendMessage();
-            setTimeout(() => (newMessageText = ""), 10);
             return false;
         }
         return true;
@@ -93,15 +92,18 @@
         }
         if (
             fileMessageManager.files.length === 0 &&
-            (!newMessageText || newMessageText.replace(/\s/g, "").length === 0)
-        )
-            return false;
-        if ($selectedMessageToReply) {
-            sendReplyMessage();
+            (!htmlMessageText || htmlMessageText.replace(/\s/g, "").length === 0)
+        ) {
             return false;
         }
+
         mucRoom.updateComposingState(ChatState.Paused);
-        mucRoom.sendMessage(newMessageText);
+        const message = htmlMessageText.replace(/<div>/g, "\n").replace(/(<([^>]+)>)/gi, "");
+        if ($selectedMessageToReply) {
+            sendReplyMessage(message);
+        } else {
+            mucRoom.sendMessage(message);
+        }
         newMessageText = "";
         htmlMessageText = "";
         dispatch("scrollDown");
@@ -117,7 +119,7 @@
         if (isMe(name)) {
             return $userStore;
         }
-        const userData = [...$presenceStore].map(([, user]) => user).find((user) => user.name === name);
+        const userData = $presenceStore.map((user) => get(user)).find((user) => user.name === name);
         let user = undefined;
         if (userData) {
             user = userData;
@@ -134,13 +136,10 @@
         }
     }
 
-    function sendReplyMessage() {
-        if (!$selectedMessageToReply || !newMessageText || newMessageText.replace(/\s/g, "").length === 0) return;
-        mucRoom.updateComposingState(ChatState.Paused);
-        mucRoom.sendMessage(newMessageText, $selectedMessageToReply);
+    function sendReplyMessage(message: string) {
+        if (!$selectedMessageToReply) return;
+        mucRoom.sendMessage(message, $selectedMessageToReply);
         selectedMessageToReply.set(null);
-        newMessageText = "";
-        dispatch("scrollDown");
         return false;
     }
 
@@ -198,8 +197,8 @@
         const values = newMessageText.match(regexUserTag);
         if (values != undefined) {
             const userNameSearching = (values.pop() as string).substring(1);
-            usersSearching = [...$presenceStore]
-                .map(([, user]) => user)
+            usersSearching = $presenceStore
+                .map((user) => get(user))
                 .reduce((values: User[], user) => {
                     if (user.name.toLowerCase().indexOf(userNameSearching.toLowerCase()) === -1) {
                         return values;
@@ -255,7 +254,7 @@
         });
 
         picker.on("emoji", ({ emoji }) => {
-            newMessageText += emoji;
+            htmlMessageText += emoji;
         });
         picker.on("hidden", () => {
             emojiOpened = false;

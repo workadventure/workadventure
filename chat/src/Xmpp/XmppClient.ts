@@ -142,6 +142,7 @@ export class XmppClient {
 
         client.on("--transport-disconnected", () => {
             console.error("--transport-disconnected");
+            this.restart();
         });
 
         client.on("session:started", () => {
@@ -368,31 +369,6 @@ export class XmppClient {
         }));
     }
 
-    private restart(): void {
-        if (this.ping) {
-            clearInterval(this.ping);
-            this.ping = undefined;
-        }
-        xmppServerConnectionStatusStore.set(false);
-        mucRoomsStore.reset();
-        this.rooms.clear();
-
-        this.close();
-
-        // This can happen when the first connection failed for some reason.
-        // We should probably retry regularly (every 10 seconds)
-        if (this.timeout) {
-            clearTimeout(this.timeout);
-            this.timeout = undefined;
-        }
-
-        if (this.isAuthorized) {
-            this.timeout = setTimeout(() => {
-                void this.start();
-            }, 10_000);
-        }
-    }
-
     private xmlRestrictionsToEjabberd(element: string): void {
         // TODO IMPLEMENT RESTRICTIONS
         // Test body message length
@@ -561,6 +537,31 @@ export class XmppClient {
             mucRoomsStore.removeMucRoom(room);
         }
         this.clientPromise.cancel();
+    }
+
+    public restart() {
+        if (this.ping) {
+            clearInterval(this.ping);
+            this.ping = undefined;
+        }
+        xmppServerConnectionStatusStore.set(false);
+        mucRoomsStore.reset();
+        this.rooms.clear();
+
+        this.close();
+
+        // This can happen when the first connection failed for some reason.
+        // We should probably retry regularly (every 10 seconds)
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = undefined;
+        }
+
+        if (this.isAuthorized) {
+            this.timeout = setTimeout(() => {
+                void this.start();
+            }, 10_000);
+        }
     }
 
     public getPlayerName() {
