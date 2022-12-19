@@ -289,8 +289,7 @@ export class EntityEditorTool extends MapEditorTool {
             this.entityPrefabPreview.y + this.entityPrefabPreview.displayHeight * 0.5
         );
         if (!this.scene.getGameMapFrontWrapper().canEntityBePlaced(
-            this.entityPrefabPreview.getTopLeft().x,
-            this.entityPrefabPreview.getTopLeft().y,
+            this.entityPrefabPreview.getTopLeft(),
             this.entityPrefabPreview.displayWidth,
             this.entityPrefabPreview.displayHeight,
             this.entityPrefab.collisionGrid,
@@ -307,8 +306,7 @@ export class EntityEditorTool extends MapEditorTool {
             return
         }
         if (!this.scene.getGameMapFrontWrapper().canEntityBePlaced(
-            this.entityPrefabPreview.getTopLeft().x,
-            this.entityPrefabPreview.getTopLeft().y,
+            this.entityPrefabPreview.getTopLeft(),
             this.entityPrefabPreview.displayWidth,
             this.entityPrefabPreview.displayHeight,
             this.entityPrefab.collisionGrid,

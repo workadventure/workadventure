@@ -146,11 +146,11 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 entity.setDepth(entity.y + entity.displayHeight * 0.5);
 
                 if (!this.scene.getGameMapFrontWrapper().canEntityBePlaced(
-                    entity.getTopLeft().x,
-                    entity.getTopLeft().y,
+                    entity.getTopLeft(),
                     entity.displayWidth,
                     entity.displayHeight,
                     entity.getCollisionGrid(),
+                    entity.getOldPositionTopLeft(),
                 )) {
                     entity.setTint(0xff0000);
                 } else {
@@ -163,11 +163,11 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         entity.on(Phaser.Input.Events.DRAG_END, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
                 if (!this.scene.getGameMapFrontWrapper().canEntityBePlaced(
-                    entity.getTopLeft().x,
-                    entity.getTopLeft().y,
+                    entity.getTopLeft(),
                     entity.displayWidth,
                     entity.displayHeight,
                     entity.getCollisionGrid(),
+                    entity.getOldPositionTopLeft(),
                 )) {
                     const oldPos = entity.getOldPositionTopLeft();
                     entity.setPosition(oldPos.x + entity.displayWidth * 0.5, oldPos.y + entity.displayHeight * 0.5);

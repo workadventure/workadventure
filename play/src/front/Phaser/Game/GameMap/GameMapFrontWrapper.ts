@@ -376,23 +376,46 @@ export class GameMapFrontWrapper {
         }
     }
 
-    public canEntityBePlaced(topLeftX: number, topLeftY: number, width: number, height: number, collisionGrid?: number[][]): boolean {
+    public canEntityBePlaced(
+        topLeftPos: { x: number, y: number },
+        width: number,
+        height: number,
+        collisionGrid?: number[][],
+        oldTopLeftPos?: { x: number, y: number },
+    ): boolean {
         if (!collisionGrid) {
             return !this.scene.getGameMapFrontWrapper().isOutOfMapBounds(
-                topLeftX,
-                topLeftY,
+                topLeftPos.x,
+                topLeftPos.y,
                 width,
                 height,
             );
         }
+        const positionsToIgnore: Map<string, number> = new Map<string, number>();
         const tileDim = this.scene.getGameMapFrontWrapper().getTileDimensions();
+        if (oldTopLeftPos) {
+            for (let y = 0; y < collisionGrid.length; y += 1) {
+                for (let x = 0; x < collisionGrid[y].length; x += 1) {
+                    if (collisionGrid[y][x] === 1) {
+                        const xIndex = Math.floor((oldTopLeftPos.x + x * tileDim.width) / tileDim.width);
+                        const yIndex = Math.floor((oldTopLeftPos.y + y * tileDim.height) / tileDim.height);
+                        positionsToIgnore.set(`x:${xIndex}y:${yIndex}`, 1);
+                    }
+                }
+            }
+        }
         for (let y = 0; y < collisionGrid.length; y += 1) {
             for (let x = 0; x < collisionGrid[y].length; x += 1) {
                 if (collisionGrid[y][x] === 0) {
                     continue;
                 }
+                const xIndex = Math.floor((topLeftPos.x + x * tileDim.width) / tileDim.width);
+                const yIndex = Math.floor((topLeftPos.y + y * tileDim.height) / tileDim.height);
+                if (positionsToIgnore.has(`x:${xIndex}y:${yIndex}`)) {
+                    continue;
+                }
                 if (!this.scene.getGameMapFrontWrapper().isSpaceAvailable(
-                    topLeftX + x * tileDim.width, topLeftY + y * tileDim.height,
+                    topLeftPos.x + x * tileDim.width, topLeftPos.y + y * tileDim.height,
                 )) {
                     return false;
                 }
