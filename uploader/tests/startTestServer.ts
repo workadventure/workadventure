@@ -1,7 +1,7 @@
 import {spawn} from "child_process";
 
 export default function(env: {}) {
-    const testServer = spawn("yarn", ['startTestServer'], {
+    const testServer = spawn("pnpm", ['run', 'startTestServer'], {
         env: {
             ...process.env,
             ...env
@@ -13,7 +13,7 @@ export default function(env: {}) {
         console.log(data.toString());
     });*/
     testServer.stderr.on('data', (data) => {
-        console.warn(data.toString());
+        console.warn('TestServer logs:', data.toString());
     });
     testServer.on('error', (err) => {
         console.error('Failed to start subprocess.', err);

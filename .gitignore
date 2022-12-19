@@ -11,7 +11,4 @@ node_modules
 _
 *.code-workspace
 /install.lock
-/.yarn/*
-!/.yarn/releases
-!/.yarn/plugins
-yarn-error.log
+/.pnpm-store

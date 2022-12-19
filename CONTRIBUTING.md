@@ -50,16 +50,20 @@ Before committing, be sure to install the "Prettier" precommit hook that will re
 In order to enable the "Prettier" precommit hook, at the root of the project, run:
 
 ```console
-$ yarn install
-$ yarn run prepare
+$ # This will install pnpm (the package manager we use on WorkAdventure)
+$ corepack enable && corepack prepare pnpm@latest --activate
+$ # This install all dependencies
+$ pnpm install
+$ # This actually installs the precommit hooks.
+$ pnpm run prepare
 ```
 
 If you don't have the precommit hook installed (or if you committed code before installing the precommit hook), you will need
 to run code linting manually:
 
 ```console
-$ docker-compose exec play yarn run pretty
-$ docker-compose exec back yarn run pretty
+$ docker-compose exec play pnpm run pretty
+$ docker-compose exec back pnpm run pretty
 ```
 
 ### Providing tests

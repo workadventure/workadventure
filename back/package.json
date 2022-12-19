@@ -13,8 +13,8 @@
     "lint": "DEBUG= eslint src/ . --ext .ts",
     "fix": "DEBUG= eslint --fix src/ . --ext .ts",
     "precommit": "lint-staged",
-    "pretty": "yarn prettier --write 'src/**/*.{ts,tsx}'",
-    "pretty-check": "yarn prettier --check 'src/**/*.{ts,tsx}'"
+    "pretty": "prettier --write 'src/**/*.{ts,tsx}'",
+    "pretty-check": "prettier --check 'src/**/*.{ts,tsx}'"
   },
   "repository": {
     "type": "git",

@@ -28,7 +28,6 @@ services:
 
   play:
     image: thecodingmachine/workadventure-play:${VERSION}
-    command: yarn run start
     environment:
       - DEBUG_MODE
       - JITSI_URL
@@ -97,7 +96,6 @@ services:
 
   back:
     image: thecodingmachine/workadventure-back:${VERSION}
-    command: yarn run runprod
     environment:
       - SECRET_JITSI_KEY
       - ENABLE_FEATURE_MAP_EDITOR
