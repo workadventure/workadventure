@@ -120,7 +120,6 @@ export class GameMapFrontWrapper {
             }
         }
 
-        // TODO: Load up entities from JSON
         this.entitiesManager = new EntitiesManager(this.scene, this);
         for (const entityData of this.gameMap.getGameMapEntities().getEntities()) {
             void this.entitiesManager.addEntity(entityData, TexturesHelper.ENTITIES_TEXTURES_DIRECTORY);
@@ -383,6 +382,7 @@ export class GameMapFrontWrapper {
         collisionGrid?: number[][],
         oldTopLeftPos?: { x: number, y: number },
     ): boolean {
+        // no collision grid means we can place it anywhere on the map
         if (!collisionGrid) {
             return !this.scene.getGameMapFrontWrapper().isOutOfMapBounds(
                 topLeftPos.x,
@@ -391,6 +391,7 @@ export class GameMapFrontWrapper {
                 height,
             );
         }
+        // prevent entity's old position from blocking it when repositioning
         const positionsToIgnore: Map<string, number> = new Map<string, number>();
         const tileDim = this.scene.getGameMapFrontWrapper().getTileDimensions();
         if (oldTopLeftPos) {
@@ -406,11 +407,14 @@ export class GameMapFrontWrapper {
         }
         for (let y = 0; y < collisionGrid.length; y += 1) {
             for (let x = 0; x < collisionGrid[y].length; x += 1) {
+                // this tile is collisionGrid is non-collidible. We can skip calculations for it
                 if (collisionGrid[y][x] === 0) {
                     continue;
                 }
                 const xIndex = Math.floor((topLeftPos.x + x * tileDim.width) / tileDim.width);
                 const yIndex = Math.floor((topLeftPos.y + y * tileDim.height) / tileDim.height);
+                // current position is being blocked by entity's old position. We can ignore that
+                // NOTE: Is it possible for position to be blocked by 2 different things?
                 if (positionsToIgnore.has(`x:${xIndex}y:${yIndex}`)) {
                     continue;
                 }
@@ -431,6 +435,18 @@ export class GameMapFrontWrapper {
         if (this.isOutOfMapBounds(topLeftX, topLeftY, this.getTileDimensions().width, this.getTileDimensions().height)) {
             return false;
         }
+        const playersPositions = [...this.scene.getRemotePlayers().map((player) => player.getPosition()), this.scene.CurrentPlayer.getPosition()];
+        
+        // check if entity is not occupied by a WOKA
+        for (const position of playersPositions) {
+            if (MathUtils.isOverlappingWithRectangle(
+                position,
+                { x: topLeftX, y: topLeftY, width: this.getTileDimensions().width, height: this.getTileDimensions().height},
+            )) {
+                return false;
+            }
+        }
+        // TODO: Check if it's colliding with other players
         const height = this.collisionGrid.length;
         const width  = this.collisionGrid[0].length;
         const xIndex = Math.floor(topLeftX / this.getTileDimensions().width);

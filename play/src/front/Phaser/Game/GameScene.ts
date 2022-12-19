@@ -2460,7 +2460,6 @@ ${escapedMessage}
         this.gameMapChangedSubscription = this.gameMapFrontWrapper
             .getMapChangedObservable()
             .subscribe((collisionGrid) => {
-                console.log('set collision grid');
                 this.pathfindingManager.setCollisionGrid(collisionGrid);
                 this.markDirty();
                 const playerDestination = this.CurrentPlayer.getCurrentPathDestinationPoint();
@@ -2784,6 +2783,10 @@ ${escapedMessage}
 
     public getCameraManager(): CameraManager {
         return this.cameraManager;
+    }
+
+    public getRemotePlayers(): RemotePlayer[] {
+        return Array.from(this.MapPlayersByKey.values());
     }
 
     public getMapEditorModeManager(): MapEditorModeManager {
