@@ -561,6 +561,38 @@
             <table class="table">
                 <tr>
                     <td>
+                        <input type="radio" name="entity_addition_and_removal"> Success <input type="radio" name="entity_addition_and_removal"> Failure <input type="radio" name="entity_addition_and_removal" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="~/maps/tests/entity_addition_and_removal.json" target="_blank">Test entity addition and removal</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="entity_edition_and_interaction"> Success <input type="radio" name="entity_edition_and_interaction"> Failure <input type="radio" name="entity_edition_and_interaction" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="~/maps/tests/entity_edition_and_interaction.json" target="_blank">Test entity edition and interaction</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="entity_jitsi_room_interaction"> Success <input type="radio" name="entity_jitsi_room_interaction"> Failure <input type="radio" name="entity_jitsi_room_interaction" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="~/maps/tests/entity_jitsi_room_interaction.json" target="_blank">Test entity jitsi room interaction</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="entity_open_tab_interaction"> Success <input type="radio" name="entity_open_tab_interaction"> Failure <input type="radio" name="entity_open_tab_interaction" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="~/maps/tests/entity_open_tab_interaction.json" target="_blank">Test open link interaction</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
                         <input type="radio" name="move-to-non-editable-map"> Success <input type="radio" name="move-to-non-editable-map"> Failure <input type="radio" name="move-to-non-editable-map" checked> Pending
                     </td>
                     <td>
@@ -681,6 +713,8 @@
 
             let completeUrl = window.location.protocol + '//' + playHost + '/_/global/' + host + window.location.pathname;
 
+            let shortUrl = window.location.protocol + '//' + playHost + '/';
+
             baseInput.value = completeUrl;
 
             baseInput.addEventListener('change', init);
@@ -688,7 +722,14 @@
             function init() {
                 console.log(baseInput.value);
                 for (const link of document.querySelectorAll('a.testLink')) {
-                    const url = baseInput.value + link.dataset.testmap;
+                    let url ="";
+                    if(link.dataset.testmap.startsWith("~"))
+                    {
+                        url = shortUrl + link.dataset.testmap;
+                    }
+                    else{
+                        url = baseInput.value + link.dataset.testmap;
+                    }
                     link.href = url;
                 }
             }

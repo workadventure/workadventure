@@ -32,8 +32,11 @@ const mapEditor: BaseTranslation = {
             audioMutedLabel :"Muted by default",
             moreOptionsLabel:"More Options",
             jitsiRoomConfig:{
+                addConfig:"Add an option",
                 startWithAudioMuted:"Start with microphone muted",
-                startWithVideoMuted:"Start with video closed"
+                startWithVideoMuted:"Start with video closed",
+                cancel:"Cancel",
+                validate:"Validate"
             }
         },
         audioProperties:{

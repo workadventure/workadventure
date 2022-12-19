@@ -15,7 +15,7 @@ export class MapEntitiesPrefabsStore implements Readable<EntityPrefab[]> {
 
     private mapObjects: EntityPrefab[] = [];
     private filter = "";
-    public tagsStore = writable<string[]>([]);
+    public tagsStore= writable<string[]>([]);
     private currentCollection: EntityCollection = { collectionName: "All Object Collection", collection: [], tags: [] };
 
     constructor() {}
@@ -75,7 +75,7 @@ export class MapEntitiesPrefabsStore implements Readable<EntityPrefab[]> {
                     entity.tags.forEach((tag: string) => tagSet.add(tag));
                 });
 
-                const tags = [...tagSet];
+                const tags = [...tagSet, ...get(this.tagsStore)];
                 tags.sort();
                 this.tagsStore.set(tags);
                 this.mapEntitiesStore.set(this.currentCollection.collection);
