@@ -4,7 +4,6 @@ import type { Unsubscriber } from "svelte/store";
 import type { RoomConnection } from "../../../Connexion/RoomConnection";
 import type { GameScene } from "../GameScene";
 import {
-    mapEditorModeDragCameraPointerDownStore,
     mapEditorModeStore,
     mapEditorSelectedToolStore,
 } from "../../../Stores/MapEditorStore";
@@ -75,7 +74,6 @@ export class MapEditorModeManager {
         this.currentCommandIndex = -1;
 
         this.active = false;
-        this.pointerDown = false;
 
         this.editorTools = {
             [EditorToolName.AreaEditor]: new AreaEditorTool(this),
@@ -213,16 +211,11 @@ export class MapEditorModeManager {
         return this.active;
     }
 
-    public isPointerDown(): boolean {
-        return this.pointerDown;
-    }
-
     public destroy(): void {
         for (const key of Object.keys(this.editorTools)) {
             this.editorTools[key as EditorToolName].destroy();
         }
         this.unsubscribeFromStores();
-        this.pointerDownUnsubscriber();
     }
 
     public handleKeyDownEvent(event: KeyboardEvent): void {
@@ -352,18 +345,9 @@ export class MapEditorModeManager {
     private subscribeToStores(): void {
         this.mapEditorModeUnsubscriber = mapEditorModeStore.subscribe((active) => {
             this.active = active;
-            if (active) {
-                this.scene.CurrentPlayer.finishFollowingPath(true);
-                this.scene.CurrentPlayer.stop();
-                this.scene.getCameraManager().stopFollow();
-            } else {
-                this.scene.getCameraManager().startFollowPlayer(this.scene.CurrentPlayer);
+            if (!active) {
                 this.equipTool();
             }
-        });
-
-        this.pointerDownUnsubscriber = mapEditorModeDragCameraPointerDownStore.subscribe((pointerDown) => {
-            this.pointerDown = pointerDown;
         });
     }
 
