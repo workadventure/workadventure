@@ -99,7 +99,6 @@
 
         .name {
             max-height: 15vh;
-            // margin-bottom: 50px;
         }
 
         .actions::-webkit-scrollbar {

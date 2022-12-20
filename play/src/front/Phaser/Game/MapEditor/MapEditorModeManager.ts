@@ -345,9 +345,7 @@ export class MapEditorModeManager {
     private subscribeToStores(): void {
         this.mapEditorModeUnsubscriber = mapEditorModeStore.subscribe((active) => {
             this.active = active;
-            if (!active) {
-                this.equipTool();
-            }
+            this.equipTool(this.active ? EditorToolName.EntityEditor : undefined);
         });
     }
 
