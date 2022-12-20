@@ -100,7 +100,7 @@ const mapStorageServer: MapStorageServer = {
                             prefab: entityPrefab,
                             x: message.x,
                             y: message.y,
-                            interactive: true,
+                            interactive: false,
                         },
                     });
                     break;

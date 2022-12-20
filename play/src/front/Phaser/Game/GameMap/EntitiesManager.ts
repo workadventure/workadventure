@@ -92,16 +92,25 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         return this.properties;
     }
 
-    public makeAllEntitiesNonInteractive(): void {
-        this.entities.forEach((entity) => entity.disableInteractive());
-    }
-
+    
     public clearAllEntitiesTint(): void {
         this.entities.forEach((entity) => entity.clearTint());
     }
+    
+    public makeAllEntitiesNonInteractive(): void {
+        this.entities.forEach((entity) => {
+            entity.disableInteractive();
+        });
+    }
 
-    public makeAllEntitiesInteractive(): void {
-        this.entities.forEach((entity) => entity.setInteractive({ pixelPerfect: true, cursor: "pointer" }));
+    public makeAllEntitiesInteractive(activatableOnly: boolean = false): void {
+        const entities = activatableOnly ?
+            this.entities.filter(entity => entity.isActivatable()) :
+            this.entities;
+        entities.forEach((entity) => {
+            entity.setInteractive({ pixelPerfect: true, cursor: "pointer" })
+            this.scene.input.setDraggable(entity);
+        });
     }
 
     private bindEntityEventHandlers(entity: Entity): void {
@@ -183,6 +192,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             }
         });
         entity.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+            console.log(entity.getEntityData());
+            console.log(`isActivatable: ${entity.isActivatable()}`);
             if (get(mapEditorModeStore)) {
                 const entityEditorMode = get(mapEntityEditorModeStore);
                 switch (entityEditorMode) {

@@ -38,7 +38,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     private entityData: Required<EntityData>;
 
-    private beingRepositioned: boolean;
     private activatable: boolean;
     private oldPositionTopLeft: { x: number; y: number };
 
@@ -46,16 +45,14 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         super(scene, data.x, data.y, data.prefab.imagePath);
 
         this.oldPositionTopLeft = this.getTopLeft();
-        this.beingRepositioned = false;
-
-        this.activatable = data.interactive ?? false;
 
         this.entityData = {
             ...data,
-            interactive: data.interactive ?? true,
+            interactive: data.interactive ?? false,
             properties: data.properties ?? {},
         };
 
+        this.activatable = data.interactive ?? false;
         this.setDepth(this.y + this.displayHeight * 0.5);
 
         this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
