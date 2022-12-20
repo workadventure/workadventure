@@ -1,6 +1,6 @@
 import { getEnvConfig } from "@geprog/vite-plugin-env-config/getEnvConfig";
 
-const PUSHER_URL = getEnvConfig("PUSHER_URL") || "//play.workadventure.localhost";
+const PLAY_URL = getEnvConfig("PLAY_URL") || "//play.workadventure.localhost";
 const ADMIN_API_URL = getEnvConfig("ADMIN_API_URL") || undefined;
 const ENABLE_CHAT_UPLOAD = getEnvConfig("ENABLE_CHAT_UPLOAD") !== "false";
 const FALLBACK_LOCALE = getEnvConfig("FALLBACK_LOCALE") || undefined;
@@ -15,7 +15,7 @@ const EJABBERD_DOMAIN: string = getEnvConfig("EJABBERD_DOMAIN") || "";
 const EJABBERD_WS_URI: string = getEnvConfig("EJABBERD_WS_URI") || "";
 
 export {
-    PUSHER_URL,
+    PLAY_URL,
     FALLBACK_LOCALE,
     UPLOADER_URL,
     EMBEDLY_KEY,

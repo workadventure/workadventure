@@ -80,7 +80,7 @@
           "API_URL": "back1:50051,back2:50051",
           "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
           "FRONT_URL": "https://play-"+url,
-          "PUSHER_URL": "https://play-"+url,
+          "PLAY_URL": "https://play-"+url,
           "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
           "ENABLE_OPENAPI_ENDPOINT": "true",
           "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
@@ -117,7 +117,7 @@
       },
       "ports": [80],
       "env": {
-        "PUSHER_URL": "//play-"+url,
+        "PLAY_URL": "//play-"+url,
         "UPLOADER_URL": "//uploader-"+url,
         "EMBEDLY_KEY": if std.objectHas(env, 'EMBEDLY_KEY') then env.EMBEDLY_KEY else "",
         "ICON_URL": "//icon-"+url,

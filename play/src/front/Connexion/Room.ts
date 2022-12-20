@@ -1,6 +1,6 @@
 import {
     CONTACT_URL,
-    PUSHER_URL,
+    PLAY_URL,
     DISABLE_ANONYMOUS,
     OPID_LOGOUT_REDIRECT_URL,
     OPID_WOKA_NAME_POLICY,
@@ -22,7 +22,7 @@ export interface RoomRedirect {
 export class Room {
     public readonly id: string;
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
-    private _iframeAuthentication?: string = PUSHER_URL + "/login-screen";
+    private _iframeAuthentication?: string = PLAY_URL + "/login-screen";
     private _opidLogoutRedirectUrl = "/";
     private _opidWokaNamePolicy: OpidWokaNamePolicy | undefined;
     private _mapUrl: string | undefined;
@@ -116,7 +116,7 @@ export class Room {
     private async getMapDetail(): Promise<MapDetail | RoomRedirect> {
         try {
             const result = await axiosWithRetry.get<unknown>(
-                new URL("/map", new URL(PUSHER_URL, window.location.href)).toString(),
+                new URL("/map", new URL(PLAY_URL, window.location.href)).toString(),
                 {
                     params: {
                         playUri: this.roomUrl.toString(),
@@ -149,7 +149,7 @@ export class Room {
                 this._group = data.group;
                 this._authenticationMandatory =
                     data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
-                this._iframeAuthentication = data.iframeAuthentication || PUSHER_URL + "/login-screen";
+                this._iframeAuthentication = data.iframeAuthentication || PLAY_URL + "/login-screen";
                 this._opidLogoutRedirectUrl = data.opidLogoutRedirectUrl || OPID_LOGOUT_REDIRECT_URL || "/";
                 this._contactPage = data.contactPage || CONTACT_URL;
                 if (data.expireOn) {

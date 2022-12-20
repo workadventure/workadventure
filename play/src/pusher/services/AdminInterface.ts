@@ -3,8 +3,8 @@ import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData } from "@
 
 export interface AdminInterface {
     /**
-     * @var playUri: is url of the room
-     * @var userIdentifier: can to be undefined or email or uuid
+     * @var playUri is url of the room
+     * @var userIdentifier can to be undefined or email or uuid
      * @var ipAddress
      * @var characterLayers
      * @return MapDetailsData|RoomRedirect
@@ -19,8 +19,8 @@ export interface AdminInterface {
     ): Promise<FetchMemberDataByUuidResponse>;
 
     /**
-     * @var playUri: is url of the room
-     * @var userId: can to be undefined or email or uuid
+     * @var playUri is url of the room
+     * @var userId can to be undefined or email or uuid
      * @return MapDetailsData|RoomRedirect
      */
     fetchMapDetails(
@@ -40,6 +40,12 @@ export interface AdminInterface {
         playUri: string | null,
         locale?: string
     ): Promise<AdminApiData>;
+
+    /**
+     * @var host Request hostname
+     * @return string
+     */
+    fetchWellKnownChallenge(host: string): Promise<string>;
 
     /**
      * @param locale

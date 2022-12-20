@@ -1,4 +1,4 @@
-import { PUSHER_URL, UPLOADER_URL } from "../Enum/EnvironmentVariable";
+import { PLAY_URL, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
@@ -195,7 +195,7 @@ export class RoomConnection implements RoomConnection {
         companion: string | null,
         availabilityStatus: AvailabilityStatus
     ) {
-        let url = new URL(PUSHER_URL, window.location.toString()).toString();
+        let url = new URL(PLAY_URL, window.location.toString()).toString();
         url = url.replace("http://", "ws://").replace("https://", "wss://");
         if (!url.endsWith("/")) {
             url += "/";
