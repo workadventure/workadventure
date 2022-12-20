@@ -271,9 +271,9 @@ export class GameScene extends DirtyScene {
 
         this.fetchCollectionsNames()
             .then((names) => {
-                for (const name of names.collections) {
-                    mapEntitiesPrefabsStore.loadCollection(`${this.room.entityCollectionsUrl}/${name}`);
-                }
+                mapEntitiesPrefabsStore.loadCollections(
+                    names.collections.map(name => `${this.room.entityCollectionsUrl}/${name}`),
+                );
             })
             .catch((reason) => {
                 console.warn(reason);
