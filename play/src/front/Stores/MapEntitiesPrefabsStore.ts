@@ -56,49 +56,38 @@ export class MapEntitiesPrefabsStore implements Readable<EntityPrefab[]> {
         this.mapEntitiesStore.set(newCollection);
     }
 
-    public loadCollection(url: string): void {
-        this.fetchCollection(url)
-            .then((entityCollection: EntityCollection) => {
-                const tagSet = new Set<string>();
-                entityCollection.collection.forEach((entity: EntityPrefab) => {
-                    this.currentCollection.collection.push({
-                        name: entity.name,
-                        id: entity.id,
-                        collectionName: entity.collectionName,
-                        // TODO: Merge tags on map-storage side?
-                        tags: [...entity.tags, ...entityCollection.tags],
-                        imagePath: `${TexturesHelper.ENTITIES_TEXTURES_DIRECTORY}${entity.imagePath}`,
-                        direction: entity.direction,
-                        color: entity.color,
-                        collisionGrid: entity.collisionGrid,
-                    });
-                    entity.tags.forEach((tag: string) => tagSet.add(tag));
-                });
+    public async loadCollections(urls: string[]): Promise<void> {
+        const promises: Promise<EntityCollection>[] = [];
+        for (const url of urls) {
+            promises.push(this.fetchCollection(url));
+        }
+        const entityCollections = await Promise.all(promises);
 
-                const tags = [...tagSet, ...get(this.tagsStore)];
-                tags.sort();
-                this.tagsStore.set(tags);
-                this.mapEntitiesStore.set(this.currentCollection.collection);
-            })
-            .catch((reason) => {
-                console.error(reason);
+        for (const entityCollection of entityCollections) {
+            const tagSet = new Set<string>();
+            entityCollection.collection.forEach((entity: EntityPrefab) => {
+                this.currentCollection.collection.push({
+                    name: entity.name,
+                    id: entity.id,
+                    collectionName: entity.collectionName,
+                    // TODO: Merge tags on map-storage side?
+                    tags: [...entity.tags, ...entityCollection.tags],
+                    imagePath: `${TexturesHelper.ENTITIES_TEXTURES_DIRECTORY}${entity.imagePath}`,
+                    direction: entity.direction,
+                    color: entity.color,
+                    collisionGrid: entity.collisionGrid,
+                });
+                entity.tags.forEach((tag: string) => tagSet.add(tag));
             });
+
+            const tags = [...tagSet, ...get(this.tagsStore)];
+            tags.sort();
+            this.tagsStore.set(tags);
+            this.mapEntitiesStore.set(this.currentCollection.collection);
+        }
     }
 
     private async fetchCollection(url: string): Promise<EntityCollection> {
         return (await fetch(url)).json();
-    }
-
-    // private async fetchCollections(collectionsNames: string[]): Promise<EntityCollection[]> {
-    //     const promises: Promise<EntityCollection>[] = [];
-    //     for (const name of collectionsNames) {
-    //         // TODO: Get this url from GameScene..?
-    //         promises.push((await fetch(`http://map-storage.workadventure.localhost/entityCollections/${name}`)).json());
-    //     }
-    //     return await Promise.all(promises);
-    // }
-
-    private async fetchCollectionsNames(): Promise<{ collections: string[] }> {
-        return (await fetch("http://map-storage.workadventure.localhost/entityCollections")).json();
     }
 }

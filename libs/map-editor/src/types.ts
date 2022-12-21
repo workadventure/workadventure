@@ -40,7 +40,6 @@ export interface EntityData {
     id: number;
     x: number;
     y: number;
-    interactive?: boolean;
     properties?: { [key: string]: unknown | undefined };
     prefab: EntityPrefab;
 }

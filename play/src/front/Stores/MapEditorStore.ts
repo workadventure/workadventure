@@ -36,8 +36,6 @@ export const mapEditorModeStore = createMapEditorModeStore();
 
 export const mapEditorInputStore = writable(false);
 
-export const mapEditorModeDragCameraPointerDownStore = writable(false);
-
 export const mapEditorSelectedAreaPreviewStore = writable<AreaPreview | undefined>(undefined);
 
 export const mapEditorSelectedEntityStore = writable<Entity | undefined>(undefined);

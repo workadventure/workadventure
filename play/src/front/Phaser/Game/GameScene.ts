@@ -271,9 +271,9 @@ export class GameScene extends DirtyScene {
 
         this.fetchCollectionsNames()
             .then((names) => {
-                for (const name of names.collections) {
-                    mapEntitiesPrefabsStore.loadCollection(`${this.room.entityCollectionsUrl}/${name}`);
-                }
+                mapEntitiesPrefabsStore.loadCollections(
+                    names.collections.map(name => `${this.room.entityCollectionsUrl}/${name}`),
+                );
             })
             .catch((reason) => {
                 console.warn(reason);
@@ -1194,7 +1194,10 @@ export class GameScene extends DirtyScene {
                 this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesNonInteractive();
             } else {
                 this.activatablesManager.enableSelectingByDistance();
-                this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesInteractive();
+                // make sure all entities are non-interactive
+                this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesNonInteractive();
+                // add interactions back only for activatables
+                this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesInteractive(true);
             }
             this.markDirty();
         });

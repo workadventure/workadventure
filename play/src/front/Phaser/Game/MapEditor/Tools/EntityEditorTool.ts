@@ -112,7 +112,6 @@ export class EntityEditorTool extends MapEditorTool {
                             x: data.x,
                             y: data.y,
                             id: data.id,
-                            interactive: true,
                             prefab: entityPrefab,
                             properties: {
                                 customProperties: {},
@@ -331,7 +330,6 @@ export class EntityEditorTool extends MapEditorTool {
             y,
             id: this.gameMapEntities.getNextEntityId(),
             prefab: this.entityPrefab,
-            interactive: true,
             properties: {},
         };
         this.mapEditorModeManager.executeCommand({

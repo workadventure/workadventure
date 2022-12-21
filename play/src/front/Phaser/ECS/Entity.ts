@@ -38,7 +38,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     private entityData: Required<EntityData>;
 
-    private beingRepositioned: boolean;
     private activatable: boolean;
     private oldPositionTopLeft: { x: number; y: number };
 
@@ -46,15 +45,17 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         super(scene, data.x, data.y, data.prefab.imagePath);
 
         this.oldPositionTopLeft = this.getTopLeft();
-        this.beingRepositioned = false;
-
-        this.activatable = data.interactive ?? false;
 
         this.entityData = {
             ...data,
-            interactive: data.interactive ?? true,
             properties: data.properties ?? {},
         };
+
+        this.activatable = this.hasAnyPropertiesSet();
+        if (this.activatable) {
+            this.setInteractive({ pixelPerfect: true, cursor: "pointer" });
+            this.scene.input.setDraggable(this);
+        }
 
         this.setDepth(this.y + this.displayHeight * 0.5);
 
@@ -71,11 +72,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             (this.scene as GameScene).markDirty();
         });
 
-        if (data.interactive) {
-            this.setInteractive({ pixelPerfect: true, cursor: "pointer" });
-            this.scene.input.setDraggable(this);
-        }
-
         this.scene.add.existing(this);
     }
 
@@ -84,7 +80,13 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
         this.setPosition(this.entityData.x, this.entityData.y);
         this.oldPositionTopLeft = this.getTopLeft();
-        // TODO: Add more visual changes on Entity Update
+        this.activatable = this.hasAnyPropertiesSet();
+        if (this.activatable) {
+            this.setInteractive({ pixelPerfect: true, cursor: "pointer" });
+            this.scene.input.setDraggable(this);
+        } else {
+            this.disableInteractive();
+        }
     }
 
     public destroy(fromScene?: boolean | undefined): void {
@@ -156,6 +158,19 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     private getOutlinePlugin(): OutlinePipelinePlugin | undefined {
         return this.scene.plugins.get("rexOutlinePipeline") as unknown as OutlinePipelinePlugin | undefined;
+    }
+
+    private hasAnyPropertiesSet(): boolean {
+        if (!this.entityData.properties) {
+            return false;
+        }
+        const propValues = Object.values(this.entityData.properties);
+        for (const value of propValues) {
+            if (value !== undefined && value !== null) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private toggleActionsMenu(): void {
