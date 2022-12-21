@@ -23,12 +23,16 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v2.0.0"
 
+      - uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache: "yarn"
-          cache-dependency-path: '**/yarn.lock'
+          cache: "pnpm"
+
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
@@ -36,7 +40,7 @@ jobs:
           version: '3.x'
 
       - name: "Install dependencies"
-        run: yarn workspaces focus workadventure-play
+        run: pnpm install --filter workadventure-play...
 
       - name: "Install messages dependencies"
         run: npm install
@@ -47,11 +51,11 @@ jobs:
         working-directory: "messages"
 
       - name: "Generate i18n files"
-        run: yarn run typesafe-i18n
+        run: pnpm run typesafe-i18n
         working-directory: "play"
 
       - name: "Build"
-        run: yarn run build
+        run: pnpm run build
         env:
           PUSHER_URL: "//localhost:3000"
           ADMIN_URL: "//localhost:80"
@@ -60,27 +64,27 @@ jobs:
         working-directory: "play"
 
       - name: "Build iframe-api"
-        run: yarn run build-iframe-api
+        run: pnpm run build-iframe-api
         working-directory: "play"
 
       - name: "Typecheck"
-        run: yarn run typecheck
+        run: pnpm run typecheck
         working-directory: "play"
 
       - name: "Svelte check"
-        run: yarn run svelte-check
+        run: pnpm run svelte-check
         working-directory: "play"
 
       - name: "Lint"
-        run: yarn run lint
+        run: pnpm run lint
         working-directory: "play"
 
       - name: "Pretty"
-        run: yarn run pretty-check
+        run: pnpm run pretty-check
         working-directory: "play"
 
       - name: "Unit tests"
-        run: yarn test
+        run: pnpm test
         working-directory: "play"
 
   continuous-integration-chat:
@@ -92,12 +96,16 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v2.0.0"
 
+      - uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
       - name: "Setup NodeJS"
         uses: actions/setup-node@v1
         with:
           node-version: '16.x'
-          cache: "yarn"
-          cache-dependency-path: '**/yarn.lock'
+          cache: "pnpm"
+
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
@@ -109,7 +117,7 @@ jobs:
       #   working-directory: "libs"
 
       - name: "Install dependencies"
-        run: yarn workspaces focus workadventurechat
+        run: pnpm install --filter workadventurechat...
 
       - name: "Install messages dependencies"
         run: npm install
@@ -120,15 +128,15 @@ jobs:
         working-directory: "messages"
 
       - name: "Pretty"
-        run: yarn run pretty-check
+        run: pnpm run pretty-check
         working-directory: "chat"
 
       - name: "Generate i18n files"
-        run: yarn run typesafe-i18n
+        run: pnpm run typesafe-i18n
         working-directory: "chat"
 
       - name: "Build"
-        run: yarn run build
+        run: pnpm run build
         env:
           PUSHER_URL: "//localhost:8080"
           ADMIN_URL: "//localhost:80"
@@ -137,21 +145,21 @@ jobs:
         working-directory: "chat"
 
       - name: "Svelte check"
-        run: yarn run svelte-check
+        run: pnpm run svelte-check
         working-directory: "chat"
 
       - name: "Lint"
-        run: yarn run lint
+        run: pnpm run lint
         working-directory: "chat"
 
       # TODO active
       #- name: "Typecheck"
-      #  run: yarn run typecheck
+      #  run: pnpm run typecheck
       #  working-directory: "chat"
 
       # TODO active
       #- name: "Jasmine"
-      #  run: yarn test
+      #  run: pnpm test
       #  working-directory: "chat"
 
   continuous-integration-back:
@@ -163,12 +171,16 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v2.0.0"
 
+      - uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
           node-version: 16
-          cache: "yarn"
-          cache-dependency-path: '**/yarn.lock'
+          cache: "pnpm"
+
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
@@ -176,7 +188,7 @@ jobs:
           version: '3.x'
 
       - name: "Install dependencies"
-        run: yarn workspaces focus workadventureback
+        run: pnpm install --filter workadventureback...
 
       - name: "Install messages dependencies"
         run: npm install
@@ -187,19 +199,19 @@ jobs:
         working-directory: "messages"
 
       - name: "Typecheck"
-        run: yarn run typecheck
+        run: pnpm run typecheck
         working-directory: "back"
 
       - name: "Lint"
-        run: yarn run lint
+        run: pnpm run lint
         working-directory: "back"
 
       - name: "Jasmine"
-        run: yarn test
+        run: pnpm test
         working-directory: "back"
 
       - name: "Prettier"
-        run: yarn run pretty-check
+        run: pnpm run pretty-check
         working-directory: "back"
 
   continuous-integration-uploader:
@@ -211,22 +223,26 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v2.0.0"
 
+      - uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
           node-version: 16
-          cache: "yarn"
-          cache-dependency-path: '**/yarn.lock'
+          cache: "pnpm"
+
 
       - name: "Install dependencies"
-        run: yarn workspaces focus workadventureuploader
+        run: pnpm install --filter workadventureuploader...
 
       - name: "Lint"
-        run: yarn run lint
+        run: pnpm run lint
         working-directory: "uploader"
 
       - name: "jest"
-        run: yarn test
+        run: pnpm test
         working-directory: "uploader"
 
 
@@ -239,12 +255,16 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v2.0.0"
 
+      - uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
           node-version: 16
-          cache: "yarn"
-          cache-dependency-path: '**/yarn.lock'
+          cache: "pnpm"
+
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
@@ -252,7 +272,7 @@ jobs:
           version: '3.x'
 
       - name: "Install dependencies"
-        run: yarn workspaces focus map-storage
+        run: pnpm install --filter map-storage...
 
       - name: "Install messages dependencies"
         run: npm install
@@ -263,19 +283,19 @@ jobs:
         working-directory: "messages"
 
       - name: "Typecheck"
-        run: yarn run typecheck
+        run: pnpm run typecheck
         working-directory: "map-storage"
 
       - name: "Lint"
-        run: yarn run lint
+        run: pnpm run lint
         working-directory: "map-storage"
 
       - name: "Jasmine"
-        run: yarn test
+        run: pnpm test
         working-directory: "map-storage"
 
       - name: "Prettier"
-        run: yarn run format
+        run: pnpm run format
         working-directory: "map-storage"
 
   continuous-integration-desktop:
@@ -294,31 +314,28 @@ jobs:
           cache: "yarn"
           cache-dependency-path: '**/yarn.lock'
 
-      - name: "Revert to Yarn 1"
-        run: yarn set version classic
-
       - name: "Install dependencies"
-        run: yarn install  --immutable
+        run: yarn install
         working-directory: "desktop/electron"
 
       - name: "Build"
-        run: yarn build
+        run: yarn run build
         working-directory: "desktop/electron"
 
       - name: "Typecheck"
-        run: yarn typecheck
+        run: yarn run typecheck
         working-directory: "desktop/electron"
 
       - name: "Lint"
-        run: yarn lint
+        run: yarn run lint
         working-directory: "desktop/electron"
 
       - name: "Jasmine"
-        run: yarn test
+        run: yarn run test
         working-directory: "desktop/electron"
 
       - name: "Prettier"
-        run: yarn pretty-check
+        run: yarn run pretty-check
         working-directory: "desktop/electron"
 
   continuous-integration-desktop-local-app:
@@ -337,11 +354,9 @@ jobs:
           cache: "yarn"
           cache-dependency-path: '**/yarn.lock'
 
-      - name: "Revert to Yarn 1"
-        run: yarn set version classic
 
       - name: "Install dependencies"
-        run: yarn install  --immutable
+        run: yarn install
         working-directory: "desktop/local-app"
 
       - name: "Build"
@@ -373,6 +388,10 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v2.0.0"
 
+      - uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
@@ -385,8 +404,7 @@ jobs:
         working-directory: "tests"
 
       - name: "Install play dependencies"
-        run: yarn workspaces focus workadventure-play
-        working-directory: "play"
+        run: pnpm install --filter workadventure-play...
 
       - name: "Install messages dependencies"
         run: npm install
@@ -397,7 +415,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build API typings"
-        run: yarn run build-typings
+        run: pnpm run build-typings
         working-directory: "play"
 
       - name: "Lint"

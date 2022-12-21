@@ -9,7 +9,7 @@
     "dev": "ts-node-dev --inspect=0.0.0.0:9229 --respawn ./server.ts",
     "start": "ts-node --transpileOnly ./server.ts",
     "profile": "tsc && node --prof ./dist/server.js",
-    "test": "jest --forceExit",
+    "test": "jest --forceExit --detectOpenHandles",
     "startTestServer": "ts-node tests/testServer.ts",
     "lint": "eslint src/ . --ext .ts",
     "fix": "eslint --fix src/ . --ext .ts"
@@ -41,7 +41,7 @@
     "aws-sdk": "^2.1185.0",
     "axios": "^0.27.2",
     "debug": "^4.3.1",
-    "hyper-express": "^6.5.2",
+    "hyper-express": "^6.5.3",
     "jsonwebtoken": "^8.5.1",
     "mime-types": "^2.1.35",
     "mkdirp": "^1.0.4",

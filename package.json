@@ -5,20 +5,5 @@
   },
   "scripts": {
     "prepare": "husky install"
-  },
-  "workspaces": [
-    "play",
-    "back",
-    "chat",
-    "map-storage",
-    "libs/map-editor",
-    "libs/math-utils",
-    "libs/messages",
-    "libs/store-utils",
-    "libs/tailwind",
-    "benchmark",
-    "uploader",
-    "play/packages/iframe-api-typings"
-  ],
-  "packageManager": "yarn@3.3.0"
+  }
 }

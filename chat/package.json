@@ -75,15 +75,15 @@
     "precommit": "lint-staged",
     "svelte-check-watch": "svelte-check --fail-on-warnings --threshold error --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore,a11y-click-events-have-key-events:ignore,security-anchor-rel-noreferrer:ignore\" --watch",
     "svelte-check": "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore,a11y-click-events-have-key-events:ignore,security-anchor-rel-noreferrer:ignore\"",
-    "pretty": "yarn prettier --write 'src/**/*.{ts,svelte}'",
-    "pretty-check": "yarn prettier --check 'src/**/*.{ts,svelte}'",
+    "pretty": "prettier --write 'src/**/*.{ts,svelte}'",
+    "pretty-check": "prettier --check 'src/**/*.{ts,svelte}'",
     "typecheck": "tsc --noEmit",
     "typesafe-i18n": "typesafe-i18n  --no-watch",
     "typesafe-i18n-watch": "typesafe-i18n"
   },
   "lint-staged": {
     "*.svelte": [
-      "yarn run svelte-check"
+      "svelte-check"
     ],
     "*.{ts,svelte}": [
       "eslint --fix",
