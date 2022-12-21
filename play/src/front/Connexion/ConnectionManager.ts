@@ -88,7 +88,13 @@ class ConnectionManager {
         this._currentRoom = null;
 
         const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get("token");
+        let token = urlParams.get("token");
+        if(!token && navigator.cookieEnabled){
+            const match = document.cookie.match(new RegExp('(^| )' + 'privateaccesstoken' + '=([^;]+)'));
+            if (match) {
+                console.log('initGameConnexion => token => ', match[2]);
+            }
+        }
         if (token) {
             this.authToken = token;
             localUserStore.setAuthToken(token);
