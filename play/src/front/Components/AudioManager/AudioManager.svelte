@@ -70,7 +70,9 @@
             let volume = HTMLAudioPlayer.volume;
             audioPlayerVol.value = "" + volume;
             audioPlayerVolumeIcon.classList.remove("muted");
-            if (volume < 0.3) {
+            if (volume == 0) {
+                onMute();
+            } else if (volume < 0.3) {
                 audioPlayerVolumeIcon.classList.add("low");
             } else if (volume < 0.7) {
                 audioPlayerVolumeIcon.classList.remove("low");
@@ -102,7 +104,7 @@
     }
 </script>
 
-<div class="main-audio-manager nes-container is-rounded">
+<div class="main-audio-manager">
     <div class:hidden={!isAudioAllowed}>
         <div class="audio-manager-player-volume">
             <span id="audioplayer_volume_icon_playing" bind:this={audioPlayerVolumeIcon} on:click={onMute}>
@@ -149,80 +151,13 @@
             <audio class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer} />
         </section>
     </div>
-    <div class:hidden={isAudioAllowed}>
-        <button type="button" class="nes-btn" on:click={tryPlay}>{$LL.audio.manager.allow()}</button>
+    <div class:hidden={isAudioAllowed} class="tw-text-center">
+        <button type="button" class="btn light tw-font-bold tw-w-full tw-text-xs sm:tw-text-base" on:click={tryPlay}>{$LL.audio.manager.allow()}</button>
     </div>
 </div>
 
 <style lang="scss">
     .hidden {
         display: none;
-    }
-
-    div.main-audio-manager {
-        position: absolute;
-        top: 1%;
-        max-height: clamp(150px, 10vh, 15vh); //replace @media for small screen
-        width: clamp(200px, 15vw, 15vw);
-        padding: 3px 3px;
-        margin-left: auto;
-        margin-right: auto;
-        left: 0;
-        right: 0;
-        z-index: 550;
-
-        background-color: rgb(0, 0, 0, 0.5);
-        display: grid;
-        grid-template-rows: 50% 50%;
-        color: whitesmoke;
-        text-align: center;
-        pointer-events: auto;
-
-        div.audio-manager-player-volume {
-            display: grid;
-            grid-template-columns: 50px 1fr;
-
-            span svg {
-                height: 100%;
-                width: calc(100% - 10px);
-                margin-right: 10px;
-            }
-        }
-
-        section.audio-manager-file {
-            display: none;
-        }
-
-        #audioplayer_volume_icon_playing.muted {
-            #audioplayer_volume_icon_playing_low {
-                visibility: hidden;
-                display: none;
-            }
-
-            #audioplayer_volume_icon_playing_mid {
-                visibility: hidden;
-                display: none;
-            }
-
-            #audioplayer_volume_icon_playing_high {
-                visibility: hidden;
-                display: none;
-            }
-        }
-
-        #audioplayer_volume_icon_playing.low #audioplayer_volume_icon_playing_high {
-            visibility: hidden;
-            display: none;
-        }
-
-        #audioplayer_volume_icon_playing.low #audioplayer_volume_icon_playing_mid {
-            visibility: hidden;
-            display: none;
-        }
-
-        #audioplayer_volume_icon_playing.mid #audioplayer_volume_icon_playing_high {
-            visibility: hidden;
-            display: none;
-        }
     }
 </style>
