@@ -23,7 +23,7 @@ export class LocalStackContainer extends GenericContainer {
                 new Promise((resolve, reject) => {
                     check(resolve, reject)
                 }).then(() => {
-                    console.log("S3 successfully started");
+                    //console.log("S3 successfully started");
                     resolve(0)
                 }).catch(()=> {
                     setTimeout(attempt, 200)
