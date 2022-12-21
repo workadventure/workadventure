@@ -70,7 +70,7 @@
     <div class="tw-w-full tw-bg-dark-purple/95 tw-rounded" transition:fly={{ x: 1000, duration: 500 }}>
         <button type="button" class="close-window" on:click={close}>&times</button>
         <select class="tag-selector" bind:value={selectedKey} on:change={() => onSelectedKey()}>
-            <option value="">{$LL.mapEditor.entityEditor.jitsiProperties.jitsiRoomConfig.addConfig}</option>
+            <option value="">{$LL.mapEditor.entityEditor.jitsiProperties.jitsiRoomConfig.addConfig()}</option>
             {#each Object.keys(defaultConfig) as configKey }
                 {#if currentConfig[configKey] === undefined}
                 <option value={configKey}>{$LL.mapEditor.entityEditor.jitsiProperties.jitsiRoomConfig[configKey]()}</option>
@@ -93,8 +93,8 @@
             {/each}
         </div>
         <div class="action-buttons">
-            <button on:click={close}>{$LL.mapEditor.entityEditor.jitsiProperties.jitsiRoomConfig.cancel}</button>
-            <button on:click={validate}>{$LL.mapEditor.entityEditor.jitsiProperties.jitsiRoomConfig.validate}</button>
+            <button on:click={close}>{$LL.mapEditor.entityEditor.jitsiProperties.jitsiRoomConfig.cancel()}</button>
+            <button on:click={validate}>{$LL.mapEditor.entityEditor.jitsiProperties.jitsiRoomConfig.validate()}</button>
         </div>
     </div>
 </div>
