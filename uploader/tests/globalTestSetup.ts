@@ -5,7 +5,7 @@ import {DockerImageName} from "testcontainers/dist/docker-image-name";
 
 export default async function () {
     console.log("Pulling required images")
-    await pull("localstack/localstack:1.1");
+    await pull("localstack/localstack:1.3.1");
     await pull("redis:6");
 }
 

@@ -21,7 +21,7 @@
     "typecheck": "cross-env tsc -p tsconfig-pusher.json --noEmit",
     "profile": "tsc && node --prof ./dist/server.js",
     "build-iframe-api": "vite --config iframe-api.vite.config.ts build",
-    "watch-iframe-api": "yarn run build-iframe-api --watch",
+    "watch-iframe-api": "pnpm run build-iframe-api --watch",
     "build-typings": "cross-env tsc --project tsconfig-for-iframe-api-typings.json",
     "precommit": "lint-staged",
     "test": "vitest",
@@ -29,14 +29,14 @@
     "svelte-check": "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore,a11y-click-events-have-key-events:ignore,security-anchor-rel-noreferrer:ignore\"",
     "lint": "eslint src/ tests/ --ext .ts,.svelte",
     "lint-fix": "eslint --fix src/ tests/ --ext .ts,.svelte",
-    "pretty": "yarn prettier --write 'src/**/*.{ts,svelte}'",
-    "pretty-check": "yarn prettier --check 'src/**/*.{ts,svelte}'",
+    "pretty": "prettier --write 'src/**/*.{ts,svelte}'",
+    "pretty-check": "prettier --check 'src/**/*.{ts,svelte}'",
     "typesafe-i18n": "typesafe-i18n --no-watch",
     "typesafe-i18n-watch": "typesafe-i18n"
   },
   "lint-staged": {
     "*.svelte": [
-      "yarn run svelte-check"
+      "svelte-check"
     ],
     "*.{ts,svelte}": [
       "eslint --fix",
@@ -72,12 +72,12 @@
     "lint-staged": "^12.3.7",
     "postcss": "^8.4.17",
     "prettier": "^2.7.1",
-    "prettier-plugin-svelte": "^2.7.1",
+    "prettier-plugin-svelte": "^2.9.0",
     "sass": "^1.55.0",
-    "svelte": "^3.50.1",
-    "svelte-check": "^2.9.1",
+    "svelte": "^3.55.0",
+    "svelte-check": "^2.10.2",
     "svelte-feather-icons": "^4.0.0",
-    "svelte-preprocess": "^4.10.7",
+    "svelte-preprocess": "^5.0.0",
     "tailwindcss": "^3.1.8",
     "ts-node-dev": "^2.0.0",
     "tslib": "^2.4.0",

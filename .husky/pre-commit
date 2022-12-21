@@ -2,21 +2,21 @@
 . "$(dirname "$0")/_/husky.sh"
 (
 cd messages || exit
-yarn run precommit
+pnpm run precommit
 )
 (
 cd play || exit
-yarn run precommit
+pnpm run precommit
 )
 (
 cd back || exit
-yarn run precommit
+pnpm run precommit
 )
 (
 cd map-storage || exit
-yarn run precommit
+pnpm run precommit
 )
 (
 cd tests || exit
-yarn run precommit
+pnpm run precommit
 )

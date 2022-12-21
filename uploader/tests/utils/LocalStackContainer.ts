@@ -4,7 +4,7 @@ import {AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY} from "../../src/Enum/Environme
 
 export class LocalStackContainer extends GenericContainer {
     constructor() {
-        super("localstack/localstack:1.1");
+        super("localstack/localstack:1.3.1");
         this.withExposedPorts({ container: 4566, host: 4566})
     }
     async run(): Promise<StartedTestContainer> {
@@ -22,7 +22,10 @@ export class LocalStackContainer extends GenericContainer {
             const attempt = () => {
                 new Promise((resolve, reject) => {
                     check(resolve, reject)
-                }).then(() => resolve(0)).catch(()=> {
+                }).then(() => {
+                    console.log("S3 successfully started");
+                    resolve(0)
+                }).catch(()=> {
                     setTimeout(attempt, 200)
                 })
             }
