@@ -1,7 +1,7 @@
 import {Readable} from "stream";
 import {mimeTypeManager} from "../Service/MimeType";
 import {TargetDevice} from "../Service/TargetDevice";
-import {Response} from "hyper-express/types/components/http/Response";
+import {Response} from "express";
 
 export class HttpResponseDevice implements TargetDevice {
     constructor(private id: string, private response: Response) {
@@ -17,14 +17,6 @@ export class HttpResponseDevice implements TargetDevice {
             return;
         }
 
-        const readable = new Readable()
-        readable._read = () => {
-        } // _read is required but you can noop it
-        readable.push(buffer);
-        readable.push(null);
-
-        const size = buffer.byteLength;
-
         this.response.status(200);
 
         const mimeType = mimeTypeManager.getMimeTypeByFileName(this.id);
@@ -32,6 +24,6 @@ export class HttpResponseDevice implements TargetDevice {
             this.response.type(mimeType);
         }
 
-        this.response.stream(readable);
+        this.response.send(buffer);
     }
 }

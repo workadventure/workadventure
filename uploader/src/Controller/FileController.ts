@@ -6,9 +6,12 @@ import {ByteLenghtBufferException} from "../Exception/ByteLenghtBufferException"
 import Axios, {AxiosError} from "axios";
 import {ADMIN_API_URL, ENABLE_CHAT_UPLOAD, UPLOAD_MAX_FILESIZE, UPLOADER_URL} from "../Enum/EnvironmentVariable";
 import {HttpResponseDevice} from "./HttpResponseDevice";
-import {Server} from "hyper-express";
-import {Request} from "hyper-express/types/components/http/Request";
-import {Response} from "hyper-express/types/components/http/Response";
+import {Express} from "express";
+import {UploadedFile} from "../../../chat/src/Services/FileMessageManager";
+import multer from "multer";
+const upload = multer({
+    storage: multer.memoryStorage()
+})
 
 interface UploadedFileBuffer {
     buffer: Buffer,
@@ -19,10 +22,8 @@ class DisabledChat extends Error{}
 class NotLoggedUser extends Error {}
 
 export class FileController {
-    //TODO migrate in upload file service
-    private uploadedFileBuffers: Map<string, UploadedFileBuffer> = new Map<string, UploadedFileBuffer>();
 
-    constructor(private App : Server) {
+    constructor(private App : Express) {
         this.App = App;
 
         this.uploadAudioMessage();
@@ -34,59 +35,24 @@ export class FileController {
     }
 
     uploadAudioMessage(){
-        this.App.options("/upload-audio-message", (req: Request, res: Response) => {
+        /*this.App.options("/upload-audio-message", (req: Request, res: Response) => {
             res.status(200).send("");
-        });
+        });*/
 
-        this.App.post("/upload-audio-message", async(request: Request, response: Response) => {
+        this.App.post("/upload-audio-message", upload.single('file'), async(request, response) => {
+            if (!request.file) {
+                return response.status(400).send("No files were uploaded.");
+            }
+
             const audioMessageId = v4();
-
-            /*const chunks: Buffer[] = [];
-            const params = await res.formData({
-                onFile: (fieldname: string,
-                         file: NodeJS.ReadableStream,
-                         filename: string,
-                         encoding: string,
-                         mimetype: string) => {
-                    (async () => {
-                        console.log('READING FILE', fieldname)
-
-                        for await (const chunk of file) {
-                            if (!(chunk instanceof Buffer)) {
-                                throw new Error('Unexpected chunk');
-                            }
-                            chunks.push(chunk)
-                        }
-                    })();
-                }
-            });*/
-
-            const chunks: Buffer[] = [];
-
-            await request.multipart(async (field) => {
-                console.log('READING FILE', field.name);
-
-                // Ensure that this field is a file-type
-                // You may also perform your own checks on the encoding and mime type as needed
-                if (field.file) {
-
-                    // Let's upload everything in memory, in the buffer (not it might be more optimal to directly stream to the upload service in the future)
-                    for await (const chunk of field.file.stream) {
-                        if (!(chunk instanceof Buffer)) {
-                            throw new Error('Unexpected chunk');
-                        }
-                        chunks.push(chunk);
-                    }
-                }
-            });
 
             await uploaderService.uploadTempFile(
                 audioMessageId,
-                Buffer.concat(chunks),
+                request.file.buffer,
                 60
             );
 
-            response.status(200).json({
+            return response.status(200).json({
                 id: audioMessageId,
                 path: `/download-audio-message/${audioMessageId}`
             });
@@ -94,104 +60,68 @@ export class FileController {
     }
 
     downloadAudioMessage(){
-        this.App.options("/download-audio-message/*", (request: Request, response: Response) => {
-            response.status(200).send("");
-        });
-
-        this.App.get("/download-audio-message/:id", (request: Request, response: Response) => {
-            const id = request.path_parameters['id'];
+        this.App.get("/download-audio-message/:id", (request, response) => {
+            const id = request.params['id'];
             const targetDevice = new HttpResponseDevice(id, response);
             uploaderService.copyFile(id, targetDevice);
         });
     }
 
     downloadFile(){
-        this.App.options("/upload-file/*", (request: Request, response: Response) => {
-            response.status(200).send("");
-        });
-
-        this.App.get("/upload-file/:id", (request: Request, response: Response) => {
-            const id = request.path_parameters["id"];
+        this.App.get("/upload-file/:id", (request, response) => {
+            const id = request.params["id"];
             const targetDevice = new HttpResponseDevice(id, response);
             uploaderService.copyFile(id, targetDevice);
         })
     }
 
     uploadFile(){
-        this.App.options("/upload-file", (request: Request, response: Response) => {
-            response.status(200).send("");
-        });
+        this.App.post("/upload-file", upload.any(), async (request, response) => {
+            if (!request.files) {
+                return response.status(400).send("No files were uploaded.");
+            }
+            const files = request.files as Express.Multer.File[];
 
-        this.App.post("/upload-file", async (request: Request, response: Response) => {
-            let userRoomToken = null;
+            const userRoomToken = request.body.userRoomToken;
+
+
 
             try {
-                const chunksByFile = new Map<string, {
-                    mimeType: string,
-                    buffer: Buffer,
-                }>();
-
-                await request.multipart(async (field) => {
-                    console.log('READING FILE', field.name, field.encoding, field.mime_type);
-                    const chunks: Buffer[] = [];
-
-                    // Ensure that this field is a file-type
-                    if (field.file && field.file.name) {
-
-                        // Let's upload everything in memory, in the buffer (note that it might be more optimal to directly stream to the upload service in the future)
-                        for await (const chunk of field.file.stream) {
-                            if (!(chunk instanceof Buffer)) {
-                                throw new Error('Unexpected chunk');
-                            }
-                            chunks.push(chunk);
-                        }
-                        chunksByFile.set(field.file.name, {
-                            mimeType: field.mime_type,
-                            buffer: Buffer.concat(chunks)
-                        });
-                    }
-                    if (field.name === 'userRoomToken') {
-                        userRoomToken = field.value;
-                    }
-                });
-
-                if(chunksByFile.size === 0){
-                    throw new Error('no file found in request');
-                }
-
                 const uploadedFiles: {name: string, id: string, location: string, size: number, lastModified: Date, type?: string}[] = [];
-                for(const [fileName, fileDesc] of chunksByFile){
-                    const {buffer, mimeType} = fileDesc;
+
+                for(const file of files){
+                    // This is needed because of a bug in busboy. Remove this when https://github.com/expressjs/multer/pull/1158 is merged
+                    const filename = Buffer.from(file.originalname, 'latin1').toString('utf8');
                     if(ADMIN_API_URL) {
                         if(!userRoomToken){
                             throw new NotLoggedUser();
                         } else {
                             await Axios.get(`${ADMIN_API_URL}/api/limit/fileSize`, {
                                 headers: {'userRoomToken': userRoomToken},
-                                params: {fileSize: buffer.byteLength}
+                                params: {fileSize: file.buffer.byteLength}
                             });
                         }
                     } else {
-                        console.log('FILE SIZE', fileName, ' : ', buffer.byteLength, 'bytes', '//', UPLOAD_MAX_FILESIZE, 'bytes');
+                        console.log('FILE SIZE', filename, ' : ', file.buffer.byteLength, 'bytes', '//', UPLOAD_MAX_FILESIZE, 'bytes');
                         if(!ENABLE_CHAT_UPLOAD){
                             throw new DisabledChat('Upload is disabled');
-                        } else if (UPLOAD_MAX_FILESIZE && buffer.byteLength > parseInt(UPLOAD_MAX_FILESIZE)) {
+                        } else if (UPLOAD_MAX_FILESIZE && file.buffer.byteLength > parseInt(UPLOAD_MAX_FILESIZE)) {
                             throw new ByteLenghtBufferException(`file-too-big`);
                         }
                     }
                     const fileUuid = await uploaderService.uploadFile(
-                        fileName,
-                        buffer,
-                        mimeType
+                        filename,
+                        file.buffer,
+                        file.mimetype
                     );
                     const location = `${UPLOADER_URL}/upload-file/${fileUuid}`
                     uploadedFiles.push({
-                        name: fileName,
+                        name: filename,
                         id: fileUuid,
                         location: location,
-                        size: buffer.byteLength,
+                        size: file.buffer.byteLength,
                         lastModified: new Date(),
-                        type: mimeType
+                        type: file.mimetype
                     });
                 }
 
@@ -237,19 +167,18 @@ export class FileController {
     }
 
     deleteUploadedFile(){
-        this.App.options("/upload-file/:fileId", (request: Request, response: Response) => {
-            response.status(200).send("");
-        });
+        this.App.delete("/upload-file/:fileId", (request, response) => {
+            (async () => {
+                const fileId = decodeURI(request.params['fileId']);
+                await uploaderService.deleteFileById(fileId);
+                return response.json({message: "ok", id: fileId});
 
-        this.App.delete("/upload-file/:fileId", async (request: Request, response: Response) => {
-            const fileId = decodeURI(request.path_parameters['fileId']);
-            await uploaderService.deleteFileById(fileId);
-            return response.json({message: "ok", id: fileId});
+            })().catch(e => console.error(e))
         });
     }
 
     ping(){
-        this.App.get("/ping", (req: Request, res: Response) => {
+        this.App.get("/ping", (req, res) => {
             res.status(200).send("pong");
         });
     }
