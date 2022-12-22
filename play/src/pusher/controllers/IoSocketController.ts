@@ -404,6 +404,9 @@ export class IoSocketController {
                                             // If the response points to nowhere, don't attempt an upgrade
                                             return;
                                         }
+
+                                        console.error("Axios error on room connection", err?.response?.status, errorType.data);
+
                                         return res.upgrade(
                                             {
                                                 rejected: true,
@@ -417,6 +420,7 @@ export class IoSocketController {
                                             context
                                         );
                                     } else {
+                                        console.error("Unknown error on room connection", err);
                                         if (upgradeAborted.aborted) {
                                             // If the response points to nowhere, don't attempt an upgrade
                                             return;
