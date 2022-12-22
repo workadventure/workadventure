@@ -800,9 +800,9 @@
                                 class="emoji"
                                 style="padding: 2px"
                                 draggable="false"
-                                alt={$emoteDataStore.get(key)?.unicode}
+                                alt={$emoteDataStore.get(key)?.emoji}
                                 id={`icon-${$emoteDataStore.get(key)?.name}`}
-                                src={$emoteDataStore.get(key)?.url}
+                                src=""
                             />
                             {#if !isMobile}
                                 <span class="tw-text-white">{key}</span>

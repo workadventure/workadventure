@@ -375,7 +375,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.cancelPreviousEmote();
         const emoteY = -45;
         const image = new Image(16, 16);
-        image.src = emote;
+        image.alt = emote;
         this.emote = new DOMElement(this.scene, -1, 0, image, "z-index:10;");
         this.emote.setAlpha(0);
         this.add(this.emote);
