@@ -404,7 +404,11 @@ export class IoSocketController {
                                             return;
                                         }
 
-                                        console.error("Axios error on room connection", err?.response?.status, errorType.data);
+                                        console.error(
+                                            "Axios error on room connection",
+                                            err?.response?.status,
+                                            errorType.data
+                                        );
 
                                         return res.upgrade(
                                             {
