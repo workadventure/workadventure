@@ -53,6 +53,15 @@ div.main-audio-manager {
       visibility: hidden;
       display: none;
     }
+    #audioplayer_volume_icon_playing_muted {
+      visibility: inherit;
+      display: initial;
+    }
+  }
+
+  #audioplayer_volume_icon_playing #audioplayer_volume_icon_playing_muted {
+    visibility: hidden;
+    display: none;
   }
 
   #audioplayer_volume_icon_playing.low #audioplayer_volume_icon_playing_high {
