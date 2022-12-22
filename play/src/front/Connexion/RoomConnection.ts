@@ -230,10 +230,12 @@ export class RoomConnection implements RoomConnection {
         this.socket.binaryType = "arraybuffer";
 
         this.socket.onopen = () => {
+            console.log("Socket has been opened")
             this.resetPingTimeout();
         };
 
         this.socket.addEventListener("close", (event) => {
+            console.log("Socket has been closed")
             if (this.timeout) {
                 clearTimeout(this.timeout);
             }
@@ -250,6 +252,9 @@ export class RoomConnection implements RoomConnection {
 
             const serverToClientMessage = ServerToClientMessageTsProto.decode(new Uint8Array(arrayBuffer));
             //const message = ServerToClientMessage.deserializeBinary(new Uint8Array(arrayBuffer));
+
+            // Todo : Remove this debug line
+            console.log("New message received", serverToClientMessage.message)
 
             const message = serverToClientMessage.message;
             if (message === undefined) {
