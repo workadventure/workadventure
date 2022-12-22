@@ -707,7 +707,7 @@
                         class="bottom-action-button"
                     >
                         <Tooltip text={$LL.actionbar.mapEditor()} />
-                        <button id="mapEditorIcon" class:border-top-light={$menuVisiblilityStore}>
+                        <button id="mapEditorIcon" class:border-top-light={$mapEditorModeStore}>
                             <img draggable="false" src={logoRegister} style="padding: 2px" alt="toggle-map-editor" />
                         </button>
                     </div>
