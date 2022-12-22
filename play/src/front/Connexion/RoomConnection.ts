@@ -254,11 +254,7 @@ export class RoomConnection implements RoomConnection {
             //const message = ServerToClientMessage.deserializeBinary(new Uint8Array(arrayBuffer));
 
             // Todo : Remove this debug line
-<<<<<<< HEAD
-            console.log("New message received", serverToClientMessage.message)
-=======
             console.log("New message received", serverToClientMessage.message);
->>>>>>> Add more logs on socket
 
             const message = serverToClientMessage.message;
             if (message === undefined) {
