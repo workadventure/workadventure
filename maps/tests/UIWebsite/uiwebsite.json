@@ -92,7 +92,8 @@
          "name":"floorLayer",
          "objects":[
                 {
-                 "height":116.924156284309,
+                 "class":"",
+                 "height":120.725985914819,
                  "id":1,
                  "name":"Tests",
                  "rotation":0,
@@ -100,14 +101,47 @@
                     {
                      "fontfamily":"Sans Serif",
                      "pixelsize":8,
-                     "text":"Test 1:\nMove on the white carpet to display a UIWebsite.\n\nTest 2:\nMove on the blue carpet to display an other UIWebsite above the first.",
+                     "text":"Test 1:\nMove on the white carpet to display a first UIWebsite.\n\nTest 2:\nMove on the blue carpet to display a second UIWebsite above the first.\n\nTest 3:\nGo to the other map with the grey carpet to check if the third UIWebsite already open is deleted",
                      "wrap":true
                     },
-                 "type":"",
                  "visible":true,
                  "width":158.381128664136,
                  "x":1.64026713939023,
-                 "y":201.037039933902
+                 "y":196.981754994692
+                }, 
+                {
+                 "class":"area",
+                 "height":27.6266286483704,
+                 "id":6,
+                 "name":"exitToOlderMap",
+                 "properties":[
+                        {
+                         "name":"exitUrl",
+                         "type":"string",
+                         "value":"uiwebsiteother.json#entryFromUIWebsite"
+                        }],
+                 "rotation":0,
+                 "visible":true,
+                 "width":63.1103718664607,
+                 "x":32.6957348223833,
+                 "y":0.253455308700604
+                }, 
+                {
+                 "class":"area",
+                 "height":22.3040671656568,
+                 "id":8,
+                 "name":"entryFromUIWebsiteOther",
+                 "properties":[
+                        {
+                         "name":"start",
+                         "type":"bool",
+                         "value":true
+                        }],
+                 "rotation":0,
+                 "visible":true,
+                 "width":62.0965506316582,
+                 "x":32.9491901310839,
+                 "y":32.188824204982
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -116,7 +150,7 @@
          "y":0
         }, 
         {
-         "data":[0, 0, 0, 0, 0, 0, 0, 0, 82, 0,
+         "data":[0, 111, 111, 0, 0, 0, 0, 0, 82, 0,
             0, 0, 0, 0, 0, 0, 0, 8, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 19, 27, 0,
             0, 0, 0, 0, 0, 0, 0, 30, 0, 0,
@@ -137,7 +171,7 @@
          "y":0
         }],
  "nextlayerid":9,
- "nextobjectid":3,
+ "nextobjectid":9,
  "orientation":"orthogonal",
  "properties":[
         {
@@ -146,7 +180,7 @@
          "value":"script.js"
         }],
  "renderorder":"right-down",
- "tiledversion":"1.8.4",
+ "tiledversion":"1.9.2",
  "tileheight":32,
  "tilesets":[
         {
@@ -674,6 +708,6 @@
         }],
  "tilewidth":32,
  "type":"map",
- "version":"1.8",
+ "version":"1.9",
  "width":10
 }

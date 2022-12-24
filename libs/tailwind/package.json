@@ -12,13 +12,13 @@
     "autoprefixer": "^10.4.7"
   },
   "dependencies": {
-    "@tailwindcss/forms": "^0.5.0",
+    "@16bits/nes.css": "^2.3.2",
     "@fontsource/press-start-2p": "^4.3.0",
     "@fontsource/roboto": "^4.5.8",
     "@fontsource/roboto-condensed": "^4.5.9",
-    "@16bits/nes.css": "^2.3.2",
-    "tailwindcss": "^3.1.5",
-    "postcss": "^8.4.14"
+    "@tailwindcss/forms": "^0.5.0",
+    "postcss": "^8.4.14",
+    "tailwindcss": "^3.1.5"
   },
   "files": [
     "src",

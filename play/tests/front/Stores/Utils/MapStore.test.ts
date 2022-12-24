@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MapStore } from "../../../../src/front/Stores/Utils/MapStore";
+import { MapStore } from "@workadventure/store-utils";
 import type { Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
 

@@ -1,21 +1,20 @@
 {
+  "private": true,
   "name": "workadventureback",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "tsc": "tsc",
     "dev": "ts-node-dev --inspect=0.0.0.0:9229 --exit-child --respawn ./server.ts",
-    "prod": "tsc && node -r source-map-support/register --max-old-space-size=4096 ./dist/server.js",
     "runprod": "ts-node --transpileOnly ./server.ts",
-    "old_runprod": "node -r source-map-support/register --max-old-space-size=4096 ./dist/server.js",
     "profile": "tsc && node --prof ./dist/server.js",
+    "typecheck": "tsc --noEmit",
     "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
-    "lint": "DEBUG= node_modules/.bin/eslint src/ . --ext .ts",
-    "fix": "DEBUG= node_modules/.bin/eslint --fix src/ . --ext .ts",
+    "lint": "DEBUG= eslint src/ . --ext .ts",
+    "fix": "DEBUG= eslint --fix src/ . --ext .ts",
     "precommit": "lint-staged",
-    "pretty": "yarn prettier --write 'src/**/*.{ts,tsx}'",
-    "pretty-check": "yarn prettier --check 'src/**/*.{ts,tsx}'"
+    "pretty": "prettier --write 'src/**/*.{ts,tsx}'",
+    "pretty-check": "prettier --check 'src/**/*.{ts,tsx}'"
   },
   "repository": {
     "type": "git",
@@ -43,7 +42,7 @@
   "dependencies": {
     "@anatine/zod-openapi": "^1.3.0",
     "@grpc/grpc-js": "^1.7.1",
-    "@workadventure/messages": "link:../libs/messages",
+    "@workadventure/messages": "1.0.0",
     "@workadventure/tiled-map-type-guard": "^2.0.6",
     "axios": "^0.21.2",
     "bigbluebutton-js": "^0.1.1",
@@ -60,6 +59,7 @@
     "redis": "^4.3.1",
     "source-map-support": "^0.5.21",
     "ts-node": "^10.9.1",
+    "typescript": "^4.5.4",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.10.0",
     "uuidv4": "^6.0.7",
     "zod": "^3.19.1"
@@ -74,18 +74,18 @@
     "@types/jasmine": "^4.0.3",
     "@types/jsonwebtoken": "^8.3.8",
     "@types/mkdirp": "^1.0.1",
+    "@types/node": "^18.11.9",
     "@typescript-eslint/eslint-plugin": "^5.8.0",
     "@typescript-eslint/parser": "^5.8.0",
     "eslint": "^8.5.0",
     "jasmine": "^4.0.3",
     "lint-staged": "^11.0.0",
     "prettier": "^2.3.1",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^4.5.4"
+    "ts-node-dev": "^2.0.0"
   },
   "lint-staged": {
     "*.ts": [
-      "node_modules/.bin/eslint --fix",
+      "eslint --fix",
       "prettier --write"
     ]
   }

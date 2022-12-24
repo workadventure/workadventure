@@ -22,10 +22,9 @@
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
     "@types/ws": "^7.2.6",
-    "@workadventure/messages": "link:../libs/messages",
+    "@workadventure/messages": "1.0.0",
     "ts-node-dev": "^1.0.0-pre.62",
     "typescript": "^4.0.2",
     "ws": "^7.4.6"
-  },
-  "devDependencies": {}
+  }
 }

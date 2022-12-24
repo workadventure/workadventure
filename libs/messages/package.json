@@ -13,7 +13,9 @@
     "@anatine/zod-openapi": "^1.3.0",
     "@grpc/grpc-js": "^1.7.1",
     "google-protobuf": "^3.21.0",
+    "long": "^5.2.1",
     "openapi3-ts": "^3.0.2",
+    "protobufjs": "^7.1.2",
     "rxjs": "6.6.3",
     "zod": "^3.19.1"
   },

@@ -95,7 +95,7 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
-import { MapStore } from "../../Stores/Utils/MapStore";
+import { MapStore } from "@workadventure/store-utils";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import LL, { locale } from "../../../i18n/i18n-svelte";
@@ -1986,7 +1986,7 @@ ${escapedMessage}
                 iframeListener.unregisterScript(script);
             }
         }
-
+        uiWebsiteManager.closeAll();
         followUsersStore.stopFollowing();
 
         audioManagerFileStore.unloadAudio();

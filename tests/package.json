@@ -14,8 +14,8 @@
     "typescript-eslint": "^0.0.1-alpha.0"
   },
   "scripts": {
-    "lint": "node_modules/.bin/eslint tests/ . --ext .ts",
-    "fix": "node_modules/.bin/eslint --fix tests/ . --ext .ts",
+    "lint": "eslint tests/ . --ext .ts",
+    "fix": "eslint --fix tests/ . --ext .ts",
     "test": "dotenv -e ../.env -- playwright test",
     "test-headed": "dotenv -e ../.env -- playwright test --headed",
     "test-headed-chrome": "dotenv -e ../.env -- playwright test --headed --project=chromium",
@@ -26,7 +26,7 @@
   },
   "lint-staged": {
     "*.ts": [
-      "node_modules/.bin/eslint --fix"
+      "eslint --fix"
     ]
   }
 }

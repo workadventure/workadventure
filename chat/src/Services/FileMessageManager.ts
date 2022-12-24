@@ -3,7 +3,7 @@ import { filesUploadStore } from "../Stores/ChatStore";
 import { get } from "svelte/store";
 import { userStore } from "../Stores/LocalUserStore";
 import { ADMIN_API_URL, ENABLE_CHAT_UPLOAD } from "../Enum/EnvironmentVariable";
-import * as StanzaProtocol from "stanza/protocol";
+import { WaLink } from "../Xmpp/Lib/Plugin";
 
 const _VERBOSE = true;
 
@@ -151,18 +151,18 @@ export class FileMessageManager {
         return uploaderManager.delete(file.id);
     }
 
-    get jsonFiles() {
+    get jsonFiles(): WaLink[] {
         return this.getJsonFrom(this.files);
     }
 
-    public getJsonFrom(files: UploadedFile[]): StanzaProtocol.Link[] {
-        return files.reduce((allFiles: Array<StanzaProtocol.Link>, file) => {
+    public getJsonFrom(files: UploadedFile[]): WaLink[] {
+        return files.reduce((allFiles: Array<WaLink>, file) => {
             allFiles.push({
                 url: file.location,
                 description: file.name,
-            });
+            } as WaLink);
             return allFiles;
-        }, new Array<StanzaProtocol.Link>());
+        }, new Array<WaLink>());
     }
 
     get files(): UploadedFile[] {

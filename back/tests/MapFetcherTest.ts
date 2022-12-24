@@ -1,3 +1,4 @@
+import "jasmine";
 import { mapFetcher } from "../src/Services/MapFetcher";
 
 describe("MapFetcher", () => {

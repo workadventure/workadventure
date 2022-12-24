@@ -1,9 +1,9 @@
 {
+  "private": true,
   "devDependencies": {
     "husky": "^7.0.1"
   },
   "scripts": {
     "prepare": "husky install"
-  },
-  "dependencies": {}
+  }
 }

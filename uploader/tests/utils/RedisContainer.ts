@@ -13,9 +13,8 @@ export class RedisContainer extends GenericContainer {
 
     async start() {
         this.withExposedPorts({ container: this.redisPort, host: this.redisPort})
-
         const startedTestContainer = await super.start()
-        await isPortReachable(this.redisPort, { host: 'localhost' , timeout: 10000})
+        await isPortReachable(this.redisPort, { host: 'localhost' , timeout: 30000})
         return startedTestContainer
     }
 }

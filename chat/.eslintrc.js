@@ -47,7 +47,7 @@ module.exports = {
         "@typescript-eslint/no-unsafe-argument": "off",
     },
     "settings": {
-        "svelte3/typescript": true,
+        "svelte3/typescript": () => require('typescript'),
         "svelte3/ignore-styles": () => true
     }
 }
