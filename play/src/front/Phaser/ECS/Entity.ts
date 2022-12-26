@@ -4,18 +4,14 @@ import {
     JitsiRoomPropertyData,
     OpenTabPropertyData,
     PlayAudioPropertyData,
-    GameMapProperties
+    GameMapProperties,
 } from "@workadventure/map-editor";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { get, Unsubscriber } from "svelte/store";
 import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
-import {
-    mapEditorModeStore,
-    MapEntityEditorMode,
-    mapEntityEditorModeStore,
-} from "../../Stores/MapEditorStore";
+import { mapEditorModeStore, MapEntityEditorMode, mapEntityEditorModeStore } from "../../Stores/MapEditorStore";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import { ActivatableInterface } from "../Game/ActivatableInterface";
 import type { GameScene } from "../Game/GameScene";
@@ -84,7 +80,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         if (this.activatable) {
             this.setInteractive({ pixelPerfect: true, cursor: "pointer" });
             this.scene.input.setDraggable(this);
-        } else {
+        } else if (!get(mapEditorModeStore)) {
             this.disableInteractive();
         }
     }
@@ -178,7 +174,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             actionsMenuStore.clear();
             return;
         }
-        actionsMenuStore.initialize(this.entityData.properties["textHeader"]??"");
+        actionsMenuStore.initialize(this.entityData.properties["textHeader"] ?? "");
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
         }
@@ -201,12 +197,17 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                             protected: true,
                             priority: 1,
                             callback: () => {
-                                this.emit(EntityEvent.PropertyActivated, {
-                                    propertyName: key,
-                                    propertyValue: propertyData.roomName},{
-                                    propertyName: GameMapProperties.JITSI_CONFIG,
-                                    propertyValue: JSON.stringify(propertyData.jitsiRoomConfig)
-                                });
+                                this.emit(
+                                    EntityEvent.PropertyActivated,
+                                    {
+                                        propertyName: key,
+                                        propertyValue: propertyData.roomName,
+                                    },
+                                    {
+                                        propertyName: GameMapProperties.JITSI_CONFIG,
+                                        propertyValue: JSON.stringify(propertyData.jitsiRoomConfig),
+                                    }
+                                );
                             },
                         });
                         break;
@@ -233,17 +234,13 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                             protected: true,
                             priority: 1,
                             callback: () => {
-                                if(propertyData.inNewTab)
-                                {
+                                if (propertyData.inNewTab) {
                                     this.emit(EntityEvent.PropertyActivated, {
                                         propertyName: key,
                                         propertyValue: propertyData.link,
                                     });
-                                }
-                                else{
-                                    const coWebsite = new SimpleCoWebsite(
-                                        new URL(propertyData.link)
-                                    );
+                                } else {
+                                    const coWebsite = new SimpleCoWebsite(new URL(propertyData.link));
                                     coWebsiteManager.addCoWebsiteToStore(coWebsite, undefined);
                                     coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
                                         console.error("Error during loading a co-website: " + coWebsite.getUrl());
@@ -279,7 +276,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.emit(EntityEvent.PropertiesUpdated, key, value);
     }
 
-    public getOldPositionTopLeft(): { x: number, y: number } {
+    public getOldPositionTopLeft(): { x: number; y: number } {
         return this.oldPositionTopLeft;
     }
 
