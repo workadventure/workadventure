@@ -27,6 +27,8 @@ export class EntityEditorTool extends MapEditorTool {
     private entityPrefab: EntityPrefab | undefined;
     private entityPrefabPreview: Phaser.GameObjects.Image | undefined;
 
+    private shiftKey: Phaser.Input.Keyboard.Key;
+
     private mapEditorSelectedEntityPrefabStoreUnsubscriber!: Unsubscriber;
     private mapEntityEditorModeStoreUnsubscriber!: Unsubscriber;
 
@@ -37,6 +39,8 @@ export class EntityEditorTool extends MapEditorTool {
         super();
         this.mapEditorModeManager = mapEditorModeManager;
         this.scene = this.mapEditorModeManager.getScene();
+
+        this.shiftKey = this.scene.input.keyboard.addKey("SHIFT");
 
         this.entitiesManager = this.scene.getGameMapFrontWrapper().getEntitiesManager();
         this.gameMapEntities = this.scene.getGameMap().getGameMapEntities();
@@ -183,12 +187,9 @@ export class EntityEditorTool extends MapEditorTool {
         const grid = entity.getCollisionGrid();
         if (reversedGrid && grid) {
             this.scene.getGameMapFrontWrapper().modifyToCollisionsLayer(oldX, oldY, "0", reversedGrid);
-            this.scene.getGameMapFrontWrapper().modifyToCollisionsLayer(
-                entity.getTopLeft().x,
-                entity.getTopLeft().y,
-                "0",
-                grid
-            );
+            this.scene
+                .getGameMapFrontWrapper()
+                .modifyToCollisionsLayer(entity.getTopLeft().x, entity.getTopLeft().y, "0", grid);
         }
     }
 
@@ -246,7 +247,7 @@ export class EntityEditorTool extends MapEditorTool {
                 type: "DeleteEntityCommand",
             });
         });
-        this.entitiesManager.on(EntitiesManagerEvent.UpdateEntity, (entityData: AtLeast<EntityData, 'id'>) => {
+        this.entitiesManager.on(EntitiesManagerEvent.UpdateEntity, (entityData: AtLeast<EntityData, "id">) => {
             this.mapEditorModeManager.executeCommand({
                 dataToModify: entityData,
                 type: "UpdateEntityCommand",
@@ -273,27 +274,29 @@ export class EntityEditorTool extends MapEditorTool {
 
     private handlePointerMoveEvent(pointer: Phaser.Input.Pointer): void {
         if (!this.entityPrefabPreview || !this.entityPrefab) {
-            return
+            return;
         }
-        if (this.entityPrefab.collisionGrid) {
-            const offsets = this.getPositionOffset(this.entityPrefab.collisionGrid);
+        if (this.entityPrefab.collisionGrid || this.shiftKey.isDown) {
+            const offset = this.getEntityPrefabAlignWithGridOffset();
             this.entityPrefabPreview.setPosition(
-                Math.floor(pointer.worldX / 32) * 32 + offsets.x,
-                Math.floor(pointer.worldY / 32) * 32 + offsets.y
+                Math.floor(pointer.worldX / 32) * 32 + offset.x,
+                Math.floor(pointer.worldY / 32) * 32 + offset.y
             );
         } else {
             this.entityPrefabPreview.setPosition(Math.floor(pointer.worldX), Math.floor(pointer.worldY));
         }
-        this.entityPrefabPreview.setDepth(
-            this.entityPrefabPreview.y + this.entityPrefabPreview.displayHeight * 0.5
-        );
-        if (!this.scene.getGameMapFrontWrapper().canEntityBePlaced(
-            this.entityPrefabPreview.getTopLeft(),
-            this.entityPrefabPreview.displayWidth,
-            this.entityPrefabPreview.displayHeight,
-            this.entityPrefab.collisionGrid,
-        )) {
-            this.entityPrefabPreview.setTint(0xFF0000);
+        this.entityPrefabPreview.setDepth(this.entityPrefabPreview.y + this.entityPrefabPreview.displayHeight * 0.5);
+        if (
+            !this.scene
+                .getGameMapFrontWrapper()
+                .canEntityBePlaced(
+                    this.entityPrefabPreview.getTopLeft(),
+                    this.entityPrefabPreview.displayWidth,
+                    this.entityPrefabPreview.displayHeight,
+                    this.entityPrefab.collisionGrid
+                )
+        ) {
+            this.entityPrefabPreview.setTint(0xff0000);
         } else {
             this.entityPrefabPreview.clearTint();
         }
@@ -302,14 +305,18 @@ export class EntityEditorTool extends MapEditorTool {
 
     private handlePointerDownEvent(pointer: Phaser.Input.Pointer): void {
         if (!this.entityPrefabPreview || !this.entityPrefab) {
-            return
+            return;
         }
-        if (!this.scene.getGameMapFrontWrapper().canEntityBePlaced(
-            this.entityPrefabPreview.getTopLeft(),
-            this.entityPrefabPreview.displayWidth,
-            this.entityPrefabPreview.displayHeight,
-            this.entityPrefab.collisionGrid,
-        )) {
+        if (
+            !this.scene
+                .getGameMapFrontWrapper()
+                .canEntityBePlaced(
+                    this.entityPrefabPreview.getTopLeft(),
+                    this.entityPrefabPreview.displayWidth,
+                    this.entityPrefabPreview.displayHeight,
+                    this.entityPrefab.collisionGrid
+                )
+        ) {
             return;
         }
         if (pointer.rightButtonDown()) {
@@ -319,8 +326,8 @@ export class EntityEditorTool extends MapEditorTool {
         let x = Math.floor(pointer.worldX);
         let y = Math.floor(pointer.worldY);
 
-        if (this.entityPrefab.collisionGrid) {
-            const offsets = this.getPositionOffset(this.entityPrefab.collisionGrid);
+        if (this.entityPrefab.collisionGrid || this.shiftKey.isDown) {
+            const offsets = this.getEntityPrefabAlignWithGridOffset();
             x = Math.floor(pointer.worldX / 32) * 32 + offsets.x;
             y = Math.floor(pointer.worldY / 32) * 32 + offsets.y;
         }
@@ -345,13 +352,20 @@ export class EntityEditorTool extends MapEditorTool {
         this.scene.markDirty();
     }
 
-    private getPositionOffset(collisionGrid?: number[][]): { x: number; y: number } {
-        if (!collisionGrid || collisionGrid.length === 0) {
+    private getEntityPrefabAlignWithGridOffset(): { x: number; y: number } {
+        if (!this.entityPrefab || !this.entityPrefabPreview) {
             return { x: 0, y: 0 };
         }
+        const collisionGrid = this.entityPrefab.collisionGrid;
+        if (collisionGrid && collisionGrid.length > 0) {
+            return {
+                x: collisionGrid[0].length % 2 === 1 ? 16 : 0,
+                y: collisionGrid.length % 2 === 1 ? 16 : 0,
+            };
+        }
         return {
-            x: collisionGrid[0].length % 2 === 1 ? 16 : 0,
-            y: collisionGrid.length % 2 === 1 ? 16 : 0,
+            x: Math.floor(this.entityPrefabPreview.displayWidth / 32) % 2 === 1 ? 16 : 0,
+            y: Math.floor(this.entityPrefabPreview.displayHeight / 32) % 2 === 1 ? 16 : 0,
         };
     }
 }
