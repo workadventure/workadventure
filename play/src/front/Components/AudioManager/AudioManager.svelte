@@ -70,7 +70,9 @@
             let volume = HTMLAudioPlayer.volume;
             audioPlayerVol.value = "" + volume;
             audioPlayerVolumeIcon.classList.remove("muted");
-            if (volume < 0.3) {
+            if (volume == 0) {
+                onMute();
+            } else if (volume < 0.3) {
                 audioPlayerVolumeIcon.classList.add("low");
             } else if (volume < 0.7) {
                 audioPlayerVolumeIcon.classList.remove("low");
@@ -102,35 +104,40 @@
     }
 </script>
 
-<div class="main-audio-manager nes-container is-rounded">
+<div class="main-audio-manager">
     <div class:hidden={!isAudioAllowed}>
         <div class="audio-manager-player-volume">
             <span id="audioplayer_volume_icon_playing" bind:this={audioPlayerVolumeIcon} on:click={onMute}>
                 <svg
                     width="2em"
                     height="2em"
-                    viewBox="0 0 16 16"
+                    viewBox="0 0 19.54 18.03"
                     class="bi bi-volume-up"
                     fill="white"
                     xmlns="http://www.w3.org/2000/svg"
                 >
                     <path
                         fill-rule="evenodd"
-                        d="M6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06zM6 5.04L4.312 6.39A.5.5 0 0 1 4 6.5H2v3h2a.5.5 0 0 1 .312.11L6 10.96V5.04z"
+                        d="m8.58,2.34c.26.12.42.39.42.68v12c0,.41-.34.75-.75.75-.17,0-.33-.06-.47-.16l-3.54-2.84H.75c-.41,0-.75-.34-.75-.75v-6c0-.41.34-.75.75-.75h3.49l3.54-2.83c.23-.18.53-.22.79-.09Zm-1.08,2.24l-2.53,2.02c-.13.11-.3.16-.47.17H1.5v4.5h3c.17,0,.34.06.47.16l2.53,2.03V4.58Z"
                     />
                     <g id="audioplayer_volume_icon_playing_high">
                         <path
-                            d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z"
+                            d="m15.8,18.03c2.39-2.39,3.74-5.63,3.73-9.02,0-3.38-1.34-6.63-3.73-9.02l-1.06,1.06c2.11,2.11,3.3,4.97,3.3,7.95,0,3.11-1.26,5.92-3.3,7.95,0,0,1.06,1.06,1.06,1.06Z"
                         />
                     </g>
                     <g id="audioplayer_volume_icon_playing_mid">
                         <path
-                            d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.483 5.483 0 0 1 11.025 8a5.483 5.483 0 0 1-1.61 3.89l.706.706z"
+                            d="m13.68,15.91c1.83-1.83,2.86-4.31,2.86-6.89,0-2.59-1.02-5.07-2.86-6.89l-1.06,1.06c1.55,1.55,2.42,3.64,2.42,5.83,0,2.19-.87,4.29-2.41,5.84,0,0,1.06,1.06,1.06,1.06Z"
                         />
                     </g>
                     <g id="audioplayer_volume_icon_playing_low">
                         <path
-                            d="M8.707 11.182A4.486 4.486 0 0 0 10.025 8a4.486 4.486 0 0 0-1.318-3.182L8 5.525A3.489 3.489 0 0 1 9.025 8 3.49 3.49 0 0 1 8 10.475l.707.707z"
+                            d="m11.56,13.79c1.27-1.26,1.98-2.98,1.98-4.77,0-1.79-.71-3.51-1.98-4.77l-1.06,1.06c.99.98,1.54,2.32,1.54,3.71,0,1.39-.55,2.73-1.54,3.71l1.06,1.06Z"
+                        />
+                    </g>
+                    <g id="audioplayer_volume_icon_playing_muted">
+                        <path
+                            d="m18.28,5.47c.3.3.3.76,0,1.07h0l-2.48,2.47,2.48,2.47c.3.3.3.77,0,1.07s-.76.3-1.07,0l-2.48-2.48-2.47,2.48c-.3.3-.76.3-1.06,0s-.3-.77,0-1.07l2.47-2.48-2.44-2.49c-.3-.28-.3-.77,0-1.05.3-.28.77-.3,1.05,0h0l2.47,2.47,2.48-2.47c.3-.3.76-.3,1.07,0h-.02Z"
                         />
                     </g>
                 </svg>
@@ -149,80 +156,15 @@
             <audio class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer} />
         </section>
     </div>
-    <div class:hidden={isAudioAllowed}>
-        <button type="button" class="nes-btn" on:click={tryPlay}>{$LL.audio.manager.allow()}</button>
+    <div class:hidden={isAudioAllowed} class="tw-text-center">
+        <button type="button" class="btn light tw-font-bold tw-w-full tw-text-xs sm:tw-text-base" on:click={tryPlay}
+            >{$LL.audio.manager.allow()}</button
+        >
     </div>
 </div>
 
 <style lang="scss">
     .hidden {
         display: none;
-    }
-
-    div.main-audio-manager {
-        position: absolute;
-        top: 1%;
-        max-height: clamp(150px, 10vh, 15vh); //replace @media for small screen
-        width: clamp(200px, 15vw, 15vw);
-        padding: 3px 3px;
-        margin-left: auto;
-        margin-right: auto;
-        left: 0;
-        right: 0;
-        z-index: 550;
-
-        background-color: rgb(0, 0, 0, 0.5);
-        display: grid;
-        grid-template-rows: 50% 50%;
-        color: whitesmoke;
-        text-align: center;
-        pointer-events: auto;
-
-        div.audio-manager-player-volume {
-            display: grid;
-            grid-template-columns: 50px 1fr;
-
-            span svg {
-                height: 100%;
-                width: calc(100% - 10px);
-                margin-right: 10px;
-            }
-        }
-
-        section.audio-manager-file {
-            display: none;
-        }
-
-        #audioplayer_volume_icon_playing.muted {
-            #audioplayer_volume_icon_playing_low {
-                visibility: hidden;
-                display: none;
-            }
-
-            #audioplayer_volume_icon_playing_mid {
-                visibility: hidden;
-                display: none;
-            }
-
-            #audioplayer_volume_icon_playing_high {
-                visibility: hidden;
-                display: none;
-            }
-        }
-
-        #audioplayer_volume_icon_playing.low #audioplayer_volume_icon_playing_high {
-            visibility: hidden;
-            display: none;
-        }
-
-        #audioplayer_volume_icon_playing.low #audioplayer_volume_icon_playing_mid {
-            visibility: hidden;
-            display: none;
-        }
-
-        #audioplayer_volume_icon_playing.mid #audioplayer_volume_icon_playing_high {
-            visibility: hidden;
-            display: none;
-        }
     }
 </style>

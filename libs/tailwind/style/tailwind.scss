@@ -170,7 +170,10 @@
     }
 
     .wa-thread-head{
-        @apply wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-flex tw-justify-between tw-items-center tw-border-t-0 tw-fixed tw-w-full tw-z-20;
+        @apply tw-border-t-0 tw-fixed tw-w-full tw-z-20 tw-top-0;
+        .title {
+            @apply wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-flex tw-justify-between tw-items-center;
+        }
     }
 
     .wa-message-form {
@@ -233,7 +236,7 @@
 
         .wa-messages-list{
             @apply tw-pb-6;
-            min-height: calc(100vh - 2.8rem);
+            min-height: calc(100vh - 8.8rem);
         }
 
         p span.nice-a{
@@ -288,6 +291,28 @@
 
     input[type="checkbox"] {
         @apply tw-rounded;
+    }
+
+    input[type="range"], .input-range {
+        &::-webkit-slider-runnable-track,
+        &::-webkit-slider-thumb {
+            @apply tw-appearance-none;
+        }
+        &::-webkit-slider-runnable-track {
+            @apply tw-border tw-border-light-purple tw-rounded-full tw-bg-dark-purple tw-shadow-none;
+            height: 8px;
+        }
+        &:focus::-webkit-slider-runnable-track {
+            @apply tw-bg-dark-purple;
+        }
+        @apply tw-appearance-none tw-w-full tw-h-2.5 tw-cursor-col-resize;
+        &.input-range-vertical {
+            @apply tw-cursor-col-resize tw-rotate-[270deg] tw-translate-y-[45px] tw-translate-x-[-50px];
+        }
+        &::-webkit-slider-thumb {
+            @apply tw-bg-light-blue tw-rounded-full tw-h-5 tw-w-5 tw-border-0 tw-shadow-none;
+            margin-top: -0.44rem;
+        }
     }
 
     .blue-title {

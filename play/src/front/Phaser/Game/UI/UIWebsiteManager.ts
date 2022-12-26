@@ -91,6 +91,12 @@ class UIWebsiteManager {
 
         uiWebsitesStore.remove(uiWebsite);
     }
+
+    public closeAll() {
+        get(uiWebsitesStore).forEach((uiWebsite: UIWebsite) => {
+            uiWebsitesStore.remove(uiWebsite);
+        });
+    }
 }
 
 export const uiWebsiteManager = new UIWebsiteManager();

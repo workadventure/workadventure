@@ -112,7 +112,9 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         apiCallback({
             type: "remotePlayerClickedEvent",
             callback: (payloadData: AddPlayerEvent) => {
-                this._onRemotePlayerClicked.next(new RemotePlayer(payloadData));
+                const remotePlayer = new RemotePlayer(payloadData);
+                this.currentlyClickedRemotePlayer = remotePlayer;
+                this._onRemotePlayerClicked.next(remotePlayer);
             },
         }),
         apiCallback({

@@ -56,6 +56,9 @@ jobs:
           restore-keys: |
             ${{ runner.OS }}-yarn-
 
+      - name: "Revert to Yarn 1"
+        run: yarn set version classic
+
       - name: "local-app: Install dependencies"
         run: yarn install  --immutable
         working-directory: "desktop/local-app"

@@ -11,7 +11,7 @@
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
     import { iframeListener } from "../IframeListener";
-    import { derived } from "svelte/store";
+    import { get } from "svelte/store";
 
     export let mucRoom: MucRoom;
     export let user: User;
@@ -24,7 +24,7 @@
 
     const presenceStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
 
-    const me = derived(presenceStore, ($presenceStore) => $presenceStore.get(mucRoom.myJID));
+    const me = presenceStore.get(mucRoom.myJID);
 
     let chatMenuActive = false;
     let openChatUserMenu = () => {
@@ -49,10 +49,10 @@
     }
 
     function findUserInDefault(jid: string): User | undefined {
-        const userData = [...$presenceStore].find(([, user]) => user.jid === jid);
+        const userData = presenceStore.get(jid);
         let user = undefined;
         if (userData) {
-            [, user] = userData;
+            user = get(userData);
         }
         return user;
     }

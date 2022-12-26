@@ -48,7 +48,6 @@ import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessa
 import Axios from "axios";
 import { InvalidTokenError } from "./InvalidTokenError";
 import type HyperExpress from "hyper-express";
-import type { WebSocket } from "uWebSockets.js";
 import { z } from "zod";
 import { adminService } from "../services/AdminService";
 import {
@@ -61,6 +60,8 @@ import {
 import Jwt from "jsonwebtoken";
 import { v4 as uuid } from "uuid";
 import { JID } from "stanza";
+
+type WebSocket = HyperExpress.compressors.WebSocket;
 
 /**
  * The object passed between the "open" and the "upgrade" methods when opening a websocket
@@ -403,6 +404,13 @@ export class IoSocketController {
                                             // If the response points to nowhere, don't attempt an upgrade
                                             return;
                                         }
+
+                                        console.error(
+                                            "Axios error on room connection",
+                                            err?.response?.status,
+                                            errorType.data
+                                        );
+
                                         return res.upgrade(
                                             {
                                                 rejected: true,
@@ -416,6 +424,7 @@ export class IoSocketController {
                                             context
                                         );
                                     } else {
+                                        console.error("Unknown error on room connection", err);
                                         if (upgradeAborted.aborted) {
                                             // If the response points to nowhere, don't attempt an upgrade
                                             return;

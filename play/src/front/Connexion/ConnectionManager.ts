@@ -88,11 +88,11 @@ class ConnectionManager {
         this._currentRoom = null;
 
         const urlParams = new URLSearchParams(window.location.search);
-        let token = urlParams.get("token");
-        if(!token && navigator.cookieEnabled){
-            const match = document.cookie.match(new RegExp('(^| )' + 'privateaccesstoken' + '=([^;]+)'));
+        const token = urlParams.get("token");
+        if (!token && navigator.cookieEnabled) {
+            const match = document.cookie.match(new RegExp("(^| )" + "privateaccesstoken" + "=([^;]+)"));
             if (match) {
-                console.log('initGameConnexion => token => ', match[2]);
+                console.log("initGameConnexion => token => ", match[2]);
             }
         }
         if (token) {
@@ -329,16 +329,16 @@ class ConnectionManager {
                 resolve(connect);
             });
         }).catch((err) => {
-            console.log("connectToRoomSocket => catch => new Promise[OnConnectInterface] => err", err);
+            console.info("connectToRoomSocket => catch => new Promise[OnConnectInterface] => err", err);
 
             // Let's retry in 4-6 seconds
             return new Promise<OnConnectInterface>((resolve) => {
-                console.log("connectToRoomSocket => catch => new Promise[OnConnectInterface] => reconnectingTimeout");
+                console.info("connectToRoomSocket => catch => new Promise[OnConnectInterface] => reconnectingTimeout");
 
                 this.reconnectingTimeout = setTimeout(() => {
                     //todo: allow a way to break recursion?
                     //todo: find a way to avoid recursive function. Otherwise, the call stack will grow indefinitely.
-                    console.log(
+                    console.info(
                         "connectToRoomSocket => catch => ew Promise[OnConnectInterface] reconnectingTimeout => setTimeout",
                         roomUrl,
                         name,
