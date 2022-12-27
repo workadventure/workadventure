@@ -6,8 +6,8 @@ import {
     DeleteAreaCommand,
     CreateAreaCommand,
 } from "@workadventure/map-editor";
-import { writeFileSync } from "fs";
-import { readFile } from "fs/promises";
+import { ITiledMap } from "@workadventure/tiled-map-type-guard";
+import { fileSystem } from "./fileSystem";
 
 class MapsManager {
     private loadedMaps: Map<string, GameMap>;
@@ -72,13 +72,13 @@ class MapsManager {
         return this.loadedMaps.get(key);
     }
 
-    public async getMap(path: string): Promise<any> {
+    public async getMap(path: string): Promise<ITiledMap> {
         const inMemoryGameMap = this.loadedMaps.get(path);
         if (inMemoryGameMap) {
             return inMemoryGameMap.getMap();
         }
-        const file = await readFile(`./public${path}`, "utf-8");
-        const map = JSON.parse(file);
+        const file = await fileSystem.readFileAsString(path);
+        const map = ITiledMap.parse(JSON.parse(file));
         this.loadedMaps.set(path, new GameMap(map));
         return map;
     }
@@ -97,11 +97,11 @@ class MapsManager {
     private startSavingMapInterval(key: string, intervalMS: number): void {
         this.saveMapIntervals.set(
             key,
-            setInterval(() => {
+            setInterval(async () => {
                 console.log(`saving map ${key}`);
                 const gameMap = this.loadedMaps.get(key);
                 if (gameMap) {
-                    writeFileSync(`./public${key}`, JSON.stringify(gameMap.getMap()));
+                    await fileSystem.writeStringAsFile(key, JSON.stringify(gameMap.getMap()));
                 }
                 const lastChangeTimestamp = this.mapLastChangeTimestamp.get(key);
                 if (lastChangeTimestamp === undefined) {

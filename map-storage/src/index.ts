@@ -4,6 +4,12 @@ import cors from "cors";
 import { mapStorageServer } from "./MapStorageServer";
 import { mapsManager } from "./MapsManager";
 import { MapStorageService } from "@workadventure/messages/src/ts-proto-generated/services";
+import { STORAGE_DIRECTORY } from "./Enum/EnvironmentVariable";
+import { proxyFiles } from "./FileFetcher/FileFetcher";
+import { UploadController } from "./Upload/UploadController";
+import { fileSystem } from "./fileSystem";
+import passport from "passport";
+import { passportStrategy } from "./Services/Authentication";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -22,6 +28,10 @@ server.bindAsync(`0.0.0.0:50053`, grpc.ServerCredentials.createInsecure(), (err,
 const app = express();
 app.use(cors());
 
+passport.use(passportStrategy);
+app.use(passport.initialize());
+//app.use(passport.session());
+
 app.get("/", (req, res) => {
     res.send("Hello World!");
 });
@@ -30,7 +40,11 @@ app.get("*.json", async (req, res) => {
     res.send(await mapsManager.getMap(req.url));
 });
 
-app.use(express.static("public"));
+new UploadController(app, fileSystem);
+
+app.use(express.static(STORAGE_DIRECTORY));
+
+app.use(proxyFiles(fileSystem));
 
 app.listen(3000, () => {
     console.log("Application is running on port 3000");
