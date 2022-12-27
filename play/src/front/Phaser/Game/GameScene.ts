@@ -665,9 +665,17 @@ export class GameScene extends DirtyScene {
             if (this.isReconnecting) {
                 setTimeout(() => {
                     if (this.connection === undefined) {
-                        this.scene.sleep();
+                        try {
+                            this.scene.sleep();
+                        } catch (err) {
+                            console.error("Scene sleep error: ", err);
+                        }
                         if (get(errorScreenStore)) {
                             // If an error message is already displayed, don't display the "connection lost" message.
+                            console.error(
+                                "Error message store already displayed for CONNECTION_LOST",
+                                get(errorScreenStore)
+                            );
                             return;
                         }
                         errorScreenStore.setError(
@@ -678,27 +686,40 @@ export class GameScene extends DirtyScene {
                                 details: get(LL).warning.connectionLostSubtitle(),
                             })
                         );
-                        //this.scene.launch(ReconnectingSceneName);
                     }
                 }, 0);
             } else if (this.connection === undefined) {
                 // Let's wait 1 second before printing the "connecting" screen to avoid blinking
                 setTimeout(() => {
+                    console.log("this.room", this.room);
                     if (this.connection === undefined) {
-                        this.scene.sleep();
+                        try {
+                            this.scene.sleep();
+                        } catch (err) {
+                            console.error("Scene sleep error: ", err);
+                        }
                         if (get(errorScreenStore)) {
                             // If an error message is already displayed, don't display the "connection lost" message.
+                            console.error(
+                                "Error message store already displayed for CONNECTION_PENDING: ",
+                                get(errorScreenStore)
+                            );
                             return;
                         }
-                        errorScreenStore.setError(
+                        /*
+                         * @fixme
+                         * The error awaiting connection appears while the connection is in progress.
+                         * In certain cases like the invalid character layer, the connection is close and this error is displayed after selecting Woka scene.
+                         * TODO: create connection status with invalid layer case and not display this error.
+                         **/
+                        /*errorScreenStore.setError(
                             ErrorScreenMessage.fromPartial({
                                 type: "reconnecting",
                                 code: "CONNECTION_PENDING",
                                 title: get(LL).warning.waitingConnectionTitle(),
                                 details: get(LL).warning.waitingConnectionSubtitle(),
                             })
-                        );
-                        //this.scene.launch(ReconnectingSceneName);
+                        );*/
                     }
                 }, 1000);
             }
@@ -720,7 +741,11 @@ export class GameScene extends DirtyScene {
         new GameMapPropertiesListener(this, this.gameMapFrontWrapper).register();
 
         if (!this.room.isDisconnected()) {
-            this.scene.sleep();
+            try {
+                this.scene.sleep();
+            } catch (err) {
+                console.error("Scene sleep error: ", err);
+            }
             this.connect();
         }
 
