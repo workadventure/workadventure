@@ -119,8 +119,8 @@ jobs:
         working-directory: "messages"
 
       - name: "Pretty"
-        #run: npm run pretty-check
-        run: npm run pretty && git diff --exit-code
+        run: npm run pretty-check
+        #run: npm run pretty && git diff --exit-code
         working-directory: "chat"
 
       - name: "Generate i18n files"

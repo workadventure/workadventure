@@ -224,23 +224,20 @@
                         {#if defaultMucRoom !== undefined}
                             <UsersList mucRoom={defaultMucRoom} searchValue={searchValue.toLocaleLowerCase()} />
                         {/if}
-                    {:else}
-                        {#if $enableChat}
-                            <ChatZones
-                                searchValue={searchValue.toLocaleLowerCase()}
-                                chatZones={[...$mucRoomsStore].filter(
-                                    (mucRoom) =>
-                                        mucRoom.type === "live" && mucRoom.name.toLowerCase().includes(searchValue)
-                                )}
-                            />
-                            <Forums
-                                searchValue={searchValue.toLocaleLowerCase()}
-                                forums={[...$mucRoomsStore].filter(
-                                    (mucRoom) =>
-                                        mucRoom.type === "forum" && mucRoom.name.toLowerCase().includes(searchValue)
-                                )}
-                            />
-                        {/if}
+                    {:else if $enableChat}
+                        <ChatZones
+                            searchValue={searchValue.toLocaleLowerCase()}
+                            chatZones={[...$mucRoomsStore].filter(
+                                (mucRoom) => mucRoom.type === "live" && mucRoom.name.toLowerCase().includes(searchValue)
+                            )}
+                        />
+                        <Forums
+                            searchValue={searchValue.toLocaleLowerCase()}
+                            forums={[...$mucRoomsStore].filter(
+                                (mucRoom) =>
+                                    mucRoom.type === "forum" && mucRoom.name.toLowerCase().includes(searchValue)
+                            )}
+                        />
                     {/if}
                     {#if $navChat !== "users"}
                         <Timeline on:activeThreadTimeLine={() => timelineActiveStore.set(true)} />
