@@ -35,7 +35,7 @@
     <h2 class="tw-text-white tw-text-2xl">{$LL.woka.selectWoka.title()}</h2>
 </section>
 <section class="category tw-flex tw-flex-row tw-justify-center">
-    {#if $collectionsSizeStore > 1}
+    {#if $collectionsSizeStore > 1 && $selectedCollection}
         <button class="light tw-mr-2 selectCharacterButton" on:click|preventDefault={selectLeft}> &lt; </button>
         <strong class="category-text">{$selectedCollection}</strong>
         <button class="outline tw-ml-2 selectCharacterButton" on:click|preventDefault={selectRight}> &gt; </button>

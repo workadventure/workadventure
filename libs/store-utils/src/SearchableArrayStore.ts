@@ -26,13 +26,12 @@ export class SearchableArrayStore<K, V> extends Array<V> implements Readable<Arr
     }
 
     delete(key: K): boolean {
-        const value = this.storesByKey.get(key);
-        if (value) {
-            super.filter((_value) => _value === value);
-            this.store.set(this);
-            this.storesByKey.delete(key);
+        const index = super.findIndex((item) => this.callback(item) === key);
+        if (index){
+            this.splice(index, 1);
+            return true;
         }
-        return !!value;
+        return false;
     }
 
     push(...items: V[]): number {
