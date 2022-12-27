@@ -21,6 +21,7 @@ import officeCollection from "./entities/collections/OfficeCollection.json";
 
 class MapsManager {
     private loadedMaps: Map<string, GameMap>;
+    private loadedMapsCommandsQueue: Map<string, { id: string; commandConfig: CommandConfig }[]>;
     private loadedCollections: Map<string, EntityCollection>;
 
     private saveMapIntervals: Map<string, NodeJS.Timer>;
@@ -31,12 +32,17 @@ class MapsManager {
      */
     private readonly AUTO_SAVE_INTERVAL_MS: number = 15 * 1000; // 15 seconds
     /**
+     * Time after which the command will be removed from the commands queue
+     */
+    private readonly COMMAND_TIME_IN_QUEUE_MS: number = this.AUTO_SAVE_INTERVAL_MS * 2;
+    /**
      * Kill saving map interval after given time of no changes done to the map
      */
     private readonly NO_CHANGE_DETECTED_MS: number = 1 * 60 * 1000; // 1 minute
 
     constructor() {
         this.loadedMaps = new Map<string, GameMap>();
+        this.loadedMapsCommandsQueue = new Map<string, { id: string; commandConfig: CommandConfig }[]>();
         this.saveMapIntervals = new Map<string, NodeJS.Timer>();
         this.mapLastChangeTimestamp = new Map<string, number>();
 
@@ -64,7 +70,7 @@ class MapsManager {
         if (!this.saveMapIntervals.has(mapKey)) {
             this.startSavingMapInterval(mapKey, this.AUTO_SAVE_INTERVAL_MS);
         }
-        let command: Command;
+        let command: Command | undefined;
         try {
             switch (commandConfig.type) {
                 case "UpdateAreaCommand": {
@@ -99,11 +105,16 @@ class MapsManager {
                 }
                 default: {
                     const _exhaustiveCheck: never = commandConfig;
+                    break;
                 }
             }
         } catch (e) {
             console.log(e);
             return false;
+        }
+        if (command !== undefined) {
+            this.addCommandToQueue(mapKey, command.id, commandConfig);
+            this.loadedMaps.get(mapKey)?.updateLatestCommandIdProperty(command.id);
         }
         return true;
     }
@@ -148,6 +159,31 @@ class MapsManager {
             return true;
         }
         return false;
+    }
+
+    private addCommandToQueue(mapKey: string, commandId: string, commandConfig: CommandConfig): void {
+        if (!this.loadedMapsCommandsQueue.has(mapKey)) {
+            this.loadedMapsCommandsQueue.set(mapKey, []);
+        }
+        const commands = this.loadedMapsCommandsQueue.get(mapKey);
+        if (commands !== undefined) {
+            commands.push({ id: commandId, commandConfig });
+            this.setCommandDeletionTimeout(mapKey, commandId);
+        }
+    }
+
+    private setCommandDeletionTimeout(mapKey: string, commandId: string): void {
+        setTimeout(() => {
+            const queue = this.loadedMapsCommandsQueue.get(mapKey);
+            if (!queue) {
+                return;
+            }
+            const index = queue.findIndex((command) => command.id === commandId);
+            if (index === -1) {
+                return;
+            }
+            queue.splice(index, 1);
+        }, this.COMMAND_TIME_IN_QUEUE_MS);
     }
 
     private startSavingMapInterval(key: string, intervalMS: number): void {

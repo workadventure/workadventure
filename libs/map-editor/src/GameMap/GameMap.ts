@@ -36,7 +36,8 @@ export class GameMap {
     public readonly flatLayers: ITiledMapLayer[];
     public readonly tiledObjects: ITiledMapObject[];
 
-    private readonly defaultTileSize = 32;
+    private readonly DEFAULT_TILE_SIZE = 32;
+    private readonly MAP_PROPERTY_LATEST_COMMAND_ID_KEY: string = 'latestCommandId';
 
 
     public exitUrls: Array<string> = [];
@@ -83,15 +84,15 @@ export class GameMap {
 
     public getTileDimensions(): { width: number; height: number } {
         return {
-            width: this.map.tilewidth ?? this.defaultTileSize,
-            height: this.map.tileheight ?? this.defaultTileSize,
+            width: this.map.tilewidth ?? this.DEFAULT_TILE_SIZE,
+            height: this.map.tileheight ?? this.DEFAULT_TILE_SIZE,
         };
     }
 
     public getTileIndexAt(x: number, y: number): { x: number; y: number } {
         return {
-            x: Math.floor(x / (this.map.tilewidth ?? this.defaultTileSize)),
-            y: Math.floor(y / (this.map.tileheight ?? this.defaultTileSize)),
+            x: Math.floor(x / (this.map.tilewidth ?? this.DEFAULT_TILE_SIZE)),
+            y: Math.floor(y / (this.map.tileheight ?? this.DEFAULT_TILE_SIZE)),
         };
     }
 
@@ -229,8 +230,30 @@ export class GameMap {
         return objects;
     }
 
+    public updateLatestCommandIdProperty(commandId: string): void {
+        const property = this.getMapPropertyByKey(this.MAP_PROPERTY_LATEST_COMMAND_ID_KEY);
+        if (!property) {
+            this.map.properties?.push({
+                name: this.MAP_PROPERTY_LATEST_COMMAND_ID_KEY,
+                type: "string",
+                propertytype: "string",
+                value: commandId,
+            });
+        } else {
+            property.value = commandId;
+        }
+    }
+
+    public getLatestCommandId(): string | undefined {
+        return this.getMapPropertyByKey(this.MAP_PROPERTY_LATEST_COMMAND_ID_KEY)?.value as string ?? undefined;
+    }
+
+    public getMapPropertyByKey(key: string): ITiledMapProperty | undefined {
+        return this.map.properties?.find(property => property.name === key);
+    }
+
     public getDefaultTileSize(): number {
-        return this.defaultTileSize;
+        return this.DEFAULT_TILE_SIZE;
     }
 
     public getGameMapAreas(): GameMapAreas {

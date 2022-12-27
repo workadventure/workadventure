@@ -3,10 +3,7 @@ import { UpdateAreaCommand, CreateAreaCommand, DeleteAreaCommand } from "@workad
 import type { Unsubscriber } from "svelte/store";
 import type { RoomConnection } from "../../../Connexion/RoomConnection";
 import type { GameScene } from "../GameScene";
-import {
-    mapEditorModeStore,
-    mapEditorSelectedToolStore,
-} from "../../../Stores/MapEditorStore";
+import { mapEditorModeStore, mapEditorSelectedToolStore } from "../../../Stores/MapEditorStore";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
@@ -27,11 +24,6 @@ export class MapEditorModeManager {
      * Is user currently in Editor Mode
      */
     private active: boolean;
-
-    /**
-     * Is pointer currently down (map dragging etc)
-     */
-    private pointerDown: boolean;
 
     /**
      * Tools that we can work with inside Editor
@@ -58,7 +50,6 @@ export class MapEditorModeManager {
     private currentCommandIndex: number;
 
     private mapEditorModeUnsubscriber!: Unsubscriber;
-    private pointerDownUnsubscriber!: Unsubscriber;
 
     private ctrlKey: Phaser.Input.Keyboard.Key;
     private shiftKey: Phaser.Input.Keyboard.Key;

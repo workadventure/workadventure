@@ -120,7 +120,7 @@ export class GameMapEntities {
     }
 
     private getEntitiesMapProperty(): ITiledMapProperty | undefined {
-        return this.gameMap.getMap().properties?.find(property => property.name === this.MAP_PROPERTY_ENTITIES_NAME);
+        return this.gameMap.getMapPropertyByKey(this.MAP_PROPERTY_ENTITIES_NAME);
     }
 
     public getEntities(): EntityData[] {
