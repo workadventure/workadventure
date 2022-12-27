@@ -56,10 +56,12 @@ jobs:
         working-directory: "play"
 
       - name: Install dependencies in package
-        run: npm ci --workspace=@workadventure/iframe-api-typings
+        run: npm ci
+        working-directory: "play/packages/iframe-api-typings"
+        if: ${{ github.event_name == 'release' }}
 
       - name: Publish package
-        run: npm publish --filter @workadventure/iframe-api-typings
+        run: npm publish
         working-directory: "play/packages/iframe-api-typings"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
