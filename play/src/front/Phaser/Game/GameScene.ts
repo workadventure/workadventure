@@ -668,6 +668,10 @@ export class GameScene extends DirtyScene {
                         this.scene.sleep();
                         if (get(errorScreenStore)) {
                             // If an error message is already displayed, don't display the "connection lost" message.
+                            console.error(
+                                "Error message store already displayed for CONNECTION_LOST",
+                                get(errorScreenStore)
+                            );
                             return;
                         }
                         errorScreenStore.setError(
@@ -688,6 +692,10 @@ export class GameScene extends DirtyScene {
                         this.scene.sleep();
                         if (get(errorScreenStore)) {
                             // If an error message is already displayed, don't display the "connection lost" message.
+                            console.error(
+                                "Error message store already displayed for CONNECTION_PENDING: ",
+                                get(errorScreenStore)
+                            );
                             return;
                         }
                         errorScreenStore.setError(

@@ -20,6 +20,7 @@ const ignoreFollowRequests = "ignoreFollowRequests";
 const decreaseAudioPlayerVolumeWhileTalking = "decreaseAudioPlayerVolumeWhileTalking";
 const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
+const accessToken = "accessToken";
 const notification = "notificationPermission";
 const chatSounds = "chatSounds";
 const cameraSetup = "cameraSetup";
@@ -105,8 +106,13 @@ class LocalUserStore {
     }
 
     getCharacterLayers(): string[] | null {
-        const value = JSON.parse(localStorage.getItem(characterLayersKey) || "null");
-        return areCharacterLayersValid(value) ? value : null;
+        try {
+            const value = JSON.parse(localStorage.getItem(characterLayersKey) || "null");
+            return areCharacterLayersValid(value) ? value : null;
+        } catch (err) {
+            console.error("LocalUserStore error: ", err);
+            return null;
+        }
     }
 
     setCompanion(companion: string | null): void {
@@ -230,6 +236,18 @@ class LocalUserStore {
 
     getAuthToken(): string | null {
         return localStorage.getItem(authToken);
+    }
+
+    setAccessToken(value: string | null) {
+        if (value !== null) {
+            localStorage.setItem(accessToken, value);
+        } else {
+            localStorage.removeItem(accessToken);
+        }
+    }
+
+    getAccessToken(): string | null {
+        return localStorage.getItem(accessToken);
     }
 
     isLogged(): boolean {

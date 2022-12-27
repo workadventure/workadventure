@@ -1,3 +1,4 @@
+import { ADMIN_URL } from "./../Enum/EnvironmentVariable";
 import Axios from "axios";
 import { ENABLE_OPENID, PUSHER_URL } from "../Enum/EnvironmentVariable";
 import { RoomConnection } from "./RoomConnection";
@@ -88,12 +89,30 @@ class ConnectionManager {
         this._currentRoom = null;
 
         const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get("token");
-        if (!token && navigator.cookieEnabled) {
-            const match = document.cookie.match(new RegExp("(^| )" + "privateaccesstoken" + "=([^;]+)"));
-            if (match) {
-                console.log("initGameConnexion => token => ", match[2]);
+        // @deprecated
+        let token = urlParams.get("token");
+        let accessToken;
+        if (!token) {
+            accessToken = urlParams.get("accessToken");
+            if (accessToken == undefined) {
+                accessToken = localUserStore.getAccessToken();
             }
+            if (accessToken != undefined) {
+                try {
+                    const res = await Axios.get(`${ADMIN_URL}/api/workadventure/privatetoken/${accessToken}`);
+                    console.log("res", res);
+                    accessToken = res.data.accessToken;
+                    token = res.data.privateToken;
+                } catch (e) {
+                    console.error("Init game connection get private token", e);
+                }
+            }
+        }
+
+        if (accessToken != undefined) {
+            localUserStore.setAccessToken(accessToken);
+            // @deprecated
+            urlParams.delete("accessToken");
         }
         if (token) {
             this.authToken = token;
