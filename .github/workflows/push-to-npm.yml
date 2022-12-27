@@ -34,10 +34,10 @@ jobs:
           version: '3.x'
 
       - name: "Install play dependencies"
-        run: npm install --workspace=workadventure-play
+        run: npm ci --workspace=workadventure-play
 
       - name: "Install messages dependencies"
-        run: npm install
+        run: npm ci
         working-directory: "messages"
 
       - name: "Build proto messages"
@@ -56,7 +56,7 @@ jobs:
         working-directory: "play"
 
       - name: Install dependencies in package
-        run: npm install --workspace=@workadventure/iframe-api-typings
+        run: npm ci --workspace=@workadventure/iframe-api-typings
 
       - name: Publish package
         run: npm publish --filter @workadventure/iframe-api-typings

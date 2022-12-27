@@ -1,11 +1,10 @@
 {
   "private": true,
   "devDependencies": {
-    "husky": "^7.0.1",
-    "path-exists-cli": "^2.0.0"
+    "husky": "^7.0.1"
   },
   "scripts": {
-    "prepare": "path-exists node_modules/.bin/husky && husky install || echo 'Husky not found. Maybe you are installing only a subproject.'"
+    "prepare": "husky install || echo 'Husky not found. Maybe you are installing only a subproject.'"
   },
   "workspaces": [
     "play",

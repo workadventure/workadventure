@@ -35,10 +35,10 @@ jobs:
           version: '3.x'
 
       - name: "Install dependencies"
-        run: npm install --workspace=workadventure-play
+        run: npm ci --workspace=workadventure-play
 
       - name: "Install messages dependencies"
-        run: npm install
+        run: npm ci
         working-directory: "messages"
 
       - name: "Build proto messages"
@@ -108,10 +108,10 @@ jobs:
       #   working-directory: "libs"
 
       - name: "Install dependencies"
-        run: npm install --workspace=workadventurechat
+        run: npm ci --workspace=workadventurechat
 
       - name: "Install messages dependencies"
-        run: npm install
+        run: npm ci
         working-directory: "messages"
 
       - name: "Build proto messages"
@@ -175,10 +175,10 @@ jobs:
           version: '3.x'
 
       - name: "Install dependencies"
-        run: npm install --workspace=workadventureback
+        run: npm ci --workspace=workadventureback
 
       - name: "Install messages dependencies"
-        run: npm install
+        run: npm ci
         working-directory: "messages"
 
       - name: "Build proto messages"
@@ -218,7 +218,7 @@ jobs:
 
 
       - name: "Install dependencies"
-        run: npm install --workspace=workadventureuploader
+        run: npm ci --workspace=workadventureuploader
 
       - name: "Lint"
         run: npm run lint
@@ -251,10 +251,10 @@ jobs:
           version: '3.x'
 
       - name: "Install dependencies"
-        run: npm install --workspace=map-storage
+        run: npm ci --workspace=map-storage
 
       - name: "Install messages dependencies"
-        run: npm install
+        run: npm ci
         working-directory: "messages"
 
       - name: "Build proto messages"
@@ -379,10 +379,10 @@ jobs:
         working-directory: "tests"
 
       - name: "Install play dependencies"
-        run: npm install --workspace=workadventure-play
+        run: npm ci --workspace=workadventure-play
 
       - name: "Install messages dependencies"
-        run: npm install
+        run: npm ci
         working-directory: "messages"
 
       - name: "Build proto messages"

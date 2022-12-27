@@ -6,7 +6,7 @@
 FROM --platform=$BUILDPLATFORM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d as proto-builder
 WORKDIR /usr/src
 COPY messages/package-lock.json messages/package.json ./
-RUN npm install
+RUN npm ci
 COPY messages .
 COPY libs ./../libs
 RUN npm run tag-version && npm run ts-proto
@@ -21,7 +21,7 @@ COPY libs/messages/package.json libs/messages/package.json
 COPY libs/map-editor/package.json libs/map-editor/package.json
 COPY libs/math-utils/package.json libs/math-utils/package.json
 COPY libs/tailwind/package.json libs/tailwind/package.json
-RUN npm install --production --workspace map-storage
+RUN npm ci --omit=dev --workspace map-storage
 COPY libs ./libs
 COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
 COPY --chown=node:node map-storage map-storage

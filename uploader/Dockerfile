@@ -5,7 +5,7 @@ RUN apt-get update && apt-get install -y git
 COPY package.json package-lock.json ./
 COPY uploader/package.json uploader/package.json
 ENV NODE_ENV=production
-RUN npm install --production --workspace workadventureuploader
+RUN npm ci --omit=dev --workspace workadventureuploader
 COPY uploader uploader
 
 WORKDIR /usr/src/uploader
