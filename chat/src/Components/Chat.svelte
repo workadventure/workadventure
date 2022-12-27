@@ -232,8 +232,10 @@
                             />
                         {/if}
                     {/if}
+                    {#if $navChat !== "users"}
+                        <Timeline on:activeThreadTimeLine={() => timelineActiveStore.set(true)} />
+                    {/if}
                 {/if}
-                <Timeline on:activeThreadTimeLine={() => timelineActiveStore.set(true)} />
             </div>
         {/if}
     </section>
