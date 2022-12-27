@@ -43,6 +43,7 @@
         if (!newMessageText) return;
         chatMessagesStore.addPersonalMessage(newMessageText);
         newMessageText = "";
+        htmlMessageText = "";
         return false;
     }
 
