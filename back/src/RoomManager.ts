@@ -78,11 +78,19 @@ const roomManager: IRoomManagerServer = {
                                         room = gameRoom;
                                         user = myUser;
                                     } else {
-                                        //Connection may have been closed before the init was finished, so we have to manually disconnect the user.
+                                        // Connection may have been closed before the init was finished, so we have to manually disconnect the user.
+                                        // TODO: Remove this debug line
+                                        console.info(
+                                            "message handleJoinRoom connection have been closed before. Check 'call.writable': ",
+                                            call.writable
+                                        );
                                         socketManager.leaveRoom(gameRoom, myUser);
                                     }
                                 })
-                                .catch((e) => emitError(call, e));
+                                .catch((e) => {
+                                    console.error("message handleJoinRoom error: ", e);
+                                    emitError(call, e);
+                                });
                         } else {
                             throw new Error("The first message sent MUST be of type JoinRoomMessage");
                         }
