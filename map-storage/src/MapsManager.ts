@@ -12,6 +12,7 @@ import {
     EntityPrefab,
     EntityRawPrefab,
 } from "@workadventure/map-editor";
+import { EditMapCommandMessage } from "@workadventure/messages";
 import { writeFileSync } from "fs";
 import { readFile } from "fs/promises";
 
@@ -21,7 +22,7 @@ import officeCollection from "./entities/collections/OfficeCollection.json";
 
 class MapsManager {
     private loadedMaps: Map<string, GameMap>;
-    private loadedMapsCommandsQueue: Map<string, { id: string; commandConfig: CommandConfig }[]>;
+    private loadedMapsCommandsQueue: Map<string, EditMapCommandMessage[]>;
     private loadedCollections: Map<string, EntityCollection>;
 
     private saveMapIntervals: Map<string, NodeJS.Timer>;
@@ -42,7 +43,7 @@ class MapsManager {
 
     constructor() {
         this.loadedMaps = new Map<string, GameMap>();
-        this.loadedMapsCommandsQueue = new Map<string, { id: string; commandConfig: CommandConfig }[]>();
+        this.loadedMapsCommandsQueue = new Map<string, EditMapCommandMessage[]>();
         this.saveMapIntervals = new Map<string, NodeJS.Timer>();
         this.mapLastChangeTimestamp = new Map<string, number>();
 
@@ -112,10 +113,6 @@ class MapsManager {
             console.log(e);
             return false;
         }
-        if (command !== undefined) {
-            this.addCommandToQueue(mapKey, command.id, commandConfig);
-            this.loadedMaps.get(mapKey)?.updateLatestCommandIdProperty(command.id);
-        }
         return true;
     }
 
@@ -161,15 +158,16 @@ class MapsManager {
         return false;
     }
 
-    private addCommandToQueue(mapKey: string, commandId: string, commandConfig: CommandConfig): void {
+    public addCommandToQueue(mapKey: string, message: EditMapCommandMessage): void {
         if (!this.loadedMapsCommandsQueue.has(mapKey)) {
             this.loadedMapsCommandsQueue.set(mapKey, []);
         }
         const commands = this.loadedMapsCommandsQueue.get(mapKey);
         if (commands !== undefined) {
-            commands.push({ id: commandId, commandConfig });
-            this.setCommandDeletionTimeout(mapKey, commandId);
+            commands.push(message);
+            this.setCommandDeletionTimeout(mapKey, message.id);
         }
+        this.loadedMaps.get(mapKey)?.updateLatestCommandIdProperty(message.id);
     }
 
     private setCommandDeletionTimeout(mapKey: string, commandId: string): void {

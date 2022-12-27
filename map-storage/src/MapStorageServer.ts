@@ -118,6 +118,7 @@ const mapStorageServer: MapStorageServer = {
             }
             // send edit map message back as a valid one
             if (validCommand) {
+                mapsManager.addCommandToQueue(call.request.mapKey, editMapCommandMessage);
                 callback(null, editMapCommandMessage);
             }
         } catch (e) {
