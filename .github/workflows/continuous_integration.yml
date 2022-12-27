@@ -23,16 +23,11 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v2.0.0"
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: latest
-
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache: "pnpm"
-
+          cache: "npm"
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
@@ -40,7 +35,7 @@ jobs:
           version: '3.x'
 
       - name: "Install dependencies"
-        run: pnpm install --filter workadventure-play...
+        run: npm install --workspace=workadventure-play
 
       - name: "Install messages dependencies"
         run: npm install
@@ -51,11 +46,11 @@ jobs:
         working-directory: "messages"
 
       - name: "Generate i18n files"
-        run: pnpm run typesafe-i18n
+        run: npm run typesafe-i18n
         working-directory: "play"
 
       - name: "Build"
-        run: pnpm run build
+        run: npm run build
         env:
           PUSHER_URL: "//localhost:3000"
           ADMIN_URL: "//localhost:80"
@@ -64,27 +59,27 @@ jobs:
         working-directory: "play"
 
       - name: "Build iframe-api"
-        run: pnpm run build-iframe-api
+        run: npm run build-iframe-api
         working-directory: "play"
 
       - name: "Typecheck"
-        run: pnpm run typecheck
+        run: npm run typecheck
         working-directory: "play"
 
       - name: "Svelte check"
-        run: pnpm run svelte-check
+        run: npm run svelte-check
         working-directory: "play"
 
       - name: "Lint"
-        run: pnpm run lint
+        run: npm run lint
         working-directory: "play"
 
       - name: "Pretty"
-        run: pnpm run pretty-check
+        run: npm run pretty-check
         working-directory: "play"
 
       - name: "Unit tests"
-        run: pnpm test
+        run: npm test
         working-directory: "play"
 
   continuous-integration-chat:
@@ -96,15 +91,11 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v2.0.0"
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: latest
-
       - name: "Setup NodeJS"
         uses: actions/setup-node@v1
         with:
           node-version: '16.x'
-          cache: "pnpm"
+          cache: "npm"
 
 
       - name: Install Protoc
@@ -117,7 +108,7 @@ jobs:
       #   working-directory: "libs"
 
       - name: "Install dependencies"
-        run: pnpm install --filter workadventurechat...
+        run: npm install --workspace=workadventurechat
 
       - name: "Install messages dependencies"
         run: npm install
@@ -128,15 +119,15 @@ jobs:
         working-directory: "messages"
 
       - name: "Pretty"
-        run: pnpm run pretty-check
+        run: npm run pretty-check
         working-directory: "chat"
 
       - name: "Generate i18n files"
-        run: pnpm run typesafe-i18n
+        run: npm run typesafe-i18n
         working-directory: "chat"
 
       - name: "Build"
-        run: pnpm run build
+        run: npm run build
         env:
           PUSHER_URL: "//localhost:8080"
           ADMIN_URL: "//localhost:80"
@@ -145,21 +136,21 @@ jobs:
         working-directory: "chat"
 
       - name: "Svelte check"
-        run: pnpm run svelte-check
+        run: npm run svelte-check
         working-directory: "chat"
 
       - name: "Lint"
-        run: pnpm run lint
+        run: npm run lint
         working-directory: "chat"
 
       # TODO active
       #- name: "Typecheck"
-      #  run: pnpm run typecheck
+      #  run: npm run typecheck
       #  working-directory: "chat"
 
       # TODO active
       #- name: "Jasmine"
-      #  run: pnpm test
+      #  run: npm test
       #  working-directory: "chat"
 
   continuous-integration-back:
@@ -171,15 +162,11 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v2.0.0"
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: latest
-
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
           node-version: 16
-          cache: "pnpm"
+          cache: "npm"
 
 
       - name: Install Protoc
@@ -188,7 +175,7 @@ jobs:
           version: '3.x'
 
       - name: "Install dependencies"
-        run: pnpm install --filter workadventureback...
+        run: npm install --workspace=workadventureback
 
       - name: "Install messages dependencies"
         run: npm install
@@ -199,19 +186,19 @@ jobs:
         working-directory: "messages"
 
       - name: "Typecheck"
-        run: pnpm run typecheck
+        run: npm run typecheck
         working-directory: "back"
 
       - name: "Lint"
-        run: pnpm run lint
+        run: npm run lint
         working-directory: "back"
 
       - name: "Jasmine"
-        run: pnpm test
+        run: npm test
         working-directory: "back"
 
       - name: "Prettier"
-        run: pnpm run pretty-check
+        run: npm run pretty-check
         working-directory: "back"
 
   continuous-integration-uploader:
@@ -223,26 +210,22 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v2.0.0"
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: latest
-
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
           node-version: 16
-          cache: "pnpm"
+          cache: "npm"
 
 
       - name: "Install dependencies"
-        run: pnpm install --filter workadventureuploader...
+        run: npm install --workspace=workadventureuploader
 
       - name: "Lint"
-        run: pnpm run lint
+        run: npm run lint
         working-directory: "uploader"
 
       - name: "jest"
-        run: pnpm test
+        run: npm test
         working-directory: "uploader"
 
 
@@ -255,15 +238,11 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v2.0.0"
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: latest
-
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
           node-version: 16
-          cache: "pnpm"
+          cache: "npm"
 
 
       - name: Install Protoc
@@ -272,7 +251,7 @@ jobs:
           version: '3.x'
 
       - name: "Install dependencies"
-        run: pnpm install --filter map-storage...
+        run: npm install --workspace=map-storage
 
       - name: "Install messages dependencies"
         run: npm install
@@ -283,19 +262,19 @@ jobs:
         working-directory: "messages"
 
       - name: "Typecheck"
-        run: pnpm run typecheck
+        run: npm run typecheck
         working-directory: "map-storage"
 
       - name: "Lint"
-        run: pnpm run lint
+        run: npm run lint
         working-directory: "map-storage"
 
       - name: "Jasmine"
-        run: pnpm test
+        run: npm test
         working-directory: "map-storage"
 
       - name: "Prettier"
-        run: pnpm run format
+        run: npm run format
         working-directory: "map-storage"
 
   continuous-integration-desktop:
@@ -388,10 +367,6 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v2.0.0"
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: latest
-
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
@@ -404,7 +379,7 @@ jobs:
         working-directory: "tests"
 
       - name: "Install play dependencies"
-        run: pnpm install --filter workadventure-play...
+        run: npm install --workspace=workadventure-play
 
       - name: "Install messages dependencies"
         run: npm install
@@ -415,7 +390,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build API typings"
-        run: pnpm run build-typings
+        run: npm run build-typings
         working-directory: "play"
 
       - name: "Lint"

@@ -11,4 +11,3 @@ node_modules
 _
 *.code-workspace
 /install.lock
-/.pnpm-store
