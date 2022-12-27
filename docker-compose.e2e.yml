@@ -14,7 +14,7 @@ services:
       args:
         BUILDKIT_INLINE_CACHE: 1
     working_dir: /usr/src/play
-    command: pnpm run start
+    command: npm run start
     volumes: []
     environment:
       ENABLE_OPENAPI_ENDPOINT: "false"
@@ -61,7 +61,7 @@ services:
         - thecodingmachine/workadventure-back:${DOCKER_TAG:-develop}
       args:
         BUILDKIT_INLINE_CACHE: 1
-    command: pnpm run runprod
+    command: npm run runprod
     working_dir: /usr/src/back
     volumes: []
     environment:
@@ -80,7 +80,7 @@ services:
       args:
         BUILDKIT_INLINE_CACHE: 1
     working_dir: /usr/src/map-storage
-    command: pnpm run start
+    command: npm run start
     volumes: []
     environment:
       ENABLE_OPENAPI_ENDPOINT: "false"
@@ -110,7 +110,7 @@ services:
       args:
         BUILDKIT_INLINE_CACHE: 1
     working_dir: /usr/src/uploader
-    command: pnpm run start
+    command: npm run start
     volumes: []
     environment:
       ENABLE_OPENAPI_ENDPOINT: "false"

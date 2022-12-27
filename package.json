@@ -5,5 +5,15 @@
   },
   "scripts": {
     "prepare": "husky install"
-  }
+  },
+  "workspaces": [
+    "play",
+    "back",
+    "chat",
+    "map-storage",
+    "libs/*",
+    "benchmark",
+    "uploader",
+    "play/packages/iframe-api-typings"
+  ]
 }

@@ -35,7 +35,7 @@
     "tsconfig-paths": "^3.14.1",
     "typescript": "^4.7.2",
     "vite": "^3.1.8",
-    "vite-plugin-rewrite-all": "^0.1.2"
+    "vite-plugin-rewrite-all": "^1.0.1"
   },
   "dependencies": {
     "@16bits/nes.css": "^2.3.2",
