@@ -116,6 +116,14 @@ class MapsManager {
         return true;
     }
 
+    public getCommandsNewerThan(mapKey: string, commandId: string): EditMapCommandMessage[] {
+        const queue = this.loadedMapsCommandsQueue.get(mapKey);
+        if (queue) {
+            return queue;
+        }
+        return [];
+    }
+
     public getGameMap(key: string): GameMap | undefined {
         return this.loadedMaps.get(key);
     }

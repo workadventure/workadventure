@@ -61,6 +61,15 @@ message PingMessage {
 
 }
 
+message UpdateMapToNewestMessage {
+  string commandId = 1;
+}
+
+message UpdateMapToNewestWithKeyMessage {
+  string mapKey = 1;
+  UpdateMapToNewestMessage updateMapToNewestMessage = 2;
+}
+
 message SetPlayerDetailsMessage {
   google.protobuf.UInt32Value outlineColor = 3;
   google.protobuf.BoolValue removeOutlineColor = 4;
@@ -127,6 +136,10 @@ message EditMapMessage {
 message EditMapCommandMessage {
   string id = 1;
   EditMapMessage editMapMessage = 2;
+}
+
+message EditMapCommandsArrayMessage {
+  repeated EditMapCommandMessage editMapCommands = 1;
 }
 
 message EditMapCommandWithKeyMessage {
@@ -213,6 +226,7 @@ message ClientToServerMessage {
     //XmppMessage xmppMessage = 22;
     AskPositionMessage askPositionMessage = 23;
     EditMapCommandMessage editMapCommandMessage = 24;
+    UpdateMapToNewestMessage updateMapToNewestMessage = 25;
   }
 }
 
@@ -617,6 +631,7 @@ message PusherToBackMessage {
     QueryMessage queryMessage = 21;
     AskPositionMessage askPositionMessage = 22;
     EditMapCommandWithKeyMessage editMapCommandWithKeyMessage = 23;
+    UpdateMapToNewestWithKeyMessage updateMapToNewestWithKeyMessage = 24;
   }
 }
 

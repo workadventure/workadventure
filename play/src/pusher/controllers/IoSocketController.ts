@@ -27,6 +27,7 @@ import type {
     AvailabilityStatus,
     QueryMessage,
     EditMapCommandMessage,
+    UpdateMapToNewestMessage,
 } from "../../messages/generated/messages_pb";
 import qs from "qs";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
@@ -712,6 +713,11 @@ export class IoSocketController {
                         );
                     } else if (message.hasPingmessage()) {
                         client.resetPongTimeout();
+                    } else if (message.hasUpdatemaptonewestmessage()) {
+                        socketManager.handleUpdateMapToNewestCommandMessage(
+                            client,
+                            message.getUpdatemaptonewestmessage() as UpdateMapToNewestMessage
+                        );
                     } else if (message.hasEditmapcommandmessage()) {
                         socketManager.handleEditMapCommandMessage(
                             client,

@@ -1008,6 +1008,17 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitUpdateMapToNewest(commandId: string): void {
+        this.send({
+            message: {
+                $case: "updateMapToNewestMessage",
+                updateMapToNewestMessage: {
+                    commandId,
+                },
+            },
+        });
+    }
+
     public emitMapEditorModifyArea(commandId: string, config: AreaData): void {
         this.send({
             message: {
@@ -1061,7 +1072,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorModifyEntity(commandId: string, config: AtLeast<EntityData, 'id'>): void {
+    public emitMapEditorModifyEntity(commandId: string, config: AtLeast<EntityData, "id">): void {
         if (config.properties) {
             for (const key of Object.keys(config.properties)) {
                 if (config.properties[key] === undefined) {

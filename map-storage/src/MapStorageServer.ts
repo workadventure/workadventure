@@ -4,9 +4,11 @@ import { AreaData, AreaType } from "@workadventure/map-editor";
 import { mapsManager } from "./MapsManager";
 import {
     EditMapCommandMessage,
+    EditMapCommandsArrayMessage,
     EditMapCommandWithKeyMessage,
     EmptyMessage,
     PingMessage,
+    UpdateMapToNewestWithKeyMessage,
 } from "@workadventure/messages";
 
 import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
@@ -15,6 +17,24 @@ const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, EmptyMessage>, callback: sendUnaryData<PingMessage>): void {
         callback(null, call.request);
     },
+    handleUpdateMapToNewestMessage(
+        call: ServerUnaryCall<UpdateMapToNewestWithKeyMessage, EmptyMessage>,
+        callback: sendUnaryData<EditMapCommandsArrayMessage>
+    ): void {
+        const updateMapToNewestMessage = call.request.updateMapToNewestMessage;
+        if (!updateMapToNewestMessage) {
+            callback({ name: "MapStorageError", message: "UpdateMapToNewest message does not exist" }, null);
+            return;
+        }
+        console.log(`CLIENT LAST COMMAND: ${updateMapToNewestMessage.commandId}`);
+        console.log(`LOADED MAP LAST COMMAND: ${mapsManager.getGameMap(call.request.mapKey)?.getLatestCommandId()}`);
+        const newerCommands = mapsManager.getCommandsNewerThan(call.request.mapKey, updateMapToNewestMessage.commandId);
+        const editMapCommandsArrayMessage: EditMapCommandsArrayMessage = {
+            editMapCommands: newerCommands,
+        };
+        callback(null, editMapCommandsArrayMessage);
+    },
+
     handleEditMapCommandWithKeyMessage(
         call: ServerUnaryCall<EditMapCommandWithKeyMessage, EmptyMessage>,
         callback: sendUnaryData<EditMapCommandMessage>

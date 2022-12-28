@@ -271,8 +271,8 @@ export class GameScene extends DirtyScene {
 
         this.fetchCollectionsNames()
             .then((names) => {
-                mapEntitiesPrefabsStore.loadCollections(
-                    names.collections.map(name => `${this.room.entityCollectionsUrl}/${name}`),
+                void mapEntitiesPrefabsStore.loadCollections(
+                    names.collections.map((name) => `${this.room.entityCollectionsUrl}/${name}`)
                 );
             })
             .catch((reason) => {
@@ -757,6 +757,13 @@ export class GameScene extends DirtyScene {
         if (gameManager.currentStartedRoom.backgroundColor != undefined) {
             this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
         }
+
+        this.input.keyboard.on("keydown-U", () => {
+            const commandId = this.gameMapFrontWrapper.getGameMap().getLatestCommandId();
+            if (commandId) {
+                this.connection?.emitUpdateMapToNewest(commandId);
+            }
+        });
     }
 
     /**

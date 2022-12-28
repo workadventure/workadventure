@@ -1,6 +1,6 @@
 import { PusherRoom } from "../models/PusherRoom";
 import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
-import type {
+import {
     EmoteEventMessage,
     EmotePromptMessage,
     FollowRequestMessage,
@@ -26,8 +26,7 @@ import type {
     AskPositionMessage,
     BanUserByUuidMessage,
     EditMapCommandMessage,
-} from "../../messages/generated/messages_pb";
-import {
+    UpdateMapToNewestWithKeyMessage,
     AdminMessage,
     AdminPusherToBackMessage,
     AdminRoomMessage,
@@ -45,10 +44,12 @@ import {
     InvalidTextureMessage,
     ErrorScreenMessage,
     ApplicationMessage,
+    UpdateMapToNewestMessage,
     EditMapCommandWithKeyMessage,
     XmppSettingsMessage,
     MucRoomDefinitionMessage,
 } from "../../messages/generated/messages_pb";
+
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
@@ -352,6 +353,16 @@ export class SocketManager implements ZoneEventListener {
     handleLockGroup(client: ExSocketInterface, message: LockGroupPromptMessage): void {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setLockgrouppromptmessage(message);
+        client.backConnection.write(pusherToBackMessage);
+    }
+
+    handleUpdateMapToNewestCommandMessage(client: ExSocketInterface, message: UpdateMapToNewestMessage): void {
+        const updateMapToNewestWithKeyMessage = new UpdateMapToNewestWithKeyMessage();
+        updateMapToNewestWithKeyMessage.setUpdatemaptonewestmessage(message);
+        updateMapToNewestWithKeyMessage.setMapkey(client.roomId.split("~")[1]);
+
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setUpdatemaptonewestwithkeymessage(updateMapToNewestWithKeyMessage);
         client.backConnection.write(pusherToBackMessage);
     }
 

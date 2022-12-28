@@ -26,4 +26,5 @@ service RoomManager {
 service MapStorage {
   rpc ping(PingMessage) returns (PingMessage);
   rpc handleEditMapCommandWithKeyMessage(EditMapCommandWithKeyMessage) returns (EditMapCommandMessage);
+  rpc handleUpdateMapToNewestMessage(UpdateMapToNewestWithKeyMessage) returns (EditMapCommandsArrayMessage);
 }

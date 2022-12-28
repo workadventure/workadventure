@@ -50,6 +50,8 @@ import {
     EditMapCommandWithKeyMessage,
     EditMapCommandMessage,
     ChatMessagePrompt,
+    UpdateMapToNewestWithKeyMessage,
+    EditMapCommandsArrayMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -1097,6 +1099,19 @@ export class SocketManager {
                 const subMessage = new SubToPusherRoomMessage();
                 subMessage.setEditmapcommandmessage(editMapMessage);
                 room.dispatchRoomMessage(subMessage);
+            }
+        );
+    }
+
+    handleUpdateMapToNewestMessage(room: GameRoom, user: User, message: UpdateMapToNewestWithKeyMessage) {
+        getMapStorageClient().handleUpdateMapToNewestMessage(
+            message,
+            (err: unknown, message: EditMapCommandsArrayMessage) => {
+                if (err) {
+                    emitError(user.socket, err);
+                    throw err;
+                }
+                console.log(message);
             }
         );
     }

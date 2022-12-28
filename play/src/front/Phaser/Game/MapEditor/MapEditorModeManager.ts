@@ -148,6 +148,8 @@ export class MapEditorModeManager {
             this.currentCommandIndex += 1;
         }
 
+        this.scene.getGameMap().updateLatestCommandIdProperty(command.id);
+
         return true;
     }
 
