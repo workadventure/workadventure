@@ -1,7 +1,7 @@
 import {spawn} from "child_process";
 
 export default function(env: {}) {
-    const testServer = spawn("pnpm", ['run', 'startTestServer'], {
+    const testServer = spawn("npm", ['run', 'startTestServer'], {
         env: {
             ...process.env,
             ...env
