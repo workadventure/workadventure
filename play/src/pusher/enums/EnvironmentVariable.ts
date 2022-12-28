@@ -8,12 +8,14 @@ type BoolAsString = z.infer<typeof BoolAsString>;
 const PositiveIntAsString = z.string().regex(/^\d*$/, { message: "Must be a positive integer number" });
 type PositiveIntAsString = z.infer<typeof PositiveIntAsString>;
 
+const AbsoluteOrRelativeUrl = z.string().url().or(z.string().startsWith("/"));
+
 const EnvironmentVariables = z.object({
     // Pusher related environment variables
     SECRET_KEY: z.string().min(1),
     API_URL: z.string().min(1),
-    ADMIN_API_URL: z.string().url().optional(),
-    ADMIN_URL: z.string().url().optional(),
+    ADMIN_API_URL: AbsoluteOrRelativeUrl.optional(),
+    ADMIN_URL: AbsoluteOrRelativeUrl.optional(),
     ADMIN_API_TOKEN: z.string().optional(),
     ADMIN_SOCKETS_TOKEN: z.string().optional(),
     CPU_OVERHEAT_THRESHOLD: PositiveIntAsString.optional(),
@@ -24,8 +26,8 @@ const EnvironmentVariables = z.object({
     VITE_URL: z.string().url().optional(),
     // Use "*" to allow any domain
     ALLOWED_CORS_ORIGIN: z.string().url().or(z.literal("*")).optional(),
-    PUSHER_URL: z.string().url().optional(),
-    PUBLIC_MAP_STORAGE_URL: z.string().url().optional(),
+    PUSHER_URL: AbsoluteOrRelativeUrl.optional(),
+    PUBLIC_MAP_STORAGE_URL: AbsoluteOrRelativeUrl.optional(),
     OPID_CLIENT_ID: z.string().optional(),
     OPID_CLIENT_SECRET: z.string().optional(),
     OPID_CLIENT_ISSUER: z.string().optional(),
@@ -50,8 +52,8 @@ const EnvironmentVariables = z.object({
 
     // Front related environment variables
     DEBUG_MODE: BoolAsString.optional(),
-    UPLOADER_URL: z.string().url(),
-    ICON_URL: z.string().url(),
+    UPLOADER_URL: AbsoluteOrRelativeUrl,
+    ICON_URL: AbsoluteOrRelativeUrl,
     STUN_SERVER: z.string().optional(),
     TURN_SERVER: z.string().optional(),
     SKIP_RENDER_OPTIMIZATIONS: BoolAsString.optional(),
@@ -64,11 +66,11 @@ const EnvironmentVariables = z.object({
     MAX_USERNAME_LENGTH: PositiveIntAsString.optional(),
     MAX_PER_GROUP: PositiveIntAsString.optional(),
     NODE_ENV: z.string().optional(),
-    CONTACT_URL: z.string().url().optional(),
+    CONTACT_URL: AbsoluteOrRelativeUrl.optional(),
     POSTHOG_API_KEY: z.string().optional(),
     POSTHOG_URL: z.string().url().optional().or(z.literal("")),
     FALLBACK_LOCALE: z.string().optional(),
-    CHAT_URL: z.string().url(),
+    CHAT_URL: AbsoluteOrRelativeUrl,
     OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy.optional(),
 });
 

@@ -1,6 +1,6 @@
 # Deploying WorkAdventure in production
 
-This directory contains a sample production deployment of WorkAdventure using docker-compose.
+This directory contains a sample production deployment of WorkAdventure using docker-compose: [`docker-compose.prod.yaml`](docker-compose.prod.yaml).
 
 Every production environment is different and this docker-compose file will not
 fit all use cases. But it is intended to be a good starting point for you
@@ -40,11 +40,22 @@ HTTP server (nginx / Apache, ...) and properly configure the [CORS settings as e
 > **Note**
 > The Ejabberd server is used to list all the users connected to your environment and also
 > to transmit chat messages. The Ejabberd server proposed in this install comes almost
-> unconfigured. There is no authentication system set up so all logins are anonymous. This
-> is OK because the server is not exposed to the outside and only the "play" container will
-> connect to it. Because authentications are anonymous, nothing will be saved.
+> unconfigured. There is a basic system set up to authenticate users using JWT. Because 
+> authentications are using JWT, nothing will be saved.
 > If you want to persist messages and use "real accounts", you will need to implement the
 > "admin API" (it is the role of the Admin API to give valid credentials to Ejabberd),
 > and you will need to modify the Ejabberd configuration to persist messages the way you want
 > (using Mnesia or any other supported database)
 
+## Single domain install
+
+The install proposed in [`docker-compose.prod.yaml`](docker-compose.prod.yaml) uses many domain names (one for each service).
+If you want to run WorkAdventure on a single domain name, you can override the settings using [`docker-compose.single-domain.yaml`](docker-compose.single-domain.yaml).
+
+In this case, you can configure the only domain used with the `DOMAIN` environment variable in the ".env" file.
+
+Usage:
+
+```console
+$ docker-compose -f docker-compose.prod.yaml -f docker-compose.single-domain.yaml up
+```
