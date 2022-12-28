@@ -115,12 +115,15 @@ export class Room {
 
     private async getMapDetail(): Promise<MapDetail | RoomRedirect> {
         try {
-            const result = await axiosWithRetry.get<unknown>(`${PUSHER_URL}/map`, {
-                params: {
-                    playUri: this.roomUrl.toString(),
-                    authToken: localUserStore.getAuthToken(),
-                },
-            });
+            const result = await axiosWithRetry.get<unknown>(
+                new URL("/map", new URL(PUSHER_URL, window.location.href)).toString(),
+                {
+                    params: {
+                        playUri: this.roomUrl.toString(),
+                        authToken: localUserStore.getAuthToken(),
+                    },
+                }
+            );
 
             const data = result.data;
 

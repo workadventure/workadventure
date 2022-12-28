@@ -32,6 +32,7 @@ jobs:
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
           version: '3.x'
 
       - name: "Install dependencies"
@@ -101,6 +102,7 @@ jobs:
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
           version: '3.x'
 
       # - name: "Copy libs dependencies"
@@ -173,6 +175,7 @@ jobs:
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
           version: '3.x'
 
       - name: "Install dependencies"
@@ -249,6 +252,7 @@ jobs:
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
           version: '3.x'
 
       - name: "Install dependencies"
