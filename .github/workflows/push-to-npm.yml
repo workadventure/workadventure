@@ -35,6 +35,7 @@ jobs:
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
           version: '3.x'
 
       - name: "Install play dependencies"
