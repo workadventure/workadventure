@@ -199,7 +199,7 @@ class IframeListener {
     } = {};
 
     // Note: Message Queue used to store message who can't be sent to the Chat because it's not ready yet
-    private messagesToChatQueue = new Map<number, IframeResponseEvent>();
+    private messagesToChatQueue = new Array<IframeResponseEvent>();
 
     init() {
         window.addEventListener(
@@ -442,11 +442,11 @@ class IframeListener {
                         additionnalButtonsMenu.removeAdditionnalButtonActionBar(iframeEvent.data);
                     } else if (iframeEvent.type == "chatReady") {
                         this.chatReady = true;
-                        if (this.messagesToChatQueue.size > 0) {
-                            this.messagesToChatQueue.forEach((message, time) => {
+                        if (this.messagesToChatQueue.length > 0) {
+                            for (const message of this.messagesToChatQueue) {
                                 this.postMessageToChat(message);
-                                this.messagesToChatQueue.delete(time);
-                            });
+                            }
+                            this.messagesToChatQueue = [];
                         }
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
@@ -913,20 +913,13 @@ class IframeListener {
         if (!this.chatIframe) {
             this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
         }
-        try {
-            if (
-                !this.chatIframe ||
-                !this.chatIframe.contentWindow ||
-                !this.chatIframe.contentWindow.postMessage ||
-                !this.chatReady
-            ) {
-                throw new Error("No chat iFrame registered");
-            } else {
-                this.chatIframe.contentWindow?.postMessage(message, this.chatIframe?.src);
+        if (!this.chatReady) {
+            this.messagesToChatQueue.push(message);
+        } else {
+            if (this.chatIframe === null) {
+                throw new Error("postMessageToChat => Missing chatIframe => impossible");
             }
-        } catch (err) {
-            console.error("postMessageToChat Error => ", err);
-            this.messagesToChatQueue.set(Date.now(), message);
+            this.chatIframe.contentWindow?.postMessage(message, this.chatIframe?.src);
         }
     }
 
