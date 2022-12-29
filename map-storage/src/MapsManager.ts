@@ -137,10 +137,14 @@ class MapsManager {
         if (inMemoryGameMap) {
             return inMemoryGameMap.getMap();
         }
-        const file = await readFile(`./public${path}`, "utf-8");
-        const map = JSON.parse(file);
-        this.loadedMaps.set(path, new GameMap(map));
-        return map;
+        try {
+            const file = await readFile(`./public${path}`, "utf-8");
+            const map = JSON.parse(file);
+            this.loadedMaps.set(path, new GameMap(map));
+            return map;
+        } catch (error) {
+            return error;
+        }
     }
 
     public getEntityCollection(collectionName: string): EntityCollection | undefined {
