@@ -15,6 +15,7 @@ import {
     isApplicationDefinitionInterface,
     isCapabilities,
     Capabilities,
+    isPrivateTokenResponse,
 } from "@workadventure/messages";
 import type { MapDetailsData, RoomRedirect, AdminApiData } from "@workadventure/messages";
 import { z } from "zod";
@@ -616,6 +617,33 @@ class AdminApi implements AdminInterface {
                 reject(err);
             });
         }
+    }
+
+    /**
+     * @openapi
+     * /api/workadventure/privatetoken/{accesstoken}:
+     *   get:
+     *     tags: ["AdminAPI"]
+     *     description: Get private token from admin
+     *     produces:
+     *      - "application/json"
+     *     responses:
+     *       200:
+     *         description: a private token response
+     *         schema:
+     *             type: object
+     *             items:
+     *                 $ref: '#/definitions/PrivateTokenResponse'
+     *       404:
+     *         description: Endpoint not found.
+     */
+    async getPrivateToken(accessToken: string) {
+        const res = await Axios.get(`${ADMIN_API_URL}/api/workadventure/privatetoken/${accessToken}`);
+        const privateTokenResponse = isPrivateTokenResponse.safeParse(res.data);
+        if (!privateTokenResponse.success) {
+            throw new Error("Response error");
+        }
+        return privateTokenResponse.data;
     }
 }
 

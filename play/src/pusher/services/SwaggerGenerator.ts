@@ -10,6 +10,7 @@ import {
     wokaList,
     wokaTexture,
     isRoomRedirect,
+    isPrivateTokenResponse,
 } from "@workadventure/messages";
 import { isFetchMemberDataByUuidResponse } from "./AdminApi";
 import type { SchemaObject } from "openapi3-ts";
@@ -32,6 +33,7 @@ class SwaggerGenerator {
                 MapDetailsData: generateSchema(isMapDetailsData),
                 RoomRedirect: generateSchema(isRoomRedirect),
                 WokaDetail: generateSchema(isWokaDetail),
+                PrivateTokenResponse: generateSchema(isPrivateTokenResponse),
             },
         };
         if (type === "external") {
@@ -59,6 +61,7 @@ class SwaggerGenerator {
                 WokaDetail: generateSchema(isWokaDetail),
                 WokaList: generateSchema(wokaList),
                 WokaTexture: generateSchema(wokaTexture),
+                PrivateTokenResponse: generateSchema(isPrivateTokenResponse),
             },
         };
     }

@@ -1,4 +1,3 @@
-import { ADMIN_URL } from "./../Enum/EnvironmentVariable";
 import Axios from "axios";
 import { ENABLE_OPENID, PUSHER_URL } from "../Enum/EnvironmentVariable";
 import { RoomConnection } from "./RoomConnection";
@@ -100,12 +99,13 @@ class ConnectionManager {
                 accessToken = localUserStore.getAccessToken();
             }
 
-            /**
-             * TODO: move this part in pusher and use service admin. Add new settings access private token for self-hosted.
-             */
-            if (ADMIN_URL != undefined && accessToken != undefined) {
+            if (accessToken != undefined) {
                 try {
-                    const res = await Axios.get(`${ADMIN_URL}/api/workadventure/privatetoken/${accessToken}`);
+                    const res = await Axios.get(`/privatetoken/${accessToken}`, {
+                        headers: {
+                            Authorization: localUserStore.getAuthToken() ?? "",
+                        },
+                    });
                     console.log("res", res);
                     accessToken = res.data.accessToken;
                     token = res.data.privateToken;

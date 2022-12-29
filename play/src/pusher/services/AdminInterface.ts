@@ -1,6 +1,11 @@
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
-import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData } from "@workadventure/messages";
-
+import type {
+    MapDetailsData,
+    RoomRedirect,
+    AdminApiData,
+    ErrorApiData,
+    PrivateTokenResponse,
+} from "@workadventure/messages";
 export interface AdminInterface {
     /**
      * @var playUri: is url of the room
@@ -91,4 +96,6 @@ export interface AdminInterface {
         message: string,
         byUserEmail: string
     ): Promise<boolean>;
+
+    getPrivateToken(accessToken: string): Promise<PrivateTokenResponse>;
 }

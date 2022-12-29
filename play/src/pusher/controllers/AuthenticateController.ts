@@ -21,6 +21,7 @@ export class AuthenticateController extends BaseHttpController {
         this.register();
         this.anonymLogin();
         this.profileCallback();
+        this.getPrivateToken();
     }
 
     private roomAccess(): void {
@@ -510,6 +511,38 @@ export class AuthenticateController extends BaseHttpController {
             res.setHeader("Location", adminService.getProfileUrl(authTokenData.accessToken, playUri));
             res.send("");
             return;
+        });
+    }
+
+    /**
+     * @openapi
+     * /privatetoken/{accesstoken}:
+     *   get:
+     *     description: get JWT token with access token for the user authentified.
+     *     tags:
+     *      - Admin endpoint
+     *     parameters:
+     *      - name: "accesstoken"
+     *        in: "path"
+     *        description: "access token to get private token from admin"
+     *        required: true
+     *        type: "string"
+     *     responses:
+     *       200:
+     *         description: Will always return "ok".
+     *         example: "ok"
+     */
+    getPrivateToken() {
+        this.app.get("/privatetoken/:accesstoken", async (req, res) => {
+            const accessToken = req.params.accesstoken;
+            try {
+                const tokenResponse = await adminService.getPrivateToken(accessToken);
+                res.setHeader("Content-Type", "application/json").send(JSON.stringify(tokenResponse));
+                return;
+            } catch (err) {
+                res.status(500, "Internal Server Error").send(JSON.stringify(err));
+                return;
+            }
         });
     }
 }

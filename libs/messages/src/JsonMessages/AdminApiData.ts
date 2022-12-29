@@ -41,3 +41,12 @@ export const isUserRoomToken = z.object({
   }),
   exp: z.number(),
 });
+
+/**
+ * Reponse from admin to get new access token and private token for authentified user.
+ */
+export const isPrivateTokenResponse = z.object({
+  accessToken: z.string(),
+  privateToken: z.string()
+});
+export type PrivateTokenResponse = z.infer<typeof isPrivateTokenResponse>;

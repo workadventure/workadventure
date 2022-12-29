@@ -106,13 +106,8 @@ class LocalUserStore {
     }
 
     getCharacterLayers(): string[] | null {
-        try {
-            const value = JSON.parse(localStorage.getItem(characterLayersKey) || "null");
-            return areCharacterLayersValid(value) ? value : null;
-        } catch (err) {
-            console.error("LocalUserStore error: ", err);
-            return null;
-        }
+        const value = JSON.parse(localStorage.getItem(characterLayersKey) || "null");
+        return areCharacterLayersValid(value) ? value : null;
     }
 
     setCompanion(companion: string | null): void {

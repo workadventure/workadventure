@@ -155,6 +155,10 @@ class LocalAdmin implements AdminInterface {
     ): Promise<boolean> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
+
+    async getPrivateToken(accessToken: string) {
+        return Promise.reject(new Error(`No admin backoffice set! Access token: ${accessToken}`));
+    }
 }
 
 export const localAdmin = new LocalAdmin();
