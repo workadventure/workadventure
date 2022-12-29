@@ -478,7 +478,7 @@
             </div>
         {/if}
 
-        <div class="tw-flex tw-flex-row base-section animated">
+        <div class="tw-flex tw-flex-row base-section animated tw-flex-wrap tw-justify-center">
             <div class="bottom-action-section tw-flex tw-flex-initial">
                 {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
                     {#if $myCameraStore}
@@ -723,6 +723,33 @@
                 {/if}
             </div>
 
+            {#if [...$additionnalButtonsMenu.values()].filter((c) => c.type === "action").length > 0}
+                <div class="bottom-action-section tw-flex tw-flex-initial">
+                    {#each [...$additionnalButtonsMenu.values()].filter((c) => c.type === "action") as button}
+                        <div
+                            in:fly={{}}
+                            on:dragstart|preventDefault={noDrag}
+                            on:click={() => {
+                                buttonActionBarTrigger(button.id);
+                            }}
+                            class="bottom-action-button"
+                        >
+                            {#if button.toolTip}
+                                <Tooltip text={button.toolTip} />
+                            {/if}
+                            <button id="menuIcon">
+                                <img
+                                    draggable="false"
+                                    src={button.imageSrc}
+                                    style="padding: 2px"
+                                    alt={button.toolTip}
+                                />
+                            </button>
+                        </div>
+                    {/each}
+                </div>
+            {/if}
+
             {#if $inviteUserActivated}
                 <div
                     class="bottom-action-section tw-flex tw-flex-initial"
@@ -761,7 +788,7 @@
                 </div>
             {/if}
             -->
-            {#each [...$additionnalButtonsMenu.values()] as button}
+            {#each [...$additionnalButtonsMenu.values()].filter((c) => c.type === "button") as button}
                 <div
                     class="bottom-action-section tw-flex tw-flex-initial"
                     in:fly={{}}

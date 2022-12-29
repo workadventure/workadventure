@@ -4,9 +4,17 @@ import { apiCallback } from "../registeredCallbacks";
 
 export type ButtonActionBarClickedCallback = (buttonActionBar: AddButtonActionBarEvent) => void;
 
+enum ActionBarButtonType {
+    button = "button",
+    action = "action",
+}
+
 export type ActionBarButtonDescriptor = {
     id: string;
     label: string;
+    type: ActionBarButtonType;
+    imageSrc?: string;
+    toolTip?: string;
     callback?: ButtonActionBarClickedCallback;
 };
 
@@ -34,7 +42,13 @@ export class WorkAdventureButtonActionBarCommands extends IframeApiContribution<
         }
         sendToWorkadventure({
             type: "addButtonActionBar",
-            data: { id: descriptor.id, label: descriptor.label },
+            data: {
+                id: descriptor.id,
+                label: descriptor.label,
+                type: descriptor.type,
+                imageSrc: descriptor.imageSrc,
+                toolTip: descriptor.toolTip,
+            },
         });
     }
 
