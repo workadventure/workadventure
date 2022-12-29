@@ -9,7 +9,7 @@
     "runprod": "ts-node --transpileOnly ./server.ts",
     "profile": "tsc && node --prof ./dist/server.js",
     "typecheck": "tsc --noEmit",
-    "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
+    "test": "ts-node ../node_modules/jasmine/bin/jasmine --config=jasmine.json",
     "lint": "DEBUG= eslint src/ . --ext .ts",
     "fix": "DEBUG= eslint --fix src/ . --ext .ts",
     "precommit": "lint-staged",
@@ -80,7 +80,7 @@
     "eslint": "^8.5.0",
     "jasmine": "^4.0.3",
     "lint-staged": "^11.0.0",
-    "prettier": "^2.3.1",
+    "prettier": "^2.8.1",
     "ts-node-dev": "^2.0.0"
   },
   "lint-staged": {

@@ -175,7 +175,10 @@
                 {#if $showPart === "connectionNotAuthorized"}
                     <NeedRefresh />
                 {:else if $showPart === "loading"}
-                    <Loader text={loadingText} height="tw-h-40 tw-border-solid tw-border-transparent tw-border-b-light-purple tw-border-b"/>
+                    <Loader
+                        text={loadingText}
+                        height="tw-h-40 tw-border-solid tw-border-transparent tw-border-b-light-purple tw-border-b"
+                    />
                 {:else}
                     {#if $enableChatOnlineListStore}
                         <nav class="nav">
@@ -191,20 +194,26 @@
                         <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
                             <div class="tw-p-3">
                                 <input
-                                        class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
-                                        placeholder={$navChat === "users" ? $LL.searchUser() : $LL.searchChat()}
-                                        bind:value={searchValue}
+                                    class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
+                                    placeholder={$navChat === "users" ? $LL.searchUser() : $LL.searchChat()}
+                                    bind:value={searchValue}
                                 />
                             </div>
                         </div>
                     {:else}
-                        <div class="tw-mt-11 tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid" />
+                        <div
+                            class="tw-mt-11 tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid"
+                        />
                     {/if}
                     {#if !userStore.get().isLogged && ENABLE_OPENID && $enableChat}
                         <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
                             <div class="tw-p-3 tw-text-sm tw-text-center">
                                 <p>{$LL.signIn()}</p>
-                                <button type="button" class="light tw-m-auto tw-cursor-pointer tw-px-3" on:click={login}>
+                                <button
+                                    type="button"
+                                    class="light tw-m-auto tw-cursor-pointer tw-px-3"
+                                    on:click={login}
+                                >
                                     {$LL.logIn()}
                                 </button>
                             </div>
@@ -215,22 +224,20 @@
                         {#if defaultMucRoom !== undefined}
                             <UsersList mucRoom={defaultMucRoom} searchValue={searchValue.toLocaleLowerCase()} />
                         {/if}
-                    {:else}
-                        {#if $enableChat}
-                            <ChatZones
-                                    searchValue={searchValue.toLocaleLowerCase()}
-                                    chatZones={[...$mucRoomsStore].filter(
+                    {:else if $enableChat}
+                        <ChatZones
+                            searchValue={searchValue.toLocaleLowerCase()}
+                            chatZones={[...$mucRoomsStore].filter(
                                 (mucRoom) => mucRoom.type === "live" && mucRoom.name.toLowerCase().includes(searchValue)
                             )}
-                            />
-                            <Forums
-                                    searchValue={searchValue.toLocaleLowerCase()}
-                                    forums={[...$mucRoomsStore].filter(
+                        />
+                        <Forums
+                            searchValue={searchValue.toLocaleLowerCase()}
+                            forums={[...$mucRoomsStore].filter(
                                 (mucRoom) =>
                                     mucRoom.type === "forum" && mucRoom.name.toLowerCase().includes(searchValue)
                             )}
-                            />
-                        {/if}
+                        />
                     {/if}
                     {#if $navChat !== "users"}
                         <Timeline on:activeThreadTimeLine={() => timelineActiveStore.set(true)} />
@@ -244,10 +251,10 @@
 <audio id="newMessageSound" src="/static/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
 
 <style lang="scss">
-  aside.chatWindow {
-    pointer-events: auto;
-    color: whitesmoke;
-    display: flex;
-    flex-direction: column;
-  }
+    aside.chatWindow {
+        pointer-events: auto;
+        color: whitesmoke;
+        display: flex;
+        flex-direction: column;
+    }
 </style>

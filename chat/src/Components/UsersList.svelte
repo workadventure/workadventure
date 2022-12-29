@@ -20,7 +20,7 @@
 
     const loadingSubscribersStore = mucRoom.getLoadingSubscribersStore();
     const presenceStore = mucRoom.getPresenceStore();
-    let me:  Writable<User> | undefined = presenceStore.get(mucRoom.myJID);
+    let me: Writable<User> | undefined = presenceStore.get(mucRoom.myJID);
 
     let unsubscribe: Unsubscriber;
 
