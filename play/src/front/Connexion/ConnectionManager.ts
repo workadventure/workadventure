@@ -89,15 +89,21 @@ class ConnectionManager {
         this._currentRoom = null;
 
         const urlParams = new URLSearchParams(window.location.search);
-        // @deprecated
+
+        /** @deprecated */
         let token = urlParams.get("token");
+
         let accessToken;
         if (!token) {
             accessToken = urlParams.get("accessToken");
             if (accessToken == undefined) {
                 accessToken = localUserStore.getAccessToken();
             }
-            if (accessToken != undefined) {
+
+            /**
+             * TODO: move this part in pusher and use service admin. Add new settings access private token for self-hosted.
+             */
+            if (ADMIN_URL != undefined && accessToken != undefined) {
                 try {
                     const res = await Axios.get(`${ADMIN_URL}/api/workadventure/privatetoken/${accessToken}`);
                     console.log("res", res);
@@ -111,14 +117,16 @@ class ConnectionManager {
 
         if (accessToken != undefined) {
             localUserStore.setAccessToken(accessToken);
-            // @deprecated
+
+            // clean access token of url
             urlParams.delete("accessToken");
         }
         if (token) {
             this.authToken = token;
             localUserStore.setAuthToken(token);
 
-            //clean token of url
+            // clean token of url
+            /** @deprecated */
             urlParams.delete("token");
         }
 
@@ -132,10 +140,8 @@ class ConnectionManager {
         } else if (this.connexionType === GameConnexionTypes.jwt) {
             /** @deprecated */
             throw new Error("This endpoint is deprecated");
-        }
-
-        //@deprecated
-        else if (this.connexionType === GameConnexionTypes.register) {
+        } else if (this.connexionType === GameConnexionTypes.register) {
+            /** @deprecated */
             const organizationMemberToken = urlManager.getOrganizationToken();
             const result = await Axios.post(`${PUSHER_URL}/register`, { organizationMemberToken }).then(
                 (res) => res.data
