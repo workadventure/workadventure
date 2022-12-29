@@ -29,16 +29,12 @@ const mapStorageServer: MapStorageServer = {
         const clientCommandId = updateMapToNewestMessage.commandId;
         const newestCommandId = mapsManager.getGameMap(call.request.mapKey)?.getLatestCommandId();
         let commandsToApply: EditMapCommandMessage[] = [];
-        console.log(`CLIENT LAST COMMAND: ${updateMapToNewestMessage.commandId}`);
-        console.log(`LOADED MAP LAST COMMAND: ${mapsManager.getGameMap(call.request.mapKey)?.getLatestCommandId()}`);
         if (clientCommandId !== newestCommandId) {
             commandsToApply = mapsManager.getCommandsNewerThan(call.request.mapKey, updateMapToNewestMessage.commandId);
         }
         const editMapCommandsArrayMessage: EditMapCommandsArrayMessage = {
             editMapCommands: commandsToApply,
         };
-        console.log("TRY TO APPLY THESE COMMANDS");
-        console.log(commandsToApply.map((command) => command.id));
         callback(null, editMapCommandsArrayMessage);
     },
 

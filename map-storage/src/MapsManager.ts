@@ -118,15 +118,11 @@ class MapsManager {
 
     public getCommandsNewerThan(mapKey: string, commandId: string): EditMapCommandMessage[] {
         const queue = this.loadedMapsCommandsQueue.get(mapKey);
-        console.log("ALL STORED COMMANDS IN MEMORY: : ");
-        console.log(queue?.map((command) => `${command.id}: ${command.editMapMessage?.message?.$case}`));
         if (queue) {
             const commandIndex = queue.findIndex((command) => command.id === commandId);
             if (commandIndex === -1) {
-                console.log("R1");
                 return [];
             }
-            console.log("R2");
             return queue.slice(commandIndex + 1);
         }
         return [];
