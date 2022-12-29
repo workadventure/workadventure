@@ -63,6 +63,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): void {
+        const commandId = editMapCommandMessage.id;
         switch (editMapCommandMessage.editMapMessage?.message?.$case) {
             case "modifyAreaMessage": {
                 const data = editMapCommandMessage.editMapMessage?.message.modifyAreaMessage;
@@ -73,7 +74,8 @@ export class AreaEditorTool extends MapEditorTool {
                         areaObjectConfig: data as AreaData,
                     },
                     false,
-                    false
+                    false,
+                    commandId
                 );
                 break;
             }
@@ -93,7 +95,8 @@ export class AreaEditorTool extends MapEditorTool {
                         areaObjectConfig: config,
                     },
                     false,
-                    false
+                    false,
+                    commandId
                 );
                 break;
             }
@@ -106,7 +109,8 @@ export class AreaEditorTool extends MapEditorTool {
                         id: data.id,
                     },
                     false,
-                    false
+                    false,
+                    commandId
                 );
                 break;
             }

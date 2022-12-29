@@ -62,7 +62,7 @@ class MapsManager {
         }
     }
 
-    public executeCommand(mapKey: string, commandConfig: CommandConfig): boolean {
+    public executeCommand(mapKey: string, commandConfig: CommandConfig, commandId?: string): boolean {
         const gameMap = this.getGameMap(mapKey);
         if (!gameMap) {
             return false;
@@ -75,32 +75,32 @@ class MapsManager {
         try {
             switch (commandConfig.type) {
                 case "UpdateAreaCommand": {
-                    command = new UpdateAreaCommand(gameMap, commandConfig);
+                    command = new UpdateAreaCommand(gameMap, commandConfig, commandId);
                     command.execute();
                     break;
                 }
                 case "CreateAreaCommand": {
-                    command = new CreateAreaCommand(gameMap, commandConfig);
+                    command = new CreateAreaCommand(gameMap, commandConfig, commandId);
                     command.execute();
                     break;
                 }
                 case "DeleteAreaCommand": {
-                    command = new DeleteAreaCommand(gameMap, commandConfig);
+                    command = new DeleteAreaCommand(gameMap, commandConfig, commandId);
                     command.execute();
                     break;
                 }
                 case "UpdateEntityCommand": {
-                    command = new UpdateEntityCommand(gameMap, commandConfig);
+                    command = new UpdateEntityCommand(gameMap, commandConfig, commandId);
                     command.execute();
                     break;
                 }
                 case "CreateEntityCommand": {
-                    command = new CreateEntityCommand(gameMap, commandConfig);
+                    command = new CreateEntityCommand(gameMap, commandConfig, commandId);
                     command.execute();
                     break;
                 }
                 case "DeleteEntityCommand": {
-                    command = new DeleteEntityCommand(gameMap, commandConfig);
+                    command = new DeleteEntityCommand(gameMap, commandConfig, commandId);
                     command.execute();
                     break;
                 }
@@ -118,8 +118,16 @@ class MapsManager {
 
     public getCommandsNewerThan(mapKey: string, commandId: string): EditMapCommandMessage[] {
         const queue = this.loadedMapsCommandsQueue.get(mapKey);
+        console.log("ALL STORED COMMANDS IN MEMORY: : ");
+        console.log(queue?.map((command) => `${command.id}: ${command.editMapMessage?.message?.$case}`));
         if (queue) {
-            return queue;
+            const commandIndex = queue.findIndex((command) => command.id === commandId);
+            if (commandIndex === -1) {
+                console.log("R1");
+                return [];
+            }
+            console.log("R2");
+            return queue.slice(commandIndex + 1);
         }
         return [];
     }
@@ -170,9 +178,9 @@ class MapsManager {
         if (!this.loadedMapsCommandsQueue.has(mapKey)) {
             this.loadedMapsCommandsQueue.set(mapKey, []);
         }
-        const commands = this.loadedMapsCommandsQueue.get(mapKey);
-        if (commands !== undefined) {
-            commands.push(message);
+        const queue = this.loadedMapsCommandsQueue.get(mapKey);
+        if (queue !== undefined) {
+            queue.push(message);
             this.setCommandDeletionTimeout(mapKey, message.id);
         }
         this.loadedMaps.get(mapKey)?.updateLatestCommandIdProperty(message.id);

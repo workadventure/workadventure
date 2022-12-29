@@ -652,6 +652,7 @@ message SubToPusherMessage {
     EmoteEventMessage emoteEventMessage = 9;
     ErrorMessage errorMessage = 10;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 11;
+    EditMapCommandMessage editMapCommandMessage = 12;
   }
 }
 

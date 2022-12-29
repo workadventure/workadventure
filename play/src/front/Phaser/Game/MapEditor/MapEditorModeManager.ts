@@ -91,33 +91,34 @@ export class MapEditorModeManager {
     public executeCommand(
         commandConfig: CommandConfig,
         emitMapEditorUpdate = true,
-        addToLocalCommandsHistory = true
+        addToLocalCommandsHistory = true,
+        commandId?: string
     ): boolean {
         let command: Command;
         const delay = 0;
         switch (commandConfig.type) {
             case "UpdateAreaCommand": {
-                command = new UpdateAreaCommand(this.scene.getGameMap(), commandConfig);
+                command = new UpdateAreaCommand(this.scene.getGameMap(), commandConfig, commandId);
                 break;
             }
             case "CreateAreaCommand": {
-                command = new CreateAreaCommand(this.scene.getGameMap(), commandConfig);
+                command = new CreateAreaCommand(this.scene.getGameMap(), commandConfig, commandId);
                 break;
             }
             case "DeleteAreaCommand": {
-                command = new DeleteAreaCommand(this.scene.getGameMap(), commandConfig);
+                command = new DeleteAreaCommand(this.scene.getGameMap(), commandConfig, commandId);
                 break;
             }
             case "UpdateEntityCommand": {
-                command = new UpdateEntityCommand(this.scene.getGameMap(), commandConfig);
+                command = new UpdateEntityCommand(this.scene.getGameMap(), commandConfig, commandId);
                 break;
             }
             case "CreateEntityCommand": {
-                command = new CreateEntityCommand(this.scene.getGameMap(), commandConfig);
+                command = new CreateEntityCommand(this.scene.getGameMap(), commandConfig, commandId);
                 break;
             }
             case "DeleteEntityCommand": {
-                command = new DeleteEntityCommand(this.scene.getGameMap(), commandConfig);
+                command = new DeleteEntityCommand(this.scene.getGameMap(), commandConfig, commandId);
                 break;
             }
             default: {

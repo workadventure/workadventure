@@ -13,8 +13,8 @@ export class DeleteEntityCommand extends Command {
 
     private gameMap: GameMap;
 
-    constructor(gameMap: GameMap, config: DeleteEntityCommandConfig) {
-        super();
+    constructor(gameMap: GameMap, config: DeleteEntityCommandConfig, commandId?: string) {
+        super(commandId);
         this.gameMap = gameMap;
         const entityData = gameMap.getGameMapEntities().getEntity(config.id);
         if (!entityData) {

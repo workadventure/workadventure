@@ -1111,7 +1111,12 @@ export class SocketManager {
                     emitError(user.socket, err);
                     throw err;
                 }
-                console.log(message);
+                const commands = message.getEditmapcommandsList();
+                for (const editMapCommandMessage of commands) {
+                    const subMessage = new SubMessage();
+                    subMessage.setEditmapcommandmessage(editMapCommandMessage);
+                    user.emitInBatch(subMessage);
+                }
             }
         );
     }

@@ -26,12 +26,19 @@ const mapStorageServer: MapStorageServer = {
             callback({ name: "MapStorageError", message: "UpdateMapToNewest message does not exist" }, null);
             return;
         }
+        const clientCommandId = updateMapToNewestMessage.commandId;
+        const newestCommandId = mapsManager.getGameMap(call.request.mapKey)?.getLatestCommandId();
+        let commandsToApply: EditMapCommandMessage[] = [];
         console.log(`CLIENT LAST COMMAND: ${updateMapToNewestMessage.commandId}`);
         console.log(`LOADED MAP LAST COMMAND: ${mapsManager.getGameMap(call.request.mapKey)?.getLatestCommandId()}`);
-        const newerCommands = mapsManager.getCommandsNewerThan(call.request.mapKey, updateMapToNewestMessage.commandId);
+        if (clientCommandId !== newestCommandId) {
+            commandsToApply = mapsManager.getCommandsNewerThan(call.request.mapKey, updateMapToNewestMessage.commandId);
+        }
         const editMapCommandsArrayMessage: EditMapCommandsArrayMessage = {
-            editMapCommands: newerCommands,
+            editMapCommands: commandsToApply,
         };
+        console.log("TRY TO APPLY THESE COMMANDS");
+        console.log(commandsToApply.map((command) => command.id));
         callback(null, editMapCommandsArrayMessage);
     },
 
@@ -52,6 +59,7 @@ const mapStorageServer: MapStorageServer = {
             );
             return;
         }
+        const commandId = editMapCommandMessage.id;
         const editMapMessage = editMapCommandMessage.editMapMessage.message;
         let validCommand = false;
         try {
@@ -62,10 +70,14 @@ const mapStorageServer: MapStorageServer = {
                     if (area) {
                         const areaObjectConfig: AreaData = structuredClone(area);
                         _.merge(areaObjectConfig, message);
-                        validCommand = mapsManager.executeCommand(call.request.mapKey, {
-                            type: "UpdateAreaCommand",
-                            areaObjectConfig,
-                        });
+                        validCommand = mapsManager.executeCommand(
+                            call.request.mapKey,
+                            {
+                                type: "UpdateAreaCommand",
+                                areaObjectConfig,
+                            },
+                            commandId
+                        );
                     } else {
                         console.log(`Could not find area with id: ${message.id}`);
                     }
@@ -80,28 +92,40 @@ const mapStorageServer: MapStorageServer = {
                         },
                         visible: true,
                     };
-                    validCommand = mapsManager.executeCommand(call.request.mapKey, {
-                        areaObjectConfig,
-                        type: "CreateAreaCommand",
-                    });
+                    validCommand = mapsManager.executeCommand(
+                        call.request.mapKey,
+                        {
+                            areaObjectConfig,
+                            type: "CreateAreaCommand",
+                        },
+                        commandId
+                    );
                     break;
                 }
                 case "deleteAreaMessage": {
                     const message = editMapMessage.deleteAreaMessage;
-                    validCommand = mapsManager.executeCommand(call.request.mapKey, {
-                        type: "DeleteAreaCommand",
-                        id: message.id,
-                    });
+                    validCommand = mapsManager.executeCommand(
+                        call.request.mapKey,
+                        {
+                            type: "DeleteAreaCommand",
+                            id: message.id,
+                        },
+                        commandId
+                    );
                     break;
                 }
                 case "modifyEntityMessage": {
                     const message = editMapMessage.modifyEntityMessage;
                     const entity = gameMap.getGameMapEntities().getEntity(message.id);
                     if (entity) {
-                        validCommand = mapsManager.executeCommand(call.request.mapKey, {
-                            type: "UpdateEntityCommand",
-                            dataToModify: message,
-                        });
+                        validCommand = mapsManager.executeCommand(
+                            call.request.mapKey,
+                            {
+                                type: "UpdateEntityCommand",
+                                dataToModify: message,
+                            },
+                            commandId
+                        );
                     } else {
                         console.log(`Could not find entity with id: ${message.id}`);
                     }
@@ -113,23 +137,31 @@ const mapStorageServer: MapStorageServer = {
                     if (!entityPrefab) {
                         throw new Error(`CANNOT FIND PREFAB FOR: ${message.collecionName} ${message.prefabId}`);
                     }
-                    validCommand = mapsManager.executeCommand(call.request.mapKey, {
-                        type: "CreateEntityCommand",
-                        entityData: {
-                            id: message.id,
-                            prefab: entityPrefab,
-                            x: message.x,
-                            y: message.y,
+                    validCommand = mapsManager.executeCommand(
+                        call.request.mapKey,
+                        {
+                            type: "CreateEntityCommand",
+                            entityData: {
+                                id: message.id,
+                                prefab: entityPrefab,
+                                x: message.x,
+                                y: message.y,
+                            },
                         },
-                    });
+                        commandId
+                    );
                     break;
                 }
                 case "deleteEntityMessage": {
                     const message = editMapMessage.deleteEntityMessage;
-                    validCommand = mapsManager.executeCommand(call.request.mapKey, {
-                        type: "DeleteEntityCommand",
-                        id: message.id,
-                    });
+                    validCommand = mapsManager.executeCommand(
+                        call.request.mapKey,
+                        {
+                            type: "DeleteEntityCommand",
+                            id: message.id,
+                        },
+                        commandId
+                    );
                     break;
                 }
                 default: {
@@ -139,7 +171,10 @@ const mapStorageServer: MapStorageServer = {
             // send edit map message back as a valid one
             if (validCommand) {
                 mapsManager.addCommandToQueue(call.request.mapKey, editMapCommandMessage);
-                callback(null, editMapCommandMessage);
+                setTimeout(() => {
+                    callback(null, editMapCommandMessage);
+                }, 5000);
+                // callback(null, editMapCommandMessage);
             }
         } catch (e) {
             console.log(e);

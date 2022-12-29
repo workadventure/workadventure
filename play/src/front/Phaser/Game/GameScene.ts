@@ -760,6 +760,7 @@ export class GameScene extends DirtyScene {
 
         this.input.keyboard.on("keydown-U", () => {
             const commandId = this.gameMapFrontWrapper.getGameMap().getLatestCommandId();
+            console.log("emit id: " + commandId);
             if (commandId) {
                 this.connection?.emitUpdateMapToNewest(commandId);
             }

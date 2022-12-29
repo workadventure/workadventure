@@ -13,8 +13,8 @@ export class UpdateEntityCommand extends Command {
 
     private gameMap: GameMap;
 
-    constructor(gameMap: GameMap, config: UpdateEntityCommandConfig) {
-        super();
+    constructor(gameMap: GameMap, config: UpdateEntityCommandConfig, commandId?: string) {
+        super(commandId);
         this.gameMap = gameMap;
         const oldConfig = gameMap.getGameMapEntities().getEntity(config.dataToModify.id);
         if (!oldConfig) {

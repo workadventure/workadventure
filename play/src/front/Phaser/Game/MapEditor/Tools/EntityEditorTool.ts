@@ -100,6 +100,7 @@ export class EntityEditorTool extends MapEditorTool {
      * React on commands coming from the outside
      */
     public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): void {
+        const commandId = editMapCommandMessage.id;
         switch (editMapCommandMessage.editMapMessage?.message?.$case) {
             case "createEntityMessage": {
                 const data = editMapCommandMessage.editMapMessage?.message.createEntityMessage;
@@ -128,7 +129,8 @@ export class EntityEditorTool extends MapEditorTool {
                                 entityData,
                             },
                             false,
-                            false
+                            false,
+                            commandId
                         );
                     })
                     .catch((reason) => {
@@ -144,7 +146,8 @@ export class EntityEditorTool extends MapEditorTool {
                         id,
                     },
                     false,
-                    false
+                    false,
+                    commandId
                 );
                 break;
             }
@@ -156,7 +159,8 @@ export class EntityEditorTool extends MapEditorTool {
                         dataToModify: data as EntityData,
                     },
                     false,
-                    false
+                    false,
+                    commandId
                 );
                 break;
             }

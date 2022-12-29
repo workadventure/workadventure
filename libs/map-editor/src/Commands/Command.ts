@@ -5,8 +5,8 @@ export abstract class Command {
 
     public readonly id: string;
 
-    constructor() {
-        this.id = uuidv4();
+    constructor(id?: string) {
+        this.id = id ?? uuidv4();
     }
 
     public abstract execute(): CommandConfig;

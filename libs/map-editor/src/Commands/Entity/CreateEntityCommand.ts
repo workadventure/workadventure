@@ -13,8 +13,8 @@ export class CreateEntityCommand extends Command {
 
     private gameMap: GameMap;
 
-    constructor(gameMap: GameMap, config: CreateEntityCommandConfig) {
-        super();
+    constructor(gameMap: GameMap, config: CreateEntityCommandConfig, commandId?: string) {
+        super(commandId);
         this.gameMap = gameMap;
         this.entityData = structuredClone(config.entityData);
     }
