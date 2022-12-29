@@ -1,3 +1,4 @@
+import { AddClassicButtonActionBarEvent, AddActionButtonActionBarEvent } from "./../Api/Events/Ui/ButtonActionBarEvent";
 import { derived, get, writable } from "svelte/store";
 import { userIsAdminStore } from "./GameStore";
 import { CONTACT_URL, OPID_PROFILE_SCREEN_PROVIDER, PUSHER_URL } from "../Enum/EnvironmentVariable";
@@ -226,3 +227,13 @@ function createAdditionalButtonsMenu() {
     };
 }
 export const additionnalButtonsMenu = createAdditionalButtonsMenu();
+export const addClassicButtonActionBarEvent = writable<AddClassicButtonActionBarEvent[]>([]);
+export const addActionButtonActionBarEvent = writable<AddActionButtonActionBarEvent[]>([]);
+additionnalButtonsMenu.subscribe((map) => {
+    addClassicButtonActionBarEvent.set(
+        [...map.values()].filter((c) => c.type === "button") as AddClassicButtonActionBarEvent[]
+    );
+    addActionButtonActionBarEvent.set(
+        [...map.values()].filter((c) => c.type === "action") as AddActionButtonActionBarEvent[]
+    );
+});

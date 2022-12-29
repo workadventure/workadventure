@@ -15,6 +15,8 @@ export const isAddActionButtonActionBarEvent = z.object({
 
 export const isAddButtonActionBarEvent = z.union([isAddClassicButtonActionBarEvent, isAddActionButtonActionBarEvent]);
 export type AddButtonActionBarEvent = z.infer<typeof isAddButtonActionBarEvent>;
+export type AddActionButtonActionBarEvent = z.infer<typeof isAddActionButtonActionBarEvent>;
+export type AddClassicButtonActionBarEvent = z.infer<typeof isAddClassicButtonActionBarEvent>;
 export type AddActionsButtonActionBarEventCallback = (event: AddButtonActionBarEvent) => void;
 
 export const isRemoveButtonActionBarEvent = z.object({

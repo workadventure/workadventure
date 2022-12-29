@@ -52,25 +52,27 @@ export class WorkAdventureButtonActionBarCommands extends IframeApiContribution<
             this._callbacks.set(descriptor.id, descriptor.callback);
         }
 
-        if (isAddClassicButtonActionBarEvent.safeParse(descriptor).success && descriptor.type === "button") {
+        const addClassicButtonActionBar = isAddClassicButtonActionBarEvent.safeParse(descriptor);
+        if (addClassicButtonActionBar.success && addClassicButtonActionBar.data.type === "button") {
             sendToWorkadventure({
                 type: "addButtonActionBar",
                 data: {
-                    id: descriptor.id,
-                    label: (descriptor as ActionBarClassicButtonDescriptor).label,
-                    type: descriptor.type,
+                    id: addClassicButtonActionBar.data.id,
+                    label: addClassicButtonActionBar.data.label,
+                    type: addClassicButtonActionBar.data.type,
                 },
             });
         }
 
-        if (isAddActionButtonActionBarEvent.safeParse(descriptor).success && descriptor.type === "action") {
+        const addActionButtonActionBarEvent = isAddActionButtonActionBarEvent.safeParse(descriptor);
+        if (addActionButtonActionBarEvent.success && addActionButtonActionBarEvent.data.type === "action") {
             sendToWorkadventure({
                 type: "addButtonActionBar",
                 data: {
-                    id: descriptor.id,
-                    type: descriptor.type,
-                    imageSrc: (descriptor as ActionBarActionButtonDescriptor).imageSrc,
-                    toolTip: (descriptor as ActionBarActionButtonDescriptor).toolTip,
+                    id: addActionButtonActionBarEvent.data.id,
+                    type: addActionButtonActionBarEvent.data.type,
+                    imageSrc: addActionButtonActionBarEvent.data.imageSrc,
+                    toolTip: addActionButtonActionBarEvent.data.toolTip,
                 },
             });
         }

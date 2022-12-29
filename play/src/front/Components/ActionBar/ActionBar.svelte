@@ -47,6 +47,8 @@
         SubMenusInterface,
         subMenusStore,
         additionnalButtonsMenu,
+        addClassicButtonActionBarEvent,
+        addActionButtonActionBarEvent,
     } from "../../Stores/MenuStore";
     import type { Emoji } from "../../Stores/EmoteStore";
     import {
@@ -723,9 +725,9 @@
                 {/if}
             </div>
 
-            {#if [...$additionnalButtonsMenu.values()].filter((c) => c.type === "action").length > 0}
+            {#if $addActionButtonActionBarEvent.length > 0}
                 <div class="bottom-action-section tw-flex tw-flex-initial">
-                    {#each [...$additionnalButtonsMenu.values()].filter((c) => c.type === "action") as button}
+                    {#each $addActionButtonActionBarEvent as button}
                         <div
                             in:fly={{}}
                             on:dragstart|preventDefault={noDrag}
@@ -788,7 +790,7 @@
                 </div>
             {/if}
             -->
-            {#each [...$additionnalButtonsMenu.values()].filter((c) => c.type === "button") as button}
+            {#each $addClassicButtonActionBarEvent as button}
                 <div
                     class="bottom-action-section tw-flex tw-flex-initial"
                     in:fly={{}}
