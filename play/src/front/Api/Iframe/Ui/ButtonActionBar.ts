@@ -1,4 +1,8 @@
-import { AddButtonActionBarEvent } from "../../Events/Ui/ButtonActionBarEvent";
+import {
+    AddButtonActionBarEvent,
+    isAddClassicButtonActionBarEvent,
+    isAddActionButtonActionBarEvent,
+} from "../../Events/Ui/ButtonActionBarEvent";
 import { IframeApiContribution, sendToWorkadventure } from "../IframeApiContribution";
 import { apiCallback } from "../registeredCallbacks";
 
@@ -10,12 +14,18 @@ const ActionBarButtonType = {
 } as const;
 type ActionBarButtonType = typeof ActionBarButtonType[keyof typeof ActionBarButtonType];
 
-export type ActionBarButtonDescriptor = {
+export type ActionBarClassicButtonDescriptor = {
     id: string;
     label: string;
     type: ActionBarButtonType;
-    imageSrc?: string;
-    toolTip?: string;
+    callback?: ButtonActionBarClickedCallback;
+};
+
+export type ActionBarActionButtonDescriptor = {
+    id: string;
+    type: ActionBarButtonType;
+    imageSrc: string;
+    toolTip: string;
     callback?: ButtonActionBarClickedCallback;
 };
 
@@ -37,20 +47,33 @@ export class WorkAdventureButtonActionBarCommands extends IframeApiContribution<
      * Add action bar button
      * {@link http://workadventure.localhost/map-building/api-ui.md#add-action-bar | Website documentation}
      */
-    addButton(descriptor: ActionBarButtonDescriptor) {
+    addButton(descriptor: ActionBarClassicButtonDescriptor | ActionBarActionButtonDescriptor) {
         if (descriptor.callback != undefined) {
             this._callbacks.set(descriptor.id, descriptor.callback);
         }
-        sendToWorkadventure({
-            type: "addButtonActionBar",
-            data: {
-                id: descriptor.id,
-                label: descriptor.label,
-                type: descriptor.type,
-                imageSrc: descriptor.imageSrc,
-                toolTip: descriptor.toolTip,
-            },
-        });
+
+        if (isAddClassicButtonActionBarEvent.safeParse(descriptor).success && descriptor.type === "button") {
+            sendToWorkadventure({
+                type: "addButtonActionBar",
+                data: {
+                    id: descriptor.id,
+                    label: (descriptor as ActionBarClassicButtonDescriptor).label,
+                    type: descriptor.type,
+                },
+            });
+        }
+
+        if (isAddActionButtonActionBarEvent.safeParse(descriptor).success && descriptor.type === "action") {
+            sendToWorkadventure({
+                type: "addButtonActionBar",
+                data: {
+                    id: descriptor.id,
+                    type: descriptor.type,
+                    imageSrc: (descriptor as ActionBarActionButtonDescriptor).imageSrc,
+                    toolTip: (descriptor as ActionBarActionButtonDescriptor).toolTip,
+                },
+            });
+        }
     }
 
     /**
