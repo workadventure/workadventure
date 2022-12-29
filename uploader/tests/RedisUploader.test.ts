@@ -55,10 +55,10 @@ describe("Redis Uploader tests", () => {
         await redisContainer?.stop()
     })
 
-    it("should reply options with 200", async ()=> {
+    it("should reply options with 204", async ()=> {
         const response = await axios.options(`${UPLOADER_URL}/upload-file`)
 
-        expect(response.status).toBe(200)
+        expect(response.status).toBe(204)
         verifyResponseHeaders(response);
     })
 

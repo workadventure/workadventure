@@ -1,5 +1,4 @@
 <script lang="ts">
-    import Tooltip from "../../Util/Tooltip.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
     import { createEventDispatcher } from "svelte";
@@ -74,7 +73,7 @@
         margin-bottom: 0.5em;
         margin-top: 0.5em;
         align-items: center;
-        height:2.5em;
+        height: 2.5em;
         label {
             min-width: fit-content;
             margin-right: 0.5em;

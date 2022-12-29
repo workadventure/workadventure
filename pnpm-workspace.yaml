@@ -1,9 +1,0 @@
-packages:
-  - "play"
-  - "back"
-  - "chat"
-  - "map-storage"
-  - "libs/*"
-  - "benchmark"
-  - "uploader"
-  - "play/packages/iframe-api-typings"

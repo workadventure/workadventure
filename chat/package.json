@@ -22,8 +22,8 @@
     "lint-staged": "^12.3.7",
     "npm-run-all": "^4.1.5",
     "postcss": "^8.4.12",
-    "prettier": "^2.8.0",
-    "prettier-plugin-svelte": "^2.8.1",
+    "prettier": "^2.8.1",
+    "prettier-plugin-svelte": "^2.9.0",
     "rollup-plugin-node-polyfills": "^0.2.1",
     "sass": "^1.49.7",
     "svelte": "^3.53.1",
@@ -35,7 +35,7 @@
     "tsconfig-paths": "^3.14.1",
     "typescript": "^4.7.2",
     "vite": "^3.1.8",
-    "vite-plugin-rewrite-all": "^0.1.2"
+    "vite-plugin-rewrite-all": "^1.0.1"
   },
   "dependencies": {
     "@16bits/nes.css": "^2.3.2",

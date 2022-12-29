@@ -230,10 +230,12 @@ export class RoomConnection implements RoomConnection {
         this.socket.binaryType = "arraybuffer";
 
         this.socket.onopen = () => {
+            console.info("Socket has been opened");
             this.resetPingTimeout();
         };
 
         this.socket.addEventListener("close", (event) => {
+            console.info("Socket has been closed", this.userId, this.closed, event);
             if (this.timeout) {
                 clearTimeout(this.timeout);
             }
@@ -250,6 +252,9 @@ export class RoomConnection implements RoomConnection {
 
             const serverToClientMessage = ServerToClientMessageTsProto.decode(new Uint8Array(arrayBuffer));
             //const message = ServerToClientMessage.deserializeBinary(new Uint8Array(arrayBuffer));
+
+            // Todo : Remove this debug line
+            console.info("New message received", serverToClientMessage.message);
 
             const message = serverToClientMessage.message;
             if (message === undefined) {
@@ -327,14 +332,14 @@ export class RoomConnection implements RoomConnection {
                                 break;
                             }
                             case "joinMucRoomMessage": {
-                                console.log("[sendChatMessagePrompt] RoomConnection => joinMucRoomMessage received");
+                                console.info("[sendChatMessagePrompt] RoomConnection => joinMucRoomMessage received");
                                 this._joinMucRoomMessageStream.next(
                                     subMessage.joinMucRoomMessage.mucRoomDefinitionMessage
                                 );
                                 break;
                             }
                             case "leaveMucRoomMessage": {
-                                console.log("[sendChatMessagePrompt] RoomConnection => leaveMucRoomMessage received");
+                                console.info("[sendChatMessagePrompt] RoomConnection => leaveMucRoomMessage received");
                                 this._leaveMucRoomMessageStream.next(subMessage.leaveMucRoomMessage);
                                 break;
                             }
@@ -825,7 +830,7 @@ export class RoomConnection implements RoomConnection {
             if (this.closed === true || connectionManager.unloading) {
                 return;
             }
-            console.log("Socket closed with code " + event.code + ". Reason: " + event.reason);
+            console.info("Socket closed with code " + event.code + ". Reason: " + event.reason);
             if (event.code === 1000) {
                 // Normal closure case
                 return;
@@ -1254,7 +1259,6 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitPlayerSetVariable(event: SetPlayerVariableEvent): void {
-        //console.log("emitPlayerSetVariable", name, value);
         let scope: SetPlayerVariableMessage_Scope;
         switch (event.scope) {
             case "room": {

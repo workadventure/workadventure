@@ -167,10 +167,7 @@ const mapStorageServer: MapStorageServer = {
             // send edit map message back as a valid one
             if (validCommand) {
                 mapsManager.addCommandToQueue(call.request.mapKey, editMapCommandMessage);
-                setTimeout(() => {
-                    callback(null, editMapCommandMessage);
-                }, 5000);
-                // callback(null, editMapCommandMessage);
+                callback(null, editMapCommandMessage);
             }
         } catch (e) {
             console.log(e);

@@ -4,45 +4,42 @@
     import { createEventDispatcher, onMount } from "svelte";
     import { JitsiRoomConfigData } from "@workadventure/map-editor";
 
-	const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher();
 
-    let defaultConfig:JitsiRoomConfigData = {
-        startWithAudioMuted:false,
-        startWithVideoMuted:false
-    }
+    let defaultConfig: JitsiRoomConfigData = {
+        startWithAudioMuted: false,
+        startWithVideoMuted: false,
+    };
+
+    type JitsiRoomConfigDataKeys = "startWithAudioMuted" | "startWithVideoMuted";
+
+    const defaultConfigKeys: JitsiRoomConfigDataKeys[] = Object.keys(defaultConfig).map(
+        (key) => key as JitsiRoomConfigDataKeys
+    );
 
     export let visibilityValue: boolean;
-    export let config:JitsiRoomConfigData;
-    let currentConfig:JitsiRoomConfigData = {};
+    export let config: JitsiRoomConfigData;
+    let currentConfig: JitsiRoomConfigData = {};
 
-    onMount(async ()=>{
+    onMount(() => {
         currentConfig = {};
-        if(config !== undefined)
-        {
-            Object.keys(config).forEach((key:keyof typeof currentConfig)=>{
-                currentConfig[key] = config[key];
-            });
+        if (config !== undefined) {
             currentConfig = structuredClone(config);
         }
     });
 
-    let selectedKey:string = "";
-    function onSelectedKey(){
-        if(selectedKey !== "")
-        {
+    let selectedKey: JitsiRoomConfigDataKeys | "";
+    function onSelectedKey() {
+        if (selectedKey !== "") {
             currentConfig[selectedKey] = defaultConfig[selectedKey];
             currentConfig = currentConfig;
         }
         selectedKey = "";
     }
 
-    function onDeleteConfig(key:string){
-        delete(currentConfig[key]);
+    function onDeleteConfig(key: JitsiRoomConfigDataKeys) {
+        delete currentConfig[key];
         currentConfig = currentConfig;
-    }
-
-    function onUpdateValue(event:any, key:string){
-        currentConfig[key] = event.detail;
     }
 
     function close() {
@@ -51,8 +48,8 @@
 
     function validate() {
         visibilityValue = false;
-        let returnValue:JitsiRoomConfigData = structuredClone(currentConfig);
- 
+        let returnValue: JitsiRoomConfigData = structuredClone(currentConfig);
+
         dispatch("change", returnValue);
     }
 
@@ -61,7 +58,6 @@
             close();
         }
     }
-
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -71,25 +67,32 @@
         <button type="button" class="close-window" on:click={close}>&times</button>
         <select class="tag-selector" bind:value={selectedKey} on:change={() => onSelectedKey()}>
             <option value="">{$LL.mapEditor.entityEditor.jitsiProperties.jitsiRoomConfig.addConfig()}</option>
-            {#each Object.keys(defaultConfig) as configKey }
+            {#each defaultConfigKeys as configKey}
                 {#if currentConfig[configKey] === undefined}
-                <option value={configKey}>{$LL.mapEditor.entityEditor.jitsiProperties.jitsiRoomConfig[configKey]()}</option>
+                    <option value={configKey}
+                        >{$LL.mapEditor.entityEditor.jitsiProperties.jitsiRoomConfig[configKey]()}</option
+                    >
                 {/if}
             {/each}
         </select>
         <div class="config-element-container">
-            {#each Object.keys(currentConfig) as configKey}
-            <div class="config-element">
-                <button on:click={()=>onDeleteConfig(configKey)}><div class="delete-button">&times</div></button>
-                <label class="config-element-label" for={configKey}>
-                    {$LL.mapEditor.entityEditor.jitsiProperties.jitsiRoomConfig[configKey]()}
-                </label>
-                {#if typeof(defaultConfig[configKey]) === "string"}
-                <input id={configKey} type="text" bind:value={currentConfig[configKey]} />
-                {:else if typeof(defaultConfig[configKey]) ==="boolean"}
-                <input class="input-switch" id={configKey} type="checkbox" bind:checked={currentConfig[configKey]}/>
-                {/if}
-            </div>
+            {#each defaultConfigKeys as configKey}
+                <div class="config-element">
+                    <button on:click={() => onDeleteConfig(configKey)}><div class="delete-button">&times</div></button>
+                    <label class="config-element-label" for={configKey}>
+                        {$LL.mapEditor.entityEditor.jitsiProperties.jitsiRoomConfig[configKey]()}
+                    </label>
+                    {#if typeof defaultConfig[configKey] === "string"}
+                        <input id={configKey} type="text" bind:value={currentConfig[configKey]} />
+                    {:else if typeof defaultConfig[configKey] === "boolean"}
+                        <input
+                            class="input-switch"
+                            id={configKey}
+                            type="checkbox"
+                            bind:checked={currentConfig[configKey]}
+                        />
+                    {/if}
+                </div>
             {/each}
         </div>
         <div class="action-buttons">
@@ -100,76 +103,75 @@
 </div>
 
 <style lang="scss">
-    .menu-container{
-        position:fixed;
-        width:50%;
+    .menu-container {
+        position: fixed;
+        width: 50%;
     }
-    .config-element-container{
+    .config-element-container {
         max-height: calc(100% - 10.5em);
-        margin-left:2.5em;
-        margin-right:2.5em;
+        margin-left: 2.5em;
+        margin-right: 2.5em;
         overflow-y: auto;
         overflow-x: hidden;
-        .config-element{
-            display:flex;
+        .config-element {
+            display: flex;
             flex-direction: row;
             height: 2.5em;
 
-            .config-element-label{
-                padding-left:1em;
+            .config-element-label {
+                padding-left: 1em;
                 vertical-align: middle;
-                margin-top:auto;
-                margin-bottom:auto;
+                margin-top: auto;
+                margin-bottom: auto;
                 flex-grow: 1;
             }
-            input[type=text]{
-                margin-top:0.25em;
-                margin-bottom:0.25em;
+            input[type="text"] {
+                margin-top: 0.25em;
+                margin-bottom: 0.25em;
                 padding-top: 0.25em;
                 padding-bottom: 0.25em;
             }
-            input[type=checkbox]{
-                margin-top:auto;
-                margin-bottom:auto;
+            input[type="checkbox"] {
+                margin-top: auto;
+                margin-bottom: auto;
             }
 
-            button{
-                padding:0;
-                .delete-button{
-                    border-radius:0.75em;
+            button {
+                padding: 0;
+                .delete-button {
+                    border-radius: 0.75em;
                     background-color: black;
-                    margin : 0em;
+                    margin: 0em;
                     padding: 0em;
-                    height : 1.5em;
-                    width : 1.5em;
-                    line-height:1.5em;
+                    height: 1.5em;
+                    width: 1.5em;
+                    line-height: 1.5em;
                 }
             }
         }
     }
 
-    .tag-selector{
-        margin-top:2.5em;
-        margin-left:2.5em;
+    .tag-selector {
+        margin-top: 2.5em;
+        margin-left: 2.5em;
     }
-    
-    .action-buttons{
-        position:absolute;
+
+    .action-buttons {
+        position: absolute;
         bottom: 1em;
-        left:0;
-        right:0;
+        left: 0;
+        right: 0;
         align-content: center;
-        display:flex;
+        display: flex;
         flex-direction: row;
         justify-content: center;
-        button{
+        button {
             border-radius: 0.25em;
-            border:solid 1px grey;
-
+            border: solid 1px grey;
         }
         button:hover {
-                background-color: rgb(77 75 103);
-            }
+            background-color: rgb(77 75 103);
+        }
     }
     .input-switch {
         position: relative;

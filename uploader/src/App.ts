@@ -1,24 +1,25 @@
 // lib/app.ts
 import {FileController} from "./Controller/FileController";
-import {Server} from "hyper-express";
-import {cors} from "./Middlewares/Cors";
-import {globalErrorHandler} from "./Service/GlobalErrorHandler";
+import express, {Express} from 'express';
+import cors from 'cors';
+import bodyParser from "body-parser";
+import morgan from "morgan";
+import {ALLOWED_CORS_ORIGIN} from "./Enum/EnvironmentVariable";
 
 class App {
-    public app: Server;
+    public app: Express;
     public fileController: FileController;
 
     constructor() {
-        this.app = new Server();
+        this.app = express();
 
         // Global middlewares
-        this.app.use(cors);
-
-        this.app.set_error_handler(globalErrorHandler);
-
-        this.app.set_not_found_handler(((request, response) => {
-            response.status(404).send("Uploader - Page not found");
+        this.app.use(cors({
+            origin: ALLOWED_CORS_ORIGIN
         }));
+        this.app.use(bodyParser.json());
+        this.app.use(bodyParser.urlencoded({extended: true}));
+        this.app.use(morgan('dev'));
 
         this.fileController = new FileController(this.app);
     }
