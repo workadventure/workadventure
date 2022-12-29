@@ -873,7 +873,6 @@
         </div>
     </div>
 {/if}
-F
 
 <style lang="scss">
     @import "../../style/breakpoints.scss";
