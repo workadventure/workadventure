@@ -4,10 +4,11 @@ import { apiCallback } from "../registeredCallbacks";
 
 export type ButtonActionBarClickedCallback = (buttonActionBar: AddButtonActionBarEvent) => void;
 
-enum ActionBarButtonType {
-    button = "button",
-    action = "action",
-}
+const ActionBarButtonType = {
+    button: "button",
+    action: "action",
+} as const;
+type ActionBarButtonType = typeof ActionBarButtonType[keyof typeof ActionBarButtonType];
 
 export type ActionBarButtonDescriptor = {
     id: string;

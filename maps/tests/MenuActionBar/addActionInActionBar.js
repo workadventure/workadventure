@@ -1,6 +1,5 @@
 WA.ui.actionBar.addButton({
     id: 'register-btn',
-    label: 'Register',
     type: 'action',
     toolTip: 'Test register button',
     imageSrc: 'http://develop.test.workadventu.re/images/feedback/star.svg',

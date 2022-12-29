@@ -377,13 +377,22 @@ If the user is in mobile definition, the modal will open in full screen:
 
 ### Add a button in the action bar
 
+#### Classic button
 ```ts
 WA.ui.actionBar.addButton(descriptor: {
     id: string,
     label: string,
-    type: 'button'|'action',
-    imageSrc: string ?? null,
-    toolTip: string ?? null,
+    clickCallback: (buttonActionBar: AddButtonActionBar) => void
+}): void
+```
+
+#### Action button
+```ts
+WA.ui.actionBar.addButton(descriptor: {
+    id: string,
+    type: 'action',
+    imageSrc: string,
+    toolTip: string,
     clickCallback: (buttonActionBar: AddButtonActionBar) => void
 }): void
 ```
@@ -391,8 +400,8 @@ WA.ui.actionBar.addButton(descriptor: {
 - id: the id of the button action bar defined.
 - label: the label to display in the button.
 - type: the type of button ('button' / 'action'). By default is 'button'.
-- imageSrc: image of button associated, This parameter is nullable.
-- toolTip: label displayed above the action button. This parameter is nullable.
+- imageSrc: image of button associated.
+- toolTip: label displayed above the action button.
 - clickCallback: function called when the user clicks on the button. The callback is passed a `AddButtonActionBar` instance in parameter.
 
 With `AddButtonActionBar` defined as:
@@ -400,10 +409,11 @@ With `AddButtonActionBar` defined as:
 /**
  * Ennum of button type
  */
-enum ActionBarButtonType {
-    button = "button",
-    action = "action",
-}
+const ActionBarButtonType = {
+    button: "button",
+    action: "action",
+} as const;
+type ActionBarButtonType = typeof ActionBarButtonType[keyof typeof ActionBarButtonType];
 
 interface AddButtonActionBar {
     /*
@@ -424,12 +434,12 @@ interface AddButtonActionBar {
     /*
     *  the image of button associated, This parameter is nullable.
     */
-    imageSrc?: string
+    imageSrc: string
 
     /*
     *   the label displayed above the action button. This parameter is nullable.
     */
-    toolTip?: string
+    toolTip: string
 }
 ```
 
@@ -464,7 +474,6 @@ interface AddButtonActionBar {
     // Add action bar button 'Register'.
     WA.ui.actionBar.addButton({
         id: 'register-btn',
-        label: 'Register',
         type: 'action',
         imageSrc: '<Your image url>',
         toolTip: 'Register',
