@@ -51,8 +51,20 @@ export class FrontController extends BaseHttpController {
              */
             return this.displayFront(req, res, this.getFullUrl(req));
         });
+        this.app.post("/_/*", (req: Request, res: Response) => {
+            /**
+             * get infos from map file details
+             */
+            return this.displayFront(req, res, this.getFullUrl(req));
+        });
 
         this.app.get("/*/*", (req: Request, res: Response) => {
+            /**
+             * get infos from map file details
+             */
+            return this.displayFront(req, res, this.getFullUrl(req));
+        });
+        this.app.post("/*/*", (req: Request, res: Response) => {
             /**
              * get infos from map file details
              */
@@ -65,8 +77,20 @@ export class FrontController extends BaseHttpController {
              */
             return this.displayFront(req, res, this.getFullUrl(req));
         });
+        this.app.post("/@/*", (req: Request, res: Response) => {
+            /**
+             * get infos from admin else map file details
+             */
+            return this.displayFront(req, res, this.getFullUrl(req));
+        });
 
         this.app.get("/~/*", (req: Request, res: Response) => {
+            /**
+             * get infos from map file details
+             */
+            return this.displayFront(req, res, this.getFullUrl(req));
+        });
+        this.app.post("/~/*", (req: Request, res: Response) => {
             /**
              * get infos from map file details
              */
@@ -156,6 +180,9 @@ export class FrontController extends BaseHttpController {
             return res.redirect(redirectUrl);
         }
 
+        // get auth token from post /authToken
+        const { authToken } = await req.urlencoded();
+
         try {
             const metaTagsData = await builder.getMeta(req.header("User-Agent"));
             html = Mustache.render(this.indexFile, {
@@ -163,6 +190,7 @@ export class FrontController extends BaseHttpController {
                 msApplicationTileImage: metaTagsData.favIcons[metaTagsData.favIcons.length - 1].src,
                 url,
                 script: this.script,
+                authToken: authToken,
             });
         } catch (e) {
             console.log(`Cannot render metatags on ${url}`, e);
