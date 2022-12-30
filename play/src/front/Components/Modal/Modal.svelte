@@ -24,7 +24,7 @@
     onMount(() => {
         resizeObserver.observe(mainModal);
         if ($modalIframeStore?.allowApi) {
-            iframeListener.registerChatIframe(modalIframe);
+            iframeListener.registerIframe(modalIframe);
         }
     });
 
