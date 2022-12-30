@@ -45,7 +45,6 @@ test.describe('Action button in action bar', () => {
         await evaluateScript(page, async () => {
             return WA.ui.actionBar.addButton({
                 id: 'register-btn',
-                label: 'Register',
                 type: 'action',
                 toolTip: 'Register',
                 imageSrc: '/src/front/Components/images/icon-workadventure-white.png',
@@ -59,9 +58,9 @@ test.describe('Action button in action bar', () => {
          *  TODO apply this when API scripting will released
          */
         // Click on the register button
-        //await page.locator('#register-btn').click();
+        await page.locator('#register-btn').click();
 
         // Check if the register button is hidden
-        //await expect(page.locator('#register-btn')).toHaveCount(0);
+        await expect(page.locator('#register-btn')).toHaveCount(0);
     });
 });

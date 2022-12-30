@@ -17,7 +17,7 @@ type ActionBarButtonType = typeof ActionBarButtonType[keyof typeof ActionBarButt
 export type ActionBarClassicButtonDescriptor = {
     id: string;
     label: string;
-    type: ActionBarButtonType;
+    type?: ActionBarButtonType;
     callback?: ButtonActionBarClickedCallback;
 };
 

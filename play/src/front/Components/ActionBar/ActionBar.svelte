@@ -739,7 +739,7 @@
                             {#if button.toolTip}
                                 <Tooltip text={button.toolTip} />
                             {/if}
-                            <button id="menuIcon">
+                            <button id={button.id}>
                                 <img
                                     draggable="false"
                                     src={button.imageSrc}
