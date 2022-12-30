@@ -1,3 +1,4 @@
+import { HtmlUtils } from "./../WebRtc/HtmlUtils";
 import Axios from "axios";
 import { ENABLE_OPENID, PLAY_URL } from "../Enum/EnvironmentVariable";
 import { RoomConnection } from "./RoomConnection";
@@ -88,8 +89,14 @@ class ConnectionManager {
         this._currentRoom = null;
 
         const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get("token");
-        if (token) {
+        let token = urlParams.get("token");
+        // get token injected by post method from pusher
+        if (token == undefined) {
+            const input = HtmlUtils.getElementByIdOrFail("authToken");
+            if (input.value != undefined && input.value != "") token = input.value;
+        }
+
+        if (token != undefined) {
             this.authToken = token;
             localUserStore.setAuthToken(token);
 
