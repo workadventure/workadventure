@@ -108,9 +108,9 @@
         htmlMessageText = "";
         dispatch("scrollDown");
         setTimeout(() => {
-            textarea.innerHTML = '';
+            textarea.innerHTML = "";
             dispatch("formHeight", messageForm.clientHeight);
-            }, 0);
+        }, 0);
         return false;
     }
 

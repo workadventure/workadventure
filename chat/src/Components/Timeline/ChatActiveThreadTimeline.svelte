@@ -45,7 +45,9 @@
         chatMessagesStore.addPersonalMessage(newMessageText);
         newMessageText = "";
         htmlMessageText = "";
-        setTimeout(() => { input.innerHTML = ''; }, 0);
+        setTimeout(() => {
+            input.innerHTML = "";
+        }, 0);
         return false;
     }
 
