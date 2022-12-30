@@ -41,7 +41,6 @@ COPY chat/templater.sh /
 COPY chat/start_nginx.sh /start_nginx.sh
 
 COPY --from=builder /usr/src/chat/dist /usr/share/nginx/html
-COPY --from=builder /usr/src/chat/server.template.json /usr/share/nginx/html/server.template.json
 
 EXPOSE 80
 CMD ["/start_nginx.sh"]

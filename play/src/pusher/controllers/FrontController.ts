@@ -5,6 +5,9 @@ import { FRONT_ENVIRONMENT_VARIABLES, VITE_URL } from "../enums/EnvironmentVaria
 import { MetaTagsBuilder } from "../services/MetaTagsBuilder";
 import Mustache from "mustache";
 import type { LiveDirectory } from "../models/LiveDirectory";
+import { adminService } from "../services/AdminService";
+import { notWaHost } from "../middlewares/NotWaHost";
+import { version } from "../../../package.json";
 
 export class FrontController extends BaseHttpController {
     private indexFile: string;
@@ -103,9 +106,29 @@ export class FrontController extends BaseHttpController {
             return this.displayFront(req, res, this.getFullUrl(req));
         });
 
-        // this.app.get("/static/images/favicons/manifest.json", (req: Request, res: Response) => {
-        //     return res.status(303).redirect("/");
-        // });
+        this.app.get(
+            "/.well-known/cf-custom-hostname-challenge/*",
+            [notWaHost],
+            async (req: Request, res: Response) => {
+                try {
+                    const response = await adminService.fetchWellKnownChallenge(req.hostname);
+                    return res.status(200).send(response);
+                } catch (e) {
+                    console.error(e);
+                    return res.status(526).send("Fail on challenging hostname");
+                }
+            }
+        );
+
+        this.app.get("/server.json", (req: Request, res: Response) => {
+            return res.json({
+                domain: process.env.PLAY_URL,
+                name: process.env.SERVER_NAME || "WorkAdventure Server",
+                motd: process.env.SERVER_MOTD || "A WorkAdventure Server",
+                icon: process.env.SERVER_ICON || process.env.PLAY_URL + "/static/images/favicons/icon-512x512.png",
+                version: version + (process.env.NODE_ENV !== "production" ? "-dev" : ""),
+            });
+        });
 
         this.app.get("/*", (req: Request, res: Response) => {
             if (req.path.startsWith("/src") || req.path.startsWith("/node_modules") || req.path.startsWith("/@fs/")) {

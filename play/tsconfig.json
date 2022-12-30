@@ -23,6 +23,7 @@
     "alwaysStrict": true,
     "preserveValueImports": false,
     "importsNotUsedAsValues": "remove",
+    "resolveJsonModule": true
   },
   "exclude": [
     "dist",
