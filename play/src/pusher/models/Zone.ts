@@ -27,6 +27,7 @@ import type { PositionDispatcher } from "../models/PositionDispatcher";
 import Debug from "debug";
 import { BoolValue, UInt32Value } from "google-protobuf/google/protobuf/wrappers_pb";
 import type * as jspb from "google-protobuf";
+import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 
 const debug = Debug("zone");
 
@@ -190,7 +191,7 @@ interface ZoneDescriptor {
     y: number;
 }
 
-export class Zone {
+export class Zone implements CustomJsonReplacerInterface {
     //private things: Set<Movable> = new Set<Movable>();
     private users: Map<number, UserDescriptor> = new Map<number, UserDescriptor>();
     private groups: Map<number, GroupDescriptor> = new Map<number, GroupDescriptor>();
@@ -482,5 +483,15 @@ export class Zone {
 
         this.listeners.delete(listener);
         listener.listenedZones.delete(this);
+    }
+
+    public customJsonReplacer(key: unknown, value: unknown): string | undefined {
+        if (key === "listeners") {
+            return `${(value as Set<ExSocketInterface>).size} listener(s) registered`;
+        }
+        if (key === "positionDispatcher") {
+            return "positionDispatcher";
+        }
+        return undefined;
     }
 }
