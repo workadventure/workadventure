@@ -37,7 +37,13 @@ app.get("/", (req, res) => {
 });
 
 app.get("*.json", async (req, res) => {
-    res.send(await mapsManager.getMap(req.url));
+    const path = req.url;
+    const domain = req.hostname;
+    if (path.includes('..') || domain.includes('..')) {
+        res.status(400).send('Invalid request');
+        return;
+    }
+    res.send(await mapsManager.getMap(path, domain));
 });
 
 new UploadController(app, fileSystem);

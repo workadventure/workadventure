@@ -31,7 +31,7 @@ import {
     RoomsList,
     PingMessage,
     QueryMessage,
-    EditMapCommandWithKeyMessage,
+    EditMapCommandMessage,
     ChatMessagePrompt,
 } from "./Messages/generated/messages_pb";
 import {
@@ -163,12 +163,12 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 message.getLockgrouppromptmessage() as LockGroupPromptMessage
                             );
-                        } else if (message.hasEditmapcommandwithkeymessage()) {
-                            if (message.getEditmapcommandwithkeymessage())
-                                socketManager.handleEditMapCommandWithKeyMessage(
+                        } else if (message.hasEditmapcommandmessage()) {
+                            if (message.getEditmapcommandmessage())
+                                socketManager.handleEditMapCommandMessage(
                                     room,
                                     user,
-                                    message.getEditmapcommandwithkeymessage() as EditMapCommandWithKeyMessage
+                                    message.getEditmapcommandmessage() as EditMapCommandMessage
                                 );
                         } else if (message.hasSendusermessage()) {
                             const sendUserMessage = message.getSendusermessage();
