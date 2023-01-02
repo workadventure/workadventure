@@ -96,62 +96,66 @@ export class MapEditorModeManager {
     ): boolean {
         let command: Command;
         const delay = 0;
-        switch (commandConfig.type) {
-            case "UpdateAreaCommand": {
-                command = new UpdateAreaCommand(this.scene.getGameMap(), commandConfig, commandId);
-                break;
+        try {
+            switch (commandConfig.type) {
+                case "UpdateAreaCommand": {
+                    command = new UpdateAreaCommand(this.scene.getGameMap(), commandConfig, commandId);
+                    break;
+                }
+                case "CreateAreaCommand": {
+                    command = new CreateAreaCommand(this.scene.getGameMap(), commandConfig, commandId);
+                    break;
+                }
+                case "DeleteAreaCommand": {
+                    command = new DeleteAreaCommand(this.scene.getGameMap(), commandConfig, commandId);
+                    break;
+                }
+                case "UpdateEntityCommand": {
+                    command = new UpdateEntityCommand(this.scene.getGameMap(), commandConfig, commandId);
+                    break;
+                }
+                case "CreateEntityCommand": {
+                    command = new CreateEntityCommand(this.scene.getGameMap(), commandConfig, commandId);
+                    break;
+                }
+                case "DeleteEntityCommand": {
+                    command = new DeleteEntityCommand(this.scene.getGameMap(), commandConfig, commandId);
+                    break;
+                }
+                default: {
+                    const _exhaustiveCheck: never = commandConfig;
+                    return false;
+                }
             }
-            case "CreateAreaCommand": {
-                command = new CreateAreaCommand(this.scene.getGameMap(), commandConfig, commandId);
-                break;
-            }
-            case "DeleteAreaCommand": {
-                command = new DeleteAreaCommand(this.scene.getGameMap(), commandConfig, commandId);
-                break;
-            }
-            case "UpdateEntityCommand": {
-                command = new UpdateEntityCommand(this.scene.getGameMap(), commandConfig, commandId);
-                break;
-            }
-            case "CreateEntityCommand": {
-                command = new CreateEntityCommand(this.scene.getGameMap(), commandConfig, commandId);
-                break;
-            }
-            case "DeleteEntityCommand": {
-                command = new DeleteEntityCommand(this.scene.getGameMap(), commandConfig, commandId);
-                break;
-            }
-            default: {
-                const _exhaustiveCheck: never = commandConfig;
+            if (!command) {
                 return false;
             }
-        }
-        if (!command) {
+            // We do an execution instantly so there will be no lag from user's perspective
+            const executedCommandConfig = command.execute();
+
+            // do any necessary changes for active tool interface
+            this.handleCommandExecutionByTools(executedCommandConfig);
+
+            if (emitMapEditorUpdate) {
+                this.emitMapEditorUpdate(command.id, commandConfig, delay);
+            }
+
+            if (addToLocalCommandsHistory) {
+                // if we are not at the end of commands history and perform an action, get rid of commands later in history than our current point in time
+                if (this.currentCommandIndex !== this.localCommandsHistory.length - 1) {
+                    this.localCommandsHistory.splice(this.currentCommandIndex + 1);
+                }
+                this.pendingCommands.push(command);
+                this.localCommandsHistory.push(command);
+                this.currentCommandIndex += 1;
+            }
+
+            this.scene.getGameMap().updateLatestCommandIdProperty(command.id);
+            return true;
+        } catch (error) {
+            console.warn(error);
             return false;
         }
-        // We do an execution instantly so there will be no lag from user's perspective
-        const executedCommandConfig = command.execute();
-
-        // do any necessary changes for active tool interface
-        this.handleCommandExecutionByTools(executedCommandConfig);
-
-        if (emitMapEditorUpdate) {
-            this.emitMapEditorUpdate(command.id, commandConfig, delay);
-        }
-
-        if (addToLocalCommandsHistory) {
-            // if we are not at the end of commands history and perform an action, get rid of commands later in history than our current point in time
-            if (this.currentCommandIndex !== this.localCommandsHistory.length - 1) {
-                this.localCommandsHistory.splice(this.currentCommandIndex + 1);
-            }
-            this.pendingCommands.push(command);
-            this.localCommandsHistory.push(command);
-            this.currentCommandIndex += 1;
-        }
-
-        this.scene.getGameMap().updateLatestCommandIdProperty(command.id);
-
-        return true;
     }
 
     public undoCommand(): void {
@@ -167,7 +171,7 @@ export class MapEditorModeManager {
             this.handleCommandExecutionByTools(commandConfig);
 
             // this should not be called with every change. Use some sort of debounce
-            this.emitMapEditorUpdate(command.id, commandConfig);
+            this.emitMapEditorUpdate(`${command.id}-undo`, commandConfig);
             this.currentCommandIndex -= 1;
         } catch (e) {
             this.localCommandsHistory.splice(this.currentCommandIndex, 1);
