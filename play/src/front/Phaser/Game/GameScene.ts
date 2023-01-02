@@ -151,6 +151,7 @@ import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
+import { debugManager } from "../../Debug/DebugManager";
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PositionInterface;
@@ -2405,7 +2406,13 @@ ${escapedMessage}
             player.setAvailabilityStatus(addPlayerData.availabilityStatus, true);
         }
         this.MapPlayers.add(player);
+        if (debugManager.activated) {
+            console.debug("Player added in MapPlayers in GameScene", player);
+        }
         this.MapPlayersByKey.set(player.userId, player);
+        if (debugManager.activated) {
+            console.debug("Player added in MapPlayersByKey in GameScene", player);
+        }
         player.updatePosition(addPlayerData.position);
 
         player.on(Phaser.Input.Events.POINTER_OVER, () => {
@@ -2479,8 +2486,14 @@ ${escapedMessage}
             }
 
             this.MapPlayers.remove(player);
+            if (debugManager.activated) {
+                console.debug("Player removed in MapPlayers in GameScene", player);
+            }
         }
         this.MapPlayersByKey.delete(userId);
+        if (debugManager.activated) {
+            console.debug("User removed in MapPlayersByKey in GameScene", userId);
+        }
         this.playersPositionInterpolator.removePlayer(userId);
     }
 
