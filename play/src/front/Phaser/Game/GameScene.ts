@@ -170,7 +170,6 @@ interface DeleteGroupEventInterface {
 export class GameScene extends DirtyScene {
     Terrains: Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer!: Player;
-    MapPlayers!: Phaser.Physics.Arcade.Group;
     MapPlayersByKey: MapStore<number, RemotePlayer> = new MapStore<number, RemotePlayer>();
     Map!: Phaser.Tilemaps.Tilemap;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
@@ -613,9 +612,6 @@ export class GameScene extends DirtyScene {
 
         //add entities
         this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
-
-        //initialise list of other player
-        this.MapPlayers = this.physics.add.group({ immovable: true });
 
         //create input to move
         this.userInputManager = new UserInputManager(this, new GameSceneUserInputHandler(this));
@@ -2077,8 +2073,6 @@ ${escapedMessage}
             if (player.companion) {
                 player.companion.destroy();
             }
-
-            this.MapPlayers.remove(player);
         });
         this.MapPlayersByKey.clear();
     }
@@ -2308,7 +2302,9 @@ ${escapedMessage}
         }
 
         for (const addedPlayer of this.remotePlayersRepository.getAddedPlayers()) {
+            //console.log("Player will be added from GameScene :", addedPlayer.userId);
             this.doAddPlayer(addedPlayer);
+            //console.log("Player has been added from GameScene :", addedPlayer.userId);
         }
         for (const movedPlayer of this.remotePlayersRepository.getMovedPlayers()) {
             this.doUpdatePlayerPosition(movedPlayer);
@@ -2317,7 +2313,9 @@ ${escapedMessage}
             this.doUpdatePlayerDetails(updatedPlayer);
         }
         for (const removedPlayerId of this.remotePlayersRepository.getRemovedPlayers()) {
+            //console.log("Player will be removed from GameScene :", removedPlayerId);
             this.doRemovePlayer(removedPlayerId);
+            //console.log("Player has been removed from GameScene :", removedPlayerId);
         }
 
         this.remotePlayersRepository.reset();
@@ -2405,10 +2403,6 @@ ${escapedMessage}
         if (addPlayerData.availabilityStatus !== undefined) {
             player.setAvailabilityStatus(addPlayerData.availabilityStatus, true);
         }
-        this.MapPlayers.add(player);
-        if (debugManager.activated) {
-            console.debug("Player added in MapPlayers in GameScene", player);
-        }
         this.MapPlayersByKey.set(player.userId, player);
         if (debugManager.activated) {
             console.debug("Player added in MapPlayersByKey in GameScene", player);
@@ -2484,16 +2478,9 @@ ${escapedMessage}
             if (player.companion) {
                 player.companion.destroy();
             }
-
-            this.MapPlayers.remove(player);
-            if (debugManager.activated) {
-                console.debug("Player removed in MapPlayers in GameScene", player);
-            }
         }
         this.MapPlayersByKey.delete(userId);
-        if (debugManager.activated) {
-            console.debug("User removed in MapPlayersByKey in GameScene", userId);
-        }
+        // console.debug("User removed in MapPlayersByKey in GameScene", userId);
         this.playersPositionInterpolator.removePlayer(userId);
     }
 
