@@ -5,8 +5,9 @@ import { Movable } from "../Model/Movable";
 import { PositionNotifier } from "../Model/PositionNotifier";
 import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
 import type { Zone } from "../Model/Zone";
+import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 
-export class Group implements Movable {
+export class Group implements Movable, CustomJsonReplacerInterface {
     private static nextId = 1;
 
     private id: number;
@@ -222,5 +223,16 @@ export class Group implements Movable {
 
     get getOutOfBounds() {
         return this.outOfBounds;
+    }
+
+    public customJsonReplacer(key: unknown, value: unknown): string | undefined {
+        if (key === "positionNotifier") {
+            return "positionNotifier";
+        }
+        if (key === "currentZone") {
+            const zone = value as Zone | null;
+            return zone ? `zone ${zone.x},${zone.y}` : "null";
+        }
+        return undefined;
     }
 }
