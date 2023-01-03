@@ -30,8 +30,15 @@ export class UploadController {
 
     constructor(private app: Express, private fileSystem: FileSystemInterface) {
         this.uploadLimiter = new Map<string, pLimit.Limit>();
+        this.index();
         this.postUpload();
         this.getDownload();
+    }
+
+    private index() {
+        this.app.get("/", passportAuthenticator, async (req, res) => {
+            res.sendFile(__dirname + "/index.html");
+        });
     }
 
     private postUpload() {

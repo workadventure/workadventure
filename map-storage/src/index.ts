@@ -32,15 +32,11 @@ passport.use(passportStrategy);
 app.use(passport.initialize());
 //app.use(passport.session());
 
-app.get("/", (req, res) => {
-    res.send("Hello World!");
-});
-
 app.get("*.json", async (req, res) => {
     const path = req.url;
     const domain = req.hostname;
-    if (path.includes('..') || domain.includes('..')) {
-        res.status(400).send('Invalid request');
+    if (path.includes("..") || domain.includes("..")) {
+        res.status(400).send("Invalid request");
         return;
     }
     res.send(await mapsManager.getMap(path, domain));
