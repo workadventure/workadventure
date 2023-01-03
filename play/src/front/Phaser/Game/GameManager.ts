@@ -51,6 +51,8 @@ export class GameManager {
         if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
             return LoginSceneName;
         } else if (!this.characterLayers || !this.characterLayers.length) {
+            // TODO: Remove this debug line
+            console.info("Your Woka texture is invalid for this world, got to select Woka scene. Init game manager.");
             return SelectCharacterSceneName;
         } else if (this.cameraSetup == undefined) {
             return EnableCameraSceneName;

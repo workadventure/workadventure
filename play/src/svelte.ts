@@ -21,6 +21,9 @@ import { Game } from "./front/Phaser/Game/Game";
 import App from "./front/Components/App.svelte";
 import { HtmlUtils } from "./front/WebRtc/HtmlUtils";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
+import { debugManager } from "./front/Debug/DebugManager";
+
+window.waDebug = debugManager;
 
 const { width, height } = coWebsiteManager.getGameSize();
 const fps: Phaser.Types.Core.FPSConfig = {

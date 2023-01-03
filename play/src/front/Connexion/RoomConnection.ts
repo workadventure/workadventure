@@ -253,8 +253,8 @@ export class RoomConnection implements RoomConnection {
             const serverToClientMessage = ServerToClientMessageTsProto.decode(new Uint8Array(arrayBuffer));
             //const message = ServerToClientMessage.deserializeBinary(new Uint8Array(arrayBuffer));
 
-            // Todo : Remove this debug line
-            console.info("New message received", serverToClientMessage.message);
+            // TODO: Remove this debug line
+            //console.info("New message received", serverToClientMessage.message);
 
             const message = serverToClientMessage.message;
             if (message === undefined) {
@@ -394,6 +394,7 @@ export class RoomConnection implements RoomConnection {
                         roomJoinedMessage.characterLayer.length !== initCharacterLayers.length ||
                         roomJoinedMessage.characterLayer.find((layer) => !layer.url)
                     ) {
+                        console.info("Your Woka texture is invalid for this world, got to select Woka scene");
                         this.goToSelectYourWokaScene();
                         this.closed = true;
                     }
@@ -424,6 +425,10 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "invalidTextureMessage": {
+                    console.info(
+                        "Your Woka texture is invalid for this world, got to select Woka scene. Message: ",
+                        message
+                    );
                     this.goToSelectYourWokaScene();
 
                     this.closed = true;

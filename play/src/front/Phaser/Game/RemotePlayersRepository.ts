@@ -33,23 +33,44 @@ export class RemotePlayersRepository {
     private remotePlayersData = new Map<number, RemotePlayerData>();
 
     public addPlayer(userJoinedMessage: MessageUserJoined): void {
+        //console.log("Player Will be added from repo", userJoinedMessage.userId);
         const player = {
             ...userJoinedMessage,
             showVoiceIndicator: false,
         };
         this.remotePlayersData.set(userJoinedMessage.userId, player);
-        this.addedPlayers.set(userJoinedMessage.userId, player);
-        this.movedPlayers.delete(userJoinedMessage.userId);
-        this.removedPlayers.delete(userJoinedMessage.userId);
-        this.updatedPlayers.delete(userJoinedMessage.userId);
+
+        if (this.removedPlayers.has(userJoinedMessage.userId)) {
+            // Special case: we add a user that was just removed before. Instead, let's update the user
+            this.removedPlayers.delete(userJoinedMessage.userId);
+            this.movedPlayers.set(userJoinedMessage.userId, player);
+            this.updatedPlayers.set(userJoinedMessage.userId, {
+                updated: {
+                    availabilityStatus: true,
+                    outlineColor: true,
+                    showVoiceIndicator: true,
+                },
+                player,
+            });
+        } else {
+            this.movedPlayers.delete(userJoinedMessage.userId);
+            this.updatedPlayers.delete(userJoinedMessage.userId);
+            this.addedPlayers.set(userJoinedMessage.userId, player);
+        }
+        //console.log("Player Has been added from repo", userJoinedMessage.userId);
     }
 
     public removePlayer(userId: number): void {
+        //console.log("Player Will be removed from repo", userId);
         this.remotePlayersData.delete(userId);
-        this.addedPlayers.delete(userId);
+        if (this.addedPlayers.has(userId)) {
+            this.addedPlayers.delete(userId);
+        } else {
+            this.removedPlayers.add(userId);
+        }
         this.movedPlayers.delete(userId);
         this.updatedPlayers.delete(userId);
-        this.removedPlayers.add(userId);
+        //console.log("Player Has been removed from repo", userId);
     }
 
     public movePlayer(userMovedMessage: UserMovedMessage): void {

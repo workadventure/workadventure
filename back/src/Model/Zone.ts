@@ -8,6 +8,7 @@ import {
     SetPlayerDetailsMessage,
     PlayerDetailsUpdatedMessage,
 } from "../Messages/generated/messages_pb";
+import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 
 export type EntersCallback = (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) => void;
 export type MovesCallback = (thing: Movable, position: PositionInterface, listener: ZoneSocket) => void;
@@ -19,7 +20,7 @@ export type PlayerDetailsUpdatedCallback = (
     listener: ZoneSocket
 ) => void;
 
-export class Zone {
+export class Zone implements CustomJsonReplacerInterface {
     private things: Set<Movable> = new Set<Movable>();
     private listeners: Set<ZoneSocket> = new Set<ZoneSocket>();
 
@@ -131,5 +132,12 @@ export class Zone {
         for (const listener of this.listeners) {
             this.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener);
         }
+    }
+
+    public customJsonReplacer(key: unknown, value: unknown): string | undefined {
+        if (key === "listeners") {
+            return `${(value as Set<ZoneSocket>).size} listener(s) registered`;
+        }
+        return undefined;
     }
 }
