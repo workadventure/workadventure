@@ -757,14 +757,6 @@ export class GameScene extends DirtyScene {
         if (gameManager.currentStartedRoom.backgroundColor != undefined) {
             this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
         }
-
-        this.input.keyboard.on("keydown-U", () => {
-            const commandId = this.gameMapFrontWrapper.getGameMap().getLatestCommandId();
-            console.log("emit id: " + commandId);
-            if (commandId) {
-                this.connection?.emitUpdateMapToNewest(commandId);
-            }
-        });
     }
 
     /**
@@ -788,7 +780,8 @@ export class GameScene extends DirtyScene {
                     bottom: camera.scrollY + camera.height,
                 },
                 this.companion,
-                get(availabilityStatusStore)
+                get(availabilityStatusStore),
+                this.getGameMap().getLastCommandId()
             )
             .then((onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;

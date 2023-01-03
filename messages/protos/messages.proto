@@ -226,7 +226,6 @@ message ClientToServerMessage {
     //XmppMessage xmppMessage = 22;
     AskPositionMessage askPositionMessage = 23;
     EditMapCommandMessage editMapCommandMessage = 24;
-    UpdateMapToNewestMessage updateMapToNewestMessage = 25;
   }
 }
 
@@ -438,6 +437,7 @@ message RoomJoinedMessage {
   repeated VariableMessage playerVariable = 10;
   repeated ApplicationMessage applications = 11;
   string userJid = 12;
+  EditMapCommandsArrayMessage editMapCommandsArrayMessage = 13;
 }
 
 message WebRtcStartMessage {
@@ -555,6 +555,7 @@ message JoinRoomMessage {
   bool isLogged = 13;
   repeated ApplicationMessage applications = 14;
   string userJid = 15;
+  string lastCommandId = 16;
 }
 
 message UserJoinedZoneMessage {

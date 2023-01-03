@@ -183,7 +183,7 @@ class MapsManager {
             queue.push(message);
             this.setCommandDeletionTimeout(mapKey, message.id);
         }
-        this.loadedMaps.get(mapKey)?.updateLatestCommandIdProperty(message.id);
+        this.loadedMaps.get(mapKey)?.updateLastCommandIdProperty(message.id);
     }
 
     private setCommandDeletionTimeout(mapKey: string, commandId: string): void {

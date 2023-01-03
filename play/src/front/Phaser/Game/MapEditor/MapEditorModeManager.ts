@@ -150,7 +150,7 @@ export class MapEditorModeManager {
                 this.currentCommandIndex += 1;
             }
 
-            this.scene.getGameMap().updateLatestCommandIdProperty(command.id);
+            this.scene.getGameMap().updateLastCommandIdProperty(command.id);
             return true;
         } catch (error) {
             console.warn(error);

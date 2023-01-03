@@ -32,7 +32,6 @@ import {
     PingMessage,
     QueryMessage,
     EditMapCommandWithKeyMessage,
-    UpdateMapToNewestWithKeyMessage,
     ChatMessagePrompt,
 } from "./Messages/generated/messages_pb";
 import {
@@ -163,12 +162,6 @@ const roomManager: IRoomManagerServer = {
                                     user,
                                     message.getEditmapcommandwithkeymessage() as EditMapCommandWithKeyMessage
                                 );
-                        } else if (message.hasUpdatemaptonewestwithkeymessage()) {
-                            socketManager.handleUpdateMapToNewestMessage(
-                                room,
-                                user,
-                                message.getUpdatemaptonewestwithkeymessage() as UpdateMapToNewestWithKeyMessage
-                            );
                         } else if (message.hasSendusermessage()) {
                             const sendUserMessage = message.getSendusermessage();
                             socketManager.handleSendUserMessage(user, sendUserMessage as SendUserMessage);

@@ -184,6 +184,7 @@ export class RoomConnection implements RoomConnection {
      * @param viewport
      * @param companion
      * @param availabilityStatus
+     * @param lastCommandId
      */
     public constructor(
         token: string | null,
@@ -193,7 +194,8 @@ export class RoomConnection implements RoomConnection {
         position: PositionInterface,
         viewport: ViewportInterface,
         companion: string | null,
-        availabilityStatus: AvailabilityStatus
+        availabilityStatus: AvailabilityStatus,
+        lastCommandId?: string
     ) {
         let url = new URL(PUSHER_URL, window.location.toString()).toString();
         url = url.replace("http://", "ws://").replace("https://", "wss://");
@@ -219,6 +221,10 @@ export class RoomConnection implements RoomConnection {
         if (typeof availabilityStatus === "number") {
             url += "&availabilityStatus=" + availabilityStatus;
         }
+        if (lastCommandId) {
+            url += "&lastCommandId=" + lastCommandId;
+        }
+
         url += "&version=" + apiVersionHash;
 
         if (RoomConnection.websocketFactory) {
@@ -1005,17 +1011,6 @@ export class RoomConnection implements RoomConnection {
                 $case: "lockGroupPromptMessage",
                 lockGroupPromptMessage: {
                     lock,
-                },
-            },
-        });
-    }
-
-    public emitUpdateMapToNewest(commandId: string): void {
-        this.send({
-            message: {
-                $case: "updateMapToNewestMessage",
-                updateMapToNewestMessage: {
-                    commandId,
                 },
             },
         });

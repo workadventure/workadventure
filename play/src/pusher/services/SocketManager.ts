@@ -210,6 +210,10 @@ export class SocketManager implements ZoneEventListener {
                 }
             }
 
+            if (client.lastCommandId !== undefined) {
+                joinRoomMessage.setLastcommandid(client.lastCommandId);
+            }
+
             for (const characterLayer of client.characterLayers) {
                 const characterLayerMessage = new CharacterLayerMessage();
                 characterLayerMessage.setName(characterLayer.id);

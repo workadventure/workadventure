@@ -27,7 +27,7 @@ const mapStorageServer: MapStorageServer = {
             return;
         }
         const clientCommandId = updateMapToNewestMessage.commandId;
-        const newestCommandId = mapsManager.getGameMap(call.request.mapKey)?.getLatestCommandId();
+        const newestCommandId = mapsManager.getGameMap(call.request.mapKey)?.getLastCommandId();
         let commandsToApply: EditMapCommandMessage[] = [];
         if (clientCommandId !== newestCommandId) {
             commandsToApply = mapsManager.getCommandsNewerThan(call.request.mapKey, updateMapToNewestMessage.commandId);

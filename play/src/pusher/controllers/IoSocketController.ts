@@ -27,7 +27,6 @@ import type {
     AvailabilityStatus,
     QueryMessage,
     EditMapCommandMessage,
-    UpdateMapToNewestMessage,
 } from "../../messages/generated/messages_pb";
 import qs from "qs";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
@@ -292,6 +291,7 @@ export class IoSocketController {
                         const right = Number(query.right);
                         const name = query.name;
                         const availabilityStatus = Number(query.availabilityStatus);
+                        const lastCommandId = query.lastCommandId;
                         const version = query.version;
 
                         if (version !== apiVersionHash) {
@@ -504,6 +504,7 @@ export class IoSocketController {
                                 name,
                                 companion,
                                 availabilityStatus,
+                                lastCommandId,
                                 characterLayers: characterLayerObjs,
                                 messages: memberMessages,
                                 tags: memberTags,
@@ -721,11 +722,6 @@ export class IoSocketController {
                         );
                     } else if (message.hasPingmessage()) {
                         client.resetPongTimeout();
-                    } else if (message.hasUpdatemaptonewestmessage()) {
-                        socketManager.handleUpdateMapToNewestCommandMessage(
-                            client,
-                            message.getUpdatemaptonewestmessage() as UpdateMapToNewestMessage
-                        );
                     } else if (message.hasEditmapcommandmessage()) {
                         socketManager.handleEditMapCommandMessage(
                             client,
@@ -796,6 +792,7 @@ export class IoSocketController {
         client.characterLayers = ws.characterLayers;
         client.companion = ws.companion;
         client.availabilityStatus = ws.availabilityStatus;
+        client.lastCommandId = ws.lastCommandId;
         client.roomId = ws.roomId;
         client.listenedZones = new Set<Zone>();
         client.jabberId = ws.jabberId;
