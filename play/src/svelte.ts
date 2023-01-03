@@ -105,6 +105,7 @@ const config: Phaser.Types.Core.GameConfig = {
         pixelArt: true,
         roundPixels: true,
         antialias: false,
+        antialiasGL: false,
     },
     plugins: {
         global: [
