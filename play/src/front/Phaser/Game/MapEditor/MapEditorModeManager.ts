@@ -10,6 +10,7 @@ import { FloorEditorTool } from "./Tools/FloorEditorTool";
 import { EntityEditorTool } from "./Tools/EntityEditorTool";
 import { CreateEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/CreateEntityCommand";
 import { DeleteEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/DeleteEntityCommand";
+import { EditMapCommandMessage } from "@workadventure/messages";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
@@ -202,6 +203,19 @@ export class MapEditorModeManager {
             this.localCommandsHistory.splice(this.currentCommandIndex, 1);
             this.currentCommandIndex -= 1;
             console.warn(e);
+        }
+    }
+
+    /**
+     * Update local map with missing commands given from the map-storage on RoomJoinedEvent. This commands
+     * are applied locally and are not being send further.
+     * @param commands Commands to apply in order to make sure the local map is in sync with the map-storage
+     */
+    public updateMapToNewest(commands: EditMapCommandMessage[]) {
+        for (const command of commands) {
+            for (const key of Object.keys(this.editorTools)) {
+                this.editorTools[key as EditorToolName].handleIncomingCommandMessage(command);
+            }
         }
     }
 

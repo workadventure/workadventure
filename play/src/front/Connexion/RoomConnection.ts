@@ -373,6 +373,12 @@ export class RoomConnection implements RoomConnection {
                         playerVariables.set(variable.name, RoomConnection.unserializeVariable(variable.value));
                     }
 
+                    const editMapCommandsArrayMessage = roomJoinedMessage.editMapCommandsArrayMessage;
+                    let commandsToApply: EditMapCommandMessage[] | undefined = undefined;
+                    if (editMapCommandsArrayMessage) {
+                        commandsToApply = editMapCommandsArrayMessage.editMapCommands;
+                    }
+
                     this.userId = roomJoinedMessage.currentUserId;
                     this.tags = roomJoinedMessage.tag;
                     this._userRoomToken = roomJoinedMessage.userRoomToken;
@@ -417,6 +423,7 @@ export class RoomConnection implements RoomConnection {
                             variables,
                             characterLayers,
                             playerVariables,
+                            commandsToApply,
                         } as RoomJoinedMessageInterface,
                     });
                     break;

@@ -342,7 +342,8 @@ class ConnectionManager {
                         position,
                         viewport,
                         companion,
-                        availabilityStatus
+                        availabilityStatus,
+                        lastCommandId
                     );
                     void this.connectToRoomSocket(
                         roomUrl,
@@ -351,7 +352,8 @@ class ConnectionManager {
                         position,
                         viewport,
                         companion,
-                        availabilityStatus
+                        availabilityStatus,
+                        lastCommandId
                     ).then((connection) => resolve(connection));
                 }, 4000 + Math.floor(Math.random() * 2000));
             });

@@ -109,11 +109,7 @@ export class SocketManager {
         //join new previous room
         const { room, user } = await this.joinRoom(socket, joinRoomMessage);
 
-        console.log("%%%%%%%%%% HANDLE JOIN ROOM EVENT %%%%%%%%%%");
-        console.log(joinRoomMessage.getLastcommandid());
-
         const lastCommandId = joinRoomMessage.getLastcommandid();
-
         let commandsToApply: EditMapCommandMessage[] | undefined = undefined;
 
         if (lastCommandId) {
