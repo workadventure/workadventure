@@ -1,14 +1,10 @@
-import debug from "debug";
 import type { PlayerDetailsUpdatedMessage, UserMovedMessage } from "@workadventure/messages";
 import { availabilityStatusToJSON } from "@workadventure/messages";
 import type { MessageUserJoined } from "../../Connexion/ConnexionModels";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import { iframeListener } from "../../Api/IframeListener";
 import { RoomConnection } from "../../Connexion/RoomConnection";
-
-const debugRepo = debug("RemotePlayersRepository");
-const debugAddPlayer = debugRepo.extend("addPlayer");
-const debugRemovePlayer = debugRepo.extend("removePlayer");
+import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
 
 interface RemotePlayerData extends MessageUserJoined {
     showVoiceIndicator: boolean;

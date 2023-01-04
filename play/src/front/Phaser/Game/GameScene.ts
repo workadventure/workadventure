@@ -151,6 +151,7 @@ import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
+import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -2302,9 +2303,9 @@ ${escapedMessage}
         }
 
         for (const addedPlayer of this.remotePlayersRepository.getAddedPlayers()) {
-            //console.log("Player will be added from GameScene :", addedPlayer.userId);
+            debugAddPlayer("Player will be added to the GameScene", addedPlayer.userId);
             this.doAddPlayer(addedPlayer);
-            //console.log("Player has been added from GameScene :", addedPlayer.userId);
+            debugAddPlayer("Player has been added to the GameScene", addedPlayer.userId);
         }
         for (const movedPlayer of this.remotePlayersRepository.getMovedPlayers()) {
             this.doUpdatePlayerPosition(movedPlayer);
@@ -2313,9 +2314,9 @@ ${escapedMessage}
             this.doUpdatePlayerDetails(updatedPlayer);
         }
         for (const removedPlayerId of this.remotePlayersRepository.getRemovedPlayers()) {
-            //console.log("Player will be removed from GameScene :", removedPlayerId);
+            debugRemovePlayer("Player will be removed from GameScene", removedPlayerId);
             this.doRemovePlayer(removedPlayerId);
-            //console.log("Player has been removed from GameScene :", removedPlayerId);
+            debugRemovePlayer("Player has been removed from GameScene", removedPlayerId);
         }
 
         if (
@@ -2392,13 +2393,22 @@ ${escapedMessage}
 
     private doAddPlayer(addPlayerData: AddPlayerInterface): void {
         //check if exist player, if exist, move position
-        // Can this really happen?
+        // Can this really happen? yes..
         if (this.MapPlayersByKey.has(addPlayerData.userId)) {
             console.warn("Got instructed to add a player that already exists: ", addPlayerData.userId);
-            /*this.updatePlayerPosition({
-                userId: addPlayerData.userId,
-                position: addPlayerData.position,
-            });*/
+            console.error(
+                "Players status",
+                this.remotePlayersRepository.getPlayers(),
+                this.MapPlayersByKey,
+                "Added players:",
+                this.remotePlayersRepository.getAddedPlayers(),
+                "Moved players:",
+                this.remotePlayersRepository.getMovedPlayers(),
+                "Updated players:",
+                this.remotePlayersRepository.getUpdatedPlayers(),
+                "Removed players:",
+                this.remotePlayersRepository.getRemovedPlayers()
+            );
             return;
         }
 
