@@ -151,7 +151,7 @@ import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import { debugManager } from "../../Debug/DebugManager";
+
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PositionInterface;
@@ -2411,9 +2411,6 @@ ${escapedMessage}
             player.setAvailabilityStatus(addPlayerData.availabilityStatus, true);
         }
         this.MapPlayersByKey.set(player.userId, player);
-        if (debugManager.activated) {
-            console.debug("Player added in MapPlayersByKey in GameScene", player);
-        }
         player.updatePosition(addPlayerData.position);
 
         player.on(Phaser.Input.Events.POINTER_OVER, () => {
