@@ -34,6 +34,8 @@ Configuration is done using environment variables.
 If S3 related environment variables are found, map-storage will default to S3.
 Otherwise, the `STORAGE_DIRECTORY` environment variable is used to find the root directory of the maps.
 
+Note: in the Docker image, the `STORAGE_DIRECTORY` defaults to `/maps` at the root of the container. 
+
 Take a look at `src/Enum/EnvironmentVariables.ts` for a complete list of supported configuration parameters.
 
 ### Configuring authentication
