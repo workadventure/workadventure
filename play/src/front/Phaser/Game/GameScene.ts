@@ -3,6 +3,7 @@ import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
+import { throttle } from "throttle-debounce";
 
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connexion/ConnectionManager";
@@ -254,6 +255,7 @@ export class GameScene extends DirtyScene {
     private playersMovementEventDispatcher = new IframeEventDispatcher();
     private remotePlayersRepository = new RemotePlayersRepository();
     private companionLoadingManager: CompanionTexturesLoadingManager | undefined;
+    private throttledSendViewportToServer!: () => void;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -536,6 +538,10 @@ export class GameScene extends DirtyScene {
                     tileset.spacing /*, tileset.firstgid*/
                 )
             );
+        });
+
+        this.throttledSendViewportToServer = throttle(200, () => {
+            this.sendViewportToServer();
         });
 
         //permit to set bound collision
@@ -2602,16 +2608,16 @@ ${escapedMessage}
         super.onResize();
         this.reposition(true);
 
-        this.sendViewportToServer();
+        this.throttledSendViewportToServer();
     }
 
-    public sendViewportToServer(): void {
+    public sendViewportToServer(margin = 300): void {
         const camera = this.cameras.main;
         this.connection?.setViewport({
-            left: camera.scrollX,
-            top: camera.scrollY,
-            right: camera.scrollX + camera.width,
-            bottom: camera.scrollY + camera.height,
+            left: Math.max(0, camera.scrollX - margin),
+            top: Math.max(0, camera.scrollY - margin),
+            right: camera.scrollX + camera.width + margin,
+            bottom: camera.scrollY + camera.height + margin,
         });
     }
 
