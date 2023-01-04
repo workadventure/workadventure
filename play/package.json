@@ -106,6 +106,7 @@
     "@xmpp/debug": "^0.13.0",
     "@xmpp/jid": "^0.13.1",
     "@xmpp/xml": "^0.13.1",
+    "throttle-debounce": "^5.0.0",
     "axios": "^0.27.2",
     "buffer": "^6.0.3",
     "cancelable-promise": "^4.3.0",
