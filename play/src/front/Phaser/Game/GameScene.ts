@@ -254,6 +254,7 @@ export class GameScene extends DirtyScene {
     private playersMovementEventDispatcher = new IframeEventDispatcher();
     private remotePlayersRepository = new RemotePlayersRepository();
     private companionLoadingManager: CompanionTexturesLoadingManager | undefined;
+    private playersDebugLogAlreadyDisplayed = false;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -2317,12 +2318,24 @@ ${escapedMessage}
             //console.log("Player has been removed from GameScene :", removedPlayerId);
         }
 
-        if (this.remotePlayersRepository.getPlayers().size !== this.MapPlayersByKey.size) {
+        if (
+            !this.playersDebugLogAlreadyDisplayed &&
+            this.remotePlayersRepository.getPlayers().size !== this.MapPlayersByKey.size
+        ) {
             console.error(
                 "Not the same count of players",
                 this.remotePlayersRepository.getPlayers(),
-                this.MapPlayersByKey
+                this.MapPlayersByKey,
+                "Added players:",
+                this.remotePlayersRepository.getAddedPlayers(),
+                "Moved players:",
+                this.remotePlayersRepository.getMovedPlayers(),
+                "Updated players:",
+                this.remotePlayersRepository.getUpdatedPlayers(),
+                "Removed players:",
+                this.remotePlayersRepository.getRemovedPlayers()
             );
+            this.playersDebugLogAlreadyDisplayed = true;
         }
 
         this.remotePlayersRepository.reset();

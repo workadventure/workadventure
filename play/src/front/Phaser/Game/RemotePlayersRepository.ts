@@ -38,7 +38,7 @@ export class RemotePlayersRepository {
 
     public addPlayer(userJoinedMessage: MessageUserJoined): void {
         const debugAddPlayer = debugRepo.extend("addPlayer");
-        debugAddPlayer("Player Will be added from repo", userJoinedMessage.userId);
+        debugAddPlayer("Player will be added to repo", userJoinedMessage.userId);
 
         const player = {
             ...userJoinedMessage,
@@ -64,12 +64,12 @@ export class RemotePlayersRepository {
             this.addedPlayers.set(userJoinedMessage.userId, player);
         }
 
-        debugAddPlayer("Player Has been added from repo", userJoinedMessage.userId);
+        debugAddPlayer("Player has been added to repo", userJoinedMessage.userId);
     }
 
     public removePlayer(userId: number): void {
         const debugRemovePlayer = debugRepo.extend("removePlayer");
-        debugRemovePlayer("Player Will be removed from repo", userId);
+        debugRemovePlayer("Player will be removed from repo", userId);
 
         this.remotePlayersData.delete(userId);
         if (this.addedPlayers.has(userId)) {
@@ -79,7 +79,7 @@ export class RemotePlayersRepository {
         }
         this.movedPlayers.delete(userId);
         this.updatedPlayers.delete(userId);
-        debugRemovePlayer("Player Has been removed from repo", userId);
+        debugRemovePlayer("Player has been removed from repo", userId);
     }
 
     public movePlayer(userMovedMessage: UserMovedMessage): void {
