@@ -104,4 +104,29 @@ test.describe('Map-storage Upload API', () => {
         await expect(await accessFile1.text()).toContain("world");
 
     });
+
+    test('cache-control header', async ({
+                                           request,
+                                       }) => {
+        // Let's upload the cache-control.zip
+        // It contains 2 files: immutable.a45b7e8f.js and normal-file.js.
+        // When accessed, normal-file.js should have a small cache-control TTL
+        // immutable.a45b7e8f.js should have a "immutable" Cache-Control HTTP header
+        const uploadFile1 = await request.post(`/upload`, {
+            multipart: {
+                file: fs.createReadStream("./assets/cache-control.zip"),
+            }
+        });
+        await expect(uploadFile1.ok()).toBeTruthy();
+
+        const accessNormalFile = await request.get(`/normal-file.js`);
+        await expect(accessNormalFile.ok()).toBeTruthy();
+        await expect(accessNormalFile.headers()['etag']).toBeDefined();
+        await expect(accessNormalFile.headers()['cache-control']).toContain('public, s-max-age=10')
+
+        const accessCacheControlFile = await request.get(`/immutable.a45b7e8f.js`);
+        await expect(accessCacheControlFile.ok()).toBeTruthy();
+        await expect(accessCacheControlFile.headers()['etag']).toBeDefined();
+        await expect(accessCacheControlFile.headers()['cache-control']).toContain("immutable");
+    });
 });

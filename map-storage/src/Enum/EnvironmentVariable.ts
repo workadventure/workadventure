@@ -27,6 +27,12 @@ const BasicEnvironmentVariables = z.object({
         .string()
         .optional()
         .describe("Storage directory for the maps on physical disk. Used if S3 storage is not configured."),
+    CACHE_CONTROL: z
+        .string()
+        .optional()
+        .describe(
+            'The cache-control HTTP header to be used for "normal" ressources. Note: resources containing a hash in the name will be set to "immutable", whatever this setting is.'
+        ),
 });
 
 const BearerAuthEnvVariables = z.object({
@@ -101,4 +107,6 @@ export const S3_UPLOAD_CONCURRENCY_LIMIT = toNumber(env.S3_UPLOAD_CONCURRENCY_LI
 export const MAX_UNCOMPRESSED_SIZE = toNumber(env.MAX_UNCOMPRESSED_SIZE, 1024 * 1024 * 1024);
 export const USE_DOMAIN_NAME_IN_PATH = toBool(env.USE_DOMAIN_NAME_IN_PATH, false);
 export const STORAGE_DIRECTORY = env.STORAGE_DIRECTORY || "./public";
+// By default, cache only 10 seconds in the CDN
+export const CACHE_CONTROL = env.CACHE_CONTROL || "public, s-max-age=10";
 export const ENV_VARS = env;

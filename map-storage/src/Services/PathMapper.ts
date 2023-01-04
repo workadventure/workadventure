@@ -10,7 +10,6 @@ export function mapPath(filePath: string, req: Request): string {
     return mapPathUsingDomain(filePath, req.hostname);
 }
 
-
 export function mapPathUsingDomain(filePath: string, domain: string): string {
     if (filePath.startsWith("/")) {
         filePath = filePath.substring(1);

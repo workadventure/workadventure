@@ -91,10 +91,7 @@ export class S3FileSystem implements FileSystemInterface {
                     res.set("Expires", result.Expires.toString());
                 }
 
-                // Cache 1 hour on the client, but only 10 seconds in the CDN
-                res.set("Cache-control", `public, max-age=3600, s-max-age=10`);
-
-                // FIXME: AND/OR REDIRECT TO THE BUCKET PUBLIC URL FOR MOST FILES EXCEPT .html files
+                // TODO assess this idea: REDIRECT TO THE BUCKET PUBLIC URL FOR MOST FILES EXCEPT .html files
 
                 if (!result.Body) {
                     throw new Error("Missing body");

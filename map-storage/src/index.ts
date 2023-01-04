@@ -4,7 +4,6 @@ import cors from "cors";
 import { mapStorageServer } from "./MapStorageServer";
 import { mapsManager } from "./MapsManager";
 import { MapStorageService } from "@workadventure/messages/src/ts-proto-generated/services";
-import { STORAGE_DIRECTORY } from "./Enum/EnvironmentVariable";
 import { proxyFiles } from "./FileFetcher/FileFetcher";
 import { UploadController } from "./Upload/UploadController";
 import { fileSystem } from "./fileSystem";
@@ -43,8 +42,6 @@ app.get("*.json", async (req, res) => {
 });
 
 new UploadController(app, fileSystem);
-
-app.use(express.static(STORAGE_DIRECTORY));
 
 app.use(proxyFiles(fileSystem));
 
