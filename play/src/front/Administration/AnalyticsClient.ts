@@ -84,6 +84,14 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    clickOnCustomButton(id: string, label?: string, toolTip?: string, imageSrc?: string) {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-custom-button", { id, label, toolTip, imageSrc });
+            })
+            .catch((e) => console.error(e));
+    }
+
     enteredJitsi(roomName: string, roomId: string): void {
         this.posthogPromise
             ?.then((posthog) => {
