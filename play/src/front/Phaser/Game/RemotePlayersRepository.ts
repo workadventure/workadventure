@@ -7,6 +7,8 @@ import { iframeListener } from "../../Api/IframeListener";
 import { RoomConnection } from "../../Connexion/RoomConnection";
 
 const debugRepo = debug("RemotePlayersRepository");
+const debugAddPlayer = debugRepo.extend("addPlayer");
+const debugRemovePlayer = debugRepo.extend("removePlayer");
 
 interface RemotePlayerData extends MessageUserJoined {
     showVoiceIndicator: boolean;
@@ -37,7 +39,6 @@ export class RemotePlayersRepository {
     private remotePlayersData = new Map<number, RemotePlayerData>();
 
     public addPlayer(userJoinedMessage: MessageUserJoined): void {
-        const debugAddPlayer = debugRepo.extend("addPlayer");
         debugAddPlayer("Player will be added to repo", userJoinedMessage.userId);
 
         const player = {
@@ -68,7 +69,6 @@ export class RemotePlayersRepository {
     }
 
     public removePlayer(userId: number): void {
-        const debugRemovePlayer = debugRepo.extend("removePlayer");
         debugRemovePlayer("Player will be removed from repo", userId);
 
         this.remotePlayersData.delete(userId);
