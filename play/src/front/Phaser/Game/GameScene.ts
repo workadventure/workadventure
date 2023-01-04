@@ -2393,13 +2393,22 @@ ${escapedMessage}
 
     private doAddPlayer(addPlayerData: AddPlayerInterface): void {
         //check if exist player, if exist, move position
-        // Can this really happen?
+        // Can this really happen? yes..
         if (this.MapPlayersByKey.has(addPlayerData.userId)) {
             console.warn("Got instructed to add a player that already exists: ", addPlayerData.userId);
-            /*this.updatePlayerPosition({
-                userId: addPlayerData.userId,
-                position: addPlayerData.position,
-            });*/
+            console.error(
+                "Players status",
+                this.remotePlayersRepository.getPlayers(),
+                this.MapPlayersByKey,
+                "Added players:",
+                this.remotePlayersRepository.getAddedPlayers(),
+                "Moved players:",
+                this.remotePlayersRepository.getMovedPlayers(),
+                "Updated players:",
+                this.remotePlayersRepository.getUpdatedPlayers(),
+                "Removed players:",
+                this.remotePlayersRepository.getRemovedPlayers()
+            );
             return;
         }
 
