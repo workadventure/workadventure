@@ -17,9 +17,7 @@ export function getS3Client(): S3 {
     }
 
     const config: S3ClientConfig = {
-        // ID and Secret are detected by default by the lib
-        /*accessKeyId: AWS_ACCESS_KEY_ID,
-        secretAccessKey: AWS_SECRET_ACCESS_KEY,*/
+        // ID and Secret are detected by default by the lib in the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env vars
         region: AWS_DEFAULT_REGION,
     };
 

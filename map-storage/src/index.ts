@@ -29,16 +29,19 @@ app.use(cors());
 
 passport.use(passportStrategy);
 app.use(passport.initialize());
-//app.use(passport.session());
 
-app.get("*.json", async (req, res) => {
-    const path = req.url;
-    const domain = req.hostname;
-    if (path.includes("..") || domain.includes("..")) {
-        res.status(400).send("Invalid request");
-        return;
+app.get("*.json", async (req, res, next) => {
+    try {
+        const path = req.url;
+        const domain = req.hostname;
+        if (path.includes("..") || domain.includes("..")) {
+            res.status(400).send("Invalid request");
+            return;
+        }
+        res.send(await mapsManager.getMap(path, domain));
+    } catch (e) {
+        next(e);
     }
-    res.send(await mapsManager.getMap(path, domain));
 });
 
 new UploadController(app, fileSystem);

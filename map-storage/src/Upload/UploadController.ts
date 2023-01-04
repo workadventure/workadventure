@@ -36,85 +36,93 @@ export class UploadController {
     }
 
     private index() {
-        this.app.get("/", passportAuthenticator, async (req, res) => {
+        this.app.get("/", passportAuthenticator, (req, res) => {
             res.sendFile(__dirname + "/index.html");
         });
     }
 
     private postUpload() {
-        this.app.post("/upload", passportAuthenticator, upload.single("file"), async (req, res) => {
-            // Make sure a file was uploaded
-            if (!req.file) {
-                res.status(400).send("No file was uploaded.");
-                return;
-            }
-
-            // Get the uploaded file
-            const zipFile = req.file;
-
-            const directoryRaw = req.body.directory;
-            const directory = z.string().optional().parse(directoryRaw) || "./";
-
-            if (directory.includes("..")) {
-                // Attempt to override filesystem. That' a hack!
-                res.status(400).send("Invalid directory");
-                return;
-            }
-
-            // Let's explicitly forbid 2 uploads from running at the same time using a p-limit of 1.
-            // Uploads will be serialized.
-            const virtualDirectory = mapPath(directory, req);
-            let limiter = this.uploadLimiter.get(virtualDirectory);
-            if (limiter === undefined) {
-                limiter = pLimit(1);
-                this.uploadLimiter.set(virtualDirectory, limiter);
-            }
-
-            await limiter(async () => {
-                // Read the contents of the ZIP archive
-                const zip = new AdmZip(zipFile.path);
-                const zipEntries = zip
-                    .getEntries()
-                    .filter((zipEntry) => !zipEntry.isDirectory && this.filterFile(zipEntry.entryName));
-
-                let totalSize = 0;
-                for (const zipEntry of zipEntries) {
-                    totalSize += zipEntry.header.size;
-                }
-
-                if (totalSize > MAX_UNCOMPRESSED_SIZE) {
-                    res.status(413).send(
-                        "File too large. Unzipped files should be less than " + MAX_UNCOMPRESSED_SIZE + " bytes."
-                    );
+        this.app.post("/upload", passportAuthenticator, upload.single("file"), async (req, res, next) => {
+            try {
+                // Make sure a file was uploaded
+                if (!req.file) {
+                    res.status(400).send("No file was uploaded.");
                     return;
                 }
 
-                // Delete all files in the S3 bucket
-                await this.fileSystem.deleteFiles(mapPath(directory, req));
+                // Get the uploaded file
+                const zipFile = req.file;
 
-                const promises: Promise<void>[] = [];
-                // Iterate over the entries in the ZIP archive
-                for (const zipEntry of zipEntries) {
-                    // Store the file
-                    promises.push(
-                        this.fileSystem.writeFile(zipEntry, mapPath(path.join(directory, zipEntry.entryName), req), zip)
-                    );
+                const directoryRaw = req.body.directory;
+                const directory = z.string().optional().parse(directoryRaw) || "./";
+
+                if (directory.includes("..")) {
+                    // Attempt to override filesystem. That' a hack!
+                    res.status(400).send("Invalid directory");
+                    return;
                 }
 
-                await Promise.all(promises);
+                // Let's explicitly forbid 2 uploads from running at the same time using a p-limit of 1.
+                // Uploads will be serialized.
+                const virtualDirectory = mapPath(directory, req);
+                let limiter = this.uploadLimiter.get(virtualDirectory);
+                if (limiter === undefined) {
+                    limiter = pLimit(1);
+                    this.uploadLimiter.set(virtualDirectory, limiter);
+                }
 
-                // Delete the uploaded ZIP file from the disk
-                fs.unlink(zipFile.path, (err) => {
-                    if (err) {
-                        console.error(`Error deleting file: ${err}`);
+                await limiter(async () => {
+                    // Read the contents of the ZIP archive
+                    const zip = new AdmZip(zipFile.path);
+                    const zipEntries = zip
+                        .getEntries()
+                        .filter((zipEntry) => !zipEntry.isDirectory && this.filterFile(zipEntry.entryName));
+
+                    let totalSize = 0;
+                    for (const zipEntry of zipEntries) {
+                        totalSize += zipEntry.header.size;
                     }
+
+                    if (totalSize > MAX_UNCOMPRESSED_SIZE) {
+                        res.status(413).send(
+                            "File too large. Unzipped files should be less than " + MAX_UNCOMPRESSED_SIZE + " bytes."
+                        );
+                        return;
+                    }
+
+                    // Delete all files in the S3 bucket
+                    await this.fileSystem.deleteFiles(mapPath(directory, req));
+
+                    const promises: Promise<void>[] = [];
+                    // Iterate over the entries in the ZIP archive
+                    for (const zipEntry of zipEntries) {
+                        // Store the file
+                        promises.push(
+                            this.fileSystem.writeFile(
+                                zipEntry,
+                                mapPath(path.join(directory, zipEntry.entryName), req),
+                                zip
+                            )
+                        );
+                    }
+
+                    await Promise.all(promises);
+
+                    // Delete the uploaded ZIP file from the disk
+                    fs.unlink(zipFile.path, (err) => {
+                        if (err) {
+                            console.error(`Error deleting file: ${err}`);
+                        }
+                    });
+
+                    res.send("File successfully uploaded.");
                 });
 
-                res.send("File successfully uploaded.");
-            });
-
-            if (limiter.activeCount === 0 && limiter.pendingCount === 0) {
-                this.uploadLimiter.delete(virtualDirectory);
+                if (limiter.activeCount === 0 && limiter.pendingCount === 0) {
+                    this.uploadLimiter.delete(virtualDirectory);
+                }
+            } catch (e) {
+                next(e);
             }
         });
     }
@@ -133,60 +141,63 @@ export class UploadController {
     }
 
     private getDownload() {
-        this.app.get("/download", passportAuthenticator, async (req, res) => {
-            const directoryRaw = req.query.directory;
-            const directory = z.string().optional().parse(directoryRaw) || "./";
+        this.app.get("/download", passportAuthenticator, async (req, res, next) => {
+            try {
+                const directoryRaw = req.query.directory;
+                const directory = z.string().optional().parse(directoryRaw) || "./";
 
-            if (directory.includes("..")) {
-                // Attempt to override filesystem. That' a hack!
-                res.status(400).send("Invalid directory");
-                return;
-            }
-
-            // Let's explicitly forbid 2 uploads from running at the same time using a p-limit of 1.
-            // Uploads will be serialized.
-            const virtualDirectory = mapPath(directory, req);
-
-            let archiveName: string | undefined;
-            if (directory) {
-                const baseName = path.basename(directory);
-                if (baseName !== "." && baseName !== "") {
-                    archiveName = baseName + ".zip";
+                if (directory.includes("..")) {
+                    // Attempt to override filesystem. That' a hack!
+                    res.status(400).send("Invalid directory");
+                    return;
                 }
-            }
-            if (archiveName === undefined) {
-                archiveName = "map.zip";
-            }
 
-            res.attachment(archiveName);
+                // Let's explicitly forbid 2 uploads from running at the same time using a p-limit of 1.
+                // Uploads will be serialized.
+                const virtualDirectory = mapPath(directory, req);
 
-            const archive = archiver("zip", {
-                zlib: { level: 9 }, // Sets the compression level.
-            });
-
-            // good practice to catch warnings (ie stat failures and other non-blocking errors)
-            archive.on("warning", function (err) {
-                if (err.code === "ENOENT") {
-                    // log warning
-                    console.warn("File not found: ", err);
-                } else {
-                    console.error("An warning occurred while Zipping file: ", err);
-                    //res.status(500).send('An error occurred');
+                let archiveName: string | undefined;
+                if (directory) {
+                    const baseName = path.basename(directory);
+                    if (baseName !== "." && baseName !== "") {
+                        archiveName = baseName + ".zip";
+                    }
                 }
-            });
+                if (archiveName === undefined) {
+                    archiveName = "map.zip";
+                }
 
-            // good practice to catch this error explicitly
-            archive.on("error", function (err) {
-                console.error("An error occurred while Zipping file: ", err);
-                res.status(500).send("An error occurred");
-            });
+                res.attachment(archiveName);
 
-            // pipe archive data to the file
-            archive.pipe(res);
+                const archive = archiver("zip", {
+                    zlib: { level: 9 }, // Sets the compression level.
+                });
 
-            await fileSystem.archiveDirectory(archive, virtualDirectory);
+                // good practice to catch warnings (ie stat failures and other non-blocking errors)
+                archive.on("warning", function (err) {
+                    if (err.code === "ENOENT") {
+                        // log warning
+                        console.warn("File not found: ", err);
+                    } else {
+                        console.error("A warning occurred while Zipping file: ", err);
+                    }
+                });
 
-            await archive.finalize();
+                // good practice to catch this error explicitly
+                archive.on("error", function (err) {
+                    console.error("An error occurred while Zipping file: ", err);
+                    res.status(500).send("An error occurred");
+                });
+
+                // pipe archive data to the file
+                archive.pipe(res);
+
+                await fileSystem.archiveDirectory(archive, virtualDirectory);
+
+                await archive.finalize();
+            } catch (e) {
+                next(e);
+            }
         });
     }
 }

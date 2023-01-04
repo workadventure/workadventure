@@ -83,10 +83,6 @@ export class S3FileSystem implements FileSystemInterface {
                     res.set("ETag", result.ETag);
                 }
 
-                /*if (result.CacheControl) {
-                res.set('Cache-Control', result.CacheControl);
-            }*/
-
                 if (result.Expires) {
                     res.set("Expires", result.Expires.toString());
                 }
@@ -96,17 +92,11 @@ export class S3FileSystem implements FileSystemInterface {
                 if (!result.Body) {
                     throw new Error("Missing body");
                 }
-                // Stream the item to the client
-                //(result.Body as ReadableStream).pipeTo(res);
-                //console.log('BAA', await result.Body.transformToByteArray());
 
                 // Typescript doc is wrong in AWS: see: https://github.com/aws/aws-sdk-js-v3/issues/1877#issuecomment-755387549
                 //eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 //@ts-ignore
                 (result.Body as IncomingMessage).pipe(res);
-                //console.log(result.Body.constructor.name);
-                //res.send(result.Body.transformToWebStream());
-                //res.end();
             })
             .catch((err) => {
                 if (err.constructor.name === "NoSuchKey") {
