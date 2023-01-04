@@ -15,5 +15,8 @@
     "benchmark",
     "uploader",
     "play/packages/iframe-api-typings"
-  ]
+  ],
+  "dependencies": {
+    "throttle-debounce": "^5.0.0"
+  }
 }
