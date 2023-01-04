@@ -16,14 +16,17 @@ describe("Main store", () => {
 
         expect(triggered).toBe(true);
         triggered = false;
+        expect(mapStore.has("foo")).toBe(false);
         mapStore.set("foo", "bar");
         expect(triggered).toBe(true);
+        expect(mapStore.has("foo")).toBe(true);
 
         triggered = false;
         mapStore.delete("baz");
         expect(triggered).toBe(false);
         mapStore.delete("foo");
         expect(triggered).toBe(true);
+        expect(mapStore.has("foo")).toBe(false);
 
         triggered = false;
         mapStore.clear();
