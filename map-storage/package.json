@@ -44,7 +44,7 @@
     "@workadventure/map-editor": "1.0.0",
     "@workadventure/messages": "1.0.0",
     "@workadventure/tiled-map-type-guard": "^2.0.6",
-    "adm-zip": "^0.5.10",
+    "node-stream-zip": "^1.15.0",
     "archiver": "^5.3.1",
     "concurrently": "^7.3.0",
     "cors": "^2.8.5",
@@ -68,7 +68,6 @@
     "zod": "^3.20.2"
   },
   "devDependencies": {
-    "@types/adm-zip": "^0.5.0",
     "@types/archiver": "^5.3.1",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",

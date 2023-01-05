@@ -13,7 +13,7 @@ export function proxyFiles(fileSystem: FileSystemInterface) {
 
         if (fileName) {
             // Use a regular expression to check if the file has a unique alphanumeric identifier of length between 6 and 32 characters in its name, and capture the file extension
-            const regex = /[\.\-]([a-f0-9]{8})\.([a-z]{2,4})$/i;
+            const regex = /[.-]([a-f0-9]{8})\.([a-z]{2,4})$/i;
             const match = fileName.match(regex);
 
             // Check if the regular expression matched and the file extension is one of the common static file extensions

@@ -1,9 +1,9 @@
 import { FileSystemInterface } from "./FileSystemInterface";
-import AdmZip from "adm-zip";
 import * as fs from "fs-extra";
 import path from "path";
 import { NextFunction, Response } from "express";
 import { Archiver } from "archiver";
+import { StreamZipAsync, ZipEntry } from "node-stream-zip";
 
 export class DiskFileSystem implements FileSystemInterface {
     public constructor(private baseDirectory: string) {}
@@ -15,8 +15,11 @@ export class DiskFileSystem implements FileSystemInterface {
         }
     }
 
-    async writeFile(zipEntry: AdmZip.IZipEntry, targetFilePath: string, zip: AdmZip): Promise<void> {
-        zip.extractEntryTo(zipEntry, path.dirname(this.getFullPath(targetFilePath)), false);
+    async writeFile(zipEntry: ZipEntry, targetFilePath: string, zip: StreamZipAsync): Promise<void> {
+        const fullPath = this.getFullPath(targetFilePath);
+        const dir = path.dirname(fullPath);
+        await fs.mkdirp(dir);
+        await zip.extract(zipEntry, this.getFullPath(targetFilePath));
     }
 
     private getFullPath(filePath: string) {
@@ -26,21 +29,20 @@ export class DiskFileSystem implements FileSystemInterface {
         return path.resolve(path.join(this.baseDirectory, filePath));
     }
 
-    async serveStaticFile(virtualPath: string, res: Response, next: NextFunction): Promise<void> {
-        return new Promise(async (resolve, reject) => {
+    serveStaticFile(virtualPath: string, res: Response, next: NextFunction): void {
+        (async () => {
             const fullPath = this.getFullPath(virtualPath);
             if (await fs.pathExists(fullPath)) {
                 res.sendFile(fullPath, (err) => {
                     if (err) {
-                        reject(err);
-                    } else {
-                        resolve();
+                        next(err);
                     }
                 });
             } else {
                 next();
-                resolve();
             }
+        })().catch((e) => {
+            next(e);
         });
     }
 

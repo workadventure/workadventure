@@ -1,4 +1,3 @@
-import AdmZip from "adm-zip";
 import * as fs from "fs";
 import multer from "multer";
 import { Express } from "express";
@@ -11,6 +10,7 @@ import pLimit from "p-limit";
 import { passportAuthenticator } from "../Services/Authentication";
 import archiver from "archiver";
 import { fileSystem } from "../fileSystem";
+import StreamZip from "node-stream-zip";
 
 const upload = multer({
     storage: multer.diskStorage({}),
@@ -42,8 +42,8 @@ export class UploadController {
     }
 
     private postUpload() {
-        this.app.post("/upload", passportAuthenticator, upload.single("file"), async (req, res, next) => {
-            try {
+        this.app.post("/upload", passportAuthenticator, upload.single("file"), (req, res, next) => {
+            (async () => {
                 // Make sure a file was uploaded
                 if (!req.file) {
                     res.status(400).send("No file was uploaded.");
@@ -53,8 +53,11 @@ export class UploadController {
                 // Get the uploaded file
                 const zipFile = req.file;
 
-                const directoryRaw = req.body.directory;
-                const directory = z.string().optional().parse(directoryRaw) || "./";
+                const Body = z.object({
+                    directory: z.string().optional(),
+                });
+
+                const directory = Body.parse(req.body).directory || "./";
 
                 if (directory.includes("..")) {
                     // Attempt to override filesystem. That' a hack!
@@ -73,19 +76,19 @@ export class UploadController {
 
                 await limiter(async () => {
                     // Read the contents of the ZIP archive
-                    const zip = new AdmZip(zipFile.path);
-                    const zipEntries = zip
-                        .getEntries()
-                        .filter((zipEntry) => !zipEntry.isDirectory && this.filterFile(zipEntry.entryName));
+                    const zip = new StreamZip.async({ file: zipFile.path });
+                    const zipEntries = Object.values(await zip.entries()).filter(
+                        (zipEntry) => !zipEntry.isDirectory && this.filterFile(zipEntry.name)
+                    );
 
                     let totalSize = 0;
                     for (const zipEntry of zipEntries) {
-                        totalSize += zipEntry.header.size;
+                        totalSize += zipEntry.size;
                     }
 
                     if (totalSize > MAX_UNCOMPRESSED_SIZE) {
                         res.status(413).send(
-                            "File too large. Unzipped files should be less than " + MAX_UNCOMPRESSED_SIZE + " bytes."
+                            `File too large. Unzipped files should be less than ${MAX_UNCOMPRESSED_SIZE} bytes.`
                         );
                         return;
                     }
@@ -98,20 +101,17 @@ export class UploadController {
                     for (const zipEntry of zipEntries) {
                         // Store the file
                         promises.push(
-                            this.fileSystem.writeFile(
-                                zipEntry,
-                                mapPath(path.join(directory, zipEntry.entryName), req),
-                                zip
-                            )
+                            this.fileSystem.writeFile(zipEntry, mapPath(path.join(directory, zipEntry.name), req), zip)
                         );
                     }
 
                     await Promise.all(promises);
 
+                    await zip.close();
                     // Delete the uploaded ZIP file from the disk
                     fs.unlink(zipFile.path, (err) => {
                         if (err) {
-                            console.error(`Error deleting file: ${err}`);
+                            console.error("Error deleting file:", err);
                         }
                     });
 
@@ -121,9 +121,7 @@ export class UploadController {
                 if (limiter.activeCount === 0 && limiter.pendingCount === 0) {
                     this.uploadLimiter.delete(virtualDirectory);
                 }
-            } catch (e) {
-                next(e);
-            }
+            })().catch((e) => next(e));
         });
     }
 
@@ -131,7 +129,7 @@ export class UploadController {
      * Let's filter out any file starting with "."
      */
     public filterFile(path: string): boolean {
-        const paths = path.split(/[\/\\]/);
+        const paths = path.split(/[/\\]/);
         for (const subPath of paths) {
             if (subPath.startsWith(".")) {
                 return false;
@@ -141,8 +139,8 @@ export class UploadController {
     }
 
     private getDownload() {
-        this.app.get("/download", passportAuthenticator, async (req, res, next) => {
-            try {
+        this.app.get("/download", passportAuthenticator, (req, res, next) => {
+            (async () => {
                 const directoryRaw = req.query.directory;
                 const directory = z.string().optional().parse(directoryRaw) || "./";
 
@@ -195,9 +193,7 @@ export class UploadController {
                 await fileSystem.archiveDirectory(archive, virtualDirectory);
 
                 await archive.finalize();
-            } catch (e) {
-                next(e);
-            }
+            })().catch((e) => next(e));
         });
     }
 }

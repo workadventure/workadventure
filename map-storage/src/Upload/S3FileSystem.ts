@@ -8,13 +8,13 @@ import {
     S3,
 } from "@aws-sdk/client-s3";
 import { FileSystemInterface } from "./FileSystemInterface";
-import AdmZip from "adm-zip";
 import { s3UploadConcurrencyLimit } from "../Services/S3Client";
 import mime from "mime";
 import { NextFunction, Response } from "express";
 import { IncomingMessage } from "http";
 import { Archiver } from "archiver";
 import { Readable } from "stream";
+import { StreamZipAsync, ZipEntry } from "node-stream-zip";
 
 export class S3FileSystem implements FileSystemInterface {
     public constructor(private s3: S3, private bucketName: string) {}
@@ -54,14 +54,15 @@ export class S3FileSystem implements FileSystemInterface {
         } while (listObjectsResponse.IsTruncated);
     }
 
-    async writeFile(zipEntry: AdmZip.IZipEntry, targetFilePath: string, zip: AdmZip): Promise<void> {
-        await s3UploadConcurrencyLimit(() =>
+    async writeFile(zipEntry: ZipEntry, targetFilePath: string, zip: StreamZipAsync): Promise<void> {
+        await s3UploadConcurrencyLimit(async () =>
             this.s3.send(
                 new PutObjectCommand({
                     Bucket: this.bucketName,
                     Key: targetFilePath,
-                    Body: zipEntry.getData(),
+                    Body: (await zip.stream(zipEntry)) as unknown as ReadableStream,
                     ContentType: mime.getType(targetFilePath) ?? undefined,
+                    ContentLength: zipEntry.size,
                 })
             )
         );
@@ -71,7 +72,7 @@ export class S3FileSystem implements FileSystemInterface {
     serveStaticFile(virtualPath: string, res: Response, next: NextFunction): void {
         this.s3
             .getObject({ Bucket: this.bucketName, Key: virtualPath })
-            .then(async (result) => {
+            .then((result) => {
                 // Set the content type and content length headers
                 res.set("Content-Type", result.ContentType);
 
@@ -99,7 +100,7 @@ export class S3FileSystem implements FileSystemInterface {
                 (result.Body as IncomingMessage).pipe(res);
             })
             .catch((err) => {
-                if (err.constructor.name === "NoSuchKey") {
+                if (err instanceof Error && err.constructor.name === "NoSuchKey") {
                     next();
                 } else {
                     next(err);

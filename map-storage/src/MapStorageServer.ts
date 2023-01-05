@@ -88,7 +88,13 @@ const mapStorageServer: MapStorageServer = {
             callback(null, editMapCommandMessage);
         } catch (e) {
             console.log(e);
-            callback({ name: "MapStorageError", message: `${e}` }, null);
+            let message: string;
+            if (typeof e === "object" && e !== null) {
+                message = e.toString();
+            } else {
+                message = "Unknown error";
+            }
+            callback({ name: "MapStorageError", message }, null);
         }
     },
 };

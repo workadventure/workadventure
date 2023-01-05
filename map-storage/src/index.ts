@@ -30,8 +30,8 @@ app.use(cors());
 passport.use(passportStrategy);
 app.use(passport.initialize());
 
-app.get("*.json", async (req, res, next) => {
-    try {
+app.get("*.json", (req, res, next) => {
+    (async () => {
         const path = req.url;
         const domain = req.hostname;
         if (path.includes("..") || domain.includes("..")) {
@@ -39,9 +39,7 @@ app.get("*.json", async (req, res, next) => {
             return;
         }
         res.send(await mapsManager.getMap(path, domain));
-    } catch (e) {
-        next(e);
-    }
+    })().catch((e) => next(e));
 });
 
 new UploadController(app, fileSystem);

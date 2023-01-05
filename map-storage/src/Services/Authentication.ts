@@ -2,12 +2,13 @@ import { ENV_VARS } from "../Enum/EnvironmentVariable";
 import { Strategy as BearerStrategy } from "passport-http-bearer";
 import { BasicStrategy, DigestStrategy } from "passport-http";
 import passport, { Authenticator, Strategy } from "passport";
+import { RequestHandler } from "express-serve-static-core";
 
 let strategy: Strategy;
 let authenticator: ReturnType<Authenticator["authenticate"]>;
 
 switch (ENV_VARS.AUTHENTICATION_STRATEGY) {
-    case "Bearer":
+    case "Bearer": {
         const authToken = ENV_VARS.AUTHENTICATION_TOKEN;
         strategy = new BearerStrategy((token, done) => {
             if (token !== authToken) {
@@ -16,8 +17,10 @@ switch (ENV_VARS.AUTHENTICATION_STRATEGY) {
                 return done(null, {}, { scope: "all" });
             }
         });
+        //eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         authenticator = passport.authenticate("bearer", { session: false });
         break;
+    }
     case "Basic": {
         const configuredUser = ENV_VARS.AUTHENTICATION_USER;
         const configuredPassword = ENV_VARS.AUTHENTICATION_PASSWORD;
@@ -30,6 +33,7 @@ switch (ENV_VARS.AUTHENTICATION_STRATEGY) {
                 });
             }
         });
+        //eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         authenticator = passport.authenticate("basic", { session: false });
         break;
     }
@@ -49,6 +53,7 @@ switch (ENV_VARS.AUTHENTICATION_STRATEGY) {
                 );
             }
         });
+        //eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         authenticator = passport.authenticate("digest", { session: false });
         break;
     }
@@ -59,4 +64,4 @@ switch (ENV_VARS.AUTHENTICATION_STRATEGY) {
 }
 
 export const passportStrategy = strategy;
-export const passportAuthenticator = authenticator;
+export const passportAuthenticator = authenticator as RequestHandler;

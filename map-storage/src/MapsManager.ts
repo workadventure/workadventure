@@ -93,20 +93,22 @@ class MapsManager {
     private startSavingMapInterval(key: string, intervalMS: number): void {
         this.saveMapIntervals.set(
             key,
-            setInterval(async () => {
-                console.log(`saving map ${key}`);
-                const gameMap = this.loadedMaps.get(key);
-                if (gameMap) {
-                    await fileSystem.writeStringAsFile(key, JSON.stringify(gameMap.getMap()));
-                }
-                const lastChangeTimestamp = this.mapLastChangeTimestamp.get(key);
-                if (lastChangeTimestamp === undefined) {
-                    return;
-                }
-                if (lastChangeTimestamp + this.NO_CHANGE_DETECTED_MS < +new Date()) {
-                    console.log(`NO CHANGES ON THE MAP ${key} DETECTED. STOP AUTOSAVING`);
-                    this.clearSaveMapInterval(key);
-                }
+            setInterval(() => {
+                (async () => {
+                    console.log(`saving map ${key}`);
+                    const gameMap = this.loadedMaps.get(key);
+                    if (gameMap) {
+                        await fileSystem.writeStringAsFile(key, JSON.stringify(gameMap.getMap()));
+                    }
+                    const lastChangeTimestamp = this.mapLastChangeTimestamp.get(key);
+                    if (lastChangeTimestamp === undefined) {
+                        return;
+                    }
+                    if (lastChangeTimestamp + this.NO_CHANGE_DETECTED_MS < +new Date()) {
+                        console.log(`NO CHANGES ON THE MAP ${key} DETECTED. STOP AUTOSAVING`);
+                        this.clearSaveMapInterval(key);
+                    }
+                })().catch((e) => console.error(e));
             }, intervalMS)
         );
     }

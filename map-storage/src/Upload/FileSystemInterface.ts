@@ -1,13 +1,13 @@
-import AdmZip, { IZipEntry } from "adm-zip";
 import { NextFunction, Response } from "express";
 import { Archiver } from "archiver";
+import { StreamZipAsync, ZipEntry } from "node-stream-zip";
 
 export interface FileSystemInterface {
     deleteFiles(directory: string): Promise<void>;
 
-    writeFile(zipEntry: IZipEntry, targetFilePath: string, zip: AdmZip): Promise<void>;
+    writeFile(zipEntry: ZipEntry, targetFilePath: string, zip: StreamZipAsync): Promise<void>;
 
-    serveStaticFile(virtualPath: string, res: Response, next: NextFunction): void | Promise<void>;
+    serveStaticFile(virtualPath: string, res: Response, next: NextFunction): void;
 
     readFileAsString(virtualPath: string): Promise<string>;
 

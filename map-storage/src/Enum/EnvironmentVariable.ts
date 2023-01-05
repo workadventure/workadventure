@@ -72,7 +72,7 @@ try {
             // It appears the typing of "value" is incorrect in Zod (!)
             //eslint-disable-next-line @typescript-eslint/ban-ts-comment
             //@ts-ignore
-            for (const error of value._errors) {
+            for (const error of value._errors as string[]) {
                 console.error(`For variable "${name}": ${error}`);
             }
         }
