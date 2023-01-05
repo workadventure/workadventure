@@ -14,10 +14,11 @@ import type { Zone } from "../Zone";
 import type { compressors } from "hyper-express";
 import type { WokaDetail, MucRoomDefinitionInterface, ApplicationDefinitionInterface } from "@workadventure/messages";
 import type { PusherRoom } from "../PusherRoom";
+import { CustomJsonReplacerInterface } from "../CustomJsonReplacerInterface";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
-export interface ExSocketInterface extends compressors.WebSocket, Identificable {
+export interface ExSocketInterface extends compressors.WebSocket, Identificable, CustomJsonReplacerInterface {
     token: string;
     roomId: string;
     //userId: number;   // A temporary (autoincremented) identifier for this user

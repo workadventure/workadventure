@@ -14,6 +14,8 @@ RUN npm run tag-version && npm run ts-proto
 # final production image
 FROM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d
 WORKDIR /usr/src
+ENV STORAGE_DIRECTORY=/maps
+RUN mkdir /maps && chown node:node /maps
 RUN apt-get update && apt-get install -y git
 COPY package.json package-lock.json ./
 COPY map-storage/package.json map-storage/package.json

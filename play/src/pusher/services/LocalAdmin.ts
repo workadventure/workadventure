@@ -117,6 +117,10 @@ class LocalAdmin implements AdminInterface {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 
+    fetchWellKnownChallenge(host: string): Promise<string> {
+        return Promise.reject(new Error("No admin backoffice set!"));
+    }
+
     reportPlayer(
         reportedUserUuid: string,
         reportedUserComment: string,

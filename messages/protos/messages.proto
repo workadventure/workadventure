@@ -631,7 +631,7 @@ message PusherToBackMessage {
     LockGroupPromptMessage lockGroupPromptMessage = 19;
     QueryMessage queryMessage = 21;
     AskPositionMessage askPositionMessage = 22;
-    EditMapCommandWithKeyMessage editMapCommandWithKeyMessage = 23;
+    EditMapCommandMessage editMapCommandMessage = 23;
     UpdateMapToNewestWithKeyMessage updateMapToNewestWithKeyMessage = 24;
   }
 }

@@ -12,6 +12,7 @@ import {
 } from "@workadventure/messages";
 
 import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
+import { mapPathUsingDomain } from "./Services/PathMapper";
 
 const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, EmptyMessage>, callback: sendUnaryData<PingMessage>): void {
@@ -47,18 +48,21 @@ const mapStorageServer: MapStorageServer = {
             callback({ name: "MapStorageError", message: "EditMapCommand message does not exist" }, null);
             return;
         }
-        const gameMap = mapsManager.getGameMap(call.request.mapKey);
-        if (!gameMap) {
-            callback(
-                { name: "MapStorageError", message: `Could not find the game map of ${call.request.mapKey} key!` },
-                { id: editMapCommandMessage.id, editMapMessage: undefined }
-            );
-            return;
-        }
-        const commandId = editMapCommandMessage.id;
-        const editMapMessage = editMapCommandMessage.editMapMessage.message;
-        let validCommand = false;
         try {
+            // The mapKey is the complete URL to the map. Let's map it to our virtual path.
+            const mapUrl = new URL(call.request.mapKey);
+            const mapKey = mapPathUsingDomain(mapUrl.pathname, mapUrl.hostname);
+
+            const gameMap = mapsManager.getGameMap(mapKey);
+            if (!gameMap) {
+                callback(
+                    { name: "MapStorageError", message: `Could not find the game map of ${mapKey} key!` },
+                    { id: editMapCommandMessage.id, editMapMessage: undefined }
+                );
+                return;
+            }
+            const editMapMessage = editMapCommandMessage.editMapMessage.message;
+            const commandId = editMapCommandMessage.id;
             switch (editMapMessage.$case) {
                 case "modifyAreaMessage": {
                     const message = editMapMessage.modifyAreaMessage;
@@ -66,8 +70,8 @@ const mapStorageServer: MapStorageServer = {
                     if (area) {
                         const areaObjectConfig: AreaData = structuredClone(area);
                         _.merge(areaObjectConfig, message);
-                        validCommand = mapsManager.executeCommand(
-                            call.request.mapKey,
+                        mapsManager.executeCommand(
+                            mapKey,
                             {
                                 type: "UpdateAreaCommand",
                                 areaObjectConfig,
@@ -88,8 +92,8 @@ const mapStorageServer: MapStorageServer = {
                         },
                         visible: true,
                     };
-                    validCommand = mapsManager.executeCommand(
-                        call.request.mapKey,
+                    mapsManager.executeCommand(
+                        mapKey,
                         {
                             areaObjectConfig,
                             type: "CreateAreaCommand",
@@ -100,8 +104,8 @@ const mapStorageServer: MapStorageServer = {
                 }
                 case "deleteAreaMessage": {
                     const message = editMapMessage.deleteAreaMessage;
-                    validCommand = mapsManager.executeCommand(
-                        call.request.mapKey,
+                    mapsManager.executeCommand(
+                        mapKey,
                         {
                             type: "DeleteAreaCommand",
                             id: message.id,
@@ -114,8 +118,8 @@ const mapStorageServer: MapStorageServer = {
                     const message = editMapMessage.modifyEntityMessage;
                     const entity = gameMap.getGameMapEntities().getEntity(message.id);
                     if (entity) {
-                        validCommand = mapsManager.executeCommand(
-                            call.request.mapKey,
+                        mapsManager.executeCommand(
+                            mapKey,
                             {
                                 type: "UpdateEntityCommand",
                                 dataToModify: message,
@@ -133,8 +137,8 @@ const mapStorageServer: MapStorageServer = {
                     if (!entityPrefab) {
                         throw new Error(`CANNOT FIND PREFAB FOR: ${message.collecionName} ${message.prefabId}`);
                     }
-                    validCommand = mapsManager.executeCommand(
-                        call.request.mapKey,
+                    mapsManager.executeCommand(
+                        mapKey,
                         {
                             type: "CreateEntityCommand",
                             entityData: {
@@ -150,8 +154,8 @@ const mapStorageServer: MapStorageServer = {
                 }
                 case "deleteEntityMessage": {
                     const message = editMapMessage.deleteEntityMessage;
-                    validCommand = mapsManager.executeCommand(
-                        call.request.mapKey,
+                    mapsManager.executeCommand(
+                        mapKey,
                         {
                             type: "DeleteEntityCommand",
                             id: message.id,
@@ -161,17 +165,21 @@ const mapStorageServer: MapStorageServer = {
                     break;
                 }
                 default: {
-                    throw new Error(`UNKNOWN EDIT MAP MESSAGE CASE. THIS SHOULD NOT BE POSSIBLE`);
+                    const _exhaustiveCheck: never = editMapMessage;
                 }
             }
             // send edit map message back as a valid one
-            if (validCommand) {
-                mapsManager.addCommandToQueue(call.request.mapKey, editMapCommandMessage);
-                callback(null, editMapCommandMessage);
-            }
+            mapsManager.addCommandToQueue(call.request.mapKey, editMapCommandMessage);
+            callback(null, editMapCommandMessage);
         } catch (e) {
             console.log(e);
-            callback({ name: "MapStorageError", message: `${e}` }, null);
+            let message: string;
+            if (typeof e === "object" && e !== null) {
+                message = e.toString();
+            } else {
+                message = "Unknown error";
+            }
+            callback({ name: "MapStorageError", message }, null);
         }
     },
 };

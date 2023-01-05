@@ -1,7 +1,8 @@
 import { ADMIN_API_TOKEN } from "../enums/EnvironmentVariable";
-import { stringify } from "flatted";
+import { stringify } from "circular-json";
 import { socketManager } from "../services/SocketManager";
 import { BaseHttpController } from "./BaseHttpController";
+import { CustomJsonReplacerInterface } from "../models/CustomJsonReplacerInterface";
 
 export class DebugController extends BaseHttpController {
     routes(): void {
@@ -15,14 +16,29 @@ export class DebugController extends BaseHttpController {
                 return;
             }
 
-            const worlds = Object.fromEntries(socketManager.getWorlds().entries());
+            res.header("Content-Type", "application/json");
+            res.send(
+                stringify(socketManager, function (key: unknown, value: unknown) {
+                    const customObj = CustomJsonReplacerInterface.safeParse(this);
+                    if (customObj.success) {
+                        const val = customObj.data.customJsonReplacer(key, value);
+                        if (val !== undefined) {
+                            return val;
+                        }
+                    }
 
-            res.json(
-                stringify(worlds, (key: unknown, value: unknown) => {
+                    if (key === "socket") {
+                        return "Socket";
+                    }
+                    if (key === "batchedMessages") {
+                        return "BatchedMessages";
+                    }
                     if (value instanceof Map) {
-                        const obj: any = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
+                        const obj: { [key: string | number]: unknown } = {};
                         for (const [mapKey, mapValue] of value.entries()) {
-                            obj[mapKey] = mapValue;
+                            if (typeof mapKey === "number" || typeof mapKey === "string") {
+                                obj[mapKey] = mapValue;
+                            }
                         }
                         return obj;
                     } else if (value instanceof Set) {

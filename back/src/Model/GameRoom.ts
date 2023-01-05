@@ -71,7 +71,7 @@ export class GameRoom implements BrothersFinder {
 
     private constructor(
         public readonly roomUrl: string,
-        private mapUrl: string,
+        private _mapUrl: string,
         private roomGroup: string | null,
         private readonly connectCallback: ConnectCallback,
         private readonly disconnectCallback: DisconnectCallback,
@@ -143,7 +143,7 @@ export class GameRoom implements BrothersFinder {
             .then((mucManager) => {
                 mucManager.init(mapDetails).catch((err) => console.error(err));
             })
-            .catch((err) => console.error(err));
+            .catch((err) => console.error("Error get Muc Manager: ", err));
         return gameRoom;
     }
 
@@ -589,8 +589,8 @@ export class GameRoom implements BrothersFinder {
     public async incrementVersion(): Promise<number> {
         // Let's check if the mapUrl has changed
         const mapDetails = await GameRoom.getMapDetails(this.roomUrl);
-        if (this.mapUrl !== mapDetails.mapUrl) {
-            this.mapUrl = mapDetails.mapUrl;
+        if (this._mapUrl !== mapDetails.mapUrl) {
+            this._mapUrl = mapDetails.mapUrl;
             this.mapPromise = undefined;
             // Reset the variable manager
             this.variableManagerPromise = undefined;
@@ -674,7 +674,7 @@ export class GameRoom implements BrothersFinder {
      */
     private getMap(canLoadLocalUrl = false): Promise<ITiledMap> {
         if (!this.mapPromise) {
-            this.mapPromise = mapFetcher.fetchMap(this.mapUrl, canLoadLocalUrl);
+            this.mapPromise = mapFetcher.fetchMap(this._mapUrl, canLoadLocalUrl);
         }
 
         return this.mapPromise;
@@ -889,10 +889,10 @@ export class GameRoom implements BrothersFinder {
     private mucManagerLastLoad: Date | undefined;
 
     private getMucManager(): Promise<MucManager> {
-        const lastMapUrl = this.mapUrl;
+        const lastMapUrl = this._mapUrl;
         if (!this.mucManagerPromise) {
             // For localhost maps
-            this.mapUrl = this.mapUrl.replace("http://maps.workadventure.localhost", "http://maps:80");
+            this._mapUrl = this._mapUrl.replace("http://maps.workadventure.localhost", "http://maps:80");
             this.mucManagerLastLoad = new Date();
             this.mucManagerPromise = this.getMap(true)
                 .then((map) => {
@@ -930,7 +930,7 @@ export class GameRoom implements BrothersFinder {
                     return new MucManager(this.roomUrl, null);
                 });
         }
-        this.mapUrl = lastMapUrl;
+        this._mapUrl = lastMapUrl;
         return this.mucManagerPromise;
     }
 
@@ -942,5 +942,9 @@ export class GameRoom implements BrothersFinder {
         for (const socket of this.roomListeners) {
             socket.write(batchMessage);
         }
+    }
+
+    get mapUrl(): string {
+        return this._mapUrl;
     }
 }

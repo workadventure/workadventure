@@ -3,6 +3,7 @@ import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
+import { throttle } from "throttle-debounce";
 
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connexion/ConnectionManager";
@@ -152,6 +153,7 @@ import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import { mapEditorModeStore, mapEntitiesPrefabsStore } from "../../Stores/MapEditorStore";
+import { debugManager } from "../../Debug/DebugManager";
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PositionInterface;
@@ -170,7 +172,6 @@ interface DeleteGroupEventInterface {
 export class GameScene extends DirtyScene {
     Terrains: Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer!: Player;
-    MapPlayers!: Phaser.Physics.Arcade.Group;
     MapPlayersByKey: MapStore<number, RemotePlayer> = new MapStore<number, RemotePlayer>();
     Map!: Phaser.Tilemaps.Tilemap;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
@@ -257,6 +258,7 @@ export class GameScene extends DirtyScene {
     private playersMovementEventDispatcher = new IframeEventDispatcher();
     private remotePlayersRepository = new RemotePlayersRepository();
     private companionLoadingManager: CompanionTexturesLoadingManager | undefined;
+    private throttledSendViewportToServer!: () => void;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -552,6 +554,10 @@ export class GameScene extends DirtyScene {
             );
         });
 
+        this.throttledSendViewportToServer = throttle(200, () => {
+            this.sendViewportToServer();
+        });
+
         //permit to set bound collision
         this.physics.world.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
 
@@ -627,9 +633,6 @@ export class GameScene extends DirtyScene {
         //add entities
         this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
 
-        //initialise list of other player
-        this.MapPlayers = this.physics.add.group({ immovable: true });
-
         //create input to move
         this.userInputManager = new UserInputManager(this, new GameSceneUserInputHandler(this));
         mediaManager.setUserInputManager(this.userInputManager);
@@ -680,9 +683,17 @@ export class GameScene extends DirtyScene {
             if (this.isReconnecting) {
                 setTimeout(() => {
                     if (this.connection === undefined) {
-                        this.scene.sleep();
+                        try {
+                            this.scene.sleep();
+                        } catch (err) {
+                            console.error("Scene sleep error: ", err);
+                        }
                         if (get(errorScreenStore)) {
                             // If an error message is already displayed, don't display the "connection lost" message.
+                            console.error(
+                                "Error message store already displayed for CONNECTION_LOST",
+                                get(errorScreenStore)
+                            );
                             return;
                         }
                         errorScreenStore.setError(
@@ -693,27 +704,40 @@ export class GameScene extends DirtyScene {
                                 details: get(LL).warning.connectionLostSubtitle(),
                             })
                         );
-                        //this.scene.launch(ReconnectingSceneName);
                     }
                 }, 0);
             } else if (this.connection === undefined) {
                 // Let's wait 1 second before printing the "connecting" screen to avoid blinking
                 setTimeout(() => {
+                    console.log("this.room", this.room);
                     if (this.connection === undefined) {
-                        this.scene.sleep();
+                        try {
+                            this.scene.sleep();
+                        } catch (err) {
+                            console.error("Scene sleep error: ", err);
+                        }
                         if (get(errorScreenStore)) {
                             // If an error message is already displayed, don't display the "connection lost" message.
+                            console.error(
+                                "Error message store already displayed for CONNECTION_PENDING: ",
+                                get(errorScreenStore)
+                            );
                             return;
                         }
-                        errorScreenStore.setError(
+                        /*
+                         * @fixme
+                         * The error awaiting connection appears while the connection is in progress.
+                         * In certain cases like the invalid character layer, the connection is close and this error is displayed after selecting Woka scene.
+                         * TODO: create connection status with invalid layer case and not display this error.
+                         **/
+                        /*errorScreenStore.setError(
                             ErrorScreenMessage.fromPartial({
                                 type: "reconnecting",
                                 code: "CONNECTION_PENDING",
                                 title: get(LL).warning.waitingConnectionTitle(),
                                 details: get(LL).warning.waitingConnectionSubtitle(),
                             })
-                        );
-                        //this.scene.launch(ReconnectingSceneName);
+                        );*/
                     }
                 }, 1000);
             }
@@ -735,7 +759,11 @@ export class GameScene extends DirtyScene {
         new GameMapPropertiesListener(this, this.gameMapFrontWrapper).register();
 
         if (!this.room.isDisconnected()) {
-            this.scene.sleep();
+            try {
+                this.scene.sleep();
+            } catch (err) {
+                console.error("Scene sleep error: ", err);
+            }
             this.connect();
         }
 
@@ -2088,8 +2116,6 @@ ${escapedMessage}
             if (player.companion) {
                 player.companion.destroy();
             }
-
-            this.MapPlayers.remove(player);
         });
         this.MapPlayersByKey.clear();
     }
@@ -2320,7 +2346,9 @@ ${escapedMessage}
         }
 
         for (const addedPlayer of this.remotePlayersRepository.getAddedPlayers()) {
+            //console.log("Player will be added from GameScene :", addedPlayer.userId);
             this.doAddPlayer(addedPlayer);
+            //console.log("Player has been added from GameScene :", addedPlayer.userId);
         }
         for (const movedPlayer of this.remotePlayersRepository.getMovedPlayers()) {
             this.doUpdatePlayerPosition(movedPlayer);
@@ -2329,7 +2357,9 @@ ${escapedMessage}
             this.doUpdatePlayerDetails(updatedPlayer);
         }
         for (const removedPlayerId of this.remotePlayersRepository.getRemovedPlayers()) {
+            //console.log("Player will be removed from GameScene :", removedPlayerId);
             this.doRemovePlayer(removedPlayerId);
+            //console.log("Player has been removed from GameScene :", removedPlayerId);
         }
 
         this.remotePlayersRepository.reset();
@@ -2417,8 +2447,10 @@ ${escapedMessage}
         if (addPlayerData.availabilityStatus !== undefined) {
             player.setAvailabilityStatus(addPlayerData.availabilityStatus, true);
         }
-        this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
+        if (debugManager.activated) {
+            console.debug("Player added in MapPlayersByKey in GameScene", player);
+        }
         player.updatePosition(addPlayerData.position);
 
         player.on(Phaser.Input.Events.POINTER_OVER, () => {
@@ -2513,10 +2545,9 @@ ${escapedMessage}
             if (player.companion) {
                 player.companion.destroy();
             }
-
-            this.MapPlayers.remove(player);
         }
         this.MapPlayersByKey.delete(userId);
+        // console.debug("User removed in MapPlayersByKey in GameScene", userId);
         this.playersPositionInterpolator.removePlayer(userId);
     }
 
@@ -2638,16 +2669,16 @@ ${escapedMessage}
         super.onResize();
         this.reposition(true);
 
-        this.sendViewportToServer();
+        this.throttledSendViewportToServer();
     }
 
-    public sendViewportToServer(): void {
+    public sendViewportToServer(margin = 300): void {
         const camera = this.cameras.main;
         this.connection?.setViewport({
-            left: camera.scrollX,
-            top: camera.scrollY,
-            right: camera.scrollX + camera.width,
-            bottom: camera.scrollY + camera.height,
+            left: Math.max(0, camera.scrollX - margin),
+            top: Math.max(0, camera.scrollY - margin),
+            right: camera.scrollX + camera.width + margin,
+            bottom: camera.scrollY + camera.height + margin,
         });
     }
 

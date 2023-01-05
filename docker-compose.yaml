@@ -54,10 +54,9 @@ services:
             ENABLE_FEATURE_MAP_EDITOR: "$ENABLE_FEATURE_MAP_EDITOR"
             HOST: "0.0.0.0"
             NODE_ENV: development
-            SERVER_ID: "$SERVER_ID"
             ALLOWED_CORS_ORIGIN: "http://play.workadventure.localhost"
             VITE_URL: "http://front.workadventure.localhost"
-            PUSHER_URL: http://play.workadventure.localhost
+            PLAY_URL: http://play.workadventure.localhost
             UPLOADER_URL: http://uploader.workadventure.localhost
             ICON_URL: http://icon.workadventure.localhost
             STUN_SERVER: "stun:stun.l.google.com:19302"
@@ -95,12 +94,16 @@ services:
             ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
             ENABLE_CHAT_ONLINE_LIST: "$ENABLE_CHAT_ONLINE_LIST"
             ENABLE_CHAT_DISCONNECTED_LIST: "$ENABLE_CHAT_DISCONNECTED_LIST"
+            SERVER_NAME: $SERVER_NAME
+            SERVER_MOTD: $SERVER_MOTD
+            SERVER_ICON: $SERVER_ICON
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"
             - "traefik.http.routers.front.service=front"
             - "traefik.http.services.front.loadbalancer.server.port=8080"
-            - "traefik.http.routers.play.rule=Host(`play.workadventure.localhost`)"
+            - "traefik.http.routers.play.rule=HostRegexp(`{domain:.*}`)"
+            - "traefik.http.routers.play.priority=1"
             - "traefik.http.routers.play.service=play"
             - "traefik.http.services.play.loadbalancer.server.port=3000"
 
@@ -111,7 +114,7 @@ services:
         environment:
             STARTUP_COMMAND_2: ../npm-install.sh
             STARTUP_COMMAND_3: npm run typesafe-i18n
-            PUSHER_URL: http://play.workadventure.localhost
+            PLAY_URL: http://play.workadventure.localhost
             UPLOADER_URL: http://uploader.workadventure.localhost
             EMBEDLY_KEY: $EMBEDLY_KEY
             ICON_URL: http://icon.workadventure.localhost
@@ -204,6 +207,9 @@ services:
             STARTUP_COMMAND_1: ../npm-install.sh
             NODE_ENV: development
             PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
+            AUTHENTICATION_STRATEGY: "Basic"
+            AUTHENTICATION_USER: "john.doe"
+            AUTHENTICATION_PASSWORD: "password"
         volumes:
             - .:/usr/src/app
         ports:

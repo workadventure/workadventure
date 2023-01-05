@@ -41,7 +41,7 @@ export default defineConfig({
         envConfig({
             variables: [
                 "ADMIN_API_URL",
-                "PUSHER_URL",
+                "PLAY_URL",
                 "FALLBACK_LOCALE",
                 "UPLOADER_URL",
                 "EMBEDLY_KEY",

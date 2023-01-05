@@ -27,6 +27,7 @@
 
     let newMessageText = "";
     let htmlMessageText = "";
+    let input: HTMLElement;
 
     function reInitialize() {
         chatMessagesStore.reInitialize();
@@ -44,6 +45,9 @@
         chatMessagesStore.addPersonalMessage(newMessageText);
         newMessageText = "";
         htmlMessageText = "";
+        setTimeout(() => {
+            input.innerHTML = "";
+        }, 0);
         return false;
     }
 
@@ -429,6 +433,7 @@
         <form on:submit|preventDefault={saveMessage}>
             <div class="tw-w-full tw-px-2 tw-pb-2">
                 <div
+                    bind:this={input}
                     contenteditable="true"
                     bind:textContent={newMessageText}
                     bind:innerHTML={htmlMessageText}

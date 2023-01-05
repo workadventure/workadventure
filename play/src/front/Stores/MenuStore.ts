@@ -1,6 +1,7 @@
+import { AddClassicButtonActionBarEvent, AddActionButtonActionBarEvent } from "./../Api/Events/Ui/ButtonActionBarEvent";
 import { derived, get, writable } from "svelte/store";
 import { userIsAdminStore } from "./GameStore";
-import { CONTACT_URL, OPID_PROFILE_SCREEN_PROVIDER, PUSHER_URL } from "../Enum/EnvironmentVariable";
+import { CONTACT_URL, OPID_PROFILE_SCREEN_PROVIDER, PLAY_URL } from "../Enum/EnvironmentVariable";
 import type { Translation } from "../../i18n/i18n-types";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { connectionManager } from "../Connexion/ConnectionManager";
@@ -199,7 +200,7 @@ export function handleMenuUnregisterEvent(menuName: string) {
 
 export function getProfileUrl() {
     return (
-        PUSHER_URL +
+        PLAY_URL +
         `/profile-callback?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`
     );
 }
@@ -226,3 +227,13 @@ function createAdditionalButtonsMenu() {
     };
 }
 export const additionnalButtonsMenu = createAdditionalButtonsMenu();
+export const addClassicButtonActionBarEvent = writable<AddClassicButtonActionBarEvent[]>([]);
+export const addActionButtonActionBarEvent = writable<AddActionButtonActionBarEvent[]>([]);
+additionnalButtonsMenu.subscribe((map) => {
+    addClassicButtonActionBarEvent.set(
+        [...map.values()].filter((c) => c.type === "button") as AddClassicButtonActionBarEvent[]
+    );
+    addActionButtonActionBarEvent.set(
+        [...map.values()].filter((c) => c.type === "action") as AddActionButtonActionBarEvent[]
+    );
+});

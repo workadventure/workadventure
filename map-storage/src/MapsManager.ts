@@ -13,8 +13,9 @@ import {
     EntityRawPrefab,
 } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
-import { writeFileSync } from "fs";
-import { readFile } from "fs/promises";
+import { ITiledMap } from "@workadventure/tiled-map-type-guard";
+import { fileSystem } from "./fileSystem";
+import { mapPathUsingDomain } from "./Services/PathMapper";
 
 // TODO: dynamic imports?
 import furnitureCollection from "./entities/collections/FurnitureCollection.json";
@@ -56,64 +57,58 @@ class MapsManager {
                     this.parseRawEntityPrefab(collection.collectionName, rawPrefab as EntityRawPrefab)
                 );
             }
-            const parsedCollection: EntityCollection = structuredClone(collection);
+            const parsedCollection: EntityCollection = structuredClone(collection) as EntityCollection;
             parsedCollection.collection = parsedCollectionPrefabs;
             this.loadedCollections.set(parsedCollection.collectionName, parsedCollection);
         }
     }
 
-    public executeCommand(mapKey: string, commandConfig: CommandConfig, commandId?: string): boolean {
+    public executeCommand(mapKey: string, commandConfig: CommandConfig, commandId?: string): void {
         const gameMap = this.getGameMap(mapKey);
         if (!gameMap) {
-            return false;
+            throw new Error('Could not find GameMap with key "' + mapKey + '"');
         }
         this.mapLastChangeTimestamp.set(mapKey, +new Date());
         if (!this.saveMapIntervals.has(mapKey)) {
             this.startSavingMapInterval(mapKey, this.AUTO_SAVE_INTERVAL_MS);
         }
         let command: Command | undefined;
-        try {
-            switch (commandConfig.type) {
-                case "UpdateAreaCommand": {
-                    command = new UpdateAreaCommand(gameMap, commandConfig, commandId);
-                    command.execute();
-                    break;
-                }
-                case "CreateAreaCommand": {
-                    command = new CreateAreaCommand(gameMap, commandConfig, commandId);
-                    command.execute();
-                    break;
-                }
-                case "DeleteAreaCommand": {
-                    command = new DeleteAreaCommand(gameMap, commandConfig, commandId);
-                    command.execute();
-                    break;
-                }
-                case "UpdateEntityCommand": {
-                    command = new UpdateEntityCommand(gameMap, commandConfig, commandId);
-                    command.execute();
-                    break;
-                }
-                case "CreateEntityCommand": {
-                    command = new CreateEntityCommand(gameMap, commandConfig, commandId);
-                    command.execute();
-                    break;
-                }
-                case "DeleteEntityCommand": {
-                    command = new DeleteEntityCommand(gameMap, commandConfig, commandId);
-                    command.execute();
-                    break;
-                }
-                default: {
-                    const _exhaustiveCheck: never = commandConfig;
-                    break;
-                }
+        switch (commandConfig.type) {
+            case "UpdateAreaCommand": {
+                command = new UpdateAreaCommand(gameMap, commandConfig, commandId);
+                command.execute();
+                break;
             }
-        } catch (e) {
-            console.log(e);
-            return false;
+            case "CreateAreaCommand": {
+                command = new CreateAreaCommand(gameMap, commandConfig, commandId);
+                command.execute();
+                break;
+            }
+            case "DeleteAreaCommand": {
+                command = new DeleteAreaCommand(gameMap, commandConfig, commandId);
+                command.execute();
+                break;
+            }
+            case "UpdateEntityCommand": {
+                command = new UpdateEntityCommand(gameMap, commandConfig, commandId);
+                command.execute();
+                break;
+            }
+            case "CreateEntityCommand": {
+                command = new CreateEntityCommand(gameMap, commandConfig, commandId);
+                command.execute();
+                break;
+            }
+            case "DeleteEntityCommand": {
+                command = new DeleteEntityCommand(gameMap, commandConfig, commandId);
+                command.execute();
+                break;
+            }
+            default: {
+                const _exhaustiveCheck: never = commandConfig;
+                break;
+            }
         }
-        return true;
     }
 
     public getCommandsNewerThan(mapKey: string, commandId: string): EditMapCommandMessage[] {
@@ -132,19 +127,16 @@ class MapsManager {
         return this.loadedMaps.get(key);
     }
 
-    public async getMap(path: string): Promise<any> {
-        const inMemoryGameMap = this.loadedMaps.get(path);
+    public async getMap(path: string, domain: string): Promise<ITiledMap> {
+        const key = mapPathUsingDomain(path, domain);
+        const inMemoryGameMap = this.loadedMaps.get(key);
         if (inMemoryGameMap) {
             return inMemoryGameMap.getMap();
         }
-        try {
-            const file = await readFile(`./public${path}`, "utf-8");
-            const map = JSON.parse(file);
-            this.loadedMaps.set(path, new GameMap(map));
-            return map;
-        } catch (error) {
-            return error;
-        }
+        const file = await fileSystem.readFileAsString(key);
+        const map = ITiledMap.parse(JSON.parse(file));
+        this.loadedMaps.set(key, new GameMap(map));
+        return map;
     }
 
     public getEntityCollection(collectionName: string): EntityCollection | undefined {
@@ -204,19 +196,21 @@ class MapsManager {
         this.saveMapIntervals.set(
             key,
             setInterval(() => {
-                console.log(`saving map ${key}`);
-                const gameMap = this.loadedMaps.get(key);
-                if (gameMap) {
-                    writeFileSync(`./public${key}`, JSON.stringify(gameMap.getMap()));
-                }
-                const lastChangeTimestamp = this.mapLastChangeTimestamp.get(key);
-                if (lastChangeTimestamp === undefined) {
-                    return;
-                }
-                if (lastChangeTimestamp + this.NO_CHANGE_DETECTED_MS < +new Date()) {
-                    console.log(`NO CHANGES ON THE MAP ${key} DETECTED. STOP AUTOSAVING`);
-                    this.clearSaveMapInterval(key);
-                }
+                (async () => {
+                    console.log(`saving map ${key}`);
+                    const gameMap = this.loadedMaps.get(key);
+                    if (gameMap) {
+                        await fileSystem.writeStringAsFile(key, JSON.stringify(gameMap.getMap()));
+                    }
+                    const lastChangeTimestamp = this.mapLastChangeTimestamp.get(key);
+                    if (lastChangeTimestamp === undefined) {
+                        return;
+                    }
+                    if (lastChangeTimestamp + this.NO_CHANGE_DETECTED_MS < +new Date()) {
+                        console.log(`NO CHANGES ON THE MAP ${key} DETECTED. STOP AUTOSAVING`);
+                        this.clearSaveMapInterval(key);
+                    }
+                })().catch((e) => console.error(e));
             }, intervalMS)
         );
     }

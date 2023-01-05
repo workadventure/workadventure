@@ -31,7 +31,7 @@ import {
     RoomsList,
     PingMessage,
     QueryMessage,
-    EditMapCommandWithKeyMessage,
+    EditMapCommandMessage,
     ChatMessagePrompt,
 } from "./Messages/generated/messages_pb";
 import {
@@ -78,11 +78,19 @@ const roomManager: IRoomManagerServer = {
                                         room = gameRoom;
                                         user = myUser;
                                     } else {
-                                        //Connection may have been closed before the init was finished, so we have to manually disconnect the user.
+                                        // Connection may have been closed before the init was finished, so we have to manually disconnect the user.
+                                        // TODO: Remove this debug line
+                                        console.info(
+                                            "message handleJoinRoom connection have been closed before. Check 'call.writable': ",
+                                            call.writable
+                                        );
                                         socketManager.leaveRoom(gameRoom, myUser);
                                     }
                                 })
-                                .catch((e) => emitError(call, e));
+                                .catch((e) => {
+                                    console.error("message handleJoinRoom error: ", e);
+                                    emitError(call, e);
+                                });
                         } else {
                             throw new Error("The first message sent MUST be of type JoinRoomMessage");
                         }
@@ -155,12 +163,12 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 message.getLockgrouppromptmessage() as LockGroupPromptMessage
                             );
-                        } else if (message.hasEditmapcommandwithkeymessage()) {
-                            if (message.getEditmapcommandwithkeymessage())
-                                socketManager.handleEditMapCommandWithKeyMessage(
+                        } else if (message.hasEditmapcommandmessage()) {
+                            if (message.getEditmapcommandmessage())
+                                socketManager.handleEditMapCommandMessage(
                                     room,
                                     user,
-                                    message.getEditmapcommandwithkeymessage() as EditMapCommandWithKeyMessage
+                                    message.getEditmapcommandmessage() as EditMapCommandMessage
                                 );
                         } else if (message.hasSendusermessage()) {
                             const sendUserMessage = message.getSendusermessage();

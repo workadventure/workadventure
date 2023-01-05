@@ -421,6 +421,14 @@ class AdminApi implements AdminInterface {
         throw new Error("Message received from /api/login-url is not in the expected format.");
     }
 
+    async fetchWellKnownChallenge(host: string): Promise<string> {
+        const res = await Axios.get(`${ADMIN_API_URL}/white-label/cf-challenge`, {
+            params: { host },
+        });
+
+        return res.data;
+    }
+
     reportPlayer(
         reportedUserUuid: string,
         reportedUserComment: string,

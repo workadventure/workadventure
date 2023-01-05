@@ -801,6 +801,12 @@ export class IoSocketController {
         client.activatedInviteUser = ws.activatedInviteUser;
         client.isLogged = ws.isLogged;
         client.applications = ws.applications;
+        client.customJsonReplacer = (key: unknown, value: unknown): string | undefined => {
+            if (key === "listenedZones") {
+                return (value as Set<Zone>).size + " listened zone(s)";
+            }
+            return undefined;
+        };
         return client;
     }
 }

@@ -1,4 +1,4 @@
-import { PUSHER_URL, UPLOADER_URL } from "../Enum/EnvironmentVariable";
+import { PLAY_URL, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
@@ -197,7 +197,7 @@ export class RoomConnection implements RoomConnection {
         availabilityStatus: AvailabilityStatus,
         lastCommandId?: string
     ) {
-        let url = new URL(PUSHER_URL, window.location.toString()).toString();
+        let url = new URL(PLAY_URL, window.location.toString()).toString();
         url = url.replace("http://", "ws://").replace("https://", "wss://");
         if (!url.endsWith("/")) {
             url += "/";
@@ -403,6 +403,7 @@ export class RoomConnection implements RoomConnection {
                         roomJoinedMessage.characterLayer.length !== initCharacterLayers.length ||
                         roomJoinedMessage.characterLayer.find((layer) => !layer.url)
                     ) {
+                        console.info("Your Woka texture is invalid for this world, got to select Woka scene");
                         this.goToSelectYourWokaScene();
                         this.closed = true;
                     }
@@ -434,6 +435,10 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "invalidTextureMessage": {
+                    console.info(
+                        "Your Woka texture is invalid for this world, got to select Woka scene. Message: ",
+                        message
+                    );
                     this.goToSelectYourWokaScene();
 
                     this.closed = true;

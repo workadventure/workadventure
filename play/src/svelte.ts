@@ -21,6 +21,9 @@ import { Game } from "./front/Phaser/Game/Game";
 import App from "./front/Components/App.svelte";
 import { HtmlUtils } from "./front/WebRtc/HtmlUtils";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
+import { debugManager } from "./front/Debug/DebugManager";
+
+window.waDebug = debugManager;
 
 const { width, height } = coWebsiteManager.getGameSize();
 const fps: Phaser.Types.Core.FPSConfig = {
@@ -102,6 +105,7 @@ const config: Phaser.Types.Core.GameConfig = {
         pixelArt: true,
         roundPixels: true,
         antialias: false,
+        antialiasGL: false,
     },
     plugins: {
         global: [
@@ -142,7 +146,7 @@ if (canvas) {
     canvas.addEventListener("click", function () {
         document.activeElement?.blur();
     });
-    
+
     /*
         TODO: replace with disableContextMenu when Phaser does not disable context menu on document.body
         see https://github.com/photonstorm/phaser/issues/6064
