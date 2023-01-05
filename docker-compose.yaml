@@ -207,6 +207,9 @@ services:
             STARTUP_COMMAND_1: ../npm-install.sh
             NODE_ENV: development
             PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
+            AUTHENTICATION_STRATEGY: "Basic"
+            AUTHENTICATION_USER: "john.doe"
+            AUTHENTICATION_PASSWORD: "password"
         volumes:
             - .:/usr/src/app
         ports:

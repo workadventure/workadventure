@@ -1,73 +1,89 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Map-storage
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+The map-storage component is in charge of:
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+- serving map files and assets to the game over HTTP
+- accepting uploads of new maps and assets (as a ZIP file)
+- editing the uploaded maps. The map-storage will receive edit messages from the back container directly.
 
-## Description
+> **Note**
+> Maps do not have to be stored in the map-storage. They can be stored on any web server on the web and WorkAdventure
+> can fetch them from this webserver. However, if you want to edit a map, you need to store the map in the map-storage.
+> It is the only place where WorkAdventure has right accesses to edit a map.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Installation
-
-```bash
-$ npm install
+```mermaid
+graph LR
+    A[Browser] --> B(Traefik)
+    subgraph docker-compose
+    B --> C(Map-storage)
+    B --> D(Pusher)
+    D --> F(Back)
+    F -->|gRPC| C
+    end
 ```
 
-## Running the app
+## Configuration
 
-```bash
-# development
-$ npm run start
+The map-storage currently supports 2 backends:
 
-# watch mode
-$ npm run start:dev
+- "disk" backend to store maps on the hard-drive of the map-storage
+- "S3" to store the maps in any Amazon S3-compatible storage
 
-# production mode
-$ npm run start:prod
-```
+Configuration is done using environment variables.
 
-## Test
+If S3 related environment variables are found, map-storage will default to S3.
+Otherwise, the `STORAGE_DIRECTORY` environment variable is used to find the root directory of the maps.
 
-```bash
-# unit tests
-$ npm run test
+Note: in the Docker image, the `STORAGE_DIRECTORY` defaults to `/maps` at the root of the container. 
 
-# e2e tests
-$ npm run test:e2e
+Take a look at `src/Enum/EnvironmentVariables.ts` for a complete list of supported configuration parameters.
 
-# test coverage
-$ npm run test:cov
-```
+### Configuring authentication
 
-## Support
+The `/upload` endpoint MUST be protected by authentication.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+As of now, the map-storage supports 3 mechanisms for authentication basic enough (there is no integration with third party systems yet).
 
-## Stay in touch
+- Basic auth
+- Digest auth
+- Bearer token
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+You can configure the mode used with the `AUTHENTICATION_STRATEGY` environment variable.
+Allowed values are "Basic", "Digest" and "Bearer".
 
-## License
+If "Basic" or "Digest", you must use the `AUTHENTICATION_USER` and `AUTHENTICATION_PASSWORD` environment variable to pass the (only) valid user.
 
-Nest is [MIT licensed](LICENSE).
+If "Bearer", you must use the `AUTHENTICATION_TOKEN` environment variable to set the (only, hard-coded) credential.
+
+> **Note**
+> Contributions are welcome to improve this. Behind the scene, we use "passport" to the authentication.
+
+## API
+
+### File upload
+
+## Endpoints that require Authentication
+
+Closed endpoints require // TODO
+
+### Upload a map / a world
+
+Upload files to the map-storage. Uploading is done in ZIP files.
+
+**URL** : `/upload`
+
+**Method** : `POST`
+
+**Auth required** : YES
+
+Parameters in POST must be passed with the `multipart/form-data` encoding.
+
+Parameters:
+
+* **file** (compulsory): the uploaded ZIP file. Must not be encrypted.
+* **directory** (optional): the sub-directory we are performing the upload in.
+
+If `directory` is not passed, upload is performed at the root of the storage directory ("/").
+
+> **Warning**
+> The `upload` endpoint will delete ALL files within `directory` before uploading new files.
