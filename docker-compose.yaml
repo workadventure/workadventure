@@ -6,6 +6,7 @@ services:
             - "8080"
         ports:
             - "80:80"
+            - "8080:8080"
         command:
             - --api.insecure=true
             - --providers.docker
