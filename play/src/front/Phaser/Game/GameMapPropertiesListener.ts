@@ -147,27 +147,29 @@ export class GameMapPropertiesListener {
         });
 
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.BBB_MEETING, (newValue, oldValue, allProps) => {
-            if (newValue === undefined) {
+            if (newValue === undefined || newValue !== oldValue) {
                 layoutManagerActionStore.removeAction("bbbMeeting");
                 inBbbStore.set(false);
                 bbbFactory.setStopped(true);
                 bbbFactory.stop();
-            } else {
-                inBbbStore.set(true);
-                bbbFactory.setStopped(false);
-                bbbFactory
-                    .parametrizeMeetingId(newValue as string)
-                    .then((hashedMeetingId) => {
-                        if (this.scene.connection === undefined) {
-                            throw new Error("No more connection to open BBB");
-                        }
-                        return this.scene.connection.queryBBBMeetingUrl(hashedMeetingId, allProps);
-                    })
-                    .then((bbbAnswer) => {
-                        bbbFactory.start(bbbAnswer.clientURL);
-                    })
-                    .catch((e) => console.error(e));
+                if (newValue === undefined) {
+                    return;
+                }
             }
+            inBbbStore.set(true);
+            bbbFactory.setStopped(false);
+            bbbFactory
+                .parametrizeMeetingId(newValue as string)
+                .then((hashedMeetingId) => {
+                    if (this.scene.connection === undefined) {
+                        throw new Error("No more connection to open BBB");
+                    }
+                    return this.scene.connection.queryBBBMeetingUrl(hashedMeetingId, allProps);
+                })
+                .then((bbbAnswer) => {
+                    bbbFactory.start(bbbAnswer.clientURL);
+                })
+                .catch((e) => console.error(e));
         });
 
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.EXIT_SCENE_URL, (newValue) => {
