@@ -95,7 +95,7 @@
                  "class":"area",
                  "height":97.6404647983595,
                  "id":36,
-                 "name":"",
+                 "name":"start",
                  "properties":[
                         {
                          "name":"start",
@@ -117,7 +117,17 @@
                         {
                          "name":"focusable",
                          "type":"bool",
-                         "value":true
+                         "value":false
+                        }, 
+                        {
+                         "name":"jitsiRoom",
+                         "type":"string",
+                         "value":"MeetingRoom"
+                        }, 
+                        {
+                         "name":"jitsiTriggerMessage",
+                         "type":"string",
+                         "value":"LEFT"
                         }],
                  "rotation":0,
                  "visible":true,
@@ -132,9 +142,24 @@
                  "name":"",
                  "properties":[
                         {
+                         "name":"focusable",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"jitsiRoom",
+                         "type":"string",
+                         "value":"MeetingRoom2"
+                        }, 
+                        {
+                         "name":"jitsiTriggerMessage",
+                         "type":"string",
+                         "value":"RIGHT"
+                        }, 
+                        {
                          "name":"silent",
                          "type":"bool",
-                         "value":true
+                         "value":false
                         }],
                  "rotation":0,
                  "visible":true,
