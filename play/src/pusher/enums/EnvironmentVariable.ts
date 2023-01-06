@@ -8,12 +8,14 @@ type BoolAsString = z.infer<typeof BoolAsString>;
 const PositiveIntAsString = z.string().regex(/^\d*$/, { message: "Must be a positive integer number" });
 type PositiveIntAsString = z.infer<typeof PositiveIntAsString>;
 
+const AbsoluteOrRelativeUrl = z.string().url().or(z.string().startsWith("/"));
+
 const EnvironmentVariables = z.object({
     // Pusher related environment variables
     SECRET_KEY: z.string().min(1),
     API_URL: z.string().min(1),
-    ADMIN_API_URL: z.string().url().optional(),
-    ADMIN_URL: z.string().url().optional(),
+    ADMIN_API_URL: AbsoluteOrRelativeUrl.optional(),
+    ADMIN_URL: AbsoluteOrRelativeUrl.optional(),
     ADMIN_API_TOKEN: z.string().optional(),
     ADMIN_SOCKETS_TOKEN: z.string().optional(),
     CPU_OVERHEAT_THRESHOLD: PositiveIntAsString.optional(),
@@ -24,8 +26,8 @@ const EnvironmentVariables = z.object({
     VITE_URL: z.string().url().optional(),
     // Use "*" to allow any domain
     ALLOWED_CORS_ORIGIN: z.string().url().or(z.literal("*")).optional(),
-    PUSHER_URL: z.string().url().optional(),
-    PUBLIC_MAP_STORAGE_URL: z.string().url().optional(),
+    PLAY_URL: AbsoluteOrRelativeUrl.optional(),
+    PUBLIC_MAP_STORAGE_URL: AbsoluteOrRelativeUrl.optional(),
     OPID_CLIENT_ID: z.string().optional(),
     OPID_CLIENT_SECRET: z.string().optional(),
     OPID_CLIENT_ISSUER: z.string().optional(),
@@ -50,8 +52,8 @@ const EnvironmentVariables = z.object({
 
     // Front related environment variables
     DEBUG_MODE: BoolAsString.optional(),
-    UPLOADER_URL: z.string().url(),
-    ICON_URL: z.string().url(),
+    UPLOADER_URL: AbsoluteOrRelativeUrl,
+    ICON_URL: AbsoluteOrRelativeUrl,
     STUN_SERVER: z.string().optional(),
     TURN_SERVER: z.string().optional(),
     SKIP_RENDER_OPTIMIZATIONS: BoolAsString.optional(),
@@ -64,11 +66,11 @@ const EnvironmentVariables = z.object({
     MAX_USERNAME_LENGTH: PositiveIntAsString.optional(),
     MAX_PER_GROUP: PositiveIntAsString.optional(),
     NODE_ENV: z.string().optional(),
-    CONTACT_URL: z.string().url().optional(),
+    CONTACT_URL: AbsoluteOrRelativeUrl.optional(),
     POSTHOG_API_KEY: z.string().optional(),
     POSTHOG_URL: z.string().url().optional().or(z.literal("")),
     FALLBACK_LOCALE: z.string().optional(),
-    CHAT_URL: z.string().url(),
+    CHAT_URL: AbsoluteOrRelativeUrl,
     OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy.optional(),
 });
 
@@ -115,15 +117,15 @@ export const PUSHER_HTTP_PORT = toNumber(env.PUSHER_HTTP_PORT, 3000);
 export const SOCKET_IDLE_TIMER = toNumber(env.SOCKET_IDLE_TIMER, 120); // maximum time (in second) without activity before a socket is closed. Should be greater than 60 seconds in order to cope for Chrome intensive throttling (https://developer.chrome.com/blog/timer-throttling-in-chrome-88/#intensive-throttling)
 export const VITE_URL = env.VITE_URL || "http://front.workadventure.localhost"; // Used only in development
 export const ALLOWED_CORS_ORIGIN = env.ALLOWED_CORS_ORIGIN; // Use "*" to allow any domain
-export const PUSHER_URL = env.PUSHER_URL || "";
+export const PLAY_URL = env.PLAY_URL || "";
 export const PUBLIC_MAP_STORAGE_URL = env.PUBLIC_MAP_STORAGE_URL || "";
 export const OPID_CLIENT_ID = env.OPID_CLIENT_ID || "";
 export const OPID_CLIENT_SECRET = env.OPID_CLIENT_SECRET || "";
 export const OPID_CLIENT_ISSUER = env.OPID_CLIENT_ISSUER || "";
-if (OPID_CLIENT_ID && !PUSHER_URL) {
-    throw new Error("Missing PUSHER_URL environment variable.");
+if (OPID_CLIENT_ID && !PLAY_URL) {
+    throw new Error("Missing PLAY_URL environment variable.");
 }
-export const OPID_CLIENT_REDIRECT_URL = PUSHER_URL + "/openid-callback";
+export const OPID_CLIENT_REDIRECT_URL = PLAY_URL + "/openid-callback";
 export const OPID_PROFILE_SCREEN_PROVIDER =
     env.OPID_PROFILE_SCREEN_PROVIDER || (ADMIN_URL ? ADMIN_URL + "/profile" : undefined);
 export const OPID_SCOPE = env.OPID_SCOPE || "openid email";
@@ -151,7 +153,7 @@ export const FALLBACK_LOCALE: string | undefined = env.FALLBACK_LOCALE;
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     DEBUG_MODE: toBool(env.DEBUG_MODE, false),
-    PUSHER_URL: env.PUSHER_URL || "/",
+    PLAY_URL: env.PLAY_URL || "/",
     ADMIN_URL: env.ADMIN_URL,
     UPLOADER_URL: env.UPLOADER_URL,
     ICON_URL: env.ICON_URL,

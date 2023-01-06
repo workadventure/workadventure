@@ -1086,9 +1086,13 @@ export class SocketManager {
         room.emitLockGroupEvent(user, group.getId());
     }
 
-    handleEditMapCommandWithKeyMessage(room: GameRoom, user: User, message: EditMapCommandWithKeyMessage) {
+    handleEditMapCommandMessage(room: GameRoom, user: User, message: EditMapCommandMessage) {
+        const messageWithKey = new EditMapCommandWithKeyMessage();
+        messageWithKey.setEditmapcommandmessage(message);
+        messageWithKey.setMapkey(room.mapUrl);
+
         getMapStorageClient().handleEditMapCommandWithKeyMessage(
-            message,
+            messageWithKey,
             (err: unknown, editMapMessage: EditMapCommandMessage) => {
                 if (err) {
                     emitError(user.socket, err);

@@ -1,5 +1,6 @@
+import { HtmlUtils } from "./../WebRtc/HtmlUtils";
 import Axios from "axios";
-import { ENABLE_OPENID, PUSHER_URL } from "../Enum/EnvironmentVariable";
+import { ENABLE_OPENID, PLAY_URL } from "../Enum/EnvironmentVariable";
 import { RoomConnection } from "./RoomConnection";
 import type { OnConnectInterface, PositionInterface, ViewportInterface } from "./ConnexionModels";
 import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
@@ -71,7 +72,7 @@ class ConnectionManager {
 
         //Logout user in pusher and hydra
         const token = localUserStore.getAuthToken();
-        await Axios.get(`${PUSHER_URL}/logout-callback`, { params: { token } }).then((res) => res.data);
+        await Axios.get(`${PLAY_URL}/logout-callback`, { params: { token } }).then((res) => res.data);
         localUserStore.setAuthToken(null);
 
         //Go on root page
@@ -88,8 +89,14 @@ class ConnectionManager {
         this._currentRoom = null;
 
         const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get("token");
-        if (token) {
+        let token = urlParams.get("token");
+        // get token injected by post method from pusher
+        if (token == undefined) {
+            const input = HtmlUtils.getElementByIdOrFail("authToken");
+            if (input.value != undefined && input.value != "") token = input.value;
+        }
+
+        if (token != undefined) {
             this.authToken = token;
             localUserStore.setAuthToken(token);
 
@@ -112,7 +119,7 @@ class ConnectionManager {
         //@deprecated
         else if (this.connexionType === GameConnexionTypes.register) {
             const organizationMemberToken = urlManager.getOrganizationToken();
-            const result = await Axios.post(`${PUSHER_URL}/register`, { organizationMemberToken }).then(
+            const result = await Axios.post(`${PLAY_URL}/register`, { organizationMemberToken }).then(
                 (res) => res.data
             );
 
@@ -242,7 +249,7 @@ class ConnectionManager {
     }
 
     public async anonymousLogin(isBenchmark = false): Promise<void> {
-        const data = await axiosWithRetry.post(`${PUSHER_URL}/anonymLogin`).then((res) => res.data);
+        const data = await axiosWithRetry.post(`${PLAY_URL}/anonymLogin`).then((res) => res.data);
         this.localUser = new LocalUser(data.userUuid, data.email);
         this.authToken = data.authToken;
         if (!isBenchmark) {
@@ -365,7 +372,7 @@ class ConnectionManager {
         userIsConnected.set(false);
 
         const { authToken, userUuid, email, username, locale, textures, visitCardUrl } = await Axios.get(
-            `${PUSHER_URL}/me`,
+            `${PLAY_URL}/me`,
             {
                 params: { token, playUri: this.currentRoom?.key },
             }

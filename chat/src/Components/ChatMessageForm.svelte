@@ -107,7 +107,10 @@
         newMessageText = "";
         htmlMessageText = "";
         dispatch("scrollDown");
-        setTimeout(() => dispatch("formHeight", messageForm.clientHeight), 0);
+        setTimeout(() => {
+            textarea.innerHTML = "";
+            dispatch("formHeight", messageForm.clientHeight);
+        }, 0);
         return false;
     }
 

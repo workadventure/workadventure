@@ -41,7 +41,7 @@ export default defineConfig({
         envConfig({
             variables: [
                 "ADMIN_API_URL",
-                "PUSHER_URL",
+                "PLAY_URL",
                 "FALLBACK_LOCALE",
                 "UPLOADER_URL",
                 "EMBEDLY_KEY",
@@ -70,7 +70,7 @@ export default defineConfig({
     },
     resolve: {
         alias: [
-            { find: 'events', replacement: './node_modules/rollup-plugin-node-polyfills/polyfills/events.js' },
+            { find: 'events', replacement: 'rollup-plugin-node-polyfills/polyfills/events' },
             { find: 'child_process', replacement: 'rollup-plugin-node-polyfills' },
             { find: 'path', replacement: 'rollup-plugin-node-polyfills/polyfills/path' },
         ],
