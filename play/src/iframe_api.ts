@@ -38,9 +38,14 @@ export type { ActionsMenuAction } from "./front/Api/Iframe/ui";
 const globalState = createState();
 
 let _metadata: unknown | undefined;
+let _iframeId: string | undefined;
 
 const setMetadata = (data: unknown | undefined) => {
     _metadata = data;
+};
+
+const setIframeId = (data: string | undefined) => {
+    _iframeId = data;
 };
 
 // Notify WorkAdventure that we are ready to receive data
@@ -48,6 +53,7 @@ const initPromise = queryWorkadventure({
     type: "getState",
     data: undefined,
 }).then((gameState) => {
+    console.log({ gameState });
     setPlayerName(gameState.nickname);
     setPlayerLanguage(gameState.language);
     setRoomId(gameState.roomId);
@@ -56,6 +62,7 @@ const initPromise = queryWorkadventure({
     setUuid(gameState.uuid);
     setUserRoomToken(gameState.userRoomToken);
     setMetadata(gameState.metadata);
+    setIframeId(gameState.iframeId);
     globalState.initVariables(gameState.variables as Map<string, unknown>);
     player.state.initVariables(gameState.playerVariables as Map<string, unknown>);
     setIsLogged(gameState.isLogged);
@@ -96,6 +103,17 @@ const wa = {
      */
     get metadata(): unknown | undefined {
         return _metadata;
+    },
+
+    /**
+     * The iframeId sent by the open website.
+     * Important: You need to wait for the end of the initialization before accessing.
+     * {@link https://workadventu.re/map-building/api-metadata.md | Website documentation}
+     *
+     * @returns {string|undefined} IframeId
+     */
+    get iframeId(): string | undefined {
+        return _iframeId;
     },
 
     // All methods below are deprecated and should not be used anymore.

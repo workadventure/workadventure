@@ -4,7 +4,6 @@
     import { iframeListener } from "../../../Api/IframeListener";
 
     export let uiWebsite: UIWebsite;
-
     let main: HTMLDivElement;
     const iframe = document.createElement("iframe");
     iframe.id = `ui-website-${uiWebsite.id}`;

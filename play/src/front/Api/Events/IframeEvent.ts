@@ -225,6 +225,10 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("modifyUIWebsite"),
         data: isModifyUIWebsiteEvent,
     }),
+    // z.object({
+    //     type: z.literal("getUIWebsiteId"),
+    //     data: z.string(),
+    // }),
     z.object({
         type: z.literal("modifyArea"),
         data: isAreaEvent,
@@ -544,6 +548,10 @@ export const iframeQueryMapTypeGuards = {
     getUIWebsites: {
         query: z.undefined(),
         answer: z.array(isUIWebsite),
+    },
+    getUIWebsiteById: {
+        query: z.string(),
+        answer: isUIWebsite,
     },
     enablePlayersTracking: {
         query: isEnablePlayersTrackingEvent,

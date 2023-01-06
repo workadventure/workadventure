@@ -152,6 +152,7 @@ import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import { debugManager } from "../../Debug/DebugManager";
+
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PositionInterface;
@@ -254,6 +255,7 @@ export class GameScene extends DirtyScene {
     private playersMovementEventDispatcher = new IframeEventDispatcher();
     private remotePlayersRepository = new RemotePlayersRepository();
     private companionLoadingManager: CompanionTexturesLoadingManager | undefined;
+    private iframeId: string | undefined;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -1660,6 +1662,10 @@ ${escapedMessage}
             return uiWebsiteManager.getAll();
         });
 
+        iframeListener.registerAnswerer("getUIWebsiteById", (websiteId) => {
+            return uiWebsiteManager.getById(websiteId);
+        });
+
         iframeListener.registerAnswerer("closeUIWebsite", (websiteId) => {
             return uiWebsiteManager.close(websiteId);
         });
@@ -1674,6 +1680,8 @@ ${escapedMessage}
             // The sharedVariablesManager is not instantiated before the connection is established. So we need to wait
             // for the connection to send back the answer.
             await this.connectionAnswerPromiseDeferred.promise;
+            // this.iframeId = uiWebsiteManager.getId();
+            // console.log(this.iframeId);
             return {
                 mapUrl: this.MapUrlFile,
                 startLayerName: this.startPositionCalculator.getStartPositionName() ?? undefined,
@@ -1687,6 +1695,7 @@ ${escapedMessage}
                 playerVariables: this.playerVariablesManager.variables,
                 userRoomToken: this.connection ? this.connection.userRoomToken : "",
                 metadata: this.room.metadata,
+                iframeId: this.iframeId,
                 isLogged: localUserStore.isLogged(),
             };
         });
@@ -2043,6 +2052,7 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("setVariable");
         iframeListener.unregisterAnswerer("openUIWebsite");
         iframeListener.unregisterAnswerer("getUIWebsites");
+        iframeListener.unregisterAnswerer("getUIWebsiteById");
         iframeListener.unregisterAnswerer("closeUIWebsite");
         iframeListener.unregisterAnswerer("enablePlayersTracking");
         this.sharedVariablesManager?.close();

@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { uiWebsitesStore } from "../../../Stores/UIWebsiteStore";
 
 class UIWebsiteManager {
+    private iframeId: string | undefined;
     constructor() {
         iframeListener.modifyUIWebsiteStream.subscribe((websiteEvent: ModifyUIWebsiteEvent) => {
             const website = get(uiWebsitesStore).find((currentWebsite) => currentWebsite.id === websiteEvent.id);
@@ -72,18 +73,25 @@ class UIWebsiteManager {
             allowPolicy: websiteConfig.allowPolicy ?? "",
             allowApi: websiteConfig.allowApi ?? false,
         };
-
+        this.iframeId = newWebsite.id;
         uiWebsitesStore.add(newWebsite);
-
         return newWebsite;
+    }
+
+    public getId(): string | undefined {
+        return this.iframeId;
     }
 
     public getAll(): UIWebsite[] {
         return get(uiWebsitesStore);
     }
 
+    public getById(websiteId: string): UIWebsite {
+        return get(uiWebsitesStore).find((currentWebsite) => currentWebsite.id === websiteId)!;
+    }
+
     public close(websiteId: string) {
-        const uiWebsite = get(uiWebsitesStore).find((currentWebsite) => currentWebsite.id === websiteId);
+        const uiWebsite = this.getById(websiteId);
 
         if (!uiWebsite) {
             return;
