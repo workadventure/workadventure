@@ -1,15 +1,10 @@
-/**
- * Tracks the remote players and their state.
- * The repository contains RemotePlayerData objects that containing the raw data (but are not Phaser sprite)
- * We need to make the distinction between RemotePlayerData and RemotePlayer (Phaser sprite) because data is arriving
- * from the Websocket but we cannot safely create/update a sprite until we are in the "update" method of the GameScene.
- */
 import type { PlayerDetailsUpdatedMessage, UserMovedMessage } from "@workadventure/messages";
 import { availabilityStatusToJSON } from "@workadventure/messages";
 import type { MessageUserJoined } from "../../Connexion/ConnexionModels";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import { iframeListener } from "../../Api/IframeListener";
 import { RoomConnection } from "../../Connexion/RoomConnection";
+import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
 
 interface RemotePlayerData extends MessageUserJoined {
     showVoiceIndicator: boolean;
@@ -24,6 +19,13 @@ export type PlayerDetailsUpdate = {
     };
 };
 
+/**
+ * Tracks the remote players and their state.
+ * The repository contains RemotePlayerData objects that containing the raw data (but are not Phaser sprite)
+ * We need to make the distinction between RemotePlayerData and RemotePlayer (Phaser sprite) because data is arriving
+ * from the Websocket but we cannot safely create/update a sprite until we are in the "update" method of the GameScene.
+ */
+
 export class RemotePlayersRepository {
     private removedPlayers = new Set<number>();
     private addedPlayers = new Map<number, RemotePlayerData>();
@@ -33,7 +35,8 @@ export class RemotePlayersRepository {
     private remotePlayersData = new Map<number, RemotePlayerData>();
 
     public addPlayer(userJoinedMessage: MessageUserJoined): void {
-        //console.log("Player Will be added from repo", userJoinedMessage.userId);
+        debugAddPlayer("Player will be added to repo", userJoinedMessage.userId);
+
         const player = {
             ...userJoinedMessage,
             showVoiceIndicator: false,
@@ -57,11 +60,13 @@ export class RemotePlayersRepository {
             this.updatedPlayers.delete(userJoinedMessage.userId);
             this.addedPlayers.set(userJoinedMessage.userId, player);
         }
-        //console.log("Player Has been added from repo", userJoinedMessage.userId);
+
+        debugAddPlayer("Player has been added to repo", userJoinedMessage.userId);
     }
 
     public removePlayer(userId: number): void {
-        //console.log("Player Will be removed from repo", userId);
+        debugRemovePlayer("Player will be removed from repo", userId);
+
         this.remotePlayersData.delete(userId);
         if (this.addedPlayers.has(userId)) {
             this.addedPlayers.delete(userId);
@@ -70,7 +75,7 @@ export class RemotePlayersRepository {
         }
         this.movedPlayers.delete(userId);
         this.updatedPlayers.delete(userId);
-        //console.log("Player Has been removed from repo", userId);
+        debugRemovePlayer("Player has been removed from repo", userId);
     }
 
     public movePlayer(userMovedMessage: UserMovedMessage): void {
@@ -165,8 +170,8 @@ export class RemotePlayersRepository {
         this.updatedPlayers.clear();
     }
 
-    public getPlayers(): IterableIterator<MessageUserJoined> {
-        return this.remotePlayersData.values();
+    public getPlayers(): ReadonlyMap<number, MessageUserJoined> {
+        return this.remotePlayersData;
     }
 
     /**
