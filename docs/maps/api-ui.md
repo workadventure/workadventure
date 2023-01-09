@@ -286,6 +286,16 @@ You can get all websites with the `WA.ui.website.getAll()` method. It returns an
 WA.ui.website.getAll();
 ```
 
+### Get UI website by ID
+You can get a specific website with the `WA.ui.website.getById()` method. It returns an `Promise<UIWebsite>` instance.
+WA.iframeId can be used to obtain the id. This property provides access to the current iframeId of a UIWebsite.
+
+```ts
+const websiteId = WA.iframeId;
+WA.ui.website.getById(websiteId);
+```
+
+
 ## The modal iframe API
 ### Open the modal iframe
 
