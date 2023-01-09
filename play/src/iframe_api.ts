@@ -108,7 +108,7 @@ const wa = {
     /**
      * The iframeId sent by the open website.
      * Important: You need to wait for the end of the initialization before accessing.
-     * {@link https://workadventu.re/map-building/api-metadata.md | Website documentation}
+     * {@link https://workadventu.re/map-building/api-ui.md#get-ui-website-by-id | Website documentation}
      *
      * @returns {string|undefined} IframeId
      */

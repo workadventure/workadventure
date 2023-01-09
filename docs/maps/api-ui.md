@@ -278,7 +278,7 @@ You can close a website with the close function on the `UIWebsite` object
 ```ts
 myWebsite.close();
 ```
-
+i
 ### Get all UI websites
 You can get all websites with the `WA.ui.website.getAll()` method. It returns an `Promise<UIWebsite[]>` instance.
 
@@ -294,7 +294,6 @@ WA.iframeId can be used to obtain the id. This property provides access to the c
 const websiteId = WA.iframeId;
 WA.ui.website.getById(websiteId);
 ```
-
 
 ## The modal iframe API
 ### Open the modal iframe

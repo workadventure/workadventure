@@ -225,10 +225,6 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("modifyUIWebsite"),
         data: isModifyUIWebsiteEvent,
     }),
-    // z.object({
-    //     type: z.literal("getUIWebsiteId"),
-    //     data: z.string(),
-    // }),
     z.object({
         type: z.literal("modifyArea"),
         data: isAreaEvent,
