@@ -127,6 +127,10 @@ class MapsManager {
         return this.loadedMaps.get(key);
     }
 
+    public getLoadedMaps(): string[] {
+        return Array.from(this.loadedMaps.keys());
+    }
+
     public async getMap(path: string, domain: string): Promise<ITiledMap> {
         const key = mapPathUsingDomain(path, domain);
         const inMemoryGameMap = this.loadedMaps.get(key);

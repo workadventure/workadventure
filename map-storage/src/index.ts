@@ -30,7 +30,6 @@ app.use(cors());
 passport.use(passportStrategy);
 app.use(passport.initialize());
 
-app.use(express.static("public"));
 app.get("*.json", (req, res, next) => {
     (async () => {
         const path = req.url;
