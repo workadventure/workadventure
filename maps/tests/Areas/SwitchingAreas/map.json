@@ -166,6 +166,57 @@
                  "width":224,
                  "x":480,
                  "y":96
+                }, 
+                {
+                 "class":"",
+                 "height":19,
+                 "id":43,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "halign":"center",
+                     "text":"LEFT",
+                     "wrap":true
+                    },
+                 "visible":true,
+                 "width":83,
+                 "x":326,
+                 "y":200
+                }, 
+                {
+                 "class":"",
+                 "height":19,
+                 "id":44,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "halign":"center",
+                     "text":"RIGHT",
+                     "wrap":true
+                    },
+                 "visible":true,
+                 "width":83,
+                 "x":550,
+                 "y":200
+                }, 
+                {
+                 "class":"",
+                 "height":73.6556473829201,
+                 "id":45,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "halign":"center",
+                     "text":"MOVE FROM ONE AREA TO THE OTHER. PROMPT WITH AREA TO TRIGGER SHOULD CHANGE EACH TIME",
+                     "wrap":true
+                    },
+                 "visible":true,
+                 "width":343.812913827268,
+                 "x":311.364530472186,
+                 "y":351.994369532647
                 }],
          "opacity":1,
          "properties":[
@@ -180,7 +231,7 @@
          "y":0
         }],
  "nextlayerid":40,
- "nextobjectid":43,
+ "nextobjectid":48,
  "orientation":"orthogonal",
  "properties":[
         {
