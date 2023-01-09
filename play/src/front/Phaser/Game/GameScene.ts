@@ -1676,12 +1676,10 @@ ${escapedMessage}
             };
         });
 
-        iframeListener.registerAnswerer("getState", async (): Promise<GameStateEvent> => {
+        iframeListener.registerAnswerer("getState", async (query, source): Promise<GameStateEvent> => {
             // The sharedVariablesManager is not instantiated before the connection is established. So we need to wait
             // for the connection to send back the answer.
             await this.connectionAnswerPromiseDeferred.promise;
-            // this.iframeId = uiWebsiteManager.getId();
-            // console.log(this.iframeId);
             return {
                 mapUrl: this.MapUrlFile,
                 startLayerName: this.startPositionCalculator.getStartPositionName() ?? undefined,
@@ -1695,7 +1693,7 @@ ${escapedMessage}
                 playerVariables: this.playerVariablesManager.variables,
                 userRoomToken: this.connection ? this.connection.userRoomToken : "",
                 metadata: this.room.metadata,
-                iframeId: this.iframeId,
+                iframeId: source ? iframeListener.getUIWebsiteIframeIdFromSource(source) : undefined,
                 isLogged: localUserStore.isLogged(),
             };
         });

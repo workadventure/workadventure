@@ -8,7 +8,6 @@
     const iframe = document.createElement("iframe");
     iframe.id = `ui-website-${uiWebsite.id}`;
     iframe.tabIndex = -1;
-
     $: {
         iframe.src = uiWebsite.url;
         iframe.title = uiWebsite.url;
@@ -28,7 +27,7 @@
         main.appendChild(iframe);
 
         if (uiWebsite.allowApi) {
-            iframeListener.registerIframe(iframe);
+            iframeListener.registerIframe(iframe, uiWebsite.id);
         }
     });
 
