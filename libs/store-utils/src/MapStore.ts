@@ -64,12 +64,12 @@ export class MapStore<K, V> extends Map<K, V> implements Readable<Map<K, V>> {
         return this;
     }
 
-    has(key: K): boolean {
-        return this.storesByKey.has(key);
-    }
-
     getStore(key: K): Readable<V | undefined> {
-        const store = writable(this.get(key), () => {
+        let store = this.storesByKey.get(key);
+        if (store !== undefined) {
+            return store;
+        }
+        store = writable(this.get(key), () => {
             return () => {
                 // No more subscribers!
                 this.storesByKey.delete(key);
