@@ -36,7 +36,7 @@ const en_US: BaseTranslation = {
     notification,
     cowebsite,
     actionbar,
-    mapEditor
+    mapEditor,
 };
 
 export default en_US;

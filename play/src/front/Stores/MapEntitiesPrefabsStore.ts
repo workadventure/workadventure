@@ -15,7 +15,7 @@ export class MapEntitiesPrefabsStore implements Readable<EntityPrefab[]> {
 
     private mapObjects: EntityPrefab[] = [];
     private filter = "";
-    public tagsStore= writable<string[]>([]);
+    public tagsStore = writable<string[]>([]);
     private currentCollection: EntityCollection = { collectionName: "All Object Collection", collection: [], tags: [] };
 
     constructor() {}

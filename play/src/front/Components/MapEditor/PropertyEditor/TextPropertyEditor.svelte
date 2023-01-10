@@ -21,6 +21,7 @@
         on:blur={onMapEditorInputUnfocus}
     />
 </div>
+
 <style lang="scss">
     .value-input {
         display: flex;

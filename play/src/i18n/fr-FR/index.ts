@@ -37,7 +37,7 @@ const fr_FR = merge(en_US, {
     notification,
     cowebsite,
     actionbar,
-    mapEditor
+    mapEditor,
 });
 
 export default fr_FR;
