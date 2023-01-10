@@ -137,6 +137,9 @@
            "ports": [3000, 50053],
            "env": {
              "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
+             "AUTHENTICATION_STRATEGY": "Basic",
+             "AUTHENTICATION_USER": "john.doe",
+             "AUTHENTICATION_PASSWORD": "password",
            }
          },
     "uploaderredis":{
