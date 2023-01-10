@@ -33,6 +33,7 @@ const BasicEnvironmentVariables = z.object({
         .describe(
             'The cache-control HTTP header to be used for "normal" ressources. Note: resources containing a hash in the name will be set to "immutable", whatever this setting is.'
         ),
+    HTTP_PORT: PositiveIntAsString.optional(),
 });
 
 const BearerAuthEnvVariables = z.object({
@@ -109,4 +110,5 @@ export const USE_DOMAIN_NAME_IN_PATH = toBool(env.USE_DOMAIN_NAME_IN_PATH, false
 export const STORAGE_DIRECTORY = env.STORAGE_DIRECTORY || "./public";
 // By default, cache only 10 seconds in the CDN
 export const CACHE_CONTROL = env.CACHE_CONTROL || "public, s-max-age=10";
+export const HTTP_PORT = toNumber(env.HTTP_PORT, 3000);
 export const ENV_VARS = env;

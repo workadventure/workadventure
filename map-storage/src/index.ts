@@ -9,6 +9,7 @@ import { UploadController } from "./Upload/UploadController";
 import { fileSystem } from "./fileSystem";
 import passport from "passport";
 import { passportStrategy } from "./Services/Authentication";
+import { HTTP_PORT } from "./Enum/EnvironmentVariable";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -46,6 +47,6 @@ new UploadController(app, fileSystem);
 
 app.use(proxyFiles(fileSystem));
 
-app.listen(3000, () => {
-    console.log("Application is running on port 3000");
+app.listen(HTTP_PORT, () => {
+    console.log(`Web-server is running on port ${HTTP_PORT}`);
 });

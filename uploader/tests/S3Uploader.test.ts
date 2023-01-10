@@ -37,7 +37,7 @@ describe("S3 Uploader tests", () => {
         s3 = new AWS.S3(options);
 
         server = startTestServer({
-            SERVER_PORT: APP_PORT,
+            HTTP_PORT: APP_PORT,
             AWS_ACCESS_KEY_ID: "fake-access-key",
             AWS_BUCKET: testBucket,
             AWS_SECRET_ACCESS_KEY: "fake-secret",
