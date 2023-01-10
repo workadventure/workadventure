@@ -183,7 +183,7 @@ class IframeListener {
     private readonly _addButtonActionBarStream: Subject<AddActionsMenuKeyToRemotePlayerEvent> = new Subject();
     public readonly addButtonActionBarStream = this._addButtonActionBarStream.asObservable();
 
-    private readonly iframes = new Set<HTMLIFrameElement>();
+    private readonly iframes = new Map<HTMLIFrameElement, string | undefined>();
     private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
 
@@ -201,6 +201,15 @@ class IframeListener {
     // Note: Message Queue used to store message who can't be sent to the Chat because it's not ready yet
     private messagesToChatQueue = new Array<IframeResponseEvent>();
 
+    public getUIWebsiteIframeIdFromSource(source: MessageEventSource): string | undefined {
+        for (const [iframe, id] of this.iframes.entries()) {
+            if (iframe.contentWindow === source) {
+                return id;
+            }
+        }
+        return undefined;
+    }
+
     init() {
         window.addEventListener(
             "message",
@@ -211,7 +220,7 @@ class IframeListener {
                 let foundSrc: string | undefined;
 
                 let iframe: HTMLIFrameElement | undefined;
-                for (iframe of this.iframes) {
+                for (iframe of this.iframes.keys()) {
                     if (iframe.contentWindow === message.source) {
                         foundSrc = iframe.src;
                         break;
@@ -461,8 +470,8 @@ class IframeListener {
     /**
      * Allows the passed iFrame to send/receive messages via the API.
      */
-    registerIframe(iframe: HTMLIFrameElement): void {
-        this.iframes.add(iframe);
+    registerIframe(iframe: HTMLIFrameElement, id?: string): void {
+        this.iframes.set(iframe, id);
         iframe.addEventListener("load", () => {
             if (iframe.contentWindow) {
                 this.iframeCloseCallbacks.set(iframe.contentWindow, new Set());
@@ -557,7 +566,7 @@ class IframeListener {
         let foundSrc: string | undefined;
         let iframe: HTMLIFrameElement | undefined;
 
-        for (iframe of this.iframes) {
+        for (iframe of this.iframes.keys()) {
             if (iframe.contentWindow === source) {
                 foundSrc = iframe.src;
                 break;
@@ -927,7 +936,7 @@ class IframeListener {
      * Sends the message... to all allowed iframes and not the chat.
      */
     public postMessage(message: IframeResponseEvent, exceptOrigin?: MessageEventSource) {
-        for (const iframe of this.iframes) {
+        for (const iframe of this.iframes.keys()) {
             if (exceptOrigin === iframe.contentWindow || iframe.src === this.chatIframe?.src) {
                 continue;
             }

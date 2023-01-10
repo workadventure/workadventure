@@ -72,9 +72,7 @@ class UIWebsiteManager {
             allowPolicy: websiteConfig.allowPolicy ?? "",
             allowApi: websiteConfig.allowApi ?? false,
         };
-
         uiWebsitesStore.add(newWebsite);
-
         return newWebsite;
     }
 
@@ -82,8 +80,12 @@ class UIWebsiteManager {
         return get(uiWebsitesStore);
     }
 
+    public getById(websiteId: string): UIWebsite {
+        return get(uiWebsitesStore).find((currentWebsite) => currentWebsite.id === websiteId)!;
+    }
+
     public close(websiteId: string) {
-        const uiWebsite = get(uiWebsitesStore).find((currentWebsite) => currentWebsite.id === websiteId);
+        const uiWebsite = this.getById(websiteId);
 
         if (!uiWebsite) {
             return;

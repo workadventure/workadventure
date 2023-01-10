@@ -278,7 +278,6 @@ You can close a website with the close function on the `UIWebsite` object
 ```ts
 myWebsite.close();
 ```
-
 ### Get all UI websites
 You can get all websites with the `WA.ui.website.getAll()` method. It returns an `Promise<UIWebsite[]>` instance.
 
@@ -286,6 +285,13 @@ You can get all websites with the `WA.ui.website.getAll()` method. It returns an
 WA.ui.website.getAll();
 ```
 
+### Get UI website by ID
+You can get a specific website with the `WA.ui.website.getById()` method. It returns an `Promise<UIWebsite>` instance.
+If your code is running inside a UIWebsite iframe, you can use `WA.iframeId` to obtain the id of the current iframe.
+
+```ts
+const websiteId = WA.iframeId;
+const website = await WA.ui.website.getById(websiteId);
 ## The modal iframe API
 ### Open the modal iframe
 

@@ -1,19 +1,18 @@
 import type { ModifyAreaMessage } from "@workadventure/messages";
-import type { CreateAreaCommandConfig } from './Commands/Area/CreateAreaCommand';
-import type { DeleteAreaCommandConfig } from './Commands/Area/DeleteAreaCommand';
-import type { UpdateAreaCommandConfig } from './Commands/Area/UpdateAreaCommand';
-import type { CreateEntityCommandConfig } from './Commands/Entity/CreateEntityCommand';
-import type { DeleteEntityCommandConfig } from './Commands/Entity/DeleteEntityCommand';
-import { UpdateEntityCommandConfig } from './Commands/Entity/UpdateEntityCommand';
-
+import type { CreateAreaCommandConfig } from "./Commands/Area/CreateAreaCommand";
+import type { DeleteAreaCommandConfig } from "./Commands/Area/DeleteAreaCommand";
+import type { UpdateAreaCommandConfig } from "./Commands/Area/UpdateAreaCommand";
+import type { CreateEntityCommandConfig } from "./Commands/Entity/CreateEntityCommand";
+import type { DeleteEntityCommandConfig } from "./Commands/Entity/DeleteEntityCommand";
+import { UpdateEntityCommandConfig } from "./Commands/Entity/UpdateEntityCommand";
 
 export type CommandConfig =
-    UpdateAreaCommandConfig |
-    DeleteAreaCommandConfig |
-    CreateAreaCommandConfig |
-    UpdateEntityCommandConfig |
-    CreateEntityCommandConfig |
-    DeleteEntityCommandConfig;
+    | UpdateAreaCommandConfig
+    | DeleteAreaCommandConfig
+    | CreateAreaCommandConfig
+    | UpdateEntityCommandConfig
+    | CreateEntityCommandConfig
+    | DeleteEntityCommandConfig;
 
 export type AtLeast<T, K extends keyof T> = Partial<T> & Pick<T, K>;
 
@@ -28,7 +27,7 @@ export enum Direction {
     Left = "Left",
     Up = "Up",
     Down = "Down",
-    Right = "Right"
+    Right = "Right",
 }
 
 export interface EntityCollection {
@@ -61,7 +60,7 @@ export interface PredefinedPropertyData {
     name: string;
     description: string;
     turnedOn: boolean;
-    additionalProperties: Record<string, string | number | boolean | {} | undefined>;
+    additionalProperties: Record<string, string | number | boolean | object | undefined>;
 }
 
 export interface ActionsMenuData {
@@ -70,12 +69,12 @@ export interface ActionsMenuData {
 
 export interface JitsiRoomPropertyData extends ActionsMenuData {
     roomName: string;
-    jitsiRoomConfig:JitsiRoomConfigData;
+    jitsiRoomConfig: JitsiRoomConfigData;
 }
 
 export interface JitsiRoomConfigData {
-    startWithAudioMuted?:boolean;
-    startWithVideoMuted?:boolean;
+    startWithAudioMuted?: boolean;
+    startWithVideoMuted?: boolean;
 }
 
 export interface PlayAudioPropertyData extends ActionsMenuData {

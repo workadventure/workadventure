@@ -545,6 +545,10 @@ export const iframeQueryMapTypeGuards = {
         query: z.undefined(),
         answer: z.array(isUIWebsite),
     },
+    getUIWebsiteById: {
+        query: z.string(),
+        answer: isUIWebsite,
+    },
     enablePlayersTracking: {
         query: isEnablePlayersTrackingEvent,
         answer: z.array(isAddPlayerEvent),

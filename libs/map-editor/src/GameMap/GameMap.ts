@@ -6,14 +6,12 @@ import {
     ITiledMapTile,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
-import type { AreaData } from '../types';
+import type { AreaData } from "../types";
 import type { AreaChangeCallback } from "./GameMapAreas";
 import { GameMapAreas } from "./GameMapAreas";
-import { GameMapProperties } from '../types';
-import { flattenGroupLayersMap } from './LayersFlattener';
-import { GameMapEntities } from './GameMapEntities';
-
-
+import { GameMapProperties } from "../types";
+import { flattenGroupLayersMap } from "./LayersFlattener";
+import { GameMapEntities } from "./GameMapEntities";
 
 /**
  * A wrapper around a ITiledMap interface to provide additional capabilities.
@@ -28,7 +26,6 @@ export class GameMap {
      */
     private gameMapEntities: GameMapEntities;
 
-
     private readonly map: ITiledMap;
     private tileNameMap = new Map<string, number>();
 
@@ -37,8 +34,7 @@ export class GameMap {
     public readonly tiledObjects: ITiledMapObject[];
 
     private readonly DEFAULT_TILE_SIZE = 32;
-    private readonly MAP_PROPERTY_LAST_COMMAND_ID_KEY: string = 'lastCommandId';
-
+    private readonly MAP_PROPERTY_LAST_COMMAND_ID_KEY: string = "lastCommandId";
 
     public exitUrls: Array<string> = [];
 
@@ -97,7 +93,9 @@ export class GameMap {
     }
 
     public getTileInformationFromTileset(tilesetName: string, tileIndex: number): ITiledMapTile | undefined {
-        return this.map.tilesets.find(tile => tile.name === tilesetName)?.tiles?.find(tile => tile.id === tileIndex);
+        return this.map.tilesets
+            .find((tile) => tile.name === tilesetName)
+            ?.tiles?.find((tile) => tile.id === tileIndex);
     }
 
     public getMap(): ITiledMap {
@@ -149,11 +147,7 @@ export class GameMap {
         property.value = propertyValue;
     }
 
-    public setAreaProperty(
-        area: AreaData,
-        key: string,
-        value: string | number | boolean | undefined
-    ): void {
+    public setAreaProperty(area: AreaData, key: string, value: string | number | boolean | undefined): void {
         this.gameMapAreas.setProperty(area, key, value);
     }
 
@@ -245,11 +239,11 @@ export class GameMap {
     }
 
     public getLastCommandId(): string | undefined {
-        return this.getMapPropertyByKey(this.MAP_PROPERTY_LAST_COMMAND_ID_KEY)?.value as string ?? undefined;
+        return (this.getMapPropertyByKey(this.MAP_PROPERTY_LAST_COMMAND_ID_KEY)?.value as string) ?? undefined;
     }
 
     public getMapPropertyByKey(key: string): ITiledMapProperty | undefined {
-        return this.map.properties?.find(property => property.name === key);
+        return this.map.properties?.find((property) => property.name === key);
     }
 
     public getDefaultTileSize(): number {
@@ -267,13 +261,13 @@ export class GameMap {
     // NOTE: Flat layers are deep copied so we cannot operate on them
     public deleteGameObjectFromMapById(id: number, layers: ITiledMapLayer[]): boolean {
         for (const layer of layers) {
-            if (layer.type === 'objectgroup') {
-                const index = layer.objects.findIndex(object => object.id === id);
+            if (layer.type === "objectgroup") {
+                const index = layer.objects.findIndex((object) => object.id === id);
                 if (index !== -1) {
                     layer.objects.splice(index, 1);
                     return true;
                 }
-            } else if (layer.type === 'group') {
+            } else if (layer.type === "group") {
                 return this.deleteGameObjectFromMapById(id, layer.layers);
             }
         }
