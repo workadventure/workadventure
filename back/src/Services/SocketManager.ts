@@ -117,8 +117,7 @@ export class SocketManager {
             updateMapToNewestMessage.setCommandid(lastCommandId);
 
             const updateMapToNewestWithKeyMessage = new UpdateMapToNewestWithKeyMessage();
-            // TODO: Take mapKey from pusher
-            updateMapToNewestWithKeyMessage.setMapkey(room.roomUrl.split("~")[1]);
+            updateMapToNewestWithKeyMessage.setMapkey(room.mapUrl);
             updateMapToNewestWithKeyMessage.setUpdatemaptonewestmessage(updateMapToNewestMessage);
 
             commandsToApply = await new Promise<EditMapCommandMessage[]>((resolve, reject) => {

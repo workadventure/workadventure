@@ -26,7 +26,6 @@ import {
     AskPositionMessage,
     BanUserByUuidMessage,
     EditMapCommandMessage,
-    UpdateMapToNewestWithKeyMessage,
     AdminMessage,
     AdminPusherToBackMessage,
     AdminRoomMessage,
@@ -45,7 +44,6 @@ import {
     ErrorScreenMessage,
     ApplicationMessage,
     XmppSettingsMessage,
-    UpdateMapToNewestMessage,
     MucRoomDefinitionMessage,
 } from "../../messages/generated/messages_pb";
 
@@ -356,16 +354,6 @@ export class SocketManager implements ZoneEventListener {
     handleLockGroup(client: ExSocketInterface, message: LockGroupPromptMessage): void {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setLockgrouppromptmessage(message);
-        client.backConnection.write(pusherToBackMessage);
-    }
-
-    handleUpdateMapToNewestCommandMessage(client: ExSocketInterface, message: UpdateMapToNewestMessage): void {
-        const updateMapToNewestWithKeyMessage = new UpdateMapToNewestWithKeyMessage();
-        updateMapToNewestWithKeyMessage.setUpdatemaptonewestmessage(message);
-        updateMapToNewestWithKeyMessage.setMapkey(client.roomId.split("~")[1]);
-
-        const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setUpdatemaptonewestwithkeymessage(updateMapToNewestWithKeyMessage);
         client.backConnection.write(pusherToBackMessage);
     }
 
