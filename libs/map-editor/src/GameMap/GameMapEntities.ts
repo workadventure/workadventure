@@ -63,8 +63,7 @@ export class GameMapEntities {
         if (!this.getEntitiesMapProperty()) {
             this.gameMap.getMap().properties?.push({
                 name: this.MAP_PROPERTY_ENTITIES_NAME,
-                type: "string",
-                propertytype: "string",
+                type: "class",
                 value: JSON.parse(JSON.stringify([])),
             });
         }

@@ -172,7 +172,7 @@ export class MapEditorModeManager {
             this.handleCommandExecutionByTools(commandConfig);
 
             // this should not be called with every change. Use some sort of debounce
-            this.emitMapEditorUpdate(`${command.id}-undo`, commandConfig);
+            this.emitMapEditorUpdate(`${command.id}`, commandConfig);
             this.currentCommandIndex -= 1;
         } catch (e) {
             this.localCommandsHistory.splice(this.currentCommandIndex, 1);
