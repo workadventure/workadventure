@@ -45,7 +45,6 @@ import {
     InvalidTextureMessage,
     ErrorScreenMessage,
     ApplicationMessage,
-    EditMapCommandWithKeyMessage,
     XmppSettingsMessage,
     MucRoomDefinitionMessage,
 } from "../../messages/generated/messages_pb";
@@ -356,12 +355,8 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleEditMapCommandMessage(client: ExSocketInterface, message: EditMapCommandMessage): void {
-        const editWithMapKeyMessage = new EditMapCommandWithKeyMessage();
-        editWithMapKeyMessage.setEditmapcommandmessage(message);
-        editWithMapKeyMessage.setMapkey(client.roomId.split("~")[1]);
-
         const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setEditmapcommandwithkeymessage(editWithMapKeyMessage);
+        pusherToBackMessage.setEditmapcommandmessage(message);
         client.backConnection.write(pusherToBackMessage);
     }
 

@@ -6,8 +6,9 @@ import {
     DeleteAreaCommand,
     CreateAreaCommand,
 } from "@workadventure/map-editor";
-import { writeFileSync } from "fs";
-import { readFile } from "fs/promises";
+import { ITiledMap } from "@workadventure/tiled-map-type-guard";
+import { fileSystem } from "./fileSystem";
+import { mapPathUsingDomain } from "./Services/PathMapper";
 
 class MapsManager {
     private loadedMaps: Map<string, GameMap>;
@@ -30,56 +31,51 @@ class MapsManager {
         this.mapLastChangeTimestamp = new Map<string, number>();
     }
 
-    public executeCommand(mapKey: string, commandConfig: CommandConfig): boolean {
+    public executeCommand(mapKey: string, commandConfig: CommandConfig): void {
         const gameMap = this.getGameMap(mapKey);
         if (!gameMap) {
-            return false;
+            throw new Error('Could not find GameMap with key "' + mapKey + '"');
         }
         this.mapLastChangeTimestamp.set(mapKey, +new Date());
         if (!this.saveMapIntervals.has(mapKey)) {
             this.startSavingMapInterval(mapKey, this.AUTO_SAVE_INTERVAL_MS);
         }
         let command: Command;
-        try {
-            switch (commandConfig.type) {
-                case "UpdateAreaCommand": {
-                    command = new UpdateAreaCommand(gameMap, commandConfig);
-                    command.execute();
-                    break;
-                }
-                case "CreateAreaCommand": {
-                    command = new CreateAreaCommand(gameMap, commandConfig);
-                    command.execute();
-                    break;
-                }
-                case "DeleteAreaCommand": {
-                    command = new DeleteAreaCommand(gameMap, commandConfig);
-                    command.execute();
-                    break;
-                }
-                default: {
-                    const _exhaustiveCheck: never = commandConfig;
-                }
+        switch (commandConfig.type) {
+            case "UpdateAreaCommand": {
+                command = new UpdateAreaCommand(gameMap, commandConfig);
+                command.execute();
+                break;
             }
-        } catch (e) {
-            console.log(e);
-            return false;
+            case "CreateAreaCommand": {
+                command = new CreateAreaCommand(gameMap, commandConfig);
+                command.execute();
+                break;
+            }
+            case "DeleteAreaCommand": {
+                command = new DeleteAreaCommand(gameMap, commandConfig);
+                command.execute();
+                break;
+            }
+            default: {
+                const _exhaustiveCheck: never = commandConfig;
+            }
         }
-        return true;
     }
 
     public getGameMap(key: string): GameMap | undefined {
         return this.loadedMaps.get(key);
     }
 
-    public async getMap(path: string): Promise<any> {
-        const inMemoryGameMap = this.loadedMaps.get(path);
+    public async getMap(path: string, domain: string): Promise<ITiledMap> {
+        const key = mapPathUsingDomain(path, domain);
+        const inMemoryGameMap = this.loadedMaps.get(key);
         if (inMemoryGameMap) {
             return inMemoryGameMap.getMap();
         }
-        const file = await readFile(`./public${path}`, "utf-8");
-        const map = JSON.parse(file);
-        this.loadedMaps.set(path, new GameMap(map));
+        const file = await fileSystem.readFileAsString(key);
+        const map = ITiledMap.parse(JSON.parse(file));
+        this.loadedMaps.set(key, new GameMap(map));
         return map;
     }
 
@@ -98,19 +94,21 @@ class MapsManager {
         this.saveMapIntervals.set(
             key,
             setInterval(() => {
-                console.log(`saving map ${key}`);
-                const gameMap = this.loadedMaps.get(key);
-                if (gameMap) {
-                    writeFileSync(`./public${key}`, JSON.stringify(gameMap.getMap()));
-                }
-                const lastChangeTimestamp = this.mapLastChangeTimestamp.get(key);
-                if (lastChangeTimestamp === undefined) {
-                    return;
-                }
-                if (lastChangeTimestamp + this.NO_CHANGE_DETECTED_MS < +new Date()) {
-                    console.log(`NO CHANGES ON THE MAP ${key} DETECTED. STOP AUTOSAVING`);
-                    this.clearSaveMapInterval(key);
-                }
+                (async () => {
+                    console.log(`saving map ${key}`);
+                    const gameMap = this.loadedMaps.get(key);
+                    if (gameMap) {
+                        await fileSystem.writeStringAsFile(key, JSON.stringify(gameMap.getMap()));
+                    }
+                    const lastChangeTimestamp = this.mapLastChangeTimestamp.get(key);
+                    if (lastChangeTimestamp === undefined) {
+                        return;
+                    }
+                    if (lastChangeTimestamp + this.NO_CHANGE_DETECTED_MS < +new Date()) {
+                        console.log(`NO CHANGES ON THE MAP ${key} DETECTED. STOP AUTOSAVING`);
+                        this.clearSaveMapInterval(key);
+                    }
+                })().catch((e) => console.error(e));
             }, intervalMS)
         );
     }
