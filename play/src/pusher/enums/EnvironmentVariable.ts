@@ -139,7 +139,7 @@ export const EJABBERD_DOMAIN: string = env.EJABBERD_DOMAIN || "";
 export const EJABBERD_JWT_SECRET: string = env.EJABBERD_JWT_SECRET || "";
 export const ENABLE_CHAT: boolean = toBool(env.ENABLE_CHAT, true);
 export const ENABLE_CHAT_UPLOAD: boolean = toBool(env.ENABLE_CHAT_UPLOAD, true);
-export const ENABLE_CHAT_ONLINE_LIST: boolean = toBool(env.ENABLE_CHAT_UPLOAD, true);
+export const ENABLE_CHAT_ONLINE_LIST: boolean = toBool(env.ENABLE_CHAT_ONLINE_LIST, true);
 export const ENABLE_CHAT_DISCONNECTED_LIST: boolean = toBool(env.ENABLE_CHAT_DISCONNECTED_LIST, true);
 export const DEBUG_ERROR_MESSAGES = toBool(env.DEBUG_ERROR_MESSAGES, false);
 
@@ -153,8 +153,8 @@ export const FALLBACK_LOCALE: string | undefined = env.FALLBACK_LOCALE;
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     DEBUG_MODE: toBool(env.DEBUG_MODE, false),
-    PLAY_URL: env.PLAY_URL || "/",
-    ADMIN_URL: env.ADMIN_URL,
+    PLAY_URL,
+    ADMIN_URL,
     UPLOADER_URL: env.UPLOADER_URL,
     ICON_URL: env.ICON_URL,
     STUN_SERVER: env.STUN_SERVER,
@@ -172,12 +172,12 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     CONTACT_URL: env.CONTACT_URL,
     POSTHOG_API_KEY: env.POSTHOG_API_KEY,
     POSTHOG_URL: env.POSTHOG_URL,
-    DISABLE_ANONYMOUS: toBool(env.DISABLE_ANONYMOUS, false),
+    DISABLE_ANONYMOUS,
     ENABLE_OPENID: !!env.OPID_CLIENT_ID,
     OPID_PROFILE_SCREEN_PROVIDER: env.OPID_PROFILE_SCREEN_PROVIDER,
     OPID_LOGOUT_REDIRECT_URL: env.OPID_LOGOUT_REDIRECT_URL,
     CHAT_URL: env.CHAT_URL,
-    ENABLE_CHAT_UPLOAD: toBool(env.ENABLE_CHAT_UPLOAD, true),
-    FALLBACK_LOCALE: env.FALLBACK_LOCALE,
-    OPID_WOKA_NAME_POLICY: env.OPID_WOKA_NAME_POLICY,
+    ENABLE_CHAT_UPLOAD,
+    FALLBACK_LOCALE,
+    OPID_WOKA_NAME_POLICY,
 };
