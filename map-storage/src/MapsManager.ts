@@ -143,6 +143,18 @@ class MapsManager {
         return map;
     }
 
+    public getEntityCollection(collectionName: string): EntityCollection | undefined {
+        return this.loadedCollections.get(collectionName);
+    }
+
+    public getEntityCollectionsNames(): string[] {
+        const names: string[] = [];
+        for (const collection of this.loadedCollections.values()) {
+            names.push(collection.collectionName);
+        }
+        return names;
+    }
+
     public getEntityPrefab(collectionName: string, entityId: string): EntityPrefab | undefined {
         return this.loadedCollections.get(collectionName)?.collection.find((entity) => entity.id === entityId);
     }

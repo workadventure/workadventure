@@ -626,10 +626,12 @@ export class GameRoom implements BrothersFinder {
 
             let mapUrl = "";
             let canEdit = false;
+            let entityCollectionsUrl = undefined;
             const match = /\/~\/(.+)/.exec(roomUrlObj.pathname);
             if (match) {
                 mapUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
                 canEdit = true;
+                entityCollectionsUrl = `${PUBLIC_MAP_STORAGE_URL}/entityCollections`;
             } else {
                 const match = /\/_\/[^/]+\/(.+)/.exec(roomUrlObj.pathname);
                 if (!match) {
@@ -642,6 +644,7 @@ export class GameRoom implements BrothersFinder {
             return {
                 mapUrl,
                 canEdit,
+                entityCollectionsUrl,
                 authenticationMandatory: null,
                 group: null,
                 mucRooms: null,

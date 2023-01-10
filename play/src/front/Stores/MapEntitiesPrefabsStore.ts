@@ -1,21 +1,12 @@
-import { EntityPrefab, Direction, EntityRawPrefab } from "@workadventure/map-editor";
+import { EntityPrefab, Direction } from "@workadventure/map-editor";
 import type { Readable, Subscriber, Unsubscriber } from "svelte/store";
 import { get, writable } from "svelte/store";
 import { TexturesHelper } from "../Phaser/Helpers/TexturesHelper";
-
-import furnitureCollection from "../../../public/resources/entities-collections/FurnitureCollection.json";
-import officeCollection from "../../../public/resources/entities-collections/OfficeCollection.json";
 
 export interface EntityCollection {
     collectionName: string;
     tags: string[];
     collection: EntityPrefab[];
-}
-
-export interface EntityRawCollection {
-    collectionName: string;
-    tags: string[];
-    collection: EntityRawPrefab[];
 }
 
 export class MapEntitiesPrefabsStore implements Readable<EntityPrefab[]> {
@@ -24,7 +15,7 @@ export class MapEntitiesPrefabsStore implements Readable<EntityPrefab[]> {
 
     private mapObjects: EntityPrefab[] = [];
     private filter = "";
-    public tagsStore = writable<string[]>([]);
+    public tagsStore= writable<string[]>([]);
     private currentCollection: EntityCollection = { collectionName: "All Object Collection", collection: [], tags: [] };
 
     constructor() {}
@@ -65,25 +56,28 @@ export class MapEntitiesPrefabsStore implements Readable<EntityPrefab[]> {
         this.mapEntitiesStore.set(newCollection);
     }
 
-    public loadCollections(): void {
-        const entityCollections: EntityRawCollection[] = [furnitureCollection, officeCollection];
+    public async loadCollections(urls: string[]): Promise<void> {
+        const promises: Promise<EntityCollection>[] = [];
+        for (const url of urls) {
+            promises.push(this.fetchCollection(url));
+        }
+        const entityCollections = await Promise.all(promises);
 
         for (const entityCollection of entityCollections) {
             const tagSet = new Set<string>();
-            entityCollection.collection.forEach((rawEntityPrefab: EntityRawPrefab) => {
-                const entity = this.parseRawEntityPrefab(entityCollection.collectionName, rawEntityPrefab);
+            entityCollection.collection.forEach((entity: EntityPrefab) => {
                 this.currentCollection.collection.push({
                     name: entity.name,
                     id: entity.id,
                     collectionName: entity.collectionName,
                     // TODO: Merge tags on map-storage side?
-                    tags: [...rawEntityPrefab.tags, ...entityCollection.tags],
-                    imagePath: `${TexturesHelper.ENTITIES_TEXTURES_DIRECTORY}${rawEntityPrefab.imagePath}`,
+                    tags: [...entity.tags, ...entityCollection.tags],
+                    imagePath: `${TexturesHelper.ENTITIES_TEXTURES_DIRECTORY}${entity.imagePath}`,
                     direction: entity.direction,
                     color: entity.color,
                     collisionGrid: entity.collisionGrid,
                 });
-                rawEntityPrefab.tags.forEach((tag: string) => tagSet.add(tag));
+                entity.tags.forEach((tag: string) => tagSet.add(tag));
             });
 
             const tags = [...tagSet, ...get(this.tagsStore)];
@@ -93,11 +87,7 @@ export class MapEntitiesPrefabsStore implements Readable<EntityPrefab[]> {
         }
     }
 
-    private parseRawEntityPrefab(collectionName: string, rawPrefab: EntityRawPrefab): EntityPrefab {
-        return {
-            ...rawPrefab,
-            collectionName,
-            id: `${rawPrefab.name}:${rawPrefab.color}:${rawPrefab.direction}`,
-        };
+    private async fetchCollection(url: string): Promise<EntityCollection> {
+        return (await fetch(url)).json();
     }
 }

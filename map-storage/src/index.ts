@@ -42,6 +42,23 @@ app.get("*.json", (req, res, next) => {
     })().catch((e) => next(e));
 });
 
+app.get("/entityCollections/*", (req, res) => {
+    const url = new URL(`${req.protocol}://${req.get("host") ?? ""}${req.originalUrl}`);
+    const collectionName = decodeURI(url.pathname).split("/").pop() ?? "";
+    const collection = mapsManager.getEntityCollection(collectionName);
+    if (collection) {
+        res.send(collection);
+    } else {
+        res.send(`COULD NOT FIND COLLECTION: ${collectionName}`);
+    }
+});
+
+app.get("/entityCollections", (req, res) => {
+    res.send({
+        collections: mapsManager.getEntityCollectionsNames(),
+    });
+});
+
 new UploadController(app, fileSystem);
 
 app.use(proxyFiles(fileSystem));
