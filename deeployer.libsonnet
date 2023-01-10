@@ -296,6 +296,16 @@
               }
              }
           },
+          "map-storage"+: {
+            ingress+: {
+              spec+: {
+                tls+: [{
+                  hosts: ["map-storage-"+url],
+                  secretName: "certificate-tls"
+                }]
+              }
+             }
+          },
           iconserver+: {
             ingress+: {
               spec+: {
