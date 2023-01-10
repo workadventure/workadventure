@@ -5,13 +5,11 @@ import {
     ITiledMapProperty,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
-import type { AreaData } from '../types';
+import type { AreaData } from "../types";
 import type { AreaChangeCallback } from "./GameMapAreas";
 import { GameMapAreas } from "./GameMapAreas";
-import { GameMapProperties } from '../types';
-import { flattenGroupLayersMap } from './LayersFlattener';
-
-
+import { GameMapProperties } from "../types";
+import { flattenGroupLayersMap } from "./LayersFlattener";
 
 /**
  * A wrapper around a ITiledMap interface to provide additional capabilities.
@@ -22,7 +20,6 @@ export class GameMap {
      */
     private gameMapAreas: GameMapAreas;
 
-
     private readonly map: ITiledMap;
     private tileNameMap = new Map<string, number>();
 
@@ -31,7 +28,6 @@ export class GameMap {
     public readonly tiledObjects: ITiledMapObject[];
 
     private readonly defaultTileSize = 32;
-
 
     public exitUrls: Array<string> = [];
 
@@ -137,11 +133,7 @@ export class GameMap {
         property.value = propertyValue;
     }
 
-    public setAreaProperty(
-        area: AreaData,
-        key: string,
-        value: string | number | boolean | undefined
-    ): void {
+    public setAreaProperty(area: AreaData, key: string, value: string | number | boolean | undefined): void {
         this.gameMapAreas.setProperty(area, key, value);
     }
 
@@ -229,13 +221,13 @@ export class GameMap {
     // NOTE: Flat layers are deep copied so we cannot operate on them
     public deleteGameObjectFromMapById(id: number, layers: ITiledMapLayer[]): boolean {
         for (const layer of layers) {
-            if (layer.type === 'objectgroup') {
-                const index = layer.objects.findIndex(object => object.id === id);
+            if (layer.type === "objectgroup") {
+                const index = layer.objects.findIndex((object) => object.id === id);
                 if (index !== -1) {
                     layer.objects.splice(index, 1);
                     return true;
                 }
-            } else if (layer.type === 'group') {
+            } else if (layer.type === "group") {
                 return this.deleteGameObjectFromMapById(id, layer.layers);
             }
         }
