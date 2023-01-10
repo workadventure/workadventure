@@ -11,6 +11,7 @@ import isPortReachable from "./utils/isPortReachable";
 import startTestServer from "./startTestServer";
 import {createClient} from "redis";
 import {CHAT_URL} from "../src/Enum/EnvironmentVariable";
+import {describe, expect, jest, it, beforeAll, afterAll} from '@jest/globals';
 
 const APP_PORT = 7373
 
