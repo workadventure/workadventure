@@ -1667,6 +1667,10 @@ ${escapedMessage}
             return uiWebsiteManager.getAll();
         });
 
+        iframeListener.registerAnswerer("getUIWebsiteById", (websiteId) => {
+            return uiWebsiteManager.getById(websiteId);
+        });
+
         iframeListener.registerAnswerer("closeUIWebsite", (websiteId) => {
             return uiWebsiteManager.close(websiteId);
         });
@@ -1677,7 +1681,7 @@ ${escapedMessage}
             };
         });
 
-        iframeListener.registerAnswerer("getState", async (): Promise<GameStateEvent> => {
+        iframeListener.registerAnswerer("getState", async (query, source): Promise<GameStateEvent> => {
             // The sharedVariablesManager is not instantiated before the connection is established. So we need to wait
             // for the connection to send back the answer.
             await this.connectionAnswerPromiseDeferred.promise;
@@ -1694,6 +1698,7 @@ ${escapedMessage}
                 playerVariables: this.playerVariablesManager.variables,
                 userRoomToken: this.connection ? this.connection.userRoomToken : "",
                 metadata: this.room.metadata,
+                iframeId: source ? iframeListener.getUIWebsiteIframeIdFromSource(source) : undefined,
                 isLogged: localUserStore.isLogged(),
             };
         });
@@ -2050,6 +2055,7 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("setVariable");
         iframeListener.unregisterAnswerer("openUIWebsite");
         iframeListener.unregisterAnswerer("getUIWebsites");
+        iframeListener.unregisterAnswerer("getUIWebsiteById");
         iframeListener.unregisterAnswerer("closeUIWebsite");
         iframeListener.unregisterAnswerer("enablePlayersTracking");
         this.sharedVariablesManager?.close();
