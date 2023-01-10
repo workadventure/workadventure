@@ -348,7 +348,7 @@ export class UIWebsiteCommands extends IframeApiContribution<UIWebsiteCommands> 
     }
 
     /**
-     * Returns all UI websites (iframes positionned on the viewport)
+     * Returns one UI website (iframe positionned on the viewport) by ID.
      * {@link https://workadventu.re/map-building/api-ui.md#get-all-ui-websites | Website documentation}
      * @param {string} id The id of the UIWebsite
      * @returns {Promise<UIWebsite>} Promise to return UI website

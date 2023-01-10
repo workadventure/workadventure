@@ -256,7 +256,6 @@ export class GameScene extends DirtyScene {
     private playersMovementEventDispatcher = new IframeEventDispatcher();
     private remotePlayersRepository = new RemotePlayersRepository();
     private companionLoadingManager: CompanionTexturesLoadingManager | undefined;
-    private iframeId: string | undefined;
     private throttledSendViewportToServer!: () => void;
     private playersDebugLogAlreadyDisplayed = false;
 
