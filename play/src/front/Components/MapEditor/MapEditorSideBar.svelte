@@ -1,5 +1,4 @@
 <script lang="ts">
-    import Tooltip from "../Util/Tooltip.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { onDestroy } from "svelte";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
@@ -16,8 +15,12 @@
     let currentTool: EditorToolName | undefined;
 
     let availableTools = [
-        { toolName: EditorToolName.AreaEditor, img: AreaToolImg, tooltiptext: $LL.mapEditor.sideBar.areaEditor()},
-        { toolName: EditorToolName.EntityEditor, img: EntityToolImg, tooltiptext: $LL.mapEditor.sideBar.entityEditor()},
+        { toolName: EditorToolName.AreaEditor, img: AreaToolImg, tooltiptext: $LL.mapEditor.sideBar.areaEditor() },
+        {
+            toolName: EditorToolName.EntityEditor,
+            img: EntityToolImg,
+            tooltiptext: $LL.mapEditor.sideBar.entityEditor(),
+        },
         { toolName: EditorToolName.FloorEditor, img: FloorToolImg, tooltiptext: $LL.mapEditor.sideBar.tileEditor() },
     ];
 
@@ -50,15 +53,19 @@
     <div class="side-bar">
         <div class="tool-button">
             <!-- <Tooltip text={$LL.mapEditor.sideBar.zoomIn()} /> --><!--do not work yet-->
-            <button on:click|preventDefault={zoomIn} type="button"><img src={ZoomInImg} alt={$LL.mapEditor.sideBar.zoomIn()} /></button>
+            <button on:click|preventDefault={zoomIn} type="button"
+                ><img src={ZoomInImg} alt={$LL.mapEditor.sideBar.zoomIn()} /></button
+            >
         </div>
         <div class="tool-button">
             <!-- <Tooltip text={$LL.mapEditor.sideBar.zoomOut()} /> --><!--do not work yet-->
-            <button on:click|preventDefault={zoomOut} type="button"><img src={ZoomOutImg} alt={$LL.mapEditor.sideBar.zoomOut()} /></button>
+            <button on:click|preventDefault={zoomOut} type="button"
+                ><img src={ZoomOutImg} alt={$LL.mapEditor.sideBar.zoomOut()} /></button
+            >
         </div>
         {#each availableTools as tool (tool.toolName)}
             <div class="tool-button">
-            <!-- <Tooltip text={tool.tooltiptext} /> --><!--do not work yet-->
+                <!-- <Tooltip text={tool.tooltiptext} /> --><!--do not work yet-->
                 <button
                     class={tool.toolName == currentTool ? "active" : ""}
                     on:click|preventDefault={() => switchTool(tool.toolName)}

@@ -1,28 +1,29 @@
-import { ITiledMapProperty } from '@workadventure/tiled-map-type-guard';
-import _ from 'lodash';
-import { EntityData } from '../types';
-import type { GameMap } from './GameMap';
+import { ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
+import _ from "lodash";
+import { EntityData } from "../types";
+import type { GameMap } from "./GameMap";
 
 export class GameMapEntities {
-
     private gameMap: GameMap;
 
     private entities: EntityData[] = [];
 
-    private nextEntityId: number = 0;
+    private nextEntityId = 0;
 
-    private readonly MAP_PROPERTY_ENTITIES_NAME: string = 'entities';
+    private readonly MAP_PROPERTY_ENTITIES_NAME: string = "entities";
 
     constructor(gameMap: GameMap) {
         this.gameMap = gameMap;
 
-        for (const entityData of JSON.parse(JSON.stringify(this.getEntitiesMapProperty()?.value ?? [])) as EntityData[] ?? []) {
+        for (const entityData of (JSON.parse(
+            JSON.stringify(this.getEntitiesMapProperty()?.value ?? [])
+        ) as EntityData[]) ?? []) {
             this.addEntity(entityData, false);
-        };
+        }
     }
 
-    public addEntity(entityData: EntityData, addToMapProperties: boolean = true): boolean {
-        if (this.entities.find(entity => entity.id === entityData.id)) {
+    public addEntity(entityData: EntityData, addToMapProperties = true): boolean {
+        if (this.entities.find((entity) => entity.id === entityData.id)) {
             return false;
         }
         this.entities.push(entityData);
@@ -34,11 +35,11 @@ export class GameMapEntities {
     }
 
     public getEntity(id: number): EntityData | undefined {
-        return this.entities.find(entity => entity.id === id);
+        return this.entities.find((entity) => entity.id === id);
     }
 
     public deleteEntity(id: number): boolean {
-        const index = this.entities.findIndex(entityData => entityData.id === id);
+        const index = this.entities.findIndex((entityData) => entityData.id === id);
         if (index !== -1) {
             this.entities.splice(index, 1);
             return this.deleteEntityFromMapProperties(id);
@@ -64,12 +65,12 @@ export class GameMapEntities {
             this.gameMap.getMap().properties?.push({
                 name: this.MAP_PROPERTY_ENTITIES_NAME,
                 type: "class",
-                value: JSON.parse(JSON.stringify([])),
+                value: JSON.parse(JSON.stringify([])) as Json,
             });
         }
         const entitiesPropertyValues = JSON.parse(JSON.stringify(this.getEntitiesMapProperty()?.value)) as EntityData[];
 
-        if (entitiesPropertyValues.find(entity => entity.id === entityData.id)) {
+        if (entitiesPropertyValues.find((entity) => entity.id === entityData.id)) {
             console.warn(`ADD ENTITY FAIL: ENTITY OF ID ${entityData.id} ALREADY EXISTS WITHIN THE GAMEMAP!`);
             return false;
         }
@@ -77,7 +78,7 @@ export class GameMapEntities {
 
         const entitiesMapProperty = this.getEntitiesMapProperty();
         if (entitiesMapProperty !== undefined) {
-            entitiesMapProperty.value = JSON.parse(JSON.stringify(entitiesPropertyValues));
+            entitiesMapProperty.value = JSON.parse(JSON.stringify(entitiesPropertyValues)) as Json;
         }
 
         return true;
@@ -85,12 +86,12 @@ export class GameMapEntities {
 
     private deleteEntityFromMapProperties(id: number): boolean {
         const entitiesPropertyValues = JSON.parse(JSON.stringify(this.getEntitiesMapProperty()?.value)) as EntityData[];
-        const indexToRemove = entitiesPropertyValues.findIndex(entityData => entityData.id === id);
+        const indexToRemove = entitiesPropertyValues.findIndex((entityData) => entityData.id === id);
         if (indexToRemove !== -1) {
             entitiesPropertyValues.splice(indexToRemove, 1);
             const entitiesMapProperty = this.getEntitiesMapProperty();
             if (entitiesMapProperty !== undefined) {
-                entitiesMapProperty.value = JSON.parse(JSON.stringify(entitiesPropertyValues));
+                entitiesMapProperty.value = JSON.parse(JSON.stringify(entitiesPropertyValues)) as Json;
                 return true;
             } else {
                 return false;
@@ -102,7 +103,7 @@ export class GameMapEntities {
     private updateEntityInMapProperties(entityData: EntityData): boolean {
         const entitiesPropertyValue = JSON.parse(JSON.stringify(this.getEntitiesMapProperty()?.value)) as EntityData[];
 
-        const entityIndex = entitiesPropertyValue.findIndex(entity => entity.id === entityData.id);
+        const entityIndex = entitiesPropertyValue.findIndex((entity) => entity.id === entityData.id);
 
         if (entityIndex === -1) {
             console.warn(`CANNOT FIND ENTITY WITH ID: ${entityData.id} IN MAP PROPERTIES!`);
@@ -112,7 +113,7 @@ export class GameMapEntities {
         const entitiesMapProperty = this.getEntitiesMapProperty();
         if (entitiesMapProperty !== undefined) {
             entitiesPropertyValue[entityIndex] = entityData;
-            entitiesMapProperty.value = JSON.parse(JSON.stringify(entitiesPropertyValue));
+            entitiesMapProperty.value = JSON.parse(JSON.stringify(entitiesPropertyValue)) as Json;
             return true;
         }
         return false;

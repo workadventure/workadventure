@@ -1,7 +1,7 @@
-import type { EntityData } from '../../types';
-import type { GameMap } from '../../GameMap/GameMap';
+import type { EntityData } from "../../types";
+import type { GameMap } from "../../GameMap/GameMap";
 import { Command } from "../Command";
-import type { CreateEntityCommandConfig } from './CreateEntityCommand';
+import type { CreateEntityCommandConfig } from "./CreateEntityCommand";
 
 export interface DeleteEntityCommandConfig {
     type: "DeleteEntityCommand";
@@ -18,7 +18,7 @@ export class DeleteEntityCommand extends Command {
         this.gameMap = gameMap;
         const entityData = gameMap.getGameMapEntities().getEntity(config.id);
         if (!entityData) {
-            throw new Error('Trying to delete a non existing Entity!');
+            throw new Error("Trying to delete a non existing Entity!");
         }
         this.entityData = structuredClone(entityData);
     }
@@ -27,13 +27,13 @@ export class DeleteEntityCommand extends Command {
         if (!this.gameMap.getGameMapEntities().deleteEntity(this.entityData.id)) {
             throw new Error(`MapEditorError: Could not execute DeleteEntity Command. Entity ID: ${this.entityData.id}`);
         }
-        return { type: 'DeleteEntityCommand', id: this.entityData.id };
+        return { type: "DeleteEntityCommand", id: this.entityData.id };
     }
 
     public undo(): CreateEntityCommandConfig {
         if (!this.gameMap.getGameMapEntities().addEntity(this.entityData)) {
             throw new Error(`MapEditorError: Could not undo DeleteEntity Command. Entity ID: ${this.entityData.id}`);
         }
-        return { type: 'CreateEntityCommand', entityData: this.entityData };
+        return { type: "CreateEntityCommand", entityData: this.entityData };
     }
 }
