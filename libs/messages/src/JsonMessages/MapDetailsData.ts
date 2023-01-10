@@ -235,9 +235,6 @@ export const isMapDetailsData = z.object({
         description: "The background color used on configuration scenes (enter your name, select a woka, etc...) (WIP)",
         example: "#330033",
     }),
-    entityCollectionsUrl: extendApi(z.string().optional().nullable(), {
-        description: "What entity collections are available for this map",
-    }),
 });
 
 export type MapDetailsData = z.infer<typeof isMapDetailsData>;

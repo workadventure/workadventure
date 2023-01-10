@@ -1,5 +1,5 @@
 export class TexturesHelper {
-    public static readonly ENTITIES_TEXTURES_DIRECTORY = "/resources/entities/";
+    public static readonly ENTITIES_TEXTURES_DIRECTORY = "/resources/entities-collections/";
 
     public static async getSnapshot(
         scene: Phaser.Scene,

@@ -46,7 +46,7 @@ export interface EntityRawPrefab {
     name: string;
     tags: string[];
     imagePath: string;
-    direction: Direction;
+    direction: string;
     color: string;
     collisionGrid?: number[][];
 }
