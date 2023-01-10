@@ -376,20 +376,15 @@ export class GameMapFrontWrapper {
     }
 
     public canEntityBePlaced(
-        topLeftPos: { x: number, y: number },
+        topLeftPos: { x: number; y: number },
         width: number,
         height: number,
         collisionGrid?: number[][],
-        oldTopLeftPos?: { x: number, y: number },
+        oldTopLeftPos?: { x: number; y: number }
     ): boolean {
         // no collision grid means we can place it anywhere on the map
         if (!collisionGrid) {
-            return !this.scene.getGameMapFrontWrapper().isOutOfMapBounds(
-                topLeftPos.x,
-                topLeftPos.y,
-                width,
-                height,
-            );
+            return !this.scene.getGameMapFrontWrapper().isOutOfMapBounds(topLeftPos.x, topLeftPos.y, width, height);
         }
         // prevent entity's old position from blocking it when repositioning
         const positionsToIgnore: Map<string, number> = new Map<string, number>();
@@ -418,9 +413,11 @@ export class GameMapFrontWrapper {
                 if (positionsToIgnore.has(`x:${xIndex}y:${yIndex}`)) {
                     continue;
                 }
-                if (!this.scene.getGameMapFrontWrapper().isSpaceAvailable(
-                    topLeftPos.x + x * tileDim.width, topLeftPos.y + y * tileDim.height,
-                )) {
+                if (
+                    !this.scene
+                        .getGameMapFrontWrapper()
+                        .isSpaceAvailable(topLeftPos.x + x * tileDim.width, topLeftPos.y + y * tileDim.height)
+                ) {
                     return false;
                 }
             }
@@ -432,23 +429,32 @@ export class GameMapFrontWrapper {
         if (this.collisionGrid.length === 0) {
             return false;
         }
-        if (this.isOutOfMapBounds(topLeftX, topLeftY, this.getTileDimensions().width, this.getTileDimensions().height)) {
+        if (
+            this.isOutOfMapBounds(topLeftX, topLeftY, this.getTileDimensions().width, this.getTileDimensions().height)
+        ) {
             return false;
         }
-        const playersPositions = [...this.scene.getRemotePlayers().map((player) => player.getPosition()), this.scene.CurrentPlayer.getPosition()];
-        
+        const playersPositions = [
+            ...this.scene.getRemotePlayers().map((player) => player.getPosition()),
+            this.scene.CurrentPlayer.getPosition(),
+        ];
+
         // check if entity is not occupied by a WOKA
         for (const position of playersPositions) {
-            if (MathUtils.isOverlappingWithRectangle(
-                position,
-                { x: topLeftX, y: topLeftY, width: this.getTileDimensions().width, height: this.getTileDimensions().height},
-            )) {
+            if (
+                MathUtils.isOverlappingWithRectangle(position, {
+                    x: topLeftX,
+                    y: topLeftY,
+                    width: this.getTileDimensions().width,
+                    height: this.getTileDimensions().height,
+                })
+            ) {
                 return false;
             }
         }
         // TODO: Check if it's colliding with other players
         const height = this.collisionGrid.length;
-        const width  = this.collisionGrid[0].length;
+        const width = this.collisionGrid[0].length;
         const xIndex = Math.floor(topLeftX / this.getTileDimensions().width);
         const yIndex = Math.floor(topLeftY / this.getTileDimensions().height);
         if (yIndex >= height || yIndex < 0 || xIndex >= width || xIndex < 0) {
@@ -460,7 +466,7 @@ export class GameMapFrontWrapper {
         return true;
     }
 
-    public isOutOfMapBounds(topLeftX: number, topLeftY: number, width: number = 0, height: number = 0): boolean {
+    public isOutOfMapBounds(topLeftX: number, topLeftY: number, width = 0, height = 0): boolean {
         const mapWidth = this.collisionGrid[0].length * this.getTileDimensions().width;
         const mapHeight = this.collisionGrid.length * this.getTileDimensions().height;
         if (topLeftX < 0 || topLeftX + width > mapWidth || topLeftY < 0 || topLeftY + height > mapHeight) {

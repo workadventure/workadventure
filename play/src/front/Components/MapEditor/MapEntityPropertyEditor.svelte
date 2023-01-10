@@ -14,7 +14,7 @@
         name: string;
         active: boolean;
         currentValue: unknown;
-        component: any;
+        component: unknown;
         defaultValue: unknown;
     }
 
@@ -33,7 +33,10 @@
             active: false,
             currentValue: undefined,
             component: JitsiRoomPropertyEditor,
-            defaultValue: { buttonLabel: $LL.mapEditor.entityEditor.jitsiProperties.defaultButtonLabel(), roomName: "" },
+            defaultValue: {
+                buttonLabel: $LL.mapEditor.entityEditor.jitsiProperties.defaultButtonLabel(),
+                roomName: "",
+            },
         },
         {
             key: "playAudio",
@@ -41,15 +44,22 @@
             active: false,
             currentValue: undefined,
             component: PlayAudioPropertyEditor,
-            defaultValue: { buttonLabel: $LL.mapEditor.entityEditor.audioProperties.defaultButtonLabel(), audioLink: "" },
+            defaultValue: {
+                buttonLabel: $LL.mapEditor.entityEditor.audioProperties.defaultButtonLabel(),
+                audioLink: "",
+            },
         },
         {
             key: "openTab",
-            name:  $LL.mapEditor.entityEditor.linkProperties.label(),
+            name: $LL.mapEditor.entityEditor.linkProperties.label(),
             active: false,
             currentValue: undefined,
             component: OpenTabPropertyEditor,
-            defaultValue: { buttonLabel: $LL.mapEditor.entityEditor.linkProperties.defaultButtonLabel(), link: "", inNewTab:true },
+            defaultValue: {
+                buttonLabel: $LL.mapEditor.entityEditor.linkProperties.defaultButtonLabel(),
+                link: "",
+                inNewTab: true,
+            },
         },
     ];
 
@@ -108,30 +118,30 @@
 {#if $mapEditorSelectedEntityStore === undefined}
     {$LL.mapEditor.entityEditor.editInstructions()}
 {:else}
-<div class="entity-properties">
-    {#each possibleProperties as property (property.key)}
-        <div class="property-enabler">
-            <label for={property.key}>{property.name}</label>
-            <input
-                id={property.key}
-                type="checkbox"
-                class="input-switch"
-                bind:checked={property.active}
-                on:change={() => onPropertyChecked(property)}
-            />
-        </div>
-        {#if property.active}
-            <div class="property-container" transition:slide|local>
-                <svelte:component
-                    this={property.component}
-                    bind:property={property.currentValue}
-                    on:change={() => onUpdateProperty(property)}
+    <div class="entity-properties">
+        {#each possibleProperties as property (property.key)}
+            <div class="property-enabler">
+                <label for={property.key}>{property.name}</label>
+                <input
+                    id={property.key}
+                    type="checkbox"
+                    class="input-switch"
+                    bind:checked={property.active}
+                    on:change={() => onPropertyChecked(property)}
                 />
             </div>
-        {/if}
-    {/each}
-</div>
-<div class="action-button">
+            {#if property.active}
+                <div class="property-container" transition:slide|local>
+                    <svelte:component
+                        this={property.component}
+                        bind:property={property.currentValue}
+                        on:change={() => onUpdateProperty(property)}
+                    />
+                </div>
+            {/if}
+        {/each}
+    </div>
+    <div class="action-button">
         <button on:click={onTestInteraction}>{$LL.mapEditor.entityEditor.testInteractionButton()}</button>
         <button class="delete-button" on:click={onDeleteEntity}
             ><div>{$LL.mapEditor.entityEditor.deleteButton()}</div>
@@ -141,10 +151,9 @@
 {/if}
 
 <style lang="scss">
-    .entity-properties
-    {
-        overflow-y:auto;
-        overflow-x:hidden;
+    .entity-properties {
+        overflow-y: auto;
+        overflow-x: hidden;
         .property-enabler {
             border-radius: 0.1em;
             display: flex;

@@ -2,7 +2,7 @@
     import LL from "../../../i18n/i18n-svelte";
     import type { EntityPrefab } from "@workadventure/map-editor";
     import { onDestroy } from "svelte/internal";
-    import { onMount } from 'svelte';
+    import { onMount } from "svelte";
     import {
         mapEditorSelectedEntityPrefabStore,
         mapEntitiesPrefabsStore,
@@ -26,9 +26,9 @@
 
     let tagsStore = mapEntitiesPrefabsStore.tagsStore;
 
-    onMount(async ()=>{
+    onMount(() => {
         mapEntitiesPrefabsStore.setNameFilter(filter);
-    })
+    });
 
     function onPickItemVariant(variant: EntityPrefab) {
         pickedVariant = variant;
@@ -170,7 +170,7 @@
                 max-width: 10%;
                 margin-bottom: 0;
                 position: absolute;
-                overflow-y:auto;
+                overflow-y: auto;
             }
         }
         .item-picker-container,

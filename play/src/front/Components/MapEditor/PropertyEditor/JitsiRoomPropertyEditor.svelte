@@ -2,7 +2,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
     import { createEventDispatcher } from "svelte";
-    import { JitsiRoomPropertyData } from "@workadventure/map-editor";
+    import { JitsiRoomConfigData, JitsiRoomPropertyData } from "@workadventure/map-editor";
     import JitsiRoomConfigEditor from "./JitsiRoomConfigEditor.svelte";
 
     export let property: JitsiRoomPropertyData;
@@ -13,10 +13,9 @@
         dispatch("change");
     }
 
-    let jitsiConfigModalOpened :boolean = false;
+    let jitsiConfigModalOpened = false;
 
-    function onConfigChange(event:any)
-    {
+    function onConfigChange(event: { detail: JitsiRoomConfigData }) {
         property.jitsiRoomConfig = event.detail;
         dispatch("change");
     }
@@ -45,9 +44,17 @@
         on:blur={onMapEditorInputUnfocus}
     />
 </div>
-<button on:click={()=>{jitsiConfigModalOpened = true}}>{$LL.mapEditor.entityEditor.jitsiProperties.moreOptionsLabel()}</button>
+<button
+    on:click={() => {
+        jitsiConfigModalOpened = true;
+    }}>{$LL.mapEditor.entityEditor.jitsiProperties.moreOptionsLabel()}</button
+>
 {#if jitsiConfigModalOpened}
-    <JitsiRoomConfigEditor bind:visibilityValue={jitsiConfigModalOpened} on:change={onConfigChange} bind:config={property.jitsiRoomConfig}></JitsiRoomConfigEditor>
+    <JitsiRoomConfigEditor
+        bind:visibilityValue={jitsiConfigModalOpened}
+        on:change={onConfigChange}
+        bind:config={property.jitsiRoomConfig}
+    />
 {/if}
 
 <style lang="scss">

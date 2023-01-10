@@ -1702,7 +1702,11 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("getUIWebsiteById", (websiteId) => {
-            return uiWebsiteManager.getById(websiteId);
+            const website = uiWebsiteManager.getById(websiteId);
+            if (!website) {
+                throw new Error("Unknown ui-website");
+            }
+            return website;
         });
 
         iframeListener.registerAnswerer("closeUIWebsite", (websiteId) => {
