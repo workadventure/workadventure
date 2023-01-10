@@ -41,25 +41,27 @@ export class GameMap {
         this.gameMapAreas = new GameMapAreas(this);
 
         for (const tileset of this.map.tilesets) {
-            tileset?.tiles?.forEach((tile) => {
-                if (tile.properties && tileset.firstgid !== undefined) {
-                    this.tileSetPropertyMap[tileset.firstgid + tile.id] = tile.properties;
-                    tile.properties.forEach((prop) => {
-                        if (
-                            prop.name == GameMapProperties.NAME &&
-                            typeof prop.value == "string" &&
-                            tileset.firstgid !== undefined
-                        ) {
-                            this.tileNameMap.set(prop.value, tileset.firstgid + tile.id);
+            if ("tiles" in tileset) {
+                for (const tile of tileset.tiles ?? []) {
+                    if (tile.properties && tileset.firstgid !== undefined) {
+                        this.tileSetPropertyMap[tileset.firstgid + tile.id] = tile.properties;
+                        for (const prop of tile.properties) {
+                            if (
+                                prop.name == GameMapProperties.NAME &&
+                                typeof prop.value == "string" &&
+                                tileset.firstgid !== undefined
+                            ) {
+                                this.tileNameMap.set(prop.value, tileset.firstgid + tile.id);
+                            }
+                            if (prop.name == GameMapProperties.EXIT_URL && typeof prop.value == "string") {
+                                this.exitUrls.push(prop.value);
+                            } else if (prop.name == GameMapProperties.START) {
+                                this.hasStartTile = true;
+                            }
                         }
-                        if (prop.name == GameMapProperties.EXIT_URL && typeof prop.value == "string") {
-                            this.exitUrls.push(prop.value);
-                        } else if (prop.name == GameMapProperties.START) {
-                            this.hasStartTile = true;
-                        }
-                    });
+                    }
                 }
-            });
+            }
         }
     }
 
