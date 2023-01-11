@@ -3,6 +3,7 @@ services:
   play:
     environment:
       - PLAY_URL=/
+      - PUSHER_URL=/
       - ICON_URL=/icon
       - API_URL=/api
       - FRONT_URL=/

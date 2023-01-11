@@ -57,6 +57,7 @@ services:
             ALLOWED_CORS_ORIGIN: "http://play.workadventure.localhost"
             VITE_URL: "http://front.workadventure.localhost"
             PLAY_URL: http://play.workadventure.localhost
+            PUSHER_URL: http://pusher.workadventure.localhost
             UPLOADER_URL: http://uploader.workadventure.localhost
             ICON_URL: http://icon.workadventure.localhost
             STUN_SERVER: "stun:stun.l.google.com:19302"
