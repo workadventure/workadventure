@@ -16,7 +16,6 @@ import { EditMapCommandMessage } from "@workadventure/messages";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { fileSystem } from "./fileSystem";
 import { mapPathUsingDomain } from "./Services/PathMapper";
-import fs from "fs";
 
 // TODO: dynamic imports?
 import furnitureCollection from "./entities/collections/FurnitureCollection.json";
@@ -130,17 +129,6 @@ class MapsManager {
 
     public getLoadedMaps(): string[] {
         return Array.from(this.loadedMaps.keys());
-    }
-
-    public async listMapFiles(): Promise<string[]> {
-        return new Promise<string[]>((resolve, reject) => {
-            fs.readdir("./public/maps", (err, files) => {
-                if (err) {
-                    reject(err);
-                }
-                resolve(files);
-            });
-        });
     }
 
     public async getMap(path: string, domain: string): Promise<ITiledMap> {

@@ -15,6 +15,7 @@ import { IncomingMessage } from "http";
 import { Archiver } from "archiver";
 import { Readable } from "stream";
 import { StreamZipAsync, ZipEntry } from "node-stream-zip";
+import path from "path";
 
 export class S3FileSystem implements FileSystemInterface {
     public constructor(private s3: S3, private bucketName: string) {}
@@ -67,6 +68,17 @@ export class S3FileSystem implements FileSystemInterface {
             )
         );
         return;
+    }
+
+    async listFiles(extension?: string): Promise<string[]> {
+        const list = await this.s3.listObjects({
+            Bucket: this.bucketName,
+        });
+        const recordsPaths: string[] = list.Contents?.map((record) => record.Key ?? "") ?? [];
+        if (extension) {
+            return recordsPaths.filter((record) => path.extname(record) === extension);
+        }
+        return recordsPaths;
     }
 
     serveStaticFile(virtualPath: string, res: Response, next: NextFunction): void {

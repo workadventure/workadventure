@@ -61,7 +61,7 @@ app.get("/entityCollections", (req, res) => {
 
 app.get("/maps", (req, res, next) => {
     (async () => {
-        const files = await mapsManager.listMapFiles();
+        const files = await fileSystem.listFiles(".json");
         res.send(files);
     })().catch((e) => next(e));
 });

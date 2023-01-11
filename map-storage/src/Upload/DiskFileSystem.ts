@@ -22,6 +22,22 @@ export class DiskFileSystem implements FileSystemInterface {
         await zip.extract(zipEntry, this.getFullPath(targetFilePath));
     }
 
+    // use extensions. Use baseDirectory
+    async listFiles(extension?: string): Promise<string[]> {
+        return new Promise<string[]>((resolve, reject) => {
+            fs.readdir("./public/maps", (err, files) => {
+                if (err) {
+                    reject(err);
+                }
+                if (extension) {
+                    resolve(files.filter((file) => path.extname(file).toLowerCase() === extension));
+                } else {
+                    resolve(files);
+                }
+            });
+        });
+    }
+
     private getFullPath(filePath: string) {
         if (filePath.includes("..")) {
             throw new Error("Invalid path.");
