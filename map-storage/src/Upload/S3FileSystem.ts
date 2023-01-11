@@ -70,15 +70,17 @@ export class S3FileSystem implements FileSystemInterface {
         return;
     }
 
-    async listFiles(extension?: string): Promise<string[]> {
+    async listFiles(virtualDirectory: string, extension?: string): Promise<string[]> {
         const list = await this.s3.listObjects({
             Bucket: this.bucketName,
         });
         const recordsPaths: string[] = list.Contents?.map((record) => record.Key ?? "") ?? [];
         if (extension) {
-            return recordsPaths.filter((record) => path.extname(record) === extension);
+            return recordsPaths
+                .filter((record) => path.extname(record) === extension)
+                .map((record) => path.relative(virtualDirectory, record));
         }
-        return recordsPaths;
+        return recordsPaths.map((record) => path.relative(virtualDirectory, record));
     }
 
     serveStaticFile(virtualPath: string, res: Response, next: NextFunction): void {

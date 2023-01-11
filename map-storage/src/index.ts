@@ -1,4 +1,5 @@
 import * as grpc from "@grpc/grpc-js";
+import fs from "fs";
 import express from "express";
 import cors from "cors";
 import { mapStorageServer } from "./MapStorageServer";
@@ -9,6 +10,7 @@ import { UploadController } from "./Upload/UploadController";
 import { fileSystem } from "./fileSystem";
 import passport from "passport";
 import { passportStrategy } from "./Services/Authentication";
+import { mapPath } from "./Services/PathMapper";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -60,10 +62,15 @@ app.get("/entityCollections", (req, res) => {
 });
 
 app.get("/maps", (req, res, next) => {
-    (async () => {
-        const files = await fileSystem.listFiles(".json");
-        res.send(files);
-    })().catch((e) => next(e));
+    fs.readFile(`cache/${mapPath("/", req)}cached-map-names.txt`, "utf-8", (err, data) => {
+        console.log(data);
+        if (err) {
+            console.log(err);
+            res.send([]);
+            return;
+        }
+        res.send(JSON.parse(data));
+    });
 });
 
 new UploadController(app, fileSystem);

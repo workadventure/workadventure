@@ -22,20 +22,13 @@ export class DiskFileSystem implements FileSystemInterface {
         await zip.extract(zipEntry, this.getFullPath(targetFilePath));
     }
 
-    // use extensions. Use baseDirectory
-    async listFiles(extension?: string): Promise<string[]> {
-        return new Promise<string[]>((resolve, reject) => {
-            fs.readdir("./public/maps", (err, files) => {
-                if (err) {
-                    reject(err);
-                }
-                if (extension) {
-                    resolve(files.filter((file) => path.extname(file).toLowerCase() === extension));
-                } else {
-                    resolve(files);
-                }
-            });
-        });
+    async listFiles(virtualDirectory: string, extension?: string): Promise<string[]> {
+        const pathToDir = path.resolve(this.baseDirectory, virtualDirectory);
+        const list = await this.getAllFilesWithin(pathToDir, pathToDir);
+        if (!extension) {
+            return list;
+        }
+        return list.filter((file) => path.extname(file) === extension);
     }
 
     private getFullPath(filePath: string) {
@@ -80,5 +73,22 @@ export class DiskFileSystem implements FileSystemInterface {
         const fullPath = this.getFullPath(virtualPath);
         archiver.directory(fullPath, false);
         return Promise.resolve();
+    }
+
+    async getAllFilesWithin(dir: string, startingDir: string): Promise<string[]> {
+        let results: string[] = [];
+        const list = await fs.promises.readdir(dir);
+        for (let file of list) {
+            file = path.resolve(dir, file);
+            const stat = await fs.promises.stat(file);
+            if (stat && stat.isDirectory()) {
+                /* Recurse into a subdirectory */
+                results = results.concat(await this.getAllFilesWithin(file, startingDir));
+            } else {
+                /* Is a file */
+                results.push(path.relative(startingDir, file));
+            }
+        }
+        return results;
     }
 }
