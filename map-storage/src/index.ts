@@ -59,6 +59,13 @@ app.get("/entityCollections", (req, res) => {
     });
 });
 
+app.get("/maps", (req, res, next) => {
+    (async () => {
+        const files = await mapsManager.listMapFiles();
+        res.send(files);
+    })().catch((e) => next(e));
+});
+
 new UploadController(app, fileSystem);
 
 app.use(proxyFiles(fileSystem));
