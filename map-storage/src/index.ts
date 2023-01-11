@@ -63,7 +63,6 @@ app.get("/entityCollections", (req, res) => {
 
 app.get("/maps", (req, res, next) => {
     fs.readFile(`cache/${mapPath("/", req)}cached-map-names.txt`, "utf-8", (err, data) => {
-        console.log(data);
         if (err) {
             console.log(err);
             res.send([]);

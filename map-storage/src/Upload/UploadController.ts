@@ -126,7 +126,6 @@ export class UploadController {
                 const cacheFileName = "cached-map-names.txt";
                 const files = await fileSystem.listFiles(virtualDirectory, ".json");
 
-                console.log(virtualDirectory);
                 fs.mkdir(path.dirname(cachePath), { recursive: true }, (err) => {
                     if (err) {
                         throw new Error(err.message);
