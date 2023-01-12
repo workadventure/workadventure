@@ -124,7 +124,7 @@ export class UploadController {
 
                 const cacheFileName = "map-names.txt";
                 const cachePath = `cache/${virtualDirectory}`;
-                const files = await fileSystem.listFiles(virtualDirectory, ".json");
+                const files = await fileSystem.listFiles(virtualDirectory, ".tmj");
 
                 await fileSystem.writeCache(cachePath, cacheFileName, JSON.stringify(files));
             })().catch((e) => next(e));

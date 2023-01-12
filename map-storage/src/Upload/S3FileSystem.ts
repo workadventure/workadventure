@@ -71,10 +71,26 @@ export class S3FileSystem implements FileSystemInterface {
     }
 
     async listFiles(virtualDirectory: string, extension?: string): Promise<string[]> {
-        const list = await this.s3.listObjects({
-            Bucket: this.bucketName,
-        });
-        const recordsPaths: string[] = list.Contents?.map((record) => record.Key ?? "") ?? [];
+        let listObjectsResponse: ListObjectsCommandOutput;
+        let pageMarker: string | undefined;
+        const allObjects = [];
+        do {
+            const command: ListObjectsCommandInput = {
+                Bucket: this.bucketName,
+                MaxKeys: 1000,
+                Prefix: virtualDirectory,
+            };
+            if (pageMarker) {
+                command.Marker = pageMarker;
+            }
+            listObjectsResponse = await this.s3.send(new ListObjectsCommand(command));
+            const objects = listObjectsResponse.Contents;
+            if (objects) {
+                allObjects.push(...objects);
+            }
+        } while (listObjectsResponse.IsTruncated);
+
+        const recordsPaths: string[] = allObjects.map((record) => record.Key ?? "") ?? [];
         if (extension) {
             return recordsPaths
                 .filter((record) => path.extname(record) === extension)
