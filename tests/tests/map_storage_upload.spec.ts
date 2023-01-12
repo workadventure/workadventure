@@ -57,6 +57,13 @@ test.describe('Map-storage Upload API', () => {
         await expect(await accessFile5.text()).toContain("world");
     });
 
+    test("get list of maps", async ({
+        request,
+    }) => {
+        const listOfMaps = await request.get("/maps");
+        await expect(await listOfMaps.text() === JSON.stringify(["subdir/map.tmj"])).toBeTruthy();
+    });
+
     test('not authenticated requests are rejected', async ({
                                            request,
                                        }) => {
