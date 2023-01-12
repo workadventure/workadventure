@@ -13,11 +13,6 @@ const upload = multer({
     storage: multer.memoryStorage()
 })
 
-interface UploadedFileBuffer {
-    buffer: Buffer,
-    expireDate?: Date
-}
-
 class DisabledChat extends Error{}
 class NotLoggedUser extends Error {}
 

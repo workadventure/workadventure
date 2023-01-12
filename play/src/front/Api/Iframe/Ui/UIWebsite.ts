@@ -346,6 +346,21 @@ export class UIWebsiteCommands extends IframeApiContribution<UIWebsiteCommands> 
 
         return result.map((current) => new UIWebsite(current));
     }
+
+    /**
+     * Returns one UI website (iframe positionned on the viewport) by ID.
+     * {@link https://workadventu.re/map-building/api-ui.md#get-all-ui-websites | Website documentation}
+     * @param {string} id The id of the UIWebsite
+     * @returns {Promise<UIWebsite>} Promise to return UI website
+     */
+    async getById(id: string): Promise<UIWebsite> {
+        const result = await queryWorkadventure({
+            type: "getUIWebsiteById",
+            data: id,
+        });
+
+        return new UIWebsite(result);
+    }
 }
 
 export default new UIWebsiteCommands();

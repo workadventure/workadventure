@@ -545,6 +545,10 @@ export const iframeQueryMapTypeGuards = {
         query: z.undefined(),
         answer: z.array(isUIWebsite),
     },
+    getUIWebsiteById: {
+        query: z.string(),
+        answer: isUIWebsite,
+    },
     enablePlayersTracking: {
         query: isEnablePlayersTrackingEvent,
         answer: z.array(isAddPlayerEvent),
@@ -560,8 +564,8 @@ type UnknownToVoid<T> = undefined extends T ? void : T;
 
 export type IframeQueryMap = {
     [key in keyof IframeQueryMapTypeGuardsType]: {
-        query: z.infer<typeof iframeQueryMapTypeGuards[key]["query"]>;
-        answer: UnknownToVoid<z.infer<typeof iframeQueryMapTypeGuards[key]["answer"]>>;
+        query: z.infer<(typeof iframeQueryMapTypeGuards)[key]["query"]>;
+        answer: UnknownToVoid<z.infer<(typeof iframeQueryMapTypeGuards)[key]["answer"]>>;
     };
 };
 

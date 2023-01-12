@@ -152,7 +152,8 @@ import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import { debugManager } from "../../Debug/DebugManager";
+import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
+
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PositionInterface;
@@ -256,6 +257,7 @@ export class GameScene extends DirtyScene {
     private remotePlayersRepository = new RemotePlayersRepository();
     private companionLoadingManager: CompanionTexturesLoadingManager | undefined;
     private throttledSendViewportToServer!: () => void;
+    private playersDebugLogAlreadyDisplayed = false;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -1125,13 +1127,12 @@ export class GameScene extends DirtyScene {
         this.peerStoreUnsubscriber = peerStore.subscribe((peers) => {
             const newPeerNumber = peers.size;
             const newUsers = new Map<number, MessageUserJoined>();
+            const players = this.remotePlayersRepository.getPlayers();
 
             for (const playerId of peers.keys()) {
-                for (const player of this.remotePlayersRepository.getPlayers()) {
-                    if (player.userId === playerId) {
-                        newUsers.set(playerId, player);
-                        break;
-                    }
+                const currentPlayer = players.get(playerId);
+                if (currentPlayer) {
+                    newUsers.set(playerId, currentPlayer);
                 }
             }
 
@@ -1666,6 +1667,10 @@ ${escapedMessage}
             return uiWebsiteManager.getAll();
         });
 
+        iframeListener.registerAnswerer("getUIWebsiteById", (websiteId) => {
+            return uiWebsiteManager.getById(websiteId);
+        });
+
         iframeListener.registerAnswerer("closeUIWebsite", (websiteId) => {
             return uiWebsiteManager.close(websiteId);
         });
@@ -1676,7 +1681,7 @@ ${escapedMessage}
             };
         });
 
-        iframeListener.registerAnswerer("getState", async (): Promise<GameStateEvent> => {
+        iframeListener.registerAnswerer("getState", async (query, source): Promise<GameStateEvent> => {
             // The sharedVariablesManager is not instantiated before the connection is established. So we need to wait
             // for the connection to send back the answer.
             await this.connectionAnswerPromiseDeferred.promise;
@@ -1693,6 +1698,7 @@ ${escapedMessage}
                 playerVariables: this.playerVariablesManager.variables,
                 userRoomToken: this.connection ? this.connection.userRoomToken : "",
                 metadata: this.room.metadata,
+                iframeId: source ? iframeListener.getUIWebsiteIframeIdFromSource(source) : undefined,
                 isLogged: localUserStore.isLogged(),
             };
         });
@@ -1729,7 +1735,7 @@ ${escapedMessage}
             const addPlayerEvents: AddPlayerEvent[] = [];
             if (sendPlayers) {
                 if (enablePlayersTrackingEvent.players) {
-                    for (const player of this.remotePlayersRepository.getPlayers()) {
+                    for (const player of this.remotePlayersRepository.getPlayers().values()) {
                         addPlayerEvents.push(RemotePlayersRepository.toIframeAddPlayerEvent(player));
                     }
                 }
@@ -2049,6 +2055,7 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("setVariable");
         iframeListener.unregisterAnswerer("openUIWebsite");
         iframeListener.unregisterAnswerer("getUIWebsites");
+        iframeListener.unregisterAnswerer("getUIWebsiteById");
         iframeListener.unregisterAnswerer("closeUIWebsite");
         iframeListener.unregisterAnswerer("enablePlayersTracking");
         this.sharedVariablesManager?.close();
@@ -2308,9 +2315,9 @@ ${escapedMessage}
         }
 
         for (const addedPlayer of this.remotePlayersRepository.getAddedPlayers()) {
-            //console.log("Player will be added from GameScene :", addedPlayer.userId);
+            debugAddPlayer("Player will be added to the GameScene", addedPlayer.userId);
             this.doAddPlayer(addedPlayer);
-            //console.log("Player has been added from GameScene :", addedPlayer.userId);
+            debugAddPlayer("Player has been added to the GameScene", addedPlayer.userId);
         }
         for (const movedPlayer of this.remotePlayersRepository.getMovedPlayers()) {
             this.doUpdatePlayerPosition(movedPlayer);
@@ -2319,9 +2326,29 @@ ${escapedMessage}
             this.doUpdatePlayerDetails(updatedPlayer);
         }
         for (const removedPlayerId of this.remotePlayersRepository.getRemovedPlayers()) {
-            //console.log("Player will be removed from GameScene :", removedPlayerId);
+            debugRemovePlayer("Player will be removed from GameScene", removedPlayerId);
             this.doRemovePlayer(removedPlayerId);
-            //console.log("Player has been removed from GameScene :", removedPlayerId);
+            debugRemovePlayer("Player has been removed from GameScene", removedPlayerId);
+        }
+
+        if (
+            !this.playersDebugLogAlreadyDisplayed &&
+            this.remotePlayersRepository.getPlayers().size !== this.MapPlayersByKey.size
+        ) {
+            console.error(
+                "Not the same count of players",
+                this.remotePlayersRepository.getPlayers(),
+                this.MapPlayersByKey,
+                "Added players:",
+                this.remotePlayersRepository.getAddedPlayers(),
+                "Moved players:",
+                this.remotePlayersRepository.getMovedPlayers(),
+                "Updated players:",
+                this.remotePlayersRepository.getUpdatedPlayers(),
+                "Removed players:",
+                this.remotePlayersRepository.getRemovedPlayers()
+            );
+            this.playersDebugLogAlreadyDisplayed = true;
         }
 
         this.remotePlayersRepository.reset();
@@ -2378,13 +2405,22 @@ ${escapedMessage}
 
     private doAddPlayer(addPlayerData: AddPlayerInterface): void {
         //check if exist player, if exist, move position
-        // Can this really happen?
+        // Can this really happen? yes..
         if (this.MapPlayersByKey.has(addPlayerData.userId)) {
             console.warn("Got instructed to add a player that already exists: ", addPlayerData.userId);
-            /*this.updatePlayerPosition({
-                userId: addPlayerData.userId,
-                position: addPlayerData.position,
-            });*/
+            console.error(
+                "Players status",
+                this.remotePlayersRepository.getPlayers(),
+                this.MapPlayersByKey,
+                "Added players:",
+                this.remotePlayersRepository.getAddedPlayers(),
+                "Moved players:",
+                this.remotePlayersRepository.getMovedPlayers(),
+                "Updated players:",
+                this.remotePlayersRepository.getUpdatedPlayers(),
+                "Removed players:",
+                this.remotePlayersRepository.getRemovedPlayers()
+            );
             return;
         }
 
@@ -2410,9 +2446,6 @@ ${escapedMessage}
             player.setAvailabilityStatus(addPlayerData.availabilityStatus, true);
         }
         this.MapPlayersByKey.set(player.userId, player);
-        if (debugManager.activated) {
-            console.debug("Player added in MapPlayersByKey in GameScene", player);
-        }
         player.updatePosition(addPlayerData.position);
 
         player.on(Phaser.Input.Events.POINTER_OVER, () => {
@@ -2426,12 +2459,7 @@ ${escapedMessage}
         });
 
         player.on(RemotePlayerEvent.Clicked, () => {
-            let userFound = undefined;
-            for (const user of this.remotePlayersRepository.getPlayers()) {
-                if (user.userId === player.userId) {
-                    userFound = user;
-                }
-            }
+            const userFound = this.remotePlayersRepository.getPlayers().get(player.userId);
 
             if (!userFound) {
                 console.error("Undefined clicked player!");

@@ -41,7 +41,7 @@ docker-compose up
 The environment will start.
 
 You should now be able to browse to http://play.workadventure.localhost/ and see the application.
-You can view the Traefik dashboard at http://localhost:8080/
+You can view the Traefik dashboard at http://traefik.workadventure.localhost
 
 Note: on some OSes, you will need to add this line to your `/etc/hosts` file:
 

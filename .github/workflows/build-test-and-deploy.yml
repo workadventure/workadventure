@@ -652,6 +652,12 @@ jobs:
         with:
           namespace: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 
+      - name: Upload demo maps in map-storage
+        run: rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip * && curl -F 'file=@../assets.zip' https://map-storage-${DEPLOY_REF}.test.workadventu.re/upload --basic -u john.doe:password
+        env:
+          DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        working-directory: map-storage
+
       - name: Add a comment in PR
         uses: unsplash/comment-on-pr@master
         if: ${{ github.event_name == 'pull_request' }}

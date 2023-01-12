@@ -1,5 +1,6 @@
 WA.onInit().then(() => {
     initListeners();
+
 });
 
 async function initListeners() {
@@ -9,7 +10,8 @@ async function initListeners() {
 
     WA.room.onEnterLayer('first_website').subscribe(async () => {
         first_website = await WA.ui.website.open({
-            url: "http://maps.workadventure.localhost/tests/UIWebsite/index.html",
+            allowApi: true,
+            url: "http://maps.workadventure.localhost/tests/UIWebsite/index.php",
             position: {
                 vertical: "middle",
                 horizontal: "middle",
