@@ -15,5 +15,7 @@ export interface FileSystemInterface {
 
     writeStringAsFile(virtualPath: string, content: string): Promise<void>;
 
+    writeCache(virtualPath: string, fileName: string, content: string): Promise<void>;
+
     archiveDirectory(archiver: Archiver, virtualPath: string): Promise<void>;
 }

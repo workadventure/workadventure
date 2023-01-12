@@ -1,5 +1,4 @@
 import * as grpc from "@grpc/grpc-js";
-import fs from "fs";
 import express from "express";
 import cors from "cors";
 import { mapStorageServer } from "./MapStorageServer";
@@ -62,14 +61,10 @@ app.get("/entityCollections", (req, res) => {
 });
 
 app.get("/maps", (req, res, next) => {
-    fs.readFile(`cache/${mapPath("/", req)}cached-map-names.txt`, "utf-8", (err, data) => {
-        if (err) {
-            console.log(err);
-            res.send([]);
-            return;
-        }
+    (async () => {
+        const data = await fileSystem.readFileAsString(`cache/${mapPath("/", req)}map-names.txt`);
         res.send(JSON.parse(data));
-    });
+    })().catch((e) => next(e));
 });
 
 new UploadController(app, fileSystem);
