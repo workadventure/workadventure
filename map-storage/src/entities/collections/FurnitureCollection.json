@@ -6,9 +6,6 @@
             "name":"Basic Chair",
             "tags":["seat","basic"],
             "imagePath":"Furniture/Chair/ChairGreyDown.png",
-            "collisionGrid": [
-                [ 1 ]
-            ],
             "direction":"Down",
             "color":"grey"
         },
@@ -167,6 +164,7 @@
                 [ 1, 1 ],
                 [ 1, 1 ]
             ],
+            "depthOffset": -64,
             "imagePath":"Furniture/Table/TableBrown.png",
             "direction":"Down",
             "color":"orange"

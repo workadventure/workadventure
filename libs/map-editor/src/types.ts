@@ -49,6 +49,7 @@ export interface EntityRawPrefab {
     direction: Direction;
     color: string;
     collisionGrid?: number[][];
+    depthOffset?: number;
 }
 
 export interface EntityPrefab extends EntityRawPrefab {

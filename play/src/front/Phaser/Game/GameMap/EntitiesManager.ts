@@ -146,6 +146,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         entity.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
                 const collisitonGrid = entity.getEntityData().prefab.collisionGrid;
+                const depthOffset = entity.getEntityData().prefab.depthOffset ?? 0;
                 const offsets = this.getEntityAlignWithGridOffset(entity);
                 const tileDim = this.scene.getGameMapFrontWrapper().getTileDimensions();
                 entity.x =
@@ -156,7 +157,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                     collisitonGrid || this.shiftKey.isDown
                         ? Math.floor(dragY / tileDim.height) * tileDim.height + offsets.y
                         : Math.floor(dragY);
-                entity.setDepth(entity.y + entity.displayHeight * 0.5);
+                entity.setDepth(entity.y + entity.displayHeight * 0.5 + depthOffset);
 
                 if (
                     !this.scene

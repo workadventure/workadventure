@@ -53,7 +53,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             this.scene.input.setDraggable(this);
         }
 
-        this.setDepth(this.y + this.displayHeight * 0.5);
+        this.setDepth(this.y + this.displayHeight * 0.5 + (this.entityData.prefab.depthOffset ?? 0));
 
         this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
             if (color === undefined) {

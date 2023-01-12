@@ -289,7 +289,11 @@ export class EntityEditorTool extends MapEditorTool {
         } else {
             this.entityPrefabPreview.setPosition(Math.floor(pointer.worldX), Math.floor(pointer.worldY));
         }
-        this.entityPrefabPreview.setDepth(this.entityPrefabPreview.y + this.entityPrefabPreview.displayHeight * 0.5);
+        this.entityPrefabPreview.setDepth(
+            this.entityPrefabPreview.y +
+                this.entityPrefabPreview.displayHeight * 0.5 +
+                (this.entityPrefab.depthOffset ?? 0)
+        );
         if (
             !this.scene
                 .getGameMapFrontWrapper()
