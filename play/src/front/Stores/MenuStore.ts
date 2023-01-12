@@ -22,6 +22,7 @@ function createWarningContainerStore() {
 
     return {
         subscribe,
+        set,
         activateWarningContainer() {
             set(true);
             if (warningContainerTimeout) clearTimeout(warningContainerTimeout);

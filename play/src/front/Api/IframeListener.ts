@@ -1,3 +1,4 @@
+import { warningContainerStore } from "./../Stores/MenuStore";
 import { Subject } from "rxjs";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
@@ -43,7 +44,7 @@ import { localUserStore } from "../Connexion/LocalUserStore";
 import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import type { ChatMessage } from "./Events/ChatEvent";
-import { requestVisitCardsStore } from "../Stores/GameStore";
+import { bannerStore, requestVisitCardsStore } from "../Stores/GameStore";
 import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
 import { connectionManager } from "../Connexion/ConnectionManager";
 import { gameManager } from "../Phaser/Game/GameManager";
@@ -457,6 +458,12 @@ class IframeListener {
                             }
                             this.messagesToChatQueue = [];
                         }
+                    } else if (iframeEvent.type == "openBanner") {
+                        warningContainerStore.activateWarningContainer();
+                        bannerStore.set(iframeEvent.data);
+                    } else if (iframeEvent.type == "closeBanner") {
+                        warningContainerStore.set(false);
+                        bannerStore.set(null);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
