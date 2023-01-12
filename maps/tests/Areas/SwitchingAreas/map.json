@@ -125,6 +125,11 @@
                          "value":"MeetingRoom"
                         }, 
                         {
+                         "name":"jitsiTrigger",
+                         "type":"string",
+                         "value":"onaction"
+                        }, 
+                        {
                          "name":"jitsiTriggerMessage",
                          "type":"string",
                          "value":"LEFT"
@@ -150,6 +155,11 @@
                          "name":"jitsiRoom",
                          "type":"string",
                          "value":"MeetingRoom2"
+                        }, 
+                        {
+                         "name":"jitsiTrigger",
+                         "type":"string",
+                         "value":"onaction"
                         }, 
                         {
                          "name":"jitsiTriggerMessage",
