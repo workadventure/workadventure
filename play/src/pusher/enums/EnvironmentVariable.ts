@@ -73,7 +73,7 @@ const EnvironmentVariables = z.object({
     CHAT_URL: AbsoluteOrRelativeUrl,
     OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy.optional(),
     ACTIVE_REPORT_ISSUES_MENU: BoolAsString.optional(),
-    URL_REPORT_ISSUES: z.string().url().optional(),
+    URL_REPORT_ISSUES: z.string().url().optional().or(z.literal("")),
 });
 
 type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
