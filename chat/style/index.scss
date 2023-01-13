@@ -1,0 +1,209 @@
+//@import "fonts";
+//@import "tailwind";
+@import '@workadventure/tailwind/style/index.scss';
+
+::-webkit-scrollbar {
+    width: 4px;
+}
+::-webkit-scrollbar-track {
+    background: none;
+}
+::-webkit-scrollbar-thumb {
+    @apply tw-bg-lighter-purple;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:active {
+    @apply tw-bg-light-blue;
+}
+
+.emoji-picker__overlay{
+    background: none!important;
+}
+.emoji-picker__wrapper{
+    bottom: 50px!important;
+    top: auto!important;
+    .emoji-picker{
+        border: none!important;
+    }
+}
+
+.wa-message{
+    .actions{
+        visibility: hidden;
+        justify-content: space-between;
+        .action{
+            cursor: pointer;
+            opacity: 0.8;
+            position: relative;
+            .caption{
+                @apply tw-absolute tw-bg-dark-blue tw-px-2 tw-py-1 tw-rounded-xl tw-border-lighter-purple tw-border tw-border-solid;
+                display: none;
+                top: -32px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 10;
+                &::before{
+                    @apply tw-absolute tw-border-t-lighter-purple;
+                    left: calc( 50% - 10px );
+                    top: 100.5%;
+                    content: '';
+                    width: 0;
+                    height: 0;
+                    border-left: 9px solid transparent;
+                    border-right: 9px solid transparent;
+                    border-top-width: 6px;
+                    border-top-style: solid;
+                }
+                &::after{
+                    @apply tw-absolute tw-border-t-dark-blue;
+                    margin-left: -50%;
+                    top: 100%;
+                    content: '';
+                    width: 0;
+                    height: 0;
+                    border-left: 7px solid transparent;
+                    border-right: 7px solid transparent;
+                    border-top-width: 5px;
+                    border-top-style: solid;
+                }
+            }
+            &:hover{
+                opacity: 1;
+                .caption{
+                    display: block;
+                }
+            }
+        }
+    }
+    &:hover{
+        .actions{
+            visibility: visible;
+        }
+    }
+}
+.wa-message-body{
+    @apply tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left;
+    p{
+        @apply tw-whitespace-pre-line;
+        margin: 0;
+        .mention{
+            margin: 0 2px;
+            padding: 0px 4px;
+            background-color: black;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
+    }
+
+    .file {
+        @apply tw-mt-1;
+        position: relative;
+        &:hover {
+            .actions {
+                display: flex;
+            }
+        }
+
+        .actions {
+            display: none;
+            position: absolute;
+            top: 0px;
+            padding: 0px;
+            cursor: pointer;
+            flex-direction: column;
+            border-radius: 0.25rem;
+            border-width: 1px;
+            border-style: solid;
+            --tw-border-opacity: 1;
+            border-color: rgb(77 75 103 / var(--tw-border-opacity));
+            background-color: rgb(27 27 41 / 0.95);
+            font-size: 0.75rem;
+            line-height: 1rem;
+            font-weight: 500;
+            color: rgb(255 255 255 / var(--tw-text-opacity));
+            --tw-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --tw-shadow-colored: 0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);
+            box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+            z-index: 1;
+
+            .action {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                padding: 4px;
+                border-radius: 0.15rem;
+
+                & > span {
+                    display: none;
+                }
+
+                &:hover {
+                    --tw-bg-opacity: 1;
+                    background-color: rgb(77 75 103 / var(--tw-bg-opacity));
+                }
+            }
+
+            &:hover {
+                span.action > span {
+                    display: block;
+                }
+            }
+        }
+
+        .other-content {
+            @apply tw-p-0.5 tw-cursor-pointer tw-rounded tw-mr-0.5;
+            position: relative;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            --tw-bg-opacity: 1;
+            border: solid 1px rgb(77 75 103 / var(--tw-bg-opacity));
+            &:hover {
+                background-color: rgb(77 75 103 / var(--tw-bg-opacity));
+            }
+            .icon{
+            }
+        }
+
+        audio {
+            max-width: 100%;
+        }
+    }
+}
+
+.selected {
+    .wa-message{
+        &::after{
+            @apply tw-animate-ping;
+        }
+    }
+}
+
+
+aside.chatWindow nav{
+    @apply tw-bg-dark-purple tw-p-1 tw-mx-3 tw-mb-1 tw-rounded-2xl tw-border-solid tw-border tw-border-light-purple tw-relative;
+    width: calc( 100% - 65px );
+}
+aside.chatWindow nav .background{
+    @apply tw-rounded-xl tw-transition-transform tw-transform tw-bg-light-blue tw-absolute;
+    height: 26px;
+    width: 48.5%;
+}
+aside.chatWindow nav .background.chat{
+    @apply tw-translate-x-full;
+}
+aside.chatWindow nav ul{
+    @apply tw-flex tw-list-none tw-justify-between tw-w-full tw-p-0 tw-m-0;
+}
+aside.chatWindow nav ul li{
+    @apply tw-text-center tw-rounded tw-font-bold tw-transition-transform tw-transform tw-cursor-pointer tw-rounded-2xl;
+    padding: 1px 0;
+    width: 48.5%;
+}
+aside.chatWindow nav ul li:not(.active):hover{
+    background-color: rgba(146, 142, 187, .3);
+}
+
+aside.chatWindow nav ul li.active{
+    @apply tw-text-black tw-cursor-default;
+}

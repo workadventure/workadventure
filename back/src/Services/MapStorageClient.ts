@@ -1,4 +1,4 @@
-import { MapStorageClient } from "../Messages/generated/messages_grpc_pb";
+import { MapStorageClient } from "../Messages/generated/services_grpc_pb";
 import * as grpc from "@grpc/grpc-js";
 import { ENABLE_FEATURE_MAP_EDITOR, MAP_STORAGE_URL } from "../Enum/EnvironmentVariable";
 

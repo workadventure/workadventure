@@ -1,5 +1,5 @@
 
-import {} from "../../front/packages/iframe-api-typings/iframe_api";
+import {} from "../../play/packages/iframe-api-typings/iframe_api";
 //import {} from "../../front/src/iframe_api";
 import {expect, test, Browser, Page} from '@playwright/test';
 import { login } from './utils/roles';
@@ -72,7 +72,10 @@ test.describe('API WA.players', () => {
     await evaluateScript(page, async () => {
       await WA.onInit();
 
-      WA.player.state.myvar = 12;
+      await WA.player.state.saveVariable('myvar', 12, {
+        public: true,
+        persist: false,
+      });
       return;
     });
 
@@ -136,6 +139,12 @@ test.describe('API WA.players', () => {
         scope: "room",
       });
 
+      await WA.player.state.saveVariable('public_persisted_json', { value: "public_persisted_json" }, {
+        public: true,
+        persist: true,
+        scope: "room",
+      });
+
       await WA.player.state.saveVariable('non_public_non_persisted', 'non_public_non_persisted', {
         public: false,
         persist: false,
@@ -145,6 +154,19 @@ test.describe('API WA.players', () => {
       await WA.player.state.saveVariable('public_non_persisted', 'public_non_persisted', {
         public: true,
         persist: false,
+        scope: "room",
+      });
+
+
+      await WA.player.state.saveVariable('undefined_var', 'some value that will be set to undefined later', {
+        public: false,
+        persist: true,
+        scope: "room",
+      });
+
+      await WA.player.state.saveVariable('undefined_var', undefined, {
+        public: false,
+        persist: true,
         scope: "room",
       });
 
@@ -167,15 +189,24 @@ test.describe('API WA.players', () => {
 
     await login(page2, 'Bob');
 
-    const readRemotePlayerVariable = async (name: string, targetPage: Page): Promise<unknown> => {
-      return await evaluateScript(targetPage, async (name: string) => {
+    const readRemotePlayerVariable = async (playerName: string, variableName: string, targetPage: Page): Promise<unknown> => {
+      return await evaluateScript(targetPage, async ({variableName, playerName}) => {
         await WA.onInit();
         await WA.players.configureTracking();
 
+        let value: unknown = undefined;
+        let playerFound = false;
         for (const player of WA.players.list()) {
-          return player.state[name];
+          if (player.name === playerName) {
+            if (playerFound === true) {
+              throw new Error(`Player with name ${playerName} found twice in players list`);
+            }
+            value = player.state[variableName];
+            playerFound = true;
+          }
         }
-      }, name);
+        return value;
+      }, {variableName, playerName});
     }
 
     const readLocalPlayerVariable = async (name: string, targetPage: Page): Promise<unknown> => {
@@ -187,16 +218,20 @@ test.describe('API WA.players', () => {
     }
 
     // We should not be able to read a non public variable from another user
-    await expect(await readRemotePlayerVariable('non_public_persisted', page2)).toBe(undefined);
-    await expect(await readRemotePlayerVariable('non_public_non_persisted', page2)).toBe(undefined);
-    await expect.poll(() => readRemotePlayerVariable('public_non_persisted', page2)).toBe('public_non_persisted');
-    await expect.poll(() =>  readRemotePlayerVariable('public_persisted', page2)).toBe('public_persisted');
+    await expect(await readRemotePlayerVariable('Alice', 'non_public_persisted', page2)).toBe(undefined);
+    await expect(await readRemotePlayerVariable('Alice', 'non_public_non_persisted', page2)).toBe(undefined);
+    await expect.poll(() => readRemotePlayerVariable('Alice', 'public_non_persisted', page2)).toBe('public_non_persisted');
+    await expect.poll(() =>  readRemotePlayerVariable('Alice', 'public_persisted', page2)).toBe('public_persisted');
+    await expect.poll(() =>  readRemotePlayerVariable('Alice', 'public_persisted_json', page2)).toEqual({ value: "public_persisted_json" });
+    await expect.poll(() =>  readRemotePlayerVariable('Alice', 'undefined_var', page2)).toEqual(undefined);
 
     // The user himself should always be allowed to read his own variables
     await expect.poll(() => readLocalPlayerVariable('non_public_persisted', page)).toBe('non_public_persisted');
     await expect.poll(() => readLocalPlayerVariable('non_public_non_persisted', page)).toBe('non_public_non_persisted');
     await expect.poll(() => readLocalPlayerVariable('public_non_persisted', page)).toBe('public_non_persisted');
     await expect.poll(() => readLocalPlayerVariable('public_persisted', page)).toBe('public_persisted');
+    await expect.poll(() => readLocalPlayerVariable('public_persisted_json', page)).toEqual({ value: "public_persisted_json" });
+    await expect.poll(() => readLocalPlayerVariable('undefined_var', page)).toEqual(undefined);
 
     /*console.log("PAGE 1 MY ID", await evaluateScript(page, async () => {
       await WA.onInit();
@@ -222,16 +257,18 @@ test.describe('API WA.players', () => {
     }));*/
 
     // Non persisted variables should be gone now
-    await expect.poll(() => readRemotePlayerVariable('non_public_persisted', page2)).toBe(undefined);
-    await expect.poll(() => readRemotePlayerVariable('non_public_non_persisted', page2)).toBe(undefined);
-    await expect.poll(() => readRemotePlayerVariable('public_non_persisted', page2)).toBe(undefined);
-    await expect.poll(() => readRemotePlayerVariable('public_persisted', page2)).toBe('public_persisted');
+    await expect.poll(() => readRemotePlayerVariable('Alice', 'non_public_persisted', page2)).toBe(undefined);
+    await expect.poll(() => readRemotePlayerVariable('Alice', 'non_public_non_persisted', page2)).toBe(undefined);
+    await expect.poll(() => readRemotePlayerVariable('Alice', 'public_non_persisted', page2)).toBe(undefined);
+    await expect.poll(() => readRemotePlayerVariable('Alice', 'public_persisted', page2)).toBe('public_persisted');
+    await expect.poll(() => readRemotePlayerVariable('Alice', 'undefined_var', page2)).toBe(undefined);
 
     // The user himself should always be allowed to read his own persisted variables
     await expect.poll(() => readLocalPlayerVariable('non_public_persisted', page)).toBe('non_public_persisted');
     await expect.poll(() => readLocalPlayerVariable('non_public_non_persisted', page)).toBe(undefined);
     await expect.poll(() => readLocalPlayerVariable('public_non_persisted', page)).toBe(undefined);
     await expect.poll(() => readLocalPlayerVariable('public_persisted', page)).toBe('public_persisted');
+    await expect.poll(() => readLocalPlayerVariable('undefined_var', page)).toBe(undefined);
 
     await page2.close();
 
@@ -249,6 +286,7 @@ test.describe('API WA.players', () => {
   });
 
   test('Test variable persistence for logged users.', async ({ page, browser }) => {
+    test.setTimeout(120_000); // Fix Webkit that can take more than 60s
     await page.goto(
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
     );
@@ -374,6 +412,44 @@ test.describe('API WA.players', () => {
     await expect.poll(() => gotUnexpectedNotification).toBe(false);
 
     await page2.close();
+  });
+
+  test('Test that a variable changed can be listened to locally.', async ({ page, browser }) => {
+    await page.goto(
+        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+    );
+
+    await login(page, "Alice");
+
+    // Test that a variable triggered locally can be listened locally
+    let gotExpectedNotification = false;
+
+    await page.on('console', async (msg) => {
+      const text = msg.text();
+
+      if (text === 'NOTIFICATION RECEIVED FOR should_be_notified VARIABLE CHANGE') {
+        gotExpectedNotification = true;
+      }
+    });
+
+
+    await evaluateScript(page, async () => {
+      await WA.onInit();
+
+      WA.player.state.onVariableChange('should_be_notified').subscribe(() => {
+        console.log('NOTIFICATION RECEIVED FOR should_be_notified VARIABLE CHANGE');
+      });
+
+      await WA.player.state.saveVariable('should_be_notified', 'should_be_notified', {
+        public: false,
+        persist: true,
+        scope: "room",
+      });
+
+      return;
+    });
+
+    await expect.poll(() => gotExpectedNotification).toBe(true);
   });
 
 });

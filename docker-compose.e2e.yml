@@ -4,53 +4,53 @@ services:
   # use with command:
   # docker-compose -f docker-compose.yaml -f docker-compose.e2e.yml up -d --build
 
-  front:
-    image: thecodingmachine/workadventure-front:${DOCKER_TAG:-develop}
+  play:
+    image: thecodingmachine/workadventure-play:${DOCKER_TAG:-develop}
     build:
       context: ./
-      dockerfile: front/Dockerfile
+      dockerfile: play/Dockerfile
       cache_from:
-        - thecodingmachine/workadventure-front:${DOCKER_TAG:-develop}
+        - thecodingmachine/workadventure-play:${DOCKER_TAG:-develop}
       args:
         BUILDKIT_INLINE_CACHE: 1
-    command: /bin/sh -c "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"
+    working_dir: /usr/src/play
+    command: npm run start
     volumes: []
+    environment:
+      ENABLE_OPENAPI_ENDPOINT: "false"
+      STARTUP_COMMAND_0: ""
+      STARTUP_COMMAND_1: ""
+      STARTUP_COMMAND_2: ""
+      STARTUP_COMMAND_3: ""
+      STARTUP_COMMAND_4: ""
+      STARTUP_COMMAND_5: ""
+
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.front.rule=Host(`play.workadventure.localhost`)"
-      - "traefik.http.routers.front.entryPoints=web"
-      - "traefik.http.services.front.loadbalancer.server.port=80"
+      - "traefik.http.routers.play.rule=Host(`play.workadventure.localhost`)"
+      - "traefik.http.routers.play.entryPoints=web"
+      - "traefik.http.services.play.loadbalancer.server.port=3000"
 
   chat:
     image: thecodingmachine/workadventure-chat:${DOCKER_TAG:-develop}
     build:
       context: ./
-      dockerfile: front/chat/Dockerfile
+      dockerfile: chat/Dockerfile
       cache_from:
         - thecodingmachine/workadventure-chat:${DOCKER_TAG:-develop}
       args:
         BUILDKIT_INLINE_CACHE: 1
-    command: /bin/sh -c "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"
+    command: /start_nginx.sh
     volumes: []
+    environment:
+      STARTUP_COMMAND_2: ""
+      STARTUP_COMMAND_3: ""
+      STARTUP_COMMAND_4: ""
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.chat.rule=Host(`chat.workadventure.localhost`)"
       - "traefik.http.routers.chat.entryPoints=web"
       - "traefik.http.services.chat.loadbalancer.server.port=80"
-
-  pusher:
-    image: thecodingmachine/workadventure-pusher:${DOCKER_TAG:-develop}
-    build:
-      context: ./
-      dockerfile: pusher/Dockerfile
-      cache_from:
-        - thecodingmachine/workadventure-pusher:${DOCKER_TAG:-develop}
-      args:
-        BUILDKIT_INLINE_CACHE: 1
-    command: yarn run runprod
-    volumes: []
-    environment:
-      ENABLE_OPENAPI_ENDPOINT: "false"
 
   back:
     image: thecodingmachine/workadventure-back:${DOCKER_TAG:-develop}
@@ -61,8 +61,14 @@ services:
         - thecodingmachine/workadventure-back:${DOCKER_TAG:-develop}
       args:
         BUILDKIT_INLINE_CACHE: 1
-    command: yarn run runprod
+    command: npm run runprod
+    working_dir: /usr/src/back
     volumes: []
+    environment:
+      ENABLE_OPENAPI_ENDPOINT: "false"
+      STARTUP_COMMAND_0: ""
+      STARTUP_COMMAND_1: ""
+      STARTUP_COMMAND_2: ""
 
   map-storage:
     image: thecodingmachine/workadventure-map-storage:${DOCKER_TAG:-develop}
@@ -73,9 +79,25 @@ services:
         - thecodingmachine/workadventure-map-storage:${DOCKER_TAG:-develop}
       args:
         BUILDKIT_INLINE_CACHE: 1
-    command: yarn run start:prod
+    working_dir: /usr/src/map-storage
+    command: npm run start
     volumes: []
+    environment:
+      STARTUP_COMMAND_1: ""
+      STARTUP_COMMAND_2: ""
 
+  maps:
+    image: thecodingmachine/workadventure-maps:${DOCKER_TAG:-develop}
+    build:
+      context: maps/
+      cache_from:
+        - thecodingmachine/workadventure-maps:${DOCKER_TAG:-develop}
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    volumes: []
+    environment:
+      STARTUP_COMMAND_0: ""
+      STARTUP_COMMAND_1: ""
 
   uploader:
     image: thecodingmachine/workadventure-uploader:${DOCKER_TAG:-develop}
@@ -86,5 +108,19 @@ services:
         - thecodingmachine/workadventure-uploader:${DOCKER_TAG:-develop}
       args:
         BUILDKIT_INLINE_CACHE: 1
-    command: yarn run runprod
+    working_dir: /usr/src/uploader
+    command: npm run start
+    volumes: []
+    environment:
+      ENABLE_OPENAPI_ENDPOINT: "false"
+      STARTUP_COMMAND_1: ""
+
+  ejabberd:
+    image: thecodingmachine/workadventure-ejabberd:${DOCKER_TAG:-develop}
+    build:
+      context: ./xmpp
+      cache_from:
+        - thecodingmachine/workadventure-ejabberd:${DOCKER_TAG:-develop}
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     volumes: []

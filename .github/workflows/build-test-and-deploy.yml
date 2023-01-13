@@ -8,8 +8,12 @@ on:
   pull_request:
     types: [labeled, synchronize, opened, reopened]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build-front:
+  build-play:
     runs-on: ubuntu-latest
 
     steps:
@@ -25,6 +29,7 @@ jobs:
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -35,19 +40,43 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: thecodingmachine/workadventure-front
+          images: thecodingmachine/workadventure-play
 
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         with:
           context: .
-          file: front/Dockerfile
+          file: play/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: thecodingmachine/workadventure-front:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          cache-from: type=registry,ref=thecodingmachine/workadventure-front:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          tags: thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Build test image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: play/Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=docker,dest=/tmp/play.tar
+
+      - name: Zip image
+        run: gzip play.tar
+        working-directory: /tmp
+
+      - name: Upload image as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: play
+          path: /tmp/play.tar.gz
 
   build-chat:
     runs-on: ubuntu-latest
@@ -65,6 +94,7 @@ jobs:
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -78,16 +108,40 @@ jobs:
           images: thecodingmachine/workadventure-chat
 
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         with:
           context: .
-          file: front/chat/Dockerfile
+          file: chat/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           tags: thecodingmachine/workadventure-chat:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           cache-from: type=registry,ref=thecodingmachine/workadventure-chat:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Build test image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: chat/Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: thecodingmachine/workadventure-chat:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-chat:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=docker,dest=/tmp/chat.tar
+
+      - name: Zip image
+        run: gzip chat.tar
+        working-directory: /tmp
+
+      - name: Upload image as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: chat
+          path: /tmp/chat.tar.gz
 
   build-back:
     runs-on: ubuntu-latest
@@ -105,6 +159,7 @@ jobs:
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -118,7 +173,8 @@ jobs:
           images: thecodingmachine/workadventure-back
 
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         with:
           context: .
           file: back/Dockerfile
@@ -129,45 +185,28 @@ jobs:
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
 
-  build-pusher:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      # docker
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - uses: rlespinasse/github-slug-action@3.1.0
-
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v3
-        with:
-          images: thecodingmachine/workadventure-pusher
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
+      - name: Build test image
+        uses: docker/build-push-action@v3
         with:
           context: .
-          file: pusher/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: thecodingmachine/workadventure-pusher:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          cache-from: type=registry,ref=thecodingmachine/workadventure-pusher:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          file: back/Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=docker,dest=/tmp/back.tar
+
+      - name: Zip image
+        run: gzip back.tar
+        working-directory: /tmp
+
+      - name: Upload image as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: back
+          path: /tmp/back.tar.gz
 
   build-uploader:
     runs-on: ubuntu-latest
@@ -181,6 +220,7 @@ jobs:
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -194,7 +234,8 @@ jobs:
           images: thecodingmachine/workadventure-uploader
 
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         with:
           file: uploader/Dockerfile
           push: true
@@ -202,6 +243,27 @@ jobs:
           cache-from: type=registry,ref=thecodingmachine/workadventure-uploader:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Build test image
+        uses: docker/build-push-action@v3
+        with:
+          file: uploader/Dockerfile
+          push: false
+          tags: thecodingmachine/workadventure-uploader:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-uploader:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=docker,dest=/tmp/uploader.tar
+
+      - name: Zip image
+        run: gzip uploader.tar
+        working-directory: /tmp
+
+      - name: Upload image as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: uploader
+          path: /tmp/uploader.tar.gz
 
   build-maps:
     runs-on: ubuntu-latest
@@ -218,6 +280,7 @@ jobs:
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -231,7 +294,8 @@ jobs:
           images: thecodingmachine/workadventure-maps
 
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         with:
           context: maps/
           file: maps/Dockerfile
@@ -241,17 +305,34 @@ jobs:
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
 
+      - name: Build test image
+        uses: docker/build-push-action@v3
+        with:
+          context: maps/
+          file: maps/Dockerfile
+          push: false
+          tags: thecodingmachine/workadventure-maps:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-maps:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=docker,dest=/tmp/maps.tar
+
+      - name: Zip image
+        run: gzip maps.tar
+        working-directory: /tmp
+
+      - name: Upload image as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: maps
+          path: /tmp/maps.tar.gz
+
   build-map-storage:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
-      - name: Setup NodeJS
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
 
       # docker
       - name: Set up QEMU
@@ -262,6 +343,7 @@ jobs:
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -275,7 +357,8 @@ jobs:
           images: thecodingmachine/workadventure-map-storage
 
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         with:
           context: .
           file: map-storage/Dockerfile
@@ -286,6 +369,92 @@ jobs:
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
 
+      - name: Build test image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: map-storage/Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: thecodingmachine/workadventure-map-storage:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-map-storage:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=docker,dest=/tmp/map-storage.tar
+
+      - name: Zip image
+        run: gzip map-storage.tar
+        working-directory: /tmp
+
+      - name: Upload image as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: map-storage
+          path: /tmp/map-storage.tar.gz
+
+  build-ejabberd:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # docker
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - uses: rlespinasse/github-slug-action@3.1.0
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: thecodingmachine/workadventure-ejabberd
+
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+        with:
+          context: xmpp/
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: thecodingmachine/workadventure-ejabberd:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-ejabberd:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Build test image
+        uses: docker/build-push-action@v3
+        with:
+          context: xmpp/
+          platforms: linux/amd64
+          push: false
+          tags: thecodingmachine/workadventure-ejabberd:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-ejabberd:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=docker,dest=/tmp/ejabberd.tar
+
+      - name: Zip image
+        run: gzip ejabberd.tar
+        working-directory: /tmp
+
+      - name: Upload image as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ejabberd
+          path: /tmp/ejabberd.tar.gz
+
   end-to-end-tests:
     name: "End to end tests with ${{ matrix.browser }}"
     strategy:
@@ -293,13 +462,13 @@ jobs:
       matrix:
         browser: [ 'chromium', 'firefox', 'webkit' ]
     needs:
-      - build-front
+      - build-play
       - build-chat
       - build-back
-      - build-pusher
       - build-maps
       - build-uploader
       - build-map-storage
+      - build-ejabberd
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
@@ -315,50 +484,70 @@ jobs:
         working-directory: tests
       - name: 'Setup .env file'
         run: cp .env.template .env
-#      - name: Wait for front to build
-#        uses: lewagon/wait-on-check-action@v1.1.2
-#        with:
-#          ref: ${{ github.sha }}
-#          check-name: 'build-front'
-#          repo-token: ${{ secrets.GITHUB_TOKEN }}
-#          wait-interval: 10
-#      - name: Wait for pusher to build
-#        uses: lewagon/wait-on-check-action@v1.1.2
-#        with:
-#          ref: ${{ github.sha }}
-#          check-name: 'build-pusher'
-#          repo-token: ${{ secrets.GITHUB_TOKEN }}
-#          wait-interval: 10
-#      - name: Wait for back to build
-#        uses: lewagon/wait-on-check-action@v1.1.2
-#        with:
-#          ref: ${{ github.sha }}
-#          check-name: 'build-back'
-#          repo-token: ${{ secrets.GITHUB_TOKEN }}
-#          wait-interval: 10
-#      - name: Wait for chat to build
-#        uses: lewagon/wait-on-check-action@v1.1.2
-#        with:
-#          ref: ${{ github.sha }}
-#          check-name: 'build-chat'
-#          repo-token: ${{ secrets.GITHUB_TOKEN }}
-#          wait-interval: 10
-#      - name: Wait for map-storage to build
-#        uses: lewagon/wait-on-check-action@v1.1.2
-#        with:
-#          ref: ${{ github.sha }}
-#          check-name: 'build-map-storage'
-#          repo-token: ${{ secrets.GITHUB_TOKEN }}
-#          wait-interval: 10
       - uses: rlespinasse/github-slug-action@3.1.0
       - name: Display pulled version
         run: echo "Pulling images with tag ${DOCKER_TAG}"
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-      - name: Download images
-        run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml pull
-        env:
-          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+
+      -
+        name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: play
+          path: /tmp
+      -
+        name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: chat
+          path: /tmp
+      -
+        name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: back
+          path: /tmp
+      -
+        name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: maps
+          path: /tmp
+      -
+        name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: map-storage
+          path: /tmp
+      -
+        name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: uploader
+          path: /tmp
+      -
+        name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ejabberd
+          path: /tmp
+      -
+        name: Load image
+        run: |
+          docker load --input /tmp/play.tar.gz
+          docker load --input /tmp/chat.tar.gz
+          docker load --input /tmp/back.tar.gz
+          docker load --input /tmp/maps.tar.gz
+          docker load --input /tmp/map-storage.tar.gz
+          docker load --input /tmp/uploader.tar.gz
+          docker load --input /tmp/ejabberd.tar.gz
+          docker image ls -a
+
+#      - name: Download images
+#        run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml pull
+#        env:
+#s          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
       - name: Start WorkAdventure
         run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml up -d
         env:
@@ -394,13 +583,13 @@ jobs:
 
   deeploy:
     needs:
-      - build-front
+      - build-play
       - build-chat
       - build-back
-      - build-pusher
       - build-maps
       - build-uploader
       - build-map-storage
+      - build-ejabberd
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
 
@@ -459,8 +648,15 @@ jobs:
           DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
           POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
+          EJABBERD_JWT_SECRET: ${{ secrets.EJABBERD_JWT_SECRET }}
         with:
           namespace: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+
+      - name: Upload demo maps in map-storage
+        run: rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip * && curl -F 'file=@../assets.zip' https://map-storage-${DEPLOY_REF}.test.workadventu.re/upload --basic -u john.doe:password
+        env:
+          DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        working-directory: map-storage
 
       - name: Add a comment in PR
         uses: unsplash/comment-on-pr@master

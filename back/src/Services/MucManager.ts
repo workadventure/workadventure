@@ -1,6 +1,7 @@
 import { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard/dist";
 import Axios from "axios";
 import { EjabberdClient, ejabberdClient } from "./EjabberdClient";
+import { MapDetailsData } from "@workadventure/messages";
 
 export interface ChatZone {
     chatName?: string;
@@ -30,11 +31,11 @@ export class MucManager {
         }
     }
 
-    public async init() {
+    public async init(mapDetails: MapDetailsData) {
         const allMucRooms = await ejabberdClient.getAllMucRooms();
         const allMucRoomsOfWorld: string[] = [];
         if (Axios.isAxiosError(allMucRooms)) {
-            console.warn("Error to get allMucRooms (AxiosError) : ", allMucRooms.response);
+            console.warn("Error to get allMucRooms (AxiosError) : ", allMucRooms.message, allMucRooms);
         } else if (allMucRooms instanceof Error) {
             console.warn("Error to get allMucRooms : ", allMucRooms);
         } else {
@@ -64,7 +65,7 @@ export class MucManager {
                     }
                 }
             }
-            if (this.chatZones) {
+            if (this.chatZones && mapDetails.enableChat) {
                 for (const [, chatZone] of this.chatZones) {
                     if (chatZone.mucCreated) return;
                     if (chatZone.mucUrl) {

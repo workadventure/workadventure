@@ -1,7 +1,9 @@
 const defaultTheme = require("tailwindcss/defaultTheme");
 
 module.exports = {
-  content: ["./src/**/*.{html,js,svelte,ts}"],
+  content: [
+      "./src/**/*.{html,js,svelte,ts}"
+  ],
   corePlugins: {
     preflight: false,
   },
@@ -56,6 +58,10 @@ module.exports = {
       fontFamily: {
         sans: ["Roboto", defaultTheme.fontFamily.sans],
         condensed: ["Roboto Condensed", defaultTheme.fontFamily.sans],
+      },
+      scale: {
+        '01': '0.1',
+        140: "1.4",
       },
     },
   },

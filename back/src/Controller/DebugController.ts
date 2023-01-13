@@ -4,6 +4,7 @@ import { HttpRequest, HttpResponse } from "uWebSockets.js";
 import { parse } from "query-string";
 import { App } from "../Server/sifrr.server";
 import { socketManager } from "../Services/SocketManager";
+import { CustomJsonReplacerInterface } from "../Model/CustomJsonReplacerInterface";
 
 export class DebugController {
     constructor(private App: App) {
@@ -15,7 +16,7 @@ export class DebugController {
             (async () => {
                 const query = parse(req.getQuery());
 
-                if (ADMIN_API_TOKEN === "") {
+                if (!ADMIN_API_TOKEN) {
                     return res.writeStatus("401 Unauthorized").end("No token configured!");
                 }
                 if (query.token !== ADMIN_API_TOKEN) {
@@ -28,10 +29,15 @@ export class DebugController {
                     .end(
                         stringify(
                             await Promise.all(socketManager.getWorlds().values()),
-                            (key: unknown, value: unknown) => {
-                                if (key === "listeners") {
-                                    return "Listeners";
+                            function (key: unknown, value: unknown) {
+                                const customObj = CustomJsonReplacerInterface.safeParse(this);
+                                if (customObj.success) {
+                                    const val = customObj.data.customJsonReplacer(key, value);
+                                    if (val !== undefined) {
+                                        return val;
+                                    }
                                 }
+
                                 if (key === "socket") {
                                     return "Socket";
                                 }

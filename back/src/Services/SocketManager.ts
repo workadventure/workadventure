@@ -46,7 +46,10 @@ import {
     Zone as ProtoZone,
     AskPositionMessage,
     MoveToPositionMessage,
-    EditMapMessage,
+    SubToPusherRoomMessage,
+    EditMapCommandWithKeyMessage,
+    EditMapCommandMessage,
+    ChatMessagePrompt,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -65,6 +68,8 @@ import Debug from "debug";
 import { Admin } from "../Model/Admin";
 import crypto from "crypto";
 import QueryCase = QueryMessage.QueryCase;
+import { getMapStorageClient } from "./MapStorageClient";
+import { emitError } from "./MessageHelpers";
 
 const debug = Debug("sockermanager");
 
@@ -109,6 +114,7 @@ export class SocketManager {
             };
         }
         const roomJoinedMessage = new RoomJoinedMessage();
+        roomJoinedMessage.setUserjid(joinRoomMessage.getUserjid());
         roomJoinedMessage.setTagList(joinRoomMessage.getTagList());
         roomJoinedMessage.setUserroomtoken(joinRoomMessage.getUserroomtoken());
         roomJoinedMessage.setCharacterlayerList(joinRoomMessage.getCharacterlayerList());
@@ -135,6 +141,9 @@ export class SocketManager {
         roomJoinedMessage.setActivatedinviteuser(
             user.activatedInviteUser != undefined ? user.activatedInviteUser : true
         );
+        if (user.applications != undefined) {
+            roomJoinedMessage.setApplicationsList(user.applications);
+        }
 
         const playerVariables = user.getVariables().getVariables();
 
@@ -356,6 +365,7 @@ export class SocketManager {
             throw new Error(`clientUser.userId is not an integer ${user.id}`);
         }
         userJoinedZoneMessage.setUserid(user.id);
+        userJoinedZoneMessage.setUserjid(user.userJid);
         userJoinedZoneMessage.setUseruuid(user.uuid);
         userJoinedZoneMessage.setName(user.name);
         userJoinedZoneMessage.setAvailabilitystatus(user.getAvailabilityStatus());
@@ -697,6 +707,7 @@ export class SocketManager {
 
         const jitsiJwtAnswer = new JitsiJwtAnswer();
         jitsiJwtAnswer.setJwt(jwt);
+        jitsiJwtAnswer.setUrl(jitsiSettings.url);
 
         return jitsiJwtAnswer;
     }
@@ -707,6 +718,7 @@ export class SocketManager {
         joinBBBMeetingQuery: JoinBBBMeetingQuery
     ): Promise<JoinBBBMeetingAnswer> {
         const meetingId = joinBBBMeetingQuery.getMeetingid();
+        const localMeetingId = joinBBBMeetingQuery.getLocalmeetingid();
         const meetingName = joinBBBMeetingQuery.getMeetingname();
         const bbbSettings = gameRoom.getBbbSettings();
 
@@ -722,7 +734,7 @@ export class SocketManager {
         if (user.tags.includes("admin")) {
             isAdmin = true;
         } else {
-            const moderatorTag = await gameRoom.getModeratorTagForBbbMeeting(meetingId);
+            const moderatorTag = await gameRoom.getModeratorTagForBbbMeeting(localMeetingId);
             if (moderatorTag && user.tags.includes(moderatorTag)) {
                 isAdmin = true;
             } else if (moderatorTag === undefined) {
@@ -759,6 +771,11 @@ export class SocketManager {
             userID: user.id,
             joinViaHtml5: true,
         });
+        console.log(
+            `User "${user.name}" (${user.uuid}) joined the BBB meeting "${meetingName}" as ${
+                isAdmin ? "Admin" : "Participant"
+            }.`
+        );
 
         const bbbMeetingAnswer = new JoinBBBMeetingAnswer();
         bbbMeetingAnswer.setMeetingid(meetingId);
@@ -876,8 +893,10 @@ export class SocketManager {
     private cleanupRoomIfEmpty(room: GameRoom): void {
         if (room.isEmpty()) {
             this.roomsPromises.delete(room.roomUrl);
-            this.resolvedRooms.delete(room.roomUrl);
-            gaugeManager.decNbRoomGauge();
+            const deleted = this.resolvedRooms.delete(room.roomUrl);
+            if (deleted) {
+                gaugeManager.decNbRoomGauge();
+            }
             debug('Room is empty. Deleting room "%s"', room.roomUrl);
         }
     }
@@ -1067,13 +1086,23 @@ export class SocketManager {
         room.emitLockGroupEvent(user, group.getId());
     }
 
-    handleEditMapMessage(room: GameRoom, user: User, message: EditMapMessage) {
-        if (message.hasModifyareamessage()) {
-            const msg = message.getModifyareamessage();
-            if (msg) {
-                room.getMapEditorMessagesHandler().handleModifyAreaMessage(msg);
+    handleEditMapCommandMessage(room: GameRoom, user: User, message: EditMapCommandMessage) {
+        const messageWithKey = new EditMapCommandWithKeyMessage();
+        messageWithKey.setEditmapcommandmessage(message);
+        messageWithKey.setMapkey(room.mapUrl);
+
+        getMapStorageClient().handleEditMapCommandWithKeyMessage(
+            messageWithKey,
+            (err: unknown, editMapMessage: EditMapCommandMessage) => {
+                if (err) {
+                    emitError(user.socket, err);
+                    throw err;
+                }
+                const subMessage = new SubToPusherRoomMessage();
+                subMessage.setEditmapcommandmessage(editMapMessage);
+                room.dispatchRoomMessage(subMessage);
             }
-        }
+        );
     }
 
     getAllRooms(): RoomsList {
@@ -1108,6 +1137,24 @@ export class SocketManager {
                 // TODO delete room;
             }
         }
+    }
+
+    async dispatchChatMessagePrompt(chatMessagePrompt: ChatMessagePrompt): Promise<boolean> {
+        const room = await this.roomsPromises.get(chatMessagePrompt.getRoomid());
+        console.log(chatMessagePrompt.getRoomid());
+        if (!room) {
+            return false;
+        }
+
+        const subMessage = new SubToPusherRoomMessage();
+        if (chatMessagePrompt.hasJoinmucroommessage()) {
+            subMessage.setJoinmucroommessage(chatMessagePrompt.getJoinmucroommessage());
+        } else if (chatMessagePrompt.hasLeavemucroommessage()) {
+            subMessage.setLeavemucroommessage(chatMessagePrompt.getLeavemucroommessage());
+        }
+        room.sendSubMessageToRoom(subMessage);
+
+        return true;
     }
 }
 

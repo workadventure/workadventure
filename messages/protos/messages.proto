@@ -1,10 +1,9 @@
 syntax = "proto3";
 
 import "google/protobuf/wrappers.proto";
+import "google/protobuf/struct.proto";
 
 /*********** PARTIAL MESSAGES **************/
-
-package workadventure;
 
 enum AvailabilityStatus {
   UNCHANGED = 0;
@@ -45,6 +44,11 @@ message CharacterLayerMessage {
   string url = 1;
   string name = 2;
   string layer = 3;
+}
+
+message ApplicationMessage {
+  string name = 1;
+  string script = 2;
 }
 
 message CompanionMessage {
@@ -107,12 +111,62 @@ message LockGroupPromptMessage {
   bool lock = 1;
 }
 
+/*********** MAP EDITOR MESSAGES *************/
+
+message EditMapMessage {
+  oneof message {
+    ModifyAreaMessage modifyAreaMessage = 1;
+    CreateAreaMessage createAreaMessage = 2;
+    DeleteAreaMessage deleteAreaMessage = 3;
+  }
+}
+
+message EditMapCommandMessage {
+  string id = 1;
+  EditMapMessage editMapMessage = 2;
+}
+
+message EditMapCommandWithKeyMessage {
+  string mapKey = 1;
+  EditMapCommandMessage editMapCommandMessage = 2;
+}
+
 message ModifyAreaMessage {
   int32 id = 1;
-  google.protobuf.UInt32Value x = 2;
-  google.protobuf.UInt32Value y = 3;
-  google.protobuf.UInt32Value width = 4;
-  google.protobuf.UInt32Value height = 5;
+  optional string name = 2;
+  optional uint32 x = 3;
+  optional uint32 y = 4;
+  optional uint32 width = 5;
+  optional uint32 height = 6;
+  optional AreaProperties properties = 7;
+}
+
+message AreaProperties {
+  optional bool focusable = 1;
+  optional float zoom_margin = 2;
+  optional bool silent = 3;
+  map<string, google.protobuf.Value> customProperties = 4;
+}
+
+message CustomAreaProperty {
+  oneof value {
+    bool boolVal = 1;
+    float numberVal = 2;
+    string stringVal = 3;
+  }
+}
+
+message DeleteAreaMessage {
+  int32 id = 1;
+}
+
+message CreateAreaMessage {
+  int32 id = 1;
+  uint32 x = 2;
+  uint32 y = 3;
+  uint32 width = 4;
+  uint32 height = 5;
+  string name = 6;
 }
 
 message ClientToServerMessage {
@@ -136,7 +190,7 @@ message ClientToServerMessage {
     PingMessage pingMessage = 21;
     //XmppMessage xmppMessage = 22;
     AskPositionMessage askPositionMessage = 23;
-    EditMapMessage editMapMessage = 24;
+    EditMapCommandMessage editMapCommandMessage = 24;
   }
 }
 
@@ -175,9 +229,6 @@ message SetPlayerVariableMessage {
   google.protobuf.Value value = 2;
 }*/
 
-message XmppMessage {
-  string stanza = 1;
-}
 
 /**
  * A variable, along the tag describing who it is targeted at
@@ -213,8 +264,9 @@ message JitsiJwtQuery {
 }
 
 message JoinBBBMeetingQuery {
-  string meetingId = 1;
-  string meetingName = 2;
+  string meetingId = 1; /* a hash of domain, instance and localMeetingId */
+  string localMeetingId = 2; /* bbbMeeting field from the map  */
+  string meetingName = 3;
   // Fix me Pusher linter fails because eslint-plugin version < 3.0
   // map<string, string> userdata = 3;
 }
@@ -230,6 +282,7 @@ message AnswerMessage {
 
 message JitsiJwtAnswer {
   string jwt = 1;
+  string url = 2;
 }
 
 message JoinBBBMeetingAnswer {
@@ -261,8 +314,9 @@ message SubMessage {
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
     PingMessage pingMessage = 11;
-    //XmppMessage xmppMessage = 12;
-    EditMapMessage editMapMessage = 13;
+    EditMapCommandMessage editMapCommandMessage = 13;
+    JoinMucRoomMessage joinMucRoomMessage = 14;
+    LeaveMucRoomMessage leaveMucRoomMessage = 15;
   }
 }
 
@@ -284,16 +338,17 @@ message GroupDeleteMessage {
 
 message UserJoinedMessage {
   int32 userId = 1;
-  string name = 2;
-  repeated CharacterLayerMessage characterLayers = 3;
-  PositionMessage position = 4;
-  CompanionMessage companion = 5;
-  string visitCardUrl = 6;
-  string userUuid = 7;
-  uint32 outlineColor = 8;
-  bool hasOutline = 9;
-  AvailabilityStatus availabilityStatus = 10;
-  map<string, string> variables = 11;
+  string userJid = 2;
+  string name = 3;
+  repeated CharacterLayerMessage characterLayers = 4;
+  PositionMessage position = 5;
+  CompanionMessage companion = 6;
+  string visitCardUrl = 7;
+  string userUuid = 8;
+  uint32 outlineColor = 9;
+  bool hasOutline = 10;
+  AvailabilityStatus availabilityStatus = 11;
+  map<string, string> variables = 12;
 }
 
 message UserLeftMessage {
@@ -345,6 +400,8 @@ message RoomJoinedMessage {
   repeated CharacterLayerMessage characterLayer = 8;
   bool activatedInviteUser = 9;
   repeated VariableMessage playerVariable = 10;
+  repeated ApplicationMessage applications = 11;
+  string userJid = 12;
 }
 
 message WebRtcStartMessage {
@@ -408,6 +465,7 @@ message AskPositionMessage{
   string playUri = 2;
 }
 
+
 /**
  * Messages going from back and pusher to the front
  */
@@ -437,8 +495,7 @@ message ServerToClientMessage {
     GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
     ErrorScreenMessage errorScreenMessage = 26;
     AnswerMessage answerMessage = 28;
-    //XmppSettingsMessage xmppSettingsMessage = 29;
-    //XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 30;
+    XmppSettingsMessage xmppSettingsMessage = 29;
     MoveToPositionMessage moveToPositionMessage = 31;
   }
 }
@@ -460,21 +517,24 @@ message JoinRoomMessage {
   AvailabilityStatus availabilityStatus = 11;
   bool activatedInviteUser = 12;
   bool isLogged = 13;
+  repeated ApplicationMessage applications = 14;
+  string userJid = 15;
 }
 
 message UserJoinedZoneMessage {
   int32 userId = 1;
-  string name = 2;
-  repeated CharacterLayerMessage characterLayers = 3;
-  PositionMessage position = 4;
-  Zone fromZone = 5;
-  CompanionMessage companion = 6;
-  string visitCardUrl = 7;
-  string userUuid = 8;
-  uint32 outlineColor = 9;
-  bool hasOutline = 10;
-  AvailabilityStatus availabilityStatus = 11;
-  map<string, string> variables = 12;
+  string userJid = 2;
+  string name = 3;
+  repeated CharacterLayerMessage characterLayers = 4;
+  PositionMessage position = 5;
+  Zone fromZone = 6;
+  CompanionMessage companion = 7;
+  string visitCardUrl = 8;
+  string userUuid = 9;
+  uint32 outlineColor = 10;
+  bool hasOutline = 11;
+  AvailabilityStatus availabilityStatus = 12;
+  map<string, string> variables = 13;
 }
 
 message UserLeftZoneMessage {
@@ -534,7 +594,7 @@ message PusherToBackMessage {
     LockGroupPromptMessage lockGroupPromptMessage = 19;
     QueryMessage queryMessage = 21;
     AskPositionMessage askPositionMessage = 22;
-    EditMapMessage editMapMessage = 23;
+    EditMapCommandMessage editMapCommandMessage = 23;
   }
 }
 
@@ -566,16 +626,11 @@ message SubToPusherRoomMessage {
   oneof message {
     VariableWithTagMessage variableMessage = 1;
     ErrorMessage errorMessage = 2;
-    EditMapMessage editMapMessage = 3;
+    EditMapCommandMessage editMapCommandMessage = 3;
+    JoinMucRoomMessage joinMucRoomMessage = 4;
+    LeaveMucRoomMessage leaveMucRoomMessage = 5;
   }
 }
-
-message EditMapMessage {
-  oneof message {
-    ModifyAreaMessage modifyAreaMessage = 1;
-  }
-}
-
 
 /*message BatchToAdminPusherMessage {
   repeated SubToAdminPusherMessage payload = 2;
@@ -659,23 +714,24 @@ message EmptyMessage {
 
 
 
-/*******************************************************µ************************
+/********************************************************************************
  * Start Chat Messages
  ********************************************************************************/
-message IframeToPusherMessage{
+message ChatMessagePrompt{
+  string roomId = 1;
   oneof message {
-    XmppMessage xmppMessage = 1;
-    BanUserByUuidMessage banUserByUuidMessage = 2;
-  }
-}
-message PusherToIframeMessage{
-  oneof message {
-    XmppSettingsMessage xmppSettingsMessage = 1;
-    XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 2;
-    XmppMessage xmppMessage = 3;
+    JoinMucRoomMessage joinMucRoomMessage = 2;
+    LeaveMucRoomMessage leaveMucRoomMessage = 3;
   }
 }
 
+message JoinMucRoomMessage{
+  MucRoomDefinitionMessage mucRoomDefinitionMessage = 1;
+}
+
+message LeaveMucRoomMessage{
+  string url = 1;
+}
 message MucRoomDefinitionMessage {
   string url = 1;
   string name = 2;
@@ -687,19 +743,8 @@ message XmppSettingsMessage{
   string jid = 1;
   string conferenceDomain = 2;
   repeated MucRoomDefinitionMessage rooms = 3;
-}
-
-
-/**
- * Status of the connection to the XMPP server.
- * In case something goes wrong with the XMPP server, we are notified here.
- */
-message XmppConnectionStatusChangeMessage{
-  enum Status {
-    DISCONNECTED = 0;
-  }
-
-  Status status = 1;
+  string jabberId = 4;
+  string jabberPassword = 5;
 }
 
 message BanUserByUuidMessage{
@@ -712,35 +757,3 @@ message BanUserByUuidMessage{
 /*********************************************************************************
  * End Chat Messages
  *********************************************************************************/
-
-
-
-
-
-
-
-
-/**
- * Service handled by the "back". Pusher servers connect to this service.
- */
-service RoomManager {
-  rpc joinRoom(stream PusherToBackMessage) returns (stream ServerToClientMessage); // Holds a connection between one given client and the back
-  rpc listenZone(ZoneMessage) returns (stream BatchToPusherMessage); // Connection used to send to a pusher messages related to a given zone of a given room
-  rpc listenRoom(RoomMessage) returns (stream BatchToPusherRoomMessage); // Connection used to send to a pusher messages related to a given room
-  rpc adminRoom(stream AdminPusherToBackMessage) returns (stream ServerToAdminClientMessage);
-  rpc sendAdminMessage(AdminMessage) returns (EmptyMessage);
-  rpc sendGlobalAdminMessage(AdminGlobalMessage) returns (EmptyMessage);
-  rpc ban(BanMessage) returns (EmptyMessage);
-  rpc sendAdminMessageToRoom(AdminRoomMessage) returns (EmptyMessage);
-  rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (EmptyMessage);
-  rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (EmptyMessage);
-  rpc getRooms(EmptyMessage) returns (RoomsList);
-  rpc ping(PingMessage) returns (PingMessage);
-}
-
-/**
- * Service handled by the "map-storage". Back servers connect to this service.
- */
-service MapStorage {
-  rpc ping(PingMessage) returns (PingMessage);
-}

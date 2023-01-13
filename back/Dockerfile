@@ -1,33 +1,31 @@
-# The building of ProtoBuf "messages" must be done out of Docker because grpc-node does not ship with ARM64 binaries.
-# See: https://github.com/grpc/grpc-node/issues/1405
-# When the issue above is closed, we can move back messages building inside Dockerfile
-
 # protobuf build
-FROM --platform=$BUILDPLATFORM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c as proto-builder
+FROM --platform=$BUILDPLATFORM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d as proto-builder
 WORKDIR /usr/src
-COPY messages/yarn.lock messages/package.json ./
-RUN yarn install
+COPY messages/package-lock.json messages/package.json ./
+RUN npm ci
 COPY messages .
-RUN yarn run tag-version && yarn proto
-
-# typescript build
-FROM --platform=$BUILDPLATFORM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c as builder
-WORKDIR /usr/src
-COPY back/yarn.lock back/package.json ./
-RUN yarn install
-COPY back .
-COPY --from=proto-builder /usr/src/generated src/Messages/generated
-COPY --from=proto-builder /usr/src/JsonMessages src/Messages/JsonMessages
-ENV NODE_ENV=production
-RUN yarn run tsc
+COPY libs ./../libs
+RUN npm run tag-version && npm run proto && npm run ts-proto
 
 # final production image
-FROM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c
+FROM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d
 WORKDIR /usr/src
-COPY back/yarn.lock back/package.json ./
+RUN apt-get update && apt-get install -y git
+COPY package.json package-lock.json ./
+COPY back/package.json back/package.json
+COPY libs/messages/package.json libs/messages/package.json
+COPY libs/map-editor/package.json libs/map-editor/package.json
+COPY libs/math-utils/package.json libs/math-utils/package.json
+COPY libs/tailwind/package.json libs/tailwind/package.json
+COPY libs/store-utils/package.json libs/store-utils/package.json
 ENV NODE_ENV=production
-RUN yarn install --production
-COPY --from=builder /usr/src/dist /usr/src/dist
+RUN npm ci --omit=dev --workspace workadventureback
+COPY libs ./libs
+COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
+COPY back ./back
+COPY --from=proto-builder /usr/src/generated ./back/src/Messages/generated
+
+WORKDIR /usr/src/back
 
 USER node
-CMD ["yarn", "run", "runprod"]
+CMD ["npm", "run", "runprod"]

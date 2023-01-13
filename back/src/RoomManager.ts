@@ -1,4 +1,4 @@
-import { IRoomManagerServer } from "./Messages/generated/messages_grpc_pb";
+import { IRoomManagerServer } from "./Messages/generated/services_grpc_pb";
 import {
     AdminGlobalMessage,
     AdminMessage,
@@ -31,9 +31,16 @@ import {
     RoomsList,
     PingMessage,
     QueryMessage,
-    EditMapMessage,
+    EditMapCommandMessage,
+    ChatMessagePrompt,
 } from "./Messages/generated/messages_pb";
-import { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
+import {
+    sendUnaryData,
+    ServerDuplexStream,
+    ServerErrorResponse,
+    ServerUnaryCall,
+    ServerWritableStream,
+} from "@grpc/grpc-js";
 import { socketManager } from "./Services/SocketManager";
 import {
     emitError,
@@ -71,11 +78,19 @@ const roomManager: IRoomManagerServer = {
                                         room = gameRoom;
                                         user = myUser;
                                     } else {
-                                        //Connection may have been closed before the init was finished, so we have to manually disconnect the user.
+                                        // Connection may have been closed before the init was finished, so we have to manually disconnect the user.
+                                        // TODO: Remove this debug line
+                                        console.info(
+                                            "message handleJoinRoom connection have been closed before. Check 'call.writable': ",
+                                            call.writable
+                                        );
                                         socketManager.leaveRoom(gameRoom, myUser);
                                     }
                                 })
-                                .catch((e) => emitError(call, e));
+                                .catch((e) => {
+                                    console.error("message handleJoinRoom error: ", e);
+                                    emitError(call, e);
+                                });
                         } else {
                             throw new Error("The first message sent MUST be of type JoinRoomMessage");
                         }
@@ -148,12 +163,13 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 message.getLockgrouppromptmessage() as LockGroupPromptMessage
                             );
-                        } else if (message.hasEditmapmessage()) {
-                            socketManager.handleEditMapMessage(
-                                room,
-                                user,
-                                message.getEditmapmessage() as EditMapMessage
-                            );
+                        } else if (message.hasEditmapcommandmessage()) {
+                            if (message.getEditmapcommandmessage())
+                                socketManager.handleEditMapCommandMessage(
+                                    room,
+                                    user,
+                                    message.getEditmapcommandmessage() as EditMapCommandMessage
+                                );
                         } else if (message.hasSendusermessage()) {
                             const sendUserMessage = message.getSendusermessage();
                             socketManager.handleSendUserMessage(user, sendUserMessage as SendUserMessage);
@@ -359,6 +375,20 @@ const roomManager: IRoomManagerServer = {
     },
     ping(call: ServerUnaryCall<PingMessage, EmptyMessage>, callback: sendUnaryData<PingMessage>): void {
         callback(null, call.request);
+    },
+    sendChatMessagePrompt(
+        call: ServerUnaryCall<ChatMessagePrompt, EmptyMessage>,
+        callback: sendUnaryData<EmptyMessage>
+    ): void {
+        socketManager
+            .dispatchChatMessagePrompt(call.request)
+            .then(() => {
+                callback(null, new EmptyMessage());
+            })
+            .catch((err) => {
+                console.error(err);
+                callback(err as ServerErrorResponse, new EmptyMessage());
+            });
     },
 };
 

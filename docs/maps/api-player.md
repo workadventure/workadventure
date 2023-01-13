@@ -90,11 +90,20 @@ The player's current position is available using the `WA.player.getPosition()` f
 You need to wait for the end of the initialization before calling `WA.player.getPosition()`
 
 ```typescript
-WA.onInit().then(() => {
-    console.log('Position: ', WA.player.getPosition());
+WA.onInit().then(async () => {
+    console.log('Position: ', await WA.player.getPosition());
 })
 ```
 
+### Get the woka of the player
+```
+WA.player.getWokaPicture(): Promise<string>
+```
+
+The player's Woka picture can be fetched using the `WA.player.getWokaPicture()` function.
+
+This will return a promise resolving to a base64 encoded PNG of the Woka.
+The Woka is facing south, in "standing" position.
 
 ### Get the user-room token of the player
 
@@ -228,8 +237,10 @@ A player variable can be set simply by assigning a value.
 
 Example:
 ```javascript
-WA.player.state.foo = "value" //will set the "foo" key to "value". By default, variable is transient and private.
+WA.player.state.foo = "value"
 ```
+
+By **default**, variables saved are **persisted** and **private** in the **world** scope.
 
 If you want to set some options, you will need to use the `saveVariable` function:
 

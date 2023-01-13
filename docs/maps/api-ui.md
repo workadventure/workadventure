@@ -278,10 +278,221 @@ You can close a website with the close function on the `UIWebsite` object
 ```ts
 myWebsite.close();
 ```
-
 ### Get all UI websites
 You can get all websites with the `WA.ui.website.getAll()` method. It returns an `Promise<UIWebsite[]>` instance.
 
 ```ts
 WA.ui.website.getAll();
 ```
+
+### Get UI website by ID
+You can get a specific website with the `WA.ui.website.getById()` method. It returns an `Promise<UIWebsite>` instance.
+If your code is running inside a UIWebsite iframe, you can use `WA.iframeId` to obtain the id of the current iframe.
+
+```ts
+const websiteId = WA.iframeId;
+const website = await WA.ui.website.getById(websiteId);
+## The modal iframe API
+### Open the modal iframe
+
+```ts
+WA.ui.modal.openModal({
+    title: string,// mandatory, title of the iframe modal.
+    src: string, // mandatory, url of the iframe modal.
+    allow?: string, // optional by default null.
+    allowApi?: boolean, // optional by default false.
+    position?: string, // optional by default right. Reference for position: center / left / right.
+    closeCallback?: Function // optionall, function when the user close the modal.
+}): void
+```
+
+
+### Close the chat window
+
+```ts
+WA.ui.modal.closeModal(): void
+```
+
+### Example of mofal opened
+
+```ts
+WA.ui.modal.openModal({
+    title: "WorkAdventure website",
+    src: 'https://workadventu.re',
+    allow: "fullscreen",
+    allowApi: true,
+    position: "center",
+    () => {
+        console.info('The modal was closed');
+    }
+});
+```
+
+Open modal to the center position:
+
+<div class="row">
+    <div class="col text-center">
+        <img src="images/modal/modal-center.png" class="figure-img img-fluid rounded" alt="" />
+    </div>
+</div>
+
+```ts
+    WA.ui.modal.openModal({
+        title: "WorkAdventure website",
+        src: 'https://workadventu.re',
+        allow: "fullscreen",
+        position: "right"
+    });
+```
+
+Open modal to the right position:
+
+<div class="row">
+    <div class="col text-center">
+        <img src="images/modal/modal-right.png" class="figure-img img-fluid rounded" alt="" />
+    </div>
+</div>
+
+Open modal to the left position:
+
+```ts
+    WA.ui.modal.openModal({
+        title: "WorkAdventure website",
+        src: 'https://workadventu.re',
+        position: "left"
+    });
+```
+
+<div class="row">
+    <div class="col text-center">
+        <img src="images/modal/modal-left.png" class="figure-img img-fluid rounded" alt="" />
+    </div>
+</div>
+
+### Mobile example
+
+If the user is in mobile definition, the modal will open in full screen:
+
+<div class="row">
+    <div class="col text-center">
+        <img src="images/modal/modal-mobile.png" class="figure-img img-fluid rounded" alt="" />
+    </div>
+</div>
+
+## Action bar button API
+
+### Add a button in the action bar
+
+#### Classic button
+```ts
+WA.ui.actionBar.addButton(descriptor: {
+    id: string,
+    label: string,
+    clickCallback: (buttonActionBar: AddButtonActionBar) => void
+}): void
+```
+
+#### Action button
+```ts
+WA.ui.actionBar.addButton(descriptor: {
+    id: string,
+    type: 'action',
+    imageSrc: string,
+    toolTip: string,
+    clickCallback: (buttonActionBar: AddButtonActionBar) => void
+}): void
+```
+
+- id: the id of the button action bar defined.
+- label: the label to display in the button.
+- type: the type of button ('button' / 'action'). By default is 'button'.
+- imageSrc: image of button associated.
+- toolTip: label displayed above the action button.
+- clickCallback: function called when the user clicks on the button. The callback is passed a `AddButtonActionBar` instance in parameter.
+
+With `AddButtonActionBar` defined as:
+```ts
+/**
+ * Ennum of button type
+ */
+const ActionBarButtonType = {
+    button: "button",
+    action: "action",
+} as const;
+type ActionBarButtonType = typeof ActionBarButtonType[keyof typeof ActionBarButtonType];
+
+interface AddButtonActionBar {
+    /*
+    *   the id of the button action bar defined.
+    */
+    id: string,
+
+    /*
+    *   the label to display in button action bar.
+    */
+    label: string
+
+    /*
+    *   the type of button ('button' / 'action'). By default is 'button'.
+    */
+    type: ActionBarButtonType,
+
+    /*
+    *  the image of button associated, This parameter is nullable.
+    */
+    imageSrc: string
+
+    /*
+    *   the label displayed above the action button. This parameter is nullable.
+    */
+    toolTip: string
+}
+```
+
+### Remove a button from the action bar
+```ts
+    WA.ui.actionBar.removeButton(id: string);
+```
+- id: the id of the action bar button previously defined.
+
+### Example of an action bar button
+```ts
+    // Add action bar button 'Register'.
+    WA.ui.actionBar.addButton({
+        id: 'register-btn',
+        label: 'Register',
+        callback: (event) => {
+            console.log('Button clicked', event);
+            // When a user clicks on the action bar button 'Register', we remove it.
+            WA.ui.actionBar.removeButton('register-btn');
+        }
+    });
+```
+
+<div class="row">
+    <div class="col text-center">
+        <img src="images/action_bar/button_action_bar.png" class="figure-img img-fluid rounded" alt="" />
+    </div>
+</div>
+
+### Example of an action bar for action button
+```ts
+    // Add action bar button 'Register'.
+    WA.ui.actionBar.addButton({
+        id: 'register-btn',
+        type: 'action',
+        imageSrc: '<Your image url>',
+        toolTip: 'Register',
+        callback: (event) => {
+            console.log('Button clicked', event);
+            // When a user clicks on the action bar button 'Register', we remove it.
+            WA.ui.actionBar.removeButton('register-btn');
+        }
+    });
+```
+
+<div class="row">
+    <div class="col text-center">
+        <img src="images/action_bar/action_button_action_bar.png" class="figure-img img-fluid rounded" alt="" />
+    </div>
+</div>

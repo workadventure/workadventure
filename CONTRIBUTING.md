@@ -50,17 +50,18 @@ Before committing, be sure to install the "Prettier" precommit hook that will re
 In order to enable the "Prettier" precommit hook, at the root of the project, run:
 
 ```console
-$ yarn install
-$ yarn run prepare
+$ # This install all dependencies
+$ npm install
+$ # This actually installs the precommit hooks.
+$ npm run prepare
 ```
 
 If you don't have the precommit hook installed (or if you committed code before installing the precommit hook), you will need
 to run code linting manually:
 
 ```console
-$ docker-compose exec front yarn run pretty
-$ docker-compose exec pusher yarn run pretty
-$ docker-compose exec back yarn run pretty
+$ docker-compose exec play npm run pretty
+$ docker-compose exec back npm run pretty
 ```
 
 ### Providing tests

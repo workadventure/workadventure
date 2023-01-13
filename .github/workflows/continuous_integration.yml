@@ -9,9 +9,13 @@ on:
       - develop
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  continuous-integration-front:
-    name: "Continuous Integration Front"
+  continuous-integration-play:
+    name: "Continuous Integration Play"
 
     runs-on: "ubuntu-latest"
 
@@ -22,73 +26,62 @@ jobs:
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
+          cache: "npm"
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
           version: '3.x'
 
-      - name: "Install libs/tailwind dependencies"
-        run: yarn install
-        working-directory: "libs/tailwind"
-
-      - name: "Install libs/map-editor-types dependencies"
-        run: yarn install
-        working-directory: "libs/map-editor-types"
-
       - name: "Install dependencies"
-        run: yarn install
-        working-directory: "front"
+        run: npm ci --workspace=workadventure-play
 
       - name: "Install messages dependencies"
-        run: yarn install
+        run: npm ci
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run ts-proto && yarn run copy-to-front-ts-proto && yarn run json-copy-to-front
+        run: npm run ts-proto && npm run proto && npm run copy-to-play
         working-directory: "messages"
 
-      - name: "Create index.html"
-        run: ./templater.sh
-        working-directory: "front"
-
       - name: "Generate i18n files"
-        run: yarn run typesafe-i18n
-        working-directory: "front"
+        run: npm run typesafe-i18n
+        working-directory: "play"
 
       - name: "Build"
-        run: yarn run build
+        run: npm run build
         env:
-          PUSHER_URL: "//localhost:8080"
+          PLAY_URL: "//localhost:3000"
           ADMIN_URL: "//localhost:80"
           # upgrade RAM available to 6GB
           NODE_OPTIONS: --max-old-space-size=6144
-        working-directory: "front"
+        working-directory: "play"
 
       - name: "Build iframe-api"
-        run: yarn run build-iframe-api
-        working-directory: "front"
+        run: npm run build-iframe-api
+        working-directory: "play"
 
       - name: "Typecheck"
-        run: yarn run typecheck
-        working-directory: "front"
+        run: npm run typecheck
+        working-directory: "play"
 
       - name: "Svelte check"
-        run: yarn run svelte-check
-        working-directory: "front"
+        run: npm run svelte-check
+        working-directory: "play"
 
       - name: "Lint"
-        run: yarn run lint
-        working-directory: "front"
+        run: npm run lint
+        working-directory: "play"
 
       - name: "Pretty"
-        run: yarn run pretty-check
-        working-directory: "front"
+        run: npm run pretty-check
+        working-directory: "play"
 
-      - name: "Jasmine"
-        run: yarn test
-        working-directory: "front"
+      - name: "Unit tests"
+        run: npm test
+        working-directory: "play"
 
   continuous-integration-chat:
     name: "Continuous Integration Chat"
@@ -102,119 +95,66 @@ jobs:
       - name: "Setup NodeJS"
         uses: actions/setup-node@v1
         with:
-          node-version: '14.x'
+          node-version: '16.x'
+          cache: "npm"
+
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
           version: '3.x'
 
-      - name: "Copy libs dependencies"
-        run: mkdir -p ./../front/libs/tailwind && cp -R ./* ./../front/libs
-        working-directory: "libs"
-
-      - name: "Install libs/tailwind dependencies"
-        run: yarn install
-        working-directory: "front/libs/tailwind"
+      # - name: "Copy libs dependencies"
+      #   run: mkdir -p ./../front/libs/tailwind && cp -R ./* ./../front/libs
+      #   working-directory: "libs"
 
       - name: "Install dependencies"
-        run: yarn install
-        working-directory: "front/chat"
+        run: npm ci --workspace=workadventurechat
 
       - name: "Install messages dependencies"
-        run: yarn install
+        run: npm ci
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run ts-proto && yarn run copy-to-chat-ts-proto && yarn run json-copy-to-chat
+        run: npm run ts-proto
         working-directory: "messages"
 
-      - name: "Create index.html"
-        run: ./templater.sh
-        working-directory: "front/chat"
-
       - name: "Pretty"
-        run: yarn run pretty-check
-        working-directory: "front/chat"
+        run: npm run pretty-check
+        #run: npm run pretty && git diff --exit-code
+        working-directory: "chat"
 
       - name: "Generate i18n files"
-        run: yarn run typesafe-i18n
-        working-directory: "front/chat"
+        run: npm run typesafe-i18n
+        working-directory: "chat"
 
-      # TODO active
-      #- name: "Build"
-      #  run: yarn run build
-      #  env:
-      #    PUSHER_URL: "//localhost:8080"
-      #    ADMIN_URL: "//localhost:80"
-      #    # upgrade RAM available to 6GB
-      #    NODE_OPTIONS: --max-old-space-size=6144
-      #  working-directory: "front/chat"
+      - name: "Build"
+        run: npm run build
+        env:
+          PLAY_URL: "//localhost:8080"
+          ADMIN_URL: "//localhost:80"
+          # upgrade RAM available to 6GB
+          NODE_OPTIONS: --max-old-space-size=6144
+        working-directory: "chat"
 
       - name: "Svelte check"
-        run: yarn run svelte-check
-        working-directory: "front/chat"
+        run: npm run svelte-check
+        working-directory: "chat"
 
       - name: "Lint"
-        run: yarn run lint
-        working-directory: "front/chat"
+        run: npm run lint
+        working-directory: "chat"
 
       # TODO active
       #- name: "Typecheck"
-      #  run: yarn run typecheck
-      #  working-directory: "front/chat"
+      #  run: npm run typecheck
+      #  working-directory: "chat"
 
       # TODO active
       #- name: "Jasmine"
-      #  run: yarn test
-      #  working-directory: "front/chat"
-
-  continuous-integration-pusher:
-    name: "Continuous Integration Pusher"
-
-    runs-on: "ubuntu-latest"
-
-    steps:
-      - name: "Checkout"
-        uses: "actions/checkout@v2.0.0"
-
-      - name: "Setup NodeJS"
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v1
-        with:
-          version: '3.x'
-
-      - name: "Install dependencies"
-        run: yarn install
-        working-directory: "pusher"
-
-      - name: "Install messages dependencies"
-        run: yarn install
-        working-directory: "messages"
-
-      - name: "Build proto messages"
-        run: yarn run proto && yarn run copy-to-pusher && yarn run json-copy-to-pusher
-        working-directory: "messages"
-
-      - name: "Build"
-        run: yarn run tsc
-        working-directory: "pusher"
-
-      - name: "Lint"
-        run: yarn run lint
-        working-directory: "pusher"
-
-      - name: "Jasmine"
-        run: yarn test
-        working-directory: "pusher"
-
-      - name: "Prettier"
-        run: yarn run pretty-check
-        working-directory: "pusher"
+      #  run: npm test
+      #  working-directory: "chat"
 
   continuous-integration-back:
     name: "Continuous Integration Back"
@@ -229,39 +169,116 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
+          cache: "npm"
+
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
           version: '3.x'
 
       - name: "Install dependencies"
-        run: yarn install
-        working-directory: "back"
+        run: npm ci --workspace=workadventureback
 
       - name: "Install messages dependencies"
-        run: yarn install
+        run: npm ci
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run proto && yarn run copy-to-back && yarn run json-copy-to-back
+        run: npm run proto && npm run ts-proto && npm run copy-to-back
         working-directory: "messages"
 
-      - name: "Build"
-        run: yarn run tsc
+      - name: "Typecheck"
+        run: npm run typecheck
         working-directory: "back"
 
       - name: "Lint"
-        run: yarn run lint
+        run: npm run lint
         working-directory: "back"
 
       - name: "Jasmine"
-        run: yarn test
+        run: npm test
         working-directory: "back"
 
       - name: "Prettier"
-        run: yarn run pretty-check
+        run: npm run pretty-check
         working-directory: "back"
+
+  continuous-integration-uploader:
+    name: "Continuous Integration Uploader"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: "npm"
+
+
+      - name: "Install dependencies"
+        run: npm ci --workspace=workadventureuploader
+
+      - name: "Lint"
+        run: npm run lint
+        working-directory: "uploader"
+
+      - name: "jest"
+        run: npm test
+        working-directory: "uploader"
+
+  continuous-integration-lib-map-editor:
+    name: "Continuous Integration Map Editor Library"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: "npm"
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          version: '3.x'
+
+      - name: "Install dependencies"
+        run: npm ci --workspace=@workadventure/map-editor
+
+      - name: "Install messages dependencies"
+        run: npm ci
+        working-directory: "messages"
+
+      - name: "Build proto messages"
+        run: npm run ts-proto && npm run proto
+        working-directory: "messages"
+
+      - name: "Typecheck"
+        run: npm run typecheck
+        working-directory: "libs/map-editor"
+
+      - name: "Lint"
+        run: npm run lint
+        working-directory: "libs/map-editor"
+
+      - name: "Pretty"
+        run: npm run pretty-check
+        working-directory: "libs/map-editor"
+
+#      - name: "jest"
+#        run: npm test
+#        working-directory: "libs/map-editor"
 
   continuous-integration-map-storage:
     name: "Continuous Integration Map Storage"
@@ -276,38 +293,40 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
+          cache: "npm"
+
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
           version: '3.x'
 
       - name: "Install dependencies"
-        run: yarn install
-        working-directory: "map-storage"
+        run: npm ci --workspace=map-storage
 
       - name: "Install messages dependencies"
-        run: yarn install
+        run: npm ci
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run ts-proto-nest && yarn run copy-to-map-storage
+        run: npm run ts-proto
         working-directory: "messages"
 
-      - name: "Build"
-        run: yarn run build
+      - name: "Typecheck"
+        run: npm run typecheck
         working-directory: "map-storage"
 
       - name: "Lint"
-        run: yarn run lint
+        run: npm run lint
         working-directory: "map-storage"
 
-      - name: "Jasmine"
-        run: yarn test
+      - name: "Tests"
+        run: npm run test
         working-directory: "map-storage"
 
       - name: "Prettier"
-        run: yarn run format
+        run: npm run format
         working-directory: "map-storage"
 
   continuous-integration-desktop:
@@ -323,29 +342,31 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
+          cache: "yarn"
+          cache-dependency-path: '**/yarn.lock'
 
       - name: "Install dependencies"
-        run: yarn install --froze-lockfile
+        run: yarn install
         working-directory: "desktop/electron"
 
       - name: "Build"
-        run: yarn build
+        run: yarn run build
         working-directory: "desktop/electron"
 
       - name: "Typecheck"
-        run: yarn typecheck
+        run: yarn run typecheck
         working-directory: "desktop/electron"
 
       - name: "Lint"
-        run: yarn lint
+        run: yarn run lint
         working-directory: "desktop/electron"
 
       - name: "Jasmine"
-        run: yarn test
+        run: yarn run test
         working-directory: "desktop/electron"
 
       - name: "Prettier"
-        run: yarn pretty-check
+        run: yarn run pretty-check
         working-directory: "desktop/electron"
 
   continuous-integration-desktop-local-app:
@@ -361,9 +382,12 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
+          cache: "yarn"
+          cache-dependency-path: '**/yarn.lock'
+
 
       - name: "Install dependencies"
-        run: yarn install --froze-lockfile
+        run: yarn install
         working-directory: "desktop/local-app"
 
       - name: "Build"
@@ -399,19 +423,28 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
+          cache: "npm"
+          cache-dependency-path: 'tests/package-lock.json'
 
       - name: "Install dependencies"
         run: npm ci
         working-directory: "tests"
 
-      - name: "Install front dependencies"
-        run: yarn install --froze-lockfile
-        working-directory: "front"
+      - name: "Install play dependencies"
+        run: npm ci --workspace=workadventure-play
+
+      - name: "Install messages dependencies"
+        run: npm ci
+        working-directory: "messages"
+
+      - name: "Build proto messages"
+        run: npm run ts-proto
+        working-directory: "messages"
 
       - name: "Build API typings"
-        run: yarn run build-typings
-        working-directory: "front"
+        run: npm run build-typings
+        working-directory: "play"
 
       - name: "Lint"
-        run: yarn lint
+        run: npm run lint
         working-directory: "tests"

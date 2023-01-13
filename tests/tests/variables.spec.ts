@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
 import * as fs from 'fs';
 import {
+  gotoWait200,
   rebootBack,
-  rebootPusher,
+  rebootPlay,
   rebootTraefik,
   resetRedis,
   startRedis,
@@ -19,11 +20,10 @@ test.describe('Variables', () => {
   test('storage works', async ({ page }) => {
     await resetRedis();
 
-    await Promise.all([rebootBack(), rebootPusher()]);
+    await Promise.all([rebootBack(), rebootPlay()]);
 
-    await page.goto(
-      'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json?somerandomparam=1'
-    );
+    await gotoWait200(page, 'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json?somerandomparam=1');
+
     await login(page);
 
     const textField = page
@@ -108,11 +108,10 @@ test.describe('Variables', () => {
     await expect(textField).toHaveValue('value set after back restart');
 
     // Now, let's try to kill / reboot the back
-    await rebootPusher();
+    await rebootPlay();
 
-    await page.goto(
-      'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json'
-    );
+    await gotoWait200(page, 'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json');
+
     await expect(textField).toHaveValue('value set after back restart', {
       timeout: 60000,
     });
