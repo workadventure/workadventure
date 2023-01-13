@@ -72,6 +72,8 @@ const EnvironmentVariables = z.object({
     FALLBACK_LOCALE: z.string().optional(),
     CHAT_URL: AbsoluteOrRelativeUrl,
     OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy.optional(),
+    ACTIVE_REPORT_ISSUES_MENU: BoolAsString.optional(),
+    URL_REPORT_ISSUES: z.string().url().optional(),
 });
 
 type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
@@ -180,4 +182,6 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     ENABLE_CHAT_UPLOAD: toBool(env.ENABLE_CHAT_UPLOAD, true),
     FALLBACK_LOCALE: env.FALLBACK_LOCALE,
     OPID_WOKA_NAME_POLICY: env.OPID_WOKA_NAME_POLICY,
+    ACTIVE_REPORT_ISSUES_MENU: toBool(env.ACTIVE_REPORT_ISSUES_MENU, false),
+    URL_REPORT_ISSUES: env.URL_REPORT_ISSUES,
 };
