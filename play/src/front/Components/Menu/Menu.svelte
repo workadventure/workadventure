@@ -6,6 +6,7 @@
     import ContactSubMenu from "./ContactSubMenu.svelte";
     import CustomSubMenu from "./CustomSubMenu.svelte";
     import GuestSubMenu from "./GuestSubMenu.svelte";
+    import ReportSubMenu from "./ReportSubMenu.svelte";
     import chevronImg from "../images/chevron.svg";
     import type { TranslatedMenu } from "../../Stores/MenuStore";
     import {
@@ -92,6 +93,10 @@
                 case SubMenusInterface.globalMessages:
                     activeComponent = (await import("./GlobalMessagesSubMenu.svelte")).default;
                     analyticsClient.globalMessage();
+                    break;
+                case SubMenusInterface.report:
+                    activeComponent = ReportSubMenu;
+                    analyticsClient.reportIssue();
                     break;
             }
         } else {

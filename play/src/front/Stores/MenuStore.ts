@@ -1,3 +1,4 @@
+import { ACTIVE_REPORT_ISSUES_MENU, URL_REPORT_ISSUES } from "./../Enum/EnvironmentVariable";
 import { AddClassicButtonActionBarEvent, AddActionButtonActionBarEvent } from "./../Api/Events/Ui/ButtonActionBarEvent";
 import { derived, get, writable } from "svelte/store";
 import { userIsAdminStore } from "./GameStore";
@@ -42,6 +43,7 @@ export enum SubMenusInterface {
     aboutRoom = "credit",
     globalMessages = "globalMessages",
     contact = "contact",
+    report = "report",
 }
 
 type MenuKeys = keyof Translation["menu"]["sub"];
@@ -92,6 +94,20 @@ function createSubMenusStore() {
             key: SubMenusInterface.contact,
         },
     ]);
+
+    if (
+        ACTIVE_REPORT_ISSUES_MENU != undefined &&
+        ACTIVE_REPORT_ISSUES_MENU === true &&
+        URL_REPORT_ISSUES != undefined
+    ) {
+        update((valuesSubMenusStore) => {
+            valuesSubMenusStore.push({
+                type: "translated",
+                key: SubMenusInterface.report,
+            });
+            return valuesSubMenusStore;
+        });
+    }
 
     inviteUserActivated.subscribe((value) => {
         //update menu tab
@@ -154,6 +170,7 @@ function createSubMenusStore() {
 }
 
 export const subMenusStore = createSubMenusStore();
+console.log("subMenusStore", get(subMenusStore));
 
 export const activeSubMenuStore = writable<number>(0);
 

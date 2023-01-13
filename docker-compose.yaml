@@ -97,6 +97,9 @@ services:
             SERVER_NAME: $SERVER_NAME
             SERVER_MOTD: $SERVER_MOTD
             SERVER_ICON: $SERVER_ICON
+            # Report issues menu
+            ACTIVE_REPORT_ISSUES_MENU: $ACTIVE_REPORT_ISSUES_MENU
+            URL_REPORT_ISSUES: $URL_REPORT_ISSUES
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"
