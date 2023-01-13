@@ -95,19 +95,6 @@ function createSubMenusStore() {
         },
     ]);
 
-    if (
-        connectionManager.currentRoom?.urlReportIssues != undefined ||
-        (ACTIVE_REPORT_ISSUES_MENU != undefined && ACTIVE_REPORT_ISSUES_MENU === true && URL_REPORT_ISSUES != undefined)
-    ) {
-        update((valuesSubMenusStore) => {
-            valuesSubMenusStore.push({
-                type: "translated",
-                key: SubMenusInterface.report,
-            });
-            return valuesSubMenusStore;
-        });
-    }
-
     inviteUserActivated.subscribe((value) => {
         //update menu tab
         update((valuesSubMenusStore) => {
@@ -164,6 +151,22 @@ function createSubMenusStore() {
                 }
                 return menuList;
             });
+        },
+        addReportIssuesMenu() {
+            if (
+                connectionManager.currentRoom?.urlReportIssues != undefined ||
+                (ACTIVE_REPORT_ISSUES_MENU != undefined &&
+                    ACTIVE_REPORT_ISSUES_MENU === true &&
+                    URL_REPORT_ISSUES != undefined)
+            ) {
+                update((valuesSubMenusStore) => {
+                    valuesSubMenusStore.push({
+                        type: "translated",
+                        key: SubMenusInterface.report,
+                    });
+                    return valuesSubMenusStore;
+                });
+            }
         },
     };
 }
