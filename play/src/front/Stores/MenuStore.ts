@@ -96,7 +96,7 @@ function createSubMenusStore() {
     ]);
 
     if (
-        connectionManager.currentRoom?.urlReportIssues ||
+        connectionManager.currentRoom?.urlReportIssues != undefined ||
         (ACTIVE_REPORT_ISSUES_MENU != undefined && ACTIVE_REPORT_ISSUES_MENU === true && URL_REPORT_ISSUES != undefined)
     ) {
         update((valuesSubMenusStore) => {
