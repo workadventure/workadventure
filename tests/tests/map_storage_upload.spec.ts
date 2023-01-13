@@ -57,13 +57,6 @@ test.describe('Map-storage Upload API', () => {
         await expect(await accessFile5.text()).toContain("world");
     });
 
-    test("get list of maps", async ({
-        request,
-    }) => {
-        const listOfMaps = await request.get("/maps");
-        await expect(await listOfMaps.text() === JSON.stringify(["subdir/map.tmj"])).toBeTruthy();
-    });
-
     test('not authenticated requests are rejected', async ({
                                            request,
                                        }) => {
@@ -135,5 +128,38 @@ test.describe('Map-storage Upload API', () => {
         await expect(accessCacheControlFile.ok()).toBeTruthy();
         await expect(accessCacheControlFile.headers()['etag']).toBeDefined();
         await expect(accessCacheControlFile.headers()['cache-control']).toContain("immutable");
+    });
+
+    test("get list of maps", async ({
+        request,
+    }) => {
+        const uploadFile = await request.post(`/upload`, {
+            multipart: {
+                file: fs.createReadStream("./assets/file1.zip"),
+                directory: "/"
+            }
+        });
+        const uploadFileToDir = await request.post(`/upload`, {
+            multipart: {
+                file: fs.createReadStream("./assets/file1.zip"),
+                directory: "/foo"
+            }
+        });
+        await expect(uploadFile.ok()).toBeTruthy();
+        await expect(uploadFileToDir.ok()).toBeTruthy();
+
+        let listOfMaps = await request.get("/maps");
+        await expect(await listOfMaps.text() === JSON.stringify(["foo/map.tmj","map.tmj"])).toBeTruthy();
+
+        const uploadFileAlone = await request.post(`/upload`, {
+            multipart: {
+                file: fs.createReadStream("./assets/file1.zip"),
+                directory: "/"
+            }
+        });
+
+        await expect(uploadFileAlone.ok()).toBeTruthy();
+        listOfMaps = await request.get("/maps");
+        await expect(await listOfMaps.text() === JSON.stringify(["map.tmj"])).toBeTruthy();
     });
 });

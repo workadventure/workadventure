@@ -122,11 +122,10 @@ export class UploadController {
                     this.uploadLimiter.delete(virtualDirectory);
                 }
 
-                const cacheFileName = "map-names.txt";
-                const cachePath = `cache/${virtualDirectory}`;
-                const files = await fileSystem.listFiles(virtualDirectory, ".tmj");
+                const cacheFileName = "cache.txt";
+                const files = await fileSystem.listFiles(req.hostname, ".tmj");
 
-                await fileSystem.writeCache(cachePath, cacheFileName, JSON.stringify(files));
+                await fileSystem.writeCache(req.hostname, cacheFileName, JSON.stringify(files));
             })().catch((e) => next(e));
         });
     }

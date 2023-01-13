@@ -62,7 +62,7 @@ app.get("/entityCollections", (req, res) => {
 
 app.get("/maps", (req, res, next) => {
     (async () => {
-        const data = await fileSystem.readFileAsString(`cache/${mapPath("/", req)}map-names.txt`);
+        const data = await fileSystem.readFileAsString(`${mapPath("/", req)}cache.txt`);
         res.send(JSON.parse(data));
     })().catch((e) => next(e));
 });
