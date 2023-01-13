@@ -24,6 +24,12 @@ export enum MapEntityEditorMode {
     RemoveMode = "RemoveMode",
 }
 
+export enum AreasEditorMode {
+    AddMode = "AddMode",
+    EditMode = "EditMode",
+    RemoveMode = "RemoveMode",
+}
+
 export function onMapEditorInputFocus() {
     mapEditorInputStore.set(true);
 }
@@ -48,4 +54,5 @@ export const mapEntitiesPrefabsStore = new MapEntitiesPrefabsStore();
 
 export const mapEditorSelectedEntityPrefabStore = writable<EntityPrefab | undefined>(undefined);
 
+export const areasEditorModeStore = writable<AreasEditorMode>(AreasEditorMode.AddMode);
 export const mapEntityEditorModeStore = writable<MapEntityEditorMode>(MapEntityEditorMode.AddMode);

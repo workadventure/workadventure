@@ -1,6 +1,5 @@
 <script lang="ts">
-    import AreaPreviewWindow from "./AreaPreviewWindow.svelte";
-    import PropertyPreviewSidebar from "./PropertyPreviewSidebar.svelte";
+    import AreaEditor from "./AreaEditor.svelte";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import MapEntityEditor from "./MapEntityEditor.svelte";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
@@ -14,8 +13,9 @@
             <MapEntityEditor />
         {/if}
         {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor}
-            <AreaPreviewWindow />
-            <PropertyPreviewSidebar />
+            <AreaEditor />
+            <!-- <AreaPreviewWindow />
+            <PropertyPreviewSidebar /> -->
         {/if}
     </div>
 </div>
