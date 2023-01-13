@@ -32,6 +32,8 @@
                     class="tw-ml-2 tw-underline"
                     style={`color: ${$bannerStore.textColor};`}
                     href={$bannerStore.link.url}
+                    target="_blank"
+                    rel="noreferrer"
                 >
                     {$bannerStore.link.label}
                 </a>
