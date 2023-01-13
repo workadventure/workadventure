@@ -96,9 +96,8 @@ function createSubMenusStore() {
     ]);
 
     if (
-        ACTIVE_REPORT_ISSUES_MENU != undefined &&
-        ACTIVE_REPORT_ISSUES_MENU === true &&
-        URL_REPORT_ISSUES != undefined
+        connectionManager.currentRoom?.urlReportIssues ||
+        (ACTIVE_REPORT_ISSUES_MENU != undefined && ACTIVE_REPORT_ISSUES_MENU === true && URL_REPORT_ISSUES != undefined)
     ) {
         update((valuesSubMenusStore) => {
             valuesSubMenusStore.push({
@@ -170,7 +169,6 @@ function createSubMenusStore() {
 }
 
 export const subMenusStore = createSubMenusStore();
-console.log("subMenusStore", get(subMenusStore));
 
 export const activeSubMenuStore = writable<number>(0);
 

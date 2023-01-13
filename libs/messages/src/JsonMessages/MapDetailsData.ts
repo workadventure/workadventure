@@ -235,6 +235,10 @@ export const isMapDetailsData = z.object({
         description: "The background color used on configuration scenes (enter your name, select a woka, etc...) (WIP)",
         example: "#330033",
     }),
+    urlReportIssues: extendApi(z.string().nullable().optional(), {
+        description: "Url parameter to defined the report issues url and active report issues menu in WorkAdventure. If this parameter is null, report issues menu is hidden",
+        example: "https://my-report-issues-form.com/issues",
+    }),
 });
 
 export type MapDetailsData = z.infer<typeof isMapDetailsData>;
