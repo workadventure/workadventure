@@ -15,7 +15,6 @@ import {
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { fileSystem } from "./fileSystem";
-import { mapPathUsingDomain } from "./Services/PathMapper";
 
 // TODO: dynamic imports?
 import furnitureCollection from "./entities/collections/FurnitureCollection.json";
@@ -131,16 +130,12 @@ class MapsManager {
         return Array.from(this.loadedMaps.keys());
     }
 
-    public async getMap(path: string, domain: string): Promise<ITiledMap> {
-        const key = mapPathUsingDomain(path, domain);
-        const inMemoryGameMap = this.loadedMaps.get(key);
-        if (inMemoryGameMap) {
-            return inMemoryGameMap.getMap();
-        }
-        const file = await fileSystem.readFileAsString(key);
-        const map = ITiledMap.parse(JSON.parse(file));
+    public isMapAlreadyLoaded(key: string): boolean {
+        return this.loadedMaps.has(key);
+    }
+
+    public loadMapToMemory(key: string, map: ITiledMap): void {
         this.loadedMaps.set(key, new GameMap(map));
-        return map;
     }
 
     public getEntityCollection(collectionName: string): EntityCollection | undefined {
