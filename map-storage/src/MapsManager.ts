@@ -203,7 +203,6 @@ class MapsManager {
                 (async () => {
                     console.log(`saving map ${key}`);
                     const gameMap = this.loadedMaps.get(key);
-                    gameMap?.getGameMapEntities().updateEntitiesMapProperty();
                     if (gameMap) {
                         await fileSystem.writeStringAsFile(key, JSON.stringify(gameMap.getMap()));
                     }

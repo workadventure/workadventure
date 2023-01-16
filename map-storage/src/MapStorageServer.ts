@@ -133,9 +133,9 @@ const mapStorageServer: MapStorageServer = {
                 }
                 case "createEntityMessage": {
                     const message = editMapMessage.createEntityMessage;
-                    const entityPrefab = mapsManager.getEntityPrefab(message.collecionName, message.prefabId);
+                    const entityPrefab = mapsManager.getEntityPrefab(message.collectionName, message.prefabId);
                     if (!entityPrefab) {
-                        throw new Error(`CANNOT FIND PREFAB FOR: ${message.collecionName} ${message.prefabId}`);
+                        throw new Error(`CANNOT FIND PREFAB FOR: ${message.collectionName} ${message.prefabId}`);
                     }
                     mapsManager.executeCommand(
                         mapKey,

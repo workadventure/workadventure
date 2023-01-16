@@ -213,8 +213,8 @@ export class MapEditorModeManager {
      */
     public updateMapToNewest(commands: EditMapCommandMessage[]) {
         for (const command of commands) {
-            for (const key of Object.keys(this.editorTools)) {
-                this.editorTools[key as EditorToolName].handleIncomingCommandMessage(command);
+            for (const tool of Object.values(this.editorTools)) {
+                tool.handleIncomingCommandMessage(command);
             }
         }
     }
@@ -224,8 +224,8 @@ export class MapEditorModeManager {
     }
 
     public destroy(): void {
-        for (const key of Object.keys(this.editorTools)) {
-            this.editorTools[key as EditorToolName].destroy();
+        for (const tool of Object.values(this.editorTools)) {
+            tool.destroy();
         }
         this.unsubscribeFromStores();
     }
@@ -267,8 +267,8 @@ export class MapEditorModeManager {
                 this.revertPendingCommands();
             }
 
-            for (const key of Object.keys(this.editorTools)) {
-                this.editorTools[key as EditorToolName].handleIncomingCommandMessage(editMapCommandMessage);
+            for (const tool of Object.values(this.editorTools)) {
+                tool.handleIncomingCommandMessage(editMapCommandMessage);
             }
         });
     }
@@ -362,16 +362,14 @@ export class MapEditorModeManager {
     }
 
     private subscribeToGameMapFrontWrapperEvents(): void {
-        for (const key of Object.keys(this.editorTools)) {
-            this.editorTools[key as EditorToolName].subscribeToGameMapFrontWrapperEvents(
-                this.scene.getGameMapFrontWrapper()
-            );
+        for (const tool of Object.values(this.editorTools)) {
+            tool.subscribeToGameMapFrontWrapperEvents(this.scene.getGameMapFrontWrapper());
         }
     }
 
     private handleCommandExecutionByTools(commandConfig: CommandConfig): void {
-        for (const key of Object.keys(this.editorTools)) {
-            this.editorTools[key as EditorToolName].handleCommandExecution(commandConfig);
+        for (const tool of Object.values(this.editorTools)) {
+            tool.handleCommandExecution(commandConfig);
         }
     }
 

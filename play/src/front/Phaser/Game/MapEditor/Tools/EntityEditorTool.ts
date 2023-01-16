@@ -104,10 +104,10 @@ export class EntityEditorTool extends MapEditorTool {
         switch (editMapCommandMessage.editMapMessage?.message?.$case) {
             case "createEntityMessage": {
                 const data = editMapCommandMessage.editMapMessage?.message.createEntityMessage;
-                const entityPrefab = mapEntitiesPrefabsStore.getEntityPrefab(data.collecionName, data.prefabId);
+                const entityPrefab = mapEntitiesPrefabsStore.getEntityPrefab(data.collectionName, data.prefabId);
 
                 if (!entityPrefab) {
-                    console.warn(`NO PREFAB WAS FOUND FOR: ${data.collecionName} ${data.prefabId}`);
+                    console.warn(`NO PREFAB WAS FOUND FOR: ${data.collectionName} ${data.prefabId}`);
                     return;
                 }
 
