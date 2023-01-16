@@ -59,9 +59,16 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
 
     public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
         this.gameScene.getActivatablesManager().handlePointerDownEvent();
+        if (get(mapEditorModeStore)) {
+            this.gameScene.getMapEditorModeManager()?.handlePointerDownEvent(pointer, gameObjects);
+        }
     }
 
-    public handlePointerMoveEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}
+    public handlePointerMoveEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        if (get(mapEditorModeStore)) {
+            this.gameScene.getMapEditorModeManager()?.handlePointerMoveEvent(pointer, gameObjects);
+        }
+    }
 
     public handleKeyDownEvent(event: KeyboardEvent): KeyboardEvent {
         if (get(mapEditorModeStore)) {

@@ -232,6 +232,14 @@ export class MapEditorModeManager {
         this.unsubscribeFromStores();
     }
 
+    public handlePointerMoveEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        this.currentlyActiveTool?.handlePointerMoveEvent(pointer, gameObjects);
+    }
+
+    public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        this.currentlyActiveTool?.handlePointerDownEvent(pointer, gameObjects);
+    }
+
     public handleKeyDownEvent(event: KeyboardEvent): void {
         this.currentlyActiveTool?.handleKeyDownEvent(event);
         switch (event.key.toLowerCase()) {

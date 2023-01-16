@@ -32,8 +32,8 @@ export class EntityEditorTool extends MapEditorTool {
     private mapEditorSelectedEntityPrefabStoreUnsubscriber!: Unsubscriber;
     private mapEntityEditorModeStoreUnsubscriber!: Unsubscriber;
 
-    private pointerMoveEventHandler!: (pointer: Phaser.Input.Pointer) => void;
-    private pointerDownEventHandler!: (pointer: Phaser.Input.Pointer) => void;
+    // private pointerMoveEventHandler!: (pointer: Phaser.Input.Pointer) => void;
+    // private pointerDownEventHandler!: (pointer: Phaser.Input.Pointer) => void;
 
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super();
@@ -57,14 +57,11 @@ export class EntityEditorTool extends MapEditorTool {
         mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
         this.entitiesManager.clearAllEntitiesTint();
         this.cleanPreview();
-        this.unbindEventHandlers();
     }
-    public activate(): void {
-        this.bindEventHandlers();
-    }
+    public activate(): void {}
+
     public destroy(): void {
         this.cleanPreview();
-        this.unbindEventHandlers();
         this.mapEditorSelectedEntityPrefabStoreUnsubscriber();
         this.mapEntityEditorModeStoreUnsubscriber();
     }
@@ -259,24 +256,7 @@ export class EntityEditorTool extends MapEditorTool {
         });
     }
 
-    private bindEventHandlers(): void {
-        this.pointerMoveEventHandler = (pointer: Phaser.Input.Pointer) => {
-            this.handlePointerMoveEvent(pointer);
-        };
-        this.pointerDownEventHandler = (pointer: Phaser.Input.Pointer) => {
-            this.handlePointerDownEvent(pointer);
-        };
-
-        this.scene.input.on(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
-        this.scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
-    }
-
-    private unbindEventHandlers(): void {
-        this.scene.input.off(Phaser.Input.Events.POINTER_MOVE, this.pointerDownEventHandler);
-        this.scene.input.off(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
-    }
-
-    private handlePointerMoveEvent(pointer: Phaser.Input.Pointer): void {
+    public handlePointerMoveEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
         if (!this.entityPrefabPreview || !this.entityPrefab) {
             return;
         }
@@ -311,7 +291,7 @@ export class EntityEditorTool extends MapEditorTool {
         this.scene.markDirty();
     }
 
-    private handlePointerDownEvent(pointer: Phaser.Input.Pointer): void {
+    public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
         if (!this.entityPrefabPreview || !this.entityPrefab) {
             return;
         }

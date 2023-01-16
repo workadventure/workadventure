@@ -166,6 +166,14 @@ export class AreaEditorTool extends MapEditorTool {
         return this.getAreaPreview(id)?.getConfig();
     }
 
+    public handlePointerMoveEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        //
+    }
+
+    public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        //
+    }
+
     public handleKeyDownEvent(event: KeyboardEvent): void {
         switch (event.key.toLowerCase()) {
             case "delete": {

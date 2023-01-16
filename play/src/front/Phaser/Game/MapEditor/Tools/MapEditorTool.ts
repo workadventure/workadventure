@@ -9,6 +9,14 @@ export abstract class MapEditorTool {
     public abstract destroy(): void;
     public abstract subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void;
     public abstract handleKeyDownEvent(event: KeyboardEvent): void;
+    public abstract handlePointerDownEvent(
+        pointer: Phaser.Input.Pointer,
+        gameObjects: Phaser.GameObjects.GameObject[]
+    ): void;
+    public abstract handlePointerMoveEvent(
+        pointer: Phaser.Input.Pointer,
+        gameObjects: Phaser.GameObjects.GameObject[]
+    ): void;
     /**
      * Perform actions needed to see the changes instantly
      */
