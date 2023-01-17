@@ -2804,10 +2804,6 @@ ${escapedMessage}
         });
     }
 
-    private async fetchCollectionsNames(): Promise<{ collections: string[] }> {
-        return (await fetch(this.room.entityCollectionsUrls)).json();
-    }
-
     zoomByFactor(zoomFactor: number) {
         if (this.cameraManager.isCameraLocked()) {
             return;
