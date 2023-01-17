@@ -271,10 +271,12 @@ export class GameScene extends DirtyScene {
         this.MapUrlFile = MapUrlFile;
         this.roomUrl = room.key;
 
-        if (this.room.entityCollectionsUrl) {
-            mapEntitiesPrefabsStore.loadCollections(this.room.entityCollectionsUrl).catch((reason) => {
-                console.warn(reason);
-            });
+        if (this.room.entityCollectionsUrls) {
+            for (const url of this.room.entityCollectionsUrls) {
+                mapEntitiesPrefabsStore.loadCollections(url).catch((reason) => {
+                    console.warn(reason);
+                });
+            }
         }
 
         this.createPromiseDeferred = new Deferred<void>();
@@ -2803,7 +2805,7 @@ ${escapedMessage}
     }
 
     private async fetchCollectionsNames(): Promise<{ collections: string[] }> {
-        return (await fetch(this.room.entityCollectionsUrl)).json();
+        return (await fetch(this.room.entityCollectionsUrls)).json();
     }
 
     zoomByFactor(zoomFactor: number) {
