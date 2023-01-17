@@ -122,7 +122,7 @@ export class GameMapFrontWrapper {
 
         this.entitiesManager = new EntitiesManager(this.scene, this);
         for (const entityData of this.gameMap.getGameMapEntities().getEntities()) {
-            void this.entitiesManager.addEntity(entityData, TexturesHelper.ENTITIES_TEXTURES_DIRECTORY);
+            this.entitiesManager.addEntity(entityData, TexturesHelper.ENTITIES_TEXTURES_DIRECTORY).catch(e => console.error(e));
         }
 
         this.updateCollisionGrid();
