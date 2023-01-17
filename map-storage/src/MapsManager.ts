@@ -138,16 +138,8 @@ class MapsManager {
         this.loadedMaps.set(key, new GameMap(map));
     }
 
-    public getEntityCollection(collectionName: string): EntityCollection | undefined {
-        return this.loadedCollections.get(collectionName);
-    }
-
-    public getEntityCollectionsNames(): string[] {
-        const names: string[] = [];
-        for (const collection of this.loadedCollections.values()) {
-            names.push(collection.collectionName);
-        }
-        return names;
+    public getEntityCollections(): EntityCollection[] {
+        return Array.from(this.loadedCollections.values());
     }
 
     public getEntityPrefab(collectionName: string, entityId: string): EntityPrefab | undefined {

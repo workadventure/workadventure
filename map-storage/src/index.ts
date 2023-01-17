@@ -51,21 +51,8 @@ app.get("*.tmj", (req, res, next) => {
     })().catch((e) => next());
 });
 
-app.get("/entityCollections/*", (req, res) => {
-    const url = new URL(`${req.protocol}://${req.get("host") ?? ""}${req.originalUrl}`);
-    const collectionName = decodeURI(url.pathname).split("/").pop() ?? "";
-    const collection = mapsManager.getEntityCollection(collectionName);
-    if (collection) {
-        res.send(collection);
-    } else {
-        res.status(404).send(`COULD NOT FIND COLLECTION: ${collectionName}`);
-    }
-});
-
 app.get("/entityCollections", (req, res) => {
-    res.send({
-        collections: mapsManager.getEntityCollectionsNames(),
-    });
+    res.send(mapsManager.getEntityCollections());
 });
 
 new UploadController(app, fileSystem);
