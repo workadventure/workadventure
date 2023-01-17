@@ -1,6 +1,5 @@
 <script lang="ts">
     import LL from "../../../i18n/i18n-svelte";
-    import { onDestroy } from "svelte";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import { mapEditorSelectedToolStore } from "../../Stores/MapEditorStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -12,8 +11,6 @@
 
     const gameScene = gameManager.getCurrentGameScene();
 
-    let currentTool: EditorToolName | undefined;
-
     let availableTools = [
         { toolName: EditorToolName.AreaEditor, img: AreaToolImg, tooltiptext: $LL.mapEditor.sideBar.areaEditor() },
         {
@@ -23,16 +20,6 @@
         },
         { toolName: EditorToolName.FloorEditor, img: FloorToolImg, tooltiptext: $LL.mapEditor.sideBar.tileEditor() },
     ];
-
-    let mapEditorSelectToolStoreUnsubscriber = mapEditorSelectedToolStore.subscribe(
-        (newCurrentTool) => (currentTool = newCurrentTool)
-    );
-
-    onDestroy(() => {
-        if (mapEditorSelectToolStoreUnsubscriber) {
-            mapEditorSelectToolStoreUnsubscriber();
-        }
-    });
 
     function switchTool(newTool: EditorToolName) {
         console.log(JSON.stringify($LL));
@@ -67,7 +54,7 @@
             <div class="tool-button">
                 <!-- <Tooltip text={tool.tooltiptext} /> --><!--do not work yet-->
                 <button
-                    class={tool.toolName == currentTool ? "active" : ""}
+                    class={tool.toolName == $mapEditorSelectedToolStore ? "active" : ""}
                     on:click|preventDefault={() => switchTool(tool.toolName)}
                     type="button"><img src={tool.img} alt="open tool {tool.toolName}" /></button
                 >

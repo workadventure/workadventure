@@ -2238,7 +2238,7 @@ ${escapedMessage}
         this.activatablesManager.updateActivatableObjectsDistances([
             ...Array.from(this.MapPlayersByKey.values()),
             ...this.actionableItems.values(),
-            ...this.gameMapFrontWrapper.getEntities().filter((entity) => entity.isActivatable()),
+            ...this.gameMapFrontWrapper.getActivatableEntities(),
         ]);
         this.activatablesManager.deduceSelectedActivatableObjectByDistance();
     }
@@ -2852,8 +2852,8 @@ ${escapedMessage}
         return this.cameraManager;
     }
 
-    public getRemotePlayers(): RemotePlayer[] {
-        return Array.from(this.MapPlayersByKey.values());
+    public getRemotePlayersRepository(): RemotePlayersRepository {
+        return this.remotePlayersRepository;
     }
 
     public getMapEditorModeManager(): MapEditorModeManager {

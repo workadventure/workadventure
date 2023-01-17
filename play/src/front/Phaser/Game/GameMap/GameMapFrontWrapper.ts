@@ -122,7 +122,9 @@ export class GameMapFrontWrapper {
 
         this.entitiesManager = new EntitiesManager(this.scene, this);
         for (const entityData of this.gameMap.getGameMapEntities().getEntities()) {
-            this.entitiesManager.addEntity(entityData, TexturesHelper.ENTITIES_TEXTURES_DIRECTORY).catch(e => console.error(e));
+            this.entitiesManager
+                .addEntity(entityData, TexturesHelper.ENTITIES_TEXTURES_DIRECTORY)
+                .catch((e) => console.error(e));
         }
 
         this.updateCollisionGrid();
@@ -435,7 +437,9 @@ export class GameMapFrontWrapper {
             return false;
         }
         const playersPositions = [
-            ...this.scene.getRemotePlayers().map((player) => player.getPosition()),
+            ...Array.from(this.scene.getRemotePlayersRepository().getPlayers().values()).map(
+                (player) => player.position
+            ),
             this.scene.CurrentPlayer.getPosition(),
         ];
 
@@ -663,8 +667,8 @@ export class GameMapFrontWrapper {
         return this.entitiesManager;
     }
 
-    public getEntities(): Entity[] {
-        return this.entitiesManager.getEntities();
+    public getActivatableEntities(): Entity[] {
+        return this.entitiesManager.getActivatableEntities();
     }
 
     public handleEntityActionTrigger(): void {

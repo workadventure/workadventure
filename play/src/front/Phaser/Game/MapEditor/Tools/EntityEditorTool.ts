@@ -168,7 +168,7 @@ export class EntityEditorTool extends MapEditorTool {
     }
 
     private handleEntityUpdate(config: AtLeast<EntityData, "id">): void {
-        const entity = this.entitiesManager.getEntities().find((entity) => entity.getEntityData().id === config.id);
+        const entity = this.entitiesManager.getEntities().get(config.id);
         if (!entity) {
             return;
         }
