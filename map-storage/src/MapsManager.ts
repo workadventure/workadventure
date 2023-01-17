@@ -180,14 +180,12 @@ class MapsManager {
     private setCommandDeletionTimeout(mapKey: string, commandId: string): void {
         setTimeout(() => {
             const queue = this.loadedMapsCommandsQueue.get(mapKey);
-            if (!queue) {
+            if (!queue || queue.length === 0) {
                 return;
             }
-            const index = queue.findIndex((command) => command.id === commandId);
-            if (index === -1) {
-                return;
+            if (queue[0].id === commandId) {
+                queue.splice(0, 1);
             }
-            queue.splice(index, 1);
         }, this.COMMAND_TIME_IN_QUEUE_MS);
     }
 

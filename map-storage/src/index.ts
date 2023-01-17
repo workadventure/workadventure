@@ -58,7 +58,7 @@ app.get("/entityCollections/*", (req, res) => {
     if (collection) {
         res.send(collection);
     } else {
-        res.send(`COULD NOT FIND COLLECTION: ${collectionName}`);
+        res.status(404).send(`COULD NOT FIND COLLECTION: ${collectionName}`);
     }
 });
 
