@@ -10,6 +10,7 @@ import type { AreaChangeCallback } from "./GameMapAreas";
 import { GameMapAreas } from "./GameMapAreas";
 import { GameMapProperties } from "../types";
 import { flattenGroupLayersMap } from "./LayersFlattener";
+import { GameMapEntities } from "./GameMapEntities";
 
 /**
  * A wrapper around a ITiledMap interface to provide additional capabilities.
@@ -19,6 +20,10 @@ export class GameMap {
      * Component responsible for holding gameMap Areas related logic
      */
     private gameMapAreas: GameMapAreas;
+    /**
+     * Component responsible for holding gameMap entities related logic
+     */
+    private gameMapEntities: GameMapEntities;
 
     private readonly map: ITiledMap;
     private tileNameMap = new Map<string, number>();
@@ -27,7 +32,8 @@ export class GameMap {
     public readonly flatLayers: ITiledMapLayer[];
     public readonly tiledObjects: ITiledMapObject[];
 
-    private readonly defaultTileSize = 32;
+    private readonly DEFAULT_TILE_SIZE = 32;
+    private readonly MAP_PROPERTY_LAST_COMMAND_ID_KEY: string = "lastCommandId";
 
     public exitUrls: Array<string> = [];
 
@@ -39,6 +45,7 @@ export class GameMap {
         this.tiledObjects = GameMap.getObjectsFromLayers(this.flatLayers);
 
         this.gameMapAreas = new GameMapAreas(this);
+        this.gameMapEntities = new GameMapEntities(this);
 
         for (const tileset of this.map.tilesets) {
             if ("tiles" in tileset) {
@@ -74,15 +81,15 @@ export class GameMap {
 
     public getTileDimensions(): { width: number; height: number } {
         return {
-            width: this.map.tilewidth ?? this.defaultTileSize,
-            height: this.map.tileheight ?? this.defaultTileSize,
+            width: this.map.tilewidth ?? this.DEFAULT_TILE_SIZE,
+            height: this.map.tileheight ?? this.DEFAULT_TILE_SIZE,
         };
     }
 
     public getTileIndexAt(x: number, y: number): { x: number; y: number } {
         return {
-            x: Math.floor(x / (this.map.tilewidth ?? this.defaultTileSize)),
-            y: Math.floor(y / (this.map.tileheight ?? this.defaultTileSize)),
+            x: Math.floor(x / (this.map.tilewidth ?? this.DEFAULT_TILE_SIZE)),
+            y: Math.floor(y / (this.map.tileheight ?? this.DEFAULT_TILE_SIZE)),
         };
     }
 
@@ -212,12 +219,38 @@ export class GameMap {
         return objects;
     }
 
+    public updateLastCommandIdProperty(commandId: string): void {
+        const property = this.getMapPropertyByKey(this.MAP_PROPERTY_LAST_COMMAND_ID_KEY);
+        if (!property) {
+            this.map.properties?.push({
+                name: this.MAP_PROPERTY_LAST_COMMAND_ID_KEY,
+                type: "string",
+                propertytype: "string",
+                value: commandId,
+            });
+        } else {
+            property.value = commandId;
+        }
+    }
+
+    public getLastCommandId(): string | undefined {
+        return (this.getMapPropertyByKey(this.MAP_PROPERTY_LAST_COMMAND_ID_KEY)?.value as string) ?? undefined;
+    }
+
+    public getMapPropertyByKey(key: string): ITiledMapProperty | undefined {
+        return this.map.properties?.find((property) => property.name === key);
+    }
+
     public getDefaultTileSize(): number {
-        return this.defaultTileSize;
+        return this.DEFAULT_TILE_SIZE;
     }
 
     public getGameMapAreas(): GameMapAreas {
         return this.gameMapAreas;
+    }
+
+    public getGameMapEntities(): GameMapEntities {
+        return this.gameMapEntities;
     }
 
     // NOTE: Flat layers are deep copied so we cannot operate on them

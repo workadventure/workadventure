@@ -8,7 +8,7 @@ export type ActionsMenuAction = {
     style?: "is-success" | "is-error" | "is-primary";
 };
 export interface ActionsMenuData {
-    playerName: string;
+    menuName: string;
     actions: Map<string, ActionsMenuAction>;
 }
 
@@ -17,9 +17,9 @@ function createActionsMenuStore() {
 
     return {
         subscribe,
-        initialize: (playerName: string) => {
+        initialize: (menuName: string) => {
             set({
-                playerName,
+                menuName,
                 actions: new Map<string, ActionsMenuAction>(),
             });
         },

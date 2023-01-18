@@ -12,6 +12,6 @@
       "strict": true,
       "declaration": true,
       "sourceMap": true,
-      "importsNotUsedAsValues": "error"
+      "importsNotUsedAsValues": "remove"
     }
   }

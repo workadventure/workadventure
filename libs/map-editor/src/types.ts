@@ -2,8 +2,20 @@ import type { ModifyAreaMessage } from "@workadventure/messages";
 import type { CreateAreaCommandConfig } from "./Commands/Area/CreateAreaCommand";
 import type { DeleteAreaCommandConfig } from "./Commands/Area/DeleteAreaCommand";
 import type { UpdateAreaCommandConfig } from "./Commands/Area/UpdateAreaCommand";
+import type { CreateEntityCommandConfig } from "./Commands/Entity/CreateEntityCommand";
+import type { DeleteEntityCommandConfig } from "./Commands/Entity/DeleteEntityCommand";
+import { UpdateEntityCommandConfig } from "./Commands/Entity/UpdateEntityCommand";
+import { z } from "zod";
 
-export type CommandConfig = UpdateAreaCommandConfig | DeleteAreaCommandConfig | CreateAreaCommandConfig;
+export type CommandConfig =
+    | UpdateAreaCommandConfig
+    | DeleteAreaCommandConfig
+    | CreateAreaCommandConfig
+    | UpdateEntityCommandConfig
+    | CreateEntityCommandConfig
+    | DeleteEntityCommandConfig;
+
+export type AtLeast<T, K extends keyof T> = Partial<T> & Pick<T, K>;
 
 export type AreaData = Required<ModifyAreaMessage> & { visible: boolean }; // move visible to messages also
 
@@ -12,12 +24,91 @@ export enum AreaType {
     Dynamic = "Dynamic",
 }
 
+// TODO: This probably won't be used in the future
 export interface PredefinedPropertyData {
     name: string;
     description: string;
     turnedOn: boolean;
     additionalProperties: Record<string, string | number | boolean | object | undefined>;
 }
+
+export enum Direction {
+    Left = "Left",
+    Up = "Up",
+    Down = "Down",
+    Right = "Right",
+}
+
+export const TextHeaderPropertyData = z.string();
+
+export const ActionsMenuData = z.object({
+    buttonLabel: z.string(),
+});
+
+export const JitsiRoomConfigData = z.object({
+    startWithAudioMuted: z.boolean().optional(),
+    startWithVideoMuted: z.boolean().optional(),
+});
+
+export const JitsiRoomPropertyData = ActionsMenuData.extend({
+    roomName: z.string(),
+    jitsiRoomConfig: JitsiRoomConfigData,
+});
+
+export const PlayAudioPropertyData = ActionsMenuData.extend({
+    audioLink: z.string(),
+});
+
+export const OpenTabPropertyData = ActionsMenuData.extend({
+    link: z.string(),
+    inNewTab: z.boolean(),
+});
+
+export const EntityDataProperties = z.object({
+    textHeader: TextHeaderPropertyData.optional(),
+    jitsiRoom: JitsiRoomPropertyData.optional(),
+    playAudio: PlayAudioPropertyData.optional(),
+    openTab: OpenTabPropertyData.optional(),
+});
+
+export const EntityRawPrefab = z.object({
+    name: z.string(),
+    tags: z.array(z.string()),
+    imagePath: z.string(),
+    direction: z.enum(["Left", "Up", "Down", "Right"]),
+    color: z.string(),
+    collisionGrid: z.array(z.array(z.number())).optional(),
+});
+
+export const EntityPrefab = EntityRawPrefab.extend({
+    collectionName: z.string(),
+    id: z.string(),
+});
+
+export const EntityCollection = z.object({
+    collectionName: z.string(),
+    tags: z.array(z.string()),
+    collection: z.array(EntityPrefab),
+});
+
+export const EntityData = z.object({
+    id: z.number(),
+    x: z.number(),
+    y: z.number(),
+    properties: EntityDataProperties.optional(),
+    prefab: EntityPrefab,
+});
+
+export type EntityRawPrefab = z.infer<typeof EntityRawPrefab>;
+export type EntityPrefab = z.infer<typeof EntityPrefab>;
+export type EntityCollection = z.infer<typeof EntityCollection>;
+export type EntityData = z.infer<typeof EntityData>;
+export type TextHeaderPropertyData = z.infer<typeof TextHeaderPropertyData>;
+export type ActionsMenuData = z.infer<typeof ActionsMenuData>;
+export type JitsiRoomConfigData = z.infer<typeof JitsiRoomConfigData>;
+export type JitsiRoomPropertyData = z.infer<typeof JitsiRoomPropertyData>;
+export type PlayAudioPropertyData = z.infer<typeof PlayAudioPropertyData>;
+export type OpenTabPropertyData = z.infer<typeof OpenTabPropertyData>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",

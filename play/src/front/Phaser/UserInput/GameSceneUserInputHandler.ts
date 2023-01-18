@@ -3,13 +3,11 @@ import { RemotePlayer } from "../Entity/RemotePlayer";
 
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
 import type { GameScene } from "../Game/GameScene";
-import { mapEditorModeDragCameraPointerDownStore, mapEditorModeStore } from "../../Stores/MapEditorStore";
+import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { get } from "svelte/store";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
-
-    private lastPointerDownPosition?: { x: number; y: number };
 
     constructor(gameScene: GameScene) {
         this.gameScene = gameScene;
@@ -26,10 +24,6 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        if (this.gameScene.getMapEditorModeManager()?.isActive()) {
-            mapEditorModeDragCameraPointerDownStore.set(false);
-            this.lastPointerDownPosition = undefined;
-        }
         if ((!pointer.wasTouch && pointer.leftButtonReleased()) || pointer.getDuration() > 250) {
             return;
         }
@@ -64,29 +58,10 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        if (this.gameScene.getMapEditorModeManager()?.isActive()) {
-            mapEditorModeDragCameraPointerDownStore.set(true);
-        }
+        this.gameScene.getActivatablesManager().handlePointerDownEvent();
     }
 
-    public handlePointerMoveEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        if (
-            this.gameScene.getMapEditorModeManager()?.isActive() &&
-            this.gameScene.getMapEditorModeManager()?.isPointerDown()
-        ) {
-            if (pointer.rightButtonDown() || pointer.wasTouch) {
-                if (this.lastPointerDownPosition) {
-                    this.gameScene
-                        .getCameraManager()
-                        .scrollBy(
-                            this.lastPointerDownPosition.x - pointer.x,
-                            this.lastPointerDownPosition.y - pointer.y
-                        );
-                }
-                this.lastPointerDownPosition = { x: pointer.x, y: pointer.y };
-            }
-        }
-    }
+    public handlePointerMoveEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}
 
     public handleKeyDownEvent(event: KeyboardEvent): KeyboardEvent {
         if (get(mapEditorModeStore)) {
@@ -95,10 +70,6 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         switch (event.code) {
             case "KeyE": {
                 mapEditorModeStore.switchMode(!get(mapEditorModeStore));
-                break;
-            }
-            case "KeyI": {
-                console.log(this.gameScene.getGameMap().getNextObjectId());
                 break;
             }
             default: {

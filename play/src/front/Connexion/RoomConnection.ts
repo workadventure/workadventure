@@ -62,7 +62,7 @@ import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
-import type { AreaData } from "@workadventure/map-editor";
+import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 
@@ -184,6 +184,7 @@ export class RoomConnection implements RoomConnection {
      * @param viewport
      * @param companion
      * @param availabilityStatus
+     * @param lastCommandId
      */
     public constructor(
         token: string | null,
@@ -193,7 +194,8 @@ export class RoomConnection implements RoomConnection {
         position: PositionInterface,
         viewport: ViewportInterface,
         companion: string | null,
-        availabilityStatus: AvailabilityStatus
+        availabilityStatus: AvailabilityStatus,
+        lastCommandId?: string
     ) {
         let url = new URL(PLAY_URL, window.location.toString()).toString();
         url = url.replace("http://", "ws://").replace("https://", "wss://");
@@ -219,6 +221,10 @@ export class RoomConnection implements RoomConnection {
         if (typeof availabilityStatus === "number") {
             url += "&availabilityStatus=" + availabilityStatus;
         }
+        if (lastCommandId) {
+            url += "&lastCommandId=" + lastCommandId;
+        }
+
         url += "&version=" + apiVersionHash;
 
         if (RoomConnection.websocketFactory) {
@@ -252,9 +258,6 @@ export class RoomConnection implements RoomConnection {
 
             const serverToClientMessage = ServerToClientMessageTsProto.decode(new Uint8Array(arrayBuffer));
             //const message = ServerToClientMessage.deserializeBinary(new Uint8Array(arrayBuffer));
-
-            // TODO: Remove this debug line
-            //console.info("New message received", serverToClientMessage.message);
 
             const message = serverToClientMessage.message;
             if (message === undefined) {
@@ -370,6 +373,12 @@ export class RoomConnection implements RoomConnection {
                         playerVariables.set(variable.name, RoomConnection.unserializeVariable(variable.value));
                     }
 
+                    const editMapCommandsArrayMessage = roomJoinedMessage.editMapCommandsArrayMessage;
+                    let commandsToApply: EditMapCommandMessage[] | undefined = undefined;
+                    if (editMapCommandsArrayMessage) {
+                        commandsToApply = editMapCommandsArrayMessage.editMapCommands;
+                    }
+
                     this.userId = roomJoinedMessage.currentUserId;
                     this.tags = roomJoinedMessage.tag;
                     this._userRoomToken = roomJoinedMessage.userRoomToken;
@@ -415,6 +424,7 @@ export class RoomConnection implements RoomConnection {
                             variables,
                             characterLayers,
                             playerVariables,
+                            commandsToApply,
                         } as RoomJoinedMessageInterface,
                     });
                     break;
@@ -1064,6 +1074,76 @@ export class RoomConnection implements RoomConnection {
                         message: {
                             $case: "createAreaMessage",
                             createAreaMessage: config,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitMapEditorModifyEntity(commandId: string, config: AtLeast<EntityData, "id">): void {
+        if (config.properties) {
+            for (const key of Object.keys(config.properties)) {
+                if (config.properties[key] === undefined) {
+                    config.properties[key] = null;
+                }
+            }
+        }
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "modifyEntityMessage",
+                            modifyEntityMessage: {
+                                ...config,
+                                // We need to declare properties due to the protobuf limitations - make new custom type to use optional flag?
+                                properties: config.properties ?? {},
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitMapEditorCreateEntity(commandId: string, config: EntityData): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "createEntityMessage",
+                            createEntityMessage: {
+                                id: config.id,
+                                x: config.x,
+                                y: config.y,
+                                collectionName: config.prefab.collectionName,
+                                prefabId: config.prefab.id,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitMapEditorDeleteEntity(commandId: string, id: number): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "deleteEntityMessage",
+                            deleteEntityMessage: {
+                                id,
+                            },
                         },
                     },
                 },

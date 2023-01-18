@@ -83,6 +83,8 @@ export class ActionableItem implements ActivatableInterface {
         this.onActivateCallback(this);
     }
 
+    public deactivate(): void {}
+
     public emit(eventName: string, state: unknown, parameters: unknown = null): void {
         this.eventHandler.emitActionableEvent(this.id, eventName, state, parameters);
         // Also, execute the action locally.

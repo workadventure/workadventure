@@ -4,14 +4,26 @@ import {
     GameMap,
     UpdateAreaCommand,
     DeleteAreaCommand,
+    UpdateEntityCommand,
     CreateAreaCommand,
+    CreateEntityCommand,
+    DeleteEntityCommand,
+    EntityCollection,
+    EntityPrefab,
+    EntityRawPrefab,
 } from "@workadventure/map-editor";
+import { EditMapCommandMessage } from "@workadventure/messages";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { fileSystem } from "./fileSystem";
-import { mapPathUsingDomain } from "./Services/PathMapper";
+
+// TODO: dynamic imports?
+import furnitureCollection from "./entities/collections/FurnitureCollection.json";
+import officeCollection from "./entities/collections/OfficeCollection.json";
 
 class MapsManager {
     private loadedMaps: Map<string, GameMap>;
+    private loadedMapsCommandsQueue: Map<string, EditMapCommandMessage[]>;
+    private loadedCollections: Map<string, EntityCollection>;
 
     private saveMapIntervals: Map<string, NodeJS.Timer>;
     private mapLastChangeTimestamp: Map<string, number>;
@@ -21,17 +33,36 @@ class MapsManager {
      */
     private readonly AUTO_SAVE_INTERVAL_MS: number = 15 * 1000; // 15 seconds
     /**
+     * Time after which the command will be removed from the commands queue
+     */
+    private readonly COMMAND_TIME_IN_QUEUE_MS: number = this.AUTO_SAVE_INTERVAL_MS * 2;
+    /**
      * Kill saving map interval after given time of no changes done to the map
      */
     private readonly NO_CHANGE_DETECTED_MS: number = 1 * 60 * 1000; // 1 minute
 
     constructor() {
         this.loadedMaps = new Map<string, GameMap>();
+        this.loadedMapsCommandsQueue = new Map<string, EditMapCommandMessage[]>();
         this.saveMapIntervals = new Map<string, NodeJS.Timer>();
         this.mapLastChangeTimestamp = new Map<string, number>();
+
+        this.loadedCollections = new Map<string, EntityCollection>();
+
+        for (const collection of [furnitureCollection, officeCollection]) {
+            const parsedCollectionPrefabs: EntityPrefab[] = [];
+            for (const rawPrefab of collection.collection) {
+                parsedCollectionPrefabs.push(
+                    this.parseRawEntityPrefab(collection.collectionName, rawPrefab as EntityRawPrefab)
+                );
+            }
+            const parsedCollection: EntityCollection = structuredClone(collection) as EntityCollection;
+            parsedCollection.collection = parsedCollectionPrefabs;
+            this.loadedCollections.set(parsedCollection.collectionName, parsedCollection);
+        }
     }
 
-    public executeCommand(mapKey: string, commandConfig: CommandConfig): void {
+    public executeCommand(mapKey: string, commandConfig: CommandConfig, commandId?: string): void {
         const gameMap = this.getGameMap(mapKey);
         if (!gameMap) {
             throw new Error('Could not find GameMap with key "' + mapKey + '"');
@@ -40,43 +71,79 @@ class MapsManager {
         if (!this.saveMapIntervals.has(mapKey)) {
             this.startSavingMapInterval(mapKey, this.AUTO_SAVE_INTERVAL_MS);
         }
-        let command: Command;
+        let command: Command | undefined;
         switch (commandConfig.type) {
             case "UpdateAreaCommand": {
-                command = new UpdateAreaCommand(gameMap, commandConfig);
+                command = new UpdateAreaCommand(gameMap, commandConfig, commandId);
                 command.execute();
                 break;
             }
             case "CreateAreaCommand": {
-                command = new CreateAreaCommand(gameMap, commandConfig);
+                command = new CreateAreaCommand(gameMap, commandConfig, commandId);
                 command.execute();
                 break;
             }
             case "DeleteAreaCommand": {
-                command = new DeleteAreaCommand(gameMap, commandConfig);
+                command = new DeleteAreaCommand(gameMap, commandConfig, commandId);
+                command.execute();
+                break;
+            }
+            case "UpdateEntityCommand": {
+                command = new UpdateEntityCommand(gameMap, commandConfig, commandId);
+                command.execute();
+                break;
+            }
+            case "CreateEntityCommand": {
+                command = new CreateEntityCommand(gameMap, commandConfig, commandId);
+                command.execute();
+                break;
+            }
+            case "DeleteEntityCommand": {
+                command = new DeleteEntityCommand(gameMap, commandConfig, commandId);
                 command.execute();
                 break;
             }
             default: {
                 const _exhaustiveCheck: never = commandConfig;
+                break;
             }
         }
+    }
+
+    public getCommandsNewerThan(mapKey: string, commandId: string): EditMapCommandMessage[] {
+        const queue = this.loadedMapsCommandsQueue.get(mapKey);
+        if (queue) {
+            const commandIndex = queue.findIndex((command) => command.id === commandId);
+            if (commandIndex === -1) {
+                return [];
+            }
+            return queue.slice(commandIndex + 1);
+        }
+        return [];
     }
 
     public getGameMap(key: string): GameMap | undefined {
         return this.loadedMaps.get(key);
     }
 
-    public async getMap(path: string, domain: string): Promise<ITiledMap> {
-        const key = mapPathUsingDomain(path, domain);
-        const inMemoryGameMap = this.loadedMaps.get(key);
-        if (inMemoryGameMap) {
-            return inMemoryGameMap.getMap();
-        }
-        const file = await fileSystem.readFileAsString(key);
-        const map = ITiledMap.parse(JSON.parse(file));
+    public getLoadedMaps(): string[] {
+        return Array.from(this.loadedMaps.keys());
+    }
+
+    public isMapAlreadyLoaded(key: string): boolean {
+        return this.loadedMaps.has(key);
+    }
+
+    public loadMapToMemory(key: string, map: ITiledMap): void {
         this.loadedMaps.set(key, new GameMap(map));
-        return map;
+    }
+
+    public getEntityCollections(): EntityCollection[] {
+        return Array.from(this.loadedCollections.values());
+    }
+
+    public getEntityPrefab(collectionName: string, entityId: string): EntityPrefab | undefined {
+        return this.loadedCollections.get(collectionName)?.collection.find((entity) => entity.id === entityId);
     }
 
     private clearSaveMapInterval(key: string): boolean {
@@ -88,6 +155,30 @@ class MapsManager {
             return true;
         }
         return false;
+    }
+
+    public addCommandToQueue(mapKey: string, message: EditMapCommandMessage): void {
+        if (!this.loadedMapsCommandsQueue.has(mapKey)) {
+            this.loadedMapsCommandsQueue.set(mapKey, []);
+        }
+        const queue = this.loadedMapsCommandsQueue.get(mapKey);
+        if (queue !== undefined) {
+            queue.push(message);
+            this.setCommandDeletionTimeout(mapKey, message.id);
+        }
+        this.loadedMaps.get(mapKey)?.updateLastCommandIdProperty(message.id);
+    }
+
+    private setCommandDeletionTimeout(mapKey: string, commandId: string): void {
+        setTimeout(() => {
+            const queue = this.loadedMapsCommandsQueue.get(mapKey);
+            if (!queue || queue.length === 0) {
+                return;
+            }
+            if (queue[0].id === commandId) {
+                queue.splice(0, 1);
+            }
+        }, this.COMMAND_TIME_IN_QUEUE_MS);
     }
 
     private startSavingMapInterval(key: string, intervalMS: number): void {
@@ -111,6 +202,14 @@ class MapsManager {
                 })().catch((e) => console.error(e));
             }, intervalMS)
         );
+    }
+
+    private parseRawEntityPrefab(collectionName: string, rawPrefab: EntityRawPrefab): EntityPrefab {
+        return {
+            ...rawPrefab,
+            collectionName,
+            id: `${rawPrefab.name}:${rawPrefab.color}:${rawPrefab.direction}`,
+        };
     }
 }
 

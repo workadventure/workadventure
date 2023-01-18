@@ -14,8 +14,8 @@ export class CreateAreaCommand extends Command {
 
     private gameMap: GameMap;
 
-    constructor(gameMap: GameMap, config: CreateAreaCommandConfig) {
-        super();
+    constructor(gameMap: GameMap, config: CreateAreaCommandConfig, commandId?: string) {
+        super(commandId);
         this.gameMap = gameMap;
         this.areaConfig = structuredClone<AreaData>(config.areaObjectConfig);
     }

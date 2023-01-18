@@ -270,7 +270,8 @@ class ConnectionManager {
         position: PositionInterface,
         viewport: ViewportInterface,
         companion: string | null,
-        availabilityStatus: AvailabilityStatus
+        availabilityStatus: AvailabilityStatus,
+        lastCommandId?: string
     ): Promise<OnConnectInterface> {
         return new Promise<OnConnectInterface>((resolve, reject) => {
             const connection = new RoomConnection(
@@ -281,7 +282,8 @@ class ConnectionManager {
                 position,
                 viewport,
                 companion,
-                availabilityStatus
+                availabilityStatus,
+                lastCommandId
             );
 
             connection.onConnectError((error: object) => {
@@ -347,7 +349,8 @@ class ConnectionManager {
                         position,
                         viewport,
                         companion,
-                        availabilityStatus
+                        availabilityStatus,
+                        lastCommandId
                     );
                     void this.connectToRoomSocket(
                         roomUrl,
@@ -356,7 +359,8 @@ class ConnectionManager {
                         position,
                         viewport,
                         companion,
-                        availabilityStatus
+                        availabilityStatus,
+                        lastCommandId
                     ).then((connection) => resolve(connection));
                 }, 4000 + Math.floor(Math.random() * 2000));
             });

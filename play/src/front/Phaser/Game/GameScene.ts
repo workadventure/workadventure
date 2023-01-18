@@ -152,6 +152,7 @@ import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
+import { mapEditorModeStore, mapEntitiesPrefabsStore } from "../../Stores/MapEditorStore";
 import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
 
 export interface GameSceneInitInterface {
@@ -203,6 +204,7 @@ export class GameScene extends DirtyScene {
     private highlightedEmbedScreenUnsubscriber!: Unsubscriber;
     private embedScreenLayoutStoreUnsubscriber!: Unsubscriber;
     private availabilityStatusStoreUnsubscriber!: Unsubscriber;
+    private mapEditorModeStoreUnsubscriber!: Unsubscriber;
 
     private modalVisibilityStoreUnsubscriber!: Unsubscriber;
 
@@ -268,6 +270,14 @@ export class GameScene extends DirtyScene {
 
         this.MapUrlFile = MapUrlFile;
         this.roomUrl = room.key;
+
+        if (this.room.entityCollectionsUrls) {
+            for (const url of this.room.entityCollectionsUrls) {
+                mapEntitiesPrefabsStore.loadCollections(url).catch((reason) => {
+                    console.warn(reason);
+                });
+            }
+        }
 
         this.createPromiseDeferred = new Deferred<void>();
         this.connectionAnswerPromiseDeferred = new Deferred<RoomJoinedMessageInterface>();
@@ -552,7 +562,7 @@ export class GameScene extends DirtyScene {
         this.embeddedWebsiteManager = new EmbeddedWebsiteManager(this);
 
         //add layer on map
-        this.gameMapFrontWrapper = new GameMapFrontWrapper(new GameMap(this.mapFile), this.Map, this.Terrains);
+        this.gameMapFrontWrapper = new GameMapFrontWrapper(this, new GameMap(this.mapFile), this.Map, this.Terrains);
         for (const layer of this.gameMapFrontWrapper.getFlatLayers()) {
             if (layer.type === "tilelayer") {
                 const exitSceneUrl = this.getExitSceneUrl(layer);
@@ -634,11 +644,12 @@ export class GameScene extends DirtyScene {
 
         this.pathfindingManager = new PathfindingManager(
             this,
-            this.gameMapFrontWrapper.getCollisionGrid(undefined, false),
+            this.gameMapFrontWrapper.getCollisionGrid(),
             this.gameMapFrontWrapper.getTileDimensions()
         );
 
         this.subscribeToGameMapChanged();
+        this.subscribeToEntitiesManagerObservables();
 
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
@@ -795,7 +806,8 @@ export class GameScene extends DirtyScene {
                     bottom: camera.scrollY + camera.height,
                 },
                 this.companion,
-                get(availabilityStatusStore)
+                get(availabilityStatusStore),
+                this.getGameMap().getLastCommandId()
             )
             .then((onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
@@ -1045,7 +1057,8 @@ export class GameScene extends DirtyScene {
             this.emoteUnsubscriber != undefined ||
             this.emoteMenuUnsubscriber != undefined ||
             this.followUsersColorStoreUnsubscriber != undefined ||
-            this.peerStoreUnsubscriber != undefined
+            this.peerStoreUnsubscriber != undefined ||
+            this.mapEditorModeStoreUnsubscriber != undefined
         ) {
             console.error(
                 "subscribeToStores => Check all subscriber undefined ",
@@ -1055,7 +1068,8 @@ export class GameScene extends DirtyScene {
                 this.emoteUnsubscriber,
                 this.emoteMenuUnsubscriber,
                 this.followUsersColorStoreUnsubscriber,
-                this.peerStoreUnsubscriber
+                this.peerStoreUnsubscriber,
+                this.mapEditorModeStoreUnsubscriber
             );
 
             throw new Error("One store is already subscribed.");
@@ -1196,6 +1210,22 @@ export class GameScene extends DirtyScene {
 
             oldUsers = newUsers;
             oldPeersNumber = newPeerNumber;
+        });
+
+        this.mapEditorModeStoreUnsubscriber = mapEditorModeStore.subscribe((isOn) => {
+            if (isOn) {
+                this.activatablesManager.deactivateSelectedObject();
+                this.activatablesManager.handlePointerOutActivatableObject();
+                this.activatablesManager.disableSelectingByDistance();
+                this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesNonInteractive();
+            } else {
+                this.activatablesManager.enableSelectingByDistance();
+                // make sure all entities are non-interactive
+                this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesNonInteractive();
+                // add interactions back only for activatables
+                this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesInteractive(true);
+            }
+            this.markDirty();
         });
     }
 
@@ -1668,7 +1698,11 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("getUIWebsiteById", (websiteId) => {
-            return uiWebsiteManager.getById(websiteId);
+            const website = uiWebsiteManager.getById(websiteId);
+            if (!website) {
+                throw new Error("Unknown ui-website");
+            }
+            return website;
         });
 
         iframeListener.registerAnswerer("closeUIWebsite", (websiteId) => {
@@ -1789,12 +1823,14 @@ ${escapedMessage}
                             }
                             //Create a new GameMap with the changed file
                             this.gameMapFrontWrapper = new GameMapFrontWrapper(
+                                this,
                                 new GameMap(this.mapFile),
                                 this.Map,
                                 this.Terrains
                             );
                             // Unsubscribe if needed and subscribe to GameMapChanged event again
                             this.subscribeToGameMapChanged();
+                            this.subscribeToEntitiesManagerObservables();
                             //Destroy the colliders of the old tilemapLayer
                             this.physics.add.world.colliders.destroy();
                             //Create new colliders with the new GameMap
@@ -2036,6 +2072,7 @@ ${escapedMessage}
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
         this.peerStoreUnsubscriber?.();
+        this.mapEditorModeStoreUnsubscriber?.();
         this.emoteUnsubscriber?.();
         this.emoteMenuUnsubscriber?.();
         this.followUsersColorStoreUnsubscriber?.();
@@ -2197,6 +2234,7 @@ ${escapedMessage}
         this.activatablesManager.updateActivatableObjectsDistances([
             ...Array.from(this.MapPlayersByKey.values()),
             ...this.actionableItems.values(),
+            ...this.gameMapFrontWrapper.getActivatableEntities(),
         ]);
         this.activatablesManager.deduceSelectedActivatableObjectByDistance();
     }
@@ -2502,6 +2540,29 @@ ${escapedMessage}
             });
     }
 
+    private subscribeToEntitiesManagerObservables(): void {
+        this.gameMapFrontWrapper
+            .getEntitiesManager()
+            .getPointerOverEntityObservable()
+            .subscribe((entity) => {
+                if (get(mapEditorModeStore)) {
+                    return;
+                }
+                this.activatablesManager.handlePointerOverActivatableObject(entity);
+                this.markDirty();
+            });
+        this.gameMapFrontWrapper
+            .getEntitiesManager()
+            .getPointerOutEntityObservable()
+            .subscribe((entity) => {
+                if (get(mapEditorModeStore)) {
+                    return;
+                }
+                this.activatablesManager.handlePointerOutActivatableObject();
+                this.markDirty();
+            });
+    }
+
     private doRemovePlayer(userId: number) {
         const player = this.MapPlayersByKey.get(userId);
         if (player === undefined) {
@@ -2781,6 +2842,10 @@ ${escapedMessage}
 
     public getCameraManager(): CameraManager {
         return this.cameraManager;
+    }
+
+    public getRemotePlayersRepository(): RemotePlayersRepository {
+        return this.remotePlayersRepository;
     }
 
     public getMapEditorModeManager(): MapEditorModeManager {

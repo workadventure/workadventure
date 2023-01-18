@@ -1,7 +1,7 @@
 import type { SignalData } from "simple-peer";
 import type { RoomConnection } from "./RoomConnection";
 import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
-import type { AvailabilityStatus, PositionMessage } from "@workadventure/messages";
+import type { AvailabilityStatus, EditMapCommandMessage, PositionMessage } from "@workadventure/messages";
 
 export interface MessageUserMovedInterface {
     userId: number;
@@ -71,6 +71,7 @@ export interface RoomJoinedMessageInterface {
     variables: Map<string, unknown>;
     playerVariables: Map<string, unknown>;
     characterLayers: BodyResourceDescriptionInterface[];
+    commandsToApply?: EditMapCommandMessage[];
 }
 
 export interface PlayGlobalMessageInterface {

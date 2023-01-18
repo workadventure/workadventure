@@ -33,6 +33,7 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable,
     viewport: ViewportInterface;
     companion?: CompanionMessage;
     availabilityStatus: AvailabilityStatus;
+    lastCommandId?: string;
     /**
      * Pushes an event that will be sent in the next batch of events
      */

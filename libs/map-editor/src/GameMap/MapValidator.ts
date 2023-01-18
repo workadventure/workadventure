@@ -1,6 +1,7 @@
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { z } from "zod";
 import path from "node:path";
+import { EntityData } from "../types";
 
 export type Success<T> = { ok: true; value: T };
 export type Failure<E> = { ok: false; error: E };
@@ -120,6 +121,7 @@ export class MapValidator {
         errors.push(...this.validateRootProperties(map));
         errors.push(...this.validateLayers(map, mapPath, availableFiles));
         errors.push(...this.validateTileset(map, mapPath, availableFiles));
+        errors.push(...this.validateEntitiesProperty(map, mapPath, availableFiles));
 
         errors = errors.filter((error) => {
             const logLevel = this.toLogNumber(error.type);
@@ -302,6 +304,37 @@ export class MapValidator {
                 });
             }
         });
+
+        return errors;
+    }
+
+    private validateEntitiesProperty(map: ITiledMap, mapPath: string, availableFiles: string[]): ValidationError[] {
+        const errors: ValidationError[] = [];
+
+        const mapProperties = map.properties;
+        if (!mapProperties) {
+            return errors;
+        }
+
+        const entitiesProperty = mapProperties.find((property) => property.name === "entities");
+
+        if (!entitiesProperty) {
+            return errors;
+        }
+
+        const parsedEntitiesPropertyValue = z.array(EntityData).safeParse(entitiesProperty.value);
+
+        if (!parsedEntitiesPropertyValue.success) {
+            const error = parsedEntitiesPropertyValue.error;
+            const flattenerErrors = error.flatten((issue): string => {
+                return `For field "${issue.path.join(".")}": ${issue.message}`;
+            });
+            errors.push({
+                type: "error",
+                message: "Your map file contains invalid entities.",
+                details: Object.values(flattenerErrors.fieldErrors).join("\n"),
+            });
+        }
 
         return errors;
     }

@@ -47,6 +47,27 @@ describe("Map validator", () => {
         expect(errors[0].type).toBe("error");
     });
 
+    it("should detect invalid entities map property type", () => {
+        const result = loadMap(__dirname + "/../../../../maps/tests/Validation/invalidEntitiesPropertyType.json");
+
+        expect(result.ok).toBe(false);
+        const errors = (result as Failure<ValidationError[]>).error;
+        expect(errors.length).toBe(1);
+        expect(errors[0].message).toBe("Your map file contains an invalid JSON structure.");
+        expect(errors[0].type).toBe("error");
+        expect(errors[0].details).toBe('For field "properties.0": Invalid input');
+    });
+
+    it("should detect invalid entities", () => {
+        const result = loadMap(__dirname + "/../../../../maps/tests/Validation/invalidEntities.json");
+
+        expect(result.ok).toBe(false);
+        const errors = (result as Failure<ValidationError[]>).error;
+        expect(errors.length).toBe(1);
+        expect(errors[0].message).toBe("Your map file contains invalid entities.");
+        expect(errors[0].type).toBe("error");
+    });
+
     it("should not be infinite", () => {
         const result = loadMap(__dirname + "/../../../../maps/tests/Validation/Infini.json");
 
