@@ -5,6 +5,7 @@ import type { UpdateAreaCommandConfig } from "./Commands/Area/UpdateAreaCommand"
 import type { CreateEntityCommandConfig } from "./Commands/Entity/CreateEntityCommand";
 import type { DeleteEntityCommandConfig } from "./Commands/Entity/DeleteEntityCommand";
 import { UpdateEntityCommandConfig } from "./Commands/Entity/UpdateEntityCommand";
+import { z } from "zod";
 
 export type CommandConfig =
     | UpdateAreaCommandConfig
@@ -30,31 +31,38 @@ export enum Direction {
     Right = "Right",
 }
 
-export interface EntityCollection {
-    collectionName: string;
-    tags: string[];
-    collection: EntityPrefab[];
-}
-export interface EntityData {
-    id: number;
-    x: number;
-    y: number;
-    properties?: { [key: string]: unknown | undefined };
-    prefab: EntityPrefab;
-}
-export interface EntityRawPrefab {
-    name: string;
-    tags: string[];
-    imagePath: string;
-    direction: Direction;
-    color: string;
-    collisionGrid?: number[][];
-}
+export const isEntityRawPrefab = z.object({
+    name: z.string(),
+    tags: z.array(z.string()),
+    imagePath: z.string(),
+    direction: z.enum(["Left", "Up", "Down", "Right"]),
+    color: z.string(),
+    collisionGrid: z.array(z.array(z.number())).optional(),
+});
 
-export interface EntityPrefab extends EntityRawPrefab {
-    collectionName: string;
-    id: string;
-}
+export const isEntityPrefab = isEntityRawPrefab.extend({
+    collectionName: z.string(),
+    id: z.string(),
+});
+
+export const isEntityCollection = z.object({
+    collectionName: z.string(),
+    tags: z.array(z.string()),
+    collection: z.array(isEntityPrefab),
+});
+
+export const isEntityData = z.object({
+    id: z.number(),
+    x: z.number(),
+    y: z.number(),
+    properties: z.record(z.unknown().optional()).optional(),
+    prefab: isEntityPrefab,
+});
+
+export type EntityRawPrefab = z.infer<typeof isEntityRawPrefab>;
+export type EntityPrefab = z.infer<typeof isEntityPrefab>;
+export type EntityCollection = z.infer<typeof isEntityCollection>;
+export type EntityData = z.infer<typeof isEntityData>;
 
 export interface PredefinedPropertyData {
     name: string;
@@ -130,3 +138,29 @@ export enum GameMapProperties {
     ZONE = "zone",
     ZOOM_MARGIN = "zoomMargin",
 }
+
+// export interface EntityCollection {
+//     collectionName: string;
+//     tags: string[];
+//     collection: EntityPrefab[];
+// }
+// export interface EntityData {
+//     id: number;
+//     x: number;
+//     y: number;
+//     properties?: { [key: string]: unknown | undefined };
+//     prefab: EntityPrefab;
+// }
+// export interface EntityRawPrefab {
+//     name: string;
+//     tags: string[];
+//     imagePath: string;
+//     direction: Direction;
+//     color: string;
+//     collisionGrid?: number[][];
+// }
+
+// export interface EntityPrefab extends EntityRawPrefab {
+//     collectionName: string;
+//     id: string;
+// }
