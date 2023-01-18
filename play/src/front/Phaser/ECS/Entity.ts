@@ -1,10 +1,11 @@
 import {
     AtLeast,
     EntityData,
-    JitsiRoomPropertyData,
-    OpenTabPropertyData,
-    PlayAudioPropertyData,
     GameMapProperties,
+    isJitsiRoomPropertyData,
+    isPlayAudioPropertyData,
+    isOpenTabPropertyData,
+    isTextHeaderPropertyData,
 } from "@workadventure/map-editor";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
@@ -174,7 +175,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             actionsMenuStore.clear();
             return;
         }
-        actionsMenuStore.initialize(this.entityData.properties["textHeader"] ?? "");
+        actionsMenuStore.initialize(isTextHeaderPropertyData.parse(this.entityData.properties["textHeader"] ?? ""));
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
         }
@@ -191,7 +192,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                     case "textHeader": //do nothing, handled in toggleActionsMenu
                         break;
                     case "jitsiRoom": {
-                        const propertyData = this.entityData.properties[key] as JitsiRoomPropertyData;
+                        const propertyData = isJitsiRoomPropertyData.parse(this.entityData.properties[key]);
                         actions.push({
                             actionName: propertyData.buttonLabel,
                             protected: true,
@@ -213,7 +214,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                         break;
                     }
                     case "playAudio": {
-                        const propertyData = this.entityData.properties[key] as PlayAudioPropertyData;
+                        const propertyData = isPlayAudioPropertyData.parse(this.entityData.properties[key]);
                         actions.push({
                             actionName: propertyData.buttonLabel,
                             protected: true,
@@ -228,7 +229,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                         break;
                     }
                     case "openTab": {
-                        const propertyData = this.entityData.properties[key] as OpenTabPropertyData;
+                        const propertyData = isOpenTabPropertyData.parse(this.entityData.properties[key]);
                         actions.push({
                             actionName: propertyData.buttonLabel,
                             protected: true,

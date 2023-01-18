@@ -64,6 +64,7 @@ export type EntityPrefab = z.infer<typeof isEntityPrefab>;
 export type EntityCollection = z.infer<typeof isEntityCollection>;
 export type EntityData = z.infer<typeof isEntityData>;
 
+// TODO: This probably won't be used in the future
 export interface PredefinedPropertyData {
     name: string;
     description: string;
@@ -71,27 +72,37 @@ export interface PredefinedPropertyData {
     additionalProperties: Record<string, string | number | boolean | object | undefined>;
 }
 
-export interface ActionsMenuData {
-    buttonLabel: string;
-}
+export const isTextHeaderPropertyData = z.string();
 
-export interface JitsiRoomPropertyData extends ActionsMenuData {
-    roomName: string;
-    jitsiRoomConfig: JitsiRoomConfigData;
-}
+export const isActionsMenuData = z.object({
+    buttonLabel: z.string(),
+});
 
-export interface JitsiRoomConfigData {
-    startWithAudioMuted?: boolean;
-    startWithVideoMuted?: boolean;
-}
+export const isJitsiRoomConfigData = z.object({
+    startWithAudioMuted: z.boolean().optional(),
+    startWithVideoMuted: z.boolean().optional(),
+});
 
-export interface PlayAudioPropertyData extends ActionsMenuData {
-    audioLink: string;
-}
-export interface OpenTabPropertyData extends ActionsMenuData {
-    link: string;
-    inNewTab: boolean;
-}
+export const isJitsiRoomPropertyData = isActionsMenuData.extend({
+    roomName: z.string(),
+    jitsiRoomConfig: isJitsiRoomConfigData,
+});
+
+export const isPlayAudioPropertyData = isActionsMenuData.extend({
+    audioLink: z.string(),
+});
+
+export const isOpenTabPropertyData = isActionsMenuData.extend({
+    link: z.string(),
+    inNewTab: z.boolean(),
+});
+
+export type TextHeaderPropertyData = z.infer<typeof isTextHeaderPropertyData>;
+export type ActionsMenuData = z.infer<typeof isActionsMenuData>;
+export type JitsiRoomConfigData = z.infer<typeof isJitsiRoomConfigData>;
+export type JitsiRoomPropertyData = z.infer<typeof isJitsiRoomPropertyData>;
+export type PlayAudioPropertyData = z.infer<typeof isPlayAudioPropertyData>;
+export type OpenTabPropertyData = z.infer<typeof isOpenTabPropertyData>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",
@@ -138,29 +149,3 @@ export enum GameMapProperties {
     ZONE = "zone",
     ZOOM_MARGIN = "zoomMargin",
 }
-
-// export interface EntityCollection {
-//     collectionName: string;
-//     tags: string[];
-//     collection: EntityPrefab[];
-// }
-// export interface EntityData {
-//     id: number;
-//     x: number;
-//     y: number;
-//     properties?: { [key: string]: unknown | undefined };
-//     prefab: EntityPrefab;
-// }
-// export interface EntityRawPrefab {
-//     name: string;
-//     tags: string[];
-//     imagePath: string;
-//     direction: Direction;
-//     color: string;
-//     collisionGrid?: number[][];
-// }
-
-// export interface EntityPrefab extends EntityRawPrefab {
-//     collectionName: string;
-//     id: string;
-// }
