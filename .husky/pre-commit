@@ -9,6 +9,10 @@ cd play || exit
 npm run precommit
 )
 (
+cd chat || exit
+npm run precommit
+)
+(
 cd back || exit
 npm run precommit
 )
