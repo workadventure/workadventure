@@ -1,12 +1,4 @@
-import {
-    AtLeast,
-    EntityData,
-    GameMapProperties,
-    isJitsiRoomPropertyData,
-    isPlayAudioPropertyData,
-    isOpenTabPropertyData,
-    isTextHeaderPropertyData,
-} from "@workadventure/map-editor";
+import { AtLeast, EntityData, GameMapProperties, TextHeaderPropertyData } from "@workadventure/map-editor";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
@@ -175,7 +167,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             actionsMenuStore.clear();
             return;
         }
-        actionsMenuStore.initialize(isTextHeaderPropertyData.parse(this.entityData.properties["textHeader"] ?? ""));
+        actionsMenuStore.initialize(TextHeaderPropertyData.parse(this.entityData.properties.textHeader ?? ""));
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
         }
@@ -186,76 +178,69 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             return [];
         }
         const actions: ActionsMenuAction[] = [];
-        for (const key of Object.keys(this.entityData.properties)) {
-            if (this.entityData.properties[key]) {
-                switch (key) {
-                    case "textHeader": //do nothing, handled in toggleActionsMenu
-                        break;
-                    case "jitsiRoom": {
-                        const propertyData = isJitsiRoomPropertyData.parse(this.entityData.properties[key]);
-                        actions.push({
-                            actionName: propertyData.buttonLabel,
-                            protected: true,
-                            priority: 1,
-                            callback: () => {
-                                this.emit(
-                                    EntityEvent.PropertyActivated,
-                                    {
-                                        propertyName: key,
-                                        propertyValue: propertyData.roomName,
-                                    },
-                                    {
-                                        propertyName: GameMapProperties.JITSI_CONFIG,
-                                        propertyValue: JSON.stringify(propertyData.jitsiRoomConfig),
-                                    }
-                                );
-                            },
+        const properties = this.entityData.properties;
+
+        if (properties.jitsiRoom) {
+            const roomName = properties.jitsiRoom.roomName;
+            const roomConfig = properties.jitsiRoom.jitsiRoomConfig;
+            actions.push({
+                actionName: properties.jitsiRoom.buttonLabel,
+                protected: true,
+                priority: 1,
+                callback: () => {
+                    this.emit(
+                        EntityEvent.PropertyActivated,
+                        {
+                            propertyName: GameMapProperties.JITSI_ROOM,
+                            propertyValue: roomName,
+                        },
+                        {
+                            propertyName: GameMapProperties.JITSI_CONFIG,
+                            propertyValue: JSON.stringify(roomConfig),
+                        }
+                    );
+                },
+            });
+        }
+        if (properties.openTab) {
+            const link = properties.openTab.link;
+            const inNewTab = properties.openTab.inNewTab;
+            actions.push({
+                actionName: properties.openTab.buttonLabel,
+                protected: true,
+                priority: 1,
+                callback: () => {
+                    if (inNewTab) {
+                        this.emit(EntityEvent.PropertyActivated, {
+                            propertyName: GameMapProperties.OPEN_TAB,
+                            propertyValue: link,
                         });
-                        break;
-                    }
-                    case "playAudio": {
-                        const propertyData = isPlayAudioPropertyData.parse(this.entityData.properties[key]);
-                        actions.push({
-                            actionName: propertyData.buttonLabel,
-                            protected: true,
-                            priority: 1,
-                            callback: () => {
-                                this.emit(EntityEvent.PropertyActivated, {
-                                    propertyName: key,
-                                    propertyValue: propertyData.audioLink,
-                                });
-                            },
+                    } else {
+                        const coWebsite = new SimpleCoWebsite(new URL(link));
+                        coWebsiteManager.addCoWebsiteToStore(coWebsite, undefined);
+                        coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
+                            console.error("Error during loading a co-website: " + coWebsite.getUrl());
                         });
-                        break;
                     }
-                    case "openTab": {
-                        const propertyData = isOpenTabPropertyData.parse(this.entityData.properties[key]);
-                        actions.push({
-                            actionName: propertyData.buttonLabel,
-                            protected: true,
-                            priority: 1,
-                            callback: () => {
-                                if (propertyData.inNewTab) {
-                                    this.emit(EntityEvent.PropertyActivated, {
-                                        propertyName: key,
-                                        propertyValue: propertyData.link,
-                                    });
-                                } else {
-                                    const coWebsite = new SimpleCoWebsite(new URL(propertyData.link));
-                                    coWebsiteManager.addCoWebsiteToStore(coWebsite, undefined);
-                                    coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
-                                        console.error("Error during loading a co-website: " + coWebsite.getUrl());
-                                    });
-                                }
-                            },
-                        });
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
-                }
-            }
+                },
+            });
+        }
+        if (properties.playAudio) {
+            const audioLink = properties.playAudio.audioLink;
+            actions.push({
+                actionName: properties.playAudio.buttonLabel,
+                protected: true,
+                priority: 1,
+                callback: () => {
+                    this.emit(EntityEvent.PropertyActivated, {
+                        propertyName: GameMapProperties.PLAY_AUDIO,
+                        propertyValue: audioLink,
+                    });
+                },
+            });
+        }
+        if (properties.textHeader) {
+            //
         }
         return actions;
     }

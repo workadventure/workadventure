@@ -1,7 +1,7 @@
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { z } from "zod";
 import path from "node:path";
-import { isEntityData } from "../types";
+import { EntityData } from "../types";
 
 export type Success<T> = { ok: true; value: T };
 export type Failure<E> = { ok: false; error: E };
@@ -322,7 +322,7 @@ export class MapValidator {
             return errors;
         }
 
-        const parsedEntitiesPropertyValue = z.array(isEntityData).safeParse(entitiesProperty.value);
+        const parsedEntitiesPropertyValue = z.array(EntityData).safeParse(entitiesProperty.value);
 
         if (!parsedEntitiesPropertyValue.success) {
             const error = parsedEntitiesPropertyValue.error;
