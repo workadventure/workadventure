@@ -179,7 +179,7 @@ export class EntityEditorTool extends MapEditorTool {
     }
 
     private handleEntityCreation(config: EntityData): void {
-        this.entitiesManager.addEntity(structuredClone(config)).catch(e=> console.error(e));
+        this.entitiesManager.addEntity(structuredClone(config)).catch((e) => console.error(e));
     }
 
     private handleEntityDeletion(id: number): void {
