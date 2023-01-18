@@ -1,6 +1,6 @@
 import { ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import _ from "lodash";
-import { EntityData, isEntityData } from "../types";
+import { EntityData } from "../types";
 import type { GameMap } from "./GameMap";
 
 export class GameMapEntities {
@@ -18,7 +18,7 @@ export class GameMapEntities {
         const entitiesData: unknown = structuredClone(this.getEntitiesMapProperty()?.value ?? []);
 
         for (const entityData of (entitiesData as EntityData[]) ?? []) {
-            this.addEntity(isEntityData.parse(entityData), false);
+            this.addEntity(entityData, false);
         }
     }
 

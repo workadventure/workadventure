@@ -5,7 +5,6 @@ import type {
     ITiledMapLayer,
     ITiledMapObject,
     ITiledMapProperty,
-    ITiledMapTile,
     ITiledMapTileLayer,
 } from "@workadventure/tiled-map-type-guard";
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
@@ -198,10 +197,6 @@ export class GameMapFrontWrapper {
 
     public getPropertiesForIndex(index: number): Array<ITiledMapProperty> {
         return this.gameMap.getPropertiesForIndex(index);
-    }
-
-    public getTileInformationFromTileset(tilesetName: string, tileIndex: number): ITiledMapTile | undefined {
-        return this.gameMap.getTileInformationFromTileset(tilesetName, tileIndex);
     }
 
     public getCollisionGrid(): number[][] {

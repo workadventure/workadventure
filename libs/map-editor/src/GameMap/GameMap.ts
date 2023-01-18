@@ -3,7 +3,6 @@ import {
     ITiledMapLayer,
     ITiledMapObject,
     ITiledMapProperty,
-    ITiledMapTile,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
 import type { AreaData } from "../types";
@@ -92,12 +91,6 @@ export class GameMap {
             x: Math.floor(x / (this.map.tilewidth ?? this.DEFAULT_TILE_SIZE)),
             y: Math.floor(y / (this.map.tileheight ?? this.DEFAULT_TILE_SIZE)),
         };
-    }
-
-    public getTileInformationFromTileset(tilesetName: string, tileIndex: number): ITiledMapTile | undefined {
-        return this.map.tilesets
-            .find((tile) => tile.name === tilesetName)
-            ?.tiles?.find((tile) => tile.id === tileIndex);
     }
 
     public getMap(): ITiledMap {
