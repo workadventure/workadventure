@@ -162,15 +162,6 @@ export class S3FileSystem implements FileSystemInterface {
         return;
     }
 
-    async writeCache(virtualPath: string, fileName: string, content: string): Promise<void> {
-        let path = virtualPath;
-        if (!path.endsWith("/")) {
-            path += "/";
-        }
-        await this.writeStringAsFile(`${path}${fileName}`, content);
-        return;
-    }
-
     async archiveDirectory(archiver: Archiver, virtualPath: string): Promise<void> {
         if (!virtualPath.endsWith("/")) {
             virtualPath += "/";

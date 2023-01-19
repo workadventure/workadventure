@@ -169,7 +169,7 @@ export class UploadController {
                 const cacheFileName = "cache.txt";
                 const files = await fileSystem.listFiles(req.hostname, ".tmj");
 
-                await fileSystem.writeCache(req.hostname, cacheFileName, JSON.stringify(files));
+                await fileSystem.writeStringAsFile(`${req.hostname}/${cacheFileName}`, JSON.stringify(files));
             })().catch((e) => next(e));
         });
     }

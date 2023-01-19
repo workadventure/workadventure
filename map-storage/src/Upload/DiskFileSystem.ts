@@ -69,14 +69,6 @@ export class DiskFileSystem implements FileSystemInterface {
         });
     }
 
-    async writeCache(virtualPath: string, filename: string, content: string): Promise<void> {
-        const fullPath = this.getFullPath(virtualPath);
-        await fs.promises.mkdir(path.dirname(fullPath), { recursive: true });
-        return fs.writeFile(`${fullPath}/${filename}`, content, {
-            encoding: "utf-8",
-        });
-    }
-
     archiveDirectory(archiver: Archiver, virtualPath: string): Promise<void> {
         const fullPath = this.getFullPath(virtualPath);
         archiver.directory(fullPath, false);
