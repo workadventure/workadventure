@@ -3,7 +3,6 @@ import {
     ITiledMapLayer,
     ITiledMapObject,
     ITiledMapProperty,
-    ITiledMapTile,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
 import type { AreaData } from "../types";
@@ -49,25 +48,27 @@ export class GameMap {
         this.gameMapEntities = new GameMapEntities(this);
 
         for (const tileset of this.map.tilesets) {
-            tileset?.tiles?.forEach((tile) => {
-                if (tile.properties && tileset.firstgid !== undefined) {
-                    this.tileSetPropertyMap[tileset.firstgid + tile.id] = tile.properties;
-                    tile.properties.forEach((prop) => {
-                        if (
-                            prop.name == GameMapProperties.NAME &&
-                            typeof prop.value == "string" &&
-                            tileset.firstgid !== undefined
-                        ) {
-                            this.tileNameMap.set(prop.value, tileset.firstgid + tile.id);
+            if ("tiles" in tileset) {
+                for (const tile of tileset.tiles ?? []) {
+                    if (tile.properties && tileset.firstgid !== undefined) {
+                        this.tileSetPropertyMap[tileset.firstgid + tile.id] = tile.properties;
+                        for (const prop of tile.properties) {
+                            if (
+                                prop.name == GameMapProperties.NAME &&
+                                typeof prop.value == "string" &&
+                                tileset.firstgid !== undefined
+                            ) {
+                                this.tileNameMap.set(prop.value, tileset.firstgid + tile.id);
+                            }
+                            if (prop.name == GameMapProperties.EXIT_URL && typeof prop.value == "string") {
+                                this.exitUrls.push(prop.value);
+                            } else if (prop.name == GameMapProperties.START) {
+                                this.hasStartTile = true;
+                            }
                         }
-                        if (prop.name == GameMapProperties.EXIT_URL && typeof prop.value == "string") {
-                            this.exitUrls.push(prop.value);
-                        } else if (prop.name == GameMapProperties.START) {
-                            this.hasStartTile = true;
-                        }
-                    });
+                    }
                 }
-            });
+            }
         }
     }
 
@@ -90,12 +91,6 @@ export class GameMap {
             x: Math.floor(x / (this.map.tilewidth ?? this.DEFAULT_TILE_SIZE)),
             y: Math.floor(y / (this.map.tileheight ?? this.DEFAULT_TILE_SIZE)),
         };
-    }
-
-    public getTileInformationFromTileset(tilesetName: string, tileIndex: number): ITiledMapTile | undefined {
-        return this.map.tilesets
-            .find((tile) => tile.name === tilesetName)
-            ?.tiles?.find((tile) => tile.id === tileIndex);
     }
 
     public getMap(): ITiledMap {

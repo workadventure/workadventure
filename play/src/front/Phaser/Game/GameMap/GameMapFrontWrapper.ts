@@ -5,7 +5,6 @@ import type {
     ITiledMapLayer,
     ITiledMapObject,
     ITiledMapProperty,
-    ITiledMapTile,
     ITiledMapTileLayer,
 } from "@workadventure/tiled-map-type-guard";
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
@@ -122,7 +121,9 @@ export class GameMapFrontWrapper {
 
         this.entitiesManager = new EntitiesManager(this.scene, this);
         for (const entityData of this.gameMap.getGameMapEntities().getEntities()) {
-            void this.entitiesManager.addEntity(entityData, TexturesHelper.ENTITIES_TEXTURES_DIRECTORY);
+            this.entitiesManager
+                .addEntity(entityData, TexturesHelper.ENTITIES_TEXTURES_DIRECTORY)
+                .catch((e) => console.error(e));
         }
 
         this.updateCollisionGrid();
@@ -196,10 +197,6 @@ export class GameMapFrontWrapper {
 
     public getPropertiesForIndex(index: number): Array<ITiledMapProperty> {
         return this.gameMap.getPropertiesForIndex(index);
-    }
-
-    public getTileInformationFromTileset(tilesetName: string, tileIndex: number): ITiledMapTile | undefined {
-        return this.gameMap.getTileInformationFromTileset(tilesetName, tileIndex);
     }
 
     public getCollisionGrid(): number[][] {
@@ -435,7 +432,9 @@ export class GameMapFrontWrapper {
             return false;
         }
         const playersPositions = [
-            ...this.scene.getRemotePlayers().map((player) => player.getPosition()),
+            ...Array.from(this.scene.getRemotePlayersRepository().getPlayers().values()).map(
+                (player) => player.position
+            ),
             this.scene.CurrentPlayer.getPosition(),
         ];
 
@@ -663,8 +662,8 @@ export class GameMapFrontWrapper {
         return this.entitiesManager;
     }
 
-    public getEntities(): Entity[] {
-        return this.entitiesManager.getEntities();
+    public getActivatableEntities(): Entity[] {
+        return this.entitiesManager.getActivatableEntities();
     }
 
     public handleEntityActionTrigger(): void {

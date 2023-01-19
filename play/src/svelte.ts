@@ -98,6 +98,7 @@ const config: Phaser.Types.Core.GameConfig = {
     dom: {
         createContainer: true,
     },
+    disableContextMenu: true,
     render: {
         pixelArt: true,
         roundPixels: true,
@@ -142,14 +143,6 @@ const canvas = HtmlUtils.querySelectorOrFail("#game canvas");
 if (canvas) {
     canvas.addEventListener("click", function () {
         document.activeElement?.blur();
-    });
-
-    /*
-        TODO: replace with disableContextMenu when Phaser does not disable context menu on document.body
-        see https://github.com/photonstorm/phaser/issues/6064
-    */
-    canvas.addEventListener("contextmenu", function (e) {
-        e.preventDefault();
     });
 }
 

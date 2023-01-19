@@ -24,7 +24,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
     private shiftKey: Phaser.Input.Keyboard.Key;
 
-    private entities: Entity[];
+    private entities: Map<number, Entity>;
+    private activatableEntities: Entity[];
 
     private properties: Map<string, string | boolean | number>;
 
@@ -39,7 +40,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         this.scene = scene;
         this.gameMapFrontWrapper = gameMapFrontWrapper;
         this.shiftKey = this.scene.input.keyboard.addKey("SHIFT");
-        this.entities = [];
+        this.entities = new Map<number, Entity>();
+        this.activatableEntities = [];
         this.properties = new Map<string, string | boolean | number>();
 
         // clear properties immediately on every ActionsMenu change
@@ -69,17 +71,25 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             );
         }
 
-        this.entities.push(entity);
+        this.entities.set(data.id, entity);
+        if (entity.isActivatable()) {
+            this.activatableEntities.push(entity);
+        }
         this.scene.markDirty();
     }
 
     public deleteEntity(id: number): boolean {
-        const index = this.entities.findIndex((ent) => ent.getEntityData().id === id);
-        if (index === -1) {
+        const entity = this.entities.get(id);
+        if (!entity) {
             return false;
         }
-        const entity = this.entities[index];
-        this.entities.splice(index, 1);
+
+        if (entity.isActivatable()) {
+            const index = this.activatableEntities.findIndex((entity) => entity.getEntityData().id === id);
+            if (index !== -1) {
+                this.activatableEntities.splice(index, 1);
+            }
+        }
 
         const colGrid = entity.getReversedCollisionGrid();
         if (colGrid) {
@@ -90,10 +100,10 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 colGrid
             );
         }
-
         entity.destroy();
         this.scene.markDirty();
-        return true;
+
+        return this.entities.delete(id);
     }
 
     public getProperties(): Map<string, string | boolean | number> {
@@ -111,7 +121,9 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
     }
 
     public makeAllEntitiesInteractive(activatableOnly = false): void {
-        const entities = activatableOnly ? this.entities.filter((entity) => entity.isActivatable()) : this.entities;
+        const entities = activatableOnly
+            ? Array.from(this.entities.values()).filter((entity) => entity.isActivatable())
+            : this.entities;
         entities.forEach((entity) => {
             entity.setInteractive({ pixelPerfect: true, cursor: "pointer" });
             this.scene.input.setDraggable(entity);
@@ -245,8 +257,12 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         });
     }
 
-    public getEntities(): Entity[] {
+    public getEntities(): Map<number, Entity> {
         return this.entities;
+    }
+
+    public getActivatableEntities(): Entity[] {
+        return this.activatableEntities;
     }
 
     public getPointerOverEntityObservable(): Observable<Entity> {
