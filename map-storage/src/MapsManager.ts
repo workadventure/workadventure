@@ -115,10 +115,6 @@ class MapsManager {
         const queue = this.loadedMapsCommandsQueue.get(mapKey);
         if (queue) {
             const commandIndex = queue.findIndex((command) => command.id === commandId);
-            // if (commandIndex === -1) {
-            //     return [];
-            // }
-            // return queue.slice(commandIndex + 1);
             return queue.slice(commandIndex !== -1 ? commandIndex + 1 : 0);
         }
         return [];
@@ -193,8 +189,6 @@ class MapsManager {
                     if (gameMap) {
                         await fileSystem.writeStringAsFile(key, JSON.stringify(gameMap.getMap()));
                     }
-                    // map is saved, there is no unsaved commands that need to be applied
-                    this.loadedMapsCommandsQueue.set(key, []);
                     const lastChangeTimestamp = this.mapLastChangeTimestamp.get(key);
                     if (lastChangeTimestamp === undefined) {
                         return;
