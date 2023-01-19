@@ -177,6 +177,7 @@
                 [ 1, 1 ],
                 [ 1, 1 ]
             ],
+            "depthOffset": -64,
             "imagePath":"Furniture/Table/TableDarkBrown.png",
             "direction":"Down",
             "color":"brown"
@@ -184,6 +185,7 @@
         {
             "name":"Basic Narrow Wood Table",
             "tags":["basic", "table"],
+            "depthOffset": -64,
             "imagePath":"Furniture/Table/TableNarrowBrown.png",
             "collisionGrid": [
                 [ 0],
@@ -196,6 +198,7 @@
         {
             "name":"Basic Narrow Wood Table",
             "tags":["basic", "table"],
+            "depthOffset": -64,
             "imagePath":"Furniture/Table/TableNarrowDarkBrown.png",
             "collisionGrid": [
                 [ 0],
@@ -208,6 +211,7 @@
         {
             "name":"Basic Small Table",
             "tags":["basic", "table"],
+            "depthOffset": -32,
             "imagePath":"Furniture/Table/TableSmallGrey.png",
             "collisionGrid": [
                 [ 0],
@@ -219,6 +223,7 @@
         {
             "name":"Basic Small Table",
             "tags":["basic", "table"],
+            "depthOffset": -32,
             "imagePath":"Furniture/Table/TableSmallWhite.png",
             "collisionGrid": [
                 [ 0],
@@ -511,6 +516,7 @@
         {
             "name":"Mural Shelf",
             "tags":["mural","shelf"],
+            "depthOffset": -64,
             "imagePath":"Furniture/Shelf/MuralShelf.png",
             "direction":"Down",
             "color":"saddlebrown"
@@ -518,6 +524,7 @@
         {
             "name":"Shelf",
             "tags":["basic", "shelf"],
+            "depthOffset": -96,
             "imagePath":"Furniture/Shelf/Shelf.png",
             "direction":"Down",
             "color":"saddlebrown"
@@ -525,6 +532,7 @@
         {
             "name":"Big Shelf",
             "tags":["basic", "shelf"],
+            "depthOffset": -96,
             "imagePath":"Furniture/Shelf/ShelfBig.png",
             "direction":"Down",
             "color":"saddlebrown"
