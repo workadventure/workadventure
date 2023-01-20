@@ -121,9 +121,7 @@ export class GameMapFrontWrapper {
 
         this.entitiesManager = new EntitiesManager(this.scene, this);
         for (const entityData of this.gameMap.getGameMapEntities().getEntities()) {
-            this.entitiesManager
-                .addEntity(entityData, TexturesHelper.ENTITIES_TEXTURES_DIRECTORY)
-                .catch((e) => console.error(e));
+            this.entitiesManager.addEntity(entityData, TexturesHelper.ENTITIES_TEXTURES_DIRECTORY);
         }
 
         this.updateCollisionGrid();
