@@ -57,7 +57,7 @@ app.get("/entityCollections", (req, res) => {
 
 app.get("/maps", (req, res, next) => {
     (async () => {
-        const data = await fileSystem.readFileAsString(`${mapPath("/", req)}cache.txt`);
+        const data = await fileSystem.readFileAsString(mapPath(`/${UploadController.CACHE_NAME}`, req));
         res.send(JSON.parse(data));
     })().catch((e) => next(e));
 });
