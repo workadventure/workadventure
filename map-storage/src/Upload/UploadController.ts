@@ -162,7 +162,7 @@ export class UploadController {
                     const cacheFileName = "cache.txt";
                     const files = await fileSystem.listFiles(mapPath("/", req), ".tmj");
 
-                    await fileSystem.writeStringAsFile(mapPath("/"+cacheFileName, req), JSON.stringify(files));
+                    await fileSystem.writeStringAsFile(mapPath("/" + cacheFileName, req), JSON.stringify(files));
 
                     res.send("File successfully uploaded.");
                 });
