@@ -91,7 +91,7 @@ export class XmppClient {
         }
     }
 
-    private createClient(
+    private create(
         res: (value: Stanza.Agent | PromiseLike<Stanza.Agent>) => void,
         rej: (reason?: unknown) => void
     ): void {
@@ -357,7 +357,7 @@ export class XmppClient {
     start(): CancelablePromise {
         debug("xmppClient => start");
         return (this.clientPromise = new CancelablePromise((res, rej, onCancel) => {
-            this.createClient(res, rej);
+            this.create(res, rej);
             onCancel(() => {
                 debug("clientPromise => onCancel => from xmppClient");
                 this.restart();

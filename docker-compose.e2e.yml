@@ -43,9 +43,9 @@ services:
     command: /start_nginx.sh
     volumes: []
     environment:
+      STARTUP_COMMAND_1: ""
       STARTUP_COMMAND_2: ""
       STARTUP_COMMAND_3: ""
-      STARTUP_COMMAND_4: ""
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.chat.rule=Host(`chat.workadventure.localhost`)"

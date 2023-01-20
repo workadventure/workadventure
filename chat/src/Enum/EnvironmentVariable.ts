@@ -26,3 +26,13 @@ export {
     EJABBERD_DOMAIN,
     EJABBERD_WS_URI,
 };
+
+
+
+
+
+
+
+
+
+export const MATRIX_SERVER_URL: string = getEnvConfig("MATRIX_SERVER_URL") || "";

@@ -112,7 +112,8 @@ services:
         command: npm run start
         working_dir: /usr/src/app/chat
         environment:
-            STARTUP_COMMAND_2: ../npm-install.sh
+            STARTUP_COMMAND_1: ../npm-install.sh
+            STARTUP_COMMAND_2: cp -f ../node_modules/@matrix-org/olm/olm.wasm public/olm.wasm
             STARTUP_COMMAND_3: npm run typesafe-i18n
             PLAY_URL: http://play.workadventure.localhost
             UPLOADER_URL: http://uploader.workadventure.localhost
@@ -122,6 +123,7 @@ services:
             EJABBERD_WS_URI: ws://xmpp.workadventure.localhost:5443/ws
             ENABLE_OPENID: "$OPID_CLIENT_ID"
             ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
+            MATRIX_SERVER_URL: matrix.workadventure.localhost
         volumes:
             - .:/usr/src/app
         labels:

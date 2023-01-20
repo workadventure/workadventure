@@ -1,0 +1,37 @@
+version: "3.6"
+services:
+  reverse-proxy:
+    networks:
+      default:
+        aliases:
+          - 'matrix.workadventure.localhost'
+
+  synapse:
+    image: matrixdotorg/synapse:latest
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.matrix.rule=Host(`matrix.workadventure.localhost`)"
+      - "traefik.http.routers.matrix.entryPoints=web"
+      - "traefik.http.services.matrix.loadbalancer.server.port=8008"
+      - "traefik.http.routers.matrix.service=matrix"
+    volumes:
+      - ./synapse/:/data/
+      - ./synapse/federation:/etc/nginx/vhost.d/matrix.workadventure.localhost
+    environment:
+      VIRTUAL_HOST: "matrix.workadventure.localhost"
+      VIRTUAL_PORT: 8008
+      LETSENCRYPT_HOST: "matrix.workadventure.localhost"
+      SYNAPSE_SERVER_NAME: "matrix.workadventure.localhost"
+      SYNAPSE_REPORT_STATS: "yes"
+
+  element:
+    image: vectorim/element-web:latest
+    restart: unless-stopped
+    volumes:
+      - ./synapse/config.json:/app/config.json
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.element.rule=Host(`element.workadventure.localhost`)"
+      - "traefik.http.routers.element.entryPoints=web"
+      - "traefik.http.services.element.loadbalancer.server.port=80"
+      - "traefik.http.routers.element.service=element"

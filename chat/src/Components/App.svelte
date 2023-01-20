@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Chat from "./Chat.svelte";
+    import Matrix from "./Matrix.svelte";
 </script>
 
-<Chat />
+<Matrix />

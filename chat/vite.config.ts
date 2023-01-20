@@ -4,10 +4,9 @@ import { envConfig } from "@geprog/vite-plugin-env-config";
 import sveltePreprocess from "svelte-preprocess";
 import pluginRewriteAll from "vite-plugin-rewrite-all";
 import NodeGlobalsPolyfillPlugin from "@esbuild-plugins/node-globals-polyfill";
-import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill';
-import rollupNodePolyFill from 'rollup-plugin-node-polyfills'
 
 export default defineConfig({
+    define: {global: 'window'},
     server: {
         port: 8080,
         hmr: {
@@ -17,12 +16,6 @@ export default defineConfig({
     },
     build: {
         sourcemap: true,
-        rollupOptions: {
-            plugins: [
-                //@ts-ignore
-                rollupNodePolyFill(),
-            ],
-        },
     },
     plugins: [
         svelte({
@@ -49,30 +42,27 @@ export default defineConfig({
                 "ENABLE_OPENID",
                 "ENABLE_CHAT_UPLOAD",
                 "EJABBERD_WS_URI",
-                "EJABBERD_DOMAIN"
+                "EJABBERD_DOMAIN",
+                "MATRIX_SERVER_URL"
             ],
         }),
         pluginRewriteAll(),
     ],
     optimizeDeps: {
+        include: [
+            '@matrix-org/olm',
+        ],
         esbuildOptions: {
             define: {
                 global: 'globalThis'
             },
             plugins: [
+                // @ts-ignore
                 NodeGlobalsPolyfillPlugin({
-                    process: true,
-                    buffer: true
-                }),
-                NodeModulesPolyfillPlugin()
+                    buffer: true,
+                    process: false
+                })
             ]
         }
     },
-    resolve: {
-        alias: [
-            { find: 'events', replacement: 'rollup-plugin-node-polyfills/polyfills/events' },
-            { find: 'child_process', replacement: 'rollup-plugin-node-polyfills' },
-            { find: 'path', replacement: 'rollup-plugin-node-polyfills/polyfills/path' },
-        ],
-    }
 });

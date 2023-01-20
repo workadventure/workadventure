@@ -11,3 +11,9 @@ node_modules
 _
 *.code-workspace
 /install.lock
+/synapse/media_store/
+/synapse/homeserver.db
+/synapse/homeserver.db-shm
+/synapse/homeserver.db-wal
+/synapse/matrix.workadventure.localhost.signing.key
+/synapse/matrix.workadventure.localhost.log.config
