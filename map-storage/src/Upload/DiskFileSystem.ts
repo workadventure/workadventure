@@ -4,6 +4,7 @@ import path from "path";
 import { NextFunction, Response } from "express";
 import { Archiver } from "archiver";
 import { StreamZipAsync, ZipEntry } from "node-stream-zip";
+import { UploadController } from "./UploadController";
 
 export class DiskFileSystem implements FileSystemInterface {
     public constructor(private baseDirectory: string) {}
@@ -71,7 +72,7 @@ export class DiskFileSystem implements FileSystemInterface {
 
     archiveDirectory(archiver: Archiver, virtualPath: string): Promise<void> {
         const fullPath = this.getFullPath(virtualPath);
-        archiver.directory(fullPath, false);
+        archiver.glob("**/*", { cwd: fullPath, ignore: UploadController.CACHE_NAME });
         return Promise.resolve();
     }
 

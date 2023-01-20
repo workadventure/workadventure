@@ -16,6 +16,7 @@ import { Archiver } from "archiver";
 import { Readable } from "stream";
 import { StreamZipAsync, ZipEntry } from "node-stream-zip";
 import path from "path";
+import { UploadController } from "./UploadController";
 
 export class S3FileSystem implements FileSystemInterface {
     public constructor(private s3: S3, private bucketName: string) {}
@@ -195,6 +196,10 @@ export class S3FileSystem implements FileSystemInterface {
                     }
                     if (file.Key.endsWith("/")) {
                         // a directory. Let's bypass this.
+                        continue;
+                    }
+                    if (file.Key.includes(UploadController.CACHE_NAME)) {
+                        // we do not want cache file to be downloaded
                         continue;
                     }
                     archiver.append(Body as Readable, { name: file.Key.substring(virtualPath.length) });
