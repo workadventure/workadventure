@@ -66,6 +66,7 @@ export class MapEntitiesPrefabsStore implements Readable<EntityPrefab[]> {
                     name: entity.name,
                     id: entity.id,
                     collectionName: entity.collectionName,
+                    depthOffset: entity.depthOffset ?? 0,
                     // TODO: Merge tags on map-storage side?
                     tags: [...entity.tags, ...entityCollection.tags],
                     imagePath: `${TexturesHelper.ENTITIES_TEXTURES_DIRECTORY}${entity.imagePath}`,
