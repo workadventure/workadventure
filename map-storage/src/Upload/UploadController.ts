@@ -159,17 +159,17 @@ export class UploadController {
                         }
                     });
 
+                    const cacheFileName = "cache.txt";
+                    const files = await fileSystem.listFiles(mapPath("/", req), ".tmj");
+
+                    await fileSystem.writeStringAsFile(mapPath("/" + cacheFileName, req), JSON.stringify(files));
+
                     res.send("File successfully uploaded.");
                 });
 
                 if (limiter.activeCount === 0 && limiter.pendingCount === 0) {
                     this.uploadLimiter.delete(virtualDirectory);
                 }
-
-                const cacheFileName = "cache.txt";
-                const files = await fileSystem.listFiles(req.hostname, ".tmj");
-
-                await fileSystem.writeStringAsFile(`${req.hostname}/${cacheFileName}`, JSON.stringify(files));
             })().catch((e) => next(e));
         });
     }
