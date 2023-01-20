@@ -811,6 +811,10 @@ export class GameScene extends DirtyScene {
             )
             .then((onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
+                this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
+                if (onConnect.room.commandsToApply) {
+                    this.mapEditorModeManager?.updateMapToNewest(onConnect.room.commandsToApply);
+                }
 
                 this.subscribeToStores();
 
@@ -825,8 +829,6 @@ export class GameScene extends DirtyScene {
                 playersStore.connectToRoomConnection(this.connection);
                 userIsAdminStore.set(this.connection.hasTag("admin"));
                 userIsEditorStore.set(this.connection.hasTag("editor"));
-
-                this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
 
                 this.connection.userJoinedMessageStream.subscribe((message) => {
                     this.remotePlayersRepository.addPlayer(message);
