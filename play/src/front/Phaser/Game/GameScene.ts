@@ -154,6 +154,7 @@ import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import { mapEditorModeStore, mapEntitiesPrefabsStore } from "../../Stores/MapEditorStore";
 import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
+import {BroadcastService} from "../../Streaming/BroadcastService";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -260,6 +261,7 @@ export class GameScene extends DirtyScene {
     private companionLoadingManager: CompanionTexturesLoadingManager | undefined;
     private throttledSendViewportToServer!: () => void;
     private playersDebugLogAlreadyDisplayed = false;
+    private broadcastService: BroadcastService | undefined;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -1005,6 +1007,8 @@ export class GameScene extends DirtyScene {
                     this.room.id,
                     this.room.group ?? undefined
                 );
+
+                this.broadcastService = new BroadcastService(this.connection);
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
@@ -2073,6 +2077,7 @@ ${escapedMessage}
         this.emoteManager?.destroy();
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
+        this.broadcastService?.destroy();
         this.peerStoreUnsubscriber?.();
         this.mapEditorModeStoreUnsubscriber?.();
         this.emoteUnsubscriber?.();
