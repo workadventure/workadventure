@@ -17,6 +17,7 @@ import { AvailabilityStatus } from "@workadventure/messages";
 import deepEqual from "fast-deep-equal";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 import { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/ConstraintMessage";
+import {megaphoneEnabledStore} from "./MegaphoneStore";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -163,13 +164,14 @@ const mouseInCameraTriggerArea = readable(false, function start(set) {
  * A store that contains "true" if the webcam should be stopped for energy efficiency reason - i.e. we are not moving and not in a conversation.
  */
 export const cameraEnergySavingStore = derived(
-    [userMoved5SecondsAgoStore, peerStore, enabledWebCam10secondsAgoStore, mouseInCameraTriggerArea],
-    ([$userMoved5SecondsAgoStore, $peerStore, $enabledWebCam10secondsAgoStore, $mouseInBottomRight]) => {
+    [userMoved5SecondsAgoStore, peerStore, enabledWebCam10secondsAgoStore, mouseInCameraTriggerArea, megaphoneEnabledStore],
+    ([$userMoved5SecondsAgoStore, $peerStore, $enabledWebCam10secondsAgoStore, $mouseInBottomRight, $megaphoneEnabledStore]) => {
         return (
             !$mouseInBottomRight &&
             !$userMoved5SecondsAgoStore &&
             $peerStore.size === 0 &&
-            !$enabledWebCam10secondsAgoStore
+            !$enabledWebCam10secondsAgoStore &&
+            !$megaphoneEnabledStore
         );
     }
 );

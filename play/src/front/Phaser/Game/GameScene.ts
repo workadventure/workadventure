@@ -152,6 +152,7 @@ import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManag
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { faviconManager } from "./../../WebRtc/FaviconManager";
 import { z } from "zod";
+import {BroadcastService} from "../../Streaming/BroadcastService";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -260,6 +261,7 @@ export class GameScene extends DirtyScene {
     private companionLoadingManager: CompanionTexturesLoadingManager | undefined;
     private throttledSendViewportToServer!: () => void;
     private playersDebugLogAlreadyDisplayed = false;
+    private broadcastService: BroadcastService | undefined;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -1041,6 +1043,8 @@ export class GameScene extends DirtyScene {
                         iframeListener.sendXmppSettingsToChatIframe(xmppSettingsMessage);
                     }
                 });
+
+                this.broadcastService = new BroadcastService(this.connection);
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
@@ -2140,6 +2144,7 @@ ${escapedMessage}
         this.emoteManager?.destroy();
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
+        this.broadcastService?.destroy();
         this.peerStoreUnsubscriber?.();
         this.mapEditorModeStoreUnsubscriber?.();
         this.refreshPromptStoreStoreUnsubscriber?.();

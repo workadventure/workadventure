@@ -75,6 +75,7 @@ import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEven
 import { iframeListener } from "../Api/IframeListener";
 import { assertObjectKeys } from "../Utils/CustomTypeGuards";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
+import {libJitsiFactory} from "../Streaming/Jitsi/LibJitsiFactory";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
@@ -216,6 +217,110 @@ export class RoomConnection implements RoomConnection {
         availabilityStatus: AvailabilityStatus,
         lastCommandId?: string
     ) {
+        // TEEEEEEEEEEEEEEEEST
+        libJitsiFactory.createConnection("jitsi.test.workadventu.re", "prosody.test.workadventu.re", "muc.prosody.test.workadventu.re").then((connection) => {
+            const JitsiMeetJS = window.JitsiMeetJS;
+            const room = connection.initJitsiConference('conferencetestfromjitsilib', {});
+            let isJoined = false;
+            let localTracks: any[] = [];
+            room.on(
+                JitsiMeetJS.events.conference.CONFERENCE_JOINED,
+                () => {
+                    isJoined = true;
+                    for (let i = 0; i < localTracks.length; i++) {
+                        room.addTrack(localTracks[i]);
+                    }
+                    console.error("conference joined")
+                });
+            room.on(
+                JitsiMeetJS.events.conference.CONFERENCE_FAILED,
+                () => {
+                    console.error("conference failed")
+                });
+            room.on(
+                JitsiMeetJS.events.conference.CONNECTION_ESTABLISHED,
+                () => {
+                    console.error("CONNECTION_ESTABLISHED")
+                });
+            room.on(
+                JitsiMeetJS.events.conference.CONNECTION_INTERRUPTED,
+                () => {
+                    console.error("CONNECTION_INTERRUPTED")
+                });
+            room.on(
+                JitsiMeetJS.events.conference.CONNECTION_RESTORED,
+                () => {
+                    console.error("CONNECTION_RESTORED")
+                });
+
+            function onLocalTracks(tracks) {
+                console.error("ONLOCALTRACKS", tracks)
+                localTracks = tracks;
+                for (let i = 0; i < localTracks.length; i++) {
+                    localTracks[i].addEventListener(
+                        JitsiMeetJS.events.track.TRACK_AUDIO_LEVEL_CHANGED,
+                        audioLevel => console.log(`Audio Level local: ${audioLevel}`));
+                    localTracks[i].addEventListener(
+                        JitsiMeetJS.events.track.TRACK_MUTE_CHANGED,
+                        () => console.log('local track muted'));
+                    localTracks[i].addEventListener(
+                        JitsiMeetJS.events.track.LOCAL_TRACK_STOPPED,
+                        () => console.log('local track stopped'));
+                    localTracks[i].addEventListener(
+                        JitsiMeetJS.events.track.TRACK_AUDIO_OUTPUT_CHANGED,
+                        deviceId =>
+                            console.log(
+                                `track audio output device was changed to ${deviceId}`));
+                    if (localTracks[i].getType() === 'video') {
+                        console.error("OUTPUTTING VIDEO")
+                     /*   const video = document.createElement("video");
+                        video.id = `localVideo${i}`;
+                        video.autoplay = true;
+
+                        window.document.body.prepend(video);
+
+                        //$('body').append(`<video autoplay='1' id='localVideo${i}' />`);
+                        localTracks[i].attach($(`#localVideo${i}`)[0]);*/
+                    } else {
+                        console.error("AUDIO ONLY")
+                        /*$('body').append(
+                            `<audio autoplay='1' muted='true' id='localAudio${i}' />`);
+                        localTracks[i].attach($(`#localAudio${i}`)[0]);*/
+                    }
+                    if (isJoined) {
+                        room.addTrack(localTracks[i]).catch(e => console.error(e));
+                    }
+                }
+            }
+
+            JitsiMeetJS.createLocalTracks({
+                devices: [ 'video' ]
+            }).then(onLocalTracks).catch(e => console.error(e));
+
+
+
+            /*room.on(JitsiMeetJS.events.conference.USER_JOINED, id => {
+                console.log('user join');
+                remoteTracks[id] = [];
+            });
+            room.on(JitsiMeetJS.events.conference.USER_LEFT, onUserLeft);
+            room.on(JitsiMeetJS.events.conference.TRACK_MUTE_CHANGED, track => {
+                console.log(`${track.getType()} - ${track.isMuted()}`);
+            });
+            room.on(
+                JitsiMeetJS.events.conference.DISPLAY_NAME_CHANGED,
+                (userID, displayName) => console.log(`${userID} - ${displayName}`));
+            room.on(
+                JitsiMeetJS.events.conference.TRACK_AUDIO_LEVEL_CHANGED,
+                (userID, audioLevel) => console.log(`${userID} - ${audioLevel}`));
+            room.on(
+                JitsiMeetJS.events.conference.PHONE_NUMBER_CHANGED,
+                () => console.log(`${room.getPhoneNumber()} - ${room.getPhonePin()}`));*/
+            room.join("");
+
+        }).catch(e => console.error(e));
+        // TEEEEEEEEEEEEEEEEST
+
         let url = ABSOLUTE_PUSHER_URL;
         url = url.replace("http://", "ws://").replace("https://", "wss://");
         if (!url.endsWith("/")) {

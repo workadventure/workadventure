@@ -30,6 +30,7 @@
     import closeImg from "../images/close.png";
     import penImg from "../images/pen.png";
     import hammerImg from "../images/hammer.png";
+    import megaphoneImg from "../images/audio.svg"; // TODO: change this image
     import WorkAdventureImg from "../images/icon-workadventure-white.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
@@ -77,6 +78,7 @@
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
+    import {megaphoneEnabledStore} from "../../Stores/MegaphoneStore";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -150,6 +152,10 @@
 
     function toggleEmojiPicker() {
         $emoteMenuSubStore == true ? emoteMenuSubStore.closeEmoteMenu() : emoteMenuSubStore.openEmoteMenu();
+    }
+
+    function toggleMegaphone() {
+        $megaphoneEnabledStore = !$megaphoneEnabledStore;
     }
 
     function toggleMapEditorMode() {
@@ -684,6 +690,13 @@
 
                     <button class:border-top-light={$emoteMenuSubStore}>
                         <img draggable="false" src={emojiPickOn} style="padding: 2px" alt="Toggle emoji picker" />
+                    </button>
+                </div>
+                <div on:click={toggleMegaphone} class="bottom-action-button">
+                    <Tooltip text={$megaphoneEnabledStore ? $LL.actionbar.disableMegaphone() : $LL.actionbar.enableMegaphone()} />
+
+                    <button class:border-top-light={$megaphoneEnabledStore}>
+                        <img draggable="false" src={megaphoneImg} style="padding: 2px" alt="Toggle megaphone" />
                     </button>
                 </div>
             </div>
