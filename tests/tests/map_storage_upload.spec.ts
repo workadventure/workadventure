@@ -130,6 +130,38 @@ test.describe('Map-storage Upload API', () => {
         await expect(accessCacheControlFile.headers()['cache-control']).toContain("immutable");
     });
 
+    test("get list of maps", async ({
+        request,
+    }) => {
+        const uploadFile = await request.post(`/upload`, {
+            multipart: {
+                file: fs.createReadStream("./assets/file1.zip"),
+                directory: "/"
+            }
+        });
+        const uploadFileToDir = await request.post(`/upload`, {
+            multipart: {
+                file: fs.createReadStream("./assets/file1.zip"),
+                directory: "/foo"
+            }
+        });
+        await expect(uploadFile.ok()).toBeTruthy();
+        await expect(uploadFileToDir.ok()).toBeTruthy();
+
+        let listOfMaps = await request.get("/maps");
+        await expect(await listOfMaps.text() === JSON.stringify(["foo/map.tmj","map.tmj"])).toBeTruthy();
+
+        const uploadFileAlone = await request.post(`/upload`, {
+            multipart: {
+                file: fs.createReadStream("./assets/file1.zip"),
+                directory: "/"
+            }
+        });
+
+        await expect(uploadFileAlone.ok()).toBeTruthy();
+        listOfMaps = await request.get("/maps");
+        await expect(await listOfMaps.text() === JSON.stringify(["map.tmj"])).toBeTruthy();
+    });
     test('fails on invalid maps', async ({
                                            request,
                                        }) => {

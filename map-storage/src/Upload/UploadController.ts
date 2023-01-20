@@ -27,6 +27,8 @@ export class UploadController {
      * already a start of a check.
      */
 
+    public static readonly CACHE_NAME = "__cache.json";
+
     private uploadLimiter: Map<string, pLimit.Limit>;
 
     constructor(private app: Express, private fileSystem: FileSystemInterface) {
@@ -158,6 +160,13 @@ export class UploadController {
                             console.error("Error deleting file:", err);
                         }
                     });
+
+                    const files = await fileSystem.listFiles(mapPath("/", req), ".tmj");
+
+                    await fileSystem.writeStringAsFile(
+                        mapPath("/" + UploadController.CACHE_NAME, req),
+                        JSON.stringify(files)
+                    );
 
                     res.send("File successfully uploaded.");
                 });

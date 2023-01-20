@@ -452,7 +452,8 @@ export class MapValidator {
         if (filePath === undefined) {
             return false;
         }
-        const resolvedPath = path.normalize(path.resolve(path.dirname(mapPath), filePath));
+
+        const resolvedPath = path.normalize(`${path.dirname(mapPath)}/${filePath}`);
 
         return availableFiles.includes(resolvedPath);
     }
