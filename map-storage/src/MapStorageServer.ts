@@ -22,16 +22,18 @@ const mapStorageServer: MapStorageServer = {
         call: ServerUnaryCall<UpdateMapToNewestWithKeyMessage, EmptyMessage>,
         callback: sendUnaryData<EditMapCommandsArrayMessage>
     ): void {
+        const mapUrl = new URL(call.request.mapKey);
+        const mapKey = mapPathUsingDomain(mapUrl.pathname, mapUrl.hostname);
         const updateMapToNewestMessage = call.request.updateMapToNewestMessage;
         if (!updateMapToNewestMessage) {
             callback({ name: "MapStorageError", message: "UpdateMapToNewest message does not exist" }, null);
             return;
         }
         const clientCommandId = updateMapToNewestMessage.commandId;
-        const newestCommandId = mapsManager.getGameMap(call.request.mapKey)?.getLastCommandId();
+        const lastCommandId = mapsManager.getGameMap(mapKey)?.getLastCommandId();
         let commandsToApply: EditMapCommandMessage[] = [];
-        if (clientCommandId !== newestCommandId) {
-            commandsToApply = mapsManager.getCommandsNewerThan(call.request.mapKey, updateMapToNewestMessage.commandId);
+        if (clientCommandId !== lastCommandId) {
+            commandsToApply = mapsManager.getCommandsNewerThan(mapKey, updateMapToNewestMessage.commandId);
         }
         const editMapCommandsArrayMessage: EditMapCommandsArrayMessage = {
             editMapCommands: commandsToApply,
@@ -133,9 +135,9 @@ const mapStorageServer: MapStorageServer = {
                 }
                 case "createEntityMessage": {
                     const message = editMapMessage.createEntityMessage;
-                    const entityPrefab = mapsManager.getEntityPrefab(message.collecionName, message.prefabId);
+                    const entityPrefab = mapsManager.getEntityPrefab(message.collectionName, message.prefabId);
                     if (!entityPrefab) {
-                        throw new Error(`CANNOT FIND PREFAB FOR: ${message.collecionName} ${message.prefabId}`);
+                        throw new Error(`CANNOT FIND PREFAB FOR: ${message.collectionName} ${message.prefabId}`);
                     }
                     mapsManager.executeCommand(
                         mapKey,
@@ -169,7 +171,7 @@ const mapStorageServer: MapStorageServer = {
                 }
             }
             // send edit map message back as a valid one
-            mapsManager.addCommandToQueue(call.request.mapKey, editMapCommandMessage);
+            mapsManager.addCommandToQueue(mapKey, editMapCommandMessage);
             callback(null, editMapCommandMessage);
         } catch (e) {
             console.log(e);

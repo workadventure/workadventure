@@ -276,9 +276,9 @@ jobs:
         run: npm run pretty-check
         working-directory: "libs/map-editor"
 
-#      - name: "jest"
-#        run: npm test
-#        working-directory: "libs/map-editor"
+      - name: "jest"
+        run: npm test
+        working-directory: "libs/map-editor"
 
   continuous-integration-map-storage:
     name: "Continuous Integration Map Storage"

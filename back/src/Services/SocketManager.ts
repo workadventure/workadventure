@@ -127,6 +127,7 @@ export class SocketManager {
                         if (err) {
                             emitError(user.socket, err);
                             reject(err);
+                            return;
                         }
                         resolve(message.getEditmapcommandsList());
                     }

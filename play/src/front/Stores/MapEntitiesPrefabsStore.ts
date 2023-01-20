@@ -56,12 +56,8 @@ export class MapEntitiesPrefabsStore implements Readable<EntityPrefab[]> {
         this.mapEntitiesStore.set(newCollection);
     }
 
-    public async loadCollections(urls: string[]): Promise<void> {
-        const promises: Promise<EntityCollection>[] = [];
-        for (const url of urls) {
-            promises.push(this.fetchCollection(url));
-        }
-        const entityCollections = await Promise.all(promises);
+    public async loadCollections(url: string): Promise<void> {
+        const entityCollections = await this.fetchCollections(url);
 
         for (const entityCollection of entityCollections) {
             const tagSet = new Set<string>();
@@ -88,7 +84,7 @@ export class MapEntitiesPrefabsStore implements Readable<EntityPrefab[]> {
         }
     }
 
-    private async fetchCollection(url: string): Promise<EntityCollection> {
+    private async fetchCollections(url: string): Promise<EntityCollection[]> {
         return (await fetch(url)).json();
     }
 }

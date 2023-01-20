@@ -4,6 +4,7 @@ import { get } from "svelte/store";
 import { userStore } from "../Stores/LocalUserStore";
 import { ADMIN_API_URL, ENABLE_CHAT_UPLOAD } from "../Enum/EnvironmentVariable";
 import { WaLink } from "../Xmpp/Lib/Plugin";
+import axios from "axios";
 
 const _VERBOSE = true;
 
@@ -118,31 +119,41 @@ export class FileMessageManager {
                 }
                 return list;
             });
-            //eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (err: any) {
-            console.error("sendFiles => ", err, err.response, err.response?.data);
-
-            //add error state in message
-            filesUploadStore.update((list) => {
-                for (const [, file] of list) {
-                    file.uploadState = uploadingState.error;
-                    if (err instanceof NotLoggedUser) {
-                        file.errorMessage = "not-logged";
-                        file.errorCode = 401;
-                    } else if (err instanceof DisabledChat) {
-                        file.errorMessage = "disabled";
-                        file.errorCode = 401;
-                    } else {
-                        file.errorMessage = err.response?.data.message;
-                        file.errorCode = err.response?.status;
-                        if (err.response?.data.maxFileSize) {
-                            file.maxFileSize = `(< ${err.response?.data.maxFileSize / 1_048_576}Mo)`;
-                        }
-                    }
-                    list.set(file.name, file);
+        } catch (err) {
+            if (err instanceof Error) {
+                if (axios.isAxiosError(err)) {
+                    console.error("sendFiles => ", err, err.response, err.response?.data);
+                } else {
+                    console.error("sendFiles => ", err);
                 }
-                return list;
-            });
+
+                //add error state in message
+                filesUploadStore.update((list) => {
+                    for (const [, file] of list) {
+                        file.uploadState = uploadingState.error;
+                        if (err instanceof NotLoggedUser) {
+                            file.errorMessage = "not-logged";
+                            file.errorCode = 401;
+                        } else if (err instanceof DisabledChat) {
+                            file.errorMessage = "disabled";
+                            file.errorCode = 401;
+                        } else if (axios.isAxiosError(err) && err.response) {
+                            file.errorMessage = err.response?.data.message;
+                            file.errorCode = err.response?.status;
+                            if (err.response?.data.maxFileSize) {
+                                file.maxFileSize = `(< ${err.response?.data.maxFileSize / 1_048_576}Mo)`;
+                            }
+                        } else {
+                            file.errorMessage = "Unknown error! Please contact us!";
+                            file.errorCode = 500;
+                        }
+                        list.set(file.name, file);
+                    }
+                    return list;
+                });
+            } else {
+                throw err;
+            }
         }
     }
 

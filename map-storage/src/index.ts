@@ -9,6 +9,8 @@ import { UploadController } from "./Upload/UploadController";
 import { fileSystem } from "./fileSystem";
 import passport from "passport";
 import { passportStrategy } from "./Services/Authentication";
+import { mapPathUsingDomain } from "./Services/PathMapper";
+import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -30,7 +32,7 @@ app.use(cors());
 passport.use(passportStrategy);
 app.use(passport.initialize());
 
-app.get("*.json", (req, res, next) => {
+app.get("*.tmj", (req, res, next) => {
     (async () => {
         const path = req.url;
         const domain = req.hostname;
@@ -38,25 +40,19 @@ app.get("*.json", (req, res, next) => {
             res.status(400).send("Invalid request");
             return;
         }
-        res.send(await mapsManager.getMap(path, domain));
-    })().catch((e) => next(e));
-});
+        const key = mapPathUsingDomain(path, domain);
+        const file = await fileSystem.readFileAsString(key);
+        const map = ITiledMap.parse(JSON.parse(file));
 
-app.get("/entityCollections/*", (req, res) => {
-    const url = new URL(`${req.protocol}://${req.get("host") ?? ""}${req.originalUrl}`);
-    const collectionName = decodeURI(url.pathname).split("/").pop() ?? "";
-    const collection = mapsManager.getEntityCollection(collectionName);
-    if (collection) {
-        res.send(collection);
-    } else {
-        res.send(`COULD NOT FIND COLLECTION: ${collectionName}`);
-    }
+        if (!mapsManager.isMapAlreadyLoaded(key)) {
+            mapsManager.loadMapToMemory(key, map);
+        }
+        res.send(map);
+    })().catch((e) => next());
 });
 
 app.get("/entityCollections", (req, res) => {
-    res.send({
-        collections: mapsManager.getEntityCollectionsNames(),
-    });
+    res.send(mapsManager.getEntityCollections());
 });
 
 new UploadController(app, fileSystem);

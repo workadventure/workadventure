@@ -1,0 +1,390 @@
+{ "compressionlevel":-1,
+ "height":17,
+ "infinite":false,
+ "layers":[
+        {
+         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443,
+            443, 0, 0, 0, 0, 0, 0, 443, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 443, 0, 0, 0, 0, 0, 0, 0, 443,
+            443, 0, 0, 0, 0, 0, 0, 443, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 443, 0, 0, 0, 0, 0, 0, 0, 443,
+            443, 0, 0, 0, 0, 0, 0, 443, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 443, 0, 0, 0, 0, 0, 0, 0, 443,
+            443, 0, 0, 0, 0, 0, 0, 443, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 443, 0, 0, 0, 0, 0, 0, 0, 443,
+            443, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 443,
+            443, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 443,
+            443, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 443,
+            443, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 443,
+            443, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 443,
+            443, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 443,
+            443, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 443,
+            443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443, 443,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         "height":17,
+         "id":7,
+         "name":"collisions",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":31,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201,
+            201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201,
+            201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201,
+            201, 201, 201, 201, 201, 201, 201, 201, 234, 234, 234, 234, 234, 234, 234, 212, 212, 212, 212, 212, 212, 212, 201, 201, 201, 201, 201, 201, 201, 201, 201,
+            201, 201, 201, 201, 201, 201, 201, 201, 234, 234, 234, 234, 234, 234, 234, 212, 212, 212, 212, 212, 212, 212, 201, 201, 201, 201, 201, 201, 201, 201, 201,
+            201, 201, 201, 201, 201, 201, 201, 201, 234, 234, 234, 234, 234, 234, 234, 212, 212, 212, 212, 212, 212, 212, 201, 201, 201, 201, 201, 201, 201, 201, 201,
+            201, 201, 201, 201, 201, 201, 201, 201, 234, 234, 234, 234, 234, 234, 234, 212, 212, 212, 212, 212, 212, 212, 201, 201, 201, 201, 201, 201, 201, 201, 201,
+            201, 201, 201, 201, 201, 201, 201, 201, 234, 234, 234, 234, 234, 234, 234, 212, 212, 212, 212, 212, 212, 212, 201, 201, 201, 201, 201, 201, 201, 201, 201,
+            201, 201, 201, 201, 201, 201, 201, 201, 234, 234, 234, 234, 234, 234, 234, 212, 212, 212, 212, 212, 212, 212, 201, 201, 201, 201, 201, 201, 201, 201, 201,
+            201, 201, 201, 201, 201, 201, 201, 201, 234, 234, 234, 234, 234, 234, 234, 212, 212, 212, 212, 212, 212, 212, 201, 201, 201, 201, 201, 201, 201, 201, 201,
+            201, 201, 212, 212, 212, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201,
+            201, 201, 212, 212, 212, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201,
+            201, 201, 212, 212, 212, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201,
+            201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201,
+            201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201,
+            201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201,
+            201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201],
+         "height":17,
+         "id":4,
+         "name":"floor",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":31,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[49, 58, 58, 58, 58, 58, 58, 42, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 42, 57, 57, 57, 57, 57, 57, 57, 50,
+            45, 63, 63, 63, 63, 63, 63, 45, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 45, 63, 63, 63, 63, 63, 63, 63, 45,
+            45, 73, 73, 73, 73, 73, 73, 45, 73, 73, 73, 73, 73, 73, 73, 73, 73, 73, 73, 73, 73, 73, 45, 73, 73, 73, 73, 73, 73, 73, 45,
+            45, 0, 0, 0, 0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 45,
+            45, 0, 0, 0, 0, 0, 0, 56, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 56, 0, 0, 0, 0, 0, 0, 0, 45,
+            45, 0, 0, 0, 0, 0, 0, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 63, 0, 0, 0, 0, 0, 0, 0, 45,
+            45, 0, 0, 0, 0, 0, 0, 73, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 73, 0, 0, 0, 0, 0, 0, 0, 45,
+            45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 45,
+            45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 45,
+            45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 45,
+            45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 45,
+            45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 45,
+            45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 45,
+            45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 45,
+            59, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 32, 58, 58, 58, 58, 58, 58, 58, 60,
+            83, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 84,
+            93, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 94],
+         "height":17,
+         "id":9,
+         "name":"walls",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":31,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":2,
+         "name":"floorLayer",
+         "objects":[
+                {
+                 "class":"area",
+                 "height":97.6404647983595,
+                 "id":36,
+                 "name":"start",
+                 "properties":[
+                        {
+                         "name":"start",
+                         "type":"bool",
+                         "value":true
+                        }],
+                 "rotation":0,
+                 "visible":true,
+                 "width":96.736386420597,
+                 "x":61.477329687856,
+                 "y":319.139667350194
+                }, 
+                {
+                 "class":"area",
+                 "height":224,
+                 "id":38,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"focusable",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"jitsiRoom",
+                         "type":"string",
+                         "value":"MeetingRoom"
+                        }, 
+                        {
+                         "name":"jitsiTrigger",
+                         "type":"string",
+                         "value":"onaction"
+                        }, 
+                        {
+                         "name":"jitsiTriggerMessage",
+                         "type":"string",
+                         "value":"LEFT"
+                        }],
+                 "rotation":0,
+                 "visible":true,
+                 "width":224,
+                 "x":256,
+                 "y":96
+                }, 
+                {
+                 "class":"area",
+                 "height":224,
+                 "id":41,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"focusable",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"jitsiRoom",
+                         "type":"string",
+                         "value":"MeetingRoom2"
+                        }, 
+                        {
+                         "name":"jitsiTrigger",
+                         "type":"string",
+                         "value":"onaction"
+                        }, 
+                        {
+                         "name":"jitsiTriggerMessage",
+                         "type":"string",
+                         "value":"RIGHT"
+                        }, 
+                        {
+                         "name":"silent",
+                         "type":"bool",
+                         "value":false
+                        }],
+                 "rotation":0,
+                 "visible":true,
+                 "width":224,
+                 "x":480,
+                 "y":96
+                }, 
+                {
+                 "class":"",
+                 "height":19,
+                 "id":43,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "halign":"center",
+                     "text":"LEFT",
+                     "wrap":true
+                    },
+                 "visible":true,
+                 "width":83,
+                 "x":326,
+                 "y":200
+                }, 
+                {
+                 "class":"",
+                 "height":19,
+                 "id":44,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "halign":"center",
+                     "text":"RIGHT",
+                     "wrap":true
+                    },
+                 "visible":true,
+                 "width":83,
+                 "x":550,
+                 "y":200
+                }, 
+                {
+                 "class":"",
+                 "height":73.6556473829201,
+                 "id":45,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "halign":"center",
+                     "text":"MOVE FROM ONE AREA TO THE OTHER. PROMPT WITH AREA TO TRIGGER SHOULD CHANGE EACH TIME",
+                     "wrap":true
+                    },
+                 "visible":true,
+                 "width":343.812913827268,
+                 "x":311.364530472186,
+                 "y":351.994369532647
+                }],
+         "opacity":1,
+         "properties":[
+                {
+                 "name":"start",
+                 "type":"bool",
+                 "value":true
+                }],
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":40,
+ "nextobjectid":48,
+ "orientation":"orthogonal",
+ "properties":[
+        {
+         "name":"mapCopyright",
+         "type":"string",
+         "value":"Credits: Valdo Romao https:\/\/www.linkedin.com\/in\/valdo-romao\/ \nLicense: CC-BY-SA 3.0 (http:\/\/creativecommons.org\/licenses\/by-sa\/3.0\/)"
+        }, 
+        {
+         "name":"mapDescription",
+         "type":"string",
+         "value":"A perfect virtual office to get started with WorkAdventure!"
+        }, 
+        {
+         "name":"mapImage",
+         "type":"string",
+         "value":"map.png"
+        }, 
+        {
+         "name":"mapLink",
+         "type":"string",
+         "value":"https:\/\/thecodingmachine.github.io\/workadventure-map-starter-kit\/map.json"
+        }, 
+        {
+         "name":"mapName",
+         "type":"string",
+         "value":"Starter kit"
+        }, 
+        {
+         "name":"script",
+         "type":"string",
+         "value":"..\/dist\/script.js"
+        }],
+ "renderorder":"right-down",
+ "tiledversion":"1.9.0",
+ "tileheight":32,
+ "tilesets":[
+        {
+         "columns":10,
+         "firstgid":1,
+         "image":"..\/..\/..\/assets\/tileset5_export.png",
+         "imageheight":320,
+         "imagewidth":320,
+         "margin":0,
+         "name":"tileset5_export",
+         "properties":[
+                {
+                 "name":"tilesetCopyright",
+                 "type":"string",
+                 "value":"\u00a9 2021 WorkAdventure <https:\/\/workadventu.re\/> \nLicence: WORKADVENTURE SPECIFIC RESOURCES LICENSE (see LICENSE.assets file)"
+                }],
+         "spacing":0,
+         "tilecount":100,
+         "tileheight":32,
+         "tilewidth":32
+        }, 
+        {
+         "columns":10,
+         "firstgid":101,
+         "image":"..\/..\/..\/assets\/tileset6_export.png",
+         "imageheight":320,
+         "imagewidth":320,
+         "margin":0,
+         "name":"tileset6_export",
+         "properties":[
+                {
+                 "name":"tilesetCopyright",
+                 "type":"string",
+                 "value":"\u00a9 2021 WorkAdventure <https:\/\/workadventu.re\/> \nLicence: WORKADVENTURE SPECIFIC RESOURCES LICENSE (see LICENSE.assets file)"
+                }],
+         "spacing":0,
+         "tilecount":100,
+         "tileheight":32,
+         "tilewidth":32
+        }, 
+        {
+         "columns":11,
+         "firstgid":201,
+         "image":"..\/..\/..\/assets\/tileset1.png",
+         "imageheight":352,
+         "imagewidth":352,
+         "margin":0,
+         "name":"tileset1",
+         "properties":[
+                {
+                 "name":"tilesetCopyright",
+                 "type":"string",
+                 "value":"\u00a9 2021 WorkAdventure <https:\/\/workadventu.re\/> \nLicence: WORKADVENTURE SPECIFIC RESOURCES LICENSE (see LICENSE.assets file)"
+                }],
+         "spacing":0,
+         "tilecount":121,
+         "tileheight":32,
+         "tilewidth":32
+        }, 
+        {
+         "columns":11,
+         "firstgid":322,
+         "image":"..\/..\/..\/assets\/tileset1-repositioning.png",
+         "imageheight":352,
+         "imagewidth":352,
+         "margin":0,
+         "name":"tileset1-repositioning",
+         "properties":[
+                {
+                 "name":"tilesetCopyright",
+                 "type":"string",
+                 "value":"\u00a9 2021 WorkAdventure <https:\/\/workadventu.re\/> \nLicence: WORKADVENTURE SPECIFIC RESOURCES LICENSE (see LICENSE.assets file)"
+                }],
+         "spacing":0,
+         "tilecount":121,
+         "tileheight":32,
+         "tilewidth":32
+        }, 
+        {
+         "columns":6,
+         "firstgid":443,
+         "image":"..\/..\/..\/assets\/Special_Zones.png",
+         "imageheight":64,
+         "imagewidth":192,
+         "margin":0,
+         "name":"Special_Zones",
+         "properties":[
+                {
+                 "name":"tilesetCopyright",
+                 "type":"string",
+                 "value":"\u00a9 2021 WorkAdventure <https:\/\/workadventu.re\/> \nLicence: WORKADVENTURE SPECIFIC RESOURCES LICENSE (see LICENSE.assets file)"
+                }],
+         "spacing":0,
+         "tilecount":12,
+         "tileheight":32,
+         "tiles":[
+                {
+                 "id":0,
+                 "properties":[
+                        {
+                         "name":"collides",
+                         "type":"bool",
+                         "value":true
+                        }]
+                }],
+         "tilewidth":32
+        }],
+ "tilewidth":32,
+ "type":"map",
+ "version":"1.9",
+ "width":31
+}

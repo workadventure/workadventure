@@ -6,8 +6,8 @@
   "scripts": {
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "precommit": "lint-staged",
-    "pretty": "prettier --write \"src/**/*.ts\"",
-    "pretty-check": "prettier --check 'src/**/*.{ts,tsx}'",
+    "pretty": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "pretty-check": "prettier --check 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}'",
     "test": "jest --detectOpenHandles",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -21,9 +21,10 @@
     "@types/uuid": "^8.3.4",
     "@workadventure/math-utils": "1.0.0",
     "@workadventure/messages": "1.0.0",
-    "@workadventure/tiled-map-type-guard": "^2.0.6",
+    "@workadventure/tiled-map-type-guard": "^2.1.0",
     "lodash": "^4.17.21",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "zod": "^3.20.2"
   },
   "devDependencies": {
     "@jest/globals": "^29.3.1",

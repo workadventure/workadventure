@@ -6,7 +6,7 @@ import type { GameMap } from "./GameMap";
 export class GameMapEntities {
     private gameMap: GameMap;
 
-    private entities: EntityData[] = [];
+    private entities: Map<number, EntityData> = new Map<number, EntityData>();
 
     private nextEntityId = 0;
 
@@ -15,18 +15,18 @@ export class GameMapEntities {
     constructor(gameMap: GameMap) {
         this.gameMap = gameMap;
 
-        for (const entityData of (JSON.parse(
-            JSON.stringify(this.getEntitiesMapProperty()?.value ?? [])
-        ) as EntityData[]) ?? []) {
+        const entitiesData: unknown = structuredClone(this.getEntitiesMapProperty()?.value ?? []);
+
+        for (const entityData of (entitiesData as EntityData[]) ?? []) {
             this.addEntity(entityData, false);
         }
     }
 
     public addEntity(entityData: EntityData, addToMapProperties = true): boolean {
-        if (this.entities.find((entity) => entity.id === entityData.id)) {
+        if (this.entities.has(entityData.id)) {
             return false;
         }
-        this.entities.push(entityData);
+        this.entities.set(entityData.id, entityData);
         this.nextEntityId = Math.max(this.nextEntityId, entityData.id);
         if (addToMapProperties) {
             return this.addEntityToMapProperties(entityData);
@@ -35,13 +35,12 @@ export class GameMapEntities {
     }
 
     public getEntity(id: number): EntityData | undefined {
-        return this.entities.find((entity) => entity.id === id);
+        return this.entities.get(id);
     }
 
     public deleteEntity(id: number): boolean {
-        const index = this.entities.findIndex((entityData) => entityData.id === id);
-        if (index !== -1) {
-            this.entities.splice(index, 1);
+        const deleted = this.entities.delete(id);
+        if (deleted) {
             return this.deleteEntityFromMapProperties(id);
         }
         return false;
@@ -78,7 +77,7 @@ export class GameMapEntities {
 
         const entitiesMapProperty = this.getEntitiesMapProperty();
         if (entitiesMapProperty !== undefined) {
-            entitiesMapProperty.value = JSON.parse(JSON.stringify(entitiesPropertyValues)) as Json;
+            entitiesMapProperty.value = structuredClone(entitiesPropertyValues) as unknown as Json;
         }
 
         return true;
@@ -101,7 +100,7 @@ export class GameMapEntities {
     }
 
     private updateEntityInMapProperties(entityData: EntityData): boolean {
-        const entitiesPropertyValue = JSON.parse(JSON.stringify(this.getEntitiesMapProperty()?.value)) as EntityData[];
+        const entitiesPropertyValue = this.getEntitiesMapProperty()?.value as unknown as EntityData[];
 
         const entityIndex = entitiesPropertyValue.findIndex((entity) => entity.id === entityData.id);
 
@@ -124,7 +123,7 @@ export class GameMapEntities {
     }
 
     public getEntities(): EntityData[] {
-        return this.entities;
+        return Array.from(this.entities.values());
     }
 
     public getNextEntityId(): number {

@@ -44,7 +44,7 @@
     "@grpc/proto-loader": "^0.6.13",
     "@workadventure/map-editor": "1.0.0",
     "@workadventure/messages": "1.0.0",
-    "@workadventure/tiled-map-type-guard": "^2.0.6",
+    "@workadventure/tiled-map-type-guard": "^2.1.0",
     "node-stream-zip": "^1.15.0",
     "archiver": "^5.3.1",
     "concurrently": "^7.3.0",

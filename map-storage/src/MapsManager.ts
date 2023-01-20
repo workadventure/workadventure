@@ -15,7 +15,6 @@ import {
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { fileSystem } from "./fileSystem";
-import { mapPathUsingDomain } from "./Services/PathMapper";
 
 // TODO: dynamic imports?
 import furnitureCollection from "./entities/collections/FurnitureCollection.json";
@@ -112,13 +111,11 @@ class MapsManager {
     }
 
     public getCommandsNewerThan(mapKey: string, commandId: string): EditMapCommandMessage[] {
+        // shouldn't we just apply every command on this list to the new client?
         const queue = this.loadedMapsCommandsQueue.get(mapKey);
         if (queue) {
             const commandIndex = queue.findIndex((command) => command.id === commandId);
-            if (commandIndex === -1) {
-                return [];
-            }
-            return queue.slice(commandIndex + 1);
+            return queue.slice(commandIndex !== -1 ? commandIndex + 1 : 0);
         }
         return [];
     }
@@ -131,28 +128,16 @@ class MapsManager {
         return Array.from(this.loadedMaps.keys());
     }
 
-    public async getMap(path: string, domain: string): Promise<ITiledMap> {
-        const key = mapPathUsingDomain(path, domain);
-        const inMemoryGameMap = this.loadedMaps.get(key);
-        if (inMemoryGameMap) {
-            return inMemoryGameMap.getMap();
-        }
-        const file = await fileSystem.readFileAsString(key);
-        const map = ITiledMap.parse(JSON.parse(file));
+    public isMapAlreadyLoaded(key: string): boolean {
+        return this.loadedMaps.has(key);
+    }
+
+    public loadMapToMemory(key: string, map: ITiledMap): void {
         this.loadedMaps.set(key, new GameMap(map));
-        return map;
     }
 
-    public getEntityCollection(collectionName: string): EntityCollection | undefined {
-        return this.loadedCollections.get(collectionName);
-    }
-
-    public getEntityCollectionsNames(): string[] {
-        const names: string[] = [];
-        for (const collection of this.loadedCollections.values()) {
-            names.push(collection.collectionName);
-        }
-        return names;
+    public getEntityCollections(): EntityCollection[] {
+        return Array.from(this.loadedCollections.values());
     }
 
     public getEntityPrefab(collectionName: string, entityId: string): EntityPrefab | undefined {
@@ -185,14 +170,12 @@ class MapsManager {
     private setCommandDeletionTimeout(mapKey: string, commandId: string): void {
         setTimeout(() => {
             const queue = this.loadedMapsCommandsQueue.get(mapKey);
-            if (!queue) {
+            if (!queue || queue.length === 0) {
                 return;
             }
-            const index = queue.findIndex((command) => command.id === commandId);
-            if (index === -1) {
-                return;
+            if (queue[0].id === commandId) {
+                queue.splice(0, 1);
             }
-            queue.splice(index, 1);
         }, this.COMMAND_TIME_IN_QUEUE_MS);
     }
 

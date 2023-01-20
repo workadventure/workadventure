@@ -129,4 +129,28 @@ test.describe('Map-storage Upload API', () => {
         await expect(accessCacheControlFile.headers()['etag']).toBeDefined();
         await expect(accessCacheControlFile.headers()['cache-control']).toContain("immutable");
     });
+
+    test('fails on invalid maps', async ({
+                                           request,
+                                       }) => {
+        const uploadFile1 = await request.post(`/upload`, {
+            multipart: {
+                file: fs.createReadStream("./assets/missing-image.zip"),
+            }
+        });
+        await expect(uploadFile1.ok()).toBeFalsy();
+        await expect((await uploadFile1.json())['missing-image/MissingImage.tmj'][0]['type']).toBe("error");
+    });
+
+    test('fails on JSON extension', async ({
+                                             request,
+                                         }) => {
+        const uploadFile1 = await request.post(`/upload`, {
+            multipart: {
+                file: fs.createReadStream("./assets/json-map.zip"),
+            }
+        });
+        await expect(uploadFile1.ok()).toBeFalsy();
+        await expect((await uploadFile1.json())['map.json'][0]['message']).toBe('Invalid file extension. Maps should end with the ".tmj" extension.');
+    });
 });

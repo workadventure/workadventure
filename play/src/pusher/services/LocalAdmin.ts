@@ -60,11 +60,11 @@ class LocalAdmin implements AdminInterface {
 
         let mapUrl = "";
         let canEdit = false;
-        let entityCollectionsUrl = undefined;
+        const entityCollectionsUrls = [];
         let match = /\/~\/(.+)/.exec(roomUrl.pathname);
         if (match) {
             mapUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
-            entityCollectionsUrl = `${PUBLIC_MAP_STORAGE_URL}/entityCollections`;
+            entityCollectionsUrls.push(`${PUBLIC_MAP_STORAGE_URL}/entityCollections`);
             canEdit = true;
         } else {
             match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);
@@ -86,7 +86,7 @@ class LocalAdmin implements AdminInterface {
         return Promise.resolve({
             mapUrl,
             canEdit,
-            entityCollectionsUrl,
+            entityCollectionsUrls,
             authenticationMandatory: DISABLE_ANONYMOUS,
             contactPage: null,
             mucRooms: null,
