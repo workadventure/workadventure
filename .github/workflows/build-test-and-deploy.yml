@@ -649,6 +649,8 @@ jobs:
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
           POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
           EJABBERD_JWT_SECRET: ${{ secrets.EJABBERD_JWT_SECRET }}
+          ENABLE_REPORT_ISSUES_MENU: ${{ secrets.ENABLE_REPORT_ISSUES_MENU }}
+          REPORT_ISSUES_URL: ${{ secrets.REPORT_ISSUES_URL }}
         with:
           namespace: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 

@@ -55,6 +55,7 @@ import { isShowBusinessCardEvent } from "./ShowBusinessCardEvent";
 import { isModalEvent } from "./ModalEvent";
 import { isXmppSettingsMessageEvent } from "./XmppSettingsMessageEvent";
 import { isAddButtonActionBarEvent, isRemoveButtonActionBarEvent } from "./Ui/ButtonActionBarEvent";
+import { isBannerEvent } from "./Ui/BannerEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -279,6 +280,14 @@ export const isIframeEventWrapper = z.union([
     }),
     z.object({
         type: z.literal("chatReady"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("openBanner"),
+        data: isBannerEvent,
+    }),
+    z.object({
+        type: z.literal("closeBanner"),
         data: z.undefined(),
     }),
 ]);
