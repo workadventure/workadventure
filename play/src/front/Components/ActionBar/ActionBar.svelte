@@ -796,14 +796,9 @@
                             class="emoji"
                             class:focus={$emoteMenuStore && $emoteMenuSubCurrentEmojiSelectedStore === key}
                         >
-                            <img
-                                class="emoji"
-                                style="padding: 2px"
-                                draggable="false"
-                                alt={$emoteDataStore.get(key)?.emoji}
-                                id={`icon-${$emoteDataStore.get(key)?.name}`}
-                                src=""
-                            />
+                            <span class="emoji" style="margin:auto" id={`icon-${$emoteDataStore.get(key)?.name}`}>
+                                {$emoteDataStore.get(key)?.emoji}
+                            </span>
                             {#if !isMobile}
                                 <span class="tw-text-white">{key}</span>
                             {/if}
