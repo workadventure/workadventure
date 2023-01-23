@@ -336,7 +336,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         }
         this.playAnimation(this.lastDirection, true);
 
-        this.setDepth(this.y);
+        this.setDepth(this.y + 16);
 
         if (this.companion) {
             this.companion.setTarget(this.x, this.y, this.lastDirection);

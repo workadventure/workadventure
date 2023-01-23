@@ -102,3 +102,21 @@ If `directory` is not passed, upload is performed at the root of the storage dir
 
 > **Warning**
 > The `upload` endpoint will delete ALL files within `directory` before uploading new files.
+
+**Response**:
+
+- 200: OK
+- 400: Validation error (for instance: invalid maps)
+  **Sample:**
+  ```json
+  {
+    'missing-image/MissingImage.tmj': [
+      {
+        type: 'error',
+        message: 'Image of the tileset "XXX": "xxx.png" is not loadable.',
+        details: '',
+        link: ''
+      }
+    ]
+  }
+  ```

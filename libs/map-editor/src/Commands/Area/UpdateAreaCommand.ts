@@ -14,8 +14,8 @@ export class UpdateAreaCommand extends Command {
 
     private gameMap: GameMap;
 
-    constructor(gameMap: GameMap, config: UpdateAreaCommandConfig) {
-        super();
+    constructor(gameMap: GameMap, config: UpdateAreaCommandConfig, commandId?: string) {
+        super(commandId);
         this.gameMap = gameMap;
         const oldConfig = gameMap.getGameMapAreas().getArea(config.areaObjectConfig.id, AreaType.Static);
         if (!oldConfig) {

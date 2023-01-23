@@ -26,12 +26,15 @@ export class AreaEditorTool extends MapEditorTool {
 
     private selectedAreaPreviewStoreSubscriber!: Unsubscriber;
 
+    private active: boolean;
+
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super();
         this.mapEditorModeManager = mapEditorModeManager;
         this.scene = this.mapEditorModeManager.getScene();
 
         this.areaPreviews = this.createAreaPreviews();
+        this.active = false;
 
         this.subscribeToStores();
     }
@@ -41,12 +44,14 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     public clear(): void {
+        this.active = false;
         mapEditorSelectedAreaPreviewStore.set(undefined);
         mapEditorSelectedPropertyStore.set(undefined);
         this.setAreaPreviewsVisibility(false);
     }
 
     public activate(): void {
+        this.active = true;
         this.updateAreaPreviews();
         this.setAreaPreviewsVisibility(true);
         this.scene.markDirty();
@@ -58,6 +63,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): void {
+        const commandId = editMapCommandMessage.id;
         switch (editMapCommandMessage.editMapMessage?.message?.$case) {
             case "modifyAreaMessage": {
                 const data = editMapCommandMessage.editMapMessage?.message.modifyAreaMessage;
@@ -68,12 +74,12 @@ export class AreaEditorTool extends MapEditorTool {
                         areaObjectConfig: data as AreaData,
                     },
                     false,
-                    false
+                    false,
+                    commandId
                 );
                 break;
             }
             case "createAreaMessage": {
-                console.log("create area message");
                 const data = editMapCommandMessage.editMapMessage?.message.createAreaMessage;
                 const config: AreaData = {
                     ...data,
@@ -89,7 +95,8 @@ export class AreaEditorTool extends MapEditorTool {
                         areaObjectConfig: config,
                     },
                     false,
-                    false
+                    false,
+                    commandId
                 );
                 break;
             }
@@ -102,7 +109,8 @@ export class AreaEditorTool extends MapEditorTool {
                         id: data.id,
                     },
                     false,
-                    false
+                    false,
+                    commandId
                 );
                 break;
             }
@@ -110,6 +118,10 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     public handleCommandExecution(commandConfig: CommandConfig): void {
+        // We do not need to make any visual changes if AreaEditorTool is not active
+        if (!this.active) {
+            return;
+        }
         switch (commandConfig.type) {
             case "CreateAreaCommand": {
                 this.handleAreaPreviewCreation(commandConfig.areaObjectConfig);
@@ -195,14 +207,14 @@ export class AreaEditorTool extends MapEditorTool {
         }
     }
 
-    public handleAreaPreviewDeletion(id: number): void {
+    private handleAreaPreviewDeletion(id: number): void {
         this.deleteAreaPreview(id);
         this.scene.markDirty();
         mapEditorSelectedAreaPreviewStore.set(undefined);
         mapEditorSelectedPropertyStore.set(undefined);
     }
 
-    public handleAreaPreviewCreation(config: AreaData): void {
+    private handleAreaPreviewCreation(config: AreaData): void {
         const areaPreview = new AreaPreview(this.scene, structuredClone(config));
         this.bindAreaPreviewEventHandlers(areaPreview);
         this.areaPreviews.push(areaPreview);
@@ -211,7 +223,7 @@ export class AreaEditorTool extends MapEditorTool {
 
     private handleAreaPreviewUpdate(config: AreaData): void {
         this.areaPreviews.find((area) => area.getConfig().id === config.id)?.updatePreview(config);
-        this.scene.getGameMapFrontWrapper().updateAreaById(config.id, AreaType.Static, config);
+        this.scene.getGameMapFrontWrapper().updateAreaById(config.id, AreaType.Static, config); // TODO: is this line needed?
         this.scene.markDirty();
     }
 

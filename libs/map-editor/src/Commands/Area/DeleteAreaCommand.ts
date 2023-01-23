@@ -14,8 +14,8 @@ export class DeleteAreaCommand extends Command {
 
     private gameMap: GameMap;
 
-    constructor(gameMap: GameMap, config: DeleteAreaCommandConfig) {
-        super();
+    constructor(gameMap: GameMap, config: DeleteAreaCommandConfig, commandId?: string) {
+        super(commandId);
         this.gameMap = gameMap;
         const areaConfig = gameMap.getGameMapAreas().getArea(config.id, AreaType.Static);
         if (!areaConfig) {

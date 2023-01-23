@@ -61,6 +61,15 @@ message PingMessage {
 
 }
 
+message UpdateMapToNewestMessage {
+  string commandId = 1;
+}
+
+message UpdateMapToNewestWithKeyMessage {
+  string mapKey = 1;
+  UpdateMapToNewestMessage updateMapToNewestMessage = 2;
+}
+
 message SetPlayerDetailsMessage {
   google.protobuf.UInt32Value outlineColor = 3;
   google.protobuf.BoolValue removeOutlineColor = 4;
@@ -118,12 +127,19 @@ message EditMapMessage {
     ModifyAreaMessage modifyAreaMessage = 1;
     CreateAreaMessage createAreaMessage = 2;
     DeleteAreaMessage deleteAreaMessage = 3;
+    ModifyEntityMessage modifyEntityMessage = 4;
+    CreateEntityMessage createEntityMessage = 5;
+    DeleteEntityMessage deleteEntityMessage = 6;
   }
 }
 
 message EditMapCommandMessage {
   string id = 1;
   EditMapMessage editMapMessage = 2;
+}
+
+message EditMapCommandsArrayMessage {
+  repeated EditMapCommandMessage editMapCommands = 1;
 }
 
 message EditMapCommandWithKeyMessage {
@@ -167,6 +183,25 @@ message CreateAreaMessage {
   uint32 width = 4;
   uint32 height = 5;
   string name = 6;
+}
+
+message CreateEntityMessage {
+  int32 id = 1;
+  uint32 x = 2;
+  uint32 y = 3;
+  string collectionName = 4;
+  string prefabId = 5;
+}
+
+message DeleteEntityMessage {
+  int32 id = 1;
+}
+
+message ModifyEntityMessage {
+  int32 id = 1;
+  optional uint32 x = 2;
+  optional uint32 y = 3;
+  map<string, google.protobuf.Value> properties = 4;
 }
 
 message ClientToServerMessage {
@@ -402,6 +437,7 @@ message RoomJoinedMessage {
   repeated VariableMessage playerVariable = 10;
   repeated ApplicationMessage applications = 11;
   string userJid = 12;
+  EditMapCommandsArrayMessage editMapCommandsArrayMessage = 13;
 }
 
 message WebRtcStartMessage {
@@ -519,6 +555,7 @@ message JoinRoomMessage {
   bool isLogged = 13;
   repeated ApplicationMessage applications = 14;
   string userJid = 15;
+  string lastCommandId = 16;
 }
 
 message UserJoinedZoneMessage {
@@ -615,6 +652,7 @@ message SubToPusherMessage {
     EmoteEventMessage emoteEventMessage = 9;
     ErrorMessage errorMessage = 10;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 11;
+    EditMapCommandMessage editMapCommandMessage = 12;
   }
 }
 

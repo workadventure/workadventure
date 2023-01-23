@@ -80,8 +80,8 @@ class UIWebsiteManager {
         return get(uiWebsitesStore);
     }
 
-    public getById(websiteId: string): UIWebsite {
-        return get(uiWebsitesStore).find((currentWebsite) => currentWebsite.id === websiteId)!;
+    public getById(websiteId: string): UIWebsite | undefined {
+        return get(uiWebsitesStore).find((currentWebsite) => currentWebsite.id === websiteId);
     }
 
     public close(websiteId: string) {
