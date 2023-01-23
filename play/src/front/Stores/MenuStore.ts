@@ -1,4 +1,4 @@
-import { ACTIVE_REPORT_ISSUES_MENU, URL_REPORT_ISSUES } from "./../Enum/EnvironmentVariable";
+import { ENABLE_REPORT_ISSUES_MENU, REPORT_ISSUES_URL } from "./../Enum/EnvironmentVariable";
 import { AddClassicButtonActionBarEvent, AddActionButtonActionBarEvent } from "./../Api/Events/Ui/ButtonActionBarEvent";
 import { derived, get, writable } from "svelte/store";
 import { userIsAdminStore } from "./GameStore";
@@ -154,10 +154,10 @@ function createSubMenusStore() {
         },
         addReportIssuesMenu() {
             if (
-                connectionManager.currentRoom?.urlReportIssues != undefined ||
-                (ACTIVE_REPORT_ISSUES_MENU != undefined &&
-                    ACTIVE_REPORT_ISSUES_MENU === true &&
-                    URL_REPORT_ISSUES != undefined)
+                connectionManager.currentRoom?.reportIssuesUrl != undefined ||
+                (ENABLE_REPORT_ISSUES_MENU != undefined &&
+                    ENABLE_REPORT_ISSUES_MENU === true &&
+                    REPORT_ISSUES_URL != undefined)
             ) {
                 update((valuesSubMenusStore) => {
                     valuesSubMenusStore.push({

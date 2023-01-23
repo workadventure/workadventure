@@ -93,8 +93,8 @@
           "ENABLE_FEATURE_MAP_EDITOR":"true",
           "ICON_URL": "https://icon-"+url,
           "CHAT_URL": "https://chat-"+url,
-          "ACTIVE_REPORT_ISSUES_MENU": env.ACTIVE_REPORT_ISSUES_MENU,
-          "URL_REPORT_ISSUES": env.URL_REPORT_ISSUES,
+          "ENABLE_REPORT_ISSUES_MENU": env.ENABLE_REPORT_ISSUES_MENU,
+          "REPORT_ISSUES_URL": env.REPORT_ISSUES_URL,
         } + (if adminUrl != null then {
           # Admin
           "ADMIN_URL": adminUrl,
