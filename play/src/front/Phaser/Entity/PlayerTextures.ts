@@ -94,8 +94,8 @@ export class PlayerTextures {
         this.layers = [
             this.colorResources,
             this.eyesResources,
-            this.hairResources,
             this.clothesResources,
+            this.hairResources,
             this.hatsResources,
             this.accessoriesResources,
         ];
