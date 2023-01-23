@@ -9,7 +9,7 @@ import { LocalUser } from "./LocalUser";
 import { Room } from "./Room";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
-import { userIsConnected, warningContainerStore } from "../Stores/MenuStore";
+import { subMenusStore, userIsConnected, warningContainerStore } from "../Stores/MenuStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { axiosWithRetry } from "./AxiosUtils";
 import type { AvailabilityStatus } from "@workadventure/messages";
@@ -245,6 +245,10 @@ class ConnectionManager {
         }
 
         this.serviceWorker = new _ServiceWorker();
+
+        // add report issue menu
+        subMenusStore.addReportIssuesMenu();
+
         return Promise.resolve(this._currentRoom);
     }
 
