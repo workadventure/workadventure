@@ -316,6 +316,59 @@
          "spacing":0,
          "tilecount":121,
          "tileheight":32,
+         "tiles":[
+                {
+                 "id":16,
+                 "objectgroup":
+                    {
+                     "draworder":"index",
+                     "id":3,
+                     "name":"",
+                     "objects":[
+                            {
+                             "class":"",
+                             "height":31.2140350877193,
+                             "id":3,
+                             "name":"",
+                             "rotation":0,
+                             "visible":true,
+                             "width":31.2140350877193,
+                             "x":0.299415204678363,
+                             "y":0.299415204678363
+                            }],
+                     "opacity":1,
+                     "type":"objectgroup",
+                     "visible":true,
+                     "x":0,
+                     "y":0
+                    }
+                }, 
+                {
+                 "id":28,
+                 "objectgroup":
+                    {
+                     "draworder":"index",
+                     "id":2,
+                     "name":"",
+                     "objects":[
+                            {
+                             "class":"",
+                             "height":37.5391812865497,
+                             "id":1,
+                             "name":"",
+                             "rotation":0,
+                             "visible":true,
+                             "width":32,
+                             "x":0,
+                             "y":-5.53918128654971
+                            }],
+                     "opacity":1,
+                     "type":"objectgroup",
+                     "visible":true,
+                     "x":0,
+                     "y":0
+                    }
+                }],
          "tilewidth":32
         }, 
         {

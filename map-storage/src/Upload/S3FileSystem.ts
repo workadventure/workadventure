@@ -15,6 +15,8 @@ import { IncomingMessage } from "http";
 import { Archiver } from "archiver";
 import { Readable } from "stream";
 import { StreamZipAsync, ZipEntry } from "node-stream-zip";
+import path from "path";
+import { UploadController } from "./UploadController";
 
 export class S3FileSystem implements FileSystemInterface {
     public constructor(private s3: S3, private bucketName: string) {}
@@ -67,6 +69,35 @@ export class S3FileSystem implements FileSystemInterface {
             )
         );
         return;
+    }
+
+    async listFiles(virtualDirectory: string, extension?: string): Promise<string[]> {
+        let listObjectsResponse: ListObjectsCommandOutput;
+        let pageMarker: string | undefined;
+        const allObjects = [];
+        do {
+            const command: ListObjectsCommandInput = {
+                Bucket: this.bucketName,
+                MaxKeys: 1000,
+                Prefix: virtualDirectory,
+            };
+            if (pageMarker) {
+                command.Marker = pageMarker;
+            }
+            listObjectsResponse = await this.s3.send(new ListObjectsCommand(command));
+            const objects = listObjectsResponse.Contents;
+            if (objects) {
+                allObjects.push(...objects);
+            }
+        } while (listObjectsResponse.IsTruncated);
+
+        const recordsPaths: string[] = allObjects.map((record) => record.Key ?? "") ?? [];
+        if (extension) {
+            return recordsPaths
+                .filter((record) => path.extname(record) === extension)
+                .map((record) => path.relative(virtualDirectory, record));
+        }
+        return recordsPaths.map((record) => path.relative(virtualDirectory, record));
     }
 
     serveStaticFile(virtualPath: string, res: Response, next: NextFunction): void {
@@ -165,6 +196,10 @@ export class S3FileSystem implements FileSystemInterface {
                     }
                     if (file.Key.endsWith("/")) {
                         // a directory. Let's bypass this.
+                        continue;
+                    }
+                    if (file.Key.includes(UploadController.CACHE_NAME)) {
+                        // we do not want cache file to be downloaded
                         continue;
                     }
                     archiver.append(Body as Readable, { name: file.Key.substring(virtualPath.length) });

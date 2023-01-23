@@ -1,6 +1,6 @@
 import { PusherRoom } from "../models/PusherRoom";
 import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
-import type {
+import {
     EmoteEventMessage,
     EmotePromptMessage,
     FollowRequestMessage,
@@ -26,8 +26,6 @@ import type {
     AskPositionMessage,
     BanUserByUuidMessage,
     EditMapCommandMessage,
-} from "../../messages/generated/messages_pb";
-import {
     AdminMessage,
     AdminPusherToBackMessage,
     AdminRoomMessage,
@@ -48,6 +46,7 @@ import {
     XmppSettingsMessage,
     MucRoomDefinitionMessage,
 } from "../../messages/generated/messages_pb";
+
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
@@ -206,6 +205,10 @@ export class SocketManager implements ZoneEventListener {
                     application.setScript(aplicationValue.script);
                     joinRoomMessage.addApplications(application);
                 }
+            }
+
+            if (client.lastCommandId !== undefined) {
+                joinRoomMessage.setLastcommandid(client.lastCommandId);
             }
 
             for (const characterLayer of client.characterLayers) {

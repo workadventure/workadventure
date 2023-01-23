@@ -11,6 +11,7 @@ import { passportAuthenticator } from "../Services/Authentication";
 import archiver from "archiver";
 import { fileSystem } from "../fileSystem";
 import StreamZip from "node-stream-zip";
+import { MapValidator, ValidationError } from "@workadventure/map-editor/src/GameMap/MapValidator";
 
 const upload = multer({
     storage: multer.diskStorage({}),
@@ -25,6 +26,8 @@ export class UploadController {
      * This is not perfect (because we should actually forbid an upload on "/" if "/foo" is being uploaded), but it's
      * already a start of a check.
      */
+
+    public static readonly CACHE_NAME = "__cache.json";
 
     private uploadLimiter: Map<string, pLimit.Limit>;
 
@@ -93,6 +96,49 @@ export class UploadController {
                         return;
                     }
 
+                    // Let's validate the archive
+                    const mapValidator = new MapValidator("error");
+                    const availableFiles = zipEntries.map((entry) => entry.name);
+
+                    const errors: { [key: string]: ValidationError[] } = {};
+
+                    for (const zipEntry of zipEntries) {
+                        const extension = path.extname(zipEntry.name);
+                        if (
+                            extension === ".json" &&
+                            mapValidator.doesStringLooksLikeMap((await zip.entryData(zipEntry)).toString())
+                        ) {
+                            // We forbid Maps in JSON format.
+                            errors[zipEntry.name] = [
+                                {
+                                    type: "error",
+                                    message: 'Invalid file extension. Maps should end with the ".tmj" extension.',
+                                    details: "",
+                                },
+                            ];
+
+                            continue;
+                        }
+
+                        if (extension !== ".tmj") {
+                            continue;
+                        }
+
+                        const result = mapValidator.validateStringMap(
+                            (await zip.entryData(zipEntry)).toString(),
+                            zipEntry.name,
+                            availableFiles
+                        );
+                        if (!result.ok) {
+                            errors[zipEntry.name] = result.error;
+                        }
+                    }
+
+                    if (Object.keys(errors).length > 0) {
+                        res.status(400).json(errors);
+                        return;
+                    }
+
                     // Delete all files in the S3 bucket
                     await this.fileSystem.deleteFiles(mapPath(directory, req));
 
@@ -114,6 +160,13 @@ export class UploadController {
                             console.error("Error deleting file:", err);
                         }
                     });
+
+                    const files = await fileSystem.listFiles(mapPath("/", req), ".tmj");
+
+                    await fileSystem.writeStringAsFile(
+                        mapPath("/" + UploadController.CACHE_NAME, req),
+                        JSON.stringify(files)
+                    );
 
                     res.send("File successfully uploaded.");
                 });

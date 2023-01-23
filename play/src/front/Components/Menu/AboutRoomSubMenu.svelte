@@ -39,7 +39,7 @@
         }
 
         for (const tileset of gameScene.mapFile.tilesets) {
-            if (tileset.properties !== undefined) {
+            if ("properties" in tileset && tileset.properties !== undefined) {
                 const propertyTilesetCopyright = tileset.properties.find(
                     (property) => property.name === "tilesetCopyright"
                 );

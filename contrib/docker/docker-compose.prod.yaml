@@ -61,6 +61,9 @@ services:
       # Only used if you set up a JWT authentication mechanism in Ejabberd
       - EJABBERD_JWT_SECRET=${EJABBERD_JWT_SECRET}
       - EJABBERD_DOMAIN=${EJABBERD_DOMAIN}
+      # Report issues menu
+      - ENABLE_REPORT_ISSUES_MENU=${ENABLE_REPORT_ISSUES_MENU}
+      - REPORT_ISSUES_URL=${$REPORT_ISSUES_URL}
     labels:
       traefik.enable: "true"
       traefik.http.routers.play.rule: "Host(`${FRONT_HOST}`)"

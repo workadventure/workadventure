@@ -291,6 +291,7 @@ export class IoSocketController {
                         const right = Number(query.right);
                         const name = query.name;
                         const availabilityStatus = Number(query.availabilityStatus);
+                        const lastCommandId = query.lastCommandId;
                         const version = query.version;
 
                         if (version !== apiVersionHash) {
@@ -503,6 +504,7 @@ export class IoSocketController {
                                 name,
                                 companion,
                                 availabilityStatus,
+                                lastCommandId,
                                 characterLayers: characterLayerObjs,
                                 messages: memberMessages,
                                 tags: memberTags,
@@ -790,6 +792,7 @@ export class IoSocketController {
         client.characterLayers = ws.characterLayers;
         client.companion = ws.companion;
         client.availabilityStatus = ws.availabilityStatus;
+        client.lastCommandId = ws.lastCommandId;
         client.roomId = ws.roomId;
         client.listenedZones = new Set<Zone>();
         client.jabberId = ws.jabberId;

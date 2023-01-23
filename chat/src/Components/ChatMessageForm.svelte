@@ -189,6 +189,7 @@
         if ($hasInProgressUploadingFile || !$hasErrorUploadingFile) {
             return;
         }
+
         const elements = document.getElementsByClassName("error-hover") as HTMLCollectionOf<HTMLElement>;
         for (const element of elements) {
             element.style.display = "flex";

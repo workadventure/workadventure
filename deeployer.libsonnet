@@ -29,6 +29,7 @@
          "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
          "EJABBERD_USER": "admin",
          "EJABBERD_PASSWORD": "apideo",
+         "ENABLE_FEATURE_MAP_EDITOR":"true",
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -58,6 +59,7 @@
               "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
               "EJABBERD_USER": "admin",
               "EJABBERD_PASSWORD": "apideo",
+              "ENABLE_FEATURE_MAP_EDITOR":"true",
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -93,6 +95,8 @@
           "ENABLE_FEATURE_MAP_EDITOR":"true",
           "ICON_URL": "https://icon-"+url,
           "CHAT_URL": "https://chat-"+url,
+          "ENABLE_REPORT_ISSUES_MENU": env.ENABLE_REPORT_ISSUES_MENU,
+          "REPORT_ISSUES_URL": env.REPORT_ISSUES_URL,
         } + (if adminUrl != null then {
           # Admin
           "ADMIN_URL": adminUrl,
