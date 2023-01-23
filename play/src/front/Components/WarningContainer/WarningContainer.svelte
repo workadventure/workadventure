@@ -13,14 +13,7 @@
 </script>
 
 <main class="warningMain" transition:fly={{ y: -200, duration: 500 }}>
-    {#if $userIsAdminStore}
-        <h2>{$LL.warning.title()}</h2>
-        <p>{@html $LL.warning.content({ upgradeLink: ADMIN_URL + "/pricing" })}</p>
-    {:else if $limitMapStore}
-        <p>
-            This map is available for 2 days. You can register your domain <a href={registerLink}>here</a>!
-        </p>
-    {:else if $bannerStore != undefined}
+    {#if $bannerStore != undefined}
         <p
             id={$bannerStore.id}
             class="tw-m-0 tw-p-0 tw-h-10 tw-flex tw-justify-center tw-items-center"
@@ -46,6 +39,13 @@
                 on:click|preventDefault={closeBanner}>x</span
             >
         {/if}
+    {:else if $userIsAdminStore}
+        <h2>{$LL.warning.title()}</h2>
+        <p>{@html $LL.warning.content({ upgradeLink: ADMIN_URL + "/pricing" })}</p>
+    {:else if $limitMapStore}
+        <p>
+            This map is available for 2 days. You can register your domain <a href={registerLink}>here</a>!
+        </p>
     {:else}
         <h2>{$LL.warning.title()}</h2>
         <p>{@html $LL.warning.content({ upgradeLink: ADMIN_URL + "/pricing" })}</p>
