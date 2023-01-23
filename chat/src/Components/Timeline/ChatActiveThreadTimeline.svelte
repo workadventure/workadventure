@@ -99,7 +99,7 @@
             position: "bottom",
             emojisPerRow: 5,
             autoFocusSearch: false,
-            style: "twemoji",
+            style: "native",
             showPreview: false,
             i18n: {
                 search: $LL.emoji.search(),

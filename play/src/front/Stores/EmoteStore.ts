@@ -2,8 +2,7 @@ import { get, writable } from "svelte/store";
 import { localUserStore } from "../Connexion/LocalUserStore";
 
 export interface Emoji {
-    unicode: string;
-    url: string;
+    emoji: string;
     name: string;
 }
 
@@ -30,20 +29,12 @@ function createEmoteDataStore() {
         set(mapStored);
     } else {
         const map = new Map<number, Emoji>();
-        map.set(1, { url: "https://twemoji.maxcdn.com/v/13.0.0/svg/1f44d.svg", unicode: "👍", name: "thumbs up" });
-        map.set(2, { url: "https://twemoji.maxcdn.com/v/13.0.0/svg/2764.svg", unicode: "❤️", name: "red heart" });
-        map.set(3, {
-            url: "https://twemoji.maxcdn.com/v/13.0.0/svg/1f602.svg",
-            unicode: "😂",
-            name: "face with tears of joy",
-        });
-        map.set(4, { url: "https://twemoji.maxcdn.com/v/13.0.0/svg/1f44f.svg", unicode: "👏", name: "clapping hands" });
-        map.set(5, {
-            url: "https://twemoji.maxcdn.com/v/13.0.0/svg/1f60d.svg",
-            unicode: "😍",
-            name: "smiling face with heart-eyes",
-        });
-        map.set(6, { url: "https://twemoji.maxcdn.com/v/13.0.0/svg/1f64f.svg", unicode: "🙏", name: "folded hands" });
+        map.set(1, { emoji: "👍", name: "thumbs up" });
+        map.set(2, { emoji: "❤️", name: "red heart" });
+        map.set(3, { emoji: "😂", name: "face with tears of joy" });
+        map.set(4, { emoji: "👏", name: "clapping hands" });
+        map.set(5, { emoji: "😍", name: "smiling face with heart-eyes" });
+        map.set(6, { emoji: "🙏", name: "folded hands" });
         set(map);
     }
 

@@ -1077,8 +1077,8 @@ export class GameScene extends DirtyScene {
 
         this.emoteUnsubscriber = emoteStore.subscribe((emote) => {
             if (emote) {
-                this.CurrentPlayer?.playEmote(emote.url);
-                this.connection?.emitEmoteEvent(emote.url);
+                this.CurrentPlayer?.playEmote(emote.emoji);
+                this.connection?.emitEmoteEvent(emote.emoji);
                 emoteStore.set(null);
             }
         });
