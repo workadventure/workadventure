@@ -680,7 +680,11 @@ export class SocketManager {
         if (user.tags.includes("admin")) {
             isAdmin = true;
         } else {
-            const moderatorTag = await gameRoom.getModeratorTagForJitsiRoom(jitsiRoom);
+            // Let's remove the prefix added by the front to make the Jitsi room unique:
+            // Note: this is not 100% perfect as this will fail on Jitsi rooms with "NoPrefix" option set and containing a "-" in the room name.
+            const jitsiRoomSuffix = jitsiRoom.match(/\w*-(.+)/);
+            const finalRoomName = jitsiRoomSuffix && jitsiRoomSuffix[1] ? jitsiRoomSuffix[1] : jitsiRoom;
+            const moderatorTag = await gameRoom.getModeratorTagForJitsiRoom(finalRoomName);
             if (moderatorTag && user.tags.includes(moderatorTag)) {
                 isAdmin = true;
             }
