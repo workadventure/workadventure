@@ -1,7 +1,7 @@
 import type { LocalUser } from "./LocalUser";
 import { areCharacterLayersValid, isUserNameValid } from "./LocalUser";
-import type { Emoji } from "../Stores/EmoteStore";
 import { z } from "zod";
+import { arrayEmoji, Emoji } from "../Stores/Utils/emojiSchema";
 
 const playerNameKey = "playerName";
 const selectedPlayerKey = "selectedPlayer";
@@ -398,10 +398,12 @@ class LocalUserStore {
     getEmojiFavorite(): Map<number, Emoji> | null {
         const value = localStorage.getItem(emojiFavorite);
         if (value == undefined) return null;
-
-        const emojis = JSON.parse(value);
-        if (!Array.isArray(emojis)) {
+        try {
+            const emojis: Emoji[] = JSON.parse(value);
+            arrayEmoji.parse(emojis);
+        } catch (e) {
             localStorage.removeItem(emojiFavorite);
+            console.error(`The key emojiFavorite value does not have a good format and ${e}.`);
             return null;
         }
 
