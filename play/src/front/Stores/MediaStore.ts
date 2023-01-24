@@ -804,3 +804,19 @@ localStreamStore.subscribe((streamResult) => {
         }
     }
 });
+
+// When the stream is initialized, the new sound constraint is recreated and the first speaker is set.
+// If the user did not select the new speaker, the first new speaker cannot be selected automatically.
+speakerSelectedStore.subscribe((value) => {
+    const oldValue = localUserStore.getSpeakerDeviceId();
+    const currentValue = value;
+    const oldDevice = oldValue
+        ? get(speakerListStore).find((mediaDeviceInfo) => mediaDeviceInfo.deviceId == oldValue)
+        : null;
+    if (
+        oldDevice != undefined &&
+        currentValue !== oldDevice.deviceId &&
+        get(speakerListStore).find((value) => value.deviceId == oldValue)
+    )
+        speakerSelectedStore.set(oldDevice.deviceId);
+});

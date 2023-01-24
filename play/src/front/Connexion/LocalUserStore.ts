@@ -28,6 +28,7 @@ const userProperties = "user-properties";
 const cameraPrivacySettings = "cameraPrivacySettings";
 const microphonePrivacySettings = "microphonePrivacySettings";
 const emojiFavorite = "emojiFavorite";
+const speakerDeviceId = "speakerDeviceId";
 
 const JwtAuthToken = z
     .object({
@@ -411,6 +412,14 @@ class LocalUserStore {
             map.set(index + 1, value);
         });
         return map;
+    }
+
+    setSpeakerDeviceId(value: string) {
+        localStorage.setItem(speakerDeviceId, value);
+    }
+
+    getSpeakerDeviceId() {
+        return localStorage.getItem(speakerDeviceId);
     }
 }
 
