@@ -411,8 +411,6 @@ class LocalUserStore {
             console.error("The localStorage key 'emojiFavorite' format is incorrect:", e);
             return null;
         }
-
-
     }
 }
 
