@@ -57,6 +57,7 @@ services:
             ALLOWED_CORS_ORIGIN: "http://play.workadventure.localhost"
             VITE_URL: "http://front.workadventure.localhost"
             PLAY_URL: http://play.workadventure.localhost
+            PUSHER_URL: http://pusher.workadventure.localhost
             UPLOADER_URL: http://uploader.workadventure.localhost
             ICON_URL: http://icon.workadventure.localhost
             STUN_SERVER: "stun:stun.l.google.com:19302"
@@ -97,6 +98,9 @@ services:
             SERVER_NAME: $SERVER_NAME
             SERVER_MOTD: $SERVER_MOTD
             SERVER_ICON: $SERVER_ICON
+            # Report issues menu
+            ENABLE_REPORT_ISSUES_MENU: $ENABLE_REPORT_ISSUES_MENU
+            REPORT_ISSUES_URL: $REPORT_ISSUES_URL
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"

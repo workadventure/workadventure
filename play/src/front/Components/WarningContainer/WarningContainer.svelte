@@ -1,14 +1,45 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { userIsAdminStore, limitMapStore } from "../../Stores/GameStore";
+    import { userIsAdminStore, limitMapStore, bannerStore } from "../../Stores/GameStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import LL from "../../../i18n/i18n-svelte";
-
+    import { warningContainerStore } from "../../Stores/MenuStore";
     const registerLink = ADMIN_URL + "/second-step-register";
+
+    function closeBanner() {
+        warningContainerStore.set(false);
+        bannerStore.set(null);
+    }
 </script>
 
 <main class="warningMain" transition:fly={{ y: -200, duration: 500 }}>
-    {#if $userIsAdminStore}
+    {#if $bannerStore != undefined}
+        <p
+            id={$bannerStore.id}
+            class="tw-m-0 tw-p-0 tw-h-10 tw-flex tw-justify-center tw-items-center"
+            style={`background-color:${$bannerStore.bgColor}; color: ${$bannerStore.textColor};`}
+        >
+            {$bannerStore.text}
+            {#if $bannerStore.link}
+                <a
+                    class="tw-ml-2 tw-underline"
+                    style={`color: ${$bannerStore.textColor};`}
+                    href={$bannerStore.link.url}
+                    target="_blank"
+                    rel="noreferrer"
+                >
+                    {$bannerStore.link.label}
+                </a>
+            {/if}
+        </p>
+        {#if $bannerStore.closable}
+            <span
+                class="tw-absolute tw-right-4 tw-top-0 tw-flex tw-items-center tw-h-10 tw-text-xl tw-cursor-pointer"
+                style={`color: ${$bannerStore.textColor ?? "red"};`}
+                on:click|preventDefault={closeBanner}>x</span
+            >
+        {/if}
+    {:else if $userIsAdminStore}
         <h2>{$LL.warning.title()}</h2>
         <p>{@html $LL.warning.content({ upgradeLink: ADMIN_URL + "/pricing" })}</p>
     {:else if $limitMapStore}
