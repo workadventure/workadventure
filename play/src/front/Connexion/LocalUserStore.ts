@@ -401,18 +401,18 @@ class LocalUserStore {
         try {
             const emojis: Emoji[] = JSON.parse(value);
             arrayEmoji.parse(emojis);
+            const map = new Map<number, Emoji>();
+            emojis.forEach((value, index) => {
+                map.set(index + 1, value);
+            });
+            return map;
         } catch (e) {
             localStorage.removeItem(emojiFavorite);
             console.error(`The key emojiFavorite value does not have a good format and ${e}.`);
             return null;
         }
 
-        const array: Array<Emoji> = JSON.parse(value) as Array<Emoji>;
-        const map: Map<number, Emoji> = new Map<number, Emoji>();
-        array.forEach((value, index) => {
-            map.set(index + 1, value);
-        });
-        return map;
+
     }
 }
 
