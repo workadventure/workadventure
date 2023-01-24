@@ -29,7 +29,11 @@ We provide a production ready `docker-compose` file that you can use as a good s
 > These installation instructions are for local development only. They will not work on
 > remote servers as local environments do not have HTTPS certificates.
 
-Install Docker.
+Install Docker and clone this repository.
+
+> **Warning**
+> If you are using Windows, make sure the End-Of-Line character is not modified by the cloning process by setting
+> the `core.autocrlf` setting to false: `git config --global core.autocrlf false`
 
 Run:
 
