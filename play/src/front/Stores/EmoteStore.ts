@@ -1,10 +1,6 @@
 import { get, writable } from "svelte/store";
 import { localUserStore } from "../Connexion/LocalUserStore";
-
-export interface Emoji {
-    emoji: string;
-    name: string;
-}
+import { Emoji } from "./Utils/emojiSchema";
 
 function createEmoteMenuStore() {
     const { subscribe, set } = writable(false);
