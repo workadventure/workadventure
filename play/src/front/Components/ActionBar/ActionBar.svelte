@@ -48,7 +48,6 @@
         subMenusStore,
         additionnalButtonsMenu,
     } from "../../Stores/MenuStore";
-    import type { Emoji } from "../../Stores/EmoteStore";
     import {
         emoteDataStore,
         emoteDataStoreLoading,
@@ -73,6 +72,7 @@
     import { modalIframeStore, modalVisibilityStore } from "../../Stores/ModalStore";
     import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
+    import { Emoji } from "../../Stores/Utils/emojiSchema";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
