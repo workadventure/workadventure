@@ -408,7 +408,7 @@ class LocalUserStore {
             return map;
         } catch (e) {
             localStorage.removeItem(emojiFavorite);
-            console.error(`The key emojiFavorite value does not have a good format and ${e}.`);
+            console.error("The localStorage key 'emojiFavorite' format is incorrect:", e);
             return null;
         }
 
