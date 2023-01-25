@@ -33,7 +33,6 @@ services:
       - JITSI_URL
       - JITSI_PRIVATE_MODE
       - ENABLE_FEATURE_MAP_EDITOR
-      - PLAY_URL=https://${PLAY_HOST}
       - PUSHER_URL=https://${PUSHER_HOST}
       - ICON_URL=https://${ICON_HOST}
       - TURN_SERVER
@@ -80,7 +79,7 @@ services:
   chat:
     image: thecodingmachine/workadventure-chat:${VERSION}
     environment:
-      - PLAY_URL=https://${PLAY_HOST}
+      - PUSHER_URL=https://${PUSHER_HOST}
       - UPLOADER_URL=https://${UPLOADER_HOST}
       - EMBEDLY_KEY=${EMBEDLY_KEY}
       - ENABLE_CHAT_UPLOAD=${ENABLE_CHAT_UPLOAD}

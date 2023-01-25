@@ -2,7 +2,6 @@ version: "3.6"
 services:
   play:
     environment:
-      - PLAY_URL=/
       - PUSHER_URL=/
       - ICON_URL=/icon
       - API_URL=/api
@@ -15,7 +14,7 @@ services:
 
   chat:
     environment:
-      - PLAY_URL=/
+      - PUSHER_URL=/
       - UPLOADER_URL=/uploader
     labels:
       traefik.http.middlewares.strip-chat-prefix.stripprefix.prefixes: "/chat"
