@@ -1,0 +1,15 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: map-storage-ingress-route
+spec:
+  entryPoints:
+    - web
+    - websecure
+
+  routes:
+    - match: "HostRegexp(`{subdomain:[A-Za-z0-9\\-]+}-map-storage-${DEPLOY_REF}.test.workadventu.re`)"
+      kind: Rule
+      services:
+        - name: map-storage
+          port: 3000

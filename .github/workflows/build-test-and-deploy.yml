@@ -663,7 +663,7 @@ jobs:
         with:
           args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} create secret tls certificate-tls --key="secrets/privkey.pem" --cert="secrets/fullchain.pem"
 
-      - name: Deploy
+      - name: Deploy with deeployer
         uses: thecodingmachine/deeployer-action@master
         env:
           KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
@@ -681,6 +681,20 @@ jobs:
           REPORT_ISSUES_URL: ${{ secrets.REPORT_ISSUES_URL }}
         with:
           namespace: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+
+      - name: Perform environment substitution in K8S files
+        run: envsubst < cd/map-storage-traefik-ingress-route.tmpl.yaml > cd/map-storage-traefik-ingress-route.yaml
+        if: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy-connect-to-admin')) || env.GITHUB_REF_SLUG == 'develop'  }}
+        env:
+          DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+
+      - name: Deploy custom K8S files
+        uses: steebchen/kubectl@v1.0.0
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+        with:
+          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} apply -f cd/map-storage-traefik-ingress-route.yaml
+        if: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy-connect-to-admin')) || env.GITHUB_REF_SLUG == 'develop'  }}
 
       - name: Upload demo maps in map-storage
         run: rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip * && curl -F 'file=@../assets.zip' https://map-storage-${DEPLOY_REF}.test.workadventu.re/upload --basic -u john.doe:password
