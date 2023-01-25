@@ -52,7 +52,7 @@ jobs:
       - name: "Build"
         run: npm run build-typings
         env:
-          PLAY_URL: "//localhost:3000"
+          PUSHER_URL: "//localhost:3000"
           ADMIN_URL: "//localhost:80"
         working-directory: "play"
 

@@ -13,7 +13,7 @@ import { PinchManager } from "../UserInput/PinchManager";
 import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
-import { PLAY_URL } from "../../Enum/EnvironmentVariable";
+import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
 import {
     collectionsSizeStore,
     customizeAvailableStore,
@@ -58,7 +58,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.superLoad
             .json(
                 wokaMetadataKey,
-                `${PLAY_URL}/woka/list?roomUrl=` + encodeURIComponent(gameManager.currentStartedRoom.href),
+                `${PUSHER_URL}/woka/list?roomUrl=` + encodeURIComponent(gameManager.currentStartedRoom.href),
                 undefined,
                 {
                     responseType: "text",

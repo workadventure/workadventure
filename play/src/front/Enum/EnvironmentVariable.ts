@@ -9,7 +9,6 @@ declare global {
 
 const env = window.env;
 export const DEBUG_MODE = env.DEBUG_MODE;
-export const PLAY_URL = env.PLAY_URL;
 export const PUSHER_URL = env.PUSHER_URL;
 export const ADMIN_URL = env.ADMIN_URL;
 export const UPLOADER_URL = env.UPLOADER_URL;

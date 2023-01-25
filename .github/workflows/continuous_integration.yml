@@ -53,7 +53,7 @@ jobs:
       - name: "Build"
         run: npm run build
         env:
-          PLAY_URL: "//localhost:3000"
+          PUSHER_URL: "//localhost:3000"
           ADMIN_URL: "//localhost:80"
           # upgrade RAM available to 6GB
           NODE_OPTIONS: --max-old-space-size=6144
@@ -132,7 +132,7 @@ jobs:
       - name: "Build"
         run: npm run build
         env:
-          PLAY_URL: "//localhost:8080"
+          PUSHER_URL: "//localhost:8080"
           ADMIN_URL: "//localhost:80"
           # upgrade RAM available to 6GB
           NODE_OPTIONS: --max-old-space-size=6144
