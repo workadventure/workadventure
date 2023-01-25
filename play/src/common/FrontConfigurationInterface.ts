@@ -31,4 +31,5 @@ export interface FrontConfigurationInterface {
     OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy | undefined;
     ENABLE_REPORT_ISSUES_MENU: boolean | undefined;
     REPORT_ISSUES_URL: string | undefined;
+    BACK_OFFICE_MENU: string | undefined;
 }

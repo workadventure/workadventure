@@ -40,6 +40,7 @@
     import { chatVisibilityStore, chatZoneLiveStore } from "../../Stores/ChatStore";
     import { proximityMeetingStore } from "../../Stores/MyMediaStore";
     import type { MenuItem, TranslatedMenu } from "../../Stores/MenuStore";
+    import { BACK_OFFICE_MENU } from "../../Enum/EnvironmentVariable";
     import {
         activeSubMenuStore,
         menuVisiblilityStore,
@@ -276,7 +277,7 @@
     }
 
     function openBo() {
-        window.open(`https://workadventu.re/admin`, "_blanck");
+        window.open(BACK_OFFICE_MENU, "_blank"); 
     }
 
     /*function register() {

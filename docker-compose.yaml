@@ -83,6 +83,7 @@ services:
             SECRET_KEY: "$SECRET_KEY"
             ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
             API_URL: back:50051
+            BACK_OFFICE_MENU: "$BACK_OFFICE_MENU"
             DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
             PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
             ENABLE_OPENAPI_ENDPOINT: "true"

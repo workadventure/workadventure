@@ -15,6 +15,7 @@ const EnvironmentVariables = z.object({
     SECRET_KEY: z.string().min(1),
     API_URL: z.string().min(1),
     ADMIN_API_URL: AbsoluteOrRelativeUrl.optional(),
+    BACK_OFFICE_MENU: z.string().url().optional(),
     ADMIN_URL: AbsoluteOrRelativeUrl.optional(),
     ADMIN_API_TOKEN: z.string().optional(),
     ADMIN_SOCKETS_TOKEN: z.string().optional(),
@@ -109,6 +110,7 @@ function toBool(value: BoolAsString | undefined, defaultValue: boolean): boolean
 
 export const SECRET_KEY = env.SECRET_KEY;
 export const API_URL = env.API_URL;
+export const BACK_OFFICE_MENU = env.BACK_OFFICE_MENU;
 export const ADMIN_API_URL = env.ADMIN_API_URL;
 export const ADMIN_API_RETRY_DELAY = parseInt(process.env.ADMIN_API_RETRY_DELAY || "500");
 export const ADMIN_URL = env.ADMIN_URL;
@@ -184,4 +186,5 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     OPID_WOKA_NAME_POLICY,
     ENABLE_REPORT_ISSUES_MENU: toBool(env.ENABLE_REPORT_ISSUES_MENU, false),
     REPORT_ISSUES_URL: env.REPORT_ISSUES_URL,
+    BACK_OFFICE_MENU: env.BACK_OFFICE_MENU,
 };
