@@ -1,7 +1,7 @@
 import type { LocalUser } from "./LocalUser";
 import { areCharacterLayersValid, isUserNameValid } from "./LocalUser";
-import type { Emoji } from "../Stores/EmoteStore";
 import { z } from "zod";
+import { arrayEmoji, Emoji } from "../Stores/Utils/emojiSchema";
 
 const playerNameKey = "playerName";
 const selectedPlayerKey = "selectedPlayer";
@@ -399,19 +399,19 @@ class LocalUserStore {
     getEmojiFavorite(): Map<number, Emoji> | null {
         const value = localStorage.getItem(emojiFavorite);
         if (value == undefined) return null;
-
-        const emojis = JSON.parse(value);
-        if (!Array.isArray(emojis)) {
+        try {
+            const emojis: Emoji[] = JSON.parse(value);
+            arrayEmoji.parse(emojis);
+            const map = new Map<number, Emoji>();
+            emojis.forEach((value, index) => {
+                map.set(index + 1, value);
+            });
+            return map;
+        } catch (e) {
             localStorage.removeItem(emojiFavorite);
+            console.error("The localStorage key 'emojiFavorite' format is incorrect:", e);
             return null;
         }
-
-        const array: Array<Emoji> = JSON.parse(value) as Array<Emoji>;
-        const map: Map<number, Emoji> = new Map<number, Emoji>();
-        array.forEach((value, index) => {
-            map.set(index + 1, value);
-        });
-        return map;
     }
 
     setSpeakerDeviceId(value: string) {

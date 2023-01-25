@@ -50,7 +50,6 @@
         addClassicButtonActionBarEvent,
         addActionButtonActionBarEvent,
     } from "../../Stores/MenuStore";
-    import type { Emoji } from "../../Stores/EmoteStore";
     import {
         emoteDataStore,
         emoteDataStoreLoading,
@@ -76,6 +75,7 @@
     import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { localUserStore } from "../../Connexion/LocalUserStore";
+    import { Emoji } from "../../Stores/Utils/emojiSchema";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
