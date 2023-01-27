@@ -143,6 +143,7 @@
              "AUTHENTICATION_USER": "john.doe",
              "AUTHENTICATION_PASSWORD": "password",
              "AUTHENTICATION_TOKEN": "SomeSecretToken",
+             "USE_DOMAIN_NAME_IN_PATH": if (adminUrl == null) then "false" else "true",
            }
          },
     "uploaderredis":{
