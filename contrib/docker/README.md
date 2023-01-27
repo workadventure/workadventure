@@ -20,9 +20,8 @@ In this docker-compose file, you will find:
 graph LR
     A[Browser] --> B(Traefik)
     subgraph docker-compose
-    B --> C(Front)
     B --> I(Chat)
-    B --> D(Pusher)
+    B --> D(Play)
     B --> E(Icon)
     D --> F(Back)
     F --> G(Redis)
@@ -40,7 +39,7 @@ HTTP server (nginx / Apache, ...) and properly configure the [CORS settings as e
 > **Note**
 > The Ejabberd server is used to list all the users connected to your environment and also
 > to transmit chat messages. The Ejabberd server proposed in this install comes almost
-> unconfigured. There is a basic system set up to authenticate users using JWT. Because 
+> unconfigured. There is a basic system set up to authenticate users using JWT. Because
 > authentications are using JWT, nothing will be saved.
 > If you want to persist messages and use "real accounts", you will need to implement the
 > "admin API" (it is the role of the Admin API to give valid credentials to Ejabberd),

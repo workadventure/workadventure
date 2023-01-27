@@ -5,6 +5,8 @@ import { NextFunction, Response } from "express";
 import { Archiver } from "archiver";
 import { StreamZipAsync, ZipEntry } from "node-stream-zip";
 import { UploadController } from "./UploadController";
+import { FileNotFoundError } from "./FileNotFoundError";
+import { NodeError } from "./NodeError";
 
 export class DiskFileSystem implements FileSystemInterface {
     public constructor(private baseDirectory: string) {}
@@ -56,11 +58,21 @@ export class DiskFileSystem implements FileSystemInterface {
         });
     }
 
-    readFileAsString(virtualPath: string): Promise<string> {
+    async readFileAsString(virtualPath: string): Promise<string> {
         const fullPath = this.getFullPath(virtualPath);
-        return fs.readFile(fullPath, {
-            encoding: "utf-8",
-        });
+        try {
+            return await fs.readFile(fullPath, {
+                encoding: "utf-8",
+            });
+        } catch (e) {
+            const nodeError = NodeError.safeParse(e);
+            if (e instanceof Error && nodeError.success && nodeError.data.code === "ENOENT") {
+                throw new FileNotFoundError(e.message, {
+                    cause: e,
+                });
+            }
+            throw e;
+        }
     }
 
     writeStringAsFile(virtualPath: string, content: string): Promise<void> {

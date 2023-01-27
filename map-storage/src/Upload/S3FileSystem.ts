@@ -4,6 +4,7 @@ import {
     ListObjectsCommand,
     ListObjectsCommandInput,
     ListObjectsCommandOutput,
+    NoSuchKey,
     PutObjectCommand,
     S3,
 } from "@aws-sdk/client-s3";
@@ -17,6 +18,7 @@ import { Readable } from "stream";
 import { StreamZipAsync, ZipEntry } from "node-stream-zip";
 import path from "path";
 import { UploadController } from "./UploadController";
+import { FileNotFoundError } from "./FileNotFoundError";
 
 export class S3FileSystem implements FileSystemInterface {
     public constructor(private s3: S3, private bucketName: string) {}
@@ -140,13 +142,22 @@ export class S3FileSystem implements FileSystemInterface {
     }
 
     async readFileAsString(virtualPath: string): Promise<string> {
-        const file = await this.s3.getObject({ Bucket: this.bucketName, Key: virtualPath });
+        try {
+            const file = await this.s3.getObject({ Bucket: this.bucketName, Key: virtualPath });
 
-        if (!file.Body) {
-            throw new Error("Missing body");
+            if (!file.Body) {
+                throw new Error("Missing body");
+            }
+
+            return file.Body.transformToString("utf-8");
+        } catch (e) {
+            if (e instanceof NoSuchKey) {
+                throw new FileNotFoundError(e.message, {
+                    cause: e,
+                });
+            }
+            throw e;
         }
-
-        return file.Body.transformToString("utf-8");
     }
 
     async writeStringAsFile(virtualPath: string, content: string): Promise<void> {

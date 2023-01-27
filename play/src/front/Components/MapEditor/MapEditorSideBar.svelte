@@ -43,13 +43,13 @@
             <button on:click|preventDefault={zoomIn} type="button"
                 ><img src={ZoomInImg} alt={$LL.mapEditor.sideBar.zoomIn()} /></button
             >
-            <Tooltip text={$LL.mapEditor.sideBar.zoomIn()} rightPosition="true"/>
+            <Tooltip text={$LL.mapEditor.sideBar.zoomIn()} rightPosition="true" />
         </div>
         <div class="tool-button">
             <button on:click|preventDefault={zoomOut} type="button"
                 ><img src={ZoomOutImg} alt={$LL.mapEditor.sideBar.zoomOut()} /></button
             >
-            <Tooltip text={$LL.mapEditor.sideBar.zoomOut() } rightPosition="true"/>
+            <Tooltip text={$LL.mapEditor.sideBar.zoomOut()} rightPosition="true" />
         </div>
         {#each availableTools as tool (tool.toolName)}
             <div class="tool-button">
@@ -58,7 +58,7 @@
                     on:click|preventDefault={() => switchTool(tool.toolName)}
                     type="button"><img src={tool.img} alt="open tool {tool.toolName}" /></button
                 >
-                <Tooltip text={tool.tooltiptext} rightPosition="true"/>
+                <Tooltip text={tool.tooltiptext} rightPosition="true" />
             </div>
         {/each}
     </div>
