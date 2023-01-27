@@ -9,7 +9,7 @@ import { LocalUser } from "./LocalUser";
 import { Room } from "./Room";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
-import { userIsConnected, warningContainerStore } from "../Stores/MenuStore";
+import { subMenusStore, userIsConnected, warningContainerStore } from "../Stores/MenuStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { axiosWithRetry } from "./AxiosUtils";
 import type { AvailabilityStatus } from "@workadventure/messages";
@@ -245,6 +245,10 @@ class ConnectionManager {
         }
 
         this.serviceWorker = new _ServiceWorker();
+
+        // add report issue menu
+        subMenusStore.addReportIssuesMenu();
+
         return Promise.resolve(this._currentRoom);
     }
 
@@ -270,7 +274,8 @@ class ConnectionManager {
         position: PositionInterface,
         viewport: ViewportInterface,
         companion: string | null,
-        availabilityStatus: AvailabilityStatus
+        availabilityStatus: AvailabilityStatus,
+        lastCommandId?: string
     ): Promise<OnConnectInterface> {
         return new Promise<OnConnectInterface>((resolve, reject) => {
             const connection = new RoomConnection(
@@ -281,7 +286,8 @@ class ConnectionManager {
                 position,
                 viewport,
                 companion,
-                availabilityStatus
+                availabilityStatus,
+                lastCommandId
             );
 
             connection.onConnectError((error: object) => {
@@ -347,7 +353,8 @@ class ConnectionManager {
                         position,
                         viewport,
                         companion,
-                        availabilityStatus
+                        availabilityStatus,
+                        lastCommandId
                     );
                     void this.connectToRoomSocket(
                         roomUrl,
@@ -356,7 +363,8 @@ class ConnectionManager {
                         position,
                         viewport,
                         companion,
-                        availabilityStatus
+                        availabilityStatus,
+                        lastCommandId
                     ).then((connection) => resolve(connection));
                 }, 4000 + Math.floor(Math.random() * 2000));
             });

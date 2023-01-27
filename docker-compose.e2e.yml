@@ -83,7 +83,6 @@ services:
     command: npm run start
     volumes: []
     environment:
-      ENABLE_OPENAPI_ENDPOINT: "false"
       STARTUP_COMMAND_1: ""
       STARTUP_COMMAND_2: ""
 

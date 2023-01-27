@@ -33,7 +33,6 @@ services:
       - JITSI_URL
       - JITSI_PRIVATE_MODE
       - ENABLE_FEATURE_MAP_EDITOR
-      - PLAY_URL=https://${PLAY_HOST}
       - PUSHER_URL=https://${PUSHER_HOST}
       - ICON_URL=https://${ICON_HOST}
       - TURN_SERVER
@@ -62,6 +61,9 @@ services:
       # Only used if you set up a JWT authentication mechanism in Ejabberd
       - EJABBERD_JWT_SECRET=${EJABBERD_JWT_SECRET}
       - EJABBERD_DOMAIN=${EJABBERD_DOMAIN}
+      # Report issues menu
+      - ENABLE_REPORT_ISSUES_MENU=${ENABLE_REPORT_ISSUES_MENU}
+      - REPORT_ISSUES_URL=${REPORT_ISSUES_URL}
     labels:
       traefik.enable: "true"
       traefik.http.routers.play.rule: "Host(`${FRONT_HOST}`)"
@@ -77,7 +79,7 @@ services:
   chat:
     image: thecodingmachine/workadventure-chat:${VERSION}
     environment:
-      - PLAY_URL=https://${PLAY_HOST}
+      - PUSHER_URL=https://${PUSHER_HOST}
       - UPLOADER_URL=https://${UPLOADER_HOST}
       - EMBEDLY_KEY=${EMBEDLY_KEY}
       - ENABLE_CHAT_UPLOAD=${ENABLE_CHAT_UPLOAD}

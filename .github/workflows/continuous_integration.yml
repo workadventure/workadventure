@@ -53,7 +53,7 @@ jobs:
       - name: "Build"
         run: npm run build
         env:
-          PLAY_URL: "//localhost:3000"
+          PUSHER_URL: "//localhost:3000"
           ADMIN_URL: "//localhost:80"
           # upgrade RAM available to 6GB
           NODE_OPTIONS: --max-old-space-size=6144
@@ -132,7 +132,7 @@ jobs:
       - name: "Build"
         run: npm run build
         env:
-          PLAY_URL: "//localhost:8080"
+          PUSHER_URL: "//localhost:8080"
           ADMIN_URL: "//localhost:80"
           # upgrade RAM available to 6GB
           NODE_OPTIONS: --max-old-space-size=6144
@@ -232,6 +232,53 @@ jobs:
         run: npm test
         working-directory: "uploader"
 
+  continuous-integration-lib-map-editor:
+    name: "Continuous Integration Map Editor Library"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: "npm"
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          version: '3.x'
+
+      - name: "Install dependencies"
+        run: npm ci --workspace=@workadventure/map-editor
+
+      - name: "Install messages dependencies"
+        run: npm ci
+        working-directory: "messages"
+
+      - name: "Build proto messages"
+        run: npm run ts-proto && npm run proto
+        working-directory: "messages"
+
+      - name: "Typecheck"
+        run: npm run typecheck
+        working-directory: "libs/map-editor"
+
+      - name: "Lint"
+        run: npm run lint
+        working-directory: "libs/map-editor"
+
+      - name: "Pretty"
+        run: npm run pretty-check
+        working-directory: "libs/map-editor"
+
+      - name: "jest"
+        run: npm test
+        working-directory: "libs/map-editor"
 
   continuous-integration-map-storage:
     name: "Continuous Integration Map Storage"
@@ -274,8 +321,8 @@ jobs:
         run: npm run lint
         working-directory: "map-storage"
 
-      - name: "Jasmine"
-        run: npm test
+      - name: "Tests"
+        run: npm run test
         working-directory: "map-storage"
 
       - name: "Prettier"

@@ -5,13 +5,12 @@ import {
     ITiledMapProperty,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
-import type { AreaData } from '../types';
+import type { AreaData } from "../types";
 import type { AreaChangeCallback } from "./GameMapAreas";
 import { GameMapAreas } from "./GameMapAreas";
-import { GameMapProperties } from '../types';
-import { flattenGroupLayersMap } from './LayersFlattener';
-
-
+import { GameMapProperties } from "../types";
+import { flattenGroupLayersMap } from "./LayersFlattener";
+import { GameMapEntities } from "./GameMapEntities";
 
 /**
  * A wrapper around a ITiledMap interface to provide additional capabilities.
@@ -21,7 +20,10 @@ export class GameMap {
      * Component responsible for holding gameMap Areas related logic
      */
     private gameMapAreas: GameMapAreas;
-
+    /**
+     * Component responsible for holding gameMap entities related logic
+     */
+    private gameMapEntities: GameMapEntities;
 
     private readonly map: ITiledMap;
     private tileNameMap = new Map<string, number>();
@@ -30,8 +32,8 @@ export class GameMap {
     public readonly flatLayers: ITiledMapLayer[];
     public readonly tiledObjects: ITiledMapObject[];
 
-    private readonly defaultTileSize = 32;
-
+    private readonly DEFAULT_TILE_SIZE = 32;
+    private readonly MAP_PROPERTY_LAST_COMMAND_ID_KEY: string = "lastCommandId";
 
     public exitUrls: Array<string> = [];
 
@@ -43,27 +45,30 @@ export class GameMap {
         this.tiledObjects = GameMap.getObjectsFromLayers(this.flatLayers);
 
         this.gameMapAreas = new GameMapAreas(this);
+        this.gameMapEntities = new GameMapEntities(this);
 
         for (const tileset of this.map.tilesets) {
-            tileset?.tiles?.forEach((tile) => {
-                if (tile.properties && tileset.firstgid !== undefined) {
-                    this.tileSetPropertyMap[tileset.firstgid + tile.id] = tile.properties;
-                    tile.properties.forEach((prop) => {
-                        if (
-                            prop.name == GameMapProperties.NAME &&
-                            typeof prop.value == "string" &&
-                            tileset.firstgid !== undefined
-                        ) {
-                            this.tileNameMap.set(prop.value, tileset.firstgid + tile.id);
+            if ("tiles" in tileset) {
+                for (const tile of tileset.tiles ?? []) {
+                    if (tile.properties && tileset.firstgid !== undefined) {
+                        this.tileSetPropertyMap[tileset.firstgid + tile.id] = tile.properties;
+                        for (const prop of tile.properties) {
+                            if (
+                                prop.name == GameMapProperties.NAME &&
+                                typeof prop.value == "string" &&
+                                tileset.firstgid !== undefined
+                            ) {
+                                this.tileNameMap.set(prop.value, tileset.firstgid + tile.id);
+                            }
+                            if (prop.name == GameMapProperties.EXIT_URL && typeof prop.value == "string") {
+                                this.exitUrls.push(prop.value);
+                            } else if (prop.name == GameMapProperties.START) {
+                                this.hasStartTile = true;
+                            }
                         }
-                        if (prop.name == GameMapProperties.EXIT_URL && typeof prop.value == "string") {
-                            this.exitUrls.push(prop.value);
-                        } else if (prop.name == GameMapProperties.START) {
-                            this.hasStartTile = true;
-                        }
-                    });
+                    }
                 }
-            });
+            }
         }
     }
 
@@ -76,15 +81,15 @@ export class GameMap {
 
     public getTileDimensions(): { width: number; height: number } {
         return {
-            width: this.map.tilewidth ?? this.defaultTileSize,
-            height: this.map.tileheight ?? this.defaultTileSize,
+            width: this.map.tilewidth ?? this.DEFAULT_TILE_SIZE,
+            height: this.map.tileheight ?? this.DEFAULT_TILE_SIZE,
         };
     }
 
     public getTileIndexAt(x: number, y: number): { x: number; y: number } {
         return {
-            x: Math.floor(x / (this.map.tilewidth ?? this.defaultTileSize)),
-            y: Math.floor(y / (this.map.tileheight ?? this.defaultTileSize)),
+            x: Math.floor(x / (this.map.tilewidth ?? this.DEFAULT_TILE_SIZE)),
+            y: Math.floor(y / (this.map.tileheight ?? this.DEFAULT_TILE_SIZE)),
         };
     }
 
@@ -137,11 +142,7 @@ export class GameMap {
         property.value = propertyValue;
     }
 
-    public setAreaProperty(
-        area: AreaData,
-        key: string,
-        value: string | number | boolean | undefined
-    ): void {
+    public setAreaProperty(area: AreaData, key: string, value: string | number | boolean | undefined): void {
         this.gameMapAreas.setProperty(area, key, value);
     }
 
@@ -218,24 +219,50 @@ export class GameMap {
         return objects;
     }
 
+    public updateLastCommandIdProperty(commandId: string): void {
+        const property = this.getMapPropertyByKey(this.MAP_PROPERTY_LAST_COMMAND_ID_KEY);
+        if (!property) {
+            this.map.properties?.push({
+                name: this.MAP_PROPERTY_LAST_COMMAND_ID_KEY,
+                type: "string",
+                propertytype: "string",
+                value: commandId,
+            });
+        } else {
+            property.value = commandId;
+        }
+    }
+
+    public getLastCommandId(): string | undefined {
+        return (this.getMapPropertyByKey(this.MAP_PROPERTY_LAST_COMMAND_ID_KEY)?.value as string) ?? undefined;
+    }
+
+    public getMapPropertyByKey(key: string): ITiledMapProperty | undefined {
+        return this.map.properties?.find((property) => property.name === key);
+    }
+
     public getDefaultTileSize(): number {
-        return this.defaultTileSize;
+        return this.DEFAULT_TILE_SIZE;
     }
 
     public getGameMapAreas(): GameMapAreas {
         return this.gameMapAreas;
     }
 
+    public getGameMapEntities(): GameMapEntities {
+        return this.gameMapEntities;
+    }
+
     // NOTE: Flat layers are deep copied so we cannot operate on them
     public deleteGameObjectFromMapById(id: number, layers: ITiledMapLayer[]): boolean {
         for (const layer of layers) {
-            if (layer.type === 'objectgroup') {
-                const index = layer.objects.findIndex(object => object.id === id);
+            if (layer.type === "objectgroup") {
+                const index = layer.objects.findIndex((object) => object.id === id);
                 if (index !== -1) {
                     layer.objects.splice(index, 1);
                     return true;
                 }
-            } else if (layer.type === 'group') {
+            } else if (layer.type === "group") {
                 return this.deleteGameObjectFromMapById(id, layer.layers);
             }
         }

@@ -51,7 +51,7 @@
 {#if actionsMenuData}
     <div class="actions-menu nes-container is-rounded">
         <button type="button" class="nes-btn is-error close" on:click={closeActionsMenu}>&times;</button>
-        <h2>{actionsMenuData.playerName}</h2>
+        <h2 class="name">{actionsMenuData.menuName}</h2>
         <div class="actions">
             {#each sortedActions ?? [] as action}
                 <button
@@ -75,7 +75,7 @@
         transform: translate(-50%, 0);
         width: 260px !important;
         height: max-content !important;
-        max-height: 40vh;
+        max-height: 50vh;
         margin-top: 200px;
         z-index: 425;
 
@@ -95,6 +95,10 @@
                 width: calc(100% - 10px);
                 margin-bottom: 10px;
             }
+        }
+
+        .name {
+            max-height: 15vh;
         }
 
         .actions::-webkit-scrollbar {

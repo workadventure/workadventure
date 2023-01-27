@@ -4,8 +4,8 @@ import { envConfig } from "@geprog/vite-plugin-env-config";
 import sveltePreprocess from "svelte-preprocess";
 import pluginRewriteAll from "vite-plugin-rewrite-all";
 import NodeGlobalsPolyfillPlugin from "@esbuild-plugins/node-globals-polyfill";
-import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill';
-import rollupNodePolyFill from 'rollup-plugin-node-polyfills'
+import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
+import rollupNodePolyFill from "rollup-plugin-node-polyfills";
 
 export default defineConfig({
     server: {
@@ -29,8 +29,8 @@ export default defineConfig({
             preprocess: sveltePreprocess(),
             onwarn(warning, defaultHandler) {
                 // don't warn on:
-                if (warning.code === 'a11y-click-events-have-key-events') return;
-                if (warning.code === 'security-anchor-rel-noreferrer') return;
+                if (warning.code === "a11y-click-events-have-key-events") return;
+                if (warning.code === "security-anchor-rel-noreferrer") return;
 
                 // handle all other warnings normally
                 if (defaultHandler) {
@@ -41,7 +41,7 @@ export default defineConfig({
         envConfig({
             variables: [
                 "ADMIN_API_URL",
-                "PLAY_URL",
+                "PUSHER_URL",
                 "FALLBACK_LOCALE",
                 "UPLOADER_URL",
                 "EMBEDLY_KEY",
@@ -49,7 +49,7 @@ export default defineConfig({
                 "ENABLE_OPENID",
                 "ENABLE_CHAT_UPLOAD",
                 "EJABBERD_WS_URI",
-                "EJABBERD_DOMAIN"
+                "EJABBERD_DOMAIN",
             ],
         }),
         pluginRewriteAll(),
@@ -57,22 +57,22 @@ export default defineConfig({
     optimizeDeps: {
         esbuildOptions: {
             define: {
-                global: 'globalThis'
+                global: "globalThis",
             },
             plugins: [
                 NodeGlobalsPolyfillPlugin({
                     process: true,
-                    buffer: true
+                    buffer: true,
                 }),
-                NodeModulesPolyfillPlugin()
-            ]
-        }
+                NodeModulesPolyfillPlugin(),
+            ],
+        },
     },
     resolve: {
         alias: [
-            { find: 'events', replacement: 'rollup-plugin-node-polyfills/polyfills/events' },
-            { find: 'child_process', replacement: 'rollup-plugin-node-polyfills' },
-            { find: 'path', replacement: 'rollup-plugin-node-polyfills/polyfills/path' },
+            { find: "events", replacement: "rollup-plugin-node-polyfills/polyfills/events" },
+            { find: "child_process", replacement: "rollup-plugin-node-polyfills" },
+            { find: "path", replacement: "rollup-plugin-node-polyfills/polyfills/path" },
         ],
-    }
+    },
 });

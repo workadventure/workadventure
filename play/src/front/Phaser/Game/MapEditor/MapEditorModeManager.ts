@@ -1,14 +1,21 @@
-import type { CommandConfig, Command } from "@workadventure/map-editor";
+import { CommandConfig, Command, UpdateEntityCommand } from "@workadventure/map-editor";
 import { UpdateAreaCommand, CreateAreaCommand, DeleteAreaCommand } from "@workadventure/map-editor";
 import type { Unsubscriber } from "svelte/store";
 import type { RoomConnection } from "../../../Connexion/RoomConnection";
-import { mapEditorModeDragCameraPointerDownStore, mapEditorModeStore } from "../../../Stores/MapEditorStore";
 import type { GameScene } from "../GameScene";
+import { mapEditorModeStore, mapEditorSelectedToolStore } from "../../../Stores/MapEditorStore";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
+import { FloorEditorTool } from "./Tools/FloorEditorTool";
+import { EntityEditorTool } from "./Tools/EntityEditorTool";
+import { CreateEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/CreateEntityCommand";
+import { DeleteEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/DeleteEntityCommand";
+import { EditMapCommandMessage } from "@workadventure/messages";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
+    FloorEditor = "FloorEditor",
+    EntityEditor = "EntityEditor",
 }
 
 export class MapEditorModeManager {
@@ -20,14 +27,9 @@ export class MapEditorModeManager {
     private active: boolean;
 
     /**
-     * Is pointer currently down (map dragging etc)
-     */
-    private pointerDown: boolean;
-
-    /**
      * Tools that we can work with inside Editor
      */
-    private editorTools: Map<EditorToolName, MapEditorTool>;
+    private editorTools: Record<EditorToolName, MapEditorTool>;
 
     /**
      * What tool are we using right now
@@ -49,7 +51,6 @@ export class MapEditorModeManager {
     private currentCommandIndex: number;
 
     private mapEditorModeUnsubscriber!: Unsubscriber;
-    private pointerDownUnsubscriber!: Unsubscriber;
 
     private ctrlKey: Phaser.Input.Keyboard.Key;
     private shiftKey: Phaser.Input.Keyboard.Key;
@@ -65,11 +66,12 @@ export class MapEditorModeManager {
         this.currentCommandIndex = -1;
 
         this.active = false;
-        this.pointerDown = false;
 
-        this.editorTools = new Map<EditorToolName, MapEditorTool>([
-            [EditorToolName.AreaEditor, new AreaEditorTool(this)],
-        ]);
+        this.editorTools = {
+            [EditorToolName.AreaEditor]: new AreaEditorTool(this),
+            [EditorToolName.EntityEditor]: new EntityEditorTool(this),
+            [EditorToolName.FloorEditor]: new FloorEditorTool(this),
+        };
         this.activeTool = undefined;
 
         this.subscribeToStores();
@@ -90,52 +92,71 @@ export class MapEditorModeManager {
     public executeCommand(
         commandConfig: CommandConfig,
         emitMapEditorUpdate = true,
-        addToLocalCommandsHistory = true
+        addToLocalCommandsHistory = true,
+        commandId?: string
     ): boolean {
         let command: Command;
         const delay = 0;
-        switch (commandConfig.type) {
-            case "UpdateAreaCommand": {
-                command = new UpdateAreaCommand(this.scene.getGameMap(), commandConfig);
-                break;
+        try {
+            switch (commandConfig.type) {
+                case "UpdateAreaCommand": {
+                    command = new UpdateAreaCommand(this.scene.getGameMap(), commandConfig, commandId);
+                    break;
+                }
+                case "CreateAreaCommand": {
+                    command = new CreateAreaCommand(this.scene.getGameMap(), commandConfig, commandId);
+                    break;
+                }
+                case "DeleteAreaCommand": {
+                    command = new DeleteAreaCommand(this.scene.getGameMap(), commandConfig, commandId);
+                    break;
+                }
+                case "UpdateEntityCommand": {
+                    command = new UpdateEntityCommand(this.scene.getGameMap(), commandConfig, commandId);
+                    break;
+                }
+                case "CreateEntityCommand": {
+                    command = new CreateEntityCommand(this.scene.getGameMap(), commandConfig, commandId);
+                    break;
+                }
+                case "DeleteEntityCommand": {
+                    command = new DeleteEntityCommand(this.scene.getGameMap(), commandConfig, commandId);
+                    break;
+                }
+                default: {
+                    const _exhaustiveCheck: never = commandConfig;
+                    return false;
+                }
             }
-            case "CreateAreaCommand": {
-                command = new CreateAreaCommand(this.scene.getGameMap(), commandConfig);
-                break;
-            }
-            case "DeleteAreaCommand": {
-                command = new DeleteAreaCommand(this.scene.getGameMap(), commandConfig);
-                break;
-            }
-            default: {
-                const _exhaustiveCheck: never = commandConfig;
+            if (!command) {
                 return false;
             }
-        }
-        if (!command) {
+            // We do an execution instantly so there will be no lag from user's perspective
+            const executedCommandConfig = command.execute();
+
+            // do any necessary changes for active tool interface
+            this.handleCommandExecutionByTools(executedCommandConfig);
+
+            if (emitMapEditorUpdate) {
+                this.emitMapEditorUpdate(command.id, commandConfig, delay);
+            }
+
+            if (addToLocalCommandsHistory) {
+                // if we are not at the end of commands history and perform an action, get rid of commands later in history than our current point in time
+                if (this.currentCommandIndex !== this.localCommandsHistory.length - 1) {
+                    this.localCommandsHistory.splice(this.currentCommandIndex + 1);
+                }
+                this.pendingCommands.push(command);
+                this.localCommandsHistory.push(command);
+                this.currentCommandIndex += 1;
+            }
+
+            this.scene.getGameMap().updateLastCommandIdProperty(command.id);
+            return true;
+        } catch (error) {
+            console.warn(error);
             return false;
         }
-        // We do an execution instantly so there will be no lag from user's perspective
-        const executedCommandConfig = command.execute();
-
-        // do any necessary changes for active tool interface
-        this.currentlyActiveTool?.handleCommandExecution(executedCommandConfig);
-
-        if (emitMapEditorUpdate) {
-            this.emitMapEditorUpdate(command.id, commandConfig, delay);
-        }
-
-        if (addToLocalCommandsHistory) {
-            // if we are not at the end of commands history and perform an action, get rid of commands later in history than our current point in time
-            if (this.currentCommandIndex !== this.localCommandsHistory.length - 1) {
-                this.localCommandsHistory.splice(this.currentCommandIndex + 1);
-            }
-            this.pendingCommands.push(command);
-            this.localCommandsHistory.push(command);
-            this.currentCommandIndex += 1;
-        }
-
-        return true;
     }
 
     public undoCommand(): void {
@@ -148,10 +169,10 @@ export class MapEditorModeManager {
             this.pendingCommands.push(command);
 
             // do any necessary changes for active tool interface
-            this.currentlyActiveTool?.handleCommandExecution(commandConfig);
+            this.handleCommandExecutionByTools(commandConfig);
 
             // this should not be called with every change. Use some sort of debounce
-            this.emitMapEditorUpdate(command.id, commandConfig);
+            this.emitMapEditorUpdate(`${command.id}`, commandConfig);
             this.currentCommandIndex -= 1;
         } catch (e) {
             this.localCommandsHistory.splice(this.currentCommandIndex, 1);
@@ -173,7 +194,7 @@ export class MapEditorModeManager {
             this.pendingCommands.push(command);
 
             // do any necessary changes for active tool interface
-            this.currentlyActiveTool?.handleCommandExecution(commandConfig);
+            this.handleCommandExecutionByTools(commandConfig);
 
             // this should not be called with every change. Use some sort of debounce
             this.emitMapEditorUpdate(command.id, commandConfig);
@@ -185,18 +206,28 @@ export class MapEditorModeManager {
         }
     }
 
+    /**
+     * Update local map with missing commands given from the map-storage on RoomJoinedEvent. This commands
+     * are applied locally and are not being send further.
+     * @param commands Commands to apply in order to make sure the local map is in sync with the map-storage
+     */
+    public updateMapToNewest(commands: EditMapCommandMessage[]) {
+        for (const command of commands) {
+            for (const tool of Object.values(this.editorTools)) {
+                tool.handleIncomingCommandMessage(command);
+            }
+        }
+    }
+
     public isActive(): boolean {
         return this.active;
     }
 
-    public isPointerDown(): boolean {
-        return this.pointerDown;
-    }
-
     public destroy(): void {
-        this.editorTools.forEach((tool) => tool.destroy());
+        for (const tool of Object.values(this.editorTools)) {
+            tool.destroy();
+        }
         this.unsubscribeFromStores();
-        this.pointerDownUnsubscriber();
     }
 
     public handleKeyDownEvent(event: KeyboardEvent): void {
@@ -208,6 +239,10 @@ export class MapEditorModeManager {
             }
             case "1": {
                 this.equipTool(EditorToolName.AreaEditor);
+                break;
+            }
+            case "2": {
+                this.equipTool(EditorToolName.FloorEditor);
                 break;
             }
             case "z": {
@@ -232,7 +267,9 @@ export class MapEditorModeManager {
                 this.revertPendingCommands();
             }
 
-            this.editorTools.forEach((tool) => tool.handleIncomingCommandMessage(editMapCommandMessage));
+            for (const tool of Object.values(this.editorTools)) {
+                tool.handleIncomingCommandMessage(editMapCommandMessage);
+            }
         });
     }
 
@@ -251,7 +288,7 @@ export class MapEditorModeManager {
         }
     }
 
-    private equipTool(tool?: EditorToolName): void {
+    public equipTool(tool?: EditorToolName): void {
         if (this.activeTool === tool) {
             return;
         }
@@ -261,6 +298,7 @@ export class MapEditorModeManager {
         if (tool !== undefined) {
             this.activateTool();
         }
+        mapEditorSelectedToolStore.set(tool);
     }
 
     private emitMapEditorUpdate(commandId: string, commandConfig: CommandConfig, delay = 0): void {
@@ -276,6 +314,18 @@ export class MapEditorModeManager {
                 }
                 case "DeleteAreaCommand": {
                     this.scene.connection?.emitMapEditorDeleteArea(commandId, commandConfig.id);
+                    break;
+                }
+                case "UpdateEntityCommand": {
+                    this.scene.connection?.emitMapEditorModifyEntity(commandId, commandConfig.dataToModify);
+                    break;
+                }
+                case "CreateEntityCommand": {
+                    this.scene.connection?.emitMapEditorCreateEntity(commandId, commandConfig.entityData);
+                    break;
+                }
+                case "DeleteEntityCommand": {
+                    this.scene.connection?.emitMapEditorDeleteEntity(commandId, commandConfig.id);
                     break;
                 }
                 default: {
@@ -307,25 +357,20 @@ export class MapEditorModeManager {
     private subscribeToStores(): void {
         this.mapEditorModeUnsubscriber = mapEditorModeStore.subscribe((active) => {
             this.active = active;
-            if (active) {
-                this.scene.CurrentPlayer.finishFollowingPath(true);
-                this.scene.CurrentPlayer.stop();
-                this.scene.getCameraManager().stopFollow();
-            } else {
-                this.scene.getCameraManager().startFollowPlayer(this.scene.CurrentPlayer);
-                this.equipTool();
-            }
-        });
-
-        this.pointerDownUnsubscriber = mapEditorModeDragCameraPointerDownStore.subscribe((pointerDown) => {
-            this.pointerDown = pointerDown;
+            this.equipTool(this.active ? EditorToolName.EntityEditor : undefined);
         });
     }
 
     private subscribeToGameMapFrontWrapperEvents(): void {
-        this.editorTools.forEach((tool) =>
-            tool.subscribeToGameMapFrontWrapperEvents(this.scene.getGameMapFrontWrapper())
-        );
+        for (const tool of Object.values(this.editorTools)) {
+            tool.subscribeToGameMapFrontWrapperEvents(this.scene.getGameMapFrontWrapper());
+        }
+    }
+
+    private handleCommandExecutionByTools(commandConfig: CommandConfig): void {
+        for (const tool of Object.values(this.editorTools)) {
+            tool.handleCommandExecution(commandConfig);
+        }
     }
 
     private unsubscribeFromStores(): void {
@@ -333,7 +378,7 @@ export class MapEditorModeManager {
     }
 
     private get currentlyActiveTool(): MapEditorTool | undefined {
-        return this.activeTool ? this.editorTools.get(this.activeTool) : undefined;
+        return this.activeTool ? this.editorTools[this.activeTool] : undefined;
     }
 
     public getScene(): GameScene {

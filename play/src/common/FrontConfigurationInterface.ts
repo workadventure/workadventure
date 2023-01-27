@@ -2,7 +2,6 @@ import type { OpidWokaNamePolicy } from "@workadventure/messages";
 
 export interface FrontConfigurationInterface {
     DEBUG_MODE: boolean;
-    PLAY_URL: string;
     PUSHER_URL: string;
     ADMIN_URL: string | undefined;
     UPLOADER_URL: string;
@@ -30,4 +29,6 @@ export interface FrontConfigurationInterface {
     ENABLE_CHAT_UPLOAD: boolean;
     FALLBACK_LOCALE: string | undefined;
     OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy | undefined;
+    ENABLE_REPORT_ISSUES_MENU: boolean | undefined;
+    REPORT_ISSUES_URL: string | undefined;
 }
