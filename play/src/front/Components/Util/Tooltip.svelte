@@ -2,11 +2,10 @@
     import { onMount, onDestroy } from "svelte";
 
     export let text: string;
-    export let rightPosition :string = "false";
+    export let rightPosition = "false";
 
     let tooltipElement: HTMLDivElement;
     let textElement: HTMLSpanElement;
-
 
     function hide() {
         textElement?.style.setProperty("visibility", "hidden");
@@ -27,7 +26,9 @@
 </script>
 
 <div bind:this={tooltipElement} class="tooltip tw-w-fit">
-    <span bind:this={textElement} class="tooltiptext {rightPosition === "true"?"right-tooltip":"top-tooltip"}">{text}</span>
+    <span bind:this={textElement} class="tooltiptext {rightPosition === 'true' ? 'right-tooltip' : 'top-tooltip'}"
+        >{text}</span
+    >
 </div>
 
 <style lang="scss">
@@ -50,22 +51,22 @@
             color: rgb(255 255 255 / var(--tw-text-opacity));
         }
 
-        .right-tooltip{
-            left : 10px;
-            bottom : 50%;
-            transform:translate(0,50%);
-            &::after{
-                top : calc(50% - 5px);
-                left:-5px;
+        .right-tooltip {
+            left: 10px;
+            bottom: 50%;
+            transform: translate(0, 50%);
+            &::after {
+                top: calc(50% - 5px);
+                left: -5px;
                 border-color: theme("colors.transparent") theme("colors.medium-purple") theme("colors.transparent")
-        theme("colors.transparent");
+                    theme("colors.transparent");
             }
         }
-        .top-tooltip{
+        .top-tooltip {
             bottom: 10px;
             left: 0;
-            &::after{
-                left : 1.5rem;
+            &::after {
+                left: 1.5rem;
             }
         }
     }
