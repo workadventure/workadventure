@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import multer from "multer";
-import { Express } from "express";
+import { Express, Request } from "express";
 import { FileSystemInterface } from "./FileSystemInterface";
 import { MAX_UNCOMPRESSED_SIZE } from "../Enum/EnvironmentVariable";
 import { mapPath } from "../Services/PathMapper";
@@ -12,6 +12,7 @@ import archiver from "archiver";
 import { fileSystem } from "../fileSystem";
 import StreamZip from "node-stream-zip";
 import { MapValidator, ValidationError } from "@workadventure/map-editor/src/GameMap/MapValidator";
+import { FileNotFoundError } from "./FileNotFoundError";
 
 const upload = multer({
     storage: multer.diskStorage({}),
@@ -36,6 +37,7 @@ export class UploadController {
         this.index();
         this.postUpload();
         this.getDownload();
+        this.getMaps();
     }
 
     private index() {
@@ -161,12 +163,7 @@ export class UploadController {
                         }
                     });
 
-                    const files = await fileSystem.listFiles(mapPath("/", req), ".tmj");
-
-                    await fileSystem.writeStringAsFile(
-                        mapPath("/" + UploadController.CACHE_NAME, req),
-                        JSON.stringify(files)
-                    );
+                    await this.generateCacheFile(req);
 
                     res.send("File successfully uploaded.");
                 });
@@ -176,6 +173,12 @@ export class UploadController {
                 }
             })().catch((e) => next(e));
         });
+    }
+
+    private async generateCacheFile(req: Request): Promise<void> {
+        const files = await fileSystem.listFiles(mapPath("/", req), ".tmj");
+
+        await fileSystem.writeStringAsFile(mapPath("/" + UploadController.CACHE_NAME, req), JSON.stringify(files));
     }
 
     /**
@@ -246,6 +249,26 @@ export class UploadController {
                 await fileSystem.archiveDirectory(archive, virtualDirectory);
 
                 await archive.finalize();
+            })().catch((e) => next(e));
+        });
+    }
+
+    private getMaps() {
+        this.app.get("/maps", (req, res, next) => {
+            (async () => {
+                try {
+                    const data = await fileSystem.readFileAsString(mapPath(`/${UploadController.CACHE_NAME}`, req));
+                    res.json(JSON.parse(data));
+                } catch (e) {
+                    if (e instanceof FileNotFoundError) {
+                        // No cache file? What the hell? Let's try to regenerate the cache file
+                        await this.generateCacheFile(req);
+                        // Now that the cache file is generated, let's retry serving the file.
+                        const data = await fileSystem.readFileAsString(mapPath(`/${UploadController.CACHE_NAME}`, req));
+                        res.json(JSON.parse(data));
+                    }
+                    throw e;
+                }
             })().catch((e) => next(e));
         });
     }

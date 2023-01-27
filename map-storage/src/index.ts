@@ -9,7 +9,7 @@ import { UploadController } from "./Upload/UploadController";
 import { fileSystem } from "./fileSystem";
 import passport from "passport";
 import { passportStrategy } from "./Services/Authentication";
-import { mapPath, mapPathUsingDomain } from "./Services/PathMapper";
+import { mapPathUsingDomain } from "./Services/PathMapper";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 
 const server = new grpc.Server();
@@ -53,13 +53,6 @@ app.get("*.tmj", (req, res, next) => {
 
 app.get("/entityCollections", (req, res) => {
     res.send(mapsManager.getEntityCollections());
-});
-
-app.get("/maps", (req, res, next) => {
-    (async () => {
-        const data = await fileSystem.readFileAsString(mapPath(`/${UploadController.CACHE_NAME}`, req));
-        res.send(JSON.parse(data));
-    })().catch((e) => next(e));
 });
 
 new UploadController(app, fileSystem);
