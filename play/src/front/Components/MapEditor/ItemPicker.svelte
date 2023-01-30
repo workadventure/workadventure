@@ -10,7 +10,7 @@
         onMapEditorInputUnfocus,
     } from "../../Stores/MapEditorStore";
 
-    let pickedItem: EntityPrefab = $mapEntitiesPrefabsStore[0];
+    let pickedItem: EntityPrefab | undefined = undefined;
     let pickedVariant: EntityPrefab | undefined = undefined;
     let currentColor: string;
 
@@ -37,13 +37,16 @@
 
     function onPickItem(item: EntityPrefab) {
         pickedItem = item;
-        itemVariants = $mapEntitiesPrefabsStore.filter((item: EntityPrefab) => item.name == pickedItem.name);
+        if (!pickedItem) {
+            return;
+        }
+        itemVariants = $mapEntitiesPrefabsStore.filter((item: EntityPrefab) => item.name == pickedItem?.name);
         itemVariants = itemVariants.sort(
             (a, b) =>
                 a.direction.localeCompare(b.direction) +
                 a.color.localeCompare(b.color) * 10 +
-                (a.color === pickedItem.color ? -100 : 0) +
-                (b.color === pickedItem.color ? 100 : 0)
+                (a.color === pickedItem?.color ? -100 : 0) +
+                (b.color === pickedItem?.color ? 100 : 0)
         );
         let variantColorSet = new Set<string>();
         itemVariants.forEach((item) => variantColorSet.add(item.color));
@@ -77,10 +80,7 @@
         mapEntitiesPrefabsStore.setNameFilter(filter);
     }
 
-    onPickItem(pickedItem);
-
     let mapObjectStoreUnsubscriber = mapEntitiesPrefabsStore.subscribe((newMap: EntityPrefab[]) => {
-        // currentMapObjects = newMap;
         let tags = new Set<string>();
         let uniqId = new Set<string>();
         rootItem = [];
@@ -92,7 +92,7 @@
             }
         }
 
-        if (!rootItem.includes(pickedItem) && rootItem.length != 0) {
+        if (pickedItem && !rootItem.includes(pickedItem) && rootItem.length != 0) {
             //if the item is not available due to filtering, we change it
             onPickItem(rootItem[0]);
         }
@@ -122,11 +122,11 @@
             {/each}
         </select>
     </div>
-    <div class="item-name">{pickedItem.name}</div>
+    <div class="item-name">{pickedItem?.name ?? "no entity selected"}</div>
     <div class="item-picker-container">
         {#each rootItem as item (item.name)}
             <div
-                class="pickable-item {item.name === pickedItem.name ? 'active' : ''}"
+                class="pickable-item {item.name === pickedItem?.name ? 'active' : ''}"
                 on:click={() => onPickItem(item)}
             >
                 <img class="item-image" src={item.imagePath} alt={item.name} />
