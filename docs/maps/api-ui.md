@@ -498,6 +498,11 @@ interface AddButtonActionBar {
 </div>
 
 ## Open / Close banner
+
+{.alert.alert-warning}
+The open/close banner API is **experimental**. It means the compatibility with future versions of WorkAdventure is not 
+guaranteed and we might break the signature of these methods at any moment. Use at your own risk.
+
 ### Open the banner
 ```ts
     WA.ui.banner.openBanner({
@@ -528,7 +533,7 @@ interface AddButtonActionBar {
     WA.ui.banner.closeBanner();
 ```
 
-### Example of mofal opened
+### Example of banner opened
 ```ts
 WA.ui.banner.openBanner({
     id: "banner-test",
@@ -550,7 +555,7 @@ WA.ui.banner.openBanner({
 </div>
 
 
-### Example of mofal closed
+### Example of banner closed
 ```ts
 WA.ui.banner.closeBanner();
 ```
