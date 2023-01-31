@@ -5,7 +5,6 @@ import { get } from "svelte/store";
 import CancelablePromise from "cancelable-promise";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { jitsiParticipantsCountStore, userIsJitsiDominantSpeakerStore } from "../Stores/GameStore";
-import { StringUtils } from "../Utils/StringUtils";
 
 interface jitsiConfigInterface {
     startWithAudioMuted: boolean;
@@ -114,18 +113,6 @@ const defaultInterfaceConfig = {
     ],
 };
 
-const slugify = (...args: (string | number)[]): string => {
-    const value = args.join(" ");
-
-    return value
-        .normalize("NFD") // split an accented letter in the base letter and the accent
-        .replace(/[\u0300-\u036f]/g, "") // remove all previously split accents
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9-_ ]/g, "") // remove all chars not letters, numbers, dash, underscores and spaces (to be replaced)
-        .replace(/\s+/g, "-"); // separator
-};
-
 class JitsiFactory {
     private jitsiApi?: JitsiApi;
     private audioCallback = this.onAudioChange.bind(this);
@@ -133,13 +120,6 @@ class JitsiFactory {
     private dominantSpeakerChangedCallback = this.onDominantSpeakerChanged.bind(this);
     private participantsCountChangeCallback = this.onParticipantsCountChange.bind(this);
     private jitsiScriptLoaded = false;
-
-    /**
-     * Slugifies the room name and prepends the room name with the instance
-     */
-    public getRoomName(roomName: string, roomId: string, addPrefix: boolean): string {
-        return slugify((addPrefix ? StringUtils.shortHash(roomId) + "-" : "") + roomName);
-    }
 
     public start(
         roomName: string,
@@ -152,7 +132,7 @@ class JitsiFactory {
         return new CancelablePromise((resolve, reject, cancel) => {
             // Jitsi meet external API maintains some data in local storage
             // which is sent via the appData URL parameter when joining a
-            // conference. Problem is that this data grows indefinitely. Thus
+            // conference. Problem is that this data grows indefinitely. Thus,
             // after some time the URLs get so huge that loading the iframe
             // becomes slow and eventually breaks completely. Thus lets just
             // clear jitsi local storage before starting a new conference.
