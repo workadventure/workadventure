@@ -7,7 +7,6 @@ import { get } from "svelte/store";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
-import { jitsiFactory } from "../../WebRtc/JitsiFactory";
 import { bbbFactory } from "../../WebRtc/BBBFactory";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../Enum/EnvironmentVariable";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
@@ -22,6 +21,7 @@ import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { GameMapProperties } from "@workadventure/map-editor";
 import { connectionManager } from "../../Connexion/ConnectionManager";
+import { slugifyJitsiRoomName } from "@workadventure/shared-utils/src/Jitsi/slugify";
 
 interface OpenCoWebsite {
     actionId: string;
@@ -78,11 +78,7 @@ export class GameMapPropertiesListener {
                 }
             }
             const openJitsiRoomFunction = async () => {
-                let addPrefix = true;
-                if (allProps.get(GameMapProperties.JITSI_NO_PREFIX)) {
-                    addPrefix = false;
-                }
-                const roomName = jitsiFactory.getRoomName(newValue.toString(), this.scene.roomUrl, addPrefix);
+                const roomName = slugifyJitsiRoomName(newValue.toString(), this.scene.roomUrl, allProps);
                 let jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
 
                 let jwt: string | undefined;
