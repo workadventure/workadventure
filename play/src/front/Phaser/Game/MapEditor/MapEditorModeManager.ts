@@ -37,11 +37,6 @@ export class MapEditorModeManager {
     private activeTool?: EditorToolName;
 
     /**
-     * Commands given at the start to make sure we are up-to-date with the changes on the map
-     */
-    private commandsToApply?: EditMapCommandMessage[];
-
-    /**
      * We are making use of CommandPattern to implement an Undo-Redo mechanism
      */
     private localCommandsHistory: Command[];
@@ -212,27 +207,21 @@ export class MapEditorModeManager {
     }
 
     /**
-     * Load up necessary commands and wait for the game to be ready to apply them
-     * @param commands Commands to apply in order to make sure the local map is in sync with the map-storage
-     */
-    public loadCommandsToApply(commands: EditMapCommandMessage[]): void {
-        this.commandsToApply = commands;
-    }
-
-    /**
      * Update local map with missing commands given from the map-storage on RoomJoinedEvent. This commands
      * are applied locally and are not being send further.
      */
-    public updateMapToNewest(): void {
-        if (!this.commandsToApply) {
+    public updateMapToNewest(commands: EditMapCommandMessage[]): void {
+        console.log("======= UPDATE MAP TO NEWEST ==========");
+        console.log(commands.map((command) => `${command.id}: ${command.editMapMessage?.message?.$case}`));
+        if (!commands) {
             return;
         }
-        for (const command of this.commandsToApply) {
+        for (const command of commands) {
+            console.log(`TRY TO APPLY COMMAND: ${command.editMapMessage?.message?.$case}`);
             for (const tool of Object.values(this.editorTools)) {
                 tool.handleIncomingCommandMessage(command);
             }
         }
-        this.commandsToApply = undefined;
     }
 
     public isActive(): boolean {

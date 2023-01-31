@@ -23,6 +23,7 @@ export class GameMapEntities {
     }
 
     public addEntity(entityData: EntityData, addToMapProperties = true): boolean {
+        console.log(`ADD ENTITY, ID: ${entityData.id}`);
         if (this.entities.has(entityData.id)) {
             return false;
         }
@@ -39,6 +40,7 @@ export class GameMapEntities {
     }
 
     public deleteEntity(id: number): boolean {
+        console.log(`DELETE ENTITY, ID: ${id}`);
         const deleted = this.entities.delete(id);
         if (deleted) {
             return this.deleteEntityFromMapProperties(id);

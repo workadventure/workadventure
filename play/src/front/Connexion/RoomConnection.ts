@@ -377,6 +377,8 @@ export class RoomConnection implements RoomConnection {
                     let commandsToApply: EditMapCommandMessage[] | undefined = undefined;
                     if (editMapCommandsArrayMessage) {
                         commandsToApply = editMapCommandsArrayMessage.editMapCommands;
+                        console.log("COMMANDS TO APPLY");
+                        console.log(commandsToApply);
                     }
 
                     this.userId = roomJoinedMessage.currentUserId;
