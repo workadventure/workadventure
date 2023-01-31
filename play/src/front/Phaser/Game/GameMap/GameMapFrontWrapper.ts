@@ -121,17 +121,11 @@ export class GameMapFrontWrapper {
         }
 
         this.entitiesManager = new EntitiesManager(this.scene, this);
-        const promises: Promise<void>[] = [];
         for (const entityData of this.gameMap.getGameMapEntities().getEntities()) {
-            promises.push(this.entitiesManager.addEntity(entityData, TexturesHelper.ENTITIES_TEXTURES_DIRECTORY));
+            this.entitiesManager.addEntity(entityData, TexturesHelper.ENTITIES_TEXTURES_DIRECTORY);
         }
 
-        this.entitiesReadyPromise = Promise.all(promises);
-        this.entitiesReadyPromise
-            .then(() => {
-                this.updateCollisionGrid();
-            })
-            .catch((e) => console.warn(e));
+        this.updateCollisionGrid();
     }
 
     public setLayerVisibility(layerName: string, visible: boolean): void {

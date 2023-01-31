@@ -28,12 +28,13 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     private entityData: Required<EntityData>;
 
     private activatable: boolean;
-    private oldPositionTopLeft: { x: number; y: number };
+    private oldPosition: { x: number; y: number };
 
     constructor(scene: GameScene, data: EntityData) {
         super(scene, data.x, data.y, data.prefab.imagePath);
+        this.setOrigin(0);
 
-        this.oldPositionTopLeft = this.getTopLeft();
+        this.oldPosition = this.getPosition();
 
         this.entityData = {
             ...data,
@@ -68,7 +69,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         _.merge(this.entityData, dataToModify);
 
         this.setPosition(this.entityData.x, this.entityData.y);
-        this.oldPositionTopLeft = this.getTopLeft();
+        this.oldPosition = this.getPosition();
         this.activatable = this.hasAnyPropertiesSet();
         if (this.activatable) {
             this.setInteractive({ pixelPerfect: true, cursor: "pointer" });
@@ -262,11 +263,11 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.emit(EntityEvent.PropertiesUpdated, key, value);
     }
 
-    public getOldPositionTopLeft(): { x: number; y: number } {
-        return this.oldPositionTopLeft;
+    public getOldPosition(): { x: number; y: number } {
+        return this.oldPosition;
     }
 
-    public setOldPositionTopLeft(x: number, y: number): void {
-        this.oldPositionTopLeft = { x, y };
+    public setOldPosition(x: number, y: number): void {
+        this.oldPosition = { x, y };
     }
 }

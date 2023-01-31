@@ -113,29 +113,31 @@ export class EntityEditorTool extends MapEditorTool {
 
                 TexturesHelper.loadEntityImage(this.scene, entityPrefab.imagePath, entityPrefab.imagePath)
                     .then(() => {
-                        const entityData: EntityData = {
-                            x: data.x,
-                            y: data.y,
-                            id: data.id,
-                            prefab: entityPrefab,
-                            properties: {
-                                customProperties: {},
-                            },
-                        };
-                        // execute command locally
-                        this.mapEditorModeManager.executeCommand(
-                            {
-                                type: "CreateEntityCommand",
-                                entityData,
-                            },
-                            false,
-                            false,
-                            commandId
-                        );
+                        this.entitiesManager.getEntities().get(data.id)?.setTexture(entityPrefab.imagePath);
                     })
                     .catch((reason) => {
                         console.warn(reason);
                     });
+
+                const entityData: EntityData = {
+                    x: data.x,
+                    y: data.y,
+                    id: data.id,
+                    prefab: entityPrefab,
+                    properties: {
+                        customProperties: {},
+                    },
+                };
+                // execute command locally
+                this.mapEditorModeManager.executeCommand(
+                    {
+                        type: "CreateEntityCommand",
+                        entityData,
+                    },
+                    false,
+                    false,
+                    commandId
+                );
                 break;
             }
             case "deleteEntityMessage": {
@@ -172,14 +174,14 @@ export class EntityEditorTool extends MapEditorTool {
         if (!entity) {
             return;
         }
-        const { x: oldX, y: oldY } = entity.getOldPositionTopLeft();
+        const { x: oldX, y: oldY } = entity.getOldPosition();
         entity?.updateEntity(config);
         this.updateCollisionGrid(entity, oldX, oldY);
         this.scene.markDirty();
     }
 
     private handleEntityCreation(config: EntityData): void {
-        this.entitiesManager.addEntity(structuredClone(config)).catch((e) => console.warn(e));
+        this.entitiesManager.addEntity(structuredClone(config));
     }
 
     private handleEntityDeletion(id: number): void {
@@ -191,9 +193,7 @@ export class EntityEditorTool extends MapEditorTool {
         const grid = entity.getCollisionGrid();
         if (reversedGrid && grid) {
             this.scene.getGameMapFrontWrapper().modifyToCollisionsLayer(oldX, oldY, "0", reversedGrid);
-            this.scene
-                .getGameMapFrontWrapper()
-                .modifyToCollisionsLayer(entity.getTopLeft().x, entity.getTopLeft().y, "0", grid);
+            this.scene.getGameMapFrontWrapper().modifyToCollisionsLayer(entity.x, entity.y, "0", grid);
         }
     }
 
@@ -298,7 +298,7 @@ export class EntityEditorTool extends MapEditorTool {
             !this.scene
                 .getGameMapFrontWrapper()
                 .canEntityBePlaced(
-                    this.entityPrefabPreview.getTopLeft(),
+                    { x: this.entityPrefabPreview.x, y: this.entityPrefabPreview.y },
                     this.entityPrefabPreview.displayWidth,
                     this.entityPrefabPreview.displayHeight,
                     this.entityPrefab.collisionGrid
@@ -319,7 +319,7 @@ export class EntityEditorTool extends MapEditorTool {
             !this.scene
                 .getGameMapFrontWrapper()
                 .canEntityBePlaced(
-                    this.entityPrefabPreview.getTopLeft(),
+                    { x: this.entityPrefabPreview.x, y: this.entityPrefabPreview.y },
                     this.entityPrefabPreview.displayWidth,
                     this.entityPrefabPreview.displayHeight,
                     this.entityPrefab.collisionGrid

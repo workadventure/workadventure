@@ -211,13 +211,10 @@ export class MapEditorModeManager {
      * are applied locally and are not being send further.
      */
     public updateMapToNewest(commands: EditMapCommandMessage[]): void {
-        console.log("======= UPDATE MAP TO NEWEST ==========");
-        console.log(commands.map((command) => `${command.id}: ${command.editMapMessage?.message?.$case}`));
         if (!commands) {
             return;
         }
         for (const command of commands) {
-            console.log(`TRY TO APPLY COMMAND: ${command.editMapMessage?.message?.$case}`);
             for (const tool of Object.values(this.editorTools)) {
                 tool.handleIncomingCommandMessage(command);
             }
@@ -370,14 +367,6 @@ export class MapEditorModeManager {
         for (const tool of Object.values(this.editorTools)) {
             tool.subscribeToGameMapFrontWrapperEvents(this.scene.getGameMapFrontWrapper());
         }
-
-        this.scene
-            .getGameMapFrontWrapper()
-            .getEntitiesReadyPromise()
-            .then(() => {
-                this.updateMapToNewest();
-            })
-            .catch((e) => console.warn(e));
     }
 
     private handleCommandExecutionByTools(commandConfig: CommandConfig): void {
