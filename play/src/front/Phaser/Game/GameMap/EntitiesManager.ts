@@ -51,16 +51,12 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         });
     }
 
-    public addEntity(data: EntityData, imagePathPrefix?: string): void {
-        TexturesHelper.loadEntityImage(
+    public async addEntity(data: EntityData, imagePathPrefix?: string): Promise<void> {
+        await TexturesHelper.loadEntityImage(
             this.scene,
             data.prefab.imagePath,
             `${imagePathPrefix ?? ""}${data.prefab.imagePath}`
-        )
-            .then(() => {
-                this.entities.get(data.id)?.setTexture(data.prefab.imagePath);
-            })
-            .catch((e) => console.error(e));
+        );
         const entity = new Entity(this.scene, data);
 
         this.bindEntityEventHandlers(entity);

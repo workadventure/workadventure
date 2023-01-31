@@ -37,6 +37,11 @@ export class MapEditorModeManager {
     private activeTool?: EditorToolName;
 
     /**
+     * Commands given at the start to make sure we are up-to-date with the changes on the map
+     */
+    private commandsToApply?: EditMapCommandMessage[];
+
+    /**
      * We are making use of CommandPattern to implement an Undo-Redo mechanism
      */
     private localCommandsHistory: Command[];
@@ -207,16 +212,27 @@ export class MapEditorModeManager {
     }
 
     /**
-     * Update local map with missing commands given from the map-storage on RoomJoinedEvent. This commands
-     * are applied locally and are not being send further.
+     * Load up necessary commands and wait for the game to be ready to apply them
      * @param commands Commands to apply in order to make sure the local map is in sync with the map-storage
      */
-    public updateMapToNewest(commands: EditMapCommandMessage[]) {
-        for (const command of commands) {
+    public loadCommandsToApply(commands: EditMapCommandMessage[]): void {
+        this.commandsToApply = commands;
+    }
+
+    /**
+     * Update local map with missing commands given from the map-storage on RoomJoinedEvent. This commands
+     * are applied locally and are not being send further.
+     */
+    public updateMapToNewest(): void {
+        if (!this.commandsToApply) {
+            return;
+        }
+        for (const command of this.commandsToApply) {
             for (const tool of Object.values(this.editorTools)) {
                 tool.handleIncomingCommandMessage(command);
             }
         }
+        this.commandsToApply = undefined;
     }
 
     public isActive(): boolean {
@@ -365,6 +381,15 @@ export class MapEditorModeManager {
         for (const tool of Object.values(this.editorTools)) {
             tool.subscribeToGameMapFrontWrapperEvents(this.scene.getGameMapFrontWrapper());
         }
+
+        this.scene
+            .getGameMapFrontWrapper()
+            .getEntitiesReadyAsObservable()
+            .subscribe((ready) => {
+                if (ready) {
+                    this.updateMapToNewest();
+                }
+            });
     }
 
     private handleCommandExecutionByTools(commandConfig: CommandConfig): void {

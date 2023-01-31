@@ -813,7 +813,7 @@ export class GameScene extends DirtyScene {
                 this.connection = onConnect.connection;
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
                 if (onConnect.room.commandsToApply) {
-                    this.mapEditorModeManager?.updateMapToNewest(onConnect.room.commandsToApply);
+                    this.mapEditorModeManager?.loadCommandsToApply(onConnect.room.commandsToApply);
                 }
 
                 this.subscribeToStores();
