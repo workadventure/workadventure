@@ -75,7 +75,7 @@ export class GameMapFrontWrapper {
      */
     private mapChangedSubject = new Subject<number[][]>();
     private areaUpdatedSubject = new Subject<AreaData>();
-    private entitiesReadySubject = new Subject<boolean>();
+    private entitiesReadyPromise: Promise<void[]>;
 
     constructor(
         scene: GameScene,
@@ -126,10 +126,10 @@ export class GameMapFrontWrapper {
             promises.push(this.entitiesManager.addEntity(entityData, TexturesHelper.ENTITIES_TEXTURES_DIRECTORY));
         }
 
-        Promise.all(promises)
+        this.entitiesReadyPromise = Promise.all(promises);
+        this.entitiesReadyPromise
             .then(() => {
                 this.updateCollisionGrid();
-                this.entitiesReadySubject.next(true);
             })
             .catch((e) => console.warn(e));
     }
@@ -647,8 +647,8 @@ export class GameMapFrontWrapper {
         return this.areaUpdatedSubject.asObservable();
     }
 
-    public getEntitiesReadyAsObservable(): Observable<boolean> {
-        return this.entitiesReadySubject.asObservable();
+    public getEntitiesReadyPromise(): Promise<void[]> {
+        return this.entitiesReadyPromise;
     }
 
     public getFlatLayers(): ITiledMapLayer[] {

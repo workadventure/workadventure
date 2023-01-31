@@ -384,12 +384,11 @@ export class MapEditorModeManager {
 
         this.scene
             .getGameMapFrontWrapper()
-            .getEntitiesReadyAsObservable()
-            .subscribe((ready) => {
-                if (ready) {
-                    this.updateMapToNewest();
-                }
-            });
+            .getEntitiesReadyPromise()
+            .then(() => {
+                this.updateMapToNewest();
+            })
+            .catch((e) => console.warn(e));
     }
 
     private handleCommandExecutionByTools(commandConfig: CommandConfig): void {
