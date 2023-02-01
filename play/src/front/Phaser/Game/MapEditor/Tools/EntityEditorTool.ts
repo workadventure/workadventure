@@ -298,7 +298,7 @@ export class EntityEditorTool extends MapEditorTool {
             !this.scene
                 .getGameMapFrontWrapper()
                 .canEntityBePlaced(
-                    { x: this.entityPrefabPreview.x, y: this.entityPrefabPreview.y },
+                    this.entityPrefabPreview.getTopLeft(),
                     this.entityPrefabPreview.displayWidth,
                     this.entityPrefabPreview.displayHeight,
                     this.entityPrefab.collisionGrid
@@ -319,7 +319,7 @@ export class EntityEditorTool extends MapEditorTool {
             !this.scene
                 .getGameMapFrontWrapper()
                 .canEntityBePlaced(
-                    { x: this.entityPrefabPreview.x, y: this.entityPrefabPreview.y },
+                    this.entityPrefabPreview.getTopLeft(),
                     this.entityPrefabPreview.displayWidth,
                     this.entityPrefabPreview.displayHeight,
                     this.entityPrefab.collisionGrid
@@ -341,8 +341,8 @@ export class EntityEditorTool extends MapEditorTool {
         }
 
         const entityData: EntityData = {
-            x,
-            y,
+            x: x - this.entityPrefabPreview.displayWidth * 0.5,
+            y: y - this.entityPrefabPreview.displayHeight * 0.5,
             id: this.gameMapEntities.getNextEntityId(),
             prefab: this.entityPrefab,
             properties: {},

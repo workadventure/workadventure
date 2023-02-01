@@ -378,9 +378,15 @@ export class GameMapFrontWrapper {
         collisionGrid?: number[][],
         oldTopLeftPos?: { x: number; y: number }
     ): boolean {
+        const isOutOfBounds = this.scene
+            .getGameMapFrontWrapper()
+            .isOutOfMapBounds(topLeftPos.x, topLeftPos.y, width, height);
+        if (isOutOfBounds) {
+            return false;
+        }
         // no collision grid means we can place it anywhere on the map
         if (!collisionGrid) {
-            return !this.scene.getGameMapFrontWrapper().isOutOfMapBounds(topLeftPos.x, topLeftPos.y, width, height);
+            return true;
         }
         // prevent entity's old position from blocking it when repositioning
         const positionsToIgnore: Map<string, number> = new Map<string, number>();
