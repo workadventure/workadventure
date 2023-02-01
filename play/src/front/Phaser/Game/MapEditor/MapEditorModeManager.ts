@@ -251,7 +251,8 @@ export class MapEditorModeManager {
                 break;
             }
             case "3": {
-                this.equipTool(EditorToolName.FloorEditor);
+                // NOTE: Hide it untill FloorEditing is done
+                // this.equipTool(EditorToolName.FloorEditor);
                 break;
             }
             case "z": {

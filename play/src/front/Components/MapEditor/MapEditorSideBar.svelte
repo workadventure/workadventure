@@ -4,7 +4,7 @@
     import { mapEditorSelectedToolStore } from "../../Stores/MapEditorStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import AreaToolImg from "../images/icon-tool-area.png";
-    import FloorToolImg from "../images/icon-tool-floor.png";
+    // import FloorToolImg from "../images/icon-tool-floor.png";
     import EntityToolImg from "../images/icon-tool-entity.svg";
     import ZoomInImg from "../images/zoom-in-icons.svg";
     import ZoomOutImg from "../images/zoom-out-icons.svg";
@@ -28,8 +28,9 @@
             toolName: EditorToolName.EntityEditor,
             img: EntityToolImg,
             tooltiptext: $LL.mapEditor.sideBar.entityEditor(),
-        },
-        { toolName: EditorToolName.FloorEditor, img: FloorToolImg, tooltiptext: $LL.mapEditor.sideBar.tileEditor() }
+        }
+        // NOTE: Hide it untill FloorEditing is done
+        // { toolName: EditorToolName.FloorEditor, img: FloorToolImg, tooltiptext: $LL.mapEditor.sideBar.tileEditor() }
     );
 
     function switchTool(newTool: EditorToolName) {
