@@ -1,4 +1,6 @@
 import type { AreaData } from "@workadventure/map-editor";
+import { get } from "svelte/store";
+import { AreasEditorMode, areasEditorModeStore } from "../../../Stores/MapEditorStore";
 import type { GameScene } from "../../Game/GameScene";
 import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
 
@@ -6,6 +8,7 @@ export enum AreaPreviewEvent {
     Clicked = "AreaPreview:Clicked",
     DoubleClicked = "AreaPreview:DoubleClicked",
     Changed = "AreaPreview:Changed",
+    Removed = "AreaPreview:Removed",
 }
 
 export class AreaPreview extends Phaser.GameObjects.Container {
@@ -112,8 +115,30 @@ export class AreaPreview extends Phaser.GameObjects.Container {
     }
 
     private bindEventHandlers(): void {
+        this.preview.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
+            if ((pointer.event.target as Element)?.localName !== "canvas") {
+                return;
+            }
+            const color = get(areasEditorModeStore) === AreasEditorMode.RemoveMode ? 0xff0000 : 0x0000ff;
+            if (get(areasEditorModeStore) === AreasEditorMode.RemoveMode) {
+                this.preview.setFillStyle(color, 0.5);
+                (this.scene as GameScene).markDirty();
+                return;
+            }
+        });
+        this.preview.on(Phaser.Input.Events.POINTER_OUT, (pointer: Phaser.Input.Pointer) => {
+            if ((pointer.event.target as Element)?.localName !== "canvas") {
+                return;
+            }
+            this.preview.setFillStyle(0x0000ff, 0.5);
+            (this.scene as GameScene).markDirty();
+        });
         this.preview.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
             if ((pointer.event.target as Element)?.localName !== "canvas") {
+                return;
+            }
+            if (get(areasEditorModeStore) === AreasEditorMode.RemoveMode) {
+                this.emit(AreaPreviewEvent.Removed);
                 return;
             }
             this.emit(AreaPreviewEvent.Clicked);

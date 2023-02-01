@@ -290,6 +290,12 @@ export class AreaEditorTool extends MapEditorTool {
                 areaObjectConfig: areaPreview.getConfig(),
             });
         });
+        areaPreview.on(AreaPreviewEvent.Removed, () => {
+            this.mapEditorModeManager.executeCommand({
+                type: "DeleteAreaCommand",
+                id: areaPreview.getId(),
+            });
+        });
     }
 
     private updateAreaPreviews(): void {

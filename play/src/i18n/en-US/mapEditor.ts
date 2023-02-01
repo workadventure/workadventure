@@ -8,6 +8,14 @@ const mapEditor: BaseTranslation = {
         entityEditor: "Entity editor tool",
         tileEditor: "Tile editor tool",
     },
+    areasEditor: {
+        addButton: "Add",
+        editButton: "Edit",
+        deleteButton: "Delete",
+        addInstructions: "Click and drag on map to create new Area.",
+        editInstructions: "Click an Area to modify its properties.",
+        removeInstructions: "Click an Area to delete it.",
+    },
     entityEditor: {
         itemPicker: {
             searchPlaceholder: "Search for name or tags",

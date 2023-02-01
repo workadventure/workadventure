@@ -16,25 +16,25 @@
 <div class="mode-button-container">
     <button
         class={$areasEditorModeStore === AreasEditorMode.AddMode ? "active" : ""}
-        on:click={() => changeStore(AreasEditorMode.AddMode)}>{$LL.mapEditor.entityEditor.addButton()}</button
+        on:click={() => changeStore(AreasEditorMode.AddMode)}>{$LL.mapEditor.areasEditor.addButton()}</button
     >
     <button
         class={$areasEditorModeStore === AreasEditorMode.EditMode ? "active" : ""}
-        on:click={() => changeStore(AreasEditorMode.EditMode)}>{$LL.mapEditor.entityEditor.editButton()}</button
+        on:click={() => changeStore(AreasEditorMode.EditMode)}>{$LL.mapEditor.areasEditor.editButton()}</button
     >
     <button
         class={$areasEditorModeStore === AreasEditorMode.RemoveMode ? "active" : ""}
-        on:click={() => changeStore(AreasEditorMode.RemoveMode)}>{$LL.mapEditor.entityEditor.deleteButton()}</button
+        on:click={() => changeStore(AreasEditorMode.RemoveMode)}>{$LL.mapEditor.areasEditor.deleteButton()}</button
     >
 </div>
 {#if $areasEditorModeStore === AreasEditorMode.AddMode}
-    ADD NEW AREA COMPONENT
+    {$LL.mapEditor.areasEditor.addInstructions()}
 {/if}
 {#if $areasEditorModeStore === AreasEditorMode.EditMode}
-    EDIT AREA COMPONENT
+    {$LL.mapEditor.areasEditor.editInstructions()}
 {/if}
 {#if $areasEditorModeStore === AreasEditorMode.RemoveMode}
-    {$LL.mapEditor.entityEditor.removeInstructions()}
+    {$LL.mapEditor.areasEditor.removeInstructions()}
 {/if}
 
 <style lang="scss">
