@@ -492,6 +492,9 @@ export class Zone implements CustomJsonReplacerInterface {
         if (key === "positionDispatcher") {
             return "positionDispatcher";
         }
+        if (key === "backConnection") {
+            return value !== undefined ? "backConnection" : "undefined";
+        }
         return undefined;
     }
 }
