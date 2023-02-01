@@ -1,4 +1,4 @@
-import { ITiledMap, ITiledMapLayer, ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
+import { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
 
 export class ModeratorTagFinder {
     /**
@@ -12,6 +12,9 @@ export class ModeratorTagFinder {
     ) {
         for (const layer of map.layers) {
             this.findModeratorTagInLayer(layer);
+        }
+        for (const tileset of map.tilesets) {
+            this.findModeratorTagInTileset(tileset);
         }
     }
 
@@ -41,5 +44,15 @@ export class ModeratorTagFinder {
 
     public getModeratorTag(roomName: string): string | undefined {
         return this._roomModerators.get(roomName);
+    }
+
+    private findModeratorTagInTileset(tileset: ITiledMapTileset) {
+        if ("tiles" in tileset && tileset.tiles) {
+            for (const tile of tileset.tiles) {
+                if (tile.properties) {
+                    this.registerProperties(tile.properties);
+                }
+            }
+        }
     }
 }
