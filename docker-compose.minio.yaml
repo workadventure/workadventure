@@ -28,18 +28,13 @@ services:
 
   map-storage:
     environment:
-#      AWS_ACCESS_KEY_ID: "minio-access-key"
-#      AWS_SECRET_ACCESS_KEY: "minio-secret-access-key"
-#      AWS_DEFAULT_REGION: "eu-west-1"
-#      AWS_BUCKET: "mapstorage"
-#      AWS_URL: "http://minio-mapstorage:9000"
-#      AWS_ENDPOINT: "http://cdn-mapstorage.workadventure.localhost/"
-      AWS_ACCESS_KEY_ID: "AKIAUKVIEPEMFALFADUN"
-      AWS_SECRET_ACCESS_KEY: "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"
+      AWS_ACCESS_KEY_ID: "minio-access-key"
+      AWS_SECRET_ACCESS_KEY: "minio-secret-access-key"
       AWS_DEFAULT_REGION: "eu-west-1"
-      AWS_BUCKET: "workadventure-map-storage-staging"
+      AWS_BUCKET: "mapstorage"
+      AWS_URL: "http://minio-mapstorage:9000"
+      AWS_ENDPOINT: "http://cdn-mapstorage.workadventure.localhost/"
       USE_DOMAIN_NAME_IN_PATH: "true"
-
 
 volumes:
   minio-mapstorage:
