@@ -11,6 +11,7 @@ import { EntityEditorTool } from "./Tools/EntityEditorTool";
 import { CreateEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/CreateEntityCommand";
 import { DeleteEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/DeleteEntityCommand";
 import { EditMapCommandMessage } from "@workadventure/messages";
+import { ENABLE_MAP_EDITOR_AREAS_TOOL } from "../../../Enum/EnvironmentVariable";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
@@ -209,9 +210,11 @@ export class MapEditorModeManager {
     /**
      * Update local map with missing commands given from the map-storage on RoomJoinedEvent. This commands
      * are applied locally and are not being send further.
-     * @param commands Commands to apply in order to make sure the local map is in sync with the map-storage
      */
-    public updateMapToNewest(commands: EditMapCommandMessage[]) {
+    public updateMapToNewest(commands: EditMapCommandMessage[]): void {
+        if (!commands) {
+            return;
+        }
         for (const command of commands) {
             for (const tool of Object.values(this.editorTools)) {
                 tool.handleIncomingCommandMessage(command);
@@ -238,11 +241,18 @@ export class MapEditorModeManager {
                 break;
             }
             case "1": {
-                this.equipTool(EditorToolName.AreaEditor);
+                if (ENABLE_MAP_EDITOR_AREAS_TOOL) {
+                    this.equipTool(EditorToolName.AreaEditor);
+                }
                 break;
             }
             case "2": {
-                this.equipTool(EditorToolName.FloorEditor);
+                this.equipTool(EditorToolName.EntityEditor);
+                break;
+            }
+            case "3": {
+                // NOTE: Hide it untill FloorEditing is done
+                // this.equipTool(EditorToolName.FloorEditor);
                 break;
             }
             case "z": {

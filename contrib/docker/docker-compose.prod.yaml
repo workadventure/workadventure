@@ -33,6 +33,7 @@ services:
       - JITSI_URL
       - JITSI_PRIVATE_MODE
       - ENABLE_FEATURE_MAP_EDITOR
+      - ENABLE_MAP_EDITOR_AREAS_TOOL
       - PUSHER_URL=https://${PUSHER_HOST}
       - ICON_URL=https://${ICON_HOST}
       - TURN_SERVER

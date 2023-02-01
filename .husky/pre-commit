@@ -28,3 +28,7 @@ npm run precommit
 cd libs/map-editor || exit
 npm run precommit
 )
+(
+cd libs/shared-utils || exit
+npm run precommit
+)

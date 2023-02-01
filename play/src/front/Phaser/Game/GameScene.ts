@@ -812,8 +812,9 @@ export class GameScene extends DirtyScene {
             .then((onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
-                if (onConnect.room.commandsToApply) {
-                    this.mapEditorModeManager?.updateMapToNewest(onConnect.room.commandsToApply);
+                const commandsToApply = onConnect.room.commandsToApply;
+                if (commandsToApply) {
+                    this.mapEditorModeManager?.updateMapToNewest(commandsToApply);
                 }
 
                 this.subscribeToStores();

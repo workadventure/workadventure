@@ -27,7 +27,7 @@ import { RoomSocket, ZoneSocket } from "../RoomManager";
 import { Admin } from "../Model/Admin";
 import { adminApi } from "../Services/AdminApi";
 import { isMapDetailsData, MapDetailsData, MapThirdPartyData, MapBbbData, MapJitsiData } from "@workadventure/messages";
-import { ITiledMap } from "@workadventure/tiled-map-type-guard";
+import { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import { mapFetcher } from "../Services/MapFetcher";
 import { VariablesManager } from "../Services/VariablesManager";
 import {
@@ -50,6 +50,7 @@ import { MapLoadingError } from "../Services/MapLoadingError";
 import { MucManager } from "../Services/MucManager";
 import { BrothersFinder } from "./BrothersFinder";
 import { getMapStorageClient } from "../Services/MapStorageClient";
+import { slugifyJitsiRoomName } from "@workadventure/shared-utils/src/Jitsi/slugify";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -749,7 +750,39 @@ export class GameRoom implements BrothersFinder {
         if (this.jitsiModeratorTagFinderPromise === undefined) {
             this.jitsiModeratorTagFinderPromise = this.getMap()
                 .then((map) => {
-                    return new ModeratorTagFinder(map, "jitsiRoom", "jitsiRoomAdminTag");
+                    return new ModeratorTagFinder(
+                        map,
+                        (properties: ITiledMapProperty[]): { mainValue: string; tagValue: string } | undefined => {
+                            // We need to detect the "jitsiRoom" and "jitsiRoomAdminTag" properties AND to slugify the "jitsiRoom" in the same way
+                            // as we do on the front.
+                            let mainValue: string | undefined = undefined;
+                            let tagValue: string | undefined = undefined;
+                            for (const property of properties ?? []) {
+                                if (property.name === "jitsiRoom" && typeof property.value === "string") {
+                                    mainValue = property.value;
+                                } else if (
+                                    property.name === "jitsiRoomAdminTag" &&
+                                    typeof property.value === "string"
+                                ) {
+                                    tagValue = property.value;
+                                }
+                            }
+                            if (mainValue !== undefined && tagValue !== undefined) {
+                                // Compute allprops (needed for utility function)
+                                const allProps = new Map<string, string | number | boolean | Json>();
+                                for (const property of properties ?? []) {
+                                    if (property.value !== undefined) {
+                                        allProps.set(property.name, property.value);
+                                    }
+                                }
+                                return {
+                                    mainValue: slugifyJitsiRoomName(mainValue, this.roomUrl, allProps),
+                                    tagValue,
+                                };
+                            }
+                            return undefined;
+                        }
+                    );
                 })
                 .catch((e) => {
                     if (e instanceof LocalUrlError) {
@@ -801,7 +834,30 @@ export class GameRoom implements BrothersFinder {
         if (this.bbbModeratorTagFinderPromise === undefined) {
             this.bbbModeratorTagFinderPromise = this.getMap()
                 .then((map) => {
-                    return new ModeratorTagFinder(map, "bbbMeeting", "bbbMeetingAdminTag");
+                    return new ModeratorTagFinder(
+                        map,
+                        (properties: ITiledMapProperty[]): { mainValue: string; tagValue: string } | undefined => {
+                            let mainValue: string | undefined = undefined;
+                            let tagValue: string | undefined = undefined;
+                            for (const property of properties ?? []) {
+                                if (property.name === "bbbMeeting" && typeof property.value === "string") {
+                                    mainValue = property.value;
+                                } else if (
+                                    property.name === "bbbMeetingAdminTag" &&
+                                    typeof property.value === "string"
+                                ) {
+                                    tagValue = property.value;
+                                }
+                            }
+                            if (mainValue !== undefined && tagValue !== undefined) {
+                                return {
+                                    mainValue,
+                                    tagValue,
+                                };
+                            }
+                            return undefined;
+                        }
+                    );
                 })
                 .catch((e) => {
                     if (e instanceof LocalUrlError) {
