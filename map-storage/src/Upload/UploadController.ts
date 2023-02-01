@@ -62,7 +62,7 @@ export class UploadController {
                     directory: z.string().optional(),
                 });
 
-                const directory = Body.parse(req.body).directory || "./";
+                const directory = Body.parse(req.body).directory || "";
 
                 if (directory.includes("..")) {
                     // Attempt to override filesystem. That' a hack!

@@ -7,7 +7,8 @@ const staticFileExtensions = ["png", "css", "js", "jpg", "jpeg", "ico", "svg", "
 
 export function proxyFiles(fileSystem: FileSystemInterface) {
     return (req: Request, res: Response, next: NextFunction) => {
-        const virtualPath = mapPath(req.path, req);
+        const unescapedPath = decodeURIComponent(req.path.replace(/\+/g, " "));
+        const virtualPath = mapPath(unescapedPath, req);
 
         const fileName = req.path.split("/").pop();
 

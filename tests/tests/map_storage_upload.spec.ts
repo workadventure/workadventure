@@ -185,4 +185,23 @@ test.describe('Map-storage Upload API', () => {
         await expect(uploadFile1.ok()).toBeFalsy();
         await expect((await uploadFile1.json())['map.json'][0]['message']).toBe('Invalid file extension. Maps should end with the ".tmj" extension.');
     });
+
+    test('special characters support', async ({
+                                               request,
+                                           }) => {
+        const uploadFile1 = await request.post(`/upload`, {
+            multipart: {
+                file: fs.createReadStream("./assets/special_characters.zip"),
+            }
+        });
+        await expect(uploadFile1.ok()).toBeTruthy();
+
+        const accessFileWithSpace = await request.get(`/file+with%20space.txt`);
+        await expect(accessFileWithSpace.ok()).toBeTruthy();
+        await expect(await accessFileWithSpace.text()).toContain("ok");
+
+        const accessFileWithEmoji = await request.get(`/🍕.txt`);
+        await expect(accessFileWithEmoji.ok()).toBeTruthy();
+        await expect(await accessFileWithEmoji.text()).toContain("ok");
+    });
 });
