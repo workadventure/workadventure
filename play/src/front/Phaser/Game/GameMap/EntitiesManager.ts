@@ -67,12 +67,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
         const colGrid = entity.getCollisionGrid();
         if (colGrid) {
-            this.gameMapFrontWrapper.modifyToCollisionsLayer(
-                entity.getTopLeft().x,
-                entity.getTopLeft().y,
-                "0",
-                colGrid
-            );
+            this.gameMapFrontWrapper.modifyToCollisionsLayer(entity.x, entity.y, "0", colGrid);
         }
 
         this.entities.set(data.id, entity);
@@ -97,12 +92,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
         const colGrid = entity.getReversedCollisionGrid();
         if (colGrid) {
-            this.gameMapFrontWrapper.modifyToCollisionsLayer(
-                entity.getTopLeft().x,
-                entity.getTopLeft().y,
-                "0",
-                colGrid
-            );
+            this.gameMapFrontWrapper.modifyToCollisionsLayer(entity.x, entity.y, "0", colGrid);
         }
         entity.destroy();
         this.scene.markDirty();
@@ -179,11 +169,11 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                     !this.scene
                         .getGameMapFrontWrapper()
                         .canEntityBePlaced(
-                            entity.getTopLeft(),
+                            entity.getPosition(),
                             entity.displayWidth,
                             entity.displayHeight,
                             entity.getCollisionGrid(),
-                            entity.getOldPositionTopLeft()
+                            entity.getOldPosition()
                         )
                 ) {
                     entity.setTint(0xff0000);
@@ -200,14 +190,14 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                     !this.scene
                         .getGameMapFrontWrapper()
                         .canEntityBePlaced(
-                            entity.getTopLeft(),
+                            entity.getPosition(),
                             entity.displayWidth,
                             entity.displayHeight,
                             entity.getCollisionGrid(),
-                            entity.getOldPositionTopLeft()
+                            entity.getOldPosition()
                         )
                 ) {
-                    const oldPos = entity.getOldPositionTopLeft();
+                    const oldPos = entity.getOldPosition();
                     entity.setPosition(oldPos.x + entity.displayWidth * 0.5, oldPos.y + entity.displayHeight * 0.5);
                 } else {
                     const data: AtLeast<EntityData, "id"> = {

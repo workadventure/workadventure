@@ -75,6 +75,7 @@ export class GameMapFrontWrapper {
      */
     private mapChangedSubject = new Subject<number[][]>();
     private areaUpdatedSubject = new Subject<AreaData>();
+    private entitiesReadyPromise: Promise<void[]>;
 
     constructor(
         scene: GameScene,
@@ -377,9 +378,15 @@ export class GameMapFrontWrapper {
         collisionGrid?: number[][],
         oldTopLeftPos?: { x: number; y: number }
     ): boolean {
+        const isOutOfBounds = this.scene
+            .getGameMapFrontWrapper()
+            .isOutOfMapBounds(topLeftPos.x, topLeftPos.y, width, height);
+        if (isOutOfBounds) {
+            return false;
+        }
         // no collision grid means we can place it anywhere on the map
         if (!collisionGrid) {
-            return !this.scene.getGameMapFrontWrapper().isOutOfMapBounds(topLeftPos.x, topLeftPos.y, width, height);
+            return true;
         }
         // prevent entity's old position from blocking it when repositioning
         const positionsToIgnore: Map<string, number> = new Map<string, number>();
@@ -638,6 +645,10 @@ export class GameMapFrontWrapper {
 
     public getAreaUpdatedObservable(): Observable<AreaData> {
         return this.areaUpdatedSubject.asObservable();
+    }
+
+    public getEntitiesReadyPromise(): Promise<void[]> {
+        return this.entitiesReadyPromise;
     }
 
     public getFlatLayers(): ITiledMapLayer[] {

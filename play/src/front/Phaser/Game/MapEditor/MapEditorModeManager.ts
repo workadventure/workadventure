@@ -209,9 +209,11 @@ export class MapEditorModeManager {
     /**
      * Update local map with missing commands given from the map-storage on RoomJoinedEvent. This commands
      * are applied locally and are not being send further.
-     * @param commands Commands to apply in order to make sure the local map is in sync with the map-storage
      */
-    public updateMapToNewest(commands: EditMapCommandMessage[]) {
+    public updateMapToNewest(commands: EditMapCommandMessage[]): void {
+        if (!commands) {
+            return;
+        }
         for (const command of commands) {
             for (const tool of Object.values(this.editorTools)) {
                 tool.handleIncomingCommandMessage(command);
