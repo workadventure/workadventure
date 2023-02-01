@@ -52,6 +52,7 @@ services:
             JITSI_URL: $JITSI_URL
             JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
             ENABLE_FEATURE_MAP_EDITOR: "$ENABLE_FEATURE_MAP_EDITOR"
+            ENABLE_MAP_EDITOR_AREAS_TOOL: "$ENABLE_MAP_EDITOR_AREAS_TOOL"
             HOST: "0.0.0.0"
             NODE_ENV: development
             ALLOWED_CORS_ORIGIN: "http://play.workadventure.localhost"
@@ -169,6 +170,7 @@ services:
             SECRET_KEY: "$SECRET_KEY"
             SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
             ENABLE_FEATURE_MAP_EDITOR: "$ENABLE_FEATURE_MAP_EDITOR"
+            ENABLE_MAP_EDITOR_AREAS_TOOL: "$ENABLE_MAP_EDITOR_AREAS_TOOL"
             ALLOW_ARTILLERY: "true"
             ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
             JITSI_URL: $JITSI_URL

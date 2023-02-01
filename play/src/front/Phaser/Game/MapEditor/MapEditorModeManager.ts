@@ -11,6 +11,7 @@ import { EntityEditorTool } from "./Tools/EntityEditorTool";
 import { CreateEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/CreateEntityCommand";
 import { DeleteEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/DeleteEntityCommand";
 import { EditMapCommandMessage } from "@workadventure/messages";
+import { ENABLE_MAP_EDITOR_AREAS_TOOL } from "../../../Enum/EnvironmentVariable";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
@@ -240,10 +241,16 @@ export class MapEditorModeManager {
                 break;
             }
             case "1": {
-                this.equipTool(EditorToolName.AreaEditor);
+                if (ENABLE_MAP_EDITOR_AREAS_TOOL) {
+                    this.equipTool(EditorToolName.AreaEditor);
+                }
                 break;
             }
             case "2": {
+                this.equipTool(EditorToolName.EntityEditor);
+                break;
+            }
+            case "3": {
                 this.equipTool(EditorToolName.FloorEditor);
                 break;
             }

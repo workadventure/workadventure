@@ -30,6 +30,7 @@
          "EJABBERD_USER": "admin",
          "EJABBERD_PASSWORD": "apideo",
          "ENABLE_FEATURE_MAP_EDITOR":"true",
+         "ENABLE_MAP_EDITOR_AREAS_TOOL":"false",
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -60,6 +61,7 @@
               "EJABBERD_USER": "admin",
               "EJABBERD_PASSWORD": "apideo",
               "ENABLE_FEATURE_MAP_EDITOR":"true",
+              "ENABLE_MAP_EDITOR_AREAS_TOOL":"false",
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -93,6 +95,7 @@
           "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
           "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
           "ENABLE_FEATURE_MAP_EDITOR":"true",
+          "ENABLE_MAP_EDITOR_AREAS_TOOL":"false",
           "ICON_URL": "https://icon-"+url,
           "CHAT_URL": "https://chat-"+url,
         } + (if adminUrl != null then {

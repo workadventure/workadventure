@@ -9,18 +9,28 @@
     import ZoomInImg from "../images/zoom-in-icons.svg";
     import ZoomOutImg from "../images/zoom-out-icons.svg";
     import Tooltip from "../Util/Tooltip.svelte";
+    import { ENABLE_MAP_EDITOR_AREAS_TOOL } from "../../Enum/EnvironmentVariable";
+    import { LocalizedString } from "typesafe-i18n";
 
     const gameScene = gameManager.getCurrentGameScene();
 
-    let availableTools = [
-        { toolName: EditorToolName.AreaEditor, img: AreaToolImg, tooltiptext: $LL.mapEditor.sideBar.areaEditor() },
+    const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
+
+    if (ENABLE_MAP_EDITOR_AREAS_TOOL) {
+        availableTools.push({
+            toolName: EditorToolName.AreaEditor,
+            img: AreaToolImg,
+            tooltiptext: $LL.mapEditor.sideBar.areaEditor(),
+        });
+    }
+    availableTools.push(
         {
             toolName: EditorToolName.EntityEditor,
             img: EntityToolImg,
             tooltiptext: $LL.mapEditor.sideBar.entityEditor(),
         },
-        { toolName: EditorToolName.FloorEditor, img: FloorToolImg, tooltiptext: $LL.mapEditor.sideBar.tileEditor() },
-    ];
+        { toolName: EditorToolName.FloorEditor, img: FloorToolImg, tooltiptext: $LL.mapEditor.sideBar.tileEditor() }
+    );
 
     function switchTool(newTool: EditorToolName) {
         console.log(JSON.stringify($LL));
