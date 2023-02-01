@@ -7,6 +7,7 @@ const JITSI_URL: string | undefined = process.env.JITSI_URL === "" ? undefined :
 const JITSI_ISS = process.env.JITSI_ISS || "";
 const SECRET_JITSI_KEY = process.env.SECRET_JITSI_KEY || "";
 const ENABLE_FEATURE_MAP_EDITOR = process.env.ENABLE_FEATURE_MAP_EDITOR || false;
+const ENABLE_MAP_EDITOR_AREAS_TOOL = process.env.ENABLE_MAP_EDITOR_AREAS_TOOL || false;
 const BBB_URL: string = process.env.BBB_URL || "";
 const BBB_SECRET = process.env.BBB_SECRET || "";
 const HTTP_PORT = parseInt(process.env.HTTP_PORT || "8080") || 8080;
@@ -44,6 +45,7 @@ export {
     JITSI_ISS,
     SECRET_JITSI_KEY,
     ENABLE_FEATURE_MAP_EDITOR,
+    ENABLE_MAP_EDITOR_AREAS_TOOL,
     BBB_URL,
     BBB_SECRET,
 };
