@@ -1,3 +1,5 @@
+import type { OpidWokaNamePolicy } from "@workadventure/messages";
+
 export interface FrontConfigurationInterface {
     DEBUG_MODE: boolean;
     PUSHER_URL: string;
@@ -13,6 +15,7 @@ export interface FrontConfigurationInterface {
     JITSI_URL: string | undefined;
     JITSI_PRIVATE_MODE: boolean;
     ENABLE_FEATURE_MAP_EDITOR: boolean;
+    ENABLE_MAP_EDITOR_AREAS_TOOL: boolean;
     MAX_USERNAME_LENGTH: number;
     MAX_PER_GROUP: number;
     NODE_ENV: string;
@@ -26,4 +29,7 @@ export interface FrontConfigurationInterface {
     CHAT_URL: string | undefined;
     ENABLE_CHAT_UPLOAD: boolean;
     FALLBACK_LOCALE: string | undefined;
+    OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy | undefined;
+    ENABLE_REPORT_ISSUES_MENU: boolean | undefined;
+    REPORT_ISSUES_URL: string | undefined;
 }

@@ -1,7 +1,7 @@
 import { writable } from "svelte/store";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import type { RoomConnection } from "../Connexion/RoomConnection";
-import { AvailabilityStatus } from "../../messages/ts-proto-generated/protos/messages";
+import { AvailabilityStatus } from "@workadventure/messages";
 import { getColorByString } from "../Components/Video/utils";
 import { localUserStore } from "../Connexion/LocalUserStore";
 
@@ -25,6 +25,7 @@ function createPlayersStore() {
                 update((users) => {
                     users.set(message.userId, {
                         userId: message.userId,
+                        userJid: message.userJid,
                         name: message.name,
                         characterLayers: message.characterLayers,
                         visitCardUrl: message.visitCardUrl,
@@ -66,6 +67,7 @@ function createPlayersStore() {
             update((users) => {
                 users.set(newUserId, {
                     userId: newUserId,
+                    userJid: "fake",
                     name,
                     characterLayers: [],
                     visitCardUrl: null,

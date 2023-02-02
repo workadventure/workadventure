@@ -1,18 +1,10 @@
-/**
- * Tracks the remote players and their state.
- * The repository contains RemotePlayerData objects that containing the raw data (but are not Phaser sprite)
- * We need to make the distinction between RemotePlayerData and RemotePlayer (Phaser sprite) because data is arriving
- * from the Websocket but we cannot safely create/update a sprite until we are in the "update" method of the GameScene.
- */
-import type {
-    PlayerDetailsUpdatedMessage,
-    UserMovedMessage,
-} from "../../../messages/ts-proto-generated/protos/messages";
-import { availabilityStatusToJSON } from "../../../messages/ts-proto-generated/protos/messages";
+import type { PlayerDetailsUpdatedMessage, UserMovedMessage } from "@workadventure/messages";
+import { availabilityStatusToJSON } from "@workadventure/messages";
 import type { MessageUserJoined } from "../../Connexion/ConnexionModels";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import { iframeListener } from "../../Api/IframeListener";
 import { RoomConnection } from "../../Connexion/RoomConnection";
+import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
 
 interface RemotePlayerData extends MessageUserJoined {
     showVoiceIndicator: boolean;
@@ -27,6 +19,13 @@ export type PlayerDetailsUpdate = {
     };
 };
 
+/**
+ * Tracks the remote players and their state.
+ * The repository contains RemotePlayerData objects that containing the raw data (but are not Phaser sprite)
+ * We need to make the distinction between RemotePlayerData and RemotePlayer (Phaser sprite) because data is arriving
+ * from the Websocket but we cannot safely create/update a sprite until we are in the "update" method of the GameScene.
+ */
+
 export class RemotePlayersRepository {
     private removedPlayers = new Set<number>();
     private addedPlayers = new Map<number, RemotePlayerData>();
@@ -36,23 +35,47 @@ export class RemotePlayersRepository {
     private remotePlayersData = new Map<number, RemotePlayerData>();
 
     public addPlayer(userJoinedMessage: MessageUserJoined): void {
+        debugAddPlayer("Player will be added to repo", userJoinedMessage.userId);
+
         const player = {
             ...userJoinedMessage,
             showVoiceIndicator: false,
         };
         this.remotePlayersData.set(userJoinedMessage.userId, player);
-        this.addedPlayers.set(userJoinedMessage.userId, player);
-        this.movedPlayers.delete(userJoinedMessage.userId);
-        this.removedPlayers.delete(userJoinedMessage.userId);
-        this.updatedPlayers.delete(userJoinedMessage.userId);
+
+        if (this.removedPlayers.has(userJoinedMessage.userId)) {
+            // Special case: we add a user that was just removed before. Instead, let's update the user
+            this.removedPlayers.delete(userJoinedMessage.userId);
+            this.movedPlayers.set(userJoinedMessage.userId, player);
+            this.updatedPlayers.set(userJoinedMessage.userId, {
+                updated: {
+                    availabilityStatus: true,
+                    outlineColor: true,
+                    showVoiceIndicator: true,
+                },
+                player,
+            });
+        } else {
+            this.movedPlayers.delete(userJoinedMessage.userId);
+            this.updatedPlayers.delete(userJoinedMessage.userId);
+            this.addedPlayers.set(userJoinedMessage.userId, player);
+        }
+
+        debugAddPlayer("Player has been added to repo", userJoinedMessage.userId);
     }
 
     public removePlayer(userId: number): void {
+        debugRemovePlayer("Player will be removed from repo", userId);
+
         this.remotePlayersData.delete(userId);
-        this.addedPlayers.delete(userId);
+        if (this.addedPlayers.has(userId)) {
+            this.addedPlayers.delete(userId);
+        } else {
+            this.removedPlayers.add(userId);
+        }
         this.movedPlayers.delete(userId);
         this.updatedPlayers.delete(userId);
-        this.removedPlayers.add(userId);
+        debugRemovePlayer("Player has been removed from repo", userId);
     }
 
     public movePlayer(userMovedMessage: UserMovedMessage): void {
@@ -147,8 +170,8 @@ export class RemotePlayersRepository {
         this.updatedPlayers.clear();
     }
 
-    public getPlayers(): IterableIterator<MessageUserJoined> {
-        return this.remotePlayersData.values();
+    public getPlayers(): ReadonlyMap<number, MessageUserJoined> {
+        return this.remotePlayersData;
     }
 
     /**

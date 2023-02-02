@@ -53,6 +53,9 @@ import { isChatVisibilityEvent } from "./ChatVisibilityEvent";
 import { isNotificationEvent } from "./NotificationEvent";
 import { isShowBusinessCardEvent } from "./ShowBusinessCardEvent";
 import { isModalEvent } from "./ModalEvent";
+import { isXmppSettingsMessageEvent } from "./XmppSettingsMessageEvent";
+import { isAddButtonActionBarEvent, isRemoveButtonActionBarEvent } from "./Ui/ButtonActionBarEvent";
+import { isBannerEvent } from "./Ui/BannerEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -267,6 +270,26 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("redirectPricing"),
         data: z.undefined(),
     }),
+    z.object({
+        type: z.literal("addButtonActionBar"),
+        data: isAddButtonActionBarEvent,
+    }),
+    z.object({
+        type: z.literal("removeButtonActionBar"),
+        data: isRemoveButtonActionBarEvent,
+    }),
+    z.object({
+        type: z.literal("chatReady"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("openBanner"),
+        data: isBannerEvent,
+    }),
+    z.object({
+        type: z.literal("closeBanner"),
+        data: z.undefined(),
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;
@@ -388,6 +411,10 @@ export const isIframeResponseEvent = z.union([
         type: z.literal("availabilityStatus"),
         data: z.number(),
     }),
+    z.object({
+        type: z.literal("xmppSettingsMessage"),
+        data: isXmppSettingsMessageEvent,
+    }),
 
     // TODO will be deleted if timeline is becoming a MUC room
     z.object({
@@ -405,6 +432,14 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("updateWritingStatusChatList"),
         data: z.array(z.nullable(z.string())),
+    }),
+    z.object({
+        type: z.literal("buttonActionBarTrigger"),
+        data: isAddButtonActionBarEvent,
+    }),
+    z.object({
+        type: z.literal("modalCloseTrigger"),
+        data: isModalEvent,
     }),
 ]);
 export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;
@@ -519,6 +554,10 @@ export const iframeQueryMapTypeGuards = {
         query: z.undefined(),
         answer: z.array(isUIWebsite),
     },
+    getUIWebsiteById: {
+        query: z.string(),
+        answer: isUIWebsite,
+    },
     enablePlayersTracking: {
         query: isEnablePlayersTrackingEvent,
         answer: z.array(isAddPlayerEvent),
@@ -534,8 +573,8 @@ type UnknownToVoid<T> = undefined extends T ? void : T;
 
 export type IframeQueryMap = {
     [key in keyof IframeQueryMapTypeGuardsType]: {
-        query: z.infer<typeof iframeQueryMapTypeGuards[key]["query"]>;
-        answer: UnknownToVoid<z.infer<typeof iframeQueryMapTypeGuards[key]["answer"]>>;
+        query: z.infer<(typeof iframeQueryMapTypeGuards)[key]["query"]>;
+        answer: UnknownToVoid<z.infer<(typeof iframeQueryMapTypeGuards)[key]["answer"]>>;
     };
 };
 

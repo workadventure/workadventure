@@ -29,7 +29,11 @@ We provide a production ready `docker-compose` file that you can use as a good s
 > These installation instructions are for local development only. They will not work on
 > remote servers as local environments do not have HTTPS certificates.
 
-Install Docker.
+Install Docker and clone this repository.
+
+> **Warning**
+> If you are using Windows, make sure the End-Of-Line character is not modified by the cloning process by setting
+> the `core.autocrlf` setting to false: `git config --global core.autocrlf false`
 
 Run:
 
@@ -41,13 +45,13 @@ docker-compose up
 The environment will start.
 
 You should now be able to browse to http://play.workadventure.localhost/ and see the application.
-You can view the Traefik dashboard at http://localhost:8080/
+You can view the Traefik dashboard at http://traefik.workadventure.localhost
 
 Note: on some OSes, you will need to add this line to your `/etc/hosts` file:
 
 **/etc/hosts**
 ```
-127.0.0.1 workadventure.localhost
+127.0.0.1 oidc.workadventure.localhost redis.workadventure.localhost play.workadventure.localhost chat.workadventure.localhost traefik.workadventure.localhost xmpp.workadventure.localhost extra.workadventure.localhost icon.workadventure.localhost map-storage.workadventure.localhost uploader.workadventure.localhost maps.workadventure.localhost api.workadventure.localhost front.workadventure.localhost
 ```
 
 You can also start WorkAdventure + a test OpenID connect server using:

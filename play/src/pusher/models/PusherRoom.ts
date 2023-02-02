@@ -11,10 +11,11 @@ import type {
 } from "../../messages/generated/messages_pb";
 import Debug from "debug";
 import type { ClientReadableStream } from "@grpc/grpc-js";
+import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 
 const debug = Debug("room");
 
-export class PusherRoom {
+export class PusherRoom implements CustomJsonReplacerInterface {
     private readonly positionNotifier: PositionDispatcher;
     private versionNumber = 1;
     //eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,16 +49,12 @@ export class PusherRoom {
             return;
         }
 
-        //socket.xmppClient = new XmppClient(socket, this.mucRooms);
         socket.pusherRoom = this;
     }
 
     public leave(socket: ExSocketInterface): void {
         this.positionNotifier.removeViewport(socket);
         this.listeners.delete(socket);
-        if (socket.xmppClient) {
-            socket.xmppClient.close();
-        }
         socket.pusherRoom = undefined;
     }
 
@@ -108,11 +105,24 @@ export class PusherRoom {
                     }
                 } else if (message.hasErrormessage()) {
                     const errorMessage = message.getErrormessage() as ErrorMessage;
-
                     // Let's dispatch this error to all the listeners
                     for (const listener of this.listeners) {
                         const subMessage = new SubMessage();
                         subMessage.setErrormessage(errorMessage);
+                        listener.emitInBatch(subMessage);
+                    }
+                } else if (message.hasJoinmucroommessage()) {
+                    // Let's dispatch this joinMucRoomMessage to all the listeners
+                    for (const listener of this.listeners) {
+                        const subMessage = new SubMessage();
+                        subMessage.setJoinmucroommessage(message.getJoinmucroommessage());
+                        listener.emitInBatch(subMessage);
+                    }
+                } else if (message.hasLeavemucroommessage()) {
+                    // Let's dispatch this leaveMucRoomMessage to all the listeners
+                    for (const listener of this.listeners) {
+                        const subMessage = new SubMessage();
+                        subMessage.setLeavemucroommessage(message.getLeavemucroommessage());
                         listener.emitInBatch(subMessage);
                     }
                 } else {
@@ -150,10 +160,13 @@ export class PusherRoom {
         debug("Closing connection to room %s on back server", this.roomUrl);
         this.isClosing = true;
         this.backConnection.cancel();
+    }
 
-        debug("Closing connections to XMPP server for room %s", this.roomUrl);
-        for (const client of this.listeners) {
-            client.xmppClient?.close();
+    public customJsonReplacer(key: unknown, value: unknown): string | undefined {
+        if (key === "backConnection") {
+            const backConnection = value as ClientReadableStream<BatchToPusherRoomMessage> | undefined;
+            return backConnection ? "backConnection" : "undefined";
         }
+        return undefined;
     }
 }

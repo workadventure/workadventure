@@ -1,42 +1,54 @@
 # protobuf build
-FROM --platform=$BUILDPLATFORM node:18.11-buster-slim@sha256:c3a4122a9b60c52a633b92788dec4159909158c828b56e11a3dc0284814a81f2 as proto-builder
+FROM --platform=$BUILDPLATFORM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d as proto-builder
 WORKDIR /usr/src
-COPY messages/yarn.lock messages/package.json ./
-RUN yarn install
+COPY messages/package-lock.json messages/package.json ./
+RUN npm ci
 COPY messages .
-RUN yarn run tag-version && yarn proto && yarn ts-proto
+COPY libs ./../libs
+RUN npm run tag-version && npm run proto && npm run ts-proto
 
 # typescript build
-FROM --platform=$BUILDPLATFORM node:18.11-buster-slim@sha256:c3a4122a9b60c52a633b92788dec4159909158c828b56e11a3dc0284814a81f2 as builder
+FROM --platform=$BUILDPLATFORM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d as builder
 WORKDIR /usr/src
-COPY libs/tailwind/yarn.lock libs/tailwind/package.json ./../libs/tailwind/
-RUN cd ../libs/tailwind && yarn install --network-timeout 1000000
-COPY libs/map-editor/yarn.lock libs/map-editor/package.json ./../libs/map-editor/
-RUN cd ../libs/map-editor && yarn install --network-timeout 1000000
-COPY libs/math-utils/yarn.lock libs/math-utils/package.json ./../libs/math-utils/
-RUN cd ../libs/math-utils && yarn install --network-timeout 1000000
-COPY libs ./../libs
-COPY play/yarn.lock play/package.json ./
-RUN yarn install
-COPY play/yarn.lock play/package.json ./
-RUN yarn install --network-timeout 1000000
-COPY play .
-COPY --from=proto-builder /usr/src/generated src/messages/generated
-COPY --from=proto-builder /usr/src/ts-proto-generated src/messages/ts-proto-generated
-RUN sed -i 's/import { Observable } from "rxjs";/import type { Observable } from "rxjs";/g' src/messages/ts-proto-generated/protos/messages.ts
-COPY --from=proto-builder /usr/src/JsonMessages src/messages/JsonMessages
+RUN apt-get update && apt-get install -y git
+COPY package.json package-lock.json ./
+COPY play/package.json play/package.json
+COPY play/packages/iframe-api-typings/package.json play/packages/iframe-api-typings/package.json
+COPY libs/messages/package.json libs/messages/package.json
+COPY libs/map-editor/package.json libs/map-editor/package.json
+COPY libs/math-utils/package.json libs/math-utils/package.json
+COPY libs/tailwind/package.json libs/tailwind/package.json
+COPY libs/store-utils/package.json libs/store-utils/package.json
+COPY libs/shared-utils/package.json libs/shared-utils/package.json
+RUN npm ci --workspace=workadventure-play --workspace=@workadventure/iframe-api-typings...
+COPY libs ./libs
+COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
+COPY play ./play
+COPY --from=proto-builder /usr/src/generated play/src/messages/generated
 ENV NODE_ENV=production
 # upgrade RAM available to 6G
-RUN yarn run typesafe-i18n && yarn run build-iframe-api && NODE_OPTIONS="--max-old-space-size=6144" yarn build
+RUN cd play && npm run typesafe-i18n && npm run build-iframe-api && NODE_OPTIONS="--max-old-space-size=6144" npm run build
 
 # final production image
-FROM node:18.11-buster-slim@sha256:c3a4122a9b60c52a633b92788dec4159909158c828b56e11a3dc0284814a81f2
+FROM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d
 WORKDIR /usr/src
-COPY play/yarn.lock play/package.json ./
+RUN apt-get update && apt-get install -y git
+COPY package.json package-lock.json ./
+COPY play/package.json play/package.json
+COPY play/packages/iframe-api-typings/package.json play/packages/iframe-api-typings/package.json
+COPY libs/messages/package.json libs/messages/package.json
+COPY libs/map-editor/package.json libs/map-editor/package.json
+COPY libs/math-utils/package.json libs/math-utils/package.json
+COPY libs/tailwind/package.json libs/tailwind/package.json
+COPY libs/store-utils/package.json libs/store-utils/package.json
+COPY libs/shared-utils/package.json libs/shared-utils/package.json
 ENV NODE_ENV=production
-RUN yarn install --production
-COPY --from=builder --chown=node:node /usr/src/dist /usr/src/dist
-COPY --chown=node:node play/src/pusher/data /usr/src/dist/pusher/data
+RUN npm ci --omit=dev --workspace workadventure-play
+COPY --from=builder /usr/src/libs /usr/src/libs
+COPY --from=builder --chown=node:node /usr/src/play /usr/src/play
+#COPY play/src/pusher/data /usr/src/play/dist/pusher/data
+
+WORKDIR /usr/src/play
 
 USER node
-CMD ["yarn", "run", "start"]
+CMD ["npm", "run", "start"]

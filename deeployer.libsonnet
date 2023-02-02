@@ -27,6 +27,10 @@
          "MAP_STORAGE_URL": "map-storage:50053",
          "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
          "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
+         "EJABBERD_USER": "admin",
+         "EJABBERD_PASSWORD": "apideo",
+         "ENABLE_FEATURE_MAP_EDITOR":"true",
+         "ENABLE_MAP_EDITOR_AREAS_TOOL":"false",
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -54,6 +58,10 @@
               "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
               "MAP_STORAGE_URL": "map-storage:50053",
               "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
+              "EJABBERD_USER": "admin",
+              "EJABBERD_PASSWORD": "apideo",
+              "ENABLE_FEATURE_MAP_EDITOR":"true",
+              "ENABLE_MAP_EDITOR_AREAS_TOOL":"false",
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -87,6 +95,7 @@
           "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
           "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
           "ENABLE_FEATURE_MAP_EDITOR":"true",
+          "ENABLE_MAP_EDITOR_AREAS_TOOL":"false",
           "ICON_URL": "https://icon-"+url,
           "CHAT_URL": "https://chat-"+url,
         } + (if adminUrl != null then {
@@ -100,15 +109,10 @@
           "OPID_CLIENT_SECRET": env.ADMIN_API_TOKEN,
           "OPID_CLIENT_ISSUER": "https://publichydra-"+url,
           "START_ROOM_URL": "/_/global/maps-"+url+"/starter/map.json",
-          # Ejabberd
-          "EJABBERD_DOMAIN": "xmpp-"+url,
-          "EJABBERD_WS_URI": "wss://xmpp-"+url+"/ws",
-          "EJABBERD_JWT_SECRET": env.EJABBERD_JWT_SECRET,
         } else {
           # Ejabberd
-          "EJABBERD_DOMAIN": "ejabberd",
-          "EJABBERD_WS_URI": "ws://ejabberd:5443/ws",
-          //"EJABBERD_JWT_SECRET": env.JWT_SECRET_KEY,
+          "EJABBERD_DOMAIN": "xmpp-"+url,
+          "EJABBERD_JWT_SECRET": env.EJABBERD_JWT_SECRET,
         })
       },
     "chat": {
@@ -120,8 +124,10 @@
       "env": {
         "PUSHER_URL": "//play-"+url,
         "UPLOADER_URL": "//uploader-"+url,
-        "CHAT_EMBEDLY_KEY": if std.objectHas(env, 'CHAT_EMBEDLY_KEY') then env.CHAT_EMBEDLY_KEY else "",
-        "ICON_URL": "//icon-"+url
+        "EMBEDLY_KEY": if std.objectHas(env, 'EMBEDLY_KEY') then env.EMBEDLY_KEY else "",
+        "ICON_URL": "//icon-"+url,
+        "EJABBERD_WS_URI": "wss://xmpp-"+url+"/ws",
+        "EJABBERD_DOMAIN": "xmpp-"+url,
       } + (if adminUrl != null then {
         # Admin
         "ENABLE_OPENID": "1",
@@ -136,6 +142,11 @@
            "ports": [3000, 50053],
            "env": {
              "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
+             "AUTHENTICATION_STRATEGY": if (adminUrl == null) then "Basic" else "Bearer",
+             "AUTHENTICATION_USER": "john.doe",
+             "AUTHENTICATION_PASSWORD": "password",
+             "AUTHENTICATION_TOKEN": "SomeSecretToken",
+             "USE_DOMAIN_NAME_IN_PATH": if (adminUrl == null) then "false" else "true",
            }
          },
     "uploaderredis":{
@@ -186,12 +197,19 @@
       },
       "ports": [8080]
     },
-  }+ (if (adminUrl == "") then {
+  }+ (if (adminUrl == null) then {
     "ejabberd": {
-      "image": "thecodingmachine/workadventure-simple-ecs:"+tag,
+      "image": "thecodingmachine/workadventure-ejabberd:"+tag,
       "ports": [5222, 5269, 5443, 5280, 5380, 1883],
+      "host": {
+          "url": "xmpp-"+url,
+          "containerPort": 5443
+      },
       "env": {
-        "JWT_SECRET": "tempSecretKeyNeedsToChange",
+        "JWT_SECRET": env.EJABBERD_JWT_SECRET,
+        "EJABBERD_DOMAIN": "xmpp-"+url,
+        "EJABBERD_USER": "admin",
+        "EJABBERD_PASSWORD": "apideo",
       }
     }
   } else {
@@ -285,6 +303,16 @@
               }
              }
           },
+          "map-storage"+: {
+            ingress+: {
+              spec+: {
+                tls+: [{
+                  hosts: ["map-storage-"+url],
+                  secretName: "certificate-tls"
+                }]
+              }
+             }
+          },
           iconserver+: {
             ingress+: {
               spec+: {
@@ -295,6 +323,18 @@
               }
              }
           },
-        }
+        } + (if (adminUrl == null) then {
+             ejabberd+: {
+                 ingress+: {
+                   spec+: {
+                     tls+: [{
+                       hosts: ["xmpp-"+url],
+                       secretName: "certificate-tls"
+                     }]
+                   }
+                 }
+               },
+        } else {
+        }),
   }
 }

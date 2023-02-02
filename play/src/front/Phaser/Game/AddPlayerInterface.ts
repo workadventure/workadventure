@@ -1,5 +1,5 @@
 import type { PlayerInterface } from "./PlayerInterface";
-import type { PositionMessage } from "../../../messages/ts-proto-generated/protos/messages";
+import type { PositionMessage } from "@workadventure/messages";
 
 export interface AddPlayerInterface extends PlayerInterface {
     position: PositionMessage;

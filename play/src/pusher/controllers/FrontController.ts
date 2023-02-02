@@ -5,6 +5,9 @@ import { FRONT_ENVIRONMENT_VARIABLES, VITE_URL } from "../enums/EnvironmentVaria
 import { MetaTagsBuilder } from "../services/MetaTagsBuilder";
 import Mustache from "mustache";
 import type { LiveDirectory } from "../models/LiveDirectory";
+import { adminService } from "../services/AdminService";
+import { notWaHost } from "../middlewares/NotWaHost";
+import { version } from "../../../package.json";
 
 export class FrontController extends BaseHttpController {
     private indexFile: string;
@@ -14,12 +17,12 @@ export class FrontController extends BaseHttpController {
         super(app);
 
         let indexPath: string;
-        if (fs.existsSync("index.html")) {
-            // In dev mode
-            indexPath = "index.html";
-        } else if (fs.existsSync("dist/public/index.html")) {
+        if (fs.existsSync("dist/public/index.html")) {
             // In prod mode
             indexPath = "dist/public/index.html";
+        } else if (fs.existsSync("index.html")) {
+            // In dev mode
+            indexPath = "index.html";
         } else {
             throw new Error("Could not find index.html file");
         }
@@ -51,8 +54,20 @@ export class FrontController extends BaseHttpController {
              */
             return this.displayFront(req, res, this.getFullUrl(req));
         });
+        this.app.post("/_/*", (req: Request, res: Response) => {
+            /**
+             * get infos from map file details
+             */
+            return this.displayFront(req, res, this.getFullUrl(req));
+        });
 
         this.app.get("/*/*", (req: Request, res: Response) => {
+            /**
+             * get infos from map file details
+             */
+            return this.displayFront(req, res, this.getFullUrl(req));
+        });
+        this.app.post("/*/*", (req: Request, res: Response) => {
             /**
              * get infos from map file details
              */
@@ -65,8 +80,20 @@ export class FrontController extends BaseHttpController {
              */
             return this.displayFront(req, res, this.getFullUrl(req));
         });
+        this.app.post("/@/*", (req: Request, res: Response) => {
+            /**
+             * get infos from admin else map file details
+             */
+            return this.displayFront(req, res, this.getFullUrl(req));
+        });
 
         this.app.get("/~/*", (req: Request, res: Response) => {
+            /**
+             * get infos from map file details
+             */
+            return this.displayFront(req, res, this.getFullUrl(req));
+        });
+        this.app.post("/~/*", (req: Request, res: Response) => {
             /**
              * get infos from map file details
              */
@@ -84,7 +111,7 @@ export class FrontController extends BaseHttpController {
 
         this.app.get("/static/images/favicons/manifest.json", (req: Request, res: Response) => {
             if (req.query.url == undefined) {
-                return res.status(500).send("playUrl is empty in query pramater of the request");
+                return res.status(500).send("playUrl is empty in query parameter of the request");
             }
             return this.displayManifestJson(req, res, req.query.url.toString());
         });
@@ -103,12 +130,32 @@ export class FrontController extends BaseHttpController {
             return this.displayFront(req, res, this.getFullUrl(req));
         });
 
-        // this.app.get("/static/images/favicons/manifest.json", (req: Request, res: Response) => {
-        //     return res.status(303).redirect("/");
-        // });
+        this.app.get(
+            "/.well-known/cf-custom-hostname-challenge/*",
+            [notWaHost],
+            async (req: Request, res: Response) => {
+                try {
+                    const response = await adminService.fetchWellKnownChallenge(req.hostname);
+                    return res.status(200).send(response);
+                } catch (e) {
+                    console.error(e);
+                    return res.status(526).send("Fail on challenging hostname");
+                }
+            }
+        );
+
+        this.app.get("/server.json", (req: Request, res: Response) => {
+            return res.json({
+                domain: process.env.PUSHER_URL,
+                name: process.env.SERVER_NAME || "WorkAdventure Server",
+                motd: process.env.SERVER_MOTD || "A WorkAdventure Server",
+                icon: process.env.SERVER_ICON || process.env.PUSHER_URL + "/static/images/favicons/icon-512x512.png",
+                version: version + (process.env.NODE_ENV !== "production" ? "-dev" : ""),
+            });
+        });
 
         this.app.get("/*", (req: Request, res: Response) => {
-            if (req.path.startsWith("/src") || req.path.startsWith("/node_modules")) {
+            if (req.path.startsWith("/src") || req.path.startsWith("/node_modules") || req.path.startsWith("/@fs/")) {
                 res.status(303).redirect(`${VITE_URL}${decodeURI(req.path)}`);
                 return;
             }
@@ -142,20 +189,35 @@ export class FrontController extends BaseHttpController {
 
     private async displayFront(req: Request, res: Response, url: string) {
         const builder = new MetaTagsBuilder(url);
+        let html = this.indexFile;
 
-        const redirectUrl = await builder.getRedirectUrl();
+        let redirectUrl: string | undefined;
+
+        try {
+            redirectUrl = await builder.getRedirectUrl();
+        } catch (e) {
+            console.log(`Cannot get redirect URL ${url}`, e);
+        }
+
         if (redirectUrl) {
             return res.redirect(redirectUrl);
         }
 
-        const metaTagsData = await builder.getMeta(req.header("User-Agent"));
+        // get auth token from post /authToken
+        const { authToken } = await req.urlencoded();
 
-        const html = Mustache.render(this.indexFile, {
-            ...metaTagsData,
-            msApplicationTileImage: metaTagsData.favIcons[metaTagsData.favIcons.length - 1].src,
-            url,
-            script: this.script,
-        });
+        try {
+            const metaTagsData = await builder.getMeta(req.header("User-Agent"));
+            html = Mustache.render(this.indexFile, {
+                ...metaTagsData,
+                msApplicationTileImage: metaTagsData.favIcons[metaTagsData.favIcons.length - 1].src,
+                url,
+                script: this.script,
+                authToken: authToken,
+            });
+        } catch (e) {
+            console.log(`Cannot render metatags on ${url}`, e);
+        }
 
         return res.type("html").send(html);
     }

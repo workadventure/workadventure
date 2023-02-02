@@ -116,6 +116,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         credit: "信用",
         globalMessages: "全局消息",
         contact: "联系",
+        report: "Report Issues",
     },
 };
 

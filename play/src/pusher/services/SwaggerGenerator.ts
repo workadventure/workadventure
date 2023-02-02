@@ -1,16 +1,24 @@
 import { generateSchema } from "@anatine/zod-openapi";
-import { isAdminApiData } from "../../messages/JsonMessages/AdminApiData";
 import {
+    isAdminApiData,
     isErrorApiErrorData,
     isErrorApiRedirectData,
     isErrorApiRetryData,
     isErrorApiUnauthorizedData,
-} from "../../messages/JsonMessages/ErrorApiData";
-import { isMapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
+    isMapDetailsData,
+    isWokaDetail,
+    wokaList,
+    wokaTexture,
+    isRoomRedirect,
+} from "@workadventure/messages";
 import { isFetchMemberDataByUuidResponse } from "./AdminApi";
-import { isWokaDetail, wokaList, wokaTexture } from "../../messages/JsonMessages/PlayerTextures";
 import type { SchemaObject } from "openapi3-ts";
-import { isRoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
+import {
+    companionCollectionList,
+    companionTextureCollection,
+    isCompanionDetail,
+    isCapabilities,
+} from "@workadventure/messages";
 
 class SwaggerGenerator {
     definitions(type: string | null): {
@@ -33,6 +41,10 @@ class SwaggerGenerator {
             definitions: {
                 AdminApiData: generateSchema(isAdminApiData),
                 //BanBannedAdminMessageInterface: generateSchema(isBanBannedAdminMessageInterface),
+                Capabilities: generateSchema(isCapabilities),
+                CompanionCollectionList: generateSchema(companionCollectionList),
+                CompanionDetail: generateSchema(isCompanionDetail),
+                CompanionCollection: generateSchema(companionTextureCollection),
                 ErrorApiErrorData: generateSchema(isErrorApiErrorData),
                 ErrorApiRedirectData: generateSchema(isErrorApiRedirectData),
                 ErrorApiRetryData: generateSchema(isErrorApiRetryData),

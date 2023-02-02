@@ -30,11 +30,14 @@ function createMucRoomsStore() {
         getDefaultRoom(): MucRoom | undefined {
             return [...get(this).values()].find((mucRoom) => mucRoom.type === "default");
         },
-        getLiveRoom(): MucRoom | undefined {
+        getChatZones(): MucRoom | undefined {
             return [...get(this).values()].find((mucRoom) => mucRoom.type === "live");
         },
         sendPresences() {
             [...get(this).values()].forEach((mucRoom) => mucRoom.sendPresence());
+        },
+        sendUserInfos() {
+            [...get(this).values()].forEach((mucRoom) => mucRoom.sendUserInfo());
         },
     };
 }

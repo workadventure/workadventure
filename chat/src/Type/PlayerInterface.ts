@@ -1,4 +1,4 @@
-import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
+import { AvailabilityStatus } from "@workadventure/messages";
 
 export interface BodyResourceDescriptionInterface {
     id: string;

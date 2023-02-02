@@ -22,10 +22,11 @@ import { CharacterLayer } from "../Model/Websocket/CharacterLayer";
 import { PlayerVariables } from "../Services/PlayersRepository/PlayerVariables";
 import { getPlayersVariablesRepository } from "../Services/PlayersRepository/PlayersVariablesRepository";
 import { BrothersFinder } from "./BrothersFinder";
+import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 
 export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
-export class User implements Movable {
+export class User implements Movable, CustomJsonReplacerInterface {
     public listenedZones: Set<Zone>;
     public group?: Group;
     private _following: User | undefined;
@@ -33,6 +34,7 @@ export class User implements Movable {
 
     public constructor(
         public id: number,
+        public userJid: string,
         public readonly uuid: string,
         public readonly isLogged: boolean,
         public readonly IPAddress: string,
@@ -60,6 +62,7 @@ export class User implements Movable {
     public static async create(
         id: number,
         uuid: string,
+        userJid: string,
         isLogged: boolean,
         IPAddress: string,
         position: PointInterface,
@@ -85,6 +88,7 @@ export class User implements Movable {
 
         return new User(
             id,
+            userJid,
             uuid,
             isLogged,
             IPAddress,
@@ -297,5 +301,16 @@ export class User implements Movable {
                 brother.emitInBatch(subMessage);
             }
         }
+    }
+
+    public customJsonReplacer(key: unknown, value: unknown): string | undefined {
+        if (key === "positionNotifier") {
+            return "positionNotifier";
+        }
+        if (key === "group") {
+            const group = value as Group | undefined;
+            return group ? `group ${group.getId()}` : "no group";
+        }
+        return undefined;
     }
 }

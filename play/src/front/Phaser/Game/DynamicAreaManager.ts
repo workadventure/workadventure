@@ -7,6 +7,7 @@ import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 export class DynamicAreaManager {
     private readonly gameMapFrontWrapper: GameMapFrontWrapper;
     private readonly subscription: Subscription;
+    private nextAreaId = 1;
 
     constructor(gameMapFrontWrapper: GameMapFrontWrapper) {
         this.gameMapFrontWrapper = gameMapFrontWrapper;
@@ -59,16 +60,11 @@ export class DynamicAreaManager {
             this.gameMapFrontWrapper.addArea(
                 {
                     ...createAreaEvent,
-                    id: -1,
-                    gid: -1,
+                    id: this.nextAreaId++,
                     visible: true,
-                    rotation: 0,
-                    type: "area",
-                    class: "area",
-                    ellipse: false,
-                    polygon: [],
-                    polyline: [],
-                    properties: [],
+                    properties: {
+                        customProperties: {},
+                    },
                 },
                 AreaType.Dynamic
             );

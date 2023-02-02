@@ -24,10 +24,12 @@ import {
     warningContainerStore,
 } from "../Stores/MenuStore";
 import { localUserStore } from "./LocalUserStore";
-import type {
+import {
+    apiVersionHash,
     AnswerMessage,
     AvailabilityStatus,
     CharacterLayerMessage,
+    ClientToServerMessage as ClientToServerMessageTsProto,
     EditMapCommandMessage,
     EmoteEventMessage as EmoteEventMessageTsProto,
     ErrorMessage as ErrorMessageTsProto,
@@ -36,10 +38,15 @@ import type {
     GroupUpdateMessage as GroupUpdateMessageTsProto,
     JitsiJwtAnswer,
     JoinBBBMeetingAnswer,
+    LeaveMucRoomMessage,
     MoveToPositionMessage as MoveToPositionMessageProto,
+    MucRoomDefinitionMessage,
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
     PositionMessage as PositionMessageTsProto,
     PositionMessage_Direction,
+    ServerToClientMessage as ServerToClientMessageTsProto,
+    SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
+    SetPlayerVariableMessage_Scope,
     QueryMessage,
     TokenExpiredMessage,
     UserJoinedMessage as UserJoinedMessageTsProto,
@@ -48,24 +55,19 @@ import type {
     ViewportMessage as ViewportMessageTsProto,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnexionMessage,
-} from "../../messages/ts-proto-generated/protos/messages";
-import {
-    ClientToServerMessage as ClientToServerMessageTsProto,
-    ServerToClientMessage as ServerToClientMessageTsProto,
-    SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
-    SetPlayerVariableMessage_Scope,
-} from "../../messages/ts-proto-generated/protos/messages";
+    XmppSettingsMessage,
+} from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
-import { apiVersionHash } from "../../messages/JsonMessages/ApiVersion";
-import type { ITiledMapRectangleObject } from "@workadventure/map-editor";
+import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 
-const manualPingDelay = 20000;
+// This must be greater than IoSocketController's PING_INTERVAL
+const manualPingDelay = 100000;
 
 export class RoomConnection implements RoomConnection {
     private readonly socket: WebSocket;
@@ -154,11 +156,18 @@ export class RoomConnection implements RoomConnection {
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
 
+    public xmppSettingsMessage: XmppSettingsMessage | null = null;
     // If this timeout triggers, we consider the connection is lost (no ping received)
     private timeout: ReturnType<typeof setInterval> | undefined = undefined;
 
     private readonly _moveToPositionMessageStream = new Subject<MoveToPositionMessageProto>();
     public readonly moveToPositionMessageStream = this._moveToPositionMessageStream.asObservable();
+
+    private readonly _joinMucRoomMessageStream = new Subject<MucRoomDefinitionMessage>();
+    public readonly joinMucRoomMessageStream = this._joinMucRoomMessageStream.asObservable();
+
+    private readonly _leaveMucRoomMessageStream = new Subject<LeaveMucRoomMessage>();
+    public readonly leaveMucRoomMessageStream = this._leaveMucRoomMessageStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -175,6 +184,7 @@ export class RoomConnection implements RoomConnection {
      * @param viewport
      * @param companion
      * @param availabilityStatus
+     * @param lastCommandId
      */
     public constructor(
         token: string | null,
@@ -184,7 +194,8 @@ export class RoomConnection implements RoomConnection {
         position: PositionInterface,
         viewport: ViewportInterface,
         companion: string | null,
-        availabilityStatus: AvailabilityStatus
+        availabilityStatus: AvailabilityStatus,
+        lastCommandId?: string
     ) {
         let url = new URL(PUSHER_URL, window.location.toString()).toString();
         url = url.replace("http://", "ws://").replace("https://", "wss://");
@@ -210,6 +221,10 @@ export class RoomConnection implements RoomConnection {
         if (typeof availabilityStatus === "number") {
             url += "&availabilityStatus=" + availabilityStatus;
         }
+        if (lastCommandId) {
+            url += "&lastCommandId=" + lastCommandId;
+        }
+
         url += "&version=" + apiVersionHash;
 
         if (RoomConnection.websocketFactory) {
@@ -221,10 +236,12 @@ export class RoomConnection implements RoomConnection {
         this.socket.binaryType = "arraybuffer";
 
         this.socket.onopen = () => {
+            console.info("Socket has been opened");
             this.resetPingTimeout();
         };
 
         this.socket.addEventListener("close", (event) => {
+            console.info("Socket has been closed", this.userId, this.closed, event);
             if (this.timeout) {
                 clearTimeout(this.timeout);
             }
@@ -317,6 +334,18 @@ export class RoomConnection implements RoomConnection {
                                 this._editMapCommandMessageStream.next(message);
                                 break;
                             }
+                            case "joinMucRoomMessage": {
+                                console.info("[sendChatMessagePrompt] RoomConnection => joinMucRoomMessage received");
+                                this._joinMucRoomMessageStream.next(
+                                    subMessage.joinMucRoomMessage.mucRoomDefinitionMessage
+                                );
+                                break;
+                            }
+                            case "leaveMucRoomMessage": {
+                                console.info("[sendChatMessagePrompt] RoomConnection => leaveMucRoomMessage received");
+                                this._leaveMucRoomMessageStream.next(subMessage.leaveMucRoomMessage);
+                                break;
+                            }
                             default: {
                                 // Security check: if we forget a "case", the line below will catch the error at compile-time.
                                 //@ts-ignore
@@ -344,6 +373,12 @@ export class RoomConnection implements RoomConnection {
                         playerVariables.set(variable.name, RoomConnection.unserializeVariable(variable.value));
                     }
 
+                    const editMapCommandsArrayMessage = roomJoinedMessage.editMapCommandsArrayMessage;
+                    let commandsToApply: EditMapCommandMessage[] | undefined = undefined;
+                    if (editMapCommandsArrayMessage) {
+                        commandsToApply = editMapCommandsArrayMessage.editMapCommands;
+                    }
+
                     this.userId = roomJoinedMessage.currentUserId;
                     this.tags = roomJoinedMessage.tag;
                     this._userRoomToken = roomJoinedMessage.userRoomToken;
@@ -368,6 +403,7 @@ export class RoomConnection implements RoomConnection {
                         roomJoinedMessage.characterLayer.length !== initCharacterLayers.length ||
                         roomJoinedMessage.characterLayer.find((layer) => !layer.url)
                     ) {
+                        console.info("Your Woka texture is invalid for this world, got to select Woka scene");
                         this.goToSelectYourWokaScene();
                         this.closed = true;
                     }
@@ -388,6 +424,7 @@ export class RoomConnection implements RoomConnection {
                             variables,
                             characterLayers,
                             playerVariables,
+                            commandsToApply,
                         } as RoomJoinedMessageInterface,
                     });
                     break;
@@ -398,6 +435,10 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "invalidTextureMessage": {
+                    console.info(
+                        "Your Woka texture is invalid for this world, got to select Woka scene. Message: ",
+                        message
+                    );
                     this.goToSelectYourWokaScene();
 
                     this.closed = true;
@@ -549,6 +590,10 @@ export class RoomConnection implements RoomConnection {
                     this.queries.delete(queryId);
                     break;
                 }
+                case "xmppSettingsMessage": {
+                    this.xmppSettingsMessage = message.xmppSettingsMessage;
+                    break;
+                }
                 default: {
                     // Security check: if we forget a "case", the line below will catch the error at compile-time.
                     //@ts-ignore
@@ -564,7 +609,7 @@ export class RoomConnection implements RoomConnection {
             this.timeout = undefined;
         }
         this.timeout = setTimeout(() => {
-            console.warn("Timeout detected server-side. Is your connexion down? Closing connexion.");
+            console.warn("Timeout detected server-side. Is your connection down? Closing connection.");
             this.socket.close();
         }, manualPingDelay);
     }
@@ -729,6 +774,7 @@ export class RoomConnection implements RoomConnection {
 
         return {
             userId: message.userId,
+            userJid: message.userJid,
             name: message.name,
             characterLayers,
             visitCardUrl: message.visitCardUrl,
@@ -799,7 +845,7 @@ export class RoomConnection implements RoomConnection {
             if (this.closed === true || connectionManager.unloading) {
                 return;
             }
-            console.log("Socket closed with code " + event.code + ". Reason: " + event.reason);
+            console.info("Socket closed with code " + event.code + ". Reason: " + event.reason);
             if (event.code === 1000) {
                 // Normal closure case
                 return;
@@ -982,7 +1028,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorModifyArea(commandId: string, config: ITiledMapRectangleObject): void {
+    public emitMapEditorModifyArea(commandId: string, config: AreaData): void {
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1018,7 +1064,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorCreateArea(commandId: string, config: ITiledMapRectangleObject): void {
+    public emitMapEditorCreateArea(commandId: string, config: AreaData): void {
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1028,6 +1074,76 @@ export class RoomConnection implements RoomConnection {
                         message: {
                             $case: "createAreaMessage",
                             createAreaMessage: config,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitMapEditorModifyEntity(commandId: string, config: AtLeast<EntityData, "id">): void {
+        if (config.properties) {
+            for (const key of Object.keys(config.properties)) {
+                if (config.properties[key] === undefined) {
+                    config.properties[key] = null;
+                }
+            }
+        }
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "modifyEntityMessage",
+                            modifyEntityMessage: {
+                                ...config,
+                                // We need to declare properties due to the protobuf limitations - make new custom type to use optional flag?
+                                properties: config.properties ?? {},
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitMapEditorCreateEntity(commandId: string, config: EntityData): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "createEntityMessage",
+                            createEntityMessage: {
+                                id: config.id,
+                                x: config.x,
+                                y: config.y,
+                                collectionName: config.prefab.collectionName,
+                                prefabId: config.prefab.id,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitMapEditorDeleteEntity(commandId: string, id: number): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "deleteEntityMessage",
+                            deleteEntityMessage: {
+                                id,
+                            },
                         },
                     },
                 },
@@ -1147,7 +1263,6 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitPlayerSetVariable(event: SetPlayerVariableEvent): void {
-        //console.log("emitPlayerSetVariable", name, value);
         let scope: SetPlayerVariableMessage_Scope;
         switch (event.scope) {
             case "room": {

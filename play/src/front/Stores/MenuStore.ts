@@ -1,9 +1,12 @@
+import { ENABLE_REPORT_ISSUES_MENU, REPORT_ISSUES_URL } from "./../Enum/EnvironmentVariable";
+import { AddClassicButtonActionBarEvent, AddActionButtonActionBarEvent } from "./../Api/Events/Ui/ButtonActionBarEvent";
 import { derived, get, writable } from "svelte/store";
 import { userIsAdminStore } from "./GameStore";
 import { CONTACT_URL, OPID_PROFILE_SCREEN_PROVIDER, PUSHER_URL } from "../Enum/EnvironmentVariable";
 import type { Translation } from "../../i18n/i18n-types";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { connectionManager } from "../Connexion/ConnectionManager";
+import { AddButtonActionBarEvent, RemoveButtonActionBarEvent } from "../Api/Events/Ui/ButtonActionBarEvent";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
@@ -20,6 +23,7 @@ function createWarningContainerStore() {
 
     return {
         subscribe,
+        set,
         activateWarningContainer() {
             set(true);
             if (warningContainerTimeout) clearTimeout(warningContainerTimeout);
@@ -40,6 +44,7 @@ export enum SubMenusInterface {
     aboutRoom = "credit",
     globalMessages = "globalMessages",
     contact = "contact",
+    report = "report",
 }
 
 type MenuKeys = keyof Translation["menu"]["sub"];
@@ -148,6 +153,22 @@ function createSubMenusStore() {
                 return menuList;
             });
         },
+        addReportIssuesMenu() {
+            if (
+                connectionManager.currentRoom?.reportIssuesUrl != undefined ||
+                (ENABLE_REPORT_ISSUES_MENU != undefined &&
+                    ENABLE_REPORT_ISSUES_MENU === true &&
+                    REPORT_ISSUES_URL != undefined)
+            ) {
+                update((valuesSubMenusStore) => {
+                    valuesSubMenusStore.push({
+                        type: "translated",
+                        key: SubMenusInterface.report,
+                    });
+                    return valuesSubMenusStore;
+                });
+            }
+        },
     };
 }
 
@@ -202,3 +223,36 @@ export function getProfileUrl() {
         `/profile-callback?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`
     );
 }
+
+function createAdditionalButtonsMenu() {
+    const { subscribe, update } = writable<Map<string, AddButtonActionBarEvent>>(
+        new Map<string, AddButtonActionBarEvent>()
+    );
+    return {
+        subscribe,
+        addAdditionnalButtonActionBar(button: AddButtonActionBarEvent) {
+            console.log("MenuStore => additionnalButtonsMenu => addAdditionnalButtonActionBar => button", button);
+            update((additionnalButtonsMenu) => {
+                additionnalButtonsMenu.set(button.id, button);
+                return additionnalButtonsMenu;
+            });
+        },
+        removeAdditionnalButtonActionBar(button: RemoveButtonActionBarEvent) {
+            update((additionnalButtonsMenu) => {
+                additionnalButtonsMenu.delete(button.id);
+                return additionnalButtonsMenu;
+            });
+        },
+    };
+}
+export const additionnalButtonsMenu = createAdditionalButtonsMenu();
+export const addClassicButtonActionBarEvent = writable<AddClassicButtonActionBarEvent[]>([]);
+export const addActionButtonActionBarEvent = writable<AddActionButtonActionBarEvent[]>([]);
+additionnalButtonsMenu.subscribe((map) => {
+    addClassicButtonActionBarEvent.set(
+        [...map.values()].filter((c) => c.type === "button") as AddClassicButtonActionBarEvent[]
+    );
+    addActionButtonActionBarEvent.set(
+        [...map.values()].filter((c) => c.type === "action") as AddActionButtonActionBarEvent[]
+    );
+});

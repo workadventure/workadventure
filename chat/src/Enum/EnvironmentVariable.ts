@@ -11,6 +11,9 @@ const enableOpenID = getEnvConfig("ENABLE_OPENID");
 const ENABLE_OPENID =
     enableOpenID !== "" && enableOpenID != undefined && enableOpenID != "0" && enableOpenID.toLowerCase() !== "false";
 
+const EJABBERD_DOMAIN: string = getEnvConfig("EJABBERD_DOMAIN") || "";
+const EJABBERD_WS_URI: string = getEnvConfig("EJABBERD_WS_URI") || "";
+
 export {
     PUSHER_URL,
     FALLBACK_LOCALE,
@@ -20,4 +23,6 @@ export {
     ENABLE_OPENID,
     ENABLE_CHAT_UPLOAD,
     ADMIN_API_URL,
+    EJABBERD_DOMAIN,
+    EJABBERD_WS_URI,
 };

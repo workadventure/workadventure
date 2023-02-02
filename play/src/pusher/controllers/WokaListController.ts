@@ -1,51 +1,27 @@
-import { BaseHttpController } from "./BaseHttpController";
-import { wokaService } from "../services/WokaService";
-import { jwtTokenManager } from "../services/JWTTokenManager";
-import type { Request, Response } from "hyper-express";
+import { AuthenticatedProviderController } from "./AuthenticatedProviderController";
+import { WokaList } from "@workadventure/messages";
+import type { Server } from "hyper-express";
+import type { JWTTokenManager } from "../services/JWTTokenManager";
+import type { WokaServiceInterface } from "../services/WokaServiceInterface";
 
-export class WokaListController extends BaseHttpController {
+/**
+ * A controller to expose the woka list
+ */
+export class WokaListController extends AuthenticatedProviderController<WokaList> {
+    private wokaService: WokaServiceInterface | undefined;
+    constructor(protected app: Server, protected jwtTokenManager: JWTTokenManager) {
+        super(app, jwtTokenManager);
+    }
+
+    public setWokaService(wokaService: WokaServiceInterface) {
+        this.wokaService = wokaService;
+    }
+
+    protected getData(roomUrl: string, uuid: string): Promise<WokaList | undefined> {
+        return this.wokaService?.getWokaList(roomUrl, uuid) || Promise.resolve(undefined);
+    }
+
     routes(): void {
-        this.app.options("/woka/list", (req: Request, res: Response) => {
-            res.status(200).send("");
-            return;
-        });
-
-        this.app.get("/woka/list", async (req: Request, res: Response) => {
-            const token = req.header("Authorization");
-
-            if (!token) {
-                res.status(401).send("Undefined authorization header");
-                return;
-            }
-
-            let uuid: string;
-            try {
-                const jwtData = jwtTokenManager.verifyJWTToken(token);
-                // Let's set the "uuid" param
-                uuid = jwtData.identifier;
-            } catch (e) {
-                console.error("Connection refused for token: " + token, e);
-                res.status(401).send("Invalid token sent");
-                return;
-            }
-
-            let { roomUrl } = req.query;
-
-            if (typeof roomUrl !== "string") {
-                res.status(400).send("missing roomUrl URL parameter");
-                return;
-            }
-
-            roomUrl = decodeURIComponent(roomUrl);
-            const wokaList = await wokaService.getWokaList(roomUrl, uuid);
-
-            if (!wokaList) {
-                res.status(500).send("Error on getting woka list");
-                return;
-            }
-
-            res.status(200).json(wokaList);
-            return;
-        });
+        super.setupRoutes("/woka/list");
     }
 }

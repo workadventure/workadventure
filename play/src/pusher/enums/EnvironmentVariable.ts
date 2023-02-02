@@ -1,3 +1,4 @@
+import { OpidWokaNamePolicy } from "@workadventure/messages";
 import { z, ZodError } from "zod";
 import type { FrontConfigurationInterface } from "../../common/FrontConfigurationInterface";
 
@@ -7,12 +8,14 @@ type BoolAsString = z.infer<typeof BoolAsString>;
 const PositiveIntAsString = z.string().regex(/^\d*$/, { message: "Must be a positive integer number" });
 type PositiveIntAsString = z.infer<typeof PositiveIntAsString>;
 
+const AbsoluteOrRelativeUrl = z.string().url().or(z.string().startsWith("/"));
+
 const EnvironmentVariables = z.object({
     // Pusher related environment variables
     SECRET_KEY: z.string().min(1),
     API_URL: z.string().min(1),
-    ADMIN_API_URL: z.string().url().optional(),
-    ADMIN_URL: z.string().url().optional(),
+    ADMIN_API_URL: AbsoluteOrRelativeUrl.optional(),
+    ADMIN_URL: AbsoluteOrRelativeUrl.optional(),
     ADMIN_API_TOKEN: z.string().optional(),
     ADMIN_SOCKETS_TOKEN: z.string().optional(),
     CPU_OVERHEAT_THRESHOLD: PositiveIntAsString.optional(),
@@ -23,8 +26,8 @@ const EnvironmentVariables = z.object({
     VITE_URL: z.string().url().optional(),
     // Use "*" to allow any domain
     ALLOWED_CORS_ORIGIN: z.string().url().or(z.literal("*")).optional(),
-    PUSHER_URL: z.string().url().optional(),
-    PUBLIC_MAP_STORAGE_URL: z.string().url().optional(),
+    PUSHER_URL: AbsoluteOrRelativeUrl.optional(),
+    PUBLIC_MAP_STORAGE_URL: AbsoluteOrRelativeUrl.optional(),
     OPID_CLIENT_ID: z.string().optional(),
     OPID_CLIENT_SECRET: z.string().optional(),
     OPID_CLIENT_ISSUER: z.string().optional(),
@@ -34,22 +37,23 @@ const EnvironmentVariables = z.object({
     OPID_USERNAME_CLAIM: z.string().optional(),
     OPID_LOCALE_CLAIM: z.string().optional(),
     OPID_LOGOUT_REDIRECT_URL: z.string().optional(),
+    USERNAME_POLICY: z.string().optional(),
     DISABLE_ANONYMOUS: BoolAsString.optional(),
     PROMETHEUS_AUTHORIZATION_TOKEN: z.string().optional(),
     EJABBERD_DOMAIN: z.string().optional(),
-    EJABBERD_WS_URI: z.string().optional(),
     EJABBERD_JWT_SECRET: z.string().optional(),
-    MAX_HISTORY_CHAT: PositiveIntAsString.optional(),
     ENABLE_CHAT: BoolAsString.optional(),
     ENABLE_CHAT_UPLOAD: BoolAsString.optional(),
+    ENABLE_CHAT_ONLINE_LIST: BoolAsString.optional(),
+    ENABLE_CHAT_DISCONNECTED_LIST: BoolAsString.optional(),
     DEBUG_ERROR_MESSAGES: BoolAsString.optional(),
     ENABLE_OPENAPI_ENDPOINT: BoolAsString.optional(),
     START_ROOM_URL: z.string().optional(),
 
     // Front related environment variables
     DEBUG_MODE: BoolAsString.optional(),
-    UPLOADER_URL: z.string().url(),
-    ICON_URL: z.string().url(),
+    UPLOADER_URL: AbsoluteOrRelativeUrl,
+    ICON_URL: AbsoluteOrRelativeUrl,
     STUN_SERVER: z.string().optional(),
     TURN_SERVER: z.string().optional(),
     SKIP_RENDER_OPTIMIZATIONS: BoolAsString.optional(),
@@ -59,14 +63,18 @@ const EnvironmentVariables = z.object({
     JITSI_URL: z.string().optional(),
     JITSI_PRIVATE_MODE: BoolAsString.optional(),
     ENABLE_FEATURE_MAP_EDITOR: BoolAsString.optional(),
+    ENABLE_MAP_EDITOR_AREAS_TOOL: BoolAsString.optional(),
     MAX_USERNAME_LENGTH: PositiveIntAsString.optional(),
     MAX_PER_GROUP: PositiveIntAsString.optional(),
     NODE_ENV: z.string().optional(),
-    CONTACT_URL: z.string().url().optional(),
+    CONTACT_URL: AbsoluteOrRelativeUrl.optional(),
     POSTHOG_API_KEY: z.string().optional(),
     POSTHOG_URL: z.string().url().optional().or(z.literal("")),
     FALLBACK_LOCALE: z.string().optional(),
-    CHAT_URL: z.string().url(),
+    CHAT_URL: AbsoluteOrRelativeUrl,
+    OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy.optional(),
+    ENABLE_REPORT_ISSUES_MENU: BoolAsString.optional(),
+    REPORT_ISSUES_URL: z.string().url().optional().or(z.literal("")),
 });
 
 type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
@@ -103,6 +111,7 @@ function toBool(value: BoolAsString | undefined, defaultValue: boolean): boolean
 export const SECRET_KEY = env.SECRET_KEY;
 export const API_URL = env.API_URL;
 export const ADMIN_API_URL = env.ADMIN_API_URL;
+export const ADMIN_API_RETRY_DELAY = parseInt(process.env.ADMIN_API_RETRY_DELAY || "500");
 export const ADMIN_URL = env.ADMIN_URL;
 export const ADMIN_API_TOKEN = env.ADMIN_API_TOKEN;
 export const ADMIN_SOCKETS_TOKEN = env.ADMIN_SOCKETS_TOKEN;
@@ -126,14 +135,15 @@ export const OPID_SCOPE = env.OPID_SCOPE || "openid email";
 export const OPID_PROMPT = env.OPID_PROMPT || "login";
 export const OPID_USERNAME_CLAIM = env.OPID_USERNAME_CLAIM || "username";
 export const OPID_LOCALE_CLAIM = env.OPID_LOCALE_CLAIM || "locale";
+export const OPID_WOKA_NAME_POLICY = env.OPID_WOKA_NAME_POLICY || "user_input";
 export const DISABLE_ANONYMOUS: boolean = toBool(env.DISABLE_ANONYMOUS, false);
 export const PROMETHEUS_AUTHORIZATION_TOKEN = env.PROMETHEUS_AUTHORIZATION_TOKEN;
 export const EJABBERD_DOMAIN: string = env.EJABBERD_DOMAIN || "";
-export const EJABBERD_WS_URI: string = env.EJABBERD_WS_URI || "";
 export const EJABBERD_JWT_SECRET: string = env.EJABBERD_JWT_SECRET || "";
-export const MAX_HISTORY_CHAT: number = toNumber(env.MAX_HISTORY_CHAT, 0);
 export const ENABLE_CHAT: boolean = toBool(env.ENABLE_CHAT, true);
 export const ENABLE_CHAT_UPLOAD: boolean = toBool(env.ENABLE_CHAT_UPLOAD, true);
+export const ENABLE_CHAT_ONLINE_LIST: boolean = toBool(env.ENABLE_CHAT_ONLINE_LIST, true);
+export const ENABLE_CHAT_DISCONNECTED_LIST: boolean = toBool(env.ENABLE_CHAT_DISCONNECTED_LIST, true);
 export const DEBUG_ERROR_MESSAGES = toBool(env.DEBUG_ERROR_MESSAGES, false);
 
 // If set to the string "true", the /openapi route will return the OpenAPI definition and the swagger-ui/ route will display the documentation
@@ -146,8 +156,8 @@ export const FALLBACK_LOCALE: string | undefined = env.FALLBACK_LOCALE;
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     DEBUG_MODE: toBool(env.DEBUG_MODE, false),
-    PUSHER_URL: env.PUSHER_URL || "/",
-    ADMIN_URL: env.ADMIN_URL,
+    PUSHER_URL,
+    ADMIN_URL,
     UPLOADER_URL: env.UPLOADER_URL,
     ICON_URL: env.ICON_URL,
     STUN_SERVER: env.STUN_SERVER,
@@ -159,17 +169,21 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     JITSI_URL: env.JITSI_URL,
     JITSI_PRIVATE_MODE: toBool(env.JITSI_PRIVATE_MODE, false),
     ENABLE_FEATURE_MAP_EDITOR: toBool(env.ENABLE_FEATURE_MAP_EDITOR, false),
+    ENABLE_MAP_EDITOR_AREAS_TOOL: toBool(env.ENABLE_MAP_EDITOR_AREAS_TOOL, false),
     MAX_USERNAME_LENGTH: toNumber(env.MAX_USERNAME_LENGTH, 10),
     MAX_PER_GROUP: toNumber(env.MAX_PER_GROUP, 4),
     NODE_ENV: env.NODE_ENV || "development",
     CONTACT_URL: env.CONTACT_URL,
     POSTHOG_API_KEY: env.POSTHOG_API_KEY,
     POSTHOG_URL: env.POSTHOG_URL,
-    DISABLE_ANONYMOUS: toBool(env.DISABLE_ANONYMOUS, false),
+    DISABLE_ANONYMOUS,
     ENABLE_OPENID: !!env.OPID_CLIENT_ID,
     OPID_PROFILE_SCREEN_PROVIDER: env.OPID_PROFILE_SCREEN_PROVIDER,
     OPID_LOGOUT_REDIRECT_URL: env.OPID_LOGOUT_REDIRECT_URL,
     CHAT_URL: env.CHAT_URL,
-    ENABLE_CHAT_UPLOAD: toBool(env.ENABLE_CHAT_UPLOAD, true),
-    FALLBACK_LOCALE: env.FALLBACK_LOCALE,
+    ENABLE_CHAT_UPLOAD,
+    FALLBACK_LOCALE,
+    OPID_WOKA_NAME_POLICY,
+    ENABLE_REPORT_ISSUES_MENU: toBool(env.ENABLE_REPORT_ISSUES_MENU, false),
+    REPORT_ISSUES_URL: env.REPORT_ISSUES_URL,
 };

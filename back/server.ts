@@ -2,14 +2,12 @@
 import App from "./src/App";
 import * as grpc from "@grpc/grpc-js";
 import { roomManager } from "./src/RoomManager";
-import { RoomManagerService } from "./src/Messages/generated/messages_grpc_pb";
+import { RoomManagerService } from "./src/Messages/generated/services_grpc_pb";
 import { HTTP_PORT, GRPC_PORT } from "./src/Enum/EnvironmentVariable";
 
 App.listen(HTTP_PORT, () => console.log(`WorkAdventure HTTP API starting on port %d!`, HTTP_PORT));
 
 const server = new grpc.Server();
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-//@ts-ignore
 server.addService(RoomManagerService, roomManager);
 
 server.bindAsync(`0.0.0.0:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure(), (err, port) => {

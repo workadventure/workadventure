@@ -1,6 +1,6 @@
 import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
-import type { Emoji } from "../Stores/EmoteStore";
 import type { PostHog } from "posthog-js";
+import { Emoji } from "../Stores/Utils/emojiSchema";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare let window: any;
 
@@ -80,6 +80,14 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa-opened-bo");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    clickOnCustomButton(id: string, label?: string, toolTip?: string, imageSrc?: string) {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-custom-button", { id, label, toolTip, imageSrc });
             })
             .catch((e) => console.error(e));
     }
@@ -177,6 +185,30 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_microphone");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    selectCamera(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_select_camera");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    selectMicrophone(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_select_microphone");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    selectSpeaker(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_select_speaker");
             })
             .catch((e) => console.error(e));
     }
@@ -335,6 +367,14 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_menu_globalmessage");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    reportIssue(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_menu_report");
             })
             .catch((e) => console.error(e));
     }

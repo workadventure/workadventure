@@ -2,6 +2,13 @@ import {expect, Page} from "@playwright/test";
 import {expectInViewport} from "./viewport";
 
 class Chat {
+    async slideToChat(page: Page){
+        await this.get(page).locator('li:has-text("Chat")').click({timeout: 60_000});
+    }
+    async slideToUsers(page: Page){
+        await this.get(page).locator('li:has-text("Users")').click({timeout: 60_000});
+    }
+
     async checkNameInChat(page: Page, name: string, timeout = 30_000){
         await expect(page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow div.users')).toContainText(name, {timeout});
     }
@@ -18,17 +25,17 @@ class Chat {
         return page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
     }
 
-    async liveRoomExist(page: Page, name: string){
-        await expect(this.get(page).locator('#liveRooms')).toContainText('liveZone');
+    async chatZoneExist(page: Page, name: string){
+        await expect(this.get(page).locator('#chatZones')).toContainText('liveZone');
     }
 
-    async noLiveRoom(page: Page){
-        await expect(this.get(page)).not.toContain('#liveRooms');
+    async noChatZone(page: Page){
+        await expect(this.get(page)).not.toContain('#chatZones');
     }
 
-    async openLiveRoom(page: Page){
-        await this.get(page).locator('#liveRooms .wa-chat-item .wa-dropdown button').click();
-        await this.get(page).locator('#liveRooms .wa-chat-item .wa-dropdown .open').click();
+    async openChatZone(page: Page){
+        await this.get(page).locator('#chatZones .wa-chat-item .wa-dropdown button').click();
+        await this.get(page).locator('#chatZones .wa-chat-item .wa-dropdown .open').click();
     }
 
     async openTimeline(page: Page){
@@ -46,7 +53,7 @@ class Chat {
     }
 
     async AT_sendMessage(page: Page, text: string){
-        await this.get(page).locator('#activeThread .wa-message-form textarea').fill(text);
+        await this.get(page).locator('#activeThread .wa-message-form div[contenteditable=true]').fill(text);
         await this.get(page).locator('#activeThread #send').click();
     }
 
@@ -117,6 +124,16 @@ class Chat {
 
     async AT_close(page: Page){
         await this.get(page).locator('#activeThread .exit').click();
+    }
+
+    async expandUsers(page: Page){
+        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).toHaveClass(/tw-rotate-180/);
+        await this.get(page).locator('#users div:has-text("Users") button > .feather-chevron-up').click();
+        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).not.toHaveClass(/tw-rotate-180/);
+    }
+
+    async forumExist(page: Page, name: string) {
+        await expect(this.get(page).locator('#forumRooms')).toContainText(name);
     }
 }
 

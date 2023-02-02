@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MapStore } from "../../../../src/front/Stores/Utils/MapStore";
+import { MapStore } from "@workadventure/store-utils";
 import type { Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
 
@@ -16,14 +16,17 @@ describe("Main store", () => {
 
         expect(triggered).toBe(true);
         triggered = false;
+        expect(mapStore.has("foo")).toBe(false);
         mapStore.set("foo", "bar");
         expect(triggered).toBe(true);
+        expect(mapStore.has("foo")).toBe(true);
 
         triggered = false;
         mapStore.delete("baz");
         expect(triggered).toBe(false);
         mapStore.delete("foo");
         expect(triggered).toBe(true);
+        expect(mapStore.has("foo")).toBe(false);
 
         triggered = false;
         mapStore.clear();

@@ -5,7 +5,7 @@
     }
 
     .bottom-action-bar {
-        @apply tw-flex tw-flex-col tw-items-center tw-pointer-events-auto tw-justify-center tw-m-auto tw-bottom-6 md:tw-bottom-4 tw-z-[251] tw-transition-transform tw-duration-300 tw-max-h-12;
+        @apply tw-flex tw-flex-col tw-items-center tw-pointer-events-auto tw-justify-center tw-m-auto tw-bottom-6 md:tw-bottom-4 tw-z-[251] tw-transition-transform tw-duration-300;
         @apply sm:tw-flex-row;
 
         .bottom-action-section {

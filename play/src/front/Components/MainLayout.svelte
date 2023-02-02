@@ -35,7 +35,6 @@
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
     import UiWebsiteContainer from "./UI/Website/UIWebsiteContainer.svelte";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
-    import { mapEditorModeStore, mapEditorSelectedAreaPreviewStore } from "../Stores/MapEditorStore";
     import Modal from "./Modal/Modal.svelte";
     import { coWebsites } from "../Stores/CoWebsiteStore";
     import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
@@ -112,13 +111,6 @@
 
         {#if $requestVisitCardsStore}
             <VisitCard visitCardUrl={$requestVisitCardsStore} />
-        {/if}
-
-        {#if $mapEditorModeStore}
-            <Lazy
-                when={$mapEditorSelectedAreaPreviewStore !== undefined}
-                component={() => import("./MapEditor/AreaPreviewWindow.svelte")}
-            />
         {/if}
 
         {#if hasEmbedScreen}

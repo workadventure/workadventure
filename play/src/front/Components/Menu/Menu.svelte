@@ -6,6 +6,7 @@
     import ContactSubMenu from "./ContactSubMenu.svelte";
     import CustomSubMenu from "./CustomSubMenu.svelte";
     import GuestSubMenu from "./GuestSubMenu.svelte";
+    import ReportSubMenu from "./ReportSubMenu.svelte";
     import chevronImg from "../images/chevron.svg";
     import type { TranslatedMenu } from "../../Stores/MenuStore";
     import {
@@ -93,6 +94,10 @@
                     activeComponent = (await import("./GlobalMessagesSubMenu.svelte")).default;
                     analyticsClient.globalMessage();
                     break;
+                case SubMenusInterface.report:
+                    activeComponent = ReportSubMenu;
+                    analyticsClient.reportIssue();
+                    break;
             }
         } else {
             const customMenu = customMenuIframe.get(menu.label);
@@ -108,8 +113,8 @@
     }
 
     function closeMenu() {
-        menuVisiblilityStore.set(false);
         activeSubMenuStore.set(0);
+        menuVisiblilityStore.set(false);
     }
 
     function onKeyDown(e: KeyboardEvent) {

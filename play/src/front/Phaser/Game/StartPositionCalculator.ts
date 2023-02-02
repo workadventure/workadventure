@@ -27,16 +27,19 @@ export class StartPositionCalculator {
 
     public getStartPositionNames(): string[] {
         const names: string[] = [];
-        for (const obj of [
-            ...this.gameMapFrontWrapper.getFlatLayers(),
-            ...this.gameMapFrontWrapper.getAreas(AreaType.Static),
-        ]) {
+        for (const obj of this.gameMapFrontWrapper.getFlatLayers()) {
             if (obj.name === "start") {
                 names.push(obj.name);
                 continue;
             }
             if (this.isStartObject(obj)) {
                 names.push(obj.name);
+            }
+        }
+        for (const area of this.gameMapFrontWrapper.getAreas(AreaType.Static)) {
+            if (area.name === "start" || area.properties.customProperties[GameMapProperties.START] === true) {
+                names.push(area.name);
+                continue;
             }
         }
         return names;
@@ -82,7 +85,7 @@ export class StartPositionCalculator {
         const area = this.gameMapFrontWrapper.getAreaByName(startPositionName, AreaType.Static);
         if (area) {
             if (needStartProperty) {
-                if (!(this.gameMapFrontWrapper.getObjectProperty(area, "start") === true)) {
+                if (!area.properties.customProperties["start"]) {
                     return false;
                 }
             }
@@ -93,9 +96,11 @@ export class StartPositionCalculator {
     }
 
     private initPositionFromLayerName(startPositionName?: string): boolean {
+        let foundLayer: ITiledMapLayer | undefined = undefined;
+
         const tileLayers = this.gameMapFrontWrapper.getFlatLayers().filter((layer) => layer.type === "tilelayer");
 
-        if (startPositionName !== undefined) {
+        if (startPositionName) {
             for (const layer of tileLayers) {
                 //we want to prioritize the selectedLayer rather than "start" layer
                 if (
@@ -115,24 +120,29 @@ export class StartPositionCalculator {
                 }
             }
         } else {
-            for (const layer of tileLayers) {
-                if (
-                    layer.name === this.DEFAULT_START_NAME ||
-                    layer.name.endsWith("/" + this.DEFAULT_START_NAME) ||
-                    this.isStartObject(layer)
-                ) {
-                    try {
-                        const startPosition = this.gameMapFrontWrapper.getRandomPositionFromLayer(layer.name);
-                        this.startPosition = {
-                            x: startPosition.x * (this.mapFile.tilewidth ?? 0) + (this.mapFile.tilewidth ?? 0) / 2,
-                            y: startPosition.y * (this.mapFile.tileheight ?? 0) + (this.mapFile.tileheight ?? 0) / 2,
-                        };
-                        return true;
-                    } catch (e: unknown) {
-                        console.error("Error while finding start position: ", e);
+            foundLayer = tileLayers.find(
+                (layer) => layer.name === this.DEFAULT_START_NAME || layer.name.endsWith("/" + this.DEFAULT_START_NAME)
+            );
+            if (!foundLayer) {
+                for (const layer of tileLayers) {
+                    if (this.isStartObject(layer)) {
+                        foundLayer = layer;
+                        break;
                     }
                 }
             }
+        }
+        if (foundLayer) {
+            try {
+                const startPosition = this.gameMapFrontWrapper.getRandomPositionFromLayer(foundLayer.name);
+                this.startPosition = {
+                    x: startPosition.x * (this.mapFile.tilewidth ?? 0) + (this.mapFile.tilewidth ?? 0) / 2,
+                    y: startPosition.y * (this.mapFile.tileheight ?? 0) + (this.mapFile.tileheight ?? 0) / 2,
+                };
+            } catch (e: unknown) {
+                console.error("Error while finding start position: ", e);
+            }
+            return true;
         }
         return false;
     }
@@ -180,11 +190,11 @@ export class StartPositionCalculator {
     }
 
     private isStartObject(obj: ITiledMapLayer | ITiledMapObject): boolean {
-        if (this.gameMapFrontWrapper.getObjectProperty(obj, GameMapProperties.START) == true) {
+        if (this.gameMapFrontWrapper.getTiledObjectProperty(obj, GameMapProperties.START) == true) {
             return true;
         }
         // legacy reasons
-        return this.gameMapFrontWrapper.getObjectProperty(obj, GameMapProperties.START_LAYER) == true;
+        return this.gameMapFrontWrapper.getTiledObjectProperty(obj, GameMapProperties.START_LAYER) == true;
     }
 
     public getStartPositionName(): string {

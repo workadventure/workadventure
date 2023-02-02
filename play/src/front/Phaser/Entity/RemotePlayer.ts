@@ -1,16 +1,15 @@
 import { requestVisitCardsStore } from "../../Stores/GameStore";
-import type { ActionsMenuAction, ActionsMenuData } from "../../Stores/ActionsMenuStore";
+import type { ActionsMenuAction } from "../../Stores/ActionsMenuStore";
 import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
 import { Character } from "../Entity/Character";
 import type { GameScene } from "../Game/GameScene";
-import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import type { ActivatableInterface } from "../Game/ActivatableInterface";
 import type CancelablePromise from "cancelable-promise";
 import LL from "../../../i18n/i18n-svelte";
 import { blackListManager } from "../../WebRtc/BlackListManager";
 import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
-import type { PositionMessage, PositionMessage_Direction } from "../../../messages/ts-proto-generated/protos/messages";
+import type { PositionMessage, PositionMessage_Direction } from "@workadventure/messages";
 
 export enum RemotePlayerEvent {
     Clicked = "Clicked",
@@ -25,8 +24,6 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     public readonly activationRadius: number;
 
     private visitCardUrl: string | null;
-    private isActionsMenuInitialized = false;
-    private actionsMenuStoreUnsubscriber: Unsubscriber;
 
     constructor(
         userId: number,
@@ -51,9 +48,6 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         this.visitCardUrl = visitCardUrl;
         this.setClickable(this.getDefaultActionsMenuActions().length > 0);
         this.activationRadius = activationRadius ?? 96;
-        this.actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((value: ActionsMenuData | undefined) => {
-            this.isActionsMenuInitialized = value ? true : false;
-        });
 
         this.bindEventHandlers();
     }
@@ -89,8 +83,11 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         this.toggleActionsMenu();
     }
 
+    public deactivate(): void {
+        actionsMenuStore.clear();
+    }
+
     public destroy(): void {
-        this.actionsMenuStoreUnsubscriber();
         actionsMenuStore.clear();
         super.destroy();
     }
@@ -100,7 +97,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     }
 
     private toggleActionsMenu(): void {
-        if (this.isActionsMenuInitialized) {
+        if (get(actionsMenuStore) !== undefined) {
             actionsMenuStore.clear();
             return;
         }
@@ -132,7 +129,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             priority: -1,
             style: "is-error",
             callback: () => {
-                showReportScreenStore.set({ userId: this.userId, userName: this.name });
+                showReportScreenStore.set({ userId: this.userId, userName: this.playerName });
                 actionsMenuStore.clear();
             },
         });
@@ -143,7 +140,6 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     private bindEventHandlers(): void {
         this.on(Phaser.Input.Events.POINTER_DOWN, (event: Phaser.Input.Pointer) => {
             if (event.downElement.nodeName === "CANVAS" && event.leftButtonDown()) {
-                this.toggleActionsMenu();
                 this.emit(RemotePlayerEvent.Clicked);
             }
         });

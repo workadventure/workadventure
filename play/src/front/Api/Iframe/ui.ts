@@ -14,6 +14,9 @@ import { RemotePlayer } from "./Players/RemotePlayer";
 import type { AddPlayerEvent } from "../Events/AddPlayerEvent";
 import modal from "./Ui/Modal";
 import type { WorkadventureModalCommands } from "./Ui/Modal";
+import buttonActionBar, { WorkAdventureButtonActionBarCommands } from "./Ui/ButtonActionBar";
+import { WorkadventureBannerCommands } from "./Ui/Banner";
+import banner from "./Ui/Banner";
 
 let popupId = 0;
 const popups: Map<number, Popup> = new Map<number, Popup>();
@@ -111,7 +114,9 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         apiCallback({
             type: "remotePlayerClickedEvent",
             callback: (payloadData: AddPlayerEvent) => {
-                this._onRemotePlayerClicked.next(new RemotePlayer(payloadData));
+                const remotePlayer = new RemotePlayer(payloadData);
+                this.currentlyClickedRemotePlayer = remotePlayer;
+                this._onRemotePlayerClicked.next(remotePlayer);
             },
         }),
         apiCallback({
@@ -277,6 +282,14 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
 
     get modal(): WorkadventureModalCommands {
         return modal;
+    }
+
+    get actionBar(): WorkAdventureButtonActionBarCommands {
+        return buttonActionBar;
+    }
+
+    get banner(): WorkadventureBannerCommands {
+        return banner;
     }
 }
 

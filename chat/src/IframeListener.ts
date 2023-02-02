@@ -8,18 +8,20 @@ import {
     chatPeerConnectionInProgress,
     chatSoundsStore,
     enableChat,
+    enableChatOnlineListStore,
+    enableChatDisconnectedListStore,
     enableChatUpload,
     newChatMessageSubject,
     newChatMessageWritingStatusSubject,
+    showTimelineStore,
     timelineActiveStore,
-    timelineOpenedStore,
+    timelineMessagesToSee,
     writingStatusMessageStore,
 } from "./Stores/ChatStore";
 import { setCurrentLocale } from "./i18n/locales";
 import { Locales } from "./i18n/i18n-types";
 import { mucRoomsStore } from "./Stores/MucRoomsStore";
-import { defaultUserData } from "./Xmpp/MucRoom";
-import { connectionManager } from "./Connection/ChatConnectionManager";
+import { chatConnectionManager } from "./Connection/ChatConnectionManager";
 import { chatVisibilityStore } from "./Stores/ChatStore";
 import { NotificationType } from "./Media/MediaManager";
 import { activeThreadStore } from "./Stores/ActiveThreadStore";
@@ -41,19 +43,24 @@ class IframeListener {
                             chatNotificationsStore.set(iframeEvent.data.notification);
                             enableChat.set(iframeEvent.data.enableChat);
                             enableChatUpload.set(iframeEvent.data.enableChatUpload);
+                            enableChatOnlineListStore.set(iframeEvent.data.enableChatOnlineList);
+                            enableChatDisconnectedListStore.set(iframeEvent.data.enableChatDisconnectedList);
+                            break;
+                        }
+                        case "xmppSettingsMessage": {
+                            chatConnectionManager.initXmppSettings(iframeEvent.data);
                             break;
                         }
                         case "userData": {
                             iframeEvent.data.name = iframeEvent.data.name.replace(emojiRegex, "");
                             userStore.set(iframeEvent.data);
-                            if (!connectionManager.connection) {
-                                connectionManager.init(
-                                    iframeEvent.data.playUri,
-                                    iframeEvent.data.uuid,
-                                    iframeEvent.data.authToken
-                                );
-                            } else {
-                                mucRoomsStore.sendPresences();
+                            chatConnectionManager.initUser(
+                                iframeEvent.data.playUri,
+                                iframeEvent.data.uuid,
+                                iframeEvent.data.authToken
+                            );
+                            if (chatConnectionManager.connection) {
+                                mucRoomsStore.sendUserInfos();
                             }
                             break;
                         }
@@ -65,27 +72,19 @@ class IframeListener {
                             if (!get(enableChat)) {
                                 return;
                             }
-                            if (!connectionManager.connection) {
-                                connectionManager.start();
-                            }
-                            connectionManager.connectionOrFail
-                                .getXmppClient()
-                                ?.joinMuc(
-                                    iframeEvent.data.name,
-                                    iframeEvent.data.url,
-                                    iframeEvent.data.type,
-                                    iframeEvent.data.subscribe
-                                );
+                            chatConnectionManager.connectionOrFail?.joinMuc(
+                                iframeEvent.data.name,
+                                iframeEvent.data.url,
+                                iframeEvent.data.type,
+                                iframeEvent.data.subscribe
+                            );
                             break;
                         }
                         case "leaveMuc": {
                             if (!get(enableChat)) {
                                 return;
                             }
-                            if (!connectionManager.connection) {
-                                connectionManager.start();
-                            }
-                            connectionManager.connectionOrFail.getXmppClient()?.leaveMuc(iframeEvent.data.url);
+                            chatConnectionManager.connectionOrFail?.leaveMuc(iframeEvent.data.url);
                             break;
                         }
                         case "updateWritingStatusChatList": {
@@ -93,42 +92,41 @@ class IframeListener {
                             break;
                         }
                         case "addChatMessage": {
-                            if (iframeEvent.data.author == undefined || iframeEvent.data.text == undefined) {
+                            if (iframeEvent.data.text == undefined) {
                                 break;
                             }
-
-                            let userData = defaultUserData;
                             const mucRoomDefault = mucRoomsStore.getDefaultRoom();
-                            if (mucRoomDefault) {
-                                userData = mucRoomDefault.getUserDataByUuid(iframeEvent.data.author);
+                            let userData = undefined;
+                            if (mucRoomDefault && iframeEvent.data.author.jid !== "fake") {
+                                userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
+                            } else {
+                                userData = iframeEvent.data.author;
                             }
-
                             for (const chatMessageText of iframeEvent.data.text) {
-                                chatMessagesStore.addExternalMessage(userData, chatMessageText);
+                                chatMessagesStore.addExternalMessage(userData, chatMessageText, userData.name);
                             }
                             break;
                         }
                         case "comingUser": {
-                            for (const target of iframeEvent.data.targets) {
-                                let userData = defaultUserData;
-                                const mucRoomDefault = mucRoomsStore.getDefaultRoom();
-                                if (mucRoomDefault) {
-                                    userData = mucRoomDefault.getUserDataByUuid(target);
-                                }
-
-                                if (ChatMessageTypes.userIncoming === iframeEvent.data.type) {
-                                    chatMessagesStore.addIncomingUser(userData);
-                                }
-                                if (ChatMessageTypes.userOutcoming === iframeEvent.data.type) {
-                                    chatMessagesStore.addOutcomingUser(userData);
-                                }
+                            const mucRoomDefault = mucRoomsStore.getDefaultRoom();
+                            let userData = undefined;
+                            if (mucRoomDefault && iframeEvent.data.author.jid !== "fake") {
+                                userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
+                            } else {
+                                userData = iframeEvent.data.author;
+                            }
+                            if (ChatMessageTypes.userIncoming === iframeEvent.data.type) {
+                                chatMessagesStore.addIncomingUser(userData);
+                            }
+                            if (ChatMessageTypes.userOutcoming === iframeEvent.data.type) {
+                                chatMessagesStore.addOutcomingUser(userData);
                             }
                             break;
                         }
                         case "peerConnectionStatus": {
                             chatPeerConnectionInProgress.set(iframeEvent.data);
                             if (iframeEvent.data) {
-                                timelineOpenedStore.set(true);
+                                showTimelineStore.set(true);
                             }
                             break;
                         }
@@ -136,10 +134,10 @@ class IframeListener {
                             chatVisibilityStore.set(iframeEvent.data.visibility);
                             if (!iframeEvent.data.visibility) {
                                 activeThreadStore.reset();
-                            } else if (get(chatPeerConnectionInProgress)) {
+                            } else if (get(chatPeerConnectionInProgress) || get(timelineMessagesToSee) > 0) {
                                 timelineActiveStore.set(true);
-                            } else if (mucRoomsStore.getLiveRoom()) {
-                                activeThreadStore.set(mucRoomsStore.getLiveRoom());
+                            } else if (mucRoomsStore.getChatZones()) {
+                                activeThreadStore.set(mucRoomsStore.getChatZones());
                             }
                             break;
                         }
@@ -149,7 +147,7 @@ class IframeListener {
                         }
                     }
                 } else {
-                    console.error("Message structure not conform", iframeEventGuarded);
+                    console.error("Message structure not conform", lookingLikeEvent.data, iframeEventGuarded);
                 }
             }
         });
@@ -238,6 +236,25 @@ class IframeListener {
         window.parent.postMessage(
             {
                 type: "redirectPricing",
+            },
+            "*"
+        );
+    }
+
+    sendChatTotalMessagesToSee(total: number) {
+        window.parent.postMessage(
+            {
+                type: "chatTotalMessagesToSee",
+                data: total,
+            },
+            "*"
+        );
+    }
+
+    sendChatIsReady() {
+        window.parent.postMessage(
+            {
+                type: "chatReady",
             },
             "*"
         );

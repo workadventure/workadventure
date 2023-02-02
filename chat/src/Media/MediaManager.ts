@@ -14,7 +14,6 @@ class MediaManager {
     private canSendNotification = true;
     private canPlayNotificationMessage = true;
 
-    //TODO fix it with local storage configuration from front
     public hasNotification(): boolean {
         return this.canSendNotification;
     }

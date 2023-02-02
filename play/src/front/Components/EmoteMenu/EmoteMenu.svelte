@@ -27,7 +27,7 @@
             },
             emojisPerRow: isMediaBreakpointUp("md") ? 6 : 8,
             autoFocusSearch: false,
-            style: "twemoji",
+            style: "native",
             showPreview: false,
             autoHide: false,
             i18n: {

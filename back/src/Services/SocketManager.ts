@@ -48,6 +48,11 @@ import {
     MoveToPositionMessage,
     SubToPusherRoomMessage,
     EditMapCommandWithKeyMessage,
+    EditMapCommandMessage,
+    ChatMessagePrompt,
+    UpdateMapToNewestWithKeyMessage,
+    EditMapCommandsArrayMessage,
+    UpdateMapToNewestMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -104,6 +109,32 @@ export class SocketManager {
         //join new previous room
         const { room, user } = await this.joinRoom(socket, joinRoomMessage);
 
+        const lastCommandId = joinRoomMessage.getLastcommandid();
+        let commandsToApply: EditMapCommandMessage[] | undefined = undefined;
+
+        if (lastCommandId) {
+            const updateMapToNewestMessage = new UpdateMapToNewestMessage();
+            updateMapToNewestMessage.setCommandid(lastCommandId);
+
+            const updateMapToNewestWithKeyMessage = new UpdateMapToNewestWithKeyMessage();
+            updateMapToNewestWithKeyMessage.setMapkey(room.mapUrl);
+            updateMapToNewestWithKeyMessage.setUpdatemaptonewestmessage(updateMapToNewestMessage);
+
+            commandsToApply = await new Promise<EditMapCommandMessage[]>((resolve, reject) => {
+                getMapStorageClient().handleUpdateMapToNewestMessage(
+                    updateMapToNewestWithKeyMessage,
+                    (err: unknown, message: EditMapCommandsArrayMessage) => {
+                        if (err) {
+                            emitError(user.socket, err);
+                            reject(err);
+                            return;
+                        }
+                        resolve(message.getEditmapcommandsList());
+                    }
+                );
+            });
+        }
+
         if (!socket.writable) {
             console.warn("Socket was aborted");
             return {
@@ -112,9 +143,15 @@ export class SocketManager {
             };
         }
         const roomJoinedMessage = new RoomJoinedMessage();
+        roomJoinedMessage.setUserjid(joinRoomMessage.getUserjid());
         roomJoinedMessage.setTagList(joinRoomMessage.getTagList());
         roomJoinedMessage.setUserroomtoken(joinRoomMessage.getUserroomtoken());
         roomJoinedMessage.setCharacterlayerList(joinRoomMessage.getCharacterlayerList());
+        if (commandsToApply) {
+            const editMapCommandsArrayMessage = new EditMapCommandsArrayMessage();
+            editMapCommandsArrayMessage.setEditmapcommandsList(commandsToApply);
+            roomJoinedMessage.setEditmapcommandsarraymessage(editMapCommandsArrayMessage);
+        }
 
         for (const [itemId, item] of room.getItemsState().entries()) {
             const itemStateMessage = new ItemStateMessage();
@@ -362,6 +399,7 @@ export class SocketManager {
             throw new Error(`clientUser.userId is not an integer ${user.id}`);
         }
         userJoinedZoneMessage.setUserid(user.id);
+        userJoinedZoneMessage.setUserjid(user.userJid);
         userJoinedZoneMessage.setUseruuid(user.uuid);
         userJoinedZoneMessage.setName(user.name);
         userJoinedZoneMessage.setAvailabilitystatus(user.getAvailabilityStatus());
@@ -1082,17 +1120,41 @@ export class SocketManager {
         room.emitLockGroupEvent(user, group.getId());
     }
 
-    handleEditMapCommandWithKeyMessage(room: GameRoom, user: User, message: EditMapCommandWithKeyMessage) {
-        getMapStorageClient().handleEditMapCommandWithKeyMessage(message, (err, editMapMessage) => {
-            if (err) {
-                emitError(user.socket, err);
-                throw err;
-            }
-            const subMessage = new SubToPusherRoomMessage();
-            subMessage.setEditmapcommandmessage(editMapMessage);
+    handleEditMapCommandMessage(room: GameRoom, user: User, message: EditMapCommandMessage) {
+        const messageWithKey = new EditMapCommandWithKeyMessage();
+        messageWithKey.setEditmapcommandmessage(message);
+        messageWithKey.setMapkey(room.mapUrl);
 
-            room.dispatchRoomMessage(subMessage);
-        });
+        getMapStorageClient().handleEditMapCommandWithKeyMessage(
+            messageWithKey,
+            (err: unknown, editMapMessage: EditMapCommandMessage) => {
+                if (err) {
+                    emitError(user.socket, err);
+                    throw err;
+                }
+                const subMessage = new SubToPusherRoomMessage();
+                subMessage.setEditmapcommandmessage(editMapMessage);
+                room.dispatchRoomMessage(subMessage);
+            }
+        );
+    }
+
+    handleUpdateMapToNewestMessage(room: GameRoom, user: User, message: UpdateMapToNewestWithKeyMessage) {
+        getMapStorageClient().handleUpdateMapToNewestMessage(
+            message,
+            (err: unknown, message: EditMapCommandsArrayMessage) => {
+                if (err) {
+                    emitError(user.socket, err);
+                    throw err;
+                }
+                const commands = message.getEditmapcommandsList();
+                for (const editMapCommandMessage of commands) {
+                    const subMessage = new SubMessage();
+                    subMessage.setEditmapcommandmessage(editMapCommandMessage);
+                    user.emitInBatch(subMessage);
+                }
+            }
+        );
     }
 
     getAllRooms(): RoomsList {
@@ -1127,6 +1189,24 @@ export class SocketManager {
                 // TODO delete room;
             }
         }
+    }
+
+    async dispatchChatMessagePrompt(chatMessagePrompt: ChatMessagePrompt): Promise<boolean> {
+        const room = await this.roomsPromises.get(chatMessagePrompt.getRoomid());
+        console.log(chatMessagePrompt.getRoomid());
+        if (!room) {
+            return false;
+        }
+
+        const subMessage = new SubToPusherRoomMessage();
+        if (chatMessagePrompt.hasJoinmucroommessage()) {
+            subMessage.setJoinmucroommessage(chatMessagePrompt.getJoinmucroommessage());
+        } else if (chatMessagePrompt.hasLeavemucroommessage()) {
+            subMessage.setLeavemucroommessage(chatMessagePrompt.getLeavemucroommessage());
+        }
+        room.sendSubMessageToRoom(subMessage);
+
+        return true;
     }
 }
 

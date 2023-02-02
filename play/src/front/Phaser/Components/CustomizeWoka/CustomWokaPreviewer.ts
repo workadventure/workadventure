@@ -1,22 +1,39 @@
 import { Easing } from "../../../types";
 import { getPlayerAnimations, PlayerAnimationTypes } from "../../Player/Animation";
-import { PositionMessage_Direction } from "../../../../messages/ts-proto-generated/protos/messages";
+import { PositionMessage_Direction } from "@workadventure/messages";
 import { ProtobufClientUtils } from "../../../Network/ProtobufClientUtils";
 
+export const WokaBodyPart = ["Body", "Eyes", "Hair", "Clothes", "Hat", "Accessory"] as const;
+
+export const WokaBodyPartOrder = {
+    Body: 0,
+    Eyes: 1,
+    Clothes: 2,
+    Hair: 3,
+    Hat: 4,
+    Accessory: 5,
+};
+
+/**
+ * @deprecated Use WokaBodyPart instead
+ */
 export enum CustomWokaBodyPart {
     Body = "Body",
     Eyes = "Eyes",
-    Hair = "Hair",
     Clothes = "Clothes",
+    Hair = "Hair",
     Hat = "Hat",
     Accessory = "Accessory",
 }
 
+/**
+ * @deprecated Use WokaBodyPartOrder instead
+ */
 export enum CustomWokaBodyPartOrder {
     Body,
     Eyes,
-    Hair,
     Clothes,
+    Hair,
     Hat,
     Accessory,
 }
@@ -75,8 +92,8 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
             this.frame,
             this.sprites.Body,
             this.sprites.Eyes,
-            this.sprites.Hair,
             this.sprites.Clothes,
+            this.sprites.Hair,
             this.sprites.Hat,
             this.sprites.Accessory,
             this.turnIcon,

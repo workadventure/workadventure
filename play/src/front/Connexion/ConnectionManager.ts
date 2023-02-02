@@ -1,3 +1,4 @@
+import { HtmlUtils } from "./../WebRtc/HtmlUtils";
 import Axios from "axios";
 import { ENABLE_OPENID, PUSHER_URL } from "../Enum/EnvironmentVariable";
 import { RoomConnection } from "./RoomConnection";
@@ -8,17 +9,17 @@ import { LocalUser } from "./LocalUser";
 import { Room } from "./Room";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
-import { userIsConnected, warningContainerStore } from "../Stores/MenuStore";
+import { subMenusStore, userIsConnected, warningContainerStore } from "../Stores/MenuStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { axiosWithRetry } from "./AxiosUtils";
-import { isRegisterData } from "../../messages/JsonMessages/RegisterData";
+import type { AvailabilityStatus } from "@workadventure/messages";
+import { isRegisterData } from "@workadventure/messages";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { locales } from "../../i18n/i18n-util";
 import type { Locales } from "../../i18n/i18n-types";
 import { setCurrentLocale } from "../../i18n/locales";
-import type { AvailabilityStatus } from "../../messages/ts-proto-generated/protos/messages";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -88,8 +89,14 @@ class ConnectionManager {
         this._currentRoom = null;
 
         const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get("token");
-        if (token) {
+        let token = urlParams.get("token");
+        // get token injected by post method from pusher
+        if (token == undefined) {
+            const input = HtmlUtils.getElementByIdOrFail("authToken");
+            if (input.value != undefined && input.value != "") token = input.value;
+        }
+
+        if (token != undefined) {
             this.authToken = token;
             localUserStore.setAuthToken(token);
 
@@ -238,6 +245,10 @@ class ConnectionManager {
         }
 
         this.serviceWorker = new _ServiceWorker();
+
+        // add report issue menu
+        subMenusStore.addReportIssuesMenu();
+
         return Promise.resolve(this._currentRoom);
     }
 
@@ -263,7 +274,8 @@ class ConnectionManager {
         position: PositionInterface,
         viewport: ViewportInterface,
         companion: string | null,
-        availabilityStatus: AvailabilityStatus
+        availabilityStatus: AvailabilityStatus,
+        lastCommandId?: string
     ): Promise<OnConnectInterface> {
         return new Promise<OnConnectInterface>((resolve, reject) => {
             const connection = new RoomConnection(
@@ -274,7 +286,8 @@ class ConnectionManager {
                 position,
                 viewport,
                 companion,
-                availabilityStatus
+                availabilityStatus,
+                lastCommandId
             );
 
             connection.onConnectError((error: object) => {
@@ -323,16 +336,16 @@ class ConnectionManager {
                 resolve(connect);
             });
         }).catch((err) => {
-            console.log("connectToRoomSocket => catch => new Promise[OnConnectInterface] => err", err);
+            console.info("connectToRoomSocket => catch => new Promise[OnConnectInterface] => err", err);
 
             // Let's retry in 4-6 seconds
             return new Promise<OnConnectInterface>((resolve) => {
-                console.log("connectToRoomSocket => catch => new Promise[OnConnectInterface] => reconnectingTimeout");
+                console.info("connectToRoomSocket => catch => new Promise[OnConnectInterface] => reconnectingTimeout");
 
                 this.reconnectingTimeout = setTimeout(() => {
                     //todo: allow a way to break recursion?
                     //todo: find a way to avoid recursive function. Otherwise, the call stack will grow indefinitely.
-                    console.log(
+                    console.info(
                         "connectToRoomSocket => catch => ew Promise[OnConnectInterface] reconnectingTimeout => setTimeout",
                         roomUrl,
                         name,
@@ -340,7 +353,8 @@ class ConnectionManager {
                         position,
                         viewport,
                         companion,
-                        availabilityStatus
+                        availabilityStatus,
+                        lastCommandId
                     );
                     void this.connectToRoomSocket(
                         roomUrl,
@@ -349,7 +363,8 @@ class ConnectionManager {
                         position,
                         viewport,
                         companion,
-                        availabilityStatus
+                        availabilityStatus,
+                        lastCommandId
                     ).then((connection) => resolve(connection));
                 }, 4000 + Math.floor(Math.random() * 2000));
             });
@@ -381,8 +396,14 @@ class ConnectionManager {
         if (visitCardUrl) {
             gameManager.setVisitCardurl(visitCardUrl);
         }
-        if (username) {
-            gameManager.setPlayerName(username);
+
+        const opidWokaNamePolicy = this.currentRoom?.opidWokaNamePolicy;
+        if (username != undefined && opidWokaNamePolicy != undefined) {
+            if (opidWokaNamePolicy === "force_opid") {
+                gameManager.setPlayerName(username);
+            } else if (opidWokaNamePolicy === "allow_override_opid" && localUserStore.getName() == undefined) {
+                gameManager.setPlayerName(username);
+            }
         }
 
         if (locale) {

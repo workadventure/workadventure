@@ -1,23 +1,34 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
-
 (
 cd messages || exit
-yarn run precommit
+npm run precommit
 )
 (
 cd play || exit
-yarn run precommit
+npm run precommit
+)
+(
+cd chat || exit
+npm run precommit
 )
 (
 cd back || exit
-yarn run precommit
+npm run precommit
 )
 (
 cd map-storage || exit
-yarn run precommit
+npm run precommit
 )
 (
 cd tests || exit
-yarn run precommit
+npm run precommit
+)
+(
+cd libs/map-editor || exit
+npm run precommit
+)
+(
+cd libs/shared-utils || exit
+npm run precommit
 )

@@ -1,5 +1,6 @@
 <script lang="ts">
     import { chatVisibilityStore, writingStatusMessageStore } from "../../Stores/ChatStore";
+    import { enableUserInputsStore } from "../../Stores/UserInputStore";
     import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
     import { localUserStore } from "../../Connexion/LocalUserStore";
@@ -17,10 +18,12 @@
     import { peerStore } from "../../Stores/PeerStore";
     import { connectionManager } from "../../Connexion/ConnectionManager";
     import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
+    import { Locales } from "../../../i18n/i18n-types";
 
     let chatIframe: HTMLIFrameElement;
 
     let subscribeListeners: Array<Unsubscriber> = [];
+    let subscribeObservers: Array<Subscription> = [];
 
     const wokaDefinedStore = writable<boolean>(false);
     const iframeLoadedStore = writable<boolean>(false);
@@ -47,8 +50,6 @@
         }
     );
 
-    let messageStream: Subscription;
-
     onMount(() => {
         iframeListener.registerChatIframe(chatIframe);
         chatIframe.addEventListener("load", () => {
@@ -56,7 +57,7 @@
             if (chatIframe && chatIframe.contentWindow && "postMessage" in chatIframe.contentWindow) {
                 iframeLoadedStore.set(true);
                 subscribeListeners.push(
-                    locale.subscribe((value) => {
+                    locale.subscribe((value: Locales) => {
                         chatIframe?.contentWindow?.postMessage(
                             {
                                 type: "setLocale",
@@ -92,7 +93,7 @@
                                         woka: wokaSrc,
                                         isLogged: localUserStore.isLogged(),
                                         availabilityStatus: get(availabilityStatusStore),
-                                        roomName: connectionManager.currentRoom?.roomName ?? null,
+                                        roomName: connectionManager.currentRoom?.roomName ?? "default",
                                         visitCardUrl: gameManager.myVisitCardUrl,
                                         userRoomToken: gameManager.getCurrentGameScene().connection?.userRoomToken,
                                     },
@@ -126,13 +127,16 @@
                         iframeListener.sendChatVisibilityToChatIframe(visibility);
                     })
                 );
-                messageStream = adminMessagesService.messageStream.subscribe((message) => {
-                    if (message.type === AdminMessageEventTypes.banned) {
-                        chatIframe.remove();
-                    }
-                    chatVisibilityStore.set(false);
-                    menuIconVisiblilityStore.set(false);
-                });
+                subscribeObservers.push(
+                    adminMessagesService.messageStream.subscribe((message) => {
+                        if (message.type === AdminMessageEventTypes.banned) {
+                            chatIframe.remove();
+                        }
+                        chatVisibilityStore.set(false);
+                        menuIconVisiblilityStore.set(false);
+                    })
+                );
+
                 //TODO delete it with new XMPP integration
                 //send list to chat iframe
                 subscribeListeners.push(
@@ -149,30 +153,29 @@
         subscribeListeners.forEach((listener) => {
             listener();
         });
-        if (messageStream) {
-            messageStream.unsubscribe();
-        }
+        subscribeObservers.forEach((observer) => {
+            observer.unsubscribe();
+        });
     });
 
     function closeChat() {
         chatVisibilityStore.set(false);
     }
-    function openChat() {
-        chatVisibilityStore.set(true);
-    }
     function onKeyDown(e: KeyboardEvent) {
         if (e.key === "Escape" && $chatVisibilityStore) {
             closeChat();
             chatIframe.blur();
-        } else if (e.key === "c" && !$chatVisibilityStore) {
-            openChat();
+        } else if (e.key === "c" && !$chatVisibilityStore && $enableUserInputsStore) {
+            chatVisibilityStore.set(true);
         }
     }
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
 <div id="chatWindow" class:show={$chatVisibilityStore}>
-    {#if $chatVisibilityStore}<button class="hide" on:click={closeChat}>&#215;</button>{/if}
+    {#if $chatVisibilityStore}<div class="hide">
+            <button class="close-window" on:click={closeChat}>&#215;</button>
+        </div>{/if}
     <iframe
         id="chatWorkAdventure"
         bind:this={chatIframe}
@@ -188,7 +191,7 @@
 
     @include media-breakpoint-up(sm) {
         #chatWindow {
-            width: calc(100% - 20px) !important;
+            width: 100% !important;
         }
     }
 
@@ -199,12 +202,11 @@
         top: 0;
         left: -100%;
         height: 100%;
-        width: 28%;
+        width: 22%;
         min-width: 335px;
         transition: all 0.2s ease-in-out;
         pointer-events: none;
         visibility: hidden;
-        //display: none;
         &.show {
             left: 0;
             pointer-events: auto;
@@ -215,16 +217,17 @@
             height: 100%;
         }
         .hide {
-            top: 1%;
-            padding: 0 5px 0 3px;
-            min-height: fit-content;
+            top: 13px;
             position: absolute;
-            right: -21px;
-            z-index: -1;
-            font-size: 21px;
-            border-bottom-left-radius: 0;
-            border-top-left-radius: 0;
-            background: rgba(27, 27, 41, 0.95);
+            right: 12px;
+            width: fit-content;
+            height: fit-content;
+            .close-window {
+                height: 1.6rem;
+                width: 1.6rem;
+                position: initial;
+                cursor: pointer;
+            }
         }
     }
 </style>

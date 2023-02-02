@@ -1,16 +1,22 @@
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
-import { isMapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
+import {
+    MetaTagsData,
+    RequiredMetaTagsData,
+    MapDetailsData,
+    isMapDetailsData,
+    RoomRedirect,
+    isRoomRedirect,
+    ErrorApiData,
+} from "@workadventure/messages";
 import { adminService } from "./AdminService";
 import axios from "axios";
 import { ADMIN_API_URL } from "../enums/EnvironmentVariable";
-import type { MetaTagsData, RequiredMetaTagsData, MapDetailsData } from "../../messages/JsonMessages/MapDetailsData";
-import type { RoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
-import { isRoomRedirect } from "../../messages/JsonMessages/RoomRedirect";
-import type { ErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
 
 export const MetaTagsDefaultValue: RequiredMetaTagsData = {
     title: "WorkAdventure",
     description: "Create your own digital office, Metaverse and meet online with the world.",
+    author: "WorkAdventure team",
+    provider: "WorkAdventure",
     favIcons: [
         {
             rel: "icon",
@@ -50,7 +56,7 @@ export const MetaTagsDefaultValue: RequiredMetaTagsData = {
         {
             rel: "apple-touch-icon",
             sizes: "114x114",
-            src: "static/images/favicons/apple-icon-114x114.png",
+            src: "/static/images/favicons/apple-icon-114x114.png",
         },
         {
             rel: "apple-touch-icon",
@@ -288,6 +294,8 @@ export class MetaTagsBuilder {
             description: mapDescriptionProperty?.value
                 ? String(mapDescriptionProperty.value)
                 : MetaTagsDefaultValue.description,
+            author: MetaTagsDefaultValue.author,
+            provider: MetaTagsDefaultValue.provider,
             favIcons: MetaTagsDefaultValue.favIcons,
             manifestIcons: MetaTagsDefaultValue.manifestIcons,
             appName: MetaTagsDefaultValue.appName,

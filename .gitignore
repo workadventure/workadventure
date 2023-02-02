@@ -10,3 +10,4 @@ maps/dist/computer.js.map
 node_modules
 _
 *.code-workspace
+/install.lock

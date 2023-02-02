@@ -1,5 +1,5 @@
-import { ADMIN_API_URL } from "../enums/EnvironmentVariable";
 import { adminApi } from "./AdminApi";
+import { AdminInterface } from "./AdminInterface";
 import { localAdmin } from "./LocalAdmin";
 
-export const adminService = ADMIN_API_URL ? adminApi : localAdmin;
+export const adminService: AdminInterface = adminApi.isEnabled() ? adminApi : localAdmin;

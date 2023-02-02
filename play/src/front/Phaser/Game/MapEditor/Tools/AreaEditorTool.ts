@@ -1,10 +1,10 @@
-import type { CommandConfig, ITiledMapRectangleObject } from "@workadventure/map-editor";
+import type { AreaData, CommandConfig } from "@workadventure/map-editor";
 import { AreaType } from "@workadventure/map-editor";
 import type { Subscription } from "rxjs";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
-import type { EditMapCommandMessage } from "../../../../../messages/ts-proto-generated/protos/messages";
-import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
+import type { EditMapCommandMessage } from "@workadventure/messages";
+import { mapEditorSelectedAreaPreviewStore, mapEditorSelectedPropertyStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import type { GameScene } from "../../GameScene";
@@ -26,12 +26,15 @@ export class AreaEditorTool extends MapEditorTool {
 
     private selectedAreaPreviewStoreSubscriber!: Unsubscriber;
 
+    private active: boolean;
+
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super();
         this.mapEditorModeManager = mapEditorModeManager;
         this.scene = this.mapEditorModeManager.getScene();
 
         this.areaPreviews = this.createAreaPreviews();
+        this.active = false;
 
         this.subscribeToStores();
     }
@@ -41,11 +44,14 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     public clear(): void {
+        this.active = false;
         mapEditorSelectedAreaPreviewStore.set(undefined);
+        mapEditorSelectedPropertyStore.set(undefined);
         this.setAreaPreviewsVisibility(false);
     }
 
     public activate(): void {
+        this.active = true;
         this.updateAreaPreviews();
         this.setAreaPreviewsVisibility(true);
         this.scene.markDirty();
@@ -57,6 +63,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): void {
+        const commandId = editMapCommandMessage.id;
         switch (editMapCommandMessage.editMapMessage?.message?.$case) {
             case "modifyAreaMessage": {
                 const data = editMapCommandMessage.editMapMessage?.message.modifyAreaMessage;
@@ -64,20 +71,22 @@ export class AreaEditorTool extends MapEditorTool {
                 this.mapEditorModeManager.executeCommand(
                     {
                         type: "UpdateAreaCommand",
-                        areaObjectConfig: data as ITiledMapRectangleObject,
+                        areaObjectConfig: data,
                     },
                     false,
-                    false
+                    false,
+                    commandId
                 );
                 break;
             }
             case "createAreaMessage": {
-                console.log("create area message");
                 const data = editMapCommandMessage.editMapMessage?.message.createAreaMessage;
-                const config = {
+                const config: AreaData = {
                     ...data,
-                    class: "area",
                     visible: true,
+                    properties: {
+                        customProperties: {},
+                    },
                 };
                 // execute command locally
                 this.mapEditorModeManager.executeCommand(
@@ -86,7 +95,8 @@ export class AreaEditorTool extends MapEditorTool {
                         areaObjectConfig: config,
                     },
                     false,
-                    false
+                    false,
+                    commandId
                 );
                 break;
             }
@@ -99,7 +109,8 @@ export class AreaEditorTool extends MapEditorTool {
                         id: data.id,
                     },
                     false,
-                    false
+                    false,
+                    commandId
                 );
                 break;
             }
@@ -107,6 +118,10 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     public handleCommandExecution(commandConfig: CommandConfig): void {
+        // We do not need to make any visual changes if AreaEditorTool is not active
+        if (!this.active) {
+            return;
+        }
         switch (commandConfig.type) {
             case "CreateAreaCommand": {
                 this.handleAreaPreviewCreation(commandConfig.areaObjectConfig);
@@ -129,13 +144,13 @@ export class AreaEditorTool extends MapEditorTool {
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
         this.gameMapAreaUpdateSubscription = gameMapFrontWrapper
             .getAreaUpdatedObservable()
-            .subscribe((areaConfig: ITiledMapRectangleObject) => {
+            .subscribe((areaConfig: AreaData) => {
                 this.updateAreaPreview(areaConfig);
                 this.scene.markDirty();
             });
     }
 
-    public updateAreaPreview(config: ITiledMapRectangleObject): void {
+    public updateAreaPreview(config: AreaData): void {
         const areaPreview = this.getAreaPreview(config.id);
         if (!areaPreview) {
             return;
@@ -147,7 +162,7 @@ export class AreaEditorTool extends MapEditorTool {
         }
     }
 
-    public getAreaPreviewConfig(id: number): ITiledMapRectangleObject | undefined {
+    public getAreaPreviewConfig(id: number): AreaData | undefined {
         return this.getAreaPreview(id)?.getConfig();
     }
 
@@ -173,9 +188,11 @@ export class AreaEditorTool extends MapEditorTool {
                     type: "CreateAreaCommand",
                     areaObjectConfig: {
                         id: newAreaId,
-                        class: "area",
                         name: `STATIC_AREA_${newAreaId}`,
                         visible: true,
+                        properties: {
+                            customProperties: {},
+                        },
                         width: 100,
                         height: 100,
                         x: this.scene.input.activePointer.worldX - 50,
@@ -190,22 +207,23 @@ export class AreaEditorTool extends MapEditorTool {
         }
     }
 
-    public handleAreaPreviewDeletion(id: number): void {
+    private handleAreaPreviewDeletion(id: number): void {
         this.deleteAreaPreview(id);
         this.scene.markDirty();
         mapEditorSelectedAreaPreviewStore.set(undefined);
+        mapEditorSelectedPropertyStore.set(undefined);
     }
 
-    public handleAreaPreviewCreation(config: ITiledMapRectangleObject): void {
+    private handleAreaPreviewCreation(config: AreaData): void {
         const areaPreview = new AreaPreview(this.scene, structuredClone(config));
         this.bindAreaPreviewEventHandlers(areaPreview);
         this.areaPreviews.push(areaPreview);
         this.scene.markDirty();
     }
 
-    private handleAreaPreviewUpdate(config: ITiledMapRectangleObject): void {
+    private handleAreaPreviewUpdate(config: AreaData): void {
         this.areaPreviews.find((area) => area.getConfig().id === config.id)?.updatePreview(config);
-        this.scene.getGameMapFrontWrapper().updateAreaById(config.id, AreaType.Static, config);
+        this.scene.getGameMapFrontWrapper().updateAreaById(config.id, AreaType.Static, config); // TODO: is this line needed?
         this.scene.markDirty();
     }
 
@@ -226,7 +244,7 @@ export class AreaEditorTool extends MapEditorTool {
         return this.areaPreviews;
     }
 
-    private createAreaPreview(areaConfig: ITiledMapRectangleObject): AreaPreview {
+    private createAreaPreview(areaConfig: AreaData): AreaPreview {
         const areaPreview = new AreaPreview(this.scene, { ...areaConfig });
         this.bindAreaPreviewEventHandlers(areaPreview);
         return areaPreview;

@@ -48,17 +48,20 @@ import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessa
 import Axios from "axios";
 import { InvalidTokenError } from "./InvalidTokenError";
 import type HyperExpress from "hyper-express";
-import type { WebSocket } from "uWebSockets.js";
-import type { WokaDetail } from "../../messages/JsonMessages/PlayerTextures";
 import { z } from "zod";
 import { adminService } from "../services/AdminService";
-import { isErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
-import type { ErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
-import { apiVersionHash } from "../../messages/JsonMessages/ApiVersion";
+import {
+    MucRoomDefinitionInterface,
+    ErrorApiData,
+    WokaDetail,
+    apiVersionHash,
+    isErrorApiData,
+} from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
-import type { MucRoomDefinitionInterface } from "../../messages/JsonMessages/MucRoomDefinitionInterface";
-//eslint-disable-next-line @typescript-eslint/no-var-requires
-const { jid } = require("@xmpp/client");
+import { v4 as uuid } from "uuid";
+import { JID } from "stanza";
+
+type WebSocket = HyperExpress.compressors.WebSocket;
 
 /**
  * The object passed between the "open" and the "upgrade" methods when opening a websocket
@@ -68,6 +71,7 @@ interface UpgradeData {
     rejected: false;
     token: string;
     userUuid: string;
+    userJid: string;
     IPAddress: string;
     roomId: string;
     name: string;
@@ -107,8 +111,8 @@ type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData;
 
 // Maximum time to wait for a pong answer to a ping before closing connection.
 // Note: PONG_TIMEOUT must be less than PING_INTERVAL
-const PONG_TIMEOUT = 10000;
-const PING_INTERVAL = 15000;
+const PONG_TIMEOUT = 70000; // PONG_TIMEOUT is > 1 minute because of Chrome heavy throttling. See: https://docs.google.com/document/d/11FhKHRcABGS4SWPFGwoL6g0ALMqrFKapCk5ZTKKupEk/edit#
+const PING_INTERVAL = 80000;
 
 export class IoSocketController {
     private nextUserId = 1;
@@ -287,6 +291,7 @@ export class IoSocketController {
                         const right = Number(query.right);
                         const name = query.name;
                         const availabilityStatus = Number(query.availabilityStatus);
+                        const lastCommandId = query.lastCommandId;
                         const version = query.version;
 
                         if (version !== apiVersionHash) {
@@ -400,6 +405,13 @@ export class IoSocketController {
                                             // If the response points to nowhere, don't attempt an upgrade
                                             return;
                                         }
+
+                                        console.error(
+                                            "Axios error on room connection",
+                                            err?.response?.status,
+                                            errorType.data
+                                        );
+
                                         return res.upgrade(
                                             {
                                                 rejected: true,
@@ -413,6 +425,7 @@ export class IoSocketController {
                                             context
                                         );
                                     } else {
+                                        console.error("Unknown error on room connection", err);
                                         if (upgradeAborted.aborted) {
                                             // If the response points to nowhere, don't attempt an upgrade
                                             return;
@@ -450,7 +463,11 @@ export class IoSocketController {
 
                         if (!userData.jabberId) {
                             // If there is no admin, or no user, let's log users using JWT tokens
-                            userData.jabberId = jid(userIdentifier, EJABBERD_DOMAIN).toString();
+                            userData.jabberId = JID.create({
+                                local: userIdentifier,
+                                domain: EJABBERD_DOMAIN,
+                                resource: uuid(),
+                            });
                             if (EJABBERD_JWT_SECRET) {
                                 userData.jabberPassword = Jwt.sign({ jid: userData.jabberId }, EJABBERD_JWT_SECRET, {
                                     expiresIn: "1d",
@@ -459,6 +476,8 @@ export class IoSocketController {
                             } else {
                                 userData.jabberPassword = "no_password_set";
                             }
+                        } else {
+                            userData.jabberId = `${userData.jabberId}/${uuid()}`;
                         }
 
                         // Generate characterLayers objects from characterLayers string[]
@@ -478,12 +497,14 @@ export class IoSocketController {
                                 rejected: false,
                                 token,
                                 userUuid: userData.userUuid,
+                                userJid: userData.jabberId,
                                 IPAddress,
                                 userIdentifier,
                                 roomId,
                                 name,
                                 companion,
                                 availabilityStatus,
+                                lastCommandId,
                                 characterLayers: characterLayerObjs,
                                 messages: memberMessages,
                                 tags: memberTags,
@@ -584,6 +605,7 @@ export class IoSocketController {
                     // Let's join the room
                     const client = this.initClient(ws);
                     await socketManager.handleJoinRoom(client);
+                    socketManager.emitXMPPSettings(client);
 
                     //get data information and show messages
                     if (client.messages && Array.isArray(client.messages)) {
@@ -618,7 +640,14 @@ export class IoSocketController {
                         }
 
                         client.pongTimeoutId = setTimeout(() => {
-                            console.log("Connexion lost with user ", client.userUuid);
+                            console.log(
+                                "Connection lost with user ",
+                                client.userUuid,
+                                client.name,
+                                client.userJid,
+                                "in room",
+                                client.roomId
+                            );
                             client.close();
                         }, PONG_TIMEOUT);
                     }, PING_INTERVAL);
@@ -738,6 +767,7 @@ export class IoSocketController {
         const client: ExSocketInterface = ws;
         client.userId = this.nextUserId;
         this.nextUserId++;
+        client.userJid = ws.userJid;
         client.userUuid = ws.userUuid;
         client.IPAddress = ws.IPAddress;
         client.token = ws.token;
@@ -762,6 +792,7 @@ export class IoSocketController {
         client.characterLayers = ws.characterLayers;
         client.companion = ws.companion;
         client.availabilityStatus = ws.availabilityStatus;
+        client.lastCommandId = ws.lastCommandId;
         client.roomId = ws.roomId;
         client.listenedZones = new Set<Zone>();
         client.jabberId = ws.jabberId;
@@ -770,6 +801,12 @@ export class IoSocketController {
         client.activatedInviteUser = ws.activatedInviteUser;
         client.isLogged = ws.isLogged;
         client.applications = ws.applications;
+        client.customJsonReplacer = (key: unknown, value: unknown): string | undefined => {
+            if (key === "listenedZones") {
+                return (value as Set<Zone>).size + " listened zone(s)";
+            }
+            return undefined;
+        };
         return client;
     }
 }

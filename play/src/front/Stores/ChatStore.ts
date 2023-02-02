@@ -63,10 +63,19 @@ function createChatMessagesStore() {
                     });
                 }
 
+                const author = getAuthor(authorId);
+
                 /* @deprecated with new chat service */
                 iframeListener.sendComingUserToChatIframe({
                     type: ChatMessageTypes.userIncoming,
-                    targets: [getAuthor(authorId).userUuid],
+                    author: {
+                        name: author.name,
+                        active: true,
+                        isMe: false,
+                        jid: author.userJid,
+                        isMember: false,
+                        color: author.color,
+                    },
                     date: new Date(),
                 });
 
@@ -86,10 +95,19 @@ function createChatMessagesStore() {
                     });
                 }
 
+                const author = getAuthor(authorId);
+
                 /* @deprecated with new chat service */
                 iframeListener.sendComingUserToChatIframe({
                     type: ChatMessageTypes.userOutcoming,
-                    targets: [getAuthor(authorId).userUuid],
+                    author: {
+                        name: author.name,
+                        active: true,
+                        isMe: false,
+                        jid: author.userJid,
+                        isMember: false,
+                        color: author.color,
+                    },
                     date: new Date(),
                 });
 
@@ -98,7 +116,7 @@ function createChatMessagesStore() {
                 return list;
             });
         },
-        addPersonnalMessage(text: string) {
+        addPersonalMessage(text: string) {
             iframeListener.sendUserInputChat(text);
             _newChatMessageSubject.next(text);
             update((list) => {
@@ -147,7 +165,14 @@ function createChatMessagesStore() {
                 iframeListener.sendMessageToChatIframe({
                     type: ChatMessageTypes.text,
                     text: [text],
-                    author: author.userUuid,
+                    author: {
+                        name: author.name,
+                        active: true,
+                        isMe: false,
+                        jid: author.userJid,
+                        isMember: false,
+                        color: author.color,
+                    },
                     date: new Date(),
                 });
 

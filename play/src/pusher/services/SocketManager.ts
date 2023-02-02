@@ -1,6 +1,6 @@
 import { PusherRoom } from "../models/PusherRoom";
 import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
-import type {
+import {
     EmoteEventMessage,
     EmotePromptMessage,
     FollowRequestMessage,
@@ -23,12 +23,9 @@ import type {
     PlayerDetailsUpdatedMessage,
     LockGroupPromptMessage,
     QueryMessage,
-    XmppMessage,
     AskPositionMessage,
     BanUserByUuidMessage,
     EditMapCommandMessage,
-} from "../../messages/generated/messages_pb";
-import {
     AdminMessage,
     AdminPusherToBackMessage,
     AdminRoomMessage,
@@ -46,8 +43,10 @@ import {
     InvalidTextureMessage,
     ErrorScreenMessage,
     ApplicationMessage,
-    EditMapCommandWithKeyMessage,
+    XmppSettingsMessage,
+    MucRoomDefinitionMessage,
 } from "../../messages/generated/messages_pb";
+
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
@@ -59,8 +58,9 @@ import Debug from "debug";
 import type { ExAdminSocketInterface } from "../models/Websocket/ExAdminSocketInterface";
 import type { compressors } from "hyper-express";
 import { adminService } from "./AdminService";
-import type { ErrorApiData } from "../../messages/JsonMessages/ErrorApiData";
+import { ErrorApiData, MucRoomDefinitionInterface } from "@workadventure/messages";
 import { BoolValue, Int32Value, StringValue } from "google-protobuf/google/protobuf/wrappers_pb";
+import { EJABBERD_DOMAIN } from "../enums/EnvironmentVariable";
 
 const debug = Debug("socket");
 
@@ -177,6 +177,7 @@ export class SocketManager implements ZoneEventListener {
         try {
             const joinRoomMessage = new JoinRoomMessage();
             joinRoomMessage.setUseruuid(client.userUuid);
+            joinRoomMessage.setUserjid(client.userJid);
             joinRoomMessage.setIpaddress(client.IPAddress);
             joinRoomMessage.setRoomid(client.roomId);
             joinRoomMessage.setName(client.name);
@@ -204,6 +205,10 @@ export class SocketManager implements ZoneEventListener {
                     application.setScript(aplicationValue.script);
                     joinRoomMessage.addApplications(application);
                 }
+            }
+
+            if (client.lastCommandId !== undefined) {
+                joinRoomMessage.setLastcommandid(client.lastCommandId);
             }
 
             for (const characterLayer of client.characterLayers) {
@@ -257,10 +262,6 @@ export class SocketManager implements ZoneEventListener {
                                 "'"
                         );
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
-                    }
-                    if (client.xmppClient) {
-                        console.log("Trying disconnecting from xmppClient");
-                        client.xmppClient.close();
                     }
                 })
                 .on("error", (err: Error) => {
@@ -357,12 +358,8 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleEditMapCommandMessage(client: ExSocketInterface, message: EditMapCommandMessage): void {
-        const editWithMapKeyMessage = new EditMapCommandWithKeyMessage();
-        editWithMapKeyMessage.setEditmapcommandmessage(message);
-        editWithMapKeyMessage.setMapkey(client.roomId.split("~")[1]);
-
         const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setEditmapcommandwithkeymessage(editWithMapKeyMessage);
+        pusherToBackMessage.setEditmapcommandmessage(message);
         client.backConnection.write(pusherToBackMessage);
     }
 
@@ -415,11 +412,11 @@ export class SocketManager implements ZoneEventListener {
     async handleReportMessage(client: ExSocketInterface, reportPlayerMessage: ReportPlayerMessage): Promise<void> {
         try {
             await adminService.reportPlayer(
-                "en",
                 reportPlayerMessage.getReporteduseruuid(),
                 reportPlayerMessage.getReportcomment(),
                 client.userUuid,
-                client.roomId
+                client.roomId,
+                "en"
             );
         } catch (e) {
             console.error('An error occurred on "handleReportMessage"');
@@ -459,10 +456,6 @@ export class SocketManager implements ZoneEventListener {
                     //user leave previous room
                     //Client.leave(Client.roomId);
                 } finally {
-                    if (socket.xmppClient) {
-                        console.log("leaveRoom => close");
-                        socket.xmppClient.close();
-                    }
                     //delete Client.roomId;
                     clientEventsEmitter.emitClientLeave(socket.userUuid, socket.roomId);
                     debug("User ", socket.name, " left: ", socket.userUuid);
@@ -530,7 +523,7 @@ export class SocketManager implements ZoneEventListener {
         backAdminMessage.setRoomid(roomId);
         backAdminMessage.setRecipientuuid(userUuid);
         backAdminMessage.setType(type);
-        backConnection.sendAdminMessage(backAdminMessage, (error) => {
+        backConnection.sendAdminMessage(backAdminMessage, (error: unknown) => {
             if (error !== null) {
                 console.error("Error while sending admin message", error);
             }
@@ -555,7 +548,7 @@ export class SocketManager implements ZoneEventListener {
         banMessage.setRoomid(roomId);
         banMessage.setRecipientuuid(userUuid);
         banMessage.setType(type);
-        backConnection.ban(banMessage, (error) => {
+        backConnection.ban(banMessage, (error: unknown) => {
             if (error !== null) {
                 console.error("Error while sending admin message", error);
             }
@@ -724,15 +717,6 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    handleXmppMessage(client: ExSocketInterface, xmppMessage: XmppMessage): void {
-        if (client.xmppClient === undefined) {
-            throw new Error(
-                "Trying to send a message from client to server but the XMPP connection is not established yet! There is a race condition."
-            );
-        }
-        client.xmppClient.sendToEjabberd(xmppMessage.getStanza()).catch((e) => console.error(e));
-    }
-
     handleAskPositionMessage(client: ExSocketInterface, askPositionMessage: AskPositionMessage): void {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setAskpositionmessage(askPositionMessage);
@@ -766,6 +750,34 @@ export class SocketManager implements ZoneEventListener {
         } catch (e) {
             console.error('An error occurred on "handleBanUserByUuidMessage"');
             console.error(e);
+        }
+    }
+
+    emitXMPPSettings(client: ExSocketInterface): void {
+        const xmppSettings = new XmppSettingsMessage();
+        xmppSettings.setConferencedomain("conference." + EJABBERD_DOMAIN);
+        xmppSettings.setRoomsList(
+            client.mucRooms.map((definition: MucRoomDefinitionInterface) => {
+                const mucRoomDefinitionMessage = new MucRoomDefinitionMessage();
+                if (!definition.name || !definition.url || !definition.type) {
+                    throw new Error("Name URL and type cannot be empty!");
+                }
+                mucRoomDefinitionMessage.setName(definition.name);
+                mucRoomDefinitionMessage.setUrl(definition.url);
+                mucRoomDefinitionMessage.setType(definition.type);
+                mucRoomDefinitionMessage.setSubscribe(definition.subscribe);
+                return mucRoomDefinitionMessage;
+            })
+        );
+
+        xmppSettings.setJabberid(client.jabberId);
+        xmppSettings.setJabberpassword(client.jabberPassword);
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setXmppsettingsmessage(xmppSettings);
+
+        if (!client.disconnecting) {
+            client.send(serverToClientMessage.serializeBinary().buffer, true);
         }
     }
 }

@@ -55,13 +55,13 @@
     <!--If we are in a silent zone-->
     {#if $silentStore}
         <div
-            class="tw-z-[250] tw-bg-dark-blue tw-rounded tw-h-full tw-py-4 tw-px-3 tw-text-pop-red tw-border-2 tw-border-solid tw-border-pop-red tw-flex tw-flex-col tw-justify-center tw-items-center tw-content-center media-box-camera-on-size video-on-responsive-height "
+            class="tw-z-[250] tw-h-12 tw-bg-dark-blue tw-rounded tw-py-4 tw-px-3 tw-text-pop-red tw-border-2 tw-border-solid tw-border-pop-red tw-flex tw-flex-row tw-items-center tw-content-center tw-justify-between media-box-camera-off-size"
         >
-            <div class="tw-flex tw-flex-row tw-mr-2">
-                <img draggable="false" src={microphoneOffImg} class="tw-flex tw-p-1 tw-h-8 tw-w-8" alt="Mute" />
-                <img draggable="false" src={cameraOffImg} class="tw-flex tw-p-1 tw-h-8 tw-w-8" alt="Mute" />
+            <div class="tw-flex tw-flex-row">
+                <img draggable="false" src={microphoneOffImg} class="tw-p-1 tw-h-8 tw-w-8" alt="Mute" />
+                <img draggable="false" src={cameraOffImg} class="tw-p-1 tw-h-8 tw-w-8" alt="Mute" />
             </div>
-            <p class="tw-m-0 tw-w-32 tw-text-center">{$LL.camera.my.silentZone()}</p>
+            <p class="tw-m-0 tw-text-center tw-pr-1">{$LL.camera.my.silentZone()}</p>
         </div>
 
         <!--If we have a video to display-->

@@ -1,9 +1,11 @@
 import type { AxiosResponse } from "axios";
 import axios from "axios";
 import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../enums/EnvironmentVariable";
-import type { WokaList } from "../../messages/JsonMessages/PlayerTextures";
-import { wokaList } from "../../messages/JsonMessages/PlayerTextures";
+import type { WokaList } from "@workadventure/messages";
+import { wokaList } from "@workadventure/messages";
 import type { WokaServiceInterface } from "./WokaServiceInterface";
+import type { AdminCapabilities } from "./adminApi/AdminCapabilities";
+import { AdminCapability } from "./adminApi/AdminCapabilities";
 
 class AdminWokaService implements WokaServiceInterface {
     /**
@@ -60,6 +62,10 @@ class AdminWokaService implements WokaServiceInterface {
                 console.error(`Cannot get woka list from admin API with token: ${token}`, err);
                 return undefined;
             });
+    }
+
+    isEnabled(capabilities: AdminCapabilities): boolean {
+        return capabilities.has(AdminCapability.WokaList);
     }
 }
 

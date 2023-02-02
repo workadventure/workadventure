@@ -1,3 +1,4 @@
+import { BannerEvent } from "./../Api/Events/Ui/BannerEvent";
 import { writable, derived } from "svelte/store";
 
 export const userMovingStore = writable(false);
@@ -19,3 +20,5 @@ export const userHasAccessToBackOfficeStore = derived(
         return $userIsAdminStore || $userIsEditorStore;
     }
 );
+
+export const bannerStore = writable<BannerEvent | null>(null);

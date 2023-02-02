@@ -1,9 +1,10 @@
 import { uploaderManager } from "./UploaderManager";
 import { filesUploadStore } from "../Stores/ChatStore";
-import xml, { Element } from "@xmpp/xml";
 import { get } from "svelte/store";
 import { userStore } from "../Stores/LocalUserStore";
 import { ADMIN_API_URL, ENABLE_CHAT_UPLOAD } from "../Enum/EnvironmentVariable";
+import { WaLink } from "../Xmpp/Lib/Plugin";
+import axios from "axios";
 
 const _VERBOSE = true;
 
@@ -103,7 +104,6 @@ export class FileMessageManager {
 
         try {
             const userRoomToken = userStore.get().userRoomToken;
-            console.log("USER ROOM TOKEN :", userRoomToken, !userRoomToken, !!ADMIN_API_URL);
             if (!userRoomToken && ADMIN_API_URL) {
                 throw new NotLoggedUser();
             } else if (!ENABLE_CHAT_UPLOAD && !ADMIN_API_URL) {
@@ -119,31 +119,41 @@ export class FileMessageManager {
                 }
                 return list;
             });
-            //eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (err: any) {
-            console.error("sendFiles => ", err, err.response, err.response?.data);
-
-            //add error state in message
-            filesUploadStore.update((list) => {
-                for (const [, file] of list) {
-                    file.uploadState = uploadingState.error;
-                    if (err instanceof NotLoggedUser) {
-                        file.errorMessage = "not-logged";
-                        file.errorCode = 401;
-                    } else if (err instanceof DisabledChat) {
-                        file.errorMessage = "disabled";
-                        file.errorCode = 401;
-                    } else {
-                        file.errorMessage = err.response?.data.message;
-                        file.errorCode = err.response?.status;
-                        if (err.response?.data.maxFileSize) {
-                            file.maxFileSize = `(< ${err.response?.data.maxFileSize / 1_048_576}Mo)`;
-                        }
-                    }
-                    list.set(file.name, file);
+        } catch (err) {
+            if (err instanceof Error) {
+                if (axios.isAxiosError(err)) {
+                    console.error("sendFiles => ", err, err.response, err.response?.data);
+                } else {
+                    console.error("sendFiles => ", err);
                 }
-                return list;
-            });
+
+                //add error state in message
+                filesUploadStore.update((list) => {
+                    for (const [, file] of list) {
+                        file.uploadState = uploadingState.error;
+                        if (err instanceof NotLoggedUser) {
+                            file.errorMessage = "not-logged";
+                            file.errorCode = 401;
+                        } else if (err instanceof DisabledChat) {
+                            file.errorMessage = "disabled";
+                            file.errorCode = 401;
+                        } else if (axios.isAxiosError(err) && err.response) {
+                            file.errorMessage = err.response?.data.message;
+                            file.errorCode = err.response?.status;
+                            if (err.response?.data.maxFileSize) {
+                                file.maxFileSize = `(< ${err.response?.data.maxFileSize / 1_048_576}Mo)`;
+                            }
+                        } else {
+                            file.errorMessage = "Unknown error! Please contact us!";
+                            file.errorCode = 500;
+                        }
+                        list.set(file.name, file);
+                    }
+                    return list;
+                });
+            } else {
+                throw err;
+            }
         }
     }
 
@@ -152,41 +162,18 @@ export class FileMessageManager {
         return uploaderManager.delete(file.id);
     }
 
-    /**
-     *
-     * @param files
-     * @returns
-     */
-    get getXmlFileAttr() {
-        return this.getXmlFileAttrFrom(this.files);
+    get jsonFiles(): WaLink[] {
+        return this.getJsonFrom(this.files);
     }
 
-    /**
-     *
-     * @param files
-     * @returns
-     */
-    public getXmlFileAttrFrom(files: UploadedFile[]) {
-        return files.reduce((xmlObject, file) => {
-            xmlObject.append(xml("file", { ...file }));
-            return xmlObject;
-        }, xml("files", { size: files.length }));
-    }
-
-    public getFilesListFromXml(xmlFile: Element) {
-        return xmlFile.getChildElements().reduce((list: UploadedFile[], element: Element) => {
-            const file = new UploadedFile(
-                element.getAttr("name") as string,
-                element.getAttr("id") as string,
-                element.getAttr("location") as string,
-                element.getAttr("lastModified") as number,
-                element.getAttr("webkitRelativePath") as string,
-                element.getAttr("size") as number,
-                element.getAttr("type") as string
-            );
-            list.push(file);
-            return list;
-        }, []);
+    public getJsonFrom(files: UploadedFile[]): WaLink[] {
+        return files.reduce((allFiles: Array<WaLink>, file) => {
+            allFiles.push({
+                url: file.location,
+                description: file.name,
+            } as WaLink);
+            return allFiles;
+        }, new Array<WaLink>());
     }
 
     get files(): UploadedFile[] {
@@ -197,17 +184,21 @@ export class FileMessageManager {
         filesUploadStore.set(new Map());
     }
 
-    public static isImage(extension: string) {
-        return ["png", "jpef", "gif", "svg"].includes(extension);
+    public static getName(url: string) {
+        return url.split("/").pop() ?? "";
     }
-    public static isVideo(extension: string) {
-        return ["mov", "mp4", "m4v", "avi", "mov", "ogg", "webm"].includes(extension);
+
+    public static isImage(url: string) {
+        return ["png", "jpeg", "jpg", "gif", "svg", "heic"].includes(this.getExtension(this.getName(url)));
     }
-    public static isSound(extension: string) {
-        return ["mp3", "wav"].includes(extension);
+    public static isVideo(url: string) {
+        return ["mov", "mp4", "m4v", "avi", "mov", "ogg", "webm"].includes(this.getExtension(this.getName(url)));
     }
-    public static getExtension(location: string) {
-        return location.split(".").pop()?.toLowerCase();
+    public static isSound(url: string) {
+        return ["mp3", "wav"].includes(this.getExtension(url));
+    }
+    public static getExtension(fileName: string) {
+        return fileName.split(".").pop() ?? "";
     }
 }
 

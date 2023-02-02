@@ -1,5 +1,5 @@
 import type { CommandConfig } from "@workadventure/map-editor";
-import type { EditMapCommandMessage } from "../../../../../messages/ts-proto-generated/protos/messages";
+import type { EditMapCommandMessage } from "@workadventure/messages";
 import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 
 export abstract class MapEditorTool {
