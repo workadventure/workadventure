@@ -24,11 +24,14 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        if ((!pointer.wasTouch && pointer.leftButtonReleased()) || pointer.getDuration() > 250) {
+        if (!this.gameScene.userInputManager.isControlsEnabled) {
             return;
         }
 
-        if (!this.gameScene.userInputManager.isControlsEnabled) {
+        if ((!pointer.wasTouch && pointer.leftButtonReleased()) || pointer.getDuration() > 250) {
+            if (get(mapEditorModeStore)) {
+                this.gameScene.getMapEditorModeManager()?.handlePointerUpEvent(pointer, gameObjects);
+            }
             return;
         }
 
@@ -37,28 +40,17 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 return;
             }
         }
-        const camera = this.gameScene.getCameraManager().getCamera();
-        const index = this.gameScene
-            .getGameMap()
-            .getTileIndexAt(pointer.x + camera.scrollX, pointer.y + camera.scrollY);
-        const startTile = this.gameScene
-            .getGameMap()
-            .getTileIndexAt(this.gameScene.CurrentPlayer.x, this.gameScene.CurrentPlayer.y);
-        this.gameScene
-            .getPathfindingManager()
-            .findPath(startTile, index, true, true)
-            .then((path) => {
-                // Remove first step as it is for the tile we are currently standing on
-                path.shift();
-                this.gameScene.CurrentPlayer.setPathToFollow(path).catch(() => {});
-            })
-            .catch((reason) => {
-                console.warn(reason);
-            });
+
+        this.setPathToFollow(pointer);
     }
 
     public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        if (!this.gameScene.userInputManager.isControlsEnabled) {
+            return;
+        }
+
         this.gameScene.getActivatablesManager().handlePointerDownEvent();
+
         if (get(mapEditorModeStore)) {
             this.gameScene.getMapEditorModeManager()?.handlePointerDownEvent(pointer, gameObjects);
         }
@@ -111,5 +103,26 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     public removeSpaceEventListener(callback: () => void): void {
         this.gameScene.input.keyboard.removeListener("keyup-SPACE", callback);
         this.gameScene.getActivatablesManager().enableSelectingByDistance();
+    }
+
+    private setPathToFollow(pointer: Phaser.Input.Pointer): void {
+        const camera = this.gameScene.getCameraManager().getCamera();
+        const index = this.gameScene
+            .getGameMap()
+            .getTileIndexAt(pointer.x + camera.scrollX, pointer.y + camera.scrollY);
+        const startTile = this.gameScene
+            .getGameMap()
+            .getTileIndexAt(this.gameScene.CurrentPlayer.x, this.gameScene.CurrentPlayer.y);
+        this.gameScene
+            .getPathfindingManager()
+            .findPath(startTile, index, true, true)
+            .then((path) => {
+                // Remove first step as it is for the tile we are currently standing on
+                path.shift();
+                this.gameScene.CurrentPlayer.setPathToFollow(path).catch(() => {});
+            })
+            .catch((reason) => {
+                console.warn(reason);
+            });
     }
 }

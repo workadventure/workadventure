@@ -4,7 +4,12 @@ import type { Subscription } from "rxjs";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import type { EditMapCommandMessage } from "@workadventure/messages";
-import { mapEditorSelectedAreaPreviewStore, mapEditorSelectedPropertyStore } from "../../../../Stores/MapEditorStore";
+import {
+    AreasEditorMode,
+    areasEditorModeStore,
+    mapEditorSelectedAreaPreviewStore,
+    mapEditorSelectedPropertyStore,
+} from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import type { GameScene } from "../../GameScene";
@@ -27,6 +32,11 @@ export class AreaEditorTool extends MapEditorTool {
     private selectedAreaPreviewStoreSubscriber!: Unsubscriber;
 
     private active: boolean;
+
+    /**
+     * Stored id to select newly created area immediately
+     */
+    private newlyCreatedAreaId: number | undefined;
 
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super();
@@ -170,8 +180,33 @@ export class AreaEditorTool extends MapEditorTool {
         //
     }
 
-    public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+    public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
         //
+    }
+
+    public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        if (get(areasEditorModeStore) === AreasEditorMode.AddMode) {
+            const newAreaId = this.scene.getGameMap().getNextObjectId();
+            if (newAreaId === undefined) {
+                return;
+            }
+            this.newlyCreatedAreaId = newAreaId;
+            this.mapEditorModeManager.executeCommand({
+                type: "CreateAreaCommand",
+                areaObjectConfig: {
+                    id: newAreaId,
+                    name: `STATIC_AREA_${newAreaId}`,
+                    visible: true,
+                    properties: {
+                        customProperties: {},
+                    },
+                    width: 30,
+                    height: 30,
+                    x: this.scene.input.activePointer.worldX - 15,
+                    y: this.scene.input.activePointer.worldY - 15,
+                },
+            });
+        }
     }
 
     public handleKeyDownEvent(event: KeyboardEvent): void {
@@ -184,28 +219,6 @@ export class AreaEditorTool extends MapEditorTool {
                 this.mapEditorModeManager.executeCommand({
                     type: "DeleteAreaCommand",
                     id: areaPreview.getId(),
-                });
-                break;
-            }
-            case "l": {
-                const newAreaId = this.scene.getGameMap().getNextObjectId();
-                if (newAreaId === undefined) {
-                    return;
-                }
-                this.mapEditorModeManager.executeCommand({
-                    type: "CreateAreaCommand",
-                    areaObjectConfig: {
-                        id: newAreaId,
-                        name: `STATIC_AREA_${newAreaId}`,
-                        visible: true,
-                        properties: {
-                            customProperties: {},
-                        },
-                        width: 100,
-                        height: 100,
-                        x: this.scene.input.activePointer.worldX - 50,
-                        y: this.scene.input.activePointer.worldY - 50,
-                    },
                 });
                 break;
             }
@@ -226,6 +239,12 @@ export class AreaEditorTool extends MapEditorTool {
         const areaPreview = new AreaPreview(this.scene, structuredClone(config));
         this.bindAreaPreviewEventHandlers(areaPreview);
         this.areaPreviews.push(areaPreview);
+        if (areaPreview.getId() === this.newlyCreatedAreaId) {
+            this.newlyCreatedAreaId = undefined;
+            areaPreview.select(true);
+            mapEditorSelectedAreaPreviewStore.set(areaPreview);
+            areasEditorModeStore.set(AreasEditorMode.EditMode);
+        }
         this.scene.markDirty();
     }
 
@@ -281,7 +300,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {
-        areaPreview.on(AreaPreviewEvent.Clicked, () => {
+        areaPreview.on(AreaPreviewEvent.Selected, () => {
             mapEditorSelectedAreaPreviewStore.set(areaPreview);
         });
         areaPreview.on(AreaPreviewEvent.Changed, () => {

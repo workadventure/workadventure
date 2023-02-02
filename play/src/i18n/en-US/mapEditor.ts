@@ -1,6 +1,13 @@
 import type { BaseTranslation } from "../i18n-types";
 
 const mapEditor: BaseTranslation = {
+    addButton: "Add",
+    editButton: "Edit",
+    deleteButton: "Delete",
+    testInteractionButton: "Test Interaction",
+    buttonLabel: "Button Label",
+    editInstructions: "Click an object to modify its properties.",
+    removeInstructions: "Click an object to delete it.",
     sideBar: {
         zoomIn: "Zoom in",
         zoomOut: "Zoom out",
@@ -8,26 +15,7 @@ const mapEditor: BaseTranslation = {
         entityEditor: "Entity editor tool",
         tileEditor: "Tile editor tool",
     },
-    areasEditor: {
-        addButton: "Add",
-        editButton: "Edit",
-        deleteButton: "Delete",
-        addInstructions: "Click and drag on map to create new Area.",
-        editInstructions: "Click an Area to modify its properties.",
-        removeInstructions: "Click an Area to delete it.",
-    },
-    entityEditor: {
-        itemPicker: {
-            searchPlaceholder: "Search for name or tags",
-            selectVariationInstructions: "Select a variant",
-        },
-        addButton: "Add",
-        editButton: "Edit",
-        deleteButton: "Delete",
-        testInteractionButton: "Test Interaction",
-        buttonLabel: "Button Label",
-        editInstructions: "Click an object to modify its properties.",
-        removeInstructions: "Click an object to delete it.",
+    properties: {
         textProperties: {
             label: "Header Text",
             placeholder: "Input here text which will be displayed when interacting with the object",
@@ -59,6 +47,15 @@ const mapEditor: BaseTranslation = {
             newTabLabel: "Open in new tab",
             linkPlaceholder: "https://play.staging.workadventu.re/",
             defaultButtonLabel: "Open Link",
+        },
+    },
+    areaEditor: {
+        addInstructions: "Click and drag on map to create new Area.",
+    },
+    entityEditor: {
+        itemPicker: {
+            searchPlaceholder: "Search for name or tags",
+            selectVariationInstructions: "Select a variant",
         },
     },
 };

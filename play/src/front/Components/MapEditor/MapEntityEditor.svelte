@@ -17,15 +17,15 @@
 <div class="mode-button-container">
     <button
         class={$mapEntityEditorModeStore === MapEntityEditorMode.AddMode ? "active" : ""}
-        on:click={() => changeStore(MapEntityEditorMode.AddMode)}>{$LL.mapEditor.entityEditor.addButton()}</button
+        on:click={() => changeStore(MapEntityEditorMode.AddMode)}>{$LL.mapEditor.addButton()}</button
     >
     <button
         class={$mapEntityEditorModeStore === MapEntityEditorMode.EditMode ? "active" : ""}
-        on:click={() => changeStore(MapEntityEditorMode.EditMode)}>{$LL.mapEditor.entityEditor.editButton()}</button
+        on:click={() => changeStore(MapEntityEditorMode.EditMode)}>{$LL.mapEditor.editButton()}</button
     >
     <button
         class={$mapEntityEditorModeStore === MapEntityEditorMode.RemoveMode ? "active" : ""}
-        on:click={() => changeStore(MapEntityEditorMode.RemoveMode)}>{$LL.mapEditor.entityEditor.deleteButton()}</button
+        on:click={() => changeStore(MapEntityEditorMode.RemoveMode)}>{$LL.mapEditor.deleteButton()}</button
     >
 </div>
 {#if $mapEntityEditorModeStore === MapEntityEditorMode.AddMode}
@@ -35,7 +35,7 @@
     <MapEntityPropertyEditor />
 {/if}
 {#if $mapEntityEditorModeStore === MapEntityEditorMode.RemoveMode}
-    {$LL.mapEditor.entityEditor.removeInstructions()}
+    {$LL.mapEditor.removeInstructions()}
 {/if}
 
 <style lang="scss">

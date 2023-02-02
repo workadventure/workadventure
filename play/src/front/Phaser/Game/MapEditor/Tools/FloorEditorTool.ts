@@ -16,23 +16,36 @@ export class FloorEditorTool extends MapEditorTool {
     }
 
     public update(time: number, dt: number): void {
-        console.log("FloorEditorTool update");
+        // console.log("FloorEditorTool update");
     }
     public clear(): void {
-        console.log("FloorEditorTool clear");
+        // console.log("FloorEditorTool clear");
     }
     public activate(): void {
-        console.log("FloorEditorTool activate");
+        // console.log("FloorEditorTool activate");
     }
     public destroy(): void {
-        console.log("FloorEditorTool destroy");
+        // console.log("FloorEditorTool destroy");
     }
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
-        console.log("FloorEditorTool subscribeToGameMapFrontWrapperEvents");
+        // console.log("FloorEditorTool subscribeToGameMapFrontWrapperEvents");
     }
     public handleKeyDownEvent(event: KeyboardEvent): void {
-        console.log("FloorEditorTool handleKeyDownEvent");
+        // console.log("FloorEditorTool handleKeyDownEvent");
     }
+
+    public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        //
+    }
+
+    public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        //
+    }
+
+    public handlePointerMoveEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        //
+    }
+
     /**
      * Perform actions needed to see the changes instantly
      */

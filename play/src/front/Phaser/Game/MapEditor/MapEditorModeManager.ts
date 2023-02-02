@@ -236,6 +236,10 @@ export class MapEditorModeManager {
         this.currentlyActiveTool?.handlePointerMoveEvent(pointer, gameObjects);
     }
 
+    public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        this.currentlyActiveTool?.handlePointerUpEvent(pointer, gameObjects);
+    }
+
     public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
         this.currentlyActiveTool?.handlePointerDownEvent(pointer, gameObjects);
     }

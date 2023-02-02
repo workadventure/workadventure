@@ -5,6 +5,7 @@
         areasEditorModeStore,
         mapEditorSelectedAreaPreviewStore,
     } from "../../Stores/MapEditorStore";
+    import AreaPropertyEditor from "./AreaPropertyEditor.svelte";
 
     function changeStore(editorMode: AreasEditorMode) {
         areasEditorModeStore.set(editorMode);
@@ -16,25 +17,25 @@
 <div class="mode-button-container">
     <button
         class={$areasEditorModeStore === AreasEditorMode.AddMode ? "active" : ""}
-        on:click={() => changeStore(AreasEditorMode.AddMode)}>{$LL.mapEditor.areasEditor.addButton()}</button
+        on:click={() => changeStore(AreasEditorMode.AddMode)}>{$LL.mapEditor.addButton()}</button
     >
     <button
         class={$areasEditorModeStore === AreasEditorMode.EditMode ? "active" : ""}
-        on:click={() => changeStore(AreasEditorMode.EditMode)}>{$LL.mapEditor.areasEditor.editButton()}</button
+        on:click={() => changeStore(AreasEditorMode.EditMode)}>{$LL.mapEditor.editButton()}</button
     >
     <button
         class={$areasEditorModeStore === AreasEditorMode.RemoveMode ? "active" : ""}
-        on:click={() => changeStore(AreasEditorMode.RemoveMode)}>{$LL.mapEditor.areasEditor.deleteButton()}</button
+        on:click={() => changeStore(AreasEditorMode.RemoveMode)}>{$LL.mapEditor.deleteButton()}</button
     >
 </div>
 {#if $areasEditorModeStore === AreasEditorMode.AddMode}
-    {$LL.mapEditor.areasEditor.addInstructions()}
+    {$LL.mapEditor.areaEditor.addInstructions()}
 {/if}
 {#if $areasEditorModeStore === AreasEditorMode.EditMode}
-    {$LL.mapEditor.areasEditor.editInstructions()}
+    <AreaPropertyEditor />
 {/if}
 {#if $areasEditorModeStore === AreasEditorMode.RemoveMode}
-    {$LL.mapEditor.areasEditor.removeInstructions()}
+    {$LL.mapEditor.removeInstructions()}
 {/if}
 
 <style lang="scss">

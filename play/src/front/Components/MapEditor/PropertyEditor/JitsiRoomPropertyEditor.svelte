@@ -22,11 +22,11 @@
 </script>
 
 <div class="value-input">
-    <label for="roomName">{$LL.mapEditor.entityEditor.jitsiProperties.roomNameLabel()}</label>
+    <label for="roomName">{$LL.mapEditor.properties.jitsiProperties.roomNameLabel()}</label>
     <input
         id="roomName"
         type="text"
-        placeholder={$LL.mapEditor.entityEditor.jitsiProperties.roomNamePlaceholder()}
+        placeholder={$LL.mapEditor.properties.jitsiProperties.roomNamePlaceholder()}
         bind:value={property.roomName}
         on:change={onValueChange}
         on:focus={onMapEditorInputFocus}
@@ -34,7 +34,7 @@
     />
 </div>
 <div class="value-input">
-    <label for="jitsiButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
+    <label for="jitsiButtonLabel">{$LL.mapEditor.buttonLabel()}</label>
     <input
         id="jitsiButtonLabel"
         type="text"
@@ -47,7 +47,7 @@
 <button
     on:click={() => {
         jitsiConfigModalOpened = true;
-    }}>{$LL.mapEditor.entityEditor.jitsiProperties.moreOptionsLabel()}</button
+    }}>{$LL.mapEditor.properties.jitsiProperties.moreOptionsLabel()}</button
 >
 {#if jitsiConfigModalOpened}
     <JitsiRoomConfigEditor

@@ -32,6 +32,15 @@ export interface PredefinedPropertyData {
     additionalProperties: Record<string, string | number | boolean | object | undefined>;
 }
 
+export interface PropertyDescription {
+    key: string;
+    name: string;
+    active: boolean;
+    currentValue: unknown;
+    component: unknown;
+    defaultValue: unknown;
+}
+
 export enum Direction {
     Left = "Left",
     Up = "Up",

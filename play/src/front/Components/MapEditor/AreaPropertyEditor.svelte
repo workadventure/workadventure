@@ -1,7 +1,7 @@
 <script lang="ts">
     import LL from "../../../i18n/i18n-svelte";
     import { onDestroy } from "svelte";
-    import { mapEditorSelectedEntityStore } from "../../Stores/MapEditorStore";
+    import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
     import { slide } from "svelte/transition";
     import crossImg from "../images/cross-icon.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
@@ -55,13 +55,13 @@
         },
     ];
 
-    let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((currentEntity) => {
-        if (currentEntity) {
+    let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((areaPreview) => {
+        if (areaPreview) {
             for (let property of possibleProperties) {
-                property.active =
-                    currentEntity.getProperties()[property.key] !== undefined &&
-                    currentEntity.getProperties()[property.key] !== null;
-                property.currentValue = currentEntity.getProperties()[property.key];
+                // property.active =
+                //     areaPreview.getConfig().properties[property.key] !== undefined &&
+                //     areaPreview.getConfig().properties[property.key] !== null;
+                // property.currentValue = areaPreview.getConfig().properties[property.key];
                 if (!property.currentValue) {
                     property.currentValue = structuredClone(property.defaultValue);
                 }
@@ -71,43 +71,43 @@
     });
 
     onDestroy(() => {
-        selectedEntityUnsubscriber();
+        selectedAreaPreviewUnsubscriber();
     });
 
     function onPropertyChecked(property: PropertyDescription) {
-        if ($mapEditorSelectedEntityStore) {
+        if ($mapEditorSelectedAreaPreviewStore) {
             if (property.active) {
                 if (!property.currentValue) {
                     property.currentValue = possibleProperties.find((v) => v.key === property.key)?.defaultValue; //initialize here the property value
                 }
-                $mapEditorSelectedEntityStore.setProperty(property.key, property.currentValue);
+                $mapEditorSelectedAreaPreviewStore.setProperty(property.key, property.currentValue);
             } else {
-                $mapEditorSelectedEntityStore.setProperty(property.key, undefined);
+                $mapEditorSelectedAreaPreviewStore.setProperty(property.key, undefined);
             }
         }
     }
 
     function onUpdateProperty(property: PropertyDescription) {
-        if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.setProperty(property.key, property.currentValue);
+        if ($mapEditorSelectedAreaPreviewStore) {
+            $mapEditorSelectedAreaPreviewStore.setProperty(property.key, property.currentValue);
         }
     }
 
     function onTestInteraction() {
-        if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.TestActivation();
+        if ($mapEditorSelectedAreaPreviewStore) {
+            // $mapEditorSelectedAreaPreviewStore.TestActivation();
         }
     }
 
     function onDeleteEntity() {
-        if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.delete();
-            mapEditorSelectedEntityStore.set(undefined);
+        if ($mapEditorSelectedAreaPreviewStore) {
+            // $mapEditorSelectedAreaPreviewStore.delete();
+            mapEditorSelectedAreaPreviewStore.set(undefined);
         }
     }
 </script>
 
-{#if $mapEditorSelectedEntityStore === undefined}
+{#if $mapEditorSelectedAreaPreviewStore === undefined}
     {$LL.mapEditor.editInstructions()}
 {:else}
     <div class="entity-properties">

@@ -14,11 +14,11 @@
 </script>
 
 <div class="value-input">
-    <label for="tabLink">{$LL.mapEditor.entityEditor.linkProperties.linkLabel()}</label>
+    <label for="tabLink">{$LL.mapEditor.properties.linkProperties.linkLabel()}</label>
     <input
         id="tabLink"
         type="text"
-        placeholder={$LL.mapEditor.entityEditor.linkProperties.linkPlaceholder()}
+        placeholder={$LL.mapEditor.properties.linkProperties.linkPlaceholder()}
         bind:value={property.link}
         on:change={onValueChange}
         on:focus={onMapEditorInputFocus}
@@ -26,7 +26,7 @@
     />
 </div>
 <div class="value-input">
-    <label for="linkButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
+    <label for="linkButtonLabel">{$LL.mapEditor.buttonLabel()}</label>
     <input
         id="linkButtonlabel"
         type="text"
@@ -37,7 +37,7 @@
     />
 </div>
 <div class="value-switch">
-    <label for="newTab">{$LL.mapEditor.entityEditor.linkProperties.newTabLabel()}</label>
+    <label for="newTab">{$LL.mapEditor.properties.linkProperties.newTabLabel()}</label>
     <input
         id="newTab"
         type="checkbox"

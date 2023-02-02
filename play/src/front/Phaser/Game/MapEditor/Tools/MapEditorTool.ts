@@ -13,6 +13,10 @@ export abstract class MapEditorTool {
         pointer: Phaser.Input.Pointer,
         gameObjects: Phaser.GameObjects.GameObject[]
     ): void;
+    public abstract handlePointerUpEvent(
+        pointer: Phaser.Input.Pointer,
+        gameObjects: Phaser.GameObjects.GameObject[]
+    ): void;
     public abstract handlePointerMoveEvent(
         pointer: Phaser.Input.Pointer,
         gameObjects: Phaser.GameObjects.GameObject[]

@@ -5,7 +5,7 @@ import type { GameScene } from "../../Game/GameScene";
 import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
 
 export enum AreaPreviewEvent {
-    Clicked = "AreaPreview:Clicked",
+    Selected = "AreaPreview:Selected",
     DoubleClicked = "AreaPreview:DoubleClicked",
     Changed = "AreaPreview:Changed",
     Removed = "AreaPreview:Removed",
@@ -92,6 +92,11 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         this.updateSquaresPositions();
     }
 
+    public setProperty(key: string, value: unknown): void {
+        this.config.properties[key] = value;
+        this.emit(AreaPreviewEvent.Changed);
+    }
+
     private createPreview(config: AreaData): Phaser.GameObjects.Rectangle {
         const preview = this.scene.add
             .rectangle(
@@ -141,7 +146,10 @@ export class AreaPreview extends Phaser.GameObjects.Container {
                 this.emit(AreaPreviewEvent.Removed);
                 return;
             }
-            this.emit(AreaPreviewEvent.Clicked);
+            if (get(areasEditorModeStore) === AreasEditorMode.EditMode) {
+                this.emit(AreaPreviewEvent.Selected);
+                return;
+            }
         });
         this.preview.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             if (pointer.isDown && this.selected && !this.squareSelected) {

@@ -32,9 +32,6 @@ export class EntityEditorTool extends MapEditorTool {
     private mapEditorSelectedEntityPrefabStoreUnsubscriber!: Unsubscriber;
     private mapEntityEditorModeStoreUnsubscriber!: Unsubscriber;
 
-    // private pointerMoveEventHandler!: (pointer: Phaser.Input.Pointer) => void;
-    // private pointerDownEventHandler!: (pointer: Phaser.Input.Pointer) => void;
-
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super();
         this.mapEditorModeManager = mapEditorModeManager;
@@ -289,6 +286,10 @@ export class EntityEditorTool extends MapEditorTool {
             this.entityPrefabPreview.clearTint();
         }
         this.scene.markDirty();
+    }
+
+    public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        //
     }
 
     public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
