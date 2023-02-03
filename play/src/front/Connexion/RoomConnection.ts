@@ -76,6 +76,7 @@ import { iframeListener } from "../Api/IframeListener";
 import { assertObjectKeys } from "../Utils/CustomTypeGuards";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import {libJitsiFactory} from "../Streaming/Jitsi/LibJitsiFactory";
+import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
@@ -218,7 +219,8 @@ export class RoomConnection implements RoomConnection {
         lastCommandId?: string
     ) {
         // TEEEEEEEEEEEEEEEEST
-        libJitsiFactory.createConnection("jitsi.test.workadventu.re", "prosody.test.workadventu.re", "muc.prosody.test.workadventu.re").then((connection) => {
+        //libJitsiFactory.createConnection("jitsi.test.workadventu.re", "prosody.test.workadventu.re", "muc.prosody.test.workadventu.re").then((connection) => {
+        libJitsiFactory.createConnection("coremeet.workadventu.re", "prosody.workadventu.re", "muc.prosody.workadventu.re").then((connection) => {
             const JitsiMeetJS = window.JitsiMeetJS;
             const room = connection.initJitsiConference('conferencetestfromjitsilib', {});
             let isJoined = false;
@@ -298,6 +300,57 @@ export class RoomConnection implements RoomConnection {
             }).then(onLocalTracks).catch(e => console.error(e));
 
 
+
+
+
+
+            let remoteTracks: JitsiTrack[] = [];
+
+            /**
+             * Handles remote tracks
+             * @param track JitsiTrack object
+             */
+            function onRemoteTrack(track: JitsiTrack) {
+                if (track.isLocal()) {
+                    return;
+                }
+                const participant = track.getParticipantId();
+
+                if (!remoteTracks[participant]) {
+                    remoteTracks[participant] = [];
+                }
+                const idx = remoteTracks[participant].push(track);
+
+                track.addEventListener(
+                    JitsiMeetJS.events.track.TRACK_AUDIO_LEVEL_CHANGED,
+                    audioLevel => console.log(`Audio Level remote: ${audioLevel}`));
+                track.addEventListener(
+                    JitsiMeetJS.events.track.TRACK_MUTE_CHANGED,
+                    () => console.log('remote track muted'));
+                track.addEventListener(
+                    JitsiMeetJS.events.track.LOCAL_TRACK_STOPPED,
+                    () => console.log('remote track stopped'));
+                track.addEventListener(JitsiMeetJS.events.track.TRACK_AUDIO_OUTPUT_CHANGED,
+                    deviceId =>
+                        console.log(
+                            `track audio output device was changed to ${deviceId}`));
+                const id = participant + track.getType() + idx;
+
+                if (track.getType() === 'video') {
+                    $('body').prepend(
+                        `<video autoplay='1' id='${participant}video${idx}' />`);
+                } else {
+                    $('body').prepend(
+                        `<audio autoplay='1' id='${participant}audio${idx}' />`);
+                }
+                track.attach(document.getElementById(`${id}`));
+            }
+
+
+            room.on(JitsiMeetJS.events.conference.TRACK_ADDED, onRemoteTrack);
+            room.on(JitsiMeetJS.events.conference.TRACK_REMOVED, track => {
+                console.log(`track removed!!!${track}`);
+            });
 
             /*room.on(JitsiMeetJS.events.conference.USER_JOINED, id => {
                 console.log('user join');
