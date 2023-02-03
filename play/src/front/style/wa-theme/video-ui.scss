@@ -28,11 +28,13 @@
 }
 
 .cameras-container{
-    @apply tw-max-h-full sm:tw-max-h-[60vh] tw-pointer-events-auto tw-overflow-x-hidden tw-overflow-y-auto tw-flex tw-z-[150] tw-gap-5 tw-self-end tw-relative;
+    @apply tw-max-h-full tw-pointer-events-auto tw-overflow-x-hidden tw-overflow-y-auto tw-flex tw-z-[150] tw-gap-5 tw-self-end tw-relative;
+    //sm:tw-max-h-[60vh]
 }
 
 .other-cameras {
-    @apply tw-bottom-32 sm:tw-bottom-48 md:tw-bottom-28 lg:tw-bottom-24 xl:tw-bottom-36 2xl:tw-bottom-48 tw-mb-2 tw-overflow-y-auto tw-overflow-x-hidden tw-h-fit;
+    @apply tw-bottom-32 sm:tw-bottom-48 md:tw-bottom-28 xl:tw-bottom-36 2xl:tw-bottom-48 tw-mb-2 tw-overflow-y-auto tw-overflow-x-hidden tw-h-fit;
+    //lg:tw-bottom-24
 }
 
 .media-container {
