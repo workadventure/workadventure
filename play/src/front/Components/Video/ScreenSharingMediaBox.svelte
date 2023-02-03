@@ -32,13 +32,14 @@
     class="video-container screen-sharing tw-flex tw-w-full tw-flex-col tw-h-full"
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
-    {#if $statusStore === "connecting"}
-        <div class="connecting-spinner" />
-    {/if}
-    {#if $statusStore === "error"}
-        <div class="rtc-error" />
-    {/if}
-    {#if $streamStore !== null}
+    {#if $streamStore === null}
+        {#if $statusStore === "connecting"}
+            <div class="connecting-spinner" />
+        {/if}
+        {#if $statusStore === "error"}
+            <div class="rtc-error" />
+        {/if}
+    {:else if $streamStore !== null}
         <video
             use:srcObject={$streamStore}
             autoplay
