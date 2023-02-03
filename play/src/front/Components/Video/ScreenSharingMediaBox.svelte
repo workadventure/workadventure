@@ -16,7 +16,7 @@
     let name = peer.userName;
     let backGroundColor = getColorByString(peer.userName);
     let textColor = getTextColorByBackgroundColor(backGroundColor);
-    let statusStore = peer._statusStore;
+    let statusStore = peer.statusStore;
 
     let embedScreen: EmbedScreen;
 
