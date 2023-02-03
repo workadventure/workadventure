@@ -206,6 +206,8 @@ export class Matrix {
             await this.client.initCrypto();
             await this.client.startClient();
             this.client.setGlobalErrorOnUnknownDevices(false);
+            await this.client.setAccountData('m.user.workadventure', {mapUrl: 'test', color: 'red'});
+            console.log(this.client.getAccountData('m.user.workadventure')?.event);
         } catch(err) {
             if(err instanceof MatrixError) {
                 console.error("Matrix => start => ", err.errcode, err.data.error);
@@ -334,7 +336,7 @@ export class Matrix {
                 //await this.client.setDeviceVerified(this.userId, device.device_id, true);
             }
              */
-            const currentVerificationRequest = await this.client.requestVerification(this.userId, ['DIZNNAYIZY']);//devices.map(device => device.device_id));
+            const currentVerificationRequest = await this.client.requestVerification(this.userId, ['MRIVBLJXND']);//devices.map(device => device.device_id));
             console.warn("verify => verify", currentVerificationRequest);
             return await this.startVerification(currentVerificationRequest);
         } catch(e: unknown){
@@ -358,7 +360,7 @@ export class Matrix {
         });
 
         const room = this.client.getRoom(room_raw.room_id);
-        //const room = {roomId: "!cQjDsloyYuryMswPHA:matrix.workadventure.localhost", name: "My e2ee Room 2"};
+        //const room = {roomId: "!eAQbuBPCLJrgJbZZMg:matrix.workadventure.localhost", name: "My e2ee Room 2"};
         if(!room){
             throw new Error("No room created");
         }
@@ -381,11 +383,11 @@ export class Matrix {
         console.warn("Response =>", response);
 
         console.warn("Room"+room?.name+" is"+this.client.isRoomEncrypted(room.roomId)?"encrypted":"not encrypted");
-
     }
 
     async sendMessage(){
-        let room = {roomId: this._roomId ?? "", name: "My e2ee Room 2"};
+        //let room = {roomId: this._roomId ?? "", name: "My e2ee Room 2"};
+        const room = {roomId: "!eAQbuBPCLJrgJbZZMg:matrix.workadventure.localhost", name: "My e2ee Room 2"};
         const room_ = this.client.getRoom(room.roomId);
 
         if(!room_){
@@ -406,6 +408,8 @@ export class Matrix {
         console.log(event);
         await this.client.crypto?.encryptEvent(event, room_);
         await this.client.sendEvent(room.roomId, event.getType(), event.getContent());
+
+        console.warn("RoomMemberEvent sent", await this.client.sendEvent(room.roomId, "m.user.workadventu.re", {map: {url: 'https://test.fr', name: 'WA Village'}, color: 'red'}));
 
         return;
 

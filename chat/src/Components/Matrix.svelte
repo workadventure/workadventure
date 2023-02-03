@@ -116,6 +116,7 @@
         disconnect.innerText = "Disconnect";
         disconnect.addEventListener('click', async () => {
             await matrix.client.logout();
+            matrix.client.stopClient();
             await matrix.client.clearStores();
             localStorage.removeItem('mx_user_id');
             localStorage.removeItem('mx_access_token');
