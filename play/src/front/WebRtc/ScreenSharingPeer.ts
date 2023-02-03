@@ -83,7 +83,7 @@ export class ScreenSharingPeer extends Peer {
         });
 
         this.on("close", () => {
-            this._statusStore.set('closed');
+            this._statusStore.set("closed");
             this._connected = false;
             this.toClose = true;
             this.destroy();
@@ -92,7 +92,7 @@ export class ScreenSharingPeer extends Peer {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.on("error", (err: any) => {
             console.error(`screen sharing error => ${this.userId} => ${err.code}`, err);
-            this._statusStore.set('error');
+            this._statusStore.set("error");
         });
 
         this.on("connect", () => {
@@ -180,7 +180,7 @@ export class ScreenSharingPeer extends Peer {
         );
     }
 
-    public get statusStore(): Readable<PeerStatus>{
+    public get statusStore(): Readable<PeerStatus> {
         return this._statusStore;
     }
 }
