@@ -23,7 +23,7 @@ export class ScreenSharingPeer extends Peer {
     public readonly userId: number;
     public readonly uniqueId: string;
     public readonly streamStore: Readable<MediaStream | null>;
-    public readonly statusStore: Writable<PeerStatus>;
+    private readonly _statusStore: Writable<PeerStatus>;
 
     constructor(
         user: UserSimplePeerInterface,
@@ -71,27 +71,7 @@ export class ScreenSharingPeer extends Peer {
             };
         });
 
-        this.statusStore = writable<PeerStatus>("connecting", (set) => {
-            const onConnect = () => {
-                set("connected");
-            };
-            const onError = () => {
-                set("error");
-            };
-            const onClose = () => {
-                set("closed");
-            };
-
-            this.on("connect", onConnect);
-            this.on("error", onError);
-            this.on("close", onClose);
-
-            return () => {
-                this.off("connect", onConnect);
-                this.off("error", onError);
-                this.off("close", onClose);
-            };
-        });
+        this._statusStore = writable<PeerStatus>("connecting");
 
         //start listen signal for the peer connection
         this.on("signal", (data: unknown) => {
@@ -103,6 +83,7 @@ export class ScreenSharingPeer extends Peer {
         });
 
         this.on("close", () => {
+            this._statusStore.set("closed");
             this._connected = false;
             this.toClose = true;
             this.destroy();
@@ -111,11 +92,13 @@ export class ScreenSharingPeer extends Peer {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.on("error", (err: any) => {
             console.error(`screen sharing error => ${this.userId} => ${err.code}`, err);
+            this._statusStore.set("error");
         });
 
         this.on("connect", () => {
             this._connected = true;
             console.info(`connect => ${this.userId}`);
+            this._statusStore.set("connected");
         });
 
         this.once("finish", () => {
@@ -146,7 +129,7 @@ export class ScreenSharingPeer extends Peer {
             //In the case or player A send stream and player B send a stream, it's same peer connection, also the status must be changed to connect.
             //TODO add event listening when the stream is ready for displaying and change the status
             if (this._connected) {
-                this.statusStore.set("connected");
+                this._statusStore.set("connected");
             }
             this.isReceivingStream = true;
         }
@@ -195,5 +178,9 @@ export class ScreenSharingPeer extends Peer {
                 })
             )
         );
+    }
+
+    public get statusStore(): Readable<PeerStatus> {
+        return this._statusStore;
     }
 }
