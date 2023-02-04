@@ -123,7 +123,8 @@ import {
     PositionMessage_Direction,
 } from "@workadventure/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
-import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
+import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import { IframeEventDispatcher } from "./IframeEventDispatcher";
 import type { PlayerDetailsUpdate } from "./RemotePlayersRepository";
@@ -138,7 +139,7 @@ import {
 import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
-import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
+import { gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
 import { AreaType, GameMap, GameMapProperties } from "@workadventure/map-editor";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
@@ -152,7 +153,7 @@ import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManag
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { faviconManager } from "./../../WebRtc/FaviconManager";
 import { z } from "zod";
-import {BroadcastService} from "../../Streaming/BroadcastService";
+import { BroadcastService } from "../../Streaming/BroadcastService";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -261,7 +262,7 @@ export class GameScene extends DirtyScene {
     private companionLoadingManager: CompanionTexturesLoadingManager | undefined;
     private throttledSendViewportToServer!: () => void;
     private playersDebugLogAlreadyDisplayed = false;
-    private broadcastService: BroadcastService | undefined;
+    private _broadcastService: BroadcastService | undefined;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -1044,7 +1045,7 @@ export class GameScene extends DirtyScene {
                     }
                 });
 
-                this.broadcastService = new BroadcastService(this.connection);
+                this._broadcastService = new BroadcastService(this.connection);
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
@@ -1098,6 +1099,8 @@ export class GameScene extends DirtyScene {
 
                 // Get position from UUID only after the connection to the pusher is established
                 this.tryMovePlayerWithMoveToUserParameter();
+
+                gameSceneStore.set(this);
                 gameSceneIsLoadedStore.set(true);
             })
             .catch((e) => console.error(e));
@@ -2144,7 +2147,7 @@ ${escapedMessage}
         this.emoteManager?.destroy();
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
-        this.broadcastService?.destroy();
+        this._broadcastService?.destroy();
         this.peerStoreUnsubscriber?.();
         this.mapEditorModeStoreUnsubscriber?.();
         this.refreshPromptStoreStoreUnsubscriber?.();
@@ -2188,6 +2191,7 @@ ${escapedMessage}
         this.gameMapChangedSubscription?.unsubscribe();
         this.messageSubscription?.unsubscribe();
         gameSceneIsLoadedStore.set(false);
+        gameSceneStore.set(undefined);
         this.cleanupDone = true;
     }
 
@@ -2929,5 +2933,12 @@ ${escapedMessage}
 
     public getActivatablesManager(): ActivatablesManager {
         return this.activatablesManager;
+    }
+
+    public get broadcastService(): BroadcastService {
+        if (this._broadcastService === undefined) {
+            throw new Error("BroadcastService not initialized yet.");
+        }
+        return this._broadcastService;
     }
 }

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { ScreenSharingLocalMedia } from "../../Stores/ScreenSharingStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";

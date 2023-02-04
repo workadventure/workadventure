@@ -4,7 +4,7 @@ import type { UserSimplePeerInterface } from "./SimplePeer";
 import type { Readable, Writable } from "svelte/store";
 import { writable } from "svelte/store";
 import { getIceServersConfig } from "../Components/Video/utils";
-import { highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
+import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import Peer from "simple-peer/simplepeer.min.js";
 import { Buffer } from "buffer";
 import { StreamEndedMessage } from "./P2PMessages/StreamEndedMessage";

@@ -2,10 +2,9 @@ import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { z } from "zod";
 import path from "node:path";
 import { EntityData } from "../types";
+import {Failure, Result} from "../FunctionalTypes/Result";
 
-export type Success<T> = { ok: true; value: T };
-export type Failure<E> = { ok: false; error: E };
-export type Result<T, E> = Success<T> | Failure<E>;
+
 
 export type MapValidation = Result<ITiledMap, Partial<OrganizedErrors>>;
 

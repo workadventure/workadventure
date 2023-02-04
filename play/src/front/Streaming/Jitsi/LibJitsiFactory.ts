@@ -1,10 +1,9 @@
 import CancelablePromise from "cancelable-promise";
-import {InitOptions, JitsiMeetJSType} from "lib-jitsi-meet/types/hand-crafted/JitsiMeetJS";
+import { InitOptions, JitsiMeetJSType } from "lib-jitsi-meet/types/hand-crafted/JitsiMeetJS";
 import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 
-
 class LibJitsiFactory {
-    private jitsiLoadPromise: CancelablePromise<JitsiMeetJSType>|undefined;
+    private jitsiLoadPromise: CancelablePromise<JitsiMeetJSType> | undefined;
 
     // TODO: check if we can resume connection automatically. Also, check life time of JWT token.... maybe we should ask for a new token on each connection request?
 
@@ -16,11 +15,16 @@ class LibJitsiFactory {
      * @param mucDomain The domain name of the MUC. Unlike "domain" and "xmppDomain", we do not expect a real domain here, but a "virtual" domain used by the XMPP server. This is usually "muc."+xmppDomain or "conference."+xmppDomain.
      * @param jwt the JWT token to connect to Jitsi (if Jitsi requires one)
      */
-    public async createConnection(domain: string, xmppDomain: string, mucDomain: string, jwt?: string): Promise<JitsiConnection> {
+    public async createConnection(
+        domain: string,
+        xmppDomain: string,
+        mucDomain: string,
+        jwt?: string
+    ): Promise<JitsiConnection> {
         const JitsiMeetJS = await this.loadJitsiScript(domain);
 
         //JitsiMeetJS.setLogLevel(JitsiMeetJS.logLevels.ERROR);
-/*
+        /*
         XMPP_DOMAIN=prosody.test.workadventu.re
         XMPP_AUTH_DOMAIN=auth.prosody.test.workadventu.re
         XMPP_GUEST_DOMAIN=guest.prosody.test.workadventu.re
@@ -30,7 +34,6 @@ class LibJitsiFactory {
 */
         return new Promise((resolve, reject) => {
             const connection = new JitsiMeetJS.JitsiConnection(undefined, jwt, {
-
                 // JitsiConferenceOptions
                 hosts: {
                     domain: xmppDomain,
@@ -48,7 +51,7 @@ class LibJitsiFactory {
             connection.addEventListener(JitsiMeetJS.events.connection.CONNECTION_FAILED, (e: unknown, e2: unknown) => {
                 console.error(e);
                 console.error(e2);
-                reject(new Error('Unable to connect to Jitsi'));
+                reject(new Error("Unable to connect to Jitsi"));
             });
             //connection.addEventListener(JitsiMeetJS.events.connection.CONNECTION_DISCONNECTED, disconnect);
 
@@ -56,16 +59,15 @@ class LibJitsiFactory {
 
             //const conference = connection.initJitsiConference("foo", {});
 
-
             return connection;
         });
     }
 
-    private loadJitsiScript(domain: string, options?: InitOptions): CancelablePromise<JitsiMeetJSType> {
+    public loadJitsiScript(domain: string, options?: InitOptions): CancelablePromise<JitsiMeetJSType> {
         if (this.jitsiLoadPromise) {
             return this.jitsiLoadPromise;
         }
-        return this.jitsiLoadPromise = new CancelablePromise<JitsiMeetJSType>((resolve, reject, cancel) => {
+        return (this.jitsiLoadPromise = new CancelablePromise<JitsiMeetJSType>((resolve, reject, cancel) => {
             const jitsiScript = document.createElement("script");
             if (!domain.startsWith("https://")) {
                 domain = "https://" + domain;
@@ -74,6 +76,14 @@ class LibJitsiFactory {
             jitsiScript.onload = () => {
                 // As soon as the library is loaded, let's "init" it.
                 window.JitsiMeetJS.init(options ?? {});
+
+                // TODO: make the log level configurable based on the value of the localStorage debug key
+                let jitsiDebugLevel = localStorage.getItem("jitsiDebugLevel");
+                if (!jitsiDebugLevel) {
+                    jitsiDebugLevel = window.JitsiMeetJS.logLevels.WARN;
+                }
+                window.JitsiMeetJS.setLogLevel(jitsiDebugLevel);
+
                 resolve(window.JitsiMeetJS);
             };
             jitsiScript.onerror = () => {
@@ -85,7 +95,7 @@ class LibJitsiFactory {
             cancel(() => {
                 jitsiScript.remove();
             });
-        });
+        }));
     }
 }
 

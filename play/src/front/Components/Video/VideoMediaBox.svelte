@@ -4,7 +4,7 @@
     import type { VideoPeer } from "../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { srcObject } from "./utils";
-    import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";

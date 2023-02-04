@@ -78,7 +78,7 @@
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
-    import {megaphoneEnabledStore} from "../../Stores/MegaphoneStore";
+    import { megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -693,7 +693,11 @@
                     </button>
                 </div>
                 <div on:click={toggleMegaphone} class="bottom-action-button">
-                    <Tooltip text={$megaphoneEnabledStore ? $LL.actionbar.disableMegaphone() : $LL.actionbar.enableMegaphone()} />
+                    <Tooltip
+                        text={$megaphoneEnabledStore
+                            ? $LL.actionbar.disableMegaphone()
+                            : $LL.actionbar.enableMegaphone()}
+                    />
 
                     <button class:border-top-light={$megaphoneEnabledStore}>
                         <img draggable="false" src={megaphoneImg} style="padding: 2px" alt="Toggle megaphone" />

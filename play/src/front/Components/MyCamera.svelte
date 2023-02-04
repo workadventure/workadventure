@@ -17,7 +17,7 @@
     import microphoneOffImg from "./images/microphone-off.png";
     import cameraOffImg from "./images/camera-off.png";
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
-    import {megaphoneEnabledStore} from "../Stores/MegaphoneStore";
+    import { megaphoneEnabledStore } from "../Stores/MegaphoneStore";
 
     let stream: MediaStream | null;
     let userName = localUserStore.getName();
@@ -92,7 +92,9 @@
             </div>
             <div class="my-webcam-container tw-z-[250] tw-bg-dark-blue/50 tw-rounded tw-transition-all">
                 <video
-                    class="tw-h-full tw-w-full tw-rounded md:tw-object-cover {$megaphoneEnabledStore ? 'tw-border-orange tw-border-3 tw-border-solid' : ''}"
+                    class="tw-h-full tw-w-full tw-rounded md:tw-object-cover {$megaphoneEnabledStore
+                        ? 'tw-border-orange tw-border-3 tw-border-solid'
+                        : ''}"
                     style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}
                     autoplay
