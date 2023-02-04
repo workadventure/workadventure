@@ -3,7 +3,7 @@
 
     import { ICON_URL } from "../../Enum/EnvironmentVariable";
     import { mainCoWebsite } from "../../Stores/CoWebsiteStore";
-    import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";

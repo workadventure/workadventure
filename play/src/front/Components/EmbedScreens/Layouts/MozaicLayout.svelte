@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { highlightedEmbedScreen } from "../../../Stores/EmbedScreensStore";
+    import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import MediaBox from "../../Video/MediaBox.svelte";
     import MyCamera from "../../MyCamera.svelte";

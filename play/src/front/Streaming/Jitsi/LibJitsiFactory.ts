@@ -61,7 +61,7 @@ class LibJitsiFactory {
         });
     }
 
-    private loadJitsiScript(domain: string, options?: InitOptions): CancelablePromise<JitsiMeetJSType> {
+    public loadJitsiScript(domain: string, options?: InitOptions): CancelablePromise<JitsiMeetJSType> {
         if (this.jitsiLoadPromise) {
             return this.jitsiLoadPromise;
         }
@@ -74,6 +74,14 @@ class LibJitsiFactory {
             jitsiScript.onload = () => {
                 // As soon as the library is loaded, let's "init" it.
                 window.JitsiMeetJS.init(options ?? {});
+
+                // TODO: make the log level configurable based on the value of the localStorage debug key
+                let jitsiDebugLevel = localStorage.getItem("jitsiDebugLevel");
+                if (!jitsiDebugLevel) {
+                    jitsiDebugLevel = window.JitsiMeetJS.logLevels.WARN;
+                }
+                window.JitsiMeetJS.setLogLevel(jitsiDebugLevel);
+
                 resolve(window.JitsiMeetJS);
             };
             jitsiScript.onerror = () => {

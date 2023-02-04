@@ -9,7 +9,7 @@
     import { onDestroy, onMount } from "svelte";
     import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
-    import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import BanReportBox from "./BanReportBox.svelte";
     import microphoneOffImg from "../images/microphone-off.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";

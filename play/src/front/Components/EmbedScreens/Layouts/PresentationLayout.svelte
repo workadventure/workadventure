@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { highlightedEmbedScreen } from "../../../Stores/EmbedScreensStore";
+    import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
     import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
@@ -8,6 +8,7 @@
     import { peerStore } from "../../../Stores/PeerStore";
     import { myCameraStore } from "../../../Stores/MyMediaStore";
     import MyCamera from "../../MyCamera.svelte";
+    import {streamableCollectionStore} from "../../../Stores/StreamableCollectionStore";
 
     function closeCoWebsite() {
         if ($highlightedEmbedScreen?.type === "cowebsite") {
@@ -88,10 +89,9 @@
                 {/if}
             </div>
         </div>
-
-        {#if $peerStore.size > 0 || $myCameraStore}
+        {#if $streamableCollectionStore.size > 0 || $myCameraStore}
             <div class="tw-relative tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4">
-                {#if $peerStore.size > 0}
+                {#if $streamableCollectionStore.size > 0}
                     <CamerasContainer highlightedEmbedScreen={$highlightedEmbedScreen} />
                 {/if}
                 {#if $myCameraStore}
