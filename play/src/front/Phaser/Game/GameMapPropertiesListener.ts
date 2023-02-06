@@ -301,6 +301,8 @@ export class GameMapPropertiesListener {
         let websiteTriggerMessageProperty: string | undefined;
         let websiteClosableProperty: boolean | undefined;
 
+        console.log(place);
+
         place.properties.forEach((property) => {
             switch (property.name) {
                 case GameMapProperties.OPEN_WEBSITE:

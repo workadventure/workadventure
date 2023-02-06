@@ -85,6 +85,7 @@
                 $mapEditorSelectedAreaPreviewStore.setProperty(property.key, undefined);
             }
         }
+        console.log($mapEditorSelectedAreaPreviewStore);
     }
 
     function onUpdateProperty(property: PropertyDescription) {

@@ -1,7 +1,12 @@
 import type { AreaData } from "../types";
 import { AreaType } from "../types";
 import * as _ from "lodash";
-import type { ITiledMapObject, ITiledMapObjectLayer, ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
+import type {
+    ITiledMapObject,
+    ITiledMapObjectLayer,
+    ITiledMapProperty,
+    Json,
+} from "@workadventure/tiled-map-type-guard";
 import { MathUtils } from "@workadventure/math-utils";
 import type { GameMap } from "./GameMap";
 
@@ -110,13 +115,15 @@ export class GameMapAreas {
             if (data === undefined) {
                 continue;
             }
-            //eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-            properties.push(this.mapAreaPropertyToTiledProperty(key, data));
+            const property = this.mapAreaPropertyToTiledProperty(key, data);
+            if (property) {
+                properties.push(property);
+            }
         }
         return properties;
     }
 
-    private mapAreaPropertyToTiledProperty(key: string, value: string | boolean | number): ITiledMapProperty {
+    private mapAreaPropertyToTiledProperty(key: string, value: unknown): ITiledMapProperty | undefined {
         switch (typeof value) {
             case "string": {
                 return {
@@ -138,6 +145,16 @@ export class GameMapAreas {
                     name: key,
                     type: "bool",
                 };
+            }
+            case "object": {
+                return {
+                    value: value as Json,
+                    name: key,
+                    type: "class",
+                };
+            }
+            default: {
+                return undefined;
             }
         }
     }
