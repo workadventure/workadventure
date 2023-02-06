@@ -62,9 +62,7 @@ export class DynamicAreaManager {
                     ...createAreaEvent,
                     id: this.nextAreaId++,
                     visible: true,
-                    properties: {
-                        customProperties: {},
-                    },
+                    properties: {},
                 },
                 AreaType.Dynamic
             );

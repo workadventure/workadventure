@@ -94,9 +94,7 @@ export class AreaEditorTool extends MapEditorTool {
                 const config: AreaData = {
                     ...data,
                     visible: true,
-                    properties: {
-                        customProperties: {},
-                    },
+                    properties: {},
                 };
                 // execute command locally
                 this.mapEditorModeManager.executeCommand(
@@ -197,9 +195,7 @@ export class AreaEditorTool extends MapEditorTool {
                     id: newAreaId,
                     name: `STATIC_AREA_${newAreaId}`,
                     visible: true,
-                    properties: {
-                        customProperties: {},
-                    },
+                    properties: {},
                     width: 30,
                     height: 30,
                     x: this.scene.input.activePointer.worldX - 15,

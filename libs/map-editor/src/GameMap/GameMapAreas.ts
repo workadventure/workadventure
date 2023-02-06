@@ -1,4 +1,3 @@
-import type { AreaProperties } from "@workadventure/messages";
 import type { AreaData } from "../types";
 import { AreaType } from "../types";
 import * as _ from "lodash";
@@ -83,57 +82,31 @@ export class GameMapAreas {
         };
     }
 
-    private mapTiledPropertiesToAreaProperties(areaRaw: ITiledMapObject): AreaProperties {
+    private mapTiledPropertiesToAreaProperties(areaRaw: ITiledMapObject): { [key: string]: unknown | undefined } {
         if (!areaRaw.properties) {
-            return {
-                customProperties: {},
-            };
+            return {};
         }
-        const properties: AreaProperties = {
-            customProperties: {},
-        };
+        const properties: { [key: string]: unknown | undefined } = {};
         for (const rawProperty of areaRaw.properties) {
             const value = rawProperty.value;
 
-            // TODO: Figure out what to do with JSON type
             if (value === undefined || value === null) {
                 continue;
             }
-
-            //
-            if (["focusable", "silent", "zoomMargin"].includes(rawProperty.name)) {
-                //eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
-                properties[rawProperty.name] = value;
-            } else {
-                //eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
-                properties.customProperties[rawProperty.name] = value;
-            }
+            properties[rawProperty.name] = value;
         }
         return properties;
     }
 
-    private mapAreaPropertiesToTiledProperties(areaProperties: AreaProperties): ITiledMapProperty[] {
+    private mapAreaPropertiesToTiledProperties(areaProperties: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        [key: string]: any | undefined;
+    }): ITiledMapProperty[] {
         const properties: ITiledMapProperty[] = [];
 
-        const focusable = areaProperties.focusable;
-        const zoomMargin = areaProperties.zoomMargin;
-        const silent = areaProperties.silent;
-
-        if (focusable !== undefined) {
-            properties.push({ name: "focusable", type: "bool", value: focusable });
-        }
-        if (zoomMargin !== undefined) {
-            properties.push({ name: "zoomMargin", type: "float", value: zoomMargin });
-        }
-        if (silent !== undefined) {
-            properties.push({ name: "silent", type: "bool", value: silent });
-        }
-
-        for (const key in areaProperties.customProperties) {
+        for (const key in areaProperties) {
             //eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            const data = areaProperties.customProperties[key];
+            const data = areaProperties[key];
             if (data === undefined) {
                 continue;
             }
@@ -361,8 +334,8 @@ export class GameMapAreas {
         }
     }
 
-    public getProperties(position: { x: number; y: number }): Map<string, string | boolean | number> {
-        const properties = new Map<string, string | boolean | number>();
+    public getProperties(position: { x: number; y: number }): Map<string, unknown> {
+        const properties = new Map<string, unknown>();
         for (const area of this.getAreasOnPosition(position, this.areasPositionOffsetY)) {
             if (area.properties === undefined) {
                 continue;
@@ -380,46 +353,15 @@ export class GameMapAreas {
     }
 
     public setProperty(area: AreaData, key: string, value: string | number | boolean | undefined): void {
-        switch (key) {
-            case "focusable": {
-                if (typeof value === "boolean" || value === undefined) {
-                    area.properties.focusable = value;
-                }
-                break;
-            }
-            case "zoomMargin": {
-                if (typeof value === "number" || value === undefined) {
-                    area.properties.zoomMargin = value;
-                }
-                break;
-            }
-            case "silent": {
-                if (typeof value === "boolean" || value === undefined) {
-                    area.properties.silent = value;
-                }
-                break;
-            }
-            default: {
-                area.properties.customProperties[key] = value;
-            }
-        }
+        area.properties[key] = value;
     }
 
-    private flattenAreaProperties(properties: AreaProperties): Record<string, string | boolean | number> {
-        const flattenedProperties: Record<string, string | boolean | number> = {};
-        if (properties.focusable !== undefined) {
-            flattenedProperties.focusable = properties.focusable;
-        }
-        if (properties.zoomMargin !== undefined) {
-            flattenedProperties.zoomMargin = properties.zoomMargin;
-        }
-        if (properties.silent !== undefined) {
-            flattenedProperties.silent = properties.silent;
-        }
+    private flattenAreaProperties(properties: { [key: string]: unknown }): Record<string, unknown> {
+        const flattenedProperties: Record<string, unknown> = {};
 
-        for (const key in properties.customProperties) {
+        for (const key in properties) {
             //eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            flattenedProperties[key] = properties.customProperties[key];
+            flattenedProperties[key] = properties[key];
         }
         return flattenedProperties;
     }

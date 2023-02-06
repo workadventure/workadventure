@@ -37,7 +37,7 @@ export class StartPositionCalculator {
             }
         }
         for (const area of this.gameMapFrontWrapper.getAreas(AreaType.Static)) {
-            if (area.name === "start" || area.properties.customProperties[GameMapProperties.START] === true) {
+            if (area.name === "start" || area.properties[GameMapProperties.START] === true) {
                 names.push(area.name);
                 continue;
             }
@@ -85,7 +85,7 @@ export class StartPositionCalculator {
         const area = this.gameMapFrontWrapper.getAreaByName(startPositionName, AreaType.Static);
         if (area) {
             if (needStartProperty) {
-                if (!area.properties.customProperties["start"]) {
+                if (!area.properties["start"]) {
                     return false;
                 }
             }
