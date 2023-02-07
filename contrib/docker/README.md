@@ -58,3 +58,18 @@ Usage:
 ```console
 $ docker-compose -f docker-compose.prod.yaml -f docker-compose.single-domain.yaml up
 ```
+
+## Normal install
+
+If the single domain install fails, try the following which will require multiple subdomains and/or a subdomain wildcard.
+The process is to copy the .env.prod.template to .env in the same folder and fill in the following information:
+`SECRET_KEY, DOMAIN, FRONT_HOST, CHAT_HOST, PUSHER_HOST, BACK_HOST, MAPS_HOST, ICON_HOST, UPLOADER_HOST, EJABBERD_HOST`
+
+Note: You will need to add the subdomain wildcard to your DNS settings (CNAME is ok, or A record), or add each individual record for each subdomain (there are about 9 you need to add)
+
+Then, type the following command from the contrib/docker folder:
+```console
+$ docker-compose -f docker-compose.prod-yaml up
+```
+
+Note this will not setup your own Jitsu server, but it will let you use the hosted version of Jitsu until you decide to setup your own.
