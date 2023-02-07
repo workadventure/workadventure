@@ -55,11 +55,6 @@ export class GameMapFrontWrapper {
     public readonly phaserMap: Phaser.Tilemaps.Tilemap;
     public readonly phaserLayers: TilemapLayer[] = [];
 
-    /**
-     * Stores information about walls and every object that modifies collision grid on certain tile
-     */
-    public readonly collisionTilesHistogram: string[][][];
-
     public collisionGrid: number[][];
 
     private perLayerCollisionGridCache: Map<number, (0 | 2 | 1)[][]> = new Map<number, (0 | 2 | 1)[][]>();
@@ -105,21 +100,8 @@ export class GameMapFrontWrapper {
             }
         }
 
-        this.collisionTilesHistogram = [];
         this.collisionGrid = [];
-        const collisionsLayer = this.phaserLayers.find((phaserLayer) => phaserLayer.layer.name === "collisions");
-        for (let y = 0; y < this.phaserMap.height; y += 1) {
-            // this needs go have data from all collision layers, not just collisions
-            this.collisionTilesHistogram.push([]);
-            for (let x = 0; x < this.phaserMap.width; x += 1) {
-                if (this.phaserLayers)
-                    if (collisionsLayer && collisionsLayer.layer.data[y][x].index !== -1) {
-                        this.collisionTilesHistogram[y].push(["predefined"]);
-                    } else {
-                        this.collisionTilesHistogram[y].push([]);
-                    }
-            }
-        }
+        // const collisionsLayer = this.phaserLayers.find((phaserLayer) => phaserLayer.layer.name === "collisions");
 
         this.entitiesManager = new EntitiesManager(this.scene, this);
         for (const entityData of this.gameMap.getGameMapEntities().getEntities()) {
@@ -173,21 +155,12 @@ export class GameMapFrontWrapper {
                 // add tiles
                 if (collisionGrid[y][x] === 1) {
                     const tile = collisionsLayer.putTileAt(specialZonesTileset.firstgid, coords.x + x, coords.y + y);
-                    this.collisionTilesHistogram[coords.y + y][coords.x + x].push(name);
                     tile.properties["collides"] = true;
                     continue;
                 }
                 // remove tiles
                 if (collisionGrid[y][x] === -1) {
-                    const tagNameIndex = this.collisionTilesHistogram[coords.y + y][coords.x + x].findIndex(
-                        (tagName) => tagName === name
-                    );
-                    if (tagNameIndex !== -1) {
-                        this.collisionTilesHistogram[coords.y + y][coords.x + x].splice(tagNameIndex, 1);
-                        if (this.collisionTilesHistogram[coords.y + y][coords.x + x].length === 0) {
-                            collisionsLayer.removeTileAt(coords.x + x, coords.y + y, false);
-                        }
-                    }
+                    collisionsLayer.removeTileAt(coords.x + x, coords.y + y, false);
                 }
             }
         }
