@@ -82,7 +82,7 @@ export class AbstractRoom {
     protected subscriptions = new Map<string, string>();
     public closed = false;
 
-    constructor(protected xmppClient: XmppClient, protected _VERBOSE: boolean) {
+    constructor(protected xmppClient: XmppClient) {
         if (this.constructor === AbstractRoom) {
             throw new TypeError('Abstract class "AbstractRoom" cannot be instantiated directly');
         }

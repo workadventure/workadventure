@@ -1,4 +1,8 @@
-import { isLookingLikeIframeEventWrapper, isIframeEventWrapper } from "./Event/IframeEvent";
+import {
+    isLookingLikeIframeEventWrapper,
+    isIframeEventWrapper,
+    lookingLikeIframeEventWrapper,
+} from "./Event/IframeEvent";
 import { userStore } from "./Stores/LocalUserStore";
 import {
     availabilityStatusStore,
@@ -27,6 +31,9 @@ import { NotificationType } from "./Media/MediaManager";
 import { activeThreadStore } from "./Stores/ActiveThreadStore";
 import { get } from "svelte/store";
 import { emojiRegex } from "./Utils/HtmlUtils";
+import Debug from "debug";
+
+const debug = Debug("chat");
 
 class IframeListener {
     init() {
@@ -36,6 +43,7 @@ class IframeListener {
             if (lookingLikeEvent.success) {
                 const iframeEventGuarded = isIframeEventWrapper.safeParse(lookingLikeEvent.data);
                 if (iframeEventGuarded.success) {
+                    debug(`iFrameListener => message received => ${JSON.stringify(iframeEventGuarded.data)}`);
                     const iframeEvent = iframeEventGuarded.data;
                     switch (iframeEvent.type) {
                         case "settings": {
@@ -195,69 +203,53 @@ class IframeListener {
         );
     }
     sendNotificationToFront(userName: string, notificationType: NotificationType, forum: null | string) {
-        window.parent.postMessage(
-            {
-                type: "notification",
-                data: { userName, notificationType, forum },
-            },
-            "*"
-        );
+        this.sendToParent({
+            type: "notification",
+            data: { userName, notificationType, forum },
+        });
     }
 
     sendLogin() {
-        window.parent.postMessage(
-            {
-                type: "login",
-            },
-            "*"
-        );
+        this.sendToParent({
+            type: "login",
+        });
     }
 
     sendRefresh() {
-        window.parent.postMessage(
-            {
-                type: "refresh",
-            },
-            "*"
-        );
+        this.sendToParent({
+            type: "refresh",
+        });
     }
 
     sendShowBusinessCard(visitCardUrl: string) {
-        window.parent.postMessage(
-            {
-                type: "showBusinessCard",
-                data: { visitCardUrl },
-            },
-            "*"
-        );
+        this.sendToParent({
+            type: "showBusinessCard",
+            data: { visitCardUrl },
+        });
     }
 
     sendRedirectPricing() {
-        window.parent.postMessage(
-            {
-                type: "redirectPricing",
-            },
-            "*"
-        );
+        this.sendToParent({
+            type: "redirectPricing",
+        });
     }
 
     sendChatTotalMessagesToSee(total: number) {
-        window.parent.postMessage(
-            {
-                type: "chatTotalMessagesToSee",
-                data: total,
-            },
-            "*"
-        );
+        this.sendToParent({
+            type: "chatTotalMessagesToSee",
+            data: total,
+        });
     }
 
     sendChatIsReady() {
-        window.parent.postMessage(
-            {
-                type: "chatReady",
-            },
-            "*"
-        );
+        this.sendToParent({
+            type: "chatReady",
+        });
+    }
+
+    sendToParent(message: lookingLikeIframeEventWrapper) {
+        debug(`iFrameListener => message sent to parent => ${JSON.stringify(message)}`);
+        window.parent.postMessage(message, "*");
     }
 }
 

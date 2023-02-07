@@ -74,3 +74,5 @@ export const isLookingLikeIframeEventWrapper = z.object({
     type: z.string(),
     data: z.unknown().optional(),
 });
+
+export type lookingLikeIframeEventWrapper = z.infer<typeof isLookingLikeIframeEventWrapper>;
