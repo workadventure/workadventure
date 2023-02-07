@@ -28,6 +28,7 @@ const userProperties = "user-properties";
 const cameraPrivacySettings = "cameraPrivacySettings";
 const microphonePrivacySettings = "microphonePrivacySettings";
 const emojiFavorite = "emojiFavorite";
+const speakerDeviceId = "speakerDeviceId";
 
 const JwtAuthToken = z
     .object({
@@ -411,6 +412,14 @@ class LocalUserStore {
             console.error("The localStorage key 'emojiFavorite' format is incorrect:", e);
             return null;
         }
+    }
+
+    setSpeakerDeviceId(value: string) {
+        localStorage.setItem(speakerDeviceId, value);
+    }
+
+    getSpeakerDeviceId() {
+        return localStorage.getItem(speakerDeviceId);
     }
 }
 
