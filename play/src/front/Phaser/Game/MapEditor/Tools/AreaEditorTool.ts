@@ -165,9 +165,9 @@ export class AreaEditorTool extends MapEditorTool {
         }
         areaPreview.updatePreview(config);
         // HACK: A way to update AreaPreviewWindow component values after performin undo / redo operations
-        if (get(mapEditorSelectedAreaPreviewStore) !== undefined) {
-            mapEditorSelectedAreaPreviewStore.set(areaPreview);
-        }
+        // if (get(mapEditorSelectedAreaPreviewStore) !== undefined) {
+        //     mapEditorSelectedAreaPreviewStore.set(areaPreview);
+        // }
     }
 
     public getAreaPreviewConfig(id: number): AreaData | undefined {

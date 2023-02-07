@@ -14,8 +14,6 @@
         {/if}
         {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor}
             <AreaEditor />
-            <!-- <AreaPreviewWindow />
-            <PropertyPreviewSidebar /> -->
         {/if}
     </div>
 </div>

@@ -7,18 +7,18 @@
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import OpenTabPropertyEditor from "./PropertyEditor/OpenTabPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
-    import TextPropertyEditor from "./PropertyEditor/TextPropertyEditor.svelte";
     import { PropertyDescription } from "@workadventure/map-editor";
 
     let possibleProperties: PropertyDescription[] = [
-        {
-            key: "textHeader",
-            name: $LL.mapEditor.properties.textProperties.label(),
-            active: false,
-            currentValue: undefined,
-            component: TextPropertyEditor,
-            defaultValue: "",
-        },
+        // TODO: Change to Area Name?
+        // {
+        //     key: "textHeader",
+        //     name: $LL.mapEditor.properties.textProperties.label(),
+        //     active: false,
+        //     currentValue: undefined,
+        //     component: TextPropertyEditor,
+        //     defaultValue: "",
+        // },
         {
             key: "jitsiRoom",
             name: $LL.mapEditor.properties.jitsiProperties.label(),
@@ -58,10 +58,11 @@
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((areaPreview) => {
         if (areaPreview) {
             for (let property of possibleProperties) {
-                // property.active =
-                //     areaPreview.getConfig().properties[property.key] !== undefined &&
-                //     areaPreview.getConfig().properties[property.key] !== null;
-                // property.currentValue = areaPreview.getConfig().properties[property.key];
+                console.log(areaPreview);
+                property.active =
+                    areaPreview.getConfig().properties[property.key] !== undefined &&
+                    areaPreview.getConfig().properties[property.key] !== null;
+                property.currentValue = areaPreview.getConfig().properties[property.key];
                 if (!property.currentValue) {
                     property.currentValue = structuredClone(property.defaultValue);
                 }
@@ -75,17 +76,20 @@
     });
 
     function onPropertyChecked(property: PropertyDescription) {
+        console.log(property);
         if ($mapEditorSelectedAreaPreviewStore) {
             if (property.active) {
+                console.log("D1");
                 if (!property.currentValue) {
                     property.currentValue = possibleProperties.find((v) => v.key === property.key)?.defaultValue; //initialize here the property value
                 }
                 $mapEditorSelectedAreaPreviewStore.setProperty(property.key, property.currentValue);
             } else {
+                console.log("D2");
                 $mapEditorSelectedAreaPreviewStore.setProperty(property.key, undefined);
             }
         }
-        console.log($mapEditorSelectedAreaPreviewStore);
+        console.log($mapEditorSelectedAreaPreviewStore?.getConfig().properties);
     }
 
     function onUpdateProperty(property: PropertyDescription) {
