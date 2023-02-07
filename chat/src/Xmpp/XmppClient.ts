@@ -1,4 +1,4 @@
-import { XmppSettingsMessage } from "../Messages/ts-proto-generated/protos/messages";
+import { XmppSettingsMessage } from "@workadventure/messages";
 import { EJABBERD_WS_URI } from "../Enum/EnvironmentVariable";
 import CancelablePromise from "cancelable-promise";
 import Debug from "debug";
@@ -15,7 +15,7 @@ import { ChatStateMessage, JID } from "stanza";
 import { ParsedJID } from "stanza/JID";
 import Timer = NodeJS.Timer;
 
-const debug = Debug("xmppClient");
+const debug = Debug("chat");
 
 export class XmppClient {
     private address!: ParsedJID;
