@@ -55,7 +55,7 @@ import { apiClientRepository } from "./ApiClientRepository";
 import type { GroupDescriptor, UserDescriptor } from "../models/Zone";
 import type { ZoneEventListener } from "../models/Zone";
 import Debug from "debug";
-import type { ExAdminSocketInterface } from "../models/Websocket/ExAdminSocketInterface";
+import type { AdminConnection, ExAdminSocketInterface } from "../models/Websocket/ExAdminSocketInterface";
 import type { compressors } from "hyper-express";
 import { adminService } from "./AdminService";
 import { ErrorApiData, MucRoomDefinitionInterface } from "@workadventure/messages";
@@ -92,7 +92,13 @@ export class SocketManager implements ZoneEventListener {
     async handleAdminRoom(client: ExAdminSocketInterface, roomId: string): Promise<void> {
         const apiClient = await apiClientRepository.getClient(roomId);
         const adminRoomStream = apiClient.adminRoom();
-        client.adminConnection = adminRoomStream;
+        if (!client.adminConnections) {
+            client.adminConnections = new Map<string, AdminConnection>();
+        }
+        if (client.adminConnections.has(roomId)) {
+            client.adminConnections.get(roomId)?.end();
+        }
+        client.adminConnections.set(roomId, adminRoomStream);
 
         adminRoomStream
             .on("data", (message: ServerToAdminClientMessage) => {
@@ -167,8 +173,8 @@ export class SocketManager implements ZoneEventListener {
     }
 
     leaveAdminRoom(socket: ExAdminSocketInterface): void {
-        if (socket.adminConnection) {
-            socket.adminConnection.end();
+        for (const adminConnection of socket.adminConnections?.values() ?? []) {
+            adminConnection.end();
         }
     }
 
