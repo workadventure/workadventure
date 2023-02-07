@@ -152,8 +152,9 @@ import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import { mapEditorModeStore, mapEntitiesPrefabsStore } from "../../Stores/MapEditorStore";
+import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
+import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -236,6 +237,7 @@ export class GameScene extends DirtyScene {
     private emoteManager!: EmoteManager;
     private cameraManager!: CameraManager;
     private mapEditorModeManager!: MapEditorModeManager;
+    private entitiesCollectionsManager!: EntitiesCollectionsManager;
     private pathfindingManager!: PathfindingManager;
     private activatablesManager!: ActivatablesManager;
     private preloading = true;
@@ -271,9 +273,11 @@ export class GameScene extends DirtyScene {
         this.MapUrlFile = MapUrlFile;
         this.roomUrl = room.key;
 
+        this.entitiesCollectionsManager = new EntitiesCollectionsManager();
+
         if (this.room.entityCollectionsUrls) {
             for (const url of this.room.entityCollectionsUrls) {
-                mapEntitiesPrefabsStore.loadCollections(url).catch((reason) => {
+                this.entitiesCollectionsManager.loadCollections(url).catch((reason) => {
                     console.warn(reason);
                 });
             }
@@ -2853,6 +2857,10 @@ ${escapedMessage}
 
     public getMapEditorModeManager(): MapEditorModeManager {
         return this.mapEditorModeManager;
+    }
+
+    public getEntitiesCollectionsManager(): EntitiesCollectionsManager {
+        return this.entitiesCollectionsManager;
     }
 
     public getPathfindingManager(): PathfindingManager {

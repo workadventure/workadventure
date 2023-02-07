@@ -1,20 +1,20 @@
 <script lang="ts">
     import LL from "../../../i18n/i18n-svelte";
     import type { EntityPrefab } from "@workadventure/map-editor";
-    import { onDestroy } from "svelte/internal";
     import { onMount } from "svelte";
     import {
         mapEditorSelectedEntityPrefabStore,
-        mapEntitiesPrefabsStore,
         onMapEditorInputFocus,
         onMapEditorInputUnfocus,
     } from "../../Stores/MapEditorStore";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+
+    const entitiesCollectionsManager = gameManager.getCurrentGameScene().getEntitiesCollectionsManager();
 
     let pickedItem: EntityPrefab | undefined = undefined;
     let pickedVariant: EntityPrefab | undefined = undefined;
     let currentColor: string;
 
-    // let currentMapObjects: EntityPrefab[] = [];
     let rootItem: EntityPrefab[] = []; //A sample of each object
     let itemVariants: EntityPrefab[] = [];
     let currentVariants: EntityPrefab[] = [];
@@ -24,10 +24,11 @@
 
     let selectedTag = "";
 
-    let tagsStore = mapEntitiesPrefabsStore.tagsStore;
+    let tags = entitiesCollectionsManager.getTags();
 
     onMount(() => {
-        mapEntitiesPrefabsStore.setNameFilter(filter);
+        entitiesCollectionsManager.setNameFilter(filter);
+        updateVisiblePrefabs();
     });
 
     function onPickItemVariant(variant: EntityPrefab) {
@@ -40,7 +41,9 @@
         if (!pickedItem) {
             return;
         }
-        itemVariants = $mapEntitiesPrefabsStore.filter((item: EntityPrefab) => item.name == pickedItem?.name);
+        itemVariants = entitiesCollectionsManager
+            .getEntitiesPrefabs()
+            .filter((item: EntityPrefab) => item.name == pickedItem?.name);
         itemVariants = itemVariants.sort(
             (a, b) =>
                 a.direction.localeCompare(b.direction) +
@@ -77,18 +80,20 @@
     }
 
     function onFilterChange() {
-        mapEntitiesPrefabsStore.setNameFilter(filter);
+        entitiesCollectionsManager.setNameFilter(filter);
+        updateVisiblePrefabs();
     }
 
-    let mapObjectStoreUnsubscriber = mapEntitiesPrefabsStore.subscribe((newMap: EntityPrefab[]) => {
+    function updateVisiblePrefabs() {
+        const prefabs = entitiesCollectionsManager.getEntitiesPrefabs();
         let tags = new Set<string>();
         let uniqId = new Set<string>();
         rootItem = [];
-        for (let mapObject of newMap) {
-            mapObject.tags.forEach((v: string) => tags.add(v));
-            if (!uniqId.has(mapObject.name)) {
-                uniqId.add(mapObject.name);
-                rootItem.push(mapObject);
+        for (let entityPrefab of prefabs) {
+            entityPrefab.tags.forEach((v: string) => tags.add(v));
+            if (!uniqId.has(entityPrefab.name)) {
+                uniqId.add(entityPrefab.name);
+                rootItem.push(entityPrefab);
             }
         }
 
@@ -96,13 +101,7 @@
             //if the item is not available due to filtering, we change it
             onPickItem(rootItem[0]);
         }
-    });
-
-    onDestroy(() => {
-        if (mapObjectStoreUnsubscriber !== undefined) {
-            mapObjectStoreUnsubscriber();
-        }
-    });
+    }
 </script>
 
 <div class="item-picker">
@@ -117,7 +116,7 @@
             placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}
         />
         <select class="tag-selector" bind:value={selectedTag} on:change={() => onTagPick()}>
-            {#each $tagsStore as tag}
+            {#each tags as tag}
                 <option>{tag}</option>
             {/each}
         </select>
