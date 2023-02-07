@@ -18,6 +18,8 @@ export class MapEntitiesPrefabsStore implements Readable<EntityPrefab[]> {
     public tagsStore = writable<string[]>([]);
     private currentCollection: EntityCollection = { collectionName: "All Object Collection", collection: [], tags: [] };
 
+    private fetchedCollectionsUrls: string[] = [];
+
     constructor() {}
 
     subscribe(
@@ -57,7 +59,11 @@ export class MapEntitiesPrefabsStore implements Readable<EntityPrefab[]> {
     }
 
     public async loadCollections(url: string): Promise<void> {
+        if (this.fetchedCollectionsUrls.includes(url)) {
+            return;
+        }
         const entityCollections = await this.fetchCollections(url);
+        this.fetchedCollectionsUrls.push(url);
 
         for (const entityCollection of entityCollections) {
             const tagSet = new Set<string>();
