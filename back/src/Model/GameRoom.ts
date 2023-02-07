@@ -20,7 +20,6 @@ import {
     SubToPusherRoomMessage,
     VariableWithTagMessage,
     ServerToClientMessage,
-    PingMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
@@ -36,7 +35,6 @@ import {
     BBB_URL,
     ENABLE_CHAT,
     ENABLE_CHAT_UPLOAD,
-    ENABLE_FEATURE_MAP_EDITOR,
     JITSI_ISS,
     JITSI_URL,
     PUBLIC_MAP_STORAGE_URL,
@@ -49,7 +47,6 @@ import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { MapLoadingError } from "../Services/MapLoadingError";
 import { MucManager } from "../Services/MucManager";
 import { BrothersFinder } from "./BrothersFinder";
-import { getMapStorageClient } from "../Services/MapStorageClient";
 import { slugifyJitsiRoomName } from "@workadventure/shared-utils/src/Jitsi/slugify";
 
 export type ConnectCallback = (user: User, group: Group) => void;
@@ -130,14 +127,6 @@ export class GameRoom implements BrothersFinder {
             onPlayerDetailsUpdated,
             mapDetails.thirdParty ?? undefined
         );
-
-        if (ENABLE_FEATURE_MAP_EDITOR) {
-            getMapStorageClient().ping(new PingMessage(), (err: unknown, res: unknown) => {
-                console.log(`==================================`);
-                console.log(err);
-                console.log(JSON.stringify(res));
-            });
-        }
 
         gameRoom
             .getMucManager()

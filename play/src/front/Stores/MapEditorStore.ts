@@ -5,7 +5,6 @@ import { ENABLE_FEATURE_MAP_EDITOR } from "../Enum/EnvironmentVariable";
 import type { AreaPreview } from "../Phaser/Components/MapEditor/AreaPreview";
 import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
 import { Entity } from "../Phaser/ECS/Entity";
-import { MapEntitiesPrefabsStore } from "./MapEntitiesPrefabsStore";
 
 function createMapEditorModeStore() {
     const { set, subscribe } = writable(false);
@@ -43,8 +42,6 @@ export const mapEditorSelectedEntityStore = writable<Entity | undefined>(undefin
 export const mapEditorSelectedPropertyStore = writable<PredefinedPropertyData | undefined>(undefined);
 
 export const mapEditorSelectedToolStore = writable<EditorToolName | undefined>(undefined);
-
-export const mapEntitiesPrefabsStore = new MapEntitiesPrefabsStore();
 
 export const mapEditorSelectedEntityPrefabStore = writable<EntityPrefab | undefined>(undefined);
 

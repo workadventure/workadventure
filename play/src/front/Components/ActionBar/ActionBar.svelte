@@ -75,6 +75,7 @@
     import { modalIframeStore, modalVisibilityStore } from "../../Stores/ModalStore";
     import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
+    import { localUserStore } from "../../Connexion/LocalUserStore";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
@@ -325,6 +326,7 @@
     }
 
     function selectSpeaker(deviceId: string) {
+        localUserStore.setSpeakerDeviceId(deviceId);
         speakerSelectedStore.set(deviceId);
     }
 

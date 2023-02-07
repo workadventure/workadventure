@@ -98,7 +98,10 @@ export class UserDescriptor {
         if (playerDetails.getRemoveoutlinecolor()) {
             this.outlineColor = undefined;
         } else {
-            this.outlineColor = playerDetails.getOutlinecolor()?.getValue();
+            const outlineColor = playerDetails.getOutlinecolor();
+            if (outlineColor !== undefined) {
+                this.outlineColor = outlineColor.getValue();
+            }
         }
         const availabilityStatus = playerDetails.getAvailabilitystatus();
         if (availabilityStatus !== undefined) {
