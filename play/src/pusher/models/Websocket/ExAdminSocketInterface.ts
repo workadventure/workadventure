@@ -5,6 +5,6 @@ import type { ClientDuplexStream } from "@grpc/grpc-js";
 export type AdminConnection = ClientDuplexStream<AdminPusherToBackMessage, ServerToAdminClientMessage>;
 
 export interface ExAdminSocketInterface extends compressors.WebSocket {
-    adminConnection: AdminConnection;
+    adminConnections: Map<string, AdminConnection> | undefined;
     disconnecting: boolean;
 }
