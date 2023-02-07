@@ -56,6 +56,7 @@ export class GameMapFrontWrapper {
     public readonly phaserLayers: TilemapLayer[] = [];
 
     public collisionGrid: number[][];
+    private entitiesCollisionLayer: Phaser.Tilemaps.TilemapLayer;
 
     private perLayerCollisionGridCache: Map<number, (0 | 2 | 1)[][]> = new Map<number, (0 | 2 | 1)[][]>();
 
@@ -101,7 +102,10 @@ export class GameMapFrontWrapper {
         }
 
         this.collisionGrid = [];
-        // const collisionsLayer = this.phaserLayers.find((phaserLayer) => phaserLayer.layer.name === "collisions");
+        this.entitiesCollisionLayer = phaserMap.createBlankLayer("__entitiesCollisionLayer", terrains);
+        this.entitiesCollisionLayer.setDepth(-2).setVisible(false).setCollisionByProperty({ collides: true });
+
+        this.phaserLayers.push(this.entitiesCollisionLayer);
 
         this.entitiesManager = new EntitiesManager(this.scene, this);
         for (const entityData of this.gameMap.getGameMapEntities().getEntities()) {
@@ -144,28 +148,31 @@ export class GameMapFrontWrapper {
      * @returns
      */
     public modifyToCollisionsLayer(x: number, y: number, name: string, collisionGrid: number[][]): void {
-        const collisionsLayer = this.phaserLayers.find((phaserLayer) => phaserLayer.layer.name === "collisions");
         const specialZonesTileset = this.phaserMap.tilesets.find((tileset) => tileset.name === "Special_Zones");
-        if (!specialZonesTileset || !collisionsLayer) {
+        if (!specialZonesTileset || !this.entitiesCollisionLayer) {
             return;
         }
-        const coords = collisionsLayer.worldToTileXY(x, y, true);
+        const coords = this.entitiesCollisionLayer.worldToTileXY(x, y, true);
         for (let y = 0; y < collisionGrid.length; y += 1) {
             for (let x = 0; x < collisionGrid[y].length; x += 1) {
                 // add tiles
                 if (collisionGrid[y][x] === 1) {
-                    const tile = collisionsLayer.putTileAt(specialZonesTileset.firstgid, coords.x + x, coords.y + y);
+                    const tile = this.entitiesCollisionLayer.putTileAt(
+                        specialZonesTileset.firstgid,
+                        coords.x + x,
+                        coords.y + y
+                    );
                     tile.properties["collides"] = true;
                     continue;
                 }
                 // remove tiles
                 if (collisionGrid[y][x] === -1) {
-                    collisionsLayer.removeTileAt(coords.x + x, coords.y + y, false);
+                    this.entitiesCollisionLayer.removeTileAt(coords.x + x, coords.y + y, false);
                 }
             }
         }
-        collisionsLayer.setCollisionByProperty({ collides: true });
-        this.updateCollisionGrid(collisionsLayer, false);
+        this.entitiesCollisionLayer.setCollisionByProperty({ collides: true });
+        this.updateCollisionGrid(this.entitiesCollisionLayer, false);
     }
 
     public getPropertiesForIndex(index: number): Array<ITiledMapProperty> {
