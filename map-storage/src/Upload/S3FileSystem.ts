@@ -58,6 +58,20 @@ export class S3FileSystem implements FileSystemInterface {
         } while (listObjectsResponse.IsTruncated);
     }
 
+    async exist(virtualPath: string): Promise<boolean> {
+        return (await this.listFiles(virtualPath)).length > 0;
+    }
+
+    move(virtualPath: string, newVirtualPath: string): Promise<void> {
+        // Todo: Need help
+        throw new Error("Not implemented");
+    }
+
+    copy(virtualPath: string, newVirtualPath: string): Promise<void> {
+        // Todo: Need Help
+        throw new Error("Not implemented");
+    }
+
     async writeFile(zipEntry: ZipEntry, targetFilePath: string, zip: StreamZipAsync): Promise<void> {
         await s3UploadConcurrencyLimit(async () =>
             this.s3.send(

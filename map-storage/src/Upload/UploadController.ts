@@ -37,6 +37,9 @@ export class UploadController {
         this.index();
         this.postUpload();
         this.getDownload();
+        this.move();
+        this.copy();
+        this.delete();
         this.getMaps();
     }
 
@@ -249,6 +252,100 @@ export class UploadController {
                 await fileSystem.archiveDirectory(archive, virtualDirectory);
 
                 await archive.finalize();
+            })().catch((e) => next(e));
+        });
+    }
+
+    private delete() {
+        this.app.delete("/delete", passportAuthenticator, (req, res, next) => {
+            (async () => {
+                const directoryRaw = req.query.directory;
+                const directory = z.string().optional().parse(directoryRaw) || "./";
+
+                if (directory.includes("..")) {
+                    // Attempt to override filesystem. That' a hack!
+                    res.status(400).send("Invalid directory");
+                    return;
+                }
+
+                const virtualDirectory = mapPath(directory, req);
+
+                await fileSystem.deleteFiles(virtualDirectory);
+                res.sendStatus(204);
+            })().catch((e) => next(e));
+        });
+    }
+
+    private move() {
+        this.app.patch("/move", passportAuthenticator, (req, res, next) => {
+            (async () => {
+                const verifiedBody = z
+                    .object({
+                        path: z.string(),
+                        newPath: z.string(),
+                    })
+                    .safeParse(req.body);
+
+                if (!verifiedBody.success) {
+                    res.status(400).send("Invalid request :" + verifiedBody.error.message);
+                    return;
+                }
+
+                const { path, newPath } = verifiedBody.data;
+
+                if (path.includes("..") || newPath.includes("..")) {
+                    // Attempt to override filesystem. That' a hack!
+                    res.status(400).send("Invalid directory");
+                    return;
+                }
+
+                const virtualPath = mapPath(path, req);
+                const newVirtualPath = mapPath(newPath, req);
+
+                if (await fileSystem.exist(newVirtualPath)) {
+                    res.status(409).send("Destination already exist!");
+                    return;
+                }
+
+                await fileSystem.move(virtualPath, newVirtualPath);
+                res.sendStatus(200);
+            })().catch((e) => next(e));
+        });
+    }
+
+    private copy() {
+        this.app.patch("/copy", passportAuthenticator, (req, res, next) => {
+            (async () => {
+                const verifiedBody = z
+                    .object({
+                        path: z.string(),
+                        newPath: z.string(),
+                    })
+                    .safeParse(req.body);
+
+                if (!verifiedBody.success) {
+                    res.status(400).send("Invalid request :" + verifiedBody.error.message);
+                    return;
+                }
+
+                const { path, newPath } = verifiedBody.data;
+
+                if (path.includes("..") || newPath.includes("..")) {
+                    // Attempt to override filesystem. That' a hack!
+                    res.status(400).send("Invalid directory");
+                    return;
+                }
+
+                const virtualPath = mapPath(path, req);
+                const newVirtualPath = mapPath(newPath, req);
+
+                if (await fileSystem.exist(newVirtualPath)) {
+                    res.status(409).send("Destination already exist!");
+                    return;
+                }
+
+                await fileSystem.copy(virtualPath, newVirtualPath);
+                res.sendStatus(201);
             })().catch((e) => next(e));
         });
     }
