@@ -36,6 +36,5 @@ services:
       AWS_ENDPOINT: "http://cdn-mapstorage.workadventure.localhost/"
       USE_DOMAIN_NAME_IN_PATH: "true"
 
-
 volumes:
   minio-mapstorage:

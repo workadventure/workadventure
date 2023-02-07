@@ -71,6 +71,7 @@
     import { peerStore } from "../../Stores/PeerStore";
     import { StringUtils } from "../../Utils/StringUtils";
     import Tooltip from "../Util/Tooltip.svelte";
+    import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
     import { modalIframeStore, modalVisibilityStore } from "../../Stores/ModalStore";
     import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
@@ -700,13 +701,14 @@
                         <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
                     </button>
                 </div>
-                {#if gameManager.getCurrentGameScene().isMapEditorEnabled()}
+                {#if $gameSceneIsLoadedStore && gameManager.getCurrentGameScene().isMapEditorEnabled()}
                     <div
                         on:dragstart|preventDefault={noDrag}
                         on:click={toggleMapEditorMode}
                         class="bottom-action-button"
                     >
-                        <button id="mapEditorIcon" class:border-top-light={$menuVisiblilityStore}>
+                        <Tooltip text={$LL.actionbar.mapEditor()} />
+                        <button id="mapEditorIcon" class:border-top-light={$mapEditorModeStore}>
                             <img draggable="false" src={logoRegister} style="padding: 2px" alt="toggle-map-editor" />
                         </button>
                     </div>

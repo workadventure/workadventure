@@ -11,6 +11,8 @@ export interface FileSystemInterface {
 
     readFileAsString(virtualPath: string): Promise<string>;
 
+    listFiles(virtualDirectory: string, extension?: string): Promise<string[]>;
+
     writeStringAsFile(virtualPath: string, content: string): Promise<void>;
 
     archiveDirectory(archiver: Archiver, virtualPath: string): Promise<void>;

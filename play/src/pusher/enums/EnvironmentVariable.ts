@@ -26,7 +26,6 @@ const EnvironmentVariables = z.object({
     VITE_URL: z.string().url().optional(),
     // Use "*" to allow any domain
     ALLOWED_CORS_ORIGIN: z.string().url().or(z.literal("*")).optional(),
-    PLAY_URL: AbsoluteOrRelativeUrl.optional(),
     PUSHER_URL: AbsoluteOrRelativeUrl.optional(),
     PUBLIC_MAP_STORAGE_URL: AbsoluteOrRelativeUrl.optional(),
     OPID_CLIENT_ID: z.string().optional(),
@@ -64,6 +63,7 @@ const EnvironmentVariables = z.object({
     JITSI_URL: z.string().optional(),
     JITSI_PRIVATE_MODE: BoolAsString.optional(),
     ENABLE_FEATURE_MAP_EDITOR: BoolAsString.optional(),
+    ENABLE_MAP_EDITOR_AREAS_TOOL: BoolAsString.optional(),
     MAX_USERNAME_LENGTH: PositiveIntAsString.optional(),
     MAX_PER_GROUP: PositiveIntAsString.optional(),
     NODE_ENV: z.string().optional(),
@@ -73,6 +73,8 @@ const EnvironmentVariables = z.object({
     FALLBACK_LOCALE: z.string().optional(),
     CHAT_URL: AbsoluteOrRelativeUrl,
     OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy.optional(),
+    ENABLE_REPORT_ISSUES_MENU: BoolAsString.optional(),
+    REPORT_ISSUES_URL: z.string().url().optional().or(z.literal("")),
 });
 
 type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
@@ -118,14 +120,13 @@ export const PUSHER_HTTP_PORT = toNumber(env.PUSHER_HTTP_PORT, 3000);
 export const SOCKET_IDLE_TIMER = toNumber(env.SOCKET_IDLE_TIMER, 120); // maximum time (in second) without activity before a socket is closed. Should be greater than 60 seconds in order to cope for Chrome intensive throttling (https://developer.chrome.com/blog/timer-throttling-in-chrome-88/#intensive-throttling)
 export const VITE_URL = env.VITE_URL || "http://front.workadventure.localhost"; // Used only in development
 export const ALLOWED_CORS_ORIGIN = env.ALLOWED_CORS_ORIGIN; // Use "*" to allow any domain
-export const PLAY_URL = env.PLAY_URL || "";
 export const PUSHER_URL = env.PUSHER_URL || "";
 export const PUBLIC_MAP_STORAGE_URL = env.PUBLIC_MAP_STORAGE_URL || "";
 export const OPID_CLIENT_ID = env.OPID_CLIENT_ID || "";
 export const OPID_CLIENT_SECRET = env.OPID_CLIENT_SECRET || "";
 export const OPID_CLIENT_ISSUER = env.OPID_CLIENT_ISSUER || "";
 if (OPID_CLIENT_ID && !PUSHER_URL) {
-    throw new Error("Missing PLAY_URL environment variable.");
+    throw new Error("Missing PUSHER_URL environment variable.");
 }
 export const OPID_CLIENT_REDIRECT_URL = PUSHER_URL + "/openid-callback";
 export const OPID_PROFILE_SCREEN_PROVIDER =
@@ -155,7 +156,6 @@ export const FALLBACK_LOCALE: string | undefined = env.FALLBACK_LOCALE;
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     DEBUG_MODE: toBool(env.DEBUG_MODE, false),
-    PLAY_URL,
     PUSHER_URL,
     ADMIN_URL,
     UPLOADER_URL: env.UPLOADER_URL,
@@ -169,6 +169,7 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     JITSI_URL: env.JITSI_URL,
     JITSI_PRIVATE_MODE: toBool(env.JITSI_PRIVATE_MODE, false),
     ENABLE_FEATURE_MAP_EDITOR: toBool(env.ENABLE_FEATURE_MAP_EDITOR, false),
+    ENABLE_MAP_EDITOR_AREAS_TOOL: toBool(env.ENABLE_MAP_EDITOR_AREAS_TOOL, false),
     MAX_USERNAME_LENGTH: toNumber(env.MAX_USERNAME_LENGTH, 10),
     MAX_PER_GROUP: toNumber(env.MAX_PER_GROUP, 4),
     NODE_ENV: env.NODE_ENV || "development",
@@ -183,4 +184,6 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     ENABLE_CHAT_UPLOAD,
     FALLBACK_LOCALE,
     OPID_WOKA_NAME_POLICY,
+    ENABLE_REPORT_ISSUES_MENU: toBool(env.ENABLE_REPORT_ISSUES_MENU, false),
+    REPORT_ISSUES_URL: env.REPORT_ISSUES_URL,
 };

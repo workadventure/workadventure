@@ -8,8 +8,8 @@ export const WokaBodyPart = ["Body", "Eyes", "Hair", "Clothes", "Hat", "Accessor
 export const WokaBodyPartOrder = {
     Body: 0,
     Eyes: 1,
-    Hair: 2,
-    Clothes: 3,
+    Clothes: 2,
+    Hair: 3,
     Hat: 4,
     Accessory: 5,
 };
@@ -20,8 +20,8 @@ export const WokaBodyPartOrder = {
 export enum CustomWokaBodyPart {
     Body = "Body",
     Eyes = "Eyes",
-    Hair = "Hair",
     Clothes = "Clothes",
+    Hair = "Hair",
     Hat = "Hat",
     Accessory = "Accessory",
 }
@@ -32,8 +32,8 @@ export enum CustomWokaBodyPart {
 export enum CustomWokaBodyPartOrder {
     Body,
     Eyes,
-    Hair,
     Clothes,
+    Hair,
     Hat,
     Accessory,
 }
@@ -92,8 +92,8 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
             this.frame,
             this.sprites.Body,
             this.sprites.Eyes,
-            this.sprites.Hair,
             this.sprites.Clothes,
+            this.sprites.Hair,
             this.sprites.Hat,
             this.sprites.Accessory,
             this.turnIcon,

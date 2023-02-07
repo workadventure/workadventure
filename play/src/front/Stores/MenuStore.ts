@@ -1,3 +1,4 @@
+import { ENABLE_REPORT_ISSUES_MENU, REPORT_ISSUES_URL } from "./../Enum/EnvironmentVariable";
 import { AddClassicButtonActionBarEvent, AddActionButtonActionBarEvent } from "./../Api/Events/Ui/ButtonActionBarEvent";
 import { derived, get, writable } from "svelte/store";
 import { userIsAdminStore } from "./GameStore";
@@ -22,6 +23,7 @@ function createWarningContainerStore() {
 
     return {
         subscribe,
+        set,
         activateWarningContainer() {
             set(true);
             if (warningContainerTimeout) clearTimeout(warningContainerTimeout);
@@ -42,6 +44,7 @@ export enum SubMenusInterface {
     aboutRoom = "credit",
     globalMessages = "globalMessages",
     contact = "contact",
+    report = "report",
 }
 
 type MenuKeys = keyof Translation["menu"]["sub"];
@@ -149,6 +152,22 @@ function createSubMenusStore() {
                 }
                 return menuList;
             });
+        },
+        addReportIssuesMenu() {
+            if (
+                connectionManager.currentRoom?.reportIssuesUrl != undefined ||
+                (ENABLE_REPORT_ISSUES_MENU != undefined &&
+                    ENABLE_REPORT_ISSUES_MENU === true &&
+                    REPORT_ISSUES_URL != undefined)
+            ) {
+                update((valuesSubMenusStore) => {
+                    valuesSubMenusStore.push({
+                        type: "translated",
+                        key: SubMenusInterface.report,
+                    });
+                    return valuesSubMenusStore;
+                });
+            }
         },
     };
 }

@@ -451,6 +451,14 @@
                         <a href="#" class="testLink" data-testmap="Modal/modal.json" target="_blank">Open and close modal</a>
                     </td>
                 </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-openbanner"> Success <input type="radio" name="test-openbanner"> Failure <input type="radio" name="test-openbanner" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="Banner/banner.json" target="_blank">Open and close banner</a>
+                    </td>
+                </tr>
             </table>
             <h2>CoWebsite</h2>
             <table class="table">
@@ -494,6 +502,14 @@
                         <a href="#" class="testLink" data-testmap="jitsi_room_admin_tag.json" target="_blank">Test moderation of Jitsi rooms <i>Requires an admin and a non local environment</i></a>
                     </td>
                 </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-jitsi_room_admin_tag_in_tile"> Success <input type="radio" name="test-jitsi_room_admin_tag_in_tile"> Failure <input type="radio" name="test-jitsi_room_admin_tag_in_tile" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="jitsi_room_admin_tag_in_tile.tmj" target="_blank">Test moderation of Jitsi rooms with jitsiRoomAdminTag in a tile property <i>Requires an admin and a non local environment</i></a>
+                    </td>
+                </tr>
             </table>
             <h2>Pathfinding</h2>
             <table class="table">
@@ -532,6 +548,14 @@
             </table>
             <h2>Areas</h2>
             <table class="table">
+                <tr>
+                    <td>
+                        <input type="radio" name="test-switching-areas"> Success <input type="radio" name="test-switching-areas"> Failure <input type="radio" name="test-switching-areas" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="Areas/SwitchingAreas/map.json" target="_blank">Test switching between Areas</a>
+                    </td>
+                </tr>
                 <tr>
                     <td>
                         <input type="radio" name="test-areas-from-tiled"> Success <input type="radio" name="test-areas-from-tiled"> Failure <input type="radio" name="test-areas-from-tiled" checked> Pending
@@ -575,6 +599,38 @@
             </table>
             <h2>Map Editor</h2>
             <table class="table">
+                <tr>
+                    <td>
+                        <input type="radio" name="entity_addition_and_removal"> Success <input type="radio" name="entity_addition_and_removal"> Failure <input type="radio" name="entity_addition_and_removal" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="~/maps/tests/entity_addition_and_removal.json" target="_blank">Test entity addition and removal</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="entity_edition_and_interaction"> Success <input type="radio" name="entity_edition_and_interaction"> Failure <input type="radio" name="entity_edition_and_interaction" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="~/maps/tests/entity_edition_and_interaction.json" target="_blank">Test entity edition and interaction</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="entity_jitsi_room_interaction"> Success <input type="radio" name="entity_jitsi_room_interaction"> Failure <input type="radio" name="entity_jitsi_room_interaction" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="~/maps/tests/entity_jitsi_room_interaction.json" target="_blank">Test entity jitsi room interaction</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="entity_open_tab_interaction"> Success <input type="radio" name="entity_open_tab_interaction"> Failure <input type="radio" name="entity_open_tab_interaction" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="~/maps/tests/entity_open_tab_interaction.json" target="_blank">Test open link interaction</a>
+                    </td>
+                </tr>
                 <tr>
                     <td>
                         <input type="radio" name="move-to-non-editable-map"> Success <input type="radio" name="move-to-non-editable-map"> Failure <input type="radio" name="move-to-non-editable-map" checked> Pending
@@ -697,6 +753,8 @@
 
             let completeUrl = window.location.protocol + '//' + playHost + '/_/global/' + host + window.location.pathname;
 
+            let shortUrl = window.location.protocol + '//' + playHost + '/';
+
             baseInput.value = completeUrl;
 
             baseInput.addEventListener('change', init);
@@ -704,7 +762,14 @@
             function init() {
                 console.log(baseInput.value);
                 for (const link of document.querySelectorAll('a.testLink')) {
-                    const url = baseInput.value + link.dataset.testmap;
+                    let url ="";
+                    if(link.dataset.testmap.startsWith("~"))
+                    {
+                        url = shortUrl + link.dataset.testmap;
+                    }
+                    else{
+                        url = baseInput.value + link.dataset.testmap;
+                    }
                     link.href = url;
                 }
             }

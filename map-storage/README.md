@@ -22,6 +22,21 @@ graph LR
     end
 ```
 
+## Uploading a demo map
+
+By default, the map-storage container contains nothing.
+You can upload a demo map using a simple command:
+
+```bash
+$ cd map-storage
+$ npm run upload-test-map
+```
+
+> **Note:**
+> This command only works for the dev environment and must be run out of the container.
+
+This test map is accessible at http://play.workadventure.localhost/~/maps/areas.json
+
 ## Configuration
 
 The map-storage currently supports 2 backends:
@@ -87,3 +102,21 @@ If `directory` is not passed, upload is performed at the root of the storage dir
 
 > **Warning**
 > The `upload` endpoint will delete ALL files within `directory` before uploading new files.
+
+**Response**:
+
+- 200: OK
+- 400: Validation error (for instance: invalid maps)
+  **Sample:**
+  ```json
+  {
+    'missing-image/MissingImage.tmj': [
+      {
+        type: 'error',
+        message: 'Image of the tileset "XXX": "xxx.png" is not loadable.',
+        details: '',
+        link: ''
+      }
+    ]
+  }
+  ```

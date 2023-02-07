@@ -9,6 +9,10 @@ cd play || exit
 npm run precommit
 )
 (
+cd chat || exit
+npm run precommit
+)
+(
 cd back || exit
 npm run precommit
 )
@@ -18,5 +22,13 @@ npm run precommit
 )
 (
 cd tests || exit
+npm run precommit
+)
+(
+cd libs/map-editor || exit
+npm run precommit
+)
+(
+cd libs/shared-utils || exit
 npm run precommit
 )

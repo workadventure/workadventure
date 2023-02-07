@@ -1,7 +1,7 @@
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import CancelablePromise from "cancelable-promise";
 import { CompanionTexture, CompanionCollectionList, companionCollectionList } from "@workadventure/messages";
-import { PLAY_URL } from "../../Enum/EnvironmentVariable";
+import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
 import { gameManager } from "../Game/GameManager";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import type { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
@@ -20,7 +20,7 @@ export class CompanionTexturesLoadingManager {
         this.superLoad
             .json(
                 companionListMetakey(),
-                `${PLAY_URL}/companion/list?roomUrl=` + encodeURIComponent(gameManager.currentStartedRoom.href),
+                `${PUSHER_URL}/companion/list?roomUrl=` + encodeURIComponent(gameManager.currentStartedRoom.href),
                 undefined,
                 {
                     responseType: "text",

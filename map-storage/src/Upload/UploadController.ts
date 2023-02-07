@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import multer from "multer";
-import { Express } from "express";
+import { Express, Request } from "express";
 import { FileSystemInterface } from "./FileSystemInterface";
 import { MAX_UNCOMPRESSED_SIZE } from "../Enum/EnvironmentVariable";
 import { mapPath } from "../Services/PathMapper";
@@ -11,6 +11,8 @@ import { passportAuthenticator } from "../Services/Authentication";
 import archiver from "archiver";
 import { fileSystem } from "../fileSystem";
 import StreamZip from "node-stream-zip";
+import { MapValidator, ValidationError } from "@workadventure/map-editor/src/GameMap/MapValidator";
+import { FileNotFoundError } from "./FileNotFoundError";
 
 const upload = multer({
     storage: multer.diskStorage({}),
@@ -26,6 +28,8 @@ export class UploadController {
      * already a start of a check.
      */
 
+    public static readonly CACHE_NAME = "__cache.json";
+
     private uploadLimiter: Map<string, pLimit.Limit>;
 
     constructor(private app: Express, private fileSystem: FileSystemInterface) {
@@ -33,6 +37,7 @@ export class UploadController {
         this.index();
         this.postUpload();
         this.getDownload();
+        this.getMaps();
     }
 
     private index() {
@@ -57,7 +62,7 @@ export class UploadController {
                     directory: z.string().optional(),
                 });
 
-                const directory = Body.parse(req.body).directory || "./";
+                const directory = Body.parse(req.body).directory || "";
 
                 if (directory.includes("..")) {
                     // Attempt to override filesystem. That' a hack!
@@ -93,6 +98,49 @@ export class UploadController {
                         return;
                     }
 
+                    // Let's validate the archive
+                    const mapValidator = new MapValidator("error");
+                    const availableFiles = zipEntries.map((entry) => entry.name);
+
+                    const errors: { [key: string]: ValidationError[] } = {};
+
+                    for (const zipEntry of zipEntries) {
+                        const extension = path.extname(zipEntry.name);
+                        if (
+                            extension === ".json" &&
+                            mapValidator.doesStringLooksLikeMap((await zip.entryData(zipEntry)).toString())
+                        ) {
+                            // We forbid Maps in JSON format.
+                            errors[zipEntry.name] = [
+                                {
+                                    type: "error",
+                                    message: 'Invalid file extension. Maps should end with the ".tmj" extension.',
+                                    details: "",
+                                },
+                            ];
+
+                            continue;
+                        }
+
+                        if (extension !== ".tmj") {
+                            continue;
+                        }
+
+                        const result = mapValidator.validateStringMap(
+                            (await zip.entryData(zipEntry)).toString(),
+                            zipEntry.name,
+                            availableFiles
+                        );
+                        if (!result.ok) {
+                            errors[zipEntry.name] = result.error;
+                        }
+                    }
+
+                    if (Object.keys(errors).length > 0) {
+                        res.status(400).json(errors);
+                        return;
+                    }
+
                     // Delete all files in the S3 bucket
                     await this.fileSystem.deleteFiles(mapPath(directory, req));
 
@@ -115,6 +163,8 @@ export class UploadController {
                         }
                     });
 
+                    await this.generateCacheFile(req);
+
                     res.send("File successfully uploaded.");
                 });
 
@@ -123,6 +173,12 @@ export class UploadController {
                 }
             })().catch((e) => next(e));
         });
+    }
+
+    private async generateCacheFile(req: Request): Promise<void> {
+        const files = await fileSystem.listFiles(mapPath("/", req), ".tmj");
+
+        await fileSystem.writeStringAsFile(mapPath("/" + UploadController.CACHE_NAME, req), JSON.stringify(files));
     }
 
     /**
@@ -193,6 +249,26 @@ export class UploadController {
                 await fileSystem.archiveDirectory(archive, virtualDirectory);
 
                 await archive.finalize();
+            })().catch((e) => next(e));
+        });
+    }
+
+    private getMaps() {
+        this.app.get("/maps", (req, res, next) => {
+            (async () => {
+                try {
+                    const data = await fileSystem.readFileAsString(mapPath(`/${UploadController.CACHE_NAME}`, req));
+                    res.json(JSON.parse(data));
+                } catch (e) {
+                    if (e instanceof FileNotFoundError) {
+                        // No cache file? What the hell? Let's try to regenerate the cache file
+                        await this.generateCacheFile(req);
+                        // Now that the cache file is generated, let's retry serving the file.
+                        const data = await fileSystem.readFileAsString(mapPath(`/${UploadController.CACHE_NAME}`, req));
+                        res.json(JSON.parse(data));
+                    }
+                    throw e;
+                }
             })().catch((e) => next(e));
         });
     }

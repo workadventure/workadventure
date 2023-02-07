@@ -371,6 +371,14 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    reportIssue(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_menu_report");
+            })
+            .catch((e) => console.error(e));
+    }
+
     menuContact(): void {
         this.posthogPromise
             ?.then((posthog) => {

@@ -1,4 +1,6 @@
 export class TexturesHelper {
+    public static readonly ENTITIES_TEXTURES_DIRECTORY = "/resources/entities/";
+
     public static async getSnapshot(
         scene: Phaser.Scene,
         ...sprites: { sprite: Phaser.GameObjects.Sprite; frame?: string | number }[]
@@ -82,5 +84,18 @@ export class TexturesHelper {
         }
         circleTexture.generateTexture(textureKey, radius * 2, radius * 2);
         circleTexture.destroy();
+    }
+
+    public static async loadEntityImage(scene: Phaser.Scene, key: string, url: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (scene.textures.exists(key)) {
+                resolve();
+            }
+            scene.load.once(`filecomplete-image-${key}`, () => {
+                resolve();
+            });
+            scene.load.image(key, url);
+            scene.load.start();
+        });
     }
 }

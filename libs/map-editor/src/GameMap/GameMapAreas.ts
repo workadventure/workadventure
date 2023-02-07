@@ -1,6 +1,6 @@
 import type { AreaProperties } from "@workadventure/messages";
-import type { AreaData } from '../types';
-import { AreaType } from '../types';
+import type { AreaData } from "../types";
+import { AreaType } from "../types";
 import * as _ from "lodash";
 import type { ITiledMapObject, ITiledMapObjectLayer, ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
 import { MathUtils } from "@workadventure/math-utils";
@@ -40,8 +40,8 @@ export class GameMapAreas {
                 .forEach((areaRaw: ITiledMapObject) => {
                     this.staticAreas.push(this.tiledObjectToAreaData(areaRaw));
                 });
-        } catch(e) {
-            console.error('CANNOT PARSE TILED OBJECTS TO AREA DATA FORMAT:');
+        } catch (e) {
+            console.error("CANNOT PARSE TILED OBJECTS TO AREA DATA FORMAT:");
             console.error(e);
         }
     }
@@ -58,7 +58,7 @@ export class GameMapAreas {
             width: areaData.width,
             height: areaData.height,
             properties: this.mapAreaPropertiesToTiledProperties(areaData.properties),
-        }
+        };
     }
 
     private tiledObjectToAreaData(tiledObject: ITiledMapObject): AreaData {
@@ -80,7 +80,7 @@ export class GameMapAreas {
             height: tiledObject.height,
             properties: this.mapTiledPropertiesToAreaProperties(tiledObject),
             visible: true,
-        }
+        };
     }
 
     private mapTiledPropertiesToAreaProperties(areaRaw: ITiledMapObject): AreaProperties {
@@ -100,11 +100,13 @@ export class GameMapAreas {
                 continue;
             }
 
-            // 
+            //
             if (["focusable", "silent", "zoomMargin"].includes(rawProperty.name)) {
+                //eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
                 properties[rawProperty.name] = value;
             } else {
+                //eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
                 properties.customProperties[rawProperty.name] = value;
             }
@@ -130,10 +132,12 @@ export class GameMapAreas {
         }
 
         for (const key in areaProperties.customProperties) {
+            //eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             const data = areaProperties.customProperties[key];
             if (data === undefined) {
                 continue;
             }
+            //eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             properties.push(this.mapAreaPropertyToTiledProperty(key, data));
         }
         return properties;
@@ -206,15 +210,11 @@ export class GameMapAreas {
         return areasChange;
     }
 
-    public addArea(
-        area: AreaData,
-        type: AreaType,
-        playerPosition?: { x: number; y: number }
-    ): boolean {
-        if (this.getAreas(type).find(existingArea => existingArea.id === area.id)) {
+    public addArea(area: AreaData, type: AreaType, playerPosition?: { x: number; y: number }): boolean {
+        if (this.getAreas(type).find((existingArea) => existingArea.id === area.id)) {
             return false;
         }
-        const floorLayer = this.gameMap.getMap().layers.find(layer => layer.name === "floorLayer");
+        const floorLayer = this.gameMap.getMap().layers.find((layer) => layer.name === "floorLayer");
         if (floorLayer) {
             const areaDataAsTileObject = this.mapAreaDataToTiledObject(area);
             this.getAreas(type).push(area);
@@ -232,27 +232,20 @@ export class GameMapAreas {
 
     public isPlayerInsideArea(id: number, type: AreaType, playerPosition: { x: number; y: number }): boolean {
         return (
-            this.getAreasOnPosition(playerPosition, this.areasPositionOffsetY, type).findIndex((area) => area.id === id) !==
-            -1
+            this.getAreasOnPosition(playerPosition, this.areasPositionOffsetY, type).findIndex(
+                (area) => area.id === id
+            ) !== -1
         );
     }
 
-    public isPlayerInsideAreaByName(
-        name: string,
-        type: AreaType,
-        position: { x: number; y: number }
-    ): boolean {
+    public isPlayerInsideAreaByName(name: string, type: AreaType, position: { x: number; y: number }): boolean {
         return (
             this.getAreasOnPosition(position, this.areasPositionOffsetY, type).findIndex(
                 (area) => area.name === name
             ) !== -1
         );
     }
-    public updateAreaByName(
-        name: string,
-        type: AreaType,
-        config: Partial<AreaData>
-    ): AreaData | undefined {
+    public updateAreaByName(name: string, type: AreaType, config: Partial<AreaData>): AreaData | undefined {
         const area = this.getAreaByName(name, type);
         if (!area) {
             return;
@@ -261,11 +254,7 @@ export class GameMapAreas {
         return area;
     }
 
-    public updateAreaById(
-        id: number,
-        type: AreaType,
-        config: Partial<AreaData>
-    ): AreaData | undefined {
+    public updateAreaById(id: number, type: AreaType, config: Partial<AreaData>): AreaData | undefined {
         const area = this.getArea(id, type);
         if (!area) {
             return;
@@ -296,7 +285,9 @@ export class GameMapAreas {
 
     public deleteAreaById(id: number, type: AreaType, playerPosition?: { x: number; y: number }): boolean {
         if (playerPosition) {
-            const area = this.getAreasOnPosition(playerPosition, this.areasPositionOffsetY, type).find((area) => area.id === id);
+            const area = this.getAreasOnPosition(playerPosition, this.areasPositionOffsetY, type).find(
+                (area) => area.id === id
+            );
             if (area) {
                 this.triggerSpecificAreaOnLeave(area);
             }
@@ -312,7 +303,7 @@ export class GameMapAreas {
     }
 
     private updateArea(area: AreaData, config: Partial<AreaData>): void {
-        const tiledObject = this.gameMap.tiledObjects.find(object => object.id === area.id);
+        const tiledObject = this.gameMap.tiledObjects.find((object) => object.id === area.id);
         if (!tiledObject) {
             throw new Error(`Area of id: ${area.id} has not been mapped to tileObjects array!`);
         }
@@ -388,11 +379,7 @@ export class GameMapAreas {
         return properties;
     }
 
-    public setProperty(
-        area: AreaData,
-        key: string,
-        value: string | number | boolean | undefined,
-    ): void {
+    public setProperty(area: AreaData, key: string, value: string | number | boolean | undefined): void {
         switch (key) {
             case "focusable": {
                 if (typeof value === "boolean" || value === undefined) {
@@ -431,16 +418,13 @@ export class GameMapAreas {
         }
 
         for (const key in properties.customProperties) {
+            //eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             flattenedProperties[key] = properties.customProperties[key];
         }
         return flattenedProperties;
     }
 
-    private getAreasOnPosition(
-        position: { x: number; y: number },
-        offsetY = 0,
-        areaType?: AreaType
-    ): AreaData[] {
+    private getAreasOnPosition(position: { x: number; y: number }, offsetY = 0, areaType?: AreaType): AreaData[] {
         const areasOfInterest = areaType
             ? this.getAreas(areaType).values()
             : [...this.staticAreas.values(), ...this.dynamicAreas.values()];

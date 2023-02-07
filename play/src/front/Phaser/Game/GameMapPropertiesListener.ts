@@ -7,7 +7,6 @@ import { get } from "svelte/store";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
-import { jitsiFactory } from "../../WebRtc/JitsiFactory";
 import { bbbFactory } from "../../WebRtc/BBBFactory";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../Enum/EnvironmentVariable";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
@@ -22,6 +21,7 @@ import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { GameMapProperties } from "@workadventure/map-editor";
 import { connectionManager } from "../../Connexion/ConnectionManager";
+import { slugifyJitsiRoomName } from "@workadventure/shared-utils/src/Jitsi/slugify";
 
 interface OpenCoWebsite {
     actionId: string;
@@ -65,7 +65,7 @@ export class GameMapPropertiesListener {
 
         // Jitsi room
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.JITSI_ROOM, (newValue, oldValue, allProps) => {
-            if (newValue === undefined) {
+            if (newValue === undefined || newValue !== oldValue) {
                 layoutManagerActionStore.removeAction("jitsi");
                 coWebsiteManager.getCoWebsites().forEach((coWebsite) => {
                     if (coWebsite instanceof JitsiCoWebsite) {
@@ -73,99 +73,99 @@ export class GameMapPropertiesListener {
                     }
                 });
                 inJitsiStore.set(false);
-            } else {
-                const openJitsiRoomFunction = async () => {
-                    let addPrefix = true;
-                    if (allProps.get(GameMapProperties.JITSI_NO_PREFIX)) {
-                        addPrefix = false;
-                    }
-                    const roomName = jitsiFactory.getRoomName(newValue.toString(), this.scene.roomUrl, addPrefix);
-                    let jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
-
-                    let jwt: string | undefined;
-                    if (JITSI_PRIVATE_MODE && !jitsiUrl) {
-                        if (!this.scene.connection) {
-                            console.log("Cannot connect to Jitsi. No connection to Pusher server.");
-                            return;
-                        }
-                        const answer = await this.scene.connection.queryJitsiJwtToken(roomName);
-                        jwt = answer.jwt;
-                        jitsiUrl = answer.url;
-                    }
-
-                    let domain = jitsiUrl || JITSI_URL;
-                    if (domain === undefined) {
-                        throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
-                    }
-
-                    let domainWithoutProtocol = domain;
-                    if (domain.substring(0, 7) !== "http://" && domain.substring(0, 8) !== "https://") {
-                        domainWithoutProtocol = domain;
-                        domain = `${location.protocol}//${domain}`;
-                    } else {
-                        if (domain.startsWith("http://")) {
-                            domainWithoutProtocol = domain.substring(7);
-                        } else {
-                            domainWithoutProtocol = domain.substring(8);
-                        }
-                    }
-
-                    inJitsiStore.set(true);
-
-                    const closable = allProps.get(GameMapProperties.OPEN_WEBSITE_CLOSABLE) as boolean | undefined;
-
-                    const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, closable);
-
-                    coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
-                    this.scene.initialiseJitsi(coWebsite, roomName, jwt, domainWithoutProtocol);
-
-                    layoutManagerActionStore.removeAction("jitsi");
-                };
-
-                const jitsiTriggerValue = allProps.get(GameMapProperties.JITSI_TRIGGER);
-                const forceTrigger = localUserStore.getForceCowebsiteTrigger();
-                if (forceTrigger || jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
-                    let message = allProps.get(GameMapProperties.JITSI_TRIGGER_MESSAGE);
-                    if (message === undefined) {
-                        message = get(LL).trigger.jitsiRoom();
-                    }
-                    layoutManagerActionStore.addAction({
-                        uuid: "jitsi",
-                        type: "message",
-                        message: message,
-                        callback: () => {
-                            openJitsiRoomFunction().catch((e) => console.error(e));
-                        },
-                        userInputManager: this.scene.userInputManager,
-                    });
-                } else {
-                    openJitsiRoomFunction().catch((e) => console.error(e));
+                if (newValue === undefined) {
+                    return;
                 }
+            }
+            const openJitsiRoomFunction = async () => {
+                const roomName = slugifyJitsiRoomName(newValue.toString(), this.scene.roomUrl, allProps);
+                let jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
+
+                let jwt: string | undefined;
+                if (JITSI_PRIVATE_MODE && !jitsiUrl) {
+                    if (!this.scene.connection) {
+                        console.log("Cannot connect to Jitsi. No connection to Pusher server.");
+                        return;
+                    }
+                    const answer = await this.scene.connection.queryJitsiJwtToken(roomName);
+                    jwt = answer.jwt;
+                    jitsiUrl = answer.url;
+                }
+
+                let domain = jitsiUrl || JITSI_URL;
+                if (domain === undefined) {
+                    throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
+                }
+
+                let domainWithoutProtocol = domain;
+                if (domain.substring(0, 7) !== "http://" && domain.substring(0, 8) !== "https://") {
+                    domainWithoutProtocol = domain;
+                    domain = `${location.protocol}//${domain}`;
+                } else {
+                    if (domain.startsWith("http://")) {
+                        domainWithoutProtocol = domain.substring(7);
+                    } else {
+                        domainWithoutProtocol = domain.substring(8);
+                    }
+                }
+
+                inJitsiStore.set(true);
+
+                const closable = allProps.get(GameMapProperties.OPEN_WEBSITE_CLOSABLE) as boolean | undefined;
+
+                const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, closable);
+
+                coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
+                this.scene.initialiseJitsi(coWebsite, roomName, jwt, domainWithoutProtocol);
+
+                layoutManagerActionStore.removeAction("jitsi");
+            };
+
+            const jitsiTriggerValue = allProps.get(GameMapProperties.JITSI_TRIGGER);
+            const forceTrigger = localUserStore.getForceCowebsiteTrigger();
+            if (forceTrigger || jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
+                let message = allProps.get(GameMapProperties.JITSI_TRIGGER_MESSAGE);
+                if (message === undefined) {
+                    message = get(LL).trigger.jitsiRoom();
+                }
+                layoutManagerActionStore.addAction({
+                    uuid: "jitsi",
+                    type: "message",
+                    message: message,
+                    callback: () => {
+                        openJitsiRoomFunction().catch((e) => console.error(e));
+                    },
+                    userInputManager: this.scene.userInputManager,
+                });
+            } else {
+                openJitsiRoomFunction().catch((e) => console.error(e));
             }
         });
 
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.BBB_MEETING, (newValue, oldValue, allProps) => {
-            if (newValue === undefined) {
+            if (newValue === undefined || newValue !== oldValue) {
                 layoutManagerActionStore.removeAction("bbbMeeting");
                 inBbbStore.set(false);
                 bbbFactory.setStopped(true);
                 bbbFactory.stop();
-            } else {
-                inBbbStore.set(true);
-                bbbFactory.setStopped(false);
-                bbbFactory
-                    .parametrizeMeetingId(newValue as string)
-                    .then((hashedMeetingId) => {
-                        if (this.scene.connection === undefined) {
-                            throw new Error("No more connection to open BBB");
-                        }
-                        return this.scene.connection.queryBBBMeetingUrl(hashedMeetingId, allProps);
-                    })
-                    .then((bbbAnswer) => {
-                        bbbFactory.start(bbbAnswer.clientURL);
-                    })
-                    .catch((e) => console.error(e));
+                if (newValue === undefined) {
+                    return;
+                }
             }
+            inBbbStore.set(true);
+            bbbFactory.setStopped(false);
+            bbbFactory
+                .parametrizeMeetingId(newValue as string)
+                .then((hashedMeetingId) => {
+                    if (this.scene.connection === undefined) {
+                        throw new Error("No more connection to open BBB");
+                    }
+                    return this.scene.connection.queryBBBMeetingUrl(hashedMeetingId, allProps);
+                })
+                .then((bbbAnswer) => {
+                    bbbFactory.start(bbbAnswer.clientURL);
+                })
+                .catch((e) => console.error(e));
         });
 
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.EXIT_SCENE_URL, (newValue) => {

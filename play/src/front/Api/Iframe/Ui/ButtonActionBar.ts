@@ -12,7 +12,7 @@ const ActionBarButtonType = {
     button: "button",
     action: "action",
 } as const;
-type ActionBarButtonType = typeof ActionBarButtonType[keyof typeof ActionBarButtonType];
+type ActionBarButtonType = (typeof ActionBarButtonType)[keyof typeof ActionBarButtonType];
 
 export type ActionBarClassicButtonDescriptor = {
     id: string;

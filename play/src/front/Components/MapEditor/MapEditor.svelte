@@ -1,14 +1,22 @@
 <script lang="ts">
     import AreaPreviewWindow from "./AreaPreviewWindow.svelte";
-
-    // function close() {
-    //     mapEditorModeStore.switchMode(false);
-    // }
+    import PropertyPreviewSidebar from "./PropertyPreviewSidebar.svelte";
+    import MapEditorSideBar from "./MapEditorSideBar.svelte";
+    import MapEntityEditor from "./MapEntityEditor.svelte";
+    import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
+    import { mapEditorSelectedToolStore } from "../../Stores/MapEditorStore";
 </script>
 
+<MapEditorSideBar />
 <div class="map-editor tw-bg-dark-blue/95">
     <div class="sidebar">
-        <AreaPreviewWindow />
+        {#if $mapEditorSelectedToolStore === EditorToolName.EntityEditor}
+            <MapEntityEditor />
+        {/if}
+        {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor}
+            <AreaPreviewWindow />
+            <PropertyPreviewSidebar />
+        {/if}
     </div>
 </div>
 
@@ -26,8 +34,10 @@
         .sidebar {
             position: relative !important;
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
             gap: 10px;
+            padding: 1.5em;
+            width: 23em !important;
         }
     }
 </style>

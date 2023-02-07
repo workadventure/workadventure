@@ -264,7 +264,7 @@ export class UserInputManager {
                 this.userInputHandler.handlePointerUpEvent(pointer, gameObjects);
 
                 // Disable focus on iframe (need by Firefox)
-                if (pointer.downElement.nodeName === "CANVAS" && document.activeElement instanceof HTMLIFrameElement) {
+                if (pointer.downElement?.nodeName === "CANVAS" && document.activeElement instanceof HTMLIFrameElement) {
                     document.activeElement.blur();
                 }
             }

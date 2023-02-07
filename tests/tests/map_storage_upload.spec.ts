@@ -129,4 +129,79 @@ test.describe('Map-storage Upload API', () => {
         await expect(accessCacheControlFile.headers()['etag']).toBeDefined();
         await expect(accessCacheControlFile.headers()['cache-control']).toContain("immutable");
     });
+
+    test("get list of maps", async ({
+        request,
+    }) => {
+        const uploadFile = await request.post(`/upload`, {
+            multipart: {
+                file: fs.createReadStream("./assets/file1.zip"),
+                directory: "/"
+            }
+        });
+        const uploadFileToDir = await request.post(`/upload`, {
+            multipart: {
+                file: fs.createReadStream("./assets/file1.zip"),
+                directory: "/foo"
+            }
+        });
+        await expect(uploadFile.ok()).toBeTruthy();
+        await expect(uploadFileToDir.ok()).toBeTruthy();
+
+        let listOfMaps = await request.get("/maps");
+        await expect(await listOfMaps.text() === JSON.stringify(["foo/map.tmj","map.tmj"])).toBeTruthy();
+
+        const uploadFileAlone = await request.post(`/upload`, {
+            multipart: {
+                file: fs.createReadStream("./assets/file1.zip"),
+                directory: "/"
+            }
+        });
+
+        await expect(uploadFileAlone.ok()).toBeTruthy();
+        listOfMaps = await request.get("/maps");
+        await expect(await listOfMaps.text() === JSON.stringify(["map.tmj"])).toBeTruthy();
+    });
+    test('fails on invalid maps', async ({
+                                           request,
+                                       }) => {
+        const uploadFile1 = await request.post(`/upload`, {
+            multipart: {
+                file: fs.createReadStream("./assets/missing-image.zip"),
+            }
+        });
+        await expect(uploadFile1.ok()).toBeFalsy();
+        await expect((await uploadFile1.json())['missing-image/MissingImage.tmj'][0]['type']).toBe("error");
+    });
+
+    test('fails on JSON extension', async ({
+                                             request,
+                                         }) => {
+        const uploadFile1 = await request.post(`/upload`, {
+            multipart: {
+                file: fs.createReadStream("./assets/json-map.zip"),
+            }
+        });
+        await expect(uploadFile1.ok()).toBeFalsy();
+        await expect((await uploadFile1.json())['map.json'][0]['message']).toBe('Invalid file extension. Maps should end with the ".tmj" extension.');
+    });
+
+    test('special characters support', async ({
+                                               request,
+                                           }) => {
+        const uploadFile1 = await request.post(`/upload`, {
+            multipart: {
+                file: fs.createReadStream("./assets/special_characters.zip"),
+            }
+        });
+        await expect(uploadFile1.ok()).toBeTruthy();
+
+        const accessFileWithSpace = await request.get(`/file+with%20space.txt`);
+        await expect(accessFileWithSpace.ok()).toBeTruthy();
+        await expect(await accessFileWithSpace.text()).toContain("ok");
+
+        const accessFileWithEmoji = await request.get(`/🍕.txt`);
+        await expect(accessFileWithEmoji.ok()).toBeTruthy();
+        await expect(await accessFileWithEmoji.text()).toContain("ok");
+    });
 });

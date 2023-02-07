@@ -4,6 +4,7 @@ import {
     ListObjectsCommand,
     ListObjectsCommandInput,
     ListObjectsCommandOutput,
+    NoSuchKey,
     PutObjectCommand,
     S3,
 } from "@aws-sdk/client-s3";
@@ -15,6 +16,9 @@ import { IncomingMessage } from "http";
 import { Archiver } from "archiver";
 import { Readable } from "stream";
 import { StreamZipAsync, ZipEntry } from "node-stream-zip";
+import path from "path";
+import { UploadController } from "./UploadController";
+import { FileNotFoundError } from "./FileNotFoundError";
 
 export class S3FileSystem implements FileSystemInterface {
     public constructor(private s3: S3, private bucketName: string) {}
@@ -69,6 +73,35 @@ export class S3FileSystem implements FileSystemInterface {
         return;
     }
 
+    async listFiles(virtualDirectory: string, extension?: string): Promise<string[]> {
+        let listObjectsResponse: ListObjectsCommandOutput;
+        let pageMarker: string | undefined;
+        const allObjects = [];
+        do {
+            const command: ListObjectsCommandInput = {
+                Bucket: this.bucketName,
+                MaxKeys: 1000,
+                Prefix: virtualDirectory,
+            };
+            if (pageMarker) {
+                command.Marker = pageMarker;
+            }
+            listObjectsResponse = await this.s3.send(new ListObjectsCommand(command));
+            const objects = listObjectsResponse.Contents;
+            if (objects) {
+                allObjects.push(...objects);
+            }
+        } while (listObjectsResponse.IsTruncated);
+
+        const recordsPaths: string[] = allObjects.map((record) => record.Key ?? "") ?? [];
+        if (extension) {
+            return recordsPaths
+                .filter((record) => path.extname(record) === extension)
+                .map((record) => path.relative(virtualDirectory, record));
+        }
+        return recordsPaths.map((record) => path.relative(virtualDirectory, record));
+    }
+
     serveStaticFile(virtualPath: string, res: Response, next: NextFunction): void {
         this.s3
             .getObject({ Bucket: this.bucketName, Key: virtualPath })
@@ -109,13 +142,22 @@ export class S3FileSystem implements FileSystemInterface {
     }
 
     async readFileAsString(virtualPath: string): Promise<string> {
-        const file = await this.s3.getObject({ Bucket: this.bucketName, Key: virtualPath });
+        try {
+            const file = await this.s3.getObject({ Bucket: this.bucketName, Key: virtualPath });
 
-        if (!file.Body) {
-            throw new Error("Missing body");
+            if (!file.Body) {
+                throw new Error("Missing body");
+            }
+
+            return file.Body.transformToString("utf-8");
+        } catch (e) {
+            if (e instanceof NoSuchKey) {
+                throw new FileNotFoundError(e.message, {
+                    cause: e,
+                });
+            }
+            throw e;
         }
-
-        return file.Body.transformToString("utf-8");
     }
 
     async writeStringAsFile(virtualPath: string, content: string): Promise<void> {
@@ -165,6 +207,10 @@ export class S3FileSystem implements FileSystemInterface {
                     }
                     if (file.Key.endsWith("/")) {
                         // a directory. Let's bypass this.
+                        continue;
+                    }
+                    if (file.Key.includes(UploadController.CACHE_NAME)) {
+                        // we do not want cache file to be downloaded
                         continue;
                     }
                     archiver.append(Body as Readable, { name: file.Key.substring(virtualPath.length) });

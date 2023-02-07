@@ -50,6 +50,9 @@ import {
     EditMapCommandWithKeyMessage,
     EditMapCommandMessage,
     ChatMessagePrompt,
+    UpdateMapToNewestWithKeyMessage,
+    EditMapCommandsArrayMessage,
+    UpdateMapToNewestMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -106,6 +109,32 @@ export class SocketManager {
         //join new previous room
         const { room, user } = await this.joinRoom(socket, joinRoomMessage);
 
+        const lastCommandId = joinRoomMessage.getLastcommandid();
+        let commandsToApply: EditMapCommandMessage[] | undefined = undefined;
+
+        if (lastCommandId) {
+            const updateMapToNewestMessage = new UpdateMapToNewestMessage();
+            updateMapToNewestMessage.setCommandid(lastCommandId);
+
+            const updateMapToNewestWithKeyMessage = new UpdateMapToNewestWithKeyMessage();
+            updateMapToNewestWithKeyMessage.setMapkey(room.mapUrl);
+            updateMapToNewestWithKeyMessage.setUpdatemaptonewestmessage(updateMapToNewestMessage);
+
+            commandsToApply = await new Promise<EditMapCommandMessage[]>((resolve, reject) => {
+                getMapStorageClient().handleUpdateMapToNewestMessage(
+                    updateMapToNewestWithKeyMessage,
+                    (err: unknown, message: EditMapCommandsArrayMessage) => {
+                        if (err) {
+                            emitError(user.socket, err);
+                            reject(err);
+                            return;
+                        }
+                        resolve(message.getEditmapcommandsList());
+                    }
+                );
+            });
+        }
+
         if (!socket.writable) {
             console.warn("Socket was aborted");
             return {
@@ -118,6 +147,11 @@ export class SocketManager {
         roomJoinedMessage.setTagList(joinRoomMessage.getTagList());
         roomJoinedMessage.setUserroomtoken(joinRoomMessage.getUserroomtoken());
         roomJoinedMessage.setCharacterlayerList(joinRoomMessage.getCharacterlayerList());
+        if (commandsToApply) {
+            const editMapCommandsArrayMessage = new EditMapCommandsArrayMessage();
+            editMapCommandsArrayMessage.setEditmapcommandsList(commandsToApply);
+            roomJoinedMessage.setEditmapcommandsarraymessage(editMapCommandsArrayMessage);
+        }
 
         for (const [itemId, item] of room.getItemsState().entries()) {
             const itemStateMessage = new ItemStateMessage();
@@ -680,11 +714,7 @@ export class SocketManager {
         if (user.tags.includes("admin")) {
             isAdmin = true;
         } else {
-            // Let's remove the prefix added by the front to make the Jitsi room unique:
-            // Note: this is not 100% perfect as this will fail on Jitsi rooms with "NoPrefix" option set and containing a "-" in the room name.
-            const jitsiRoomSuffix = jitsiRoom.match(/\w*-(.+)/);
-            const finalRoomName = jitsiRoomSuffix && jitsiRoomSuffix[1] ? jitsiRoomSuffix[1] : jitsiRoom;
-            const moderatorTag = await gameRoom.getModeratorTagForJitsiRoom(finalRoomName);
+            const moderatorTag = await gameRoom.getModeratorTagForJitsiRoom(jitsiRoom);
             if (moderatorTag && user.tags.includes(moderatorTag)) {
                 isAdmin = true;
             }
@@ -1105,6 +1135,24 @@ export class SocketManager {
                 const subMessage = new SubToPusherRoomMessage();
                 subMessage.setEditmapcommandmessage(editMapMessage);
                 room.dispatchRoomMessage(subMessage);
+            }
+        );
+    }
+
+    handleUpdateMapToNewestMessage(room: GameRoom, user: User, message: UpdateMapToNewestWithKeyMessage) {
+        getMapStorageClient().handleUpdateMapToNewestMessage(
+            message,
+            (err: unknown, message: EditMapCommandsArrayMessage) => {
+                if (err) {
+                    emitError(user.socket, err);
+                    throw err;
+                }
+                const commands = message.getEditmapcommandsList();
+                for (const editMapCommandMessage of commands) {
+                    const subMessage = new SubMessage();
+                    subMessage.setEditmapcommandmessage(editMapCommandMessage);
+                    user.emitInBatch(subMessage);
+                }
             }
         );
     }

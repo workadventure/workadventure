@@ -29,6 +29,8 @@
          "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
          "EJABBERD_USER": "admin",
          "EJABBERD_PASSWORD": "apideo",
+         "ENABLE_FEATURE_MAP_EDITOR":"true",
+         "ENABLE_MAP_EDITOR_AREAS_TOOL":"false",
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -58,6 +60,8 @@
               "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
               "EJABBERD_USER": "admin",
               "EJABBERD_PASSWORD": "apideo",
+              "ENABLE_FEATURE_MAP_EDITOR":"true",
+              "ENABLE_MAP_EDITOR_AREAS_TOOL":"false",
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -80,8 +84,7 @@
           "API_URL": "back1:50051,back2:50051",
           "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
           "FRONT_URL": "https://play-"+url,
-          "PLAY_URL": "https://play-"+url,
-          "PUSHER_URL": "https://pusher-"+url,
+          "PUSHER_URL": "https://play-"+url,
           "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
           "ENABLE_OPENAPI_ENDPOINT": "true",
           "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
@@ -92,6 +95,7 @@
           "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
           "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
           "ENABLE_FEATURE_MAP_EDITOR":"true",
+          "ENABLE_MAP_EDITOR_AREAS_TOOL":"false",
           "ICON_URL": "https://icon-"+url,
           "CHAT_URL": "https://chat-"+url,
         } + (if adminUrl != null then {
@@ -118,7 +122,7 @@
       },
       "ports": [80],
       "env": {
-        "PLAY_URL": "//play-"+url,
+        "PUSHER_URL": "//play-"+url,
         "UPLOADER_URL": "//uploader-"+url,
         "EMBEDLY_KEY": if std.objectHas(env, 'EMBEDLY_KEY') then env.EMBEDLY_KEY else "",
         "ICON_URL": "//icon-"+url,
@@ -138,6 +142,11 @@
            "ports": [3000, 50053],
            "env": {
              "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
+             "AUTHENTICATION_STRATEGY": if (adminUrl == null) then "Basic" else "Bearer",
+             "AUTHENTICATION_USER": "john.doe",
+             "AUTHENTICATION_PASSWORD": "password",
+             "AUTHENTICATION_TOKEN": "SomeSecretToken",
+             "USE_DOMAIN_NAME_IN_PATH": if (adminUrl == null) then "false" else "true",
            }
          },
     "uploaderredis":{
@@ -289,6 +298,16 @@
               spec+: {
                 tls+: [{
                   hosts: ["maps-"+url],
+                  secretName: "certificate-tls"
+                }]
+              }
+             }
+          },
+          "map-storage"+: {
+            ingress+: {
+              spec+: {
+                tls+: [{
+                  hosts: ["map-storage-"+url],
                   secretName: "certificate-tls"
                 }]
               }
