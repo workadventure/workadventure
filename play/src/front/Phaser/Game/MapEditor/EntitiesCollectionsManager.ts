@@ -1,7 +1,5 @@
-import { EntityPrefab, Direction } from "@workadventure/map-editor";
-import type { Readable, Subscriber, Unsubscriber } from "svelte/store";
-import { get, writable } from "svelte/store";
-import { TexturesHelper } from "../Phaser/Helpers/TexturesHelper";
+import { EntityPrefab } from "@workadventure/map-editor";
+import { TexturesHelper } from "../../Helpers/TexturesHelper";
 
 export interface EntityCollection {
     collectionName: string;
@@ -9,32 +7,21 @@ export interface EntityCollection {
     collection: EntityPrefab[];
 }
 
-export class MapEntitiesPrefabsStore implements Readable<EntityPrefab[]> {
-    private allDirection = [Direction.Left, Direction.Up, Direction.Down, Direction.Right];
-    private mapEntitiesStore = writable<EntityPrefab[]>([]);
+export class EntitiesCollectionsManager {
+    private entitiesPrefabs: EntityPrefab[] = [];
+    private tags: string[] = [];
 
-    private mapObjects: EntityPrefab[] = [];
     private filter = "";
-    public tagsStore = writable<string[]>([]);
     private currentCollection: EntityCollection = { collectionName: "All Object Collection", collection: [], tags: [] };
-
-    private fetchedCollectionsUrls: string[] = [];
 
     constructor() {}
 
-    subscribe(
-        run: Subscriber<EntityPrefab[]>,
-        invalidate?: ((value?: EntityPrefab[] | undefined) => void) | undefined
-    ): Unsubscriber {
-        return this.mapEntitiesStore.subscribe(run, invalidate);
-    }
-
-    public getObjects() {
-        return get(this.mapEntitiesStore);
+    public getEntitiesPrefabs(): EntityPrefab[] {
+        return this.entitiesPrefabs;
     }
 
     public getEntityPrefab(collectionName: string, entityPrefabId: string): EntityPrefab | undefined {
-        return get(this.mapEntitiesStore).find(
+        return this.entitiesPrefabs.find(
             (prefab) => prefab.collectionName === collectionName && prefab.id === entityPrefabId
         );
     }
@@ -55,15 +42,11 @@ export class MapEntitiesPrefabsStore implements Readable<EntityPrefab[]> {
                 filters.every((word) => item.name.toLowerCase().includes(word)) ||
                 filters.every((word) => item.tags.includes(word))
         );
-        this.mapEntitiesStore.set(newCollection);
+        this.entitiesPrefabs = newCollection;
     }
 
     public async loadCollections(url: string): Promise<void> {
-        if (this.fetchedCollectionsUrls.includes(url)) {
-            return;
-        }
         const entityCollections = await this.fetchCollections(url);
-        this.fetchedCollectionsUrls.push(url);
 
         for (const entityCollection of entityCollections) {
             const tagSet = new Set<string>();
@@ -83,11 +66,15 @@ export class MapEntitiesPrefabsStore implements Readable<EntityPrefab[]> {
                 entity.tags.forEach((tag: string) => tagSet.add(tag));
             });
 
-            const tags = [...tagSet, ...get(this.tagsStore)];
+            const tags = [...new Set([...tagSet, ...this.tags])];
             tags.sort();
-            this.tagsStore.set(tags);
-            this.mapEntitiesStore.set(this.currentCollection.collection);
+            this.tags = tags;
+            this.entitiesPrefabs = this.currentCollection.collection;
         }
+    }
+
+    public getTags(): string[] {
+        return this.tags;
     }
 
     private async fetchCollections(url: string): Promise<EntityCollection[]> {
