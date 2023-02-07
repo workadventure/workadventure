@@ -109,6 +109,7 @@ export class GameMapFrontWrapper {
         this.collisionGrid = [];
         const collisionsLayer = this.phaserLayers.find((phaserLayer) => phaserLayer.layer.name === "collisions");
         for (let y = 0; y < this.phaserMap.height; y += 1) {
+            // this needs go have data from all collision layers, not just collisions
             this.collisionTilesHistogram.push([]);
             for (let x = 0; x < this.phaserMap.width; x += 1) {
                 if (this.phaserLayers)
@@ -125,7 +126,7 @@ export class GameMapFrontWrapper {
             this.entitiesManager.addEntity(entityData, TexturesHelper.ENTITIES_TEXTURES_DIRECTORY);
         }
 
-        this.updateCollisionGrid();
+        this.updateCollisionGrid(undefined, false);
     }
 
     public setLayerVisibility(layerName: string, visible: boolean): void {
@@ -404,7 +405,7 @@ export class GameMapFrontWrapper {
         }
         for (let y = 0; y < collisionGrid.length; y += 1) {
             for (let x = 0; x < collisionGrid[y].length; x += 1) {
-                // this tile is collisionGrid is non-collidible. We can skip calculations for it
+                // this tile in collisionGrid is non-collidible. We can skip calculations for it
                 if (collisionGrid[y][x] === 0) {
                     continue;
                 }
@@ -443,7 +444,7 @@ export class GameMapFrontWrapper {
             this.scene.CurrentPlayer.getPosition(),
         ];
 
-        // check if entity is not occupied by a WOKA
+        // check if position is not occupied by a WOKA
         for (const position of playersPositions) {
             if (
                 MathUtils.isOverlappingWithRectangle(position, {
@@ -457,6 +458,8 @@ export class GameMapFrontWrapper {
             }
         }
         // TODO: Check if it's colliding with other players
+
+        // Check if position is not colliding
         const height = this.collisionGrid.length;
         const width = this.collisionGrid[0].length;
         const xIndex = Math.floor(topLeftX / this.getTileDimensions().width);
