@@ -220,6 +220,7 @@ export class GameMapFrontWrapper {
             }
         }
         this.collisionGrid = grid;
+        console.log(this.collisionGrid);
         this.mapChangedSubject.next(this.collisionGrid);
     }
 
@@ -684,6 +685,8 @@ export class GameMapFrontWrapper {
         let isExitLayer = false;
         for (const property of layer.layer.properties as { [key: string]: string | number | boolean }[]) {
             if (property.name && property.name === "exitUrl") {
+                console.log(`IS EXIT LAYER: ${layer.layer.name}`);
+                console.log(layer.layer.data);
                 isExitLayer = true;
                 break;
             }
@@ -692,9 +695,9 @@ export class GameMapFrontWrapper {
             row.map((tile) =>
                 tile.properties?.[GameMapProperties.COLLIDES]
                     ? 1
-                    : isExitLayer ||
-                      tile.properties[GameMapProperties.EXIT_URL] ||
-                      tile.properties[GameMapProperties.EXIT_SCENE_URL]
+                    : (isExitLayer && tile.index !== -1) ||
+                      tile.properties?.[GameMapProperties.EXIT_URL] ||
+                      tile.properties?.[GameMapProperties.EXIT_SCENE_URL]
                     ? 2
                     : 0
             )
