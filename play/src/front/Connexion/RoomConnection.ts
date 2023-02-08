@@ -155,8 +155,8 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
-
-    public xmppSettingsMessage: XmppSettingsMessage | null = null;
+    private readonly _xmppSettingsMessageStream = new Subject<XmppSettingsMessage>();
+    public readonly xmppSettingsMessageStream = this._xmppSettingsMessageStream.asObservable();
     // If this timeout triggers, we consider the connection is lost (no ping received)
     private timeout: ReturnType<typeof setInterval> | undefined = undefined;
 
@@ -591,7 +591,7 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "xmppSettingsMessage": {
-                    this.xmppSettingsMessage = message.xmppSettingsMessage;
+                    this._xmppSettingsMessageStream.next(message.xmppSettingsMessage);
                     break;
                 }
                 default: {
