@@ -103,7 +103,7 @@ export class GameMapFrontWrapper {
 
         this.collisionGrid = [];
         this.entitiesCollisionLayer = phaserMap.createBlankLayer("__entitiesCollisionLayer", terrains);
-        this.entitiesCollisionLayer.setDepth(-2).setVisible(false).setCollisionByProperty({ collides: true });
+        this.entitiesCollisionLayer.setDepth(-2).setCollisionByProperty({ collides: true });
 
         this.phaserLayers.push(this.entitiesCollisionLayer);
 
@@ -157,12 +157,9 @@ export class GameMapFrontWrapper {
             for (let x = 0; x < collisionGrid[y].length; x += 1) {
                 // add tiles
                 if (collisionGrid[y][x] === 1) {
-                    const tile = this.entitiesCollisionLayer.putTileAt(
-                        specialZonesTileset.firstgid,
-                        coords.x + x,
-                        coords.y + y
-                    );
+                    const tile = this.entitiesCollisionLayer.putTileAt(-1, coords.x + x, coords.y + y);
                     tile.properties["collides"] = true;
+                    console.log(tile);
                     continue;
                 }
                 // remove tiles
