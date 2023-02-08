@@ -148,10 +148,6 @@ export class GameMapFrontWrapper {
      * @returns
      */
     public modifyToCollisionsLayer(x: number, y: number, name: string, collisionGrid: number[][]): void {
-        const specialZonesTileset = this.phaserMap.tilesets.find((tileset) => tileset.name === "Special_Zones");
-        if (!specialZonesTileset || !this.entitiesCollisionLayer) {
-            return;
-        }
         const coords = this.entitiesCollisionLayer.worldToTileXY(x, y, true);
         for (let y = 0; y < collisionGrid.length; y += 1) {
             for (let x = 0; x < collisionGrid[y].length; x += 1) {
