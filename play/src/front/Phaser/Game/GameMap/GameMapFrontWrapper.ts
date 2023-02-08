@@ -220,7 +220,6 @@ export class GameMapFrontWrapper {
             }
         }
         this.collisionGrid = grid;
-        console.log(this.collisionGrid);
         this.mapChangedSubject.next(this.collisionGrid);
     }
 
@@ -685,8 +684,6 @@ export class GameMapFrontWrapper {
         let isExitLayer = false;
         for (const property of layer.layer.properties as { [key: string]: string | number | boolean }[]) {
             if (property.name && property.name === "exitUrl") {
-                console.log(`IS EXIT LAYER: ${layer.layer.name}`);
-                console.log(layer.layer.data);
                 isExitLayer = true;
                 break;
             }
