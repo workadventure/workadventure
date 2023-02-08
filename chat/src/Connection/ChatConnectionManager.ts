@@ -1,8 +1,11 @@
-import { XmppSettingsMessage } from "../Messages/ts-proto-generated/protos/messages";
+import { XmppSettingsMessage } from "@workadventure/messages";
 import { XmppClient } from "../Xmpp/XmppClient";
 import { connectionEstablishedStore, enableChat } from "../Stores/ChatStore";
 import { get } from "svelte/store";
 import { xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
+import Debug from "debug";
+
+const debug = Debug("chat");
 
 class ChatConnectionManager {
     private uuid: string;
@@ -17,6 +20,7 @@ class ChatConnectionManager {
     }
 
     initUser(playUri: string, uuid: string, authToken?: string) {
+        debug("chatConnectionManager => initUser");
         this.uuid = uuid;
         this.authToken = authToken;
         this.playUri = playUri;
@@ -25,6 +29,7 @@ class ChatConnectionManager {
     }
 
     initXmppSettings(xmppSettingsMessages: XmppSettingsMessage) {
+        debug("chatConnectionManager => initXmppSettings");
         this.xmppSettingsMessage = xmppSettingsMessages;
 
         this.start();
@@ -42,13 +47,25 @@ class ChatConnectionManager {
     }
 
     public start() {
+        debug("chatConnectionManager => start");
         if (this.uuid !== "" && this.authToken && this.playUri !== "" && this.xmppSettingsMessage && !this.xmppClient) {
+            debug("chatConnectionManager => start => all parameters are OK");
             if (get(enableChat)) {
                 this.xmppClient = new XmppClient(this.xmppSettingsMessage);
             } else {
                 xmppServerConnectionStatusStore.set(true);
             }
             connectionEstablishedStore.set(true);
+        } else {
+            debug(
+                `chatConnectionManager => start => all parameters are NOT OK ${JSON.stringify({
+                    uuid: this.uuid,
+                    authToken: this.authToken,
+                    playUrl: this.playUri,
+                    xmppSettingsMessage: this.xmppSettingsMessage,
+                    xmppClient: !this.xmppClient,
+                })}`
+            );
         }
 
         /*this.chatConnection.xmppConnectionNotAuthorizedStream.subscribe(() => {

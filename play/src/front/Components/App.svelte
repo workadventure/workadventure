@@ -20,8 +20,19 @@
     import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
     import { mapEditorModeStore } from "../Stores/MapEditorStore";
     import MapEditor from "./MapEditor/MapEditor.svelte";
+    import { afterUpdate } from "svelte";
 
     export let game: Game;
+
+    /**
+     * When changing map from an exit on the current map, the Chat and the MainLayout are not really destroyed
+     * due to an internal issue of Svelte, this is a work-around to force the component to be reloaded
+     * https://github.com/sveltejs/svelte/issues/5268
+     */
+    let unique = {};
+    afterUpdate(() => {
+        unique = {};
+    });
 </script>
 
 {#if $errorScreenStore !== undefined}
@@ -49,9 +60,11 @@
         <EnableCameraScene {game} />
     </div>
 {:else if $gameSceneIsLoadedStore && !$selectCharacterCustomizeSceneVisibleStore}
-    <Chat />
-    {#if $mapEditorModeStore}
-        <MapEditor />
-    {/if}
-    <MainLayout />
+    {#key unique}
+        <Chat />
+        {#if $mapEditorModeStore}
+            <MapEditor />
+        {/if}
+        <MainLayout />
+    {/key}
 {/if}

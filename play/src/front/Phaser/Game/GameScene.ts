@@ -1007,6 +1007,10 @@ export class GameScene extends DirtyScene {
                     this.room.group ?? undefined
                 );
 
+                this.connection.xmppSettingsMessageStream.subscribe((xmppSettingsMessage) => {
+                    iframeListener.sendXmppSettingsToChatIframe(xmppSettingsMessage);
+                });
+
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
 
@@ -1046,10 +1050,9 @@ export class GameScene extends DirtyScene {
 
                 // Get position from UUID only after the connection to the pusher is established
                 this.tryMovePlayerWithMoveToUserParameter();
+                gameSceneIsLoadedStore.set(true);
             })
             .catch((e) => console.error(e));
-
-        gameSceneIsLoadedStore.set(true);
     }
 
     private subscribeToStores(): void {
@@ -2059,6 +2062,8 @@ ${escapedMessage}
                 iframeListener.unregisterScript(script);
             }
         }
+
+        iframeListener.cleanup();
         uiWebsiteManager.closeAll();
         followUsersStore.stopFollowing();
 

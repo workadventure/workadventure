@@ -1,5 +1,10 @@
 <script lang="ts">
-    import { chatVisibilityStore, writingStatusMessageStore } from "../../Stores/ChatStore";
+    import {
+        chatVisibilityStore,
+        iframeLoadedStore,
+        wokaDefinedStore,
+        writingStatusMessageStore,
+    } from "../../Stores/ChatStore";
     import { enableUserInputsStore } from "../../Stores/UserInputStore";
     import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
@@ -7,7 +12,7 @@
     import { getColorByString } from "../Video/utils";
     import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
     import type { Unsubscriber } from "svelte/store";
-    import { derived, get, writable } from "svelte/store";
+    import { derived, get } from "svelte/store";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { CHAT_URL } from "../../Enum/EnvironmentVariable";
     import { locale } from "../../../i18n/i18n-svelte";
@@ -24,9 +29,6 @@
 
     let subscribeListeners: Array<Unsubscriber> = [];
     let subscribeObservers: Array<Subscription> = [];
-
-    const wokaDefinedStore = writable<boolean>(false);
-    const iframeLoadedStore = writable<boolean>(false);
 
     export const canSendInitMessageStore = derived(
         [wokaDefinedStore, iframeLoadedStore, gameSceneIsLoadedStore],
