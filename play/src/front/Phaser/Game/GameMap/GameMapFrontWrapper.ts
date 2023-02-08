@@ -159,7 +159,6 @@ export class GameMapFrontWrapper {
                 if (collisionGrid[y][x] === 1) {
                     const tile = this.entitiesCollisionLayer.putTileAt(-1, coords.x + x, coords.y + y);
                     tile.properties["collides"] = true;
-                    console.log(tile);
                     continue;
                 }
                 // remove tiles
