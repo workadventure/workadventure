@@ -153,17 +153,16 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
                 const collisitonGrid = entity.getEntityData().prefab.collisionGrid;
                 const depthOffset = entity.getEntityData().prefab.depthOffset ?? 0;
-                const offsets = this.getEntityAlignWithGridOffset(entity);
                 const tileDim = this.scene.getGameMapFrontWrapper().getTileDimensions();
                 entity.x =
                     collisitonGrid || this.shiftKey.isDown
-                        ? Math.floor(dragX / tileDim.width) * tileDim.width + offsets.x
+                        ? Math.floor(dragX / tileDim.width) * tileDim.width
                         : Math.floor(dragX);
                 entity.y =
                     collisitonGrid || this.shiftKey.isDown
-                        ? Math.floor(dragY / tileDim.height) * tileDim.height + offsets.y
+                        ? Math.floor(dragY / tileDim.height) * tileDim.height
                         : Math.floor(dragY);
-                entity.setDepth(entity.y + entity.displayHeight * 0.5 + depthOffset);
+                entity.setDepth(entity.y + entity.displayHeight + depthOffset);
 
                 if (
                     !this.scene
@@ -270,19 +269,5 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
     public clearProperties(): void {
         this.properties.clear();
-    }
-
-    private getEntityAlignWithGridOffset(entity: Entity): { x: number; y: number } {
-        const collisionGrid = entity.getEntityData().prefab.collisionGrid;
-        if (collisionGrid && collisionGrid.length > 0) {
-            return {
-                x: collisionGrid[0].length % 2 === 1 ? 16 : 0,
-                y: collisionGrid.length % 2 === 1 ? 16 : 0,
-            };
-        }
-        return {
-            x: Math.floor(entity.displayWidth / 32) % 2 === 1 ? 16 : 0,
-            y: Math.floor(entity.displayHeight / 32) % 2 === 1 ? 16 : 0,
-        };
     }
 }
