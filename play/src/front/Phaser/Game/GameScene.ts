@@ -1012,7 +1012,9 @@ export class GameScene extends DirtyScene {
                 );
 
                 this.connection.xmppSettingsMessageStream.subscribe((xmppSettingsMessage) => {
-                    iframeListener.sendXmppSettingsToChatIframe(xmppSettingsMessage);
+                    if (xmppSettingsMessage) {
+                        iframeListener.sendXmppSettingsToChatIframe(xmppSettingsMessage);
+                    }
                 });
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
