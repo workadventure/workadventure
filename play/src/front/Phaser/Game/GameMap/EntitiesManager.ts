@@ -58,7 +58,12 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             `${imagePathPrefix ?? ""}${data.prefab.imagePath}`
         )
             .then(() => {
-                this.entities.get(data.id)?.setTexture(data.prefab.imagePath);
+                const entity = this.entities.get(data.id);
+                if (entity) {
+                    entity
+                        .setTexture(data.prefab.imagePath)
+                        .setDepth(entity.y + entity.displayHeight + (entity.getEntityData().prefab.depthOffset ?? 0));
+                }
             })
             .catch((e) => console.error(e));
         const entity = new Entity(this.scene, data);

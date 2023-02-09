@@ -78,6 +78,7 @@ export const EntityRawPrefab = z.object({
     direction: z.enum(["Left", "Up", "Down", "Right"]),
     color: z.string(),
     collisionGrid: z.array(z.array(z.number())).optional(),
+    depthOffset: z.number().optional(),
 });
 
 export const EntityPrefab = EntityRawPrefab.extend({
