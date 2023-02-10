@@ -22,6 +22,7 @@ import { StreamZipAsync, ZipEntry } from "node-stream-zip";
 import path from "path";
 import { UploadController } from "./UploadController";
 import { FileNotFoundError } from "./FileNotFoundError";
+import pLimit from "p-limit";
 
 export class S3FileSystem implements FileSystemInterface {
     public constructor(private s3: S3, private bucketName: string) {}
@@ -73,7 +74,7 @@ export class S3FileSystem implements FileSystemInterface {
         return await this.moveInternal(virtualPath, newVirtualPath);
     }
 
-    async moveInternal(virtualPath: string, newVirtualPath: string, deletePrevious = false) {
+    private async moveInternal(virtualPath: string, newVirtualPath: string, deletePrevious = false) {
         let isTruncated = true;
         let continuationToken: string | undefined = undefined;
         let result;
@@ -89,17 +90,19 @@ export class S3FileSystem implements FileSystemInterface {
             // Get the list of objects from the result
             const objects = result.Contents;
 
+            const limit = pLimit(30);
+
             // Use Promise.all to run the copy and delete operations in parallel
             if (objects) {
-                await Promise.all(
-                    objects.map(async (object) => {
-                        const objectKey = object.Key;
+                const requests = objects.map(async (object) => {
+                    const objectKey = object.Key;
 
-                        if (!objectKey) {
-                            throw new Error("No key on object : " + JSON.stringify(object));
-                        }
+                    if (!objectKey) {
+                        throw new Error("No key on object : " + JSON.stringify(object));
+                    }
 
-                        const targetObjectKey = objectKey.replace(virtualPath, newVirtualPath);
+                    const targetObjectKey = objectKey.replace(virtualPath, newVirtualPath);
+                    await limit(async () => {
                         await this.s3.send(
                             new CopyObjectCommand({
                                 Bucket: this.bucketName,
@@ -115,8 +118,10 @@ export class S3FileSystem implements FileSystemInterface {
                                 })
                             );
                         }
-                    })
-                );
+                    });
+                });
+
+                await Promise.all(requests);
             }
 
             // Check if there are more objects to list
