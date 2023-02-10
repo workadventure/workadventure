@@ -162,6 +162,49 @@ test.describe('Map-storage Upload API', () => {
         listOfMaps = await request.get("/maps");
         await expect(await listOfMaps.text() === JSON.stringify(["map.tmj"])).toBeTruthy();
     });
+
+    test("move a folder", async ({
+        request,
+    }) => {
+        const uploadFileToDir = await request.post(`/upload`, {
+            multipart: {
+                file: fs.createReadStream("./assets/file1.zip"),
+                directory: "/foo"
+            }
+        });
+        await expect(uploadFileToDir.ok()).toBeTruthy();
+
+        const moveDir = await request.post(`/move`, {
+            data: {
+                path: "/foo",
+                newPath: "/foonew",
+            }
+        });
+
+        await expect(moveDir.ok()).toBeTruthy();
+    });
+
+    test("copy a folder", async ({
+        request,
+    }) => {
+        const uploadFileToDir = await request.post(`/upload`, {
+            multipart: {
+                file: fs.createReadStream("./assets/file1.zip"),
+                directory: "/foo"
+            }
+        });
+        await expect(uploadFileToDir.ok()).toBeTruthy();
+
+        const copyDir = await request.post(`/copy`, {
+            data: {
+                path: "/foo",
+                newPath: "/foonew",
+            }
+        });
+
+        await expect(copyDir.ok()).toBeTruthy();
+    });
+
     test('fails on invalid maps', async ({
                                            request,
                                        }) => {
