@@ -1,9 +1,12 @@
 import {
+    CopyObjectCommand,
+    DeleteObjectCommand,
     DeleteObjectsCommand,
     GetObjectCommand,
     ListObjectsCommand,
     ListObjectsCommandInput,
     ListObjectsCommandOutput,
+    ListObjectsV2Command,
     NoSuchKey,
     PutObjectCommand,
     S3,
@@ -62,14 +65,64 @@ export class S3FileSystem implements FileSystemInterface {
         return (await this.listFiles(virtualPath)).length > 0;
     }
 
-    move(virtualPath: string, newVirtualPath: string): Promise<void> {
-        // Todo: Need help
-        throw new Error("Not implemented");
+    async move(virtualPath: string, newVirtualPath: string): Promise<void> {
+        return await this.moveInternal(virtualPath, newVirtualPath, true);
     }
 
-    copy(virtualPath: string, newVirtualPath: string): Promise<void> {
-        // Todo: Need Help
-        throw new Error("Not implemented");
+    async copy(virtualPath: string, newVirtualPath: string): Promise<void> {
+        return await this.moveInternal(virtualPath, newVirtualPath);
+    }
+
+    async moveInternal(virtualPath: string, newVirtualPath: string, deletePrevious = false) {
+        let isTruncated = true;
+        let continuationToken: string | undefined = undefined;
+        let result;
+        while (isTruncated) {
+            result = await this.s3.send(
+                new ListObjectsV2Command({
+                    Bucket: this.bucketName,
+                    Prefix: virtualPath,
+                    ContinuationToken: continuationToken,
+                })
+            );
+
+            // Get the list of objects from the result
+            const objects = result.Contents;
+
+            // Use Promise.all to run the copy and delete operations in parallel
+            if (objects) {
+                await Promise.all(
+                    objects.map(async (object) => {
+                        const objectKey = object.Key;
+
+                        if (!objectKey) {
+                            throw new Error("No key on object : " + JSON.stringify(object));
+                        }
+
+                        const targetObjectKey = objectKey.replace(virtualPath, newVirtualPath);
+                        await this.s3.send(
+                            new CopyObjectCommand({
+                                Bucket: this.bucketName,
+                                CopySource: `${this.bucketName}/${objectKey}`,
+                                Key: targetObjectKey,
+                            })
+                        );
+                        if (deletePrevious) {
+                            await this.s3.send(
+                                new DeleteObjectCommand({
+                                    Bucket: this.bucketName,
+                                    Key: objectKey,
+                                })
+                            );
+                        }
+                    })
+                );
+            }
+
+            // Check if there are more objects to list
+            isTruncated = result.IsTruncated ?? false;
+            continuationToken = result.NextContinuationToken;
+        }
     }
 
     async writeFile(zipEntry: ZipEntry, targetFilePath: string, zip: StreamZipAsync): Promise<void> {

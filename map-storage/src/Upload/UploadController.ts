@@ -277,7 +277,7 @@ export class UploadController {
     }
 
     private move() {
-        this.app.patch("/move", passportAuthenticator, (req, res, next) => {
+        this.app.post("/move", passportAuthenticator, (req, res, next) => {
             (async () => {
                 const verifiedBody = z
                     .object({
@@ -308,13 +308,14 @@ export class UploadController {
                 }
 
                 await fileSystem.move(virtualPath, newVirtualPath);
+                await this.generateCacheFile(req);
                 res.sendStatus(200);
             })().catch((e) => next(e));
         });
     }
 
     private copy() {
-        this.app.patch("/copy", passportAuthenticator, (req, res, next) => {
+        this.app.post("/copy", passportAuthenticator, (req, res, next) => {
             (async () => {
                 const verifiedBody = z
                     .object({
@@ -345,6 +346,7 @@ export class UploadController {
                 }
 
                 await fileSystem.copy(virtualPath, newVirtualPath);
+                await this.generateCacheFile(req);
                 res.sendStatus(201);
             })().catch((e) => next(e));
         });
