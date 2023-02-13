@@ -438,6 +438,8 @@ message RoomJoinedMessage {
   repeated ApplicationMessage applications = 11;
   string userJid = 12;
   EditMapCommandsArrayMessage editMapCommandsArrayMessage = 13;
+  string webrtcUserName = 14;
+  string webrtcPassword = 15;
 }
 
 message WebRtcStartMessage {

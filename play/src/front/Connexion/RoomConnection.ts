@@ -65,6 +65,7 @@ import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
+import { checkCoturnServer } from "../Components/Video/utils";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
@@ -427,6 +428,15 @@ export class RoomConnection implements RoomConnection {
                             commandsToApply,
                         } as RoomJoinedMessageInterface,
                     });
+
+                    // Check WebRtc connection
+                    if (roomJoinedMessage.webrtcUserName && roomJoinedMessage.webrtcPassword) {
+                        checkCoturnServer({
+                            userId: this.userId,
+                            webRtcUser: roomJoinedMessage.webrtcUserName,
+                            webRtcPassword: roomJoinedMessage.webrtcPassword,
+                        });
+                    }
                     break;
                 }
                 case "worldFullMessage": {

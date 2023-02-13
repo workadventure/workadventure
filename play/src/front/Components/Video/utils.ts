@@ -64,3 +64,48 @@ export function getIceServersConfig(user: UserSimplePeerInterface): RTCIceServer
     }
     return config;
 }
+
+/**
+ * Test STUN and TURN server access
+ * @param user UserSimplePeerInterface
+ */
+export function checkCoturnServer(user: UserSimplePeerInterface) {
+    const iceServers = getIceServersConfig(user);
+    console.info("checkTURNServer => STUN/TURN server able to test: ", getIceServersConfig(user));
+
+    const pc = new RTCPeerConnection({ iceServers });
+    console.info("checkTURNServer => Test STUN Peer Connection: ", pc);
+
+    pc.onicecandidate = (e) => {
+        if (!e.candidate) return;
+
+        // Display candidate string e.g
+        // candidate:842163049 1 udp 1677729535 XXX.XXX.XX.XXXX 58481 typ srflx raddr 0.0.0.0 rport 0 generation 0 ufrag sXP5 network-cost 999
+        console.log("checkTURNServer => onicecandidate => candidate", e.candidate.candidate);
+
+        // If a srflx candidate was found, notify that the STUN server works!
+        if (e.candidate.type == "srflx") {
+            console.info("checkTURNServer => onicecandidate => The STUN server is reachable!");
+            console.info(`   Your Public IP Address is: ${e.candidate.address}`);
+            pc.close();
+        }
+
+        // If a relay candidate was found, notify that the TURN server works!
+        if (e.candidate.type == "relay") {
+            console.info("checkTURNServer => onicecandidate => The TURN server is reachable!");
+            pc.close();
+        }
+    };
+
+    // Log errors:
+    // Remember that in most of the cases, even if its working, you will find a STUN host lookup received error
+    // Chrome tried to look up the IPv6 DNS record for server and got an error in that process. However, it may still be accessible through the IPv4 address
+    pc.onicecandidateerror = (e) => {
+        console.error("checkTURNServer => onicecandidateerror => The STUN server is on error: ", e);
+    };
+
+    pc.createDataChannel("workadventure-peerconnection-test");
+    pc.createOffer()
+        .then((offer) => pc.setLocalDescription(offer))
+        .catch((err) => console.error("Check coturn server error", err));
+}

@@ -189,6 +189,11 @@ export class SocketManager {
             roomJoinedMessage.addPlayervariable(variableMessage);
         }
 
+        if (TURN_STATIC_AUTH_SECRET !== "") {
+            const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
+            roomJoinedMessage.setWebrtcusername(username);
+            roomJoinedMessage.setWebrtcpassword(password);
+        }
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setRoomjoinedmessage(roomJoinedMessage);
         socket.write(serverToClientMessage);
@@ -565,10 +570,7 @@ export class SocketManager {
             webrtcStartMessage1.setUserid(otherUser.id);
             webrtcStartMessage1.setInitiator(true);
             if (TURN_STATIC_AUTH_SECRET !== "") {
-                const { username, password } = this.getTURNCredentials(
-                    otherUser.id.toString(),
-                    TURN_STATIC_AUTH_SECRET
-                );
+                const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
                 webrtcStartMessage1.setWebrtcusername(username);
                 webrtcStartMessage1.setWebrtcpassword(password);
             }
@@ -608,8 +610,8 @@ export class SocketManager {
         hmac.end();
         const password = hmac.read() as string;
         return {
-            username: username,
-            password: password,
+            username,
+            password,
         };
     }
 
