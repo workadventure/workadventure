@@ -155,6 +155,7 @@ import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
+import { faviconManager } from "./../../WebRtc/FaviconManager";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -1187,10 +1188,10 @@ export class GameScene extends DirtyScene {
 
             if (newPeerNumber > oldPeersNumber) {
                 this.playSound("audio-webrtc-in");
-                mediaManager.pushNotificationFavicon();
+                faviconManager.pushNotificationFavicon();
             } else if (newPeerNumber < oldPeersNumber) {
                 this.playSound("audio-webrtc-out");
-                mediaManager.pushOriginalFavicon();
+                faviconManager.pushOriginalFavicon();
             }
 
             if (newPeerNumber > 0) {
