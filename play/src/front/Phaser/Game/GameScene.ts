@@ -1187,9 +1187,12 @@ export class GameScene extends DirtyScene {
 
             if (newPeerNumber > oldPeersNumber) {
                 this.playSound("audio-webrtc-in");
+                mediaManager.pushNotificationFavicon();
             } else if (newPeerNumber < oldPeersNumber) {
                 this.playSound("audio-webrtc-out");
+                mediaManager.pushOriginalFavicon();
             }
+
             if (newPeerNumber > 0) {
                 if (!this.localVolumeStoreUnsubscriber) {
                     this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((spectrum) => {
