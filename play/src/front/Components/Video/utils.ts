@@ -1,5 +1,6 @@
 import type { UserSimplePeerInterface } from "../../WebRtc/SimplePeer";
 import { STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER } from "../../Enum/EnvironmentVariable";
+import { helpWebRtcSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
 
 export function getColorByString(str: string): string | null {
     let hash = 0;
