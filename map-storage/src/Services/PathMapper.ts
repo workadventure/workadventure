@@ -7,7 +7,7 @@ import path from "node:path";
  * The returned value never starts with "/".
  */
 export function mapPath(filePath: string, req: Request): string {
-    return mapPathUsingDomain(filePath, req.hostname);
+    return mapPathUsingDomain(filePath, req.headers["x-forwarded-host"]?.toString() ?? req.hostname);
 }
 
 export function mapPathUsingDomain(filePath: string, domain: string): string {
