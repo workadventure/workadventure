@@ -18,6 +18,15 @@ const camera: DeepPartial<Translation["camera"]> = {
             chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
         },
     },
+    webrtc: {
+        title: "WebRtc connection error",
+        error: "STUN / TURN server isn't reachable",
+        content:
+            "If you are connecting via a VPN, please try to logout and refresh the web page. You may click on the link below to test your WebRtc connection.",
+        testUrl: "WebRtc connection test",
+        refresh: "Refresh",
+        continue: "Continue",
+    },
     my: {
         silentZone: "安静区",
         nameTag: "你",

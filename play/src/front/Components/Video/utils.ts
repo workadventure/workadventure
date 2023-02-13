@@ -102,6 +102,7 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
     // Chrome tried to look up the IPv6 DNS record for server and got an error in that process. However, it may still be accessible through the IPv4 address
     pc.onicecandidateerror = (e) => {
         console.error("checkTURNServer => onicecandidateerror => The STUN server is on error: ", e);
+        helpWebRtcSettingsVisibleStore.set(true);
     };
 
     pc.createDataChannel("workadventure-peerconnection-test");
