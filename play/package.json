@@ -18,7 +18,7 @@
     "dev-front": "cross-env vite",
     "dev-pusher": "TS_NODE_PROJECT=tsconfig-pusher.json ts-node-dev --inspect=0.0.0.0:9229 --exit-child --respawn ./src/server.ts",
     "build": "cross-env vite build",
-    "typecheck": "cross-env tsc -p tsconfig-pusher.json --noEmit",
+    "typecheck": "cross-env tsc --noEmit",
     "profile": "tsc && node --prof ./dist/server.js",
     "build-iframe-api": "vite --config iframe-api.vite.config.ts build",
     "watch-iframe-api": "npm run build-iframe-api --watch",
