@@ -190,15 +190,15 @@ test.describe('Map-storage Upload API', () => {
         const uploadFileToDir = await request.post(`/upload`, {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
-                directory: "/foo"
+                directory: "/copy"
             }
         });
         await expect(uploadFileToDir.ok()).toBeTruthy();
 
         const copyDir = await request.post(`/copy`, {
             data: {
-                path: "/foo",
-                newPath: "/foonew",
+                path: "/copy",
+                newPath: "/newcopy",
             }
         });
 
