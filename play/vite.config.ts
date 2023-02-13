@@ -35,7 +35,9 @@ export default defineConfig({
             },
         }),
         legacy({
-            targets: ['defaults', 'not IE 11']
+            //targets: ['defaults', 'not IE 11', 'iOS > 14.3']
+            polyfills: ['web.structured-clone'],
+            modernPolyfills: ['web.structured-clone'],
         }),
     ],
 });
