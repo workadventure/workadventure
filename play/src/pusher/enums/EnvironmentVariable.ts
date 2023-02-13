@@ -1,5 +1,5 @@
 import { OpidWokaNamePolicy } from "@workadventure/messages";
-import { z, ZodError } from "zod";
+import { z } from "zod";
 import type { FrontConfigurationInterface } from "../../common/FrontConfigurationInterface";
 
 const BoolAsString = z.union([z.literal("true"), z.literal("false"), z.literal("0"), z.literal("1"), z.literal("")]);
@@ -79,20 +79,32 @@ const EnvironmentVariables = z.object({
 
 type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
 
-let env: EnvironmentVariables;
-try {
-    env = EnvironmentVariables.parse(process.env);
-} catch (e) {
-    if (e instanceof ZodError) {
-        console.error("Errors found in environment variables:");
-        for (const issue of e.issues) {
-            console.error(`For variable "${issue.path[0]}": ${issue.message}`);
+const envChecking = EnvironmentVariables.safeParse(process.env);
+
+// Will break the process if an error happens
+if (!envChecking.success) {
+    console.error("\n\n\n-----------------------------------------");
+    console.error("FATAL ERRORS FOUND IN ENVIRONMENT VARIABLES!!!");
+    console.error("-----------------------------------------\n");
+
+    const formattedError = envChecking.error.format();
+
+    for (const [name, value] of Object.entries(formattedError)) {
+        if (Array.isArray(value)) {
+            continue;
         }
 
-        process.exit(1);
+        for (const error of value._errors) {
+            console.error(`For variable "${name}": ${error}`);
+        }
     }
-    throw e;
+
+    console.error("\n-----------------------------------------\n\n\n");
+
+    process.exit(1);
 }
+
+const env = envChecking.data;
 
 function toNumber(value: string | undefined, defaultValue: number): number {
     if (value === undefined || value === "") {

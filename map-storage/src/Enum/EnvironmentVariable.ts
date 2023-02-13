@@ -1,4 +1,4 @@
-import { z, ZodError } from "zod";
+import { z } from "zod";
 
 const BoolAsString = z.union([z.literal("true"), z.literal("false"), z.literal("0"), z.literal("1"), z.literal("")]);
 type BoolAsString = z.infer<typeof BoolAsString>;
@@ -58,29 +58,32 @@ const EnvironmentVariables = z.intersection(BasicEnvironmentVariables, AuthEnvVa
 
 type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
 
-let env: EnvironmentVariables;
-try {
-    env = EnvironmentVariables.parse(process.env);
-} catch (e) {
-    if (e instanceof ZodError) {
-        console.error("Errors found in environment variables:");
+const envChecking = EnvironmentVariables.safeParse(process.env);
 
-        for (const [name, value] of Object.entries(e.format())) {
-            if (name === "_errors") {
-                continue;
-            }
-            // It appears the typing of "value" is incorrect in Zod (!)
-            //eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            //@ts-ignore
-            for (const error of value._errors as string[]) {
-                console.error(`For variable "${name}": ${error}`);
-            }
+// Will break the process if an error happens
+if (!envChecking.success) {
+    console.error("\n\n\n-----------------------------------------");
+    console.error("FATAL ERRORS FOUND IN ENVIRONMENT VARIABLES!!!");
+    console.error("-----------------------------------------\n");
+
+    const formattedError = envChecking.error.format();
+
+    for (const [name, value] of Object.entries(formattedError)) {
+        if (Array.isArray(value)) {
+            continue;
         }
 
-        process.exit(1);
+        for (const error of value._errors) {
+            console.error(`For variable "${name}": ${error}`);
+        }
     }
-    throw e;
+
+    console.error("\n-----------------------------------------\n\n\n");
+
+    process.exit(1);
 }
+
+const env = envChecking.data;
 
 function toNumber(value: string | undefined, defaultValue: number): number {
     if (value === undefined || value === "") {
