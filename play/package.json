@@ -66,6 +66,7 @@
     "@types/xmpp__jid": "^1.3.3",
     "@typescript-eslint/eslint-plugin": "^5.47.0",
     "@typescript-eslint/parser": "^5.47.0",
+    "@vitejs/plugin-legacy": "^2.3.1",
     "autoprefixer": "^10.4.4",
     "eslint": "^8.30.0",
     "eslint-plugin-svelte3": "^4.0.0",
