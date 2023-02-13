@@ -8,6 +8,7 @@ import type { LiveDirectory } from "../models/LiveDirectory";
 import { adminService } from "../services/AdminService";
 import { notWaHost } from "../middlewares/NotWaHost";
 import { version } from "../../../package.json";
+import { uuid } from "stanza/Utils";
 
 export class FrontController extends BaseHttpController {
     private indexFile: string;
@@ -208,12 +209,17 @@ export class FrontController extends BaseHttpController {
 
         try {
             const metaTagsData = await builder.getMeta(req.header("User-Agent"));
+            const hasLogrocketSession = req.query.logrocket === "true";
+            const userId = uuid();
             html = Mustache.render(this.indexFile, {
                 ...metaTagsData,
                 msApplicationTileImage: metaTagsData.favIcons[metaTagsData.favIcons.length - 1].src,
                 url,
                 script: this.script,
                 authToken: authToken,
+                /* TODO change it to push data from admin */
+                hasLogrocketSession,
+                userId,
             });
         } catch (e) {
             console.log(`Cannot render metatags on ${url}`, e);

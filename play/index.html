@@ -53,6 +53,20 @@
         <script>
             {{{ script }}}
         </script>
+
+        <!-- LogRocket -->
+        {{#hasLogrocketSession}}
+            <script src="https://cdn.lr-in-prod.com/LogRocket.min.js" crossorigin="anonymous"></script>
+            <script>window.LogRocket && window.LogRocket.init('kocydj/workadventure');</script>
+            <script>
+                // This is an example script - don't forget to change it!
+                LogRocket.identify("{{ userId }}", {
+                    name: "{{ userId }}",
+                    // Add your own custom user variables here, ie:
+                    roomId: "{{ url }}"
+                });
+            </script>
+        {{/hasLogrocketSession}}
     </head>
     <body id="body" style="margin: 0; background-color: #000">
         <input type="hidden" id="authToken" value="{{ authToken }}" name="authToken">
