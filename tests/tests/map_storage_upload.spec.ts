@@ -163,25 +163,76 @@ test.describe('Map-storage Upload API', () => {
         await expect(await listOfMaps.text() === JSON.stringify(["map.tmj"])).toBeTruthy();
     });
 
+    test("delete the root folder", async ({
+        request,
+    }) => {
+        const uploadFileToDir = await request.post(`/upload`, {
+            multipart: {
+                file: fs.createReadStream("./assets/file1.zip"),
+                directory: "/"
+            }
+        });
+        await expect(uploadFileToDir.ok()).toBeTruthy();
+
+        let listOfMaps = await request.get("/maps");
+        await expect(await listOfMaps.text() === JSON.stringify(["map.tmj"])).toBeTruthy();
+
+        const deleteRoot = await request.delete(`/delete?path=/`);
+
+       await expect(deleteRoot.status() === 204).toBeTruthy();
+
+        listOfMaps = await request.get("/maps");
+        await expect(await listOfMaps.text() === JSON.stringify([])).toBeTruthy();
+    });
+
+    test("delete a folder", async ({
+        request,
+    }) => {
+        const uploadFileToDir = await request.post(`/upload`, {
+            multipart: {
+                file: fs.createReadStream("./assets/file1.zip"),
+                directory: "/toDelete"
+            }
+        });
+        await expect(uploadFileToDir.ok()).toBeTruthy();
+
+        let listOfMaps = await request.get("/maps");
+        await expect(await listOfMaps.text() === JSON.stringify(["toDelete/map.tmj"])).toBeTruthy();
+
+        const deleteRoot = await request.delete(`/delete?path=/toDelete`);
+
+       await expect(deleteRoot.status() === 204).toBeTruthy();
+
+        listOfMaps = await request.get("/maps");
+        await expect(await listOfMaps.text() === JSON.stringify([])).toBeTruthy();
+    });
+
     test("move a folder", async ({
         request,
     }) => {
         const uploadFileToDir = await request.post(`/upload`, {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
-                directory: "/foo"
+                directory: "/toMove"
             }
         });
         await expect(uploadFileToDir.ok()).toBeTruthy();
 
+        let listOfMaps = await request.get("/maps");
+        await expect(JSON.parse(await listOfMaps.text()).includes("toMove/map.tmj")).toBeTruthy();
+
         const moveDir = await request.post(`/move`, {
             data: {
-                path: "/foo",
-                newPath: "/foonew",
+                source: "/toMove",
+                destination: "/moved",
             }
         });
 
         await expect(moveDir.ok()).toBeTruthy();
+
+        listOfMaps = await request.get("/maps");
+        await expect(JSON.parse(await listOfMaps.text()).includes("moved/map.tmj")).toBeTruthy();
+        await expect(JSON.parse(await listOfMaps.text()).includes("toMove/map.tmj")).toBeFalsy();
     });
 
     test("copy a folder", async ({
@@ -190,19 +241,26 @@ test.describe('Map-storage Upload API', () => {
         const uploadFileToDir = await request.post(`/upload`, {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
-                directory: "/copy"
+                directory: "/toCopy"
             }
         });
         await expect(uploadFileToDir.ok()).toBeTruthy();
 
+        let listOfMaps = await request.get("/maps");
+        await expect(JSON.parse(await listOfMaps.text()).includes("toCopy/map.tmj")).toBeTruthy();
+
         const copyDir = await request.post(`/copy`, {
             data: {
-                path: "/copy",
-                newPath: "/newcopy",
+                source: "/toCopy",
+                destination: "/copied",
             }
         });
 
         await expect(copyDir.ok()).toBeTruthy();
+
+        listOfMaps = await request.get("/maps");
+        const maps = JSON.parse(await listOfMaps.text());
+        await expect(["toCopy/map.tmj", "copied/map.tmj"].every((value) => maps.includes(value))).toBeTruthy();
     });
 
     test('fails on invalid maps', async ({

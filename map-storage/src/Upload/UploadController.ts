@@ -281,8 +281,8 @@ export class UploadController {
             (async () => {
                 const verifiedBody = z
                     .object({
-                        path: z.string(),
-                        newPath: z.string(),
+                        source: z.string(),
+                        destination: z.string(),
                     })
                     .safeParse(req.body);
 
@@ -291,16 +291,16 @@ export class UploadController {
                     return;
                 }
 
-                const { path, newPath } = verifiedBody.data;
+                const { source, destination } = verifiedBody.data;
 
-                if (path.includes("..") || newPath.includes("..")) {
+                if (source.includes("..") || destination.includes("..")) {
                     // Attempt to override filesystem. That' a hack!
                     res.status(400).send("Invalid directory");
                     return;
                 }
 
-                const virtualPath = mapPath(path, req);
-                const newVirtualPath = mapPath(newPath, req);
+                const virtualPath = mapPath(source, req);
+                const newVirtualPath = mapPath(destination, req);
 
                 if (await fileSystem.exist(newVirtualPath)) {
                     res.status(409).send("Destination already exist!");
@@ -319,8 +319,8 @@ export class UploadController {
             (async () => {
                 const verifiedBody = z
                     .object({
-                        path: z.string(),
-                        newPath: z.string(),
+                        source: z.string(),
+                        destination: z.string(),
                     })
                     .safeParse(req.body);
 
@@ -329,16 +329,16 @@ export class UploadController {
                     return;
                 }
 
-                const { path, newPath } = verifiedBody.data;
+                const { source, destination } = verifiedBody.data;
 
-                if (path.includes("..") || newPath.includes("..")) {
+                if (source.includes("..") || destination.includes("..")) {
                     // Attempt to override filesystem. That' a hack!
                     res.status(400).send("Invalid directory");
                     return;
                 }
 
-                const virtualPath = mapPath(path, req);
-                const newVirtualPath = mapPath(newPath, req);
+                const virtualPath = mapPath(source, req);
+                const newVirtualPath = mapPath(destination, req);
 
                 if (await fileSystem.exist(newVirtualPath)) {
                     res.status(409).send("Destination already exist!");
