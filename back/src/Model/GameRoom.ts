@@ -20,6 +20,8 @@ import {
     SubToPusherRoomMessage,
     VariableWithTagMessage,
     ServerToClientMessage,
+    MapStorageUrlMessage,
+    MapStorageToBackMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
@@ -48,6 +50,7 @@ import { MapLoadingError } from "../Services/MapLoadingError";
 import { MucManager } from "../Services/MucManager";
 import { BrothersFinder } from "./BrothersFinder";
 import { slugifyJitsiRoomName } from "@workadventure/shared-utils/src/Jitsi/slugify";
+import { getMapStorageClient } from "../Services/MapStorageClient";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -127,6 +130,17 @@ export class GameRoom implements BrothersFinder {
             onPlayerDetailsUpdated,
             mapDetails.thirdParty ?? undefined
         );
+
+        console.log("START LISTENING FOR MAP-STORAGE STREAM");
+        const mapStorageClientMessagesStream = getMapStorageClient().listenToMessages(
+            new MapStorageUrlMessage().setMapurl(mapDetails.mapUrl)
+        );
+        mapStorageClientMessagesStream.on("data", (data: MapStorageToBackMessage) => {
+            console.log("RECEIVED DATA FROM MAP STORAGE STREAM");
+            if (data.hasMapstoragerefreshmessage()) {
+                console.log(data.getMapstoragerefreshmessage()?.getComment());
+            }
+        });
 
         gameRoom
             .getMucManager()

@@ -14,6 +14,7 @@ import StreamZip from "node-stream-zip";
 import { MapValidator, ValidationError } from "@workadventure/map-editor/src/GameMap/MapValidator";
 import { FileNotFoundError } from "./FileNotFoundError";
 import { mapsManager } from "../MapsManager";
+import { uploadDetector } from "../Services/UploadDetector";
 
 const upload = multer({
     storage: multer.diskStorage({}),
@@ -168,6 +169,7 @@ export class UploadController {
                     });
                     for (const key of keysToPurge) {
                         mapsManager.clearAfterUpload(key);
+                        uploadDetector.refresh(key);
                     }
                     await this.generateCacheFile(req);
 

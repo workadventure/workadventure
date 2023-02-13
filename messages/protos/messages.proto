@@ -710,6 +710,21 @@ message AdminPusherToBackMessage {
   }
 }
 
+
+message MapStorageToBackMessage {
+  oneof message {
+    MapStorageRefreshMessage mapStorageRefreshMessage = 1;
+  }
+}
+
+message MapStorageRefreshMessage {
+  string comment = 1;
+}
+
+message MapStorageUrlMessage {
+  string mapUrl = 1;
+}
+
 // A message sent by an administrator to a recipient
 message AdminMessage {
   string message = 1;
