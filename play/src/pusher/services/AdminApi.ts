@@ -18,7 +18,6 @@ import {
 } from "@workadventure/messages";
 import type { MapDetailsData, RoomRedirect, AdminApiData } from "@workadventure/messages";
 import { z } from "zod";
-import qs from "qs";
 import type { AdminInterface } from "./AdminInterface";
 import { jwtTokenManager } from "./JWTTokenManager";
 import type { AuthTokenData } from "./JWTTokenManager";
@@ -345,9 +344,6 @@ class AdminApi implements AdminInterface {
                 isLogged: accessToken ? "1" : "0", // deprecated, use accessToken instead
             },
             headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
-            paramsSerializer: (p) => {
-                return qs.stringify(p, { arrayFormat: "brackets" });
-            },
         });
 
         const fetchMemberDataByUuidResponse = isFetchMemberDataByUuidResponse.safeParse(res.data);
