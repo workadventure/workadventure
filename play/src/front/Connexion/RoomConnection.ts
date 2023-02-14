@@ -431,11 +431,15 @@ export class RoomConnection implements RoomConnection {
 
                     // Check WebRtc connection
                     if (roomJoinedMessage.webrtcUserName && roomJoinedMessage.webrtcPassword) {
-                        checkCoturnServer({
-                            userId: this.userId,
-                            webRtcUser: roomJoinedMessage.webrtcUserName,
-                            webRtcPassword: roomJoinedMessage.webrtcPassword,
-                        });
+                        try {
+                            checkCoturnServer({
+                                userId: this.userId,
+                                webRtcUser: roomJoinedMessage.webrtcUserName,
+                                webRtcPassword: roomJoinedMessage.webrtcPassword,
+                            });
+                        } catch (err) {
+                            console.error("Check coturn server exception: ", err);
+                        }
                     }
                     break;
                 }

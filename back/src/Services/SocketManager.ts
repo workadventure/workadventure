@@ -570,7 +570,10 @@ export class SocketManager {
             webrtcStartMessage1.setUserid(otherUser.id);
             webrtcStartMessage1.setInitiator(true);
             if (TURN_STATIC_AUTH_SECRET !== "") {
-                const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
+                const { username, password } = this.getTURNCredentials(
+                    otherUser.id.toString(),
+                    TURN_STATIC_AUTH_SECRET
+                );
                 webrtcStartMessage1.setWebrtcusername(username);
                 webrtcStartMessage1.setWebrtcpassword(password);
             }
