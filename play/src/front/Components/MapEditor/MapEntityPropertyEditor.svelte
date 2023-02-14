@@ -8,9 +8,10 @@
     import OpenTabPropertyEditor from "./PropertyEditor/OpenTabPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import TextPropertyEditor from "./PropertyEditor/TextPropertyEditor.svelte";
+    import { EntityDataPropertiesKeys } from "@workadventure/map-editor";
 
     interface EntityPropertyDescription {
-        key: string;
+        key: EntityDataPropertiesKeys;
         name: string;
         active: boolean;
         currentValue: unknown;
