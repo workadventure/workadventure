@@ -7,7 +7,7 @@ export function globalErrorHandler(request: Request, response: Response, error: 
     if (error instanceof Error) {
         let url: string | undefined;
         if (axios.isAxiosError(error)) {
-            url = error.config.url;
+            url = error.config?.url;
             if (url !== undefined) {
                 url = " for URL: " + url;
             } else {
