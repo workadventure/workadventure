@@ -20,6 +20,7 @@ import {
     SubToPusherRoomMessage,
     VariableWithTagMessage,
     ServerToClientMessage,
+    RefreshRoomMessage,
     MapStorageUrlMessage,
     MapStorageToBackMessage,
 } from "../Messages/generated/messages_pb";
@@ -136,9 +137,14 @@ export class GameRoom implements BrothersFinder {
             new MapStorageUrlMessage().setMapurl(mapDetails.mapUrl)
         );
         mapStorageClientMessagesStream.on("data", (data: MapStorageToBackMessage) => {
-            console.log("RECEIVED DATA FROM MAP STORAGE STREAM");
             if (data.hasMapstoragerefreshmessage()) {
-                console.log(data.getMapstoragerefreshmessage()?.getComment());
+                // console.log(data.getMapstoragerefreshmessage()?.getComment());
+                const message = new ServerToClientMessage().setRefreshroommessage(
+                    new RefreshRoomMessage().setRoomid(gameRoom.roomUrl)
+                );
+                gameRoom.users.forEach((user: User) => {
+                    user.socket.write(message);
+                });
             }
         });
 
