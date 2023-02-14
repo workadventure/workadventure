@@ -18,6 +18,15 @@ const camera: BaseTranslation = {
             chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
         },
     },
+    webrtc: {
+        title: "WebRtc connection error",
+        error: "STUN / TURN server isn't reachable",
+        content:
+            "The video relay server cannot be reached. You may be unable to communicate with other users. If you are connecting via a VPN, please disconnect and refresh the web page. You may click on the link below to test your WebRtc connection.",
+        testUrl: "WebRtc connection test",
+        refresh: "Refresh",
+        continue: "Continue",
+    },
     my: {
         silentZone: "Silent zone",
         nameTag: "You",

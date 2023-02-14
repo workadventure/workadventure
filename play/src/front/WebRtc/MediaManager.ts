@@ -2,7 +2,7 @@ import { HtmlUtils } from "./HtmlUtils";
 import type { UserInputManager } from "../Phaser/UserInput/UserInputManager";
 import { localStreamStore } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
-import { helpCameraSettingsVisibleStore } from "../Stores/HelpCameraSettingsStore";
+import { helpCameraSettingsVisibleStore } from "../Stores/HelpSettingsStore";
 
 export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;

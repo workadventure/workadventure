@@ -1,13 +1,14 @@
 import type { Request, Response, Server } from "hyper-express";
 import fs from "fs";
 import { BaseHttpController } from "./BaseHttpController";
-import { FRONT_ENVIRONMENT_VARIABLES, VITE_URL } from "../enums/EnvironmentVariable";
+import { FRONT_ENVIRONMENT_VARIABLES, VITE_URL, LOGROCKET_ID } from "../enums/EnvironmentVariable";
 import { MetaTagsBuilder } from "../services/MetaTagsBuilder";
 import Mustache from "mustache";
 import type { LiveDirectory } from "../models/LiveDirectory";
 import { adminService } from "../services/AdminService";
 import { notWaHost } from "../middlewares/NotWaHost";
 import { version } from "../../../package.json";
+import { uuid } from "stanza/Utils";
 
 export class FrontController extends BaseHttpController {
     private indexFile: string;
@@ -208,12 +209,22 @@ export class FrontController extends BaseHttpController {
 
         try {
             const metaTagsData = await builder.getMeta(req.header("User-Agent"));
+            let option = {};
+            if (req.query.logrocket === "true" && LOGROCKET_ID != undefined) {
+                option = {
+                    ...option,
+                    /* TODO change it to push data from admin */
+                    logRocketId: LOGROCKET_ID,
+                    userId: uuid(),
+                };
+            }
             html = Mustache.render(this.indexFile, {
                 ...metaTagsData,
                 msApplicationTileImage: metaTagsData.favIcons[metaTagsData.favIcons.length - 1].src,
                 url,
                 script: this.script,
                 authToken: authToken,
+                ...option,
             });
         } catch (e) {
             console.log(`Cannot render metatags on ${url}`, e);

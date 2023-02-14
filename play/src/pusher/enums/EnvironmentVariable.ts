@@ -75,6 +75,7 @@ const EnvironmentVariables = z.object({
     OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy.optional(),
     ENABLE_REPORT_ISSUES_MENU: BoolAsString.optional(),
     REPORT_ISSUES_URL: z.string().url().optional().or(z.literal("")),
+    LOGROCKET_ID: z.string().optional(),
 });
 
 type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
@@ -164,6 +165,9 @@ export const ENABLE_OPENAPI_ENDPOINT = toBool(env.ENABLE_OPENAPI_ENDPOINT, false
 // The URL to use if the user is visiting the first time and hitting the "/" route.
 export const START_ROOM_URL: string = env.START_ROOM_URL || "/_/global/maps.workadventu.re/starter/map.json";
 export const FALLBACK_LOCALE: string | undefined = env.FALLBACK_LOCALE;
+
+// Logrocket id
+export const LOGROCKET_ID: string | undefined = env.LOGROCKET_ID;
 
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
