@@ -600,8 +600,10 @@ class IframeListener {
 
     cleanup() {
         this.chatReady = false;
-        this.unregisterIframe(this.chatIframe);
-        this.chatIframe = null;
+        if (this.chatIframe) {
+            this.unregisterIframe(this.chatIframe);
+            this.chatIframe = null;
+        }
     }
 
     /**

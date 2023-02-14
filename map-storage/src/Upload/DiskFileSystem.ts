@@ -18,6 +18,25 @@ export class DiskFileSystem implements FileSystemInterface {
         }
     }
 
+    async exist(virtualPath: string): Promise<boolean> {
+        const fullPath = this.getFullPath(virtualPath);
+        return await fs.pathExists(fullPath);
+    }
+
+    async move(virtualPath: string, newVirtualPath: string): Promise<void> {
+        const fullPath = this.getFullPath(virtualPath);
+        const newFullPath = this.getFullPath(newVirtualPath);
+
+        await fs.move(fullPath, newFullPath);
+    }
+
+    async copy(virtualPath: string, newVirtualPath: string): Promise<void> {
+        const fullPath = this.getFullPath(virtualPath);
+        const newFullPath = this.getFullPath(newVirtualPath);
+
+        await fs.copy(fullPath, newFullPath, { recursive: true, errorOnExist: true });
+    }
+
     async writeFile(zipEntry: ZipEntry, targetFilePath: string, zip: StreamZipAsync): Promise<void> {
         const fullPath = this.getFullPath(targetFilePath);
         const dir = path.dirname(fullPath);

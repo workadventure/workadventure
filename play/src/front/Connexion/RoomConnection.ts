@@ -66,6 +66,7 @@ import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 import { checkCoturnServer } from "../Components/Video/utils";
+import { assertObjectKeys } from "../Utils/CustomTypeGuards";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
@@ -1097,7 +1098,7 @@ export class RoomConnection implements RoomConnection {
 
     public emitMapEditorModifyEntity(commandId: string, config: AtLeast<EntityData, "id">): void {
         if (config.properties) {
-            for (const key of Object.keys(config.properties)) {
+            for (const key of assertObjectKeys(config.properties)) {
                 if (config.properties[key] === undefined) {
                     config.properties[key] = null;
                 }

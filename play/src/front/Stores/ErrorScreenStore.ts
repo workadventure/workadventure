@@ -49,7 +49,7 @@ function createErrorScreenStore() {
                             error.response.status +
                             " - " +
                             (error.response.data ? error.response.data : error.response.statusText),
-                        details: "An error occurred while accessing URL: " + error.response.config.url,
+                        details: "An error occurred while accessing URL: " + error.response.config?.url,
                     })
                 );
                 return;
@@ -57,7 +57,7 @@ function createErrorScreenStore() {
             if (Axios.isAxiosError(error)) {
                 // Axios HTTP error
                 // client never received a response, or request never left
-                console.error("Axios error. No full HTTP response received. Request to URL:", error.config.url);
+                console.error("Axios error. No full HTTP response received. Request to URL:", error.config?.url);
                 set(
                     ErrorScreenMessage.fromPartial({
                         type: "error",
