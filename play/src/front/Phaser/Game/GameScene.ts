@@ -424,7 +424,9 @@ export class GameScene extends DirtyScene {
         const url = this.MapUrlFile.substring(0, this.MapUrlFile.lastIndexOf("/"));
         this.mapFile.tilesets.forEach((tileset) => {
             if ("source" in tileset) {
-                throw new Error(`Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.MapUrlFile}".`);
+                throw new Error(
+                    `Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.MapUrlFile}".`
+                );
             }
             if (typeof tileset.name === "undefined" || typeof tileset.image === "undefined") {
                 console.warn("Don't know how to handle tileset ", tileset);
@@ -547,7 +549,9 @@ export class GameScene extends DirtyScene {
         const mapDirUrl = this.MapUrlFile.substring(0, this.MapUrlFile.lastIndexOf("/"));
         this.mapFile.tilesets.forEach((tileset: ITiledMapTileset) => {
             if ("source" in tileset) {
-                throw new Error(`Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.MapUrlFile}".`);
+                throw new Error(
+                    `Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.MapUrlFile}".`
+                );
             }
             this.Terrains.push(
                 this.Map.addTilesetImage(
@@ -1799,7 +1803,12 @@ ${escapedMessage}
                 //Initialise the firstgid to 1 because if there is no tileset in the tilemap, the firstgid will be 1
                 let newFirstgid = 1;
                 const lastTileset = this.mapFile.tilesets[this.mapFile.tilesets.length - 1];
-                if (lastTileset && lastTileset.firstgid !== undefined && "tilecount" in lastTileset && lastTileset.tilecount !== undefined) {
+                if (
+                    lastTileset &&
+                    lastTileset.firstgid !== undefined &&
+                    "tilecount" in lastTileset &&
+                    lastTileset.tilecount !== undefined
+                ) {
                     //If there is at least one tileset in the tilemap then calculate the firstgid of the new tileset
                     newFirstgid = lastTileset.firstgid + lastTileset.tilecount;
                 }
