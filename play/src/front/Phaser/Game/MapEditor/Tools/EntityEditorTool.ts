@@ -125,9 +125,7 @@ export class EntityEditorTool extends MapEditorTool {
                     y: data.y,
                     id: data.id,
                     prefab: entityPrefab,
-                    properties: {
-                        customProperties: {},
-                    },
+                    properties: {},
                 };
                 // execute command locally
                 this.mapEditorModeManager.executeCommand(
