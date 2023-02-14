@@ -48,7 +48,7 @@
     "@workadventure/messages": "1.0.0",
     "@workadventure/store-utils": "1.0.0",
     "@workadventure/tailwind": "1.0.0",
-    "axios": "^0.21.2",
+    "axios": "^1.3.2",
     "cancelable-promise": "^4.2.1",
     "cross-env": "^7.0.3",
     "debug": "^4.3.4",
