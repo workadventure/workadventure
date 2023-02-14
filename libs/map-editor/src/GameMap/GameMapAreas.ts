@@ -38,6 +38,13 @@ export class GameMapAreas {
             this.gameMap.tiledObjects
                 .filter((object) => ["zone", "area"].includes(object.class ?? ""))
                 .forEach((areaRaw: ITiledMapObject) => {
+                    const properties = areaRaw.properties ?? [];
+
+                    for (const property of properties) {
+                        if (property.name === "dynamic" && property.type === "bool" && property.value) {
+                            this.dynamicAreas.push(this.tiledObjectToAreaData(areaRaw));
+                        }
+                    }
                     this.staticAreas.push(this.tiledObjectToAreaData(areaRaw));
                 });
         } catch (e) {
