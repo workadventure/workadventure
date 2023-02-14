@@ -358,6 +358,7 @@ export class UploadController {
                 try {
                     const data = await fileSystem.readFileAsString(mapPath(`/${UploadController.CACHE_NAME}`, req));
                     res.json(JSON.parse(data));
+                    return;
                 } catch (e) {
                     if (e instanceof FileNotFoundError) {
                         // No cache file? What the hell? Let's try to regenerate the cache file
@@ -365,6 +366,7 @@ export class UploadController {
                         // Now that the cache file is generated, let's retry serving the file.
                         const data = await fileSystem.readFileAsString(mapPath(`/${UploadController.CACHE_NAME}`, req));
                         res.json(JSON.parse(data));
+                        return;
                     }
                     throw e;
                 }
