@@ -135,7 +135,6 @@ import {
     _newChatMessageSubject,
     _newChatMessageWritingStatusSubject,
 } from "../../Stores/ChatStore";
-import structuredClone from "@ungap/structured-clone";
 import type {
     ITiledMap,
     ITiledMapLayer,
