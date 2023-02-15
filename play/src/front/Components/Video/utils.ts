@@ -73,6 +73,14 @@ let completeIceCandice = false;
  * @param user UserSimplePeerInterface
  */
 export function checkCoturnServer(user: UserSimplePeerInterface) {
+    // TODO change it to test RTC Peer Connection for Firefox browser
+    if (window.navigator.userAgent.toLowerCase().indexOf("firefox") != -1) {
+        console.info(
+            "checkCoturnServer => Error RTC Peer Connection detection development is in progress for Firefox browser!"
+        );
+        return;
+    }
+
     const iceServers = getIceServersConfig(user);
     const pc = new RTCPeerConnection({ iceServers });
 
