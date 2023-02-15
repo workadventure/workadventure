@@ -4,14 +4,15 @@
     import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import { emoteDataStoreLoading, emoteMenuStore } from "../Stores/EmoteStore";
     import { requestVisitCardsStore } from "../Stores/GameStore";
-    import { helpCameraSettingsVisibleStore } from "../Stores/HelpCameraSettingsStore";
+    import { helpCameraSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
     import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
     import { menuVisiblilityStore, warningContainerStore } from "../Stores/MenuStore";
     import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
-    import HelpCameraSettingsPopup from "./HelpCameraSettings/HelpCameraSettingsPopup.svelte";
+    import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
+    import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
     import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
     import Menu from "./Menu/Menu.svelte";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
@@ -91,6 +92,10 @@
 
         {#if $helpCameraSettingsVisibleStore}
             <HelpCameraSettingsPopup />
+        {/if}
+
+        {#if $helpWebRtcSettingsVisibleStore}
+            <HelpWebRtcSettingsPopup />
         {/if}
 
         {#if $audioManagerVisibilityStore}

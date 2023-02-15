@@ -1,4 +1,11 @@
-import { AtLeast, EntityData, GameMapProperties, TextHeaderPropertyData } from "@workadventure/map-editor";
+import {
+    AtLeast,
+    EntityData,
+    EntityDataProperties,
+    EntityDataPropertiesKeys,
+    GameMapProperties,
+    TextHeaderPropertyData,
+} from "@workadventure/map-editor";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
@@ -254,11 +261,12 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         return this.entityData;
     }
 
-    public getProperties(): { [key: string]: unknown | undefined } {
+    public getProperties(): EntityDataProperties {
         return this.entityData.properties;
     }
 
-    public setProperty(key: string, value: unknown): void {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public setProperty(key: EntityDataPropertiesKeys, value: any): void {
         this.entityData.properties[key] = value;
         this.emit(EntityEvent.PropertiesUpdated, key, value);
     }

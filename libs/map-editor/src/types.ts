@@ -65,10 +65,10 @@ export const OpenTabPropertyData = ActionsMenuData.extend({
 });
 
 export const EntityDataProperties = z.object({
-    textHeader: TextHeaderPropertyData.optional(),
-    jitsiRoom: JitsiRoomPropertyData.optional(),
-    playAudio: PlayAudioPropertyData.optional(),
-    openTab: OpenTabPropertyData.optional(),
+    textHeader: TextHeaderPropertyData.optional().nullable(),
+    jitsiRoom: JitsiRoomPropertyData.optional().nullable(),
+    playAudio: PlayAudioPropertyData.optional().nullable(),
+    openTab: OpenTabPropertyData.optional().nullable(),
 });
 
 export const EntityRawPrefab = z.object({
@@ -78,6 +78,7 @@ export const EntityRawPrefab = z.object({
     direction: z.enum(["Left", "Up", "Down", "Right"]),
     color: z.string(),
     collisionGrid: z.array(z.array(z.number())).optional(),
+    depthOffset: z.number().optional(),
 });
 
 export const EntityPrefab = EntityRawPrefab.extend({
@@ -103,6 +104,8 @@ export type EntityRawPrefab = z.infer<typeof EntityRawPrefab>;
 export type EntityPrefab = z.infer<typeof EntityPrefab>;
 export type EntityCollection = z.infer<typeof EntityCollection>;
 export type EntityData = z.infer<typeof EntityData>;
+export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
+export type EntityDataPropertiesKeys = keyof z.infer<typeof EntityDataProperties>;
 export type TextHeaderPropertyData = z.infer<typeof TextHeaderPropertyData>;
 export type ActionsMenuData = z.infer<typeof ActionsMenuData>;
 export type JitsiRoomConfigData = z.infer<typeof JitsiRoomConfigData>;

@@ -101,6 +101,8 @@ services:
             # Report issues menu
             ENABLE_REPORT_ISSUES_MENU: $ENABLE_REPORT_ISSUES_MENU
             REPORT_ISSUES_URL: $REPORT_ISSUES_URL
+            # LogRocket
+            LOGROCKET_ID: $LOGROCKET_ID
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"

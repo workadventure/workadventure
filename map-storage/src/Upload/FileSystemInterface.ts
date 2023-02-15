@@ -7,6 +7,12 @@ export interface FileSystemInterface {
 
     writeFile(zipEntry: ZipEntry, targetFilePath: string, zip: StreamZipAsync): Promise<void>;
 
+    exist(virtualPath: string): Promise<boolean>;
+
+    move(virtualPath: string, newVirtualPath: string): Promise<void>;
+
+    copy(virtualPath: string, newVirtualPath: string): Promise<void>;
+
     serveStaticFile(virtualPath: string, res: Response, next: NextFunction): void;
 
     readFileAsString(virtualPath: string): Promise<string>;

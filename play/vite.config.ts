@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import sveltePreprocess from "svelte-preprocess";
+import legacy from "@vitejs/plugin-legacy";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -32,6 +33,13 @@ export default defineConfig({
                     defaultHandler(warning);
                 }
             },
+        }),
+        legacy({
+            //targets: ['defaults', 'not IE 11', 'iOS > 14.3']
+
+            // Structured clone is needed for Safari < 15.4
+            polyfills: ["web.structured-clone"],
+            modernPolyfills: ["web.structured-clone"],
         }),
     ],
 });

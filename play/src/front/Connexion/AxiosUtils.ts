@@ -1,5 +1,5 @@
-import axios from "axios";
-import * as rax from "retry-axios";
+import axios, { AxiosError, AxiosRequestConfig } from "axios";
+import axiosRetry, { isNetworkOrIdempotentRequestError } from "axios-retry";
 import { errorStore } from "../Stores/ErrorStore";
 import LL from "../../i18n/i18n-svelte";
 import { get } from "svelte/store";
@@ -8,27 +8,27 @@ import { get } from "svelte/store";
  * This instance of Axios will retry in case of an issue and display an error message as a HTML overlay.
  */
 export const axiosWithRetry = axios.create();
-axiosWithRetry.defaults.raxConfig = {
-    instance: axiosWithRetry,
-    retry: Infinity,
-    noResponseRetries: Infinity,
 
-    maxRetryAfter: 60_000,
+axiosRetry(axiosWithRetry, {
+    retryDelay: (retryCount: number) => {
+        const time = axiosRetry.exponentialDelay(retryCount);
+        if (time >= 60_000) {
+            return 60_000;
+        }
+        return time;
+    },
+    retryCondition: (error: AxiosError) => {
+        if (isNetworkOrIdempotentRequestError(error)) {
+            return true;
+        }
 
-    statusCodesToRetry: [
-        [100, 199],
-        [429, 429],
-        [501, 599],
-    ],
-
-    // You can detect when a retry is happening, and figure out how many
-    // retry attempts have been made
-    onRetryAttempt: (err) => {
-        const cfg = rax.getConfig(err);
-        console.log(`Retry attempt #${cfg?.currentRetryAttempt} on URL '${err.config.url}':`, err.message, cfg);
+        return error.code !== "ECONNABORTED" && (!error.response || error.response.status == 429);
+    },
+    onRetry: (retryCount, error: AxiosError, requestConfig: AxiosRequestConfig) => {
+        console.log(`Retry attempt #${retryCount} on URL '${requestConfig.url}':`, error.message);
         showConnectionIssueMessage();
     },
-};
+});
 
 axiosWithRetry.interceptors.response.use(
     (res) => {
@@ -37,11 +37,10 @@ axiosWithRetry.interceptors.response.use(
     },
     (error) => {
         // Do not clear error message if the status code is being retried.
-        for (const [low, high] of axiosWithRetry.defaults.raxConfig?.statusCodesToRetry ?? []) {
-            if (error.status >= low && error.status <= high) {
-                return Promise.reject(error);
-            }
+        if ((error.status >= 500 && error.status <= 599) || error.status === 429) {
+            return Promise.reject(error);
         }
+
         hideConnectionIssueMessage();
         return Promise.reject(error);
     }
@@ -57,5 +56,3 @@ export function showConnectionIssueMessage() {
 export function hideConnectionIssueMessage() {
     errorStore.clearMessageById("axios_retry");
 }
-
-rax.attach(axiosWithRetry);
