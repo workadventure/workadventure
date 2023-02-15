@@ -132,16 +132,17 @@ export class GameRoom implements BrothersFinder {
             mapDetails.thirdParty ?? undefined
         );
 
-        console.log("START LISTENING FOR MAP-STORAGE STREAM");
         const mapStorageClientMessagesStream = getMapStorageClient().listenToMessages(
             new MapStorageUrlMessage().setMapurl(mapDetails.mapUrl)
         );
         mapStorageClientMessagesStream.on("data", (data: MapStorageToBackMessage) => {
             if (data.hasMapstoragerefreshmessage()) {
-                // console.log(data.getMapstoragerefreshmessage()?.getComment());
-                const message = new ServerToClientMessage().setRefreshroommessage(
-                    new RefreshRoomMessage().setRoomid(gameRoom.roomUrl)
-                );
+                const msg = new RefreshRoomMessage().setRoomid(gameRoom.roomUrl);
+                const comment = data.getMapstoragerefreshmessage()?.getComment();
+                if (comment) {
+                    msg.setComment(comment);
+                }
+                const message = new ServerToClientMessage().setRefreshroommessage(msg);
                 gameRoom.users.forEach((user: User) => {
                     user.socket.write(message);
                 });

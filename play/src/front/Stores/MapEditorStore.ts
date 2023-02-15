@@ -31,6 +31,8 @@ export function onMapEditorInputUnfocus() {
     mapEditorInputStore.set(false);
 }
 
+export const mapUploadRefreshNeededCommentStore = writable<string | undefined>(undefined);
+
 export const mapEditorModeStore = createMapEditorModeStore();
 
 export const mapEditorInputStore = writable(false);

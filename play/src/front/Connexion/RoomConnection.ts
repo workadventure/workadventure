@@ -65,6 +65,7 @@ import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
+import { mapUploadRefreshNeededCommentStore } from "../Stores/MapEditorStore";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
@@ -520,7 +521,11 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "refreshRoomMessage": {
                     console.info("roomConnection => refreshRoomMessage received");
-                    window.location.reload();
+                    if (message.refreshRoomMessage.comment) {
+                        mapUploadRefreshNeededCommentStore.set(message.refreshRoomMessage.comment);
+                    } else {
+                        window.location.reload();
+                    }
                     break;
                 }
                 case "followRequestMessage": {
