@@ -132,22 +132,24 @@ export class GameRoom implements BrothersFinder {
             mapDetails.thirdParty ?? undefined
         );
 
-        const mapStorageClientMessagesStream = getMapStorageClient().listenToMessages(
-            new MapStorageUrlMessage().setMapurl(mapDetails.mapUrl)
-        );
-        mapStorageClientMessagesStream.on("data", (data: MapStorageToBackMessage) => {
-            if (data.hasMapstoragerefreshmessage()) {
-                const msg = new RefreshRoomMessage().setRoomid(gameRoom.roomUrl);
-                const comment = data.getMapstoragerefreshmessage()?.getComment();
-                if (comment) {
-                    msg.setComment(comment);
+        if (mapDetails.canEdit) {
+            const mapStorageClientMessagesStream = getMapStorageClient().listenToMessages(
+                new MapStorageUrlMessage().setMapurl(mapDetails.mapUrl)
+            );
+            mapStorageClientMessagesStream.on("data", (data: MapStorageToBackMessage) => {
+                if (data.hasMapstoragerefreshmessage()) {
+                    const msg = new RefreshRoomMessage().setRoomid(gameRoom.roomUrl);
+                    const comment = data.getMapstoragerefreshmessage()?.getComment();
+                    if (comment) {
+                        msg.setComment(comment);
+                    }
+                    const message = new ServerToClientMessage().setRefreshroommessage(msg);
+                    gameRoom.users.forEach((user: User) => {
+                        user.socket.write(message);
+                    });
                 }
-                const message = new ServerToClientMessage().setRefreshroommessage(msg);
-                gameRoom.users.forEach((user: User) => {
-                    user.socket.write(message);
-                });
-            }
-        });
+            });
+        }
 
         gameRoom
             .getMucManager()
