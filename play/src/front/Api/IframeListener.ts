@@ -38,7 +38,7 @@ import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
 import type { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
 import type { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
 import type { MessageUserJoined } from "../Connexion/ConnexionModels";
-import { availabilityStatusToJSON } from "@workadventure/messages";
+import { availabilityStatusToJSON, XmppSettingsMessage } from "@workadventure/messages";
 import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
@@ -47,7 +47,6 @@ import type { ChatMessage } from "./Events/ChatEvent";
 import { bannerStore, requestVisitCardsStore } from "../Stores/GameStore";
 import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
 import { connectionManager } from "../Connexion/ConnectionManager";
-import { gameManager } from "../Phaser/Game/GameManager";
 import { ModalEvent } from "./Events/ModalEvent";
 import { AddButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
 
@@ -599,6 +598,14 @@ class IframeListener {
         this.scripts.delete(scriptUrl);
     }
 
+    cleanup() {
+        this.chatReady = false;
+        if (this.chatIframe) {
+            this.unregisterIframe(this.chatIframe);
+            this.chatIframe = null;
+        }
+    }
+
     /**
      * @param message The message to dispatch
      * @param exceptOrigin Don't dispatch the message to exceptOrigin (to avoid infinite loops)
@@ -821,13 +828,7 @@ class IframeListener {
         if (!connectionManager.currentRoom) {
             throw new Error("Race condition : Current room is not defined yet");
         }
-        const xmppSettingsMessage = gameManager.getCurrentGameScene().connection?.xmppSettingsMessage;
-        if (xmppSettingsMessage) {
-            this.postMessageToChat({
-                type: "xmppSettingsMessage",
-                data: xmppSettingsMessage,
-            });
-        }
+
         this.postMessageToChat({
             type: "settings",
             data: {
@@ -838,6 +839,13 @@ class IframeListener {
                 enableChatOnlineList: connectionManager.currentRoom?.enableChatOnlineList,
                 enableChatDisconnectedList: connectionManager.currentRoom?.enableChatDisconnectedList,
             },
+        });
+    }
+
+    sendXmppSettingsToChatIframe(xmppSettingsMessage: XmppSettingsMessage) {
+        this.postMessageToChat({
+            type: "xmppSettingsMessage",
+            data: xmppSettingsMessage,
         });
     }
 
@@ -929,12 +937,9 @@ class IframeListener {
         if (!this.chatIframe) {
             this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
         }
-        if (!this.chatReady) {
+        if (!this.chatReady || !this.chatIframe) {
             this.messagesToChatQueue.push(message);
         } else {
-            if (this.chatIframe === null) {
-                throw new Error("postMessageToChat => Missing chatIframe => impossible");
-            }
             this.chatIframe.contentWindow?.postMessage(message, this.chatIframe?.src);
         }
     }

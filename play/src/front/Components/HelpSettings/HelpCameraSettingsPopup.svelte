@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { helpCameraSettingsVisibleStore } from "../../Stores/HelpCameraSettingsStore";
+    import { helpCameraSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
     import { getNavigatorType, isAndroid as isAndroidFct, NavigatorType } from "../../WebRtc/DeviceUtils";
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";

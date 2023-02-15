@@ -11,6 +11,7 @@ import passport from "passport";
 import { passportStrategy } from "./Services/Authentication";
 import { mapPathUsingDomain } from "./Services/PathMapper";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
+import bodyParser from "body-parser";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -28,6 +29,7 @@ server.bindAsync(`0.0.0.0:50053`, grpc.ServerCredentials.createInsecure(), (err,
 
 const app = express();
 app.use(cors());
+app.use(bodyParser.json());
 
 passport.use(passportStrategy);
 app.use(passport.initialize());

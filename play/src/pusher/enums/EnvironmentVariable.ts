@@ -1,5 +1,5 @@
 import { OpidWokaNamePolicy } from "@workadventure/messages";
-import { z, ZodError } from "zod";
+import { z } from "zod";
 import type { FrontConfigurationInterface } from "../../common/FrontConfigurationInterface";
 
 const BoolAsString = z.union([z.literal("true"), z.literal("false"), z.literal("0"), z.literal("1"), z.literal("")]);
@@ -75,24 +75,37 @@ const EnvironmentVariables = z.object({
     OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy.optional(),
     ENABLE_REPORT_ISSUES_MENU: BoolAsString.optional(),
     REPORT_ISSUES_URL: z.string().url().optional().or(z.literal("")),
+    LOGROCKET_ID: z.string().optional(),
 });
 
 type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
 
-let env: EnvironmentVariables;
-try {
-    env = EnvironmentVariables.parse(process.env);
-} catch (e) {
-    if (e instanceof ZodError) {
-        console.error("Errors found in environment variables:");
-        for (const issue of e.issues) {
-            console.error(`For variable "${issue.path[0]}": ${issue.message}`);
+const envChecking = EnvironmentVariables.safeParse(process.env);
+
+// Will break the process if an error happens
+if (!envChecking.success) {
+    console.error("\n\n\n-----------------------------------------");
+    console.error("FATAL ERRORS FOUND IN ENVIRONMENT VARIABLES!!!");
+    console.error("-----------------------------------------\n");
+
+    const formattedError = envChecking.error.format();
+
+    for (const [name, value] of Object.entries(formattedError)) {
+        if (Array.isArray(value)) {
+            continue;
         }
 
-        process.exit(1);
+        for (const error of value._errors) {
+            console.error(`For variable "${name}": ${error}`);
+        }
     }
-    throw e;
+
+    console.error("\n-----------------------------------------\n\n\n");
+
+    process.exit(1);
 }
+
+const env = envChecking.data;
 
 function toNumber(value: string | undefined, defaultValue: number): number {
     if (value === undefined || value === "") {
@@ -152,6 +165,9 @@ export const ENABLE_OPENAPI_ENDPOINT = toBool(env.ENABLE_OPENAPI_ENDPOINT, false
 // The URL to use if the user is visiting the first time and hitting the "/" route.
 export const START_ROOM_URL: string = env.START_ROOM_URL || "/_/global/maps.workadventu.re/starter/map.json";
 export const FALLBACK_LOCALE: string | undefined = env.FALLBACK_LOCALE;
+
+// Logrocket id
+export const LOGROCKET_ID: string | undefined = env.LOGROCKET_ID;
 
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {

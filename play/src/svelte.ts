@@ -138,11 +138,13 @@ const game = new Game(config);
 
 waScaleManager.setGame(game);
 
-const canvas = HtmlUtils.querySelectorOrFail("#game canvas");
+const canvas = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
 
 if (canvas) {
     canvas.addEventListener("click", function () {
-        document.activeElement?.blur();
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
     });
 }
 

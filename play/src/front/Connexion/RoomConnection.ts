@@ -57,7 +57,7 @@ import {
     WorldConnexionMessage,
     XmppSettingsMessage,
 } from "@workadventure/messages";
-import { Subject } from "rxjs";
+import { BehaviorSubject, Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
@@ -65,6 +65,8 @@ import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
+import { checkCoturnServer } from "../Components/Video/utils";
+import { assertObjectKeys } from "../Utils/CustomTypeGuards";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
@@ -155,8 +157,8 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
-
-    public xmppSettingsMessage: XmppSettingsMessage | null = null;
+    private readonly _xmppSettingsMessageStream = new BehaviorSubject<XmppSettingsMessage | undefined>(undefined);
+    public readonly xmppSettingsMessageStream = this._xmppSettingsMessageStream.asObservable();
     // If this timeout triggers, we consider the connection is lost (no ping received)
     private timeout: ReturnType<typeof setInterval> | undefined = undefined;
 
@@ -427,6 +429,19 @@ export class RoomConnection implements RoomConnection {
                             commandsToApply,
                         } as RoomJoinedMessageInterface,
                     });
+
+                    // Check WebRtc connection
+                    if (roomJoinedMessage.webrtcUserName && roomJoinedMessage.webrtcPassword) {
+                        try {
+                            checkCoturnServer({
+                                userId: this.userId,
+                                webRtcUser: roomJoinedMessage.webrtcUserName,
+                                webRtcPassword: roomJoinedMessage.webrtcPassword,
+                            });
+                        } catch (err) {
+                            console.error("Check coturn server exception: ", err);
+                        }
+                    }
                     break;
                 }
                 case "worldFullMessage": {
@@ -591,7 +606,7 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "xmppSettingsMessage": {
-                    this.xmppSettingsMessage = message.xmppSettingsMessage;
+                    this._xmppSettingsMessageStream.next(message.xmppSettingsMessage);
                     break;
                 }
                 default: {
@@ -1083,7 +1098,7 @@ export class RoomConnection implements RoomConnection {
 
     public emitMapEditorModifyEntity(commandId: string, config: AtLeast<EntityData, "id">): void {
         if (config.properties) {
-            for (const key of Object.keys(config.properties)) {
+            for (const key of assertObjectKeys(config.properties)) {
                 if (config.properties[key] === undefined) {
                     config.properties[key] = null;
                 }

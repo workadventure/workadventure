@@ -679,6 +679,7 @@ jobs:
           EJABBERD_JWT_SECRET: ${{ secrets.EJABBERD_JWT_SECRET }}
           ENABLE_REPORT_ISSUES_MENU: ${{ secrets.ENABLE_REPORT_ISSUES_MENU }}
           REPORT_ISSUES_URL: ${{ secrets.REPORT_ISSUES_URL }}
+          LOGROCKET_ID: ${{ secrets.LOGROCKET_ID }}
         with:
           namespace: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 

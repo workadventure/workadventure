@@ -92,7 +92,7 @@ class ConnectionManager {
         let token = urlParams.get("token");
         // get token injected by post method from pusher
         if (token == undefined) {
-            const input = HtmlUtils.getElementByIdOrFail("authToken");
+            const input = HtmlUtils.getElementByIdOrFail<HTMLInputElement>("authToken");
             if (input.value != undefined && input.value != "") token = input.value;
         }
 

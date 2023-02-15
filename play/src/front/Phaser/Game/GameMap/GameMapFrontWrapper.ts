@@ -55,12 +55,8 @@ export class GameMapFrontWrapper {
     public readonly phaserMap: Phaser.Tilemaps.Tilemap;
     public readonly phaserLayers: TilemapLayer[] = [];
 
-    /**
-     * Stores information about walls and every object that modifies collision grid on certain tile
-     */
-    public readonly collisionTilesHistogram: string[][][];
-
     public collisionGrid: number[][];
+    private entitiesCollisionLayer: Phaser.Tilemaps.TilemapLayer;
 
     private perLayerCollisionGridCache: Map<number, (0 | 2 | 1)[][]> = new Map<number, (0 | 2 | 1)[][]>();
 
@@ -75,7 +71,6 @@ export class GameMapFrontWrapper {
      */
     private mapChangedSubject = new Subject<number[][]>();
     private areaUpdatedSubject = new Subject<AreaData>();
-    private entitiesReadyPromise: Promise<void[]>;
 
     constructor(
         scene: GameScene,
@@ -105,27 +100,18 @@ export class GameMapFrontWrapper {
             }
         }
 
-        this.collisionTilesHistogram = [];
         this.collisionGrid = [];
-        const collisionsLayer = this.phaserLayers.find((phaserLayer) => phaserLayer.layer.name === "collisions");
-        for (let y = 0; y < this.phaserMap.height; y += 1) {
-            this.collisionTilesHistogram.push([]);
-            for (let x = 0; x < this.phaserMap.width; x += 1) {
-                if (this.phaserLayers)
-                    if (collisionsLayer && collisionsLayer.layer.data[y][x].index !== -1) {
-                        this.collisionTilesHistogram[y].push(["predefined"]);
-                    } else {
-                        this.collisionTilesHistogram[y].push([]);
-                    }
-            }
-        }
+        this.entitiesCollisionLayer = phaserMap.createBlankLayer("__entitiesCollisionLayer", terrains);
+        this.entitiesCollisionLayer.setDepth(-2).setCollisionByProperty({ collides: true });
+
+        this.phaserLayers.push(this.entitiesCollisionLayer);
 
         this.entitiesManager = new EntitiesManager(this.scene, this);
         for (const entityData of this.gameMap.getGameMapEntities().getEntities()) {
             this.entitiesManager.addEntity(entityData, TexturesHelper.ENTITIES_TEXTURES_DIRECTORY);
         }
 
-        this.updateCollisionGrid();
+        this.updateCollisionGrid(undefined, false);
     }
 
     public setLayerVisibility(layerName: string, visible: boolean): void {
@@ -161,37 +147,23 @@ export class GameMapFrontWrapper {
      * @returns
      */
     public modifyToCollisionsLayer(x: number, y: number, name: string, collisionGrid: number[][]): void {
-        const collisionsLayer = this.phaserLayers.find((phaserLayer) => phaserLayer.layer.name === "collisions");
-        const specialZonesTileset = this.phaserMap.tilesets.find((tileset) => tileset.name === "Special_Zones");
-        if (!specialZonesTileset || !collisionsLayer) {
-            return;
-        }
-        const coords = collisionsLayer.worldToTileXY(x, y, true);
+        const coords = this.entitiesCollisionLayer.worldToTileXY(x, y, true);
         for (let y = 0; y < collisionGrid.length; y += 1) {
             for (let x = 0; x < collisionGrid[y].length; x += 1) {
                 // add tiles
                 if (collisionGrid[y][x] === 1) {
-                    const tile = collisionsLayer.putTileAt(specialZonesTileset.firstgid, coords.x + x, coords.y + y);
-                    this.collisionTilesHistogram[coords.y + y][coords.x + x].push(name);
+                    const tile = this.entitiesCollisionLayer.putTileAt(-1, coords.x + x, coords.y + y);
                     tile.properties["collides"] = true;
                     continue;
                 }
                 // remove tiles
                 if (collisionGrid[y][x] === -1) {
-                    const tagNameIndex = this.collisionTilesHistogram[coords.y + y][coords.x + x].findIndex(
-                        (tagName) => tagName === name
-                    );
-                    if (tagNameIndex !== -1) {
-                        this.collisionTilesHistogram[coords.y + y][coords.x + x].splice(tagNameIndex, 1);
-                        if (this.collisionTilesHistogram[coords.y + y][coords.x + x].length === 0) {
-                            collisionsLayer.removeTileAt(coords.x + x, coords.y + y, false);
-                        }
-                    }
+                    this.entitiesCollisionLayer.removeTileAt(coords.x + x, coords.y + y, false);
                 }
             }
         }
-        collisionsLayer.setCollisionByProperty({ collides: true });
-        this.updateCollisionGrid(collisionsLayer, false);
+        this.entitiesCollisionLayer.setCollisionByProperty({ collides: true });
+        this.updateCollisionGrid(this.entitiesCollisionLayer, false);
     }
 
     public getPropertiesForIndex(index: number): Array<ITiledMapProperty> {
@@ -404,7 +376,7 @@ export class GameMapFrontWrapper {
         }
         for (let y = 0; y < collisionGrid.length; y += 1) {
             for (let x = 0; x < collisionGrid[y].length; x += 1) {
-                // this tile is collisionGrid is non-collidible. We can skip calculations for it
+                // this tile in collisionGrid is non-collidible. We can skip calculations for it
                 if (collisionGrid[y][x] === 0) {
                     continue;
                 }
@@ -443,7 +415,7 @@ export class GameMapFrontWrapper {
             this.scene.CurrentPlayer.getPosition(),
         ];
 
-        // check if entity is not occupied by a WOKA
+        // check if position is not occupied by a WOKA
         for (const position of playersPositions) {
             if (
                 MathUtils.isOverlappingWithRectangle(position, {
@@ -457,6 +429,8 @@ export class GameMapFrontWrapper {
             }
         }
         // TODO: Check if it's colliding with other players
+
+        // Check if position is not colliding
         const height = this.collisionGrid.length;
         const width = this.collisionGrid[0].length;
         const xIndex = Math.floor(topLeftX / this.getTileDimensions().width);
@@ -647,10 +621,6 @@ export class GameMapFrontWrapper {
         return this.areaUpdatedSubject.asObservable();
     }
 
-    public getEntitiesReadyPromise(): Promise<void[]> {
-        return this.entitiesReadyPromise;
-    }
-
     public getFlatLayers(): ITiledMapLayer[] {
         return this.gameMap.flatLayers;
     }
@@ -713,9 +683,9 @@ export class GameMapFrontWrapper {
             row.map((tile) =>
                 tile.properties?.[GameMapProperties.COLLIDES]
                     ? 1
-                    : isExitLayer ||
-                      tile.properties[GameMapProperties.EXIT_URL] ||
-                      tile.properties[GameMapProperties.EXIT_SCENE_URL]
+                    : (isExitLayer && tile.index !== -1) ||
+                      tile.properties?.[GameMapProperties.EXIT_URL] ||
+                      tile.properties?.[GameMapProperties.EXIT_SCENE_URL]
                     ? 2
                     : 0
             )

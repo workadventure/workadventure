@@ -98,6 +98,7 @@
           "ENABLE_MAP_EDITOR_AREAS_TOOL":"false",
           "ICON_URL": "https://icon-"+url,
           "CHAT_URL": "https://chat-"+url,
+          "LOGROCKET_ID": env.LOGROCKET_ID,
         } + (if adminUrl != null then {
           # Admin
           "ADMIN_URL": adminUrl,

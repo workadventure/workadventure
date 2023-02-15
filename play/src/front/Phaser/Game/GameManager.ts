@@ -2,7 +2,7 @@ import { get } from "svelte/store";
 import { connectionManager } from "../../Connexion/ConnectionManager";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import type { Room } from "../../Connexion/Room";
-import { helpCameraSettingsVisibleStore } from "../../Stores/HelpCameraSettingsStore";
+import { helpCameraSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
 import { EnableCameraSceneName } from "../Login/EnableCameraScene";

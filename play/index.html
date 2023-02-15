@@ -53,6 +53,28 @@
         <script>
             {{{ script }}}
         </script>
+
+        {{#logRocketId}}
+            <!-- LogRocket -->
+            <input type="hidden" id="log-rocket-id" value="{{ logRocketId }}">
+            <input type="hidden" id="log-rocket-roomurl" value="{{ url }}">
+            <script src="https://cdn.lr-in-prod.com/LogRocket.min.js" crossorigin="anonymous"></script>
+            <script>
+                console.info('Start LogRocket script!');
+                window.addEventListener('DOMContentLoaded', (event) => {
+                    const logRocketId = document.getElementById('log-rocket-id').value;
+                    const roomUrl = document.getElementById('log-rocket-roomurl').value;
+                    window.LogRocket && window.LogRocket.init(logRocketId);
+
+                    // This is an example script - don't forget to change it!
+                    window.LogRocket.identify("{{ userId }}", {
+                        name: "{{ userId }}",
+                        // Add your own custom user variables here, ie:
+                        roomId: roomUrl
+                    });
+                });
+            </script>
+        {{/logRocketId}}
     </head>
     <body id="body" style="margin: 0; background-color: #000">
         <input type="hidden" id="authToken" value="{{ authToken }}" name="authToken">
