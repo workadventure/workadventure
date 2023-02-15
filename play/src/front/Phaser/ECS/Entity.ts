@@ -2,7 +2,6 @@ import {
     AtLeast,
     EntityData,
     EntityDataProperties,
-    EntityDataPropertiesKeys,
     GameMapProperties,
     TextHeaderPropertyData,
 } from "@workadventure/map-editor";
@@ -265,8 +264,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         return this.entityData.properties;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public setProperty(key: EntityDataPropertiesKeys, value: any): void {
+    public setProperty<K extends keyof EntityDataProperties>(key: K, value: EntityDataProperties[K]): void {
         this.entityData.properties[key] = value;
         this.emit(EntityEvent.PropertiesUpdated, key, value);
     }
