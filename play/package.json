@@ -152,6 +152,7 @@
     "typesafe-i18n": "^5.14.0",
     "typescript": "^4.9.4",
     "uuid": "^9.0.0",
+    "webrtc-troubleshoot": "^11.0.4",
     "zod": "^3.19.1"
   }
 }
