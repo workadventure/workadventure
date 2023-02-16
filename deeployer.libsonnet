@@ -92,7 +92,7 @@
           #POSTHOG
           "POSTHOG_API_KEY": if namespace == "master" then env.POSTHOG_API_KEY else "",
           "POSTHOG_URL": if namespace == "master" then env.POSTHOG_URL else "",
-          "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
+          "TURN_SERVER": "turn:coturn.workadventure.fr:443,turns:coturn.workadventure.fr:443",
           "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
           "ENABLE_FEATURE_MAP_EDITOR":"true",
           "ENABLE_MAP_EDITOR_AREAS_TOOL":"false",
