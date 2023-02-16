@@ -19,15 +19,18 @@ const camera: DeepPartial<Translation["camera"]> = {
             chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
         },
     },
-    webrtc: {
-        title: "WebRtc connection error",
-        error: "STUN / TURN server isn't reachable",
-        content:
-            "The video relay server cannot be reached. You may be unable to communicate with other users. If you are connecting via a VPN, please disconnect and refresh the web page. You may click on the link below to test your WebRtc connection.",
-        testUrl: "WebRtc connection test",
-        refresh: "Refresh",
-        continue: "Continue",
-    },
+    /*webrtc: {
+        title: "TODO: Video relay server connection error",
+        titlePending: "TODO: Video relay server connection pending",
+        error: "TODO: TURN server isn't reachable",
+        content: "TODO: The video relay server cannot be reached. You may be unable to communicate with other users.",
+        solutionVpn: "TODO: If you are <strong>connecting via a VPN</strong>, please disconnect from you VPN and refresh the web page.",
+        solutionHotspot: "TODO: If you are on a restricted network (company network...), try switching network. For instance, create a <strong>Wifi hotspot</strong> with your phone and connect via your phone.",
+        solutionNetworkAdmin: "TODO: If you are a <strong>network administrator</strong>, review the ",
+        preparingYouNetworkGuide: 'TODO: "Preparing your network" guide',
+        refresh: "TODO: Refresh",
+        continue: "TODO: Continue",
+    },*/
     my: {
         silentZone: "Zona silenciosa",
         nameTag: "Você",
