@@ -271,6 +271,9 @@ export class UploadController {
                 const virtualDirectory = mapPath(directory, req);
 
                 await fileSystem.deleteFiles(virtualDirectory);
+
+                await this.generateCacheFile(req);
+
                 res.sendStatus(204);
             })().catch((e) => next(e));
         });
