@@ -655,6 +655,11 @@ message SubToPusherMessage {
     ErrorMessage errorMessage = 10;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 11;
     EditMapCommandMessage editMapCommandMessage = 12;
+
+    /* Spaces related messages */
+    AddSpaceUserMessage addSpaceUserMessage = 13;
+    UpdateSpaceUserMessage updateSpaceUserMessage = 14;
+    RemoveSpaceUserMessage removeSpaceUserMessage = 15;
   }
 }
 
@@ -796,4 +801,67 @@ message BanUserByUuidMessage{
 }
 /*********************************************************************************
  * End Chat Messages
+ *********************************************************************************/
+
+
+
+
+
+/********************************************************************************
+ * Start Spaces messages
+ ********************************************************************************/
+message PusherToBackSpaceMessage{
+  oneof message {
+    WatchSpaceMessage watchSpaceMessage = 1;
+    UnwatchSpaceMessage unwatchSpaceMessage = 2;
+    AddSpaceUserMessage addSpaceUserMessage = 3;
+    UpdateSpaceUserMessage updateSpaceUserMessage = 4;
+    RemoveSpaceUserMessage removeSpaceUserMessage = 5;
+  }
+}
+
+message BackToPusherSpaceMessage{
+  oneof message {
+    AddSpaceUserMessage addSpaceUserMessage = 1;
+    UpdateSpaceUserMessage updateSpaceUserMessage = 2;
+    RemoveSpaceUserMessage removeSpaceUserMessage = 3;
+  }
+}
+
+message WatchSpaceMessage{
+  string spaceName = 1;
+  SpaceUser user = 2;
+}
+message UnwatchSpaceMessage{
+  string spaceName = 1;
+  string userUuid = 2;
+}
+
+message SpaceUser{
+    string uuid = 1;
+    google.protobuf.StringValue email = 2;
+    string name = 3;
+    string playUri = 4;
+    string color = 5;
+    string woka = 6;
+    bool isLogged = 7;
+    int32 availabilityStatus = 8;
+    google.protobuf.StringValue roomName = 9;
+    google.protobuf.StringValue visitCardUrl = 10;
+}
+
+message AddSpaceUserMessage{
+  string spaceName = 1;
+  SpaceUser user = 2;
+}
+message UpdateSpaceUserMessage{
+  string spaceName = 1;
+  SpaceUser user = 2;
+}
+message RemoveSpaceUserMessage{
+  string spaceName = 1;
+  string userUuid = 2;
+}
+/*********************************************************************************
+ * End Spaces messages
  *********************************************************************************/

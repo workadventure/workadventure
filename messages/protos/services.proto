@@ -18,6 +18,7 @@ service RoomManager {
   rpc sendChatMessagePrompt(ChatMessagePrompt) returns (EmptyMessage);
   rpc getRooms(EmptyMessage) returns (RoomsList);
   rpc ping(PingMessage) returns (PingMessage);
+  rpc watchSpace(stream PusherToBackSpaceMessage) returns (stream BackToPusherSpaceMessage);
 }
 
 /**

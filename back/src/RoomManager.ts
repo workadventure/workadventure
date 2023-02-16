@@ -33,6 +33,12 @@ import {
     QueryMessage,
     EditMapCommandMessage,
     ChatMessagePrompt,
+    WatchSpaceMessage,
+    UnwatchSpaceMessage,
+    PusherToBackSpaceMessage,
+    BackToPusherSpaceMessage,
+    UpdateSpaceUserMessage,
+    AddSpaceUserMessage, RemoveSpaceUserMessage,
 } from "./Messages/generated/messages_pb";
 import {
     sendUnaryData,
@@ -52,12 +58,14 @@ import { User, UserSocket } from "./Model/User";
 import { GameRoom } from "./Model/GameRoom";
 import Debug from "debug";
 import { Admin } from "./Model/Admin";
-
+import {Pusher} from "./Model/Pusher";
+import {uuid} from "uuidv4";
 const debug = Debug("roommanager");
 
 export type AdminSocket = ServerDuplexStream<AdminPusherToBackMessage, ServerToAdminClientMessage>;
 export type ZoneSocket = ServerWritableStream<ZoneMessage, BatchToPusherMessage>;
 export type RoomSocket = ServerWritableStream<RoomMessage, BatchToPusherRoomMessage>;
+export type SpaceSocket = ServerDuplexStream<PusherToBackSpaceMessage, BackToPusherSpaceMessage>;
 
 const roomManager: IRoomManagerServer = {
     joinRoom: (call: UserSocket): void => {
@@ -217,6 +225,33 @@ const roomManager: IRoomManagerServer = {
 
         call.on("error", (err: Error) => {
             console.error("An error occurred in joinRoom stream:", err);
+        });
+    },
+
+    watchSpace: (call: SpaceSocket): void => {
+        debug("watchSpace called");
+        const pusherUuid = uuid();
+        const pusher = new Pusher(pusherUuid, call);
+
+        call.on("data", (message: PusherToBackSpaceMessage) => {
+            if (message.hasWatchspacemessage()) {
+                socketManager.handleWatchSpaceMessage(pusher, message.getWatchspacemessage() as WatchSpaceMessage);
+            } else if (message.hasUnwatchspacemessage()) {
+                socketManager.handleUnwatchSpaceMessage(pusher, message.getUnwatchspacemessage() as UnwatchSpaceMessage);
+            } else if (message.hasAddspaceusermessage()) {
+                socketManager.handleAddSpaceUserMessage(pusher, message.getAddspaceusermessage() as AddSpaceUserMessage);
+            } else if (message.hasUpdatespaceusermessage()) {
+                socketManager.handleUpdateSpaceUserMessage(pusher, message.getUpdatespaceusermessage() as UpdateSpaceUserMessage);
+            } else if (message.hasRemovespaceusermessage()) {
+                socketManager.handleRemoveSpaceUserMessage(pusher, message.getRemovespaceusermessage() as RemoveSpaceUserMessage);
+            }
+        });
+
+        call.on("end", () => {
+            debug("watchSpace ended");
+            socketManager.handleUnwatchAllSpaces(pusher);
+
+            call.end();
         });
     },
 
