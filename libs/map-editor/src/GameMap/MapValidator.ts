@@ -6,15 +6,32 @@ import { EntityData } from "../types";
 export type Success<T> = { ok: true; value: T };
 export type Failure<E> = { ok: false; error: E };
 export type Result<T, E> = Success<T> | Failure<E>;
-export type MapValidation = Result<ITiledMap, ValidationError[]>;
 
-export type ErrorType = "error" | "warning" | "info";
-export interface ValidationError {
-    type: ErrorType;
-    message: string;
-    details: string;
-    link?: string;
-}
+export type MapValidation = Result<ITiledMap, Partial<OrganizedErrors>>;
+
+export const isFailure = <T, E>(Y: Result<T, E>): Y is Failure<E> => {
+    return !Y.ok;
+};
+
+export const isSuccess = <T, E>(Y: Result<T, E>): Y is Failure<E> => {
+    return Y.ok;
+};
+
+export const ErrorType = z.enum(["error", "warning", "info"]);
+export type ErrorType = z.infer<typeof ErrorType>;
+export const SectionType = z.enum(["map", "layers", "tilesets", "entities", "script"]);
+export type SectionType = z.infer<typeof SectionType>;
+
+export const ValidationError = z.object({
+    type: ErrorType,
+    message: z.string(),
+    details: z.string(),
+    link: z.string().optional(),
+});
+export type ValidationError = z.infer<typeof ValidationError>;
+
+export const OrganizedErrors = z.record(SectionType, ValidationError.array());
+export type OrganizedErrors = z.infer<typeof OrganizedErrors>;
 
 export class MapValidator {
     private logLevel: number;
@@ -49,13 +66,15 @@ export class MapValidator {
             if (err instanceof Error) {
                 return {
                     ok: false,
-                    error: [
-                        {
-                            type: "error",
-                            message: "The provided map is not in a valid JSON format.",
-                            details: "",
-                        },
-                    ],
+                    error: {
+                        map: [
+                            {
+                                type: "error",
+                                message: "The provided map is not in a valid JSON format.",
+                                details: "",
+                            },
+                        ],
+                    },
                 };
             }
             throw err;
@@ -83,13 +102,15 @@ export class MapValidator {
         if (isInfiniteMap.safeParse(data).success) {
             return {
                 ok: false,
-                error: [
-                    {
-                        type: "error",
-                        message: "Infinite map size is not supported. Please use a fixed map size.",
-                        details: "",
-                    },
-                ],
+                error: {
+                    map: [
+                        {
+                            type: "error",
+                            message: "Infinite map size is not supported. Please use a fixed map size.",
+                            details: "",
+                        },
+                    ],
+                },
             };
         }
 
@@ -104,31 +125,37 @@ export class MapValidator {
 
             return {
                 ok: false,
-                error: [
-                    {
-                        type: "error",
-                        message: "Your map file contains an invalid JSON structure.",
-                        details: Object.values(flattenerErrors.fieldErrors).join("\n"),
-                    },
-                ],
+                error: {
+                    map: [
+                        {
+                            type: "error",
+                            message: "Your map file contains an invalid JSON structure.",
+                            details: Object.values(flattenerErrors.fieldErrors).join("\n"),
+                        },
+                    ],
+                },
             };
         }
 
         const map = parsedMap.data;
 
-        let errors: ValidationError[] = [];
+        const errors: Partial<Record<SectionType, ValidationError[]>> = {};
 
-        errors.push(...this.validateRootProperties(map));
-        errors.push(...this.validateLayers(map, mapPath, availableFiles));
-        errors.push(...this.validateTileset(map, mapPath, availableFiles));
-        errors.push(...this.validateEntitiesProperty(map, mapPath, availableFiles));
+        errors.map = this.removeWarnings(this.validateRootProperties(map));
+        errors.layers = this.removeWarnings(this.validateLayers(map, mapPath, availableFiles));
+        errors.tilesets = this.removeWarnings(this.validateTileset(map, mapPath, availableFiles));
+        errors.entities = this.removeWarnings(this.validateEntitiesProperty(map, mapPath, availableFiles));
 
-        errors = errors.filter((error) => {
-            const logLevel = this.toLogNumber(error.type);
-            return this.logLevel >= logLevel;
-        });
+        let hasError = false;
 
-        if (errors.length > 0) {
+        for (const subErrors of Object.values(errors)) {
+            if (subErrors && subErrors.length > 0) {
+                hasError = true;
+                break;
+            }
+        }
+
+        if (hasError) {
             return {
                 ok: false,
                 error: errors,
@@ -139,6 +166,17 @@ export class MapValidator {
             ok: true,
             value: map,
         };
+    }
+
+    private removeWarnings(errors: ValidationError[]) {
+        if (errors.length < 1) {
+            return undefined;
+        }
+
+        return errors.filter((error) => {
+            const logLevel = this.toLogNumber(error.type);
+            return this.logLevel >= logLevel;
+        });
     }
 
     private validateRootProperties(map: ITiledMap): ValidationError[] {
