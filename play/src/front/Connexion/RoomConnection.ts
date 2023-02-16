@@ -1139,6 +1139,7 @@ export class RoomConnection implements RoomConnection {
                                 y: config.y,
                                 collectionName: config.prefab.collectionName,
                                 prefabId: config.prefab.id,
+                                properties: config.properties ?? {},
                             },
                         },
                     },
