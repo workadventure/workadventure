@@ -61,7 +61,7 @@ services:
             UPLOADER_URL: http://uploader.workadventure.localhost
             ICON_URL: http://icon.workadventure.localhost
             STUN_SERVER: "stun:stun.l.google.com:19302"
-            TURN_SERVER: "turn:coturn.workadventure.localhost:3478,turns:coturn.workadventure.localhost:5349"
+            TURN_SERVER: "$TURN_SERVER"
             DISABLE_NOTIFICATIONS: "$DISABLE_NOTIFICATIONS"
             SKIP_RENDER_OPTIMIZATIONS: "$SKIP_RENDER_OPTIMIZATIONS"
             # Use TURN_USER/TURN_PASSWORD if your Coturn server is secured via hard coded credentials.
@@ -179,7 +179,7 @@ services:
             JITSI_ISS: $JITSI_ISS
             BBB_URL: $BBB_URL
             BBB_SECRET: $BBB_SECRET
-            TURN_STATIC_AUTH_SECRET: SomeStaticAuthSecret
+            TURN_STATIC_AUTH_SECRET: "$TURN_STATIC_AUTH_SECRET"
             MAX_PER_GROUP: "MAX_PER_GROUP"
             REDIS_HOST: redis
             NODE_ENV: development

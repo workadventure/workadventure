@@ -634,6 +634,7 @@ export class GameRoom implements BrothersFinder {
             return {
                 mapUrl,
                 canEdit,
+                editable: canEdit,
                 entityCollectionsUrls,
                 authenticationMandatory: null,
                 group: null,

@@ -24,7 +24,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
     private shiftKey: Phaser.Input.Keyboard.Key;
 
-    private entities: Map<number, Entity>;
+    private entities: Map<string, Entity>;
     private activatableEntities: Entity[];
 
     private properties: Map<string, string | boolean | number>;
@@ -40,7 +40,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         this.scene = scene;
         this.gameMapFrontWrapper = gameMapFrontWrapper;
         this.shiftKey = this.scene.input.keyboard.addKey("SHIFT");
-        this.entities = new Map<number, Entity>();
+        this.entities = new Map<string, Entity>();
         this.activatableEntities = [];
         this.properties = new Map<string, string | boolean | number>();
 
@@ -82,7 +82,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         this.scene.markDirty();
     }
 
-    public deleteEntity(id: number): boolean {
+    public deleteEntity(id: string): boolean {
         const entity = this.entities.get(id);
         if (!entity) {
             return false;
@@ -256,7 +256,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         });
     }
 
-    public getEntities(): Map<number, Entity> {
+    public getEntities(): Map<string, Entity> {
         return this.entities;
     }
 

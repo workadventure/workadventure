@@ -6,9 +6,7 @@ import type { GameMap } from "./GameMap";
 export class GameMapEntities {
     private gameMap: GameMap;
 
-    private entities: Map<number, EntityData> = new Map<number, EntityData>();
-
-    private nextEntityId = 0;
+    private entities: Map<string, EntityData> = new Map<string, EntityData>();
 
     private readonly MAP_PROPERTY_ENTITIES_NAME: string = "entities";
 
@@ -27,18 +25,17 @@ export class GameMapEntities {
             return false;
         }
         this.entities.set(entityData.id, entityData);
-        this.nextEntityId = Math.max(this.nextEntityId, entityData.id);
         if (addToMapProperties) {
             return this.addEntityToMapProperties(entityData);
         }
         return true;
     }
 
-    public getEntity(id: number): EntityData | undefined {
+    public getEntity(id: string): EntityData | undefined {
         return this.entities.get(id);
     }
 
-    public deleteEntity(id: number): boolean {
+    public deleteEntity(id: string): boolean {
         const deleted = this.entities.delete(id);
         if (deleted) {
             return this.deleteEntityFromMapProperties(id);
@@ -46,7 +43,7 @@ export class GameMapEntities {
         return false;
     }
 
-    public updateEntity(id: number, config: Partial<EntityData>): EntityData {
+    public updateEntity(id: string, config: Partial<EntityData>): EntityData {
         const entity = this.getEntity(id);
         if (!entity) {
             throw new Error(`Entity of id: ${id} does not exists!`);
@@ -83,7 +80,7 @@ export class GameMapEntities {
         return true;
     }
 
-    private deleteEntityFromMapProperties(id: number): boolean {
+    private deleteEntityFromMapProperties(id: string): boolean {
         const entitiesPropertyValues = JSON.parse(JSON.stringify(this.getEntitiesMapProperty()?.value)) as EntityData[];
         const indexToRemove = entitiesPropertyValues.findIndex((entityData) => entityData.id === id);
         if (indexToRemove !== -1) {
@@ -124,9 +121,5 @@ export class GameMapEntities {
 
     public getEntities(): EntityData[] {
         return Array.from(this.entities.values());
-    }
-
-    public getNextEntityId(): number {
-        return this.nextEntityId + 1;
     }
 }
