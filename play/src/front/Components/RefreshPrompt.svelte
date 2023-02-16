@@ -1,8 +1,9 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { mapUploadRefreshNeededCommentStore } from "../Stores/MapEditorStore";
+    import { refreshPromptStore } from "../Stores/RefreshPromptStore";
+    import LL from "../../i18n/i18n-svelte";
 
-    let timeToRefreshSeconds = 30;
+    let timeToRefreshSeconds = $refreshPromptStore?.timeToRefresh ?? 30;
 
     onMount(() => {
         setInterval(() => {
@@ -16,12 +17,12 @@
 
 <div class="tw-grid tw-place-items-center tw-h-screen refresh">
     <div class="tw-px-10 tw-py-80 tw-flex tw-items-center tw-flex-col">
-        <p>{$mapUploadRefreshNeededCommentStore}</p>
+        <p>{$refreshPromptStore?.comment}</p>
         <button
             type="button"
             class="light tw-m-auto tw-cursor-pointer tw-px-3"
             on:click|preventDefault={() => window.location.reload()}
-            >{`REFRESH (${timeToRefreshSeconds})`}
+            >{`${$LL.refreshPrompt.refresh()} (${timeToRefreshSeconds})`}
         </button>
     </div>
 </div>

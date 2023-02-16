@@ -56,6 +56,7 @@ import {
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnexionMessage,
     XmppSettingsMessage,
+    RefreshRoomMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -65,7 +66,6 @@ import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
-import { mapUploadRefreshNeededCommentStore } from "../Stores/MapEditorStore";
 import { checkCoturnServer } from "../Components/Video/utils";
 import { assertObjectKeys } from "../Utils/CustomTypeGuards";
 
@@ -135,6 +135,9 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _userLeftMessageStream = new Subject<UserLeftMessageTsProto>();
     public readonly userLeftMessageStream = this._userLeftMessageStream.asObservable();
+
+    private readonly _refreshRoomMessageStream = new Subject<RefreshRoomMessage>();
+    public readonly refreshRoomMessageStream = this._refreshRoomMessageStream.asObservable();
 
     private readonly _itemEventMessageStream = new Subject<{
         itemId: number;
@@ -535,12 +538,7 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "refreshRoomMessage": {
-                    console.info("roomConnection => refreshRoomMessage received");
-                    if (message.refreshRoomMessage.comment) {
-                        mapUploadRefreshNeededCommentStore.set(message.refreshRoomMessage.comment);
-                    } else {
-                        window.location.reload();
-                    }
+                    this._refreshRoomMessageStream.next(message.refreshRoomMessage);
                     break;
                 }
                 case "followRequestMessage": {
@@ -895,6 +893,7 @@ export class RoomConnection implements RoomConnection {
         this._groupDeleteMessageStream.complete();
         this._userJoinedMessageStream.complete();
         this._userLeftMessageStream.complete();
+        this._refreshRoomMessageStream.complete();
         this._itemEventMessageStream.complete();
         this._emoteEventMessageStream.complete();
         this._variableMessageStream.complete();

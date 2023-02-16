@@ -481,6 +481,7 @@ message RefreshRoomMessage{
   string roomId = 1;
   int32 versionNumber = 2;
   optional string comment = 3;
+  optional int32 timeToRefresh = 4;
 }
 
 message WorldFullMessage{

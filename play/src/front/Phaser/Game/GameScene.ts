@@ -151,7 +151,8 @@ import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import { mapEditorModeStore, mapUploadRefreshNeededCommentStore } from "../../Stores/MapEditorStore";
+import { mapEditorModeStore } from "../../Stores/MapEditorStore";
+import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
 import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
 
@@ -205,7 +206,7 @@ export class GameScene extends DirtyScene {
     private embedScreenLayoutStoreUnsubscriber!: Unsubscriber;
     private availabilityStatusStoreUnsubscriber!: Unsubscriber;
     private mapEditorModeStoreUnsubscriber!: Unsubscriber;
-    private mapUploadRefreshNeededCommentStoreUnsubscriber!: Unsubscriber;
+    private refreshPromptStoreStoreUnsubscriber!: Unsubscriber;
 
     private modalVisibilityStoreUnsubscriber!: Unsubscriber;
 
@@ -885,6 +886,17 @@ export class GameScene extends DirtyScene {
                     });
                 });
 
+                this.connection.refreshRoomMessageStream.subscribe((message) => {
+                    if (message.comment) {
+                        refreshPromptStore.set({
+                            comment: message.comment,
+                            timeToRefresh: message.timeToRefresh,
+                        });
+                    } else {
+                        window.location.reload();
+                    }
+                });
+
                 this.connection.playerDetailsUpdatedMessageStream.subscribe((message) => {
                     // Is this message for me (exceptionally, we can use this stream to send messages to users
                     // who share the same UUID as us)
@@ -1081,7 +1093,7 @@ export class GameScene extends DirtyScene {
             this.followUsersColorStoreUnsubscriber != undefined ||
             this.peerStoreUnsubscriber != undefined ||
             this.mapEditorModeStoreUnsubscriber != undefined ||
-            this.mapUploadRefreshNeededCommentStoreUnsubscriber != undefined
+            this.refreshPromptStoreStoreUnsubscriber != undefined
         ) {
             console.error(
                 "subscribeToStores => Check all subscriber undefined ",
@@ -1093,7 +1105,7 @@ export class GameScene extends DirtyScene {
                 this.followUsersColorStoreUnsubscriber,
                 this.peerStoreUnsubscriber,
                 this.mapEditorModeStoreUnsubscriber,
-                this.mapUploadRefreshNeededCommentStoreUnsubscriber
+                this.refreshPromptStoreStoreUnsubscriber
             );
 
             throw new Error("One store is already subscribed.");
@@ -1252,15 +1264,13 @@ export class GameScene extends DirtyScene {
             this.markDirty();
         });
 
-        this.mapUploadRefreshNeededCommentStoreUnsubscriber = mapUploadRefreshNeededCommentStore.subscribe(
-            (comment) => {
-                if (comment) {
-                    this.userInputManager.disableControls();
-                } else {
-                    this.userInputManager.restoreControls();
-                }
+        this.refreshPromptStoreStoreUnsubscriber = refreshPromptStore.subscribe((comment) => {
+            if (comment) {
+                this.userInputManager.disableControls();
+            } else {
+                this.userInputManager.restoreControls();
             }
-        );
+        });
     }
 
     //todo: into dedicated classes
@@ -2114,7 +2124,7 @@ ${escapedMessage}
         this.mapEditorModeManager?.destroy();
         this.peerStoreUnsubscriber?.();
         this.mapEditorModeStoreUnsubscriber?.();
-        this.mapUploadRefreshNeededCommentStoreUnsubscriber?.();
+        this.refreshPromptStoreStoreUnsubscriber?.();
         this.emoteUnsubscriber?.();
         this.emoteMenuUnsubscriber?.();
         this.followUsersColorStoreUnsubscriber?.();

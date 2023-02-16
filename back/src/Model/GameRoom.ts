@@ -141,7 +141,7 @@ export class GameRoom implements BrothersFinder {
                     const msg = new RefreshRoomMessage().setRoomid(gameRoom.roomUrl);
                     const comment = data.getMapstoragerefreshmessage()?.getComment();
                     if (comment) {
-                        msg.setComment(comment);
+                        msg.setComment(comment).setTimetorefresh(30);
                     }
                     const message = new ServerToClientMessage().setRefreshroommessage(msg);
                     gameRoom.users.forEach((user: User) => {
