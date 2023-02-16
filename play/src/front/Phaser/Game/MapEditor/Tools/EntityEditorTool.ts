@@ -3,6 +3,7 @@ import { GameMapEntities } from "@workadventure/map-editor/src/GameMap/GameMapEn
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { get, Unsubscriber } from "svelte/store";
 import {
+    mapEditorCopiedEntityDataPropertiesStore,
     mapEditorModeStore,
     mapEditorSelectedEntityPrefabStore,
     MapEntityEditorMode,
@@ -344,18 +345,20 @@ export class EntityEditorTool extends MapEditorTool {
             y: y - this.entityPrefabPreview.displayHeight * 0.5,
             id: this.gameMapEntities.getNextEntityId(),
             prefab: this.entityPrefab,
-            properties: {},
+            properties: get(mapEditorCopiedEntityDataPropertiesStore) ?? {},
         };
         this.mapEditorModeManager.executeCommand({
             entityData,
             type: "CreateEntityCommand",
         });
     }
+    e;
 
     private cleanPreview(): void {
         this.entityPrefabPreview?.destroy();
         this.entityPrefabPreview = undefined;
         this.entityPrefab = undefined;
+        mapEditorCopiedEntityDataPropertiesStore.set(undefined);
         this.scene.markDirty();
     }
 

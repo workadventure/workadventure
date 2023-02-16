@@ -5,8 +5,10 @@ import { actionsMenuStore } from "../../../Stores/ActionsMenuStore";
 import {
     mapEditorModeStore,
     mapEditorSelectedEntityStore,
+    mapEditorSelectedEntityPrefabStore,
     MapEntityEditorMode,
     mapEntityEditorModeStore,
+    mapEditorCopiedEntityDataPropertiesStore,
 } from "../../../Stores/MapEditorStore";
 import { Entity, EntityEvent } from "../../ECS/Entity";
 import { TexturesHelper } from "../../Helpers/TexturesHelper";
@@ -23,6 +25,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
     private gameMapFrontWrapper: GameMapFrontWrapper;
 
     private shiftKey: Phaser.Input.Keyboard.Key;
+    private ctrlKey: Phaser.Input.Keyboard.Key;
 
     private entities: Map<number, Entity>;
     private activatableEntities: Entity[];
@@ -40,6 +43,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         this.scene = scene;
         this.gameMapFrontWrapper = gameMapFrontWrapper;
         this.shiftKey = this.scene.input.keyboard.addKey("SHIFT");
+        this.ctrlKey = this.scene.input.keyboard.addKey("CTRL");
         this.entities = new Map<number, Entity>();
         this.activatableEntities = [];
         this.properties = new Map<string, string | boolean | number>();
@@ -219,6 +223,13 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 const entityEditorMode = get(mapEntityEditorModeStore);
                 switch (entityEditorMode) {
                     case MapEntityEditorMode.EditMode: {
+                        if (this.ctrlKey.isDown) {
+                            mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
+                            mapEditorSelectedEntityStore.set(undefined);
+                            mapEditorCopiedEntityDataPropertiesStore.set(entity.getEntityData().properties);
+                            mapEditorSelectedEntityPrefabStore.set(entity.getEntityData().prefab);
+                            return;
+                        }
                         mapEditorSelectedEntityStore.set(entity);
                         break;
                     }

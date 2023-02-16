@@ -1,4 +1,4 @@
-import type { PredefinedPropertyData, EntityPrefab } from "@workadventure/map-editor";
+import type { PredefinedPropertyData, EntityPrefab, EntityDataProperties } from "@workadventure/map-editor";
 import { writable } from "svelte/store";
 import { connectionManager } from "../Connexion/ConnectionManager";
 import { ENABLE_FEATURE_MAP_EDITOR } from "../Enum/EnvironmentVariable";
@@ -44,5 +44,7 @@ export const mapEditorSelectedPropertyStore = writable<PredefinedPropertyData | 
 export const mapEditorSelectedToolStore = writable<EditorToolName | undefined>(undefined);
 
 export const mapEditorSelectedEntityPrefabStore = writable<EntityPrefab | undefined>(undefined);
+
+export const mapEditorCopiedEntityDataPropertiesStore = writable<EntityDataProperties | undefined>(undefined);
 
 export const mapEntityEditorModeStore = writable<MapEntityEditorMode>(MapEntityEditorMode.AddMode);
