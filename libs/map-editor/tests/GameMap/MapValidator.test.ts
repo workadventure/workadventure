@@ -108,14 +108,14 @@ describe("Map validator", () => {
         }
 
         const errors = result.error;
-        expect(errors.map).toBeDefined();
+        expect(errors.entities).toBeDefined();
 
-        if (!errors.map) {
-            throw new Error("Not existing map on errors");
+        if (!errors.entities) {
+            throw new Error("Not existing entities on errors");
         }
 
-        expect(errors.map[0].message).toBe("Your map file contains invalid entities.");
-        expect(errors.map[0].type).toBe("error");
+        expect(errors.entities[0].message).toBe("Your map file contains invalid entities.");
+        expect(errors.entities[0].type).toBe("error");
     });
 
     it("should not be infinite", () => {
@@ -220,7 +220,12 @@ describe("Map validator", () => {
             throw new Error("Not existing layers on errors");
         }
 
-        expect(errors.layers.length).toBe(6);
+        if (!errors.tilesets) {
+            throw new Error("Not existing tilesets on errors");
+        }
+
+        expect(errors.layers.length).toBe(5);
+        expect(errors.tilesets.length).toBe(1);
 
         expect(errors.layers[0].message).toBe('Property "openWebsite" of layer "Website" is empty.');
         expect(errors.layers[0].type).toBe("warning");
@@ -243,11 +248,11 @@ describe("Map validator", () => {
         );
         expect(errors.layers[4].type).toBe("warning");
 
-        expect(errors.layers[5].message).toBe(
+        expect(errors.tilesets[0].message).toBe(
             'The tileset named Dungeon has tiles that have property "collides" set to false. This property will have no effect in the room.'
         );
-        expect(errors.layers[5].details).toContain("The tiles concerned are");
-        expect(errors.layers[5].type).toBe("info");
+        expect(errors.tilesets[0].details).toContain("The tiles concerned are");
+        expect(errors.tilesets[0].type).toBe("info");
     });
 
     it("should detect false collides", () => {
@@ -260,17 +265,17 @@ describe("Map validator", () => {
         }
 
         const errors = result.error;
-        expect(errors.layers).toBeDefined();
+        expect(errors.tilesets).toBeDefined();
 
-        if (!errors.layers) {
+        if (!errors.tilesets) {
             throw new Error("Not existing layers on errors");
         }
 
-        expect(errors.layers[0].message).toBe(
+        expect(errors.tilesets[0].message).toBe(
             'The tileset named dungeon has tiles that have property "collides" set to false. This property will have no effect in the room.'
         );
-        expect(errors.layers[0].details).toContain("The tiles concerned are");
-        expect(errors.layers[0].type).toBe("info");
+        expect(errors.tilesets[0].details).toContain("The tiles concerned are");
+        expect(errors.tilesets[0].type).toBe("info");
     });
 
     it("should not output 'info' logs if minimum level is 'warn'", () => {
