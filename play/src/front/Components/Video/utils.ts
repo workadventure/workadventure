@@ -78,14 +78,12 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
     let checkPeerConnexionStatusTimeOut: NodeJS.Timeout | null = null;
 
     if (!TURN_SERVER) {
-        debug("checkCoturnServer => No TURN server configured.");
+        debug("No TURN server configured.");
         return;
     }
 
     if (window.navigator.userAgent.toLowerCase().indexOf("firefox") != -1) {
-        debug(
-            "checkCoturnServer => RTC Peer Connection detection development is not available for Firefox browser!"
-        );
+        debug("RTC Peer Connection detection development is not available for Firefox browser!");
         return;
     }
 
@@ -102,7 +100,9 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
         ) {
             pc.close();
 
+            debug("onicecandidate => gathering is complete");
             if (!turnServerReached) {
+                debug("onicecandidate => no turn server found after gathering complete");
                 helpWebRtcSettingsVisibleStore.set("error");
             }
             if (checkPeerConnexionStatusTimeOut) {
@@ -112,10 +112,10 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
             return;
         }
 
-        debug("checkCoturnServer => onicecandidate => e.candidate.type" + e.candidate.type);
+        debug("onicecandidate => e.candidate.type %s", e.candidate.type);
         // If a srflx candidate was found, notify that the STUN server works!
         /*if (e.candidate.type == "srflx") {
-            debugCheckTurn("checkCoturnServer => onicecandidate => The STUN server is reachable!");
+            debugCheckTurn("onicecandidate => The STUN server is reachable!");
             debugCheckTurn(`   Your Public IP Address is: ${e.candidate.address}`);
             valideCoturnCheck = true;
             pc.close();
@@ -123,7 +123,7 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
 
         // If a relay candidate was found, notify that the TURN server works!
         if (e.candidate.type == "relay") {
-            debug("checkCoturnServer => onicecandidate => The TURN server is reachable!");
+            debug("onicecandidate => The TURN server is reachable!");
             turnServerReached = true;
             helpWebRtcSettingsVisibleStore.set("hidden");
             pc.close();
@@ -134,23 +134,20 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
     // Remember that in most of the cases, even if its working, you will find a STUN host lookup received error
     // Chrome tried to look up the IPv6 DNS record for server and got an error in that process. However, it may still be accessible through the IPv4 address
     pc.onicecandidateerror = (e) => {
-        debug("checkCoturnServer => onicecandidateerror => %O", e);
+        debug("onicecandidateerror => %O", e);
     };
 
     pc.addEventListener("icegatheringstatechange", (ev) => {
-        debug(
-            "checkCoturnServer => icegatheringstatechange => pc.iceGatheringState: %s",
-            pc.iceGatheringState
-        );
+        debug("icegatheringstatechange => pc.iceGatheringState: %s", pc.iceGatheringState);
         switch (pc.iceGatheringState) {
             case "new":
-                debug("checkCoturnServer => icegatheringstatechange => status is new");
+                debug("icegatheringstatechange => status is new");
                 break;
             case "gathering":
-                debug("checkCoturnServer => icegatheringstatechange => status is gathering");
+                debug("icegatheringstatechange => status is gathering");
                 break;
             case "complete":
-                debug("checkCoturnServer => icegatheringstatechange => status is complete");
+                debug("icegatheringstatechange => status is complete");
                 pc.close();
                 break;
         }
@@ -159,7 +156,7 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
     pc.createDataChannel("workadventure-peerconnection-test");
     pc.createOffer()
         .then((offer) => pc.setLocalDescription(offer))
-        .catch((err) => debug("checkCoturnServer => Check coturn server error => %O", err));
+        .catch((err) => debug("Check coturn server error => %O", err));
 
     checkPeerConnexionStatusTimeOut = setTimeout(() => {
         if (!turnServerReached) {
