@@ -154,6 +154,7 @@ import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
+import { checkCoturnServer } from "../../Components/Video/utils";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -1062,6 +1063,19 @@ export class GameScene extends DirtyScene {
                 });
 
                 this.emoteManager = new EmoteManager(this, this.connection);
+
+                // Check WebRtc connection
+                if (onConnect.room.webrtcUserName && onConnect.room.webrtcPassword) {
+                    try {
+                        checkCoturnServer({
+                            userId: onConnect.connection.getUserId(),
+                            webRtcUser: onConnect.room.webrtcUserName,
+                            webRtcPassword: onConnect.room.webrtcPassword,
+                        });
+                    } catch (err) {
+                        console.error("Check coturn server exception: ", err);
+                    }
+                }
 
                 // Get position from UUID only after the connection to the pusher is established
                 this.tryMovePlayerWithMoveToUserParameter();

@@ -72,6 +72,8 @@ export interface RoomJoinedMessageInterface {
     playerVariables: Map<string, unknown>;
     characterLayers: BodyResourceDescriptionInterface[];
     commandsToApply?: EditMapCommandMessage[];
+    webrtcUserName: string;
+    webrtcPassword: string;
 }
 
 export interface PlayGlobalMessageInterface {
