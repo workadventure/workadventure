@@ -1135,7 +1135,7 @@ export class SocketManager {
             (err: unknown, editMapMessage: EditMapCommandMessage) => {
                 if (err) {
                     emitError(user.socket, err);
-                    throw err;
+                    return;
                 }
                 const subMessage = new SubToPusherRoomMessage();
                 subMessage.setEditmapcommandmessage(editMapMessage);
