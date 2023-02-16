@@ -186,7 +186,7 @@ message CreateAreaMessage {
 }
 
 message CreateEntityMessage {
-  int32 id = 1;
+  string id = 1;
   uint32 x = 2;
   uint32 y = 3;
   string collectionName = 4;
@@ -194,11 +194,11 @@ message CreateEntityMessage {
 }
 
 message DeleteEntityMessage {
-  int32 id = 1;
+  string id = 1;
 }
 
 message ModifyEntityMessage {
-  int32 id = 1;
+  string id = 1;
   optional uint32 x = 2;
   optional uint32 y = 3;
   map<string, google.protobuf.Value> properties = 4;

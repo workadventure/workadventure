@@ -1147,7 +1147,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorDeleteEntity(commandId: string, id: number): void {
+    public emitMapEditorDeleteEntity(commandId: string, id: string): void {
         this.send({
             message: {
                 $case: "editMapCommandMessage",
