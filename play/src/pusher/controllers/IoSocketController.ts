@@ -7,7 +7,6 @@ import {
     SendUserMessage,
     ServerToClientMessage,
     CompanionMessage,
-    PingMessage,
 } from "../../messages/generated/messages_pb";
 import type {
     UserMovesMessage,
@@ -27,6 +26,7 @@ import type {
     AvailabilityStatus,
     QueryMessage,
     EditMapCommandMessage,
+    PingMessage,
 } from "../../messages/generated/messages_pb";
 import qs from "qs";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
@@ -108,11 +108,6 @@ interface UpgradeFailedErrorData {
 }
 
 type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData;
-
-// Maximum time to wait for a pong answer to a ping before closing connection.
-// Note: PONG_TIMEOUT must be less than PING_INTERVAL
-const PONG_TIMEOUT = 70000; // PONG_TIMEOUT is > 1 minute because of Chrome heavy throttling. See: https://docs.google.com/document/d/11FhKHRcABGS4SWPFGwoL6g0ALMqrFKapCk5ZTKKupEk/edit#
-const PING_INTERVAL = 80000;
 
 export class IoSocketController {
     private nextUserId = 1;
@@ -624,35 +619,6 @@ export class IoSocketController {
                             }
                         });
                     }
-
-                    const pingMessage = new PingMessage();
-                    const pingSubMessage = new SubMessage();
-                    pingSubMessage.setPingmessage(pingMessage);
-
-                    client.pingIntervalId = setInterval(() => {
-                        client.emitInBatch(pingSubMessage);
-
-                        if (client.pongTimeoutId) {
-                            console.warn(
-                                "Warning, emitting a new ping message before previous pong message was received."
-                            );
-                            client.resetPongTimeout();
-                        }
-
-                        client.pongTimeoutId = setTimeout(() => {
-                            console.log(
-                                "Connection lost with user ",
-                                client.userUuid,
-                                client.name,
-                                client.userJid,
-                                "in room",
-                                client.roomId
-                            );
-                            client.close();
-                        }, PONG_TIMEOUT);
-                    }, PING_INTERVAL);
-
-                    client.resetPongTimeout();
                 })().catch((e) => console.error(e));
             },
             message: (ws, arrayBuffer): void => {
@@ -721,7 +687,7 @@ export class IoSocketController {
                             message.getLockgrouppromptmessage() as LockGroupPromptMessage
                         );
                     } else if (message.hasPingmessage()) {
-                        client.resetPongTimeout();
+                        socketManager.handlePingMessage(client, message.getPingmessage() as PingMessage);
                     } else if (message.hasEditmapcommandmessage()) {
                         socketManager.handleEditMapCommandMessage(
                             client,
@@ -775,12 +741,6 @@ export class IoSocketController {
         client.batchTimeout = null;
         client.emitInBatch = (payload: SubMessage): void => {
             emitInBatch(client, payload);
-        };
-        client.resetPongTimeout = (): void => {
-            if (client.pongTimeoutId) {
-                clearTimeout(client.pongTimeoutId);
-                client.pongTimeoutId = undefined;
-            }
         };
         client.disconnecting = false;
 
