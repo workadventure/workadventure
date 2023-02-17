@@ -634,6 +634,7 @@ message PusherToBackMessage {
     QueryMessage queryMessage = 21;
     AskPositionMessage askPositionMessage = 22;
     EditMapCommandMessage editMapCommandMessage = 23;
+    PingMessage pingMessage = 24;
   }
 }
 
