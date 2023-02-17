@@ -93,7 +93,7 @@ export const EntityCollection = z.object({
 });
 
 export const EntityData = z.object({
-    id: z.number(),
+    id: z.string(),
     x: z.number(),
     y: z.number(),
     properties: EntityDataProperties.optional(),

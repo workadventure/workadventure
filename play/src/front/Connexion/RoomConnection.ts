@@ -66,7 +66,6 @@ import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
-import { checkCoturnServer } from "../Components/Video/utils";
 import { assertObjectKeys } from "../Utils/CustomTypeGuards";
 
 // This must be greater than IoSocketController's PING_INTERVAL
@@ -431,21 +430,11 @@ export class RoomConnection implements RoomConnection {
                             characterLayers,
                             playerVariables,
                             commandsToApply,
+                            webrtcUserName: roomJoinedMessage.webrtcUserName,
+                            webrtcPassword: roomJoinedMessage.webrtcPassword,
                         } as RoomJoinedMessageInterface,
                     });
 
-                    // Check WebRtc connection
-                    if (roomJoinedMessage.webrtcUserName && roomJoinedMessage.webrtcPassword) {
-                        try {
-                            checkCoturnServer({
-                                userId: this.userId,
-                                webRtcUser: roomJoinedMessage.webrtcUserName,
-                                webRtcPassword: roomJoinedMessage.webrtcPassword,
-                            });
-                        } catch (err) {
-                            console.error("Check coturn server exception: ", err);
-                        }
-                    }
                     break;
                 }
                 case "worldFullMessage": {
@@ -1151,7 +1140,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorDeleteEntity(commandId: string, id: number): void {
+    public emitMapEditorDeleteEntity(commandId: string, id: string): void {
         this.send({
             message: {
                 $case: "editMapCommandMessage",

@@ -11,7 +11,7 @@ import { passportAuthenticator } from "../Services/Authentication";
 import archiver from "archiver";
 import { fileSystem } from "../fileSystem";
 import StreamZip from "node-stream-zip";
-import { MapValidator, ValidationError } from "@workadventure/map-editor/src/GameMap/MapValidator";
+import { MapValidator, OrganizedErrors } from "@workadventure/map-editor/src/GameMap/MapValidator";
 import { FileNotFoundError } from "./FileNotFoundError";
 import { mapsManager } from "../MapsManager";
 import { uploadDetector } from "../Services/UploadDetector";
@@ -107,7 +107,7 @@ export class UploadController {
                     const mapValidator = new MapValidator("error");
                     const availableFiles = zipEntries.map((entry) => entry.name);
 
-                    const errors: { [key: string]: ValidationError[] } = {};
+                    const errors: { [key: string]: Partial<OrganizedErrors> } = {};
 
                     for (const zipEntry of zipEntries) {
                         const extension = path.extname(zipEntry.name);
@@ -116,13 +116,15 @@ export class UploadController {
                             mapValidator.doesStringLooksLikeMap((await zip.entryData(zipEntry)).toString())
                         ) {
                             // We forbid Maps in JSON format.
-                            errors[zipEntry.name] = [
-                                {
-                                    type: "error",
-                                    message: 'Invalid file extension. Maps should end with the ".tmj" extension.',
-                                    details: "",
-                                },
-                            ];
+                            errors[zipEntry.name] = {
+                                map: [
+                                    {
+                                        type: "error",
+                                        message: 'Invalid file extension. Maps should end with the ".tmj" extension.',
+                                        details: "",
+                                    },
+                                ],
+                            };
 
                             continue;
                         }
@@ -279,6 +281,9 @@ export class UploadController {
                 const virtualDirectory = mapPath(directory, req);
 
                 await fileSystem.deleteFiles(virtualDirectory);
+
+                await this.generateCacheFile(req);
+
                 res.sendStatus(204);
             })().catch((e) => next(e));
         });

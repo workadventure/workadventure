@@ -39,6 +39,7 @@
     import Modal from "./Modal/Modal.svelte";
     import { coWebsites } from "../Stores/CoWebsiteStore";
     import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
+    import { proximityMeetingStore } from "../Stores/MyMediaStore";
 
     let mainLayout: HTMLDivElement;
 
@@ -94,7 +95,7 @@
             <HelpCameraSettingsPopup />
         {/if}
 
-        {#if $helpWebRtcSettingsVisibleStore}
+        {#if $helpWebRtcSettingsVisibleStore !== "hidden" && $proximityMeetingStore === true}
             <HelpWebRtcSettingsPopup />
         {/if}
 

@@ -20,11 +20,17 @@ const camera: DeepPartial<Translation["camera"]> = {
         },
     },
     webrtc: {
-        title: "Erreur de connexion WebRtc",
-        error: "STUN / TURN serveur ne sont pas accessibles",
+        title: "Erreur de connexion avec le serveur vidéo relai",
+        titlePending: "En attente de connexion avec le serveur vidéo relai",
+        error: "Impossible d'accéder au serveur TURN",
         content:
-            "Impossible de se connecter au serveur vidéo relais. La connexion audio/vidéo avec d'autres utilisateurs pourrait ne pas fonctionner. Si vous êtes connectés avec un VPN, vous devez vous déconnecter pour profiter de la meilleure expérience possible. Rendez-vous sur le lien ci-dessous pour tester votre connexion.",
-        testUrl: "Test ma connexion WebRtc",
+            "Impossible de se connecter au serveur vidéo relais. La connexion audio/vidéo avec d'autres utilisateurs pourrait ne pas fonctionner.",
+        solutionVpn:
+            "Si vous êtes connectés avec <strong>un VPN</strong>, vous devez vous déconnecter du VPN et rafraîchir votre page pour profiter de la meilleure expérience possible.",
+        solutionHotspot:
+            "Si vous êtes sur un réseau sécurisé (réseau d'entreprise...), essayez de changer de réseau. Par exemple, en créant un <strong>hotspot Wifi</strong> avec votre smartphone.",
+        solutionNetworkAdmin: "Si vous êtes <strong>administrateur réseay</strong>, consultez le ",
+        preparingYouNetworkGuide: '"guide de préparation du réseau"',
         refresh: "Rafraîchir",
         continue: "Continuer",
     },
