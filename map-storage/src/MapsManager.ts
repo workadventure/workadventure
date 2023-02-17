@@ -144,6 +144,13 @@ class MapsManager {
         return this.loadedCollections.get(collectionName)?.collection.find((entity) => entity.id === entityId);
     }
 
+    public clearAfterUpload(key: string): void {
+        console.log(`UPLOAD DETECTED. CLEAR CACHE FOR: ${key}`);
+        this.loadedMaps.delete(key);
+        this.loadedMapsCommandsQueue.delete(key);
+        this.clearSaveMapInterval(key);
+    }
+
     private clearSaveMapInterval(key: string): boolean {
         const interval = this.saveMapIntervals.get(key);
         if (interval) {
