@@ -54,7 +54,11 @@ import {
     EditMapCommandsArrayMessage,
     UpdateMapToNewestMessage,
     WatchSpaceMessage,
-    UnwatchSpaceMessage, UpdateSpaceUserMessage, SpaceUser, AddSpaceUserMessage, RemoveSpaceUserMessage
+    UnwatchSpaceMessage,
+    UpdateSpaceUserMessage,
+    SpaceUser,
+    AddSpaceUserMessage,
+    RemoveSpaceUserMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -75,8 +79,8 @@ import crypto from "crypto";
 import QueryCase = QueryMessage.QueryCase;
 import { getMapStorageClient } from "./MapStorageClient";
 import { emitError } from "./MessageHelpers";
-import {Space} from "../Model/Space";
-import {Pusher} from "../Model/Pusher";
+import { Space } from "../Model/Space";
+import { Pusher } from "../Model/Pusher";
 
 const debug = Debug("sockermanager");
 
@@ -1220,14 +1224,14 @@ export class SocketManager {
         return true;
     }
 
-    handleWatchSpaceMessage(pusher: Pusher, watchSpaceMessage: WatchSpaceMessage){
+    handleWatchSpaceMessage(pusher: Pusher, watchSpaceMessage: WatchSpaceMessage) {
         const spaceUser = watchSpaceMessage.getUser();
-        if(!spaceUser){
+        if (!spaceUser) {
             throw new Error("No SpaceUser defined");
         }
         const spaceName = watchSpaceMessage.getSpacename();
         let space: Space | undefined = this.spaces.get(spaceName);
-        if(!space){
+        if (!space) {
             space = new Space(spaceName);
             this.spaces.set(spaceName, space);
         }
@@ -1236,51 +1240,51 @@ export class SocketManager {
         space.addUser(pusher, spaceUser);
     }
 
-    handleUnwatchSpaceMessage(pusher: Pusher, unwatchSpaceMessage: UnwatchSpaceMessage){
+    handleUnwatchSpaceMessage(pusher: Pusher, unwatchSpaceMessage: UnwatchSpaceMessage) {
         const userUuid = unwatchSpaceMessage.getUseruuid();
-        if(!userUuid){
+        if (!userUuid) {
             throw new Error("No userUuid defined");
         }
         const spaceName = unwatchSpaceMessage.getSpacename();
         const space: Space | undefined = this.spaces.get(spaceName);
-        if(!space){
+        if (!space) {
             throw new Error("Cant unwatch space, space not found");
         }
         space.removeWatcher(pusher);
         // If no anymore watchers we delete the space
-        if(space.canBeDeleted()){
+        if (space.canBeDeleted()) {
             this.spaces.delete(spaceName);
         }
     }
 
-    handleUnwatchAllSpaces(pusher: Pusher){
-        pusher.spacesWatched.forEach(spaceName => {
+    handleUnwatchAllSpaces(pusher: Pusher) {
+        pusher.spacesWatched.forEach((spaceName) => {
             const space = this.spaces.get(spaceName);
-            if(space){
+            if (space) {
                 space.removeWatcher(pusher);
                 // If no anymore watchers we delete the space
-                if(space.canBeDeleted()){
+                if (space.canBeDeleted()) {
                     this.spaces.delete(spaceName);
                 }
             }
         });
     }
 
-    handleAddSpaceUserMessage(pusher: Pusher, addSpaceUserMessage: AddSpaceUserMessage){
+    handleAddSpaceUserMessage(pusher: Pusher, addSpaceUserMessage: AddSpaceUserMessage) {
         const space = this.spaces.get(addSpaceUserMessage.getSpacename());
-        if(space){
+        if (space) {
             space.addUser(pusher, addSpaceUserMessage.getUser() as SpaceUser);
         }
     }
-    handleUpdateSpaceUserMessage(pusher: Pusher, updateSpaceUserMessage: UpdateSpaceUserMessage){
+    handleUpdateSpaceUserMessage(pusher: Pusher, updateSpaceUserMessage: UpdateSpaceUserMessage) {
         const space = this.spaces.get(updateSpaceUserMessage.getSpacename());
-        if(space){
+        if (space) {
             space.updateUser(pusher, updateSpaceUserMessage.getUser() as SpaceUser);
         }
     }
-    handleRemoveSpaceUserMessage(pusher: Pusher, removeSpaceUserMessage: RemoveSpaceUserMessage){
+    handleRemoveSpaceUserMessage(pusher: Pusher, removeSpaceUserMessage: RemoveSpaceUserMessage) {
         const space = this.spaces.get(removeSpaceUserMessage.getSpacename());
-        if(space){
+        if (space) {
             space.removeUser(pusher, removeSpaceUserMessage.getUseruuid());
         }
     }

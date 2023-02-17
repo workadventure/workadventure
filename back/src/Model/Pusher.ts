@@ -3,7 +3,7 @@ import {
     AddSpaceUserMessage,
     BackToPusherSpaceMessage,
     RemoveSpaceUserMessage,
-    UpdateSpaceUserMessage
+    UpdateSpaceUserMessage,
 } from "../Messages/generated/messages_pb";
 
 export type SpaceMessage = AddSpaceUserMessage | UpdateSpaceUserMessage | RemoveSpaceUserMessage;
@@ -14,38 +14,25 @@ export class Pusher {
         this._spacesWatched = [];
     }
 
-    public watchSpace(spaceName: string){
+    public watchSpace(spaceName: string) {
         this._spacesWatched.push(spaceName);
     }
 
-    public unwatchSpace(spaceName: string){
-        this._spacesWatched = this._spacesWatched.filter(space => space !== spaceName);
+    public unwatchSpace(spaceName: string) {
+        this._spacesWatched = this._spacesWatched.filter((space) => space !== spaceName);
     }
 
     get spacesWatched(): string[] {
         return this._spacesWatched;
     }
 
-    public sendUserLeft(uuid: string /*, spaceName: string, ip: string*/): void {
-        /*
-        const serverToAdminClientMessage = new ServerToAdminClientMessage();
-
-        const userLeftRoomMessage = new UserLeftRoomMessage();
-        userLeftRoomMessage.setUuid(uuid);
-
-        serverToAdminClientMessage.setUserleftroom(userLeftRoomMessage);
-
-        this.socket.write(serverToAdminClientMessage);
-         */
-    }
-
-    public write(message: SpaceMessage){
+    public write(message: SpaceMessage) {
         const backToPusherSpaceMessage = new BackToPusherSpaceMessage();
-        if(message instanceof  AddSpaceUserMessage){
+        if (message instanceof AddSpaceUserMessage) {
             backToPusherSpaceMessage.setAddspaceusermessage(message);
-        } else if(message instanceof  UpdateSpaceUserMessage){
+        } else if (message instanceof UpdateSpaceUserMessage) {
             backToPusherSpaceMessage.setUpdatespaceusermessage(message);
-        } else if(message instanceof  RemoveSpaceUserMessage){
+        } else if (message instanceof RemoveSpaceUserMessage) {
             backToPusherSpaceMessage.setRemovespaceusermessage(message);
         } else {
             throw new Error("Can't send message to pusher");
