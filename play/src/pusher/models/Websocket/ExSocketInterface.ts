@@ -15,8 +15,11 @@ import type { compressors } from "hyper-express";
 import type { WokaDetail, MucRoomDefinitionInterface, ApplicationDefinitionInterface } from "@workadventure/messages";
 import type { PusherRoom } from "../PusherRoom";
 import { CustomJsonReplacerInterface } from "../CustomJsonReplacerInterface";
+import { BackToPusherSpaceMessage, PusherToBackSpaceMessage, SpaceUser } from "../../../messages/generated/messages_pb";
+import { Space } from "../Space";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
+export type BackSpaceConnection = ClientDuplexStream<PusherToBackSpaceMessage, BackToPusherSpaceMessage>;
 
 export interface ExSocketInterface extends compressors.WebSocket, Identificable, CustomJsonReplacerInterface {
     token: string;
@@ -60,4 +63,7 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable,
     activatedInviteUser: boolean | undefined;
     mucRooms: Array<MucRoomDefinitionInterface>;
     applications: Array<ApplicationDefinitionInterface> | undefined;
+    spaceUser: SpaceUser;
+    backSpaceConnection: BackSpaceConnection;
+    spaces: Space[];
 }

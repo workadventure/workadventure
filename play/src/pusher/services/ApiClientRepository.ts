@@ -16,8 +16,7 @@ class ApiClientRepository {
     public constructor(private apiUrls: string[]) {}
 
     public async getClient(roomId: string): Promise<RoomManagerClient> {
-        const array = new Uint32Array(crypto.createHash("md5").update(roomId).digest());
-        const index = array[0] % this.apiUrls.length;
+        const index = this.getIndex(roomId);
 
         let client = this.roomManagerClients[index];
         if (client === undefined) {
@@ -38,6 +37,26 @@ class ApiClientRepository {
             }
         }
         return Promise.resolve(this.roomManagerClients);
+    }
+
+    async getSpaceClient(spaceName: string) {
+        const index = this.getIndex(spaceName);
+
+        let client = this.roomManagerClients[index];
+        if (client === undefined) {
+            this.roomManagerClients[index] = client = new RoomManagerClient(
+                this.apiUrls[index],
+                grpc.credentials.createInsecure()
+            );
+        }
+        debug("Mapping room %s to API server %s", spaceName, this.apiUrls[index]);
+
+        return Promise.resolve(client);
+    }
+
+    public getIndex(name: string) {
+        const array = new Uint32Array(crypto.createHash("md5").update(name).digest());
+        return array[0] % this.apiUrls.length;
     }
 }
 

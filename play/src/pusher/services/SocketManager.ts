@@ -1,5 +1,5 @@
 import { PusherRoom } from "../models/PusherRoom";
-import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
+import type { BackSpaceConnection, ExSocketInterface } from "../models/Websocket/ExSocketInterface";
 import {
     EmoteEventMessage,
     EmotePromptMessage,
@@ -45,6 +45,13 @@ import {
     ApplicationMessage,
     XmppSettingsMessage,
     MucRoomDefinitionMessage,
+    PusherToBackSpaceMessage,
+    WatchSpaceMessage,
+    SpaceUser,
+    BackToPusherSpaceMessage,
+    UpdateSpaceUserMessage,
+    AddSpaceUserMessage,
+    RemoveSpaceUserMessage,
 } from "../../messages/generated/messages_pb";
 
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
@@ -61,6 +68,7 @@ import { adminService } from "./AdminService";
 import { ErrorApiData, MucRoomDefinitionInterface } from "@workadventure/messages";
 import { BoolValue, Int32Value, StringValue } from "google-protobuf/google/protobuf/wrappers_pb";
 import { EJABBERD_DOMAIN } from "../enums/EnvironmentVariable";
+import { Space } from "../models/Space";
 
 const debug = Debug("socket");
 
@@ -79,6 +87,8 @@ export interface AdminSocketData {
 
 export class SocketManager implements ZoneEventListener {
     private rooms: Map<string, PusherRoom> = new Map<string, PusherRoom>();
+    private spaces: Map<string, Space> = new Map<string, Space>();
+    private spaceStreamsToPusher: Map<number, BackSpaceConnection> = new Map<number, BackSpaceConnection>();
 
     constructor() {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
@@ -291,6 +301,90 @@ export class SocketManager implements ZoneEventListener {
             const pusherRoom = await this.getOrCreateRoom(client.roomId);
             pusherRoom.mucRooms = client.mucRooms;
             pusherRoom.join(client);
+
+            /**
+             * Spaces management
+             */
+            // TODO : Get space name from AdminAPI
+            const spaceName = client.roomId + "/space";
+            const backId = apiClientRepository.getIndex(spaceName);
+            let spaceStreamToPusher = this.spaceStreamsToPusher.get(backId);
+            const apiSpaceClient = await apiClientRepository.getClient(spaceName);
+            if (!spaceStreamToPusher) {
+                spaceStreamToPusher = apiSpaceClient.watchSpace();
+            }
+            client.backSpaceConnection = spaceStreamToPusher;
+            const space = new Space(spaceName, spaceStreamToPusher, backId);
+            this.spaces.set(spaceName, space);
+            client.spaces.push(space);
+            spaceStreamToPusher
+                .on("data", (message: BackToPusherSpaceMessage) => {
+                    if (message.hasAddspaceusermessage()) {
+                        const addSpaceUserMessage = message.getAddspaceusermessage() as AddSpaceUserMessage;
+                        const space = this.spaces.get(addSpaceUserMessage.getSpacename());
+                        // FIXME: What if space is not existing ?
+                        if (space) {
+                            space.localAddUser(addSpaceUserMessage.getUser() as SpaceUser);
+                        }
+                    } else if (message.hasUpdatespaceusermessage()) {
+                        const updateSpaceUserMessage = message.getUpdatespaceusermessage() as UpdateSpaceUserMessage;
+                        const space = this.spaces.get(updateSpaceUserMessage.getSpacename());
+                        // FIXME: What if space is not existing ?
+                        if (space) {
+                            space.localUpdateUser(updateSpaceUserMessage.getUser() as SpaceUser);
+                        }
+                    } else if (message.hasRemovespaceusermessage()) {
+                        const removedSpaceUserMessage = message.getRemovespaceusermessage() as RemoveSpaceUserMessage;
+                        const space = this.spaces.get(removedSpaceUserMessage.getSpacename());
+                        // FIXME: What if space is not existing ?
+                        if (space) {
+                            space.localRemoveUser(removedSpaceUserMessage.getUseruuid());
+                        }
+                    }
+                })
+                .on("end", () => {
+                    this.spaceStreamsToPusher.delete(backId);
+                    this.spaces.delete(spaceName);
+                })
+                .on("error", (err: Error) => {
+                    console.error(
+                        "Error in connection to back server '" +
+                            apiSpaceClient.getChannel().getTarget() +
+                            "' for space '" +
+                            spaceName +
+                            "':",
+                        err
+                    );
+                    if (!client.disconnecting) {
+                        this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
+                    }
+                });
+
+            const spaceUser = new SpaceUser();
+            spaceUser.setUuid(client.userUuid);
+            spaceUser.setPlayuri(client.roomId);
+            spaceUser.setName(client.name);
+            spaceUser.setAvailabilitystatus(client.availabilityStatus);
+            spaceUser.setIslogged(client.isLogged);
+
+            if (client.visitCardUrl) {
+                const visitCardUrl = new StringValue();
+                visitCardUrl.setValue(client.visitCardUrl);
+                spaceUser.setVisitcardurl(visitCardUrl);
+            }
+            client.spaceUser = spaceUser;
+
+            if (this.spaceStreamsToPusher.has(backId)) {
+                space.addUser(spaceUser);
+            } else {
+                this.spaceStreamsToPusher.set(backId, spaceStreamToPusher);
+                const watchSpaceMessage = new WatchSpaceMessage();
+                watchSpaceMessage.setUser(spaceUser);
+                watchSpaceMessage.setSpacename(spaceName);
+                const pusherToBackSpaceMessage = new PusherToBackSpaceMessage();
+                pusherToBackSpaceMessage.setWatchspacemessage(watchSpaceMessage);
+                spaceStreamToPusher.write(pusherToBackSpaceMessage);
+            }
         } catch (e) {
             console.error('An error occurred on "join_room" event');
             console.error(e);
@@ -399,6 +493,13 @@ export class SocketManager implements ZoneEventListener {
         pusherToBackMessage.setSetplayerdetailsmessage(playerDetailsMessage);
 
         client.backConnection.write(pusherToBackMessage);
+
+        if (client.spaceUser.getAvailabilitystatus() !== playerDetailsMessage.getAvailabilitystatus()) {
+            client.spaceUser.setAvailabilitystatus(playerDetailsMessage.getAvailabilitystatus());
+            client.spaces.forEach((space) => {
+                space.updateUser(client.spaceUser);
+            });
+        }
     }
 
     handleItemEvent(client: ExSocketInterface, itemEventMessage: ItemEventMessage): void {
@@ -470,6 +571,28 @@ export class SocketManager implements ZoneEventListener {
         } finally {
             if (socket.backConnection) {
                 socket.backConnection.end();
+            }
+        }
+    }
+
+    leaveSpaces(socket: ExSocketInterface) {
+        socket.spaces.forEach((space) => {
+            space.removeUser(socket.spaceUser.getUuid());
+            this.deleteSpaceIfEmpty(space);
+        });
+    }
+
+    private deleteSpaceIfEmpty(space: Space) {
+        if (space.isEmpty()) {
+            this.spaces.delete(space.name);
+            debug("Space %s is empty. Deleting.", space.name);
+            if ([...this.spaces.values()].filter((_space) => _space.backId === space.backId).length === 0) {
+                const spaceStreamPusher = this.spaceStreamsToPusher.get(space.backId);
+                if (spaceStreamPusher) {
+                    spaceStreamPusher.end();
+                    this.spaceStreamsToPusher.delete(space.backId);
+                    debug("Connection to back %d useless. Ending.", space.backId);
+                }
             }
         }
     }

@@ -742,20 +742,20 @@ export class IoSocketController {
                 console.log("WebSocket backpressure: " + ws.getBufferedAmount());
             },
             close: (ws) => {
-                const Client = ws as ExSocketInterface;
+                const client = ws as ExSocketInterface;
                 try {
-                    Client.disconnecting = true;
-                    //leave room
-                    socketManager.leaveRoom(Client);
+                    client.disconnecting = true;
+                    socketManager.leaveRoom(client);
+                    socketManager.leaveSpaces(client);
                 } catch (e) {
                     console.error('An error occurred on "disconnect"');
                     console.error(e);
                 } finally {
-                    if (Client.pingIntervalId) {
-                        clearInterval(Client.pingIntervalId);
+                    if (client.pingIntervalId) {
+                        clearInterval(client.pingIntervalId);
                     }
-                    if (Client.pongTimeoutId) {
-                        clearTimeout(Client.pongTimeoutId);
+                    if (client.pongTimeoutId) {
+                        clearTimeout(client.pongTimeoutId);
                     }
                 }
             },
