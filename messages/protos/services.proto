@@ -18,6 +18,12 @@ service RoomManager {
   rpc sendChatMessagePrompt(ChatMessagePrompt) returns (EmptyMessage);
   rpc getRooms(EmptyMessage) returns (RoomsList);
   rpc ping(PingMessage) returns (PingMessage);
+}
+
+/**
+ * Service handled by the "back" about spaces. Pusher servers connect to this service.
+ */
+service SpaceManager {
   rpc watchSpace(stream PusherToBackSpaceMessage) returns (stream BackToPusherSpaceMessage);
 }
 
