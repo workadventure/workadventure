@@ -152,6 +152,7 @@ import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
+import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
 import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
 import { checkCoturnServer } from "../../Components/Video/utils";
@@ -207,6 +208,7 @@ export class GameScene extends DirtyScene {
     private embedScreenLayoutStoreUnsubscriber!: Unsubscriber;
     private availabilityStatusStoreUnsubscriber!: Unsubscriber;
     private mapEditorModeStoreUnsubscriber!: Unsubscriber;
+    private refreshPromptStoreStoreUnsubscriber!: Unsubscriber;
 
     private modalVisibilityStoreUnsubscriber!: Unsubscriber;
 
@@ -886,6 +888,17 @@ export class GameScene extends DirtyScene {
                     });
                 });
 
+                this.connection.refreshRoomMessageStream.subscribe((message) => {
+                    if (message.comment) {
+                        refreshPromptStore.set({
+                            comment: message.comment,
+                            timeToRefresh: message.timeToRefresh,
+                        });
+                    } else {
+                        window.location.reload();
+                    }
+                });
+
                 this.connection.playerDetailsUpdatedMessageStream.subscribe((message) => {
                     // Is this message for me (exceptionally, we can use this stream to send messages to users
                     // who share the same UUID as us)
@@ -1094,7 +1107,8 @@ export class GameScene extends DirtyScene {
             this.emoteMenuUnsubscriber != undefined ||
             this.followUsersColorStoreUnsubscriber != undefined ||
             this.peerStoreUnsubscriber != undefined ||
-            this.mapEditorModeStoreUnsubscriber != undefined
+            this.mapEditorModeStoreUnsubscriber != undefined ||
+            this.refreshPromptStoreStoreUnsubscriber != undefined
         ) {
             console.error(
                 "subscribeToStores => Check all subscriber undefined ",
@@ -1105,7 +1119,8 @@ export class GameScene extends DirtyScene {
                 this.emoteMenuUnsubscriber,
                 this.followUsersColorStoreUnsubscriber,
                 this.peerStoreUnsubscriber,
-                this.mapEditorModeStoreUnsubscriber
+                this.mapEditorModeStoreUnsubscriber,
+                this.refreshPromptStoreStoreUnsubscriber
             );
 
             throw new Error("One store is already subscribed.");
@@ -1265,6 +1280,14 @@ export class GameScene extends DirtyScene {
                 this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesInteractive(true);
             }
             this.markDirty();
+        });
+
+        this.refreshPromptStoreStoreUnsubscriber = refreshPromptStore.subscribe((comment) => {
+            if (comment) {
+                this.userInputManager.disableControls();
+            } else {
+                this.userInputManager.restoreControls();
+            }
         });
     }
 
@@ -2119,6 +2142,7 @@ ${escapedMessage}
         this.mapEditorModeManager?.destroy();
         this.peerStoreUnsubscriber?.();
         this.mapEditorModeStoreUnsubscriber?.();
+        this.refreshPromptStoreStoreUnsubscriber?.();
         this.emoteUnsubscriber?.();
         this.emoteMenuUnsubscriber?.();
         this.followUsersColorStoreUnsubscriber?.();

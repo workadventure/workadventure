@@ -108,7 +108,6 @@ export class SocketManager {
     ): Promise<{ room: GameRoom; user: User }> {
         //join new previous room
         const { room, user } = await this.joinRoom(socket, joinRoomMessage);
-
         const lastCommandId = joinRoomMessage.getLastcommandid();
         let commandsToApply: EditMapCommandMessage[] | undefined = undefined;
 
@@ -931,6 +930,7 @@ export class SocketManager {
 
     private cleanupRoomIfEmpty(room: GameRoom): void {
         if (room.isEmpty()) {
+            room.destroy();
             this.roomsPromises.delete(room.roomUrl);
             const deleted = this.resolvedRooms.delete(room.roomUrl);
             if (deleted) {

@@ -35,6 +35,7 @@ import {
     ChatMessagePrompt,
     ServerToClientMessage,
     BatchMessage,
+    SubMessage,
 } from "./Messages/generated/messages_pb";
 import {
     sendUnaryData,
@@ -54,7 +55,6 @@ import { User, UserSocket } from "./Model/User";
 import { GameRoom } from "./Model/GameRoom";
 import Debug from "debug";
 import { Admin } from "./Model/Admin";
-import { SubMessage } from "workadventure-play/src/messages/generated/messages_pb";
 import { clearInterval } from "timers";
 
 const debug = Debug("roommanager");

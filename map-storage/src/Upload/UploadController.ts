@@ -13,6 +13,8 @@ import { fileSystem } from "../fileSystem";
 import StreamZip from "node-stream-zip";
 import { MapValidator, OrganizedErrors } from "@workadventure/map-editor/src/GameMap/MapValidator";
 import { FileNotFoundError } from "./FileNotFoundError";
+import { mapsManager } from "../MapsManager";
+import { uploadDetector } from "../Services/UploadDetector";
 
 const upload = multer({
     storage: multer.diskStorage({}),
@@ -150,12 +152,15 @@ export class UploadController {
                     await this.fileSystem.deleteFiles(mapPath(directory, req));
 
                     const promises: Promise<void>[] = [];
+                    const keysToPurge: string[] = [];
                     // Iterate over the entries in the ZIP archive
                     for (const zipEntry of zipEntries) {
+                        const key = mapPath(path.join(directory, zipEntry.name), req);
                         // Store the file
-                        promises.push(
-                            this.fileSystem.writeFile(zipEntry, mapPath(path.join(directory, zipEntry.name), req), zip)
-                        );
+                        promises.push(this.fileSystem.writeFile(zipEntry, key, zip));
+                        if (path.extname(key) === ".tmj") {
+                            keysToPurge.push(key);
+                        }
                     }
 
                     await Promise.all(promises);
@@ -167,7 +172,10 @@ export class UploadController {
                             console.error("Error deleting file:", err);
                         }
                     });
-
+                    for (const key of keysToPurge) {
+                        mapsManager.clearAfterUpload(key);
+                        uploadDetector.refresh(key);
+                    }
                     await this.generateCacheFile(req);
 
                     res.send("File successfully uploaded.");
