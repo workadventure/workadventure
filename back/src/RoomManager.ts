@@ -33,13 +33,6 @@ import {
     QueryMessage,
     EditMapCommandMessage,
     ChatMessagePrompt,
-    WatchSpaceMessage,
-    UnwatchSpaceMessage,
-    PusherToBackSpaceMessage,
-    BackToPusherSpaceMessage,
-    UpdateSpaceUserMessage,
-    AddSpaceUserMessage,
-    RemoveSpaceUserMessage,
 } from "./Messages/generated/messages_pb";
 import {
     sendUnaryData,
