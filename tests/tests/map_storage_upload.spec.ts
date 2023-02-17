@@ -272,7 +272,7 @@ test.describe('Map-storage Upload API', () => {
             }
         });
         await expect(uploadFile1.ok()).toBeFalsy();
-        await expect((await uploadFile1.json())['missing-image/MissingImage.tmj'][0]['type']).toBe("error");
+        await expect((await uploadFile1.json())['missing-image/MissingImage.tmj']['tilesets'][0]['type']).toBe("error");
     });
 
     test('fails on JSON extension', async ({
@@ -284,7 +284,7 @@ test.describe('Map-storage Upload API', () => {
             }
         });
         await expect(uploadFile1.ok()).toBeFalsy();
-        await expect((await uploadFile1.json())['map.json'][0]['message']).toBe('Invalid file extension. Maps should end with the ".tmj" extension.');
+        await expect((await uploadFile1.json())['map.json']['map'][0]['message']).toBe('Invalid file extension. Maps should end with the ".tmj" extension.');
     });
 
     test('special characters support', async ({
