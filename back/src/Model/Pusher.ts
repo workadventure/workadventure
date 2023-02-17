@@ -1,4 +1,4 @@
-import { SpaceSocket } from "../RoomManager";
+import { SpaceSocket } from "../SpaceManager";
 import {
     AddSpaceUserMessage,
     BackToPusherSpaceMessage,
