@@ -16,6 +16,7 @@
        },
        "ports": [8080, 50051],
        "env": {
+         "PLAY_URL": "https://play-"+url,
          "SECRET_KEY": "tempSecretKeyNeedsToChange",
          "JITSI_ISS": env.JITSI_ISS,
          "JITSI_URL": env.JITSI_URL,
@@ -35,9 +36,11 @@
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
-         "EJABBERD_API_URI": "http://xmpp-"+adminUrl+"/api/",
+         "EJABBERD_API_URI": "http://xmpp-"+std.strReplace(adminUrl, "https://", "")+"/api/",
+         "TELEMETRY_URL": adminUrl,
        } else {
          "EJABBERD_API_URI": "http://ejabberd:5443/api/",
+         "TELEMETRY_URL": "https://staging.workadventu.re",
        })
      },
      "back2": {
@@ -48,6 +51,7 @@
             },
             "ports": [8080, 50051],
             "env": {
+              "PLAY_URL": "https://play-"+url,
               "SECRET_KEY": "tempSecretKeyNeedsToChange",
               "JITSI_ISS": env.JITSI_ISS,
               "JITSI_URL": env.JITSI_URL,
@@ -67,9 +71,11 @@
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
-              "EJABBERD_API_URI": "http://xmpp-"+adminUrl+"/api/",
+              "EJABBERD_API_URI": "http://xmpp-"+std.strReplace(adminUrl, "https://", "")+"/api/",
+              "TELEMETRY_URL": adminUrl,
             } else {
               "EJABBERD_API_URI": "http://ejabberd:5443/api/",
+              "TELEMETRY_URL": "https://staging.workadventu.re",
             })
      },
      "play": {

@@ -180,6 +180,12 @@ jobs:
         with:
           images: thecodingmachine/workadventure-back
 
+      - name: Replace version string
+        run: |
+          if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
+            sed -i "s/dev/${GITHUB_REF_NAME}/" back/src/Services/version.ts
+          fi
+
       - name: Build and push
         uses: docker/build-push-action@v3
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
