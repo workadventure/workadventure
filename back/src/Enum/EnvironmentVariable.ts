@@ -9,7 +9,7 @@ type PositiveIntAsString = z.infer<typeof PositiveIntAsString>;
 const AbsoluteOrRelativeUrl = z.string().url().or(z.string().startsWith("/"));
 
 const EnvironmentVariables = z.object({
-    // Pusher related environment variables
+    PLAY_URL: z.string().url(),
     MINIMUM_DISTANCE: PositiveIntAsString.optional().transform((val) => toNumber(val, 64)),
     GROUP_RADIUS: PositiveIntAsString.optional().transform((val) => toNumber(val, 48)),
     ADMIN_API_URL: AbsoluteOrRelativeUrl.optional(),
@@ -48,6 +48,19 @@ Note that anonymous players don't have any TTL limit because their data is store
 `),
     ENABLE_CHAT: BoolAsString.optional().transform((val) => toBool(val, true)),
     ENABLE_CHAT_UPLOAD: BoolAsString.optional().transform((val) => toBool(val, true)),
+    ENABLE_TELEMETRY: BoolAsString.optional()
+        .transform((val) => toBool(val, true))
+        .describe(
+            "By default, WorkAdventure will send telemetry usage once a day. This data contains the version of WorkAdventure used and very rough usage (max number of users...). The statistics collected through telemetry can provide developers valuable insights into WorkAdventure versions that are actually used. No personal user data is sent. Please keep this setting to true unless your WorkAdventure installation is 'secret'."
+        ),
+    SECURITY_EMAIL: z
+        .string()
+        .email()
+        .optional()
+        .describe(
+            'This email address will be notified if your WorkAdventure version contains a known security flaw. ENABLE_TELEMETRY must be set to "true" for this.'
+        ),
+    TELEMETRY_URL: z.string().optional().default("https://stats.workadventu.re"),
 });
 
 type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
@@ -93,6 +106,7 @@ function toBool(value: BoolAsString | undefined, defaultValue: boolean): boolean
     return value === "true" || value === "1";
 }
 
+export const PLAY_URL = env.PLAY_URL;
 export const MINIMUM_DISTANCE = env.MINIMUM_DISTANCE;
 export const GROUP_RADIUS = env.GROUP_RADIUS;
 export const ADMIN_API_URL = env.ADMIN_API_URL;
@@ -122,3 +136,6 @@ export const EJABBERD_PASSWORD = env.EJABBERD_PASSWORD;
 export const PLAYER_VARIABLES_MAX_TTL = env.PLAYER_VARIABLES_MAX_TTL;
 export const ENABLE_CHAT = env.ENABLE_CHAT;
 export const ENABLE_CHAT_UPLOAD = env.ENABLE_CHAT_UPLOAD;
+export const ENABLE_TELEMETRY = env.ENABLE_TELEMETRY;
+export const SECURITY_EMAIL = env.SECURITY_EMAIL;
+export const TELEMETRY_URL = env.TELEMETRY_URL;
