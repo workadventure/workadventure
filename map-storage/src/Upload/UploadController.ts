@@ -11,8 +11,10 @@ import { passportAuthenticator } from "../Services/Authentication";
 import archiver from "archiver";
 import { fileSystem } from "../fileSystem";
 import StreamZip from "node-stream-zip";
-import { MapValidator, ValidationError } from "@workadventure/map-editor/src/GameMap/MapValidator";
+import { MapValidator, OrganizedErrors } from "@workadventure/map-editor/src/GameMap/MapValidator";
 import { FileNotFoundError } from "./FileNotFoundError";
+import { mapsManager } from "../MapsManager";
+import { uploadDetector } from "../Services/UploadDetector";
 
 const upload = multer({
     storage: multer.diskStorage({}),
@@ -105,7 +107,7 @@ export class UploadController {
                     const mapValidator = new MapValidator("error");
                     const availableFiles = zipEntries.map((entry) => entry.name);
 
-                    const errors: { [key: string]: ValidationError[] } = {};
+                    const errors: { [key: string]: Partial<OrganizedErrors> } = {};
 
                     for (const zipEntry of zipEntries) {
                         const extension = path.extname(zipEntry.name);
@@ -114,13 +116,15 @@ export class UploadController {
                             mapValidator.doesStringLooksLikeMap((await zip.entryData(zipEntry)).toString())
                         ) {
                             // We forbid Maps in JSON format.
-                            errors[zipEntry.name] = [
-                                {
-                                    type: "error",
-                                    message: 'Invalid file extension. Maps should end with the ".tmj" extension.',
-                                    details: "",
-                                },
-                            ];
+                            errors[zipEntry.name] = {
+                                map: [
+                                    {
+                                        type: "error",
+                                        message: 'Invalid file extension. Maps should end with the ".tmj" extension.',
+                                        details: "",
+                                    },
+                                ],
+                            };
 
                             continue;
                         }
@@ -148,12 +152,15 @@ export class UploadController {
                     await this.fileSystem.deleteFiles(mapPath(directory, req));
 
                     const promises: Promise<void>[] = [];
+                    const keysToPurge: string[] = [];
                     // Iterate over the entries in the ZIP archive
                     for (const zipEntry of zipEntries) {
+                        const key = mapPath(path.join(directory, zipEntry.name), req);
                         // Store the file
-                        promises.push(
-                            this.fileSystem.writeFile(zipEntry, mapPath(path.join(directory, zipEntry.name), req), zip)
-                        );
+                        promises.push(this.fileSystem.writeFile(zipEntry, key, zip));
+                        if (path.extname(key) === ".tmj") {
+                            keysToPurge.push(key);
+                        }
                     }
 
                     await Promise.all(promises);
@@ -165,7 +172,10 @@ export class UploadController {
                             console.error("Error deleting file:", err);
                         }
                     });
-
+                    for (const key of keysToPurge) {
+                        mapsManager.clearAfterUpload(key);
+                        uploadDetector.refresh(key);
+                    }
                     await this.generateCacheFile(req);
 
                     res.send("File successfully uploaded.");
@@ -271,6 +281,9 @@ export class UploadController {
                 const virtualDirectory = mapPath(directory, req);
 
                 await fileSystem.deleteFiles(virtualDirectory);
+
+                await this.generateCacheFile(req);
+
                 res.sendStatus(204);
             })().catch((e) => next(e));
         });

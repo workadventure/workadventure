@@ -19,8 +19,10 @@
     import Chat from "./Chat/Chat.svelte";
     import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
     import { mapEditorModeStore } from "../Stores/MapEditorStore";
+    import { refreshPromptStore } from "../Stores/RefreshPromptStore";
     import MapEditor from "./MapEditor/MapEditor.svelte";
     import { afterUpdate } from "svelte";
+    import RefreshPrompt from "./RefreshPrompt.svelte";
 
     export let game: Game;
 
@@ -64,6 +66,9 @@
         <Chat />
         {#if $mapEditorModeStore}
             <MapEditor />
+        {/if}
+        {#if $refreshPromptStore}
+            <RefreshPrompt />
         {/if}
         <MainLayout />
     {/key}

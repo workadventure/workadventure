@@ -468,6 +468,11 @@ export class SocketManager implements ZoneEventListener {
         client.backConnection.write(pusherToBackMessage);
     }
 
+    handlePingMessage(client: ExSocketInterface, message: PingMessage): void {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setPingmessage(message);
+        client.backConnection.write(pusherToBackMessage);
+    }
     handleEditMapCommandMessage(client: ExSocketInterface, message: EditMapCommandMessage): void {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setEditmapcommandmessage(message);

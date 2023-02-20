@@ -20,6 +20,9 @@ import {
     SubToPusherRoomMessage,
     VariableWithTagMessage,
     ServerToClientMessage,
+    RefreshRoomMessage,
+    MapStorageUrlMessage,
+    MapStorageToBackMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
@@ -48,6 +51,8 @@ import { MapLoadingError } from "../Services/MapLoadingError";
 import { MucManager } from "../Services/MucManager";
 import { BrothersFinder } from "./BrothersFinder";
 import { slugifyJitsiRoomName } from "@workadventure/shared-utils/src/Jitsi/slugify";
+import { getMapStorageClient } from "../Services/MapStorageClient";
+import { ClientReadableStream } from "@grpc/grpc-js";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -66,6 +71,9 @@ export class GameRoom implements BrothersFinder {
     private nextUserId = 1;
 
     private roomListeners: Set<RoomSocket> = new Set<RoomSocket>();
+    private mapStorageClientMessagesStream: ClientReadableStream<MapStorageToBackMessage> | undefined;
+    private reconnectMapStorageTimeout: NodeJS.Timeout | undefined;
+    private closing = false;
 
     private constructor(
         public readonly roomUrl: string,
@@ -81,7 +89,8 @@ export class GameRoom implements BrothersFinder {
         onEmote: EmoteCallback,
         onLockGroup: LockGroupCallback,
         onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
-        private thirdParty: MapThirdPartyData | undefined
+        private thirdParty: MapThirdPartyData | undefined,
+        private editable: boolean
     ) {
         // A zone is 10 sprites wide.
         this.positionNotifier = new PositionNotifier(
@@ -125,8 +134,11 @@ export class GameRoom implements BrothersFinder {
             onEmote,
             onLockGroup,
             onPlayerDetailsUpdated,
-            mapDetails.thirdParty ?? undefined
+            mapDetails.thirdParty ?? undefined,
+            mapDetails.editable ?? false
         );
+
+        gameRoom.connectToMapStorage();
 
         gameRoom
             .getMucManager()
@@ -634,6 +646,7 @@ export class GameRoom implements BrothersFinder {
             return {
                 mapUrl,
                 canEdit,
+                editable: canEdit,
                 entityCollectionsUrls,
                 authenticationMandatory: null,
                 group: null,
@@ -991,5 +1004,67 @@ export class GameRoom implements BrothersFinder {
 
     get mapUrl(): string {
         return this._mapUrl;
+    }
+
+    public destroy(): void {
+        this.closing = true;
+        if (this.mapStorageClientMessagesStream) {
+            this.mapStorageClientMessagesStream.cancel();
+            this.mapStorageClientMessagesStream = undefined;
+        }
+    }
+
+    private killAndRetryMapStorageConnection(): void {
+        if (this.mapStorageClientMessagesStream) {
+            this.mapStorageClientMessagesStream.cancel();
+            this.mapStorageClientMessagesStream = undefined;
+            this.reconnectMapStorageTimeout = setTimeout(() => {
+                this.reconnectMapStorageTimeout = undefined;
+                this.connectToMapStorage();
+            }, 5_000);
+        }
+    }
+
+    private connectToMapStorage(): void {
+        if (this.editable && this.mapStorageClientMessagesStream === undefined) {
+            const mapStorageUrlMessage = new MapStorageUrlMessage();
+            mapStorageUrlMessage.setMapurl(this.mapUrl);
+            this.mapStorageClientMessagesStream = getMapStorageClient().listenToMessages(mapStorageUrlMessage);
+            this.mapStorageClientMessagesStream.on("data", (data: MapStorageToBackMessage) => {
+                if (data.hasMapstoragerefreshmessage()) {
+                    const msg = new RefreshRoomMessage().setRoomid(this.roomUrl);
+                    const comment = data.getMapstoragerefreshmessage()?.getComment();
+                    if (comment) {
+                        msg.setComment(comment).setTimetorefresh(30);
+                    }
+                    const message = new ServerToClientMessage().setRefreshroommessage(msg);
+                    this.users.forEach((user: User) => {
+                        user.socket.write(message);
+                    });
+                }
+            });
+            this.mapStorageClientMessagesStream.on("close", () => {
+                if (this.closing) {
+                    return;
+                }
+                console.log(
+                    "Connection to map-storage closed for GameRoom ",
+                    this.roomUrl,
+                    ". Retrying connection in 5 seconds"
+                );
+                this.killAndRetryMapStorageConnection();
+            });
+            this.mapStorageClientMessagesStream.on("error", () => {
+                if (this.closing) {
+                    return;
+                }
+                console.log(
+                    "An error occurred in the connection to map-storage for GameRoom ",
+                    this.roomUrl,
+                    ". Canceling and recreating connection in 5 seconds"
+                );
+                this.killAndRetryMapStorageConnection();
+            });
+        }
     }
 }

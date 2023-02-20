@@ -9,6 +9,7 @@ import follow from "./follow";
 import login from "./login";
 import menu from "./menu";
 import report from "./report";
+import refreshPrompt from "./refreshPrompt";
 import warning from "./warning";
 import emoji from "./emoji";
 import trigger from "./trigger";
@@ -29,6 +30,7 @@ const en_US: BaseTranslation = {
     login,
     menu,
     report,
+    refreshPrompt,
     warning,
     emoji,
     trigger,

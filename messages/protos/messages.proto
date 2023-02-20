@@ -186,7 +186,7 @@ message CreateAreaMessage {
 }
 
 message CreateEntityMessage {
-  int32 id = 1;
+  string id = 1;
   uint32 x = 2;
   uint32 y = 3;
   string collectionName = 4;
@@ -194,11 +194,11 @@ message CreateEntityMessage {
 }
 
 message DeleteEntityMessage {
-  int32 id = 1;
+  string id = 1;
 }
 
 message ModifyEntityMessage {
-  int32 id = 1;
+  string id = 1;
   optional uint32 x = 2;
   optional uint32 y = 3;
   map<string, google.protobuf.Value> properties = 4;
@@ -480,6 +480,8 @@ message RefreshRoomPromptMessage{
 message RefreshRoomMessage{
   string roomId = 1;
   int32 versionNumber = 2;
+  optional string comment = 3;
+  optional int32 timeToRefresh = 4;
 }
 
 message WorldFullMessage{
@@ -634,6 +636,7 @@ message PusherToBackMessage {
     QueryMessage queryMessage = 21;
     AskPositionMessage askPositionMessage = 22;
     EditMapCommandMessage editMapCommandMessage = 23;
+    PingMessage pingMessage = 24;
   }
 }
 
@@ -715,6 +718,21 @@ message AdminPusherToBackMessage {
     string subscribeToRoom = 1;
     // TODO ban, unban
   }
+}
+
+
+message MapStorageToBackMessage {
+  oneof message {
+    MapStorageRefreshMessage mapStorageRefreshMessage = 1;
+  }
+}
+
+message MapStorageRefreshMessage {
+  string comment = 1;
+}
+
+message MapStorageUrlMessage {
+  string mapUrl = 1;
 }
 
 // A message sent by an administrator to a recipient
