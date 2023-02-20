@@ -600,6 +600,7 @@ export class IoSocketController {
                     // Let's join the room
                     const client = this.initClient(ws);
                     await socketManager.handleJoinRoom(client);
+                    await socketManager.handleJoinSpace(client, client.roomId + "/space");
                     socketManager.emitXMPPSettings(client);
 
                     //get data information and show messages

@@ -302,74 +302,81 @@ export class SocketManager implements ZoneEventListener {
             const pusherRoom = await this.getOrCreateRoom(client.roomId);
             pusherRoom.mucRooms = client.mucRooms;
             pusherRoom.join(client);
+        } catch (e) {
+            console.error('An error occurred on "join_room" event');
+            console.error(e);
+        }
+    }
 
-            /**
-             * Spaces management
-             */
-            // TODO : Get space name from AdminAPI
-            const spaceName = client.roomId + "/space";
+    public async handleJoinSpace(client: ExSocketInterface, spaceName: string): Promise<void> {
+        try {
             const backId = apiClientRepository.getIndex(spaceName);
             let spaceStreamToPusher = this.spaceStreamsToPusher.get(backId);
             const apiSpaceClient = await apiClientRepository.getSpaceClient(spaceName);
             if (!spaceStreamToPusher) {
                 spaceStreamToPusher = apiSpaceClient.watchSpace() as BackSpaceConnection;
+                spaceStreamToPusher
+                    .on("data", (message: BackToPusherSpaceMessage) => {
+                        if (message.hasAddspaceusermessage()) {
+                            const addSpaceUserMessage = message.getAddspaceusermessage() as AddSpaceUserMessage;
+                            const space = this.spaces.get(addSpaceUserMessage.getSpacename());
+                            // FIXME: What if space is not existing ?
+                            if (space) {
+                                space.localAddUser(addSpaceUserMessage.getUser() as SpaceUser);
+                            }
+                        } else if (message.hasUpdatespaceusermessage()) {
+                            const updateSpaceUserMessage =
+                                message.getUpdatespaceusermessage() as UpdateSpaceUserMessage;
+                            const space = this.spaces.get(updateSpaceUserMessage.getSpacename());
+                            // FIXME: What if space is not existing ?
+                            if (space) {
+                                space.localUpdateUser(updateSpaceUserMessage.getUser() as SpaceUser);
+                            }
+                        } else if (message.hasRemovespaceusermessage()) {
+                            const removedSpaceUserMessage =
+                                message.getRemovespaceusermessage() as RemoveSpaceUserMessage;
+                            const space = this.spaces.get(removedSpaceUserMessage.getSpacename());
+                            // FIXME: What if space is not existing ?
+                            if (space) {
+                                space.localRemoveUser(removedSpaceUserMessage.getUseruuid());
+                            }
+                        } else if (message.hasPingmessage()) {
+                            if (spaceStreamToPusher) {
+                                if (spaceStreamToPusher.pingTimeout) {
+                                    clearTimeout(spaceStreamToPusher.pingTimeout);
+                                }
+                                spaceStreamToPusher.pingTimeout = setTimeout(
+                                    () => spaceStreamToPusher?.end(),
+                                    1000 * 30
+                                );
+                                const pusherToBackSpaceMessage = new PusherToBackSpaceMessage();
+                                pusherToBackSpaceMessage.setPongmessage(new PingMessage());
+                                spaceStreamToPusher.write(pusherToBackSpaceMessage);
+                            }
+                        }
+                    })
+                    .on("end", () => {
+                        this.spaceStreamsToPusher.delete(backId);
+                        this.spaces.delete(spaceName);
+                    })
+                    .on("error", (err: Error) => {
+                        console.error(
+                            "Error in connection to back server '" +
+                                apiSpaceClient.getChannel().getTarget() +
+                                "' for space '" +
+                                spaceName +
+                                "':",
+                            err
+                        );
+                    });
             }
             client.backSpaceConnection = spaceStreamToPusher;
-            const space = new Space(spaceName, spaceStreamToPusher, backId);
-            this.spaces.set(spaceName, space);
+            let space: Space | undefined = this.spaces.get(spaceName);
+            if (!space) {
+                space = new Space(spaceName, spaceStreamToPusher, backId);
+                this.spaces.set(spaceName, space);
+            }
             client.spaces.push(space);
-            spaceStreamToPusher
-                .on("data", (message: BackToPusherSpaceMessage) => {
-                    if (message.hasAddspaceusermessage()) {
-                        const addSpaceUserMessage = message.getAddspaceusermessage() as AddSpaceUserMessage;
-                        const space = this.spaces.get(addSpaceUserMessage.getSpacename());
-                        // FIXME: What if space is not existing ?
-                        if (space) {
-                            space.localAddUser(addSpaceUserMessage.getUser() as SpaceUser);
-                        }
-                    } else if (message.hasUpdatespaceusermessage()) {
-                        const updateSpaceUserMessage = message.getUpdatespaceusermessage() as UpdateSpaceUserMessage;
-                        const space = this.spaces.get(updateSpaceUserMessage.getSpacename());
-                        // FIXME: What if space is not existing ?
-                        if (space) {
-                            space.localUpdateUser(updateSpaceUserMessage.getUser() as SpaceUser);
-                        }
-                    } else if (message.hasRemovespaceusermessage()) {
-                        const removedSpaceUserMessage = message.getRemovespaceusermessage() as RemoveSpaceUserMessage;
-                        const space = this.spaces.get(removedSpaceUserMessage.getSpacename());
-                        // FIXME: What if space is not existing ?
-                        if (space) {
-                            space.localRemoveUser(removedSpaceUserMessage.getUseruuid());
-                        }
-                    } else if (message.hasPingmessage()) {
-                        if (spaceStreamToPusher) {
-                            if (spaceStreamToPusher.pingTimeout) {
-                                clearTimeout(spaceStreamToPusher.pingTimeout);
-                            }
-                            spaceStreamToPusher.pingTimeout = setTimeout(() => spaceStreamToPusher?.end(), 1000 * 30);
-                            const pusherToBackSpaceMessage = new PusherToBackSpaceMessage();
-                            pusherToBackSpaceMessage.setPongmessage(new PingMessage());
-                            spaceStreamToPusher.write(pusherToBackSpaceMessage);
-                        }
-                    }
-                })
-                .on("end", () => {
-                    this.spaceStreamsToPusher.delete(backId);
-                    this.spaces.delete(spaceName);
-                })
-                .on("error", (err: Error) => {
-                    console.error(
-                        "Error in connection to back server '" +
-                            apiSpaceClient.getChannel().getTarget() +
-                            "' for space '" +
-                            spaceName +
-                            "':",
-                        err
-                    );
-                    if (!client.disconnecting) {
-                        this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
-                    }
-                });
 
             const spaceUser = new SpaceUser();
             spaceUser.setUuid(client.userUuid);
@@ -397,7 +404,7 @@ export class SocketManager implements ZoneEventListener {
                 spaceStreamToPusher.write(pusherToBackSpaceMessage);
             }
         } catch (e) {
-            console.error('An error occurred on "join_room" event');
+            console.error('An error occurred on "join_space" event');
             console.error(e);
         }
     }
