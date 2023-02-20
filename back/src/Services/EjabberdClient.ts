@@ -5,37 +5,52 @@ import { ChatClient } from "./ChatClient";
 
 export class EjabberdClient implements ChatClient {
     private axios: AxiosInstance | undefined;
+    private conferenceDomain: string;
 
     constructor() {
-        const auth = Buffer.from(EJABBERD_USER + "@" + EJABBERD_DOMAIN + ":" + EJABBERD_PASSWORD).toString("base64");
-        this.axios = Axios.create({
-            baseURL: EJABBERD_API_URI + "/",
-            headers: {
-                Authorization: "Basic " + auth,
-                timeout: 10000,
-            },
-        });
+        this.conferenceDomain = `conference.${EJABBERD_DOMAIN ?? ""}`;
+    }
+
+    private getAxios(): AxiosInstance {
+        if (!this.axios) {
+            if (!EJABBERD_USER || !EJABBERD_DOMAIN || !EJABBERD_PASSWORD || !EJABBERD_API_URI) {
+                throw new Error(
+                    "Incomplete config. Missing one of EJABBERD_USER, EJABBERD_DOMAIN, EJABBERD_PASSWORD, EJABBERD_API_URI."
+                );
+            }
+            const auth = Buffer.from(EJABBERD_USER + "@" + EJABBERD_DOMAIN + ":" + EJABBERD_PASSWORD).toString(
+                "base64"
+            );
+            this.axios = Axios.create({
+                baseURL: EJABBERD_API_URI + "/",
+                headers: {
+                    Authorization: "Basic " + auth,
+                    timeout: 10000,
+                },
+            });
+        }
+        return this.axios;
     }
 
     async getAllMucRooms(): Promise<Array<string> | Error> {
-        return (await this.axios
-            ?.post("muc_online_rooms", { service: `conference.${EJABBERD_DOMAIN}` })
+        return (await this.getAxios()
+            .post("muc_online_rooms", { service: this.conferenceDomain })
             .then((response) => response.data as Array<string>)
             .catch((error) => error as AxiosError)) as unknown as Promise<Array<string> | Error>;
     }
 
     async destroyMucRoom(name: string) {
-        await this.axios
-            ?.post("destroy_room", { name: EjabberdClient.encode(name), service: `conference.${EJABBERD_DOMAIN}` })
+        await this.getAxios()
+            .post("destroy_room", { name: EjabberdClient.encode(name), service: this.conferenceDomain })
             .catch((error) => console.error(error));
     }
 
     async createMucRoom(chatZone: ChatZone) {
-        await this.axios
-            ?.post("create_room", {
+        await this.getAxios()
+            .post("create_room", {
                 name: `${EjabberdClient.encode(chatZone.mucUrl ?? "")}`,
                 host: EJABBERD_DOMAIN,
-                service: `conference.${EJABBERD_DOMAIN}`,
+                service: this.conferenceDomain,
             })
             .catch((error) => console.error(error));
     }
