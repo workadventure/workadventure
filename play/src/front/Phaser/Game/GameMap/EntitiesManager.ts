@@ -152,12 +152,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             };
             this.emit(EntitiesManagerEvent.UpdateEntity, data);
         });
-        entity.on(Phaser.Input.Events.POINTER_OVER, () => {
-            this.pointerOverEntitySubject.next(entity);
-        });
-        entity.on(Phaser.Input.Events.POINTER_OUT, () => {
-            this.pointerOutEntitySubject.next(entity);
-        });
         entity.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
                 const collisitonGrid = entity.getEntityData().prefab.collisionGrid;
@@ -223,13 +217,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 const entityEditorMode = get(mapEntityEditorModeStore);
                 switch (entityEditorMode) {
                     case MapEntityEditorMode.EditMode: {
-                        if (this.ctrlKey.isDown) {
-                            mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
-                            mapEditorSelectedEntityStore.set(undefined);
-                            mapEditorCopiedEntityDataPropertiesStore.set(entity.getEntityData().properties);
-                            mapEditorSelectedEntityPrefabStore.set(entity.getEntityData().prefab);
-                            return;
-                        }
                         mapEditorSelectedEntityStore.set(entity);
                         break;
                     }
@@ -240,7 +227,20 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 }
             }
         });
+        entity.on(Phaser.Input.Events.POINTER_UP, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+            if (get(mapEditorModeStore)) {
+                const entityEditorMode = get(mapEntityEditorModeStore);
+                if (entityEditorMode === MapEntityEditorMode.EditMode && this.ctrlKey.isDown) {
+                    mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
+                    mapEditorSelectedEntityStore.set(undefined);
+                    mapEditorCopiedEntityDataPropertiesStore.set(entity.getEntityData().properties);
+                    mapEditorSelectedEntityPrefabStore.set(entity.getEntityData().prefab);
+                }
+            }
+        });
         entity.on(Phaser.Input.Events.POINTER_OVER, () => {
+            this.pointerOverEntitySubject.next(entity);
+
             if (get(mapEditorModeStore)) {
                 const entityEditorMode = get(mapEntityEditorModeStore);
                 switch (entityEditorMode) {
@@ -260,6 +260,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             }
         });
         entity.on(Phaser.Input.Events.POINTER_OUT, () => {
+            this.pointerOutEntitySubject.next(entity);
+
             if (get(mapEditorModeStore)) {
                 entity.clearTint();
                 this.scene.markDirty();
