@@ -12,6 +12,7 @@ import { passportStrategy } from "./Services/Authentication";
 import { mapPathUsingDomain } from "./Services/PathMapper";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import bodyParser from "body-parser";
+import "@total-typescript/ts-reset";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment

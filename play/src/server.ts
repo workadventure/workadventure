@@ -2,6 +2,7 @@ import app from "./pusher/app";
 import { PUSHER_HTTP_PORT } from "./pusher/enums/EnvironmentVariable";
 import fs from "fs";
 import process from "process";
+import "@total-typescript/ts-reset";
 
 // In production, the current working directory is "dist".
 if (fs.existsSync("dist") && !fs.existsSync("src")) {
