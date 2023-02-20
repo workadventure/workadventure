@@ -2,16 +2,38 @@ import { SpaceSocket } from "../SpaceManager";
 import {
     AddSpaceUserMessage,
     BackToPusherSpaceMessage,
+    PingMessage,
     RemoveSpaceUserMessage,
     UpdateSpaceUserMessage,
 } from "../Messages/generated/messages_pb";
 
 export type SpaceMessage = AddSpaceUserMessage | UpdateSpaceUserMessage | RemoveSpaceUserMessage;
 
-export class Pusher {
+export class SpacesWatcher {
     private _spacesWatched: string[];
+    private pingInterval: NodeJS.Timer | undefined;
+    private pingTimeout: NodeJS.Timeout | undefined;
     public constructor(public readonly uuid: string, private readonly socket: SpaceSocket) {
         this._spacesWatched = [];
+        this.pingInterval = setInterval(() => this.sendPing(), 1000 * 30);
+    }
+
+    private sendPing() {
+        if (this.pingTimeout) {
+            clearTimeout(this.pingTimeout);
+            this.pingTimeout = undefined;
+        }
+        const backToPusherSpaceMessage = new BackToPusherSpaceMessage();
+        backToPusherSpaceMessage.setPingmessage(new PingMessage());
+        this.socket.write(backToPusherSpaceMessage);
+        this.pingTimeout = setTimeout(() => this.socket.end(), 1000 * 20);
+    }
+
+    public receivedPong() {
+        if (this.pingTimeout) {
+            clearTimeout(this.pingTimeout);
+            this.pingTimeout = undefined;
+        }
     }
 
     public watchSpace(spaceName: string) {

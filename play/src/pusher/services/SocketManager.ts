@@ -52,6 +52,7 @@ import {
     UpdateSpaceUserMessage,
     AddSpaceUserMessage,
     RemoveSpaceUserMessage,
+    PingMessage,
 } from "../../messages/generated/messages_pb";
 
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
@@ -309,9 +310,9 @@ export class SocketManager implements ZoneEventListener {
             const spaceName = client.roomId + "/space";
             const backId = apiClientRepository.getIndex(spaceName);
             let spaceStreamToPusher = this.spaceStreamsToPusher.get(backId);
-            const apiSpaceClient = await apiClientRepository.getClient(spaceName);
+            const apiSpaceClient = await apiClientRepository.getSpaceClient(spaceName);
             if (!spaceStreamToPusher) {
-                spaceStreamToPusher = apiSpaceClient.watchSpace();
+                spaceStreamToPusher = apiSpaceClient.watchSpace() as BackSpaceConnection;
             }
             client.backSpaceConnection = spaceStreamToPusher;
             const space = new Space(spaceName, spaceStreamToPusher, backId);
@@ -339,6 +340,16 @@ export class SocketManager implements ZoneEventListener {
                         // FIXME: What if space is not existing ?
                         if (space) {
                             space.localRemoveUser(removedSpaceUserMessage.getUseruuid());
+                        }
+                    } else if (message.hasPingmessage()) {
+                        if (spaceStreamToPusher) {
+                            if (spaceStreamToPusher.pingTimeout) {
+                                clearTimeout(spaceStreamToPusher.pingTimeout);
+                            }
+                            spaceStreamToPusher.pingTimeout = setTimeout(() => spaceStreamToPusher?.end(), 1000 * 30);
+                            const pusherToBackSpaceMessage = new PusherToBackSpaceMessage();
+                            pusherToBackSpaceMessage.setPongmessage(new PingMessage());
+                            spaceStreamToPusher.write(pusherToBackSpaceMessage);
                         }
                     }
                 })

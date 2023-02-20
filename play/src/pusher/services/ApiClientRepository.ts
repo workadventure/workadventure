@@ -1,7 +1,7 @@
 /**
  * A class to get connections to the correct "api" server given a room name.
  */
-import { RoomManagerClient } from "../../messages/generated/services_grpc_pb";
+import { RoomManagerClient, SpaceManagerClient } from "../../messages/generated/services_grpc_pb";
 import * as grpc from "@grpc/grpc-js";
 import crypto from "crypto";
 import { API_URL } from "../enums/EnvironmentVariable";
@@ -12,6 +12,7 @@ const debug = Debug("apiClientRespository");
 
 class ApiClientRepository {
     private roomManagerClients: RoomManagerClient[] = [];
+    private spaceManagerClients: SpaceManagerClient[] = [];
 
     public constructor(private apiUrls: string[]) {}
 
@@ -42,9 +43,9 @@ class ApiClientRepository {
     async getSpaceClient(spaceName: string) {
         const index = this.getIndex(spaceName);
 
-        let client = this.roomManagerClients[index];
+        let client = this.spaceManagerClients[index];
         if (client === undefined) {
-            this.roomManagerClients[index] = client = new RoomManagerClient(
+            this.spaceManagerClients[index] = client = new SpaceManagerClient(
                 this.apiUrls[index],
                 grpc.credentials.createInsecure()
             );

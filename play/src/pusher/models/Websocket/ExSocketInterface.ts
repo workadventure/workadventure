@@ -19,7 +19,11 @@ import { BackToPusherSpaceMessage, PusherToBackSpaceMessage, SpaceUser } from ".
 import { Space } from "../Space";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
-export type BackSpaceConnection = ClientDuplexStream<PusherToBackSpaceMessage, BackToPusherSpaceMessage>;
+export type BackSpaceConnection_ = ClientDuplexStream<PusherToBackSpaceMessage, BackToPusherSpaceMessage>;
+
+export interface BackSpaceConnection extends BackSpaceConnection_ {
+    pingTimeout: NodeJS.Timeout | undefined;
+}
 
 export interface ExSocketInterface extends compressors.WebSocket, Identificable, CustomJsonReplacerInterface {
     token: string;

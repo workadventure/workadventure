@@ -1,6 +1,6 @@
 import { ISpaceManagerServer } from "./Messages/generated/services_grpc_pb";
 import { uuid } from "uuidv4";
-import { Pusher } from "./Model/Pusher";
+import { SpacesWatcher } from "./Model/SpacesWatcher";
 import {
     AddSpaceUserMessage,
     BackToPusherSpaceMessage,
@@ -22,7 +22,7 @@ const spaceManager: ISpaceManagerServer = {
     watchSpace: (call: SpaceSocket): void => {
         debug("watchSpace called");
         const pusherUuid = uuid();
-        const pusher = new Pusher(pusherUuid, call);
+        const pusher = new SpacesWatcher(pusherUuid, call);
 
         call.on("data", (message: PusherToBackSpaceMessage) => {
             if (message.hasWatchspacemessage()) {
@@ -47,6 +47,8 @@ const spaceManager: ISpaceManagerServer = {
                     pusher,
                     message.getRemovespaceusermessage() as RemoveSpaceUserMessage
                 );
+            } else if (message.hasPongmessage()) {
+                pusher.receivedPong();
             }
         });
 

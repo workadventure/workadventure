@@ -817,6 +817,7 @@ message PusherToBackSpaceMessage{
     AddSpaceUserMessage addSpaceUserMessage = 3;
     UpdateSpaceUserMessage updateSpaceUserMessage = 4;
     RemoveSpaceUserMessage removeSpaceUserMessage = 5;
+    PingMessage pongMessage = 6;
   }
 }
 
@@ -825,6 +826,7 @@ message BackToPusherSpaceMessage{
     AddSpaceUserMessage addSpaceUserMessage = 1;
     UpdateSpaceUserMessage updateSpaceUserMessage = 2;
     RemoveSpaceUserMessage removeSpaceUserMessage = 3;
+    PingMessage pingMessage = 4;
   }
 }
 
