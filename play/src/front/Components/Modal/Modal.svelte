@@ -70,7 +70,8 @@
             right: 4px !important;
             bottom: 4px !important;
             .close-window {
-                @apply tw-fixed tw-mt-10;
+                position: fixed;
+                margin-top: 2.5rem;
             }
         }
     }

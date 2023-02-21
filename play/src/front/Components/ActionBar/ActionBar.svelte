@@ -887,7 +887,7 @@
     @import "../../style/breakpoints.scss";
 
     button {
-        @apply tw-justify-center;
+        justify-content: center;
     }
     .animated {
         transition-property: transform;
