@@ -69,10 +69,6 @@
             left: 4px !important;
             right: 4px !important;
             bottom: 4px !important;
-            .close-window {
-                position: fixed;
-                margin-top: 2.5rem;
-            }
         }
     }
 </style>
