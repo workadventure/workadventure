@@ -145,13 +145,10 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             if (!entity) {
                 return;
             }
-            // this.scene.input.setDefaultCursor('copy');
-            const oldPos = entity.getOldPosition();
-            entity.setPosition(oldPos.x, oldPos.y);
-            this.copyEntity(entity);
+            this.scene.input.setDefaultCursor("copy");
         });
         this.ctrlKey.on("up", () => {
-            // this.scene.input.setDefaultCursor('auto');
+            this.scene.input.setDefaultCursor("auto");
         });
     }
 
@@ -230,12 +227,18 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                     const oldPos = entity.getOldPosition();
                     entity.setPosition(oldPos.x, oldPos.y);
                 } else {
-                    const data: AtLeast<EntityData, "id"> = {
-                        id: entity.getEntityData().id,
-                        x: entity.x,
-                        y: entity.y,
-                    };
-                    this.emit(EntitiesManagerEvent.UpdateEntity, data);
+                    if (this.ctrlKey.isDown) {
+                        const oldPos = entity.getOldPosition();
+                        entity.setPosition(oldPos.x, oldPos.y);
+                        this.copyEntity(entity);
+                    } else {
+                        const data: AtLeast<EntityData, "id"> = {
+                            id: entity.getEntityData().id,
+                            x: entity.x,
+                            y: entity.y,
+                        };
+                        this.emit(EntitiesManagerEvent.UpdateEntity, data);
+                    }
                 }
                 this.scene.markDirty();
             }
