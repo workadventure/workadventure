@@ -1,4 +1,5 @@
-import { AtLeast, CommandConfig, EntityData, EntityPrefab } from "@workadventure/map-editor";
+import { Point } from "@home-based-studio/phaser3-utils";
+import { AtLeast, CommandConfig, EntityData, EntityDataProperties, EntityPrefab } from "@workadventure/map-editor";
 import { GameMapEntities } from "@workadventure/map-editor/src/GameMap/GameMapEntities";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { get, Unsubscriber } from "svelte/store";
@@ -290,6 +291,26 @@ export class EntityEditorTool extends MapEditorTool {
                 type: "UpdateEntityCommand",
             });
         });
+        this.entitiesManager.on(
+            EntitiesManagerEvent.CopyEntity,
+            (position: Point, prefab: EntityPrefab, properties: EntityDataProperties) => {
+                if (!position || !prefab) {
+                    return;
+                }
+                const entityData: EntityData = {
+                    x: position.x,
+                    y: position.y,
+                    id: crypto.randomUUID(),
+                    prefab: prefab,
+                    properties: properties ?? {},
+                };
+                this.mapEditorModeManager.executeCommand({
+                    entityData,
+                    type: "CreateEntityCommand",
+                });
+                this.cleanPreview();
+            }
+        );
     }
 
     private bindEventHandlers(): void {

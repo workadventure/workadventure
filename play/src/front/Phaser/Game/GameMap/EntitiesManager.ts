@@ -5,10 +5,8 @@ import { actionsMenuStore } from "../../../Stores/ActionsMenuStore";
 import {
     mapEditorModeStore,
     mapEditorSelectedEntityStore,
-    mapEditorSelectedEntityPrefabStore,
     MapEntityEditorMode,
     mapEntityEditorModeStore,
-    mapEditorCopiedEntityDataPropertiesStore,
     mapEditorSelectedEntityDraggedStore,
 } from "../../../Stores/MapEditorStore";
 import { Entity, EntityEvent } from "../../ECS/Entity";
@@ -19,6 +17,7 @@ import type { GameMapFrontWrapper } from "./GameMapFrontWrapper";
 export enum EntitiesManagerEvent {
     RemoveEntity = "EntitiesManagerEvent:RemoveEntity",
     UpdateEntity = "EntitiesManagerEvent:UpdateEntity",
+    CopyEntity = "EntitiesManagerEvent:CopyEntity",
 }
 
 export class EntitiesManager extends Phaser.Events.EventEmitter {
@@ -145,6 +144,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             if (!entity) {
                 return;
             }
+            console.log("D1");
             this.scene.input.setDefaultCursor("copy");
         });
         this.ctrlKey.on("up", () => {
@@ -228,8 +228,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                     entity.setPosition(oldPos.x, oldPos.y);
                 } else {
                     if (this.ctrlKey.isDown) {
-                        const oldPos = entity.getOldPosition();
-                        entity.setPosition(oldPos.x, oldPos.y);
                         this.copyEntity(entity);
                     } else {
                         const data: AtLeast<EntityData, "id"> = {
@@ -255,17 +253,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                         entity.delete();
                         break;
                     }
-                }
-            }
-        });
-        entity.on(Phaser.Input.Events.POINTER_UP, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore)) {
-                const entityEditorMode = get(mapEntityEditorModeStore);
-                if (entityEditorMode === MapEntityEditorMode.EditMode && this.ctrlKey.isDown) {
-                    mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
-                    mapEditorSelectedEntityStore.set(undefined);
-                    mapEditorCopiedEntityDataPropertiesStore.set(entity.getEntityData().properties);
-                    mapEditorSelectedEntityPrefabStore.set(entity.getEntityData().prefab);
                 }
             }
         });
@@ -301,10 +288,17 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
     }
 
     private copyEntity(entity: Entity): void {
+        const positionToPlaceCopyAt = { ...entity.getPosition() };
+        const oldPos = entity.getOldPosition();
+        entity.setPosition(oldPos.x, oldPos.y);
         mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
         mapEditorSelectedEntityStore.set(undefined);
-        mapEditorCopiedEntityDataPropertiesStore.set(entity.getEntityData().properties);
-        mapEditorSelectedEntityPrefabStore.set(entity.getEntityData().prefab);
+        this.emit(
+            EntitiesManagerEvent.CopyEntity,
+            positionToPlaceCopyAt,
+            entity.getEntityData().prefab,
+            entity.getEntityData().properties
+        );
     }
 
     public getEntities(): Map<string, Entity> {
