@@ -39,6 +39,8 @@ export const mapEditorSelectedAreaPreviewStore = writable<AreaPreview | undefine
 
 export const mapEditorSelectedEntityStore = writable<Entity | undefined>(undefined);
 
+export const mapEditorSelectedEntityDraggedStore = writable<boolean>(false);
+
 export const mapEditorSelectedPropertyStore = writable<PredefinedPropertyData | undefined>(undefined);
 
 export const mapEditorSelectedToolStore = writable<EditorToolName | undefined>(undefined);

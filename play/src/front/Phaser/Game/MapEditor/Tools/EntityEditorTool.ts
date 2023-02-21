@@ -5,7 +5,9 @@ import { get, Unsubscriber } from "svelte/store";
 import {
     mapEditorCopiedEntityDataPropertiesStore,
     mapEditorModeStore,
+    mapEditorSelectedEntityDraggedStore,
     mapEditorSelectedEntityPrefabStore,
+    mapEditorSelectedEntityStore,
     MapEntityEditorMode,
     mapEntityEditorModeStore,
 } from "../../../../Stores/MapEditorStore";
@@ -26,11 +28,14 @@ export class EntityEditorTool extends MapEditorTool {
 
     private entityPrefab: EntityPrefab | undefined;
     private entityPrefabPreview: Phaser.GameObjects.Image | undefined;
+    private entityOldPositionPreview: Phaser.GameObjects.Image | undefined;
 
     private shiftKey: Phaser.Input.Keyboard.Key;
 
     private mapEditorSelectedEntityPrefabStoreUnsubscriber!: Unsubscriber;
     private mapEntityEditorModeStoreUnsubscriber!: Unsubscriber;
+    private mapEditorSelectedEntityStoreUnsubscriber!: Unsubscriber;
+    private mapEditorSelectedEntityDraggedStoreUnsubscriber!: Unsubscriber;
 
     private pointerMoveEventHandler!: (pointer: Phaser.Input.Pointer) => void;
     private pointerDownEventHandler!: (pointer: Phaser.Input.Pointer) => void;
@@ -47,6 +52,7 @@ export class EntityEditorTool extends MapEditorTool {
 
         this.entityPrefab = undefined;
         this.entityPrefabPreview = undefined;
+        this.entityOldPositionPreview = undefined;
 
         this.subscribeToStores();
         this.bindEntitiesManagerEventHandlers();
@@ -67,6 +73,8 @@ export class EntityEditorTool extends MapEditorTool {
         this.unbindEventHandlers();
         this.mapEditorSelectedEntityPrefabStoreUnsubscriber();
         this.mapEntityEditorModeStoreUnsubscriber();
+        this.mapEditorSelectedEntityStoreUnsubscriber();
+        this.mapEditorSelectedEntityDraggedStoreUnsubscriber();
     }
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
         console.log("EntityEditorTool subscribeToGameMapFrontWrapperEvents");
@@ -226,6 +234,25 @@ export class EntityEditorTool extends MapEditorTool {
                 this.scene.markDirty();
             }
         );
+
+        this.mapEditorSelectedEntityDraggedStoreUnsubscriber = mapEditorSelectedEntityDraggedStore.subscribe(
+            (dragged) => {
+                if (!dragged) {
+                    this.entityOldPositionPreview?.destroy();
+                }
+            }
+        );
+
+        this.mapEditorSelectedEntityStoreUnsubscriber = mapEditorSelectedEntityStore.subscribe((entity) => {
+            this.entityOldPositionPreview?.destroy();
+            if (!entity) {
+                return;
+            }
+            this.entityOldPositionPreview = this.scene.add
+                .image(entity.x, entity.y, entity.texture)
+                .setOrigin(0)
+                .setAlpha(0.5);
+        });
 
         this.mapEntityEditorModeStoreUnsubscriber = mapEntityEditorModeStore.subscribe((mode) => {
             if (!get(mapEditorModeStore)) {

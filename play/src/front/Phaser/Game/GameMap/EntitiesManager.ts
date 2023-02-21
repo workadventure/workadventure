@@ -9,6 +9,7 @@ import {
     MapEntityEditorMode,
     mapEntityEditorModeStore,
     mapEditorCopiedEntityDataPropertiesStore,
+    mapEditorSelectedEntityDraggedStore,
 } from "../../../Stores/MapEditorStore";
 import { Entity, EntityEvent } from "../../ECS/Entity";
 import { TexturesHelper } from "../../Helpers/TexturesHelper";
@@ -169,6 +170,11 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             };
             this.emit(EntitiesManagerEvent.UpdateEntity, data);
         });
+        entity.on(Phaser.Input.Events.DRAG_START, () => {
+            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
+                mapEditorSelectedEntityDraggedStore.set(true);
+            }
+        });
         entity.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
                 const collisitonGrid = entity.getEntityData().prefab.collisionGrid;
@@ -205,6 +211,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         });
         entity.on(Phaser.Input.Events.DRAG_END, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
+                mapEditorSelectedEntityDraggedStore.set(false);
                 if (
                     !this.scene
                         .getGameMapFrontWrapper()
