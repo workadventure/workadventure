@@ -63,8 +63,8 @@
 <style lang="scss">
     .menu-container {
         &.mobile {
-            width: 100vw !important;
-            height: 100vh !important;
+            width: 100% !important;
+            height: 100% !important;
             top: 0 !important;
             left: 0 !important;
             right: 0 !important;

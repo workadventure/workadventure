@@ -886,6 +886,9 @@
 <style lang="scss">
     @import "../../style/breakpoints.scss";
 
+    button {
+        justify-content: center;
+    }
     .animated {
         transition-property: transform;
         transition-duration: 0.5s;
