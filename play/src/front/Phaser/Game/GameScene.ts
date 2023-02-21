@@ -156,6 +156,7 @@ import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
 import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
 import { checkCoturnServer } from "../../Components/Video/utils";
+import { faviconManager } from "./../../WebRtc/FaviconManager";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -1230,9 +1231,12 @@ export class GameScene extends DirtyScene {
 
             if (newPeerNumber > oldPeersNumber) {
                 this.playSound("audio-webrtc-in");
+                faviconManager.pushNotificationFavicon();
             } else if (newPeerNumber < oldPeersNumber) {
                 this.playSound("audio-webrtc-out");
+                faviconManager.pushOriginalFavicon();
             }
+
             if (newPeerNumber > 0) {
                 if (!this.localVolumeStoreUnsubscriber) {
                     this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((spectrum) => {
@@ -2928,9 +2932,5 @@ ${escapedMessage}
 
     public getActivatablesManager(): ActivatablesManager {
         return this.activatablesManager;
-    }
-
-    public isMapEditorEnabled(): boolean {
-        return ENABLE_FEATURE_MAP_EDITOR && connectionManager.currentRoom?.canEditMap === true;
     }
 }

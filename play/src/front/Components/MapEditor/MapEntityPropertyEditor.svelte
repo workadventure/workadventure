@@ -8,18 +8,18 @@
     import OpenTabPropertyEditor from "./PropertyEditor/OpenTabPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import TextPropertyEditor from "./PropertyEditor/TextPropertyEditor.svelte";
-    import { EntityDataPropertiesKeys } from "@workadventure/map-editor";
+    import { EntityDataProperties, EntityDataPropertiesKeys } from "@workadventure/map-editor";
 
-    interface EntityPropertyDescription {
-        key: EntityDataPropertiesKeys;
+    interface EntityPropertyDescription<K extends EntityDataPropertiesKeys> {
+        key: K;
         name: string;
         active: boolean;
-        currentValue: unknown;
+        currentValue: EntityDataProperties[K];
         component: unknown;
-        defaultValue: unknown;
+        defaultValue: EntityDataProperties[K];
     }
 
-    let possibleProperties: EntityPropertyDescription[] = [
+    let possibleProperties: EntityPropertyDescription<EntityDataPropertiesKeys>[] = [
         {
             key: "textHeader",
             name: $LL.mapEditor.entityEditor.textProperties.label(),
@@ -37,6 +37,7 @@
             defaultValue: {
                 buttonLabel: $LL.mapEditor.entityEditor.jitsiProperties.defaultButtonLabel(),
                 roomName: "",
+                jitsiRoomConfig: {},
             },
         },
         {
@@ -83,7 +84,7 @@
         selectedEntityUnsubscriber();
     });
 
-    function onPropertyChecked(property: EntityPropertyDescription) {
+    function onPropertyChecked(property: EntityPropertyDescription<EntityDataPropertiesKeys>) {
         if ($mapEditorSelectedEntityStore) {
             if (property.active) {
                 if (!property.currentValue) {
@@ -96,7 +97,7 @@
         }
     }
 
-    function onUpdateProperty(property: EntityPropertyDescription) {
+    function onUpdateProperty(property: EntityPropertyDescription<EntityDataPropertiesKeys>) {
         if ($mapEditorSelectedEntityStore) {
             $mapEditorSelectedEntityStore.setProperty(property.key, property.currentValue);
         }

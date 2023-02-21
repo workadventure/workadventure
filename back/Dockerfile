@@ -9,6 +9,7 @@ RUN npm run tag-version && npm run proto && npm run ts-proto
 
 # final production image
 FROM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d
+EXPOSE 8080 50051
 WORKDIR /usr/src
 RUN apt-get update && apt-get install -y git
 COPY package.json package-lock.json ./

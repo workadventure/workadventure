@@ -11,10 +11,10 @@ If you "only" want to design dynamic maps, please refer instead to the [scriptin
 
 Check out the [contributing guide](../../CONTRIBUTING.md)
 
-
 ## Global documentation
 
 - [WorkAdventure containers explained](communication-between-services.md)
+- [Troubleshooting guide](troubleshooting.md)
 - [OpenID configuration](openid.md)
 - [Chat configuration](chat.md)
 

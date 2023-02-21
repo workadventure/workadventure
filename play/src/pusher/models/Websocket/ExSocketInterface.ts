@@ -54,4 +54,5 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable,
     activatedInviteUser: boolean | undefined;
     mucRooms: Array<MucRoomDefinitionInterface>;
     applications: Array<ApplicationDefinitionInterface> | undefined;
+    canEdit: boolean;
 }
