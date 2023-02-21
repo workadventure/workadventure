@@ -61,7 +61,7 @@ services:
             UPLOADER_URL: http://uploader.workadventure.localhost
             ICON_URL: http://icon.workadventure.localhost
             STUN_SERVER: "stun:stun.l.google.com:19302"
-            TURN_SERVER: "turn:coturn.workadventure.localhost:3478,turns:coturn.workadventure.localhost:5349"
+            TURN_SERVER: "$TURN_SERVER"
             DISABLE_NOTIFICATIONS: "$DISABLE_NOTIFICATIONS"
             SKIP_RENDER_OPTIMIZATIONS: "$SKIP_RENDER_OPTIMIZATIONS"
             # Use TURN_USER/TURN_PASSWORD if your Coturn server is secured via hard coded credentials.
@@ -163,6 +163,7 @@ services:
         #command: npm run profile
         environment:
             DEBUG: "*"
+            PLAY_URL: http://play.workadventure.localhost
             # On startup, we ask the messages container to regenerate the files.
             # Note: we need to use this "messages" container because of ARM64 processors that are not supported with protoc (used in "messages" container)
             STARTUP_COMMAND_0: touch /usr/src/app/back/src/Messages/generate_request/need_regenerate
@@ -179,8 +180,8 @@ services:
             JITSI_ISS: $JITSI_ISS
             BBB_URL: $BBB_URL
             BBB_SECRET: $BBB_SECRET
-            TURN_STATIC_AUTH_SECRET: SomeStaticAuthSecret
-            MAX_PER_GROUP: "MAX_PER_GROUP"
+            TURN_STATIC_AUTH_SECRET: "$TURN_STATIC_AUTH_SECRET"
+            MAX_PER_GROUP: "$MAX_PER_GROUP"
             REDIS_HOST: redis
             NODE_ENV: development
             STORE_VARIABLES_FOR_LOCAL_MAPS: "true"

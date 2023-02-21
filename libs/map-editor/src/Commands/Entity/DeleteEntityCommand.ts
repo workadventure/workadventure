@@ -5,7 +5,7 @@ import type { CreateEntityCommandConfig } from "./CreateEntityCommand";
 
 export interface DeleteEntityCommandConfig {
     type: "DeleteEntityCommand";
-    id: number;
+    id: string;
 }
 
 export class DeleteEntityCommand extends Command {

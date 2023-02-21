@@ -1,4 +1,4 @@
-import { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
+import { sendUnaryData, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
 import * as _ from "lodash";
 import { AreaData, AreaType, EntityDataProperties } from "@workadventure/map-editor";
 import { mapsManager } from "./MapsManager";
@@ -7,16 +7,29 @@ import {
     EditMapCommandsArrayMessage,
     EditMapCommandWithKeyMessage,
     EmptyMessage,
+    MapStorageToBackMessage,
+    MapStorageUrlMessage,
     PingMessage,
     UpdateMapToNewestWithKeyMessage,
 } from "@workadventure/messages";
 
 import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import { mapPathUsingDomain } from "./Services/PathMapper";
+import { uploadDetector } from "./Services/UploadDetector";
+
+export type MapStorageStream = ServerWritableStream<MapStorageUrlMessage, MapStorageToBackMessage>;
 
 const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, EmptyMessage>, callback: sendUnaryData<PingMessage>): void {
         callback(null, call.request);
+    },
+    listenToMessages(call: MapStorageStream): void {
+        const url = new URL(call.request.mapUrl);
+        const mapKey = mapPathUsingDomain(url.pathname, url.hostname);
+        uploadDetector.registerStream(mapKey, call);
+        call.on("close", () => {
+            uploadDetector.clearStream(mapKey, call);
+        });
     },
     handleUpdateMapToNewestMessage(
         call: ServerUnaryCall<UpdateMapToNewestWithKeyMessage, EmptyMessage>,

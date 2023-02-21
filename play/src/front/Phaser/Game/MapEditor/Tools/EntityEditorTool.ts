@@ -184,7 +184,7 @@ export class EntityEditorTool extends MapEditorTool {
         this.entitiesManager.addEntity(structuredClone(config));
     }
 
-    private handleEntityDeletion(id: number): void {
+    private handleEntityDeletion(id: string): void {
         this.entitiesManager.deleteEntity(id);
     }
 
@@ -343,7 +343,7 @@ export class EntityEditorTool extends MapEditorTool {
         const entityData: EntityData = {
             x: x - this.entityPrefabPreview.displayWidth * 0.5,
             y: y - this.entityPrefabPreview.displayHeight * 0.5,
-            id: this.gameMapEntities.getNextEntityId(),
+            id: crypto.randomUUID(),
             prefab: this.entityPrefab,
             properties: get(mapEditorCopiedEntityDataPropertiesStore) ?? {},
         };

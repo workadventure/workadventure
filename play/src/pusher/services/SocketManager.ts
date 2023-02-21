@@ -45,6 +45,7 @@ import {
     ApplicationMessage,
     XmppSettingsMessage,
     MucRoomDefinitionMessage,
+    PingMessage,
 } from "../../messages/generated/messages_pb";
 
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
@@ -363,6 +364,11 @@ export class SocketManager implements ZoneEventListener {
         client.backConnection.write(pusherToBackMessage);
     }
 
+    handlePingMessage(client: ExSocketInterface, message: PingMessage): void {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setPingmessage(message);
+        client.backConnection.write(pusherToBackMessage);
+    }
     handleEditMapCommandMessage(client: ExSocketInterface, message: EditMapCommandMessage): void {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setEditmapcommandmessage(message);
