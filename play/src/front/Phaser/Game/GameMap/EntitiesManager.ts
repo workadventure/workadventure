@@ -53,6 +53,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             this.clearProperties();
             this.gameMapFrontWrapper.handleEntityActionTrigger();
         });
+
+        this.bindEventHandlers();
     }
 
     public addEntity(data: EntityData, imagePathPrefix?: string): void {
@@ -133,6 +135,21 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         });
     }
 
+    private bindEventHandlers(): void {
+        this.ctrlKey.on("down", () => {
+            if (!this.scene.input.activePointer.leftButtonDown()) {
+                return;
+            }
+            const entity = get(mapEditorSelectedEntityStore);
+            if (!entity) {
+                return;
+            }
+            const oldPos = entity.getOldPosition();
+            entity.setPosition(oldPos.x, oldPos.y);
+            this.copyEntity(entity);
+        });
+    }
+
     private bindEntityEventHandlers(entity: Entity): void {
         entity.on(EntityEvent.Remove, () => {
             this.emit(EntitiesManagerEvent.RemoveEntity, entity);
@@ -200,7 +217,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                         )
                 ) {
                     const oldPos = entity.getOldPosition();
-                    entity.setPosition(oldPos.x + entity.displayWidth * 0.5, oldPos.y + entity.displayHeight * 0.5);
+                    entity.setPosition(oldPos.x, oldPos.y);
                 } else {
                     const data: AtLeast<EntityData, "id"> = {
                         id: entity.getEntityData().id,
@@ -267,6 +284,13 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 this.scene.markDirty();
             }
         });
+    }
+
+    private copyEntity(entity: Entity): void {
+        mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
+        mapEditorSelectedEntityStore.set(undefined);
+        mapEditorCopiedEntityDataPropertiesStore.set(entity.getEntityData().properties);
+        mapEditorSelectedEntityPrefabStore.set(entity.getEntityData().prefab);
     }
 
     public getEntities(): Map<string, Entity> {

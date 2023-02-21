@@ -210,8 +210,14 @@ export class EntityEditorTool extends MapEditorTool {
                             if (this.entityPrefabPreview) {
                                 this.entityPrefabPreview.setTexture(entityPrefab.imagePath);
                             } else {
-                                this.entityPrefabPreview = this.scene.add.image(0, 0, entityPrefab.imagePath);
+                                const pointer = this.scene.input.activePointer;
+                                this.entityPrefabPreview = this.scene.add.image(
+                                    Math.floor(pointer.worldX),
+                                    Math.floor(pointer.worldY),
+                                    entityPrefab.imagePath
+                                );
                             }
+                            this.scene.markDirty();
                         })
                         .catch(() => {
                             console.error("COULD NOT LOAD THE ENTITY PREVIEW TEXTURE");

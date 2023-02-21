@@ -272,8 +272,4 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     public getOldPosition(): { x: number; y: number } {
         return this.oldPosition;
     }
-
-    public setOldPosition(x: number, y: number): void {
-        this.oldPosition = { x, y };
-    }
 }
