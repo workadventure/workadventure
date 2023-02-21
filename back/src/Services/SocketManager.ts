@@ -146,6 +146,8 @@ export class SocketManager {
         roomJoinedMessage.setTagList(joinRoomMessage.getTagList());
         roomJoinedMessage.setUserroomtoken(joinRoomMessage.getUserroomtoken());
         roomJoinedMessage.setCharacterlayerList(joinRoomMessage.getCharacterlayerList());
+        roomJoinedMessage.setCanedit(joinRoomMessage.getCanedit());
+
         if (commandsToApply) {
             const editMapCommandsArrayMessage = new EditMapCommandsArrayMessage();
             editMapCommandsArrayMessage.setEditmapcommandsList(commandsToApply);

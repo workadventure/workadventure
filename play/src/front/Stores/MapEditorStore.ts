@@ -1,10 +1,9 @@
 import type { PredefinedPropertyData, EntityPrefab } from "@workadventure/map-editor";
-import { writable } from "svelte/store";
-import { connectionManager } from "../Connexion/ConnectionManager";
-import { ENABLE_FEATURE_MAP_EDITOR } from "../Enum/EnvironmentVariable";
+import { writable, get } from "svelte/store";
 import type { AreaPreview } from "../Phaser/Components/MapEditor/AreaPreview";
 import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
 import { Entity } from "../Phaser/ECS/Entity";
+import { mapEditorActivated } from "./MenuStore";
 
 function createMapEditorModeStore() {
     const { set, subscribe } = writable(false);
@@ -12,7 +11,7 @@ function createMapEditorModeStore() {
     return {
         subscribe,
         switchMode: (value: boolean) => {
-            set(ENABLE_FEATURE_MAP_EDITOR && connectionManager.currentRoom?.canEditMap === true && value);
+            set(get(mapEditorActivated) && value);
         },
     };
 }

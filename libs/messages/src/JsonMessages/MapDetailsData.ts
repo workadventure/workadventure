@@ -167,10 +167,6 @@ export const isMapDetailsData = z.object({
         description: 'Whether the "report" feature is enabled or not on this room',
         example: true,
     }),
-    canEdit: extendApi(z.optional(z.boolean()), {
-        description: 'Whether the "map editor" feature is enabled for the current user',
-        example: true,
-    }),
     editable: extendApi(z.optional(z.boolean()), {
         description: 'Whether the "map editor" feature is enabled or not on this room (true if the map comes from the map-storage)',
         example: true,
