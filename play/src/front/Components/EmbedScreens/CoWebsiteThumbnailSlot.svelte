@@ -226,7 +226,7 @@
 
 <style lang="scss">
     .cowebsite-thumbnail {
-        cursor: url("../../images/cursor_pointer.png"), pointer;
+        cursor: pointer;
         position: relative;
         margin: 12px;
         margin-top: auto;

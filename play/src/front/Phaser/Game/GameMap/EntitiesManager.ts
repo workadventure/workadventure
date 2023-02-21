@@ -145,9 +145,13 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             if (!entity) {
                 return;
             }
+            // this.scene.input.setDefaultCursor('copy');
             const oldPos = entity.getOldPosition();
             entity.setPosition(oldPos.x, oldPos.y);
             this.copyEntity(entity);
+        });
+        this.ctrlKey.on("up", () => {
+            // this.scene.input.setDefaultCursor('auto');
         });
     }
 
