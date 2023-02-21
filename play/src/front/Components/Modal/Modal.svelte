@@ -63,12 +63,15 @@
 <style lang="scss">
     .menu-container {
         &.mobile {
-            width: 100vw !important;
-            height: 100vh !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
+            width: calc(100% - 8px) !important;
+            height: calc(100% - 8px) !important;
+            top: 4px !important;
+            left: 4px !important;
+            right: 4px !important;
+            bottom: 4px !important;
+            .close-window {
+                @apply tw-fixed tw-mt-10;
+            }
         }
     }
 </style>
