@@ -132,6 +132,22 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.outlineColorStore.removeApiColor();
     }
 
+    public setEditColor(color: number): void {
+        this.outlineColorStore.setEditColor(color);
+    }
+
+    public removeEditColor(): void {
+        this.outlineColorStore.removeEditColor();
+    }
+
+    public setPointedToEditColor(color: number): void {
+        this.outlineColorStore.setPointedToEditColor(color);
+    }
+
+    public removePointedToEditColor(): void {
+        this.outlineColorStore.removePointedToEditColor();
+    }
+
     public pointerOverOutline(color: number): void {
         this.outlineColorStore.pointerOver(color);
     }

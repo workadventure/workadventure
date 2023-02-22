@@ -231,7 +231,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                         break;
                     }
                     case MapEntityEditorMode.EditMode: {
-                        entity.setTint(0x3498db);
+                        entity.setPointedToEditColor(0x00ff00);
                         break;
                     }
                 }
@@ -240,7 +240,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         });
         entity.on(Phaser.Input.Events.POINTER_OUT, () => {
             if (get(mapEditorModeStore)) {
-                entity.clearTint();
+                entity.removePointedToEditColor();
                 this.scene.markDirty();
             }
         });

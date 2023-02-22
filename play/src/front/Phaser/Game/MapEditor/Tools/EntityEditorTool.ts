@@ -332,16 +332,8 @@ export class EntityEditorTool extends MapEditorTool {
     private handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
         if (get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode && gameObjects.length === 0) {
             mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
+            mapEditorSelectedEntityStore.set(undefined);
         }
-        // if (get(mapEntityEditorModeStore) === MapEntityEditorMode.AddMode && gameObjects.length > 0) {
-        //     for (const obj of gameObjects) {
-        //         if (this.isEntity(obj)) {
-        //             mapEditorSelectedEntityStore.set(obj)
-        //             mapEntityEditorModeStore.set(MapEntityEditorMode.EditMode);
-        //             break;
-        //         }
-        //     }
-        // }
         if (!this.entityPrefabPreview || !this.entityPrefab) {
             return;
         }
@@ -407,7 +399,8 @@ export class EntityEditorTool extends MapEditorTool {
         };
     }
 
-    private isEntity(obj: Phaser.GameObjects.GameObject): obj is Entity {
-        return (obj as Entity).getEntityData() !== undefined;
-    }
+    // private setSelectedEntityStoreValue(entity: Entity | undefined): void {
+    //     get(mapEditorSelectedEntityStore)?.removeEditColor();
+    //     mapEditorSelectedEntityStore.set(entity);
+    // }
 }
