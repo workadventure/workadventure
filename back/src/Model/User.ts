@@ -31,6 +31,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
     public group?: Group;
     private _following: User | undefined;
     private followedBy: Set<User> = new Set<User>();
+    public disconnected = false;
 
     public constructor(
         public id: number,

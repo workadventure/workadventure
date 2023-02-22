@@ -41,6 +41,7 @@ export class Zone implements CustomJsonReplacerInterface {
     public leave(thing: Movable, newZone: Zone | null) {
         const result = this.things.delete(thing);
         if (!result) {
+            // if the user socket end event was emitted, the connection is already closed
             if (thing instanceof User) {
                 throw new Error(`Could not find user in zone ${thing.id}`);
             }

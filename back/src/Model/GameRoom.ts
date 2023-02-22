@@ -227,6 +227,12 @@ export class GameRoom implements BrothersFinder {
     }
 
     public leave(user: User) {
+        if (user.disconnected === true) {
+            console.warn("User ", user.id, "already disconnected!");
+            return;
+        }
+        user.disconnected = true;
+
         if (!this.users.has(user.id)) {
             console.warn("User ", user.id, "does not belong to this game room! It should!");
         }
