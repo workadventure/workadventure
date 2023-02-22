@@ -113,7 +113,7 @@ export class SocketManager {
 
         if (lastCommandId) {
             const updateMapToNewestMessage = new UpdateMapToNewestMessage();
-            updateMapToNewestMessage.setCommandid(lastCommandId);
+            updateMapToNewestMessage.setCommandid(lastCommandId.getValue());
 
             const updateMapToNewestWithKeyMessage = new UpdateMapToNewestWithKeyMessage();
             updateMapToNewestWithKeyMessage.setMapkey(room.mapUrl);

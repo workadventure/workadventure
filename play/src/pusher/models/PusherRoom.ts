@@ -3,12 +3,7 @@ import { PositionDispatcher } from "./PositionDispatcher";
 import type { ViewportInterface } from "./Websocket/ViewportMessage";
 import type { ZoneEventListener } from "./Zone";
 import { apiClientRepository } from "../services/ApiClientRepository";
-import { RoomMessage, SubMessage } from "../../messages/generated/messages_pb";
-import type {
-    BatchToPusherRoomMessage,
-    ErrorMessage,
-    VariableWithTagMessage,
-} from "../../messages/generated/messages_pb";
+import type { BatchToPusherRoomMessage } from "@workadventure/messages";
 import Debug from "debug";
 import type { ClientReadableStream } from "@grpc/grpc-js";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
@@ -77,56 +72,87 @@ export class PusherRoom implements CustomJsonReplacerInterface {
     public async init(): Promise<void> {
         debug("Opening connection to room %s on back server", this.roomUrl);
         const apiClient = await apiClientRepository.getClient(this.roomUrl);
-        const roomMessage = new RoomMessage();
-        roomMessage.setRoomid(this.roomUrl);
-        this.backConnection = apiClient.listenRoom(roomMessage);
+        this.backConnection = apiClient.listenRoom({
+            roomId: this.roomUrl,
+        });
         this.backConnection.on("data", (batch: BatchToPusherRoomMessage) => {
-            for (const message of batch.getPayloadList()) {
-                if (message.hasVariablemessage()) {
-                    const variableMessage = message.getVariablemessage() as VariableWithTagMessage;
-                    const readableBy = variableMessage.getReadableby();
+            for (const message of batch.payload) {
+                if (!message.message) {
+                    console.error("Message is undefined for backConnection in PusherRoom");
+                    continue;
+                }
+                switch (message.message.$case) {
+                    case "variableMessage": {
+                        const variableMessage = message.message.variableMessage;
+                        const readableBy = variableMessage.readableBy;
 
-                    // We need to store all variables to dispatch variables later to the listeners
-                    //this.variables.set(variableMessage.getName(), variableMessage.getValue(), readableBy);
+                        // We need to store all variables to dispatch variables later to the listeners
+                        //this.variables.set(variableMessage.name, variableMessage.value, readableBy);
 
-                    // Let's dispatch this variable to all the listeners
-                    for (const listener of this.listeners) {
-                        if (!readableBy || listener.tags.includes(readableBy)) {
-                            const subMessage = new SubMessage();
-                            subMessage.setVariablemessage(variableMessage);
-                            listener.emitInBatch(subMessage);
+                        // Let's dispatch this variable to all the listeners
+                        for (const listener of this.listeners) {
+                            if (!readableBy || listener.tags.includes(readableBy)) {
+                                listener.emitInBatch({
+                                    message: {
+                                        $case: "variableMessage",
+                                        variableMessage: variableMessage,
+                                    },
+                                });
+                            }
                         }
+                        break;
                     }
-                } else if (message.hasEditmapcommandmessage()) {
-                    for (const listener of this.listeners) {
-                        const subMessage = new SubMessage();
-                        subMessage.setEditmapcommandmessage(message.getEditmapcommandmessage());
-                        listener.emitInBatch(subMessage);
+                    case "editMapCommandMessage": {
+                        for (const listener of this.listeners) {
+                            listener.emitInBatch({
+                                message: {
+                                    $case: "editMapCommandMessage",
+                                    editMapCommandMessage: message.message.editMapCommandMessage,
+                                },
+                            });
+                        }
+                        break;
                     }
-                } else if (message.hasErrormessage()) {
-                    const errorMessage = message.getErrormessage() as ErrorMessage;
-                    // Let's dispatch this error to all the listeners
-                    for (const listener of this.listeners) {
-                        const subMessage = new SubMessage();
-                        subMessage.setErrormessage(errorMessage);
-                        listener.emitInBatch(subMessage);
+                    case "errorMessage": {
+                        const errorMessage = message.message.errorMessage;
+                        // Let's dispatch this error to all the listeners
+                        for (const listener of this.listeners) {
+                            listener.emitInBatch({
+                                message: {
+                                    $case: "errorMessage",
+                                    errorMessage: errorMessage,
+                                },
+                            });
+                        }
+                        break;
                     }
-                } else if (message.hasJoinmucroommessage()) {
-                    // Let's dispatch this joinMucRoomMessage to all the listeners
-                    for (const listener of this.listeners) {
-                        const subMessage = new SubMessage();
-                        subMessage.setJoinmucroommessage(message.getJoinmucroommessage());
-                        listener.emitInBatch(subMessage);
+                    case "joinMucRoomMessage": {
+                        // Let's dispatch this joinMucRoomMessage to all the listeners
+                        for (const listener of this.listeners) {
+                            listener.emitInBatch({
+                                message: {
+                                    $case: "joinMucRoomMessage",
+                                    joinMucRoomMessage: message.message.joinMucRoomMessage,
+                                },
+                            });
+                        }
+                        break;
                     }
-                } else if (message.hasLeavemucroommessage()) {
-                    // Let's dispatch this leaveMucRoomMessage to all the listeners
-                    for (const listener of this.listeners) {
-                        const subMessage = new SubMessage();
-                        subMessage.setLeavemucroommessage(message.getLeavemucroommessage());
-                        listener.emitInBatch(subMessage);
+                    case "leaveMucRoomMessage": {
+                        // Let's dispatch this leaveMucRoomMessage to all the listeners
+                        for (const listener of this.listeners) {
+                            listener.emitInBatch({
+                                message: {
+                                    $case: "leaveMucRoomMessage",
+                                    leaveMucRoomMessage: message.message.leaveMucRoomMessage,
+                                },
+                            });
+                        }
+                        break;
                     }
-                } else {
-                    throw new Error("Unexpected message");
+                    default: {
+                        const _exhaustiveCheck: never = message.message;
+                    }
                 }
             }
         });

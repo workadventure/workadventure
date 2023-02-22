@@ -1,10 +1,8 @@
-import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
-import type { SubMessage } from "../../messages/generated/messages_pb";
-import { BatchMessage, ServerToClientMessage } from "../../messages/generated/messages_pb";
-//import HyperExpress from "hyper-express";
+import { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
+import { SubMessage, ServerToClientMessage } from "@workadventure/messages";
 
 export function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
-    socket.batchedMessages.addPayload(payload);
+    socket.batchedMessages.payload.push(payload);
 
     if (socket.batchTimeout === null) {
         socket.batchTimeout = setTimeout(() => {
@@ -12,11 +10,18 @@ export function emitInBatch(socket: ExSocketInterface, payload: SubMessage): voi
                 return;
             }
 
-            const serverToClientMessage = new ServerToClientMessage();
-            serverToClientMessage.setBatchmessage(socket.batchedMessages);
+            const serverToClientMessage: ServerToClientMessage = {
+                message: {
+                    $case: "batchMessage",
+                    batchMessage: socket.batchedMessages,
+                },
+            };
 
-            socket.send(serverToClientMessage.serializeBinary().buffer, true);
-            socket.batchedMessages = new BatchMessage();
+            socket.send(ServerToClientMessage.encode(serverToClientMessage).finish(), true);
+            socket.batchedMessages = {
+                event: "",
+                payload: [],
+            };
             socket.batchTimeout = null;
         }, 100);
     }
