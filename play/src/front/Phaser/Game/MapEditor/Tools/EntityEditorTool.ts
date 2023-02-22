@@ -1,5 +1,4 @@
-import { Point } from "@home-based-studio/phaser3-utils";
-import { AtLeast, CommandConfig, EntityData, EntityDataProperties, EntityPrefab } from "@workadventure/map-editor";
+import { AtLeast, CommandConfig, EntityData, EntityPrefab } from "@workadventure/map-editor";
 import { GameMapEntities } from "@workadventure/map-editor/src/GameMap/GameMapEntities";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { get, Unsubscriber } from "svelte/store";
@@ -14,7 +13,7 @@ import {
 } from "../../../../Stores/MapEditorStore";
 import { Entity } from "../../../ECS/Entity";
 import { TexturesHelper } from "../../../Helpers/TexturesHelper";
-import { EntitiesManager, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
+import { CopyEntityEventData, EntitiesManager, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
 import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { GameScene } from "../../GameScene";
 import { MapEditorModeManager } from "../MapEditorModeManager";
@@ -291,26 +290,23 @@ export class EntityEditorTool extends MapEditorTool {
                 type: "UpdateEntityCommand",
             });
         });
-        this.entitiesManager.on(
-            EntitiesManagerEvent.CopyEntity,
-            (position: Point, prefab: EntityPrefab, properties: EntityDataProperties) => {
-                if (!position || !prefab) {
-                    return;
-                }
-                const entityData: EntityData = {
-                    x: position.x,
-                    y: position.y,
-                    id: crypto.randomUUID(),
-                    prefab: prefab,
-                    properties: properties ?? {},
-                };
-                this.mapEditorModeManager.executeCommand({
-                    entityData,
-                    type: "CreateEntityCommand",
-                });
-                this.cleanPreview();
+        this.entitiesManager.on(EntitiesManagerEvent.CopyEntity, (data: CopyEntityEventData) => {
+            if (!CopyEntityEventData.parse(data)) {
+                return;
             }
-        );
+            const entityData: EntityData = {
+                x: data.position.x,
+                y: data.position.y,
+                id: crypto.randomUUID(),
+                prefab: data.prefab,
+                properties: data.properties ?? {},
+            };
+            this.mapEditorModeManager.executeCommand({
+                entityData,
+                type: "CreateEntityCommand",
+            });
+            this.cleanPreview();
+        });
     }
 
     private bindEventHandlers(): void {

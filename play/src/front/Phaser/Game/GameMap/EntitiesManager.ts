@@ -1,4 +1,4 @@
-import { AtLeast, EntityData } from "@workadventure/map-editor";
+import { AtLeast, EntityData, EntityDataProperties, EntityPrefab } from "@workadventure/map-editor";
 import { Observable, Subject } from "rxjs";
 import { get } from "svelte/store";
 import { actionsMenuStore } from "../../../Stores/ActionsMenuStore";
@@ -13,6 +13,18 @@ import { Entity, EntityEvent } from "../../ECS/Entity";
 import { TexturesHelper } from "../../Helpers/TexturesHelper";
 import type { GameScene } from "../GameScene";
 import type { GameMapFrontWrapper } from "./GameMapFrontWrapper";
+import { z } from "zod";
+
+export const CopyEntityEventData = z.object({
+    position: z.object({
+        x: z.number(),
+        y: z.number(),
+    }),
+    prefab: EntityPrefab,
+    properties: EntityDataProperties.optional(),
+});
+
+export type CopyEntityEventData = z.infer<typeof CopyEntityEventData>;
 
 export enum EntitiesManagerEvent {
     RemoveEntity = "EntitiesManagerEvent:RemoveEntity",
@@ -144,7 +156,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             if (!entity) {
                 return;
             }
-            console.log("D1");
             this.scene.input.setDefaultCursor("copy");
         });
         this.ctrlKey.on("up", () => {
@@ -293,12 +304,12 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         entity.setPosition(oldPos.x, oldPos.y);
         mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
         mapEditorSelectedEntityStore.set(undefined);
-        this.emit(
-            EntitiesManagerEvent.CopyEntity,
-            positionToPlaceCopyAt,
-            entity.getEntityData().prefab,
-            entity.getEntityData().properties
-        );
+        const eventData: CopyEntityEventData = {
+            position: positionToPlaceCopyAt,
+            prefab: entity.getEntityData().prefab,
+            properties: entity.getEntityData().properties,
+        };
+        this.emit(EntitiesManagerEvent.CopyEntity, eventData);
     }
 
     public getEntities(): Map<string, Entity> {
