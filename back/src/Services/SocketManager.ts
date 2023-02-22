@@ -59,6 +59,7 @@ import {
     SpaceUser,
     AddSpaceUserMessage,
     RemoveSpaceUserMessage,
+    PartialSpaceUser,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -82,7 +83,7 @@ import { emitError } from "./MessageHelpers";
 import { Space } from "../Model/Space";
 import { SpacesWatcher } from "../Model/SpacesWatcher";
 
-const debug = Debug("sockermanager");
+const debug = Debug("socketmanager");
 
 function emitZoneMessage(subMessage: SubToPusherMessage, socket: ZoneSocket): void {
     // TODO: should we batch those every 100ms?
@@ -1250,24 +1251,27 @@ export class SocketManager {
         if (!space) {
             throw new Error("Cant unwatch space, space not found");
         }
-        space.removeWatcher(pusher);
-        // If no anymore watchers we delete the space
-        if (space.canBeDeleted()) {
-            this.spaces.delete(spaceName);
-        }
+        this.removeSpaceWatcher(pusher, space);
     }
 
     handleUnwatchAllSpaces(pusher: SpacesWatcher) {
         pusher.spacesWatched.forEach((spaceName) => {
             const space = this.spaces.get(spaceName);
-            if (space) {
-                space.removeWatcher(pusher);
-                // If no anymore watchers we delete the space
-                if (space.canBeDeleted()) {
-                    this.spaces.delete(spaceName);
-                }
+            if (!space) {
+                throw new Error("Cant unwatch space, space not found");
             }
+            this.removeSpaceWatcher(pusher, space);
         });
+    }
+
+    private removeSpaceWatcher(watcher: SpacesWatcher, space: Space) {
+        space.removeWatcher(watcher);
+        // If no anymore watchers we delete the space
+        if (space.canBeDeleted()) {
+            debug("[space] Space %s => deleted", space.name);
+            this.spaces.delete(space.name);
+            watcher.unwatchSpace(space.name);
+        }
     }
 
     handleAddSpaceUserMessage(pusher: SpacesWatcher, addSpaceUserMessage: AddSpaceUserMessage) {
@@ -1279,7 +1283,7 @@ export class SocketManager {
     handleUpdateSpaceUserMessage(pusher: SpacesWatcher, updateSpaceUserMessage: UpdateSpaceUserMessage) {
         const space = this.spaces.get(updateSpaceUserMessage.getSpacename());
         if (space) {
-            space.updateUser(pusher, updateSpaceUserMessage.getUser() as SpaceUser);
+            space.updateUser(pusher, updateSpaceUserMessage.getUser() as PartialSpaceUser);
         }
     }
     handleRemoveSpaceUserMessage(pusher: SpacesWatcher, removeSpaceUserMessage: RemoveSpaceUserMessage) {

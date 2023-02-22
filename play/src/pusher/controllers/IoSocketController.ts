@@ -600,6 +600,7 @@ export class IoSocketController {
                     // Let's join the room
                     const client = this.initClient(ws);
                     await socketManager.handleJoinRoom(client);
+                    // TODO : Get prefix from Admin and joinSpace prefixed
                     await socketManager.handleJoinSpace(client, client.roomId + "/space");
                     socketManager.emitXMPPSettings(client);
 
@@ -768,6 +769,7 @@ export class IoSocketController {
             }
             return undefined;
         };
+        client.spaces = [];
         return client;
     }
 }

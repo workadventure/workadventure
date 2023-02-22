@@ -6,42 +6,55 @@ import {
     RemoveSpaceUserMessage,
     UpdateSpaceUserMessage,
 } from "../Messages/generated/messages_pb";
+import Debug from "debug";
 
 export type SpaceMessage = AddSpaceUserMessage | UpdateSpaceUserMessage | RemoveSpaceUserMessage;
+
+const debug = Debug("space");
 
 export class SpacesWatcher {
     private _spacesWatched: string[];
     private pingInterval: NodeJS.Timer | undefined;
-    private pingTimeout: NodeJS.Timeout | undefined;
+    private pongTimeout: NodeJS.Timeout | undefined;
     public constructor(public readonly uuid: string, private readonly socket: SpaceSocket) {
         this._spacesWatched = [];
+        // Send first ping and then send the second one
+        this.sendPing();
         this.pingInterval = setInterval(() => this.sendPing(), 1000 * 30);
+        debug("SpacesWatcher %s => created", this.uuid);
     }
 
     private sendPing() {
-        if (this.pingTimeout) {
-            clearTimeout(this.pingTimeout);
-            this.pingTimeout = undefined;
+        if (this.pongTimeout) {
+            clearTimeout(this.pongTimeout);
+            this.pongTimeout = undefined;
         }
         const backToPusherSpaceMessage = new BackToPusherSpaceMessage();
         backToPusherSpaceMessage.setPingmessage(new PingMessage());
         this.socket.write(backToPusherSpaceMessage);
-        this.pingTimeout = setTimeout(() => this.socket.end(), 1000 * 20);
+        this.pongTimeout = setTimeout(() => {
+            debug("SpacesWatcher %s => killed => no ping received from Watcher", this.uuid);
+            clearInterval(this.pingInterval);
+            this.pingInterval = undefined;
+            this.socket.end();
+        }, 1000 * 20);
     }
 
     public receivedPong() {
-        if (this.pingTimeout) {
-            clearTimeout(this.pingTimeout);
-            this.pingTimeout = undefined;
+        if (this.pongTimeout) {
+            clearTimeout(this.pongTimeout);
+            this.pongTimeout = undefined;
         }
     }
 
     public watchSpace(spaceName: string) {
         this._spacesWatched.push(spaceName);
+        debug(`SpacesWatcher ${this.uuid} => space watched => ${spaceName}`);
     }
 
     public unwatchSpace(spaceName: string) {
         this._spacesWatched = this._spacesWatched.filter((space) => space !== spaceName);
+        debug(`SpacesWatcher ${this.uuid} => space unwatched => ${spaceName}`);
     }
 
     get spacesWatched(): string[] {

@@ -53,6 +53,7 @@ import {
     AddSpaceUserMessage,
     RemoveSpaceUserMessage,
     PingMessage,
+    PartialSpaceUser,
 } from "../../messages/generated/messages_pb";
 
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
@@ -70,6 +71,7 @@ import { ErrorApiData, MucRoomDefinitionInterface } from "@workadventure/message
 import { BoolValue, Int32Value, StringValue } from "google-protobuf/google/protobuf/wrappers_pb";
 import { EJABBERD_DOMAIN } from "../enums/EnvironmentVariable";
 import { Space } from "../models/Space";
+import { getColorByString } from "@workadventure/shared-utils/src/String/Color";
 
 const debug = Debug("socket");
 
@@ -312,8 +314,8 @@ export class SocketManager implements ZoneEventListener {
         try {
             const backId = apiClientRepository.getIndex(spaceName);
             let spaceStreamToPusher = this.spaceStreamsToPusher.get(backId);
-            const apiSpaceClient = await apiClientRepository.getSpaceClient(spaceName);
             if (!spaceStreamToPusher) {
+                const apiSpaceClient = await apiClientRepository.getSpaceClient(spaceName);
                 spaceStreamToPusher = apiSpaceClient.watchSpace() as BackSpaceConnection;
                 spaceStreamToPusher
                     .on("data", (message: BackToPusherSpaceMessage) => {
@@ -330,7 +332,7 @@ export class SocketManager implements ZoneEventListener {
                             const space = this.spaces.get(updateSpaceUserMessage.getSpacename());
                             // FIXME: What if space is not existing ?
                             if (space) {
-                                space.localUpdateUser(updateSpaceUserMessage.getUser() as SpaceUser);
+                                space.localUpdateUser(updateSpaceUserMessage.getUser() as PartialSpaceUser);
                             }
                         } else if (message.hasRemovespaceusermessage()) {
                             const removedSpaceUserMessage =
@@ -344,18 +346,25 @@ export class SocketManager implements ZoneEventListener {
                             if (spaceStreamToPusher) {
                                 if (spaceStreamToPusher.pingTimeout) {
                                     clearTimeout(spaceStreamToPusher.pingTimeout);
+                                    spaceStreamToPusher.pingTimeout = undefined;
                                 }
-                                spaceStreamToPusher.pingTimeout = setTimeout(
-                                    () => spaceStreamToPusher?.end(),
-                                    1000 * 30
-                                );
                                 const pusherToBackSpaceMessage = new PusherToBackSpaceMessage();
                                 pusherToBackSpaceMessage.setPongmessage(new PingMessage());
                                 spaceStreamToPusher.write(pusherToBackSpaceMessage);
+
+                                spaceStreamToPusher.pingTimeout = setTimeout(() => {
+                                    if (spaceStreamToPusher) {
+                                        debug("[space] spaceStreamToPusher closed, no ping received");
+                                        spaceStreamToPusher.end();
+                                    }
+                                }, 1000 * 60);
+                            } else {
+                                throw new Error("spaceStreamToPusher => Message received but can't answer to it");
                             }
                         }
                     })
                     .on("end", () => {
+                        debug("[space] spaceStreamsToPusher ended");
                         this.spaceStreamsToPusher.delete(backId);
                         this.spaces.delete(spaceName);
                     })
@@ -373,23 +382,42 @@ export class SocketManager implements ZoneEventListener {
             client.backSpaceConnection = spaceStreamToPusher;
             let space: Space | undefined = this.spaces.get(spaceName);
             if (!space) {
-                space = new Space(spaceName, spaceStreamToPusher, backId);
+                space = new Space(spaceName, spaceStreamToPusher, backId, client);
                 this.spaces.set(spaceName, space);
+            } else {
+                space.addClientWatcher(client);
             }
             client.spaces.push(space);
 
-            const spaceUser = new SpaceUser();
-            spaceUser.setUuid(client.userUuid);
-            spaceUser.setPlayuri(client.roomId);
-            spaceUser.setName(client.name);
-            spaceUser.setAvailabilitystatus(client.availabilityStatus);
-            spaceUser.setIslogged(client.isLogged);
-
+            const spaceUser = new SpaceUser()
+                .setUuid(client.userUuid)
+                .setPlayuri(client.roomId)
+                .setName(client.name)
+                .setAvailabilitystatus(client.availabilityStatus)
+                .setIslogged(client.isLogged)
+                .setColor(getColorByString(client.name));
+            const characterLayersList: CharacterLayerMessage[] = [];
+            client.characterLayers.forEach((characterLayer) => {
+                const characterLayerMessage = new CharacterLayerMessage().setName(characterLayer.id);
+                if (characterLayer.layer) {
+                    characterLayerMessage.setLayer(characterLayer.layer);
+                }
+                if (characterLayer.url) {
+                    characterLayerMessage.setUrl(characterLayer.url);
+                }
+                characterLayersList.push(characterLayerMessage);
+            });
+            spaceUser.setCharacterlayersList(characterLayersList);
             if (client.visitCardUrl) {
-                const visitCardUrl = new StringValue();
-                visitCardUrl.setValue(client.visitCardUrl);
-                spaceUser.setVisitcardurl(visitCardUrl);
+                spaceUser.setVisitcardurl(new StringValue().setValue(client.visitCardUrl));
             }
+            // TODO : Get room name from admin
+            if (client.roomName) {
+                spaceUser.setRoomname(client.roomName);
+            }
+
+            spaceUser.setTagsList(client.tags);
+
             client.spaceUser = spaceUser;
 
             if (this.spaceStreamsToPusher.has(backId)) {
@@ -402,6 +430,7 @@ export class SocketManager implements ZoneEventListener {
                 const pusherToBackSpaceMessage = new PusherToBackSpaceMessage();
                 pusherToBackSpaceMessage.setWatchspacemessage(watchSpaceMessage);
                 spaceStreamToPusher.write(pusherToBackSpaceMessage);
+                space.localAddUser(spaceUser);
             }
         } catch (e) {
             console.error('An error occurred on "join_space" event');
@@ -519,8 +548,13 @@ export class SocketManager implements ZoneEventListener {
 
         if (client.spaceUser.getAvailabilitystatus() !== playerDetailsMessage.getAvailabilitystatus()) {
             client.spaceUser.setAvailabilitystatus(playerDetailsMessage.getAvailabilitystatus());
+            const partialSpaceUser = new PartialSpaceUser();
+            const availabilityStatus = new Int32Value();
+            availabilityStatus.setValue(playerDetailsMessage.getAvailabilitystatus());
+            partialSpaceUser.setAvailabilitystatus(availabilityStatus);
+            partialSpaceUser.setUuid(client.userUuid);
             client.spaces.forEach((space) => {
-                space.updateUser(client.spaceUser);
+                space.updateUser(partialSpaceUser);
             });
         }
     }

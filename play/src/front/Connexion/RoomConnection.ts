@@ -351,6 +351,18 @@ export class RoomConnection implements RoomConnection {
                                 this._leaveMucRoomMessageStream.next(subMessage.leaveMucRoomMessage);
                                 break;
                             }
+                            case "addSpaceUserMessage": {
+                                console.warn("addSpaceUserMessage", subMessage.addSpaceUserMessage);
+                                break;
+                            }
+                            case "updateSpaceUserMessage": {
+                                console.warn("updateSpaceUserMessage", subMessage.updateSpaceUserMessage);
+                                break;
+                            }
+                            case "removeSpaceUserMessage": {
+                                console.warn("removeSpaceUserMessage", subMessage.removeSpaceUserMessage);
+                                break;
+                            }
                             default: {
                                 // Security check: if we forget a "case", the line below will catch the error at compile-time.
                                 //@ts-ignore

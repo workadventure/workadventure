@@ -16,7 +16,7 @@ import { ServerDuplexStream } from "@grpc/grpc-js";
 
 export type SpaceSocket = ServerDuplexStream<PusherToBackSpaceMessage, BackToPusherSpaceMessage>;
 
-const debug = Debug("spacemanager");
+const debug = Debug("space");
 
 const spaceManager: ISpaceManagerServer = {
     watchSpace: (call: SpaceSocket): void => {
@@ -50,14 +50,15 @@ const spaceManager: ISpaceManagerServer = {
             } else if (message.hasPongmessage()) {
                 pusher.receivedPong();
             }
-        });
-
-        call.on("end", () => {
-            debug("watchSpace ended");
-            socketManager.handleUnwatchAllSpaces(pusher);
-
-            call.end();
-        });
+        })
+            .on("error", (e) => {
+                console.error("Error on watchSpace", e);
+            })
+            .on("end", () => {
+                socketManager.handleUnwatchAllSpaces(pusher);
+                debug("watchSpace => ended %s", pusher.uuid);
+                call.end();
+            });
     },
 };
 
