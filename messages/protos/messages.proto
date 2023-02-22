@@ -443,6 +443,7 @@ message RoomJoinedMessage {
   EditMapCommandsArrayMessage editMapCommandsArrayMessage = 13;
   string webrtcUserName = 14;
   string webrtcPassword = 15;
+  bool canEdit = 16;
 }
 
 message WebRtcStartMessage {
@@ -563,6 +564,7 @@ message JoinRoomMessage {
   repeated ApplicationMessage applications = 14;
   string userJid = 15;
   string lastCommandId = 16;
+  bool canEdit = 17;
 }
 
 message UserJoinedZoneMessage {

@@ -92,6 +92,7 @@ interface UpgradeData {
     mucRooms: Array<MucRoomDefinitionInterface> | undefined;
     activatedInviteUser: boolean | undefined;
     isLogged: boolean;
+    canEdit: boolean;
 }
 
 interface UpgradeFailedInvalidData {
@@ -378,6 +379,7 @@ export class IoSocketController {
                             jabberPassword: null,
                             mucRooms: [],
                             activatedInviteUser: true,
+                            canEdit: false,
                         };
 
                         let characterLayerObjs: WokaDetail[];
@@ -510,6 +512,7 @@ export class IoSocketController {
                                 jabberPassword: userData.jabberPassword,
                                 mucRooms: userData.mucRooms,
                                 activatedInviteUser: userData.activatedInviteUser,
+                                canEdit: userData.canEdit ?? false,
                                 applications: userData.applications,
                                 position: {
                                     x: x,
@@ -761,6 +764,7 @@ export class IoSocketController {
         client.jabberPassword = ws.jabberPassword;
         client.mucRooms = ws.mucRooms;
         client.activatedInviteUser = ws.activatedInviteUser;
+        client.canEdit = ws.canEdit;
         client.isLogged = ws.isLogged;
         client.applications = ws.applications;
         client.customJsonReplacer = (key: unknown, value: unknown): string | undefined => {

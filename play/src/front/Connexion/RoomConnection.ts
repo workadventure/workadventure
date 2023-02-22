@@ -1,4 +1,4 @@
-import { PUSHER_URL, UPLOADER_URL } from "../Enum/EnvironmentVariable";
+import { ENABLE_FEATURE_MAP_EDITOR, PUSHER_URL, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
@@ -19,6 +19,7 @@ import { get } from "svelte/store";
 import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
 import {
     inviteUserActivated,
+    mapEditorActivated,
     menuIconVisiblilityStore,
     menuVisiblilityStore,
     warningContainerStore,
@@ -405,6 +406,7 @@ export class RoomConnection implements RoomConnection {
                             ? roomJoinedMessage.activatedInviteUser
                             : true
                     );
+                    mapEditorActivated.set(ENABLE_FEATURE_MAP_EDITOR && roomJoinedMessage.canEdit);
 
                     // If there are scripts from the admin, run it
                     if (roomJoinedMessage.applications != undefined) {

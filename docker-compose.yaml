@@ -163,6 +163,7 @@ services:
         #command: npm run profile
         environment:
             DEBUG: "*"
+            PLAY_URL: http://play.workadventure.localhost
             # On startup, we ask the messages container to regenerate the files.
             # Note: we need to use this "messages" container because of ARM64 processors that are not supported with protoc (used in "messages" container)
             STARTUP_COMMAND_0: touch /usr/src/app/back/src/Messages/generate_request/need_regenerate
@@ -180,7 +181,7 @@ services:
             BBB_URL: $BBB_URL
             BBB_SECRET: $BBB_SECRET
             TURN_STATIC_AUTH_SECRET: "$TURN_STATIC_AUTH_SECRET"
-            MAX_PER_GROUP: "MAX_PER_GROUP"
+            MAX_PER_GROUP: "$MAX_PER_GROUP"
             REDIS_HOST: redis
             NODE_ENV: development
             STORE_VARIABLES_FOR_LOCAL_MAPS: "true"

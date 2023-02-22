@@ -101,6 +101,7 @@ services:
   back:
     image: thecodingmachine/workadventure-back:${VERSION}
     environment:
+      - PLAY_URL=https://${PLAY_HOST}
       - SECRET_JITSI_KEY
       - ENABLE_FEATURE_MAP_EDITOR
       - SECRET_KEY

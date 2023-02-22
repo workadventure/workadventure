@@ -216,6 +216,7 @@ export class SocketManager implements ZoneEventListener {
             joinRoomMessage.setActivatedinviteuser(
                 client.activatedInviteUser != undefined ? client.activatedInviteUser : true
             );
+            joinRoomMessage.setCanedit(client.canEdit);
 
             if (client.applications != undefined) {
                 for (const aplicationValue of client.applications) {

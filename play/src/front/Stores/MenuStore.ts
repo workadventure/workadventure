@@ -70,6 +70,7 @@ export const inviteMenu: MenuItem = {
 };
 
 export const inviteUserActivated = writable(true);
+export const mapEditorActivated = writable(false);
 
 function createSubMenusStore() {
     const { subscribe, update } = writable<MenuItem[]>([
