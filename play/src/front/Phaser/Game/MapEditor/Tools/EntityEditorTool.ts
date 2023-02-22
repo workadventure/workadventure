@@ -63,6 +63,7 @@ export class EntityEditorTool extends MapEditorTool {
         this.unbindEventHandlers();
     }
     public activate(): void {
+        this.entitiesManager.makeAllEntitiesInteractive();
         this.bindEventHandlers();
     }
     public destroy(): void {
@@ -198,6 +199,7 @@ export class EntityEditorTool extends MapEditorTool {
         const entity = this.entitiesManager.addEntity(structuredClone(config));
         if (localCommand) {
             mapEditorSelectedEntityStore.set(entity);
+            mapEditorSelectedEntityPrefabStore.set(undefined);
             mapEntityEditorModeStore.set(MapEntityEditorMode.EditMode);
         }
     }
@@ -245,7 +247,7 @@ export class EntityEditorTool extends MapEditorTool {
             }
             switch (mode) {
                 case MapEntityEditorMode.AddMode: {
-                    this.entitiesManager.makeAllEntitiesNonInteractive();
+                    this.entitiesManager.makeAllEntitiesInteractive();
                     break;
                 }
                 case MapEntityEditorMode.EditMode: {
@@ -331,6 +333,15 @@ export class EntityEditorTool extends MapEditorTool {
         if (get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode && gameObjects.length === 0) {
             mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
         }
+        // if (get(mapEntityEditorModeStore) === MapEntityEditorMode.AddMode && gameObjects.length > 0) {
+        //     for (const obj of gameObjects) {
+        //         if (this.isEntity(obj)) {
+        //             mapEditorSelectedEntityStore.set(obj)
+        //             mapEntityEditorModeStore.set(MapEntityEditorMode.EditMode);
+        //             break;
+        //         }
+        //     }
+        // }
         if (!this.entityPrefabPreview || !this.entityPrefab) {
             return;
         }
@@ -394,5 +405,9 @@ export class EntityEditorTool extends MapEditorTool {
             x: Math.floor(this.entityPrefabPreview.displayWidth / 32) % 2 === 1 ? 16 : 0,
             y: Math.floor(this.entityPrefabPreview.displayHeight / 32) % 2 === 1 ? 16 : 0,
         };
+    }
+
+    private isEntity(obj: Phaser.GameObjects.GameObject): obj is Entity {
+        return (obj as Entity).getEntityData() !== undefined;
     }
 }

@@ -4,6 +4,7 @@ import { get } from "svelte/store";
 import { actionsMenuStore } from "../../../Stores/ActionsMenuStore";
 import {
     mapEditorModeStore,
+    mapEditorSelectedEntityPrefabStore,
     mapEditorSelectedEntityStore,
     MapEntityEditorMode,
     mapEntityEditorModeStore,
@@ -115,6 +116,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
     }
 
     public makeAllEntitiesNonInteractive(): void {
+        console.log("disable interactive");
         this.entities.forEach((entity) => {
             entity.disableInteractive();
         });
@@ -216,14 +218,9 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             }
         });
         entity.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore)) {
-                const entityEditorMode = get(mapEntityEditorModeStore);
-                switch (entityEditorMode) {
-                    case MapEntityEditorMode.EditMode: {
-                        mapEditorSelectedEntityStore.set(entity);
-                        break;
-                    }
-                }
+            if (get(mapEditorModeStore) && !get(mapEditorSelectedEntityPrefabStore)) {
+                mapEntityEditorModeStore.set(MapEntityEditorMode.EditMode);
+                mapEditorSelectedEntityStore.set(entity);
             }
         });
         entity.on(Phaser.Input.Events.POINTER_OVER, () => {
