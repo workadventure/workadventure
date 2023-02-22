@@ -9,7 +9,7 @@
     import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
     import { localUserStore } from "../../Connexion/LocalUserStore";
-    import { getColorByString } from "../Video/utils";
+    import { Color } from "@workadventure/shared-utils";
     import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
     import type { Unsubscriber } from "svelte/store";
     import { derived, get } from "svelte/store";
@@ -91,7 +91,7 @@
                                         name,
                                         playUri,
                                         authToken: localUserStore.getAuthToken(),
-                                        color: getColorByString(name ?? ""),
+                                        color: Color.getColorByString(name ?? ""),
                                         woka: wokaSrc,
                                         isLogged: localUserStore.isLogged(),
                                         availabilityStatus: get(availabilityStatusStore),
