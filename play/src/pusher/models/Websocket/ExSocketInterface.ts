@@ -8,6 +8,10 @@ import type {
     PusherToBackMessage,
     ServerToClientMessage,
     SubMessage,
+    BackToPusherSpaceMessage,
+    PusherToBackSpaceMessage,
+    SpaceFilterMessage,
+    SpaceUser,
 } from "../../../messages/generated/messages_pb";
 import type { ClientDuplexStream } from "@grpc/grpc-js";
 import type { Zone } from "../Zone";
@@ -15,7 +19,6 @@ import type { compressors } from "hyper-express";
 import type { WokaDetail, MucRoomDefinitionInterface, ApplicationDefinitionInterface } from "@workadventure/messages";
 import type { PusherRoom } from "../PusherRoom";
 import { CustomJsonReplacerInterface } from "../CustomJsonReplacerInterface";
-import { BackToPusherSpaceMessage, PusherToBackSpaceMessage, SpaceUser } from "../../../messages/generated/messages_pb";
 import { Space } from "../Space";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
@@ -63,6 +66,6 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable,
     applications: Array<ApplicationDefinitionInterface> | undefined;
     canEdit: boolean;
     spaceUser: SpaceUser;
-    backSpaceConnection: BackSpaceConnection;
     spaces: Space[];
+    spacesFilters: SpaceFilterMessage[];
 }

@@ -62,6 +62,15 @@ export class Space implements CustomJsonReplacerInterface {
             if (spaceUser.hasVisitcardurl()) {
                 user.setVisitcardurl(spaceUser.getVisitcardurl());
             }
+            if (spaceUser.hasScreensharing()) {
+                user.setScreensharing(spaceUser.getScreensharing()?.getValue() as boolean);
+            }
+            if (spaceUser.hasAudiosharing()) {
+                user.setAudiosharing(spaceUser.getAudiosharing()?.getValue() as boolean);
+            }
+            if (spaceUser.hasVideosharing()) {
+                user.setVideosharing(spaceUser.getVideosharing()?.getValue() as boolean);
+            }
             usersList.set(spaceUser.getUuid(), user);
             const message = new UpdateSpaceUserMessage();
             message.setSpacename(this.name);

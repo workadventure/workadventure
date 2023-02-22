@@ -7,6 +7,8 @@ import {
     SendUserMessage,
     ServerToClientMessage,
     CompanionMessage,
+    AddSpaceFilterMessage,
+    UpdateSpaceFilterMessage,
 } from "../../messages/generated/messages_pb";
 import type {
     UserMovesMessage,
@@ -703,6 +705,16 @@ export class IoSocketController {
                             client,
                             message.getAskpositionmessage() as AskPositionMessage
                         );
+                    } else if (message.hasAddspacefiltermessage()) {
+                        socketManager.handleAddSpaceFilterMessage(
+                            client,
+                            message.getAddspacefiltermessage() as AddSpaceFilterMessage
+                        );
+                    } else if (message.hasUpdatespacefiltermessage()) {
+                        socketManager.handleUpdateSpaceFilterMessage(
+                            client,
+                            message.getUpdatespacefiltermessage() as UpdateSpaceFilterMessage
+                        );
                     }
 
                     /* Ok is false if backpressure was built up, wait for drain */
@@ -774,6 +786,7 @@ export class IoSocketController {
             return undefined;
         };
         client.spaces = [];
+        client.spacesFilters = [];
         return client;
     }
 }

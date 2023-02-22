@@ -54,6 +54,10 @@ import {
     RemoveSpaceUserMessage,
     PingMessage,
     PartialSpaceUser,
+    SpaceFilterMessage,
+    SpaceFilterContainName,
+    AddSpaceFilterMessage,
+    UpdateSpaceFilterMessage,
 } from "../../messages/generated/messages_pb";
 
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
@@ -72,6 +76,7 @@ import { BoolValue, Int32Value, StringValue } from "google-protobuf/google/proto
 import { EJABBERD_DOMAIN } from "../enums/EnvironmentVariable";
 import { Space } from "../models/Space";
 import { Color } from "@workadventure/shared-utils";
+import { v4 as uuid } from "uuid";
 
 const debug = Debug("socket");
 
@@ -380,7 +385,7 @@ export class SocketManager implements ZoneEventListener {
                         );
                     });
             }
-            client.backSpaceConnection = spaceStreamToPusher;
+
             let space: Space | undefined = this.spaces.get(spaceName);
             if (!space) {
                 space = new Space(spaceName, spaceStreamToPusher, backId, client);
@@ -397,6 +402,9 @@ export class SocketManager implements ZoneEventListener {
                 .setAvailabilitystatus(client.availabilityStatus)
                 .setIslogged(client.isLogged)
                 .setColor(Color.getColorByString(client.name));
+
+            // TODO : @DAN you can add the new fields here
+            spaceUser.setAudiosharing(false).setScreensharing(false).setVideosharing(false);
             const characterLayersList: CharacterLayerMessage[] = [];
             client.characterLayers.forEach((characterLayer) => {
                 const characterLayerMessage = new CharacterLayerMessage().setName(characterLayer.id);
@@ -420,6 +428,13 @@ export class SocketManager implements ZoneEventListener {
             spaceUser.setTagsList(client.tags);
 
             client.spaceUser = spaceUser;
+
+            client.spacesFilters = [
+                new SpaceFilterMessage()
+                    .setSpacename(spaceName)
+                    .setFiltername(new StringValue().setValue(uuid()))
+                    .setSpacefiltercontainname(new SpaceFilterContainName().setValue("test")),
+            ];
 
             if (this.spaceStreamsToPusher.has(backId)) {
                 space.addUser(spaceUser);
@@ -966,6 +981,24 @@ export class SocketManager implements ZoneEventListener {
         if (!client.disconnecting) {
             client.send(serverToClientMessage.serializeBinary().buffer, true);
         }
+    }
+
+    handleAddSpaceFilterMessage(client: ExSocketInterface, addSpaceFilterMessage: AddSpaceFilterMessage) {
+        client.spacesFilters.push(addSpaceFilterMessage.getSpacefiltermessage() as SpaceFilterMessage);
+    }
+
+    handleUpdateSpaceFilterMessage(client: ExSocketInterface, updateSpaceFilterMessage: UpdateSpaceFilterMessage) {
+        const filterMessage = updateSpaceFilterMessage.getSpacefiltermessage() as SpaceFilterMessage;
+        const oldFilter = client.spacesFilters.find(
+            (filter) => filter.getFiltername() === filterMessage.getFiltername()
+        );
+        const space = client.spaces.find((space) => space.name === filterMessage.getSpacename());
+        if (space) {
+            // Check delta between responses by old and new filter
+        }
+        client.spacesFilters.filter((filter) =>
+            filter.getFiltername() === filterMessage.getFiltername() ? filterMessage : filter
+        );
     }
 }
 

@@ -24,8 +24,12 @@
     import { connectionManager } from "../../Connexion/ConnectionManager";
     import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
     import { Locales } from "../../../i18n/i18n-types";
+    import { SpaceFilterMessage } from "@workadventure/messages";
 
     let chatIframe: HTMLIFrameElement;
+    let searchElement: HTMLInputElement;
+
+    let searchFilter: SpaceFilterMessage | undefined = undefined;
 
     let subscribeListeners: Array<Unsubscriber> = [];
     let subscribeObservers: Array<Subscription> = [];
@@ -171,10 +175,38 @@
             chatVisibilityStore.set(true);
         }
     }
+
+    function search() {
+        if (!searchFilter) {
+            searchFilter = {
+                filterName: undefined,
+                spaceName: "http://play.workadventure.localhost/@/wa/workadventure-premium/public/space",
+                filter: {
+                    $case: "spaceFilterContainName",
+                    spaceFilterContainName: {
+                        value: searchElement.value,
+                    },
+                },
+            } as SpaceFilterMessage;
+            gameManager.getCurrentGameScene().connection?.emitAddSpaceFilter({ spaceFilterMessage: searchFilter });
+        } else {
+            searchFilter = {
+                ...searchFilter,
+                filter: {
+                    $case: "spaceFilterContainName",
+                    spaceFilterContainName: {
+                        value: searchElement.value,
+                    },
+                },
+            } as SpaceFilterMessage;
+            gameManager.getCurrentGameScene().connection?.emitUpdateSpaceFilter({ spaceFilterMessage: searchFilter });
+        }
+    }
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
 <div id="chatWindow" class:show={$chatVisibilityStore}>
+    <input type="text" bind:this={searchElement} on:change={search} />
     {#if $chatVisibilityStore}<div class="hide">
             <button class="close-window" on:click={closeChat}>&#215;</button>
         </div>{/if}

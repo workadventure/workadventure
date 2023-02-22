@@ -4,6 +4,7 @@ import {
     PartialSpaceUser,
     PusherToBackSpaceMessage,
     RemoveSpaceUserMessage,
+    SpaceFilterContainName,
     SpaceUser,
     SubMessage,
     UpdateSpaceUserMessage,
@@ -53,7 +54,7 @@ export class Space implements CustomJsonReplacerInterface {
         const addSpaceUserMessage = new AddSpaceUserMessage();
         addSpaceUserMessage.setSpacename(this.name);
         addSpaceUserMessage.setUser(spaceUser);
-        this.notify(addSpaceUserMessage);
+        this.notifyAll(addSpaceUserMessage);
     }
 
     public updateUser(spaceUser: PartialSpaceUser) {
@@ -96,13 +97,22 @@ export class Space implements CustomJsonReplacerInterface {
             if (spaceUser.hasVisitcardurl()) {
                 user.setVisitcardurl(spaceUser.getVisitcardurl());
             }
+            if (spaceUser.hasScreensharing()) {
+                user.setScreensharing(spaceUser.getScreensharing()?.getValue() as boolean);
+            }
+            if (spaceUser.hasAudiosharing()) {
+                user.setAudiosharing(spaceUser.getAudiosharing()?.getValue() as boolean);
+            }
+            if (spaceUser.hasVideosharing()) {
+                user.setVideosharing(spaceUser.getVideosharing()?.getValue() as boolean);
+            }
             this.users.set(spaceUser.getUuid(), user);
             debug(`Space ${this.name} : space user updated ${spaceUser.getUuid()}`);
 
             const updateSpaceUserMessage = new UpdateSpaceUserMessage();
             updateSpaceUserMessage.setSpacename(this.name);
             updateSpaceUserMessage.setUser(spaceUser);
-            this.notify(updateSpaceUserMessage);
+            this.notifyAll(updateSpaceUserMessage);
         }
     }
 
@@ -117,27 +127,72 @@ export class Space implements CustomJsonReplacerInterface {
         this.localRemoveUser(uuid);
     }
     public localRemoveUser(uuid: string) {
+        const user = this.users.get(uuid);
         this.users.delete(uuid);
         debug(`Space ${this.name} : space user removed ${uuid}`);
 
         const removeSpaceUserMessage = new RemoveSpaceUserMessage();
         removeSpaceUserMessage.setUseruuid(uuid);
         removeSpaceUserMessage.setSpacename(this.name);
-        this.notify(removeSpaceUserMessage);
+
+        this.notifyAll(removeSpaceUserMessage, user);
     }
 
-    private notify(spaceMessage: SpaceMessage) {
-        [...this.clientWatchers.values()].forEach((watcher) => {
-            const subMessage = new SubMessage();
-            if (spaceMessage instanceof AddSpaceUserMessage) {
-                subMessage.setAddspaceusermessage(spaceMessage);
-            } else if (spaceMessage instanceof UpdateSpaceUserMessage) {
-                subMessage.setUpdatespaceusermessage(spaceMessage);
-            } else if (spaceMessage instanceof RemoveSpaceUserMessage) {
-                subMessage.setRemovespaceusermessage(spaceMessage);
-            }
-            watcher.emitInBatch(subMessage);
-        });
+    private notifyAll(spaceMessage: SpaceMessage, user: SpaceUser | undefined = undefined) {
+        [...this.clientWatchers.values()]
+            .filter((watcher) => this.isWatcherTargeted(watcher, spaceMessage, user))
+            .forEach((watcher) => {
+                const subMessage = new SubMessage();
+                if (spaceMessage instanceof AddSpaceUserMessage) {
+                    subMessage.setAddspaceusermessage(spaceMessage);
+                } else if (spaceMessage instanceof UpdateSpaceUserMessage) {
+                    subMessage.setUpdatespaceusermessage(spaceMessage);
+                } else if (spaceMessage instanceof RemoveSpaceUserMessage) {
+                    subMessage.setRemovespaceusermessage(spaceMessage);
+                }
+                watcher.emitInBatch(subMessage);
+            });
+    }
+
+    private notifyMe(watcher: ExSocketInterface, spaceMessage: SpaceMessage, user: SpaceUser | undefined = undefined) {
+        const subMessage = new SubMessage();
+        if (spaceMessage instanceof AddSpaceUserMessage) {
+            subMessage.setAddspaceusermessage(spaceMessage);
+        } else if (spaceMessage instanceof UpdateSpaceUserMessage) {
+            subMessage.setUpdatespaceusermessage(spaceMessage);
+        } else if (spaceMessage instanceof RemoveSpaceUserMessage) {
+            subMessage.setRemovespaceusermessage(spaceMessage);
+        }
+        watcher.emitInBatch(subMessage);
+    }
+
+    private isWatcherTargeted(
+        watcher: ExSocketInterface,
+        spaceMessage: SpaceMessage,
+        user: SpaceUser | undefined = undefined
+    ) {
+        const filtersOfThisSpace = watcher.spacesFilters.filter(
+            (spaceFilters) => spaceFilters.getSpacename() === this.name
+        );
+        return (
+            filtersOfThisSpace.length === 0 ||
+            filtersOfThisSpace.filter((spaceFilters) => {
+                if (spaceFilters.hasSpacefiltercontainname()) {
+                    const spaceFilterContainName = spaceFilters.getSpacefiltercontainname() as SpaceFilterContainName;
+                    let name = "";
+                    if (spaceMessage instanceof AddSpaceUserMessage || spaceMessage instanceof UpdateSpaceUserMessage) {
+                        const user = this.users.get(spaceMessage.getUser()?.getUuid() as string);
+                        name = user?.getName() as string;
+                    } else {
+                        name = user?.getName() as string;
+                    }
+                    if (name.includes(spaceFilterContainName.getValue())) {
+                        return true;
+                    }
+                }
+                return false;
+            }).length > 0
+        );
     }
 
     public isEmpty() {

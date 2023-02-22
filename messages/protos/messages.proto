@@ -226,6 +226,9 @@ message ClientToServerMessage {
     //XmppMessage xmppMessage = 22;
     AskPositionMessage askPositionMessage = 23;
     EditMapCommandMessage editMapCommandMessage = 24;
+    AddSpaceFilterMessage addSpaceFilterMessage = 25;
+    RemoveSpaceFilterMessage removeSpaceFilterMessage = 26;
+    UpdateSpaceFilterMessage updateSpaceFilterMessage = 27;
   }
 }
 
@@ -868,6 +871,9 @@ message SpaceUser{
   google.protobuf.StringValue roomName = 8;
   google.protobuf.StringValue visitCardUrl = 9;
   repeated string tags = 10;
+  bool videoSharing = 11;
+  bool audioSharing = 12;
+  bool screenSharing = 13;
 }
 
 message PartialSpaceUser{
@@ -881,6 +887,9 @@ message PartialSpaceUser{
   google.protobuf.StringValue roomName = 8;
   google.protobuf.StringValue visitCardUrl = 9;
   repeated string tags = 10;
+  google.protobuf.BoolValue videoSharing = 11;
+  google.protobuf.BoolValue audioSharing = 12;
+  google.protobuf.BoolValue screenSharing = 13;
 }
 
 message AddSpaceUserMessage{
@@ -895,6 +904,44 @@ message RemoveSpaceUserMessage{
   string spaceName = 1;
   string userUuid = 2;
 }
+
+
+
+/** Filter **/
+message AddSpaceFilterMessage{
+  SpaceFilterMessage spaceFilterMessage = 1;
+}
+message UpdateSpaceFilterMessage{
+  SpaceFilterMessage spaceFilterMessage = 1;
+}
+message RemoveSpaceFilterMessage{
+  SpaceFilterMessage spaceFilterMessage = 1;
+}
+message SpaceFilterMessage{
+  google.protobuf.StringValue filterName = 1;
+  string spaceName = 2;
+  oneof filter {
+    SpaceFilterContainName spaceFilterContainName = 3;
+  }
+}
+message SpaceFilterContainName{
+  string value = 1;
+}
+
+/*
+message Filter {
+  enum Operator {
+    EQUAL = 0;
+    GREATER_THAN = 1;
+    LESS_THAN = 2;
+    CONTAINS = 3;
+  }
+
+  string fieldName = 1;
+  Operator operator = 2;
+  string value = 3;
+}
+ */
 /*********************************************************************************
  * End Spaces messages
  *********************************************************************************/

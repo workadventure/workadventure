@@ -58,6 +58,9 @@ import {
     WorldConnexionMessage,
     XmppSettingsMessage,
     RefreshRoomMessage,
+    AddSpaceFilterMessage,
+    SpaceFilterMessage,
+    UpdateSpaceFilterMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -1207,6 +1210,28 @@ export class RoomConnection implements RoomConnection {
                     userIdentifier: uuid,
                     playUri,
                 },
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitAddSpaceFilter(filter: AddSpaceFilterMessage) {
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "addSpaceFilterMessage",
+                addSpaceFilterMessage: filter,
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitUpdateSpaceFilter(filter: UpdateSpaceFilterMessage) {
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "updateSpaceFilterMessage",
+                updateSpaceFilterMessage: filter,
             },
         }).finish();
 
