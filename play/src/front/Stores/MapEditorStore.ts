@@ -19,7 +19,6 @@ function createMapEditorModeStore() {
 export enum MapEntityEditorMode {
     AddMode = "AddMode",
     EditMode = "EditMode",
-    RemoveMode = "RemoveMode",
 }
 
 export function onMapEditorInputFocus() {

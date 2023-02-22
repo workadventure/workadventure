@@ -23,19 +23,12 @@
         class={$mapEntityEditorModeStore === MapEntityEditorMode.EditMode ? "active" : ""}
         on:click={() => changeStore(MapEntityEditorMode.EditMode)}>{$LL.mapEditor.entityEditor.editButton()}</button
     >
-    <button
-        class={$mapEntityEditorModeStore === MapEntityEditorMode.RemoveMode ? "active" : ""}
-        on:click={() => changeStore(MapEntityEditorMode.RemoveMode)}>{$LL.mapEditor.entityEditor.deleteButton()}</button
-    >
 </div>
 {#if $mapEntityEditorModeStore === MapEntityEditorMode.AddMode}
     <ItemPicker />
 {/if}
 {#if $mapEntityEditorModeStore === MapEntityEditorMode.EditMode}
     <MapEntityPropertyEditor />
-{/if}
-{#if $mapEntityEditorModeStore === MapEntityEditorMode.RemoveMode}
-    {$LL.mapEditor.entityEditor.removeInstructions()}
 {/if}
 
 <style lang="scss">

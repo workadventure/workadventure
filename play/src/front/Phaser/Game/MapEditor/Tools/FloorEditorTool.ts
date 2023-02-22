@@ -36,7 +36,7 @@ export class FloorEditorTool extends MapEditorTool {
     /**
      * Perform actions needed to see the changes instantly
      */
-    public handleCommandExecution(commandConfig: CommandConfig): void {
+    public handleCommandExecution(commandConfig: CommandConfig, localCommand: boolean): void {
         console.log("FloorEditorTool handleCommandExecution");
     }
     /**

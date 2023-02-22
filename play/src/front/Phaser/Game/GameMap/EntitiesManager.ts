@@ -51,7 +51,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         });
     }
 
-    public addEntity(data: EntityData, imagePathPrefix?: string): void {
+    public addEntity(data: EntityData, imagePathPrefix?: string): Entity {
         TexturesHelper.loadEntityImage(
             this.scene,
             data.prefab.imagePath,
@@ -80,6 +80,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             this.activatableEntities.push(entity);
         }
         this.scene.markDirty();
+        return entity;
     }
 
     public deleteEntity(id: string): boolean {
@@ -222,10 +223,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                         mapEditorSelectedEntityStore.set(entity);
                         break;
                     }
-                    case MapEntityEditorMode.RemoveMode: {
-                        entity.delete();
-                        break;
-                    }
                 }
             }
         });
@@ -234,10 +231,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 const entityEditorMode = get(mapEntityEditorModeStore);
                 switch (entityEditorMode) {
                     case MapEntityEditorMode.AddMode: {
-                        break;
-                    }
-                    case MapEntityEditorMode.RemoveMode: {
-                        entity.setTint(0xff0000);
                         break;
                     }
                     case MapEntityEditorMode.EditMode: {
