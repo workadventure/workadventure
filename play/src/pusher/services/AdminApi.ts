@@ -81,6 +81,9 @@ export const isFetchMemberDataByUuidResponse = z.object({
     applications: extendApi(z.array(isApplicationDefinitionInterface).nullable().optional(), {
         description: "The applications run into the customer's world",
     }),
+    canEdit: extendApi(z.boolean().nullable().optional(), {
+        description: "True if the user can edit the map",
+    }),
 });
 
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;

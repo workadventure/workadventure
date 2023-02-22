@@ -2933,8 +2933,4 @@ ${escapedMessage}
     public getActivatablesManager(): ActivatablesManager {
         return this.activatablesManager;
     }
-
-    public isMapEditorEnabled(): boolean {
-        return ENABLE_FEATURE_MAP_EDITOR && connectionManager.currentRoom?.canEditMap === true;
-    }
 }
