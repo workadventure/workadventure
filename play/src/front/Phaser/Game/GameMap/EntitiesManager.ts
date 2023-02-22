@@ -115,6 +115,11 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         this.entities.forEach((entity) => entity.clearTint());
     }
 
+    public clearAllEntitiesEditOutlines(): void {
+        this.entities.forEach((entity) => entity.removeEditColor());
+        this.entities.forEach((entity) => entity.removePointedToEditColor());
+    }
+
     public makeAllEntitiesNonInteractive(): void {
         console.log("disable interactive");
         this.entities.forEach((entity) => {
@@ -225,16 +230,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         });
         entity.on(Phaser.Input.Events.POINTER_OVER, () => {
             if (get(mapEditorModeStore)) {
-                const entityEditorMode = get(mapEntityEditorModeStore);
-                switch (entityEditorMode) {
-                    case MapEntityEditorMode.AddMode: {
-                        break;
-                    }
-                    case MapEntityEditorMode.EditMode: {
-                        entity.setPointedToEditColor(0x00ff00);
-                        break;
-                    }
-                }
+                entity.setPointedToEditColor(0x00ff00);
                 this.scene.markDirty();
             }
         });

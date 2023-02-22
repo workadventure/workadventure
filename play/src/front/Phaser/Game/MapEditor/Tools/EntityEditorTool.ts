@@ -59,6 +59,7 @@ export class EntityEditorTool extends MapEditorTool {
     public clear(): void {
         mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
         this.entitiesManager.clearAllEntitiesTint();
+        this.entitiesManager.clearAllEntitiesEditOutlines();
         this.cleanPreview();
         this.unbindEventHandlers();
     }
