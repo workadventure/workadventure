@@ -2,7 +2,7 @@
  * Computes a color from a string (name).
  * @param s
  */
-export function getColorByString(s: string): string {
+function getColorByString(s: string): string {
     let hash = 0;
     if (s.length === 0) {
         return "#000000";
@@ -25,7 +25,7 @@ export function getColorByString(s: string): string {
  * @param color: string
  * @return string
  */
-export function getTextColorByBackgroundColor(color: string | null): string {
+function getTextColorByBackgroundColor(color: string | null): string {
     if (!color) {
         return "white";
     }
@@ -38,3 +38,5 @@ export function getTextColorByBackgroundColor(color: string | null): string {
     );
     return brightness > 125 ? "black" : "white";
 }
+
+export { getColorByString, getTextColorByBackgroundColor };

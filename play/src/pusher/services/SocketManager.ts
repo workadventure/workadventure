@@ -71,7 +71,7 @@ import { ErrorApiData, MucRoomDefinitionInterface } from "@workadventure/message
 import { BoolValue, Int32Value, StringValue } from "google-protobuf/google/protobuf/wrappers_pb";
 import { EJABBERD_DOMAIN } from "../enums/EnvironmentVariable";
 import { Space } from "../models/Space";
-import { getColorByString } from "@workadventure/shared-utils/src/String/Color";
+import { Color } from "@workadventure/shared-utils";
 
 const debug = Debug("socket");
 
@@ -396,7 +396,7 @@ export class SocketManager implements ZoneEventListener {
                 .setName(client.name)
                 .setAvailabilitystatus(client.availabilityStatus)
                 .setIslogged(client.isLogged)
-                .setColor(getColorByString(client.name));
+                .setColor(Color.getColorByString(client.name));
             const characterLayersList: CharacterLayerMessage[] = [];
             client.characterLayers.forEach((characterLayer) => {
                 const characterLayerMessage = new CharacterLayerMessage().setName(characterLayer.id);
