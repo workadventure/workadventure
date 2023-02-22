@@ -1,33 +1,5 @@
 import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
 import type { PointInterface } from "../models/Websocket/PointInterface";
-import {
-    SubMessage,
-    BatchMessage,
-    ClientToServerMessage,
-    SendUserMessage,
-    ServerToClientMessage,
-    CompanionMessage,
-} from "../../messages/generated/messages_pb";
-import type {
-    UserMovesMessage,
-    SetPlayerDetailsMessage,
-    ItemEventMessage,
-    ViewportMessage,
-    WebRtcSignalToServerMessage,
-    PlayGlobalMessage,
-    ReportPlayerMessage,
-    EmotePromptMessage,
-    FollowRequestMessage,
-    FollowConfirmationMessage,
-    FollowAbortMessage,
-    VariableMessage,
-    LockGroupPromptMessage,
-    AskPositionMessage,
-    AvailabilityStatus,
-    QueryMessage,
-    EditMapCommandMessage,
-    PingMessage,
-} from "../../messages/generated/messages_pb";
 import qs from "qs";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
@@ -43,19 +15,24 @@ import {
 } from "../enums/EnvironmentVariable";
 import type { Zone } from "../models/Zone";
 import type { ExAdminSocketInterface } from "../models/Websocket/ExAdminSocketInterface";
-import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
+import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import Axios from "axios";
 import { InvalidTokenError } from "./InvalidTokenError";
 import type HyperExpress from "hyper-express";
 import { z } from "zod";
 import { adminService } from "../services/AdminService";
 import {
-    MucRoomDefinitionInterface,
-    ErrorApiData,
-    WokaDetail,
     apiVersionHash,
+    AvailabilityStatus,
+    ClientToServerMessage,
+    CompanionMessage,
+    ErrorApiData,
     isErrorApiData,
+    MucRoomDefinitionInterface,
+    ServerToClientMessage as ServerToClientMessageTsProto,
+    SubMessage,
+    WokaDetail,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import { v4 as uuid } from "uuid";
@@ -322,8 +299,9 @@ export class IoSocketController {
                         let companion: CompanionMessage | undefined = undefined;
 
                         if (typeof query.companion === "string") {
-                            companion = new CompanionMessage();
-                            companion.setName(query.companion);
+                            companion = {
+                                name: query.companion,
+                            };
                         }
 
                         if (typeof name !== "string") {
@@ -608,99 +586,139 @@ export class IoSocketController {
                     //get data information and show messages
                     if (client.messages && Array.isArray(client.messages)) {
                         client.messages.forEach((c: unknown) => {
+                            // FIXME: dangerous cast
                             const messageToSend = c as { type: string; message: string };
 
-                            const sendUserMessage = new SendUserMessage();
-                            sendUserMessage.setType(messageToSend.type);
-                            sendUserMessage.setMessage(messageToSend.message);
-
-                            const serverToClientMessage = new ServerToClientMessage();
-                            serverToClientMessage.setSendusermessage(sendUserMessage);
+                            const bytes = ServerToClientMessageTsProto.encode({
+                                message: {
+                                    $case: "sendUserMessage",
+                                    sendUserMessage: {
+                                        type: messageToSend.type,
+                                        message: messageToSend.message,
+                                    },
+                                },
+                            }).finish();
 
                             if (!client.disconnecting) {
-                                client.send(serverToClientMessage.serializeBinary().buffer, true);
+                                client.send(bytes, true);
                             }
                         });
                     }
+
+                    // Performance test
+                    /*
+                    const positionMessage = new PositionMessage();
+                    positionMessage.setMoving(true);
+                    positionMessage.setX(300);
+                    positionMessage.setY(300);
+                    positionMessage.setDirection(PositionMessage.Direction.DOWN);
+
+                    const userMovedMessage = new UserMovedMessage();
+                    userMovedMessage.setUserid(1);
+                    userMovedMessage.setPosition(positionMessage);
+
+                    const subMessage = new SubMessage();
+                    subMessage.setUsermovedmessage(userMovedMessage);
+
+                    const startTimestamp2 = Date.now();
+                    for (let i = 0; i < 100000; i++) {
+                        const batchMessage = new BatchMessage();
+                        batchMessage.setEvent("");
+                        batchMessage.setPayloadList([
+                            subMessage
+                        ]);
+
+                        const serverToClientMessage = new ServerToClientMessage();
+                        serverToClientMessage.setBatchmessage(batchMessage);
+
+                        client.send(serverToClientMessage.serializeBinary().buffer, true);
+                    }
+                    const endTimestamp2 = Date.now();
+                    console.log("Time taken 2: " + (endTimestamp2 - startTimestamp2) + "ms");
+
+                    const startTimestamp = Date.now();
+                    for (let i = 0; i < 100000; i++) {
+                        // Let's do a performance test!
+                        const bytes = ServerToClientMessageTsProto.encode({
+                            message: {
+                                $case: "batchMessage",
+                                batchMessage: {
+                                    event: '',
+                                    payload: [
+                                        {
+                                            message: {
+                                                $case: "userMovedMessage",
+                                                userMovedMessage: {
+                                                    userId: 1,
+                                                    position: {
+                                                        moving: true,
+                                                        x: 300,
+                                                        y: 300,
+                                                        direction: PositionMessage_Direction.DOWN,
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }).finish();
+
+                        client.send(bytes);
+                    }
+                    const endTimestamp = Date.now();
+                    console.log("Time taken: " + (endTimestamp - startTimestamp) + "ms");
+                    */
                 })().catch((e) => console.error(e));
             },
             message: (ws, arrayBuffer): void => {
                 (async () => {
                     const client = ws as ExSocketInterface;
-                    const message = ClientToServerMessage.deserializeBinary(new Uint8Array(arrayBuffer));
 
-                    if (message.hasViewportmessage()) {
-                        socketManager.handleViewport(
-                            client,
-                            (message.getViewportmessage() as ViewportMessage).toObject()
-                        );
-                    } else if (message.hasUsermovesmessage()) {
-                        socketManager.handleUserMovesMessage(client, message.getUsermovesmessage() as UserMovesMessage);
-                    } else if (message.hasSetplayerdetailsmessage()) {
-                        socketManager.handleSetPlayerDetails(
-                            client,
-                            message.getSetplayerdetailsmessage() as SetPlayerDetailsMessage
-                        );
-                    } else if (message.hasItemeventmessage()) {
-                        socketManager.handleItemEvent(client, message.getItemeventmessage() as ItemEventMessage);
-                    } else if (message.hasVariablemessage()) {
-                        socketManager.handleVariableEvent(client, message.getVariablemessage() as VariableMessage);
-                    } else if (message.hasWebrtcsignaltoservermessage()) {
-                        socketManager.emitVideo(
-                            client,
-                            message.getWebrtcsignaltoservermessage() as WebRtcSignalToServerMessage
-                        );
-                    } else if (message.hasWebrtcscreensharingsignaltoservermessage()) {
-                        socketManager.emitScreenSharing(
-                            client,
-                            message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage
-                        );
-                    } else if (message.hasPlayglobalmessage()) {
-                        await socketManager.emitPlayGlobalMessage(
-                            client,
-                            message.getPlayglobalmessage() as PlayGlobalMessage
-                        );
-                    } else if (message.hasReportplayermessage()) {
-                        await socketManager.handleReportMessage(
-                            client,
-                            message.getReportplayermessage() as ReportPlayerMessage
-                        );
-                    } else if (message.hasQuerymessage()) {
-                        socketManager.handleQueryMessage(client, message.getQuerymessage() as QueryMessage);
-                    } else if (message.hasEmotepromptmessage()) {
-                        socketManager.handleEmotePromptMessage(
-                            client,
-                            message.getEmotepromptmessage() as EmotePromptMessage
-                        );
-                    } else if (message.hasFollowrequestmessage()) {
-                        socketManager.handleFollowRequest(
-                            client,
-                            message.getFollowrequestmessage() as FollowRequestMessage
-                        );
-                    } else if (message.hasFollowconfirmationmessage()) {
-                        socketManager.handleFollowConfirmation(
-                            client,
-                            message.getFollowconfirmationmessage() as FollowConfirmationMessage
-                        );
-                    } else if (message.hasFollowabortmessage()) {
-                        socketManager.handleFollowAbort(client, message.getFollowabortmessage() as FollowAbortMessage);
-                    } else if (message.hasLockgrouppromptmessage()) {
-                        socketManager.handleLockGroup(
-                            client,
-                            message.getLockgrouppromptmessage() as LockGroupPromptMessage
-                        );
-                    } else if (message.hasPingmessage()) {
-                        socketManager.handlePingMessage(client, message.getPingmessage() as PingMessage);
-                    } else if (message.hasEditmapcommandmessage()) {
-                        socketManager.handleEditMapCommandMessage(
-                            client,
-                            message.getEditmapcommandmessage() as EditMapCommandMessage
-                        );
-                    } else if (message.hasAskpositionmessage()) {
-                        socketManager.handleAskPositionMessage(
-                            client,
-                            message.getAskpositionmessage() as AskPositionMessage
-                        );
+                    const message = ClientToServerMessage.decode(new Uint8Array(arrayBuffer));
+
+                    if (!message.message) {
+                        console.warn("Empty message received.");
+                        return;
+                    }
+
+                    switch (message.message.$case) {
+                        case "viewportMessage": {
+                            socketManager.handleViewport(client, message.message.viewportMessage);
+                            break;
+                        }
+                        case "userMovesMessage": {
+                            socketManager.handleUserMovesMessage(client, message.message.userMovesMessage);
+                            break;
+                        }
+                        case "playGlobalMessage": {
+                            await socketManager.emitPlayGlobalMessage(client, message.message.playGlobalMessage);
+                            break;
+                        }
+                        case "reportPlayerMessage": {
+                            await socketManager.handleReportMessage(client, message.message.reportPlayerMessage);
+                            break;
+                        }
+                        case "setPlayerDetailsMessage":
+                        case "itemEventMessage":
+                        case "variableMessage":
+                        case "webRtcSignalToServerMessage":
+                        case "webRtcScreenSharingSignalToServerMessage":
+                        case "queryMessage":
+                        case "emotePromptMessage":
+                        case "followRequestMessage":
+                        case "followConfirmationMessage":
+                        case "followAbortMessage":
+                        case "lockGroupPromptMessage":
+                        case "pingMessage":
+                        case "editMapCommandMessage":
+                        case "askPositionMessage": {
+                            socketManager.forwardMessageToBack(client, message.message);
+                            break;
+                        }
+                        default: {
+                            const _exhaustiveCheck: never = message.message;
+                        }
                     }
 
                     /* Ok is false if backpressure was built up, wait for drain */
@@ -740,7 +758,10 @@ export class IoSocketController {
         client.userUuid = ws.userUuid;
         client.IPAddress = ws.IPAddress;
         client.token = ws.token;
-        client.batchedMessages = new BatchMessage();
+        client.batchedMessages = {
+            event: "",
+            payload: [],
+        };
         client.batchTimeout = null;
         client.emitInBatch = (payload: SubMessage): void => {
             emitInBatch(client, payload);
