@@ -1,29 +1,9 @@
 <script lang="ts">
-    import LL from "../../../i18n/i18n-svelte";
     import ItemPicker from "./ItemPicker.svelte";
     import MapEntityPropertyEditor from "./MapEntityPropertyEditor.svelte";
-    import {
-        mapEditorSelectedEntityStore,
-        MapEntityEditorMode,
-        mapEntityEditorModeStore,
-    } from "../../Stores/MapEditorStore";
-
-    function changeStore(editorMode: MapEntityEditorMode) {
-        mapEntityEditorModeStore.set(editorMode);
-        mapEditorSelectedEntityStore.set(undefined);
-    }
+    import { MapEntityEditorMode, mapEntityEditorModeStore } from "../../Stores/MapEditorStore";
 </script>
 
-<div class="mode-button-container">
-    <button
-        class={$mapEntityEditorModeStore === MapEntityEditorMode.AddMode ? "active" : ""}
-        on:click={() => changeStore(MapEntityEditorMode.AddMode)}>{$LL.mapEditor.entityEditor.addButton()}</button
-    >
-    <button
-        class={$mapEntityEditorModeStore === MapEntityEditorMode.EditMode ? "active" : ""}
-        on:click={() => changeStore(MapEntityEditorMode.EditMode)}>{$LL.mapEditor.entityEditor.editButton()}</button
-    >
-</div>
 {#if $mapEntityEditorModeStore === MapEntityEditorMode.AddMode}
     <ItemPicker />
 {/if}
