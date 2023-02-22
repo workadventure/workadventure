@@ -69,7 +69,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         this.bindEventHandlers();
     }
 
-    public addEntity(data: EntityData, imagePathPrefix?: string): void {
+    public addEntity(data: EntityData, imagePathPrefix?: string, interactive?: boolean): void {
         TexturesHelper.loadEntityImage(
             this.scene,
             data.prefab.imagePath,
@@ -85,6 +85,11 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             })
             .catch((e) => console.error(e));
         const entity = new Entity(this.scene, data);
+
+        if (interactive) {
+            entity.setInteractive({ pixelPerfect: true, cursor: "pointer" });
+            this.scene.input.setDraggable(entity);
+        }
 
         this.bindEntityEventHandlers(entity);
 
@@ -302,7 +307,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         const positionToPlaceCopyAt = { ...entity.getPosition() };
         const oldPos = entity.getOldPosition();
         entity.setPosition(oldPos.x, oldPos.y);
-        mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
         mapEditorSelectedEntityStore.set(undefined);
         const eventData: CopyEntityEventData = {
             position: positionToPlaceCopyAt,
