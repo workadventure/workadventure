@@ -49,12 +49,12 @@ export class SpacesWatcher {
 
     public watchSpace(spaceName: string) {
         this._spacesWatched.push(spaceName);
-        debug(`SpacesWatcher ${this.uuid} => space watched => ${spaceName}`);
+        debug(`SpacesWatcher ${this.uuid} => watch ${spaceName}`);
     }
 
     public unwatchSpace(spaceName: string) {
         this._spacesWatched = this._spacesWatched.filter((space) => space !== spaceName);
-        debug(`SpacesWatcher ${this.uuid} => space unwatched => ${spaceName}`);
+        debug(`SpacesWatcher ${this.uuid} => unwatch ${spaceName}`);
     }
 
     get spacesWatched(): string[] {

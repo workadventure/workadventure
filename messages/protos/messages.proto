@@ -213,7 +213,6 @@ message ClientToServerMessage {
     WebRtcSignalToServerMessage webRtcSignalToServerMessage = 7;
     WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 8;
     PlayGlobalMessage playGlobalMessage = 9;
-    StopGlobalMessage stopGlobalMessage = 10;
     ReportPlayerMessage reportPlayerMessage = 11;
     EmotePromptMessage emotePromptMessage = 13;
     VariableMessage variableMessage = 14;
@@ -281,10 +280,6 @@ message PlayGlobalMessage {
   string type = 1;
   string content = 2;
   bool broadcastToWorld = 3;
-}
-
-message StopGlobalMessage {
-  string id = 1;
 }
 
 /************ Queries and answers ****************/
@@ -362,7 +357,7 @@ message SubMessage {
 }
 
 message BatchMessage {
-  string event = 1;
+  string event = 1; // FIXME: event seems to be useless
   repeated SubMessage payload = 2;
 }
 
@@ -559,14 +554,14 @@ message JoinRoomMessage {
   repeated string tag = 6;
   string IPAddress = 7;
   CompanionMessage companion = 8;
-  string visitCardUrl = 9;
+  google.protobuf.StringValue visitCardUrl = 9;
   string userRoomToken = 10;
   AvailabilityStatus availabilityStatus = 11;
   bool activatedInviteUser = 12;
   bool isLogged = 13;
   repeated ApplicationMessage applications = 14;
   string userJid = 15;
-  string lastCommandId = 16;
+  google.protobuf.StringValue lastCommandId = 16;
   bool canEdit = 17;
 }
 
@@ -806,7 +801,6 @@ message MucRoomDefinitionMessage {
 }
 
 message XmppSettingsMessage{
-  string jid = 1;
   string conferenceDomain = 2;
   repeated MucRoomDefinitionMessage rooms = 3;
   string jabberId = 4;

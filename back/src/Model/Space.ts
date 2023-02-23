@@ -18,7 +18,7 @@ export class Space implements CustomJsonReplacerInterface {
     constructor(name: string) {
         this.name = name;
         this.users = new Map<SpacesWatcher, Map<string, SpaceUser>>();
-        debug(`Space ${name} => created`);
+        debug(`${name} => created`);
     }
 
     public addUser(watcher: SpacesWatcher, spaceUser: SpaceUser) {
@@ -29,7 +29,7 @@ export class Space implements CustomJsonReplacerInterface {
         message.setSpacename(this.name);
         message.setUser(spaceUser);
         this.notifyWatchers(watcher, message);
-        debug(`Space ${this.name} : space user => added ${spaceUser.getUuid()}`);
+        debug(`${this.name} : user => added ${spaceUser.getUuid()}`);
     }
     public updateUser(watcher: SpacesWatcher, spaceUser: PartialSpaceUser) {
         const usersList = this.usersList(watcher);
@@ -76,7 +76,7 @@ export class Space implements CustomJsonReplacerInterface {
             message.setSpacename(this.name);
             message.setUser(spaceUser);
             this.notifyWatchers(watcher, message);
-            debug(`Space ${this.name} : space user => updated ${spaceUser.getUuid()}`);
+            debug(`${this.name} : user => updated ${spaceUser.getUuid()}`);
         }
     }
     public removeUser(watcher: SpacesWatcher, uuid: string) {
@@ -87,7 +87,7 @@ export class Space implements CustomJsonReplacerInterface {
         message.setSpacename(this.name);
         message.setUseruuid(uuid);
         this.notifyWatchers(watcher, message);
-        debug(`Space ${this.name} : space user => removed ${uuid}`);
+        debug(`${this.name} : user => removed ${uuid}`);
     }
 
     public addWatcher(watcher: SpacesWatcher) {
@@ -104,7 +104,7 @@ export class Space implements CustomJsonReplacerInterface {
     }
     public removeWatcher(watcher: SpacesWatcher) {
         this.users.delete(watcher);
-        debug(`Space ${this.name} => watcher removed ${watcher.uuid}`);
+        debug(`${this.name} => watcher removed ${watcher.uuid}`);
     }
 
     private notifyWatchers(watcher: SpacesWatcher, message: SpaceMessage) {

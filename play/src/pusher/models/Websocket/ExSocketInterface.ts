@@ -1,24 +1,26 @@
 import type { PointInterface } from "./PointInterface";
 import type { Identificable } from "./Identificable";
 import type { ViewportInterface } from "./ViewportMessage";
+import type { ClientDuplexStream } from "@grpc/grpc-js";
+import type { Zone } from "../Zone";
+import type { compressors } from "hyper-express";
 import type {
-    AvailabilityStatus,
-    BatchMessage,
+    WokaDetail,
+    MucRoomDefinitionInterface,
+    ApplicationDefinitionInterface,
     CompanionMessage,
+    SubMessage,
+    BatchMessage,
     PusherToBackMessage,
     ServerToClientMessage,
-    SubMessage,
     BackToPusherSpaceMessage,
     PusherToBackSpaceMessage,
     SpaceFilterMessage,
     SpaceUser,
-} from "../../../messages/generated/messages_pb";
-import type { ClientDuplexStream } from "@grpc/grpc-js";
-import type { Zone } from "../Zone";
-import type { compressors } from "hyper-express";
-import type { WokaDetail, MucRoomDefinitionInterface, ApplicationDefinitionInterface } from "@workadventure/messages";
+} from "@workadventure/messages";
 import type { PusherRoom } from "../PusherRoom";
 import { CustomJsonReplacerInterface } from "../CustomJsonReplacerInterface";
+import { AvailabilityStatus } from "@workadventure/messages";
 import { Space } from "../Space";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;

@@ -20,7 +20,7 @@ const debug = Debug("space");
 
 const spaceManager: ISpaceManagerServer = {
     watchSpace: (call: SpaceSocket): void => {
-        debug("watchSpace called");
+        debug("watchSpace => called");
         const pusherUuid = uuid();
         const pusher = new SpacesWatcher(pusherUuid, call);
 

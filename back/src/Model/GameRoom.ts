@@ -196,7 +196,7 @@ export class GameRoom implements BrothersFinder {
             joinRoomMessage.getAvailabilitystatus(),
             socket,
             joinRoomMessage.getTagList(),
-            joinRoomMessage.getVisitcardurl(),
+            joinRoomMessage.getVisitcardurl()?.getValue() ?? null,
             joinRoomMessage.getName(),
             ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.getCharacterlayerList()),
             this.roomUrl,

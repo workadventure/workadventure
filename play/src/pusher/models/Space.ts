@@ -1,24 +1,19 @@
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import {
-    AddSpaceUserMessage,
     PartialSpaceUser,
     PusherToBackSpaceMessage,
     RemoveSpaceFilterMessage,
-    RemoveSpaceUserMessage,
-    SpaceFilterContainName,
     SpaceFilterMessage,
     SpaceUser,
     SubMessage,
     UpdateSpaceFilterMessage,
-    UpdateSpaceUserMessage,
-} from "../../messages/generated/messages_pb";
+} from "@workadventure/messages";
 import Debug from "debug";
 import { BackSpaceConnection, ExSocketInterface } from "./Websocket/ExSocketInterface";
 
 const debug = Debug("space");
 
-type SpaceMessage = AddSpaceUserMessage | UpdateSpaceUserMessage | RemoveSpaceUserMessage;
-const isSameUser = (a: SpaceUser, b: SpaceUser) => a.getUuid() === b.getUuid();
+const isSameUser = (a: SpaceUser, b: SpaceUser) => a.uuid === b.uuid;
 
 export class Space implements CustomJsonReplacerInterface {
     private users: Map<string, SpaceUser>;
@@ -34,7 +29,7 @@ export class Space implements CustomJsonReplacerInterface {
         this.users = new Map<string, SpaceUser>();
         this.clientWatchers = new Map<string, ExSocketInterface>();
         this.clientWatchers.set(watcher.userUuid, watcher);
-        debug(`Space created : ${name}`);
+        debug(`created : ${name}`);
     }
 
     public addClientWatcher(watcher: ExSocketInterface) {
@@ -42,152 +37,162 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     public addUser(spaceUser: SpaceUser) {
-        const addSpaceUserMessage = new AddSpaceUserMessage();
-        addSpaceUserMessage.setSpacename(this.name);
-        addSpaceUserMessage.setUser(spaceUser);
-        const pusherToBackSpaceMessage = new PusherToBackSpaceMessage();
-        pusherToBackSpaceMessage.setAddspaceusermessage(addSpaceUserMessage);
+        const pusherToBackSpaceMessage: PusherToBackSpaceMessage = {
+            message: {
+                $case: "addSpaceUserMessage",
+                addSpaceUserMessage: {
+                    spaceName: this.name,
+                    user: spaceUser,
+                },
+            },
+        };
         this.spaceStreamToPusher.write(pusherToBackSpaceMessage);
-        debug(`Space ${this.name} : space user add sent ${spaceUser.getUuid()}`);
+        debug(`${this.name} : user add sent ${spaceUser.uuid}`);
         this.localAddUser(spaceUser);
     }
     public localAddUser(spaceUser: SpaceUser) {
-        this.users.set(spaceUser.getUuid(), spaceUser);
-        debug(`Space ${this.name} : space user added ${spaceUser.getUuid()}`);
+        this.users.set(spaceUser.uuid, spaceUser);
+        debug(`${this.name} : user added ${spaceUser.uuid}`);
 
-        const addSpaceUserMessage = new AddSpaceUserMessage();
-        addSpaceUserMessage.setSpacename(this.name);
-        addSpaceUserMessage.setUser(spaceUser);
-        this.notifyAll(addSpaceUserMessage);
+        const subMessage: SubMessage = {
+            message: {
+                $case: "addSpaceUserMessage",
+                addSpaceUserMessage: {
+                    spaceName: this.name,
+                    user: spaceUser,
+                },
+            },
+        };
+        this.notifyAll(subMessage);
     }
 
     public updateUser(spaceUser: PartialSpaceUser) {
-        const updateSpaceUserMessage = new UpdateSpaceUserMessage();
-        updateSpaceUserMessage.setSpacename(this.name);
-        updateSpaceUserMessage.setUser(spaceUser);
-        const pusherToBackSpaceMessage = new PusherToBackSpaceMessage();
-        pusherToBackSpaceMessage.setUpdatespaceusermessage(updateSpaceUserMessage);
+        const pusherToBackSpaceMessage: PusherToBackSpaceMessage = {
+            message: {
+                $case: "updateSpaceUserMessage",
+                updateSpaceUserMessage: {
+                    spaceName: this.name,
+                    user: spaceUser,
+                },
+            },
+        };
         this.spaceStreamToPusher.write(pusherToBackSpaceMessage);
-        debug(`Space ${this.name} : space user update sent ${spaceUser.getUuid()}`);
+        debug(`${this.name} : user update sent ${spaceUser.uuid}`);
         this.localUpdateUser(spaceUser);
     }
     public localUpdateUser(spaceUser: PartialSpaceUser) {
-        const user = this.users.get(spaceUser.getUuid());
+        const user = this.users.get(spaceUser.uuid);
         if (user) {
-            if (spaceUser.getTagsList().length > 0) {
-                user.setTagsList(spaceUser.getTagsList());
+            if (spaceUser.tags.length > 0) {
+                user.tags = spaceUser.tags;
             }
-            if (spaceUser.hasName()) {
-                user.setName(spaceUser.getName()?.getValue() as string);
+            if (spaceUser.name) {
+                user.name = spaceUser.name;
             }
-            if (spaceUser.hasPlayuri()) {
-                user.setPlayuri(spaceUser.getPlayuri()?.getValue() as string);
+            if (spaceUser.playUri) {
+                user.playUri = spaceUser.playUri;
             }
-            if (spaceUser.hasColor()) {
-                user.setColor(spaceUser.getColor()?.getValue() as string);
+            if (spaceUser.color) {
+                user.color = spaceUser.color;
             }
-            if (spaceUser.getCharacterlayersList().length > 0) {
-                user.setCharacterlayersList(spaceUser.getCharacterlayersList());
+            if (spaceUser.characterLayers.length > 0) {
+                user.characterLayers = spaceUser.characterLayers;
             }
-            if (spaceUser.hasIslogged()) {
-                user.setIslogged(spaceUser.getIslogged()?.getValue() as boolean);
+            if (spaceUser.isLogged !== undefined) {
+                user.isLogged = spaceUser.isLogged;
             }
-            if (spaceUser.hasAvailabilitystatus()) {
-                user.setAvailabilitystatus(spaceUser.getAvailabilitystatus()?.getValue() as number);
+            if (spaceUser.availabilityStatus !== undefined) {
+                user.availabilityStatus = spaceUser.availabilityStatus;
             }
-            if (spaceUser.hasRoomname()) {
-                user.setRoomname(spaceUser.getRoomname());
+            if (spaceUser.roomName) {
+                user.roomName = spaceUser.roomName;
             }
-            if (spaceUser.hasVisitcardurl()) {
-                user.setVisitcardurl(spaceUser.getVisitcardurl());
+            if (spaceUser.visitCardUrl) {
+                user.visitCardUrl = spaceUser.visitCardUrl;
             }
-            if (spaceUser.hasScreensharing()) {
-                user.setScreensharing(spaceUser.getScreensharing()?.getValue() as boolean);
+            if (spaceUser.screenSharing !== undefined) {
+                user.screenSharing = spaceUser.screenSharing;
             }
-            if (spaceUser.hasAudiosharing()) {
-                user.setAudiosharing(spaceUser.getAudiosharing()?.getValue() as boolean);
+            if (spaceUser.audioSharing !== undefined) {
+                user.audioSharing = spaceUser.audioSharing;
             }
-            if (spaceUser.hasVideosharing()) {
-                user.setVideosharing(spaceUser.getVideosharing()?.getValue() as boolean);
+            if (spaceUser.videoSharing !== undefined) {
+                user.videoSharing = spaceUser.videoSharing;
             }
-            this.users.set(spaceUser.getUuid(), user);
-            debug(`Space ${this.name} : space user updated ${spaceUser.getUuid()}`);
+            this.users.set(spaceUser.uuid, user);
+            debug(`${this.name} : user updated ${spaceUser.uuid}`);
 
-            const updateSpaceUserMessage = new UpdateSpaceUserMessage();
-            updateSpaceUserMessage.setSpacename(this.name);
-            updateSpaceUserMessage.setUser(spaceUser);
-            this.notifyAll(updateSpaceUserMessage);
+            const subMessage: SubMessage = {
+                message: {
+                    $case: "updateSpaceUserMessage",
+                    updateSpaceUserMessage: {
+                        spaceName: this.name,
+                        user: spaceUser,
+                    },
+                },
+            };
+            this.notifyAll(subMessage);
         }
     }
 
-    public removeUser(uuid: string) {
-        const removeSpaceUserMessage = new RemoveSpaceUserMessage();
-        removeSpaceUserMessage.setSpacename(this.name);
-        removeSpaceUserMessage.setUseruuid(uuid);
-        const pusherToBackSpaceMessage = new PusherToBackSpaceMessage();
-        pusherToBackSpaceMessage.setRemovespaceusermessage(removeSpaceUserMessage);
+    public removeUser(userUuid: string) {
+        const pusherToBackSpaceMessage: PusherToBackSpaceMessage = {
+            message: {
+                $case: "removeSpaceUserMessage",
+                removeSpaceUserMessage: {
+                    spaceName: this.name,
+                    userUuid,
+                },
+            },
+        };
         this.spaceStreamToPusher.write(pusherToBackSpaceMessage);
-        debug(`Space ${this.name} : space user remove sent ${uuid}`);
-        this.localRemoveUser(uuid);
+        debug(`${this.name} : user remove sent ${userUuid}`);
+        this.localRemoveUser(userUuid);
     }
-    public localRemoveUser(uuid: string) {
-        const user = this.users.get(uuid);
-        this.users.delete(uuid);
-        debug(`Space ${this.name} : space user removed ${uuid}`);
+    public localRemoveUser(userUuid: string) {
+        const user = this.users.get(userUuid);
+        this.users.delete(userUuid);
+        debug(`${this.name} : user removed ${userUuid}`);
 
-        const removeSpaceUserMessage = new RemoveSpaceUserMessage();
-        removeSpaceUserMessage.setUseruuid(uuid);
-        removeSpaceUserMessage.setSpacename(this.name);
+        const subMessage: SubMessage = {
+            message: {
+                $case: "removeSpaceUserMessage",
+                removeSpaceUserMessage: {
+                    spaceName: this.name,
+                    userUuid,
+                },
+            },
+        };
 
-        this.notifyAll(removeSpaceUserMessage, user);
+        this.notifyAll(subMessage, user);
     }
 
-    private notifyAll(spaceMessage: SpaceMessage, user: SpaceUser | undefined = undefined) {
+    private notifyAll(subMessage: SubMessage, user: SpaceUser | undefined = undefined) {
         [...this.clientWatchers.values()]
-            .filter((watcher) => this.isWatcherTargeted(watcher, spaceMessage, user))
-            .forEach((watcher) => {
-                const subMessage = new SubMessage();
-                if (spaceMessage instanceof AddSpaceUserMessage) {
-                    subMessage.setAddspaceusermessage(spaceMessage);
-                } else if (spaceMessage instanceof UpdateSpaceUserMessage) {
-                    subMessage.setUpdatespaceusermessage(spaceMessage);
-                } else if (spaceMessage instanceof RemoveSpaceUserMessage) {
-                    subMessage.setRemovespaceusermessage(spaceMessage);
-                }
-                watcher.emitInBatch(subMessage);
-            });
+            .filter((watcher) => this.isWatcherTargeted(watcher, subMessage, user))
+            .forEach((watcher) => watcher.emitInBatch(subMessage));
     }
 
-    public notifyMe(watcher: ExSocketInterface, spaceMessage: SpaceMessage, user: SpaceUser | undefined = undefined) {
-        const subMessage = new SubMessage();
-        if (spaceMessage instanceof AddSpaceUserMessage) {
-            subMessage.setAddspaceusermessage(spaceMessage);
-        } else if (spaceMessage instanceof UpdateSpaceUserMessage) {
-            subMessage.setUpdatespaceusermessage(spaceMessage);
-        } else if (spaceMessage instanceof RemoveSpaceUserMessage) {
-            subMessage.setRemovespaceusermessage(spaceMessage);
-        }
+    public notifyMe(watcher: ExSocketInterface, subMessage: SubMessage, user: SpaceUser | undefined = undefined) {
         watcher.emitInBatch(subMessage);
     }
 
     private isWatcherTargeted(
         watcher: ExSocketInterface,
-        spaceMessage: SpaceMessage,
+        subMessage: SubMessage,
         user: SpaceUser | undefined = undefined
     ) {
-        const filtersOfThisSpace = watcher.spacesFilters.filter(
-            (spaceFilters) => spaceFilters.getSpacename() === this.name
-        );
-        debug("Space => isWatcherTargeted => filtersOfThisSpace", filtersOfThisSpace);
+        const filtersOfThisSpace = watcher.spacesFilters.filter((spaceFilters) => spaceFilters.spaceName === this.name);
+        debug("isWatcherTargeted => filtersOfThisSpace", filtersOfThisSpace);
         return (
             filtersOfThisSpace.length === 0 ||
             filtersOfThisSpace.filter((spaceFilters) => {
                 let user_ = user;
-                if (
-                    (!user_ && spaceMessage instanceof AddSpaceUserMessage) ||
-                    spaceMessage instanceof UpdateSpaceUserMessage
-                ) {
-                    user_ = this.users.get(spaceMessage.getUser()?.getUuid() as string);
+                if (subMessage.message?.$case === "addSpaceUserMessage") {
+                    user_ = subMessage.message.addSpaceUserMessage.user;
+                } else if (subMessage.message?.$case === "updateSpaceUserMessage") {
+                    // I'm sur user uuid is existing
+                    user_ = this.users.get(subMessage.message.updateSpaceUserMessage.user?.uuid as string);
                 }
                 if (user_) {
                     return this.filterOneUser(spaceFilters, user_);
@@ -202,10 +207,9 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     private filterOneUser(spaceFilters: SpaceFilterMessage, user: SpaceUser) {
-        if (spaceFilters.hasSpacefiltercontainname()) {
-            const spaceFilterContainName = spaceFilters.getSpacefiltercontainname() as SpaceFilterContainName;
-            const name = user.getName();
-            if (name.includes(spaceFilterContainName.getValue())) {
+        if (spaceFilters.filter?.$case === "spaceFilterContainName") {
+            const spaceFilterContainName = spaceFilters.filter.spaceFilterContainName;
+            if (user.name.includes(spaceFilterContainName.value)) {
                 return true;
             }
         }
@@ -213,30 +217,36 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     public handleAddFilter(watcher: ExSocketInterface, updateSpaceFilterMessage: UpdateSpaceFilterMessage) {
-        const newFilter = updateSpaceFilterMessage.getSpacefiltermessage() as SpaceFilterMessage;
-        debug(`Space ${this.name} : space filter added (${newFilter.getFiltername()}) for ${watcher.userUuid}`);
-        const oldData = [...this.users.values()];
-        const newData = this.filter(newFilter);
-        this.delta(watcher, oldData, newData);
-    }
-
-    public handleUpdateFilter(watcher: ExSocketInterface, updateSpaceFilterMessage: UpdateSpaceFilterMessage) {
-        const newFilter = updateSpaceFilterMessage.getSpacefiltermessage() as SpaceFilterMessage;
-        const oldFilter = watcher.spacesFilters.find((filter) => filter.getFiltername() === newFilter.getFiltername());
-        if (oldFilter) {
-            debug(`Space ${this.name} : space filter updated (${newFilter.getFiltername()}) for ${watcher.userUuid}`);
-            const oldData = this.filter(oldFilter);
+        const newFilter = updateSpaceFilterMessage.spaceFilterMessage;
+        if (newFilter) {
+            debug(`${this.name} : filter added (${newFilter.filterName}) for ${watcher.userUuid}`);
+            const oldData = [...this.users.values()];
             const newData = this.filter(newFilter);
             this.delta(watcher, oldData, newData);
         }
     }
 
+    public handleUpdateFilter(watcher: ExSocketInterface, updateSpaceFilterMessage: UpdateSpaceFilterMessage) {
+        const newFilter = updateSpaceFilterMessage.spaceFilterMessage;
+        if (newFilter) {
+            const oldFilter = watcher.spacesFilters.find((filter) => filter.filterName === newFilter.filterName);
+            if (oldFilter) {
+                debug(`${this.name} : filter updated (${newFilter.filterName}) for ${watcher.userUuid}`);
+                const oldData = this.filter(oldFilter);
+                const newData = this.filter(newFilter);
+                this.delta(watcher, oldData, newData);
+            }
+        }
+    }
+
     public handleRemoveFilter(watcher: ExSocketInterface, removeSpaceFilterMessage: RemoveSpaceFilterMessage) {
-        const oldFilter = removeSpaceFilterMessage.getSpacefiltermessage() as SpaceFilterMessage;
-        debug(`Space ${this.name} : space filter removed (${oldFilter.getFiltername()}) for ${watcher.userUuid}`);
-        const oldData = this.filter(oldFilter);
-        const newData = [...this.users.values()];
-        this.delta(watcher, oldData, newData);
+        const oldFilter = removeSpaceFilterMessage.spaceFilterMessage;
+        if (oldFilter) {
+            debug(`${this.name} : filter removed (${oldFilter.filterName}) for ${watcher.userUuid}`);
+            const oldData = this.filter(oldFilter);
+            const newData = [...this.users.values()];
+            this.delta(watcher, oldData, newData);
+        }
     }
 
     private delta(watcher: ExSocketInterface, oldData: SpaceUser[], newData: SpaceUser[]) {
@@ -245,22 +255,34 @@ export class Space implements CustomJsonReplacerInterface {
             (leftValue) => !oldData.some((rightValue) => isSameUser(leftValue, rightValue))
         );
         addedUsers.forEach((user) => {
-            const addSpaceUserMessage = new AddSpaceUserMessage();
-            addSpaceUserMessage.setSpacename(this.name);
-            addSpaceUserMessage.setUser(user);
-            this.notifyMe(watcher, addSpaceUserMessage);
+            const subMessage: SubMessage = {
+                message: {
+                    $case: "addSpaceUserMessage",
+                    addSpaceUserMessage: {
+                        spaceName: this.name,
+                        user,
+                    },
+                },
+            };
+            this.notifyMe(watcher, subMessage);
         });
         const removedUsers = oldData.filter(
             (leftValue) => !newData.some((rightValue) => isSameUser(leftValue, rightValue))
         );
         removedUsers.forEach((user) => {
-            const removeSpaceUserMessage = new RemoveSpaceUserMessage();
-            removeSpaceUserMessage.setSpacename(this.name);
-            removeSpaceUserMessage.setUseruuid(user.getUuid());
-            this.notifyMe(watcher, removeSpaceUserMessage);
+            const subMessage: SubMessage = {
+                message: {
+                    $case: "removeSpaceUserMessage",
+                    removeSpaceUserMessage: {
+                        spaceName: this.name,
+                        userUuid: user.uuid,
+                    },
+                },
+            };
+            this.notifyMe(watcher, subMessage);
         });
         debug(
-            `Space ${this.name} : space filter calculated for ${watcher.userUuid} (${addedUsers.length} added, ${removedUsers.length} removed)`
+            `${this.name} : filter calculated for ${watcher.userUuid} (${addedUsers.length} added, ${removedUsers.length} removed)`
         );
     }
 
