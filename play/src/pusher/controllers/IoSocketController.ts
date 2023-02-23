@@ -9,6 +9,7 @@ import {
     CompanionMessage,
     AddSpaceFilterMessage,
     UpdateSpaceFilterMessage,
+    RemoveSpaceFilterMessage,
 } from "../../messages/generated/messages_pb";
 import type {
     UserMovesMessage,
@@ -714,6 +715,11 @@ export class IoSocketController {
                         socketManager.handleUpdateSpaceFilterMessage(
                             client,
                             message.getUpdatespacefiltermessage() as UpdateSpaceFilterMessage
+                        );
+                    } else if (message.hasRemovespacefiltermessage()) {
+                        socketManager.handleRemoveSpaceFilterMessage(
+                            client,
+                            message.getRemovespacefiltermessage() as RemoveSpaceFilterMessage
                         );
                     }
 

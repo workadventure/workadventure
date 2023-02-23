@@ -55,9 +55,9 @@ import {
     PingMessage,
     PartialSpaceUser,
     SpaceFilterMessage,
-    SpaceFilterContainName,
     AddSpaceFilterMessage,
     UpdateSpaceFilterMessage,
+    RemoveSpaceFilterMessage,
 } from "../../messages/generated/messages_pb";
 
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
@@ -76,7 +76,6 @@ import { BoolValue, Int32Value, StringValue } from "google-protobuf/google/proto
 import { EJABBERD_DOMAIN } from "../enums/EnvironmentVariable";
 import { Space } from "../models/Space";
 import { Color } from "@workadventure/shared-utils";
-import { v4 as uuid } from "uuid";
 
 const debug = Debug("socket");
 
@@ -429,12 +428,12 @@ export class SocketManager implements ZoneEventListener {
 
             client.spaceUser = spaceUser;
 
-            client.spacesFilters = [
-                new SpaceFilterMessage()
-                    .setSpacename(spaceName)
-                    .setFiltername(new StringValue().setValue(uuid()))
-                    .setSpacefiltercontainname(new SpaceFilterContainName().setValue("test")),
-            ];
+            // client.spacesFilters = [
+            //     new SpaceFilterMessage()
+            //         .setSpacename(spaceName)
+            //         .setFiltername(new StringValue().setValue(uuid()))
+            //         .setSpacefiltercontainname(new SpaceFilterContainName().setValue("test")),
+            // ];
 
             if (this.spaceStreamsToPusher.has(backId)) {
                 space.addUser(spaceUser);
@@ -984,21 +983,34 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleAddSpaceFilterMessage(client: ExSocketInterface, addSpaceFilterMessage: AddSpaceFilterMessage) {
-        client.spacesFilters.push(addSpaceFilterMessage.getSpacefiltermessage() as SpaceFilterMessage);
+        const newFilter = addSpaceFilterMessage.getSpacefiltermessage() as SpaceFilterMessage;
+        const space = client.spaces.find((space) => space.name === newFilter.getSpacename());
+        if (space) {
+            space.handleAddFilter(client, addSpaceFilterMessage);
+            client.spacesFilters.push(newFilter);
+        }
     }
 
     handleUpdateSpaceFilterMessage(client: ExSocketInterface, updateSpaceFilterMessage: UpdateSpaceFilterMessage) {
-        const filterMessage = updateSpaceFilterMessage.getSpacefiltermessage() as SpaceFilterMessage;
-        const oldFilter = client.spacesFilters.find(
-            (filter) => filter.getFiltername() === filterMessage.getFiltername()
-        );
-        const space = client.spaces.find((space) => space.name === filterMessage.getSpacename());
+        const newFilter = updateSpaceFilterMessage.getSpacefiltermessage() as SpaceFilterMessage;
+        const space = client.spaces.find((space) => space.name === newFilter.getSpacename());
         if (space) {
-            // Check delta between responses by old and new filter
+            space.handleUpdateFilter(client, updateSpaceFilterMessage);
+            client.spacesFilters = client.spacesFilters.map((filter) =>
+                filter.getFiltername() === newFilter.getFiltername() ? newFilter : filter
+            );
         }
-        client.spacesFilters.filter((filter) =>
-            filter.getFiltername() === filterMessage.getFiltername() ? filterMessage : filter
-        );
+    }
+
+    handleRemoveSpaceFilterMessage(client: ExSocketInterface, removeSpaceFilterMessage: RemoveSpaceFilterMessage) {
+        const oldFilter = removeSpaceFilterMessage.getSpacefiltermessage() as SpaceFilterMessage;
+        const space = client.spaces.find((space) => space.name === oldFilter.getSpacename());
+        if (space) {
+            space.handleRemoveFilter(client, removeSpaceFilterMessage);
+            client.spacesFilters = client.spacesFilters.filter(
+                (filter) => filter.getFiltername() !== oldFilter.getFiltername()
+            );
+        }
     }
 }
 

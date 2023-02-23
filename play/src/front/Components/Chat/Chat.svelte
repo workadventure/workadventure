@@ -179,7 +179,7 @@
     function search() {
         if (!searchFilter) {
             searchFilter = {
-                filterName: undefined,
+                filterName: "myFirstFilter",
                 spaceName: "http://play.workadventure.localhost/@/wa/workadventure-premium/public/space",
                 filter: {
                     $case: "spaceFilterContainName",
@@ -190,23 +190,32 @@
             } as SpaceFilterMessage;
             gameManager.getCurrentGameScene().connection?.emitAddSpaceFilter({ spaceFilterMessage: searchFilter });
         } else {
-            searchFilter = {
-                ...searchFilter,
-                filter: {
-                    $case: "spaceFilterContainName",
-                    spaceFilterContainName: {
-                        value: searchElement.value,
+            if (searchElement.value === "") {
+                gameManager
+                    .getCurrentGameScene()
+                    .connection?.emitRemoveSpaceFilter({ spaceFilterMessage: searchFilter });
+                searchFilter = undefined;
+            } else {
+                searchFilter = {
+                    ...searchFilter,
+                    filter: {
+                        $case: "spaceFilterContainName",
+                        spaceFilterContainName: {
+                            value: searchElement.value,
+                        },
                     },
-                },
-            } as SpaceFilterMessage;
-            gameManager.getCurrentGameScene().connection?.emitUpdateSpaceFilter({ spaceFilterMessage: searchFilter });
+                } as SpaceFilterMessage;
+                gameManager
+                    .getCurrentGameScene()
+                    .connection?.emitUpdateSpaceFilter({ spaceFilterMessage: searchFilter });
+            }
         }
     }
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
 <div id="chatWindow" class:show={$chatVisibilityStore}>
-    <input type="text" bind:this={searchElement} on:change={search} />
+    <input type="text" bind:this={searchElement} on:keydown={search} />
     {#if $chatVisibilityStore}<div class="hide">
             <button class="close-window" on:click={closeChat}>&#215;</button>
         </div>{/if}

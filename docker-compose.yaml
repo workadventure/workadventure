@@ -46,7 +46,8 @@ services:
             STARTUP_COMMAND_1: ../npm-install.sh
             STARTUP_COMMAND_2: npm run typesafe-i18n
             STARTUP_COMMAND_5: while [ -f /usr/src/app/play/src/messages/generate_request/need_regenerate ]; do sleep 1; done
-            DEBUG: "socket"
+            DEBUG: "*"
+            DEBUG_COLORS: "true"
             DEBUG_ERROR_MESSAGES: "true"
             DEBUG_MODE: "$DEBUG_MODE"
             JITSI_URL: $JITSI_URL

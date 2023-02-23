@@ -61,6 +61,7 @@ import {
     AddSpaceFilterMessage,
     SpaceFilterMessage,
     UpdateSpaceFilterMessage,
+    RemoveSpaceFilterMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -1232,6 +1233,17 @@ export class RoomConnection implements RoomConnection {
             message: {
                 $case: "updateSpaceFilterMessage",
                 updateSpaceFilterMessage: filter,
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitRemoveSpaceFilter(filter: RemoveSpaceFilterMessage) {
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "removeSpaceFilterMessage",
+                removeSpaceFilterMessage: filter,
             },
         }).finish();
 

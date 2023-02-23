@@ -918,7 +918,7 @@ message RemoveSpaceFilterMessage{
   SpaceFilterMessage spaceFilterMessage = 1;
 }
 message SpaceFilterMessage{
-  google.protobuf.StringValue filterName = 1;
+  string filterName = 1;
   string spaceName = 2;
   oneof filter {
     SpaceFilterContainName spaceFilterContainName = 3;
