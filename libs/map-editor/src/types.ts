@@ -64,6 +64,24 @@ export const OpenTabPropertyData = ActionsMenuData.extend({
     inNewTab: z.boolean(),
 });
 
+// TODO: Can they vary between Entity and Area or should it be the same type?
+export const AreaDataProperties = z.object({
+    textHeader: TextHeaderPropertyData.optional().nullable(),
+    jitsiRoom: JitsiRoomPropertyData.optional().nullable(),
+    playAudio: PlayAudioPropertyData.optional().nullable(),
+    openTab: OpenTabPropertyData.optional().nullable(),
+});
+
+export const AreaData = z.object({
+    id: z.string(),
+    name: z.string(),
+    x: z.number(),
+    y: z.number(),
+    width: z.number(),
+    height: z.number(),
+    properties: AreaDataProperties,
+});
+
 export const EntityDataProperties = z.object({
     textHeader: TextHeaderPropertyData.optional().nullable(),
     jitsiRoom: JitsiRoomPropertyData.optional().nullable(),
@@ -98,6 +116,12 @@ export const EntityData = z.object({
     y: z.number(),
     properties: EntityDataProperties.optional(),
     prefab: EntityPrefab,
+});
+
+export const WAMFileFormat = z.object({
+    version: z.string(),
+    entities: z.array(EntityData),
+    areas: z.array(AreaData),
 });
 
 export type EntityRawPrefab = z.infer<typeof EntityRawPrefab>;
