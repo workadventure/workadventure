@@ -699,7 +699,7 @@ export class GameScene extends DirtyScene {
                 setTimeout(() => {
                     if (this.connection === undefined) {
                         try {
-                            this.scene.sleep();
+                            this.scene.setVisible(false);
                         } catch (err) {
                             console.error("Scene sleep error: ", err);
                         }
@@ -727,7 +727,7 @@ export class GameScene extends DirtyScene {
                     console.log("this.room", this.room);
                     if (this.connection === undefined) {
                         try {
-                            this.scene.sleep();
+                            this.scene.setVisible(false);
                         } catch (err) {
                             console.error("Scene sleep error: ", err);
                         }
@@ -775,7 +775,7 @@ export class GameScene extends DirtyScene {
 
         if (!this.room.isDisconnected()) {
             try {
-                this.scene.sleep();
+                this.scene.setVisible(false);
             } catch (err) {
                 console.error("Scene sleep error: ", err);
             }
@@ -788,7 +788,7 @@ export class GameScene extends DirtyScene {
             this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
         ])
             .then(() => {
-                this.scene.wake();
+                this.scene.setVisible(true);
             })
             .catch((e) =>
                 console.error(
