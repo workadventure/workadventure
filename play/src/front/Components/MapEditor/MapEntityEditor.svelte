@@ -10,20 +10,3 @@
 {#if $mapEntityEditorModeStore === MapEntityEditorMode.EditMode}
     <MapEntityPropertyEditor />
 {/if}
-
-<style lang="scss">
-    .mode-button-container {
-        display: flex;
-        flex-direction: row;
-        button {
-            flex: 1 1 0px;
-            border: 1px solid grey;
-        }
-        button:hover {
-            background-color: rgb(77 75 103);
-        }
-        button.active {
-            background-color: rgb(77 75 103);
-        }
-    }
-</style>
