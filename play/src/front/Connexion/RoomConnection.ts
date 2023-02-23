@@ -59,7 +59,6 @@ import {
     XmppSettingsMessage,
     RefreshRoomMessage,
     AddSpaceFilterMessage,
-    SpaceFilterMessage,
     UpdateSpaceFilterMessage,
     RemoveSpaceFilterMessage,
 } from "@workadventure/messages";

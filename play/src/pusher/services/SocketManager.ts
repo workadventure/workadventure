@@ -543,22 +543,10 @@ export class SocketManager implements ZoneEventListener {
 
         if (client.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus) {
             client.spaceUser.availabilityStatus = playerDetailsMessage.availabilityStatus;
-            const partialSpaceUser: PartialSpaceUser = {
-                name: undefined,
-                playUri: undefined,
-                color: undefined,
-                characterLayers: [],
-                isLogged: undefined,
-                roomName: undefined,
-                visitCardUrl: undefined,
-                tags: [],
-                videoSharing: undefined,
-                audioSharing: undefined,
-                screenSharing: undefined,
-
+            const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
                 availabilityStatus: playerDetailsMessage.availabilityStatus,
                 uuid: client.userUuid,
-            };
+            });
             client.spaces.forEach((space) => {
                 space.updateUser(partialSpaceUser);
             });
