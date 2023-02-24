@@ -622,7 +622,6 @@ message PusherToBackMessage {
     SetPlayerDetailsMessage setPlayerDetailsMessage = 5;
     WebRtcSignalToServerMessage webRtcSignalToServerMessage = 6;
     WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 7;
-    ReportPlayerMessage reportPlayerMessage = 10;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
     EmotePromptMessage emotePromptMessage = 14;
