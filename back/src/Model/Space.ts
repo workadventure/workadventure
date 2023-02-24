@@ -109,8 +109,8 @@ export class Space implements CustomJsonReplacerInterface {
 
     private notifyWatchers(watcher: SpacesWatcher, message: SpaceMessage) {
         [...this.users.keys()].forEach((watcher_) => {
-            if (watcher_ !== watcher) {
-                watcher.write(message);
+            if (watcher_.uuid !== watcher.uuid) {
+                watcher_.write(message);
             }
         });
     }

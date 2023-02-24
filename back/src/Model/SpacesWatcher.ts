@@ -7,6 +7,7 @@ import {
     UpdateSpaceUserMessage,
 } from "../Messages/generated/messages_pb";
 import Debug from "debug";
+import { SpaceSocketMock } from "../../tests/utils/SpaceSocketMock";
 
 export type SpaceMessage = AddSpaceUserMessage | UpdateSpaceUserMessage | RemoveSpaceUserMessage;
 
@@ -16,7 +17,7 @@ export class SpacesWatcher {
     private _spacesWatched: string[];
     private pingInterval: NodeJS.Timer | undefined;
     private pongTimeout: NodeJS.Timeout | undefined;
-    public constructor(public readonly uuid: string, private readonly socket: SpaceSocket) {
+    public constructor(public readonly uuid: string, private readonly socket: SpaceSocket | SpaceSocketMock) {
         this._spacesWatched = [];
         // Send first ping and then send the second one
         this.sendPing();
