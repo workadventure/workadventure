@@ -26,10 +26,7 @@ export class SpacesWatcher {
     }
 
     private sendPing() {
-        if (this.pongTimeout) {
-            clearTimeout(this.pongTimeout);
-            this.pongTimeout = undefined;
-        }
+        this.receivedPong();
         const backToPusherSpaceMessage = new BackToPusherSpaceMessage();
         backToPusherSpaceMessage.setPingmessage(new PingMessage());
         this.socket.write(backToPusherSpaceMessage);
