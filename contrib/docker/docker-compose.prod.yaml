@@ -215,6 +215,11 @@ services:
     image: thecodingmachine/workadventure-map-storage:${VERSION}
     environment:
       PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
+      AUTHENTICATION_STRATEGY: "$MAP_STORAGE_AUTHENTICATION_STRATEGY"
+      AUTHENTICATION_USER: "$MAP_STORAGE_AUTHENTICATION_USER"
+      AUTHENTICATION_PASSWORD: "$MAP_STORAGE_AUTHENTICATION_PASSWORD"
+      AUTHENTICATION_TOKEN: "$MAP_STORAGE_AUTHENTICATION_TOKEN"
+
     labels:
       traefik.enable: "true"
       traefik.http.routers.map-storage.rule: "Host(`${MAP_STORAGE_HOST}`)"

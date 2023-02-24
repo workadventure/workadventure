@@ -652,6 +652,9 @@ jobs:
         run: |
           sed -i "s/SECRET_KEY=/SECRET_KEY=someSecret/g" .env
           sed -i "s/VERSION=master/VERSION=${DOCKER_TAG}/g" .env
+          sed -i "s/DOMAIN=workadventure.localhost/DOMAIN=play.workadventure.localhost/g" .env
+          sed -i "s/MAP_STORAGE_AUTHENTICATION_USER=/MAP_STORAGE_AUTHENTICATION_USER=john.doe/g" .env
+          sed -i "s/MAP_STORAGE_AUTHENTICATION_PASSWORD=/MAP_STORAGE_AUTHENTICATION_PASSWORD=password/g" .env
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         working-directory: contrib/docker
