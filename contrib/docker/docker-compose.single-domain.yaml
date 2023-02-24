@@ -26,6 +26,7 @@ services:
   back:
     environment:
       - PUBLIC_MAP_STORAGE_URL=/map-storage
+      - PLAY_URL=https://${DOMAIN}
     labels:
       traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes: "/api"
       traefik.http.routers.back.rule: "Host(`${DOMAIN}`) && PathPrefix(`/api`)"
