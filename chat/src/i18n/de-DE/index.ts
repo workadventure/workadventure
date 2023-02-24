@@ -31,8 +31,7 @@ const de_DE: Translation = {
     logIn: "Anmelden",
     signIn: "Registrieren oder anmelden, um alle Funktionen des Chats zu nutzen!",
     invite: "Einladen",
-    roomEmpty:
-        "Dieser Raum ist leer, lade einen Kollegen oder Freund ein, um sich dir anzuschließen!",
+    roomEmpty: "Dieser Raum ist leer, lade einen Kollegen oder Freund ein, um sich dir anzuschließen!",
     userOnline: "Benutzer online",
     usersOnline: "Benutzer online",
     open: "Öffnen",
