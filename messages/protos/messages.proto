@@ -889,14 +889,17 @@ message PartialSpaceUser{
 message AddSpaceUserMessage{
   string spaceName = 1;
   SpaceUser user = 2;
+  google.protobuf.StringValue filterName = 3;
 }
 message UpdateSpaceUserMessage{
   string spaceName = 1;
   PartialSpaceUser user = 2;
+  google.protobuf.StringValue filterName = 3;
 }
 message RemoveSpaceUserMessage{
   string spaceName = 1;
   string userUuid = 2;
+  google.protobuf.StringValue filterName = 3;
 }
 
 
