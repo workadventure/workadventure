@@ -197,7 +197,7 @@ jobs:
         run: npm run lint
         working-directory: "back"
 
-      - name: "Jasmine"
+      - name: "Unit tests"
         run: npm test
         working-directory: "back"
 
