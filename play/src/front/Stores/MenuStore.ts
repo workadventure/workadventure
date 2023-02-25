@@ -7,7 +7,7 @@ import type { Translation } from "../../i18n/i18n-types";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { connectionManager } from "../Connexion/ConnectionManager";
 import { AddButtonActionBarEvent, RemoveButtonActionBarEvent } from "../Api/Events/Ui/ButtonActionBarEvent";
-import {ABSOLUTE_PUSHER_URL} from "../Enum/ComputedConst";
+import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);

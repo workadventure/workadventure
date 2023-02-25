@@ -16,6 +16,7 @@ services:
     environment:
       - PUSHER_URL=/
       - UPLOADER_URL=/uploader
+      - EJABBERD_WS_URI=wss://${DOMAIN}/xmpp/ws
     labels:
       traefik.http.middlewares.strip-chat-prefix.stripprefix.prefixes: "/chat"
       traefik.http.routers.chat.rule: "Host(`${DOMAIN}`) && PathPrefix(`/chat`)"

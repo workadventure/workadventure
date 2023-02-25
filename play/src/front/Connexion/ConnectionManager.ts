@@ -11,7 +11,7 @@ import { _ServiceWorker } from "../Network/ServiceWorker";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { subMenusStore, userIsConnected, warningContainerStore } from "../Stores/MenuStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
-import {axiosToPusher, axiosWithRetry} from "./AxiosUtils";
+import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import type { AvailabilityStatus } from "@workadventure/messages";
 import { isRegisterData } from "@workadventure/messages";
 import { limitMapStore } from "../Stores/GameStore";
@@ -119,9 +119,7 @@ class ConnectionManager {
         //@deprecated
         else if (this.connexionType === GameConnexionTypes.register) {
             const organizationMemberToken = urlManager.getOrganizationToken();
-            const result = await axiosToPusher.post("register", { organizationMemberToken }).then(
-                (res) => res.data
-            );
+            const result = await axiosToPusher.post("register", { organizationMemberToken }).then((res) => res.data);
 
             const registerDataChecking = isRegisterData.safeParse(result);
 
@@ -374,14 +372,13 @@ class ConnectionManager {
         //set connected store for menu at false
         userIsConnected.set(false);
 
-        const { authToken, userUuid, email, username, locale, textures, visitCardUrl } = await axiosToPusher.get(
-            "me",
-            {
+        const { authToken, userUuid, email, username, locale, textures, visitCardUrl } = await axiosToPusher
+            .get("me", {
                 params: { token, playUri: this.currentRoom?.key },
-            }
-        ).then((res) => {
-            return res.data;
-        });
+            })
+            .then((res) => {
+                return res.data;
+            });
 
         localUserStore.setAuthToken(authToken);
         this.localUser = new LocalUser(userUuid, email);

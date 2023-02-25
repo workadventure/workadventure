@@ -28,7 +28,7 @@ import { TexturesHelper } from "../Helpers/TexturesHelper";
 import type { IconButtonConfig } from "../Components/Ui/IconButton";
 import { IconButton, IconButtonEvent } from "../Components/Ui/IconButton";
 import { selectCharacterCustomizeSceneVisibleStore } from "../../Stores/SelectCharacterStore";
-import {ABSOLUTE_PUSHER_URL} from "../../Enum/ComputedConst";
+import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -86,7 +86,10 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.superLoad
             .json(
                 wokaMetadataKey,
-                new URL("/woka/list?roomUrl=" + encodeURIComponent(gameManager.currentStartedRoom.href), ABSOLUTE_PUSHER_URL).toString(),
+                new URL(
+                    "/woka/list?roomUrl=" + encodeURIComponent(gameManager.currentStartedRoom.href),
+                    ABSOLUTE_PUSHER_URL
+                ).toString(),
                 undefined,
                 {
                     responseType: "text",
