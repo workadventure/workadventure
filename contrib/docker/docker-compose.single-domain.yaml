@@ -5,7 +5,7 @@ services:
       - PUSHER_URL=/
       - ICON_URL=/icon
       - FRONT_URL=/
-      - CHAT_URL=/chat
+      - CHAT_URL=/chat/
       - UPLOADER_URL=/uploader
       - PUBLIC_MAP_STORAGE_URL=/map-storage
     labels:

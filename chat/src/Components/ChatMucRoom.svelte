@@ -34,7 +34,7 @@
 
 <div class={`wa-chat-item`} on:mouseleave={closeChatUserMenu}>
     <div class="tw-relative" on:click|stopPropagation={() => open()}>
-        <img class={``} src="/static/images/logo-wa-2.png" alt="Send" width="35" />
+        <img class={``} src="./static/images/logo-wa-2.png" alt="Send" width="35" />
         <div class="tw-block tw-absolute tw-right-0 tw-top-0 tw-transform tw-translate-x-2 -tw-translate-y-1">
             {#if mucRoom.type === "live"}
                 <div class="tw-block tw-relative">
