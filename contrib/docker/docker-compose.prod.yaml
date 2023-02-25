@@ -47,7 +47,7 @@ services:
       - DISABLE_ANONYMOUS
       - DISABLE_NOTIFICATIONS
       - SECRET_KEY
-      - API_URL
+      - API_URL=back:50051
       - FRONT_URL=https://${FRONT_HOST}
       - CHAT_URL=https://${CHAT_HOST}
       - PUBLIC_MAP_STORAGE_URL=https://${MAP_STORAGE_HOST}

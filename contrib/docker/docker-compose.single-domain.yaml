@@ -4,10 +4,10 @@ services:
     environment:
       - PUSHER_URL=/
       - ICON_URL=/icon
-      - API_URL=/api
       - FRONT_URL=/
       - CHAT_URL=/chat
       - UPLOADER_URL=/uploader
+      - PUBLIC_MAP_STORAGE_URL=/map-storage
     labels:
       traefik.http.routers.play.rule: "Host(`${DOMAIN}`) && PathPrefix(`/`)"
       traefik.http.routers.play-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/`)"

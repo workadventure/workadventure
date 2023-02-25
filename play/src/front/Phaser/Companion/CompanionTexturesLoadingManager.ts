@@ -5,6 +5,7 @@ import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
 import { gameManager } from "../Game/GameManager";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import type { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
+import {ABSOLUTE_PUSHER_URL} from "../../Enum/ComputedConst";
 
 export function companionListMetakey() {
     return "companion-list" + gameManager.currentStartedRoom.href;
@@ -20,7 +21,7 @@ export class CompanionTexturesLoadingManager {
         this.superLoad
             .json(
                 companionListMetakey(),
-                `${PUSHER_URL}/companion/list?roomUrl=` + encodeURIComponent(gameManager.currentStartedRoom.href),
+                new URL(`companion/list?roomUrl=` + encodeURIComponent(gameManager.currentStartedRoom.href), ABSOLUTE_PUSHER_URL).toString(),
                 undefined,
                 {
                     responseType: "text",
