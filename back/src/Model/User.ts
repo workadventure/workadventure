@@ -21,7 +21,7 @@ import { getPlayersVariablesRepository } from "../Services/PlayersRepository/Pla
 import { BrothersFinder } from "./BrothersFinder";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 
-export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientMessage>;
+export type UserSocket = AsyncIterable<PusherToBackMessage>;
 
 export class User implements Movable, CustomJsonReplacerInterface {
     public listenedZones: Set<Zone>;

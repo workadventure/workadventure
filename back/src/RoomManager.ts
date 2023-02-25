@@ -18,17 +18,14 @@ import {
     ChatMessagePrompt,
     ServerToClientMessage,
 } from "@workadventure/messages";
-import { RoomManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import {
-    sendUnaryData,
-    ServerDuplexStream,
-    ServerErrorResponse,
-    ServerUnaryCall,
-    ServerWritableStream,
-} from "@grpc/grpc-js";
+    DeepPartial,
+    RoomManagerServiceImplementation, ServerStreamingMethodResult
+} from "@workadventure/messages/src/ts-proto-generated/services";
+import {CallContext, ServerError, Status} from "nice-grpc";
 import { socketManager } from "./Services/SocketManager";
 import {
-    emitError,
+    generateError,
     emitErrorOnAdminSocket,
     emitErrorOnRoomSocket,
     emitErrorOnZoneSocket,
@@ -38,6 +35,9 @@ import { GameRoom } from "./Model/GameRoom";
 import Debug from "debug";
 import { Admin } from "./Model/Admin";
 import { clearInterval } from "timers";
+import {from} from "ix/Ix.dom.asynciterable";
+import {withAbort} from "ix/Ix.dom.asynciterable.operators";
+import {Observable, from as rxjsFrom} from "rxjs";
 
 const debug = Debug("roommanager");
 
@@ -50,25 +50,32 @@ export type RoomSocket = ServerWritableStream<RoomMessage, BatchToPusherRoomMess
 const PONG_TIMEOUT = 70000; // PONG_TIMEOUT is > 1 minute because of Chrome heavy throttling. See: https://docs.google.com/document/d/11FhKHRcABGS4SWPFGwoL6g0ALMqrFKapCk5ZTKKupEk/edit#
 const PING_INTERVAL = 80000;
 
-const roomManager: RoomManagerServer = {
-    joinRoom: (call: UserSocket): void => {
+const roomManager: RoomManagerServiceImplementation = {
+    async *joinRoom(
+        request: AsyncIterable<PusherToBackMessage>,
+        context: CallContext,
+    ): ServerStreamingMethodResult<DeepPartial<ServerToClientMessage>> {
+    //joinRoom: (call: UserSocket): void => {
         console.log("joinRoom called");
 
-        let room: GameRoom | null = null;
-        let user: User | null = null;
-        let pongTimeoutId: NodeJS.Timer | undefined;
 
-        call.on("data", (message: PusherToBackMessage) => {
-            // On each message, let's reset the pong timeout
-            if (pongTimeoutId) {
-                clearTimeout(pongTimeoutId);
-                pongTimeoutId = undefined;
-            }
 
-            (async () => {
+        //yield* from(new Observable<DeepPartial<ServerToClientMessage>>(async (subscribe) => {
+        yield* from(rxjsFrom(async (subscribe) => {
+            let room: GameRoom | null = null;
+            let user: User | null = null;
+            let pongTimeoutId: NodeJS.Timer | undefined;
+
+            for await (const message of request) {
+                // On each message, let's reset the pong timeout
+                if (pongTimeoutId) {
+                    clearTimeout(pongTimeoutId);
+                    pongTimeoutId = undefined;
+                }
+
                 if (!message.message) {
                     console.error("Empty message received");
-                    return;
+                    continue;
                 }
 
                 try {
@@ -92,7 +99,7 @@ const roomManager: RoomManagerServer = {
                                 })
                                 .catch((e) => {
                                     console.error("message handleJoinRoom error: ", e);
-                                    emitError(call, e);
+                                    generateError(call, e);
                                 });
                         } else {
                             throw new Error("The first message sent MUST be of type JoinRoomMessage");
@@ -202,14 +209,15 @@ const roomManager: RoomManagerServer = {
                 } catch (e) {
                     console.error(
                         "An error occurred while managing a message of type PusherToBackMessage:" +
-                            message.message.$case,
+                        message.message.$case,
                         e
                     );
-                    emitError(call, e);
-                    call.end();
+                    yield generateError(e);
+                    throw new ServerError(Status.INTERNAL, "An error occurred. TODO: improve this error message.");
                 }
-            })().catch((e) => console.error(e));
-        });
+            }
+        })).pipe(withAbort(context.signal));
+
 
         const closeConnection = () => {
             if (user !== null && room !== null) {
