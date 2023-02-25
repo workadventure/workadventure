@@ -17,7 +17,7 @@ function getMessageFromError(error: unknown): string {
     }
 }
 
-export function emitError(Client: UserSocket, error: unknown): void {
+export function generateError(error: unknown): ServerToClientMessage {
     const message = getMessageFromError(error);
 
     const serverToClientMessage: ServerToClientMessage = {
@@ -29,10 +29,9 @@ export function emitError(Client: UserSocket, error: unknown): void {
         },
     };
 
-    //if (!Client.disconnecting) {
-    Client.write(serverToClientMessage);
-    //}
     console.warn(message);
+
+    return serverToClientMessage;
 }
 
 export function emitErrorOnAdminSocket(Client: AdminSocket, error: unknown): void {

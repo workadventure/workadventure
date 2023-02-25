@@ -56,7 +56,7 @@ import Debug from "debug";
 import { Admin } from "../Model/Admin";
 import crypto from "crypto";
 import { getMapStorageClient } from "./MapStorageClient";
-import { emitError } from "./MessageHelpers";
+import { generateError } from "./MessageHelpers";
 
 const debug = Debug("sockermanager");
 
@@ -109,7 +109,7 @@ export class SocketManager {
                     updateMapToNewestWithKeyMessage,
                     (err: unknown, message: EditMapCommandsArrayMessage) => {
                         if (err) {
-                            emitError(user.socket, err);
+                            generateError(user.socket, err);
                             reject(err);
                             return;
                         }
@@ -1202,7 +1202,7 @@ export class SocketManager {
             },
             (err: unknown, editMapCommandMessage: EditMapCommandMessage) => {
                 if (err) {
-                    emitError(user.socket, err);
+                    generateError(user.socket, err);
                     return;
                 }
                 room.dispatchRoomMessage({
@@ -1220,7 +1220,7 @@ export class SocketManager {
             message,
             (err: unknown, message: EditMapCommandsArrayMessage) => {
                 if (err) {
-                    emitError(user.socket, err);
+                    generateError(user.socket, err);
                     throw err;
                 }
                 const commands = message.editMapCommands;
