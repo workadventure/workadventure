@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import fs from "fs";
 
 test.use({
-    baseURL: 'http://john.doe:password@map-storage.workadventure.localhost',
+    baseURL: process.env.MAP_STORAGE_URL ?? 'http://john.doe:password@map-storage.workadventure.localhost',
 })
 
 test.describe('Map-storage Upload API', () => {

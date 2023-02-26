@@ -671,6 +671,7 @@ jobs:
         working-directory: tests
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          MAP_STORAGE_URL: "http://john.doe:password@play.workadventure.localhost/map-storage"
       - name: Display docker-compose logs on failure
         run: docker-compose  -f docker-compose.prod.yaml -f docker-compose.single-domain.yaml -f tests/docker-compose.test-maps.yaml logs
         if: failure()
