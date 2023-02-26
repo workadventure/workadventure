@@ -27,8 +27,8 @@ const config: PlaywrightTestConfig = {
   retries: process.env.CI ? 2 : 0,
   /* Opt out of parallel tests. */
   workers: 1,
-  /* Limit failures to 5 in CI (to finish early) */
-  maxFailures: process.env.CI ? 5 : undefined,
+  /* Limit failures to 9 in CI (to finish early) */
+  maxFailures: process.env.CI ? 9 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
     ['html'],
