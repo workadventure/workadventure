@@ -13,7 +13,6 @@ import { PinchManager } from "../UserInput/PinchManager";
 import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
-import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
 import {
     collectionsSizeStore,
     customizeAvailableStore,

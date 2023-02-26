@@ -3,7 +3,6 @@ import {
     DISABLE_ANONYMOUS,
     OPID_LOGOUT_REDIRECT_URL,
     OPID_WOKA_NAME_POLICY,
-    PUSHER_URL,
 } from "../Enum/EnvironmentVariable";
 import { localUserStore } from "./LocalUserStore";
 import axios from "axios";

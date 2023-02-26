@@ -1,4 +1,4 @@
-import { ENABLE_FEATURE_MAP_EDITOR, PUSHER_URL, UPLOADER_URL } from "../Enum/EnvironmentVariable";
+import { ENABLE_FEATURE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";

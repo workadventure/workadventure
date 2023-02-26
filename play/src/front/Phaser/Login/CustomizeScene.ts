@@ -9,7 +9,6 @@ import { areCharacterLayersValid } from "../../Connexion/LocalUser";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
-import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
 import type { CustomWokaPreviewerConfig } from "../Components/CustomizeWoka/CustomWokaPreviewer";
 import {
     CustomWokaBodyPart,

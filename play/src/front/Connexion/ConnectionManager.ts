@@ -1,6 +1,5 @@
 import { HtmlUtils } from "./../WebRtc/HtmlUtils";
-import Axios from "axios";
-import { ENABLE_OPENID, PUSHER_URL } from "../Enum/EnvironmentVariable";
+import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
 import { RoomConnection } from "./RoomConnection";
 import type { OnConnectInterface, PositionInterface, ViewportInterface } from "./ConnexionModels";
 import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
