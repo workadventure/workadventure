@@ -176,7 +176,7 @@ test.describe('Chat', () => {
       await Chat.forumExist(page, 'Welcome');
     });
 
-    await test.step('disconnect and reconnect to ejabberd and pusher', async () => {
+    await test.step('disconnect and reconnect to ejabberd and pusher @docker', async () => {
       const chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
       await Chat.slideToUsers(page);
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);

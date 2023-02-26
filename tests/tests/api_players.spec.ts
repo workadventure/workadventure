@@ -1,6 +1,5 @@
 
 import {} from "../../play/packages/iframe-api-typings/iframe_api";
-//import {} from "../../front/src/iframe_api";
 import {expect, test, Browser, Page} from '@playwright/test';
 import { login } from './utils/roles';
 import {getCoWebsiteIframe} from "./utils/iframe";
