@@ -1,15 +1,34 @@
 import { describe, expect, it } from "vitest";
 import { Space } from "../src/Model/Space";
 import { SpacesWatcher } from "../src/Model/SpacesWatcher";
-import { SpaceSocketMock } from "./utils/SpaceSocketMock";
 import { BackToPusherSpaceMessage, PartialSpaceUser, SpaceUser } from "../src/Messages/generated/messages_pb";
 import { BoolValue, Int32Value, StringValue } from "google-protobuf/google/protobuf/wrappers_pb";
+import { SpaceSocket } from "../src/SpaceManager";
+import { mock } from "vitest-mock-extended";
 
 describe("Space", () => {
     const space = new Space("test");
-    const spaceSocketToPusher1 = new SpaceSocketMock();
-    const spaceSocketToPusher2 = new SpaceSocketMock();
-    const spaceSocketToPusher3 = new SpaceSocketMock();
+    let eventsWatcher1: BackToPusherSpaceMessage[] = [];
+    const spaceSocketToPusher1 = mock<SpaceSocket>({
+        write(chunk: BackToPusherSpaceMessage): boolean {
+            eventsWatcher1.push(chunk);
+            return true;
+        },
+    });
+    let eventsWatcher2: BackToPusherSpaceMessage[] = [];
+    const spaceSocketToPusher2 = mock<SpaceSocket>({
+        write(chunk: BackToPusherSpaceMessage): boolean {
+            eventsWatcher2.push(chunk);
+            return true;
+        },
+    });
+    let eventsWatcher3: BackToPusherSpaceMessage[] = [];
+    const spaceSocketToPusher3 = mock<SpaceSocket>({
+        write(chunk: BackToPusherSpaceMessage): boolean {
+            eventsWatcher3.push(chunk);
+            return true;
+        },
+    });
 
     let watcher1: SpacesWatcher;
 
@@ -17,14 +36,12 @@ describe("Space", () => {
         expect(space.canBeDeleted()).toBe(true);
     });
     it("should emit event ONLY to other watcher on addUser", () => {
-        const eventsWatcher1: BackToPusherSpaceMessage[] = [];
-        spaceSocketToPusher1.on("write", (message) => eventsWatcher1.push(message));
+        eventsWatcher1 = [];
         const watcher1_ = new SpacesWatcher("uuid-watcher-1", spaceSocketToPusher1);
         watcher1 = watcher1_;
         space.addWatcher(watcher1_);
 
-        const eventsWatcher2: BackToPusherSpaceMessage[] = [];
-        spaceSocketToPusher2.on("write", (message) => eventsWatcher2.push(message));
+        eventsWatcher2 = [];
         const watcher2 = new SpacesWatcher("uuid-watcher-2", spaceSocketToPusher2);
         space.addWatcher(watcher2);
 
@@ -49,19 +66,17 @@ describe("Space", () => {
         space.removeWatcher(watcher2);
     });
     it("should emit addUserEvent to new watcher", () => {
-        const eventsWatcher: BackToPusherSpaceMessage[] = [];
-        spaceSocketToPusher3.on("write", (message) => eventsWatcher.push(message));
+        eventsWatcher3 = [];
         const watcher = new SpacesWatcher("uuid-watcher-3", spaceSocketToPusher3);
         space.addWatcher(watcher);
 
         // should have received the addUser event
-        expect(eventsWatcher.some((message) => message.hasAddspaceusermessage())).toBe(true);
+        expect(eventsWatcher3.some((message) => message.hasAddspaceusermessage())).toBe(true);
 
         space.removeWatcher(watcher);
     });
     it("should emit updateUserEvent to other watchers", () => {
-        const eventsWatcher3: BackToPusherSpaceMessage[] = [];
-        spaceSocketToPusher3.on("write", (message) => eventsWatcher3.push(message));
+        eventsWatcher3 = [];
         const watcher3 = new SpacesWatcher("uuid-watcher-3", spaceSocketToPusher3);
         space.addWatcher(watcher3);
 
@@ -99,8 +114,7 @@ describe("Space", () => {
         space.removeWatcher(watcher3);
     });
     it("should emit removeUserEvent to other watchers", () => {
-        const eventsWatcher3: BackToPusherSpaceMessage[] = [];
-        spaceSocketToPusher3.on("write", (message) => eventsWatcher3.push(message));
+        eventsWatcher3 = [];
         const watcher3 = new SpacesWatcher("uuid-watcher-3", spaceSocketToPusher3);
         space.addWatcher(watcher3);
 

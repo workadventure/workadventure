@@ -10,7 +10,7 @@
     "profile": "tsc && node --prof ./dist/server.js",
     "typecheck": "tsc --noEmit",
     "test": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest -- --verbose=true",
-    "test:coverage": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest --coverage -- --verbose=true",
+    "test:coverage": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest --config vitest.config.ts --coverage -- --verbose=true",
     "lint": "DEBUG= eslint src/ . --ext .ts",
     "fix": "DEBUG= eslint --fix src/ . --ext .ts",
     "precommit": "lint-staged",
@@ -83,7 +83,8 @@
     "lint-staged": "^11.0.0",
     "prettier": "^2.8.1",
     "ts-node-dev": "^2.0.0",
-    "vitest": "^0.28.5"
+    "vitest": "^0.28.5",
+    "vitest-mock-extended": "^1.0.9"
   },
   "lint-staged": {
     "*.ts": [
