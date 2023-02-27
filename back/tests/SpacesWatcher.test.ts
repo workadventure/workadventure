@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { SpaceSocketMock } from "./utils/SpaceSocketMock";
 import { BackToPusherSpaceMessage } from "../src/Messages/generated/messages_pb";
 import { SpacesWatcher } from "../src/Model/SpacesWatcher";
-import {Space} from "../src/Model/Space";
+import { Space } from "../src/Model/Space";
 
 describe("SpacesWatcher", () => {
     it(
@@ -26,27 +26,28 @@ describe("SpacesWatcher", () => {
     it("should add/remove space to watcher", () => {
         const spaceSocketToPusher = new SpaceSocketMock();
         const watcher = new SpacesWatcher("uuid-watcher", spaceSocketToPusher);
-        watcher.watchSpace('test-spaces-watcher');
-        expect(watcher.spacesWatched).toContain('test-spaces-watcher');
+        watcher.watchSpace("test-spaces-watcher");
+        expect(watcher.spacesWatched).toContain("test-spaces-watcher");
 
-        watcher.unwatchSpace('test-spaces-watcher');
-        expect(watcher.spacesWatched).not.toContain('test-spaces-watcher');
+        watcher.unwatchSpace("test-spaces-watcher");
+        expect(watcher.spacesWatched).not.toContain("test-spaces-watcher");
     });
     it(
         "should not close the socket because pong was received to the ping",
         async () => {
             const spaceSocketToPusher = new SpaceSocketMock();
+            // eslint-disable-next-line prefer-const
             let watcher: SpacesWatcher;
             spaceSocketToPusher.on("write", (message) => {
-                if(message.hasPingmessage()){
+                if (message.hasPingmessage()) {
                     // If we received ping, we are faking pong
                     // Race condition SpacesWatcher.constructor is emitting this event and this event want the watcher to be constructed etc...
                     setTimeout(() => watcher?.receivedPong(), 0);
                 }
             });
-            watcher = new SpacesWatcher("uuid-watcher", spaceSocketToPusher)
+            watcher = new SpacesWatcher("uuid-watcher", spaceSocketToPusher);
             let isClosed = false;
-            spaceSocketToPusher.on("end", () => isClosed = true);
+            spaceSocketToPusher.on("end", () => (isClosed = true));
             await new Promise((resolve) => setTimeout(resolve, 45_000));
             expect(isClosed).toBe(false);
         },
