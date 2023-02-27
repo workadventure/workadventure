@@ -667,11 +667,10 @@ jobs:
         run: sleep 30
       - name: Run Playwright tests
         # Run all tests, except the ones needing to restart Docker and the ones relying on an OIDC server
-        run: npm run test-prod-like -- --project=chromium --grep-invert "@docker|@oidc"
+        run: npm run test-single-domain-install
         working-directory: tests
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          MAP_STORAGE_URL: "http://john.doe:password@play.workadventure.localhost/map-storage"
       - name: Display docker-compose logs on failure
         run: docker-compose  -f docker-compose.prod.yaml -f docker-compose.single-domain.yaml -f tests/docker-compose.test-maps.yaml logs
         if: failure()
