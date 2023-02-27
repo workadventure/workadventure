@@ -28,12 +28,17 @@ export class Space implements CustomJsonReplacerInterface {
     ) {
         this.users = new Map<string, SpaceUser>();
         this.clientWatchers = new Map<string, ExSocketInterface>();
-        this.clientWatchers.set(watcher.userUuid, watcher);
+        this.addClientWatcher(watcher);
         debug(`created : ${name}`);
     }
 
     public addClientWatcher(watcher: ExSocketInterface) {
         this.clientWatchers.set(watcher.userUuid, watcher);
+    }
+
+    // FIXME: Is used ?
+    public removeClientWatcher(watcher: ExSocketInterface) {
+        this.clientWatchers.delete(watcher.userUuid);
     }
 
     public addUser(spaceUser: SpaceUser) {

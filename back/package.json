@@ -9,7 +9,7 @@
     "runprod": "ts-node --transpileOnly ./server.ts",
     "profile": "tsc && node --prof ./dist/server.js",
     "typecheck": "tsc --noEmit",
-    "test": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest",
+    "test": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest --config vitest.config.ts ",
     "test:coverage": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest --config vitest.config.ts --coverage -- --verbose=true",
     "lint": "DEBUG= eslint src/ . --ext .ts",
     "fix": "DEBUG= eslint --fix src/ . --ext .ts",
