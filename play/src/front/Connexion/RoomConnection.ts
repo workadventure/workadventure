@@ -61,6 +61,9 @@ import {
     AddSpaceFilterMessage,
     UpdateSpaceFilterMessage,
     RemoveSpaceFilterMessage,
+    AddSpaceUserMessage,
+    UpdateSpaceUserMessage,
+    RemoveSpaceUserMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -177,6 +180,12 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _leaveMucRoomMessageStream = new Subject<LeaveMucRoomMessage>();
     public readonly leaveMucRoomMessageStream = this._leaveMucRoomMessageStream.asObservable();
+    private readonly _addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
+    public readonly addSpaceUserMessageStream = this._addSpaceUserMessageStream.asObservable();
+    private readonly _updateSpaceUserMessageStream = new Subject<UpdateSpaceUserMessage>();
+    public readonly updateSpaceUserMessageStream = this._updateSpaceUserMessageStream.asObservable();
+    private readonly _removeSpaceUserMessageStream = new Subject<RemoveSpaceUserMessage>();
+    public readonly removeSpaceUserMessageStream = this._removeSpaceUserMessageStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -356,15 +365,15 @@ export class RoomConnection implements RoomConnection {
                                 break;
                             }
                             case "addSpaceUserMessage": {
-                                console.warn("addSpaceUserMessage", subMessage.addSpaceUserMessage);
+                                this._addSpaceUserMessageStream.next(subMessage.addSpaceUserMessage);
                                 break;
                             }
                             case "updateSpaceUserMessage": {
-                                console.warn("updateSpaceUserMessage", subMessage.updateSpaceUserMessage);
+                                this._updateSpaceUserMessageStream.next(subMessage.updateSpaceUserMessage);
                                 break;
                             }
                             case "removeSpaceUserMessage": {
-                                console.warn("removeSpaceUserMessage", subMessage.removeSpaceUserMessage);
+                                this._removeSpaceUserMessageStream.next(subMessage.removeSpaceUserMessage);
                                 break;
                             }
                             default: {
