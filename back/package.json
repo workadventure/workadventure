@@ -78,12 +78,12 @@
     "@types/node": "^18.11.9",
     "@typescript-eslint/eslint-plugin": "^5.8.0",
     "@typescript-eslint/parser": "^5.8.0",
-    "@vitest/coverage-c8": "^0.28.5",
+    "@vitest/coverage-c8": "^0.29.1",
     "eslint": "^8.5.0",
     "lint-staged": "^11.0.0",
     "prettier": "^2.8.1",
     "ts-node-dev": "^2.0.0",
-    "vitest": "^0.28.5",
+    "vitest": "^0.29.1",
     "vitest-mock-extended": "^1.0.9"
   },
   "lint-staged": {
