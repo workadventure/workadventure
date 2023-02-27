@@ -5,24 +5,28 @@ import { BackToPusherSpaceMessage } from "../src/Messages/generated/messages_pb"
 import { SpacesWatcher } from "../src/Model/SpacesWatcher";
 import { mock } from "vitest-mock-extended";
 import { SpaceSocket } from "../src/SpaceManager";
+import { Writable } from "stream";
 
 describe("SpacesWatcher", () => {
     it(
         "should close the socket because no pong was answered to the ping within 20sec",
         async () => {
             const eventsWatcher: BackToPusherSpaceMessage[] = [];
+            let isClosed = false;
             const spaceSocketToPusher = mock<SpaceSocket>({
                 write(chunk: BackToPusherSpaceMessage): boolean {
                     eventsWatcher.push(chunk);
                     return true;
+                },
+                end(): ReturnType<Writable["end"]> extends Writable ? SpaceSocket : void {
+                    isClosed = true;
+                    return mock<SpaceSocket>();
                 },
             });
 
             const watcher = new SpacesWatcher("uuid-watcher", spaceSocketToPusher);
             expect(eventsWatcher.some((message) => message.hasPingmessage())).toBe(true);
 
-            let isClosed = false;
-            spaceSocketToPusher.on("end", () => (isClosed = true));
             await new Promise((resolve) => setTimeout(resolve, 20_000));
             expect(isClosed).toBe(true);
         },
