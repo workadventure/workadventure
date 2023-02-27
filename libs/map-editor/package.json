@@ -24,7 +24,8 @@
     "@workadventure/tiled-map-type-guard": "^2.1.0",
     "lodash": "^4.17.21",
     "uuid": "^9.0.0",
-    "zod": "^3.20.2"
+    "zod": "^3.20.2",
+    "zod-to-json-schema": "^3.20.4"
   },
   "devDependencies": {
     "@jest/globals": "^29.3.1",

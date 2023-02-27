@@ -1,4 +1,4 @@
-import { AreaType, GameMapProperties } from "@workadventure/map-editor";
+import { AreaDataProperties, AreaType, GameMapProperties } from "@workadventure/map-editor";
 import type { AreaChangeCallback, AreaData, GameMap } from "@workadventure/map-editor";
 import type {
     ITiledMap,
@@ -17,6 +17,7 @@ import type { GameScene } from "../GameScene";
 import { EntitiesManager } from "./EntitiesManager";
 import { Entity } from "../../ECS/Entity";
 import { TexturesHelper } from "../../Helpers/TexturesHelper";
+import { ITiledPlace } from "../GameMapPropertiesListener";
 
 export type LayerChangeCallback = (
     layersChangedByAction: Array<ITiledMapLayer>,
@@ -545,10 +546,6 @@ export class GameMapFrontWrapper {
         this.gameMap.getGameMapAreas().triggerAreasChange(this.oldPosition, this.position);
     }
 
-    public mapAreaToTiledObject(area: AreaData): ITiledMapObject {
-        return this.gameMap.getGameMapAreas().mapAreaDataToTiledObject(area);
-    }
-
     public getAreas(areaType: AreaType): AreaData[] {
         return this.gameMap.getGameMapAreas().getAreas(areaType);
     }
@@ -569,7 +566,7 @@ export class GameMapFrontWrapper {
         return this.gameMap.getGameMapAreas().getAreaByName(name, type);
     }
 
-    public getArea(id: number, type: AreaType): AreaData | undefined {
+    public getArea(id: string, type: AreaType): AreaData | undefined {
         return this.gameMap.getGameMapAreas().getArea(id, type);
     }
 
@@ -582,7 +579,7 @@ export class GameMapFrontWrapper {
         this.areaUpdatedSubject.next(gameMapAreas.getAreaByName(name, AreaType.Static));
     }
 
-    public updateAreaById(id: number, type: AreaType, config: Partial<AreaData>): void {
+    public updateAreaById(id: string, type: AreaType, config: Partial<AreaData>): void {
         const gameMapAreas = this.gameMap.getGameMapAreas();
         const area = gameMapAreas.updateAreaById(id, type, config);
         if (this.position && area && gameMapAreas.isPlayerInsideArea(id, type, this.position)) {
@@ -595,11 +592,11 @@ export class GameMapFrontWrapper {
         this.gameMap.getGameMapAreas().deleteAreaByName(name, type, this.position);
     }
 
-    public deleteAreaById(id: number, type: AreaType): void {
+    public deleteAreaById(id: string, type: AreaType): void {
         this.gameMap.getGameMapAreas().deleteAreaById(id, type, this.position);
     }
 
-    public isPlayerInsideArea(id: number, type: AreaType): boolean {
+    public isPlayerInsideArea(id: string, type: AreaType): boolean {
         if (!this.position) {
             return false;
         }
@@ -647,6 +644,35 @@ export class GameMapFrontWrapper {
 
     public handleEntityActionTrigger(): void {
         this.triggerAllProperties();
+    }
+
+    /**
+     * Parse map-editor AreaData to ITiledMapObject format in order to handle properties changes
+     */
+    public mapAreaToTiledObject(areaData: AreaData): ITiledPlace {
+        return {
+            id: areaData.id,
+            type: "area",
+            class: "area",
+            name: areaData.name,
+            visible: true,
+            x: areaData.x,
+            y: areaData.y,
+            width: areaData.width,
+            height: areaData.height,
+            properties: this.mapAreaPropertiesToTiledProperties(areaData.properties),
+        };
+    }
+
+    private mapAreaPropertiesToTiledProperties(areaProperties: AreaDataProperties): ITiledMapProperty[] {
+        const properties: ITiledMapProperty[] = [];
+
+        // TODO: ADD THE REST IN A SAME WAY OR PREFERABLY FIGURE SOMETHING MORE CLEVER OUT
+        if (areaProperties.jitsiRoom) {
+            properties.push({ name: "jitsiRoom", type: "string", value: areaProperties.jitsiRoom.roomName ?? "" });
+        }
+
+        return properties;
     }
 
     private triggerAllProperties(): void {

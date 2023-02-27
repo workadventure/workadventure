@@ -34,7 +34,6 @@
     );
 
     function switchTool(newTool: EditorToolName) {
-        console.log(JSON.stringify($LL));
         gameScene.getMapEditorModeManager().equipTool(newTool);
     }
 

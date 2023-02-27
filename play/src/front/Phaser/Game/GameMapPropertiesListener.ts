@@ -28,7 +28,8 @@ interface OpenCoWebsite {
     coWebsite?: CoWebsite;
 }
 
-export type ITiledPlace = ITiledMapLayer | ITiledMapObject;
+// NOTE: We need to change id type to fit both ITiledMapObjects and UUID's from MapEditor
+export type ITiledPlace = Omit<ITiledMapLayer | ITiledMapObject, "id"> & { id?: string | number };
 
 export class GameMapPropertiesListener {
     private coWebsitesOpenByPlace = new Map<string, OpenCoWebsite>();

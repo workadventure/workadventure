@@ -1,4 +1,3 @@
-import type { ModifyAreaMessage } from "@workadventure/messages";
 import type { CreateAreaCommandConfig } from "./Commands/Area/CreateAreaCommand";
 import type { DeleteAreaCommandConfig } from "./Commands/Area/DeleteAreaCommand";
 import type { UpdateAreaCommandConfig } from "./Commands/Area/UpdateAreaCommand";
@@ -16,8 +15,6 @@ export type CommandConfig =
     | DeleteEntityCommandConfig;
 
 export type AtLeast<T, K extends keyof T> = Partial<T> & Pick<T, K>;
-
-export type AreaData = Required<ModifyAreaMessage> & { visible: boolean }; // move visible to messages also
 
 export enum AreaType {
     Static = "Static",
@@ -79,6 +76,7 @@ export const AreaData = z.object({
     y: z.number(),
     width: z.number(),
     height: z.number(),
+    visible: z.boolean(),
     properties: AreaDataProperties,
 });
 
@@ -120,6 +118,7 @@ export const EntityData = z.object({
 
 export const WAMFileFormat = z.object({
     version: z.string(),
+    mapUrl: z.string(),
     entities: z.array(EntityData),
     areas: z.array(AreaData),
 });
@@ -130,6 +129,8 @@ export type EntityCollection = z.infer<typeof EntityCollection>;
 export type EntityData = z.infer<typeof EntityData>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
 export type EntityDataPropertiesKeys = keyof z.infer<typeof EntityDataProperties>;
+export type AreaData = z.infer<typeof AreaData>;
+export type AreaDataProperties = z.infer<typeof AreaDataProperties>;
 export type TextHeaderPropertyData = z.infer<typeof TextHeaderPropertyData>;
 export type ActionsMenuData = z.infer<typeof ActionsMenuData>;
 export type JitsiRoomConfigData = z.infer<typeof JitsiRoomConfigData>;

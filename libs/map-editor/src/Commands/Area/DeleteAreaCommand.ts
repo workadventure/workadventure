@@ -6,7 +6,7 @@ import type { CreateAreaCommandConfig } from "./CreateAreaCommand";
 
 export interface DeleteAreaCommandConfig {
     type: "DeleteAreaCommand";
-    id: number;
+    id: string;
 }
 
 export class DeleteAreaCommand extends Command {

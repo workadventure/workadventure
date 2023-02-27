@@ -12,7 +12,7 @@
     let areaData: AreaData | undefined;
     let mapEditorSelectedAreaPreviewStoreUnsubscriber: Unsubscriber;
 
-    let propertySilent: boolean;
+    // let propertySilent: boolean;
 
     const focusablePropertyData: PredefinedPropertyData = {
         name: "Focusable",
@@ -30,10 +30,10 @@
         if (preview) {
             areaData = structuredClone(preview.getConfig());
 
-            focusablePropertyData.turnedOn = areaData.properties["focusable"] as boolean;
-            focusablePropertyData.additionalProperties["zoomMargin"] = areaData.properties["zoomMargin"] as number;
+            // focusablePropertyData.turnedOn = areaData.properties["focusable"] as boolean;
+            // focusablePropertyData.additionalProperties["zoomMargin"] = areaData.properties["zoomMargin"] as number;
 
-            propertySilent = areaData.properties["silent"] as boolean;
+            // propertySilent = areaData.properties["silent"] as boolean;
         }
     });
 
@@ -54,11 +54,11 @@
         if (!areaData) {
             return;
         }
-        areaData.properties["focusable"] = focusablePropertyData.turnedOn;
-        areaData.properties["silent"] = propertySilent;
-        areaData.properties["zoomMargin"] = focusablePropertyData.additionalProperties["zoomMargin"] as
-            | number
-            | undefined;
+        // areaData.properties["focusable"] = focusablePropertyData.turnedOn;
+        // areaData.properties["silent"] = propertySilent;
+        // areaData.properties["zoomMargin"] = focusablePropertyData.additionalProperties["zoomMargin"] as
+        //     | number
+        //     | undefined;
         gameScene.getMapEditorModeManager().executeCommand({ type: "UpdateAreaCommand", areaObjectConfig: areaData });
     }
 

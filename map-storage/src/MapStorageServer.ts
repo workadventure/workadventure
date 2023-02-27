@@ -102,9 +102,7 @@ const mapStorageServer: MapStorageServer = {
                     const message = editMapMessage.createAreaMessage;
                     const areaObjectConfig: AreaData = {
                         ...message,
-                        properties: {
-                            customProperties: {},
-                        },
+                        properties: {},
                         visible: true,
                     };
                     mapsManager.executeCommand(
