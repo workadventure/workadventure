@@ -9,7 +9,7 @@ test.describe('Map-storage Upload API', () => {
     test('can upload ZIP file', async ({
                                            request,
                                        }) => {
-        const uploadFile1 = await request.post(`/upload`, {
+        const uploadFile1 = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
             }
@@ -17,11 +17,11 @@ test.describe('Map-storage Upload API', () => {
         await expect(uploadFile1.ok()).toBeTruthy();
 
         // Now, let's try to fetch the file.
-        const accessFile1 = await request.get(`/file1.txt`);
+        const accessFile1 = await request.get(`file1.txt`);
         await expect(accessFile1.ok()).toBeTruthy();
         await expect(await accessFile1.text()).toContain("hello");
 
-        const uploadFile2 = await request.post(`/upload`, {
+        const uploadFile2 = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file2.zip"),
             }
@@ -29,16 +29,16 @@ test.describe('Map-storage Upload API', () => {
         await expect(uploadFile2.ok()).toBeTruthy();
 
         // Now, let's try to fetch the file.
-        const accessFile2 = await request.get(`/subdir/file2.txt`);
+        const accessFile2 = await request.get(`subdir/file2.txt`);
         await expect(accessFile2.ok()).toBeTruthy();
         await expect(await accessFile2.text()).toContain("world");
 
         // Let's check that the old file is gone
-        const accessFile3 = await request.get(`/file1.txt`);
+        const accessFile3 = await request.get(`file1.txt`);
         await expect(accessFile3.status()).toBe(404);
 
         // Now let's try to upload zip1 again, but in a directory
-        const uploadFile3 = await request.post(`/upload`, {
+        const uploadFile3 = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
                 directory: "/foo"
@@ -47,12 +47,12 @@ test.describe('Map-storage Upload API', () => {
         await expect(uploadFile3.ok()).toBeTruthy();
 
         // Now, let's try to fetch the file.
-        const accessFile4 = await request.get(`/foo/file1.txt`);
+        const accessFile4 = await request.get(`foo/file1.txt`);
         await expect(accessFile4.ok()).toBeTruthy();
         await expect(await accessFile4.text()).toContain("hello");
 
         // Because we uploaded in "/foo", the "/subdir" directory should always be here.
-        const accessFile5 = await request.get(`/subdir/file2.txt`);
+        const accessFile5 = await request.get(`subdir/file2.txt`);
         await expect(accessFile5.ok()).toBeTruthy();
         await expect(await accessFile5.text()).toContain("world");
     });
@@ -73,7 +73,7 @@ test.describe('Map-storage Upload API', () => {
                                 request,
                             }) => {
         // upload zip (file2.zip), download the "subdir" that contains only one file, reupload the subdir in "/bar", access the file
-        const uploadFile1 = await request.post(`/upload`, {
+        const uploadFile1 = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file2.zip"),
             }
@@ -81,12 +81,12 @@ test.describe('Map-storage Upload API', () => {
         await expect(uploadFile1.ok()).toBeTruthy();
 
         // Now, let's try to fetch the file.
-        const downloadFile1 = await request.get(`/download?directory=subdir`);
+        const downloadFile1 = await request.get(`download?directory=subdir`);
         await expect(downloadFile1.ok()).toBeTruthy();
         const buffer = await downloadFile1.body();
 
         // Let's reupload this ZIP file in subdirectory "bar"
-        const uploadFile2 = await request.post(`/upload`, {
+        const uploadFile2 = await request.post("upload", {
             multipart: {
                 file: {
                     buffer,
@@ -99,7 +99,7 @@ test.describe('Map-storage Upload API', () => {
         await expect(uploadFile2.ok()).toBeTruthy();
 
         // Now, let's see if file /bar/file2.txt exists
-        const accessFile1 = await request.get(`/bar/file2.txt`);
+        const accessFile1 = await request.get(`bar/file2.txt`);
         await expect(accessFile1.ok()).toBeTruthy();
         await expect(await accessFile1.text()).toContain("world");
 
@@ -112,19 +112,19 @@ test.describe('Map-storage Upload API', () => {
         // It contains 2 files: immutable.a45b7e8f.js and normal-file.js.
         // When accessed, normal-file.js should have a small cache-control TTL
         // immutable.a45b7e8f.js should have a "immutable" Cache-Control HTTP header
-        const uploadFile1 = await request.post(`/upload`, {
+        const uploadFile1 = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/cache-control.zip"),
             }
         });
         await expect(uploadFile1.ok()).toBeTruthy();
 
-        const accessNormalFile = await request.get(`/normal-file.js`);
+        const accessNormalFile = await request.get(`normal-file.js`);
         await expect(accessNormalFile.ok()).toBeTruthy();
         await expect(accessNormalFile.headers()['etag']).toBeDefined();
         await expect(accessNormalFile.headers()['cache-control']).toContain('public, s-max-age=10')
 
-        const accessCacheControlFile = await request.get(`/immutable.a45b7e8f.js`);
+        const accessCacheControlFile = await request.get(`immutable.a45b7e8f.js`);
         await expect(accessCacheControlFile.ok()).toBeTruthy();
         await expect(accessCacheControlFile.headers()['etag']).toBeDefined();
         await expect(accessCacheControlFile.headers()['cache-control']).toContain("immutable");
@@ -133,13 +133,13 @@ test.describe('Map-storage Upload API', () => {
     test("get list of maps", async ({
         request,
     }) => {
-        const uploadFile = await request.post(`/upload`, {
+        const uploadFile = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
                 directory: "/"
             }
         });
-        const uploadFileToDir = await request.post(`/upload`, {
+        const uploadFileToDir = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
                 directory: "/foo"
@@ -148,10 +148,10 @@ test.describe('Map-storage Upload API', () => {
         await expect(uploadFile.ok()).toBeTruthy();
         await expect(uploadFileToDir.ok()).toBeTruthy();
 
-        let listOfMaps = await request.get("/maps");
+        let listOfMaps = await request.get("maps");
         await expect(await listOfMaps.text() === JSON.stringify(["foo/map.tmj","map.tmj"])).toBeTruthy();
 
-        const uploadFileAlone = await request.post(`/upload`, {
+        const uploadFileAlone = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
                 directory: "/"
@@ -159,14 +159,14 @@ test.describe('Map-storage Upload API', () => {
         });
 
         await expect(uploadFileAlone.ok()).toBeTruthy();
-        listOfMaps = await request.get("/maps");
+        listOfMaps = await request.get("maps");
         await expect(await listOfMaps.text() === JSON.stringify(["map.tmj"])).toBeTruthy();
     });
 
     test("delete the root folder", async ({
         request,
     }) => {
-        const uploadFileToDir = await request.post(`/upload`, {
+        const uploadFileToDir = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
                 directory: "/"
@@ -174,21 +174,21 @@ test.describe('Map-storage Upload API', () => {
         });
         await expect(uploadFileToDir.ok()).toBeTruthy();
 
-        let listOfMaps = await request.get("/maps");
+        let listOfMaps = await request.get("maps");
         await expect(await listOfMaps.text() === JSON.stringify(["map.tmj"])).toBeTruthy();
 
-        const deleteRoot = await request.delete(`/delete?path=/`);
+        const deleteRoot = await request.delete(`delete?path=/`);
 
        await expect(deleteRoot.status() === 204).toBeTruthy();
 
-        listOfMaps = await request.get("/maps");
+        listOfMaps = await request.get("maps");
         await expect(await listOfMaps.text() === JSON.stringify([])).toBeTruthy();
     });
 
     test("delete a folder", async ({
         request,
     }) => {
-        const uploadFileToDir = await request.post(`/upload`, {
+        const uploadFileToDir = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
                 directory: "/toDelete"
@@ -196,21 +196,21 @@ test.describe('Map-storage Upload API', () => {
         });
         await expect(uploadFileToDir.ok()).toBeTruthy();
 
-        let listOfMaps = await request.get("/maps");
+        let listOfMaps = await request.get("maps");
         await expect(await listOfMaps.text() === JSON.stringify(["toDelete/map.tmj"])).toBeTruthy();
 
-        const deleteRoot = await request.delete(`/delete?path=/toDelete`);
+        const deleteRoot = await request.delete(`delete?path=/toDelete`);
 
        await expect(deleteRoot.status() === 204).toBeTruthy();
 
-        listOfMaps = await request.get("/maps");
+        listOfMaps = await request.get("maps");
         await expect(await listOfMaps.text() === JSON.stringify([])).toBeTruthy();
     });
 
     test("move a folder", async ({
         request,
     }) => {
-        const uploadFileToDir = await request.post(`/upload`, {
+        const uploadFileToDir = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
                 directory: "/toMove"
@@ -218,7 +218,7 @@ test.describe('Map-storage Upload API', () => {
         });
         await expect(uploadFileToDir.ok()).toBeTruthy();
 
-        let listOfMaps = await request.get("/maps");
+        let listOfMaps = await request.get("maps");
         await expect(JSON.parse(await listOfMaps.text()).includes("toMove/map.tmj")).toBeTruthy();
 
         const moveDir = await request.post(`/move`, {
@@ -230,7 +230,7 @@ test.describe('Map-storage Upload API', () => {
 
         await expect(moveDir.ok()).toBeTruthy();
 
-        listOfMaps = await request.get("/maps");
+        listOfMaps = await request.get("maps");
         await expect(JSON.parse(await listOfMaps.text()).includes("moved/map.tmj")).toBeTruthy();
         await expect(JSON.parse(await listOfMaps.text()).includes("toMove/map.tmj")).toBeFalsy();
     });
@@ -238,7 +238,7 @@ test.describe('Map-storage Upload API', () => {
     test("copy a folder", async ({
         request,
     }) => {
-        const uploadFileToDir = await request.post(`/upload`, {
+        const uploadFileToDir = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
                 directory: "/toCopy"
@@ -246,7 +246,7 @@ test.describe('Map-storage Upload API', () => {
         });
         await expect(uploadFileToDir.ok()).toBeTruthy();
 
-        let listOfMaps = await request.get("/maps");
+        let listOfMaps = await request.get("maps");
         await expect(JSON.parse(await listOfMaps.text()).includes("toCopy/map.tmj")).toBeTruthy();
 
         const copyDir = await request.post(`/copy`, {
@@ -258,7 +258,7 @@ test.describe('Map-storage Upload API', () => {
 
         await expect(copyDir.ok()).toBeTruthy();
 
-        listOfMaps = await request.get("/maps");
+        listOfMaps = await request.get("maps");
         const maps = JSON.parse(await listOfMaps.text());
         await expect(["toCopy/map.tmj", "copied/map.tmj"].every((value) => maps.includes(value))).toBeTruthy();
     });
@@ -266,7 +266,7 @@ test.describe('Map-storage Upload API', () => {
     test('fails on invalid maps', async ({
                                            request,
                                        }) => {
-        const uploadFile1 = await request.post(`/upload`, {
+        const uploadFile1 = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/missing-image.zip"),
             }
@@ -278,7 +278,7 @@ test.describe('Map-storage Upload API', () => {
     test('fails on JSON extension', async ({
                                              request,
                                          }) => {
-        const uploadFile1 = await request.post(`/upload`, {
+        const uploadFile1 = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/json-map.zip"),
             }
@@ -290,7 +290,7 @@ test.describe('Map-storage Upload API', () => {
     test('special characters support', async ({
                                                request,
                                            }) => {
-        const uploadFile1 = await request.post(`/upload`, {
+        const uploadFile1 = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/special_characters.zip"),
             }

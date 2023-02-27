@@ -17,7 +17,7 @@ test.setTimeout(180000);
 test.describe('Variables', () => {
   // WARNING: Since this test restarts traefik and other components, it might fail when run against the vite dev server.
   // when running with --headed you can manually reload the page to avoid this issue.
-  test('storage works', async ({ page }) => {
+  test('storage works @docker', async ({ page }) => {
     await resetRedis();
 
     await Promise.all([rebootBack(), rebootPlay()]);
