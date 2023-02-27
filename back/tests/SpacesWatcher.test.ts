@@ -1,18 +1,23 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { describe, expect, it } from "vitest";
-import { SpaceSocketMock } from "./utils/SpaceSocketMock";
 import { BackToPusherSpaceMessage } from "../src/Messages/generated/messages_pb";
 import { SpacesWatcher } from "../src/Model/SpacesWatcher";
-import { Space } from "../src/Model/Space";
+import { mock } from "vitest-mock-extended";
+import { SpaceSocket } from "../src/SpaceManager";
 
 describe("SpacesWatcher", () => {
     it(
         "should close the socket because no pong was answered to the ping within 20sec",
         async () => {
-            const spaceSocketToPusher = new SpaceSocketMock();
             const eventsWatcher: BackToPusherSpaceMessage[] = [];
-            spaceSocketToPusher.on("write", (message) => eventsWatcher.push(message));
+            const spaceSocketToPusher = mock<SpaceSocket>({
+                write(chunk: BackToPusherSpaceMessage): boolean {
+                    eventsWatcher.push(chunk);
+                    return true;
+                },
+            });
+
             const watcher = new SpacesWatcher("uuid-watcher", spaceSocketToPusher);
             expect(eventsWatcher.some((message) => message.hasPingmessage())).toBe(true);
 
@@ -24,7 +29,7 @@ describe("SpacesWatcher", () => {
         { timeout: 30_000 }
     );
     it("should add/remove space to watcher", () => {
-        const spaceSocketToPusher = new SpaceSocketMock();
+        const spaceSocketToPusher = mock<SpaceSocket>();
         const watcher = new SpacesWatcher("uuid-watcher", spaceSocketToPusher);
         watcher.watchSpace("test-spaces-watcher");
         expect(watcher.spacesWatched).toContain("test-spaces-watcher");
@@ -35,16 +40,17 @@ describe("SpacesWatcher", () => {
     it(
         "should not close the socket because pong was received to the ping",
         async () => {
-            const spaceSocketToPusher = new SpaceSocketMock();
             // eslint-disable-next-line prefer-const
             let watcher: SpacesWatcher;
-            spaceSocketToPusher.on("write", (message) => {
-                if (message.hasPingmessage()) {
-                    // If we received ping, we are faking pong
-                    // Race condition SpacesWatcher.constructor is emitting this event and this event want the watcher to be constructed etc...
-                    setTimeout(() => watcher?.receivedPong(), 0);
-                }
+            const spaceSocketToPusher = mock<SpaceSocket>({
+                write(chunk: BackToPusherSpaceMessage): boolean {
+                    if (chunk.hasPingmessage()) {
+                        setTimeout(() => watcher?.receivedPong(), 0);
+                    }
+                    return true;
+                },
             });
+
             watcher = new SpacesWatcher("uuid-watcher", spaceSocketToPusher);
             let isClosed = false;
             spaceSocketToPusher.on("end", () => (isClosed = true));
