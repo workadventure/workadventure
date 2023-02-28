@@ -24,6 +24,11 @@ export type LayerChangeCallback = (
     allLayersOnNewPosition: Array<ITiledMapLayer>
 ) => void;
 
+export type TiledAreaChangeCallback = (
+    areasChangedByAction: Array<ITiledMapObject>,
+    allAreasOnNewPosition: Array<ITiledMapObject>
+) => void;
+
 export type PropertyChangeCallback = (
     newValue: string | number | boolean | undefined,
     oldValue: string | number | boolean | undefined,
@@ -55,6 +60,7 @@ export class GameMapFrontWrapper {
 
     public readonly phaserMap: Phaser.Tilemaps.Tilemap;
     public readonly phaserLayers: TilemapLayer[] = [];
+    public readonly tiledAreas: ITiledMapObject[] = [];
 
     public collisionGrid: number[][];
     private entitiesCollisionLayer: Phaser.Tilemaps.TilemapLayer;
@@ -66,6 +72,9 @@ export class GameMapFrontWrapper {
 
     private enterLayerCallbacks = Array<LayerChangeCallback>();
     private leaveLayerCallbacks = Array<LayerChangeCallback>();
+
+    private enterTiledAreaCallbacks = Array<TiledAreaChangeCallback>();
+    private leaveTiledAreaCallbacks = Array<TiledAreaChangeCallback>();
 
     /**
      * Firing on map change, containing newest collision grid array
@@ -100,6 +109,13 @@ export class GameMapFrontWrapper {
                 depth = DEPTH_OVERLAY_INDEX;
             }
         }
+
+        // NOTE: We leave "zone" for legacy reasons
+        this.gameMap.tiledObjects
+            .filter((object) => ["zone", "area"].includes(object.class ?? ""))
+            .forEach((tiledArea: ITiledMapObject) => {
+                this.tiledAreas.push(tiledArea);
+            });
 
         this.collisionGrid = [];
         this.entitiesCollisionLayer = phaserMap.createBlankLayer("__entitiesCollisionLayer", terrains);
@@ -239,7 +255,8 @@ export class GameMapFrontWrapper {
         this.oldPosition = this.position;
         this.position = { x, y };
         const areasChanged = this.gameMap.getGameMapAreas().triggerAreasChange(this.oldPosition, this.position);
-        if (areasChanged) {
+        const tiledAreasChanged = this.triggerTiledAreasChange(this.oldPosition, this.position);
+        if (areasChanged || tiledAreasChanged) {
             this.triggerAllProperties();
         }
 
@@ -295,6 +312,20 @@ export class GameMapFrontWrapper {
      */
     public onLeaveLayer(callback: LayerChangeCallback) {
         this.leaveLayerCallbacks.push(callback);
+    }
+
+    /**
+     * Registers a callback called when the user moves inside another Tiled Area.
+     */
+    public onEnterTiledArea(callback: TiledAreaChangeCallback) {
+        this.enterTiledAreaCallbacks.push(callback);
+    }
+
+    /**
+     * Registers a callback called when the user moves outside another Tiled Area.
+     */
+    public onLeaveTiledArea(callback: TiledAreaChangeCallback) {
+        this.leaveTiledAreaCallbacks.push(callback);
     }
 
     public findLayer(layerName: string): ITiledMapLayer | undefined {
@@ -697,16 +728,34 @@ export class GameMapFrontWrapper {
     }
 
     private getProperties(key: number): Map<string, string | boolean | number> {
+        // CHECK FOR AREAS PROPERTIES
         const properties = this.position
             ? this.gameMap.getGameMapAreas().getProperties(this.position)
             : new Map<string, string | boolean | number>();
 
+        // CHECK FOR TILED AREAS PROPERTIES
+        if (this.position) {
+            const tiledAreasOnPosition = this.getTiledAreasOnPosition(this.position);
+            for (const tiledArea of tiledAreasOnPosition) {
+                if (tiledArea.properties) {
+                    for (const property of tiledArea.properties) {
+                        if (property.value === undefined) {
+                            continue;
+                        }
+                        properties.set(property.name, property.value as string | number | boolean);
+                    }
+                }
+            }
+        }
+
+        // CHECK FOR ENTITIES PROPERTIES
         if (this.entitiesManager) {
             for (const property of this.entitiesManager.getProperties()) {
                 properties.set(property[0], property[1]);
             }
         }
 
+        // CHECK FOR LAYERS PROPERTIES
         for (const layer of this.getFlatLayers()) {
             if (layer.type !== "tilelayer") {
                 continue;
@@ -786,5 +835,57 @@ export class GameMapFrontWrapper {
                 callback(layerArray, layersByNewKey);
             }
         }
+    }
+
+    private triggerTiledAreasChange(
+        oldPosition: { x: number; y: number } | undefined,
+        position: { x: number; y: number } | undefined
+    ): boolean {
+        const areasByOldPosition = oldPosition ? this.getTiledAreasOnPosition(oldPosition) : [];
+        const areasByNewPosition = position ? this.getTiledAreasOnPosition(position) : [];
+
+        const enterAreas = new Set(areasByNewPosition);
+        const leaveAreas = new Set(areasByOldPosition);
+
+        enterAreas.forEach((area) => {
+            if (leaveAreas.has(area)) {
+                leaveAreas.delete(area);
+                enterAreas.delete(area);
+            }
+        });
+
+        let areasChange = false;
+        if (enterAreas.size > 0) {
+            const areasArray = Array.from(enterAreas);
+
+            for (const callback of this.enterTiledAreaCallbacks) {
+                callback(areasArray, areasByNewPosition);
+            }
+            areasChange = true;
+        }
+
+        if (leaveAreas.size > 0) {
+            const areasArray = Array.from(leaveAreas);
+            for (const callback of this.leaveTiledAreaCallbacks) {
+                callback(areasArray, areasByNewPosition);
+            }
+            areasChange = true;
+        }
+        return areasChange;
+    }
+
+    private getTiledAreasOnPosition(position: { x: number; y: number }, offsetY = 16): ITiledMapObject[] {
+        const overlappedTiledAreas: ITiledMapObject[] = [];
+        for (const tiledArea of this.tiledAreas) {
+            if (
+                MathUtils.isOverlappingWithRectangle(
+                    { x: position.x, y: position.y + offsetY },
+                    { x: tiledArea.x, y: tiledArea.y, width: tiledArea.width ?? 0, height: tiledArea.height ?? 0 }
+                )
+            ) {
+                overlappedTiledAreas.push(tiledArea);
+            }
+        }
+        return overlappedTiledAreas;
     }
 }

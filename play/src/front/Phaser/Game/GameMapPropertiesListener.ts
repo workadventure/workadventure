@@ -262,6 +262,14 @@ export class GameMapPropertiesListener {
             this.onLeavePlaceHandler(oldLayers);
         });
 
+        this.gameMapFrontWrapper.onEnterTiledArea((newTiledAreas) => {
+            this.onEnterPlaceHandler(newTiledAreas);
+        });
+
+        this.gameMapFrontWrapper.onLeaveTiledArea((oldTiledAreas) => {
+            this.onLeavePlaceHandler(oldTiledAreas);
+        });
+
         this.gameMapFrontWrapper.onEnterArea((newAreas) => {
             this.onEnterPlaceHandler(newAreas.map((area) => this.gameMapFrontWrapper.mapAreaToTiledObject(area)));
         });

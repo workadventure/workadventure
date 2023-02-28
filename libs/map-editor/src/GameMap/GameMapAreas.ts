@@ -31,13 +31,6 @@ export class GameMapAreas {
 
     constructor(gameMap: GameMap) {
         this.gameMap = gameMap;
-
-        // NOTE: We leave "zone" for legacy reasons
-        // this.gameMap.tiledObjects
-        //     .filter((object) => ["zone", "area"].includes(object.class ?? ""))
-        //     .forEach((tiledArea: ITiledMapObject) => {
-        //         this.tiledAreas.push(this.map tiledArea);
-        //     });
     }
 
     public mapAreaToTiledObject(areaData: AreaData): Omit<ITiledMapObject, "id"> & { id?: string | number } {
@@ -67,7 +60,6 @@ export class GameMapAreas {
     }
 
     /**
-     * We use Tiled Objects with type "area" as areas with defined x, y, width and height for easier event triggering.
      * @returns If there were any areas changes
      */
     public triggerAreasChange(
