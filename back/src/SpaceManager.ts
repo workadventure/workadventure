@@ -53,6 +53,7 @@ const spaceManager: ISpaceManagerServer = {
         })
             .on("error", (e) => {
                 console.error("Error on watchSpace", e);
+                socketManager.handleUnwatchAllSpaces(pusher);
             })
             .on("end", () => {
                 socketManager.handleUnwatchAllSpaces(pusher);

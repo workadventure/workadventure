@@ -93,14 +93,14 @@ export class Space implements CustomJsonReplacerInterface {
     public addWatcher(watcher: SpacesWatcher) {
         this.users.set(watcher, new Map<string, SpaceUser>());
         debug(`Space ${this.name} => watcher added ${watcher.uuid}`);
-        [...this.users.values()].forEach((spaceUsers) => {
-            [...spaceUsers.values()].forEach((spaceUser) => {
+        for (const spaceUsers of this.users.values()) {
+            for (const spaceUser of spaceUsers.values()) {
                 const message = new AddSpaceUserMessage();
                 message.setSpacename(this.name);
                 message.setUser(spaceUser);
                 watcher.write(message);
-            });
-        });
+            }
+        }
     }
     public removeWatcher(watcher: SpacesWatcher) {
         this.users.delete(watcher);
@@ -108,11 +108,11 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     private notifyWatchers(watcher: SpacesWatcher, message: SpaceMessage) {
-        [...this.users.keys()].forEach((watcher_) => {
+        for (const watcher_ of this.users.keys()) {
             if (watcher_.uuid !== watcher.uuid) {
                 watcher_.write(message);
             }
-        });
+        }
     }
 
     public canBeDeleted(): boolean {
