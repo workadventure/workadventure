@@ -1,8 +1,9 @@
-import type { AreaData } from "../types";
+import type { AreaData, AreaDataProperties } from "../types";
 import { AreaType } from "../types";
 import * as _ from "lodash";
 import { MathUtils } from "@workadventure/math-utils";
 import type { GameMap } from "./GameMap";
+import { ITiledMapObject, ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
 
 export type AreaChangeCallback = (
     areasChangedByAction: Array<AreaData>,
@@ -16,13 +17,13 @@ export class GameMapAreas {
     private leaveAreaCallbacks = Array<AreaChangeCallback>();
 
     /**
+     * Areas created from within map-editor
+     */
+    private readonly staticAreas: AreaData[] = [];
+    /**
      * Areas that we can do CRUD operations on via scripting API
      */
     private readonly dynamicAreas: AreaData[] = [];
-    /**
-     * Areas loaded from Tiled map file
-     */
-    private readonly staticAreas: AreaData[] = [];
 
     private readonly areasPositionOffsetY: number = 16;
     private readonly staticAreaNamePrefix = "STATIC_AREA_";
@@ -32,96 +33,38 @@ export class GameMapAreas {
         this.gameMap = gameMap;
 
         // NOTE: We leave "zone" for legacy reasons
-        // try {
-        //     this.gameMap.tiledObjects
-        //         .filter((object) => ["zone", "area"].includes(object.class ?? ""))
-        //         .forEach((areaRaw: ITiledMapObject) => {
-        //             this.staticAreas.push(this.tiledObjectToAreaData(areaRaw));
-        //         });
-        // } catch (e) {
-        //     console.error("CANNOT PARSE TILED OBJECTS TO AREA DATA FORMAT:");
-        //     console.error(e);
-        // }
+        // this.gameMap.tiledObjects
+        //     .filter((object) => ["zone", "area"].includes(object.class ?? ""))
+        //     .forEach((tiledArea: ITiledMapObject) => {
+        //         this.tiledAreas.push(this.map tiledArea);
+        //     });
     }
 
-    // private tiledObjectToAreaData(tiledObject: ITiledMapObject): AreaData {
-    //     let name = tiledObject.name;
-    //     if (!name) {
-    //         name = `${this.staticAreaNamePrefix}${this.unnamedStaticAreasCounter}`;
-    //         tiledObject.name = name;
-    //         this.unnamedStaticAreasCounter++;
-    //     }
-    //     if (tiledObject.width === undefined || tiledObject.height === undefined) {
-    //         throw new Error(`Area name "${name}" must be a rectangle`);
-    //     }
-    //     return {
-    //         name,
-    //         id: tiledObject.id,
-    //         x: tiledObject.x,
-    //         y: tiledObject.y,
-    //         width: tiledObject.width,
-    //         height: tiledObject.height,
-    //         properties: this.mapTiledPropertiesToAreaProperties(tiledObject),
-    //         visible: true,
-    //     };
-    // }
+    public mapAreaToTiledObject(areaData: AreaData): Omit<ITiledMapObject, "id"> & { id?: string | number } {
+        return {
+            id: areaData.id,
+            type: "area",
+            class: "area",
+            name: areaData.name,
+            visible: true,
+            x: areaData.x,
+            y: areaData.y,
+            width: areaData.width,
+            height: areaData.height,
+            properties: this.mapAreaPropertiesToTiledProperties(areaData.properties),
+        };
+    }
 
-    // private mapTiledPropertiesToAreaProperties(areaRaw: ITiledMapObject): AreaProperties {
-    //     if (!areaRaw.properties) {
-    //         return {
-    //             customProperties: {},
-    //         };
-    //     }
-    //     const properties: AreaProperties = {
-    //         customProperties: {},
-    //     };
-    //     for (const rawProperty of areaRaw.properties) {
-    //         const value = rawProperty.value;
+    private mapAreaPropertiesToTiledProperties(areaProperties: AreaDataProperties): ITiledMapProperty[] {
+        const properties: ITiledMapProperty[] = [];
 
-    //         // TODO: Figure out what to do with JSON type
-    //         if (value === undefined || value === null) {
-    //             continue;
-    //         }
+        // TODO: ADD THE REST IN A SAME WAY OR PREFERABLY FIGURE SOMETHING MORE CLEVER OUT
+        if (areaProperties.jitsiRoom) {
+            properties.push({ name: "jitsiRoom", type: "string", value: areaProperties.jitsiRoom.roomName ?? "" });
+        }
 
-    //         //
-    //         if (["focusable", "silent", "zoomMargin"].includes(rawProperty.name)) {
-    //             //eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //             // @ts-ignore
-    //             properties[rawProperty.name] = value;
-    //         } else {
-    //             //eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //             // @ts-ignore
-    //             properties.customProperties[rawProperty.name] = value;
-    //         }
-    //     }
-    //     return properties;
-    // }
-
-    // private mapAreaPropertyToTiledProperty(key: string, value: string | boolean | number): ITiledMapProperty {
-    //     switch (typeof value) {
-    //         case "string": {
-    //             return {
-    //                 value,
-    //                 name: key,
-    //                 type: "string",
-    //             };
-    //         }
-    //         case "number": {
-    //             return {
-    //                 value,
-    //                 name: key,
-    //                 type: "float",
-    //             };
-    //         }
-    //         case "boolean": {
-    //             return {
-    //                 value,
-    //                 name: key,
-    //                 type: "bool",
-    //             };
-    //         }
-    //     }
-    // }
+        return properties;
+    }
 
     /**
      * We use Tiled Objects with type "area" as areas with defined x, y, width and height for easier event triggering.

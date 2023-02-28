@@ -1,4 +1,4 @@
-import { AreaDataProperties, AreaType, GameMapProperties } from "@workadventure/map-editor";
+import { AreaType, GameMapProperties } from "@workadventure/map-editor";
 import type { AreaChangeCallback, AreaData, GameMap } from "@workadventure/map-editor";
 import type {
     ITiledMap,
@@ -650,29 +650,7 @@ export class GameMapFrontWrapper {
      * Parse map-editor AreaData to ITiledMapObject format in order to handle properties changes
      */
     public mapAreaToTiledObject(areaData: AreaData): ITiledPlace {
-        return {
-            id: areaData.id,
-            type: "area",
-            class: "area",
-            name: areaData.name,
-            visible: true,
-            x: areaData.x,
-            y: areaData.y,
-            width: areaData.width,
-            height: areaData.height,
-            properties: this.mapAreaPropertiesToTiledProperties(areaData.properties),
-        };
-    }
-
-    private mapAreaPropertiesToTiledProperties(areaProperties: AreaDataProperties): ITiledMapProperty[] {
-        const properties: ITiledMapProperty[] = [];
-
-        // TODO: ADD THE REST IN A SAME WAY OR PREFERABLY FIGURE SOMETHING MORE CLEVER OUT
-        if (areaProperties.jitsiRoom) {
-            properties.push({ name: "jitsiRoom", type: "string", value: areaProperties.jitsiRoom.roomName ?? "" });
-        }
-
-        return properties;
+        return this.gameMap.getGameMapAreas().mapAreaToTiledObject(areaData);
     }
 
     private triggerAllProperties(): void {
