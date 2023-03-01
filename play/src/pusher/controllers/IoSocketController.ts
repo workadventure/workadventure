@@ -1,5 +1,5 @@
 import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
-import type { PointInterface } from "../models/Websocket/PointInterface";
+import { PointInterface } from "../models/Websocket/PointInterface";
 import qs from "qs";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
@@ -26,10 +26,8 @@ import {
     apiVersionHash,
     AvailabilityStatus,
     ClientToServerMessage,
-    CompanionMessage,
     ErrorApiData,
-    isErrorApiData,
-    MucRoomDefinitionInterface,
+    MucRoomDefinition,
     ServerToClientMessage as ServerToClientMessageTsProto,
     SubMessage,
     WokaDetail,
@@ -40,52 +38,61 @@ import { JID } from "stanza";
 
 type WebSocket = HyperExpress.compressors.WebSocket;
 
+const CompanionMessage = z.object({
+    name: z.string(),
+});
+
+type CompanionMessage = z.infer<typeof CompanionMessage>;
+
 /**
  * The object passed between the "open" and the "upgrade" methods when opening a websocket
  */
-interface UpgradeData {
+const UpgradeData = z.object({
     // Data passed here is accessible on the "websocket" socket object.
-    rejected: false;
-    token: string;
-    userUuid: string;
-    userJid: string;
-    IPAddress: string;
-    roomId: string;
-    name: string;
-    companion: CompanionMessage | undefined;
-    availabilityStatus: AvailabilityStatus;
-    characterLayers: WokaDetail[];
-    messages: unknown[];
-    tags: string[];
-    visitCardUrl: string | null;
-    userRoomToken: string | undefined;
-    position: PointInterface;
-    viewport: {
-        top: number;
-        right: number;
-        bottom: number;
-        left: number;
-    };
-    mucRooms: Array<MucRoomDefinitionInterface> | undefined;
-    activatedInviteUser: boolean | undefined;
-    isLogged: boolean;
-    canEdit: boolean;
-}
+    rejected: z.literal(false),
+    token: z.string(),
+    userUuid: z.string(),
+    userJid: z.string(),
+    IPAddress: z.string(),
+    roomId: z.string(),
+    name: z.string(),
+    companion: CompanionMessage.optional(),
+    availabilityStatus: z.nativeEnum(AvailabilityStatus),
+    characterLayers: WokaDetail.array(),
+    messages: z.unknown().array(),
+    tags: z.string().array(),
+    visitCardUrl: z.string().nullable(),
+    userRoomToken: z.string().optional(),
+    position: PointInterface,
+    viewport: z.object({
+        top: z.number(),
+        right: z.number(),
+        bottom: z.number(),
+        left: z.number(),
+    }),
+    mucRooms: MucRoomDefinition.array().optional(),
+    activatedInviteUser: z.boolean().optional(),
+    isLogged: z.boolean(),
+    canEdit: z.boolean(),
+});
 
-interface UpgradeFailedInvalidData {
-    rejected: true;
-    reason: "tokenInvalid" | "textureInvalid" | "invalidVersion" | null;
-    message: string;
-    roomId: string;
-}
+type UpgradeData = z.infer<typeof UpgradeData>;
 
-interface UpgradeFailedErrorData {
-    rejected: true;
-    reason: "error";
-    error: ErrorApiData;
-}
+const UpgradeFailedInvalidData = z.object({
+    rejected: z.literal(true),
+    reason: z.enum(["tokenInvalid", "textureInvalid", "invalidVersion"]).nullable(),
+    message: z.string(),
+    roomId: z.string(),
+});
 
-type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData;
+const UpgradeFailedErrorData = z.object({
+    rejected: z.literal(true),
+    reason: z.literal("error"),
+    error: ErrorApiData,
+});
+
+const UpgradeFailedData = z.union([UpgradeFailedErrorData, UpgradeFailedInvalidData]);
+type UpgradeFailedData = z.infer<typeof UpgradeFailedData>;
 
 export class IoSocketController {
     private nextUserId = 1;
@@ -273,7 +280,7 @@ export class IoSocketController {
                                 return;
                             }
                             return res.upgrade(
-                                {
+                                UpgradeFailedData.parse({
                                     rejected: true,
                                     reason: "error",
                                     error: {
@@ -288,7 +295,7 @@ export class IoSocketController {
                                         buttonTitle: "Refresh",
                                         timeToRetry: 999999,
                                     },
-                                } as UpgradeFailedData,
+                                }),
                                 websocketKey,
                                 websocketProtocol,
                                 websocketExtensions,
@@ -341,7 +348,6 @@ export class IoSocketController {
 
                         let memberTags: string[] = [];
                         let memberVisitCardUrl: string | null = null;
-                        let memberMessages: unknown;
                         let memberUserRoomToken: string | undefined;
                         let memberTextures: WokaDetail[] = [];
                         let userData: FetchMemberDataByUuidResponse = {
@@ -374,7 +380,7 @@ export class IoSocketController {
                                 );
                             } catch (err) {
                                 if (Axios.isAxiosError(err)) {
-                                    const errorType = isErrorApiData.safeParse(err?.response?.data);
+                                    const errorType = ErrorApiData.safeParse(err?.response?.data);
                                     if (errorType.success) {
                                         if (upgradeAborted.aborted) {
                                             // If the response points to nowhere, don't attempt an upgrade
@@ -388,12 +394,12 @@ export class IoSocketController {
                                         );
 
                                         return res.upgrade(
-                                            {
+                                            UpgradeFailedData.parse({
                                                 rejected: true,
                                                 reason: "error",
                                                 status: err?.response?.status,
                                                 error: errorType.data,
-                                            } as UpgradeFailedData,
+                                            }),
                                             websocketKey,
                                             websocketProtocol,
                                             websocketExtensions,
@@ -406,13 +412,13 @@ export class IoSocketController {
                                             return;
                                         }
                                         return res.upgrade(
-                                            {
+                                            UpgradeFailedData.parse({
                                                 rejected: true,
                                                 reason: null,
                                                 status: 500,
                                                 message: err?.response?.data,
                                                 roomId: roomId,
-                                            } as UpgradeFailedData,
+                                            }),
                                             websocketKey,
                                             websocketProtocol,
                                             websocketExtensions,
@@ -422,7 +428,6 @@ export class IoSocketController {
                                 }
                                 throw err;
                             }
-                            memberMessages = userData.messages;
                             memberTags = userData.tags;
                             memberVisitCardUrl = userData.visitCardUrl;
                             memberTextures = userData.textures;
@@ -465,47 +470,49 @@ export class IoSocketController {
                             return;
                         }
 
+                        const responseData: UpgradeData = {
+                            // Data passed here is accessible on the "websocket" socket object.
+                            rejected: false,
+                            token: token && typeof token === "string" ? token : "",
+                            userUuid: userData.userUuid,
+                            userJid: userData.jabberId,
+                            IPAddress,
+                            userIdentifier,
+                            roomId,
+                            name,
+                            companion,
+                            availabilityStatus,
+                            // lastCommandId,
+                            characterLayers: characterLayerObjs,
+                            tags: memberTags,
+                            visitCardUrl: memberVisitCardUrl,
+                            userRoomToken: memberUserRoomToken,
+                            textures: memberTextures,
+                            jabberId: userData.jabberId,
+                            jabberPassword: userData.jabberPassword,
+                            mucRooms: userData.mucRooms || undefined,
+                            activatedInviteUser: userData.activatedInviteUser || undefined,
+                            canEdit: userData.canEdit ?? false,
+                            applications: userData.applications,
+                            position: {
+                                x: x,
+                                y: y,
+                                direction: "down",
+                                moving: false,
+                            },
+                            viewport: {
+                                top,
+                                right,
+                                bottom,
+                                left,
+                            },
+                            isLogged,
+                            messages: []
+                        };
+
                         /* This immediately calls open handler, you must not use res after this call */
                         res.upgrade(
-                            {
-                                // Data passed here is accessible on the "websocket" socket object.
-                                rejected: false,
-                                token,
-                                userUuid: userData.userUuid,
-                                userJid: userData.jabberId,
-                                IPAddress,
-                                userIdentifier,
-                                roomId,
-                                name,
-                                companion,
-                                availabilityStatus,
-                                lastCommandId,
-                                characterLayers: characterLayerObjs,
-                                messages: memberMessages,
-                                tags: memberTags,
-                                visitCardUrl: memberVisitCardUrl,
-                                userRoomToken: memberUserRoomToken,
-                                textures: memberTextures,
-                                jabberId: userData.jabberId,
-                                jabberPassword: userData.jabberPassword,
-                                mucRooms: userData.mucRooms,
-                                activatedInviteUser: userData.activatedInviteUser,
-                                canEdit: userData.canEdit ?? false,
-                                applications: userData.applications,
-                                position: {
-                                    x: x,
-                                    y: y,
-                                    direction: "down",
-                                    moving: false,
-                                } as PointInterface,
-                                viewport: {
-                                    top,
-                                    right,
-                                    bottom,
-                                    left,
-                                },
-                                isLogged,
-                            } as UpgradeData,
+                            responseData,
                             /* Spell these correctly */
                             websocketKey,
                             websocketProtocol,
@@ -522,12 +529,12 @@ export class IoSocketController {
                                 return;
                             }
                             res.upgrade(
-                                {
+                                UpgradeFailedData.parse({
                                     rejected: true,
                                     reason: e instanceof InvalidTokenError ? tokenInvalidException : null,
                                     message: e.message,
                                     roomId,
-                                } as UpgradeFailedData,
+                                }),
                                 websocketKey,
                                 websocketProtocol,
                                 websocketExtensions,
@@ -539,12 +546,12 @@ export class IoSocketController {
                                 return;
                             }
                             res.upgrade(
-                                {
+                                UpgradeFailedData.parse({
                                     rejected: true,
                                     reason: null,
                                     message: "500 Internal Server Error",
                                     roomId,
-                                } as UpgradeFailedData,
+                                }),
                                 websocketKey,
                                 websocketProtocol,
                                 websocketExtensions,
@@ -586,8 +593,7 @@ export class IoSocketController {
                     //get data information and show messages
                     if (client.messages && Array.isArray(client.messages)) {
                         client.messages.forEach((c: unknown) => {
-                            // FIXME: dangerous cast
-                            const messageToSend = c as { type: string; message: string };
+                            const messageToSend = z.object({ type: z.string(), message: z.string() }).parse(c);
 
                             const bytes = ServerToClientMessageTsProto.encode({
                                 message: {

@@ -13,10 +13,11 @@ import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuSto
 import { mapEditorModeStore, MapEntityEditorMode, mapEntityEditorModeStore } from "../../Stores/MapEditorStore";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import { ActivatableInterface } from "../Game/ActivatableInterface";
-import type { GameScene } from "../Game/GameScene";
+import { GameScene } from "../Game/GameScene";
 import { OutlineableInterface } from "../Game/OutlineableInterface";
 
 import * as _ from "lodash";
+import { z } from "zod";
 
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
@@ -65,7 +66,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                     outlineColor: color,
                 });
             }
-            (this.scene as GameScene).markDirty();
+            z.instanceof(GameScene).parse(this.scene).markDirty();
         });
 
         this.scene.add.existing(this);

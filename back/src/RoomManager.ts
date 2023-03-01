@@ -15,7 +15,6 @@ import {
     FollowAbortMessage,
     EmptyMessage,
     ItemEventMessage,
-    JoinRoomMessage,
     PusherToBackMessage,
     RefreshRoomPromptMessage,
     RoomMessage,
@@ -86,9 +85,10 @@ const roomManager: IRoomManagerServer = {
             (async () => {
                 try {
                     if (room === null || user === null) {
-                        if (message.hasJoinroommessage()) {
+                        const joinRoomMessage = message.getJoinroommessage();
+                        if (joinRoomMessage) {
                             socketManager
-                                .handleJoinRoom(call, message.getJoinroommessage() as JoinRoomMessage)
+                                .handleJoinRoom(call, joinRoomMessage)
                                 .then(({ room: gameRoom, user: myUser }) => {
                                     if (call.writable) {
                                         room = gameRoom;

@@ -12,6 +12,7 @@ import { GameScene } from "./GameScene";
 import { EmptySceneName } from "../Login/EmptyScene";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraStore } from "../../Stores/MyMediaStore";
+import { z } from "zod";
 
 /**
  * This class should be responsible for any scene starting/stopping
@@ -147,7 +148,7 @@ export class GameManager {
         if (this.currentGameSceneName === null) throw new Error("No current scene id set!");
         gameSceneIsLoadedStore.set(false);
 
-        const gameScene: GameScene = this.scenePlugin.get(this.currentGameSceneName) as GameScene;
+        const gameScene = z.instanceof(GameScene).parse(this.scenePlugin.get(this.currentGameSceneName));
         gameScene.cleanupClosingScene();
         gameScene.createSuccessorGameScene(false, false);
         menuIconVisiblilityStore.set(false);
@@ -171,7 +172,7 @@ export class GameManager {
 
     public getCurrentGameScene(): GameScene {
         if (this.currentGameSceneName === null) throw new Error("No current scene id set!");
-        return this.scenePlugin.get(this.currentGameSceneName) as GameScene;
+        return z.instanceof(GameScene).parse(this.scenePlugin.get(this.currentGameSceneName));
     }
 
     public get currentStartedRoom() {

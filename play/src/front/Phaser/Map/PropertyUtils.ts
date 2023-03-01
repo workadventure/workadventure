@@ -1,11 +1,15 @@
 import type { ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
+import { z } from "zod";
 
 export class PropertyUtils {
     public static findProperty(
         name: string,
         properties: ITiledMapProperty[] | undefined
     ): string | boolean | number | undefined {
-        return properties?.find((property) => property.name === name)?.value as string | boolean | number | undefined;
+        return z
+            .union([z.string(), z.boolean(), z.number()])
+            .optional()
+            .parse(properties?.find((property) => property.name === name)?.value);
     }
 
     public static findBooleanProperty(
