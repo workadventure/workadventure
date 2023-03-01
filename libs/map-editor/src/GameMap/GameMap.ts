@@ -269,13 +269,6 @@ export class GameMap {
         return false;
     }
 
-    /**
-     * @return lowest possible available id for new object to be created
-     */
-    public getNextObjectId(): number | undefined {
-        return this.map.nextobjectid;
-    }
-
     public incrementNextObjectId(): void {
         if (this.map.nextobjectid !== undefined) {
             this.map.nextobjectid++;

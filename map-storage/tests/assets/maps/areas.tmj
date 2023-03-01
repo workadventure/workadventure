@@ -307,6 +307,12 @@
                  "height":127,
                  "id":34,
                  "name":"STATIC_AREA_2",
+                 "properties":[
+                        {
+                         "name":"openWebsite",
+                         "type":"string",
+                         "value":"https:\/\/google.com"
+                        }],
                  "rotation":0,
                  "visible":true,
                  "width":220,

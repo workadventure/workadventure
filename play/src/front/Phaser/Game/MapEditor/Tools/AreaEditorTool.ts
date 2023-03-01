@@ -180,19 +180,14 @@ export class AreaEditorTool extends MapEditorTool {
                 break;
             }
             case "l": {
-                const newAreaId = this.scene.getGameMap().getNextObjectId();
-                if (newAreaId === undefined) {
-                    return;
-                }
+                const id = crypto.randomUUID();
                 this.mapEditorModeManager.executeCommand({
                     type: "CreateAreaCommand",
                     areaObjectConfig: {
-                        id: newAreaId,
-                        name: `STATIC_AREA_${newAreaId}`,
+                        id,
+                        name: `STATIC_AREA_${id}`,
                         visible: true,
-                        properties: {
-                            customProperties: {},
-                        },
+                        properties: {},
                         width: 100,
                         height: 100,
                         x: this.scene.input.activePointer.worldX - 50,

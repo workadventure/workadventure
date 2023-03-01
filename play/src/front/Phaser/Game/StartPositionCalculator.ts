@@ -36,8 +36,9 @@ export class StartPositionCalculator {
                 names.push(obj.name);
             }
         }
+        // TODO: Add check for Tiled Areas
         for (const area of this.gameMapFrontWrapper.getAreas(AreaType.Static)) {
-            if (area.name === "start" || area.properties.customProperties[GameMapProperties.START] === true) {
+            if (area.name === "start" || area.properties[GameMapProperties.START] === true) {
                 names.push(area.name);
                 continue;
             }

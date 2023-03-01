@@ -1,9 +1,9 @@
-import type { AreaData, AreaDataProperties } from "../types";
+import { AreaData, AreaDataProperties } from "../types";
 import { AreaType } from "../types";
 import * as _ from "lodash";
 import { MathUtils } from "@workadventure/math-utils";
 import type { GameMap } from "./GameMap";
-import { ITiledMapObject, ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
+import { ITiledMapObject, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 
 export type AreaChangeCallback = (
     areasChangedByAction: Array<AreaData>,
@@ -29,8 +29,18 @@ export class GameMapAreas {
     private readonly staticAreaNamePrefix = "STATIC_AREA_";
     private unnamedStaticAreasCounter = 0;
 
+    private readonly MAP_PROPERTY_AREAS_NAME: string = "areas";
+
     constructor(gameMap: GameMap) {
         this.gameMap = gameMap;
+
+        const areasData: unknown = structuredClone(this.getAreasMapProperty()?.value ?? []);
+
+        console.log(areasData);
+
+        for (const areaData of (areasData as AreaData[]) ?? []) {
+            this.addArea(areaData, AreaType.Static, false);
+        }
     }
 
     public mapAreaToTiledObject(areaData: AreaData): Omit<ITiledMapObject, "id"> & { id?: string | number } {
@@ -99,22 +109,23 @@ export class GameMapAreas {
         return areasChange;
     }
 
-    public addArea(area: AreaData, type: AreaType, playerPosition?: { x: number; y: number }): boolean {
+    public addArea(
+        area: AreaData,
+        type: AreaType,
+        addToMapProperties = true,
+        playerPosition?: { x: number; y: number }
+    ): boolean {
         if (this.getAreas(type).find((existingArea) => existingArea.id === area.id)) {
             return false;
         }
         this.getAreas(type).push(area);
-        // const floorLayer = this.gameMap.getMap().layers.find((layer) => layer.name === "floorLayer");
-        // if (floorLayer) {
-        // const areaDataAsTileObject = this.mapAreaDataToTiledObject(area);
-        // this.gameMap.incrementNextObjectId();
-        // (floorLayer as ITiledMapObjectLayer).objects.push(areaDataAsTileObject);
-        // as we are making changes to the map itself, we can update tiledObjects helper array too!
-        // this.gameMap.tiledObjects.push(areaDataAsTileObject);
-        // }
 
         if (playerPosition && this.isPlayerInsideAreaByName(area.name, type, playerPosition)) {
             this.triggerSpecificAreaOnEnter(area);
+        }
+
+        if (addToMapProperties) {
+            return this.addAreaToMapProperties(area);
         }
         return true;
     }
@@ -200,6 +211,37 @@ export class GameMapAreas {
             _.merge(area, config);
         }
         // _.merge(tiledObject, this.mapAreaDataToTiledObject(area));
+    }
+
+    private addAreaToMapProperties(areaData: AreaData): boolean {
+        if (this.gameMap.getMap().properties === undefined) {
+            this.gameMap.getMap().properties = [];
+        }
+        if (!this.getAreasMapProperty()) {
+            this.gameMap.getMap().properties?.push({
+                name: this.MAP_PROPERTY_AREAS_NAME,
+                type: "class",
+                value: JSON.parse(JSON.stringify([])) as Json,
+            });
+        }
+        const areasPropertyValues = JSON.parse(JSON.stringify(this.getAreasMapProperty()?.value)) as AreaData[];
+
+        if (areasPropertyValues.find((area) => area.id === areaData.id)) {
+            console.warn(`ADD AREA FAIL: AREA OF ID ${areaData.id} ALREADY EXISTS WITHIN THE GAMEMAP!`);
+            return false;
+        }
+        areasPropertyValues.push(areaData);
+
+        const areasMapProperty = this.getAreasMapProperty();
+        if (areasMapProperty !== undefined) {
+            areasMapProperty.value = structuredClone(areasPropertyValues) as unknown as Json;
+        }
+
+        return true;
+    }
+
+    private getAreasMapProperty(): ITiledMapProperty | undefined {
+        return this.gameMap.getMapPropertyByKey(this.MAP_PROPERTY_AREAS_NAME);
     }
 
     // private deleteStaticArea(id: string): boolean {

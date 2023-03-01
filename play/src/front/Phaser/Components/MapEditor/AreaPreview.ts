@@ -253,7 +253,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         return this.config.name;
     }
 
-    public getId(): number {
+    public getId(): string {
         return this.config.id;
     }
 }
