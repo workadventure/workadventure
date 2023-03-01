@@ -653,6 +653,10 @@ export class GameMapFrontWrapper {
         return this.gameMap.flatLayers;
     }
 
+    public getTiledAreas(): ITiledMapObject[] {
+        return this.tiledAreas;
+    }
+
     public getExitUrls(): Array<string> {
         return this.gameMap.exitUrls;
     }
