@@ -214,7 +214,7 @@ export class SwaggerController extends BaseHttpController {
 
         // Create static serve route to serve index.html
         this.app.get("/swagger-ui/", (request, response) => {
-            fs.readFile(process.cwd() + "/node_modules/swagger-ui-dist/index.html", "utf8", function (err, data) {
+            fs.readFile(process.cwd() + "/../node_modules/swagger-ui-dist/index.html", "utf8", function (err, data) {
                 if (err) {
                     return response.status(500).send(err.message);
                 }
@@ -249,8 +249,7 @@ export class SwaggerController extends BaseHttpController {
 
             // Strip away '/assets' from the request path to get asset relative path
             const formattedPath = request.path.replace("/swagger-ui", "");
-            const realPath = `${path.resolve("node_modules/swagger-ui-dist")}${formattedPath}`;
-
+            const realPath = `${path.resolve("../node_modules/swagger-ui-dist")}${formattedPath}`;
             if (!fs.existsSync(realPath)) {
                 response.status(404).send("");
                 return;
@@ -265,7 +264,7 @@ export class SwaggerController extends BaseHttpController {
             }
 
             // Set appropriate mime-type and serve file buffer as response body
-            response.type(fileParsed.ext).send(file.buffer);
+            response.type(fileParsed.ext).send(file);
             return;
         });
     }
