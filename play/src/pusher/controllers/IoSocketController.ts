@@ -166,7 +166,7 @@ export class IoSocketController {
                             const errorMessage = `Admin socket refused for client on ${Buffer.from(
                                 ws.getRemoteAddressAsText()
                             ).toString()} listening of : \n${JSON.stringify(notAuthorizedRoom)}`;
-                            console.error();
+                            console.error(errorMessage);
                             ws.send(
                                 JSON.stringify({
                                     type: "Error",

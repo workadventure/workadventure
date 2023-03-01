@@ -1,5 +1,6 @@
 import { ADMIN_SOCKETS_TOKEN, SECRET_KEY } from "../enums/EnvironmentVariable";
 import Jwt from "jsonwebtoken";
+import z from "zod";
 import { InvalidTokenError } from "../controllers/InvalidTokenError";
 
 export interface AuthTokenData {
@@ -8,9 +9,10 @@ export interface AuthTokenData {
     username?: string;
     locale?: string;
 }
-export interface AdminSocketTokenData {
-    authorizedRoomIds: string[]; //the list of rooms the client is authorized to read from.
-}
+export const AdminSocketTokenData = z.object({
+    authorizedRoomIds: z.string().array(), //the list of rooms the client is authorized to read from.
+});
+export type AdminSocketTokenData = z.infer<typeof AdminSocketTokenData>;
 export const tokenInvalidException = "tokenInvalid";
 
 export class JWTTokenManager {
@@ -18,7 +20,10 @@ export class JWTTokenManager {
         if (!ADMIN_SOCKETS_TOKEN) {
             throw new Error("Missing environment variable ADMIN_SOCKETS_TOKEN");
         }
-        return Jwt.verify(token, ADMIN_SOCKETS_TOKEN) as AdminSocketTokenData;
+
+        const verifiedToken = Jwt.verify(token, ADMIN_SOCKETS_TOKEN);
+
+        return AdminSocketTokenData.parse(verifiedToken);
     }
 
     public createAuthToken(identifier: string, accessToken?: string, username?: string, locale?: string): string {
