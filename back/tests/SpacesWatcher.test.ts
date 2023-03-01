@@ -8,7 +8,7 @@ import { SpaceSocket } from "../src/SpaceManager";
 import { Writable } from "stream";
 
 describe("SpacesWatcher", () => {
-    it("should close the socket because no pong was answered to the ping within 20sec", () => {
+    it("should close the socket because no pong was answered to the ping within 20sec", async () => {
         const eventsWatcher: BackToPusherSpaceMessage[] = [];
         let isClosed = false;
         const spaceSocketToPusher = mock<SpaceSocket>({
@@ -24,6 +24,7 @@ describe("SpacesWatcher", () => {
 
         const watcher = new SpacesWatcher("uuid-watcher", spaceSocketToPusher, 0);
         expect(eventsWatcher.some((message) => message.hasPingmessage())).toBe(true);
+        await new Promise((resolve) => setTimeout(resolve, 5));
 
         expect(isClosed).toBe(true);
     });
