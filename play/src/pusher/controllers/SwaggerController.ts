@@ -4,6 +4,7 @@ import { ADMIN_URL } from "../enums/EnvironmentVariable";
 import SwaggerGenerator from "../services/SwaggerGenerator";
 import swaggerJsdoc from "swagger-jsdoc";
 import path from "path";
+import * as cheerio from "cheerio";
 
 export class SwaggerController extends BaseHttpController {
     routes(): void {
@@ -219,18 +220,33 @@ export class SwaggerController extends BaseHttpController {
                     return response.status(500).send(err.message);
                 }
 
+                // Load the html file
+                const $ = cheerio.load(data);
+
+                // Replace the url of the swagger.json file
                 const urls = [
                     { url: "/openapi/pusher", name: "Front -> Pusher <- Admin" },
                     { url: "/openapi/admin", name: "Pusher -> Admin" },
                     { url: "/openapi/external-admin", name: "Admin -> External Admin" },
                 ];
+                const swaggerScript = `<script charset="UTF-8">window.onload = function() {
+                    window.ui = SwaggerUIBundle({
+                        urls: ${JSON.stringify(urls)}, "urls.primaryName": "Admin -> External Admin",
+                        dom_id: '#swagger-ui',
+                        deepLinking: true,
+                        presets: [
+                            SwaggerUIBundle.presets.apis,
+                            SwaggerUIStandalonePreset
+                        ],
+                        plugins: [
+                            SwaggerUIBundle.plugins.DownloadUrl
+                        ],
+                        layout: "StandaloneLayout"
+                    });
+                  };</script>`;
+                $("body").append(swaggerScript);
 
-                const result = data.replace(
-                    /url: "https:\/\/petstore\.swagger\.io\/v2\/swagger.json"/g,
-                    `urls: ${JSON.stringify(urls)}, "urls.primaryName": "Admin -> External Admin"`
-                );
-                response.send(result);
-
+                response.send($.html());
                 return;
             });
         });
