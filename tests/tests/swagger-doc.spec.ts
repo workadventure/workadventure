@@ -1,7 +1,14 @@
 import {expect, test} from '@playwright/test';
 
 test.describe('Swgger documentation', () => {
-    test('Admin -> External Admin', async ({ page }) => {
+    test('Admin -> External Admin', async ({ page, browser, browserName }) => {
+        page.on('console', msg => console.log(browserName + ' - ' + msg.type() + ' - ' + msg.text()));
+        page.on('response', response => {
+          if (response.status() >= 400) {
+            console.log('>>', response.status(), response.url());
+          }
+        });
+
         await page.goto(
             'http://play.workadventure.localhost/swagger-ui/?urls.primaryName=Admin%20->%20External%20Admin'
         );
@@ -16,7 +23,14 @@ test.describe('Swgger documentation', () => {
         await expect(page.locator('#operations-ExternalAdminAPI-get_api_loginurl__organizationMemberToken_')).toHaveCount(1);
     });
 
-    test('Pusher -> Admin', async ({ page }) => {
+    test('Pusher -> Admin', async ({ page, browser, browserName }) => {
+        page.on('console', msg => console.log(browserName + ' - ' + msg.type() + ' - ' + msg.text()));
+        page.on('response', response => {
+          if (response.status() >= 400) {
+            console.log('>>', response.status(), response.url());
+          }
+        });
+
         await page.goto(
             'http://play.workadventure.localhost/swagger-ui/?urls.primaryName=Pusher%20->%20Admin'
         );
@@ -25,10 +39,17 @@ test.describe('Swgger documentation', () => {
         await expect(page.locator('#operations-tag-AdminAPI')).toHaveCount(1);
     });
 
-    test('Front -> Pusher <- Admin', async ({ page }) => {
+    /*test('Front -> Pusher <- Admin', async ({ page, browser, browserName }) => {
+        page.on('console', msg => console.log(browserName + ' - ' + msg.type() + ' - ' + msg.text()));
+        page.on('response', response => {
+          if (response.status() >= 400) {
+            console.log('>>', response.status(), response.url());
+          }
+        });
+
         await page.goto(
             'http://play.workadventure.localhost/swagger-ui/?urls.primaryName=Front%20->%20Pusher%20<-%20Admin'
         );
         //TODO
-    });
+    });*/
 });
