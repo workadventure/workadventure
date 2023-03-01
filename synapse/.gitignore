@@ -1,0 +1,5 @@
+*
+!config.json
+!federation
+!homeserver.template.yaml
+!start.sh

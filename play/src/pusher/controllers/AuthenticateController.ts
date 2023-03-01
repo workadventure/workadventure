@@ -231,6 +231,7 @@ export class AuthenticateController extends BaseHttpController {
                     username: authTokenData?.username,
                     authToken: token,
                     locale: authTokenData?.locale,
+                    matrixId: authTokenData?.matrixId,
                     ...resUserData,
                     ...resCheckTokenAuth,
                 });

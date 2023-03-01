@@ -29,7 +29,7 @@ services:
                     - 'maps.workadventure.localhost'
                     - 'oidc.workadventure.localhost'
                     - 'map-storage.workadventure.localhost'
-                    - 'xmpp.workadventure.localhost'
+                    - 'matrix.workadventure.localhost'
 
     play:
         image: thecodingmachine/nodejs:v2-18-bullseye
@@ -86,9 +86,6 @@ services:
             PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
             ENABLE_OPENAPI_ENDPOINT: "true"
             START_ROOM_URL: "$START_ROOM_URL"
-            # Only used if you set up a JWT authentication mechanism in Ejabberd
-            EJABBERD_JWT_SECRET: $EJABBERD_JWT_SECRET
-            EJABBERD_DOMAIN: $EJABBERD_DOMAIN
             ENABLE_CHAT: "$ENABLE_CHAT"
             ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
             ENABLE_CHAT_ONLINE_LIST: "$ENABLE_CHAT_ONLINE_LIST"
@@ -122,8 +119,6 @@ services:
             UPLOADER_URL: http://uploader.workadventure.localhost
             EMBEDLY_KEY: $EMBEDLY_KEY
             ICON_URL: http://icon.workadventure.localhost
-            EJABBERD_DOMAIN: $EJABBERD_DOMAIN
-            EJABBERD_WS_URI: ws://xmpp.workadventure.localhost:5443/ws
             ENABLE_OPENID: "$OPID_CLIENT_ID"
             ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
         volumes:
@@ -187,10 +182,6 @@ services:
             MAP_STORAGE_URL: "map-storage:50053"
             PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
             PLAYER_VARIABLES_MAX_TTL: $PLAYER_VARIABLES_MAX_TTL
-            EJABBERD_API_URI: http://ejabberd:5443/api/
-            EJABBERD_DOMAIN: $EJABBERD_DOMAIN
-            EJABBERD_USER: $EJABBERD_USER
-            EJABBERD_PASSWORD: $EJABBERD_PASSWORD
             ENABLE_CHAT: "$ENABLE_CHAT"
             ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
         volumes:
@@ -293,24 +284,6 @@ services:
             - "traefik.http.routers.icon.entryPoints=web"
             - "traefik.http.services.icon.loadbalancer.server.port=8080"
 
-    ejabberd:
-      image: workadventure/ejabberd:v1
-      ports:
-        - '5443:5443'
-      environment:
-        CTL_ON_CREATE: register $EJABBERD_USER $EJABBERD_DOMAIN $EJABBERD_PASSWORD
-        JWT_SECRET: $EJABBERD_JWT_SECRET
-        EJABBERD_DOMAIN: $EJABBERD_DOMAIN
-        EJABBERD_USER: $EJABBERD_USER
-        EJABBERD_PASSWORD: $EJABBERD_PASSWORD
-      volumes:
-        - ./xmpp/ejabberd.template.yml:/opt/ejabberd/conf/ejabberd.template.yml
-      labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.xmpp.rule=Host(`xmpp.workadventure.localhost`)"
-        - "traefik.http.routers.xmpp.entryPoints=web"
-        - "traedocfik.http.services.xmpp.loadbalancer.server.port=5443"
-
     # A mock server to test OpenID connect connectivity
     oidc-server-mock:
         image: ghcr.io/soluto/oidc-server-mock:0.7.0
@@ -383,6 +356,30 @@ services:
         healthcheck:
             #disable: true
             timeout: 5s
+
+    synapse:
+        image: matrixdotorg/synapse:latest
+        entrypoint: /data/start.sh
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.matrix.rule=Host(`matrix.workadventure.localhost`)"
+            - "traefik.http.routers.matrix.entryPoints=web"
+            - "traefik.http.services.matrix.loadbalancer.server.port=8008"
+            - "traefik.http.routers.matrix.service=matrix"
+        volumes:
+            - ./synapse/:/data/
+            - ./synapse/federation:/etc/nginx/vhost.d/matrix.workadventure.localhost
+        environment:
+            STARTUP_COMMAND_1: register_new_matrix_user -c /data/homeserver.yaml -u ${MATRIX_ADMIN_USER} -p ${MATRIX_ADMIN_PASSWORD} -a
+            VIRTUAL_HOST: "matrix.workadventure.localhost"
+            VIRTUAL_PORT: 8008
+            LETSENCRYPT_HOST: "matrix.workadventure.localhost"
+            SYNAPSE_SERVER_NAME: "matrix.workadventure.localhost"
+            SYNAPSE_REPORT_STATS: "yes"
+            MATRIX_ADMIN_USER: '$MATRIX_ADMIN_USER'
+            MATRIX_ADMIN_PASSWORD: '$MATRIX_ADMIN_PASSWORD'
+            JWT_SECRET: '$SECRET_KEY'
+            MATRIX_REGISTRATION_SHARED_SECRET: '$SECRET_KEY'
 
 #  coturn:
 #    image: coturn/coturn:4.5.2

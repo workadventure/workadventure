@@ -114,13 +114,3 @@ services:
     environment:
       ENABLE_OPENAPI_ENDPOINT: "false"
       STARTUP_COMMAND_1: ""
-
-  ejabberd:
-    image: thecodingmachine/workadventure-ejabberd:${DOCKER_TAG:-develop}
-    build:
-      context: ./xmpp
-      cache_from:
-        - thecodingmachine/workadventure-ejabberd:${DOCKER_TAG:-develop}
-      args:
-        BUILDKIT_INLINE_CACHE: 1
-    volumes: []
