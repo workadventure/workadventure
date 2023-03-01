@@ -370,7 +370,6 @@ services:
             - ./synapse/:/data/
             - ./synapse/federation:/etc/nginx/vhost.d/matrix.workadventure.localhost
         environment:
-            STARTUP_COMMAND_1: register_new_matrix_user -c /data/homeserver.yaml -u ${MATRIX_ADMIN_USER} -p ${MATRIX_ADMIN_PASSWORD} -a
             VIRTUAL_HOST: "matrix.workadventure.localhost"
             VIRTUAL_PORT: 8008
             LETSENCRYPT_HOST: "matrix.workadventure.localhost"

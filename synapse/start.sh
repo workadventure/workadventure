@@ -25,4 +25,6 @@ python -m synapse.app.homeserver \
     --config-path /data/homeserver.yaml \
     --generate-config \
     --report-stats=yes
+
+sleep 5 && register_new_matrix_user -c /data/homeserver.yaml -u ${MATRIX_ADMIN_USER} -p ${MATRIX_ADMIN_PASSWORD} -a &
 exec "/start.py"
