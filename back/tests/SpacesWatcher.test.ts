@@ -22,10 +22,9 @@ describe("SpacesWatcher", () => {
             },
         });
 
-        const watcher = new SpacesWatcher("uuid-watcher", spaceSocketToPusher, 1);
+        const watcher = new SpacesWatcher("uuid-watcher", spaceSocketToPusher, 0);
         expect(eventsWatcher.some((message) => message.hasPingmessage())).toBe(true);
 
-        await new Promise((resolve) => setTimeout(resolve, 1_000));
         expect(isClosed).toBe(true);
     });
     it("should add/remove space to watcher", () => {
@@ -49,10 +48,10 @@ describe("SpacesWatcher", () => {
             },
         });
 
-        watcher = new SpacesWatcher("uuid-watcher", spaceSocketToPusher, 1);
+        watcher = new SpacesWatcher("uuid-watcher", spaceSocketToPusher, .1);
         let isClosed = false;
         spaceSocketToPusher.on("end", () => (isClosed = true));
-        await new Promise((resolve) => setTimeout(resolve, 3_000));
+        await new Promise((resolve) => setTimeout(resolve, 300));
         expect(isClosed).toBe(false);
     });
 });
