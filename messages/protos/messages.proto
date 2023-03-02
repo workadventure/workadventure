@@ -168,6 +168,7 @@ message CreateAreaMessage {
   uint32 width = 4;
   uint32 height = 5;
   string name = 6;
+  map<string, google.protobuf.Value> properties = 7;
 }
 
 message CreateEntityMessage {

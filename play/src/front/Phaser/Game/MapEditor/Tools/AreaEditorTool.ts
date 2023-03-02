@@ -84,7 +84,6 @@ export class AreaEditorTool extends MapEditorTool {
                 const config: AreaData = {
                     ...data,
                     visible: true,
-                    properties: {},
                 };
                 // execute command locally
                 this.mapEditorModeManager.executeCommand(
@@ -236,7 +235,7 @@ export class AreaEditorTool extends MapEditorTool {
         this.areaPreviews = [];
         const areaConfigs = this.scene.getGameMapFrontWrapper().getAreas(AreaType.Static);
 
-        for (const config of areaConfigs) {
+        for (const config of Array.from(areaConfigs.values())) {
             this.areaPreviews.push(this.createAreaPreview(config));
         }
 
@@ -291,7 +290,7 @@ export class AreaEditorTool extends MapEditorTool {
         // find previews of areas that exist no longer
         const areaPreviewsToDelete: string[] = [];
         for (const preview of this.areaPreviews) {
-            if (!areaConfigs.map((config) => config.id).includes(preview.getId())) {
+            if (!areaConfigs.has(preview.getId())) {
                 areaPreviewsToDelete.push(preview.getId());
             }
         }
@@ -304,7 +303,7 @@ export class AreaEditorTool extends MapEditorTool {
         }
 
         // create previews for new areas that were created during our absence in editor mode
-        for (const config of areaConfigs) {
+        for (const config of Array.from(areaConfigs.values())) {
             const areaPreview = this.areaPreviews.find((areaPreview) => areaPreview.getId() === config.id);
             if (areaPreview) {
                 areaPreview.updatePreview(config);

@@ -577,12 +577,12 @@ export class GameMapFrontWrapper {
         this.gameMap.getGameMapAreas().triggerAreasChange(this.oldPosition, this.position);
     }
 
-    public getAreas(areaType: AreaType): AreaData[] {
+    public getAreas(areaType: AreaType): Map<string, AreaData> {
         return this.gameMap.getGameMapAreas().getAreas(areaType);
     }
 
     public addArea(area: AreaData, type: AreaType): void {
-        this.gameMap.getGameMapAreas().addArea(area, type, this.position);
+        this.gameMap.getGameMapAreas().addArea(area, type, true, this.position);
     }
 
     public triggerSpecificAreaOnEnter(area: AreaData): void {

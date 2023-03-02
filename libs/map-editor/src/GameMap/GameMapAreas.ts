@@ -19,24 +19,19 @@ export class GameMapAreas {
     /**
      * Areas created from within map-editor
      */
-    private readonly staticAreas: AreaData[] = [];
+    private readonly staticAreas: Map<string, AreaData> = new Map<string, AreaData>();
     /**
      * Areas that we can do CRUD operations on via scripting API
      */
-    private readonly dynamicAreas: AreaData[] = [];
+    private readonly dynamicAreas: Map<string, AreaData> = new Map<string, AreaData>();
 
     private readonly areasPositionOffsetY: number = 16;
-    private readonly staticAreaNamePrefix = "STATIC_AREA_";
-    private unnamedStaticAreasCounter = 0;
-
     private readonly MAP_PROPERTY_AREAS_NAME: string = "areas";
 
     constructor(gameMap: GameMap) {
         this.gameMap = gameMap;
 
         const areasData: unknown = structuredClone(this.getAreasMapProperty()?.value ?? []);
-
-        console.log(areasData);
 
         for (const areaData of (areasData as AreaData[]) ?? []) {
             this.addArea(areaData, AreaType.Static, false);
@@ -61,32 +56,84 @@ export class GameMapAreas {
     private mapAreaPropertiesToTiledProperties(areaProperties: AreaDataProperties): ITiledMapProperty[] {
         const properties: ITiledMapProperty[] = [];
 
-        // TODO: ADD THE REST IN A SAME WAY OR PREFERABLY FIGURE SOMETHING MORE CLEVER OUT
         if (areaProperties.focusable) {
-            properties.push({ name: "focusable", type: "bool", value: true });
+            properties.push({ name: GameMapProperties.FOCUSABLE, type: "bool", value: true });
             if (areaProperties.focusable.zoom_margin) {
-                properties.push({ name: "zoom_margin", type: "float", value: areaProperties.focusable.zoom_margin });
+                properties.push({
+                    name: GameMapProperties.ZOOM_MARGIN,
+                    type: "float",
+                    value: areaProperties.focusable.zoom_margin,
+                });
             }
         }
         if (areaProperties.jitsiRoom) {
-            properties.push({ name: "jitsiRoom", type: "string", value: areaProperties.jitsiRoom.roomName ?? "" });
+            properties.push({
+                name: GameMapProperties.JITSI_ROOM,
+                type: "string",
+                value: areaProperties.jitsiRoom.roomName ?? "",
+            });
             console.log(properties);
             if (areaProperties.jitsiRoom.jitsiRoomConfig) {
                 properties.push({
-                    name: "jitsiConfig ",
+                    name: GameMapProperties.JITSI_CONFIG,
                     type: "class",
                     value: areaProperties.jitsiRoom.jitsiRoomConfig,
                 });
             }
         }
         if (areaProperties.openWebsite) {
-            // properties.push({ name: "openTab", type: "string", value: areaProperties.openTab..roomName ?? "" });
+            if (areaProperties.openWebsite.newTab) {
+                properties.push({
+                    name: GameMapProperties.OPEN_TAB,
+                    type: "string",
+                    value: areaProperties.openWebsite.link,
+                });
+            } else {
+                properties.push({
+                    name: GameMapProperties.OPEN_WEBSITE,
+                    type: "string",
+                    value: areaProperties.openWebsite.link,
+                });
+            }
         }
         if (areaProperties.playAudio) {
-            // properties.push({ name: "jitsiRoom", type: "string", value: areaProperties.jitsiRoom.roomName ?? "" });
+            properties.push({
+                name: GameMapProperties.PLAY_AUDIO,
+                type: "string",
+                value: areaProperties.playAudio.audioLink,
+            });
         }
 
         return properties;
+    }
+
+    private flattenAreaProperties(areaProperties: AreaDataProperties): Record<string, string | boolean | number> {
+        const flattenedProperties: Record<string, string | boolean | number> = {};
+        if (areaProperties.focusable) {
+            flattenedProperties[GameMapProperties.FOCUSABLE] = true;
+            if (areaProperties.focusable.zoom_margin) {
+                flattenedProperties[GameMapProperties.ZOOM_MARGIN] = areaProperties.focusable.zoom_margin;
+            }
+        }
+        if (areaProperties.jitsiRoom) {
+            flattenedProperties[GameMapProperties.JITSI_ROOM] = areaProperties.jitsiRoom.roomName ?? "";
+            if (areaProperties.jitsiRoom.jitsiRoomConfig) {
+                flattenedProperties[GameMapProperties.JITSI_CONFIG] = JSON.stringify(
+                    areaProperties.jitsiRoom.jitsiRoomConfig
+                );
+            }
+        }
+        if (areaProperties.openWebsite) {
+            if (areaProperties.openWebsite.newTab) {
+                flattenedProperties[GameMapProperties.OPEN_TAB] = areaProperties.openWebsite.link;
+            } else {
+                flattenedProperties[GameMapProperties.OPEN_WEBSITE] = areaProperties.openWebsite.link;
+            }
+        }
+        if (areaProperties.playAudio) {
+            flattenedProperties[GameMapProperties.PLAY_AUDIO] = areaProperties.playAudio.audioLink;
+        }
+        return flattenedProperties;
     }
 
     /**
@@ -135,10 +182,10 @@ export class GameMapAreas {
         addToMapProperties = true,
         playerPosition?: { x: number; y: number }
     ): boolean {
-        if (this.getAreas(type).find((existingArea) => existingArea.id === area.id)) {
+        if (this.getAreas(type).has(area.id)) {
             return false;
         }
-        this.getAreas(type).push(area);
+        this.getAreas(type).set(area.id, area);
 
         if (playerPosition && this.isPlayerInsideAreaByName(area.name, type, playerPosition)) {
             this.triggerSpecificAreaOnEnter(area);
@@ -192,14 +239,14 @@ export class GameMapAreas {
                 this.triggerSpecificAreaOnLeave(area);
             }
         }
-        const areas = this.getAreas(type);
-        const index = areas.findIndex((area) => area.name === name);
-        if (index !== -1) {
-            areas.splice(index, 1);
-            // const areaId = areas.find((area) => area.name === name)?.id;
-            // if (areaId) {
-            //     this.deleteStaticArea(areaId);
-            // }
+        const areas = Array.from(this.getAreas(type).values());
+        const area = areas.find((area) => area.name === name);
+        if (area) {
+            const id = area.id;
+            const deleted = this.getAreas(type).delete(id);
+            if (deleted && type === AreaType.Static) {
+                this.deleteStaticArea(id);
+            }
         }
     }
 
@@ -212,25 +259,20 @@ export class GameMapAreas {
                 this.triggerSpecificAreaOnLeave(area);
             }
         }
-        const areas = this.getAreas(type);
-        const index = areas.findIndex((area) => area.id === id);
-        if (index !== -1) {
-            areas.splice(index, 1);
+        const deleted = this.getAreas(type).delete(id);
+        if (deleted && type === AreaType.Static) {
+            this.deleteStaticArea(id);
             return true;
-            // success = this.deleteStaticArea(id);
         }
         return false;
     }
 
     private updateArea(area: AreaData, config: Partial<AreaData>): void {
-        // const tiledObject = this.gameMap.tiledObjects.find((object) => object.id === area.id);
-        // if (!tiledObject) {
-        //     throw new Error(`Area of id: ${area.id} has not been mapped to tileObjects array!`);
-        // }
-        if (config.properties) {
-            _.merge(area, config);
+        if (!area) {
+            throw new Error(`Area to update does not exists!`);
         }
-        // _.merge(tiledObject, this.mapAreaDataToTiledObject(area));
+        _.merge(area, config);
+        this.updateAreaInMapProperties(area);
     }
 
     private addAreaToMapProperties(areaData: AreaData): boolean {
@@ -260,30 +302,63 @@ export class GameMapAreas {
         return true;
     }
 
+    private deleteAreaFromMapProperties(id: string): boolean {
+        const areasPropertyValues = JSON.parse(JSON.stringify(this.getAreasMapProperty()?.value)) as AreaData[];
+        const indexToRemove = areasPropertyValues.findIndex((areaData) => areaData.id === id);
+        if (indexToRemove !== -1) {
+            areasPropertyValues.splice(indexToRemove, 1);
+            const areasMapProperty = this.getAreasMapProperty();
+            if (areasMapProperty !== undefined) {
+                areasMapProperty.value = JSON.parse(JSON.stringify(areasPropertyValues)) as Json;
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    private updateAreaInMapProperties(areaData: AreaData): boolean {
+        const areasPropertyValue = this.getAreasMapProperty()?.value as AreaData[];
+
+        const areaIndex = areasPropertyValue.findIndex((area) => area.id === areaData.id);
+
+        if (areaIndex === -1) {
+            console.warn(`CANNOT FIND AREA WITH ID: ${areaData.id} IN MAP PROPERTIES!`);
+            return false;
+        }
+
+        const areasMapProperty = this.getAreasMapProperty();
+        if (areasMapProperty !== undefined) {
+            areasPropertyValue[areaIndex] = areaData;
+            areasMapProperty.value = JSON.parse(JSON.stringify(areasPropertyValue)) as Json;
+            return true;
+        }
+        return false;
+    }
+
     private getAreasMapProperty(): ITiledMapProperty | undefined {
         return this.gameMap.getMapPropertyByKey(this.MAP_PROPERTY_AREAS_NAME);
     }
 
-    // private deleteStaticArea(id: string): boolean {
-    //     // TODO: TiledObjects is not up to date! They are a reference because only first level of flatLayers objects are deep copied!
-    //     const index = this.gameMap.tiledObjects.findIndex((object) => object.id === id);
-    //     if (index !== -1) {
-    //         this.gameMap.tiledObjects.splice(index, 1);
-    //         return this.gameMap.deleteGameObjectFromMapById(id, this.gameMap.getMap().layers);
-    //     }
-    //     return false;
-    // }
+    private deleteStaticArea(id: string): boolean {
+        const deleted = this.getAreas(AreaType.Static).delete(id);
+        if (deleted) {
+            return this.deleteAreaFromMapProperties(id);
+        }
+        return false;
+    }
 
-    public getAreas(areaType: AreaType): AreaData[] {
+    public getAreas(areaType: AreaType): Map<string, AreaData> {
         return areaType === AreaType.Dynamic ? this.dynamicAreas : this.staticAreas;
     }
 
     public getAreaByName(name: string, type: AreaType): AreaData | undefined {
-        return this.getAreas(type).find((area) => area.name === name);
+        return Array.from(this.getAreas(type).values()).find((area) => area.name === name);
     }
 
     public getArea(id: string, type: AreaType): AreaData | undefined {
-        return this.getAreas(type).find((area) => area.id === id);
+        return this.getAreas(type).get(id);
     }
 
     /**
@@ -354,35 +429,6 @@ export class GameMapAreas {
         //         area.properties.customProperties[key] = value;
         //     }
         // }
-    }
-
-    private flattenAreaProperties(areaProperties: AreaDataProperties): Record<string, string | boolean | number> {
-        const flattenedProperties: Record<string, string | boolean | number> = {};
-        if (areaProperties.focusable) {
-            flattenedProperties[GameMapProperties.FOCUSABLE] = true;
-            if (areaProperties.focusable.zoom_margin) {
-                flattenedProperties[GameMapProperties.ZOOM_MARGIN] = areaProperties.focusable.zoom_margin;
-            }
-        }
-        if (areaProperties.jitsiRoom) {
-            flattenedProperties[GameMapProperties.JITSI_ROOM] = areaProperties.jitsiRoom.roomName ?? "";
-            if (areaProperties.jitsiRoom.jitsiRoomConfig) {
-                flattenedProperties[GameMapProperties.JITSI_CONFIG] = JSON.stringify(
-                    areaProperties.jitsiRoom.jitsiRoomConfig
-                );
-            }
-        }
-        if (areaProperties.openWebsite) {
-            if (areaProperties.openWebsite.newTab) {
-                flattenedProperties[GameMapProperties.OPEN_TAB] = areaProperties.openWebsite.link;
-            } else {
-                flattenedProperties[GameMapProperties.OPEN_WEBSITE] = areaProperties.openWebsite.link;
-            }
-        }
-        if (areaProperties.playAudio) {
-            flattenedProperties[GameMapProperties.PLAY_AUDIO] = areaProperties.playAudio.audioLink;
-        }
-        return flattenedProperties;
     }
 
     private getAreasOnPosition(position: { x: number; y: number }, offsetY = 0, areaType?: AreaType): AreaData[] {

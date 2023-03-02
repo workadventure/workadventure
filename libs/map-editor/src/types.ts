@@ -51,6 +51,8 @@ export const JitsiRoomConfigData = z.object({
     startWithVideoMuted: z.boolean().optional(),
 });
 
+export const StartPropertyData = z.boolean();
+
 export const JitsiRoomPropertyData = ActionsMenuData.extend({
     roomName: z.string(),
     jitsiRoomConfig: JitsiRoomConfigData,
@@ -67,6 +69,7 @@ export const OpenWebsitePropertyData = ActionsMenuData.extend({
 
 // TODO: Can they vary between Entity and Area or should it be the same type?
 export const AreaDataProperties = z.object({
+    start: StartPropertyData.optional().nullable(),
     focusable: FocusablePropertyData.optional().nullable(),
     jitsiRoom: JitsiRoomPropertyData.optional().nullable(),
     playAudio: PlayAudioPropertyData.optional().nullable(),
@@ -137,6 +140,7 @@ export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;
 export type TextHeaderPropertyData = z.infer<typeof TextHeaderPropertyData>;
 export type ActionsMenuData = z.infer<typeof ActionsMenuData>;
+export type StartPropertyData = z.infer<typeof StartPropertyData>;
 export type FocusablePropertyData = z.infer<typeof FocusablePropertyData>;
 export type JitsiRoomConfigData = z.infer<typeof JitsiRoomConfigData>;
 export type JitsiRoomPropertyData = z.infer<typeof JitsiRoomPropertyData>;
