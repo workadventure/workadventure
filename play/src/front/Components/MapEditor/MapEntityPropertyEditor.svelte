@@ -5,10 +5,10 @@
     import { slide } from "svelte/transition";
     import crossImg from "../images/cross-icon.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
-    import OpenTabPropertyEditor from "./PropertyEditor/OpenTabPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import TextPropertyEditor from "./PropertyEditor/TextPropertyEditor.svelte";
     import { EntityDataProperties, EntityDataPropertiesKeys } from "@workadventure/map-editor";
+    import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
 
     interface EntityPropertyDescription<K extends EntityDataPropertiesKeys> {
         key: K;
@@ -52,15 +52,15 @@
             },
         },
         {
-            key: "openTab",
+            key: "openWebsite",
             name: $LL.mapEditor.entityEditor.linkProperties.label(),
             active: false,
             currentValue: undefined,
-            component: OpenTabPropertyEditor,
+            component: OpenWebsitePropertyEditor,
             defaultValue: {
                 buttonLabel: $LL.mapEditor.entityEditor.linkProperties.defaultButtonLabel(),
                 link: "",
-                inNewTab: true,
+                newTab: true,
             },
         },
     ];

@@ -209,15 +209,15 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                 },
             });
         }
-        if (properties.openTab) {
-            const link = properties.openTab.link;
-            const inNewTab = properties.openTab.inNewTab;
+        if (properties.openWebsite) {
+            const link = properties.openWebsite.link;
+            const newTab = properties.openWebsite.newTab;
             actions.push({
-                actionName: properties.openTab.buttonLabel,
+                actionName: properties.openWebsite.buttonLabel,
                 protected: true,
                 priority: 1,
                 callback: () => {
-                    if (inNewTab) {
+                    if (newTab) {
                         this.emit(EntityEvent.PropertyActivated, {
                             propertyName: GameMapProperties.OPEN_TAB,
                             propertyValue: link,

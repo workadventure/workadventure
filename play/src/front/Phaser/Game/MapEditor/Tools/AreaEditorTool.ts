@@ -84,9 +84,7 @@ export class AreaEditorTool extends MapEditorTool {
                 const config: AreaData = {
                     ...data,
                     visible: true,
-                    properties: {
-                        customProperties: {},
-                    },
+                    properties: {},
                 };
                 // execute command locally
                 this.mapEditorModeManager.executeCommand(
@@ -162,7 +160,7 @@ export class AreaEditorTool extends MapEditorTool {
         }
     }
 
-    public getAreaPreviewConfig(id: number): AreaData | undefined {
+    public getAreaPreviewConfig(id: string): AreaData | undefined {
         return this.getAreaPreview(id)?.getConfig();
     }
 
@@ -187,7 +185,15 @@ export class AreaEditorTool extends MapEditorTool {
                         id,
                         name: `STATIC_AREA_${id}`,
                         visible: true,
-                        properties: {},
+                        properties: {
+                            focusable: {
+                                zoom_margin: 0.5,
+                            },
+                            jitsiRoom: {
+                                roomName: "elomelo",
+                                jitsiRoomConfig: {},
+                            },
+                        },
                         width: 100,
                         height: 100,
                         x: this.scene.input.activePointer.worldX - 50,
@@ -202,7 +208,7 @@ export class AreaEditorTool extends MapEditorTool {
         }
     }
 
-    private handleAreaPreviewDeletion(id: number): void {
+    private handleAreaPreviewDeletion(id: string): void {
         this.deleteAreaPreview(id);
         this.scene.markDirty();
         mapEditorSelectedAreaPreviewStore.set(undefined);
@@ -222,7 +228,7 @@ export class AreaEditorTool extends MapEditorTool {
         this.scene.markDirty();
     }
 
-    private getAreaPreview(id: number): AreaPreview | undefined {
+    private getAreaPreview(id: string): AreaPreview | undefined {
         return this.areaPreviews.find((area) => area.getId() === id);
     }
 
@@ -245,7 +251,7 @@ export class AreaEditorTool extends MapEditorTool {
         return areaPreview;
     }
 
-    private deleteAreaPreview(id: number): boolean {
+    private deleteAreaPreview(id: string): boolean {
         const index = this.areaPreviews.findIndex((preview) => preview.getConfig().id === id);
         if (index !== -1) {
             this.areaPreviews.splice(index, 1)[0].destroy();
@@ -283,7 +289,7 @@ export class AreaEditorTool extends MapEditorTool {
         const areaConfigs = this.scene.getGameMapFrontWrapper().getAreas(AreaType.Static);
 
         // find previews of areas that exist no longer
-        const areaPreviewsToDelete: number[] = [];
+        const areaPreviewsToDelete: string[] = [];
         for (const preview of this.areaPreviews) {
             if (!areaConfigs.map((config) => config.id).includes(preview.getId())) {
                 areaPreviewsToDelete.push(preview.getId());

@@ -1,4 +1,4 @@
-import { AreaData, AreaDataProperties } from "../types";
+import { AreaData, AreaDataProperties, GameMapProperties } from "../types";
 import { AreaType } from "../types";
 import * as _ from "lodash";
 import { MathUtils } from "@workadventure/math-utils";
@@ -62,8 +62,28 @@ export class GameMapAreas {
         const properties: ITiledMapProperty[] = [];
 
         // TODO: ADD THE REST IN A SAME WAY OR PREFERABLY FIGURE SOMETHING MORE CLEVER OUT
+        if (areaProperties.focusable) {
+            properties.push({ name: "focusable", type: "bool", value: true });
+            if (areaProperties.focusable.zoom_margin) {
+                properties.push({ name: "zoom_margin", type: "float", value: areaProperties.focusable.zoom_margin });
+            }
+        }
         if (areaProperties.jitsiRoom) {
             properties.push({ name: "jitsiRoom", type: "string", value: areaProperties.jitsiRoom.roomName ?? "" });
+            console.log(properties);
+            if (areaProperties.jitsiRoom.jitsiRoomConfig) {
+                properties.push({
+                    name: "jitsiConfig ",
+                    type: "class",
+                    value: areaProperties.jitsiRoom.jitsiRoomConfig,
+                });
+            }
+        }
+        if (areaProperties.openWebsite) {
+            // properties.push({ name: "openTab", type: "string", value: areaProperties.openTab..roomName ?? "" });
+        }
+        if (areaProperties.playAudio) {
+            // properties.push({ name: "jitsiRoom", type: "string", value: areaProperties.jitsiRoom.roomName ?? "" });
         }
 
         return properties;
@@ -293,22 +313,21 @@ export class GameMapAreas {
     }
 
     public getProperties(position: { x: number; y: number }): Map<string, string | boolean | number> {
-        return new Map();
-        // const properties = new Map<string, string | boolean | number>();
-        // for (const area of this.getAreasOnPosition(position, this.areasPositionOffsetY)) {
-        //     if (area.properties === undefined) {
-        //         continue;
-        //     }
-        //     const flattenedProperties = this.flattenAreaProperties(area.properties);
-        //     for (const key in flattenedProperties) {
-        //         const property = flattenedProperties[key];
-        //         if (property === undefined) {
-        //             continue;
-        //         }
-        //         properties.set(key, property);
-        //     }
-        // }
-        // return properties;
+        const properties = new Map<string, string | boolean | number>();
+        for (const area of this.getAreasOnPosition(position, this.areasPositionOffsetY)) {
+            if (area.properties === undefined) {
+                continue;
+            }
+            const flattenedProperties = this.flattenAreaProperties(area.properties);
+            for (const key in flattenedProperties) {
+                const property = flattenedProperties[key];
+                if (property === undefined) {
+                    continue;
+                }
+                properties.set(key, property);
+            }
+        }
+        return properties;
     }
 
     public setProperty(area: AreaData, key: string, value: string | number | boolean | undefined): void {
@@ -337,24 +356,34 @@ export class GameMapAreas {
         // }
     }
 
-    // private flattenAreaProperties(properties: AreaProperties): Record<string, string | boolean | number> {
-    //     const flattenedProperties: Record<string, string | boolean | number> = {};
-    //     if (properties.focusable !== undefined) {
-    //         flattenedProperties.focusable = properties.focusable;
-    //     }
-    //     if (properties.zoomMargin !== undefined) {
-    //         flattenedProperties.zoomMargin = properties.zoomMargin;
-    //     }
-    //     if (properties.silent !== undefined) {
-    //         flattenedProperties.silent = properties.silent;
-    //     }
-
-    //     for (const key in properties.customProperties) {
-    //         //eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    //         flattenedProperties[key] = properties.customProperties[key];
-    //     }
-    //     return flattenedProperties;
-    // }
+    private flattenAreaProperties(areaProperties: AreaDataProperties): Record<string, string | boolean | number> {
+        const flattenedProperties: Record<string, string | boolean | number> = {};
+        if (areaProperties.focusable) {
+            flattenedProperties[GameMapProperties.FOCUSABLE] = true;
+            if (areaProperties.focusable.zoom_margin) {
+                flattenedProperties[GameMapProperties.ZOOM_MARGIN] = areaProperties.focusable.zoom_margin;
+            }
+        }
+        if (areaProperties.jitsiRoom) {
+            flattenedProperties[GameMapProperties.JITSI_ROOM] = areaProperties.jitsiRoom.roomName ?? "";
+            if (areaProperties.jitsiRoom.jitsiRoomConfig) {
+                flattenedProperties[GameMapProperties.JITSI_CONFIG] = JSON.stringify(
+                    areaProperties.jitsiRoom.jitsiRoomConfig
+                );
+            }
+        }
+        if (areaProperties.openWebsite) {
+            if (areaProperties.openWebsite.newTab) {
+                flattenedProperties[GameMapProperties.OPEN_TAB] = areaProperties.openWebsite.link;
+            } else {
+                flattenedProperties[GameMapProperties.OPEN_WEBSITE] = areaProperties.openWebsite.link;
+            }
+        }
+        if (areaProperties.playAudio) {
+            flattenedProperties[GameMapProperties.PLAY_AUDIO] = areaProperties.playAudio.audioLink;
+        }
+        return flattenedProperties;
+    }
 
     private getAreasOnPosition(position: { x: number; y: number }, offsetY = 0, areaType?: AreaType): AreaData[] {
         const areasOfInterest = areaType

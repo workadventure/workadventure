@@ -39,7 +39,11 @@ export enum Direction {
 export const TextHeaderPropertyData = z.string();
 
 export const ActionsMenuData = z.object({
-    buttonLabel: z.string(),
+    buttonLabel: z.string().optional(),
+});
+
+export const FocusablePropertyData = z.object({
+    zoom_margin: z.number().optional(),
 });
 
 export const JitsiRoomConfigData = z.object({
@@ -56,17 +60,17 @@ export const PlayAudioPropertyData = ActionsMenuData.extend({
     audioLink: z.string(),
 });
 
-export const OpenTabPropertyData = ActionsMenuData.extend({
+export const OpenWebsitePropertyData = ActionsMenuData.extend({
     link: z.string(),
-    inNewTab: z.boolean(),
+    newTab: z.boolean().optional(),
 });
 
 // TODO: Can they vary between Entity and Area or should it be the same type?
 export const AreaDataProperties = z.object({
-    textHeader: TextHeaderPropertyData.optional().nullable(),
+    focusable: FocusablePropertyData.optional().nullable(),
     jitsiRoom: JitsiRoomPropertyData.optional().nullable(),
     playAudio: PlayAudioPropertyData.optional().nullable(),
-    openTab: OpenTabPropertyData.optional().nullable(),
+    openWebsite: OpenWebsitePropertyData.optional().nullable(),
 });
 
 export const AreaData = z.object({
@@ -84,7 +88,7 @@ export const EntityDataProperties = z.object({
     textHeader: TextHeaderPropertyData.optional().nullable(),
     jitsiRoom: JitsiRoomPropertyData.optional().nullable(),
     playAudio: PlayAudioPropertyData.optional().nullable(),
-    openTab: OpenTabPropertyData.optional().nullable(),
+    openWebsite: OpenWebsitePropertyData.optional().nullable(),
 });
 
 export const EntityRawPrefab = z.object({
@@ -133,10 +137,11 @@ export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;
 export type TextHeaderPropertyData = z.infer<typeof TextHeaderPropertyData>;
 export type ActionsMenuData = z.infer<typeof ActionsMenuData>;
+export type FocusablePropertyData = z.infer<typeof FocusablePropertyData>;
 export type JitsiRoomConfigData = z.infer<typeof JitsiRoomConfigData>;
 export type JitsiRoomPropertyData = z.infer<typeof JitsiRoomPropertyData>;
 export type PlayAudioPropertyData = z.infer<typeof PlayAudioPropertyData>;
-export type OpenTabPropertyData = z.infer<typeof OpenTabPropertyData>;
+export type OpenWebsitePropertyData = z.infer<typeof OpenWebsitePropertyData>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",
