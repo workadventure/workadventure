@@ -208,7 +208,7 @@ class ConnectionManager {
                     analyticsClient.loggedWithSso();
                 } catch (err) {
                     console.error(err);
-                    // if the user must be connected in the current room or if the pusher error is not openid provider access error
+                    // if the user must be connected to the current room or if the pusher error is not openid provider access error
                     if (this._currentRoom.authenticationMandatory) {
                         const redirect = this.loadOpenIDScreen();
                         if (redirect === null) {

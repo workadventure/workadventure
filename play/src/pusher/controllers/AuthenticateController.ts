@@ -215,7 +215,7 @@ export class AuthenticateController extends BaseHttpController {
                 );
 
                 if (authTokenData.accessToken == undefined) {
-                    //if not nonce and code, user connected in anonymous
+                    //if not nonce and code, anonymous user connected
                     //get data with identifier and return token
                     res.json({
                         authToken: token,

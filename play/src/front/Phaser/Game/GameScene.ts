@@ -699,7 +699,7 @@ export class GameScene extends DirtyScene {
                 setTimeout(() => {
                     if (this.connection === undefined) {
                         try {
-                            this.scene.sleep();
+                            this.hide();
                         } catch (err) {
                             console.error("Scene sleep error: ", err);
                         }
@@ -727,7 +727,7 @@ export class GameScene extends DirtyScene {
                     console.log("this.room", this.room);
                     if (this.connection === undefined) {
                         try {
-                            this.scene.sleep();
+                            this.hide();
                         } catch (err) {
                             console.error("Scene sleep error: ", err);
                         }
@@ -775,7 +775,7 @@ export class GameScene extends DirtyScene {
 
         if (!this.room.isDisconnected()) {
             try {
-                this.scene.sleep();
+                this.hide();
             } catch (err) {
                 console.error("Scene sleep error: ", err);
             }
@@ -788,7 +788,7 @@ export class GameScene extends DirtyScene {
             this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
         ])
             .then(() => {
-                this.scene.wake();
+                this.hide(false);
             })
             .catch((e) =>
                 console.error(
@@ -800,6 +800,11 @@ export class GameScene extends DirtyScene {
         if (gameManager.currentStartedRoom.backgroundColor != undefined) {
             this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
         }
+    }
+
+    private hide(hide = true): void {
+        this.scene.setVisible(!hide);
+        iframeListener?.hideIFrames(hide);
     }
 
     /**
