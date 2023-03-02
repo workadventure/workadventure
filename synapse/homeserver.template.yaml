@@ -25,7 +25,6 @@ database:
     database: /data/homeserver.db
 log_config: "/data/matrix.workadventure.localhost.log.config"
 media_store_path: /data/media_store
-registration_shared_secret: "${MATRIX_REGISTRATION_SHARED_SECRET}" # UUXvpP~v3g3Wz6CbaiMH9AkJ77r1riZ-FLwGddO&hi3dsj:mq;"
 report_stats: true
 macaroon_secret_key: "E@=9DoVJg.t:.k:p8uI9*hMOQl~^JF8,rs2ak-evN5eS*pv.jF"
 form_secret: "Xa6T^,-_Ib2,^#Py=;AQ*lI:ex_QCAZQXG#P&RoTxT~2qBFIA:"
@@ -40,7 +39,7 @@ jwt_config:
   algorithm: "HS256"
   subject_claim: "matrixId"
 
-enable_registration: true
-enable_registration_without_verification: true
+enable_registration: false
+enable_registration_without_verification: false
 
 # vim:ft=yaml

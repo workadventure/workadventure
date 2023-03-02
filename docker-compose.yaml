@@ -378,7 +378,6 @@ services:
             MATRIX_ADMIN_USER: '$MATRIX_ADMIN_USER'
             MATRIX_ADMIN_PASSWORD: '$MATRIX_ADMIN_PASSWORD'
             JWT_SECRET: '$SECRET_KEY'
-            MATRIX_REGISTRATION_SHARED_SECRET: '$SECRET_KEY'
 
 #  coturn:
 #    image: coturn/coturn:4.5.2
