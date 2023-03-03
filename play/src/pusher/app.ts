@@ -1,3 +1,5 @@
+import { SentryBack } from "../services/SentryBack";
+import { MonitoringInterface } from "../services/MonitoringInterface";
 import { IoSocketController } from "./controllers/IoSocketController";
 import { AuthenticateController } from "./controllers/AuthenticateController";
 import { MapController } from "./controllers/MapController";
@@ -22,6 +24,7 @@ import { CompanionService } from "./services/CompanionService";
 import { WokaService } from "./services/WokaService";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LiveDirectory = require("live-directory");
+const monitoringInterface: MonitoringInterface = new SentryBack();
 
 class App {
     private app: HyperExpress.compressors.TemplatedApp;
@@ -80,15 +83,15 @@ class App {
         new IoSocketController(this.app);
 
         // Http controllers
-        new AuthenticateController(this.webserver);
-        new MapController(this.webserver);
+        new AuthenticateController(this.webserver, monitoringInterface);
+        new MapController(this.webserver, monitoringInterface);
         new PrometheusController(this.webserver);
-        new DebugController(this.webserver);
-        new AdminController(this.webserver);
-        new OpenIdProfileController(this.webserver);
-        new PingController(this.webserver);
+        new DebugController(this.webserver, monitoringInterface);
+        new AdminController(this.webserver, monitoringInterface);
+        new OpenIdProfileController(this.webserver, monitoringInterface);
+        new PingController(this.webserver, monitoringInterface);
         if (ENABLE_OPENAPI_ENDPOINT) {
-            new SwaggerController(this.webserver);
+            new SwaggerController(this.webserver, monitoringInterface);
         }
         new FrontController(this.webserver, liveAssets);
         const companionListController = new CompanionListController(this.webserver, jwtTokenManager);

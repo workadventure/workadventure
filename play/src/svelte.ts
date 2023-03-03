@@ -1,3 +1,5 @@
+import { MonitoringInterface } from "./services/MonitoringInterface";
+import { SentryBrowser } from "./services/SentryBrowser";
 import "phaser";
 import "./front/style/index.scss";
 
@@ -21,6 +23,8 @@ import { Game } from "./front/Phaser/Game/Game";
 import App from "./front/Components/App.svelte";
 import { HtmlUtils } from "./front/WebRtc/HtmlUtils";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
+
+const monitoringInterface: MonitoringInterface = new SentryBrowser();
 
 const { width, height } = coWebsiteManager.getGameSize();
 const fps: Phaser.Types.Core.FPSConfig = {
@@ -171,3 +175,11 @@ const app = new App({
 });
 
 export default app;
+
+//test sentry
+try {
+    throw new Error("test sentry");
+} catch (error) {
+    monitoringInterface.LogError(error);
+    console.log("error sentry");
+}

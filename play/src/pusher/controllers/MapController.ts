@@ -78,6 +78,8 @@ export class MapController extends BaseHttpController {
                 res.json(mapDetails);
                 return;
             } catch (e) {
+                console.log("this.monitoringInterface", this.monitoringInterface);
+                this.monitoringInterface.LogError(e);
                 if (e instanceof InvalidTokenError) {
                     console.warn("Invalid token received", e);
                     res.status(401);

@@ -44,6 +44,7 @@ export class AuthenticateController extends BaseHttpController {
                 res.json(await adminService.fetchMemberDataByUuid(uuid, token, playUri, req.ip, []));
                 return;
             } catch (e) {
+                this.monitoringInterface.LogError(e);
                 console.warn(e);
             }
             res.status(500);
@@ -236,6 +237,7 @@ export class AuthenticateController extends BaseHttpController {
                 });
                 return;
             } catch (err) {
+                this.monitoringInterface.LogError(err);
                 if (Axios.isAxiosError(err)) {
                     const errorType = isErrorApiData.safeParse(err?.response?.data);
                     if (errorType.success) {
@@ -285,6 +287,7 @@ export class AuthenticateController extends BaseHttpController {
                 }
                 await openIDClient.logoutUser(authTokenData.accessToken);
             } catch (error) {
+                this.monitoringInterface.LogError(error);
                 console.error("openIDCallback => logout-callback", error);
             }
 
