@@ -1,3 +1,4 @@
+import { MonitoringInterface } from "./../../services/MonitoringInterface";
 import { AuthenticatedProviderController } from "./AuthenticatedProviderController";
 import { CompanionCollectionList } from "@workadventure/messages";
 import type { CompanionServiceInterface } from "../services/CompanionServiceInterface";
@@ -9,8 +10,8 @@ import type { JWTTokenManager } from "../services/JWTTokenManager";
  */
 export class CompanionListController extends AuthenticatedProviderController<CompanionCollectionList> {
     private companionService: CompanionServiceInterface | undefined;
-    constructor(protected app: Server, protected jwtTokenManager: JWTTokenManager) {
-        super(app, jwtTokenManager);
+    constructor(protected app: Server, protected jwtTokenManager: JWTTokenManager, monitoringInterface: MonitoringInterface) {
+        super(app, jwtTokenManager, monitoringInterface);
     }
     public setCompanionService(companionService: CompanionServiceInterface) {
         this.companionService = companionService;

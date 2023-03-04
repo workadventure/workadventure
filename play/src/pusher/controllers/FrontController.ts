@@ -1,3 +1,4 @@
+import { MonitoringInterface } from "./../../services/MonitoringInterface";
 import type { Request, Response, Server } from "hyper-express";
 import fs from "fs";
 import { BaseHttpController } from "./BaseHttpController";
@@ -14,8 +15,8 @@ export class FrontController extends BaseHttpController {
     private indexFile: string;
     private script: string;
 
-    constructor(protected app: Server, protected liveAssets: LiveDirectory) {
-        super(app);
+    constructor(protected app: Server, protected liveAssets: LiveDirectory, monitoringInterface: MonitoringInterface) {
+        super(app, monitoringInterface);
 
         let indexPath: string;
         if (fs.existsSync("dist/public/index.html")) {

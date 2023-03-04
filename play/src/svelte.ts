@@ -25,6 +25,10 @@ import { HtmlUtils } from "./front/WebRtc/HtmlUtils";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
 
 const monitoringInterface: MonitoringInterface = new SentryBrowser();
+try{
+    // @ts-ignore
+    foo();
+}catch(e){console.error('Test sentry error: ', e)}
 
 const { width, height } = coWebsiteManager.getGameSize();
 const fps: Phaser.Types.Core.FPSConfig = {

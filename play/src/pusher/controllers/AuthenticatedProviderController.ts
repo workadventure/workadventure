@@ -1,3 +1,4 @@
+import { MonitoringInterface } from "./../../services/MonitoringInterface";
 import { BaseHttpController } from "./BaseHttpController";
 import { parse } from "query-string";
 import type { JWTTokenManager } from "../services/JWTTokenManager";
@@ -8,8 +9,8 @@ import type { Server } from "hyper-express";
  * Base class to expose authenticated pusher endpoints that will provide data based on room url
  */
 export abstract class AuthenticatedProviderController<T> extends BaseHttpController {
-    constructor(protected app: Server, protected jwtTokenManager: JWTTokenManager) {
-        super(app);
+    constructor(protected app: Server, protected jwtTokenManager: JWTTokenManager, monitoringInterface: MonitoringInterface) {
+        super(app, monitoringInterface);
     }
     /**
      * Setup authenticated routes that take at least the room url query parameter

@@ -1,11 +1,12 @@
+import { MonitoringInterface } from "./../../services/MonitoringInterface";
 import { register, collectDefaultMetrics } from "prom-client";
 import type { Request, Response, Server } from "hyper-express";
 import { BaseHttpController } from "./BaseHttpController";
 import { PROMETHEUS_AUTHORIZATION_TOKEN } from "../enums/EnvironmentVariable";
 
 export class PrometheusController extends BaseHttpController {
-    constructor(app: Server) {
-        super(app);
+    constructor(app: Server, monitoringInterface: MonitoringInterface) {
+        super(app, monitoringInterface);
         collectDefaultMetrics({
             gcDurationBuckets: [0.001, 0.01, 0.1, 1, 2, 5], // These are the default buckets.
         });

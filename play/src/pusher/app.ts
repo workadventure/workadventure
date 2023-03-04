@@ -85,7 +85,7 @@ class App {
         // Http controllers
         new AuthenticateController(this.webserver, monitoringInterface);
         new MapController(this.webserver, monitoringInterface);
-        new PrometheusController(this.webserver);
+        new PrometheusController(this.webserver, monitoringInterface);
         new DebugController(this.webserver, monitoringInterface);
         new AdminController(this.webserver, monitoringInterface);
         new OpenIdProfileController(this.webserver, monitoringInterface);
@@ -93,9 +93,9 @@ class App {
         if (ENABLE_OPENAPI_ENDPOINT) {
             new SwaggerController(this.webserver, monitoringInterface);
         }
-        new FrontController(this.webserver, liveAssets);
-        const companionListController = new CompanionListController(this.webserver, jwtTokenManager);
-        const wokaListController = new WokaListController(this.webserver, jwtTokenManager);
+        new FrontController(this.webserver, liveAssets, monitoringInterface);
+        const companionListController = new CompanionListController(this.webserver, jwtTokenManager, monitoringInterface);
+        const wokaListController = new WokaListController(this.webserver, jwtTokenManager, monitoringInterface);
         adminApi
             .initialise()
             .then((capabilities) => {
