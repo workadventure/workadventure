@@ -42,7 +42,7 @@ export class VideoPeer extends Peer {
     private onUnBlockSubscribe: Subscription;
     public readonly streamStore: Writable<MediaStream | null> = writable<MediaStream | null>(null);
     public readonly volumeStore: Readable<number[] | undefined>;
-    public readonly statusStore: Writable<PeerStatus> = writable<PeerStatus>("closed");
+    private readonly _statusStore: Writable<PeerStatus> = writable<PeerStatus>("closed");
     private readonly _constraintsStore: Writable<ObtainedMediaStreamConstraints | null>;
     private newMessageSubscribtion: Subscription | undefined;
     private closing = false; //this is used to prevent destroy() from being called twice
@@ -122,7 +122,7 @@ export class VideoPeer extends Peer {
         this.on("stream", (stream: MediaStream) => this.stream(stream));
 
         this.on("close", () => {
-            this.statusStore.set("closed");
+            this._statusStore.set("closed");
 
             this._connected = false;
             this.toClose = true;
@@ -130,7 +130,7 @@ export class VideoPeer extends Peer {
         });
 
         this.on("error", (err: Error) => {
-            this.statusStore.set("error");
+            this._statusStore.set("error");
 
             console.error(`error for user ${this.userId}`, err);
             if ("code" in err) {
@@ -139,7 +139,7 @@ export class VideoPeer extends Peer {
         });
 
         this.on("connect", () => {
-            this.statusStore.set("connected");
+            this._statusStore.set("connected");
 
             this._connected = true;
             chatMessagesStore.addIncomingUser(this.userId);
@@ -196,7 +196,7 @@ export class VideoPeer extends Peer {
         });
 
         this.once("finish", () => {
-            this.statusStore.set("closed");
+            this._statusStore.set("closed");
 
             this._onFinish();
         });
@@ -313,5 +313,9 @@ export class VideoPeer extends Peer {
 
     get constraintsStore(): Readable<ObtainedMediaStreamConstraints | null> {
         return this._constraintsStore;
+    }
+
+    get statusStore(): Readable<PeerStatus> {
+        return this._statusStore;
     }
 }

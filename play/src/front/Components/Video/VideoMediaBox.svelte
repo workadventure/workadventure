@@ -26,8 +26,6 @@
     let name = peer.userName;
     let backGroundColor = getColorByString(peer.userName);
     let textColor = getTextColorByBackgroundColor(backGroundColor);
-    // FIXME: status store is useless here because we only get here if the VIDEO connection was successfully established!
-    // FIXME: Hence, no error is ever displayed.
     let statusStore = peer.statusStore;
     let constraintStore = peer.constraintsStore;
     let subscribeChangeOutput: Unsubscriber;
