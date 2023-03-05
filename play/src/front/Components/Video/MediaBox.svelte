@@ -6,7 +6,7 @@
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import VideoOffBox from "./VideoOffBox.svelte";
-    import type { ObtainedMediaStreamConstraints } from "../../Stores/MediaStore";
+    import type { ObtainedMediaStreamConstraints } from "../../WebRtc/P2PMessages/ConstraintMessage";
     import type { Readable } from "svelte/store";
     import { fly } from "svelte/transition";
     import { gameManager } from "../../Phaser/Game/GameManager";
