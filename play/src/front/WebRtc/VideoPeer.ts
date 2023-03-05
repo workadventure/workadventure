@@ -1,4 +1,3 @@
-import { mediaManager } from "./MediaManager";
 import type { RoomConnection } from "../Connexion/RoomConnection";
 import { blackListManager } from "./BlackListManager";
 import type { Subscription } from "rxjs";
@@ -44,7 +43,7 @@ export class VideoPeer extends Peer {
     public readonly streamStore: Writable<MediaStream | null> = writable<MediaStream | null>(null);
     public readonly volumeStore: Readable<number[] | undefined>;
     public readonly statusStore: Writable<PeerStatus> = writable<PeerStatus>("closed");
-    public readonly constraintsStore: Readable<ObtainedMediaStreamConstraints | null>;
+    private readonly _constraintsStore: Writable<ObtainedMediaStreamConstraints | null>;
     private newMessageSubscribtion: Subscription | undefined;
     private closing = false; //this is used to prevent destroy() from being called twice
     private newWritingStatusMessageSubscribtion: Subscription | undefined;
@@ -113,20 +112,7 @@ export class VideoPeer extends Peer {
             };
         });
 
-        this.constraintsStore = readable<ObtainedMediaStreamConstraints | null>(null, (set) => {
-            const onData = (chunk: Buffer) => {
-                const message = JSON.parse(chunk.toString("utf8"));
-                if (message.type === MESSAGE_TYPE_CONSTRAINT) {
-                    set(message);
-                }
-            };
-
-            this.on("data", onData);
-
-            return () => {
-                this.off("data", onData);
-            };
-        });
+        this._constraintsStore = writable<ObtainedMediaStreamConstraints | null>(null);
 
         //start listen signal for the peer connection
         this.on("signal", (data: unknown) => {
@@ -143,12 +129,13 @@ export class VideoPeer extends Peer {
             this.destroy();
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.on("error", (err: any) => {
+        this.on("error", (err: Error) => {
             this.statusStore.set("error");
 
-            console.error(`error => ${this.userId} => ${err.code}`, err);
-            mediaManager.isError("" + this.userId);
+            console.error(`error for user ${this.userId}`, err);
+            if ("code" in err) {
+                console.error(`error code => ${err.code}`);
+            }
         });
 
         this.on("connect", () => {
@@ -185,17 +172,7 @@ export class VideoPeer extends Peer {
         this.on("data", (chunk: Buffer) => {
             const message = JSON.parse(chunk.toString("utf8"));
             if (message.type === MESSAGE_TYPE_CONSTRAINT) {
-                if (message.audio) {
-                    mediaManager.enabledMicrophoneByUserId(this.userId);
-                } else {
-                    mediaManager.disabledMicrophoneByUserId(this.userId);
-                }
-
-                if (message.video || message.screen) {
-                    mediaManager.enabledVideoByUserId(this.userId);
-                } else {
-                    mediaManager.disabledVideoByUserId(this.userId);
-                }
+                this._constraintsStore.set(message);
             } else if (message.type === MESSAGE_TYPE_MESSAGE) {
                 if (!blackListManager.isBlackListed(this.userUuid)) {
                     chatMessagesStore.addExternalMessage(this.userId, message.message);
@@ -272,7 +249,6 @@ export class VideoPeer extends Peer {
 
     private toggleRemoteStream(enable: boolean) {
         this.remoteStream.getTracks().forEach((track) => (track.enabled = enable));
-        mediaManager.toggleBlockLogo(this.userId, !enable);
     }
 
     private sendWebrtcSignal(data: unknown) {
@@ -333,5 +309,9 @@ export class VideoPeer extends Peer {
         } else {
             this.once("connect", destroySoon);
         }
+    }
+
+    get constraintsStore(): Readable<ObtainedMediaStreamConstraints | null> {
+        return this._constraintsStore;
     }
 }
