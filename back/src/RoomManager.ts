@@ -15,7 +15,6 @@ import {
     FollowAbortMessage,
     EmptyMessage,
     ItemEventMessage,
-    JoinRoomMessage,
     PusherToBackMessage,
     RefreshRoomPromptMessage,
     RoomMessage,
@@ -86,9 +85,10 @@ const roomManager: IRoomManagerServer = {
             (async () => {
                 try {
                     if (room === null || user === null) {
-                        if (message.hasJoinroommessage()) {
+                        const joinRoomMessage = message.getJoinroommessage();
+                        if (joinRoomMessage) {
                             socketManager
-                                .handleJoinRoom(call, message.getJoinroommessage() as JoinRoomMessage)
+                                .handleJoinRoom(call, joinRoomMessage)
                                 .then(({ room: gameRoom, user: myUser }) => {
                                     if (call.writable) {
                                         room = gameRoom;
@@ -266,13 +266,7 @@ const roomManager: IRoomManagerServer = {
             }
 
             pongTimeoutId = setTimeout(() => {
-                console.log(
-                    "Connection lost with user ",
-                    user?.uuid,
-                    user?.name,
-                    "in room",
-                    room?.roomUrl
-                );
+                console.log("Connection lost with user ", user?.uuid, user?.name, "in room", room?.roomUrl);
                 closeConnection();
             }, PONG_TIMEOUT);
         }, PING_INTERVAL);

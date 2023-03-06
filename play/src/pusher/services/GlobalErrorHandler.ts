@@ -1,6 +1,6 @@
 import type { Request, Response } from "hyper-express";
 import axios from "axios";
-import { isErrorApiData } from "@workadventure/messages";
+import { ErrorApiData } from "@workadventure/messages";
 import { DEBUG_ERROR_MESSAGES } from "../enums/EnvironmentVariable";
 
 export function globalErrorHandler(request: Request, response: Response, error: unknown) {
@@ -23,7 +23,7 @@ export function globalErrorHandler(request: Request, response: Response, error: 
 
     if (axios.isAxiosError(error) && error.response) {
         response.status(error.response.status);
-        const errorType = isErrorApiData.safeParse(error?.response?.data);
+        const errorType = ErrorApiData.safeParse(error?.response?.data);
         if (!errorType.success) {
             response.send(
                 "An error occurred: " +

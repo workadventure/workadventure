@@ -19,7 +19,7 @@ export class SimpleCoWebsite implements CoWebsite {
     constructor(url: URL, allowApi?: boolean, allowPolicy?: string, widthPercent?: number, closable?: boolean) {
         this.id = coWebsiteManager.generateUniqueId();
         this.url = url;
-        this.state = writable("asleep" as CoWebsiteState);
+        this.state = writable("asleep");
         this.allowApi = allowApi;
         this.allowPolicy = allowPolicy;
         this.widthPercent = widthPercent;

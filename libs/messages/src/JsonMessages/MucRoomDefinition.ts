@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
 
-export const isMucRoomDefinition = z.object({
+export const MucRoomDefinition = z.object({
   name: extendApi(z.string(), {
     description: "The name of the MUC room",
     example: "Default room",
@@ -19,4 +19,4 @@ export const isMucRoomDefinition = z.object({
       "If the user need to subscribe and be persisted in the MUC room",
   }),
 });
-export type MucRoomDefinitionInterface = z.infer<typeof isMucRoomDefinition>;
+export type MucRoomDefinition = z.infer<typeof MucRoomDefinition>;

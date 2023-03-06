@@ -6,7 +6,6 @@ import type { Zone } from "../Zone";
 import type { compressors } from "hyper-express";
 import type {
     WokaDetail,
-    MucRoomDefinitionInterface,
     ApplicationDefinitionInterface,
     CompanionMessage,
     SubMessage,

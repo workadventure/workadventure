@@ -10,8 +10,7 @@ import {
     isMapDetailsData,
     isRoomRedirect,
     isAdminApiData,
-    isWokaDetail,
-    isMucRoomDefinition,
+    WokaDetail,
     isApplicationDefinitionInterface,
     isCapabilities,
     Capabilities,
@@ -52,7 +51,7 @@ export const isFetchMemberDataByUuidResponse = z.object({
         description: "URL of the visitCard of the user fetched.",
         example: "https://mycompany.com/contact/me",
     }),
-    textures: extendApi(z.array(isWokaDetail), {
+    textures: extendApi(z.array(WokaDetail), {
         description: "This data represents the textures (WOKA) that will be available to users.",
     }),
     messages: extendApi(z.array(z.unknown()), {
@@ -105,8 +104,11 @@ class AdminApi implements AdminInterface {
                 resolve(0);
             } catch (ex) {
                 // ignore errors when querying capabilities
-                const status = (ex as { response: { status: number } })?.response?.status;
-                if (status === 404) {
+                const parsedEx = z
+                    .object({ response: z.object({ status: z.number() }).optional() })
+                    .optional()
+                    .parse(ex);
+                if (parsedEx?.response?.status === 404) {
                     // 404 probably means and older api version
                     resolve(0);
                     console.warn(`Admin API server does not implement capabilities, default to basic capabilities`);

@@ -13,7 +13,7 @@ export class GameMapEntities {
     constructor(gameMap: GameMap) {
         this.gameMap = gameMap;
 
-        const entitiesData: unknown = structuredClone(this.getEntitiesMapProperty()?.value ?? []);
+        const entitiesData: unknown = EntityData.array().parse(structuredClone(this.getEntitiesMapProperty()?.value ?? []));
 
         for (const entityData of (entitiesData as EntityData[]) ?? []) {
             this.addEntity(entityData, false);

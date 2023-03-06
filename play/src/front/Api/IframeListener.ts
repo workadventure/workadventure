@@ -49,7 +49,7 @@ import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
 import { connectionManager } from "../Connexion/ConnectionManager";
 import { ModalEvent } from "./Events/ModalEvent";
 import { AddButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
-import {chatIsReadyStore} from "../Stores/ChatStore";
+import { chatIsReadyStore } from "../Stores/ChatStore";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -972,6 +972,12 @@ class IframeListener {
 
     public unregisterAnswerer(key: keyof IframeQueryMap): void {
         delete this.answerers[key];
+    }
+
+    public hideIFrames(hide = true): void {
+        for (const iframe of this.iframes.keys()) {
+            iframe.hidden = hide;
+        }
     }
 
     dispatchVariableToOtherIframes(key: string, value: unknown, source: MessageEventSource | null) {
