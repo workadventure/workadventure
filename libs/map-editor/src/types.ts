@@ -138,6 +138,7 @@ export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
 export type EntityDataPropertiesKeys = keyof z.infer<typeof EntityDataProperties>;
 export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;
+export type AreaDataPropertiesKeys = keyof z.infer<typeof AreaDataProperties>;
 export type TextHeaderPropertyData = z.infer<typeof TextHeaderPropertyData>;
 export type ActionsMenuData = z.infer<typeof ActionsMenuData>;
 export type StartPropertyData = z.infer<typeof StartPropertyData>;

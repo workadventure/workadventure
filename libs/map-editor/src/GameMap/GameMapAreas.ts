@@ -403,30 +403,8 @@ export class GameMapAreas {
         return properties;
     }
 
-    public setProperty(area: AreaData, key: string, value: string | number | boolean | undefined): void {
-        // switch (key) {
-        //     case "focusable": {
-        //         if (typeof value === "boolean" || value === undefined) {
-        //             area.properties.focusable = value;
-        //         }
-        //         break;
-        //     }
-        //     case "zoomMargin": {
-        //         if (typeof value === "number" || value === undefined) {
-        //             area.properties.zoomMargin = value;
-        //         }
-        //         break;
-        //     }
-        //     case "silent": {
-        //         if (typeof value === "boolean" || value === undefined) {
-        //             area.properties.silent = value;
-        //         }
-        //         break;
-        //     }
-        //     default: {
-        //         area.properties.customProperties[key] = value;
-        //     }
-        // }
+    public setProperty<K extends keyof AreaDataProperties>(area: AreaData, key: K, value: AreaDataProperties[K]): void {
+        area.properties[key] = value;
     }
 
     private getAreasOnPosition(position: { x: number; y: number }, offsetY = 0, areaType?: AreaType): AreaData[] {
