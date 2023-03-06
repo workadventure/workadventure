@@ -72,7 +72,6 @@ export class GameMapAreas {
                 type: "string",
                 value: areaProperties.jitsiRoom.roomName ?? "",
             });
-            console.log(properties);
             if (areaProperties.jitsiRoom.jitsiRoomConfig) {
                 properties.push({
                     name: GameMapProperties.JITSI_CONFIG,
@@ -259,8 +258,7 @@ export class GameMapAreas {
                 this.triggerSpecificAreaOnLeave(area);
             }
         }
-        const deleted = this.getAreas(type).delete(id);
-        if (deleted && type === AreaType.Static) {
+        if (type === AreaType.Static) {
             this.deleteStaticArea(id);
             return true;
         }
