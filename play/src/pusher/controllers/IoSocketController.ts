@@ -9,8 +9,6 @@ import { emitInBatch } from "../services/IoSocketHelpers";
 import {
     ADMIN_SOCKETS_TOKEN,
     DISABLE_ANONYMOUS,
-    EJABBERD_DOMAIN,
-    EJABBERD_JWT_SECRET,
     SOCKET_IDLE_TIMER,
 } from "../enums/EnvironmentVariable";
 import type { Zone } from "../models/Zone";
@@ -29,14 +27,10 @@ import {
     CompanionMessage,
     ErrorApiData,
     isErrorApiData,
-    MucRoomDefinitionInterface,
     ServerToClientMessage as ServerToClientMessageTsProto,
     SubMessage,
     WokaDetail,
 } from "@workadventure/messages";
-import Jwt from "jsonwebtoken";
-import { v4 as uuid } from "uuid";
-import { JID } from "stanza";
 
 type WebSocket = HyperExpress.compressors.WebSocket;
 
@@ -48,7 +42,6 @@ interface UpgradeData {
     rejected: false;
     token: string;
     userUuid: string;
-    userJid: string;
     IPAddress: string;
     roomId: string;
     name: string;
@@ -66,10 +59,11 @@ interface UpgradeData {
         bottom: number;
         left: number;
     };
-    mucRooms: Array<MucRoomDefinitionInterface> | undefined;
     activatedInviteUser: boolean | undefined;
     isLogged: boolean;
     canEdit: boolean;
+    matrixUserId: string | undefined;
+    isMatrixRegistered: boolean;
 }
 
 interface UpgradeFailedInvalidData {
@@ -338,6 +332,7 @@ export class IoSocketController {
 
                         const userIdentifier = tokenData ? tokenData.identifier : "";
                         const isLogged = !!tokenData?.accessToken;
+                        const matrixUserId = tokenData?.matrixUserId;
 
                         let memberTags: string[] = [];
                         let memberVisitCardUrl: string | null = null;
@@ -353,11 +348,9 @@ export class IoSocketController {
                             messages: [],
                             anonymous: true,
                             userRoomToken: undefined,
-                            jabberId: null,
-                            jabberPassword: null,
-                            mucRooms: [],
                             activatedInviteUser: true,
                             canEdit: false,
+                            isMatrixRegistered: false
                         };
 
                         let characterLayerObjs: WokaDetail[];
@@ -436,25 +429,6 @@ export class IoSocketController {
                             throw new Error("User cannot access this world");
                         }
 
-                        if (!userData.jabberId) {
-                            // If there is no admin, or no user, let's log users using JWT tokens
-                            userData.jabberId = JID.create({
-                                local: userIdentifier,
-                                domain: EJABBERD_DOMAIN,
-                                resource: uuid(),
-                            });
-                            if (EJABBERD_JWT_SECRET) {
-                                userData.jabberPassword = Jwt.sign({ jid: userData.jabberId }, EJABBERD_JWT_SECRET, {
-                                    expiresIn: "1d",
-                                    algorithm: "HS256",
-                                });
-                            } else {
-                                userData.jabberPassword = "no_password_set";
-                            }
-                        } else {
-                            userData.jabberId = `${userData.jabberId}/${uuid()}`;
-                        }
-
                         // Generate characterLayers objects from characterLayers string[]
                         /*const characterLayerObjs: CharacterLayer[] =
                                 SocketManager.mergeCharacterLayersAndCustomTextures(characterLayers, memberTextures);*/
@@ -472,7 +446,6 @@ export class IoSocketController {
                                 rejected: false,
                                 token,
                                 userUuid: userData.userUuid,
-                                userJid: userData.jabberId,
                                 IPAddress,
                                 userIdentifier,
                                 roomId,
@@ -486,9 +459,6 @@ export class IoSocketController {
                                 visitCardUrl: memberVisitCardUrl,
                                 userRoomToken: memberUserRoomToken,
                                 textures: memberTextures,
-                                jabberId: userData.jabberId,
-                                jabberPassword: userData.jabberPassword,
-                                mucRooms: userData.mucRooms,
                                 activatedInviteUser: userData.activatedInviteUser,
                                 canEdit: userData.canEdit ?? false,
                                 applications: userData.applications,
@@ -505,6 +475,8 @@ export class IoSocketController {
                                     left,
                                 },
                                 isLogged,
+                                isMatrixRegistered: userData.isMatrixRegistered,
+                                matrixUserId
                             } as UpgradeData,
                             /* Spell these correctly */
                             websocketKey,
@@ -581,7 +553,6 @@ export class IoSocketController {
                     // Let's join the room
                     const client = this.initClient(ws);
                     await socketManager.handleJoinRoom(client);
-                    socketManager.emitXMPPSettings(client);
 
                     //get data information and show messages
                     if (client.messages && Array.isArray(client.messages)) {
@@ -754,7 +725,6 @@ export class IoSocketController {
         const client: ExSocketInterface = ws;
         client.userId = this.nextUserId;
         this.nextUserId++;
-        client.userJid = ws.userJid;
         client.userUuid = ws.userUuid;
         client.IPAddress = ws.IPAddress;
         client.token = ws.token;
@@ -779,13 +749,12 @@ export class IoSocketController {
         client.lastCommandId = ws.lastCommandId;
         client.roomId = ws.roomId;
         client.listenedZones = new Set<Zone>();
-        client.jabberId = ws.jabberId;
-        client.jabberPassword = ws.jabberPassword;
-        client.mucRooms = ws.mucRooms;
         client.activatedInviteUser = ws.activatedInviteUser;
         client.canEdit = ws.canEdit;
         client.isLogged = ws.isLogged;
         client.applications = ws.applications;
+        client.matrixUserId = ws.matrixUserId;
+        client.isMatrixRegistered = ws.isMatrixRegistered;
         client.customJsonReplacer = (key: unknown, value: unknown): string | undefined => {
             if (key === "listenedZones") {
                 return (value as Set<Zone>).size + " listened zone(s)";

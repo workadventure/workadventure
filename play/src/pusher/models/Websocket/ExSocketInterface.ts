@@ -26,7 +26,6 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable,
     //userId: number;   // A temporary (autoincremented) identifier for this user
     userUuid: string; // A unique identifier for this user
     userIdentifier: string;
-    userJid: string;
     isLogged: boolean;
     IPAddress: string; // IP address
     name: string;
@@ -51,10 +50,9 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable,
     userRoomToken: string | undefined;
     maxHistoryChat: number;
     pusherRoom: PusherRoom | undefined;
-    jabberId: string;
-    jabberPassword: string;
     activatedInviteUser: boolean | undefined;
-    mucRooms: Array<MucRoomDefinitionInterface>;
     applications: Array<ApplicationDefinitionInterface> | undefined;
     canEdit: boolean;
+    matrixUserId: string | undefined;
+    isMatrixRegistered: boolean;
 }

@@ -37,7 +37,7 @@ jwt_config:
   enabled: true
   secret: "${JWT_SECRET}"
   algorithm: "HS256"
-  subject_claim: "matrixId"
+  subject_claim: "matrixUserId"
 
 enable_registration: false
 enable_registration_without_verification: false

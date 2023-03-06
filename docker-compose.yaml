@@ -98,6 +98,8 @@ services:
             REPORT_ISSUES_URL: $REPORT_ISSUES_URL
             # LogRocket
             LOGROCKET_ID: $LOGROCKET_ID
+            # Matrix
+            MATRIX_DOMAIN: "$MATRIX_DOMAIN"
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"

@@ -1,5 +1,6 @@
 <script lang="ts">
     import {
+        chatIsReadyStore,
         chatVisibilityStore,
         iframeLoadedStore,
         wokaDefinedStore,
@@ -55,99 +56,141 @@
     onMount(() => {
         iframeListener.registerChatIframe(chatIframe);
         chatIframe.addEventListener("load", () => {
-            iframeLoadedStore.set(false);
-            if (chatIframe && chatIframe.contentWindow && "postMessage" in chatIframe.contentWindow) {
-                iframeLoadedStore.set(true);
-                subscribeListeners.push(
-                    locale.subscribe((value: Locales) => {
+            subscribeListeners.push(
+                chatIsReadyStore.subscribe((value) => {
+                    if(value){
+                        iframeListener.sendSettingsToChatIframe();
                         chatIframe?.contentWindow?.postMessage(
                             {
-                                type: "setLocale",
+                                type: "userData",
                                 data: {
-                                    locale: value,
+                                    ...localUserStore.getLocalUser(),
+                                    name,
+                                    playUri,
+                                    authToken: localUserStore.getAuthToken(),
+                                    color: getColorByString(name ?? ""),
+                                    woka: wokaSrc,
+                                    isLogged: localUserStore.isLogged(),
+                                    availabilityStatus: get(availabilityStatusStore),
+                                    roomName: connectionManager.currentRoom?.roomName ?? "default",
+                                    visitCardUrl: gameManager.myVisitCardUrl,
+                                    userRoomToken: gameManager.getCurrentGameScene().connection?.userRoomToken,
                                 },
                             },
                             "*"
                         );
-                    })
-                );
-                subscribeListeners.push(
-                    currentPlayerWokaStore.subscribe((value) => {
-                        if (value !== undefined) {
-                            wokaSrc = value;
-                            wokaDefinedStore.set(true);
-                        }
-                    })
-                );
-                subscribeListeners.push(
-                    canSendInitMessageStore.subscribe((value) => {
-                        if (value) {
-                            iframeListener.sendSettingsToChatIframe();
-                            chatIframe?.contentWindow?.postMessage(
-                                {
-                                    type: "userData",
-                                    data: {
-                                        ...localUserStore.getLocalUser(),
-                                        name,
-                                        playUri,
-                                        authToken: localUserStore.getAuthToken(),
-                                        color: getColorByString(name ?? ""),
-                                        woka: wokaSrc,
-                                        isLogged: localUserStore.isLogged(),
-                                        availabilityStatus: get(availabilityStatusStore),
-                                        roomName: connectionManager.currentRoom?.roomName ?? "default",
-                                        visitCardUrl: gameManager.myVisitCardUrl,
-                                        userRoomToken: gameManager.getCurrentGameScene().connection?.userRoomToken,
-                                    },
-                                },
-                                "*"
-                            );
-                            chatIframe?.contentWindow?.postMessage(
-                                {
-                                    type: "setLocale",
-                                    data: {
-                                        locale: $locale,
-                                    },
-                                },
-                                "*"
-                            );
-                        }
-                    })
-                );
-                subscribeListeners.push(
-                    availabilityStatusStore.subscribe((status) =>
-                        iframeListener.sendAvailabilityStatusToChatIframe(status)
-                    )
-                );
-                subscribeListeners.push(
-                    chatVisibilityStore.subscribe((visibility) => {
-                        try {
-                            gameManager.getCurrentGameScene()?.onResize();
-                        } catch (err) {
-                            console.info("gameManager doesn't exist!", err);
-                        }
-                        iframeListener.sendChatVisibilityToChatIframe(visibility);
-                    })
-                );
-                subscribeObservers.push(
-                    adminMessagesService.messageStream.subscribe((message) => {
-                        if (message.type === AdminMessageEventTypes.banned) {
-                            chatIframe.remove();
-                        }
-                        chatVisibilityStore.set(false);
-                        menuIconVisiblilityStore.set(false);
-                    })
-                );
+                    }
+                })
+            );
 
-                //TODO delete it with new XMPP integration
-                //send list to chat iframe
-                subscribeListeners.push(
-                    writingStatusMessageStore.subscribe((list) => iframeListener.sendWritingStatusToChatIframe(list))
-                );
-                subscribeListeners.push(
-                    peerStore.subscribe((list) => iframeListener.sendPeerConnexionStatusToChatIframe(list.size > 0))
-                );
-            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+            /*
+                        iframeLoadedStore.set(false);
+                        if (chatIframe && chatIframe.contentWindow && "postMessage" in chatIframe.contentWindow) {
+                            iframeLoadedStore.set(true);
+                            subscribeListeners.push(
+                                locale.subscribe((value: Locales) => {
+                                    chatIframe?.contentWindow?.postMessage(
+                                        {
+                                            type: "setLocale",
+                                            data: {
+                                                locale: value,
+                                            },
+                                        },
+                                        "*"
+                                    );
+                                })
+                            );
+                            subscribeListeners.push(
+                                currentPlayerWokaStore.subscribe((value) => {
+                                    if (value !== undefined) {
+                                        wokaSrc = value;
+                                        wokaDefinedStore.set(true);
+                                    }
+                                })
+                            );
+                            subscribeListeners.push(
+                                canSendInitMessageStore.subscribe((value) => {
+                                    if (value) {
+                                        iframeListener.sendSettingsToChatIframe();
+                                        chatIframe?.contentWindow?.postMessage(
+                                            {
+                                                type: "userData",
+                                                data: {
+                                                    ...localUserStore.getLocalUser(),
+                                                    name,
+                                                    playUri,
+                                                    authToken: localUserStore.getAuthToken(),
+                                                    color: getColorByString(name ?? ""),
+                                                    woka: wokaSrc,
+                                                    isLogged: localUserStore.isLogged(),
+                                                    availabilityStatus: get(availabilityStatusStore),
+                                                    roomName: connectionManager.currentRoom?.roomName ?? "default",
+                                                    visitCardUrl: gameManager.myVisitCardUrl,
+                                                    userRoomToken: gameManager.getCurrentGameScene().connection?.userRoomToken,
+                                                },
+                                            },
+                                            "*"
+                                        );
+                                        chatIframe?.contentWindow?.postMessage(
+                                            {
+                                                type: "setLocale",
+                                                data: {
+                                                    locale: $locale,
+                                                },
+                                            },
+                                            "*"
+                                        );
+                                    }
+                                })
+                            );
+                            subscribeListeners.push(
+                                availabilityStatusStore.subscribe((status) =>
+                                    iframeListener.sendAvailabilityStatusToChatIframe(status)
+                                )
+                            );
+                            subscribeListeners.push(
+                                chatVisibilityStore.subscribe((visibility) => {
+                                    try {
+                                        gameManager.getCurrentGameScene()?.onResize();
+                                    } catch (err) {
+                                        console.info("gameManager doesn't exist!", err);
+                                    }
+                                    iframeListener.sendChatVisibilityToChatIframe(visibility);
+                                })
+                            );
+                            subscribeObservers.push(
+                                adminMessagesService.messageStream.subscribe((message) => {
+                                    if (message.type === AdminMessageEventTypes.banned) {
+                                        chatIframe.remove();
+                                    }
+                                    chatVisibilityStore.set(false);
+                                    menuIconVisiblilityStore.set(false);
+                                })
+                            );
+
+                            //TODO delete it with new XMPP integration
+                            //send list to chat iframe
+                            subscribeListeners.push(
+                                writingStatusMessageStore.subscribe((list) => iframeListener.sendWritingStatusToChatIframe(list))
+                            );
+                            subscribeListeners.push(
+                                peerStore.subscribe((list) => iframeListener.sendPeerConnexionStatusToChatIframe(list.size > 0))
+                            );
+                        }
+             */
         });
     });
     onDestroy(() => {
@@ -176,60 +219,60 @@
 <svelte:window on:keydown={onKeyDown} />
 <div id="chatWindow" class:show={$chatVisibilityStore}>
     {#if $chatVisibilityStore}<div class="hide">
-            <button class="close-window" on:click={closeChat}>&#215;</button>
-        </div>{/if}
+        <button class="close-window" on:click={closeChat}>&#215;</button>
+    </div>{/if}
     <iframe
-        id="chatWorkAdventure"
-        bind:this={chatIframe}
-        allow="fullscreen; clipboard-read; clipboard-write"
-        title="WorkAdventureChat"
-        src={CHAT_URL}
-        class="tw-border-0"
+            id="chatWorkAdventure"
+            bind:this={chatIframe}
+            allow="fullscreen; clipboard-read; clipboard-write"
+            title="WorkAdventureChat"
+            src={CHAT_URL}
+            class="tw-border-0"
     />
 </div>
 
 <style lang="scss">
-    @import "../../style/breakpoints.scss";
+  @import "../../style/breakpoints.scss";
 
-    @include media-breakpoint-up(sm) {
-        #chatWindow {
-            width: 100% !important;
-        }
-    }
-
+  @include media-breakpoint-up(sm) {
     #chatWindow {
-        z-index: 1000;
-        position: absolute;
-        background-color: transparent;
-        top: 0;
-        left: -100%;
-        height: 100%;
-        width: 22%;
-        min-width: 335px;
-        transition: all 0.2s ease-in-out;
-        pointer-events: none;
-        visibility: hidden;
-        &.show {
-            left: 0;
-            pointer-events: auto;
-            visibility: visible;
-        }
-        iframe {
-            width: 100%;
-            height: 100%;
-        }
-        .hide {
-            top: 13px;
-            position: absolute;
-            right: 12px;
-            width: fit-content;
-            height: fit-content;
-            .close-window {
-                height: 1.6rem;
-                width: 1.6rem;
-                position: initial;
-                cursor: pointer;
-            }
-        }
+      width: 100% !important;
     }
+  }
+
+  #chatWindow {
+    z-index: 1000;
+    position: absolute;
+    background-color: transparent;
+    top: 0;
+    left: -100%;
+    height: 100%;
+    width: 22%;
+    min-width: 335px;
+    transition: all 0.2s ease-in-out;
+    pointer-events: none;
+    visibility: hidden;
+    &.show {
+      left: 0;
+      pointer-events: auto;
+      visibility: visible;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+    }
+    .hide {
+      top: 8px;
+      position: absolute;
+      right: 10px;
+      width: fit-content;
+      height: fit-content;
+      .close-window {
+        height: 1.6rem;
+        width: 1.6rem;
+        position: initial;
+        cursor: pointer;
+      }
+    }
+  }
 </style>

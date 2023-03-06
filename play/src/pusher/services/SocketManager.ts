@@ -24,7 +24,6 @@ import {
     ErrorMessage,
     ErrorScreenMessage,
     JoinRoomMessage,
-    MucRoomDefinitionInterface,
     PlayerDetailsUpdatedMessage,
     PlayGlobalMessage,
     PusherToBackMessage,
@@ -33,9 +32,7 @@ import {
     ServerToClientMessage,
     UserMovesMessage,
     ViewportMessage,
-    XmppSettingsMessage,
 } from "@workadventure/messages";
-import { EJABBERD_DOMAIN } from "../enums/EnvironmentVariable";
 
 const debug = Debug("socket");
 
@@ -187,7 +184,6 @@ export class SocketManager implements ZoneEventListener {
         try {
             const joinRoomMessage: JoinRoomMessage = {
                 userUuid: client.userUuid,
-                userJid: client.userJid,
                 IPAddress: client.IPAddress,
                 roomId: client.roomId,
                 name: client.name,
@@ -732,37 +728,6 @@ export class SocketManager implements ZoneEventListener {
         } catch (e) {
             console.error('An error occurred on "handleBanUserByUuidMessage"');
             console.error(e);
-        }
-    }
-
-    emitXMPPSettings(client: ExSocketInterface): void {
-        const xmppSettings: XmppSettingsMessage = {
-            conferenceDomain: "conference." + EJABBERD_DOMAIN,
-            rooms: client.mucRooms.map((definition: MucRoomDefinitionInterface) => {
-                if (!definition.name || !definition.url || !definition.type) {
-                    throw new Error("Name URL and type cannot be empty!");
-                }
-                return {
-                    name: definition.name,
-                    url: definition.url,
-                    type: definition.type,
-                    subscribe: definition.subscribe,
-                };
-            }),
-            jabberId: client.jabberId,
-            jabberPassword: client.jabberPassword,
-        };
-
-        if (!client.disconnecting) {
-            client.send(
-                ServerToClientMessage.encode({
-                    message: {
-                        $case: "xmppSettingsMessage",
-                        xmppSettingsMessage: xmppSettings,
-                    },
-                }).finish(),
-                true
-            );
         }
     }
 }

@@ -270,7 +270,6 @@ const roomManager: IRoomManagerServer = {
                     "Connection lost with user ",
                     user?.uuid,
                     user?.name,
-                    user?.userJid,
                     "in room",
                     room?.roomUrl
                 );

@@ -368,7 +368,6 @@ message GroupDeleteMessage {
 
 message UserJoinedMessage {
   int32 userId = 1;
-  string userJid = 2;
   string name = 3;
   repeated CharacterLayerMessage characterLayers = 4;
   PositionMessage position = 5;
@@ -431,7 +430,6 @@ message RoomJoinedMessage {
   bool activatedInviteUser = 9;
   repeated VariableMessage playerVariable = 10;
   repeated ApplicationMessage applications = 11;
-  string userJid = 12;
   EditMapCommandsArrayMessage editMapCommandsArrayMessage = 13;
   string webrtcUserName = 14;
   string webrtcPassword = 15;
@@ -533,7 +531,14 @@ message ServerToClientMessage {
     AnswerMessage answerMessage = 28;
     XmppSettingsMessage xmppSettingsMessage = 29;
     MoveToPositionMessage moveToPositionMessage = 31;
+    MatrixSettingsMessage matrixSettingsMessage = 32;
   }
+}
+
+message MatrixSettingsMessage{
+  string matrixUserId = 1;
+  string matrixServer = 2;
+  bool isMatrixRegistered = 3;
 }
 
 
@@ -554,14 +559,12 @@ message JoinRoomMessage {
   bool activatedInviteUser = 12;
   bool isLogged = 13;
   repeated ApplicationMessage applications = 14;
-  string userJid = 15;
   google.protobuf.StringValue lastCommandId = 16;
   bool canEdit = 17;
 }
 
 message UserJoinedZoneMessage {
   int32 userId = 1;
-  string userJid = 2;
   string name = 3;
   repeated CharacterLayerMessage characterLayers = 4;
   PositionMessage position = 5;

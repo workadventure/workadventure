@@ -33,10 +33,6 @@ class LocalAdmin implements AdminInterface {
         if (match) {
             canEdit = true;
         }
-        const mucRooms = [{ name: "Connected users", url: playUri, type: "default", subscribe: false }];
-        if (ENABLE_CHAT) {
-            mucRooms.push({ name: "Welcome", url: `${playUri}/forum/welcome`, type: "forum", subscribe: false });
-        }
         return {
             email: userIdentifier,
             userUuid: userIdentifier,
@@ -45,9 +41,9 @@ class LocalAdmin implements AdminInterface {
             visitCardUrl: null,
             textures: (await localWokaService.fetchWokaDetails(characterLayers)) ?? [],
             userRoomToken: undefined,
-            mucRooms,
             activatedInviteUser: true,
             canEdit,
+            isMatrixRegistered: false,
         };
     }
 

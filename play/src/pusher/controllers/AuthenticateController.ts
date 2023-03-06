@@ -10,6 +10,7 @@ import { adminService } from "../services/AdminService";
 import Axios from "axios";
 import { z } from "zod";
 import { validateQuery } from "../services/QueryValidator";
+import {MatrixProvider} from "../services/MatrixProvider";
 
 export class AuthenticateController extends BaseHttpController {
     routes(): void {
@@ -231,7 +232,7 @@ export class AuthenticateController extends BaseHttpController {
                     username: authTokenData?.username,
                     authToken: token,
                     locale: authTokenData?.locale,
-                    matrixId: authTokenData?.matrixId,
+                    matrixUserId: authTokenData?.matrixUserId,
                     ...resUserData,
                     ...resCheckTokenAuth,
                 });
@@ -340,7 +341,8 @@ export class AuthenticateController extends BaseHttpController {
                 email,
                 userInfo?.access_token,
                 userInfo?.username,
-                userInfo?.locale
+                userInfo?.locale,
+                email ? MatrixProvider.getMatrixIdFromEmail(email) : undefined
             );
 
             res.clearCookie("playUri");
@@ -418,8 +420,9 @@ export class AuthenticateController extends BaseHttpController {
             const email = data.email;
             const roomUrl = data.roomUrl;
             const mapUrlStart = data.mapUrlStart;
+            const matrixUserId = email ? MatrixProvider.getMatrixIdFromEmail(email) : undefined
 
-            const authToken = jwtTokenManager.createAuthToken(email || userUuid);
+            const authToken = jwtTokenManager.createAuthToken(email || userUuid, undefined, undefined, undefined, matrixUserId);
 
             res.json({
                 authToken,

@@ -373,7 +373,7 @@ class ConnectionManager {
         //set connected store for menu at false
         userIsConnected.set(false);
 
-        const { authToken, userUuid, email, username, locale, textures, visitCardUrl, matrixId } = await Axios.get(
+        const { authToken, userUuid, email, username, locale, textures, visitCardUrl, matrixUserId, isMatrixRegistered } = await Axios.get(
             `${PUSHER_URL}/me`,
             {
                 params: { token, playUri: this.currentRoom?.key },
@@ -383,7 +383,7 @@ class ConnectionManager {
         });
 
         localUserStore.setAuthToken(authToken);
-        this.localUser = new LocalUser(userUuid, email, matrixId);
+        this.localUser = new LocalUser(userUuid, email, matrixUserId, isMatrixRegistered);
         localUserStore.saveUser(this.localUser);
         this.authToken = authToken;
 

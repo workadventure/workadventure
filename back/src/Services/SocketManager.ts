@@ -142,7 +142,6 @@ export class SocketManager {
             };
         }
         const roomJoinedMessage = new RoomJoinedMessage();
-        roomJoinedMessage.setUserjid(joinRoomMessage.getUserjid());
         roomJoinedMessage.setTagList(joinRoomMessage.getTagList());
         roomJoinedMessage.setUserroomtoken(joinRoomMessage.getUserroomtoken());
         roomJoinedMessage.setCharacterlayerList(joinRoomMessage.getCharacterlayerList());
@@ -405,7 +404,6 @@ export class SocketManager {
             throw new Error(`clientUser.userId is not an integer ${user.id}`);
         }
         userJoinedZoneMessage.setUserid(user.id);
-        userJoinedZoneMessage.setUserjid(user.userJid);
         userJoinedZoneMessage.setUseruuid(user.uuid);
         userJoinedZoneMessage.setName(user.name);
         userJoinedZoneMessage.setAvailabilitystatus(user.getAvailabilityStatus());

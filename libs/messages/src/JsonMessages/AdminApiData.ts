@@ -19,6 +19,10 @@ export const isAdminApiData = z.object({
     description: "The full URL to the JSON map file",
     example: "https://myuser.github.io/myrepo/map.json",
   }),
+  matrixUserId: extendApi(z.string().nullable(), {
+    description: "The matrix ID of the current user.",
+    example: "@example:workadventu.re",
+  }),
   messages: z.optional(z.array(z.unknown())),
 });
 

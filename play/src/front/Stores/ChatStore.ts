@@ -8,7 +8,7 @@ import type { ChatMessage } from "../Api/Events/ChatEvent";
 import { ChatMessageTypes } from "../Api/Events/ChatEvent";
 
 export const chatZoneLiveStore = writable(false);
-export const chatVisibilityStore = writable(false);
+export const chatVisibilityStore = writable(true);
 
 export const chatInputFocusStore = writable(false);
 
@@ -209,3 +209,16 @@ export const chatSubMenuVisibilityStore = createChatSubMenuVisibilityStore();
 
 export const wokaDefinedStore = writable<boolean>(false);
 export const iframeLoadedStore = writable<boolean>(false);
+
+
+
+
+
+
+
+
+
+/***********************************************************/
+/*                   NEW MATRIX CLEAN                      */
+/***********************************************************/
+export const chatIsReadyStore = writable<boolean>(false);

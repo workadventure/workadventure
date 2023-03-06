@@ -7,7 +7,7 @@ export interface AuthTokenData {
     accessToken?: string;
     username?: string;
     locale?: string;
-    matrixId?: string;
+    matrixUserId?: string;
 }
 export interface AdminSocketTokenData {
     authorizedRoomIds: string[]; //the list of rooms the client is authorized to read from.
@@ -22,9 +22,8 @@ export class JWTTokenManager {
         return Jwt.verify(token, ADMIN_SOCKETS_TOKEN) as AdminSocketTokenData;
     }
 
-    public createAuthToken(identifier: string, accessToken?: string, username?: string, locale?: string): string {
-        const matrixId = accessToken ? "@" + identifier.replace("@", "_") + ":workadventu.re" : undefined;
-        return Jwt.sign({ identifier, accessToken, username, locale, matrixId }, SECRET_KEY, { expiresIn: "30d" });
+    public createAuthToken(identifier: string, accessToken?: string, username?: string, locale?: string, matrixUserId?: string): string {
+        return Jwt.sign({ identifier, accessToken, username, locale, matrixUserId }, SECRET_KEY, { expiresIn: "30d" });
     }
 
     public verifyJWTToken(token: string, ignoreExpiration = false): AuthTokenData {

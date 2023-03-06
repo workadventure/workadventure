@@ -49,6 +49,7 @@ import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
 import { connectionManager } from "../Connexion/ConnectionManager";
 import { ModalEvent } from "./Events/ModalEvent";
 import { AddButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
+import {chatIsReadyStore} from "../Stores/ChatStore";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -450,6 +451,7 @@ class IframeListener {
                     } else if (iframeEvent.type == "removeButtonActionBar") {
                         additionnalButtonsMenu.removeAdditionnalButtonActionBar(iframeEvent.data);
                     } else if (iframeEvent.type == "chatReady") {
+                        chatIsReadyStore.set(true);
                         this.chatReady = true;
                         if (this.messagesToChatQueue.length > 0) {
                             for (const message of this.messagesToChatQueue) {

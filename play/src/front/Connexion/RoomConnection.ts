@@ -58,6 +58,7 @@ import {
     WorldConnexionMessage,
     XmppSettingsMessage,
     RefreshRoomMessage,
+    MatrixSettingsMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -174,6 +175,9 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _leaveMucRoomMessageStream = new Subject<LeaveMucRoomMessage>();
     public readonly leaveMucRoomMessageStream = this._leaveMucRoomMessageStream.asObservable();
+
+    private readonly _matrixSettingsMessageStream = new Subject<MatrixSettingsMessage>();
+    public readonly matrixSettingsMessageStream = this._matrixSettingsMessageStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -783,7 +787,6 @@ export class RoomConnection implements RoomConnection {
 
         return {
             userId: message.userId,
-            userJid: message.userJid,
             name: message.name,
             characterLayers,
             visitCardUrl: message.visitCardUrl,
