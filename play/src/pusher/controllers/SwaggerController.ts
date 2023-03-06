@@ -1,5 +1,5 @@
 import { BaseHttpController } from "./BaseHttpController";
-import * as fs from "fs";
+import fs from "fs";
 import { ADMIN_URL } from "../enums/EnvironmentVariable";
 import SwaggerGenerator from "../services/SwaggerGenerator";
 import swaggerJsdoc from "swagger-jsdoc";

@@ -4,8 +4,7 @@ import type { AuthTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager } from "../services/JWTTokenManager";
 import { openIDClient } from "../services/OpenIDClient";
 import { DISABLE_ANONYMOUS } from "../enums/EnvironmentVariable";
-import { isErrorApiData } from "@workadventure/messages";
-import type { RegisterData } from "@workadventure/messages";
+import { ErrorApiData, isRegisterData } from "@workadventure/messages";
 import { adminService } from "../services/AdminService";
 import Axios from "axios";
 import { z } from "zod";
@@ -237,7 +236,7 @@ export class AuthenticateController extends BaseHttpController {
                 return;
             } catch (err) {
                 if (Axios.isAxiosError(err)) {
-                    const errorType = isErrorApiData.safeParse(err?.response?.data);
+                    const errorType = ErrorApiData.safeParse(err?.response?.data);
                     if (errorType.success) {
                         res.sendStatus(err?.response?.status ?? 500);
                         res.json(errorType.data);
@@ -316,7 +315,7 @@ export class AuthenticateController extends BaseHttpController {
          */
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/openid-callback", async (req, res) => {
-            const playUri = (req.cookies as Record<string, string>).playUri;
+            const playUri = req.cookies.playUri;
             if (!playUri) {
                 throw new Error("Missing playUri in cookies");
             }
@@ -420,14 +419,16 @@ export class AuthenticateController extends BaseHttpController {
 
             const authToken = jwtTokenManager.createAuthToken(email || userUuid);
 
-            res.json({
-                authToken,
-                userUuid,
-                email,
-                roomUrl,
-                mapUrlStart,
-                organizationMemberToken,
-            } as RegisterData);
+            res.json(
+                isRegisterData.parse({
+                    authToken,
+                    userUuid,
+                    email,
+                    roomUrl,
+                    mapUrlStart,
+                    organizationMemberToken,
+                })
+            );
         });
     }
 

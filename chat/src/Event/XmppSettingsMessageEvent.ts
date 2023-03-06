@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { isMucRoomDefinition } from "@workadventure/messages";
+import { MucRoomDefinition } from "@workadventure/messages";
 
 export const isXmppSettingsMessageEvent = z.object({
     conferenceDomain: z.string(),
-    rooms: z.array(isMucRoomDefinition),
+    rooms: MucRoomDefinition.array(),
     jabberId: z.string(),
     jabberPassword: z.string(),
 });

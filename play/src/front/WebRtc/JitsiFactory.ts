@@ -5,13 +5,16 @@ import { get } from "svelte/store";
 import CancelablePromise from "cancelable-promise";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { jitsiParticipantsCountStore, userIsJitsiDominantSpeakerStore } from "../Stores/GameStore";
+import { z } from "zod";
 
-interface jitsiConfigInterface {
-    startWithAudioMuted: boolean;
-    startWithVideoMuted: boolean;
-    prejoinPageEnabled: boolean;
-    disableDeepLinking: boolean;
-}
+const jitsiConfig = z.object({
+    startWithAudioMuted: z.boolean().optional(),
+    startWithVideoMuted: z.boolean().optional(),
+    prejoinPageEnabled: z.boolean().optional(),
+    disableDeepLinking: z.boolean().optional(),
+});
+
+type jitsiConfig = z.infer<typeof jitsiConfig>;
 
 interface JitsiOptions {
     jwt?: string;
@@ -19,14 +22,13 @@ interface JitsiOptions {
     width: string;
     height: string;
     parentNode: HTMLElement;
-    configOverwrite: jitsiConfigInterface;
+    configOverwrite: jitsiConfig;
     interfaceConfigOverwrite: typeof defaultInterfaceConfig;
     onload?: () => void;
 }
 
 interface JitsiApi {
     executeCommand: (command: string, ...args: Array<unknown>) => void;
-
     addListener: (type: string, callback: Function) => void; //eslint-disable-line @typescript-eslint/ban-types
     removeListener: (type: string, callback: Function) => void; //eslint-disable-line @typescript-eslint/ban-types
     getParticipantsInfo(): { displayName: string; participantId: string }[];
@@ -39,7 +41,7 @@ declare global {
     }
 }
 
-const getDefaultConfig = (): jitsiConfigInterface => {
+const getDefaultConfig = (): jitsiConfig => {
     return {
         startWithAudioMuted: !get(requestedMicrophoneState),
         startWithVideoMuted: !get(requestedCameraState),
@@ -53,18 +55,15 @@ const mergeConfig = (config?: object) => {
     if (!config) {
         return currentDefaultConfig;
     }
+
+    const parsedConfig = jitsiConfig.parse(config);
+
     return {
         ...currentDefaultConfig,
         ...config,
-        startWithAudioMuted: (config as jitsiConfigInterface).startWithAudioMuted
-            ? true
-            : currentDefaultConfig.startWithAudioMuted,
-        startWithVideoMuted: (config as jitsiConfigInterface).startWithVideoMuted
-            ? true
-            : currentDefaultConfig.startWithVideoMuted,
-        prejoinPageEnabled: (config as jitsiConfigInterface).prejoinPageEnabled
-            ? true
-            : currentDefaultConfig.prejoinPageEnabled,
+        startWithAudioMuted: parsedConfig.startWithAudioMuted ? true : currentDefaultConfig.startWithAudioMuted,
+        startWithVideoMuted: parsedConfig.startWithVideoMuted ? true : currentDefaultConfig.startWithVideoMuted,
+        prejoinPageEnabled: parsedConfig.prejoinPageEnabled ? true : currentDefaultConfig.prejoinPageEnabled,
     };
 };
 
