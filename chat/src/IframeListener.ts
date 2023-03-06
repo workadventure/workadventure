@@ -3,7 +3,7 @@ import {
     isIframeEventWrapper,
     lookingLikeIframeEventWrapper,
 } from "./Event/IframeEvent";
-import { userStore } from "./Stores/LocalUserStore";
+import { localUserStore, userStore } from "./Stores/LocalUserStore";
 import {
     availabilityStatusStore,
     chatMessagesStore,
@@ -56,20 +56,14 @@ class IframeListener {
                             break;
                         }
                         case "xmppSettingsMessage": {
-                            chatConnectionManager.initXmppSettings(iframeEvent.data);
+                            //chatConnectionManager.initXmppSettings(iframeEvent.data);
                             break;
                         }
                         case "userData": {
                             iframeEvent.data.name = iframeEvent.data.name.replace(emojiRegex, "");
+                            console.log(iframeEvent.data);
                             userStore.set(iframeEvent.data);
-                            chatConnectionManager.initUser(
-                                iframeEvent.data.playUri,
-                                iframeEvent.data.uuid,
-                                iframeEvent.data.authToken
-                            );
-                            if (chatConnectionManager.connection) {
-                                mucRoomsStore.sendUserInfos();
-                            }
+                            localUserStore.setUserData(iframeEvent.data);
                             break;
                         }
                         case "setLocale": {

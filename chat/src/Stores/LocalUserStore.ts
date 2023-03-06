@@ -4,6 +4,7 @@ import { get, writable } from "svelte/store";
 const uuidKey = "uuid";
 const nameKey = "name";
 const emailKey = "email";
+const matrixIdKey = "matrixUserId";
 const playUriKey = "playUri";
 const wokaKey = "woka";
 const colorKey = "color";
@@ -28,6 +29,7 @@ class LocalUserStore {
     setUserData(data: UserData): void {
         localStorage.setItem(uuidKey, data.uuid);
         if (data.email) localStorage.setItem(emailKey, data.email);
+        if (data.matrixUserId) localStorage.setItem(matrixIdKey, data.matrixUserId);
         localStorage.setItem(playUriKey, data.playUri);
     }
 
@@ -36,6 +38,7 @@ class LocalUserStore {
             uuid: localStorage.getItem(uuidKey) || "",
             name: localStorage.getItem(nameKey) || "",
             email: localStorage.getItem(emailKey) || undefined,
+            matrixUserId: localStorage.getItem(matrixIdKey) || undefined,
             playUri: localStorage.getItem(playUriKey) || "",
             woka: localStorage.getItem(wokaKey) || "",
             color: localStorage.getItem(colorKey) || "",
