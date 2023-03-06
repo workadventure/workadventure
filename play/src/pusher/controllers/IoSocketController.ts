@@ -27,6 +27,7 @@ import {
     AvailabilityStatus,
     ClientToServerMessage,
     ErrorApiData,
+    isApplicationDefinitionInterface,
     MucRoomDefinition,
     ServerToClientMessage as ServerToClientMessageTsProto,
     SubMessage,
@@ -54,15 +55,21 @@ const UpgradeData = z.object({
     userUuid: z.string(),
     userJid: z.string(),
     IPAddress: z.string(),
+    userIdentifier: z.string(),
     roomId: z.string(),
     name: z.string(),
     companion: CompanionMessage.optional(),
     availabilityStatus: z.nativeEnum(AvailabilityStatus),
+    lastCommandId: z.string().optional(),
     characterLayers: WokaDetail.array(),
     messages: z.unknown().array(),
     tags: z.string().array(),
     visitCardUrl: z.string().nullable(),
     userRoomToken: z.string().optional(),
+    textures: WokaDetail.array(),
+    jabberId: z.string().optional(),
+    jabberPassword: z.string().nullable().optional(),
+    applications: isApplicationDefinitionInterface.array().nullable().optional(),
     position: PointInterface,
     viewport: z.object({
         top: z.number(),
@@ -271,7 +278,7 @@ export class IoSocketController {
                         const right = Number(query.right);
                         const name = query.name;
                         const availabilityStatus = Number(query.availabilityStatus);
-                        const lastCommandId = query.lastCommandId;
+                        const lastCommandId = typeof query.lastCommandId === "string" ? query.lastCommandId : undefined;
                         const version = query.version;
 
                         if (version !== apiVersionHash) {
@@ -482,7 +489,7 @@ export class IoSocketController {
                             name,
                             companion,
                             availabilityStatus,
-                            // lastCommandId,
+                            lastCommandId,
                             characterLayers: characterLayerObjs,
                             tags: memberTags,
                             visitCardUrl: memberVisitCardUrl,
@@ -507,7 +514,7 @@ export class IoSocketController {
                                 left,
                             },
                             isLogged,
-                            messages: []
+                            messages: [],
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */

@@ -270,11 +270,8 @@ export class RoomConnection implements RoomConnection {
                 return;
             }
 
-            console.log("socket message", message);
-
             switch (message.$case) {
                 case "batchMessage": {
-
                     for (const subMessageWrapper of message.batchMessage.payload) {
                         const subMessage = subMessageWrapper.message;
                         if (subMessage === undefined) {
