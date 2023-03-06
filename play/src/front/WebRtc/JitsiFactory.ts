@@ -8,10 +8,10 @@ import { jitsiParticipantsCountStore, userIsJitsiDominantSpeakerStore } from "..
 import { z } from "zod";
 
 const jitsiConfig = z.object({
-    startWithAudioMuted: z.boolean(),
-    startWithVideoMuted: z.boolean(),
-    prejoinPageEnabled: z.boolean(),
-    disableDeepLinking: z.boolean(),
+    startWithAudioMuted: z.boolean().optional(),
+    startWithVideoMuted: z.boolean().optional(),
+    prejoinPageEnabled: z.boolean().optional(),
+    disableDeepLinking: z.boolean().optional(),
 });
 
 type jitsiConfig = z.infer<typeof jitsiConfig>;
