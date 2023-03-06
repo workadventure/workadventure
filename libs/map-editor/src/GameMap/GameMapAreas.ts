@@ -102,6 +102,20 @@ export class GameMapAreas {
                 value: areaProperties.playAudio.audioLink,
             });
         }
+        if (areaProperties.start) {
+            properties.push({
+                name: GameMapProperties.START,
+                type: "bool",
+                value: areaProperties.start,
+            });
+        }
+        if (areaProperties.silent) {
+            properties.push({
+                name: GameMapProperties.SILENT,
+                type: "bool",
+                value: areaProperties.silent,
+            });
+        }
 
         return properties;
     }
@@ -131,6 +145,12 @@ export class GameMapAreas {
         }
         if (areaProperties.playAudio) {
             flattenedProperties[GameMapProperties.PLAY_AUDIO] = areaProperties.playAudio.audioLink;
+        }
+        if (areaProperties.start) {
+            flattenedProperties[GameMapProperties.START] = areaProperties.start;
+        }
+        if (areaProperties.silent) {
+            flattenedProperties[GameMapProperties.SILENT] = areaProperties.silent;
         }
         return flattenedProperties;
     }
