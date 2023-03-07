@@ -23,7 +23,7 @@ export class S3StorageProvider implements StorageProvider {
 
     async upload(fileUuid: string, chunks: Buffer, mimeType:string|undefined): Promise<string> {
         let uploadParams: S3.Types.PutObjectRequest = {
-            Bucket: `${AWS_BUCKET ?? ''}`,
+            Bucket: `${(AWS_BUCKET as string)}`,
             Key: fileUuid,
             Body: chunks
         };
@@ -47,7 +47,7 @@ export class S3StorageProvider implements StorageProvider {
 
     async deleteFileById(fileId: string): Promise<void> {
         const deleteParams: S3.Types.DeleteObjectRequest = {
-            Bucket: `${AWS_BUCKET ?? ''}`,
+            Bucket: `${(AWS_BUCKET as string)}`,
             Key: fileId
         };
         await this.S3().deleteObject(deleteParams).promise();

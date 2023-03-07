@@ -106,7 +106,7 @@ export class WebLink {
         return video.outerHTML;
     }
     private audioRendererHtml(id: string, name: string) {
-        const audio = document.createElement("video");
+        const audio = document.createElement("video") as HTMLAudioElement;
         audio.setAttribute("width", "100%");
         audio.setAttribute("height", "100%");
         audio.setAttribute("alt", name);

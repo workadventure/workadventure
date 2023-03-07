@@ -6,7 +6,7 @@ import type { Zone } from "../Zone";
 import type { compressors } from "hyper-express";
 import type {
     WokaDetail,
-    MucRoomDefinition,
+    MucRoomDefinitionInterface,
     ApplicationDefinitionInterface,
     CompanionMessage,
     SubMessage,
@@ -54,7 +54,7 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable,
     jabberId: string;
     jabberPassword: string;
     activatedInviteUser: boolean | undefined;
-    mucRooms: Array<MucRoomDefinition>;
+    mucRooms: Array<MucRoomDefinitionInterface>;
     applications: Array<ApplicationDefinitionInterface> | undefined;
     canEdit: boolean;
 }

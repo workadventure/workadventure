@@ -62,7 +62,7 @@ export const wokaPartNames = [
   "accessory",
 ];
 
-export const WokaDetail = z.object({
+export const isWokaDetail = z.object({
   id: extendApi(z.string(), {
     description: "The unique identifier of the Woka.",
     example: "03395306-5dee-4b16-a034-36f2c5f2324a",
@@ -76,6 +76,6 @@ export const WokaDetail = z.object({
   }),
 });
 
-export type WokaDetail = z.infer<typeof WokaDetail>;
+export type WokaDetail = z.infer<typeof isWokaDetail>;
 
 export type WokaDetailsResult = WokaDetail[];

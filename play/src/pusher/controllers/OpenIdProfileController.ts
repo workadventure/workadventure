@@ -26,7 +26,13 @@ export class OpenIdProfileController extends BaseHttpController {
                 throw new Error("Email was not found");
             }
             res.setHeader("Content-Type", "text/html");
-            res.send(this.buildHtml(OPID_CLIENT_ISSUER, resCheckTokenAuth.sub));
+            res.send(
+                this.buildHtml(
+                    OPID_CLIENT_ISSUER,
+                    resCheckTokenAuth.sub
+                    /*resCheckTokenAuth.picture as string | undefined*/
+                )
+            );
             return;
         });
     }

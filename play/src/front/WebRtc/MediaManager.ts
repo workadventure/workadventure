@@ -163,13 +163,9 @@ export class MediaManager {
     public playNewMessageNotification() {
         //play notification message
         const elementAudioNewMessageNotification = document.getElementById("newMessageSound");
-        if (
-            this.canPlayNotificationMessage &&
-            elementAudioNewMessageNotification &&
-            elementAudioNewMessageNotification instanceof HTMLAudioElement
-        ) {
-            elementAudioNewMessageNotification.volume = 0.2;
-            elementAudioNewMessageNotification
+        if (this.canPlayNotificationMessage && elementAudioNewMessageNotification) {
+            (elementAudioNewMessageNotification as HTMLAudioElement).volume = 0.2;
+            (elementAudioNewMessageNotification as HTMLAudioElement)
                 .play()
                 .then(() => {
                     this.canPlayNotificationMessage = false;

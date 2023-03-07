@@ -1,5 +1,4 @@
-import { z } from "zod";
-import { GameScene } from "../../Game/GameScene";
+import type { GameScene } from "../../Game/GameScene";
 
 export enum SizeAlteringSquarePosition {
     TopLeft = 0,
@@ -10,7 +9,6 @@ export enum SizeAlteringSquarePosition {
     BottomLeft,
     BottomCenter,
     BottomRight,
-    GameScene,
 }
 
 export enum SizeAlteringSquareEvent {
@@ -45,7 +43,7 @@ export class SizeAlteringSquare extends Phaser.GameObjects.Rectangle {
         }
         this.selected = value;
         this.setFillStyle(value ? 0x000000 : 0xffffff);
-        z.instanceof(GameScene).parse(this.scene).markDirty();
+        (this.scene as GameScene).markDirty();
     }
 
     private bindEventHandlers(): void {

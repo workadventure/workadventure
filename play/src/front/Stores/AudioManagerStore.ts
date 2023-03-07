@@ -73,7 +73,7 @@ function createAudioManagerFileStore() {
             loop = false
         ): void => {
             update((file: string) => {
-                const audioPath = String(url);
+                const audioPath = url as string;
 
                 if (audioPath.indexOf("://") > 0) {
                     // remote file or stream
