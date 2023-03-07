@@ -24,7 +24,7 @@ import {
     ErrorMessage,
     ErrorScreenMessage,
     JoinRoomMessage,
-    MucRoomDefinition,
+    MucRoomDefinitionInterface,
     PlayerDetailsUpdatedMessage,
     PlayGlobalMessage,
     PusherToBackMessage,
@@ -738,7 +738,7 @@ export class SocketManager implements ZoneEventListener {
     emitXMPPSettings(client: ExSocketInterface): void {
         const xmppSettings: XmppSettingsMessage = {
             conferenceDomain: "conference." + EJABBERD_DOMAIN,
-            rooms: client.mucRooms.map((definition: MucRoomDefinition) => {
+            rooms: client.mucRooms.map((definition: MucRoomDefinitionInterface) => {
                 if (!definition.name || !definition.url || !definition.type) {
                     throw new Error("Name URL and type cannot be empty!");
                 }
@@ -752,8 +752,6 @@ export class SocketManager implements ZoneEventListener {
             jabberId: client.jabberId,
             jabberPassword: client.jabberPassword,
         };
-
-        console.log(xmppSettings);
 
         if (!client.disconnecting) {
             client.send(

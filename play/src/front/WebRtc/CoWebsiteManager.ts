@@ -213,9 +213,9 @@ class CoWebsiteManager {
     private holderListeners() {
         const movecallback = (event: MouseEvent | TouchEvent) => {
             let x, y;
-            if (event.type === "mousemove" && event instanceof MouseEvent) {
-                x = event.movementX / this.getDevicePixelRatio();
-                y = event.movementY / this.getDevicePixelRatio();
+            if (event.type === "mousemove") {
+                x = (event as MouseEvent).movementX / this.getDevicePixelRatio();
+                y = (event as MouseEvent).movementY / this.getDevicePixelRatio();
             } else {
                 const touchEvent = (event as TouchEvent).touches[0];
                 const last = { x: touchEvent.pageX, y: touchEvent.pageY };

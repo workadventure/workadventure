@@ -11,7 +11,6 @@ import { GameMapAreas } from "./GameMapAreas";
 import { GameMapProperties } from "../types";
 import { flattenGroupLayersMap } from "./LayersFlattener";
 import { GameMapEntities } from "./GameMapEntities";
-import { z } from "zod";
 
 /**
  * A wrapper around a ITiledMap interface to provide additional capabilities.
@@ -161,7 +160,7 @@ export class GameMap {
         if (obj === undefined) {
             return undefined;
         }
-        return z.union([z.string(), z.boolean(), z.number()]).optional().parse(obj.value);
+        return obj.value as string | boolean | number | undefined;
     }
 
     public getObjectWithName(name: string): ITiledMapObject | undefined {

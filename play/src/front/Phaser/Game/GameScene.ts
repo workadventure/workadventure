@@ -157,7 +157,6 @@ import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { faviconManager } from "./../../WebRtc/FaviconManager";
-import { z } from "zod";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -1382,7 +1381,7 @@ ${escapedMessage}
                 html += "</div>";
                 const domElement = this.add.dom(objectLayerSquare.x, objectLayerSquare.y).createFromHTML(html);
 
-                const container = z.instanceof(HTMLDivElement).parse(domElement.getChildByID("container"));
+                const container: HTMLDivElement = domElement.getChildByID("container") as HTMLDivElement;
                 container.style.width = objectLayerSquare.width + "px";
                 domElement.scale = 0;
                 domElement.setClassName("popUpElement");
@@ -2249,26 +2248,20 @@ ${escapedMessage}
     }
 
     private getExitUrl(layer: ITiledMapLayer): string | undefined {
-        const property = this.getProperty(layer, GameMapProperties.EXIT_URL);
-        return typeof property === "string" ? property : undefined;
+        return this.getProperty(layer, GameMapProperties.EXIT_URL) as string | undefined;
     }
 
     /**
      * @deprecated the map property exitSceneUrl is deprecated
      */
     private getExitSceneUrl(layer: ITiledMapLayer): string | undefined {
-        const property = this.getProperty(layer, GameMapProperties.EXIT_SCENE_URL);
-        return typeof property === "string" ? property : undefined;
+        return this.getProperty(layer, GameMapProperties.EXIT_SCENE_URL) as string | undefined;
     }
 
     private getScriptUrls(map: ITiledMap): string[] {
-        const isScripts = z.string().array().safeParse(this.getProperties(map, GameMapProperties.SCRIPT));
-
-        if (!isScripts.success) {
-            return [];
-        }
-
-        return isScripts.data.map((script) => new URL(script, this.MapUrlFile).toString());
+        return (this.getProperties(map, GameMapProperties.SCRIPT) as string[]).map((script) =>
+            new URL(script, this.MapUrlFile).toString()
+        );
     }
 
     private getProperty(layer: ITiledMapLayer | ITiledMap, name: string): string | boolean | number | undefined {
@@ -2282,8 +2275,7 @@ ${escapedMessage}
         if (obj === undefined) {
             return undefined;
         }
-
-        return z.union([z.string(), z.number(), z.boolean()]).optional().parse(obj.value);
+        return obj.value as string | number | boolean | undefined;
     }
 
     private getProperties(layer: ITiledMapLayer | ITiledMap, name: string): (string | number | boolean | undefined)[] {
@@ -2291,15 +2283,9 @@ ${escapedMessage}
         if (!properties) {
             return [];
         }
-        return z
-            .union([z.string(), z.number(), z.boolean()])
-            .optional()
-            .array()
-            .parse(
-                properties
-                    .filter((property: ITiledMapProperty) => property.name.toLowerCase() === name.toLowerCase())
-                    .map((property) => property.value)
-            );
+        return properties
+            .filter((property: ITiledMapProperty) => property.name.toLowerCase() === name.toLowerCase())
+            .map((property) => property.value) as (string | number | boolean | undefined)[];
     }
 
     private loadNextGameFromExitUrl(exitUrl: string): Promise<void> {
@@ -2331,11 +2317,9 @@ ${escapedMessage}
     private createCollisionWithPlayer() {
         //add collision layer
         for (const phaserLayer of this.gameMapFrontWrapper.phaserLayers) {
-            this.physics.add.collider(
-                this.CurrentPlayer,
-                phaserLayer,
-                (object1: GameObject, object2: GameObject) => {}
-            );
+            this.physics.add.collider(this.CurrentPlayer, phaserLayer, (object1: GameObject, object2: GameObject) => {
+                //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
+            });
             phaserLayer.setCollisionByProperty({ collides: true });
             if (DEBUG_MODE) {
                 //debug code to see the collision hitbox of the object in the top layer
@@ -2826,24 +2810,16 @@ ${escapedMessage}
 
     public initialiseJitsi(coWebsite: JitsiCoWebsite, roomName: string, jwt?: string, jitsiUrl?: string): void {
         const allProps = this.gameMapFrontWrapper.getCurrentProperties();
-        const isJitsiConfig = z.string().optional().safeParse(allProps.get(GameMapProperties.JITSI_CONFIG));
-        const isJitsiInterfaceConfig = z
-            .string()
-            .optional()
-            .safeParse(allProps.get(GameMapProperties.JITSI_INTERFACE_CONFIG));
-        const isJitsiUrl = z.string().optional().safeParse(allProps.get(GameMapProperties.JITSI_URL));
-
         const jitsiConfig = this.safeParseJSONstring(
-            isJitsiConfig.success ? isJitsiConfig.data : undefined,
+            allProps.get(GameMapProperties.JITSI_CONFIG) as string | undefined,
             GameMapProperties.JITSI_CONFIG
         );
-
         const jitsiInterfaceConfig = this.safeParseJSONstring(
-            isJitsiInterfaceConfig.success ? isJitsiInterfaceConfig.data : undefined,
+            allProps.get(GameMapProperties.JITSI_INTERFACE_CONFIG) as string | undefined,
             GameMapProperties.JITSI_INTERFACE_CONFIG
         );
         if (!jitsiUrl) {
-            jitsiUrl = isJitsiUrl.success ? isJitsiUrl.data : undefined;
+            jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
         }
 
         coWebsite.setJitsiLoadPromise(() => {

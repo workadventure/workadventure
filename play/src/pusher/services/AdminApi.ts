@@ -10,8 +10,8 @@ import {
     isMapDetailsData,
     isRoomRedirect,
     isAdminApiData,
-    WokaDetail,
-    MucRoomDefinition,
+    isWokaDetail,
+    isMucRoomDefinition,
     isApplicationDefinitionInterface,
     isCapabilities,
     Capabilities,
@@ -52,7 +52,7 @@ export const isFetchMemberDataByUuidResponse = z.object({
         description: "URL of the visitCard of the user fetched.",
         example: "https://mycompany.com/contact/me",
     }),
-    textures: extendApi(z.array(WokaDetail), {
+    textures: extendApi(z.array(isWokaDetail), {
         description: "This data represents the textures (WOKA) that will be available to users.",
     }),
     messages: extendApi(z.array(z.unknown()), {
@@ -72,7 +72,7 @@ export const isFetchMemberDataByUuidResponse = z.object({
     jabberPassword: extendApi(z.string().nullable().optional(), {
         description: "The password to connect to the XMPP server of this user",
     }),
-    mucRooms: extendApi(z.nullable(z.array(MucRoomDefinition)), {
+    mucRooms: extendApi(z.nullable(z.array(isMucRoomDefinition)), {
         description: "The MUC room is a room of message",
     }),
     activatedInviteUser: extendApi(z.boolean().nullable().optional(), {
@@ -114,11 +114,8 @@ class AdminApi implements AdminInterface {
                 resolve(0);
             } catch (ex) {
                 // ignore errors when querying capabilities
-                const parsedEx = z
-                    .object({ response: z.object({ status: z.number() }).optional() })
-                    .optional()
-                    .parse(ex);
-                if (parsedEx?.response?.status === 404) {
+                const status = (ex as { response: { status: number } })?.response?.status;
+                if (status === 404) {
                     // 404 probably means and older api version
                     resolve(0);
                     console.warn(`Admin API server does not implement capabilities, default to basic capabilities`);

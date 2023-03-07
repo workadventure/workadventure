@@ -218,7 +218,6 @@ class ConnectionManager {
                     }
                 }
             }
-            // Todo: Replace with a real typing
             this.localUser = localUserStore.getLocalUser() as LocalUser; //if authToken exist in localStorage then localUser cannot be null
         }
         if (this._currentRoom == undefined) {

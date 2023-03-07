@@ -612,7 +612,7 @@ export class SocketManager {
         hmac.setEncoding("base64");
         hmac.write(username);
         hmac.end();
-        const password = String(hmac.read() || "");
+        const password = hmac.read() as string;
         return {
             username,
             password,
