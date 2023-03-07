@@ -15,6 +15,7 @@ import { MapValidator, OrganizedErrors } from "@workadventure/map-editor/src/Gam
 import { FileNotFoundError } from "./FileNotFoundError";
 import { mapsManager } from "../MapsManager";
 import { uploadDetector } from "../Services/UploadDetector";
+import { WAMFileFormat } from "@workadventure/map-editor";
 
 const upload = multer({
     storage: multer.diskStorage({}),
@@ -128,6 +129,21 @@ export class UploadController {
 
                             continue;
                         }
+                        if (extension === ".wam") {
+                            const result = mapValidator.validateWAMFile((await zip.entryData(zipEntry)).toString());
+                            if (!result) {
+                                errors[zipEntry.name] = {
+                                    map: [
+                                        {
+                                            type: "error",
+                                            message: "Invalid WAM file format.",
+                                            details: "",
+                                        },
+                                    ],
+                                };
+                            }
+                            continue;
+                        }
 
                         if (extension !== ".tmj") {
                             continue;
@@ -153,12 +169,23 @@ export class UploadController {
 
                     const promises: Promise<void>[] = [];
                     const keysToPurge: string[] = [];
+                    const wamFilesNames = zipEntries
+                        .filter((zipEntry) => zipEntry.name.includes(".wam"))
+                        .map((zipEntry) => path.parse(zipEntry.name).name);
                     // Iterate over the entries in the ZIP archive
                     for (const zipEntry of zipEntries) {
                         const key = mapPath(path.join(directory, zipEntry.name), req);
                         // Store the file
                         promises.push(this.fileSystem.writeFile(zipEntry, key, zip));
                         if (path.extname(key) === ".tmj") {
+                            if (!wamFilesNames.includes(path.parse(zipEntry.name).name)) {
+                                promises.push(
+                                    this.fileSystem.writeStringAsFile(
+                                        key.replace(".tmj", ".wam"),
+                                        JSON.stringify(this.getFreshWAMFileContent(key))
+                                    )
+                                );
+                            }
                             keysToPurge.push(key);
                         }
                     }
@@ -192,6 +219,15 @@ export class UploadController {
         const files = await fileSystem.listFiles(mapPath("/", req), ".tmj");
 
         await fileSystem.writeStringAsFile(mapPath("/" + UploadController.CACHE_NAME, req), JSON.stringify(files));
+    }
+
+    private getFreshWAMFileContent(tmjFilePath: string): WAMFileFormat {
+        return {
+            version: "1.0.0",
+            mapUrl: tmjFilePath,
+            areas: [],
+            entities: [],
+        };
     }
 
     /**

@@ -151,6 +151,7 @@ export type JitsiRoomConfigData = z.infer<typeof JitsiRoomConfigData>;
 export type JitsiRoomPropertyData = z.infer<typeof JitsiRoomPropertyData>;
 export type PlayAudioPropertyData = z.infer<typeof PlayAudioPropertyData>;
 export type OpenWebsitePropertyData = z.infer<typeof OpenWebsitePropertyData>;
+export type WAMFileFormat = z.infer<typeof WAMFileFormat>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",
