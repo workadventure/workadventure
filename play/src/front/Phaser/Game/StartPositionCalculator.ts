@@ -53,9 +53,13 @@ export class StartPositionCalculator {
             }
         }
 
-        for (const area of Array.from(this.gameMapFrontWrapper.getAreas(AreaType.Static).values())) {
-            if (area.name === "start" || area.properties[GameMapProperties.START]) {
-                names.push(area.name);
+        const areas = this.gameMapFrontWrapper.getAreas(AreaType.Static);
+
+        if (areas) {
+            for (const area of Array.from(areas.values())) {
+                if (area.name === "start" || area.properties[GameMapProperties.START]) {
+                    names.push(area.name);
+                }
             }
         }
         return names;

@@ -128,7 +128,7 @@ const mapStorageServer: MapStorageServer = {
                 }
                 case "modifyEntityMessage": {
                     const message = editMapMessage.modifyEntityMessage;
-                    const entity = gameMap.getGameMapEntities().getEntity(message.id);
+                    const entity = gameMap.getGameMapEntities()?.getEntity(message.id);
                     if (entity) {
                         mapsManager.executeCommand(
                             mapKey,

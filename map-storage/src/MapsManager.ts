@@ -11,6 +11,7 @@ import {
     EntityCollection,
     EntityPrefab,
     EntityRawPrefab,
+    WAMFileFormat,
 } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
@@ -132,8 +133,8 @@ class MapsManager {
         return this.loadedMaps.has(key);
     }
 
-    public loadMapToMemory(key: string, map: ITiledMap): void {
-        this.loadedMaps.set(key, new GameMap(map));
+    public loadMapToMemory(key: string, wam: WAMFileFormat, map: ITiledMap): void {
+        this.loadedMaps.set(key, new GameMap(map, wam));
     }
 
     public getEntityCollections(): EntityCollection[] {

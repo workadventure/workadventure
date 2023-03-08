@@ -5,7 +5,7 @@ import {
     ITiledMapProperty,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
-import type { AreaData, AreaDataProperties } from "../types";
+import type { AreaData, AreaDataProperties, WAMFileFormat } from "../types";
 import type { AreaChangeCallback } from "./GameMapAreas";
 import { GameMapAreas } from "./GameMapAreas";
 import { GameMapProperties } from "../types";
@@ -19,13 +19,14 @@ export class GameMap {
     /**
      * Component responsible for holding gameMap Areas related logic
      */
-    private gameMapAreas: GameMapAreas;
+    private gameMapAreas?: GameMapAreas;
     /**
      * Component responsible for holding gameMap entities related logic
      */
-    private gameMapEntities: GameMapEntities;
+    private gameMapEntities?: GameMapEntities;
 
     private readonly map: ITiledMap;
+    private readonly wam?: WAMFileFormat;
     private tileNameMap = new Map<string, number>();
 
     private tileSetPropertyMap: { [tile_index: number]: Array<ITiledMapProperty> } = {};
@@ -39,13 +40,17 @@ export class GameMap {
 
     public hasStartTile = false;
 
-    public constructor(map: ITiledMap) {
+    public constructor(map: ITiledMap, wam?: WAMFileFormat) {
         this.map = upgradeMapToNewest(map);
+        this.wam = wam; // upgrade if necessary
         this.flatLayers = flattenGroupLayersMap(this.map);
         this.tiledObjects = GameMap.getObjectsFromLayers(this.flatLayers);
 
-        this.gameMapAreas = new GameMapAreas(this);
-        this.gameMapEntities = new GameMapEntities(this);
+        console.log(this.wam);
+        if (this.wam) {
+            this.gameMapAreas = new GameMapAreas(this.wam);
+            this.gameMapEntities = new GameMapEntities(this);
+        }
 
         for (const tileset of this.map.tilesets) {
             if ("tiles" in tileset) {
@@ -147,7 +152,7 @@ export class GameMap {
         key: K,
         value: AreaDataProperties[K]
     ): void {
-        this.gameMapAreas.setProperty(area, key, value);
+        this.gameMapAreas?.setProperty(area, key, value);
     }
 
     public getTiledObjectProperty(
@@ -175,7 +180,7 @@ export class GameMap {
      * Registers a callback called when the user moves inside another area.
      */
     public onEnterArea(callback: AreaChangeCallback) {
-        this.gameMapAreas.onEnterArea(callback);
+        this.gameMapAreas?.onEnterArea(callback);
     }
 
     public getTileProperty(index: number): Array<ITiledMapProperty> {
@@ -249,11 +254,11 @@ export class GameMap {
         return this.DEFAULT_TILE_SIZE;
     }
 
-    public getGameMapAreas(): GameMapAreas {
+    public getGameMapAreas(): GameMapAreas | undefined {
         return this.gameMapAreas;
     }
 
-    public getGameMapEntities(): GameMapEntities {
+    public getGameMapEntities(): GameMapEntities | undefined {
         return this.gameMapEntities;
     }
 

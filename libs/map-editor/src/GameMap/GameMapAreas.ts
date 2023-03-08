@@ -1,9 +1,7 @@
-import { AreaData, AreaDataProperties, GameMapProperties } from "../types";
+import { AreaData, AreaDataProperties, GameMapProperties, WAMFileFormat } from "../types";
 import { AreaType } from "../types";
 import * as _ from "lodash";
 import { MathUtils } from "@workadventure/math-utils";
-import type { GameMap } from "./GameMap";
-import { ITiledMapObject, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 
 export type AreaChangeCallback = (
     areasChangedByAction: Array<AreaData>,
@@ -11,7 +9,7 @@ export type AreaChangeCallback = (
 ) => void;
 
 export class GameMapAreas {
-    private gameMap: GameMap;
+    private wam: WAMFileFormat;
 
     private enterAreaCallbacks = Array<AreaChangeCallback>();
     private leaveAreaCallbacks = Array<AreaChangeCallback>();
@@ -28,96 +26,14 @@ export class GameMapAreas {
     private readonly areasPositionOffsetY: number = 16;
     private readonly MAP_PROPERTY_AREAS_NAME: string = "areas";
 
-    constructor(gameMap: GameMap) {
-        this.gameMap = gameMap;
+    constructor(wam: WAMFileFormat) {
+        this.wam = wam;
 
-        const areasData: unknown = structuredClone(this.getAreasMapProperty()?.value ?? []);
+        console.log(this.wam);
 
-        for (const areaData of (areasData as AreaData[]) ?? []) {
+        for (const areaData of this.wam.areas) {
             this.addArea(areaData, AreaType.Static, false);
         }
-    }
-
-    public mapAreaToTiledObject(areaData: AreaData): Omit<ITiledMapObject, "id"> & { id?: string | number } {
-        return {
-            id: areaData.id,
-            type: "area",
-            class: "area",
-            name: areaData.name,
-            visible: true,
-            x: areaData.x,
-            y: areaData.y,
-            width: areaData.width,
-            height: areaData.height,
-            properties: this.mapAreaPropertiesToTiledProperties(areaData.properties),
-        };
-    }
-
-    private mapAreaPropertiesToTiledProperties(areaProperties: AreaDataProperties): ITiledMapProperty[] {
-        const properties: ITiledMapProperty[] = [];
-
-        if (areaProperties.focusable) {
-            properties.push({ name: GameMapProperties.FOCUSABLE, type: "bool", value: true });
-            if (areaProperties.focusable.zoom_margin) {
-                properties.push({
-                    name: GameMapProperties.ZOOM_MARGIN,
-                    type: "float",
-                    value: areaProperties.focusable.zoom_margin,
-                });
-            }
-        }
-        if (areaProperties.jitsiRoom) {
-            properties.push({
-                name: GameMapProperties.JITSI_ROOM,
-                type: "string",
-                value: areaProperties.jitsiRoom.roomName ?? "",
-            });
-            if (areaProperties.jitsiRoom.jitsiRoomConfig) {
-                properties.push({
-                    name: GameMapProperties.JITSI_CONFIG,
-                    type: "class",
-                    value: areaProperties.jitsiRoom.jitsiRoomConfig,
-                });
-            }
-        }
-        if (areaProperties.openWebsite) {
-            if (areaProperties.openWebsite.newTab) {
-                properties.push({
-                    name: GameMapProperties.OPEN_TAB,
-                    type: "string",
-                    value: areaProperties.openWebsite.link,
-                });
-            } else {
-                properties.push({
-                    name: GameMapProperties.OPEN_WEBSITE,
-                    type: "string",
-                    value: areaProperties.openWebsite.link,
-                });
-            }
-        }
-        if (areaProperties.playAudio) {
-            properties.push({
-                name: GameMapProperties.PLAY_AUDIO,
-                type: "string",
-                value: areaProperties.playAudio.audioLink,
-            });
-        }
-        if (areaProperties.start) {
-            properties.push({
-                name: GameMapProperties.START,
-                type: "bool",
-                value: areaProperties.start,
-            });
-        }
-        if (areaProperties.silent) {
-            properties.push({
-                name: GameMapProperties.SILENT,
-                type: "bool",
-                value: areaProperties.silent,
-            });
-        }
-
-        return properties;
     }
 
     private flattenAreaProperties(areaProperties: AreaDataProperties): Record<string, string | boolean | number> {
@@ -198,7 +114,7 @@ export class GameMapAreas {
     public addArea(
         area: AreaData,
         type: AreaType,
-        addToMapProperties = true,
+        addToWAM = true,
         playerPosition?: { x: number; y: number }
     ): boolean {
         if (this.getAreas(type).has(area.id)) {
@@ -210,8 +126,8 @@ export class GameMapAreas {
             this.triggerSpecificAreaOnEnter(area);
         }
 
-        if (addToMapProperties) {
-            return this.addAreaToMapProperties(area);
+        if (addToWAM) {
+            return this.addAreaToWAM(area);
         }
         return true;
     }
@@ -290,79 +206,41 @@ export class GameMapAreas {
             throw new Error(`Area to update does not exists!`);
         }
         _.merge(area, config);
-        this.updateAreaInMapProperties(area);
+        this.updateAreaWAM(area);
     }
 
-    private addAreaToMapProperties(areaData: AreaData): boolean {
-        if (this.gameMap.getMap().properties === undefined) {
-            this.gameMap.getMap().properties = [];
-        }
-        if (!this.getAreasMapProperty()) {
-            this.gameMap.getMap().properties?.push({
-                name: this.MAP_PROPERTY_AREAS_NAME,
-                type: "class",
-                value: JSON.parse(JSON.stringify([])) as Json,
-            });
-        }
-        const areasPropertyValues = JSON.parse(JSON.stringify(this.getAreasMapProperty()?.value)) as AreaData[];
-
-        if (areasPropertyValues.find((area) => area.id === areaData.id)) {
-            console.warn(`ADD AREA FAIL: AREA OF ID ${areaData.id} ALREADY EXISTS WITHIN THE GAMEMAP!`);
+    private addAreaToWAM(areaData: AreaData): boolean {
+        if (!this.wam.areas.find((area) => area.id === areaData.id)) {
+            this.wam.areas.push(areaData);
+        } else {
+            console.warn(`ADD AREA FAIL: AREA OF ID ${areaData.id} ALREADY EXISTS WITHIN THE WAM FILE!`);
             return false;
         }
-        areasPropertyValues.push(areaData);
-
-        const areasMapProperty = this.getAreasMapProperty();
-        if (areasMapProperty !== undefined) {
-            areasMapProperty.value = structuredClone(areasPropertyValues) as unknown as Json;
-        }
-
         return true;
     }
 
-    private deleteAreaFromMapProperties(id: string): boolean {
-        const areasPropertyValues = JSON.parse(JSON.stringify(this.getAreasMapProperty()?.value)) as AreaData[];
-        const indexToRemove = areasPropertyValues.findIndex((areaData) => areaData.id === id);
-        if (indexToRemove !== -1) {
-            areasPropertyValues.splice(indexToRemove, 1);
-            const areasMapProperty = this.getAreasMapProperty();
-            if (areasMapProperty !== undefined) {
-                areasMapProperty.value = JSON.parse(JSON.stringify(areasPropertyValues)) as Json;
-                return true;
-            } else {
-                return false;
-            }
-        }
-        return false;
-    }
-
-    private updateAreaInMapProperties(areaData: AreaData): boolean {
-        const areasPropertyValue = this.getAreasMapProperty()?.value as AreaData[];
-
-        const areaIndex = areasPropertyValue.findIndex((area) => area.id === areaData.id);
-
-        if (areaIndex === -1) {
-            console.warn(`CANNOT FIND AREA WITH ID: ${areaData.id} IN MAP PROPERTIES!`);
-            return false;
-        }
-
-        const areasMapProperty = this.getAreasMapProperty();
-        if (areasMapProperty !== undefined) {
-            areasPropertyValue[areaIndex] = areaData;
-            areasMapProperty.value = JSON.parse(JSON.stringify(areasPropertyValue)) as Json;
+    private deleteAreaFromWAM(id: string): boolean {
+        const index = this.wam.areas.findIndex((area) => area.id === id);
+        if (index !== -1) {
+            this.wam.areas.splice(index, 1);
             return true;
         }
         return false;
     }
 
-    private getAreasMapProperty(): ITiledMapProperty | undefined {
-        return this.gameMap.getMapPropertyByKey(this.MAP_PROPERTY_AREAS_NAME);
+    private updateAreaWAM(areaData: AreaData): boolean {
+        const index = this.wam.areas.findIndex((area) => area.id === areaData.id);
+        if (index !== -1) {
+            this.wam.areas[index] = structuredClone(areaData);
+            return true;
+        }
+        return false;
     }
 
     private deleteStaticArea(id: string): boolean {
         const deleted = this.getAreas(AreaType.Static).delete(id);
         if (deleted) {
-            return this.deleteAreaFromMapProperties(id);
+            return this.deleteAreaFromWAM(id);
         }
         return false;
     }

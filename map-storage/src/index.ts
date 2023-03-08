@@ -12,6 +12,7 @@ import { passportStrategy } from "./Services/Authentication";
 import { mapPathUsingDomain } from "./Services/PathMapper";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import bodyParser from "body-parser";
+import { WAMFileFormat } from "@workadventure/map-editor";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -34,7 +35,7 @@ app.use(bodyParser.json());
 passport.use(passportStrategy);
 app.use(passport.initialize());
 
-app.get("*.tmj", (req, res, next) => {
+app.get("*.wam", (req, res, next) => {
     (async () => {
         const path = req.url;
         const domain = req.hostname;
@@ -44,12 +45,15 @@ app.get("*.tmj", (req, res, next) => {
         }
         const key = mapPathUsingDomain(path, domain);
         const file = await fileSystem.readFileAsString(key);
-        const map = ITiledMap.parse(JSON.parse(file));
+        const wam = WAMFileFormat.parse(JSON.parse(file));
+
+        const tmjFile = await fileSystem.readFileAsString(wam.mapUrl);
+        const map = ITiledMap.parse(JSON.parse(tmjFile));
 
         if (!mapsManager.isMapAlreadyLoaded(key)) {
-            mapsManager.loadMapToMemory(key, map);
+            mapsManager.loadMapToMemory(key, wam, map);
         }
-        res.send(map);
+        res.send({ map, wam });
     })().catch((e) => next());
 });
 

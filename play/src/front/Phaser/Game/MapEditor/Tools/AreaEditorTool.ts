@@ -235,8 +235,10 @@ export class AreaEditorTool extends MapEditorTool {
         this.areaPreviews = [];
         const areaConfigs = this.scene.getGameMapFrontWrapper().getAreas(AreaType.Static);
 
-        for (const config of Array.from(areaConfigs.values())) {
-            this.areaPreviews.push(this.createAreaPreview(config));
+        if (areaConfigs) {
+            for (const config of Array.from(areaConfigs.values())) {
+                this.areaPreviews.push(this.createAreaPreview(config));
+            }
         }
 
         this.setAreaPreviewsVisibility(false);
@@ -290,7 +292,7 @@ export class AreaEditorTool extends MapEditorTool {
         // find previews of areas that exist no longer
         const areaPreviewsToDelete: string[] = [];
         for (const preview of this.areaPreviews) {
-            if (!areaConfigs.has(preview.getId())) {
+            if (!areaConfigs?.has(preview.getId())) {
                 areaPreviewsToDelete.push(preview.getId());
             }
         }
@@ -303,12 +305,14 @@ export class AreaEditorTool extends MapEditorTool {
         }
 
         // create previews for new areas that were created during our absence in editor mode
-        for (const config of Array.from(areaConfigs.values())) {
-            const areaPreview = this.areaPreviews.find((areaPreview) => areaPreview.getId() === config.id);
-            if (areaPreview) {
-                areaPreview.updatePreview(config);
-            } else {
-                this.areaPreviews.push(this.createAreaPreview(config));
+        if (areaConfigs) {
+            for (const config of Array.from(areaConfigs.values())) {
+                const areaPreview = this.areaPreviews.find((areaPreview) => areaPreview.getId() === config.id);
+                if (areaPreview) {
+                    areaPreview.updatePreview(config);
+                } else {
+                    this.areaPreviews.push(this.createAreaPreview(config));
+                }
             }
         }
     }

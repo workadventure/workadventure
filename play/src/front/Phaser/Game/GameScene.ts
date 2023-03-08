@@ -135,7 +135,7 @@ import {
     _newChatMessageSubject,
     _newChatMessageWritingStatusSubject,
 } from "../../Stores/ChatStore";
-import type {
+import {
     ITiledMap,
     ITiledMapLayer,
     ITiledMapObject,
@@ -146,7 +146,7 @@ import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInt
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
-import { AreaType, GameMap, GameMapProperties } from "@workadventure/map-editor";
+import { AreaType, GameMap, GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
@@ -180,6 +180,7 @@ export class GameScene extends DirtyScene {
     Map!: Phaser.Tilemaps.Tilemap;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
     mapFile!: ITiledMap;
+    wamFile!: WAMFileFormat;
     animatedTiles!: AnimatedTiles;
     groups: Map<number, Sprite>;
     circleTexture!: CanvasTexture;
@@ -273,6 +274,7 @@ export class GameScene extends DirtyScene {
         this.Terrains = [];
         this.groups = new Map<number, Sprite>();
 
+        // TODO: How to get mapUrl from WAM here?
         this.MapUrlFile = MapUrlFile;
         this.roomUrl = room.key;
 
@@ -411,12 +413,18 @@ export class GameScene extends DirtyScene {
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async onMapLoad(data: any): Promise<void> {
+        console.log(data.data);
         // Triggered when the map is loaded
         // Load tiles attached to the map recursively
 
-        // The map file can be modified by the scripting API and we don't want to tamper the Phaser cache (in case we come back on the map after visiting other maps)
-        // So we are doing a deep copy
-        this.mapFile = structuredClone(data.data);
+        if (ITiledMap.safeParse(data.data)) {
+            this.mapFile = structuredClone(data.data);
+        } else {
+            // The map file can be modified by the scripting API and we don't want to tamper the Phaser cache (in case we come back on the map after visiting other maps)
+            // So we are doing a deep copy
+            this.mapFile = structuredClone(data.data.map);
+            this.wamFile = structuredClone(data.data.wam);
+        }
 
         // Safe parse can take up to 600ms on a 17MB map.
         // TODO: move safeParse to a "map" page and display details of what is going wrong there.
@@ -579,7 +587,12 @@ export class GameScene extends DirtyScene {
         this.embeddedWebsiteManager = new EmbeddedWebsiteManager(this);
 
         //add layer on map
-        this.gameMapFrontWrapper = new GameMapFrontWrapper(this, new GameMap(this.mapFile), this.Map, this.Terrains);
+        this.gameMapFrontWrapper = new GameMapFrontWrapper(
+            this,
+            new GameMap(this.mapFile, this.wamFile),
+            this.Map,
+            this.Terrains
+        );
         for (const layer of this.gameMapFrontWrapper.getFlatLayers()) {
             if (layer.type === "tilelayer") {
                 const exitSceneUrl = this.getExitSceneUrl(layer);
@@ -1891,7 +1904,7 @@ ${escapedMessage}
                             //Create a new GameMap with the changed file
                             this.gameMapFrontWrapper = new GameMapFrontWrapper(
                                 this,
-                                new GameMap(this.mapFile),
+                                new GameMap(this.mapFile, this.wamFile),
                                 this.Map,
                                 this.Terrains
                             );

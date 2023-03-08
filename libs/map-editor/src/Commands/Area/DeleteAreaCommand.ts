@@ -17,7 +17,7 @@ export class DeleteAreaCommand extends Command {
     constructor(gameMap: GameMap, config: DeleteAreaCommandConfig, commandId?: string) {
         super(commandId);
         this.gameMap = gameMap;
-        const areaConfig = gameMap.getGameMapAreas().getArea(config.id, AreaType.Static);
+        const areaConfig = gameMap.getGameMapAreas()?.getArea(config.id, AreaType.Static);
         if (!areaConfig) {
             throw new Error("Trying to delete a non existing Area!");
         }
@@ -25,14 +25,14 @@ export class DeleteAreaCommand extends Command {
     }
 
     public execute(): DeleteAreaCommandConfig {
-        if (!this.gameMap.getGameMapAreas().deleteAreaById(this.areaConfig.id, AreaType.Static)) {
+        if (!this.gameMap.getGameMapAreas()?.deleteAreaById(this.areaConfig.id, AreaType.Static)) {
             throw new Error(`MapEditorError: Could not execute DeleteArea Command. Area ID: ${this.areaConfig.id}`);
         }
         return { type: "DeleteAreaCommand", id: this.areaConfig.id };
     }
 
     public undo(): CreateAreaCommandConfig {
-        if (!this.gameMap.getGameMapAreas().addArea(this.areaConfig, AreaType.Static)) {
+        if (!this.gameMap.getGameMapAreas()?.addArea(this.areaConfig, AreaType.Static)) {
             throw new Error(`MapEditorError: Could not undo DeleteArea Command. Area ID: ${this.areaConfig.id}`);
         }
         return { type: "CreateAreaCommand", areaObjectConfig: this.areaConfig };
