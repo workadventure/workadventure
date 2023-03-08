@@ -12,7 +12,7 @@ import type { MucRoomDefinitionInterface, MapDetailsData, LegalsData } from "@wo
 import { isMapDetailsData, isRoomRedirect, isErrorApiData, OpidWokaNamePolicy } from "@workadventure/messages";
 import { ApiError } from "../Stores/Errors/ApiError";
 export class MapDetail {
-    constructor(public readonly mapUrl: string) {}
+    constructor(public readonly mapUrl?: string, public readonly wamUrl?: string) {}
 }
 
 export interface RoomRedirect {
@@ -28,6 +28,7 @@ export class Room {
     private _opidLogoutRedirectUrl = "/";
     private _opidWokaNamePolicy: OpidWokaNamePolicy | undefined;
     private _mapUrl: string | undefined;
+    private _wamUrl: string | undefined;
     private readonly _search: URLSearchParams;
     private _contactPage: string | undefined;
     private _group: string | null = null;
@@ -150,6 +151,7 @@ export class Room {
                 const data = mapDetailsDataChecking.data;
                 console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
                 this._mapUrl = data.mapUrl;
+                this._wamUrl = data.wamUrl;
                 this._group = data.group;
                 this._authenticationMandatory =
                     data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
@@ -192,7 +194,7 @@ export class Room {
 
                 this._entityCollectionsUrls = data.entityCollectionsUrls ?? undefined;
 
-                return new MapDetail(data.mapUrl);
+                return new MapDetail(data.mapUrl, data.wamUrl);
             } else if (errorApiDataChecking.success) {
                 const error = errorApiDataChecking.data;
                 throw new ApiError(error);
@@ -251,11 +253,12 @@ export class Room {
         return this.roomUrl.toString();
     }
 
-    get mapUrl(): string {
-        if (!this._mapUrl) {
-            throw new Error("Map URL not fetched yet");
-        }
+    get mapUrl(): string | undefined {
         return this._mapUrl;
+    }
+
+    get wamUrl(): string | undefined {
+        return this._wamUrl;
     }
 
     get authenticationMandatory(): boolean {

@@ -47,13 +47,14 @@ app.get("*.wam", (req, res, next) => {
         const file = await fileSystem.readFileAsString(key);
         const wam = WAMFileFormat.parse(JSON.parse(file));
 
+        // TODO: Don't need to fetch tmj map here, fill up GameMap on map-storage side with a ITiledMap mock
         const tmjFile = await fileSystem.readFileAsString(wam.mapUrl);
         const map = ITiledMap.parse(JSON.parse(tmjFile));
 
         if (!mapsManager.isMapAlreadyLoaded(key)) {
             mapsManager.loadMapToMemory(key, wam, map);
         }
-        res.send({ map, wam });
+        res.send(wam);
     })().catch((e) => next());
 });
 

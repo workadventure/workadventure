@@ -126,9 +126,13 @@ const CustomizeSceneData = z.object({
 });
 
 export const isMapDetailsData = z.object({
-    mapUrl: extendApi(z.string(), {
+    mapUrl: extendApi(z.string().optional(), {
         description: "The full URL to the JSON map file",
         example: "https://myuser.github.io/myrepo/map.json",
+    }),
+    wamUrl: extendApi(z.string().optional(), {
+        description: "The full URL to the WAM map file",
+        example: "https://myuser.github.io/myrepo/map.wam",
     }),
     authenticationMandatory: extendApi(z.boolean().nullable().optional(), {
         description: "Whether the authentication is mandatory or not for this map",

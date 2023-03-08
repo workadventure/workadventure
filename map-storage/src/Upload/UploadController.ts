@@ -182,7 +182,7 @@ export class UploadController {
                                 promises.push(
                                     this.fileSystem.writeStringAsFile(
                                         key.replace(".tmj", ".wam"),
-                                        JSON.stringify(this.getFreshWAMFileContent(key))
+                                        JSON.stringify(this.getFreshWAMFileContent(`./${path.basename(key)}`))
                                     )
                                 );
                             }

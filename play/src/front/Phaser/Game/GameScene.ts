@@ -146,7 +146,7 @@ import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInt
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
-import { AreaType, GameMap, GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
+import { AreaDataProperties, AreaType, GameMap, GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
@@ -213,7 +213,8 @@ export class GameScene extends DirtyScene {
 
     private modalVisibilityStoreUnsubscriber!: Unsubscriber;
 
-    MapUrlFile: string;
+    mapUrlFile!: string;
+    wamUrlFile?: string;
     roomUrl: string;
 
     currentTick!: number;
@@ -267,7 +268,7 @@ export class GameScene extends DirtyScene {
     private throttledSendViewportToServer!: () => void;
     private playersDebugLogAlreadyDisplayed = false;
 
-    constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
+    constructor(private room: Room, customKey?: string | undefined) {
         super({
             key: customKey ?? room.key,
         });
@@ -275,7 +276,11 @@ export class GameScene extends DirtyScene {
         this.groups = new Map<number, Sprite>();
 
         // TODO: How to get mapUrl from WAM here?
-        this.MapUrlFile = MapUrlFile;
+        if (room.mapUrl) {
+            this.mapUrlFile = room.mapUrl;
+        } else if (room.wamUrl) {
+            this.wamUrlFile = room.wamUrl;
+        }
         this.roomUrl = room.key;
 
         this.entitiesCollectionsManager = new EntitiesCollectionsManager();
@@ -317,15 +322,15 @@ export class GameScene extends DirtyScene {
             // If we happen to be in HTTP and we are trying to load a URL in HTTPS only... (this happens only in dev environments)
             if (
                 window.location.protocol === "http:" &&
-                file.src === this.MapUrlFile &&
+                file.src === this.mapUrlFile &&
                 file.src.startsWith("http:") &&
                 this.originalMapUrl === undefined
             ) {
-                this.originalMapUrl = this.MapUrlFile;
-                this.MapUrlFile = this.MapUrlFile.replace("http://", "https://");
-                this.load.tilemapTiledJSON(this.MapUrlFile, this.MapUrlFile);
+                this.originalMapUrl = this.mapUrlFile;
+                this.mapUrlFile = this.mapUrlFile.replace("http://", "https://");
+                this.load.tilemapTiledJSON(this.mapUrlFile, this.mapUrlFile);
                 this.load.on(
-                    "filecomplete-tilemapJSON-" + this.MapUrlFile,
+                    "filecomplete-tilemapJSON-" + this.mapUrlFile,
                     (key: string, type: string, data: unknown) => {
                         this.onMapLoad(data).catch((e) => console.error(e));
                     }
@@ -341,23 +346,23 @@ export class GameScene extends DirtyScene {
             const host = url.host.split(":")[0];
             if (
                 window.location.protocol === "https:" &&
-                file.src === this.MapUrlFile &&
+                file.src === this.mapUrlFile &&
                 (host === "127.0.0.1" || host === "localhost" || host.endsWith(".localhost")) &&
                 this.originalMapUrl === undefined
             ) {
-                this.originalMapUrl = this.MapUrlFile;
-                this.MapUrlFile = this.MapUrlFile.replace("https://", "http://");
-                this.load.tilemapTiledJSON(this.MapUrlFile, this.MapUrlFile);
+                this.originalMapUrl = this.mapUrlFile;
+                this.mapUrlFile = this.mapUrlFile.replace("https://", "http://");
+                this.load.tilemapTiledJSON(this.mapUrlFile, this.mapUrlFile);
                 this.load.on(
-                    "filecomplete-tilemapJSON-" + this.MapUrlFile,
+                    "filecomplete-tilemapJSON-" + this.mapUrlFile,
                     (key: string, type: string, data: unknown) => {
                         this.onMapLoad(data).catch((e) => console.error(e));
                     }
                 );
                 // If the map has already been loaded as part of another GameScene, the "on load" event will not be triggered.
                 // In this case, we check in the cache to see if the map is here and trigger the event manually.
-                if (this.cache.tilemap.exists(this.MapUrlFile)) {
-                    const data = this.cache.tilemap.get(this.MapUrlFile);
+                if (this.cache.tilemap.exists(this.mapUrlFile)) {
+                    const data = this.cache.tilemap.get(this.mapUrlFile);
                     this.onMapLoad(data).catch((e) => console.error(e));
                 }
                 return;
@@ -386,16 +391,25 @@ export class GameScene extends DirtyScene {
         });
 
         this.load.scenePlugin("AnimatedTiles", AnimatedTiles, "animatedTiles", "animatedTiles");
-        this.load.on("filecomplete-tilemapJSON-" + this.MapUrlFile, (key: string, type: string, data: unknown) => {
-            this.onMapLoad(data).catch((e) => console.error(e));
-        });
-        //TODO strategy to add access token
-        this.load.tilemapTiledJSON(this.MapUrlFile, this.MapUrlFile);
-        // If the map has already been loaded as part of another GameScene, the "on load" event will not be triggered.
-        // In this case, we check in the cache to see if the map is here and trigger the event manually.
-        if (this.cache.tilemap.exists(this.MapUrlFile)) {
-            const data = this.cache.tilemap.get(this.MapUrlFile);
-            this.onMapLoad(data).catch((e) => console.error(e));
+
+        if (this.wamUrlFile) {
+            this.superLoad
+                .json(
+                    this.wamUrlFile,
+                    this.wamUrlFile,
+                    undefined,
+                    undefined,
+                    (key: string, type: string, wamFile: unknown) => {
+                        this.wamFile = WAMFileFormat.parse(wamFile);
+                        this.mapUrlFile = new URL(this.wamFile.mapUrl, this.wamUrlFile).toString();
+                        this.doLoadTMJFile(this.mapUrlFile);
+                    }
+                )
+                .catch((e) => {
+                    console.error(e);
+                });
+        } else {
+            this.doLoadTMJFile(this.mapUrlFile);
         }
 
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -410,21 +424,30 @@ export class GameScene extends DirtyScene {
         this.loader.addLoader();
     }
 
+    private doLoadTMJFile(mapUrlFile: string): void {
+        this.load.on("filecomplete-tilemapJSON-" + mapUrlFile, (key: string, type: string, data: unknown) => {
+            this.onMapLoad(data).catch((e) => console.error(e));
+        });
+        this.load.tilemapTiledJSON(mapUrlFile, mapUrlFile);
+        // If the map has already been loaded as part of another GameScene, the "on load" event will not be triggered.
+        // In this case, we check in the cache to see if the map is here and trigger the event manually.
+        if (this.cache.tilemap.exists(mapUrlFile)) {
+            const data = this.cache.tilemap.get(mapUrlFile);
+            this.onMapLoad(data).catch((e) => console.error(e));
+        }
+    }
+
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async onMapLoad(data: any): Promise<void> {
-        console.log(data.data);
         // Triggered when the map is loaded
         // Load tiles attached to the map recursively
+        // The map file can be modified by the scripting API and we don't want to tamper the Phaser cache (in case we come back on the map after visiting other maps)
+        // So we are doing a deep copy
 
-        if (ITiledMap.safeParse(data.data)) {
-            this.mapFile = structuredClone(data.data);
-        } else {
-            // The map file can be modified by the scripting API and we don't want to tamper the Phaser cache (in case we come back on the map after visiting other maps)
-            // So we are doing a deep copy
-            this.mapFile = structuredClone(data.data.map);
-            this.wamFile = structuredClone(data.data.wam);
-        }
+        console.log(data.data);
+
+        this.mapFile = structuredClone(data.data);
 
         // Safe parse can take up to 600ms on a 17MB map.
         // TODO: move safeParse to a "map" page and display details of what is going wrong there.
@@ -433,11 +456,11 @@ export class GameScene extends DirtyScene {
             console.warn("Your map file seems to be invalid. Errors: ", parseResult.error);
         }*/
 
-        const url = this.MapUrlFile.substring(0, this.MapUrlFile.lastIndexOf("/"));
+        const url = this.mapUrlFile.substring(0, this.mapUrlFile.lastIndexOf("/"));
         this.mapFile.tilesets.forEach((tileset) => {
             if ("source" in tileset) {
                 throw new Error(
-                    `Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.MapUrlFile}".`
+                    `Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.mapUrlFile}".`
                 );
             }
             if (typeof tileset.name === "undefined" || typeof tileset.image === "undefined") {
@@ -557,12 +580,12 @@ export class GameScene extends DirtyScene {
         this.characterLayers = gameManager.getCharacterLayers();
         this.companion = gameManager.getCompanion();
 
-        this.Map = this.add.tilemap(this.MapUrlFile);
-        const mapDirUrl = this.MapUrlFile.substring(0, this.MapUrlFile.lastIndexOf("/"));
+        this.Map = this.add.tilemap(this.mapUrlFile);
+        const mapDirUrl = this.mapUrlFile.substring(0, this.mapUrlFile.lastIndexOf("/"));
         this.mapFile.tilesets.forEach((tileset: ITiledMapTileset) => {
             if ("source" in tileset) {
                 throw new Error(
-                    `Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.MapUrlFile}".`
+                    `Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.mapUrlFile}".`
                 );
             }
             this.Terrains.push(
@@ -598,7 +621,7 @@ export class GameScene extends DirtyScene {
                 const exitSceneUrl = this.getExitSceneUrl(layer);
                 if (exitSceneUrl !== undefined) {
                     this.loadNextGame(
-                        Room.getRoomPathFromExitSceneUrl(exitSceneUrl, window.location.toString(), this.MapUrlFile)
+                        Room.getRoomPathFromExitSceneUrl(exitSceneUrl, window.location.toString(), this.mapUrlFile)
                     ).catch((e) => console.error(e));
                 }
                 const exitUrl = this.getExitUrl(layer);
@@ -1556,7 +1579,7 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.playSoundStream.subscribe((playSoundEvent) => {
-                const url = new URL(playSoundEvent.url, this.MapUrlFile);
+                const url = new URL(playSoundEvent.url, this.mapUrlFile);
                 soundManager
                     .playSound(this.load, this.sound, url.toString(), playSoundEvent.config)
                     .catch((e) => console.error(e));
@@ -1565,7 +1588,7 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.stopSoundStream.subscribe((stopSoundEvent) => {
-                const url = new URL(stopSoundEvent.url, this.MapUrlFile);
+                const url = new URL(stopSoundEvent.url, this.mapUrlFile);
                 soundManager.stopSound(this.sound, url.toString());
             })
         );
@@ -1649,7 +1672,7 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.loadSoundStream.subscribe((loadSoundEvent) => {
-                const url = new URL(loadSoundEvent.url, this.MapUrlFile);
+                const url = new URL(loadSoundEvent.url, this.mapUrlFile);
                 soundManager.loadSound(this.load, this.sound, url.toString()).catch((e) => console.error(e));
             })
         );
@@ -1795,7 +1818,7 @@ ${escapedMessage}
             // for the connection to send back the answer.
             await this.connectionAnswerPromiseDeferred.promise;
             return {
-                mapUrl: this.MapUrlFile,
+                mapUrl: this.mapUrlFile,
                 startLayerName: this.startPositionCalculator.getStartPositionName() ?? undefined,
                 uuid: localUserStore.getLocalUser()?.uuid,
                 nickname: this.playerName,
@@ -2045,17 +2068,17 @@ ${escapedMessage}
         this.gameMapFrontWrapper.setLayerProperty(layerName, propertyName, propertyValue);
     }
 
-    private setAreaProperty(
+    private setAreaProperty<K extends keyof AreaDataProperties>(
         areaName: string,
         areaType: AreaType,
-        propertyName: string,
-        propertyValue: string | number | boolean | undefined
+        propertyName: K,
+        propertyValue: AreaDataProperties[K]
     ): void {
         this.gameMapFrontWrapper.setAreaProperty(areaName, areaType, propertyName, propertyValue);
     }
 
     public getMapDirUrl(): string {
-        return this.MapUrlFile.substring(0, this.MapUrlFile.lastIndexOf("/"));
+        return this.mapUrlFile.substring(0, this.mapUrlFile.lastIndexOf("/"));
     }
 
     public async onMapExit(roomUrl: URL) {
@@ -2268,7 +2291,7 @@ ${escapedMessage}
 
     private getScriptUrls(map: ITiledMap): string[] {
         return (this.getProperties(map, GameMapProperties.SCRIPT) as string[]).map((script) =>
-            new URL(script, this.MapUrlFile).toString()
+            new URL(script, this.mapUrlFile).toString()
         );
     }
 
@@ -2897,7 +2920,7 @@ ${escapedMessage}
 
     public createSuccessorGameScene(autostart: boolean, reconnecting: boolean) {
         const gameSceneKey = "somekey" + Math.round(Math.random() * 10000);
-        const game = new GameScene(this.room, this.MapUrlFile, gameSceneKey);
+        const game = new GameScene(this.room, gameSceneKey);
         this.scene.add(gameSceneKey, game, autostart, {
             initPosition: {
                 x: this.CurrentPlayer.x,

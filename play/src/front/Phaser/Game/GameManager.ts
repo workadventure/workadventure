@@ -105,7 +105,7 @@ export class GameManager {
 
         const gameIndex = this.scenePlugin.getIndex(roomID);
         if (gameIndex === -1) {
-            const game: Phaser.Scene = new GameScene(room, room.mapUrl);
+            const game: Phaser.Scene = new GameScene(room);
             this.scenePlugin.add(roomID, game, false);
         }
     }

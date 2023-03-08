@@ -82,7 +82,7 @@ export class EmbeddedWebsiteManager {
 
                 if (embeddedWebsiteEvent.url !== undefined) {
                     website.url = embeddedWebsiteEvent.url;
-                    const absoluteUrl = new URL(embeddedWebsiteEvent.url, this.gameScene.MapUrlFile).toString();
+                    const absoluteUrl = new URL(embeddedWebsiteEvent.url, this.gameScene.mapUrlFile).toString();
                     website.iframe.src = absoluteUrl;
                 }
 
@@ -175,7 +175,7 @@ height,*/
         embeddedWebsiteEvent: CreateEmbeddedWebsiteEvent,
         visible: boolean
     ): EmbeddedWebsite {
-        const absoluteUrl = new URL(embeddedWebsiteEvent.url, this.gameScene.MapUrlFile).toString();
+        const absoluteUrl = new URL(embeddedWebsiteEvent.url, this.gameScene.mapUrlFile).toString();
 
         const iframe = document.createElement("iframe");
         const scale = embeddedWebsiteEvent.scale ?? 1;

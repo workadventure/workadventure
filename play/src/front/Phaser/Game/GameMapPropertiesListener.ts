@@ -176,7 +176,7 @@ export class GameMapPropertiesListener {
                         Room.getRoomPathFromExitSceneUrl(
                             newValue as string,
                             window.location.toString(),
-                            this.scene.MapUrlFile
+                            this.scene.mapUrlFile
                         )
                     )
                     .catch((e) => console.error(e));
@@ -365,7 +365,7 @@ export class GameMapPropertiesListener {
 
         const openCoWebsiteFunction = () => {
             const coWebsite = new SimpleCoWebsite(
-                new URL(openWebsiteProperty ?? "", this.scene.MapUrlFile),
+                new URL(openWebsiteProperty ?? "", this.scene.mapUrlFile),
                 allowApiProperty,
                 websitePolicyProperty,
                 websiteWidthProperty,
@@ -398,7 +398,7 @@ export class GameMapPropertiesListener {
             });
         } else if (websiteTriggerProperty === ON_ICON_TRIGGER_BUTTON) {
             const coWebsite = new SimpleCoWebsite(
-                new URL(openWebsiteProperty ?? "", this.scene.MapUrlFile),
+                new URL(openWebsiteProperty ?? "", this.scene.mapUrlFile),
                 allowApiProperty,
                 websitePolicyProperty,
                 websiteWidthProperty

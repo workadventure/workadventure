@@ -81,7 +81,7 @@ const mapStorageServer: MapStorageServer = {
             switch (editMapMessage.$case) {
                 case "modifyAreaMessage": {
                     const message = editMapMessage.modifyAreaMessage;
-                    const area = gameMap.getGameMapAreas().getArea(message.id, AreaType.Static);
+                    const area = gameMap.getGameMapAreas()?.getArea(message.id, AreaType.Static);
                     if (area) {
                         const areaObjectConfig: AreaData = structuredClone(area);
                         _.merge(areaObjectConfig, message);
