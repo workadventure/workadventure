@@ -1,5 +1,4 @@
 import type { AreaData } from "@workadventure/map-editor";
-import { z } from "zod";
 import { GameScene } from "../../Game/GameScene";
 import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
 
@@ -125,7 +124,11 @@ export class AreaPreview extends Phaser.GameObjects.Container {
                 this.preview.y = dragY;
                 this.updateSquaresPositions();
                 this.moved = true;
-                z.instanceof(GameScene).parse(this.scene).markDirty();
+                if (this.scene instanceof GameScene) {
+                    this.scene.markDirty();
+                } else {
+                    throw new Error("Not the Game Scene");
+                }
             }
         });
         this.preview.on(Phaser.Input.Events.POINTER_UP, (pointer: Phaser.Input.Pointer) => {
@@ -214,7 +217,11 @@ export class AreaPreview extends Phaser.GameObjects.Container {
                     square.y = oldY;
                 }
                 this.updateSquaresPositions();
-                z.instanceof(GameScene).parse(this.scene).markDirty();
+                if (this.scene instanceof GameScene) {
+                    this.scene.markDirty();
+                } else {
+                    throw new Error("Not the Game Scene");
+                }
             });
 
             square.on(SizeAlteringSquareEvent.Released, () => {

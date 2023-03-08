@@ -7,14 +7,16 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { jitsiParticipantsCountStore, userIsJitsiDominantSpeakerStore } from "../Stores/GameStore";
 import { z } from "zod";
 
-const jitsiConfig = z.object({
-    startWithAudioMuted: z.boolean().optional(),
-    startWithVideoMuted: z.boolean().optional(),
-    prejoinPageEnabled: z.boolean().optional(),
-    disableDeepLinking: z.boolean().optional(),
-});
+const JitsiConfig = z
+    .object({
+        startWithAudioMuted: z.boolean().optional(),
+        startWithVideoMuted: z.boolean().optional(),
+        prejoinPageEnabled: z.boolean().optional(),
+        disableDeepLinking: z.boolean().optional(),
+    })
+    .passthrough();
 
-type jitsiConfig = z.infer<typeof jitsiConfig>;
+type JitsiConfig = z.infer<typeof JitsiConfig>;
 
 interface JitsiOptions {
     jwt?: string;
@@ -22,7 +24,7 @@ interface JitsiOptions {
     width: string;
     height: string;
     parentNode: HTMLElement;
-    configOverwrite: jitsiConfig;
+    configOverwrite: JitsiConfig;
     interfaceConfigOverwrite: typeof defaultInterfaceConfig;
     onload?: () => void;
 }
@@ -41,7 +43,7 @@ declare global {
     }
 }
 
-const getDefaultConfig = (): jitsiConfig => {
+const getDefaultConfig = (): JitsiConfig => {
     return {
         startWithAudioMuted: !get(requestedMicrophoneState),
         startWithVideoMuted: !get(requestedCameraState),
@@ -56,7 +58,7 @@ const mergeConfig = (config?: object) => {
         return currentDefaultConfig;
     }
 
-    const parsedConfig = jitsiConfig.parse(config);
+    const parsedConfig = JitsiConfig.parse(config);
 
     return {
         ...currentDefaultConfig,

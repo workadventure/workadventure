@@ -1,9 +1,7 @@
 import type CancelablePromise from "cancelable-promise";
 import type { Readable } from "svelte/store";
-import { z } from "zod";
 
-export const CoWebsiteState = z.enum(["asleep", "loading", "ready"]);
-export type CoWebsiteState = z.infer<typeof CoWebsiteState>;
+export type CoWebsiteState = "asleep" | "loading" | "ready";
 
 export interface CoWebsite {
     getId(): string;

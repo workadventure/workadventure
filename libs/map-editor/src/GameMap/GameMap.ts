@@ -3,6 +3,7 @@ import {
     ITiledMapLayer,
     ITiledMapObject,
     ITiledMapProperty,
+    Json,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
 import type { AreaData } from "../types";
@@ -11,7 +12,6 @@ import { GameMapAreas } from "./GameMapAreas";
 import { GameMapProperties } from "../types";
 import { flattenGroupLayersMap } from "./LayersFlattener";
 import { GameMapEntities } from "./GameMapEntities";
-import { z } from "zod";
 
 /**
  * A wrapper around a ITiledMap interface to provide additional capabilities.
@@ -150,7 +150,7 @@ export class GameMap {
     public getTiledObjectProperty(
         object: { properties?: ITiledMapProperty[] },
         propertyName: string
-    ): string | boolean | number | undefined {
+    ): Json | undefined {
         const properties: ITiledMapProperty[] | undefined = object.properties;
         if (!properties) {
             return undefined;
@@ -161,7 +161,7 @@ export class GameMap {
         if (obj === undefined) {
             return undefined;
         }
-        return z.union([z.string(), z.boolean(), z.number()]).optional().parse(obj.value);
+        return obj.value;
     }
 
     public getObjectWithName(name: string): ITiledMapObject | undefined {

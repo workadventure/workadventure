@@ -1,6 +1,5 @@
 import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
 import { PointInterface } from "../models/Websocket/PointInterface";
-import qs from "qs";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
 import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
@@ -26,80 +25,75 @@ import {
     apiVersionHash,
     AvailabilityStatus,
     ClientToServerMessage,
+    CompanionMessage,
     ErrorApiData,
-    isApplicationDefinitionInterface,
     MucRoomDefinition,
     ServerToClientMessage as ServerToClientMessageTsProto,
     SubMessage,
     WokaDetail,
+    ApplicationDefinitionInterface,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import { v4 as uuid } from "uuid";
 import { JID } from "stanza";
+import { validateWebsocketQuery } from "../services/QueryValidator";
 
 type WebSocket = HyperExpress.compressors.WebSocket;
-
-const CompanionMessage = z.object({
-    name: z.string(),
-});
-
-type CompanionMessage = z.infer<typeof CompanionMessage>;
 
 /**
  * The object passed between the "open" and the "upgrade" methods when opening a websocket
  */
-const UpgradeData = z.object({
+type UpgradeData = {
     // Data passed here is accessible on the "websocket" socket object.
-    rejected: z.literal(false),
-    token: z.string(),
-    userUuid: z.string(),
-    userJid: z.string(),
-    IPAddress: z.string(),
-    userIdentifier: z.string(),
-    roomId: z.string(),
-    name: z.string(),
-    companion: CompanionMessage.optional(),
-    availabilityStatus: z.nativeEnum(AvailabilityStatus),
-    lastCommandId: z.string().optional(),
-    characterLayers: WokaDetail.array(),
-    messages: z.unknown().array(),
-    tags: z.string().array(),
-    visitCardUrl: z.string().nullable(),
-    userRoomToken: z.string().optional(),
-    textures: WokaDetail.array(),
-    jabberId: z.string().optional(),
-    jabberPassword: z.string().nullable().optional(),
-    applications: isApplicationDefinitionInterface.array().nullable().optional(),
-    position: PointInterface,
-    viewport: z.object({
-        top: z.number(),
-        right: z.number(),
-        bottom: z.number(),
-        left: z.number(),
-    }),
-    mucRooms: MucRoomDefinition.array().optional(),
-    activatedInviteUser: z.boolean().optional(),
-    isLogged: z.boolean(),
-    canEdit: z.boolean(),
-});
+    rejected: false;
+    token: string;
+    userUuid: string;
+    userJid: string;
+    IPAddress: string;
+    userIdentifier: string;
+    roomId: string;
+    name: string;
+    companion?: CompanionMessage;
+    availabilityStatus: AvailabilityStatus;
+    lastCommandId?: string;
+    characterLayers: WokaDetail[];
+    messages: unknown[];
+    tags: string[];
+    visitCardUrl: string | null;
+    userRoomToken?: string;
+    textures: WokaDetail[];
+    jabberId?: string;
+    jabberPassword?: string | null;
+    applications?: ApplicationDefinitionInterface[] | null;
+    position: PointInterface;
+    viewport: {
+        top: number;
+        right: number;
+        bottom: number;
+        left: number;
+    };
+    mucRooms?: MucRoomDefinition[];
+    activatedInviteUser?: boolean;
+    isLogged: boolean;
+    canEdit: boolean;
+};
 
-type UpgradeData = z.infer<typeof UpgradeData>;
+type UpgradeFailedInvalidData = {
+    rejected: true;
+    reason: "tokenInvalid" | "textureInvalid" | "invalidVersion" | null;
+    message: string;
+    status: number;
+    roomId: string;
+};
 
-const UpgradeFailedInvalidData = z.object({
-    rejected: z.literal(true),
-    reason: z.enum(["tokenInvalid", "textureInvalid", "invalidVersion"]).nullable(),
-    message: z.string(),
-    roomId: z.string(),
-});
+type UpgradeFailedErrorData = {
+    rejected: true;
+    reason: "error";
+    status: number;
+    error: ErrorApiData;
+};
 
-const UpgradeFailedErrorData = z.object({
-    rejected: z.literal(true),
-    reason: z.literal("error"),
-    error: ErrorApiData,
-});
-
-const UpgradeFailedData = z.union([UpgradeFailedErrorData, UpgradeFailedInvalidData]);
-type UpgradeFailedData = z.infer<typeof UpgradeFailedData>;
+export type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData;
 
 export class IoSocketController {
     private nextUserId = 1;
@@ -256,40 +250,64 @@ export class IoSocketController {
                         upgradeAborted.aborted = true;
                     });
 
-                    const query = qs.parse(req.getQuery());
+                    const query = validateWebsocketQuery(
+                        req,
+                        res,
+                        context,
+                        z.object({
+                            roomId: z.string(),
+                            token: z.string().optional(),
+                            name: z.string(),
+                            characterLayers: z.union([z.string(), z.string().array()]),
+                            x: z.coerce.number(),
+                            y: z.coerce.number(),
+                            top: z.coerce.number(),
+                            bottom: z.coerce.number(),
+                            left: z.coerce.number(),
+                            right: z.coerce.number(),
+                            companion: z.string().optional(),
+                            availabilityStatus: z.coerce.number(),
+                            lastCommandId: z.string().optional(),
+                            version: z.string(),
+                        })
+                    );
+
+                    if (query === undefined) {
+                        return;
+                    }
+
                     const websocketKey = req.getHeader("sec-websocket-key");
                     const websocketProtocol = req.getHeader("sec-websocket-protocol");
                     const websocketExtensions = req.getHeader("sec-websocket-extensions");
                     const IPAddress = req.getHeader("x-forwarded-for");
                     const locale = req.getHeader("accept-language");
 
-                    const roomId = query.roomId;
+                    const {
+                        roomId,
+                        token,
+                        x,
+                        y,
+                        top,
+                        bottom,
+                        left,
+                        right,
+                        name,
+                        availabilityStatus,
+                        lastCommandId,
+                        version,
+                    } = query;
+
                     try {
-                        if (typeof roomId !== "string") {
-                            throw new Error("Undefined room ID: ");
-                        }
-
-                        const token = query.token;
-                        const x = Number(query.x);
-                        const y = Number(query.y);
-                        const top = Number(query.top);
-                        const bottom = Number(query.bottom);
-                        const left = Number(query.left);
-                        const right = Number(query.right);
-                        const name = query.name;
-                        const availabilityStatus = Number(query.availabilityStatus);
-                        const lastCommandId = typeof query.lastCommandId === "string" ? query.lastCommandId : undefined;
-                        const version = query.version;
-
                         if (version !== apiVersionHash) {
                             if (upgradeAborted.aborted) {
                                 // If the response points to nowhere, don't attempt an upgrade
                                 return;
                             }
                             return res.upgrade(
-                                UpgradeFailedData.parse({
+                                {
                                     rejected: true,
                                     reason: "error",
+                                    status: 419,
                                     error: {
                                         type: "retry",
                                         title: "Please refresh",
@@ -302,7 +320,7 @@ export class IoSocketController {
                                         buttonTitle: "Refresh",
                                         timeToRetry: 999999,
                                     },
-                                }),
+                                } satisfies UpgradeFailedData,
                                 websocketKey,
                                 websocketProtocol,
                                 websocketExtensions,
@@ -310,41 +328,16 @@ export class IoSocketController {
                             );
                         }
 
-                        let companion: CompanionMessage | undefined = undefined;
+                        const companion: CompanionMessage | undefined = query.companion
+                            ? {
+                                  name: query.companion,
+                              }
+                            : undefined;
 
-                        if (typeof query.companion === "string") {
-                            companion = {
-                                name: query.companion,
-                            };
-                        }
+                        const characterLayers: string[] =
+                            typeof query.characterLayers === "string" ? [query.characterLayers] : query.characterLayers;
 
-                        if (typeof name !== "string") {
-                            throw new Error("Expecting name");
-                        }
-                        if (typeof availabilityStatus !== "number") {
-                            throw new Error("Expecting availability status");
-                        }
-                        if (name === "") {
-                            throw new Error("No empty name");
-                        }
-                        let characterLayers: string[];
-
-                        if (!query.characterLayers) {
-                            throw new Error("Expecting skin");
-                        }
-                        if (typeof query.characterLayers === "string") {
-                            characterLayers = [query.characterLayers];
-                        } else {
-                            const checkCharacterLayers = z.string().array().safeParse(query.characterLayers);
-                            if (!checkCharacterLayers.success) {
-                                throw new Error("Unknown layers data");
-                            }
-
-                            characterLayers = checkCharacterLayers.data;
-                        }
-
-                        const tokenData =
-                            token && typeof token === "string" ? jwtTokenManager.verifyJWTToken(token) : null;
+                        const tokenData = token ? jwtTokenManager.verifyJWTToken(token) : null;
 
                         if (DISABLE_ANONYMOUS && !tokenData) {
                             throw new Error("Expecting token");
@@ -401,12 +394,12 @@ export class IoSocketController {
                                         );
 
                                         return res.upgrade(
-                                            UpgradeFailedData.parse({
+                                            {
                                                 rejected: true,
                                                 reason: "error",
-                                                status: err?.response?.status,
+                                                status: err?.response?.status || 500,
                                                 error: errorType.data,
-                                            }),
+                                            } satisfies UpgradeFailedData,
                                             websocketKey,
                                             websocketProtocol,
                                             websocketExtensions,
@@ -419,13 +412,13 @@ export class IoSocketController {
                                             return;
                                         }
                                         return res.upgrade(
-                                            UpgradeFailedData.parse({
+                                            {
                                                 rejected: true,
                                                 reason: null,
                                                 status: 500,
                                                 message: err?.response?.data,
                                                 roomId: roomId,
-                                            }),
+                                            } satisfies UpgradeFailedData,
                                             websocketKey,
                                             websocketProtocol,
                                             websocketExtensions,
@@ -536,12 +529,13 @@ export class IoSocketController {
                                 return;
                             }
                             res.upgrade(
-                                UpgradeFailedData.parse({
+                                {
                                     rejected: true,
                                     reason: e instanceof InvalidTokenError ? tokenInvalidException : null,
+                                    status: 401,
                                     message: e.message,
                                     roomId,
-                                }),
+                                } satisfies UpgradeFailedData,
                                 websocketKey,
                                 websocketProtocol,
                                 websocketExtensions,
@@ -553,12 +547,13 @@ export class IoSocketController {
                                 return;
                             }
                             res.upgrade(
-                                UpgradeFailedData.parse({
+                                {
                                     rejected: true,
                                     reason: null,
                                     message: "500 Internal Server Error",
+                                    status: 500,
                                     roomId,
-                                }),
+                                } satisfies UpgradeFailedData,
                                 websocketKey,
                                 websocketProtocol,
                                 websocketExtensions,

@@ -6,6 +6,7 @@ import type {
     ITiledMapObject,
     ITiledMapProperty,
     ITiledMapTileLayer,
+    Json,
 } from "@workadventure/tiled-map-type-guard";
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 import type { Observable } from "rxjs";
@@ -507,7 +508,7 @@ export class GameMapFrontWrapper {
     public getTiledObjectProperty(
         object: { properties?: ITiledMapProperty[] },
         propertyName: string
-    ): string | boolean | number | undefined {
+    ): Json | undefined {
         return this.gameMap.getTiledObjectProperty(object, propertyName);
     }
 

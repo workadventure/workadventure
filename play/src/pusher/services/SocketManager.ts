@@ -753,8 +753,6 @@ export class SocketManager implements ZoneEventListener {
             jabberPassword: client.jabberPassword,
         };
 
-        console.log(xmppSettings);
-
         if (!client.disconnecting) {
             client.send(
                 ServerToClientMessage.encode({
