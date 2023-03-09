@@ -141,7 +141,7 @@
         }
 
         &.clickable {
-            cursor: url("../../style/images/cursor_pointer.png"), pointer;
+            cursor: pointer;
         }
     }
 </style>

@@ -191,6 +191,7 @@ message CreateEntityMessage {
   uint32 y = 3;
   string collectionName = 4;
   string prefabId = 5;
+  map<string, google.protobuf.Value> properties = 6;
 }
 
 message DeleteEntityMessage {

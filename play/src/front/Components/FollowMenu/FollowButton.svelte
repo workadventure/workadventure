@@ -12,7 +12,7 @@
 
 <style lang="scss">
     .btn-follow {
-        cursor: url("../../../style/images/cursor_pointer.png"), pointer;
+        cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
