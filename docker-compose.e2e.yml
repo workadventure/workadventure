@@ -17,7 +17,7 @@ services:
     command: npm run start
     volumes: []
     environment:
-      ENABLE_OPENAPI_ENDPOINT: "false"
+      ENABLE_OPENAPI_ENDPOINT: "true"
       STARTUP_COMMAND_0: ""
       STARTUP_COMMAND_1: ""
       STARTUP_COMMAND_2: ""

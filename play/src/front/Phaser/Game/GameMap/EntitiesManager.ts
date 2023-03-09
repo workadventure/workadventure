@@ -4,6 +4,7 @@ import { get } from "svelte/store";
 import { actionsMenuStore } from "../../../Stores/ActionsMenuStore";
 import {
     mapEditorModeStore,
+    mapEditorSelectedEntityPrefabStore,
     mapEditorSelectedEntityStore,
     MapEntityEditorMode,
     mapEntityEditorModeStore,
@@ -69,7 +70,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         this.bindEventHandlers();
     }
 
-    public addEntity(data: EntityData, imagePathPrefix?: string, interactive?: boolean): void {
+    public addEntity(data: EntityData, imagePathPrefix?: string, interactive?: boolean): Entity {
         TexturesHelper.loadEntityImage(
             this.scene,
             data.prefab.imagePath,
@@ -103,6 +104,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             this.activatableEntities.push(entity);
         }
         this.scene.markDirty();
+        return entity;
     }
 
     public deleteEntity(id: string): boolean {
@@ -136,7 +138,13 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         this.entities.forEach((entity) => entity.clearTint());
     }
 
+    public clearAllEntitiesEditOutlines(): void {
+        this.entities.forEach((entity) => entity.removeEditColor());
+        this.entities.forEach((entity) => entity.removePointedToEditColor());
+    }
+
     public makeAllEntitiesNonInteractive(): void {
+        console.log("disable interactive");
         this.entities.forEach((entity) => {
             entity.disableInteractive();
         });
@@ -258,38 +266,16 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             }
         });
         entity.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore)) {
-                const entityEditorMode = get(mapEntityEditorModeStore);
-                switch (entityEditorMode) {
-                    case MapEntityEditorMode.EditMode: {
-                        mapEditorSelectedEntityStore.set(entity);
-                        break;
-                    }
-                    case MapEntityEditorMode.RemoveMode: {
-                        entity.delete();
-                        break;
-                    }
-                }
+            if (get(mapEditorModeStore) && !get(mapEditorSelectedEntityPrefabStore)) {
+                mapEntityEditorModeStore.set(MapEntityEditorMode.EditMode);
+                mapEditorSelectedEntityStore.set(entity);
             }
         });
         entity.on(Phaser.Input.Events.POINTER_OVER, () => {
             this.pointerOverEntitySubject.next(entity);
 
             if (get(mapEditorModeStore)) {
-                const entityEditorMode = get(mapEntityEditorModeStore);
-                switch (entityEditorMode) {
-                    case MapEntityEditorMode.AddMode: {
-                        break;
-                    }
-                    case MapEntityEditorMode.RemoveMode: {
-                        entity.setTint(0xff0000);
-                        break;
-                    }
-                    case MapEntityEditorMode.EditMode: {
-                        entity.setTint(0x3498db);
-                        break;
-                    }
-                }
+                entity.setPointedToEditColor(0x00ff00);
                 this.scene.markDirty();
             }
         });
@@ -297,7 +283,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             this.pointerOutEntitySubject.next(entity);
 
             if (get(mapEditorModeStore)) {
-                entity.clearTint();
+                entity.removePointedToEditColor();
                 this.scene.markDirty();
             }
         });

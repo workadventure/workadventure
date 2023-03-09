@@ -6,11 +6,10 @@
     "proto": "grpc_tools_node_protoc --grpc_out=grpc_js:generated  --js_out=\"import_style=commonjs,binary:generated\" --ts_out=grpc_js:generated -I ./protos protos/*.proto",
     "ts-proto": "grpc_tools_node_protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=../libs/messages/src/ts-proto-generated --ts_proto_opt=outputServices=grpc-js --ts_proto_opt=oneof=unions --ts_proto_opt=esModuleInterop=true -I ./protos protos/*.proto",
     "copy-to-back": "syncdir generated/ ../back/src/Messages/generated && rm -f ../back/src/Messages/generate_request/need_regenerate",
-    "proto-all": "npm run proto && npm run ts-proto && npm run copy-to-back && npm run copy-to-play",
+    "proto-all": "npm run proto && npm run ts-proto && npm run copy-to-back",
     "proto:watch": "npm run proto-all; run-p proto:watch-need-regenerate proto:watch-files",
     "proto:watch-need-regenerate": "chokidar '../back/src/Messages/generate_request/*' '../play/src/messages/generate_request/*' -c \"if [ '{event}' = 'add' ]; then npm run proto-all; fi;\"",
     "proto:watch-files": "chokidar 'protos/messages.proto' -c 'npm run proto-all'",
-    "copy-to-play": "syncdir generated/ ../play/src/messages/generated && rm -f ../play/src/messages/generate_request/need_regenerate",
     "tag-version": "sed -i \"s/apiVersionHash = \\\".*\\\"/apiVersionHash = \\\"$(sha1sum protos/messages.proto ../libs/messages/src/JsonMessages/* | sha1sum | cut -c1-8)\\\"/g\" ../libs/messages/src/JsonMessages/ApiVersion.ts",
     "precommit": "lint-staged",
     "pretty": "npm prettier --write '../libs/messages/src/JsonMessages/**/*.ts'"

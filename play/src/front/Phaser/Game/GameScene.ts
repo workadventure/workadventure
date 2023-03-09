@@ -135,13 +135,7 @@ import {
     _newChatMessageSubject,
     _newChatMessageWritingStatusSubject,
 } from "../../Stores/ChatStore";
-import type {
-    ITiledMap,
-    ITiledMapLayer,
-    ITiledMapObject,
-    ITiledMapProperty,
-    ITiledMapTileset,
-} from "@workadventure/tiled-map-type-guard";
+import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
@@ -157,6 +151,7 @@ import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { faviconManager } from "./../../WebRtc/FaviconManager";
+import { z } from "zod";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -699,7 +694,7 @@ export class GameScene extends DirtyScene {
                 setTimeout(() => {
                     if (this.connection === undefined) {
                         try {
-                            this.scene.sleep();
+                            this.hide();
                         } catch (err) {
                             console.error("Scene sleep error: ", err);
                         }
@@ -727,7 +722,7 @@ export class GameScene extends DirtyScene {
                     console.log("this.room", this.room);
                     if (this.connection === undefined) {
                         try {
-                            this.scene.sleep();
+                            this.hide();
                         } catch (err) {
                             console.error("Scene sleep error: ", err);
                         }
@@ -761,9 +756,10 @@ export class GameScene extends DirtyScene {
         this.createPromiseDeferred.resolve();
         // Now, let's load the script, if any
         const scripts = this.getScriptUrls(this.mapFile);
-        const disableModuleMode = this.getProperty(this.mapFile, GameMapProperties.SCRIPT_DISABLE_MODULE_SUPPORT) as
-            | boolean
-            | undefined;
+        const disableModuleMode = PropertyUtils.findBooleanProperty(
+            GameMapProperties.SCRIPT_DISABLE_MODULE_SUPPORT,
+            this.mapFile.properties
+        );
         const scriptPromises = [];
         for (const script of scripts) {
             scriptPromises.push(iframeListener.registerScript(script, !disableModuleMode));
@@ -775,7 +771,7 @@ export class GameScene extends DirtyScene {
 
         if (!this.room.isDisconnected()) {
             try {
-                this.scene.sleep();
+                this.hide();
             } catch (err) {
                 console.error("Scene sleep error: ", err);
             }
@@ -788,7 +784,7 @@ export class GameScene extends DirtyScene {
             this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
         ])
             .then(() => {
-                this.scene.wake();
+                this.hide(false);
             })
             .catch((e) =>
                 console.error(
@@ -800,6 +796,11 @@ export class GameScene extends DirtyScene {
         if (gameManager.currentStartedRoom.backgroundColor != undefined) {
             this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
         }
+    }
+
+    private hide(hide = true): void {
+        this.scene.setVisible(!hide);
+        iframeListener?.hideIFrames(hide);
     }
 
     /**
@@ -1271,7 +1272,6 @@ export class GameScene extends DirtyScene {
                 this.activatablesManager.deactivateSelectedObject();
                 this.activatablesManager.handlePointerOutActivatableObject();
                 this.activatablesManager.disableSelectingByDistance();
-                this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesNonInteractive();
             } else {
                 this.activatablesManager.enableSelectingByDistance();
                 // make sure all entities are non-interactive
@@ -1376,7 +1376,7 @@ ${escapedMessage}
                 html += "</div>";
                 const domElement = this.add.dom(objectLayerSquare.x, objectLayerSquare.y).createFromHTML(html);
 
-                const container: HTMLDivElement = domElement.getChildByID("container") as HTMLDivElement;
+                const container = z.instanceof(HTMLDivElement).parse(domElement.getChildByID("container"));
                 container.style.width = objectLayerSquare.width + "px";
                 domElement.scale = 0;
                 domElement.setClassName("popUpElement");
@@ -2243,44 +2243,26 @@ ${escapedMessage}
     }
 
     private getExitUrl(layer: ITiledMapLayer): string | undefined {
-        return this.getProperty(layer, GameMapProperties.EXIT_URL) as string | undefined;
+        const property = PropertyUtils.findStringProperty(GameMapProperties.EXIT_URL, layer.properties);
+        return property;
     }
 
     /**
      * @deprecated the map property exitSceneUrl is deprecated
      */
     private getExitSceneUrl(layer: ITiledMapLayer): string | undefined {
-        return this.getProperty(layer, GameMapProperties.EXIT_SCENE_URL) as string | undefined;
+        const property = PropertyUtils.findStringProperty(GameMapProperties.EXIT_SCENE_URL, layer.properties);
+        return property;
     }
 
     private getScriptUrls(map: ITiledMap): string[] {
-        return (this.getProperties(map, GameMapProperties.SCRIPT) as string[]).map((script) =>
-            new URL(script, this.MapUrlFile).toString()
-        );
-    }
+        const script = PropertyUtils.findStringProperty(GameMapProperties.SCRIPT, map.properties);
 
-    private getProperty(layer: ITiledMapLayer | ITiledMap, name: string): string | boolean | number | undefined {
-        const properties: ITiledMapProperty[] | undefined = layer.properties;
-        if (!properties) {
-            return undefined;
-        }
-        const obj = properties.find(
-            (property: ITiledMapProperty) => property.name.toLowerCase() === name.toLowerCase()
-        );
-        if (obj === undefined) {
-            return undefined;
-        }
-        return obj.value as string | number | boolean | undefined;
-    }
-
-    private getProperties(layer: ITiledMapLayer | ITiledMap, name: string): (string | number | boolean | undefined)[] {
-        const properties: ITiledMapProperty[] | undefined = layer.properties;
-        if (!properties) {
+        if (!script) {
             return [];
         }
-        return properties
-            .filter((property: ITiledMapProperty) => property.name.toLowerCase() === name.toLowerCase())
-            .map((property) => property.value) as (string | number | boolean | undefined)[];
+
+        return script.split("\n").map((scriptSplit) => new URL(scriptSplit, this.MapUrlFile).toString());
     }
 
     private loadNextGameFromExitUrl(exitUrl: string): Promise<void> {
@@ -2312,9 +2294,11 @@ ${escapedMessage}
     private createCollisionWithPlayer() {
         //add collision layer
         for (const phaserLayer of this.gameMapFrontWrapper.phaserLayers) {
-            this.physics.add.collider(this.CurrentPlayer, phaserLayer, (object1: GameObject, object2: GameObject) => {
-                //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
-            });
+            this.physics.add.collider(
+                this.CurrentPlayer,
+                phaserLayer,
+                (object1: GameObject, object2: GameObject) => {}
+            );
             phaserLayer.setCollisionByProperty({ collides: true });
             if (DEBUG_MODE) {
                 //debug code to see the collision hitbox of the object in the top layer
@@ -2805,16 +2789,24 @@ ${escapedMessage}
 
     public initialiseJitsi(coWebsite: JitsiCoWebsite, roomName: string, jwt?: string, jitsiUrl?: string): void {
         const allProps = this.gameMapFrontWrapper.getCurrentProperties();
+        const isJitsiConfig = z.string().optional().safeParse(allProps.get(GameMapProperties.JITSI_CONFIG));
+        const isJitsiInterfaceConfig = z
+            .string()
+            .optional()
+            .safeParse(allProps.get(GameMapProperties.JITSI_INTERFACE_CONFIG));
+        const isJitsiUrl = z.string().optional().safeParse(allProps.get(GameMapProperties.JITSI_URL));
+
         const jitsiConfig = this.safeParseJSONstring(
-            allProps.get(GameMapProperties.JITSI_CONFIG) as string | undefined,
+            isJitsiConfig.success ? isJitsiConfig.data : undefined,
             GameMapProperties.JITSI_CONFIG
         );
+
         const jitsiInterfaceConfig = this.safeParseJSONstring(
-            allProps.get(GameMapProperties.JITSI_INTERFACE_CONFIG) as string | undefined,
+            isJitsiInterfaceConfig.success ? isJitsiInterfaceConfig.data : undefined,
             GameMapProperties.JITSI_INTERFACE_CONFIG
         );
         if (!jitsiUrl) {
-            jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
+            jitsiUrl = isJitsiUrl.success ? isJitsiUrl.data : undefined;
         }
 
         coWebsite.setJitsiLoadPromise(() => {

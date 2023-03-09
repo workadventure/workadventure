@@ -1,5 +1,5 @@
 import axios from "axios";
-import * as fs from 'fs';
+import fs from 'fs';
 
 const ADMIN_API_TOKEN = process.env.ADMIN_API_TOKEN;
 

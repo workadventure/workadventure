@@ -26,10 +26,18 @@ export class FaviconManager {
                 // Draw Original Favicon as Background
                 ctx.drawImage(img, 0, 0, faviconSize, faviconSize);
 
-                // Draw Notification Circle
+                // Draw Notification Circle in bottom right corner of favicon (16x16) with radius 5 and color red
+                const x = canvas.width - faviconSize / 3;
+                const y = canvas.height - faviconSize / 3;
                 ctx.beginPath();
-                ctx.arc(canvas.width - faviconSize / 3, faviconSize / 3, faviconSize / 3, 0, 2 * Math.PI);
+                ctx.arc(x, y, faviconSize / 3, 0, 2 * Math.PI);
                 ctx.fillStyle = "#FF0000";
+                ctx.fill();
+
+                // Draw Notification Circle in bottom right corner of favicon (16x16) with radius 3 and color white
+                ctx.beginPath();
+                ctx.arc(x, y, faviconSize / 9, 0, 2 * Math.PI);
+                ctx.fillStyle = "#FFFFFF";
                 ctx.fill();
 
                 // Replace favicon

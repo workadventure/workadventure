@@ -1,33 +1,27 @@
 import type { ExSocketInterface } from "./Websocket/ExSocketInterface";
 import { apiClientRepository } from "../services/ApiClientRepository";
-import type {
+import type { ClientReadableStream } from "@grpc/grpc-js";
+import type { PositionDispatcher } from "../models/PositionDispatcher";
+import Debug from "debug";
+import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
+import {
     AvailabilityStatus,
     BatchToPusherMessage,
     CharacterLayerMessage,
     CompanionMessage,
     EmoteEventMessage,
     ErrorMessage,
-    GroupLeftZoneMessage,
+    GroupUpdateMessage,
     GroupUpdateZoneMessage,
     PlayerDetailsUpdatedMessage,
     PointMessage,
     PositionMessage,
     SetPlayerDetailsMessage,
-    UserJoinedZoneMessage,
-    UserLeftZoneMessage,
-} from "../../messages/generated/messages_pb";
-import {
-    GroupUpdateMessage,
     UserJoinedMessage,
+    UserJoinedZoneMessage,
     UserMovedMessage,
     ZoneMessage,
-} from "../../messages/generated/messages_pb";
-import type { ClientReadableStream } from "@grpc/grpc-js";
-import type { PositionDispatcher } from "../models/PositionDispatcher";
-import Debug from "debug";
-import { BoolValue, UInt32Value } from "google-protobuf/google/protobuf/wrappers_pb";
-import type * as jspb from "google-protobuf";
-import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
+} from "@workadventure/messages";
 
 const debug = Debug("zone");
 
@@ -57,7 +51,7 @@ export class UserDescriptor {
         private position: PositionMessage,
         private availabilityStatus: AvailabilityStatus,
         private visitCardUrl: string | null,
-        private variables: jspb.Map<string, string>,
+        private variables: { [key: string]: string },
         private companion?: CompanionMessage,
         private outlineColor?: number
     ) {
@@ -67,27 +61,27 @@ export class UserDescriptor {
     }
 
     public static createFromUserJoinedZoneMessage(message: UserJoinedZoneMessage): UserDescriptor {
-        const position = message.getPosition();
+        const position = message.position;
         if (position === undefined) {
             throw new Error("Missing position");
         }
         return new UserDescriptor(
-            message.getUserid(),
-            message.getUserjid(),
-            message.getUseruuid(),
-            message.getName(),
-            message.getCharacterlayersList(),
+            message.userId,
+            message.userJid,
+            message.userUuid,
+            message.name,
+            message.characterLayers,
             position,
-            message.getAvailabilitystatus(),
-            message.getVisitcardurl(),
-            message.getVariablesMap(),
-            message.getCompanion(),
-            message.getHasoutline() ? message.getOutlinecolor() : undefined
+            message.availabilityStatus,
+            message.visitCardUrl,
+            message.variables,
+            message.companion,
+            message.hasOutline ? message.outlineColor : undefined
         );
     }
 
     public update(userMovedMessage: UserMovedMessage): void {
-        const position = userMovedMessage.getPosition();
+        const position = userMovedMessage.position;
         if (position === undefined) {
             throw new Error("Missing position");
         }
@@ -95,58 +89,48 @@ export class UserDescriptor {
     }
 
     public updateDetails(playerDetails: SetPlayerDetailsMessage): void {
-        if (playerDetails.getRemoveoutlinecolor()) {
+        if (playerDetails.removeOutlineColor) {
             this.outlineColor = undefined;
         } else {
-            const outlineColor = playerDetails.getOutlinecolor();
+            const outlineColor = playerDetails.outlineColor;
             if (outlineColor !== undefined) {
-                this.outlineColor = outlineColor.getValue();
+                this.outlineColor = outlineColor;
             }
         }
-        const availabilityStatus = playerDetails.getAvailabilitystatus();
+        const availabilityStatus = playerDetails.availabilityStatus;
         if (availabilityStatus !== undefined) {
             this.availabilityStatus = availabilityStatus;
         }
-        const setVariable = playerDetails.getSetvariable();
+        const setVariable = playerDetails.setVariable;
         if (setVariable) {
-            this.variables.set(setVariable.getName(), setVariable.getValue());
+            this.variables[setVariable.name] = setVariable.value;
         }
     }
 
     public toUserJoinedMessage(): UserJoinedMessage {
-        const userJoinedMessage = new UserJoinedMessage();
-
-        userJoinedMessage.setUserid(this.userId);
-        userJoinedMessage.setUserjid(this.userJid);
-        userJoinedMessage.setName(this.name);
-        userJoinedMessage.setCharacterlayersList(this.characterLayers);
-        userJoinedMessage.setPosition(this.position);
-        userJoinedMessage.setAvailabilitystatus(this.availabilityStatus);
-        if (this.visitCardUrl) {
-            userJoinedMessage.setVisitcardurl(this.visitCardUrl);
-        }
-        userJoinedMessage.setCompanion(this.companion);
-        userJoinedMessage.setUseruuid(this.userUuid);
-        if (this.outlineColor !== undefined) {
-            userJoinedMessage.setOutlinecolor(this.outlineColor);
-            userJoinedMessage.setHasoutline(true);
-        } else {
-            userJoinedMessage.setHasoutline(false);
-        }
-        for (const entry of this.variables.entries()) {
-            userJoinedMessage.getVariablesMap().set(entry[0], entry[1]);
-        }
+        const userJoinedMessage: UserJoinedMessage = {
+            userId: this.userId,
+            userJid: this.userJid,
+            name: this.name,
+            characterLayers: this.characterLayers,
+            position: this.position,
+            availabilityStatus: this.availabilityStatus,
+            visitCardUrl: this.visitCardUrl ?? "", // FIXME: improve the typing
+            companion: this.companion,
+            userUuid: this.userUuid,
+            outlineColor: this.outlineColor ?? 0, // FIXME: improve the typing
+            hasOutline: this.outlineColor !== undefined,
+            variables: this.variables,
+        };
 
         return userJoinedMessage;
     }
 
     public toUserMovedMessage(): UserMovedMessage {
-        const userMovedMessage = new UserMovedMessage();
-
-        userMovedMessage.setUserid(this.userId);
-        userMovedMessage.setPosition(this.position);
-
-        return userMovedMessage;
+        return {
+            userId: this.userId,
+            position: this.position,
+        };
     }
 }
 
@@ -159,11 +143,11 @@ export class GroupDescriptor {
     ) {}
 
     public static createFromGroupUpdateZoneMessage(message: GroupUpdateZoneMessage): GroupDescriptor {
-        const position = message.getPosition();
+        const position = message.position;
         if (position === undefined) {
             throw new Error("Missing position");
         }
-        return new GroupDescriptor(message.getGroupid(), message.getGroupsize(), position, message.getLocked());
+        return new GroupDescriptor(message.groupId, message.groupSize, position, message.locked);
     }
 
     public update(groupDescriptor: GroupDescriptor): void {
@@ -173,19 +157,15 @@ export class GroupDescriptor {
     }
 
     public toGroupUpdateMessage(): GroupUpdateMessage {
-        const groupUpdateMessage = new GroupUpdateMessage();
         if (!Number.isInteger(this.groupId)) {
             throw new Error("GroupDescriptor.groupId is not an integer: " + this.groupId);
         }
-        groupUpdateMessage.setGroupid(this.groupId);
-        if (this.groupSize !== undefined) {
-            groupUpdateMessage.setGroupsize(new UInt32Value().setValue(this.groupSize));
-        }
-        groupUpdateMessage.setPosition(this.position);
-        if (this.locked !== undefined) {
-            groupUpdateMessage.setLocked(new BoolValue().setValue(this.locked));
-        }
-        return groupUpdateMessage;
+        return {
+            groupId: this.groupId,
+            groupSize: this.groupSize,
+            position: this.position,
+            locked: this.locked,
+        };
     }
 }
 
@@ -218,98 +198,120 @@ export class Zone implements CustomJsonReplacerInterface {
             debug("Opening connection to zone %d, %d on back server", this.x, this.y);
             try {
                 const apiClient = await apiClientRepository.getClient(this.positionDispatcher.roomId);
-                const zoneMessage = new ZoneMessage();
-                zoneMessage.setRoomid(this.positionDispatcher.roomId);
-                zoneMessage.setX(this.x);
-                zoneMessage.setY(this.y);
+                const zoneMessage: ZoneMessage = {
+                    roomId: this.positionDispatcher.roomId,
+                    x: this.x,
+                    y: this.y,
+                };
                 this.backConnection = apiClient.listenZone(zoneMessage);
                 this.backConnection.on("data", (batch: BatchToPusherMessage) => {
-                    for (const message of batch.getPayloadList()) {
-                        if (message.hasUserjoinedzonemessage()) {
-                            const userJoinedZoneMessage = message.getUserjoinedzonemessage() as UserJoinedZoneMessage;
-                            const userDescriptor =
-                                UserDescriptor.createFromUserJoinedZoneMessage(userJoinedZoneMessage);
-                            this.users.set(userJoinedZoneMessage.getUserid(), userDescriptor);
+                    for (const message of batch.payload) {
+                        if (!message.message) {
+                            console.warn("Received empty message on backConnection.");
+                            continue;
+                        }
+                        switch (message.message.$case) {
+                            case "userJoinedZoneMessage": {
+                                const userJoinedZoneMessage = message.message.userJoinedZoneMessage;
+                                const userDescriptor =
+                                    UserDescriptor.createFromUserJoinedZoneMessage(userJoinedZoneMessage);
+                                this.users.set(userJoinedZoneMessage.userId, userDescriptor);
 
-                            const fromZone = userJoinedZoneMessage.getFromzone();
+                                const fromZone = userJoinedZoneMessage.fromZone;
 
-                            this.notifyUserEnter(userDescriptor, fromZone?.toObject());
-                        } else if (message.hasGroupupdatezonemessage()) {
-                            const groupUpdateZoneMessage =
-                                message.getGroupupdatezonemessage() as GroupUpdateZoneMessage;
-                            const groupDescriptor =
-                                GroupDescriptor.createFromGroupUpdateZoneMessage(groupUpdateZoneMessage);
-
-                            // Do we have it already?
-                            const groupId = groupUpdateZoneMessage.getGroupid();
-                            const oldGroupDescriptor = this.groups.get(groupId);
-                            if (oldGroupDescriptor !== undefined) {
-                                oldGroupDescriptor.update(groupDescriptor);
-
-                                this.notifyGroupMove(groupDescriptor);
-                            } else {
-                                this.groups.set(groupId, groupDescriptor);
-                                const fromZone = groupUpdateZoneMessage.getFromzone();
-                                this.notifyGroupEnter(groupDescriptor, fromZone?.toObject());
+                                this.notifyUserEnter(userDescriptor, fromZone);
+                                break;
                             }
-                        } else if (message.hasUserleftzonemessage()) {
-                            const userLeftMessage = message.getUserleftzonemessage() as UserLeftZoneMessage;
-                            this.users.delete(userLeftMessage.getUserid());
+                            case "groupUpdateZoneMessage": {
+                                const groupUpdateZoneMessage = message.message.groupUpdateZoneMessage;
+                                const groupDescriptor =
+                                    GroupDescriptor.createFromGroupUpdateZoneMessage(groupUpdateZoneMessage);
 
-                            this.notifyUserLeft(userLeftMessage.getUserid(), userLeftMessage.getTozone()?.toObject());
-                        } else if (message.hasGroupleftzonemessage()) {
-                            const groupLeftMessage = message.getGroupleftzonemessage() as GroupLeftZoneMessage;
-                            this.groups.delete(groupLeftMessage.getGroupid());
+                                // Do we have it already?
+                                const groupId = groupUpdateZoneMessage.groupId;
+                                const oldGroupDescriptor = this.groups.get(groupId);
+                                if (oldGroupDescriptor !== undefined) {
+                                    oldGroupDescriptor.update(groupDescriptor);
 
-                            this.notifyGroupLeft(
-                                groupLeftMessage.getGroupid(),
-                                groupLeftMessage.getTozone()?.toObject()
-                            );
-                        } else if (message.hasUsermovedmessage()) {
-                            const userMovedMessage = message.getUsermovedmessage() as UserMovedMessage;
-
-                            const userId = userMovedMessage.getUserid();
-                            const userDescriptor = this.users.get(userId);
-
-                            if (userDescriptor === undefined) {
-                                console.error('Unexpected move message received for unknown user "' + userId + '"');
-                                return;
+                                    this.notifyGroupMove(groupDescriptor);
+                                } else {
+                                    this.groups.set(groupId, groupDescriptor);
+                                    const fromZone = groupUpdateZoneMessage.fromZone;
+                                    this.notifyGroupEnter(groupDescriptor, fromZone);
+                                }
+                                break;
                             }
+                            case "userLeftZoneMessage": {
+                                const userLeftMessage = message.message.userLeftZoneMessage;
+                                this.users.delete(userLeftMessage.userId);
 
-                            userDescriptor.update(userMovedMessage);
-
-                            this.notifyUserMove(userDescriptor);
-                        } else if (message.hasEmoteeventmessage()) {
-                            const emoteEventMessage = message.getEmoteeventmessage() as EmoteEventMessage;
-                            this.notifyEmote(emoteEventMessage);
-                        } else if (message.hasPlayerdetailsupdatedmessage()) {
-                            const playerDetailsUpdatedMessage =
-                                message.getPlayerdetailsupdatedmessage() as PlayerDetailsUpdatedMessage;
-
-                            const userId = playerDetailsUpdatedMessage.getUserid();
-                            const userDescriptor = this.users.get(userId);
-
-                            if (userDescriptor === undefined) {
-                                console.error('Unexpected details message received for unknown user "' + userId + '"');
-                                return;
+                                this.notifyUserLeft(userLeftMessage.userId, userLeftMessage.toZone);
+                                break;
                             }
+                            case "groupLeftZoneMessage": {
+                                const groupLeftZoneMessage = message.message.groupLeftZoneMessage;
+                                const groupId = groupLeftZoneMessage.groupId;
+                                this.groups.delete(groupId);
 
-                            const details = playerDetailsUpdatedMessage.getDetails();
-                            if (details === undefined) {
-                                console.error(
-                                    'Unexpected details message without details received for user "' + userId + '"'
-                                );
-                                return;
+                                this.notifyGroupLeft(groupId, groupLeftZoneMessage.toZone);
+                                break;
                             }
+                            case "userMovedMessage": {
+                                const userMovedMessage = message.message.userMovedMessage;
 
-                            userDescriptor.updateDetails(details);
+                                const userId = userMovedMessage.userId;
+                                const userDescriptor = this.users.get(userId);
 
-                            this.notifyPlayerDetailsUpdated(playerDetailsUpdatedMessage);
-                        } else if (message.hasErrormessage()) {
-                            const errorMessage = message.getErrormessage() as ErrorMessage;
-                            this.notifyError(errorMessage);
-                        } else {
-                            throw new Error("Unexpected message");
+                                if (userDescriptor === undefined) {
+                                    console.error('Unexpected move message received for unknown user "' + userId + '"');
+                                    return;
+                                }
+
+                                userDescriptor.update(userMovedMessage);
+
+                                this.notifyUserMove(userDescriptor);
+                                break;
+                            }
+                            case "emoteEventMessage": {
+                                const emoteEventMessage = message.message.emoteEventMessage;
+                                this.notifyEmote(emoteEventMessage);
+                                break;
+                            }
+                            case "playerDetailsUpdatedMessage": {
+                                const playerDetailsUpdatedMessage = message.message.playerDetailsUpdatedMessage;
+
+                                const userId = playerDetailsUpdatedMessage.userId;
+                                const userDescriptor = this.users.get(userId);
+
+                                if (userDescriptor === undefined) {
+                                    console.error(
+                                        'Unexpected details message received for unknown user "' + userId + '"'
+                                    );
+                                    return;
+                                }
+
+                                const details = playerDetailsUpdatedMessage.details;
+                                if (details === undefined) {
+                                    console.error(
+                                        'Unexpected details message without details received for user "' + userId + '"'
+                                    );
+                                    return;
+                                }
+
+                                userDescriptor.updateDetails(details);
+
+                                this.notifyPlayerDetailsUpdated(playerDetailsUpdatedMessage);
+                                break;
+                            }
+                            case "errorMessage": {
+                                const errorMessage = message.message.errorMessage;
+                                this.notifyError(errorMessage);
+                                break;
+                            }
+                            default: {
+                                throw new Error("Unexpected message " + message.message.$case);
+                                //const _exhaustiveCheck: never = message.message;
+                            }
                         }
                     }
                 });
@@ -395,7 +397,7 @@ export class Zone implements CustomJsonReplacerInterface {
 
     private notifyEmote(emoteMessage: EmoteEventMessage): void {
         for (const listener of this.listeners) {
-            if (listener.userId === emoteMessage.getActoruserid()) {
+            if (listener.userId === emoteMessage.actorUserId) {
                 continue;
             }
             this.socketListener.onEmote(emoteMessage, listener);
@@ -404,7 +406,7 @@ export class Zone implements CustomJsonReplacerInterface {
 
     private notifyPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage): void {
         for (const listener of this.listeners) {
-            if (listener.userId === playerDetailsUpdatedMessage.getUserid()) {
+            if (listener.userId === playerDetailsUpdatedMessage.userId) {
                 continue;
             }
             this.socketListener.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener);

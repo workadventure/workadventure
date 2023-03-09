@@ -38,7 +38,10 @@ export class EntityEditorTool extends MapEditorTool {
     private mapEditorSelectedEntityDraggedStoreUnsubscriber!: Unsubscriber;
 
     private pointerMoveEventHandler!: (pointer: Phaser.Input.Pointer) => void;
-    private pointerDownEventHandler!: (pointer: Phaser.Input.Pointer) => void;
+    private pointerDownEventHandler!: (
+        pointer: Phaser.Input.Pointer,
+        gameObjects: Phaser.GameObjects.GameObject[]
+    ) => void;
 
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super();
@@ -62,10 +65,12 @@ export class EntityEditorTool extends MapEditorTool {
     public clear(): void {
         mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
         this.entitiesManager.clearAllEntitiesTint();
+        this.entitiesManager.clearAllEntitiesEditOutlines();
         this.cleanPreview();
         this.unbindEventHandlers();
     }
     public activate(): void {
+        this.entitiesManager.makeAllEntitiesInteractive();
         this.bindEventHandlers();
     }
     public destroy(): void {
@@ -80,19 +85,30 @@ export class EntityEditorTool extends MapEditorTool {
         console.log("EntityEditorTool subscribeToGameMapFrontWrapperEvents");
     }
     public handleKeyDownEvent(event: KeyboardEvent): void {
-        console.log("EntityEditorTool handleKeyDownEvent");
+        switch (event.key.toLowerCase()) {
+            case "escape": {
+                mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
+                break;
+            }
+            case "delete": {
+                get(mapEditorSelectedEntityStore)?.delete();
+                mapEditorSelectedEntityStore.set(undefined);
+                mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
+                break;
+            }
+        }
     }
     /**
      * Perform actions needed to see the changes instantly
      */
-    public handleCommandExecution(commandConfig: CommandConfig): void {
+    public handleCommandExecution(commandConfig: CommandConfig, localCommand: boolean): void {
         switch (commandConfig.type) {
             case "UpdateEntityCommand": {
                 this.handleEntityUpdate(commandConfig.dataToModify);
                 break;
             }
             case "CreateEntityCommand": {
-                this.handleEntityCreation(commandConfig.entityData);
+                this.handleEntityCreation(commandConfig.entityData, localCommand);
                 break;
             }
             case "DeleteEntityCommand": {
@@ -188,12 +204,17 @@ export class EntityEditorTool extends MapEditorTool {
         this.scene.markDirty();
     }
 
-    private handleEntityCreation(config: EntityData): void {
-        this.entitiesManager.addEntity(
+    private handleEntityCreation(config: EntityData, localCommand: boolean): void {
+        const entity = this.entitiesManager.addEntity(
             structuredClone(config),
             undefined,
             get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode
         );
+        if (localCommand) {
+            mapEditorSelectedEntityStore.set(entity);
+            mapEditorSelectedEntityPrefabStore.set(undefined);
+            mapEntityEditorModeStore.set(MapEntityEditorMode.EditMode);
+        }
     }
 
     private handleEntityDeletion(id: string): void {
@@ -264,15 +285,10 @@ export class EntityEditorTool extends MapEditorTool {
             }
             switch (mode) {
                 case MapEntityEditorMode.AddMode: {
-                    this.entitiesManager.makeAllEntitiesNonInteractive();
+                    this.entitiesManager.makeAllEntitiesInteractive();
                     break;
                 }
                 case MapEntityEditorMode.EditMode: {
-                    this.entitiesManager.makeAllEntitiesInteractive();
-                    this.cleanPreview();
-                    break;
-                }
-                case MapEntityEditorMode.RemoveMode: {
                     this.entitiesManager.makeAllEntitiesInteractive();
                     this.cleanPreview();
                     break;
@@ -317,8 +333,11 @@ export class EntityEditorTool extends MapEditorTool {
         this.pointerMoveEventHandler = (pointer: Phaser.Input.Pointer) => {
             this.handlePointerMoveEvent(pointer);
         };
-        this.pointerDownEventHandler = (pointer: Phaser.Input.Pointer) => {
-            this.handlePointerDownEvent(pointer);
+        this.pointerDownEventHandler = (
+            pointer: Phaser.Input.Pointer,
+            gameObjects: Phaser.GameObjects.GameObject[]
+        ) => {
+            this.handlePointerDownEvent(pointer, gameObjects);
         };
 
         this.scene.input.on(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
@@ -365,7 +384,11 @@ export class EntityEditorTool extends MapEditorTool {
         this.scene.markDirty();
     }
 
-    private handlePointerDownEvent(pointer: Phaser.Input.Pointer): void {
+    private handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        if (get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode && gameObjects.length === 0) {
+            mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
+            mapEditorSelectedEntityStore.set(undefined);
+        }
         if (!this.entityPrefabPreview || !this.entityPrefab) {
             return;
         }
@@ -431,4 +454,9 @@ export class EntityEditorTool extends MapEditorTool {
             y: Math.floor(this.entityPrefabPreview.displayHeight / 32) % 2 === 1 ? 16 : 0,
         };
     }
+
+    // private setSelectedEntityStoreValue(entity: Entity | undefined): void {
+    //     get(mapEditorSelectedEntityStore)?.removeEditColor();
+    //     mapEditorSelectedEntityStore.set(entity);
+    // }
 }
