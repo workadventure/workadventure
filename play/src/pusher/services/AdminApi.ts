@@ -10,8 +10,8 @@ import {
     isMapDetailsData,
     isRoomRedirect,
     isAdminApiData,
-    isWokaDetail,
-    isMucRoomDefinition,
+    WokaDetail,
+    MucRoomDefinition,
     isApplicationDefinitionInterface,
     isCapabilities,
     Capabilities,
@@ -52,7 +52,7 @@ export const isFetchMemberDataByUuidResponse = z.object({
         description: "URL of the visitCard of the user fetched.",
         example: "https://mycompany.com/contact/me",
     }),
-    textures: extendApi(z.array(isWokaDetail), {
+    textures: extendApi(z.array(WokaDetail), {
         description: "This data represents the textures (WOKA) that will be available to users.",
     }),
     messages: extendApi(z.array(z.unknown()), {
@@ -72,7 +72,7 @@ export const isFetchMemberDataByUuidResponse = z.object({
     jabberPassword: extendApi(z.string().nullable().optional(), {
         description: "The password to connect to the XMPP server of this user",
     }),
-    mucRooms: extendApi(z.nullable(z.array(isMucRoomDefinition)), {
+    mucRooms: extendApi(z.nullable(z.array(MucRoomDefinition)), {
         description: "The MUC room is a room of message",
     }),
     activatedInviteUser: extendApi(z.boolean().nullable().optional(), {
@@ -80,6 +80,9 @@ export const isFetchMemberDataByUuidResponse = z.object({
     }),
     applications: extendApi(z.array(isApplicationDefinitionInterface).nullable().optional(), {
         description: "The applications run into the customer's world",
+    }),
+    canEdit: extendApi(z.boolean().nullable().optional(), {
+        description: "True if the user can edit the map",
     }),
 });
 
@@ -111,13 +114,13 @@ class AdminApi implements AdminInterface {
                 resolve(0);
             } catch (ex) {
                 // ignore errors when querying capabilities
-                const status = (ex as { response: { status: number } })?.response?.status;
-                if (status === 404) {
+                if (Axios.isAxiosError(ex) && ex.response?.status === 404) {
                     // 404 probably means and older api version
                     resolve(0);
                     console.warn(`Admin API server does not implement capabilities, default to basic capabilities`);
                     return;
                 }
+
                 // if we get here, it might be due to connectivity issues
                 if (!warnIssued)
                     console.warn(

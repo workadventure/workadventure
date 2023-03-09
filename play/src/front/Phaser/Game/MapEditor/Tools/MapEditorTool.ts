@@ -12,7 +12,7 @@ export abstract class MapEditorTool {
     /**
      * Perform actions needed to see the changes instantly
      */
-    public abstract handleCommandExecution(commandConfig: CommandConfig): void;
+    public abstract handleCommandExecution(commandConfig: CommandConfig, localCommand: boolean): void;
     /**
      * React on commands coming from the outside
      */

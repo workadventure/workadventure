@@ -1,6 +1,6 @@
 import { BaseHttpController } from "./BaseHttpController";
 import { apiClientRepository } from "../services/ApiClientRepository";
-import { PingMessage } from "../../messages/generated/messages_pb";
+import { PingMessage } from "@workadventure/messages";
 import { Metadata } from "@grpc/grpc-js";
 
 export class PingController extends BaseHttpController {
@@ -60,7 +60,7 @@ export class PingController extends BaseHttpController {
                 promises.push(
                     new Promise<PingMessage>((resolve, reject) => {
                         client.ping(
-                            new PingMessage(),
+                            {},
                             new Metadata(),
                             {
                                 deadline: Date.now() + 1000,

@@ -1,10 +1,10 @@
 * {
-    cursor: url("./images/cursor_normal.png"), auto;
+    cursor: auto;
 }
 * a,
 button,
 select {
-    cursor: url("./images/cursor_pointer.png"), pointer;
+    cursor: pointer;
 }
 body {
     overflow: hidden;
@@ -157,7 +157,7 @@ input[type="range"]:focus::-ms-fill-upper {
     margin: 1%;
     max-height: 96%;
     transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s;
-    cursor: url("./images/cursor_pointer.png"), pointer;
+    cursor: pointer;
 }
 
 .chat-mode > div:hover {
@@ -234,7 +234,7 @@ input[type="range"]:focus::-ms-fill-upper {
     margin-top: 6px;
     width: 30px;
     height: 30px;
-    cursor: url("./images/cursor_pointer.png"), pointer;
+    cursor: pointer;
     padding: 0 5px;
     transition: all 0.5s ease;
     transform: rotateY(0);
@@ -255,7 +255,7 @@ input[type="range"]:focus::-ms-fill-upper {
 }
 
 .message-container div.clear:hover {
-    cursor: url("./images/cursor_pointer.png"), pointer;
+    cursor: pointer;
     top: calc(100% + 5px);
     transform: scale(1.2) translateY(3px);
 }
@@ -319,7 +319,7 @@ div.modal-report-user {
     right: 0;
     left: auto;
     top: 0;
-    cursor: url("./images/cursor_pointer.png"), pointer;
+    cursor: pointer;
     width: 15px;
     height: 15px;
     margin: 10px;
@@ -338,7 +338,7 @@ div.modal-report-user {
     transition: all 0.2s ease;
 }
 .modal-report-user button:hover {
-    cursor: url("./images/cursor_pointer.png"), pointer;
+    cursor: pointer;
     background-color: #ffda01;
     color: black;
     border: 1px solid black;
@@ -381,7 +381,7 @@ div.modal-report-user {
 }
 .discussion .active-btn {
     display: none;
-    cursor: url("./images/cursor_pointer.png"), pointer;
+    cursor: pointer;
     height: 50px;
     width: 50px;
     background-color: #2d2d2dba;
@@ -411,7 +411,7 @@ div.modal-report-user {
     right: 10px;
     background: none;
     border: none;
-    cursor: url("./images/cursor_pointer.png"), pointer;
+    cursor: pointer;
 }
 .discussion .close-btn img {
     height: 15px;
@@ -436,7 +436,7 @@ div.modal-report-user {
     background-color: #ffffff69;
     padding: 5px;
     border-radius: 15px;
-    cursor: url("./images/cursor_pointer.png"), pointer;
+    cursor: pointer;
 }
 
 .discussion .participants .participant:hover {
@@ -469,7 +469,7 @@ div.modal-report-user {
 }
 
 .discussion .participants .participant button.report-btn {
-    cursor: url("./images/cursor_pointer.png"), pointer;
+    cursor: pointer;
     position: absolute;
     background-color: #2d2d2dba;
     right: 34px;
@@ -585,7 +585,7 @@ div.action.danger {
 }
 
 div.action p.action-body {
-    cursor: url("./images/cursor_pointer.png"), pointer;
+    cursor: pointer;
     padding: 10px;
     background-color: #2d2d2dba;
     color: #fff;

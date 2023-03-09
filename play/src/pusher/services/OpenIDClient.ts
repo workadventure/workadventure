@@ -127,9 +127,9 @@ class OpenIDClient {
                 return client.userinfo(tokenSet).then((res) => {
                     return {
                         ...res,
-                        email: res.email as string,
+                        email: res.email ?? "",
                         sub: res.sub,
-                        access_token: tokenSet.access_token as string,
+                        access_token: tokenSet.access_token ?? "",
                         username: res[OPID_USERNAME_CLAIM] as string,
                         locale: res[OPID_LOCALE_CLAIM] as string,
                     };

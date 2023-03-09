@@ -1,10 +1,9 @@
-import type { PredefinedPropertyData, EntityPrefab } from "@workadventure/map-editor";
-import { writable } from "svelte/store";
-import { connectionManager } from "../Connexion/ConnectionManager";
-import { ENABLE_FEATURE_MAP_EDITOR } from "../Enum/EnvironmentVariable";
+import type { PredefinedPropertyData, EntityPrefab, EntityDataProperties } from "@workadventure/map-editor";
+import { writable, get } from "svelte/store";
 import type { AreaPreview } from "../Phaser/Components/MapEditor/AreaPreview";
 import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
 import { Entity } from "../Phaser/ECS/Entity";
+import { mapEditorActivated } from "./MenuStore";
 
 function createMapEditorModeStore() {
     const { set, subscribe } = writable(false);
@@ -12,7 +11,21 @@ function createMapEditorModeStore() {
     return {
         subscribe,
         switchMode: (value: boolean) => {
-            set(ENABLE_FEATURE_MAP_EDITOR && connectionManager.currentRoom?.canEditMap === true && value);
+            set(get(mapEditorActivated) && value);
+        },
+    };
+}
+
+function createMapEditorSelectedEntityStore() {
+    const { subscribe, update } = writable<Entity | undefined>(undefined);
+
+    return {
+        subscribe,
+        set: (value: Entity | undefined) => {
+            update((oldValue) => {
+                oldValue?.removeEditColor();
+                return value;
+            });
         },
     };
 }
@@ -20,7 +33,6 @@ function createMapEditorModeStore() {
 export enum MapEntityEditorMode {
     AddMode = "AddMode",
     EditMode = "EditMode",
-    RemoveMode = "RemoveMode",
 }
 
 export function onMapEditorInputFocus() {
@@ -33,16 +45,20 @@ export function onMapEditorInputUnfocus() {
 
 export const mapEditorModeStore = createMapEditorModeStore();
 
+export const mapEditorSelectedEntityStore = createMapEditorSelectedEntityStore();
+
+export const mapEditorSelectedEntityDraggedStore = writable<boolean>(false);
+
 export const mapEditorInputStore = writable(false);
 
 export const mapEditorSelectedAreaPreviewStore = writable<AreaPreview | undefined>(undefined);
-
-export const mapEditorSelectedEntityStore = writable<Entity | undefined>(undefined);
 
 export const mapEditorSelectedPropertyStore = writable<PredefinedPropertyData | undefined>(undefined);
 
 export const mapEditorSelectedToolStore = writable<EditorToolName | undefined>(undefined);
 
 export const mapEditorSelectedEntityPrefabStore = writable<EntityPrefab | undefined>(undefined);
+
+export const mapEditorCopiedEntityDataPropertiesStore = writable<EntityDataProperties | undefined>(undefined);
 
 export const mapEntityEditorModeStore = writable<MapEntityEditorMode>(MapEntityEditorMode.AddMode);

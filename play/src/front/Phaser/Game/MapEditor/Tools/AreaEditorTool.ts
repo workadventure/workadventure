@@ -114,7 +114,7 @@ export class AreaEditorTool extends MapEditorTool {
         }
     }
 
-    public handleCommandExecution(commandConfig: CommandConfig): void {
+    public handleCommandExecution(commandConfig: CommandConfig, localCommand: boolean): void {
         // We do not need to make any visual changes if AreaEditorTool is not active
         if (!this.active) {
             return;

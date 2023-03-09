@@ -113,7 +113,7 @@ export class SocketManager {
 
         if (lastCommandId) {
             const updateMapToNewestMessage = new UpdateMapToNewestMessage();
-            updateMapToNewestMessage.setCommandid(lastCommandId);
+            updateMapToNewestMessage.setCommandid(lastCommandId.getValue());
 
             const updateMapToNewestWithKeyMessage = new UpdateMapToNewestWithKeyMessage();
             updateMapToNewestWithKeyMessage.setMapkey(room.mapUrl);
@@ -146,6 +146,8 @@ export class SocketManager {
         roomJoinedMessage.setTagList(joinRoomMessage.getTagList());
         roomJoinedMessage.setUserroomtoken(joinRoomMessage.getUserroomtoken());
         roomJoinedMessage.setCharacterlayerList(joinRoomMessage.getCharacterlayerList());
+        roomJoinedMessage.setCanedit(joinRoomMessage.getCanedit());
+
         if (commandsToApply) {
             const editMapCommandsArrayMessage = new EditMapCommandsArrayMessage();
             editMapCommandsArrayMessage.setEditmapcommandsList(commandsToApply);
@@ -610,7 +612,7 @@ export class SocketManager {
         hmac.setEncoding("base64");
         hmac.write(username);
         hmac.end();
-        const password = hmac.read() as string;
+        const password = String(hmac.read() || "");
         return {
             username,
             password,

@@ -208,14 +208,8 @@ class ConnectionManager {
                     analyticsClient.loggedWithSso();
                 } catch (err) {
                     console.error(err);
-                    // if the user must be connected in the current room or if the pusher error is not openid provider access error
-                    // try to connect with function loadOpenIDScreen
-                    if (
-                        this._currentRoom.authenticationMandatory ||
-                        (Axios.isAxiosError(err) &&
-                            err.response?.data &&
-                            err.response.data !== "User cannot to be connected on openid provider")
-                    ) {
+                    // if the user must be connected to the current room or if the pusher error is not openid provider access error
+                    if (this._currentRoom.authenticationMandatory) {
                         const redirect = this.loadOpenIDScreen();
                         if (redirect === null) {
                             throw new Error("Unable to redirect on login page.");
@@ -224,6 +218,7 @@ class ConnectionManager {
                     }
                 }
             }
+            // Todo: Replace with a real typing
             this.localUser = localUserStore.getLocalUser() as LocalUser; //if authToken exist in localStorage then localUser cannot be null
         }
         if (this._currentRoom == undefined) {

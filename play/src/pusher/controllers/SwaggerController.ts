@@ -1,9 +1,10 @@
 import { BaseHttpController } from "./BaseHttpController";
-import * as fs from "fs";
+import fs from "fs";
 import { ADMIN_URL } from "../enums/EnvironmentVariable";
 import SwaggerGenerator from "../services/SwaggerGenerator";
 import swaggerJsdoc from "swagger-jsdoc";
 import path from "path";
+import * as cheerio from "cheerio";
 
 export class SwaggerController extends BaseHttpController {
     routes(): void {
@@ -214,23 +215,38 @@ export class SwaggerController extends BaseHttpController {
 
         // Create static serve route to serve index.html
         this.app.get("/swagger-ui/", (request, response) => {
-            fs.readFile(process.cwd() + "/node_modules/swagger-ui-dist/index.html", "utf8", function (err, data) {
+            fs.readFile(process.cwd() + "/../node_modules/swagger-ui-dist/index.html", "utf8", function (err, data) {
                 if (err) {
                     return response.status(500).send(err.message);
                 }
 
+                // Load the html file
+                const $ = cheerio.load(data);
+
+                // Replace the url of the swagger.json file
                 const urls = [
                     { url: "/openapi/pusher", name: "Front -> Pusher <- Admin" },
                     { url: "/openapi/admin", name: "Pusher -> Admin" },
                     { url: "/openapi/external-admin", name: "Admin -> External Admin" },
                 ];
+                const swaggerScript = `<script charset="UTF-8">window.onload = function() {
+                    window.ui = SwaggerUIBundle({
+                        urls: ${JSON.stringify(urls)}, "urls.primaryName": "Admin -> External Admin",
+                        dom_id: '#swagger-ui',
+                        deepLinking: true,
+                        presets: [
+                            SwaggerUIBundle.presets.apis,
+                            SwaggerUIStandalonePreset
+                        ],
+                        plugins: [
+                            SwaggerUIBundle.plugins.DownloadUrl
+                        ],
+                        layout: "StandaloneLayout"
+                    });
+                  };</script>`;
+                $("body").append(swaggerScript);
 
-                const result = data.replace(
-                    /url: "https:\/\/petstore\.swagger\.io\/v2\/swagger.json"/g,
-                    `urls: ${JSON.stringify(urls)}, "urls.primaryName": "Admin -> External Admin"`
-                );
-                response.send(result);
-
+                response.send($.html());
                 return;
             });
         });
@@ -249,8 +265,7 @@ export class SwaggerController extends BaseHttpController {
 
             // Strip away '/assets' from the request path to get asset relative path
             const formattedPath = request.path.replace("/swagger-ui", "");
-            const realPath = `${path.resolve("node_modules/swagger-ui-dist")}${formattedPath}`;
-
+            const realPath = `${path.resolve("../node_modules/swagger-ui-dist")}${formattedPath}`;
             if (!fs.existsSync(realPath)) {
                 response.status(404).send("");
                 return;
@@ -265,7 +280,7 @@ export class SwaggerController extends BaseHttpController {
             }
 
             // Set appropriate mime-type and serve file buffer as response body
-            response.type(fileParsed.ext).send(file.buffer);
+            response.type(fileParsed.ext).send(file);
             return;
         });
     }
