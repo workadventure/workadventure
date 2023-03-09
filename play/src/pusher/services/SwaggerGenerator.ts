@@ -6,7 +6,7 @@ import {
     isErrorApiRetryData,
     isErrorApiUnauthorizedData,
     isMapDetailsData,
-    isWokaDetail,
+    WokaDetail,
     wokaList,
     wokaTexture,
     isRoomRedirect,
@@ -31,7 +31,7 @@ class SwaggerGenerator {
                 FetchMemberDataByUuidResponse: generateSchema(isFetchMemberDataByUuidResponse),
                 MapDetailsData: generateSchema(isMapDetailsData),
                 RoomRedirect: generateSchema(isRoomRedirect),
-                WokaDetail: generateSchema(isWokaDetail),
+                WokaDetail: generateSchema(WokaDetail),
             },
         };
         if (type === "external") {
@@ -56,7 +56,7 @@ class SwaggerGenerator {
                 //RegisterData: generateSchema(isRegisterData),
                 //RoomRedirect: generateSchema(isRoomRedirect),
                 //UserMessageAdminMessageInterface: generateSchema(isUserMessageAdminMessageInterface),
-                WokaDetail: generateSchema(isWokaDetail),
+                WokaDetail: generateSchema(WokaDetail),
                 WokaList: generateSchema(wokaList),
                 WokaTexture: generateSchema(wokaTexture),
             },

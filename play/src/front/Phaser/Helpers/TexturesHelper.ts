@@ -17,7 +17,11 @@ export class TexturesHelper {
                 try {
                     rt.snapshot(
                         (url) => {
-                            resolve((url as HTMLImageElement).src);
+                            if (url instanceof HTMLImageElement) {
+                                resolve(url.src);
+                            } else {
+                                resolve(String(url));
+                            }
                             rt.destroy();
                         },
                         "image/png",

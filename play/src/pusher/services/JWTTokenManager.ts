@@ -1,16 +1,20 @@
 import { ADMIN_SOCKETS_TOKEN, SECRET_KEY } from "../enums/EnvironmentVariable";
 import Jwt from "jsonwebtoken";
+import z from "zod";
 import { InvalidTokenError } from "../controllers/InvalidTokenError";
 
-export interface AuthTokenData {
-    identifier: string; //will be a email if logged in or an uuid if anonymous
-    accessToken?: string;
-    username?: string;
-    locale?: string;
-}
-export interface AdminSocketTokenData {
-    authorizedRoomIds: string[]; //the list of rooms the client is authorized to read from.
-}
+export const AuthTokenData = z.object({
+    identifier: z.string(), //will be a email if logged in or an uuid if anonymous
+    accessToken: z.string().optional(),
+    username: z.string().optional(),
+    locale: z.string().optional(),
+});
+export type AuthTokenData = z.infer<typeof AuthTokenData>;
+
+export const AdminSocketTokenData = z.object({
+    authorizedRoomIds: z.string().array(), //the list of rooms the client is authorized to read from.
+});
+export type AdminSocketTokenData = z.infer<typeof AdminSocketTokenData>;
 export const tokenInvalidException = "tokenInvalid";
 
 export class JWTTokenManager {
@@ -18,7 +22,10 @@ export class JWTTokenManager {
         if (!ADMIN_SOCKETS_TOKEN) {
             throw new Error("Missing environment variable ADMIN_SOCKETS_TOKEN");
         }
-        return Jwt.verify(token, ADMIN_SOCKETS_TOKEN) as AdminSocketTokenData;
+
+        const verifiedToken = Jwt.verify(token, ADMIN_SOCKETS_TOKEN);
+
+        return AdminSocketTokenData.parse(verifiedToken);
     }
 
     public createAuthToken(identifier: string, accessToken?: string, username?: string, locale?: string): string {
@@ -27,7 +34,7 @@ export class JWTTokenManager {
 
     public verifyJWTToken(token: string, ignoreExpiration = false): AuthTokenData {
         try {
-            return Jwt.verify(token, SECRET_KEY, { ignoreExpiration }) as AuthTokenData;
+            return AuthTokenData.parse(Jwt.verify(token, SECRET_KEY, { ignoreExpiration }));
         } catch (e) {
             if (e instanceof Error) {
                 // FIXME: we are loosing the stacktrace here.
