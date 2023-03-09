@@ -122,7 +122,7 @@ export class GameRoom implements BrothersFinder {
 
         const gameRoom = new GameRoom(
             roomUrl,
-            mapDetails.mapUrl,
+            mapDetails.mapUrl!,
             mapDetails.group,
             connectCallback,
             disconnectCallback,
@@ -598,7 +598,7 @@ export class GameRoom implements BrothersFinder {
         // Let's check if the mapUrl has changed
         const mapDetails = await GameRoom.getMapDetails(this.roomUrl);
         if (this._mapUrl !== mapDetails.mapUrl) {
-            this._mapUrl = mapDetails.mapUrl;
+            this._mapUrl = mapDetails.mapUrl!;
             this.mapPromise = undefined;
             // Reset the variable manager
             this.variableManagerPromise = undefined;

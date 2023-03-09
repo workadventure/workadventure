@@ -280,7 +280,7 @@ export class MetaTagsBuilder {
             return undefined;
         }
 
-        const mapUrl = mapDetails.data.mapUrl;
+        const mapUrl = mapDetails.data.mapUrl ?? "";
         let fetchedData: AxiosResponse;
         try {
             fetchedData = await axios.get(mapUrl);
