@@ -1276,7 +1276,6 @@ export class GameScene extends DirtyScene {
                 this.activatablesManager.deactivateSelectedObject();
                 this.activatablesManager.handlePointerOutActivatableObject();
                 this.activatablesManager.disableSelectingByDistance();
-                this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesNonInteractive();
             } else {
                 this.activatablesManager.enableSelectingByDistance();
                 // make sure all entities are non-interactive

@@ -16,10 +16,23 @@ function createMapEditorModeStore() {
     };
 }
 
+function createMapEditorSelectedEntityStore() {
+    const { subscribe, update } = writable<Entity | undefined>(undefined);
+
+    return {
+        subscribe,
+        set: (value: Entity | undefined) => {
+            update((oldValue) => {
+                oldValue?.removeEditColor();
+                return value;
+            });
+        },
+    };
+}
+
 export enum MapEntityEditorMode {
     AddMode = "AddMode",
     EditMode = "EditMode",
-    RemoveMode = "RemoveMode",
 }
 
 export function onMapEditorInputFocus() {
@@ -32,11 +45,11 @@ export function onMapEditorInputUnfocus() {
 
 export const mapEditorModeStore = createMapEditorModeStore();
 
+export const mapEditorSelectedEntityStore = createMapEditorSelectedEntityStore();
+
 export const mapEditorInputStore = writable(false);
 
 export const mapEditorSelectedAreaPreviewStore = writable<AreaPreview | undefined>(undefined);
-
-export const mapEditorSelectedEntityStore = writable<Entity | undefined>(undefined);
 
 export const mapEditorSelectedPropertyStore = writable<PredefinedPropertyData | undefined>(undefined);
 
