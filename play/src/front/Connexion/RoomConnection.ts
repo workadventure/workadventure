@@ -1,4 +1,4 @@
-import { PUSHER_URL, UPLOADER_URL } from "../Enum/EnvironmentVariable";
+import { ENABLE_FEATURE_MAP_EDITOR, PUSHER_URL, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
@@ -19,6 +19,7 @@ import { get } from "svelte/store";
 import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
 import {
     inviteUserActivated,
+    mapEditorActivated,
     menuIconVisiblilityStore,
     menuVisiblilityStore,
     warningContainerStore,
@@ -209,7 +210,9 @@ export class RoomConnection implements RoomConnection {
         }
         url += "room";
         url += "?roomId=" + encodeURIComponent(roomUrl);
-        url += "&token=" + (token ? encodeURIComponent(token) : "");
+        if (token) {
+            url += "&token=" + encodeURIComponent(token);
+        }
         url += "&name=" + encodeURIComponent(name);
         for (const layer of characterLayers) {
             url += "&characterLayers=" + encodeURIComponent(layer);
@@ -220,16 +223,13 @@ export class RoomConnection implements RoomConnection {
         url += "&bottom=" + Math.floor(viewport.bottom);
         url += "&left=" + Math.floor(viewport.left);
         url += "&right=" + Math.floor(viewport.right);
-        if (typeof companion === "string") {
+        if (companion) {
             url += "&companion=" + encodeURIComponent(companion);
         }
-        if (typeof availabilityStatus === "number") {
-            url += "&availabilityStatus=" + availabilityStatus;
-        }
+        url += "&availabilityStatus=" + availabilityStatus;
         if (lastCommandId) {
             url += "&lastCommandId=" + lastCommandId;
         }
-
         url += "&version=" + apiVersionHash;
 
         if (RoomConnection.websocketFactory) {
@@ -393,6 +393,7 @@ export class RoomConnection implements RoomConnection {
                             ? roomJoinedMessage.activatedInviteUser
                             : true
                     );
+                    mapEditorActivated.set(ENABLE_FEATURE_MAP_EDITOR && roomJoinedMessage.canEdit);
 
                     // If there are scripts from the admin, run it
                     if (roomJoinedMessage.applications != undefined) {
@@ -1132,6 +1133,7 @@ export class RoomConnection implements RoomConnection {
                                 y: config.y,
                                 collectionName: config.prefab.collectionName,
                                 prefabId: config.prefab.id,
+                                properties: config.properties ?? {},
                             },
                         },
                     },

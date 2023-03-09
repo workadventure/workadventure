@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
-import { isMucRoomDefinition } from "./MucRoomDefinitionInterface";
 import { isMetaTagFavicon } from "./MetaTagFavicon";
 import { isMetaTagManifestIcon } from "./MetaTagManifestIcon";
 import { OpidWokaNamePolicy } from "./OpidWokaNamePolicy";
+import { MucRoomDefinition } from "./MucRoomDefinition";
 
 /*
  * WARNING! The original file is in /messages/JsonMessages.
@@ -142,7 +142,7 @@ export const isMapDetailsData = z.object({
         description: 'The group this room is part of (maps the notion of "world" in WorkAdventure SAAS)',
         example: "myorg/myworld",
     }),
-    mucRooms: extendApi(isMucRoomDefinition.array().nullable(), {
+    mucRooms: extendApi(MucRoomDefinition.array().nullable(), {
         description: "The MUC room is a room of message",
     }),
     contactPage: extendApi(z.string().nullable().optional(), {
@@ -169,10 +169,6 @@ export const isMapDetailsData = z.object({
     // Whether the "report" feature is enabled or not on this room
     canReport: extendApi(z.boolean().optional(), {
         description: 'Whether the "report" feature is enabled or not on this room',
-        example: true,
-    }),
-    canEdit: extendApi(z.optional(z.boolean()), {
-        description: 'Whether the "map editor" feature is enabled for the current user',
         example: true,
     }),
     editable: extendApi(z.optional(z.boolean()), {

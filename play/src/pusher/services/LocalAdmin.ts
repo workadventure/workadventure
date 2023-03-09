@@ -28,6 +28,12 @@ class LocalAdmin implements AdminInterface {
         characterLayers: string[],
         locale?: string
     ): Promise<FetchMemberDataByUuidResponse> {
+        let canEdit = false;
+        const roomUrl = new URL(playUri);
+        const match = /\/~\/(.+)/.exec(roomUrl.pathname);
+        if (match) {
+            canEdit = true;
+        }
         const mucRooms = [{ name: "Connected users", url: playUri, type: "default", subscribe: false }];
         if (ENABLE_CHAT) {
             mucRooms.push({ name: "Welcome", url: `${playUri}/forum/welcome`, type: "forum", subscribe: false });
@@ -42,6 +48,7 @@ class LocalAdmin implements AdminInterface {
             userRoomToken: undefined,
             mucRooms,
             activatedInviteUser: true,
+            canEdit,
         };
     }
 
@@ -61,7 +68,7 @@ class LocalAdmin implements AdminInterface {
 
         let mapUrl = undefined;
         let wamUrl = undefined;
-        let canEdit = false;
+        const canEdit = false;
         const entityCollectionsUrls = [];
 
         let match = /\/~\/(.+)/.exec(roomUrl.pathname);
@@ -73,7 +80,6 @@ class LocalAdmin implements AdminInterface {
             }
             wamUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
             entityCollectionsUrls.push(`${PUBLIC_MAP_STORAGE_URL}/entityCollections`);
-            canEdit = true;
         } else {
             match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);
             if (!match) {

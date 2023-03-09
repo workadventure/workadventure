@@ -196,7 +196,7 @@ export class GameRoom implements BrothersFinder {
             joinRoomMessage.getAvailabilitystatus(),
             socket,
             joinRoomMessage.getTagList(),
-            joinRoomMessage.getVisitcardurl(),
+            joinRoomMessage.getVisitcardurl()?.getValue() ?? null,
             joinRoomMessage.getName(),
             ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.getCharacterlayerList()),
             this.roomUrl,
@@ -227,6 +227,12 @@ export class GameRoom implements BrothersFinder {
     }
 
     public leave(user: User) {
+        if (user.disconnected === true) {
+            console.warn("User ", user.id, "already disconnected!");
+            return;
+        }
+        user.disconnected = true;
+
         if (!this.users.has(user.id)) {
             console.warn("User ", user.id, "does not belong to this game room! It should!");
         }
@@ -645,7 +651,6 @@ export class GameRoom implements BrothersFinder {
             }
             return {
                 mapUrl,
-                canEdit,
                 editable: canEdit,
                 entityCollectionsUrls,
                 authenticationMandatory: null,

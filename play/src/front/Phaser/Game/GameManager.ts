@@ -147,7 +147,12 @@ export class GameManager {
         if (this.currentGameSceneName === null) throw new Error("No current scene id set!");
         gameSceneIsLoadedStore.set(false);
 
-        const gameScene: GameScene = this.scenePlugin.get(this.currentGameSceneName) as GameScene;
+        const gameScene = this.scenePlugin.get(this.currentGameSceneName);
+
+        if (!(gameScene instanceof GameScene)) {
+            throw new Error("Not the Game Scene");
+        }
+
         gameScene.cleanupClosingScene();
         gameScene.createSuccessorGameScene(false, false);
         menuIconVisiblilityStore.set(false);
@@ -171,7 +176,11 @@ export class GameManager {
 
     public getCurrentGameScene(): GameScene {
         if (this.currentGameSceneName === null) throw new Error("No current scene id set!");
-        return this.scenePlugin.get(this.currentGameSceneName) as GameScene;
+        const gameScene = this.scenePlugin.get(this.currentGameSceneName);
+        if (!(gameScene instanceof GameScene)) {
+            throw new Error("Not the Game Scene");
+        }
+        return gameScene;
     }
 
     public get currentStartedRoom() {

@@ -67,6 +67,7 @@
 
     let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((currentEntity) => {
         if (currentEntity) {
+            currentEntity.setEditColor(0x00ffff);
             for (let property of possibleProperties) {
                 property.active =
                     currentEntity.getProperties()[property.key] !== undefined &&

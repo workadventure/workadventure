@@ -8,8 +8,8 @@ import {
 import { localUserStore } from "./LocalUserStore";
 import axios from "axios";
 import { axiosWithRetry } from "./AxiosUtils";
-import type { MucRoomDefinitionInterface, MapDetailsData, LegalsData } from "@workadventure/messages";
-import { isMapDetailsData, isRoomRedirect, isErrorApiData, OpidWokaNamePolicy } from "@workadventure/messages";
+import type { MucRoomDefinition, LegalsData } from "@workadventure/messages";
+import { isMapDetailsData, isRoomRedirect, ErrorApiData, OpidWokaNamePolicy } from "@workadventure/messages";
 import { ApiError } from "../Stores/Errors/ApiError";
 export class MapDetail {
     constructor(public readonly mapUrl?: string, public readonly wamUrl?: string) {}
@@ -34,13 +34,12 @@ export class Room {
     private _group: string | null = null;
     private _expireOn: Date | undefined;
     private _canReport = false;
-    private _canEditMap = false;
     private _miniLogo: string | undefined;
     private _loadingCowebsiteLogo: string | undefined;
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
     private _metadata: unknown | undefined;
-    private _mucRooms: Array<MucRoomDefinitionInterface> | undefined;
+    private _mucRooms: Array<MucRoomDefinition> | undefined;
     private _showPoweredBy: boolean | undefined = true;
     private _roomName: string | undefined;
     private _pricingUrl: string | undefined;
@@ -132,15 +131,9 @@ export class Room {
 
             const data = result.data;
 
-            if ((data as MapDetailsData).authenticationMandatory !== undefined) {
-                (data as MapDetailsData).authenticationMandatory = Boolean(
-                    (data as MapDetailsData).authenticationMandatory
-                );
-            }
-
             const roomRedirectChecking = isRoomRedirect.safeParse(data);
             const mapDetailsDataChecking = isMapDetailsData.safeParse(data);
-            const errorApiDataChecking = isErrorApiData.safeParse(data);
+            const errorApiDataChecking = ErrorApiData.safeParse(data);
 
             if (roomRedirectChecking.success) {
                 const data = roomRedirectChecking.data;
@@ -149,6 +142,11 @@ export class Room {
                 };
             } else if (mapDetailsDataChecking.success) {
                 const data = mapDetailsDataChecking.data;
+
+                if (data.authenticationMandatory !== undefined) {
+                    data.authenticationMandatory = Boolean(data.authenticationMandatory);
+                }
+
                 console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
                 this._mapUrl = data.mapUrl;
                 this._wamUrl = data.wamUrl;
@@ -163,7 +161,6 @@ export class Room {
                 }
                 this._opidWokaNamePolicy = data.opidWokaNamePolicy ?? OPID_WOKA_NAME_POLICY;
                 this._canReport = data.canReport ?? false;
-                this._canEditMap = data.canEdit ?? false;
                 this._miniLogo = data.miniLogo ?? undefined;
                 this._loadingCowebsiteLogo = data.loadingCowebsiteLogo ?? undefined;
                 this._loadingLogo = data.loadingLogo ?? undefined;
@@ -289,10 +286,6 @@ export class Room {
         return this._canReport;
     }
 
-    get canEditMap(): boolean {
-        return this._canEditMap;
-    }
-
     get loadingCowebsiteLogo(): string | undefined {
         return this._loadingCowebsiteLogo;
     }
@@ -317,7 +310,7 @@ export class Room {
         return this._metadata;
     }
 
-    get mucRooms(): Array<MucRoomDefinitionInterface> | undefined {
+    get mucRooms(): Array<MucRoomDefinition> | undefined {
         return this._mucRooms;
     }
 

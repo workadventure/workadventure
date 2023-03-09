@@ -179,12 +179,12 @@ export class UserInputManager {
     }
 
     disableControls() {
-        this.scene.input.keyboard.removeAllKeys();
+        this.scene.input.keyboard.disableGlobalCapture();
         this.isInputDisabled = true;
     }
 
     restoreControls() {
-        this.initKeyBoardEvent();
+        this.scene.input.keyboard.enableGlobalCapture();
         this.isInputDisabled = false;
     }
 
@@ -283,7 +283,7 @@ export class UserInputManager {
                 }
 
                 // Let's only display the joystick if there is one finger on the screen
-                if ((pointer.event as TouchEvent).touches.length === 1) {
+                if (pointer.event instanceof TouchEvent && pointer.event.touches.length === 1) {
                     this.joystick?.showAt(pointer.x, pointer.y);
                 } else {
                     this.joystick?.hide();

@@ -242,7 +242,7 @@ export class FrontController extends BaseHttpController {
             short_name: metaTagsData.title,
             name: metaTagsData.title,
             icons: metaTagsData.manifestIcons,
-            start_url: "/",
+            start_url: url.replace(`${req.protocol}://${req.hostname}`, ""),
             background_color: metaTagsData.themeColor,
             display_override: ["window-control-overlay", "minimal-ui"],
             display: "standalone",

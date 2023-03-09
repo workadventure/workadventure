@@ -3,6 +3,7 @@ import {
     ITiledMapLayer,
     ITiledMapObject,
     ITiledMapProperty,
+    Json,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
 import type { AreaData, AreaDataProperties, WAMFileFormat } from "../types";
@@ -158,7 +159,7 @@ export class GameMap {
     public getTiledObjectProperty(
         object: { properties?: ITiledMapProperty[] },
         propertyName: string
-    ): string | boolean | number | undefined {
+    ): Json | undefined {
         const properties: ITiledMapProperty[] | undefined = object.properties;
         if (!properties) {
             return undefined;
@@ -169,7 +170,7 @@ export class GameMap {
         if (obj === undefined) {
             return undefined;
         }
-        return obj.value as string | boolean | number | undefined;
+        return obj.value;
     }
 
     public getObjectWithName(name: string): ITiledMapObject | undefined {

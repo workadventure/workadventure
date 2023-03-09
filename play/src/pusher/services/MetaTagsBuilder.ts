@@ -9,7 +9,7 @@ import {
     ErrorApiData,
 } from "@workadventure/messages";
 import { adminService } from "./AdminService";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import { ADMIN_API_URL } from "../enums/EnvironmentVariable";
 
 export const MetaTagsDefaultValue: RequiredMetaTagsData = {
@@ -258,22 +258,43 @@ export class MetaTagsBuilder {
         }
     }
 
-    private async fetchMapFile(): Promise<ITiledMap | undefined> {
-        // Note: we could probably read the map file ONLY if the request comes from a bot.
+    private async fetchMapFile(url: string, nbRedirect = 0): Promise<ITiledMap | undefined> {
+        // Note: we read the map file ONLY if the request comes from a bot.
         // Otherwise, the map file is already read in the Game scene!
 
-        // FIXME: This is incorrect, we need to fetch the mapUrl from the adminService.
-        // FIXME: This is incorrect, we need to fetch the mapUrl from the adminService.
-        // FIXME: This is incorrect, we need to fetch the mapUrl from the adminService.
-        // FIXME: This is incorrect, we need to fetch the mapUrl from the adminService.
-        // FIXME: This is incorrect, we need to fetch the mapUrl from the adminService.
-        // Then, we need to cache the call to the mapUrl to avoid too many calls (possibly setting up axios to use etags too!)
-        const urlObject = new URL(this.url);
-        let mapUrl = urlObject.pathname;
-        const urlParsed = mapUrl.substring(1).split("/");
-        mapUrl = "http://" + urlParsed.splice(2, urlParsed.length - 1).join("/");
+        // TODO: we need to cache the call to the mapUrl to avoid too many calls (possibly setting up axios to use etags too!)
 
-        const fetchedData = await axios.get(mapUrl);
+        const response = await adminService.fetchMapDetails(this.url);
+        const roomRedirect = isRoomRedirect.safeParse(response);
+        if (roomRedirect.success) {
+            if (nbRedirect > 10) {
+                // We don't want to redirect too much, it's probably a loop
+                return undefined;
+            }
+            return this.fetchMapFile(roomRedirect.data.redirectUrl, nbRedirect + 1);
+        }
+
+        const mapDetails = isMapDetailsData.safeParse(response);
+        if (!mapDetails.success) {
+            // On a redirect we should instead loop
+            return undefined;
+        }
+
+        const mapUrl = mapDetails.data.mapUrl;
+        let fetchedData: AxiosResponse;
+        try {
+            fetchedData = await axios.get(mapUrl);
+        } catch (e) {
+            console.log(
+                "Error on getting map file",
+                mapUrl,
+                "for room url",
+                url,
+                ". The URL was requested by a bot so this might be normal.",
+                e
+            );
+            return undefined;
+        }
 
         const checkMapFile = ITiledMap.safeParse(fetchedData.data);
         return checkMapFile.success ? checkMapFile.data : undefined;
@@ -309,13 +330,13 @@ export class MetaTagsBuilder {
         let mapFile: ITiledMap | undefined;
 
         try {
-            mapFile = await this.fetchMapFile();
+            mapFile = await this.fetchMapFile(this.url);
         } catch (e) {
             console.error("Error on getting map file", e);
         }
 
         if (!mapFile) {
-            return mapFile;
+            return undefined;
         }
 
         return this.metaValuesFromMapFile(mapFile);
