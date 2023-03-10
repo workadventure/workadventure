@@ -1,14 +1,6 @@
 import { SpaceSocket } from "../SpaceManager";
-import {
-    AddSpaceUserMessage,
-    BackToPusherSpaceMessage,
-    PingMessage,
-    RemoveSpaceUserMessage,
-    UpdateSpaceUserMessage,
-} from "../Messages/generated/messages_pb";
+import { BackToPusherSpaceMessage } from "@workadventure/messages";
 import Debug from "debug";
-
-export type SpaceMessage = AddSpaceUserMessage | UpdateSpaceUserMessage | RemoveSpaceUserMessage;
 
 const debug = Debug("space");
 
@@ -31,8 +23,12 @@ export class SpacesWatcher {
 
     private sendPing() {
         this.receivedPong();
-        const backToPusherSpaceMessage = new BackToPusherSpaceMessage();
-        backToPusherSpaceMessage.setPingmessage(new PingMessage());
+        const backToPusherSpaceMessage: BackToPusherSpaceMessage = {
+            message: {
+                $case: "pingMessage",
+                pingMessage: {},
+            },
+        };
         this.socket.write(backToPusherSpaceMessage);
         this.pongTimeout = setTimeout(() => {
             debug("SpacesWatcher %s => killed => no ping received from Watcher", this.uuid);
@@ -63,17 +59,7 @@ export class SpacesWatcher {
         return this._spacesWatched;
     }
 
-    public write(message: SpaceMessage) {
-        const backToPusherSpaceMessage = new BackToPusherSpaceMessage();
-        if (message instanceof AddSpaceUserMessage) {
-            backToPusherSpaceMessage.setAddspaceusermessage(message);
-        } else if (message instanceof UpdateSpaceUserMessage) {
-            backToPusherSpaceMessage.setUpdatespaceusermessage(message);
-        } else if (message instanceof RemoveSpaceUserMessage) {
-            backToPusherSpaceMessage.setRemovespaceusermessage(message);
-        } else {
-            throw new Error("Can't send message to pusher");
-        }
-        this.socket.write(backToPusherSpaceMessage);
+    public write(message: BackToPusherSpaceMessage) {
+        this.socket.write(message);
     }
 }

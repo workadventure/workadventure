@@ -38,14 +38,11 @@ import {
     ChatMessagePrompt,
     UpdateMapToNewestWithKeyMessage,
     EditMapCommandsArrayMessage,
-    UpdateMapToNewestMessage,
     WatchSpaceMessage,
     UnwatchSpaceMessage,
     UpdateSpaceUserMessage,
-    SpaceUser,
     AddSpaceUserMessage,
     RemoveSpaceUserMessage,
-    PartialSpaceUser,
 } from "@workadventure/messages";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -1309,28 +1306,18 @@ export class SocketManager {
     }
 
     handleWatchSpaceMessage(pusher: SpacesWatcher, watchSpaceMessage: WatchSpaceMessage) {
-        const spaceUser = watchSpaceMessage.getUser();
-        if (!spaceUser) {
-            throw new Error("No SpaceUser defined");
-        }
-        const spaceName = watchSpaceMessage.getSpacename();
-        let space: Space | undefined = this.spaces.get(spaceName);
+        let space: Space | undefined = this.spaces.get(watchSpaceMessage.spaceName);
         if (!space) {
-            space = new Space(spaceName);
-            this.spaces.set(spaceName, space);
+            space = new Space(watchSpaceMessage.spaceName);
+            this.spaces.set(watchSpaceMessage.spaceName, space);
         }
         pusher.watchSpace(space.name);
         space.addWatcher(pusher);
-        space.addUser(pusher, spaceUser);
+        space.addUser(pusher, watchSpaceMessage.user);
     }
 
     handleUnwatchSpaceMessage(pusher: SpacesWatcher, unwatchSpaceMessage: UnwatchSpaceMessage) {
-        const userUuid = unwatchSpaceMessage.getUseruuid();
-        if (!userUuid) {
-            throw new Error("No userUuid defined");
-        }
-        const spaceName = unwatchSpaceMessage.getSpacename();
-        const space: Space | undefined = this.spaces.get(spaceName);
+        const space: Space | undefined = this.spaces.get(unwatchSpaceMessage.spaceName);
         if (!space) {
             throw new Error("Cant unwatch space, space not found");
         }
@@ -1358,21 +1345,21 @@ export class SocketManager {
     }
 
     handleAddSpaceUserMessage(pusher: SpacesWatcher, addSpaceUserMessage: AddSpaceUserMessage) {
-        const space = this.spaces.get(addSpaceUserMessage.getSpacename());
+        const space = this.spaces.get(addSpaceUserMessage.spaceName);
         if (space) {
-            space.addUser(pusher, addSpaceUserMessage.getUser() as SpaceUser);
+            space.addUser(pusher, addSpaceUserMessage.user);
         }
     }
     handleUpdateSpaceUserMessage(pusher: SpacesWatcher, updateSpaceUserMessage: UpdateSpaceUserMessage) {
-        const space = this.spaces.get(updateSpaceUserMessage.getSpacename());
+        const space = this.spaces.get(updateSpaceUserMessage.spaceName);
         if (space) {
-            space.updateUser(pusher, updateSpaceUserMessage.getUser() as PartialSpaceUser);
+            space.updateUser(pusher, updateSpaceUserMessage.user);
         }
     }
     handleRemoveSpaceUserMessage(pusher: SpacesWatcher, removeSpaceUserMessage: RemoveSpaceUserMessage) {
-        const space = this.spaces.get(removeSpaceUserMessage.getSpacename());
+        const space = this.spaces.get(removeSpaceUserMessage.spaceName);
         if (space) {
-            space.removeUser(pusher, removeSpaceUserMessage.getUseruuid());
+            space.removeUser(pusher, removeSpaceUserMessage.userUuid);
         }
     }
 }

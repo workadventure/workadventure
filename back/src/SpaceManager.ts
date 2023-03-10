@@ -1,15 +1,7 @@
-import { ISpaceManagerServer } from "./Messages/generated/services_grpc_pb";
+import { SpaceManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import { uuid } from "uuidv4";
 import { SpacesWatcher } from "./Model/SpacesWatcher";
-import {
-    AddSpaceUserMessage,
-    BackToPusherSpaceMessage,
-    PusherToBackSpaceMessage,
-    RemoveSpaceUserMessage,
-    UnwatchSpaceMessage,
-    UpdateSpaceUserMessage,
-    WatchSpaceMessage,
-} from "./Messages/generated/messages_pb";
+import { BackToPusherSpaceMessage, PusherToBackSpaceMessage } from "@workadventure/messages";
 import { socketManager } from "./Services/SocketManager";
 import Debug from "debug";
 import { ServerDuplexStream } from "@grpc/grpc-js";
@@ -18,37 +10,54 @@ export type SpaceSocket = ServerDuplexStream<PusherToBackSpaceMessage, BackToPus
 
 const debug = Debug("space");
 
-const spaceManager: ISpaceManagerServer = {
+const spaceManager: SpaceManagerServer = {
     watchSpace: (call: SpaceSocket): void => {
         debug("watchSpace => called");
         const pusherUuid = uuid();
         const pusher = new SpacesWatcher(pusherUuid, call);
 
         call.on("data", (message: PusherToBackSpaceMessage) => {
-            if (message.hasWatchspacemessage()) {
-                socketManager.handleWatchSpaceMessage(pusher, message.getWatchspacemessage() as WatchSpaceMessage);
-            } else if (message.hasUnwatchspacemessage()) {
-                socketManager.handleUnwatchSpaceMessage(
-                    pusher,
-                    message.getUnwatchspacemessage() as UnwatchSpaceMessage
+            if (!message.message) {
+                console.error("Empty message received");
+                return;
+            }
+            try {
+                switch (message.message.$case) {
+                    case "watchSpaceMessage": {
+                        socketManager.handleWatchSpaceMessage(pusher, message.message.watchSpaceMessage);
+                        break;
+                    }
+                    case "unwatchSpaceMessage": {
+                        socketManager.handleUnwatchSpaceMessage(pusher, message.message.unwatchSpaceMessage);
+                        break;
+                    }
+                    case "addSpaceUserMessage": {
+                        socketManager.handleAddSpaceUserMessage(pusher, message.message.addSpaceUserMessage);
+                        break;
+                    }
+                    case "updateSpaceUserMessage": {
+                        socketManager.handleUpdateSpaceUserMessage(pusher, message.message.updateSpaceUserMessage);
+                        break;
+                    }
+                    case "removeSpaceUserMessage": {
+                        socketManager.handleRemoveSpaceUserMessage(pusher, message.message.removeSpaceUserMessage);
+                        break;
+                    }
+                    case "pongMessage": {
+                        pusher.receivedPong();
+                        break;
+                    }
+                    default: {
+                        const _exhaustiveCheck: never = message.message;
+                    }
+                }
+            } catch (e) {
+                console.error(
+                    "An error occurred while managing a message of type PusherToBackSpaceMessage:" +
+                        message.message.$case,
+                    e
                 );
-            } else if (message.hasAddspaceusermessage()) {
-                socketManager.handleAddSpaceUserMessage(
-                    pusher,
-                    message.getAddspaceusermessage() as AddSpaceUserMessage
-                );
-            } else if (message.hasUpdatespaceusermessage()) {
-                socketManager.handleUpdateSpaceUserMessage(
-                    pusher,
-                    message.getUpdatespaceusermessage() as UpdateSpaceUserMessage
-                );
-            } else if (message.hasRemovespaceusermessage()) {
-                socketManager.handleRemoveSpaceUserMessage(
-                    pusher,
-                    message.getRemovespaceusermessage() as RemoveSpaceUserMessage
-                );
-            } else if (message.hasPongmessage()) {
-                pusher.receivedPong();
+                call.end();
             }
         })
             .on("error", (e) => {

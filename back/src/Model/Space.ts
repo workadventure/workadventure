@@ -1,12 +1,13 @@
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
-import { SpacesWatcher, SpaceMessage } from "./SpacesWatcher";
+import { SpacesWatcher } from "./SpacesWatcher";
 import {
     AddSpaceUserMessage,
+    BackToPusherSpaceMessage,
     PartialSpaceUser,
     RemoveSpaceUserMessage,
     SpaceUser,
     UpdateSpaceUserMessage,
-} from "../Messages/generated/messages_pb";
+} from "@workadventure/messages";
 import Debug from "debug";
 
 const debug = Debug("space");
@@ -23,70 +24,84 @@ export class Space implements CustomJsonReplacerInterface {
 
     public addUser(watcher: SpacesWatcher, spaceUser: SpaceUser) {
         const usersList = this.usersList(watcher);
-        usersList.set(spaceUser.getUuid(), spaceUser);
-
-        const message = new AddSpaceUserMessage();
-        message.setSpacename(this.name);
-        message.setUser(spaceUser);
-        this.notifyWatchers(watcher, message);
-        debug(`${this.name} : user => added ${spaceUser.getUuid()}`);
+        usersList.set(spaceUser.uuid, spaceUser);
+        this.notifyWatchers(watcher, {
+            message: {
+                $case: "addSpaceUserMessage",
+                addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
+                    spaceName: this.name,
+                    user: spaceUser,
+                }),
+            },
+        });
+        debug(`${this.name} : user => added ${spaceUser.uuid}`);
     }
     public updateUser(watcher: SpacesWatcher, spaceUser: PartialSpaceUser) {
         const usersList = this.usersList(watcher);
-        const user = usersList.get(spaceUser.getUuid());
+        const user = usersList.get(spaceUser.uuid);
         if (user) {
-            if (spaceUser.getTagsList().length > 0) {
-                user.setTagsList(spaceUser.getTagsList());
+            if (spaceUser.tags.length > 0) {
+                user.tags = spaceUser.tags;
             }
-            if (spaceUser.hasName()) {
-                user.setName(spaceUser.getName()?.getValue() as string);
+            if (spaceUser.name) {
+                user.name = spaceUser.name;
             }
-            if (spaceUser.hasPlayuri()) {
-                user.setPlayuri(spaceUser.getPlayuri()?.getValue() as string);
+            if (spaceUser.playUri) {
+                user.playUri = spaceUser.playUri;
             }
-            if (spaceUser.hasColor()) {
-                user.setColor(spaceUser.getColor()?.getValue() as string);
+            if (spaceUser.color) {
+                user.color = spaceUser.color;
             }
-            if (spaceUser.getCharacterlayersList().length > 0) {
-                user.setCharacterlayersList(spaceUser.getCharacterlayersList());
+            if (spaceUser.characterLayers.length > 0) {
+                user.characterLayers = spaceUser.characterLayers;
             }
-            if (spaceUser.hasIslogged()) {
-                user.setIslogged(spaceUser.getIslogged()?.getValue() as boolean);
+            if (spaceUser.isLogged !== undefined) {
+                user.isLogged = spaceUser.isLogged;
             }
-            if (spaceUser.hasAvailabilitystatus()) {
-                user.setAvailabilitystatus(spaceUser.getAvailabilitystatus()?.getValue() as number);
+            if (spaceUser.availabilityStatus !== undefined) {
+                user.availabilityStatus = spaceUser.availabilityStatus;
             }
-            if (spaceUser.hasRoomname()) {
-                user.setRoomname(spaceUser.getRoomname());
+            if (spaceUser.roomName) {
+                user.roomName = spaceUser.roomName;
             }
-            if (spaceUser.hasVisitcardurl()) {
-                user.setVisitcardurl(spaceUser.getVisitcardurl());
+            if (spaceUser.visitCardUrl) {
+                user.visitCardUrl = spaceUser.visitCardUrl;
             }
-            if (spaceUser.hasScreensharing()) {
-                user.setScreensharing(spaceUser.getScreensharing()?.getValue() as boolean);
+            if (spaceUser.screenSharing !== undefined) {
+                user.screenSharing = spaceUser.screenSharing;
             }
-            if (spaceUser.hasAudiosharing()) {
-                user.setAudiosharing(spaceUser.getAudiosharing()?.getValue() as boolean);
+            if (spaceUser.audioSharing !== undefined) {
+                user.audioSharing = spaceUser.audioSharing;
             }
-            if (spaceUser.hasVideosharing()) {
-                user.setVideosharing(spaceUser.getVideosharing()?.getValue() as boolean);
+            if (spaceUser.videoSharing !== undefined) {
+                user.videoSharing = spaceUser.videoSharing;
             }
-            usersList.set(spaceUser.getUuid(), user);
-            const message = new UpdateSpaceUserMessage();
-            message.setSpacename(this.name);
-            message.setUser(spaceUser);
-            this.notifyWatchers(watcher, message);
-            debug(`${this.name} : user => updated ${spaceUser.getUuid()}`);
+            usersList.set(spaceUser.uuid, user);
+            this.notifyWatchers(watcher, {
+                message: {
+                    $case: "updateSpaceUserMessage",
+                    updateSpaceUserMessage: UpdateSpaceUserMessage.fromPartial({
+                        spaceName: this.name,
+                        user: spaceUser,
+                    }),
+                },
+            });
+            debug(`${this.name} : user => updated ${spaceUser.uuid}`);
         }
     }
     public removeUser(watcher: SpacesWatcher, uuid: string) {
         const usersList = this.usersList(watcher);
         usersList.delete(uuid);
 
-        const message = new RemoveSpaceUserMessage();
-        message.setSpacename(this.name);
-        message.setUseruuid(uuid);
-        this.notifyWatchers(watcher, message);
+        this.notifyWatchers(watcher, {
+            message: {
+                $case: "removeSpaceUserMessage",
+                removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                    spaceName: this.name,
+                    userUuid: uuid,
+                }),
+            },
+        });
         debug(`${this.name} : user => removed ${uuid}`);
     }
 
@@ -95,10 +110,15 @@ export class Space implements CustomJsonReplacerInterface {
         debug(`Space ${this.name} => watcher added ${watcher.uuid}`);
         for (const spaceUsers of this.users.values()) {
             for (const spaceUser of spaceUsers.values()) {
-                const message = new AddSpaceUserMessage();
-                message.setSpacename(this.name);
-                message.setUser(spaceUser);
-                watcher.write(message);
+                watcher.write({
+                    message: {
+                        $case: "addSpaceUserMessage",
+                        addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
+                            spaceName: this.name,
+                            user: spaceUser,
+                        }),
+                    },
+                });
             }
         }
     }
@@ -107,7 +127,7 @@ export class Space implements CustomJsonReplacerInterface {
         debug(`${this.name} => watcher removed ${watcher.uuid}`);
     }
 
-    private notifyWatchers(watcher: SpacesWatcher, message: SpaceMessage) {
+    private notifyWatchers(watcher: SpacesWatcher, message: BackToPusherSpaceMessage) {
         for (const watcher_ of this.users.keys()) {
             if (watcher_.uuid !== watcher.uuid) {
                 watcher_.write(message);
