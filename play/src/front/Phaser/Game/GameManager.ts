@@ -21,7 +21,6 @@ export class GameManager {
     private characterLayers: string[] | null;
     private companion: string | null;
     private startRoom!: Room;
-    private cameraSetup?: { video: unknown; audio: unknown };
     private currentGameSceneName: string | null = null;
     // Note: this scenePlugin is the scenePlugin of the EntryScene. We should always provide a key in methods called on this scenePlugin.
     private scenePlugin!: Phaser.Scenes.ScenePlugin;
@@ -31,7 +30,6 @@ export class GameManager {
         this.playerName = localUserStore.getName();
         this.characterLayers = localUserStore.getCharacterLayers();
         this.companion = localUserStore.getCompanion();
-        this.cameraSetup = localUserStore.getCameraSetup();
     }
 
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
@@ -54,7 +52,7 @@ export class GameManager {
             // TODO: Remove this debug line
             console.info("Your Woka texture is invalid for this world, got to select Woka scene. Init game manager.");
             return SelectCharacterSceneName;
-        } else if (this.cameraSetup == undefined) {
+        } else if (localUserStore.getVideoDeviceId() === undefined && localUserStore.getAudioDeviceId() === undefined) {
             return EnableCameraSceneName;
         } else {
             this.activeMenuSceneAndHelpCameraSettings();

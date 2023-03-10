@@ -178,14 +178,22 @@ export const cameraEnergySavingStore = derived(
  * A store that contains video constraints.
  */
 function createVideoConstraintStore() {
-    const { subscribe, update } = writable({
+    const initialConstraints: MediaTrackConstraints = {
         width: { min: 640, ideal: 1280, max: 1920 },
         height: { min: 400, ideal: 720 },
         frameRate: { ideal: localUserStore.getVideoQualityValue() },
         facingMode: "user",
         resizeMode: "crop-and-scale",
         aspectRatio: 1.777777778,
-    } as MediaTrackConstraints);
+    } as MediaTrackConstraints;
+
+    if (localUserStore.getVideoDeviceId() !== undefined) {
+        initialConstraints.deviceId = {
+            ideal: localUserStore.getVideoDeviceId(),
+        };
+    }
+
+    const { subscribe, update } = writable(initialConstraints);
 
     return {
         subscribe,
@@ -198,7 +206,7 @@ function createVideoConstraintStore() {
                 } else {
                     delete constraints.deviceId;
                 }
-
+                localUserStore.setVideoDeviceId(deviceId);
                 return constraints;
             }),
         setFrameRate: (frameRate: number) =>
@@ -243,12 +251,20 @@ export const videoConstraintStore = createVideoConstraintStore();
  * A store that contains video constraints.
  */
 function createAudioConstraintStore() {
-    const { subscribe, update } = writable({
+    const initialConstraints: MediaTrackConstraints = {
         //TODO: make these values configurable in the game settings menu and store them in localstorage
         autoGainControl: false,
         echoCancellation: true,
         noiseSuppression: true,
-    } as boolean | MediaTrackConstraints);
+    } as MediaTrackConstraints;
+
+    if (localUserStore.getAudioDeviceId() !== undefined) {
+        initialConstraints.deviceId = {
+            ideal: localUserStore.getAudioDeviceId(),
+        };
+    }
+
+    const { subscribe, update } = writable(initialConstraints);
     return {
         subscribe,
         setDeviceId: (deviceId: string | undefined) =>
@@ -257,10 +273,11 @@ function createAudioConstraintStore() {
                     constraints = {};
                 }
                 if (deviceId !== undefined && navigator.mediaDevices.getSupportedConstraints().deviceId === true) {
-                    constraints.deviceId = { exact: deviceId };
+                    constraints.deviceId = { ideal: deviceId };
                 } else {
                     delete constraints.deviceId;
                 }
+                localUserStore.setAudioDeviceId(deviceId);
                 return constraints;
             }),
     };
@@ -388,15 +405,6 @@ export const mediaStreamConstraintsStore = derived(
                     audio: currentAudioConstraint,
                 });
             }, 100);
-        }
-
-        if ($enableCameraSceneVisibilityStore) {
-            localUserStore.setCameraSetup(
-                JSON.stringify({
-                    video: currentVideoConstraint,
-                    audio: currentAudioConstraint,
-                })
-            );
         }
     },
     {

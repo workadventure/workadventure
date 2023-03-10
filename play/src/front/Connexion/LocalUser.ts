@@ -1,4 +1,5 @@
 import { MAX_USERNAME_LENGTH } from "../Enum/EnvironmentVariable";
+import { z } from "zod";
 
 export type LayerNames = "woka" | "body" | "eyes" | "hair" | "clothes" | "hat" | "accessory";
 
@@ -30,6 +31,13 @@ export function areCharacterLayersValid(value: string[] | null): boolean {
     return true;
 }
 
-export class LocalUser {
-    constructor(public readonly uuid: string, public email: string | null = null) {}
-}
+export const CharacterLayers = z.string().array();
+
+export type CharacterLayers = z.infer<typeof CharacterLayers>;
+
+export const LocalUser = z.object({
+    uuid: z.string(),
+    email: z.string().optional().nullable(),
+});
+
+export type LocalUser = z.infer<typeof LocalUser>;
