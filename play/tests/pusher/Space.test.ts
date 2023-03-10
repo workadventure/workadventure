@@ -175,7 +175,16 @@ describe("Space", () => {
         expect(user?.name).toBe("johnny");
     });
     it("should remove the name filter and send me the delta (add userMessage)", () => {
-        client.spacesFilters.set("test", []);
+        client.spacesFilters.set("test", [
+            {
+                filterName: "default",
+                spaceName: "test",
+                filter: {
+                    $case: "spaceFilterEverybody",
+                    spaceFilterEverybody: {},
+                },
+            },
+        ]);
         eventsClient = [];
         space.handleRemoveFilter(client, {
             spaceFilterMessage: {
