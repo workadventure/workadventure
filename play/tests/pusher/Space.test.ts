@@ -16,7 +16,16 @@ describe("Space", () => {
         emitInBatch: (payload: SubMessage) => {
             eventsClient.push(payload);
         },
-        spacesFilters: [],
+        spacesFilters: [
+            {
+                filterName: "default",
+                spaceName: "test",
+                filter: {
+                    $case: "spaceFilterEverybody",
+                    spaceFilterEverybody: {},
+                },
+            },
+        ],
     });
     const space = new Space("test", backSpaceConnection, 1, client);
     it("should return true because Space is empty", () => {
