@@ -177,8 +177,9 @@ export class Space implements CustomJsonReplacerInterface {
                     },
                 },
             };
-
             this.notifyAll(subMessage, user);
+        } else {
+            console.error(`Space => ${this.name} : user not found ${userUuid}`);
         }
     }
 
@@ -212,10 +213,7 @@ export class Space implements CustomJsonReplacerInterface {
 
     private isWatcherTargeted(watcher: ExSocketInterface, user: SpaceUserExtended) {
         const filtersOfThisSpace = watcher.spacesFilters.filter((spaceFilters) => spaceFilters.spaceName === this.name);
-        return (
-            filtersOfThisSpace.length === 0 ||
-            filtersOfThisSpace.filter((spaceFilter) => this.isFilterTargeted(spaceFilter, user)).length > 0
-        );
+        return filtersOfThisSpace.filter((spaceFilter) => this.isFilterTargeted(spaceFilter, user)).length > 0;
     }
 
     private isFilterTargeted(spaceFilter: SpaceFilterMessage, user: SpaceUserExtended) {
@@ -246,8 +244,11 @@ export class Space implements CustomJsonReplacerInterface {
                 const spaceFilterContainName = spaceFilters.filter.spaceFilterContainName;
                 return user.lowercaseName.includes(spaceFilterContainName.value.toLowerCase());
             }
+            case "spaceFilterEverybody": {
+                return true;
+            }
             default: {
-                const _exhaustiveCheck: never = spaceFilters.filter.$case;
+                const _exhaustiveCheck: never = spaceFilters.filter;
             }
         }
         return false;

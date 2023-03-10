@@ -591,7 +591,15 @@ export class IoSocketController {
                     const client = this.initClient(ws);
                     await socketManager.handleJoinRoom(client);
                     // TODO : Get prefix from Admin and joinSpace prefixed
-                    await socketManager.handleJoinSpace(client, client.roomId + "/space");
+                    const spaceName = client.roomId + "/space";
+                    await socketManager.handleJoinSpace(client, spaceName, {
+                        filterName: "default",
+                        spaceName,
+                        filter: {
+                            $case: "spaceFilterEverybody",
+                            spaceFilterEverybody: {},
+                        },
+                    });
                     socketManager.emitXMPPSettings(client);
 
                     //get data information and show messages

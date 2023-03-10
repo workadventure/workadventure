@@ -918,11 +918,15 @@ message SpaceFilterMessage{
   string filterName = 1;
   string spaceName = 2;
   oneof filter {
-    SpaceFilterContainName spaceFilterContainName = 3;
+    SpaceFilterEverybody spaceFilterEverybody = 3;
+    SpaceFilterContainName spaceFilterContainName = 4;
   }
 }
 message SpaceFilterContainName{
   string value = 1;
+}
+
+message SpaceFilterEverybody{
 }
 
 /*

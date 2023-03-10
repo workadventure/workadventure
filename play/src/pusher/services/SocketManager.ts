@@ -42,6 +42,7 @@ import {
     UpdateSpaceFilterMessage,
     RemoveSpaceFilterMessage,
     SetPlayerDetailsMessage,
+    SpaceFilterMessage,
 } from "@workadventure/messages";
 import { EJABBERD_DOMAIN } from "../enums/EnvironmentVariable";
 import { Space } from "../models/Space";
@@ -313,7 +314,11 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public async handleJoinSpace(client: ExSocketInterface, spaceName: string): Promise<void> {
+    public async handleJoinSpace(
+        client: ExSocketInterface,
+        spaceName: string,
+        filter: SpaceFilterMessage | undefined = undefined
+    ): Promise<void> {
         try {
             const backId = apiClientRepository.getIndex(spaceName);
             let spaceStreamToPusher = this.spaceStreamsToPusher.get(backId);
@@ -430,6 +435,9 @@ export class SocketManager implements ZoneEventListener {
             };
 
             client.spaceUser = spaceUser;
+            if (filter) {
+                client.spacesFilters.push(filter);
+            }
 
             // client.spacesFilters = [
             //     new SpaceFilterMessage()
