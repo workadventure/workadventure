@@ -133,7 +133,7 @@ import type { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
 import {
     chatVisibilityStore,
     _newChatMessageSubject,
-    _newChatMessageWritingStatusSubject,
+    _newChatMessageWritingStatusSubject, chatIsReadyStore,
 } from "../../Stores/ChatStore";
 import type {
     ITiledMap,
@@ -158,6 +158,7 @@ import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManag
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { faviconManager } from "./../../WebRtc/FaviconManager";
 import { z } from "zod";
+import {take} from "rxjs/operators";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -212,6 +213,7 @@ export class GameScene extends DirtyScene {
     private refreshPromptStoreStoreUnsubscriber!: Unsubscriber;
 
     private modalVisibilityStoreUnsubscriber!: Unsubscriber;
+    private chatIsReadyStoreUnsubscriber!: Unsubscriber;
 
     MapUrlFile: string;
     roomUrl: string;
@@ -943,8 +945,8 @@ export class GameScene extends DirtyScene {
                     if (item === undefined) {
                         console.warn(
                             'Received an event about object "' +
-                                message.itemId +
-                                '" but cannot find this item on the map.'
+                            message.itemId +
+                            '" but cannot find this item on the map.'
                         );
                         return;
                     }
@@ -957,6 +959,12 @@ export class GameScene extends DirtyScene {
 
                 this.connection.groupUsersUpdateMessageStream.subscribe((message) => {
                     this.currentPlayerGroupId = message.groupId;
+                });
+
+                this.connection.matrixSettingsMessageStream.subscribe((matrixSettingsMessage) => {
+                    if(matrixSettingsMessage) {
+                        iframeListener.sendMatrixSettingsMessageToChatIframe(matrixSettingsMessage);
+                    }
                 });
 
                 this.connection.joinMucRoomMessageStream.subscribe((mucRoomDefinitionMessage) => {
@@ -1041,11 +1049,6 @@ export class GameScene extends DirtyScene {
                     this.room.group ?? undefined
                 );
 
-                this.connection.xmppSettingsMessageStream.subscribe((xmppSettingsMessage) => {
-                    if (xmppSettingsMessage) {
-                        iframeListener.sendXmppSettingsToChatIframe(xmppSettingsMessage);
-                    }
-                });
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
@@ -1190,6 +1193,16 @@ export class GameScene extends DirtyScene {
 
         this.embedScreenLayoutStoreUnsubscriber = embedScreenLayoutStore.subscribe((layout) => {
             //this.reposition();
+        });
+
+        this.chatIsReadyStoreUnsubscriber = chatIsReadyStore.subscribe((value) => {
+            if (value) {
+                this.connection?.matrixSettingsMessageStream.pipe(take(1)).subscribe(matrixSettingsMessage => {
+                    if(matrixSettingsMessage) {
+                        iframeListener.sendMatrixSettingsMessageToChatIframe(matrixSettingsMessage);
+                    }
+                }).unsubscribe();
+            }
         });
 
         const talkIconVolumeTreshold = 10;
@@ -1357,8 +1370,8 @@ export class GameScene extends DirtyScene {
                 } else {
                     console.error(
                         "Error while opening a popup. Cannot find an object on the map with name '" +
-                            openPopupEvent.targetObject +
-                            "'. The first parameter of WA.openPopup() must be the name of a rectangle object in your map."
+                        openPopupEvent.targetObject +
+                        "'. The first parameter of WA.openPopup() must be the name of a rectangle object in your map."
                     );
                     return;
                 }

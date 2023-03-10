@@ -682,6 +682,10 @@ export class SocketManager {
                     answerMessage.setJoinbbbmeetinganswer(answer);
                     break;
                 }
+                case QueryMessage.QueryCase.FIRSTMATRIXPASSWORDQUERY: {
+                    // Nothing to do message is only for front <> pusher
+                    break;
+                }
                 default: {
                     const _exhaustiveCheck: never = queryCase;
                 }

@@ -32,6 +32,7 @@ import { activeThreadStore } from "./Stores/ActiveThreadStore";
 import { get } from "svelte/store";
 import { emojiRegex } from "./Utils/HtmlUtils";
 import Debug from "debug";
+import {matrixSettingsStore} from "./Stores/MatrixStore";
 
 const debug = Debug("chat");
 
@@ -46,6 +47,11 @@ class IframeListener {
                     debug(`iFrameListener => message received => ${JSON.stringify(iframeEventGuarded.data)}`);
                     const iframeEvent = iframeEventGuarded.data;
                     switch (iframeEvent.type) {
+                        case "matrixSettings": {
+                            matrixSettingsStore.set(iframeEvent.data);
+                            console.warn("IframeListener => init => matrixSettings", iframeEvent.data);
+                            break;
+                        }
                         case "settings": {
                             chatSoundsStore.set(iframeEvent.data.chatSounds);
                             chatNotificationsStore.set(iframeEvent.data.notification);
@@ -55,15 +61,15 @@ class IframeListener {
                             enableChatDisconnectedListStore.set(iframeEvent.data.enableChatDisconnectedList);
                             break;
                         }
-                        case "xmppSettingsMessage": {
-                            //chatConnectionManager.initXmppSettings(iframeEvent.data);
-                            break;
-                        }
                         case "userData": {
                             iframeEvent.data.name = iframeEvent.data.name.replace(emojiRegex, "");
                             console.log(iframeEvent.data);
                             userStore.set(iframeEvent.data);
                             localUserStore.setUserData(iframeEvent.data);
+                            if(iframeEvent.data.authToken) {
+                                chatConnectionManager.authToken = iframeEvent.data.authToken;
+                                //chatConnectionManager.start();
+                            }
                             break;
                         }
                         case "setLocale": {
@@ -74,19 +80,23 @@ class IframeListener {
                             if (!get(enableChat)) {
                                 return;
                             }
+                            /*
                             chatConnectionManager.connectionOrFail?.joinMuc(
                                 iframeEvent.data.name,
                                 iframeEvent.data.url,
                                 iframeEvent.data.type,
                                 iframeEvent.data.subscribe
                             );
+                             */
                             break;
                         }
                         case "leaveMuc": {
                             if (!get(enableChat)) {
                                 return;
                             }
+                            /*
                             chatConnectionManager.connectionOrFail?.leaveMuc(iframeEvent.data.url);
+                             */
                             break;
                         }
                         case "updateWritingStatusChatList": {
@@ -241,7 +251,7 @@ class IframeListener {
         });
     }
 
-    sendToParent(message: lookingLikeIframeEventWrapper) {
+    private sendToParent(message: lookingLikeIframeEventWrapper) {
         debug(`iFrameListener => message sent to parent => ${JSON.stringify(message)}`);
         window.parent.postMessage(message, "*");
     }

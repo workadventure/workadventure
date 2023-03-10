@@ -2,6 +2,7 @@
     import FirstConnection from "./FirstConnection.svelte";
     import { userStore } from "../../Stores/LocalUserStore";
     import { iframeListener } from "../../IframeListener";
+    import Chat from "./Chat.svelte";
 
     window.addEventListener("load", () => {
         iframeListener.sendChatIsReady();
@@ -10,9 +11,8 @@
     let chatWindowElement: HTMLElement;
 </script>
 
-<aside class="chatWindow tw-h-full" bind:this={chatWindowElement}>
-    <section class="tw-p-0 tw-m-0">
-        <div class="header tw-h-[50px] tw-m-0 tw-p-0 tw-bg-light-purple-alt" />
+<aside class="chatWindow tw-h-full tw-backdrop-blur-sm" bind:this={chatWindowElement}>
+    <section class="tw-p-0 tw-m-0 tw-w-full tw-overflow-x-hidden">
         {#if !$userStore?.matrixUserId}
             <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
                 <div class="tw-p-3 tw-text-sm tw-text-center tw-text-white tw-font-bold">
@@ -21,7 +21,11 @@
                 </div>
             </div>
         {:else}
-            <FirstConnection />
+            {#if !$userStore.isMatrixRegistered}
+                <FirstConnection />
+            {:else}
+                <Chat />
+            {/if}
         {/if}
     </section>
 </aside>

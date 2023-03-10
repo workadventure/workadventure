@@ -26,6 +26,7 @@ database:
 log_config: "/data/matrix.workadventure.localhost.log.config"
 media_store_path: /data/media_store
 report_stats: true
+registration_shared_secret: "XJx!`J-;J4Kx!'p>J%[C!G$u8=YP6_4eEV$~Je9#~c>9sPGcDz"
 macaroon_secret_key: "E@=9DoVJg.t:.k:p8uI9*hMOQl~^JF8,rs2ak-evN5eS*pv.jF"
 form_secret: "Xa6T^,-_Ib2,^#Py=;AQ*lI:ex_QCAZQXG#P&RoTxT~2qBFIA:"
 signing_key_path: "/data/matrix.workadventure.localhost.signing.key"

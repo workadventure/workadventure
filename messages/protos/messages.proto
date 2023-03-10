@@ -536,9 +536,9 @@ message ServerToClientMessage {
 }
 
 message MatrixSettingsMessage{
-  string matrixUserId = 1;
-  string matrixServer = 2;
-  bool isMatrixRegistered = 3;
+  google.protobuf.StringValue matrixUserId = 1;
+  string homeServerUrl = 2;
+  google.protobuf.StringValue vaultPassword = 3;
 }
 
 

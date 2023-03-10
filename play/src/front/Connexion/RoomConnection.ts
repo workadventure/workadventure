@@ -56,9 +56,8 @@ import {
     ViewportMessage as ViewportMessageTsProto,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnexionMessage,
-    XmppSettingsMessage,
     RefreshRoomMessage,
-    MatrixSettingsMessage,
+    MatrixSettingsMessage
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -162,8 +161,6 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
-    private readonly _xmppSettingsMessageStream = new BehaviorSubject<XmppSettingsMessage | undefined>(undefined);
-    public readonly xmppSettingsMessageStream = this._xmppSettingsMessageStream.asObservable();
     // If this timeout triggers, we consider the connection is lost (no ping received)
     private timeout: ReturnType<typeof setInterval> | undefined = undefined;
 
@@ -176,7 +173,7 @@ export class RoomConnection implements RoomConnection {
     private readonly _leaveMucRoomMessageStream = new Subject<LeaveMucRoomMessage>();
     public readonly leaveMucRoomMessageStream = this._leaveMucRoomMessageStream.asObservable();
 
-    private readonly _matrixSettingsMessageStream = new Subject<MatrixSettingsMessage>();
+    private readonly _matrixSettingsMessageStream = new BehaviorSubject<MatrixSettingsMessage | undefined>(undefined);
     public readonly matrixSettingsMessageStream = this._matrixSettingsMessageStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -603,8 +600,8 @@ export class RoomConnection implements RoomConnection {
                     this.queries.delete(queryId);
                     break;
                 }
-                case "xmppSettingsMessage": {
-                    this._xmppSettingsMessageStream.next(message.xmppSettingsMessage);
+                case "matrixSettingsMessage": {
+                    this._matrixSettingsMessageStream.next(message.matrixSettingsMessage);
                     break;
                 }
                 default: {
@@ -1321,9 +1318,9 @@ export class RoomConnection implements RoomConnection {
             } catch (e) {
                 console.error(
                     "Unable to unserialize value received from server for a variable. " +
-                        'Value received: "' +
-                        serializedValue +
-                        '". Error: ',
+                    'Value received: "' +
+                    serializedValue +
+                    '". Error: ',
                     e
                 );
             }

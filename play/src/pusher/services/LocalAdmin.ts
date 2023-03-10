@@ -43,7 +43,7 @@ class LocalAdmin implements AdminInterface {
             userRoomToken: undefined,
             activatedInviteUser: true,
             canEdit,
-            isMatrixRegistered: false,
+            matrixVaultPassword: undefined,
         };
     }
 

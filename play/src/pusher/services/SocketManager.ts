@@ -26,13 +26,15 @@ import {
     JoinRoomMessage,
     PlayerDetailsUpdatedMessage,
     PlayGlobalMessage,
-    PusherToBackMessage,
+    PusherToBackMessage, QueryMessage,
     ReportPlayerMessage,
-    ServerToAdminClientMessage,
+    ServerToAdminClientMessage, ServerToClientMessage as ServerToClientMessageTsProto,
     ServerToClientMessage,
     UserMovesMessage,
     ViewportMessage,
 } from "@workadventure/messages";
+import {matrixProvider} from "./MatrixProvider";
+import {MATRIX_DOMAIN} from "../enums/EnvironmentVariable";
 
 const debug = Debug("socket");
 
@@ -729,6 +731,22 @@ export class SocketManager implements ZoneEventListener {
             console.error('An error occurred on "handleBanUserByUuidMessage"');
             console.error(e);
         }
+    }
+
+    emitMatrixSettings(client: ExSocketInterface) {
+        client.send(
+            ServerToClientMessage.encode({
+                message: {
+                    $case: "matrixSettingsMessage",
+                    matrixSettingsMessage: {
+                        matrixUserId: client.matrixUserId,
+                        homeServerUrl: MATRIX_DOMAIN,
+                        vaultPassword: client.matrixVaultPassword
+                    },
+                },
+            }).finish(),
+            true
+        );
     }
 }
 

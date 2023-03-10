@@ -60,25 +60,7 @@
                 chatIsReadyStore.subscribe((value) => {
                     if(value){
                         iframeListener.sendSettingsToChatIframe();
-                        chatIframe?.contentWindow?.postMessage(
-                            {
-                                type: "userData",
-                                data: {
-                                    ...localUserStore.getLocalUser(),
-                                    name,
-                                    playUri,
-                                    authToken: localUserStore.getAuthToken(),
-                                    color: getColorByString(name ?? ""),
-                                    woka: wokaSrc,
-                                    isLogged: localUserStore.isLogged(),
-                                    availabilityStatus: get(availabilityStatusStore),
-                                    roomName: connectionManager.currentRoom?.roomName ?? "default",
-                                    visitCardUrl: gameManager.myVisitCardUrl,
-                                    userRoomToken: gameManager.getCurrentGameScene().connection?.userRoomToken,
-                                },
-                            },
-                            "*"
-                        );
+                        iframeListener.sendUserDataToChatIframe();
                     }
                 })
             );

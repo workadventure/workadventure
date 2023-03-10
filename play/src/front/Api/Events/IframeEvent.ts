@@ -53,9 +53,10 @@ import { isChatVisibilityEvent } from "./ChatVisibilityEvent";
 import { isNotificationEvent } from "./NotificationEvent";
 import { isShowBusinessCardEvent } from "./ShowBusinessCardEvent";
 import { isModalEvent } from "./ModalEvent";
-import { isXmppSettingsMessageEvent } from "./XmppSettingsMessageEvent";
 import { isAddButtonActionBarEvent, isRemoveButtonActionBarEvent } from "./Ui/ButtonActionBarEvent";
 import { isBannerEvent } from "./Ui/BannerEvent";
+import {FirstMatrixPasswordEvent} from "./FirstMatrixPasswordEvent";
+import { MatrixSettingsEvent } from "./MatrixSettingsEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -290,6 +291,10 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("closeBanner"),
         data: z.undefined(),
     }),
+    z.object({
+        type: z.literal("firstMatrixPassword"),
+        data: FirstMatrixPasswordEvent
+    })
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;
@@ -411,10 +416,6 @@ export const isIframeResponseEvent = z.union([
         type: z.literal("availabilityStatus"),
         data: z.number(),
     }),
-    z.object({
-        type: z.literal("xmppSettingsMessage"),
-        data: isXmppSettingsMessageEvent,
-    }),
 
     // TODO will be deleted if timeline is becoming a MUC room
     z.object({
@@ -441,6 +442,10 @@ export const isIframeResponseEvent = z.union([
         type: z.literal("modalCloseTrigger"),
         data: isModalEvent,
     }),
+    z.object({
+        type: z.literal("matrixSettings"),
+        data: MatrixSettingsEvent,
+    })
 ]);
 export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;
 

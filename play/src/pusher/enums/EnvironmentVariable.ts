@@ -50,6 +50,7 @@ const EnvironmentVariables = z.object({
     ENABLE_OPENAPI_ENDPOINT: BoolAsString.optional(),
     START_ROOM_URL: z.string().optional(),
     MATRIX_DOMAIN: z.string(),
+    MATRIX_API_URI: z.string(),
 
     // Front related environment variables
     DEBUG_MODE: BoolAsString.optional(),
@@ -170,6 +171,7 @@ export const FALLBACK_LOCALE: string | undefined = env.FALLBACK_LOCALE;
 // Logrocket id
 export const LOGROCKET_ID: string | undefined = env.LOGROCKET_ID;
 export const MATRIX_DOMAIN: string = env.MATRIX_DOMAIN || "";
+export const MATRIX_API_URI: string = env.MATRIX_API_URI || "";
 
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {

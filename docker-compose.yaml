@@ -99,7 +99,10 @@ services:
             # LogRocket
             LOGROCKET_ID: $LOGROCKET_ID
             # Matrix
-            MATRIX_DOMAIN: "$MATRIX_DOMAIN"
+            MATRIX_API_URI: http://synapse:8008/
+            MATRIX_DOMAIN: '$MATRIX_DOMAIN'
+            MATRIX_ADMIN_USER: '$MATRIX_ADMIN_USER'
+            MATRIX_ADMIN_PASSWORD: '$MATRIX_ADMIN_PASSWORD'
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"

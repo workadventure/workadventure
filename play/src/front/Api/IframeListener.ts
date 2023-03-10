@@ -38,7 +38,7 @@ import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
 import type { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
 import type { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
 import type { MessageUserJoined } from "../Connexion/ConnexionModels";
-import { availabilityStatusToJSON, XmppSettingsMessage } from "@workadventure/messages";
+import {availabilityStatusToJSON, MatrixSettingsMessage} from "@workadventure/messages";
 import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
@@ -50,6 +50,11 @@ import { connectionManager } from "../Connexion/ConnectionManager";
 import { ModalEvent } from "./Events/ModalEvent";
 import { AddButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
 import { chatIsReadyStore } from "../Stores/ChatStore";
+import {getColorByString} from "../Components/Video/utils";
+import {get} from "svelte/store";
+import {availabilityStatusStore} from "../Stores/MediaStore";
+import {gameManager} from "../Phaser/Game/GameManager";
+import {FirstMatrixPasswordEvent} from "./Events/FirstMatrixPasswordEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -183,6 +188,9 @@ class IframeListener {
 
     private readonly _addButtonActionBarStream: Subject<AddActionsMenuKeyToRemotePlayerEvent> = new Subject();
     public readonly addButtonActionBarStream = this._addButtonActionBarStream.asObservable();
+
+    private readonly _firstMatrixPasswordStream: Subject<FirstMatrixPasswordEvent> = new Subject();
+    public readonly firstMatrixPasswordStream = this._firstMatrixPasswordStream.asObservable();
 
     private readonly iframes = new Map<HTMLIFrameElement, string | undefined>();
     private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
@@ -465,6 +473,8 @@ class IframeListener {
                     } else if (iframeEvent.type == "closeBanner") {
                         warningContainerStore.set(false);
                         bannerStore.set(null);
+                    } else if (iframeEvent.type == "firstMatrixPassword") {
+                        this._firstMatrixPasswordStream.next(iframeEvent.data);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
@@ -844,13 +854,6 @@ class IframeListener {
         });
     }
 
-    sendXmppSettingsToChatIframe(xmppSettingsMessage: XmppSettingsMessage) {
-        this.postMessageToChat({
-            type: "xmppSettingsMessage",
-            data: xmppSettingsMessage,
-        });
-    }
-
     sendLeaveMucEventToChatIframe(url: string) {
         if (!connectionManager.currentRoom) {
             throw new Error("Race condition : Current room is not defined yet");
@@ -892,7 +895,7 @@ class IframeListener {
     // << TODO delete with chat XMPP integration for the discussion circle
     sendWritingStatusToChatIframe(list: Set<PlayerInterface>) {
         const usersTyping: Array<string> = [];
-        list.forEach((user) => usersTyping.push(user.userJid));
+        list.forEach((user) => usersTyping.push(user.userUuid));
         this.postMessageToChat({
             type: "updateWritingStatusChatList",
             data: usersTyping,
@@ -931,6 +934,40 @@ class IframeListener {
         });
     }
     // end delete >>
+    sendUserDataToChatIframe() {
+        // TODO : Fetch woka from the store and send it to the chat iframe
+        // TODO : Split those data in multiple messages to avoid sending too much data
+        let wokaSrc =
+            " data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAdCAYAAABBsffGAAAB/ElEQVRIia1WMW7CQBC8EAoqFy74AD1FqNzkAUi09DROwwN4Ag+gMQ09dcQXXNHQIucBPAJFc2Iue+dd40QZycLc7c7N7d7u+cU9wXw+ryyL0+n00eU9tCZIOp1O/f/ZbBbmzuczX6uuRVTlIAYpCSeTScumaZqw0OVyURd47SIGaZ7n6s4wjmc0Grn7/e6yLFtcr9dPaaOGhcTEeDxu2dxut2hXUJ9ioKmW0IidMg6/NPmD1EmqtojTBWAvE26SW8r+YhfIu87zbyB5BiRerVYtikXxXuLRuK058HABMyz/AX8UHwXgV0NRaEXzDKzaw+EQCioo1yrsLfvyjwZrTvK0yp/xh/o+JwbFhFYgFRNqzGEIB1ZhH2INkXJZoShn2WNSgJRNS/qoYSHxer1+qkhChnC320ULRI1LEsNhv99HISBkLmhP/7L8OfqhiKC6SzEJtSTLHMkGFhK6XC79L89rmtC6rv0YfjXV9COPDwtVQxEc2ZflIu7R+WADQrkA7eCH5BdFwQRXQ8bKxXejeWFoYZGCQM7Yh7BAkcw0DEnEEPHhbjBPQfCDvwzlEINlWZq3OAiOx2O0KwAKU8gehXfzu2Wz2VQMTXqCeLZZSNvtVv20MFsu48gQpDvjuHYxE+ZHESBPSJ/x3sqBvhe0hc5vRXkfypBY4xGcc9+lcFxartG6LgAAAABJRU5ErkJggg==";
+        const playUri = window.location.protocol + "//" + window.location.hostname + window.location.pathname;
+        let name = localUserStore.getName() ?? "unknown";
+        this.chatIframe?.contentWindow?.postMessage(
+            {
+                type: "userData",
+                data: {
+                    ...localUserStore.getLocalUser(),
+                    name,
+                    playUri,
+                    authToken: localUserStore.getAuthToken(),
+                    color: getColorByString(name ?? ""),
+                    woka: wokaSrc,
+                    isLogged: localUserStore.isLogged(),
+                    availabilityStatus: get(availabilityStatusStore),
+                    roomName: connectionManager.currentRoom?.roomName ?? "default",
+                    visitCardUrl: gameManager.myVisitCardUrl,
+                    userRoomToken: gameManager.getCurrentGameScene().connection?.userRoomToken,
+                },
+            },
+            "*"
+        );
+    }
+
+    sendMatrixSettingsMessageToChatIframe(matrixSettingsMessage: MatrixSettingsMessage) {
+        this.postMessageToChat({
+            type: "matrixSettings",
+            data: matrixSettingsMessage,
+        });
+    }
 
     /**
      * Sends the message... to the chat iFrame.

@@ -9,7 +9,7 @@ import { adminService } from "../services/AdminService";
 import Axios from "axios";
 import { z } from "zod";
 import { validateQuery } from "../services/QueryValidator";
-import { MatrixProvider } from "../services/MatrixProvider";
+import {matrixProvider} from "../services/MatrixProvider";
 
 export class AuthenticateController extends BaseHttpController {
     routes(): void {
@@ -341,7 +341,7 @@ export class AuthenticateController extends BaseHttpController {
                 userInfo?.access_token,
                 userInfo?.username,
                 userInfo?.locale,
-                email ? MatrixProvider.getMatrixIdFromEmail(email) : undefined
+                email ? matrixProvider.getBareMatrixIdFromEmail(email) : undefined
             );
 
             res.clearCookie("playUri");
@@ -419,7 +419,7 @@ export class AuthenticateController extends BaseHttpController {
             const email = data.email;
             const roomUrl = data.roomUrl;
             const mapUrlStart = data.mapUrlStart;
-            const matrixUserId = email ? MatrixProvider.getMatrixIdFromEmail(email) : undefined;
+            const matrixUserId = email ? matrixProvider.getBareMatrixIdFromEmail(email) : undefined;
 
             const authToken = jwtTokenManager.createAuthToken(
                 email || userUuid,

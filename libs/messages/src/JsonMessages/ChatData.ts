@@ -14,6 +14,7 @@ export const isUserData = z.object({
   roomName: z.optional(z.nullable(z.string())),
   userRoomToken: z.optional(z.nullable(z.string())),
   visitCardUrl: z.optional(z.nullable(z.string())),
+  isMatrixRegistered: z.boolean().default(false),
 });
 
 export type UserData = z.infer<typeof isUserData>;

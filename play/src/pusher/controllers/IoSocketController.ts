@@ -68,7 +68,7 @@ const UpgradeData = z.object({
     isLogged: z.boolean(),
     canEdit: z.boolean(),
     matrixUserId: z.string().nullable().optional(),
-    isMatrixRegistered: z.boolean(),
+    matrixVaultPassword: z.string().optional(),
 });
 
 type UpgradeData = z.infer<typeof UpgradeData>;
@@ -357,7 +357,7 @@ export class IoSocketController {
                             userRoomToken: undefined,
                             activatedInviteUser: true,
                             canEdit: false,
-                            isMatrixRegistered: false,
+                            matrixVaultPassword: undefined,
                         };
 
                         let characterLayerObjs: WokaDetail[];
@@ -479,7 +479,7 @@ export class IoSocketController {
                             },
                             isLogged,
                             messages: [],
-                            isMatrixRegistered: userData.isMatrixRegistered,
+                            matrixVaultPassword: userData.matrixVaultPassword,
                             matrixUserId,
                         };
 
@@ -561,6 +561,7 @@ export class IoSocketController {
                     // Let's join the room
                     const client = this.initClient(ws);
                     await socketManager.handleJoinRoom(client);
+                    socketManager.emitMatrixSettings(client);
 
                     //get data information and show messages
                     if (client.messages && Array.isArray(client.messages)) {
@@ -677,12 +678,12 @@ export class IoSocketController {
                             await socketManager.handleReportMessage(client, message.message.reportPlayerMessage);
                             break;
                         }
+                        case "queryMessage":
                         case "setPlayerDetailsMessage":
                         case "itemEventMessage":
                         case "variableMessage":
                         case "webRtcSignalToServerMessage":
                         case "webRtcScreenSharingSignalToServerMessage":
-                        case "queryMessage":
                         case "emotePromptMessage":
                         case "followRequestMessage":
                         case "followConfirmationMessage":
@@ -761,7 +762,7 @@ export class IoSocketController {
         client.isLogged = ws.isLogged;
         client.applications = ws.applications;
         client.matrixUserId = ws.matrixUserId;
-        client.isMatrixRegistered = ws.isMatrixRegistered;
+        client.matrixVaultPassword = ws.matrixVaultPassword;
         client.customJsonReplacer = (key: unknown, value: unknown): string | undefined => {
             if (key === "listenedZones") {
                 return (value as Set<Zone>).size + " listened zone(s)";

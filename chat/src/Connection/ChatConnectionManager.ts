@@ -1,106 +1,64 @@
-import { XmppSettingsMessage } from "@workadventure/messages";
-import { XmppClient } from "../Xmpp/XmppClient";
 import { connectionEstablishedStore, enableChat } from "../Stores/ChatStore";
-import { get } from "svelte/store";
+import {get, writable, Writable} from "svelte/store";
 import { xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
 import Debug from "debug";
+import {MatrixClient} from "../Matrix/MatrixClient";
+import { MatrixClient as Matrix} from "matrix-js-sdk";
 
 const debug = Debug("chat");
 
 class ChatConnectionManager {
-    private uuid: string;
-    private playUri: string;
-    private authToken?: string;
-    private xmppSettingsMessage?: XmppSettingsMessage;
-    private xmppClient?: XmppClient;
+    private _authToken?: string;
+    private matrixClient?: MatrixClient;
+
+    public isConnected: Writable<boolean> = writable(false);
 
     constructor() {
-        this.uuid = "";
-        this.playUri = "";
     }
 
-    initUser(playUri: string, uuid: string, authToken?: string) {
-        debug("chatConnectionManager => initUser");
-        this.uuid = uuid;
-        this.authToken = authToken;
-        this.playUri = playUri;
-
-        this.start();
+    set authToken(value: string) {
+        this._authToken = value;
     }
 
-    initXmppSettings(xmppSettingsMessages: XmppSettingsMessage) {
-        debug("chatConnectionManager => initXmppSettings");
-        this.xmppSettingsMessage = xmppSettingsMessages;
-
-        this.start();
-    }
-
-    get connectionOrFail(): XmppClient {
-        if (!this.xmppClient) {
-            throw new Error("No chat connection with XMPP server!");
+    get connectionOrFail(): MatrixClient {
+        if (!this.matrixClient) {
+            throw new Error("No chat connection with Matrix server!");
         }
-        return this.xmppClient;
+        return this.matrixClient;
     }
 
-    get connection(): XmppClient | undefined {
-        return this.xmppClient;
+    get matrixOrFail(): Matrix {
+        if (!this.matrixClient || !this.matrixClient.matrix) {
+            throw new Error("No chat connection with Matrix server!");
+        }
+        return this.matrixClient.matrix;
+    }
+
+    get connection(): MatrixClient | undefined {
+        return this.matrixClient;
     }
 
     public start() {
         debug("chatConnectionManager => start");
-        if (this.uuid !== "" && this.authToken && this.playUri !== "" && this.xmppSettingsMessage && !this.xmppClient) {
+        if (this._authToken && !this.matrixClient) {
             debug("chatConnectionManager => start => all parameters are OK");
             if (get(enableChat)) {
-                this.xmppClient = new XmppClient(this.xmppSettingsMessage);
+                this.matrixClient = new MatrixClient(this._authToken, "http://matrix.workadventure.localhost");
+                this.matrixClient.login().then(async () => {
+                    await this.matrixClient?.start();
+                    this.isConnected.set(true);
+                }).catch((e) => {
+                    console.error("ChatConnectionManager => start", e);
+                })
             } else {
                 xmppServerConnectionStatusStore.set(true);
             }
             connectionEstablishedStore.set(true);
-        } else {
-            debug(
-                `chatConnectionManager => start => all parameters are NOT OK ${JSON.stringify({
-                    uuid: this.uuid,
-                    authToken: this.authToken,
-                    playUrl: this.playUri,
-                    xmppSettingsMessage: this.xmppSettingsMessage,
-                    xmppClient: !this.xmppClient,
-                })}`
-            );
         }
-
-        /*this.chatConnection.xmppConnectionNotAuthorizedStream.subscribe(() => {
-            if (this.setTimeout) {
-                clearTimeout(this.setTimeout);
-            }
-
-            //close connection before start
-            this.chatConnection?.close();
-            this.chatConnection = undefined;
-            return (this.setTimeout = setTimeout(() => {
-                if (this.chatConnection == undefined || this.chatConnection.isClose) {
-                    this.start();
-                }
-            }, 10000));
-        });
-
-        this.chatConnection.connectionErrorStream.subscribe(() => {
-            if (this.setTimeout) {
-                clearTimeout(this.setTimeout);
-            }
-
-            //close connection before start
-            this.chatConnection?.close();
-            this.chatConnection = undefined;
-            return (this.setTimeout = setTimeout(() => {
-                if (this.chatConnection == undefined || this.chatConnection.isClose) {
-                    this.start();
-                }
-            }, 10000));
-        });*/
     }
 
     get isClosed(): boolean {
-        return this.xmppClient == undefined || this.xmppClient.isClosed;
+        return this.matrixClient == undefined;
     }
 }
 export const chatConnectionManager = new ChatConnectionManager();
