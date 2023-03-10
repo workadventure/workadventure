@@ -21,7 +21,6 @@ import {
     ClientToServerMessage,
     CompanionMessage,
     ErrorApiData,
-    isApplicationDefinitionInterface,
     ServerToClientMessage as ServerToClientMessageTsProto,
     SubMessage,
     WokaDetail,
@@ -65,7 +64,6 @@ type UpgradeData = {
     canEdit: boolean;
     matrixUserId: string | null | undefined;
     matrixVaultPassword: string | undefined;
-
 };
 
 type UpgradeFailedInvalidData = {

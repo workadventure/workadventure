@@ -163,7 +163,6 @@ export class SocketManager {
         }
 
         const roomJoinedMessage: Partial<RoomJoinedMessage> = {
-            userJid: joinRoomMessage.userJid,
             tag: joinRoomMessage.tag,
             userRoomToken: joinRoomMessage.userRoomToken,
             characterLayer: joinRoomMessage.characterLayer,
