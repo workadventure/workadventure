@@ -12,22 +12,26 @@ describe("Space", () => {
         },
     });
     let eventsClient: SubMessage[] = [];
-    const spacesFilters: Map<string, SpaceFilterMessage[]> = new Map<string, SpaceFilterMessage[]>();
-    spacesFilters.set("test", [
-        {
-            filterName: "default",
-            spaceName: "test",
-            filter: {
-                $case: "spaceFilterEverybody",
-                spaceFilterEverybody: {},
-            },
-        },
-    ]);
     const client = mock<ExSocketInterface>({
         emitInBatch: (payload: SubMessage) => {
             eventsClient.push(payload);
         },
     });
+    const spacesFilters: Map<string, SpaceFilterMessage[]> = new Map<string, SpaceFilterMessage[]>([
+        [
+            "test",
+            [
+                {
+                    filterName: "default",
+                    spaceName: "test",
+                    filter: {
+                        $case: "spaceFilterEverybody",
+                        spaceFilterEverybody: {},
+                    },
+                },
+            ],
+        ],
+    ]);
     client.spacesFilters = spacesFilters;
     const space = new Space("test", backSpaceConnection, 1, client);
     it("should return true because Space is empty", () => {
@@ -171,16 +175,7 @@ describe("Space", () => {
         expect(user?.name).toBe("johnny");
     });
     it("should remove the name filter and send me the delta (add userMessage)", () => {
-        client.spacesFilters.set("test", [
-            {
-                filterName: "default",
-                spaceName: "test",
-                filter: {
-                    $case: "spaceFilterEverybody",
-                    spaceFilterEverybody: {},
-                },
-            },
-        ]);
+        client.spacesFilters = spacesFilters;
         eventsClient = [];
         space.handleRemoveFilter(client, {
             spaceFilterMessage: {
