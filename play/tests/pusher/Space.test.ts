@@ -17,7 +17,7 @@ describe("Space", () => {
             eventsClient.push(payload);
         },
     });
-    const spacesFilters: Map<string, SpaceFilterMessage[]> = new Map<string, SpaceFilterMessage[]>([
+    client.spacesFilters = new Map<string, SpaceFilterMessage[]>([
         [
             "test",
             [
@@ -32,7 +32,6 @@ describe("Space", () => {
             ],
         ],
     ]);
-    client.spacesFilters = spacesFilters;
     const space = new Space("test", backSpaceConnection, 1, client);
     it("should return true because Space is empty", () => {
         expect(space.isEmpty()).toBe(true);
@@ -175,7 +174,21 @@ describe("Space", () => {
         expect(user?.name).toBe("johnny");
     });
     it("should remove the name filter and send me the delta (add userMessage)", () => {
-        client.spacesFilters = spacesFilters;
+        client.spacesFilters = new Map<string, SpaceFilterMessage[]>([
+            [
+                "test",
+                [
+                    {
+                        filterName: "default",
+                        spaceName: "test",
+                        filter: {
+                            $case: "spaceFilterEverybody",
+                            spaceFilterEverybody: {},
+                        },
+                    },
+                ],
+            ],
+        ]);
         eventsClient = [];
         space.handleRemoveFilter(client, {
             spaceFilterMessage: {
