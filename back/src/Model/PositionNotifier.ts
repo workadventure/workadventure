@@ -21,7 +21,7 @@ import { Movable } from "../Model/Movable";
 import { PositionInterface } from "../Model/PositionInterface";
 import { ZoneSocket } from "../RoomManager";
 import { User } from "../Model/User";
-import { EmoteEventMessage, SetPlayerDetailsMessage } from "../Messages/generated/messages_pb";
+import { EmoteEventMessage, SetPlayerDetailsMessage } from "@workadventure/messages";
 
 interface ZoneDescriptor {
     i: number;

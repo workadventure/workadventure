@@ -1,4 +1,4 @@
-import { MapStorageClient } from "../Messages/generated/services_grpc_pb";
+import { MapStorageClient } from "@workadventure/messages/src/ts-proto-generated/services";
 import * as grpc from "@grpc/grpc-js";
 import { MAP_STORAGE_URL } from "../Enum/EnvironmentVariable";
 

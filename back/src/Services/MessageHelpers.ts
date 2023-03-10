@@ -1,12 +1,9 @@
 import {
     BatchToPusherMessage,
     BatchToPusherRoomMessage,
-    ErrorMessage,
     ServerToAdminClientMessage,
     ServerToClientMessage,
-    SubToPusherMessage,
-    SubToPusherRoomMessage,
-} from "../Messages/generated/messages_pb";
+} from "@workadventure/messages";
 import { UserSocket } from "../Model/User";
 import { AdminSocket, RoomSocket, ZoneSocket } from "../RoomManager";
 
@@ -23,11 +20,14 @@ function getMessageFromError(error: unknown): string {
 export function emitError(Client: UserSocket, error: unknown): void {
     const message = getMessageFromError(error);
 
-    const errorMessage = new ErrorMessage();
-    errorMessage.setMessage(message);
-
-    const serverToClientMessage = new ServerToClientMessage();
-    serverToClientMessage.setErrormessage(errorMessage);
+    const serverToClientMessage: ServerToClientMessage = {
+        message: {
+            $case: "errorMessage",
+            errorMessage: {
+                message: message,
+            },
+        },
+    };
 
     //if (!Client.disconnecting) {
     Client.write(serverToClientMessage);
@@ -38,11 +38,14 @@ export function emitError(Client: UserSocket, error: unknown): void {
 export function emitErrorOnAdminSocket(Client: AdminSocket, error: unknown): void {
     const message = getMessageFromError(error);
 
-    const errorMessage = new ErrorMessage();
-    errorMessage.setMessage(message);
-
-    const serverToClientMessage = new ServerToAdminClientMessage();
-    serverToClientMessage.setErrormessage(errorMessage);
+    const serverToClientMessage: ServerToAdminClientMessage = {
+        message: {
+            $case: "errorMessage",
+            errorMessage: {
+                message: message,
+            },
+        },
+    };
 
     //if (!Client.disconnecting) {
     Client.write(serverToClientMessage);
@@ -54,14 +57,18 @@ export function emitErrorOnRoomSocket(Client: RoomSocket, error: unknown): void 
     console.error(error);
     const message = getMessageFromError(error);
 
-    const errorMessage = new ErrorMessage();
-    errorMessage.setMessage(message);
-
-    const subToPusherRoomMessage = new SubToPusherRoomMessage();
-    subToPusherRoomMessage.setErrormessage(errorMessage);
-
-    const batchToPusherMessage = new BatchToPusherRoomMessage();
-    batchToPusherMessage.addPayload(subToPusherRoomMessage);
+    const batchToPusherMessage: BatchToPusherRoomMessage = {
+        payload: [
+            {
+                message: {
+                    $case: "errorMessage",
+                    errorMessage: {
+                        message: message,
+                    },
+                },
+            },
+        ],
+    };
 
     //if (!Client.disconnecting) {
     Client.write(batchToPusherMessage);
@@ -73,14 +80,18 @@ export function emitErrorOnZoneSocket(Client: ZoneSocket, error: unknown): void 
     console.error(error);
     const message = getMessageFromError(error);
 
-    const errorMessage = new ErrorMessage();
-    errorMessage.setMessage(message);
-
-    const subToPusherMessage = new SubToPusherMessage();
-    subToPusherMessage.setErrormessage(errorMessage);
-
-    const batchToPusherMessage = new BatchToPusherMessage();
-    batchToPusherMessage.addPayload(subToPusherMessage);
+    const batchToPusherMessage: BatchToPusherMessage = {
+        payload: [
+            {
+                message: {
+                    $case: "errorMessage",
+                    errorMessage: {
+                        message: message,
+                    },
+                },
+            },
+        ],
+    };
 
     //if (!Client.disconnecting) {
     Client.write(batchToPusherMessage);
