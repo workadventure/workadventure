@@ -184,9 +184,8 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     private notifyAll(subMessage: SubMessage, user: SpaceUserExtended) {
-        [...this.clientWatchers.values()]
-            .filter((watcher) => this.isWatcherTargeted(watcher, user))
-            .forEach((watcher) => {
+        this.clientWatchers.forEach((watcher) => {
+            if (this.isWatcherTargeted(watcher, user)) {
                 const filterOfThisSpace = watcher.spacesFilters.get(this.name) ?? [];
                 const filtersTargeted = filterOfThisSpace.filter((spaceFilter) =>
                     this.filterOneUser(spaceFilter, user)
@@ -205,7 +204,8 @@ export class Space implements CustomJsonReplacerInterface {
                 } else {
                     watcher.emitInBatch(subMessage);
                 }
-            });
+            }
+        });
     }
 
     public notifyMe(watcher: ExSocketInterface, subMessage: SubMessage) {

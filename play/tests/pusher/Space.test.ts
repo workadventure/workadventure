@@ -12,27 +12,23 @@ describe("Space", () => {
         },
     });
     let eventsClient: SubMessage[] = [];
-    const spacesFilters = new Map<string, SpaceFilterMessage[]>([
-        [
-            "test",
-            [
-                {
-                    filterName: "default",
-                    spaceName: "test",
-                    filter: {
-                        $case: "spaceFilterEverybody",
-                        spaceFilterEverybody: {},
-                    },
-                },
-            ],
-        ],
+    const spacesFilters: Map<string, SpaceFilterMessage[]> = new Map<string, SpaceFilterMessage[]>();
+    spacesFilters.set("test", [
+        {
+            filterName: "default",
+            spaceName: "test",
+            filter: {
+                $case: "spaceFilterEverybody",
+                spaceFilterEverybody: {},
+            },
+        },
     ]);
     const client = mock<ExSocketInterface>({
         emitInBatch: (payload: SubMessage) => {
             eventsClient.push(payload);
         },
-        spacesFilters,
     });
+    client.spacesFilters = spacesFilters;
     const space = new Space("test", backSpaceConnection, 1, client);
     it("should return true because Space is empty", () => {
         expect(space.isEmpty()).toBe(true);
