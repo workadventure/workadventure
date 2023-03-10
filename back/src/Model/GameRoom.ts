@@ -13,7 +13,6 @@ import {
 import { PositionNotifier } from "./PositionNotifier";
 import { Movable } from "../Model/Movable";
 import {
-    BatchToPusherRoomMessage,
     EmoteEventMessage,
     JoinRoomMessage,
     SetPlayerDetailsMessage,
@@ -23,7 +22,7 @@ import {
     RefreshRoomMessage,
     MapStorageUrlMessage,
     MapStorageToBackMessage,
-} from "../Messages/generated/messages_pb";
+} from "@workadventure/messages";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
 import { Admin } from "../Model/Admin";
@@ -154,12 +153,11 @@ export class GameRoom implements BrothersFinder {
     }
 
     public dispatchRoomMessage(message: SubToPusherRoomMessage): void {
-        const batchMessage = new BatchToPusherRoomMessage();
-        batchMessage.addPayload(message);
-
         // Dispatch the message on the room listeners
         for (const socket of this.roomListeners) {
-            socket.write(batchMessage);
+            socket.write({
+                payload: [message],
+            });
         }
     }
 
@@ -179,7 +177,7 @@ export class GameRoom implements BrothersFinder {
     }
 
     public async join(socket: UserSocket, joinRoomMessage: JoinRoomMessage): Promise<User> {
-        const positionMessage = joinRoomMessage.getPositionmessage();
+        const positionMessage = joinRoomMessage.positionMessage;
         if (positionMessage === undefined) {
             throw new Error("Missing position message");
         }
@@ -187,26 +185,26 @@ export class GameRoom implements BrothersFinder {
 
         const user = await User.create(
             this.nextUserId,
-            joinRoomMessage.getUseruuid(),
-            joinRoomMessage.getUserjid(),
-            joinRoomMessage.getIslogged(),
-            joinRoomMessage.getIpaddress(),
+            joinRoomMessage.userUuid,
+            joinRoomMessage.userJid,
+            joinRoomMessage.isLogged,
+            joinRoomMessage.IPAddress,
             position,
             this.positionNotifier,
-            joinRoomMessage.getAvailabilitystatus(),
+            joinRoomMessage.availabilityStatus,
             socket,
-            joinRoomMessage.getTagList(),
-            joinRoomMessage.getVisitcardurl()?.getValue() ?? null,
-            joinRoomMessage.getName(),
-            ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.getCharacterlayerList()),
+            joinRoomMessage.tag,
+            joinRoomMessage.visitCardUrl ?? null,
+            joinRoomMessage.name,
+            ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.characterLayer),
             this.roomUrl,
             this.roomGroup ?? undefined,
             this,
-            joinRoomMessage.getCompanion(),
+            joinRoomMessage.companion,
             undefined,
             undefined,
-            joinRoomMessage.getActivatedinviteuser(),
-            joinRoomMessage.getApplicationsList()
+            joinRoomMessage.activatedInviteUser,
+            joinRoomMessage.applications
         );
         this.nextUserId++;
         this.users.set(user.id, user);
@@ -227,6 +225,12 @@ export class GameRoom implements BrothersFinder {
     }
 
     public leave(user: User) {
+        if (user.disconnected === true) {
+            console.warn("User ", user.id, "already disconnected!");
+            return;
+        }
+        user.disconnected = true;
+
         if (!this.users.has(user.id)) {
             console.warn("User ", user.id, "does not belong to this game room! It should!");
         }
@@ -517,23 +521,21 @@ export class GameRoom implements BrothersFinder {
             }
 
             // TODO: should we batch those every 100ms?
-            const variableMessage = new VariableWithTagMessage();
-            variableMessage.setName(name);
-            variableMessage.setValue(value);
+            const variableMessage: Partial<VariableWithTagMessage> = {
+                name,
+                value,
+            };
             if (readableBy) {
-                variableMessage.setReadableby(readableBy);
+                variableMessage.readableBy = readableBy;
             }
-
-            const subMessage = new SubToPusherRoomMessage();
-            subMessage.setVariablemessage(variableMessage);
-
-            const batchMessage = new BatchToPusherRoomMessage();
-            batchMessage.addPayload(subMessage);
 
             // Dispatch the message on the room listeners
-            for (const socket of this.roomListeners) {
-                socket.write(batchMessage);
-            }
+            this.sendSubMessageToRoom({
+                message: {
+                    $case: "variableMessage",
+                    variableMessage: VariableWithTagMessage.fromPartial(variableMessage),
+                },
+            });
         } catch (e) {
             if (e instanceof VariableError) {
                 // Ok, we have an error setting a variable. Either the user is trying to hack the map... or the map
@@ -992,12 +994,11 @@ export class GameRoom implements BrothersFinder {
     }
 
     public sendSubMessageToRoom(subMessage: SubToPusherRoomMessage) {
-        const batchMessage = new BatchToPusherRoomMessage();
-        batchMessage.addPayload(subMessage);
-
         // Dispatch the message on the room listeners
         for (const socket of this.roomListeners) {
-            socket.write(batchMessage);
+            socket.write({
+                payload: [subMessage],
+            });
         }
     }
 
@@ -1026,20 +1027,36 @@ export class GameRoom implements BrothersFinder {
 
     private connectToMapStorage(): void {
         if (this.editable && this.mapStorageClientMessagesStream === undefined) {
-            const mapStorageUrlMessage = new MapStorageUrlMessage();
-            mapStorageUrlMessage.setMapurl(this.mapUrl);
+            const mapStorageUrlMessage: MapStorageUrlMessage = {
+                mapUrl: this.mapUrl,
+            };
             this.mapStorageClientMessagesStream = getMapStorageClient().listenToMessages(mapStorageUrlMessage);
             this.mapStorageClientMessagesStream.on("data", (data: MapStorageToBackMessage) => {
-                if (data.hasMapstoragerefreshmessage()) {
-                    const msg = new RefreshRoomMessage().setRoomid(this.roomUrl);
-                    const comment = data.getMapstoragerefreshmessage()?.getComment();
-                    if (comment) {
-                        msg.setComment(comment).setTimetorefresh(30);
+                const message = data.message;
+                if (!message) {
+                    console.error("Received empty message from mapStorageClientMessagesStream");
+                    return;
+                }
+                switch (message.$case) {
+                    case "mapStorageRefreshMessage": {
+                        const msg: Partial<RefreshRoomMessage> = {
+                            roomId: this.roomUrl,
+                            comment: message.mapStorageRefreshMessage.comment,
+                            timeToRefresh: 30,
+                        };
+                        this.users.forEach((user: User) => {
+                            user.socket.write({
+                                message: {
+                                    $case: "refreshRoomMessage",
+                                    refreshRoomMessage: RefreshRoomMessage.fromPartial(msg),
+                                },
+                            });
+                        });
+                        break;
                     }
-                    const message = new ServerToClientMessage().setRefreshroommessage(msg);
-                    this.users.forEach((user: User) => {
-                        user.socket.write(message);
-                    });
+                    default: {
+                        const _exhaustiveCheck: never = message.$case;
+                    }
                 }
             });
             this.mapStorageClientMessagesStream.on("close", () => {

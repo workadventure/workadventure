@@ -85,12 +85,12 @@
 .video-container {
     display: flex;
     transition: all 0.2s ease;
-    cursor: url("../images/cursor_pointer.png"), pointer;
+    cursor: pointer;
     width: 100%;
 
     &.no-clikable {
         video {
-            cursor: url("../images/cursor_normal.png"), pointer;
+            cursor: pointer;
         }
     }
 }

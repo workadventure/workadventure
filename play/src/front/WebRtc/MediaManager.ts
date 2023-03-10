@@ -1,4 +1,3 @@
-import { HtmlUtils } from "./HtmlUtils";
 import type { UserInputManager } from "../Phaser/UserInput/UserInputManager";
 import { localStreamStore } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
@@ -30,9 +29,6 @@ export enum NotificationType {
 const TIME_NOTIFYING_MILLISECOND = 10000;
 
 export class MediaManager {
-    startScreenSharingCallBacks: Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();
-    stopScreenSharingCallBacks: Set<StopScreenSharingCallback> = new Set<StopScreenSharingCallback>();
-
     private userInputManager?: UserInputManager;
 
     private canSendNotification = true;
@@ -115,80 +111,6 @@ export class MediaManager {
         proximityMeetingStore.set(false);
     }
 
-    private getScreenSharingId(userId: string): string {
-        return `screen-sharing-${userId}`;
-    }
-
-    disabledMicrophoneByUserId(userId: number) {
-        const element = document.getElementById(`microphone-${userId}`);
-        if (!element) {
-            return;
-        }
-        element.classList.add("active"); //todo: why does a method 'disable' add a class 'active'?
-    }
-
-    enabledMicrophoneByUserId(userId: number) {
-        const element = document.getElementById(`microphone-${userId}`);
-        if (!element) {
-            return;
-        }
-        element.classList.remove("active"); //todo: why does a method 'enable' remove a class 'active'?
-    }
-
-    disabledVideoByUserId(userId: number) {
-        let element = document.getElementById(`${userId}`);
-        if (element) {
-            element.style.opacity = "0";
-        }
-        element = document.getElementById(`name-${userId}`);
-        if (element) {
-            element.style.display = "block";
-        }
-    }
-
-    enabledVideoByUserId(userId: number) {
-        let element = document.getElementById(`${userId}`);
-        if (element) {
-            element.style.opacity = "1";
-        }
-        element = document.getElementById(`name-${userId}`);
-        if (element) {
-            element.style.display = "none";
-        }
-    }
-
-    toggleBlockLogo(userId: number, show: boolean): void {
-        const blockLogoElement = HtmlUtils.getElementByIdOrFail<HTMLImageElement>("blocking-" + userId);
-        show ? blockLogoElement.classList.add("active") : blockLogoElement.classList.remove("active");
-    }
-
-    isError(userId: string): void {
-        console.info("isError", `div-${userId}`);
-        const element = document.getElementById(`div-${userId}`);
-        if (!element) {
-            return;
-        }
-        const errorDiv = element.getElementsByClassName("rtc-error").item(0) as HTMLDivElement | null;
-        if (errorDiv === null) {
-            return;
-        }
-        errorDiv.style.display = "block";
-    }
-    isErrorScreenSharing(userId: string): void {
-        this.isError(this.getScreenSharingId(userId));
-    }
-
-    private getSpinner(userId: string): HTMLDivElement | null {
-        const element = document.getElementById(`div-${userId}`);
-        if (!element) {
-            return null;
-        }
-        const connectingSpinnerDiv = element
-            .getElementsByClassName("connecting-spinner")
-            .item(0) as HTMLDivElement | null;
-        return connectingSpinnerDiv;
-    }
-
     public setUserInputManager(userInputManager: UserInputManager) {
         this.userInputManager = userInputManager;
     }
@@ -241,9 +163,13 @@ export class MediaManager {
     public playNewMessageNotification() {
         //play notification message
         const elementAudioNewMessageNotification = document.getElementById("newMessageSound");
-        if (this.canPlayNotificationMessage && elementAudioNewMessageNotification) {
-            (elementAudioNewMessageNotification as HTMLAudioElement).volume = 0.2;
-            (elementAudioNewMessageNotification as HTMLAudioElement)
+        if (
+            this.canPlayNotificationMessage &&
+            elementAudioNewMessageNotification &&
+            elementAudioNewMessageNotification instanceof HTMLAudioElement
+        ) {
+            elementAudioNewMessageNotification.volume = 0.2;
+            elementAudioNewMessageNotification
                 .play()
                 .then(() => {
                     this.canPlayNotificationMessage = false;

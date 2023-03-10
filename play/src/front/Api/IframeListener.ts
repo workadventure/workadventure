@@ -972,6 +972,12 @@ class IframeListener {
         delete this.answerers[key];
     }
 
+    public hideIFrames(hide = true): void {
+        for (const iframe of this.iframes.keys()) {
+            iframe.hidden = hide;
+        }
+    }
+
     dispatchVariableToOtherIframes(key: string, value: unknown, source: MessageEventSource | null) {
         // Let's dispatch the message to the other iframes
         this.postMessage(

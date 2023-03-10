@@ -16,6 +16,7 @@ import { AvailabilityStatus } from "@workadventure/messages";
 
 import deepEqual from "fast-deep-equal";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
+import { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/ConstraintMessage";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -623,11 +624,6 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
         })().catch((e) => console.error(e));
     }
 );
-
-export interface ObtainedMediaStreamConstraints {
-    video: boolean;
-    audio: boolean;
-}
 
 let obtainedMediaConstraint: ObtainedMediaStreamConstraints = {
     audio: true,

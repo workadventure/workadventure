@@ -7,17 +7,14 @@ import { ServerDuplexStream } from "@grpc/grpc-js";
 import {
     ApplicationMessage,
     AvailabilityStatus,
-    BatchMessage,
     CompanionMessage,
-    FollowAbortMessage,
-    FollowConfirmationMessage,
-    PlayerDetailsUpdatedMessage,
     PusherToBackMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
     SetPlayerVariableMessage,
+    SetPlayerVariableMessage_Scope,
     SubMessage,
-} from "../Messages/generated/messages_pb";
+} from "@workadventure/messages";
 import { CharacterLayer } from "../Model/Websocket/CharacterLayer";
 import { PlayerVariables } from "../Services/PlayersRepository/PlayerVariables";
 import { getPlayersVariablesRepository } from "../Services/PlayersRepository/PlayersVariablesRepository";
@@ -31,6 +28,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
     public group?: Group;
     private _following: User | undefined;
     private followedBy: Set<User> = new Set<User>();
+    public disconnected = false;
 
     public constructor(
         public id: number,
@@ -124,23 +122,30 @@ export class User implements Movable, CustomJsonReplacerInterface {
         this.followedBy.add(follower);
         follower._following = this;
 
-        const message = new FollowConfirmationMessage();
-        message.setFollower(follower.id);
-        message.setLeader(this.id);
-        const clientMessage = new ServerToClientMessage();
-        clientMessage.setFollowconfirmationmessage(message);
-        this.socket.write(clientMessage);
+        this.socket.write({
+            message: {
+                $case: "followConfirmationMessage",
+                followConfirmationMessage: {
+                    follower: follower.id,
+                    leader: this.id,
+                },
+            },
+        });
     }
 
     public delFollower(follower: User): void {
         this.followedBy.delete(follower);
         follower._following = undefined;
 
-        const message = new FollowAbortMessage();
-        message.setFollower(follower.id);
-        message.setLeader(this.id);
-        const clientMessage = new ServerToClientMessage();
-        clientMessage.setFollowabortmessage(message);
+        const clientMessage = {
+            message: {
+                $case: "followAbortMessage",
+                followAbortMessage: {
+                    follower: follower.id,
+                    leader: this.id,
+                },
+            },
+        } as const;
         this.socket.write(clientMessage);
         follower.socket.write(clientMessage);
     }
@@ -176,11 +181,11 @@ export class User implements Movable, CustomJsonReplacerInterface {
         }
     }
 
-    private batchedMessages: BatchMessage = new BatchMessage();
+    private batchedMessages: SubMessage[] = [];
     private batchTimeout: NodeJS.Timeout | null = null;
 
     public emitInBatch(payload: SubMessage): void {
-        this.batchedMessages.addPayload(payload);
+        this.batchedMessages.push(payload);
 
         if (this.batchTimeout === null) {
             this.batchTimeout = setTimeout(() => {
@@ -188,79 +193,72 @@ export class User implements Movable, CustomJsonReplacerInterface {
                     return;
                 }*/
 
-                const serverToClientMessage = new ServerToClientMessage();
-                serverToClientMessage.setBatchmessage(this.batchedMessages);
-
-                this.socket.write(serverToClientMessage);
-                this.batchedMessages = new BatchMessage();
+                this.socket.write({
+                    message: {
+                        $case: "batchMessage",
+                        batchMessage: {
+                            event: "", // FIXME: remove event
+                            payload: this.batchedMessages,
+                        },
+                    },
+                });
+                this.batchedMessages = [];
                 this.batchTimeout = null;
             }, 100);
         }
     }
 
     public updateDetails(details: SetPlayerDetailsMessage) {
-        if (details.getRemoveoutlinecolor()) {
+        if (details.removeOutlineColor) {
             this.outlineColor = undefined;
-        } else if (details.getOutlinecolor()?.getValue() !== undefined) {
-            this.outlineColor = details.getOutlinecolor()?.getValue();
+        } else if (details.outlineColor !== undefined) {
+            this.outlineColor = details.outlineColor;
         }
-        this.voiceIndicatorShown = details.getShowvoiceindicator()?.getValue();
+        this.voiceIndicatorShown = details.showVoiceIndicator;
 
-        const availabilityStatus = details.getAvailabilitystatus();
+        const availabilityStatus = details.availabilityStatus;
         if (availabilityStatus && availabilityStatus !== this.availabilityStatus) {
             this.availabilityStatus = availabilityStatus;
         }
 
-        const setVariable = details.getSetvariable();
+        const setVariable = details.setVariable;
         if (setVariable) {
             /*console.log(
                 "Variable '" + setVariable.getName() + "' for user '" + this.name + "' updated. New value: '",
                 setVariable.getValue() + "'"
             );*/
-            const scope = setVariable.getScope();
-            if (scope === SetPlayerVariableMessage.Scope.WORLD) {
+            const scope = setVariable.scope;
+            if (scope === SetPlayerVariableMessage_Scope.WORLD) {
                 this.variables
                     .saveWorldVariable(
-                        setVariable.getName(),
-                        setVariable.getValue(),
-                        setVariable.getPublic(),
-                        setVariable.getTtl()?.getValue(),
-                        setVariable.getPersist()
+                        setVariable.name,
+                        setVariable.value,
+                        setVariable.public,
+                        setVariable.ttl,
+                        setVariable.persist
                     )
                     .catch((e) => console.error("An error occurred while saving world variable: ", e));
 
                 this.updateDataUserSameUUID(setVariable, details);
-            } else if (scope === SetPlayerVariableMessage.Scope.ROOM) {
+            } else if (scope === SetPlayerVariableMessage_Scope.ROOM) {
                 this.variables
                     .saveRoomVariable(
-                        setVariable.getName(),
-                        setVariable.getValue(),
-                        setVariable.getPublic(),
-                        setVariable.getTtl()?.getValue(),
-                        setVariable.getPersist()
+                        setVariable.name,
+                        setVariable.value,
+                        setVariable.public,
+                        setVariable.ttl,
+                        setVariable.persist
                     )
                     .catch((e) => console.error("An error occurred while saving room variable: ", e));
 
                 this.updateDataUserSameUUID(setVariable, details);
+            } else if (scope === SetPlayerVariableMessage_Scope.UNRECOGNIZED) {
+                console.warn("Unrecognized scope for SetPlayerVariableMessage");
             } else {
                 const _exhaustiveCheck: never = scope;
             }
         }
 
-        /*const playerDetails = new SetPlayerDetailsMessage();
-
-        if (this.outlineColor !== undefined) {
-            playerDetails.setOutlinecolor(new UInt32Value().setValue(this.outlineColor));
-        }
-        if (details.getRemoveoutlinecolor()) {
-            playerDetails.setRemoveoutlinecolor(new BoolValue().setValue(true));
-        }
-        if (this.voiceIndicatorShown !== undefined) {
-            playerDetails.setShowvoiceindicator(new BoolValue().setValue(this.voiceIndicatorShown));
-        }
-        if (sendStatusUpdate) {
-            playerDetails.setAvailabilitystatus(details.getAvailabilitystatus());
-        }*/
         this.positionNotifier.updatePlayerDetails(this, details);
     }
 
@@ -274,17 +272,17 @@ export class User implements Movable, CustomJsonReplacerInterface {
     ) {
         // Very special case: if we are updating a player variable AND if if the variable is persisted, we must also
         // update the variable of all other users with the same UUID!
-        if (setVariable.getPersist()) {
+        if (setVariable.persist) {
             // Let's have a look at all other users sharing the same UUID
             const brothers = this.brothersFinder.getBrothers(this);
 
             for (const brother of brothers) {
                 brother.variables
                     .saveRoomVariable(
-                        setVariable.getName(),
-                        setVariable.getValue(),
-                        setVariable.getPublic(),
-                        setVariable.getTtl()?.getValue(),
+                        setVariable.name,
+                        setVariable.value,
+                        setVariable.public,
+                        setVariable.ttl,
                         // We don't need to persist this for every player as this will write in the same place in DB.
                         false
                     )
@@ -293,12 +291,15 @@ export class User implements Movable, CustomJsonReplacerInterface {
                     );
 
                 // Let's dispatch the message to the user.
-                const playerDetailsUpdatedMessage = new PlayerDetailsUpdatedMessage();
-                playerDetailsUpdatedMessage.setUserid(brother.id);
-                playerDetailsUpdatedMessage.setDetails(details);
-                const subMessage = new SubMessage();
-                subMessage.setPlayerdetailsupdatedmessage(playerDetailsUpdatedMessage);
-                brother.emitInBatch(subMessage);
+                brother.emitInBatch({
+                    message: {
+                        $case: "playerDetailsUpdatedMessage",
+                        playerDetailsUpdatedMessage: {
+                            userId: brother.id,
+                            details,
+                        },
+                    },
+                });
             }
         }
     }

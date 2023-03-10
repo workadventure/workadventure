@@ -222,7 +222,9 @@ export class RoomConnection implements RoomConnection {
         }
         url += "room";
         url += "?roomId=" + encodeURIComponent(roomUrl);
-        url += "&token=" + (token ? encodeURIComponent(token) : "");
+        if (token) {
+            url += "&token=" + encodeURIComponent(token);
+        }
         url += "&name=" + encodeURIComponent(name);
         for (const layer of characterLayers) {
             url += "&characterLayers=" + encodeURIComponent(layer);
@@ -233,16 +235,13 @@ export class RoomConnection implements RoomConnection {
         url += "&bottom=" + Math.floor(viewport.bottom);
         url += "&left=" + Math.floor(viewport.left);
         url += "&right=" + Math.floor(viewport.right);
-        if (typeof companion === "string") {
+        if (companion) {
             url += "&companion=" + encodeURIComponent(companion);
         }
-        if (typeof availabilityStatus === "number") {
-            url += "&availabilityStatus=" + availabilityStatus;
-        }
+        url += "&availabilityStatus=" + availabilityStatus;
         if (lastCommandId) {
             url += "&lastCommandId=" + lastCommandId;
         }
-
         url += "&version=" + apiVersionHash;
 
         if (RoomConnection.websocketFactory) {
@@ -1158,6 +1157,7 @@ export class RoomConnection implements RoomConnection {
                                 y: config.y,
                                 collectionName: config.prefab.collectionName,
                                 prefabId: config.prefab.id,
+                                properties: config.properties ?? {},
                             },
                         },
                     },

@@ -1,6 +1,6 @@
 import { PositionMessage_Direction } from "@workadventure/messages";
 
-export interface MucRoomDefinitionInterface {
+export interface MucRoomDefinition {
     name: string;
     url: string;
     type: string;

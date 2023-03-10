@@ -1,12 +1,12 @@
 <script lang="ts">
-    import { VideoPeer } from "../../WebRtc/VideoPeer";
+    import { PeerStatus, VideoPeer } from "../../WebRtc/VideoPeer";
     import VideoMediaBox from "./VideoMediaBox.svelte";
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import VideoOffBox from "./VideoOffBox.svelte";
-    import type { ObtainedMediaStreamConstraints } from "../../Stores/MediaStore";
+    import type { ObtainedMediaStreamConstraints } from "../../WebRtc/P2PMessages/ConstraintMessage";
     import type { Readable } from "svelte/store";
     import { fly } from "svelte/transition";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -21,6 +21,10 @@
     let constraintStore: Readable<ObtainedMediaStreamConstraints | null>;
     if (streamable instanceof VideoPeer) {
         constraintStore = streamable.constraintsStore;
+    }
+    let statusStore: Readable<PeerStatus> | null;
+    if (streamable instanceof VideoPeer || streamable instanceof ScreenSharingPeer) {
+        statusStore = streamable.statusStore;
     }
 
     const gameScene = gameManager.getCurrentGameScene();
@@ -54,7 +58,7 @@
                 <VideoOffBox peer={streamable} clickable={false} />
             </div>
         </div>
-    {:else if $constraintStore && $constraintStore.video}
+    {:else if ($constraintStore && $constraintStore.video) || $statusStore === "error" || $statusStore === "connecting"}
         <div
             class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
      media-box-shape-color tw-pointer-events-auto screen-blocker
@@ -137,7 +141,7 @@
         }
 
         &.clickable {
-            cursor: url("../../style/images/cursor_pointer.png"), pointer;
+            cursor: pointer;
         }
     }
 </style>

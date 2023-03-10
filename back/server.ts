@@ -2,9 +2,9 @@
 import App from "./src/App";
 import * as grpc from "@grpc/grpc-js";
 import { roomManager } from "./src/RoomManager";
+import { RoomManagerService, SpaceManagerService } from "@workadventure/messages/src/ts-proto-generated/services";
 import { HTTP_PORT, GRPC_PORT, ENABLE_TELEMETRY } from "./src/Enum/EnvironmentVariable";
 import { telemetryService } from "./src/Services/TelemetryService";
-import {RoomManagerService, SpaceManagerService} from "./src/Messages/generated/services_grpc_pb";
 import {spaceManager} from "./src/SpaceManager";
 
 if (ENABLE_TELEMETRY) {

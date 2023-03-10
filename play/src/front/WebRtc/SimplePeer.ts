@@ -425,7 +425,9 @@ export class SimplePeer {
         PeerConnectionScreenSharing.stopPushingScreenSharingToRemoteUser(stream);
 
         if (!PeerConnectionScreenSharing.isReceivingScreenSharingStream()) {
+            PeerConnectionScreenSharing.toClose = true;
             PeerConnectionScreenSharing.destroy();
+            this.PeerScreenSharingConnectionArray.delete(PeerConnectionScreenSharing.userId);
         }
     }
 }
