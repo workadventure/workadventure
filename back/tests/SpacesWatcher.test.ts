@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { describe, expect, it } from "vitest";
-import { BackToPusherSpaceMessage } from "../src/Messages/generated/messages_pb";
+import { BackToPusherSpaceMessage } from "@workadventure/messages";
 import { SpacesWatcher } from "../src/Model/SpacesWatcher";
 import { mock } from "vitest-mock-extended";
 import { SpaceSocket } from "../src/SpaceManager";
@@ -23,7 +23,7 @@ describe("SpacesWatcher", () => {
         });
 
         const watcher = new SpacesWatcher("uuid-watcher", spaceSocketToPusher, 0);
-        expect(eventsWatcher.some((message) => message.hasPingmessage())).toBe(true);
+        expect(eventsWatcher.some((message) => message?.message?.$case === "pingMessage")).toBe(true);
         await new Promise((resolve) => setTimeout(resolve, 5));
 
         expect(isClosed).toBe(true);
@@ -42,7 +42,7 @@ describe("SpacesWatcher", () => {
         let watcher: SpacesWatcher;
         const spaceSocketToPusher = mock<SpaceSocket>({
             write(chunk: BackToPusherSpaceMessage): boolean {
-                if (chunk.hasPingmessage()) {
+                if (chunk?.message?.$case === "pingMessage") {
                     setTimeout(() => watcher?.receivedPong(), 0);
                 }
                 return true;

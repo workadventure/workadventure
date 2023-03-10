@@ -1313,7 +1313,9 @@ export class SocketManager {
         }
         pusher.watchSpace(space.name);
         space.addWatcher(pusher);
-        space.addUser(pusher, watchSpaceMessage.user);
+        if (watchSpaceMessage.user) {
+            space.addUser(pusher, watchSpaceMessage.user);
+        }
     }
 
     handleUnwatchSpaceMessage(pusher: SpacesWatcher, unwatchSpaceMessage: UnwatchSpaceMessage) {
@@ -1346,13 +1348,13 @@ export class SocketManager {
 
     handleAddSpaceUserMessage(pusher: SpacesWatcher, addSpaceUserMessage: AddSpaceUserMessage) {
         const space = this.spaces.get(addSpaceUserMessage.spaceName);
-        if (space) {
+        if (space && addSpaceUserMessage.user) {
             space.addUser(pusher, addSpaceUserMessage.user);
         }
     }
     handleUpdateSpaceUserMessage(pusher: SpacesWatcher, updateSpaceUserMessage: UpdateSpaceUserMessage) {
         const space = this.spaces.get(updateSpaceUserMessage.spaceName);
-        if (space) {
+        if (space && updateSpaceUserMessage.user) {
             space.updateUser(pusher, updateSpaceUserMessage.user);
         }
     }
