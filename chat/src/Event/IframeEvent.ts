@@ -7,7 +7,6 @@ import { isJoinMucEvent } from "./JoinMucEvent";
 import { isChatVisibility } from "./ChatVisibility";
 import { isSettings } from "./SettingsEvent";
 import { isOpenCoWebsite } from "./OpenCoWebsite";
-import {MatrixSettingsEvent} from "./MatrixSettingsEvent";
 
 export const isIframeEventWrapper = z.union([
     z.object({
@@ -45,10 +44,6 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("openCoWebsite"),
         data: isOpenCoWebsite,
-    }),
-    z.object({
-        type: z.literal("matrixSettings"),
-        data: MatrixSettingsEvent
     }),
 
     //TODO delete with chat XMPP integration for the discussion circle

@@ -56,7 +56,6 @@ import { isModalEvent } from "./ModalEvent";
 import { isAddButtonActionBarEvent, isRemoveButtonActionBarEvent } from "./Ui/ButtonActionBarEvent";
 import { isBannerEvent } from "./Ui/BannerEvent";
 import {FirstMatrixPasswordEvent} from "./FirstMatrixPasswordEvent";
-import { MatrixSettingsEvent } from "./MatrixSettingsEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -442,10 +441,6 @@ export const isIframeResponseEvent = z.union([
         type: z.literal("modalCloseTrigger"),
         data: isModalEvent,
     }),
-    z.object({
-        type: z.literal("matrixSettings"),
-        data: MatrixSettingsEvent,
-    })
 ]);
 export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;
 

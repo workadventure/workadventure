@@ -57,9 +57,8 @@ import {
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnexionMessage,
     RefreshRoomMessage,
-    MatrixSettingsMessage
 } from "@workadventure/messages";
-import { BehaviorSubject, Subject } from "rxjs";
+import { Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
@@ -172,9 +171,6 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _leaveMucRoomMessageStream = new Subject<LeaveMucRoomMessage>();
     public readonly leaveMucRoomMessageStream = this._leaveMucRoomMessageStream.asObservable();
-
-    private readonly _matrixSettingsMessageStream = new BehaviorSubject<MatrixSettingsMessage | undefined>(undefined);
-    public readonly matrixSettingsMessageStream = this._matrixSettingsMessageStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -597,10 +593,6 @@ export class RoomConnection implements RoomConnection {
                         query.resolve(message.answerMessage.answer);
                     }
                     this.queries.delete(queryId);
-                    break;
-                }
-                case "matrixSettingsMessage": {
-                    this._matrixSettingsMessageStream.next(message.matrixSettingsMessage);
                     break;
                 }
                 default: {

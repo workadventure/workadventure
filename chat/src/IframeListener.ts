@@ -32,7 +32,6 @@ import { activeThreadStore } from "./Stores/ActiveThreadStore";
 import { get } from "svelte/store";
 import { emojiRegex } from "./Utils/HtmlUtils";
 import Debug from "debug";
-import {matrixSettingsStore} from "./Stores/MatrixStore";
 
 const debug = Debug("chat");
 
@@ -47,11 +46,6 @@ class IframeListener {
                     debug(`iFrameListener => message received => ${JSON.stringify(iframeEventGuarded.data)}`);
                     const iframeEvent = iframeEventGuarded.data;
                     switch (iframeEvent.type) {
-                        case "matrixSettings": {
-                            matrixSettingsStore.set(iframeEvent.data);
-                            console.warn("IframeListener => init => matrixSettings", iframeEvent.data);
-                            break;
-                        }
                         case "settings": {
                             chatSoundsStore.set(iframeEvent.data.chatSounds);
                             chatNotificationsStore.set(iframeEvent.data.notification);
@@ -67,8 +61,9 @@ class IframeListener {
                             userStore.set(iframeEvent.data);
                             localUserStore.setUserData(iframeEvent.data);
                             if(iframeEvent.data.authToken) {
+                                console.log("IframeListener => init => authToken", iframeEvent.data.authToken);
                                 chatConnectionManager.authToken = iframeEvent.data.authToken;
-                                //chatConnectionManager.start();
+                                chatConnectionManager.start();
                             }
                             break;
                         }

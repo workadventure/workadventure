@@ -532,14 +532,7 @@ message ServerToClientMessage {
     AnswerMessage answerMessage = 28;
     XmppSettingsMessage xmppSettingsMessage = 29;
     MoveToPositionMessage moveToPositionMessage = 31;
-    MatrixSettingsMessage matrixSettingsMessage = 32;
   }
-}
-
-message MatrixSettingsMessage{
-  google.protobuf.StringValue matrixUserId = 1;
-  string homeServerUrl = 2;
-  google.protobuf.StringValue vaultPassword = 3;
 }
 
 

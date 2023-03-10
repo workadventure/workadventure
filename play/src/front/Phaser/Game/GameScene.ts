@@ -956,12 +956,6 @@ export class GameScene extends DirtyScene {
                     this.currentPlayerGroupId = message.groupId;
                 });
 
-                this.connection.matrixSettingsMessageStream.subscribe((matrixSettingsMessage) => {
-                    if(matrixSettingsMessage) {
-                        iframeListener.sendMatrixSettingsMessageToChatIframe(matrixSettingsMessage);
-                    }
-                });
-
                 this.connection.joinMucRoomMessageStream.subscribe((mucRoomDefinitionMessage) => {
                     iframeListener.sendJoinMucEventToChatIframe(
                         mucRoomDefinitionMessage.url,
@@ -1188,16 +1182,6 @@ export class GameScene extends DirtyScene {
 
         this.embedScreenLayoutStoreUnsubscriber = embedScreenLayoutStore.subscribe((layout) => {
             //this.reposition();
-        });
-
-        this.chatIsReadyStoreUnsubscriber = chatIsReadyStore.subscribe((value) => {
-            if (value) {
-                this.connection?.matrixSettingsMessageStream.pipe(take(1)).subscribe(matrixSettingsMessage => {
-                    if(matrixSettingsMessage) {
-                        iframeListener.sendMatrixSettingsMessageToChatIframe(matrixSettingsMessage);
-                    }
-                }).unsubscribe();
-            }
         });
 
         const talkIconVolumeTreshold = 10;

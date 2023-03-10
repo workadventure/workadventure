@@ -63,7 +63,6 @@ type UpgradeData = {
     isLogged: boolean;
     canEdit: boolean;
     matrixUserId: string | null | undefined;
-    matrixVaultPassword: string | undefined;
 };
 
 type UpgradeFailedInvalidData = {
@@ -349,8 +348,7 @@ export class IoSocketController {
                             anonymous: true,
                             userRoomToken: undefined,
                             activatedInviteUser: true,
-                            canEdit: false,
-                            matrixVaultPassword: undefined,
+                            canEdit: false
                         };
 
                         let characterLayerObjs: WokaDetail[];
@@ -472,7 +470,6 @@ export class IoSocketController {
                             },
                             isLogged,
                             messages: [],
-                            matrixVaultPassword: userData.matrixVaultPassword,
                             matrixUserId,
                         };
 
@@ -556,7 +553,6 @@ export class IoSocketController {
                     // Let's join the room
                     const client = this.initClient(ws);
                     await socketManager.handleJoinRoom(client);
-                    socketManager.emitMatrixSettings(client);
 
                     //get data information and show messages
                     if (client.messages && Array.isArray(client.messages)) {
@@ -757,7 +753,6 @@ export class IoSocketController {
         client.isLogged = ws.isLogged;
         client.applications = ws.applications;
         client.matrixUserId = ws.matrixUserId;
-        client.matrixVaultPassword = ws.matrixVaultPassword;
         client.customJsonReplacer = (key: unknown, value: unknown): string | undefined => {
             if (key === "listenedZones") {
                 return (value as Set<Zone>).size + " listened zone(s)";

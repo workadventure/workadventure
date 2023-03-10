@@ -73,9 +73,6 @@ export const isFetchMemberDataByUuidResponse = z.object({
     canEdit: extendApi(z.boolean().nullable().optional(), {
         description: "True if the user can edit the map",
     }),
-    matrixVaultPassword: extendApi(z.string().optional(), {
-        description: "Ths user password vault for Matrix E2EE",
-    }),
 });
 
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;

@@ -53,5 +53,4 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable,
     applications: Array<ApplicationDefinitionInterface> | undefined;
     canEdit: boolean;
     matrixUserId: string | undefined;
-    matrixVaultPassword: string | undefined;
 }

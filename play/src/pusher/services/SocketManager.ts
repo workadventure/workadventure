@@ -732,22 +732,6 @@ export class SocketManager implements ZoneEventListener {
             console.error(e);
         }
     }
-
-    emitMatrixSettings(client: ExSocketInterface) {
-        client.send(
-            ServerToClientMessage.encode({
-                message: {
-                    $case: "matrixSettingsMessage",
-                    matrixSettingsMessage: {
-                        matrixUserId: client.matrixUserId,
-                        homeServerUrl: MATRIX_DOMAIN,
-                        vaultPassword: client.matrixVaultPassword
-                    },
-                },
-            }).finish(),
-            true
-        );
-    }
 }
 
 export const socketManager = new SocketManager();
