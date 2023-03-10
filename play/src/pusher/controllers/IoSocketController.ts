@@ -14,8 +14,7 @@ import {
 } from "../enums/EnvironmentVariable";
 import type { Zone } from "../models/Zone";
 import type { ExAdminSocketInterface } from "../models/Websocket/ExAdminSocketInterface";
-import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
-import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
+import { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import Axios from "axios";
 import { InvalidTokenError } from "./InvalidTokenError";
 import type HyperExpress from "hyper-express";
@@ -121,17 +120,18 @@ export class IoSocketController {
             },
             message: (ws, arrayBuffer): void => {
                 try {
-                    const message: AdminMessageInterface = JSON.parse(
+                    const rawMessage = JSON.parse(
                         new TextDecoder("utf-8").decode(new Uint8Array(arrayBuffer))
                     );
 
+                    let message: AdminMessageInterface;
                     try {
-                        isAdminMessageInterface.parse(message);
+                        message = AdminMessageInterface.parse(rawMessage);
                     } catch (err) {
                         if (err instanceof z.ZodError) {
                             console.error(err.issues);
                         }
-                        console.error("Invalid message received.", message);
+                        console.error("Invalid message received.", rawMessage);
                         ws.send(
                             JSON.stringify({
                                 type: "Error",
@@ -195,9 +195,10 @@ export class IoSocketController {
                         }
                     } else if (message.event === "user-message") {
                         const messageToEmit = message.message;
+                        const world = message.world;
                         // Get roomIds of the world where we want broadcast the message
                         const roomIds = authorizedRoomIds.filter(
-                            (authorizeRoomId) => authorizeRoomId.split("/")[5] === message.world
+                            (authorizeRoomId) => authorizeRoomId.split("/")[5] === world
                         );
 
                         for (const roomId of roomIds) {
