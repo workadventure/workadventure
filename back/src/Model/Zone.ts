@@ -3,11 +3,7 @@ import { PositionInterface } from "../Model/PositionInterface";
 import { Movable } from "./Movable";
 import { Group } from "./Group";
 import { ZoneSocket } from "../RoomManager";
-import {
-    EmoteEventMessage,
-    SetPlayerDetailsMessage,
-    PlayerDetailsUpdatedMessage,
-} from "../Messages/generated/messages_pb";
+import { EmoteEventMessage, SetPlayerDetailsMessage, PlayerDetailsUpdatedMessage } from "@workadventure/messages";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 
 export type EntersCallback = (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) => void;
@@ -120,18 +116,20 @@ export class Zone implements CustomJsonReplacerInterface {
 
     public updatePlayerDetails(user: User, playerDetails: SetPlayerDetailsMessage) {
         // Let's filter out private variables that must not be dispatched
-        if (playerDetails.getSetvariable()?.getPublic() === false) {
+        if (playerDetails.setVariable?.public === false) {
             // Note: technically we should check no other fields are set on this "details" object.
             // But we know we are sending variables in separated SetPlayerDetailsMessage
             return;
         }
 
-        const playerDetailsUpdatedMessage = new PlayerDetailsUpdatedMessage();
-        playerDetailsUpdatedMessage.setUserid(user.id);
-        playerDetailsUpdatedMessage.setDetails(playerDetails);
-
         for (const listener of this.listeners) {
-            this.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener);
+            this.onPlayerDetailsUpdated(
+                {
+                    userId: user.id,
+                    details: playerDetails,
+                },
+                listener
+            );
         }
     }
 

@@ -4,7 +4,7 @@ import type { AuthTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager } from "../services/JWTTokenManager";
 import { openIDClient } from "../services/OpenIDClient";
 import { DISABLE_ANONYMOUS } from "../enums/EnvironmentVariable";
-import { ErrorApiData, isRegisterData } from "@workadventure/messages";
+import { ErrorApiData, RegisterData } from "@workadventure/messages";
 import { adminService } from "../services/AdminService";
 import Axios from "axios";
 import { z } from "zod";
@@ -429,16 +429,14 @@ export class AuthenticateController extends BaseHttpController {
                 matrixUserId
             );
 
-            res.json(
-                isRegisterData.parse({
-                    authToken,
-                    userUuid,
-                    email,
-                    roomUrl,
-                    mapUrlStart,
-                    organizationMemberToken,
-                })
-            );
+            res.json({
+                authToken,
+                userUuid,
+                email,
+                roomUrl,
+                mapUrlStart,
+                organizationMemberToken,
+            } satisfies RegisterData);
         });
     }
 

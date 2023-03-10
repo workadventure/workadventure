@@ -135,13 +135,7 @@ import {
     _newChatMessageSubject,
     _newChatMessageWritingStatusSubject, chatIsReadyStore,
 } from "../../Stores/ChatStore";
-import type {
-    ITiledMap,
-    ITiledMapLayer,
-    ITiledMapObject,
-    ITiledMapProperty,
-    ITiledMapTileset,
-} from "@workadventure/tiled-map-type-guard";
+import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
@@ -764,9 +758,10 @@ export class GameScene extends DirtyScene {
         this.createPromiseDeferred.resolve();
         // Now, let's load the script, if any
         const scripts = this.getScriptUrls(this.mapFile);
-        const disableModuleMode = this.getProperty(this.mapFile, GameMapProperties.SCRIPT_DISABLE_MODULE_SUPPORT) as
-            | boolean
-            | undefined;
+        const disableModuleMode = PropertyUtils.findBooleanProperty(
+            GameMapProperties.SCRIPT_DISABLE_MODULE_SUPPORT,
+            this.mapFile.properties
+        );
         const scriptPromises = [];
         for (const script of scripts) {
             scriptPromises.push(iframeListener.registerScript(script, !disableModuleMode));
@@ -1290,7 +1285,6 @@ export class GameScene extends DirtyScene {
                 this.activatablesManager.deactivateSelectedObject();
                 this.activatablesManager.handlePointerOutActivatableObject();
                 this.activatablesManager.disableSelectingByDistance();
-                this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesNonInteractive();
             } else {
                 this.activatablesManager.enableSelectingByDistance();
                 // make sure all entities are non-interactive
@@ -2262,57 +2256,26 @@ ${escapedMessage}
     }
 
     private getExitUrl(layer: ITiledMapLayer): string | undefined {
-        const property = this.getProperty(layer, GameMapProperties.EXIT_URL);
-        return typeof property === "string" ? property : undefined;
+        const property = PropertyUtils.findStringProperty(GameMapProperties.EXIT_URL, layer.properties);
+        return property;
     }
 
     /**
      * @deprecated the map property exitSceneUrl is deprecated
      */
     private getExitSceneUrl(layer: ITiledMapLayer): string | undefined {
-        const property = this.getProperty(layer, GameMapProperties.EXIT_SCENE_URL);
-        return typeof property === "string" ? property : undefined;
+        const property = PropertyUtils.findStringProperty(GameMapProperties.EXIT_SCENE_URL, layer.properties);
+        return property;
     }
 
     private getScriptUrls(map: ITiledMap): string[] {
-        const isScripts = z.string().array().safeParse(this.getProperties(map, GameMapProperties.SCRIPT));
+        const script = PropertyUtils.findStringProperty(GameMapProperties.SCRIPT, map.properties);
 
-        if (!isScripts.success) {
+        if (!script) {
             return [];
         }
 
-        return isScripts.data.map((script) => new URL(script, this.MapUrlFile).toString());
-    }
-
-    private getProperty(layer: ITiledMapLayer | ITiledMap, name: string): string | boolean | number | undefined {
-        const properties: ITiledMapProperty[] | undefined = layer.properties;
-        if (!properties) {
-            return undefined;
-        }
-        const obj = properties.find(
-            (property: ITiledMapProperty) => property.name.toLowerCase() === name.toLowerCase()
-        );
-        if (obj === undefined) {
-            return undefined;
-        }
-
-        return z.union([z.string(), z.number(), z.boolean()]).optional().parse(obj.value);
-    }
-
-    private getProperties(layer: ITiledMapLayer | ITiledMap, name: string): (string | number | boolean | undefined)[] {
-        const properties: ITiledMapProperty[] | undefined = layer.properties;
-        if (!properties) {
-            return [];
-        }
-        return z
-            .union([z.string(), z.number(), z.boolean()])
-            .optional()
-            .array()
-            .parse(
-                properties
-                    .filter((property: ITiledMapProperty) => property.name.toLowerCase() === name.toLowerCase())
-                    .map((property) => property.value)
-            );
+        return script.split("\n").map((scriptSplit) => new URL(scriptSplit, this.MapUrlFile).toString());
     }
 
     private loadNextGameFromExitUrl(exitUrl: string): Promise<void> {

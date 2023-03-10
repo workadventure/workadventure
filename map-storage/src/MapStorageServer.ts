@@ -1,6 +1,6 @@
 import { sendUnaryData, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
 import * as _ from "lodash";
-import { AreaData, AreaType } from "@workadventure/map-editor";
+import { AreaData, AreaType, EntityDataProperties } from "@workadventure/map-editor";
 import { mapsManager } from "./MapsManager";
 import {
     EditMapCommandMessage,
@@ -161,6 +161,7 @@ const mapStorageServer: MapStorageServer = {
                                 prefab: entityPrefab,
                                 x: message.x,
                                 y: message.y,
+                                properties: message.properties as EntityDataProperties,
                             },
                         },
                         commandId

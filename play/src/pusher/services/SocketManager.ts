@@ -26,7 +26,7 @@ import {
     JoinRoomMessage,
     PlayerDetailsUpdatedMessage,
     PlayGlobalMessage,
-    PusherToBackMessage, QueryMessage,
+    PusherToBackMessage,
     ReportPlayerMessage,
     ServerToAdminClientMessage, ServerToClientMessage as ServerToClientMessageTsProto,
     ServerToClientMessage,

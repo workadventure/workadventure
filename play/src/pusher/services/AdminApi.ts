@@ -106,16 +106,13 @@ class AdminApi implements AdminInterface {
                 resolve(0);
             } catch (ex) {
                 // ignore errors when querying capabilities
-                const parsedEx = z
-                    .object({ response: z.object({ status: z.number() }).optional() })
-                    .optional()
-                    .parse(ex);
-                if (parsedEx?.response?.status === 404) {
+                if (Axios.isAxiosError(ex) && ex.response?.status === 404) {
                     // 404 probably means and older api version
                     resolve(0);
                     console.warn(`Admin API server does not implement capabilities, default to basic capabilities`);
                     return;
                 }
+
                 // if we get here, it might be due to connectivity issues
                 if (!warnIssued)
                     console.warn(

@@ -1,12 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import "jasmine";
-import { ConnectCallback, DisconnectCallback, GameRoom } from "../src/Model/GameRoom";
-import { Point } from "../src/Model/Websocket/MessageUserPosition";
-import { Group } from "../src/Model/Group";
-import { User, UserSocket } from "../src/Model/User";
-import { JoinRoomMessage, PositionMessage } from "../src/Messages/generated/messages_pb";
-import Direction = PositionMessage.Direction;
-import { EmoteCallback } from "../src/Model/Zone";
+import {ConnectCallback, DisconnectCallback, GameRoom} from "../src/Model/GameRoom";
+import {Point} from "../src/Model/Websocket/MessageUserPosition";
+import {Group} from "../src/Model/Group";
+import {User, UserSocket} from "../src/Model/User";
+import {JoinRoomMessage, PositionMessage, PositionMessage_Direction} from "@workadventure/messages";
+import {EmoteCallback} from "../src/Model/Zone";
 
 function createMockUser(userId: number): User {
     return {
@@ -19,18 +18,18 @@ function createMockUserSocket(): UserSocket {
 }
 
 function createJoinRoomMessage(uuid: string, x: number, y: number): JoinRoomMessage {
-    const positionMessage = new PositionMessage();
-    positionMessage.setX(x);
-    positionMessage.setY(y);
-    positionMessage.setDirection(Direction.DOWN);
-    positionMessage.setMoving(false);
-    const joinRoomMessage = new JoinRoomMessage();
-    joinRoomMessage.setUseruuid("1");
-    joinRoomMessage.setIpaddress("10.0.0.2");
-    joinRoomMessage.setName("foo");
-    joinRoomMessage.setRoomid("_/global/test.json");
-    joinRoomMessage.setPositionmessage(positionMessage);
-    return joinRoomMessage;
+    return JoinRoomMessage.fromPartial({
+        userUuid: "1",
+        IPAddress: "10.0.0.2",
+        name: "foo",
+        roomId: "_/global/test.json",
+        positionMessage: {
+            x,
+            y,
+            direction: PositionMessage_Direction.DOWN,
+            moving: false,
+        }
+    } as const);
 }
 
 const emote: EmoteCallback = (emoteEventMessage, listener): void => {};

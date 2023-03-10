@@ -136,7 +136,7 @@ export class MapEditorModeManager {
             const executedCommandConfig = command.execute();
 
             // do any necessary changes for active tool interface
-            this.handleCommandExecutionByTools(executedCommandConfig);
+            this.handleCommandExecutionByTools(executedCommandConfig, emitMapEditorUpdate);
 
             if (emitMapEditorUpdate) {
                 this.emitMapEditorUpdate(command.id, commandConfig, delay);
@@ -170,7 +170,7 @@ export class MapEditorModeManager {
             this.pendingCommands.push(command);
 
             // do any necessary changes for active tool interface
-            this.handleCommandExecutionByTools(commandConfig);
+            this.handleCommandExecutionByTools(commandConfig, true);
 
             // this should not be called with every change. Use some sort of debounce
             this.emitMapEditorUpdate(`${command.id}`, commandConfig);
@@ -195,7 +195,7 @@ export class MapEditorModeManager {
             this.pendingCommands.push(command);
 
             // do any necessary changes for active tool interface
-            this.handleCommandExecutionByTools(commandConfig);
+            this.handleCommandExecutionByTools(commandConfig, true);
 
             // this should not be called with every change. Use some sort of debounce
             this.emitMapEditorUpdate(command.id, commandConfig);
@@ -377,9 +377,9 @@ export class MapEditorModeManager {
         }
     }
 
-    private handleCommandExecutionByTools(commandConfig: CommandConfig): void {
+    private handleCommandExecutionByTools(commandConfig: CommandConfig, localCommand: boolean): void {
         for (const tool of Object.values(this.editorTools)) {
-            tool.handleCommandExecution(commandConfig);
+            tool.handleCommandExecution(commandConfig, localCommand);
         }
     }
 

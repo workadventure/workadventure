@@ -179,12 +179,12 @@ export class UserInputManager {
     }
 
     disableControls() {
-        this.scene.input.keyboard.removeAllKeys();
+        this.scene.input.keyboard.disableGlobalCapture();
         this.isInputDisabled = true;
     }
 
     restoreControls() {
-        this.initKeyBoardEvent();
+        this.scene.input.keyboard.enableGlobalCapture();
         this.isInputDisabled = false;
     }
 

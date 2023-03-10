@@ -40,10 +40,8 @@ export class JWTTokenManager {
     }
 
     public verifyJWTToken(token: string, ignoreExpiration = false): AuthTokenData {
-        let tokenVerified = undefined;
-
         try {
-            tokenVerified = Jwt.verify(token, SECRET_KEY, { ignoreExpiration });
+            return AuthTokenData.parse(Jwt.verify(token, SECRET_KEY, { ignoreExpiration }));
         } catch (e) {
             if (e instanceof Error) {
                 // FIXME: we are loosing the stacktrace here.
@@ -52,8 +50,6 @@ export class JWTTokenManager {
                 throw e;
             }
         }
-
-        return AuthTokenData.parse(tokenVerified);
     }
 }
 

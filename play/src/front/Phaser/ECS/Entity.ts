@@ -17,7 +17,6 @@ import { GameScene } from "../Game/GameScene";
 import { OutlineableInterface } from "../Game/OutlineableInterface";
 
 import * as _ from "lodash";
-import { z } from "zod";
 
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
@@ -66,7 +65,12 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                     outlineColor: color,
                 });
             }
-            z.instanceof(GameScene).parse(this.scene).markDirty();
+
+            if (this.scene instanceof GameScene) {
+                this.scene.markDirty();
+            } else {
+                throw new Error("Not the Game Scene");
+            }
         });
 
         this.scene.add.existing(this);
@@ -131,6 +135,22 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     public removeApiOutlineColor(): void {
         this.outlineColorStore.removeApiColor();
+    }
+
+    public setEditColor(color: number): void {
+        this.outlineColorStore.setEditColor(color);
+    }
+
+    public removeEditColor(): void {
+        this.outlineColorStore.removeEditColor();
+    }
+
+    public setPointedToEditColor(color: number): void {
+        this.outlineColorStore.setPointedToEditColor(color);
+    }
+
+    public removePointedToEditColor(): void {
+        this.outlineColorStore.removePointedToEditColor();
     }
 
     public pointerOverOutline(color: number): void {
@@ -272,9 +292,5 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     public getOldPosition(): { x: number; y: number } {
         return this.oldPosition;
-    }
-
-    public setOldPosition(x: number, y: number): void {
-        this.oldPosition = { x, y };
     }
 }
