@@ -69,5 +69,5 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable,
     canEdit: boolean;
     spaceUser: SpaceUser;
     spaces: Space[];
-    spacesFilters: SpaceFilterMessage[];
+    spacesFilters: Map<string, SpaceFilterMessage[]>;
 }

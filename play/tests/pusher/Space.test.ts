@@ -12,20 +12,26 @@ describe("Space", () => {
         },
     });
     let eventsClient: SubMessage[] = [];
+    const spacesFilters = new Map<string, SpaceFilterMessage[]>([
+        [
+            "test",
+            [
+                {
+                    filterName: "default",
+                    spaceName: "test",
+                    filter: {
+                        $case: "spaceFilterEverybody",
+                        spaceFilterEverybody: {},
+                    },
+                },
+            ],
+        ],
+    ]);
     const client = mock<ExSocketInterface>({
         emitInBatch: (payload: SubMessage) => {
             eventsClient.push(payload);
         },
-        spacesFilters: [
-            {
-                filterName: "default",
-                spaceName: "test",
-                filter: {
-                    $case: "spaceFilterEverybody",
-                    spaceFilterEverybody: {},
-                },
-            },
-        ],
+        spacesFilters,
     });
     const space = new Space("test", backSpaceConnection, 1, client);
     it("should return true because Space is empty", () => {
@@ -109,7 +115,7 @@ describe("Space", () => {
                 },
             },
         };
-        client.spacesFilters.push(filter);
+        client.spacesFilters.set("test", [filter]);
         space.handleAddFilter(client, { spaceFilterMessage: filter });
         expect(eventsClient.length).toBe(0);
     });
@@ -125,7 +131,7 @@ describe("Space", () => {
             },
         };
         space.handleUpdateFilter(client, { spaceFilterMessage });
-        client.spacesFilters = [spaceFilterMessage];
+        client.spacesFilters.set("test", [spaceFilterMessage]);
         expect(eventsClient.some((message) => message.message?.$case === "removeSpaceUserMessage")).toBe(true);
         const message = eventsClient.find((message) => message.message?.$case === "removeSpaceUserMessage");
         expect(message).toBeDefined();
@@ -169,7 +175,7 @@ describe("Space", () => {
         expect(user?.name).toBe("johnny");
     });
     it("should remove the name filter and send me the delta (add userMessage)", () => {
-        client.spacesFilters = [];
+        client.spacesFilters.set("test", []);
         eventsClient = [];
         space.handleRemoveFilter(client, {
             spaceFilterMessage: {

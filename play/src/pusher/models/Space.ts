@@ -187,8 +187,9 @@ export class Space implements CustomJsonReplacerInterface {
         [...this.clientWatchers.values()]
             .filter((watcher) => this.isWatcherTargeted(watcher, user))
             .forEach((watcher) => {
-                const filtersTargeted = watcher.spacesFilters.filter((spaceFilter) =>
-                    this.isFilterTargeted(spaceFilter, user)
+                const filterOfThisSpace = watcher.spacesFilters.get(this.name) ?? [];
+                const filtersTargeted = filterOfThisSpace.filter((spaceFilter) =>
+                    this.filterOneUser(spaceFilter, user)
                 );
                 if (filtersTargeted.length > 0) {
                     filtersTargeted.forEach((spaceFilter) => {
@@ -212,15 +213,8 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     private isWatcherTargeted(watcher: ExSocketInterface, user: SpaceUserExtended) {
-        const filtersOfThisSpace = watcher.spacesFilters.filter((spaceFilters) => spaceFilters.spaceName === this.name);
-        return filtersOfThisSpace.filter((spaceFilter) => this.isFilterTargeted(spaceFilter, user)).length > 0;
-    }
-
-    private isFilterTargeted(spaceFilter: SpaceFilterMessage, user: SpaceUserExtended) {
-        if (spaceFilter.spaceName === this.name) {
-            return this.filterOneUser(spaceFilter, user);
-        }
-        return false;
+        const filtersOfThisSpace = watcher.spacesFilters.get(this.name) ?? [];
+        return filtersOfThisSpace.filter((spaceFilter) => this.filterOneUser(spaceFilter, user)).length > 0;
     }
 
     public filter(spaceFilter: SpaceFilterMessage): Map<string, SpaceUser> {
@@ -266,7 +260,9 @@ export class Space implements CustomJsonReplacerInterface {
     public handleUpdateFilter(watcher: ExSocketInterface, updateSpaceFilterMessage: UpdateSpaceFilterMessage) {
         const newFilter = updateSpaceFilterMessage.spaceFilterMessage;
         if (newFilter) {
-            const oldFilter = watcher.spacesFilters.find((filter) => filter.filterName === newFilter.filterName);
+            const oldFilter = watcher.spacesFilters
+                .get(this.name)
+                ?.find((filter) => filter.filterName === newFilter.filterName);
             if (oldFilter) {
                 debug(`${this.name} : filter updated (${newFilter.filterName}) for ${watcher.userUuid}`);
                 const oldData = this.filter(oldFilter);

@@ -436,7 +436,7 @@ export class SocketManager implements ZoneEventListener {
 
             client.spaceUser = spaceUser;
             if (filter) {
-                client.spacesFilters.push(filter);
+                client.spacesFilters.set(spaceName, [filter]);
             }
 
             // client.spacesFilters = [
@@ -978,7 +978,13 @@ export class SocketManager implements ZoneEventListener {
             const space = client.spaces.find((space) => space.name === newFilter.spaceName);
             if (space) {
                 space.handleAddFilter(client, addSpaceFilterMessage);
-                client.spacesFilters.push(newFilter);
+                let spacesFilter = client.spacesFilters.get(space.name);
+                if (!spacesFilter) {
+                    spacesFilter = [newFilter];
+                } else {
+                    spacesFilter.push(newFilter);
+                }
+                client.spacesFilters.set(space.name, spacesFilter);
             }
         }
     }
@@ -989,9 +995,17 @@ export class SocketManager implements ZoneEventListener {
             const space = client.spaces.find((space) => space.name === newFilter.spaceName);
             if (space) {
                 space.handleUpdateFilter(client, updateSpaceFilterMessage);
-                client.spacesFilters = client.spacesFilters.map((filter) =>
-                    filter.filterName === newFilter.filterName ? newFilter : filter
-                );
+                const spacesFilter = client.spacesFilters.get(space.name);
+                if (spacesFilter) {
+                    client.spacesFilters.set(
+                        space.name,
+                        spacesFilter.map((filter) => (filter.filterName === newFilter.filterName ? newFilter : filter))
+                    );
+                } else {
+                    console.trace(
+                        `SocketManager => handleUpdateSpaceFilterMessage => spacesFilter ${updateSpaceFilterMessage.spaceFilterMessage?.filterName} is undefined`
+                    );
+                }
             }
         }
     }
@@ -1002,9 +1016,17 @@ export class SocketManager implements ZoneEventListener {
             const space = client.spaces.find((space) => space.name === oldFilter.spaceName);
             if (space) {
                 space.handleRemoveFilter(client, removeSpaceFilterMessage);
-                client.spacesFilters = client.spacesFilters.filter(
-                    (filter) => filter.filterName !== oldFilter.filterName
-                );
+                const spacesFilter = client.spacesFilters.get(space.name);
+                if (spacesFilter) {
+                    client.spacesFilters.set(
+                        space.name,
+                        spacesFilter.filter((filter) => filter.filterName !== oldFilter.filterName)
+                    );
+                } else {
+                    console.trace(
+                        `SocketManager => handleRemoveSpaceFilterMessage => spacesFilter ${removeSpaceFilterMessage.spaceFilterMessage?.filterName} is undefined`
+                    );
+                }
             }
         }
     }

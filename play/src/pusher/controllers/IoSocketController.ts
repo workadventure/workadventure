@@ -32,6 +32,7 @@ import {
     SubMessage,
     WokaDetail,
     ApplicationDefinitionInterface,
+    SpaceFilterMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import { v4 as uuid } from "uuid";
@@ -832,7 +833,7 @@ export class IoSocketController {
             return undefined;
         };
         client.spaces = [];
-        client.spacesFilters = [];
+        client.spacesFilters = new Map<string, SpaceFilterMessage[]>();
         return client;
     }
 }
