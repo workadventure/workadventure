@@ -39,7 +39,7 @@ export class MatrixClient {
         if (data.errcode) {
             throw new MatrixError(data.errcode, data.error);
         }
-        console.log("MatrixClient => login => acces_token", data.access_token);
+        console.log("MatrixClient => login => access_token", data.access_token);
         this._userId = data.user_id;
         this.accessToken = data.access_token;
         this._deviceId = data.device_id;
@@ -69,7 +69,6 @@ export class MatrixClient {
                         const room_ = this.rooms.get(room.roomId);
                         if(room_) {
                             room_.set(room);
-                            console.log(get(room_));
                         }
                     }
                 }

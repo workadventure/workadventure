@@ -61,6 +61,15 @@
                     if(value){
                         iframeListener.sendSettingsToChatIframe();
                         iframeListener.sendUserDataToChatIframe();
+                        chatIframe?.contentWindow?.postMessage(
+                            {
+                                type: "setLocale",
+                                data: {
+                                    locale: $locale,
+                                },
+                            },
+                            "*"
+                        );
                     }
                 })
             );

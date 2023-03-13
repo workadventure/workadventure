@@ -1,21 +1,21 @@
 <script lang="ts">
-    import {SvelteComponent} from "svelte";
+    import {Room} from "matrix-js-sdk";
+    import {Writable} from "svelte/store";
+    import {MoreHorizontalIcon} from "svelte-feather-icons";
+    import Button from "./Button.svelte";
 
-    export let text: string;
-    export let buttonIcon: SvelteComponent;
-    export let onClick: () => void;
+    export let room: Writable<Room>;
 </script>
 <div id="line" class="tw-flex tw-flex-wrap tw-justify-between tw-items-center">
-    <p>{text}</p>
-    <button on:click|stopPropagation={onClick}>
-        <svelte:component this={buttonIcon} />
-    </button>
+    <p>{$room.name}</p>
+    <Button icon={MoreHorizontalIcon} onClick={() => null} />
 </div>
 
 <style lang="scss">
   #line {
+    @apply tw-border-0 tw-border-b tw-border-b-lighter-purple tw-border-solid tw-py-2;
     p {
-      @apply tw-m-0 tw-text-white;
+      @apply tw-m-0 tw-text-white tw-font-bold;
     }
 
     button {

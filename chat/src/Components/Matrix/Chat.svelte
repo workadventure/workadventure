@@ -1,16 +1,15 @@
 <script lang="ts">
     import Header from "./Header.svelte";
-    import {PlusIcon, UserIcon, UsersIcon, MessageSquareIcon} from "svelte-feather-icons";
-    import {get, writable} from "svelte/store";
+    import {PlusIcon, UsersIcon, MessageSquareIcon} from "svelte-feather-icons";
+    import {writable} from "svelte/store";
     import CreateRoom from "./CreateRoom.svelte";
     import {chatConnectionManager} from "../../Connection/ChatConnectionManager";
-    import Line from "./Line.svelte";
+    import Rooms from "./Rooms.svelte";
 
     let createRoom = writable(false);
-    let selectedTab = writable('users');
+    let selectedTab = writable('chats');
 
     const isConnected = chatConnectionManager.isConnected;
-    const rooms = chatConnectionManager.connectionOrFail.rooms;
 
     /*
     function createRoom() {
@@ -24,7 +23,7 @@
      */
 </script>
 
-<Header title="WorkAdventure chat" />
+<Header />
 <div class="main" id="main">
     {#if !$isConnected}
         loading
@@ -39,21 +38,19 @@
                         <span>Users</span>
                     </button>
                     <button type="button" on:click={() => selectedTab.set('chats')} class={`${$selectedTab === 'chats'?'selected':''}`}>
-                        <UserIcon class="tw-mr-1"/>
-                        <span>Chats</span>
-                    </button>
-                    <button type="button" on:click={() => selectedTab.set('groups')} class={`${$selectedTab === 'groups'?'selected':''}`}>
                         <MessageSquareIcon class="tw-mr-1"/>
-                        <span>Groups</span>
+                        <span>Chat</span>
                     </button>
                 </div>
                 <button class="new" on:click|stopPropagation={() => {createRoom.set(true)}}>
                     <PlusIcon />
                 </button>
             </div>
-            {#each $rooms as room}
-                <Line text={get(room).name} />
-            {/each}
+            {#if $selectedTab === 'users'}
+                user
+            {:else if $selectedTab === 'chats'}
+                <Rooms />
+            {/if}
         {/if}
     {/if}
 </div>
