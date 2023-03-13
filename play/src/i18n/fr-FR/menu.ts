@@ -62,6 +62,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         ignoreFollowRequest: "Ignorer les demandes de suivi des autres utilisateurs",
         proximityDiscussionVolume: "Volume des bulles de discussion",
         blockAudio: "Désactiver bruits ambiants et musique",
+        disableAnimations: "Désactiver les animations de la carte",
     },
     invite: {
         description: "Partager le lien de la salle!",
