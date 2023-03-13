@@ -31,6 +31,7 @@ class LocalUserStore {
         if (data.email) localStorage.setItem(emailKey, data.email);
         if (data.matrixUserId) localStorage.setItem(matrixIdKey, data.matrixUserId);
         localStorage.setItem(playUriKey, data.playUri);
+        localStorage.setItem(nameKey, data.name);
     }
 
     getUserData(): UserData {
@@ -51,7 +52,7 @@ class LocalUserStore {
     }
 
     getPlayerName(): string {
-        return "test";
+        return localStorage.getItem(nameKey) || "";
     }
 }
 

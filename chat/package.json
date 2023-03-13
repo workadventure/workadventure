@@ -12,7 +12,6 @@
     "@types/debug": "^4.1.7",
     "@types/jasmine": "^3.5.10",
     "@types/marked": "^4.0.7",
-    "@types/matrix-js-sdk": "^11.0.1",
     "@types/node": "^15.3.0",
     "@typescript-eslint/eslint-plugin": "^5.16.0",
     "@typescript-eslint/parser": "^5.16.0",

@@ -347,7 +347,7 @@ class AdminApi implements AdminInterface {
         console.error(fetchMemberDataByUuidResponse.error.issues);
         throw new Error(
             "Invalid answer received from the admin for the /api/room/access endpoint. Received: " +
-            JSON.stringify(res.data)
+                JSON.stringify(res.data)
         );
     }
 
@@ -392,11 +392,11 @@ class AdminApi implements AdminInterface {
          *             $ref: '#/definitions/ErrorApiErrorData'
          *
          */
-            //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
+        //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
         const res = await Axios.get(ADMIN_API_URL + "/api/login-url/" + organizationMemberToken, {
-                params: { playUri },
-                headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
-            });
+            params: { playUri },
+            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
+        });
 
         const adminApiData = isAdminApiData.safeParse(res.data);
 
@@ -529,13 +529,13 @@ class AdminApi implements AdminInterface {
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
         return Axios.get(
             ADMIN_API_URL +
-            "/api/ban" +
-            "?ipAddress=" +
-            encodeURIComponent(ipAddress) +
-            "&token=" +
-            encodeURIComponent(userUuid) +
-            "&roomUrl=" +
-            encodeURIComponent(roomUrl),
+                "/api/ban" +
+                "?ipAddress=" +
+                encodeURIComponent(ipAddress) +
+                "&token=" +
+                encodeURIComponent(userUuid) +
+                "&roomUrl=" +
+                encodeURIComponent(roomUrl),
             { headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" } }
         ).then((data) => {
             return data.data;

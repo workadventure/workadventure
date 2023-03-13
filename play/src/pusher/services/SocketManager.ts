@@ -28,7 +28,7 @@ import {
     PlayGlobalMessage,
     PusherToBackMessage,
     ReportPlayerMessage,
-    ServerToAdminClientMessage, ServerToClientMessage as ServerToClientMessageTsProto,
+    ServerToAdminClientMessage,
     ServerToClientMessage,
     UserMovesMessage,
     ViewportMessage,
@@ -42,8 +42,6 @@ import {
     SetPlayerDetailsMessage,
     SpaceFilterMessage,
 } from "@workadventure/messages";
-import {matrixProvider} from "./MatrixProvider";
-import {MATRIX_DOMAIN} from "../enums/EnvironmentVariable";
 import { Space } from "../models/Space";
 import { Color } from "@workadventure/shared-utils";
 

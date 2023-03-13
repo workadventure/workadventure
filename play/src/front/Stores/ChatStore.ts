@@ -210,14 +210,6 @@ export const chatSubMenuVisibilityStore = createChatSubMenuVisibilityStore();
 export const wokaDefinedStore = writable<boolean>(false);
 export const iframeLoadedStore = writable<boolean>(false);
 
-
-
-
-
-
-
-
-
 /***********************************************************/
 /*                   NEW MATRIX CLEAN                      */
 /***********************************************************/

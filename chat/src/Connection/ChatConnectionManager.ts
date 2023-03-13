@@ -1,9 +1,9 @@
 import { connectionEstablishedStore, enableChat } from "../Stores/ChatStore";
-import {get, writable, Writable} from "svelte/store";
+import { get, writable, Writable } from "svelte/store";
 import { xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
 import Debug from "debug";
-import {MatrixClient} from "../Matrix/MatrixClient";
-import { MatrixClient as Matrix} from "matrix-js-sdk";
+import { MatrixClient } from "../Matrix/MatrixClient";
+import { MatrixClient as Matrix } from "matrix-js-sdk";
 
 const debug = Debug("chat");
 
@@ -13,8 +13,7 @@ class ChatConnectionManager {
 
     public isConnected: Writable<boolean> = writable(false);
 
-    constructor() {
-    }
+    constructor() {}
 
     set authToken(value: string) {
         this._authToken = value;
@@ -44,12 +43,15 @@ class ChatConnectionManager {
             debug("chatConnectionManager => start => all parameters are OK");
             if (get(enableChat)) {
                 this.matrixClient = new MatrixClient(this._authToken, "http://matrix.workadventure.localhost");
-                this.matrixClient.login().then(async () => {
-                    await this.matrixClient?.start();
-                    this.isConnected.set(true);
-                }).catch((e) => {
-                    console.error("ChatConnectionManager => start", e);
-                })
+                this.matrixClient
+                    .login()
+                    .then(async () => {
+                        await this.matrixClient?.start();
+                        this.isConnected.set(true);
+                    })
+                    .catch((e) => {
+                        console.error("ChatConnectionManager => start", e);
+                    });
             } else {
                 xmppServerConnectionStatusStore.set(true);
             }

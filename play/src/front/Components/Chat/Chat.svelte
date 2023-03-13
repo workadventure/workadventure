@@ -1,31 +1,19 @@
 <script lang="ts">
-    import {
-        chatIsReadyStore,
-        chatVisibilityStore,
-        iframeLoadedStore,
-        wokaDefinedStore,
-        writingStatusMessageStore,
-    } from "../../Stores/ChatStore";
+    import { chatIsReadyStore, chatVisibilityStore, iframeLoadedStore, wokaDefinedStore } from "../../Stores/ChatStore";
     import { enableUserInputsStore } from "../../Stores/UserInputStore";
     import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
     import { localUserStore } from "../../Connexion/LocalUserStore";
-    import { Color } from "@workadventure/shared-utils";
-    import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
     import type { Unsubscriber } from "svelte/store";
-    import { derived, get } from "svelte/store";
+    import { derived } from "svelte/store";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { CHAT_URL } from "../../Enum/EnvironmentVariable";
     import { locale } from "../../../i18n/i18n-svelte";
-    import { AdminMessageEventTypes, adminMessagesService } from "../../Connexion/AdminMessagesService";
-    import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
     import type { Subscription } from "rxjs";
-    import { availabilityStatusStore } from "../../Stores/MediaStore";
-    import { peerStore } from "../../Stores/PeerStore";
-    import { connectionManager } from "../../Connexion/ConnectionManager";
     import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
     import { Locales } from "../../../i18n/i18n-types";
     import { SpaceFilterMessage } from "@workadventure/messages";
+    import { SidebarIcon } from "svelte-feather-icons";
 
     let chatIframe: HTMLIFrameElement;
     let searchElement: HTMLInputElement;
@@ -62,7 +50,7 @@
         chatIframe.addEventListener("load", () => {
             subscribeListeners.push(
                 chatIsReadyStore.subscribe((value) => {
-                    if(value){
+                    if (value) {
                         iframeListener.sendSettingsToChatIframe();
                         iframeListener.sendUserDataToChatIframe();
                         chatIframe?.contentWindow?.postMessage(
@@ -78,18 +66,19 @@
                 })
             );
 
-
-
-
-
-
-
-
-
-
-
-
-
+            subscribeListeners.push(
+                locale.subscribe((value: Locales) => {
+                    chatIframe?.contentWindow?.postMessage(
+                        {
+                            type: "setLocale",
+                            data: {
+                                locale: value,
+                            },
+                        },
+                        "*"
+                    );
+                })
+            );
 
             /*
                         iframeLoadedStore.set(false);
@@ -251,60 +240,60 @@
 <div id="chatWindow" class:show={$chatVisibilityStore}>
     <input type="text" bind:this={searchElement} on:keydown={search} style="display: none;" />
     {#if $chatVisibilityStore}<div class="hide">
-        <button class="close-window" on:click={closeChat}>&#215;</button>
-    </div>{/if}
+            <button class="close-window" on:click={closeChat}><SidebarIcon /></button>
+        </div>{/if}
     <iframe
-            id="chatWorkAdventure"
-            bind:this={chatIframe}
-            allow="fullscreen; clipboard-read; clipboard-write"
-            title="WorkAdventureChat"
-            src={CHAT_URL}
-            class="tw-border-0"
+        id="chatWorkAdventure"
+        bind:this={chatIframe}
+        allow="fullscreen; clipboard-read; clipboard-write"
+        title="WorkAdventureChat"
+        src={CHAT_URL}
+        class="tw-border-0"
     />
 </div>
 
 <style lang="scss">
-  @import "../../style/breakpoints.scss";
+    @import "../../style/breakpoints.scss";
 
-  @include media-breakpoint-up(sm) {
+    @include media-breakpoint-up(sm) {
+        #chatWindow {
+            width: 100% !important;
+        }
+    }
+
     #chatWindow {
-      width: 100% !important;
+        z-index: 1000;
+        position: absolute;
+        background-color: transparent;
+        top: 0;
+        left: -100%;
+        height: 100%;
+        width: 22%;
+        min-width: 335px;
+        transition: all 0.2s ease-in-out;
+        pointer-events: none;
+        visibility: hidden;
+        &.show {
+            left: 0;
+            pointer-events: auto;
+            visibility: visible;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+        }
+        .hide {
+            top: 8px;
+            position: absolute;
+            right: 10px;
+            width: fit-content;
+            height: fit-content;
+            .close-window {
+                height: 1.6rem;
+                width: 1.6rem;
+                position: initial;
+                cursor: pointer;
+            }
+        }
     }
-  }
-
-  #chatWindow {
-    z-index: 1000;
-    position: absolute;
-    background-color: transparent;
-    top: 0;
-    left: -100%;
-    height: 100%;
-    width: 22%;
-    min-width: 335px;
-    transition: all 0.2s ease-in-out;
-    pointer-events: none;
-    visibility: hidden;
-    &.show {
-      left: 0;
-      pointer-events: auto;
-      visibility: visible;
-    }
-    iframe {
-      width: 100%;
-      height: 100%;
-    }
-    .hide {
-      top: 8px;
-      position: absolute;
-      right: 10px;
-      width: fit-content;
-      height: fit-content;
-      .close-window {
-        height: 1.6rem;
-        width: 1.6rem;
-        position: initial;
-        cursor: pointer;
-      }
-    }
-  }
 </style>

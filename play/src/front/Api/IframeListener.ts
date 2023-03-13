@@ -38,7 +38,7 @@ import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
 import type { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
 import type { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
 import type { MessageUserJoined } from "../Connexion/ConnexionModels";
-import {availabilityStatusToJSON} from "@workadventure/messages";
+import { availabilityStatusToJSON } from "@workadventure/messages";
 import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
@@ -50,11 +50,11 @@ import { connectionManager } from "../Connexion/ConnectionManager";
 import { ModalEvent } from "./Events/ModalEvent";
 import { AddButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
 import { chatIsReadyStore } from "../Stores/ChatStore";
-import {getColorByString} from "../Components/Video/utils";
-import {get} from "svelte/store";
-import {availabilityStatusStore} from "../Stores/MediaStore";
-import {gameManager} from "../Phaser/Game/GameManager";
-import {FirstMatrixPasswordEvent} from "./Events/FirstMatrixPasswordEvent";
+import { Color } from "@workadventure/shared-utils";
+import { get } from "svelte/store";
+import { availabilityStatusStore } from "../Stores/MediaStore";
+import { gameManager } from "../Phaser/Game/GameManager";
+import { FirstMatrixPasswordEvent } from "./Events/FirstMatrixPasswordEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -949,7 +949,7 @@ class IframeListener {
                     name,
                     playUri,
                     authToken: localUserStore.getAuthToken(),
-                    color: getColorByString(name ?? ""),
+                    color: Color.getColorByString(name ?? ""),
                     woka: wokaSrc,
                     isLogged: localUserStore.isLogged(),
                     availabilityStatus: get(availabilityStatusStore),

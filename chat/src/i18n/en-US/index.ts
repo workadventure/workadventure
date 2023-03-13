@@ -111,6 +111,22 @@ const en_US: BaseTranslation = {
     disabledByAdmin: "This feature is disabled by the administrator.",
     anAdmin: "an administrator",
     messageDeletedByYou: "You deleted this message",
+
+    events: {
+        createsRoom: "has created the room",
+        memberJoins: "has joined the room",
+        memberLeaves: "has left the room",
+        changesRoomNameTo: "has changed the room name to",
+        changesRoomAvatar: "has changed the room avatar",
+        changesRoomPowerLevels: "has changed the power level of the room",
+        changesRoomJoinRules: "has changed the join rules of the room",
+        changesRoomHistoryVisibility: "has changed the history visibility of the room",
+        changesRoomGuestAccess: "has changed the guest access of the room",
+        activatesRoomEncryption: "has activated the encryption of the room",
+    },
+    settings: "Settings",
+    search: "Search",
+    members: "Members",
 };
 
 export default en_US;

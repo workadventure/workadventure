@@ -42,7 +42,7 @@ class LocalAdmin implements AdminInterface {
             textures: (await localWokaService.fetchWokaDetails(characterLayers)) ?? [],
             userRoomToken: undefined,
             activatedInviteUser: true,
-            canEdit
+            canEdit,
         };
     }
 

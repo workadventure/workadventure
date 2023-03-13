@@ -349,7 +349,7 @@ export class IoSocketController {
                             anonymous: true,
                             userRoomToken: undefined,
                             activatedInviteUser: true,
-                            canEdit: false
+                            canEdit: false,
                         };
 
                         let characterLayerObjs: WokaDetail[];
@@ -556,6 +556,7 @@ export class IoSocketController {
                     await socketManager.handleJoinRoom(client);
                     // TODO : Get prefix from Admin and joinSpace prefixed
                     const spaceName = client.roomId + "/space";
+
                     await socketManager.handleJoinSpace(client, spaceName, {
                         filterName: "default",
                         spaceName,

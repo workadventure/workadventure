@@ -9,7 +9,7 @@ import { adminService } from "../services/AdminService";
 import Axios from "axios";
 import { z } from "zod";
 import { validateQuery } from "../services/QueryValidator";
-import {matrixProvider} from "../services/MatrixProvider";
+import { matrixProvider } from "../services/MatrixProvider";
 
 export class AuthenticateController extends BaseHttpController {
     routes(): void {

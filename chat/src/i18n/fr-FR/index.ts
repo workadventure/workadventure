@@ -111,6 +111,22 @@ const fr_FR: Translation = {
     disabledByAdmin: "Cette fonctionnalité est désactivée par l'administrateur.",
     anAdmin: "un administrateur",
     messageDeletedByYou: "Vous avez supprimé ce message",
+
+    events: {
+        createsRoom: "a créé la salle",
+        memberJoins: "a rejoins la salle",
+        memberLeaves: "a quitté la salle",
+        changesRoomNameTo: "a changé le nom de la salle en",
+        changesRoomAvatar: "a changé l'avatar de la salle",
+        changesRoomPowerLevels: "a changé les droits de la salle",
+        changesRoomJoinRules: "a changé les règles d'entrée de la salle",
+        changesRoomHistoryVisibility: "a changé la visibilité de l'historique de la salle",
+        changesRoomGuestAccess: "a changé l'accès des invités de la salle",
+        activatesRoomEncryption: "a activé le chiffrement de la salle",
+    },
+    settings: "Paramètres",
+    search: "Rechercher",
+    members: "Membres",
 };
 
 export default fr_FR;

@@ -1367,9 +1367,9 @@ export class RoomConnection implements RoomConnection {
             } catch (e) {
                 console.error(
                     "Unable to unserialize value received from server for a variable. " +
-                    'Value received: "' +
-                    serializedValue +
-                    '". Error: ',
+                        'Value received: "' +
+                        serializedValue +
+                        '". Error: ',
                     e
                 );
             }

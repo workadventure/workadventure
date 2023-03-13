@@ -60,7 +60,7 @@ class IframeListener {
                             console.log(iframeEvent.data);
                             userStore.set(iframeEvent.data);
                             localUserStore.setUserData(iframeEvent.data);
-                            if(iframeEvent.data.authToken) {
+                            if (iframeEvent.data.authToken) {
                                 console.log("IframeListener => init => authToken", iframeEvent.data.authToken);
                                 chatConnectionManager.authToken = iframeEvent.data.authToken;
                                 chatConnectionManager.start();

@@ -3,7 +3,8 @@
 @import '@workadventure/tailwind/style/index.scss';
 
 ::-webkit-scrollbar {
-    width: 4px;
+    width: 2px;
+    position: absolute;
 }
 ::-webkit-scrollbar-track {
     background: none;
@@ -206,4 +207,57 @@ aside.chatWindow nav ul li:not(.active):hover{
 
 aside.chatWindow nav ul li.active{
     @apply tw-text-black tw-cursor-default;
+}
+
+
+
+/**********************************************/
+/***************** NEW DESIGN *****************/
+/**********************************************/
+.animation-slide-in-right{
+    animation: slideInRight 150ms ease-out;
+}
+.animation-slide-in-left{
+    animation: slideInLeft 150ms ease-out;
+}
+.animation-slide-out-right{
+    animation: slideOutRight 150ms ease-in;
+}
+
+
+@keyframes slideInRight {
+    0% {
+        transform: translateX(25%);
+        opacity: 0;
+    }
+    80% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(0px);
+    }
+}
+@keyframes slideInLeft {
+    0% {
+        transform: translateX(-25%);
+        opacity: 0;
+    }
+    80% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(0px);
+    }
+}
+@keyframes slideOutRight {
+    0% {
+        transform: translateX(0px);
+    }
+    80% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(25%);
+        opacity: 0;
+    }
 }

@@ -55,7 +55,7 @@ import { isShowBusinessCardEvent } from "./ShowBusinessCardEvent";
 import { isModalEvent } from "./ModalEvent";
 import { isAddButtonActionBarEvent, isRemoveButtonActionBarEvent } from "./Ui/ButtonActionBarEvent";
 import { isBannerEvent } from "./Ui/BannerEvent";
-import {FirstMatrixPasswordEvent} from "./FirstMatrixPasswordEvent";
+import { FirstMatrixPasswordEvent } from "./FirstMatrixPasswordEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -292,8 +292,8 @@ export const isIframeEventWrapper = z.union([
     }),
     z.object({
         type: z.literal("firstMatrixPassword"),
-        data: FirstMatrixPasswordEvent
-    })
+        data: FirstMatrixPasswordEvent,
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;

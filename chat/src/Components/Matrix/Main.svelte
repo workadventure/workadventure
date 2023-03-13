@@ -1,5 +1,4 @@
 <script lang="ts">
-    import FirstConnection from "./FirstConnection.svelte";
     import { userStore } from "../../Stores/LocalUserStore";
     import { iframeListener } from "../../IframeListener";
     import Chat from "./Chat.svelte";
@@ -26,7 +25,9 @@
             <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
                 <div class="tw-p-3 tw-text-sm tw-text-center tw-text-white tw-font-bold">
                     <p>{$LL.signIn()}</p>
-                    <button type="button" class="light tw-m-auto tw-cursor-pointer tw-px-3" on:click={login}>{$LL.logIn()}</button>
+                    <button type="button" class="light tw-m-auto tw-cursor-pointer tw-px-3" on:click={login}
+                        >{$LL.logIn()}</button
+                    >
                 </div>
             </div>
         {:else}
