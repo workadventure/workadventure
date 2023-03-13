@@ -13,12 +13,22 @@ import type {
     BatchMessage,
     PusherToBackMessage,
     ServerToClientMessage,
+    BackToPusherSpaceMessage,
+    PusherToBackSpaceMessage,
+    SpaceFilterMessage,
+    SpaceUser,
 } from "@workadventure/messages";
 import type { PusherRoom } from "../PusherRoom";
 import { CustomJsonReplacerInterface } from "../CustomJsonReplacerInterface";
 import { AvailabilityStatus } from "@workadventure/messages";
+import { Space } from "../Space";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
+export type BackSpaceConnection_ = ClientDuplexStream<PusherToBackSpaceMessage, BackToPusherSpaceMessage>;
+
+export interface BackSpaceConnection extends BackSpaceConnection_ {
+    pingTimeout: NodeJS.Timeout | undefined;
+}
 
 export interface ExSocketInterface extends compressors.WebSocket, Identificable, CustomJsonReplacerInterface {
     token: string;
@@ -57,4 +67,7 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable,
     mucRooms: Array<MucRoomDefinition>;
     applications: Array<ApplicationDefinitionInterface> | undefined;
     canEdit: boolean;
+    spaceUser: SpaceUser;
+    spaces: Space[];
+    spacesFilters: Map<string, SpaceFilterMessage[]>;
 }

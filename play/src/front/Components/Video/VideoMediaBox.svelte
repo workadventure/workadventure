@@ -3,11 +3,12 @@
 
     import type { VideoPeer } from "../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
-    import { getColorByString, getTextColorByBackgroundColor, srcObject } from "./utils";
+    import { srcObject } from "./utils";
     import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+    import { Color } from "@workadventure/shared-utils";
 
     import Woka from "../Woka/Woka.svelte";
     import { onDestroy, onMount } from "svelte";
@@ -24,8 +25,8 @@
     let streamStore = peer.streamStore;
     let volumeStore = peer.volumeStore;
     let name = peer.userName;
-    let backGroundColor = getColorByString(peer.userName);
-    let textColor = getTextColorByBackgroundColor(backGroundColor);
+    let backGroundColor = Color.getColorByString(peer.userName);
+    let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
     let constraintStore = peer.constraintsStore;
     let subscribeChangeOutput: Unsubscriber;

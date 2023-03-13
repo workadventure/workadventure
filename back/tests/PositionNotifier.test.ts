@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import "jasmine";
+import { describe, expect, it } from "vitest";
 import { PositionNotifier } from "../src/Model/PositionNotifier";
 import { User, UserSocket } from "../src/Model/User";
 import { Zone } from "../src/Model/Zone";

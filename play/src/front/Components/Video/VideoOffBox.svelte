@@ -3,7 +3,7 @@
 
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import type { VideoPeer } from "../../WebRtc/VideoPeer";
-    import { getColorByString, getTextColorByBackgroundColor, srcObject } from "./utils";
+    import { srcObject } from "./utils";
     import Woka from "../Woka/Woka.svelte";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import { onDestroy, onMount } from "svelte";
@@ -15,6 +15,7 @@
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { speakerSelectedStore } from "../../Stores/MediaStore";
     import { Unsubscriber } from "svelte/store";
+    import { Color } from "@workadventure/shared-utils";
 
     let videoContainer: HTMLDivElement;
     let videoElement: HTMLVideoElement;
@@ -23,8 +24,8 @@
 
     let streamStore = peer.streamStore;
     let name = peer.userName;
-    let backGroundColor = getColorByString(peer.userName);
-    let textColor = getTextColorByBackgroundColor(backGroundColor);
+    let backGroundColor = Color.getColorByString(peer.userName);
+    let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
     let volumeStore = peer.volumeStore;
     let subscribeChangeOutput: Unsubscriber;
     let subscribeStreamStore: Unsubscriber;

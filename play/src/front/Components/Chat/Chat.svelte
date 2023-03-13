@@ -9,7 +9,7 @@
     import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
     import { localUserStore } from "../../Connexion/LocalUserStore";
-    import { getColorByString } from "../Video/utils";
+    import { Color } from "@workadventure/shared-utils";
     import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
     import type { Unsubscriber } from "svelte/store";
     import { derived, get } from "svelte/store";
@@ -24,8 +24,12 @@
     import { connectionManager } from "../../Connexion/ConnectionManager";
     import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
     import { Locales } from "../../../i18n/i18n-types";
+    import { SpaceFilterMessage } from "@workadventure/messages";
 
     let chatIframe: HTMLIFrameElement;
+    let searchElement: HTMLInputElement;
+
+    let searchFilter: SpaceFilterMessage | undefined = undefined;
 
     let subscribeListeners: Array<Unsubscriber> = [];
     let subscribeObservers: Array<Subscription> = [];
@@ -91,7 +95,7 @@
                                         name,
                                         playUri,
                                         authToken: localUserStore.getAuthToken(),
-                                        color: getColorByString(name ?? ""),
+                                        color: Color.getColorByString(name ?? ""),
                                         woka: wokaSrc,
                                         isLogged: localUserStore.isLogged(),
                                         availabilityStatus: get(availabilityStatusStore),
@@ -171,10 +175,47 @@
             chatVisibilityStore.set(true);
         }
     }
+
+    function search() {
+        if (!searchFilter) {
+            searchFilter = {
+                filterName: "myFirstFilter",
+                spaceName: "http://play.workadventure.localhost/@/wa/workadventure-premium/public/space",
+                filter: {
+                    $case: "spaceFilterContainName",
+                    spaceFilterContainName: {
+                        value: searchElement.value,
+                    },
+                },
+            } as SpaceFilterMessage;
+            gameManager.getCurrentGameScene().connection?.emitAddSpaceFilter({ spaceFilterMessage: searchFilter });
+        } else {
+            if (searchElement.value === "") {
+                gameManager
+                    .getCurrentGameScene()
+                    .connection?.emitRemoveSpaceFilter({ spaceFilterMessage: searchFilter });
+                searchFilter = undefined;
+            } else {
+                searchFilter = {
+                    ...searchFilter,
+                    filter: {
+                        $case: "spaceFilterContainName",
+                        spaceFilterContainName: {
+                            value: searchElement.value,
+                        },
+                    },
+                } as SpaceFilterMessage;
+                gameManager
+                    .getCurrentGameScene()
+                    .connection?.emitUpdateSpaceFilter({ spaceFilterMessage: searchFilter });
+            }
+        }
+    }
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
 <div id="chatWindow" class:show={$chatVisibilityStore}>
+    <input type="text" bind:this={searchElement} on:keydown={search} style="display: none;" />
     {#if $chatVisibilityStore}<div class="hide">
             <button class="close-window" on:click={closeChat}>&#215;</button>
         </div>{/if}

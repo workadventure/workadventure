@@ -24,7 +24,8 @@
     "watch-iframe-api": "npm run build-iframe-api --watch",
     "build-typings": "cross-env tsc --project tsconfig-for-iframe-api-typings.json",
     "precommit": "lint-staged",
-    "test": "vitest",
+    "test": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest --config ./vitest.config.ts",
+    "test:coverage": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest --config ./vitest.config.ts --coverage",
     "svelte-check-watch": "svelte-check --fail-on-warnings --threshold error --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore,a11y-click-events-have-key-events:ignore,security-anchor-rel-noreferrer:ignore\" --watch",
     "svelte-check": "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore,a11y-click-events-have-key-events:ignore,security-anchor-rel-noreferrer:ignore\"",
     "lint": "eslint src/ tests/ --ext .ts,.svelte",
@@ -67,6 +68,7 @@
     "@typescript-eslint/eslint-plugin": "^5.47.0",
     "@typescript-eslint/parser": "^5.47.0",
     "@vitejs/plugin-legacy": "^2.3.1",
+    "@vitest/coverage-c8": "^0.29.1",
     "autoprefixer": "^10.4.4",
     "eslint": "^8.30.0",
     "eslint-plugin-svelte3": "^4.0.0",
@@ -85,7 +87,8 @@
     "tslib": "^2.4.1",
     "vite": "^3.1.4",
     "vite-tsconfig-paths": "^3.5.1",
-    "vitest": "^0.25.5"
+    "vitest": "^0.29.1",
+    "vitest-mock-extended": "^1.0.9"
   },
   "dependencies": {
     "@16bits/nes.css": "^2.3.2",

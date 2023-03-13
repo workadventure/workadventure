@@ -49,7 +49,7 @@ import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { MapLoadingError } from "../Services/MapLoadingError";
 import { MucManager } from "../Services/MucManager";
 import { BrothersFinder } from "./BrothersFinder";
-import { slugifyJitsiRoomName } from "@workadventure/shared-utils/src/Jitsi/slugify";
+import { Jitsi } from "@workadventure/shared-utils";
 import { getMapStorageClient } from "../Services/MapStorageClient";
 import { ClientReadableStream } from "@grpc/grpc-js";
 
@@ -779,7 +779,7 @@ export class GameRoom implements BrothersFinder {
                                     }
                                 }
                                 return {
-                                    mainValue: slugifyJitsiRoomName(mainValue, this.roomUrl, allProps),
+                                    mainValue: Jitsi.slugifyJitsiRoomName(mainValue, this.roomUrl, allProps),
                                     tagValue,
                                 };
                             }

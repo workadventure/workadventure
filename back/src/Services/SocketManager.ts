@@ -38,6 +38,11 @@ import {
     ChatMessagePrompt,
     UpdateMapToNewestWithKeyMessage,
     EditMapCommandsArrayMessage,
+    WatchSpaceMessage,
+    UnwatchSpaceMessage,
+    UpdateSpaceUserMessage,
+    AddSpaceUserMessage,
+    RemoveSpaceUserMessage,
 } from "@workadventure/messages";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -57,8 +62,10 @@ import { Admin } from "../Model/Admin";
 import crypto from "crypto";
 import { getMapStorageClient } from "./MapStorageClient";
 import { emitError } from "./MessageHelpers";
+import { Space } from "../Model/Space";
+import { SpacesWatcher } from "../Model/SpacesWatcher";
 
-const debug = Debug("sockermanager");
+const debug = Debug("socketmanager");
 
 function emitZoneMessage(subMessage: SubToPusherMessage, socket: ZoneSocket): void {
     // TODO: should we batch those every 100ms?
@@ -77,6 +84,8 @@ export class SocketManager {
     private resolvedRooms = new Map<string, GameRoom>();
     // List of rooms (or rooms in process of loading).
     private roomsPromises = new Map<string, PromiseLike<GameRoom>>();
+
+    private spaces = new Map<string, Space>();
 
     constructor() {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
@@ -1294,6 +1303,66 @@ export class SocketManager {
         }
 
         return true;
+    }
+
+    handleWatchSpaceMessage(pusher: SpacesWatcher, watchSpaceMessage: WatchSpaceMessage) {
+        let space: Space | undefined = this.spaces.get(watchSpaceMessage.spaceName);
+        if (!space) {
+            space = new Space(watchSpaceMessage.spaceName);
+            this.spaces.set(watchSpaceMessage.spaceName, space);
+        }
+        pusher.watchSpace(space.name);
+        space.addWatcher(pusher);
+        if (watchSpaceMessage.user) {
+            space.addUser(pusher, watchSpaceMessage.user);
+        }
+    }
+
+    handleUnwatchSpaceMessage(pusher: SpacesWatcher, unwatchSpaceMessage: UnwatchSpaceMessage) {
+        const space: Space | undefined = this.spaces.get(unwatchSpaceMessage.spaceName);
+        if (!space) {
+            throw new Error("Cant unwatch space, space not found");
+        }
+        this.removeSpaceWatcher(pusher, space);
+    }
+
+    handleUnwatchAllSpaces(pusher: SpacesWatcher) {
+        pusher.spacesWatched.forEach((spaceName) => {
+            const space = this.spaces.get(spaceName);
+            if (!space) {
+                throw new Error("Cant unwatch space, space not found");
+            }
+            this.removeSpaceWatcher(pusher, space);
+        });
+    }
+
+    private removeSpaceWatcher(watcher: SpacesWatcher, space: Space) {
+        space.removeWatcher(watcher);
+        // If no anymore watchers we delete the space
+        if (space.canBeDeleted()) {
+            debug("[space] Space %s => deleted", space.name);
+            this.spaces.delete(space.name);
+            watcher.unwatchSpace(space.name);
+        }
+    }
+
+    handleAddSpaceUserMessage(pusher: SpacesWatcher, addSpaceUserMessage: AddSpaceUserMessage) {
+        const space = this.spaces.get(addSpaceUserMessage.spaceName);
+        if (space && addSpaceUserMessage.user) {
+            space.addUser(pusher, addSpaceUserMessage.user);
+        }
+    }
+    handleUpdateSpaceUserMessage(pusher: SpacesWatcher, updateSpaceUserMessage: UpdateSpaceUserMessage) {
+        const space = this.spaces.get(updateSpaceUserMessage.spaceName);
+        if (space && updateSpaceUserMessage.user) {
+            space.updateUser(pusher, updateSpaceUserMessage.user);
+        }
+    }
+    handleRemoveSpaceUserMessage(pusher: SpacesWatcher, removeSpaceUserMessage: RemoveSpaceUserMessage) {
+        const space = this.spaces.get(removeSpaceUserMessage.spaceName);
+        if (space) {
+            space.removeUser(pusher, removeSpaceUserMessage.userUuid);
+        }
     }
 }
 

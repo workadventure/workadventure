@@ -2,7 +2,7 @@ import { writable } from "svelte/store";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import type { RoomConnection } from "../Connexion/RoomConnection";
 import { AvailabilityStatus } from "@workadventure/messages";
-import { getColorByString } from "../Components/Video/utils";
+import { Color } from "@workadventure/shared-utils";
 import { localUserStore } from "../Connexion/LocalUserStore";
 
 let idCount = 0;
@@ -32,7 +32,7 @@ function createPlayersStore() {
                         companion: message.companion,
                         userUuid: message.userUuid,
                         availabilityStatus: message.availabilityStatus,
-                        color: getColorByString(message.name),
+                        color: Color.getColorByString(message.name),
                         isLogged: localUserStore.isLogged(),
                     });
                     return users;
@@ -74,7 +74,7 @@ function createPlayersStore() {
                     companion: null,
                     availabilityStatus: AvailabilityStatus.ONLINE,
                     userUuid: "dummy",
-                    color: getColorByString(name),
+                    color: Color.getColorByString(name),
                     isLogged: localUserStore.isLogged(),
                 });
                 return users;

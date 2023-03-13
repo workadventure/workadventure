@@ -1,7 +1,7 @@
 /**
  * Computes a "short URL" hash of the string passed in parameter.
  */
-export function shortHash(s: string): string {
+function shortHash(s: string): string {
     let hash = 0;
     const strLength = s.length;
     if (strLength === 0) {
@@ -14,3 +14,5 @@ export function shortHash(s: string): string {
     }
     return Math.abs(hash).toString(36);
 }
+
+export { shortHash };

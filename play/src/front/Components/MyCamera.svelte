@@ -9,7 +9,8 @@
     import { localStreamStore } from "../Stores/MediaStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { onDestroy, onMount } from "svelte";
-    import { getColorByString, getTextColorByBackgroundColor, srcObject } from "./Video/utils";
+    import { srcObject } from "./Video/utils";
+    import { Color } from "@workadventure/shared-utils";
     import LL from "../../i18n/i18n-svelte";
     import Woka from "./Woka/Woka.svelte";
     import { localUserStore } from "../Connexion/LocalUserStore";
@@ -19,8 +20,8 @@
 
     let stream: MediaStream | null;
     let userName = localUserStore.getName();
-    let backgroundColor = getColorByString(userName ?? "default");
-    let textColor = getTextColorByBackgroundColor(backgroundColor);
+    let backgroundColor = Color.getColorByString(userName ?? "default");
+    let textColor = Color.getTextColorByBackgroundColor(backgroundColor);
 
     const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
         if (value.type === "success") {
