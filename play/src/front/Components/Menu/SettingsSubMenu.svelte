@@ -66,16 +66,16 @@
 
     function changeFullscreen() {
         // Analytics Client
-        analyticsClient.settingFullscreen(fullscreen ? "true" : "false");
+        analyticsClient.settingFullscreen(String(fullscreen));
 
         const body = HtmlUtils.querySelectorOrFail("body");
         if (body) {
+            localUserStore.setFullscreen(fullscreen);
             if (document.fullscreenElement !== null && !fullscreen) {
                 document.exitFullscreen().catch((e) => console.error(e));
             } else {
                 body.requestFullscreen().catch((e) => console.error(e));
             }
-            localUserStore.setFullscreen(fullscreen);
         }
     }
 
@@ -157,6 +157,15 @@
     });
 
     onMount(() => {
+        fullscreen = Boolean(document.fullscreenElement);
+        localUserStore.setFullscreen(fullscreen);
+        document.addEventListener("fullscreenchange", () => {
+            if (fullscreen !== localUserStore.getFullscreen()) {
+                fullscreen = Boolean(document.fullscreenElement);
+                localUserStore.setFullscreen(fullscreen);
+            }
+        });
+
         resizeObserver.observe(divContainer);
     });
 </script>
