@@ -40,7 +40,7 @@
     let legalString: string | undefined;
     if (legalStrings.length > 0) {
         if (Intl.ListFormat) {
-            const formatter = new Intl.ListFormat(locale as unknown as string, { style: "long", type: "conjunction" });
+            const formatter = new Intl.ListFormat($locale, { style: "long", type: "conjunction" });
             legalString = formatter.format(legalStrings);
         } else {
             // For old browsers
