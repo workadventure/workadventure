@@ -62,6 +62,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         ignoreFollowRequest: "Ignoriere Folgen-Anfragen anderer Nutzer",
         blockAudio: "Musik und Hintergrund-Geräusche deaktivieren",
         silentMode: "Stiller Modus (deaktiviert Audio-/Video-Chat)",
+        disableAnimations: "Karten-Animationen deaktivieren",
     },
     invite: {
         description: "Link zu diesem Raum teilen!",

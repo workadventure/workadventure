@@ -63,6 +63,7 @@ const menu: BaseTranslation = {
         ignoreFollowRequest: "Ignore requests to follow other users",
         blockAudio: "Block ambient sounds and music",
         silentMode: "Silent mode (disable proximity chat)",
+        disableAnimations: "Disable map tile animations",
     },
     invite: {
         description: "Share the link of the room!",
