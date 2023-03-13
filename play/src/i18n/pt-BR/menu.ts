@@ -61,6 +61,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         notifications: "Notificações",
         cowebsiteTrigger: "Sempre pergunte antes de abrir sites e salas do Jitsi Meet",
         ignoreFollowRequest: "Ignorar solicitações para seguir outros usuários",
+        blockAudio: "Block ambient sounds and music",
     },
     invite: {
         description: "Compartilhe o link da sala!",

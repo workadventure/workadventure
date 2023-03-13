@@ -61,6 +61,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         notifications: "通知",
         cowebsiteTrigger: "在打开网页和Jitsi Meet会议前总是询问",
         ignoreFollowRequest: "忽略跟随其他用户的请求",
+        blockAudio: "Block ambient sounds and music",
     },
     invite: {
         description: "分享该房间的链接！",
