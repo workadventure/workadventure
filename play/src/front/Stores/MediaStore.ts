@@ -178,22 +178,16 @@ export const cameraEnergySavingStore = derived(
  * A store that contains video constraints.
  */
 function createVideoConstraintStore() {
+    const videoDeviceId = localUserStore.getVideoDeviceId();
     const initialConstraints: MediaTrackConstraints = {
         width: { min: 640, ideal: 1280, max: 1920 },
         height: { min: 400, ideal: 720 },
         frameRate: { ideal: localUserStore.getVideoQualityValue() },
-        facingMode: "user",
+        facingMode: videoDeviceId ? undefined : "user",
         resizeMode: "crop-and-scale",
         aspectRatio: 1.777777778,
+        deviceId: videoDeviceId ? { exact: videoDeviceId } : undefined,
     } as MediaTrackConstraints;
-
-    if (localUserStore.getVideoDeviceId() !== undefined) {
-        initialConstraints.deviceId = {
-            exact: localUserStore.getVideoDeviceId(),
-        };
-        delete initialConstraints.facingMode;
-    }
-
     const { subscribe, update } = writable(initialConstraints);
 
     return {
@@ -205,7 +199,6 @@ function createVideoConstraintStore() {
                         exact: deviceId,
                     };
                     delete initialConstraints.facingMode;
-                    localUserStore.setVideoDeviceId(deviceId);
                 } else {
                     delete constraints.deviceId;
                     initialConstraints.facingMode = "user";
@@ -277,7 +270,6 @@ function createAudioConstraintStore() {
                 }
                 if (deviceId !== undefined && navigator.mediaDevices.getSupportedConstraints().deviceId === true) {
                     constraints.deviceId = { exact: deviceId };
-                    localUserStore.setAudioDeviceId(deviceId);
                 } else {
                     delete constraints.deviceId;
                 }
@@ -771,7 +763,10 @@ function isConstrainDOMStringParameters(param: ConstrainDOMString): param is Con
 
 // TODO: detect the new webcam and automatically switch on it.
 cameraListStore.subscribe((devices) => {
-    // If the selected camera is unplugged, let's remove the constraint on deviceId
+    // If the selected camera is unplugged (and if there are other cameras available), let's remove the constraint on deviceId
+    if (devices.length === 0) {
+        return;
+    }
     const constraints = get(videoConstraintStore);
     const deviceId = constraints.deviceId;
     if (!deviceId) {
@@ -787,7 +782,10 @@ cameraListStore.subscribe((devices) => {
 });
 
 microphoneListStore.subscribe((devices) => {
-    // If the selected camera is unplugged, let's remove the constraint on deviceId
+    // If the selected camera is unplugged (and if there are other microphones available), let's remove the constraint on deviceId
+    if (devices.length === 0) {
+        return;
+    }
     const constraints = get(audioConstraintStore);
     if (typeof constraints === "boolean") {
         return;
@@ -810,6 +808,14 @@ localStreamStore.subscribe((streamResult) => {
         if (streamResult.error.name === BrowserTooOldError.NAME || streamResult.error.name === WebviewOnOldIOS.NAME) {
             errorStore.addErrorMessage(streamResult.error);
         }
+    }
+    if (streamResult.type === "success") {
+        streamResult.stream?.getAudioTracks().forEach((track) => {
+            localUserStore.setAudioDeviceId(track.getSettings().deviceId);
+        });
+        streamResult.stream?.getVideoTracks().forEach((track) => {
+            localUserStore.setVideoDeviceId(track.getSettings().deviceId);
+        });
     }
 });
 
