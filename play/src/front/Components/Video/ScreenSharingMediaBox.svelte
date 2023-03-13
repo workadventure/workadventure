@@ -6,7 +6,8 @@
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
 
     import type { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
-    import { getColorByString, srcObject, getTextColorByBackgroundColor } from "./utils";
+    import { srcObject } from "./utils";
+    import { Color } from "@workadventure/shared-utils";
     import BanReportBox from "./BanReportBox.svelte";
 
     export let clickable = false;
@@ -14,8 +15,8 @@
     export let peer: ScreenSharingPeer;
     let streamStore = peer.streamStore;
     let name = peer.userName;
-    let backGroundColor = getColorByString(peer.userName);
-    let textColor = getTextColorByBackgroundColor(backGroundColor);
+    let backGroundColor = Color.getColorByString(peer.userName);
+    let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
 
     let embedScreen: EmbedScreen;

@@ -25,6 +25,7 @@ import {
     SubMessage,
     WokaDetail,
     ApplicationDefinitionInterface,
+    SpaceFilterMessage,
 } from "@workadventure/messages";
 import { validateWebsocketQuery } from "../services/QueryValidator";
 
@@ -553,6 +554,16 @@ export class IoSocketController {
                     // Let's join the room
                     const client = this.initClient(ws);
                     await socketManager.handleJoinRoom(client);
+                    // TODO : Get prefix from Admin and joinSpace prefixed
+                    const spaceName = client.roomId + "/space";
+                    await socketManager.handleJoinSpace(client, spaceName, {
+                        filterName: "default",
+                        spaceName,
+                        filter: {
+                            $case: "spaceFilterEverybody",
+                            spaceFilterEverybody: {},
+                        },
+                    });
 
                     //get data information and show messages
                     if (client.messages && Array.isArray(client.messages)) {
@@ -669,12 +680,33 @@ export class IoSocketController {
                             await socketManager.handleReportMessage(client, message.message.reportPlayerMessage);
                             break;
                         }
-                        case "queryMessage":
-                        case "setPlayerDetailsMessage":
+                        case "addSpaceFilterMessage": {
+                            socketManager.handleAddSpaceFilterMessage(client, message.message.addSpaceFilterMessage);
+                            break;
+                        }
+                        case "updateSpaceFilterMessage": {
+                            socketManager.handleUpdateSpaceFilterMessage(
+                                client,
+                                message.message.updateSpaceFilterMessage
+                            );
+                            break;
+                        }
+                        case "removeSpaceFilterMessage": {
+                            socketManager.handleRemoveSpaceFilterMessage(
+                                client,
+                                message.message.removeSpaceFilterMessage
+                            );
+                            break;
+                        }
+                        case "setPlayerDetailsMessage": {
+                            socketManager.handleSetPlayerDetails(client, message.message.setPlayerDetailsMessage);
+                            break;
+                        }
                         case "itemEventMessage":
                         case "variableMessage":
                         case "webRtcSignalToServerMessage":
                         case "webRtcScreenSharingSignalToServerMessage":
+                        case "queryMessage":
                         case "emotePromptMessage":
                         case "followRequestMessage":
                         case "followConfirmationMessage":
@@ -699,20 +731,20 @@ export class IoSocketController {
                 console.log("WebSocket backpressure: " + ws.getBufferedAmount());
             },
             close: (ws) => {
-                const Client = ws as ExSocketInterface;
+                const client = ws as ExSocketInterface;
                 try {
-                    Client.disconnecting = true;
-                    //leave room
-                    socketManager.leaveRoom(Client);
+                    client.disconnecting = true;
+                    socketManager.leaveRoom(client);
+                    socketManager.leaveSpaces(client);
                 } catch (e) {
                     console.error('An error occurred on "disconnect"');
                     console.error(e);
                 } finally {
-                    if (Client.pingIntervalId) {
-                        clearInterval(Client.pingIntervalId);
+                    if (client.pingIntervalId) {
+                        clearInterval(client.pingIntervalId);
                     }
-                    if (Client.pongTimeoutId) {
-                        clearTimeout(Client.pongTimeoutId);
+                    if (client.pongTimeoutId) {
+                        clearTimeout(client.pongTimeoutId);
                     }
                 }
             },
@@ -759,6 +791,8 @@ export class IoSocketController {
             }
             return undefined;
         };
+        client.spaces = [];
+        client.spacesFilters = new Map<string, SpaceFilterMessage[]>();
         return client;
     }
 }

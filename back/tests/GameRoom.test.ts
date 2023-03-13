@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import "jasmine";
+import { describe, expect, it } from "vitest";
 import {ConnectCallback, DisconnectCallback, GameRoom} from "../src/Model/GameRoom";
 import {Point} from "../src/Model/Websocket/MessageUserPosition";
 import {Group} from "../src/Model/Group";

@@ -57,6 +57,12 @@ import {
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnexionMessage,
     RefreshRoomMessage,
+    AddSpaceFilterMessage,
+    UpdateSpaceFilterMessage,
+    RemoveSpaceFilterMessage,
+    AddSpaceUserMessage,
+    UpdateSpaceUserMessage,
+    RemoveSpaceUserMessage,
 } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -171,6 +177,12 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _leaveMucRoomMessageStream = new Subject<LeaveMucRoomMessage>();
     public readonly leaveMucRoomMessageStream = this._leaveMucRoomMessageStream.asObservable();
+    private readonly _addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
+    public readonly addSpaceUserMessageStream = this._addSpaceUserMessageStream.asObservable();
+    private readonly _updateSpaceUserMessageStream = new Subject<UpdateSpaceUserMessage>();
+    public readonly updateSpaceUserMessageStream = this._updateSpaceUserMessageStream.asObservable();
+    private readonly _removeSpaceUserMessageStream = new Subject<RemoveSpaceUserMessage>();
+    public readonly removeSpaceUserMessageStream = this._removeSpaceUserMessageStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -346,6 +358,18 @@ export class RoomConnection implements RoomConnection {
                             case "leaveMucRoomMessage": {
                                 console.info("[sendChatMessagePrompt] RoomConnection => leaveMucRoomMessage received");
                                 this._leaveMucRoomMessageStream.next(subMessage.leaveMucRoomMessage);
+                                break;
+                            }
+                            case "addSpaceUserMessage": {
+                                this._addSpaceUserMessageStream.next(subMessage.addSpaceUserMessage);
+                                break;
+                            }
+                            case "updateSpaceUserMessage": {
+                                this._updateSpaceUserMessageStream.next(subMessage.updateSpaceUserMessage);
+                                break;
+                            }
+                            case "removeSpaceUserMessage": {
+                                this._removeSpaceUserMessageStream.next(subMessage.removeSpaceUserMessage);
                                 break;
                             }
                             default: {
@@ -1187,6 +1211,39 @@ export class RoomConnection implements RoomConnection {
                     userIdentifier: uuid,
                     playUri,
                 },
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitAddSpaceFilter(filter: AddSpaceFilterMessage) {
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "addSpaceFilterMessage",
+                addSpaceFilterMessage: filter,
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitUpdateSpaceFilter(filter: UpdateSpaceFilterMessage) {
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "updateSpaceFilterMessage",
+                updateSpaceFilterMessage: filter,
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitRemoveSpaceFilter(filter: RemoveSpaceFilterMessage) {
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "removeSpaceFilterMessage",
+                removeSpaceFilterMessage: filter,
             },
         }).finish();
 

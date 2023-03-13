@@ -1,4 +1,4 @@
-import "jasmine";
+import { describe, expect, it } from "vitest";
 import { getNearbyDescriptorsMatrix } from "../src/Model/PositionNotifier";
 
 describe("getNearbyDescriptorsMatrix", () => {
