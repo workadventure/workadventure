@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { LL, locale } from "../../../i18n/i18n-svelte";
     import type { Locales } from "../../../i18n/i18n-types";
@@ -20,6 +21,7 @@
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification();
     let chatSounds: boolean = localUserStore.getChatSounds();
+    let blockAudio: boolean = localUserStore.getBlockAudio();
     let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
     let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
     let decreaseAudioPlayerVolumeWhileTalking: boolean = localUserStore.getDecreaseAudioPlayerVolumeWhileTalking();
@@ -120,6 +122,14 @@
 
     function changeChatSounds() {
         localUserStore.setChatSounds(chatSounds);
+    }
+
+    function changeBlockAudio() {
+        if (blockAudio) {
+            audioManagerFileStore.unloadAudio();
+            audioManagerVisibilityStore.set(false);
+        }
+        localUserStore.setBlockAudio(blockAudio);
     }
 
     function changeForceCowebsiteTrigger() {
@@ -335,6 +345,10 @@
                 on:change={changeDecreaseAudioPlayerVolumeWhileTalking}
             />
             <span>{$LL.audio.manager.reduce()}</span>
+        </label>
+        <label>
+            <input type="checkbox" bind:checked={blockAudio} on:change={changeBlockAudio} />
+            <span>{$LL.menu.settings.blockAudio()}</span>
         </label>
     </section>
 </div>
