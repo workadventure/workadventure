@@ -25,6 +25,7 @@ import {
     warningContainerStore,
 } from "../Stores/MenuStore";
 import { localUserStore } from "./LocalUserStore";
+import { proximityMeetingStore } from "../Stores/MyMediaStore";
 import {
     apiVersionHash,
     AnswerMessage,
@@ -446,6 +447,10 @@ export class RoomConnection implements RoomConnection {
                     const characterLayers = roomJoinedMessage.characterLayer.map(
                         this.mapCharacterLayerToBodyResourceDescription.bind(this)
                     );
+
+                    if (localUserStore.getAlwaysSilent()) {
+                        proximityMeetingStore.set(false);
+                    }
 
                     this._roomJoinedMessageStream.next({
                         connection: this,

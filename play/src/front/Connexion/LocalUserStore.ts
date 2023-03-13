@@ -19,6 +19,7 @@ const blockAudio = "blockAudio";
 const forceCowebsiteTriggerKey = "forceCowebsiteTrigger";
 const ignoreFollowRequests = "ignoreFollowRequests";
 const decreaseAudioPlayerVolumeWhileTalking = "decreaseAudioPlayerVolumeWhileTalking";
+const alwaysSilent = "alwaysSilent";
 const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const notification = "notificationPermission";
@@ -191,11 +192,19 @@ class LocalUserStore {
     getIgnoreFollowRequests(): boolean {
         return localStorage.getItem(ignoreFollowRequests) === "true";
     }
+
     setDecreaseAudioPlayerVolumeWhileTalking(value: boolean): void {
         localStorage.setItem(decreaseAudioPlayerVolumeWhileTalking, value.toString());
     }
     getDecreaseAudioPlayerVolumeWhileTalking(): boolean {
         return localStorage.getItem(decreaseAudioPlayerVolumeWhileTalking) === "true";
+    }
+
+    setAlwaysSilent(value: boolean): void {
+        localStorage.setItem(alwaysSilent, value.toString());
+    }
+    getAlwaysSilent(): boolean {
+        return localStorage.getItem(alwaysSilent) === "true";
     }
 
     async setLastRoomUrl(roomUrl: string): Promise<void> {

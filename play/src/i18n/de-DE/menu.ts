@@ -61,6 +61,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         cowebsiteTrigger: "Jedes mal nachfragen bevor Webseiten oder Jitsi Meet Räume geöffnet werden",
         ignoreFollowRequest: "Ignoriere Folgen-Anfragen anderer Nutzer",
         blockAudio: "Musik und Hintergrund-Geräusche deaktivieren",
+        silentMode: "Stiller Modus (deaktiviert Audio-/Video-Chat)",
     },
     invite: {
         description: "Link zu diesem Raum teilen!",

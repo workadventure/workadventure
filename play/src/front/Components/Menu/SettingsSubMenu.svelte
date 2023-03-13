@@ -1,6 +1,7 @@
 <script lang="ts">
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import { videoConstraintStore } from "../../Stores/MediaStore";
+    import { proximityMeetingStore } from "../../Stores/MyMediaStore";
     import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { menuVisiblilityStore } from "../../Stores/MenuStore";
@@ -22,6 +23,7 @@
     let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
     let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
     let decreaseAudioPlayerVolumeWhileTalking: boolean = localUserStore.getDecreaseAudioPlayerVolumeWhileTalking();
+    let alwaysSilent: boolean = localUserStore.getAlwaysSilent();
     let valueVideo: number = localUserStore.getVideoQualityValue();
     let valueLocale: string = $locale;
     let valueCameraPrivacySettings = localUserStore.getCameraPrivacySettings();
@@ -135,6 +137,11 @@
         analyticsClient.settingDecreaseAudioVolume(decreaseAudioPlayerVolumeWhileTalking ? "true" : "false");
 
         localUserStore.setDecreaseAudioPlayerVolumeWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
+    }
+
+    function changeAlwaysSilent() {
+        localUserStore.setAlwaysSilent(alwaysSilent);
+        proximityMeetingStore.set(!alwaysSilent);
     }
 
     function closeMenu() {
@@ -267,6 +274,10 @@
         <label>
             <input type="checkbox" bind:checked={blockAudio} on:change={changeBlockAudio} />
             <span>{$LL.menu.settings.blockAudio()}</span>
+        </label>
+        <label>
+            <input type="checkbox" bind:checked={alwaysSilent} on:change={changeAlwaysSilent} />
+            <span>{$LL.menu.settings.silentMode()}</span>
         </label>
     </section>
 </div>
