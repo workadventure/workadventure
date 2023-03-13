@@ -8,18 +8,21 @@ export const isBanBannedAdminMessageInterface = z.object({
 });
 
 export const isUserMessageAdminMessageInterface = z.object({
-    event: z.enum(["user-message"]),
+    event: z.literal("user-message"),
     message: extendApi(isBanBannedAdminMessageInterface),
     world: z.string(),
     jwt: z.string(),
 });
 
 export const isListenRoomsMessageInterface = z.object({
-    event: z.enum(["listen"]),
+    event: z.literal("listen"),
     roomIds: z.array(z.string()),
     jwt: z.string(),
 });
 
-export const isAdminMessageInterface = z.union([isUserMessageAdminMessageInterface, isListenRoomsMessageInterface]);
+export const AdminMessageInterface = z.discriminatedUnion("event", [
+    isUserMessageAdminMessageInterface,
+    isListenRoomsMessageInterface,
+]);
 
-export type AdminMessageInterface = z.infer<typeof isAdminMessageInterface>;
+export type AdminMessageInterface = z.infer<typeof AdminMessageInterface>;

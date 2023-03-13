@@ -99,6 +99,7 @@
     "@grpc/grpc-js": "^1.7.1",
     "@joeattardi/emoji-button": "^4.6.2",
     "@tailwindcss/forms": "^0.5.0",
+    "@total-typescript/ts-reset": "^0.4.2",
     "@tsconfig/svelte": "^3.0.0",
     "@workadventure/map-editor": "1.0.0",
     "@workadventure/math-utils": "1.0.0",

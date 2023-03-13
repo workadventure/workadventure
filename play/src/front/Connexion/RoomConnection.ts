@@ -74,6 +74,7 @@ import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 import { assertObjectKeys } from "../Utils/CustomTypeGuards";
+import { SignalData } from "simple-peer";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
@@ -490,7 +491,8 @@ export class RoomConnection implements RoomConnection {
                 case "webRtcSignalToClientMessage": {
                     this._webRtcSignalToClientMessageStream.next({
                         userId: message.webRtcSignalToClientMessage.userId,
-                        signal: JSON.parse(message.webRtcSignalToClientMessage.signal),
+                        // TODO: SignalData could be invalid (because sent by another client). We should theoretically check that it is valid. Simple-peer probably does that already.
+                        signal: JSON.parse(message.webRtcSignalToClientMessage.signal) as SignalData,
                         webRtcUser: message.webRtcSignalToClientMessage.webrtcUserName
                             ? message.webRtcSignalToClientMessage.webrtcUserName
                             : undefined,
@@ -503,7 +505,8 @@ export class RoomConnection implements RoomConnection {
                 case "webRtcScreenSharingSignalToClientMessage": {
                     this._webRtcScreenSharingSignalToClientMessageStream.next({
                         userId: message.webRtcScreenSharingSignalToClientMessage.userId,
-                        signal: JSON.parse(message.webRtcScreenSharingSignalToClientMessage.signal),
+                        // TODO: SignalData could be invalid (because sent by another client). We should theoretically check that it is valid. Simple-peer probably does that already.
+                        signal: JSON.parse(message.webRtcScreenSharingSignalToClientMessage.signal) as SignalData,
                         webRtcUser: message.webRtcScreenSharingSignalToClientMessage.webrtcUserName
                             ? message.webRtcScreenSharingSignalToClientMessage.webrtcUserName
                             : undefined,

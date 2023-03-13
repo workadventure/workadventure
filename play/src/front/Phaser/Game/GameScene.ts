@@ -1333,7 +1333,8 @@ export class GameScene extends DirtyScene {
 
     private safeParseJSONstring(jsonString: string | undefined, propertyName: string) {
         try {
-            return jsonString ? JSON.parse(jsonString) : {};
+            const json = jsonString ? JSON.parse(jsonString) : {};
+            return z.object({}).passthrough().optional().parse(json);
         } catch (e) {
             console.warn('Invalid JSON found in property "' + propertyName + '" of the map:' + jsonString, e);
             return {};

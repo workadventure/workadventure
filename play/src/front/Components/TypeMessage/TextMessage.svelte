@@ -3,11 +3,17 @@
     import { QuillDeltaToHtmlConverter } from "quill-delta-to-html";
     import type { Message } from "../../Stores/TypeMessageStore/MessageStore";
     import { textMessageStore } from "../../Stores/TypeMessageStore/TextMessageStore";
+    import { z } from "zod";
 
     export let message: Message;
 
     const content = JSON.parse(message.text);
-    const converter = new QuillDeltaToHtmlConverter(content.ops, { inlineStyles: true });
+    const parsedContent = z
+        .object({
+            ops: z.any().array(),
+        })
+        .parse(content);
+    const converter = new QuillDeltaToHtmlConverter(parsedContent.ops, { inlineStyles: true });
 
     function closeTextMessage() {
         textMessageStore.clearMessageById(message.id);

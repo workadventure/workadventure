@@ -178,14 +178,17 @@ export const cameraEnergySavingStore = derived(
  * A store that contains video constraints.
  */
 function createVideoConstraintStore() {
-    const { subscribe, update } = writable({
+    const videoDeviceId = localUserStore.getVideoDeviceId();
+    const initialConstraints: MediaTrackConstraints = {
         width: { min: 640, ideal: 1280, max: 1920 },
         height: { min: 400, ideal: 720 },
         frameRate: { ideal: localUserStore.getVideoQualityValue() },
-        facingMode: "user",
+        facingMode: videoDeviceId ? undefined : "user",
         resizeMode: "crop-and-scale",
         aspectRatio: 1.777777778,
-    } as MediaTrackConstraints);
+        deviceId: videoDeviceId ? { exact: videoDeviceId } : undefined,
+    } as MediaTrackConstraints;
+    const { subscribe, update } = writable(initialConstraints);
 
     return {
         subscribe,
@@ -195,10 +198,11 @@ function createVideoConstraintStore() {
                     constraints.deviceId = {
                         exact: deviceId,
                     };
+                    delete initialConstraints.facingMode;
                 } else {
                     delete constraints.deviceId;
+                    initialConstraints.facingMode = "user";
                 }
-
                 return constraints;
             }),
         setFrameRate: (frameRate: number) =>
@@ -243,12 +247,20 @@ export const videoConstraintStore = createVideoConstraintStore();
  * A store that contains video constraints.
  */
 function createAudioConstraintStore() {
-    const { subscribe, update } = writable({
+    const initialConstraints: MediaTrackConstraints = {
         //TODO: make these values configurable in the game settings menu and store them in localstorage
         autoGainControl: false,
         echoCancellation: true,
         noiseSuppression: true,
-    } as boolean | MediaTrackConstraints);
+    };
+
+    if (localUserStore.getAudioDeviceId() !== undefined) {
+        initialConstraints.deviceId = {
+            exact: localUserStore.getAudioDeviceId(),
+        };
+    }
+
+    const { subscribe, update } = writable(initialConstraints);
     return {
         subscribe,
         setDeviceId: (deviceId: string | undefined) =>
@@ -389,15 +401,6 @@ export const mediaStreamConstraintsStore = derived(
                 });
             }, 100);
         }
-
-        if ($enableCameraSceneVisibilityStore) {
-            localUserStore.setCameraSetup(
-                JSON.stringify({
-                    video: currentVideoConstraint,
-                    audio: currentAudioConstraint,
-                })
-            );
-        }
     },
     {
         video: false,
@@ -456,6 +459,7 @@ async function toggleConstraints(track: MediaStreamTrack, constraints: MediaTrac
     }
 
     if (typeof constraints !== "boolean") {
+        console.log("Applying constraint", constraints);
         return track.applyConstraints(constraints);
     }
 }
@@ -759,7 +763,10 @@ function isConstrainDOMStringParameters(param: ConstrainDOMString): param is Con
 
 // TODO: detect the new webcam and automatically switch on it.
 cameraListStore.subscribe((devices) => {
-    // If the selected camera is unplugged, let's remove the constraint on deviceId
+    // If the selected camera is unplugged (and if there are other cameras available), let's remove the constraint on deviceId
+    if (devices.length === 0) {
+        return;
+    }
     const constraints = get(videoConstraintStore);
     const deviceId = constraints.deviceId;
     if (!deviceId) {
@@ -775,7 +782,10 @@ cameraListStore.subscribe((devices) => {
 });
 
 microphoneListStore.subscribe((devices) => {
-    // If the selected camera is unplugged, let's remove the constraint on deviceId
+    // If the selected camera is unplugged (and if there are other microphones available), let's remove the constraint on deviceId
+    if (devices.length === 0) {
+        return;
+    }
     const constraints = get(audioConstraintStore);
     if (typeof constraints === "boolean") {
         return;
@@ -798,6 +808,14 @@ localStreamStore.subscribe((streamResult) => {
         if (streamResult.error.name === BrowserTooOldError.NAME || streamResult.error.name === WebviewOnOldIOS.NAME) {
             errorStore.addErrorMessage(streamResult.error);
         }
+    }
+    if (streamResult.type === "success") {
+        streamResult.stream?.getAudioTracks().forEach((track) => {
+            localUserStore.setAudioDeviceId(track.getSettings().deviceId);
+        });
+        streamResult.stream?.getVideoTracks().forEach((track) => {
+            localUserStore.setVideoDeviceId(track.getSettings().deviceId);
+        });
     }
 });
 

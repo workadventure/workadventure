@@ -6,6 +6,7 @@ import { RoomManagerService, SpaceManagerService } from "@workadventure/messages
 import { HTTP_PORT, GRPC_PORT, ENABLE_TELEMETRY } from "./src/Enum/EnvironmentVariable";
 import { telemetryService } from "./src/Services/TelemetryService";
 import {spaceManager} from "./src/SpaceManager";
+import "@total-typescript/ts-reset";
 
 if (ENABLE_TELEMETRY) {
     telemetryService.startTelemetry().catch((e) => console.error(e));

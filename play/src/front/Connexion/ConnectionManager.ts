@@ -132,7 +132,10 @@ class ConnectionManager {
 
             const data = registerDataChecking.data;
 
-            this.localUser = new LocalUser(data.userUuid, data.email);
+            this.localUser = {
+                uuid: data.userUuid,
+                email: data.email,
+            };
             this.authToken = data.authToken;
             localUserStore.saveUser(this.localUser);
             localUserStore.setAuthToken(this.authToken);
@@ -225,7 +228,7 @@ class ConnectionManager {
             return Promise.reject(new Error("Invalid URL"));
         }
         if (this.localUser) {
-            analyticsClient.identifyUser(this.localUser.uuid, this.localUser.email);
+            analyticsClient.identifyUser(this.localUser.uuid, this.localUser.email ?? null);
         }
 
         //if limit room active test headband
@@ -249,7 +252,10 @@ class ConnectionManager {
 
     public async anonymousLogin(isBenchmark = false): Promise<void> {
         const data = await axiosWithRetry.post(`${PUSHER_URL}/anonymLogin`).then((res) => res.data);
-        this.localUser = new LocalUser(data.userUuid, data.email);
+        this.localUser = {
+            uuid: data.userUuid,
+            email: data.email,
+        };
         this.authToken = data.authToken;
         if (!isBenchmark) {
             // In benchmark, we don't have a local storage.
@@ -259,7 +265,10 @@ class ConnectionManager {
     }
 
     public initBenchmark(): void {
-        this.localUser = new LocalUser("");
+        this.localUser = {
+            uuid: "",
+            email: undefined,
+        };
     }
 
     public connectToRoomSocket(
@@ -384,7 +393,10 @@ class ConnectionManager {
         });
 
         localUserStore.setAuthToken(authToken);
-        this.localUser = new LocalUser(userUuid, email);
+        this.localUser = {
+            uuid: userUuid,
+            email,
+        };
         localUserStore.saveUser(this.localUser);
         this.authToken = authToken;
 

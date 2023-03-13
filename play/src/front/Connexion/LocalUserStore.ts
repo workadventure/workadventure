@@ -1,11 +1,9 @@
-import type { LocalUser } from "./LocalUser";
+import { CharacterLayers, LocalUser } from "./LocalUser";
 import { areCharacterLayersValid, isUserNameValid } from "./LocalUser";
 import { z } from "zod";
 import { arrayEmoji, Emoji } from "../Stores/Utils/emojiSchema";
 
 const playerNameKey = "playerName";
-const selectedPlayerKey = "selectedPlayer";
-const customCursorPositionKey = "customCursorPosition";
 const requestedCameraStateKey = "requestedCameraStateKey";
 const requestedMicrophoneStateKey = "requestedMicrophoneStateKey";
 const characterLayersKey = "characterLayers";
@@ -22,7 +20,6 @@ const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const notification = "notificationPermission";
 const chatSounds = "chatSounds";
-const cameraSetup = "cameraSetup";
 const cacheAPIIndex = "workavdenture-cache";
 const userProperties = "user-properties";
 const cameraPrivacySettings = "cameraPrivacySettings";
@@ -38,8 +35,14 @@ const JwtAuthToken = z
 
 type JwtAuthToken = z.infer<typeof JwtAuthToken>;
 
+const StartRoom = z.object({
+    roomUrl: z.string(),
+});
+
+type StartRoom = z.infer<typeof StartRoom>;
+
 interface PlayerVariable {
-    value: undefined;
+    value: unknown;
     isPublic: boolean;
 }
 
@@ -53,7 +56,7 @@ class LocalUserStore {
 
     getLocalUser(): LocalUser | null {
         const data = localStorage.getItem("localUser");
-        return data ? JSON.parse(data) : null;
+        return data ? LocalUser.parse(JSON.parse(data)) : null;
     }
 
     setName(name: string): void {
@@ -69,24 +72,8 @@ class LocalUserStore {
         return isUserNameValid(value) ? value : null;
     }
 
-    setPlayerCharacterIndex(playerCharacterIndex: number): void {
-        localStorage.setItem(selectedPlayerKey, "" + playerCharacterIndex);
-    }
-
-    getPlayerCharacterIndex(): number {
-        return parseInt(localStorage.getItem(selectedPlayerKey) || "");
-    }
-
-    setCustomCursorPosition(activeRow: number, selectedLayers: number[]): void {
-        localStorage.setItem(customCursorPositionKey, JSON.stringify({ activeRow, selectedLayers }));
-    }
-
-    getCustomCursorPosition(): { activeRow: number; selectedLayers: number[] } | null {
-        return JSON.parse(localStorage.getItem(customCursorPositionKey) || "null");
-    }
-
     getRequestedCameraState(): boolean {
-        return JSON.parse(localStorage.getItem(requestedCameraStateKey) || "true");
+        return z.boolean().parse(JSON.parse(localStorage.getItem(requestedCameraStateKey) || "true"));
     }
 
     setRequestedCameraState(value: boolean): void {
@@ -94,7 +81,7 @@ class LocalUserStore {
     }
 
     getRequestedMicrophoneState(): boolean {
-        return JSON.parse(localStorage.getItem(requestedMicrophoneStateKey) || "true");
+        return z.boolean().parse(JSON.parse(localStorage.getItem(requestedMicrophoneStateKey) || "true"));
     }
 
     setRequestedMicrophoneState(value: boolean): void {
@@ -105,9 +92,19 @@ class LocalUserStore {
         localStorage.setItem(characterLayersKey, JSON.stringify(layers));
     }
 
-    getCharacterLayers(): string[] | null {
-        const value = JSON.parse(localStorage.getItem(characterLayersKey) || "null");
-        return areCharacterLayersValid(value) ? value : null;
+    getCharacterLayers(): CharacterLayers | null {
+        try {
+            const characterLayers = CharacterLayers.nullable().parse(
+                JSON.parse(localStorage.getItem(characterLayersKey) || "null")
+            );
+            if (!areCharacterLayersValid(characterLayers)) {
+                return null;
+            }
+            return characterLayers;
+        } catch (e) {
+            console.error("Error while parsing character layers", e);
+            return null;
+        }
     }
 
     setCompanion(companion: string | null): void {
@@ -124,16 +121,36 @@ class LocalUserStore {
         return companion;
     }
 
-    wasCompanionSet(): boolean {
-        return localStorage.getItem(companionKey) ? true : false;
-    }
-
     setVideoQualityValue(value: number): void {
         localStorage.setItem(videoQualityKey, "" + value);
     }
 
     getVideoQualityValue(): number {
         return parseInt(localStorage.getItem(videoQualityKey) || "20");
+    }
+
+    setVideoDeviceId(deviceId: string | undefined): void {
+        if (deviceId) {
+            localStorage.setItem("videoDeviceId", deviceId);
+        } else {
+            localStorage.removeItem("videoDeviceId");
+        }
+    }
+
+    getVideoDeviceId(): string | undefined {
+        return localStorage.getItem("videoDeviceId") ?? undefined;
+    }
+
+    setAudioDeviceId(deviceId: string | undefined): void {
+        if (deviceId) {
+            localStorage.setItem("audioDeviceId", deviceId);
+        } else {
+            localStorage.removeItem("audioDeviceId");
+        }
+    }
+
+    getAudioDeviceId(): string | undefined {
+        return localStorage.getItem("audioDeviceId") ?? undefined;
     }
 
     setAudioPlayerVolume(value: number): void {
@@ -195,7 +212,7 @@ class LocalUserStore {
         if ("caches" in window) {
             try {
                 const cache = await caches.open(cacheAPIIndex);
-                const stringResponse = new Response(JSON.stringify({ roomUrl }));
+                const stringResponse = new Response(JSON.stringify({ roomUrl } satisfies StartRoom));
                 await cache.put(`/${lastRoomUrl}`, stringResponse);
             } catch (e) {
                 console.error("Could not store last room url in Browser cache. Are you using private browser mode?", e);
@@ -214,7 +231,7 @@ class LocalUserStore {
         return caches.open(cacheAPIIndex).then((cache) => {
             return cache.match(`/${lastRoomUrl}`).then((res) => {
                 return res?.json().then((data) => {
-                    return data.roomUrl;
+                    return StartRoom.parse(data).roomUrl;
                 });
             });
         });
@@ -267,15 +284,6 @@ class LocalUserStore {
 
     getChatSounds(): boolean {
         return localStorage.getItem(chatSounds) !== "false";
-    }
-
-    setCameraSetup(cameraId: string) {
-        localStorage.setItem(cameraSetup, cameraId);
-    }
-
-    getCameraSetup(): { video: unknown; audio: unknown } | undefined {
-        const cameraSetupValues = localStorage.getItem(cameraSetup);
-        return cameraSetupValues != undefined ? JSON.parse(cameraSetupValues) : undefined;
     }
 
     setCameraPrivacySettings(option: boolean) {
@@ -400,8 +408,7 @@ class LocalUserStore {
         const value = localStorage.getItem(emojiFavorite);
         if (value == undefined) return null;
         try {
-            const emojis: Emoji[] = JSON.parse(value);
-            arrayEmoji.parse(emojis);
+            const emojis: Emoji[] = arrayEmoji.parse(JSON.parse(value));
             const map = new Map<number, Emoji>();
             emojis.forEach((value, index) => {
                 map.set(index + 1, value);

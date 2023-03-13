@@ -125,7 +125,7 @@
             "name":"Computer Screen (Big)",
             "tags":["equipment", "electronic"],
             "imagePath":"Office/Computer/BigScreenWhiteUp.png",
-            "direction":"Upv",
+            "direction":"Up",
             "color":"white"
         },
         {
