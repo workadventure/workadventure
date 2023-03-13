@@ -1,6 +1,6 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
 
-const hsb_DE: BaseTranslation = {
+const hsb_DE: Translation = {
     users: "wužiwar",
     userList: {
         disconnected: "dźěleny",
