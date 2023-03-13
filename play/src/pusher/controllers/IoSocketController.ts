@@ -120,9 +120,7 @@ export class IoSocketController {
             },
             message: (ws, arrayBuffer): void => {
                 try {
-                    const rawMessage = JSON.parse(
-                        new TextDecoder("utf-8").decode(new Uint8Array(arrayBuffer))
-                    );
+                    const rawMessage = JSON.parse(new TextDecoder("utf-8").decode(new Uint8Array(arrayBuffer)));
 
                     let message: AdminMessageInterface;
                     try {

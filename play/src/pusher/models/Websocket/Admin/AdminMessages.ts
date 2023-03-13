@@ -20,6 +20,9 @@ export const isListenRoomsMessageInterface = z.object({
     jwt: z.string(),
 });
 
-export const AdminMessageInterface = z.discriminatedUnion("event", [isUserMessageAdminMessageInterface, isListenRoomsMessageInterface]);
+export const AdminMessageInterface = z.discriminatedUnion("event", [
+    isUserMessageAdminMessageInterface,
+    isListenRoomsMessageInterface,
+]);
 
 export type AdminMessageInterface = z.infer<typeof AdminMessageInterface>;

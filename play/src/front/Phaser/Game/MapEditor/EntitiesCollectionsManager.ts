@@ -1,11 +1,14 @@
 import { EntityPrefab } from "@workadventure/map-editor";
 import { TexturesHelper } from "../../Helpers/TexturesHelper";
+import { z } from "zod";
 
-export interface EntityCollection {
-    collectionName: string;
-    tags: string[];
-    collection: EntityPrefab[];
-}
+export const EntityCollection = z.object({
+    collectionName: z.string(),
+    tags: z.string().array(),
+    collection: EntityPrefab.array(),
+});
+
+export type EntityCollection = z.infer<typeof EntityCollection>;
 
 export class EntitiesCollectionsManager {
     private entitiesPrefabs: EntityPrefab[] = [];
@@ -78,6 +81,7 @@ export class EntitiesCollectionsManager {
     }
 
     private async fetchCollections(url: string): Promise<EntityCollection[]> {
-        return (await fetch(url)).json();
+        const json = await (await fetch(url)).json();
+        return EntityCollection.array().parse(json);
     }
 }

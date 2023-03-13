@@ -189,8 +189,9 @@ function createVideoConstraintStore() {
 
     if (localUserStore.getVideoDeviceId() !== undefined) {
         initialConstraints.deviceId = {
-            ideal: localUserStore.getVideoDeviceId(),
+            exact: localUserStore.getVideoDeviceId(),
         };
+        delete initialConstraints.facingMode;
     }
 
     const { subscribe, update } = writable(initialConstraints);
@@ -203,10 +204,12 @@ function createVideoConstraintStore() {
                     constraints.deviceId = {
                         exact: deviceId,
                     };
+                    delete initialConstraints.facingMode;
+                    localUserStore.setVideoDeviceId(deviceId);
                 } else {
                     delete constraints.deviceId;
+                    initialConstraints.facingMode = "user";
                 }
-                localUserStore.setVideoDeviceId(deviceId);
                 return constraints;
             }),
         setFrameRate: (frameRate: number) =>
@@ -256,11 +259,11 @@ function createAudioConstraintStore() {
         autoGainControl: false,
         echoCancellation: true,
         noiseSuppression: true,
-    } as MediaTrackConstraints;
+    };
 
     if (localUserStore.getAudioDeviceId() !== undefined) {
         initialConstraints.deviceId = {
-            ideal: localUserStore.getAudioDeviceId(),
+            exact: localUserStore.getAudioDeviceId(),
         };
     }
 
@@ -273,11 +276,11 @@ function createAudioConstraintStore() {
                     constraints = {};
                 }
                 if (deviceId !== undefined && navigator.mediaDevices.getSupportedConstraints().deviceId === true) {
-                    constraints.deviceId = { ideal: deviceId };
+                    constraints.deviceId = { exact: deviceId };
+                    localUserStore.setAudioDeviceId(deviceId);
                 } else {
                     delete constraints.deviceId;
                 }
-                localUserStore.setAudioDeviceId(deviceId);
                 return constraints;
             }),
     };
@@ -464,6 +467,7 @@ async function toggleConstraints(track: MediaStreamTrack, constraints: MediaTrac
     }
 
     if (typeof constraints !== "boolean") {
+        console.log("Applying constraint", constraints);
         return track.applyConstraints(constraints);
     }
 }
