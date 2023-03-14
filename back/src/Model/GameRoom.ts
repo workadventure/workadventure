@@ -30,7 +30,6 @@ import { Admin } from "../Model/Admin";
 import { adminApi } from "../Services/AdminApi";
 import { isMapDetailsData, MapDetailsData, MapThirdPartyData, MapBbbData, MapJitsiData } from "@workadventure/messages";
 import { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
-import { mapFetcher } from "../Services/MapFetcher";
 import { VariablesManager } from "../Services/VariablesManager";
 import {
     ADMIN_API_URL,
@@ -42,8 +41,8 @@ import {
     JITSI_URL,
     PUBLIC_MAP_STORAGE_URL,
     SECRET_JITSI_KEY,
+    STORE_VARIABLES_FOR_LOCAL_MAPS,
 } from "../Enum/EnvironmentVariable";
-import { LocalUrlError } from "../Services/LocalUrlError";
 import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
@@ -51,8 +50,11 @@ import { MapLoadingError } from "../Services/MapLoadingError";
 import { MucManager } from "../Services/MucManager";
 import { BrothersFinder } from "./BrothersFinder";
 import { slugifyJitsiRoomName } from "@workadventure/shared-utils/src/Jitsi/slugify";
+import { mapFetcher } from "@workadventure/shared-utils/src/MapFetcher";
 import { getMapStorageClient } from "../Services/MapStorageClient";
 import { ClientReadableStream } from "@grpc/grpc-js";
+import { LocalUrlError } from "@workadventure/shared-utils/src/LocalUrlError";
+import path from "path";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -75,9 +77,11 @@ export class GameRoom implements BrothersFinder {
     private reconnectMapStorageTimeout: NodeJS.Timeout | undefined;
     private closing = false;
 
+    private _mapUrl!: string;
+    private _wamUrl?: string;
+
     private constructor(
         public readonly roomUrl: string,
-        private _mapUrl: string,
         private roomGroup: string | null,
         private readonly connectCallback: ConnectCallback,
         private readonly disconnectCallback: DisconnectCallback,
@@ -119,10 +123,8 @@ export class GameRoom implements BrothersFinder {
         onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback
     ): Promise<GameRoom> {
         const mapDetails = await GameRoom.getMapDetails(roomUrl);
-
         const gameRoom = new GameRoom(
             roomUrl,
-            mapDetails.mapUrl!,
             mapDetails.group,
             connectCallback,
             disconnectCallback,
@@ -137,15 +139,21 @@ export class GameRoom implements BrothersFinder {
             mapDetails.thirdParty ?? undefined,
             mapDetails.editable ?? false
         );
+        gameRoom._mapUrl = await mapFetcher.getMapUrl(
+            mapDetails.mapUrl,
+            mapDetails.wamUrl,
+            false,
+            STORE_VARIABLES_FOR_LOCAL_MAPS
+        );
 
         gameRoom.connectToMapStorage();
 
-        gameRoom
-            .getMucManager()
-            .then((mucManager) => {
-                mucManager.init(mapDetails).catch((err) => console.error(err));
-            })
-            .catch((err) => console.error("Error get Muc Manager: ", err));
+        // gameRoom
+        //     .getMucManager()
+        //     .then((mucManager) => {
+        //         mucManager.init(mapDetails).catch((err) => console.error(err));
+        //     })
+        //     .catch((err) => console.error("Error get Muc Manager: ", err));
         return gameRoom;
     }
 
@@ -597,8 +605,14 @@ export class GameRoom implements BrothersFinder {
     public async incrementVersion(): Promise<number> {
         // Let's check if the mapUrl has changed
         const mapDetails = await GameRoom.getMapDetails(this.roomUrl);
-        if (this._mapUrl !== mapDetails.mapUrl) {
-            this._mapUrl = mapDetails.mapUrl!;
+        const mapUrl = await mapFetcher.getMapUrl(
+            mapDetails.mapUrl,
+            mapDetails.wamUrl,
+            false,
+            STORE_VARIABLES_FOR_LOCAL_MAPS
+        );
+        if (this._mapUrl !== mapUrl) {
+            this._mapUrl = mapUrl;
             this.mapPromise = undefined;
             // Reset the variable manager
             this.variableManagerPromise = undefined;
@@ -632,12 +646,17 @@ export class GameRoom implements BrothersFinder {
         if (!ADMIN_API_URL) {
             const roomUrlObj = new URL(roomUrl);
 
-            let mapUrl = "";
+            let mapUrl = undefined;
+            let wamUrl = undefined;
             let canEdit = false;
             const entityCollectionsUrls = [];
             const match = /\/~\/(.+)/.exec(roomUrlObj.pathname);
             if (match && PUBLIC_MAP_STORAGE_URL) {
-                mapUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
+                if (path.extname(roomUrlObj.pathname) === ".tmj") {
+                    mapUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
+                } else {
+                    wamUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
+                }
                 canEdit = true;
                 entityCollectionsUrls.push(`${PUBLIC_MAP_STORAGE_URL}/entityCollections`);
             } else {
@@ -651,6 +670,7 @@ export class GameRoom implements BrothersFinder {
             }
             return {
                 mapUrl,
+                wamUrl,
                 editable: canEdit,
                 entityCollectionsUrls,
                 authenticationMandatory: null,
@@ -682,7 +702,12 @@ export class GameRoom implements BrothersFinder {
      */
     private getMap(canLoadLocalUrl = false): Promise<ITiledMap> {
         if (!this.mapPromise) {
-            this.mapPromise = mapFetcher.fetchMap(this._mapUrl, canLoadLocalUrl);
+            this.mapPromise = mapFetcher.fetchMap(
+                this._mapUrl,
+                this._wamUrl,
+                canLoadLocalUrl,
+                STORE_VARIABLES_FOR_LOCAL_MAPS
+            );
         }
 
         return this.mapPromise;
