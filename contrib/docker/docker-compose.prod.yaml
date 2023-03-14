@@ -34,8 +34,8 @@ services:
       - JITSI_PRIVATE_MODE
       - ENABLE_FEATURE_MAP_EDITOR
       - ENABLE_MAP_EDITOR_AREAS_TOOL
-      - PUSHER_URL=https://${PUSHER_HOST}
-      - ICON_URL=https://${ICON_HOST}
+      - PUSHER_URL=/
+      - ICON_URL=/icon
       - TURN_SERVER
       - TURN_USER
       - TURN_PASSWORD
@@ -48,9 +48,9 @@ services:
       - DISABLE_NOTIFICATIONS
       - SECRET_KEY
       - API_URL=back:50051
-      - FRONT_URL=https://${FRONT_HOST}
-      - CHAT_URL=https://${CHAT_HOST}
-      - PUBLIC_MAP_STORAGE_URL=https://${MAP_STORAGE_HOST}
+      - FRONT_URL=/
+      - CHAT_URL=/chat/
+      - PUBLIC_MAP_STORAGE_URL=/map-storage
       - START_ROOM_URL
       - OPID_PROMPT=login
       - OPID_WOKA_NAME_POLICY
@@ -58,7 +58,7 @@ services:
       - ENABLE_CHAT_UPLOAD
       - ENABLE_CHAT_ONLINE_LIST
       - ENABLE_CHAT_DISCONNECTED_LIST
-      - UPLOADER_URL=https://${UPLOADER_HOST}
+      - UPLOADER_URL=/uploader
       # Only used if you set up a JWT authentication mechanism in Ejabberd
       - EJABBERD_JWT_SECRET=${EJABBERD_JWT_SECRET}
       - EJABBERD_DOMAIN=${EJABBERD_DOMAIN}
@@ -69,10 +69,10 @@ services:
       - ADMIN_API_TOKEN
     labels:
       traefik.enable: "true"
-      traefik.http.routers.play.rule: "Host(`${FRONT_HOST}`)"
+      traefik.http.routers.play.rule: "Host(`${DOMAIN}`) && PathPrefix(`/`)"
       traefik.http.routers.play.entryPoints: "web"
       traefik.http.services.play.loadbalancer.server.port: "3000"
-      traefik.http.routers.play-ssl.rule: "Host(`${FRONT_HOST}`)"
+      traefik.http.routers.play-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/`)"
       traefik.http.routers.play-ssl.entryPoints: "websecure"
       traefik.http.routers.play-ssl.tls: "true"
       traefik.http.routers.play-ssl.tls.certresolver: "myresolver"
@@ -82,18 +82,21 @@ services:
   chat:
     image: thecodingmachine/workadventure-chat:${VERSION}
     environment:
-      - PUSHER_URL=https://${PUSHER_HOST}
-      - UPLOADER_URL=https://${UPLOADER_HOST}
+      - PUSHER_URL=/
+      - UPLOADER_URL=/uploader
       - EMBEDLY_KEY=${EMBEDLY_KEY}
       - ENABLE_CHAT_UPLOAD=${ENABLE_CHAT_UPLOAD}
       - EJABBERD_DOMAIN=${EJABBERD_DOMAIN}
-      - EJABBERD_WS_URI=${EJABBERD_WS_URI}
+      - EJABBERD_WS_URI=wss://${DOMAIN}/xmpp/ws
     labels:
       traefik.enable: "true"
-      traefik.http.routers.chat.rule: "Host(`${CHAT_HOST}`)"
+      traefik.http.middlewares.strip-chat-prefix.stripprefix.prefixes: "/chat"
+      traefik.http.routers.chat.rule: "Host(`${DOMAIN}`) && PathPrefix(`/chat`)"
+      traefik.http.routers.chat.middlewares: "strip-chat-prefix@docker"
       traefik.http.routers.chat.entryPoints: "web"
       traefik.http.services.chat.loadbalancer.server.port: "80"
-      traefik.http.routers.chat-ssl.rule: "Host(`${CHAT_HOST}`)"
+      traefik.http.routers.chat-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/chat`)"
+      traefik.http.routers.chat-ssl.middlewares: "strip-chat-prefix@docker"
       traefik.http.routers.chat-ssl.entryPoints: "websecure"
       traefik.http.routers.chat-ssl.service: "chat"
       traefik.http.routers.chat-ssl.tls: "true"
@@ -103,7 +106,7 @@ services:
   back:
     image: thecodingmachine/workadventure-back:${VERSION}
     environment:
-      - PLAY_URL=https://${PLAY_HOST}
+      - PLAY_URL=https://${DOMAIN}
       - SECRET_JITSI_KEY
       - ENABLE_FEATURE_MAP_EDITOR
       - SECRET_KEY
@@ -123,7 +126,7 @@ services:
       - REDIS_HOST=redis
       - PROMETHEUS_AUTHORIZATION_TOKEN
       - MAP_STORAGE_URL=map-storage:50053
-      - PUBLIC_MAP_STORAGE_URL=https://${MAP_STORAGE_HOST}
+      - PUBLIC_MAP_STORAGE_URL=/map-storage
       - PLAYER_VARIABLES_MAX_TTL
       - EJABBERD_API_URI
       - EJABBERD_DOMAIN=${EJABBERD_DOMAIN}
@@ -133,10 +136,13 @@ services:
       - ENABLE_CHAT_UPLOAD
     labels:
       traefik.enable: "true"
-      traefik.http.routers.back.rule: "Host(`${BACK_HOST}`)"
+      traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes: "/api"
+      traefik.http.routers.back.rule: "Host(`${DOMAIN}`) && PathPrefix(`/api`)"
+      traefik.http.routers.back.middlewares: "strip-api-prefix@docker"
       traefik.http.routers.back.entryPoints: "web"
       traefik.http.services.back.loadbalancer.server.port: "8080"
-      traefik.http.routers.back-ssl.rule: "Host(`${BACK_HOST}`)"
+      traefik.http.routers.back-ssl.middlewares: "strip-api-prefix@docker"
+      traefik.http.routers.back-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/api`)"
       traefik.http.routers.back-ssl.entryPoints: "websecure"
       traefik.http.routers.back-ssl.service: "back"
       traefik.http.routers.back-ssl.tls: "true"
@@ -146,7 +152,7 @@ services:
   uploader:
     image: thecodingmachine/workadventure-uploader:${VERSION}
     environment:
-      - UPLOADER_URL=https://${UPLOADER_HOST}
+      - UPLOADER_URL=https://${DOMAIN}/uploader
       #AWS
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
@@ -163,10 +169,13 @@ services:
       - UPLOAD_MAX_FILESIZE=${UPLOAD_MAX_FILESIZE}
     labels:
       traefik.enable: "true"
-      traefik.http.routers.uploader.rule: "Host(`${UPLOADER_HOST}`)"
+      traefik.http.middlewares.strip-uploader-prefix.stripprefix.prefixes: "/uploader"
+      traefik.http.routers.uploader.rule: "Host(`${DOMAIN}`) && PathPrefix(`/uploader`)"
+      traefik.http.routers.uploader.middlewares: "strip-uploader-prefix@docker"
       traefik.http.routers.uploader.entryPoints: "web"
       traefik.http.services.uploader.loadbalancer.server.port: "8080"
-      traefik.http.routers.uploader-ssl.rule: "Host(`${UPLOADER_HOST}`)"
+      traefik.http.routers.uploader-ssl.middlewares: "strip-uploader-prefix@docker"
+      traefik.http.routers.uploader-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/uploader`)"
       traefik.http.routers.uploader-ssl.entryPoints: "websecure"
       traefik.http.routers.uploader-ssl.service: "uploader"
       traefik.http.routers.uploader-ssl.tls: "true"
@@ -176,10 +185,13 @@ services:
     image: matthiasluedtke/iconserver:v3.13.0
     labels:
       traefik.enable: "true"
-      traefik.http.routers.icon.rule: "Host(`${ICON_HOST}`)"
+      traefik.http.middlewares.strip-icon-prefix.stripprefix.prefixes: "/icon"
+      traefik.http.routers.icon.middlewares: "strip-icon-prefix@docker"
+      traefik.http.routers.icon.rule: "Host(`${DOMAIN}`) && PathPrefix(`/icon`)"
       traefik.http.routers.icon.entryPoints: "web"
       traefik.http.services.icon.loadbalancer.server.port: "8080"
-      traefik.http.routers.icon-ssl.rule: "Host(`${ICON_HOST}`)"
+      traefik.http.routers.icon-ssl.middlewares: "strip-icon-prefix@docker"
+      traefik.http.routers.icon-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/icon`)"
       traefik.http.routers.icon-ssl.entryPoints: "websecure"
       traefik.http.routers.icon-ssl.service: "icon"
       traefik.http.routers.icon-ssl.tls: "true"
@@ -204,10 +216,13 @@ services:
       - ../../xmpp/ejabberd.template.yml:/opt/ejabberd/conf/ejabberd.template.yml
     labels:
       traefik.enable: "true"
-      traefik.http.routers.ejabberd.rule: "Host(`${EJABBERD_HOST}`)"
+      traefik.http.middlewares.strip-ejabberd-prefix.stripprefix.prefixes: "/xmpp"
+      traefik.http.routers.ejabberd.middlewares: "strip-ejabberd-prefix@docker"
+      traefik.http.routers.ejabberd.rule: "Host(`${DOMAIN}`) && PathPrefix(`/xmpp`)"
       traefik.http.routers.ejabberd.entryPoints: "web"
       traefik.http.services.ejabberd.loadbalancer.server.port: "5443"
-      traefik.http.routers.ejabberd-ssl.rule: "Host(`${EJABBERD_HOST}`)"
+      traefik.http.routers.ejabberd-ssl.middlewares: "strip-ejabberd-prefix@docker"
+      traefik.http.routers.ejabberd-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/xmpp`)"
       traefik.http.routers.ejabberd-ssl.entryPoints: "websecure"
       traefik.http.routers.ejabberd-ssl.service: "ejabberd"
       traefik.http.routers.ejabberd-ssl.tls: "true"
@@ -224,10 +239,13 @@ services:
 
     labels:
       traefik.enable: "true"
-      traefik.http.routers.map-storage.rule: "Host(`${MAP_STORAGE_HOST}`)"
+      traefik.http.middlewares.strip-map-storage-prefix.stripprefix.prefixes: "/map-storage"
+      traefik.http.routers.map-storage.middlewares: "strip-map-storage-prefix@docker"
+      traefik.http.routers.map-storage.rule: "Host(`${DOMAIN}`) && PathPrefix(`/map-storage`)"
       traefik.http.routers.map-storage.entryPoints: "web"
       traefik.http.services.map-storage.loadbalancer.server.port: "3000"
-      traefik.http.routers.map-storage-ssl.rule: "Host(`${MAP_STORAGE_HOST}`)"
+      traefik.http.routers.map-storage-ssl.middlewares: "strip-map-storage-prefix@docker"
+      traefik.http.routers.map-storage-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/map-storage`)"
       traefik.http.routers.map-storage-ssl.entryPoints: "websecure"
       traefik.http.routers.map-storage-ssl.service: "map-storage"
       traefik.http.routers.map-storage-ssl.tls: "true"
