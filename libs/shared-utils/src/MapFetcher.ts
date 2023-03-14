@@ -14,8 +14,6 @@ class MapFetcher {
         canLoadLocalUrl = false,
         storeVariableForLocalMaps = false
     ): Promise<string> {
-        console.log(mapUrl);
-        console.log(wamUrl);
         if (mapUrl) {
             return mapUrl;
         }
@@ -23,9 +21,7 @@ class MapFetcher {
             throw new Error("Both mapUrl and wamUrl are undefined. Can't get mapUrl.");
         }
         const mapPath = (await this.fetchWamFile(wamUrl, canLoadLocalUrl, storeVariableForLocalMaps)).mapUrl;
-        console.log("==========");
-        console.log(path.resolve(new URL(wamUrl).hostname, mapPath));
-        return path.resolve(new URL(wamUrl).hostname, mapPath);
+        return path.normalize(`${path.dirname(wamUrl)}/${mapPath}`);
     }
 
     private async fetchWamFile(
@@ -34,8 +30,6 @@ class MapFetcher {
         storeVariableForLocalMaps = false
     ): Promise<WAMFileFormat> {
         const result = await this.fetchFile(wamUrl, canLoadLocalUrl, storeVariableForLocalMaps);
-        console.log("RESULTS:");
-        console.log(result);
         const parseResult = WAMFileFormat.safeParse(result.data);
         if (!parseResult) {
             throw new LocalUrlError(`Invalid wam file format for: ${wamUrl}`);
