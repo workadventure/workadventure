@@ -65,6 +65,8 @@ services:
       # Report issues menu
       - ENABLE_REPORT_ISSUES_MENU=${ENABLE_REPORT_ISSUES_MENU}
       - REPORT_ISSUES_URL=${REPORT_ISSUES_URL}
+      - ENABLE_OPENAPI_ENDPOINT=true
+      - ADMIN_API_TOKEN
     labels:
       traefik.enable: "true"
       traefik.http.routers.play.rule: "Host(`${FRONT_HOST}`)"

@@ -22,7 +22,7 @@
     "test-headed-firefox": "dotenv -e ../.env -- playwright test --headed --project=firefox",
     "test-headed-webkit": "dotenv -e ../.env -- playwright test --headed --project=webkit",
     "test-prod-like": "OVERRIDE_DOCKER_COMPOSE=docker-compose.e2e.yml npm run test -- ",
-    "test-single-domain-install": "MAP_STORAGE_PROTOCOL=https MAP_STORAGE_ENDPOINT=play.workadventure.localhost/map-storage/ playwright test --project=chromium --grep-invert \"@docker|@oidc\"",
+    "test-single-domain-install": "ADMIN_API_TOKEN=123 MAP_STORAGE_PROTOCOL=https MAP_STORAGE_ENDPOINT=play.workadventure.localhost/map-storage/ playwright test --project=chromium --grep-invert \"@docker|@oidc|@selfsigned\"",
     "precommit": "lint-staged"
   },
   "lint-staged": {
