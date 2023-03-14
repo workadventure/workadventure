@@ -1,4 +1,5 @@
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
+import { mapFetcher } from "@workadventure/shared-utils/src/MapFetcher";
 import {
     MetaTagsData,
     RequiredMetaTagsData,
@@ -9,7 +10,7 @@ import {
     ErrorApiData,
 } from "@workadventure/messages";
 import { adminService } from "./AdminService";
-import axios, { AxiosResponse } from "axios";
+import { AxiosResponse } from "axios";
 import { ADMIN_API_URL } from "../enums/EnvironmentVariable";
 
 export const MetaTagsDefaultValue: RequiredMetaTagsData = {
@@ -280,10 +281,10 @@ export class MetaTagsBuilder {
             return undefined;
         }
 
-        const mapUrl = mapDetails.data.mapUrl ?? "";
+        const mapUrl = await mapFetcher.getMapUrl(mapDetails.data.mapUrl, mapDetails.data.wamUrl);
         let fetchedData: AxiosResponse;
         try {
-            fetchedData = await axios.get(mapUrl);
+            fetchedData = await mapFetcher.fetchFile(mapUrl);
         } catch (e) {
             console.log(
                 "Error on getting map file",

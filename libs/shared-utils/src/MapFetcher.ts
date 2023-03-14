@@ -44,7 +44,6 @@ class MapFetcher {
         canLoadLocalUrl = false,
         storeVariableForLocalMaps = false
     ): Promise<ITiledMap> {
-        console.log("D1");
         const url = await this.getMapUrl(mapUrl, wamUrl);
 
         // Before trying to make the query, let's verify the map is actually on the open internet (and not a local test map)
@@ -61,7 +60,7 @@ class MapFetcher {
         return res.data;
     }
 
-    private async fetchFile(url: string, canLoadLocalUrl = false, storeVariableForLocalMaps = false) {
+    public async fetchFile(url: string, canLoadLocalUrl = false, storeVariableForLocalMaps = false) {
         // Note: mapUrl is provided by the client. A possible attack vector would be to use a rogue DNS server that
         // returns local URLs. Alas, Axios cannot pin a URL to a given IP. So "isLocalUrl" and Axios.get could potentially
         // target to different servers (and one could trick Axios.get into loading resources on the internal network
@@ -72,8 +71,6 @@ class MapFetcher {
         if ((await this.isLocalUrl(url)) && !storeVariableForLocalMaps && !canLoadLocalUrl) {
             throw new LocalUrlError('URL for map "' + url + '" targets a local map');
         }
-
-        console.log("==================");
 
         return await Axios.get(url, {
             maxContentLength: 50 * 1024 * 1024, // Max content length: 50MB. Maps should not be bigger
