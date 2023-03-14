@@ -3,7 +3,7 @@ services:
   maps:
     image: thecodingmachine/php:8.1-v4-apache-node12
     environment:
-      FRONT_URL: http://play.workadventure.localhost
+      FRONT_URL: https://play.workadventure.localhost
       #APACHE_DOCUMENT_ROOT: dist/
       #APACHE_EXTENSIONS: headers
       #APACHE_EXTENSION_HEADERS: 1

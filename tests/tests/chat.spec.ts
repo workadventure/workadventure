@@ -12,12 +12,12 @@ test.setTimeout(750_000);
 
 test.describe('Chat', () => {
   test('main', async ({ page, browser, browserName }) => {
-    page.on('console', msg => console.log(browserName + ' - ' + msg.type() + ' - ' + msg.text()));
+    /*page.on('console', msg => console.log(browserName + ' - ' + msg.type() + ' - ' + msg.text()));
     page.on('response', response => {
       if (response.status() >= 400) {
         console.log('>>', response.status(), response.url());
       }
-    });
+    });*/
 
 
     await page.goto(
