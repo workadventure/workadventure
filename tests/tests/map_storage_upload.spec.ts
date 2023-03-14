@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import fs from "fs";
 
 test.use({
-    baseURL: process.env.MAP_STORAGE_ENDPOINT ?? 'http://john.doe:password@map-storage.workadventure.localhost',
+    baseURL: (process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://john.doe:password@" + (process.env.MAP_STORAGE_ENDPOINT ?? 'map-storage.workadventure.localhost'),
 })
 
 test.describe('Map-storage Upload API', () => {
@@ -60,7 +60,7 @@ test.describe('Map-storage Upload API', () => {
     test('not authenticated requests are rejected', async ({
                                            request,
                                        }) => {
-        const uploadFile1 = await request.post(`http://bad:credentials@map-storage.workadventure.localhost/upload`, {
+        const uploadFile1 = await request.post((process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://bad:credentials@" + (process.env.MAP_STORAGE_ENDPOINT ?? 'map-storage.workadventure.localhost/') + "upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
             }
@@ -221,7 +221,7 @@ test.describe('Map-storage Upload API', () => {
         let listOfMaps = await request.get("maps");
         await expect(JSON.parse(await listOfMaps.text()).includes("toMove/map.tmj")).toBeTruthy();
 
-        const moveDir = await request.post(`/move`, {
+        const moveDir = await request.post(`move`, {
             data: {
                 source: "/toMove",
                 destination: "/moved",
@@ -249,7 +249,7 @@ test.describe('Map-storage Upload API', () => {
         let listOfMaps = await request.get("maps");
         await expect(JSON.parse(await listOfMaps.text()).includes("toCopy/map.tmj")).toBeTruthy();
 
-        const copyDir = await request.post(`/copy`, {
+        const copyDir = await request.post(`copy`, {
             data: {
                 source: "/toCopy",
                 destination: "/copied",
@@ -297,11 +297,11 @@ test.describe('Map-storage Upload API', () => {
         });
         await expect(uploadFile1.ok()).toBeTruthy();
 
-        const accessFileWithSpace = await request.get(`/file+with%20space.txt`);
+        const accessFileWithSpace = await request.get(`file+with%20space.txt`);
         await expect(accessFileWithSpace.ok()).toBeTruthy();
         await expect(await accessFileWithSpace.text()).toContain("ok");
 
-        const accessFileWithEmoji = await request.get(`/🍕.txt`);
+        const accessFileWithEmoji = await request.get(`🍕.txt`);
         await expect(accessFileWithEmoji.ok()).toBeTruthy();
         await expect(await accessFileWithEmoji.text()).toContain("ok");
     });
