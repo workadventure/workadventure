@@ -1,0 +1,5 @@
+version: "3.6"
+services:
+  oidc-server-mock:
+    volumes:
+      - ../oidc-server-mock:/tmp/config:ro
