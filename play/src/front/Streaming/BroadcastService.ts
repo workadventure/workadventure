@@ -11,6 +11,11 @@ import { Space } from "../Space/Space";
 
 class BroadcastSpace extends Space {
     public jitsiConference: JitsiConferenceWrapper | undefined;
+    public unsubscribes: Unsubscriber[] = [];
+    destroy() {
+        this.unsubscribes.forEach((unsubscribe) => unsubscribe());
+        super.destroy();
+    }
 }
 
 export class BroadcastService {
@@ -50,34 +55,36 @@ export class BroadcastService {
     public joinSpace(spaceName: string) {
         const spaceFilter = this.connection.emitWatchSpaceLiveStreaming(spaceName);
         const broadcastSpace = new BroadcastSpace(this.connection, spaceName, spaceFilter);
-        broadcastSpace.users.subscribe((users) => {
-            if (users.size === 0) {
-                if (broadcastSpace.jitsiConference !== undefined) {
-                    broadcastSpace.jitsiConference
-                        .leave()
-                        .then(async () => {
-                            broadcastSpace.jitsiConference = undefined;
-                            if (this.canDisconnect()) {
-                                await this.jitsiConnection?.disconnect();
-                                this.jitsiConnection = undefined;
-                            }
-                        })
-                        .catch((e) => {
-                            console.error(e);
-                        });
+        broadcastSpace.unsubscribes.push(
+            broadcastSpace.users.subscribe((users) => {
+                if (users.size === 0) {
+                    if (broadcastSpace.jitsiConference !== undefined) {
+                        broadcastSpace.jitsiConference
+                            .leave()
+                            .then(async () => {
+                                broadcastSpace.jitsiConference = undefined;
+                                if (this.canDisconnect()) {
+                                    await this.jitsiConnection?.disconnect();
+                                    this.jitsiConnection = undefined;
+                                }
+                            })
+                            .catch((e) => {
+                                console.error(e);
+                            });
+                    }
+                } else {
+                    if (broadcastSpace.jitsiConference === undefined) {
+                        this.joinJitsiConference(spaceName)
+                            .then((jitsiConference) => {
+                                broadcastSpace.jitsiConference = jitsiConference;
+                            })
+                            .catch((e) => {
+                                console.error(e);
+                            });
+                    }
                 }
-            } else {
-                if (broadcastSpace.jitsiConference === undefined) {
-                    this.joinJitsiConference(spaceName)
-                        .then((jitsiConference) => {
-                            broadcastSpace.jitsiConference = jitsiConference;
-                        })
-                        .catch((e) => {
-                            console.error(e);
-                        });
-                }
-            }
-        });
+            })
+        );
         this.broadcastSpaces.push(broadcastSpace);
     }
 
