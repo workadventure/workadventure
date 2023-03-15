@@ -42,7 +42,8 @@ import {
     UpdateSpaceFilterMessage,
     RemoveSpaceFilterMessage,
     SetPlayerDetailsMessage,
-    SpaceFilterMessage, WatchSpaceMessage,
+    SpaceFilterMessage,
+    WatchSpaceMessage,
 } from "@workadventure/messages";
 import { EJABBERD_DOMAIN } from "../enums/EnvironmentVariable";
 import { Space } from "../models/Space";
@@ -1029,6 +1030,30 @@ export class SocketManager implements ZoneEventListener {
                 }
             }
         }
+    }
+
+    handleCameraState(client: ExSocketInterface, state: boolean) {
+        client.cameraState = state;
+        client.spaceUser.videoSharing = state;
+        const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
+            videoSharing: state,
+            uuid: client.userUuid,
+        });
+        client.spaces.forEach((space) => {
+            space.updateUser(partialSpaceUser);
+        });
+    }
+
+    handleMicrophoneState(client: ExSocketInterface, state: boolean) {
+        client.microphoneState = state;
+        client.spaceUser.audioSharing = state;
+        const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
+            audioSharing: state,
+            uuid: client.userUuid,
+        });
+        client.spaces.forEach((space) => {
+            space.updateUser(partialSpaceUser);
+        });
     }
 }
 

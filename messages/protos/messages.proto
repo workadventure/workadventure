@@ -231,6 +231,8 @@ message ClientToServerMessage {
     UpdateSpaceFilterMessage updateSpaceFilterMessage = 27;
     WatchSpaceMessage watchSpaceMessage = 28;
     UnwatchSpaceMessage unwatchSpaceMessage = 29;
+    CameraStateMessage cameraStateMessage = 30;
+    MicrophoneStateMessage microphoneStateMessage = 31;
   }
 }
 
@@ -508,6 +510,14 @@ message BanUserMessage{
 message AskPositionMessage{
   string userIdentifier = 1;
   string playUri = 2;
+}
+
+message CameraStateMessage {
+  bool value = 1;
+}
+
+message MicrophoneStateMessage {
+  bool value = 1;
 }
 
 

@@ -754,6 +754,14 @@ export class IoSocketController {
                             // TODO : Implement
                             break;
                         }
+                        case "cameraStateMessage": {
+                            socketManager.handleCameraState(client, message.message.cameraStateMessage.value);
+                            break;
+                        }
+                        case "microphoneStateMessage": {
+                            socketManager.handleMicrophoneState(client, message.message.microphoneStateMessage.value);
+                            break;
+                        }
                         case "itemEventMessage":
                         case "variableMessage":
                         case "webRtcSignalToServerMessage":

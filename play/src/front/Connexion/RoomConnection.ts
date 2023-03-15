@@ -1387,6 +1387,28 @@ export class RoomConnection implements RoomConnection {
         return spaceFilter;
     }
 
+    public emitCameraState(state: boolean) {
+        this.send({
+            message: {
+                $case: "cameraStateMessage",
+                cameraStateMessage: {
+                    value: state,
+                },
+            },
+        });
+    }
+
+    public emitMicrophoneState(state: boolean) {
+        this.send({
+            message: {
+                $case: "microphoneStateMessage",
+                microphoneStateMessage: {
+                    value: state,
+                },
+            },
+        });
+    }
+
     /**
      * Unserializes a string received from the server.
      * If the value cannot be unserialized, returns undefined and outputs a console error.

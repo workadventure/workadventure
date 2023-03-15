@@ -57,6 +57,7 @@ export class BroadcastService {
         const broadcastSpace = new BroadcastSpace(this.connection, spaceName, spaceFilter);
         broadcastSpace.unsubscribes.push(
             broadcastSpace.users.subscribe((users) => {
+                console.warn("BroadcastService => broadcastSpace", spaceName, users);
                 if (users.size === 0) {
                     if (broadcastSpace.jitsiConference !== undefined) {
                         broadcastSpace.jitsiConference

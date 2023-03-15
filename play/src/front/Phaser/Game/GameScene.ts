@@ -1197,6 +1197,14 @@ export class GameScene extends DirtyScene {
             //this.reposition();
         });
 
+        requestedCameraState.subscribe((state) => {
+            this.connection?.emitCameraState(state);
+        });
+
+        requestedMicrophoneState.subscribe((state) => {
+            this.connection?.emitMicrophoneState(state);
+        });
+
         const talkIconVolumeTreshold = 10;
         let oldPeersNumber = 0;
         let oldUsers = new Map<number, MessageUserJoined>();
