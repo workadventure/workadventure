@@ -8,23 +8,28 @@ services:
       - --providers.docker.exposedbydefault=false
       # Entry points
       - --entryPoints.web.address=:${HTTP_PORT}
-      - --entrypoints.web.http.redirections.entryPoint.to=websecure
-      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --entrypoints.web.proxyProtocol.trustedIPs=${PROXY_TRUSTED_IPS}
+#      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+#      - --entrypoints.web.http.redirections.entryPoint.scheme=https
       - --entryPoints.websecure.address=:${HTTPS_PORT}
       # HTTP challenge
-      - --certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}
-      - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
-      - --certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web
+#      - --certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}
+#      - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
+#      - --certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web
       # Let's Encrypt's staging server
       # uncomment during testing to avoid rate limiting
       #- --certificatesresolvers.dnsresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
-    ports:
-      - "${HTTP_PORT}:80"
-      - "${HTTPS_PORT}:443"
+#    ports:
+#      - "${HTTP_PORT}:80"
+#      - "${HTTPS_PORT}:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ${DATA_DIR}/letsencrypt/:/letsencrypt/
+#      - ${DATA_DIR}/letsencrypt/:/letsencrypt/
     restart: ${RESTART_POLICY}
+    networks:
+      work.adventure:
+      reverse_proxy_shared_network:      
+
 
   play:
     image: thecodingmachine/workadventure-play:${VERSION}
@@ -78,6 +83,8 @@ services:
       traefik.http.routers.play-ssl.tls.certresolver: "myresolver"
       traefik.http.routers.play-ssl.service: "play"
     restart: ${RESTART_POLICY}
+    networks:
+      work.adventure:
 
   chat:
     image: thecodingmachine/workadventure-chat:${VERSION}
@@ -102,6 +109,8 @@ services:
       traefik.http.routers.chat-ssl.tls: "true"
       traefik.http.routers.chat-ssl.tls.certresolver: "myresolver"
     restart: ${RESTART_POLICY}
+    networks:
+      work.adventure:
 
   back:
     image: thecodingmachine/workadventure-back:${VERSION}
@@ -148,6 +157,8 @@ services:
       traefik.http.routers.back-ssl.tls: "true"
       traefik.http.routers.back-ssl.tls.certresolver: "myresolver"
     restart: ${RESTART_POLICY}
+    networks:
+      work.adventure:
 
   uploader:
     image: thecodingmachine/workadventure-uploader:${VERSION}
@@ -180,6 +191,8 @@ services:
       traefik.http.routers.uploader-ssl.service: "uploader"
       traefik.http.routers.uploader-ssl.tls: "true"
       traefik.http.routers.uploader-ssl.tls.certresolver: "myresolver"
+    networks:
+      work.adventure:
 
   icon:
     image: matthiasluedtke/iconserver:v3.13.0
@@ -196,11 +209,15 @@ services:
       traefik.http.routers.icon-ssl.service: "icon"
       traefik.http.routers.icon-ssl.tls: "true"
       traefik.http.routers.icon-ssl.tls.certresolver: "myresolver"
+    networks:
+      work.adventure:
 
   redis:
     image: redis:6
     volumes:
       - redisdata:/data
+    networks:
+      work.adventure:
 
   ejabberd:
     image: workadventure/ejabberd:v1
@@ -227,6 +244,9 @@ services:
       traefik.http.routers.ejabberd-ssl.service: "ejabberd"
       traefik.http.routers.ejabberd-ssl.tls: "true"
       traefik.http.routers.ejabberd-ssl.tls.certresolver: "myresolver"
+    networks:
+      work.adventure:
+      reverse_proxy_shared_network:
 
   map-storage:
     image: thecodingmachine/workadventure-map-storage:${VERSION}
@@ -250,6 +270,13 @@ services:
       traefik.http.routers.map-storage-ssl.service: "map-storage"
       traefik.http.routers.map-storage-ssl.tls: "true"
       traefik.http.routers.map-storage-ssl.tls.certresolver: "myresolver"
+    networks:
+      work.adventure:
 
 volumes:
   redisdata:
+
+networks:
+  work.adventure:
+  reverse_proxy_shared_network:
+    external: true
