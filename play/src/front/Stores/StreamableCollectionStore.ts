@@ -15,16 +15,14 @@ export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackWrappe
 const jitsiTracksStore = createNestedStore<GameScene | undefined, JitsiTrackWrapper[]>(gameSceneStore, (gameScene) =>
     gameScene ? gameScene.broadcastService.jitsiTracks : writable<JitsiTrackWrapper[]>([])
 );
-jitsiTracksStore.subscribe((tracks) => console.error("FOUAAAAAA", tracks));
+
 /**
  * A store that contains everything that can produce a stream (so the peers + the local screen sharing stream)
  */
 function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
-    console.error("streamableCollectionStore CREATED");
     const store = derived(
         [jitsiTracksStore, screenSharingStreamStore, peerStore, screenSharingLocalMedia],
         ([$jitsiTracksStore, $screenSharingStreamStore, $peerStore, $screenSharingLocalMedia] /*, set*/) => {
-            console.error("BOOOO", $jitsiTracksStore);
             const peers = new Map<string, Streamable>();
 
             const addPeer = (peer: Streamable) => {
@@ -49,9 +47,6 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
             return peers;
         }
     );
-    store.subscribe((test) => {
-        console.error("SUBSCRIBE FOO", test);
-    });
     return store;
 }
 
