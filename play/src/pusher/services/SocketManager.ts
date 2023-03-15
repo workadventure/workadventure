@@ -42,7 +42,7 @@ import {
     UpdateSpaceFilterMessage,
     RemoveSpaceFilterMessage,
     SetPlayerDetailsMessage,
-    SpaceFilterMessage,
+    SpaceFilterMessage, WatchSpaceMessage,
 } from "@workadventure/messages";
 import { EJABBERD_DOMAIN } from "../enums/EnvironmentVariable";
 import { Space } from "../models/Space";
@@ -453,10 +453,10 @@ export class SocketManager implements ZoneEventListener {
                 spaceStreamToPusher.write({
                     message: {
                         $case: "watchSpaceMessage",
-                        watchSpaceMessage: {
+                        watchSpaceMessage: WatchSpaceMessage.fromPartial({
                             spaceName,
                             user: spaceUser,
-                        },
+                        }),
                     },
                 });
                 space.localAddUser(spaceUser);

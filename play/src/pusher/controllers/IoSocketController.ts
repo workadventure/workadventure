@@ -590,6 +590,7 @@ export class IoSocketController {
 
                     // Let's join the room
                     const client = this.initClient(ws);
+                    /*
                     await socketManager.handleJoinRoom(client);
                     // TODO : Get prefix from Admin and joinSpace prefixed
                     const spaceName = client.roomId + "/space";
@@ -601,6 +602,7 @@ export class IoSocketController {
                             spaceFilterEverybody: {},
                         },
                     });
+                     */
                     socketManager.emitXMPPSettings(client);
 
                     //get data information and show messages
@@ -738,6 +740,14 @@ export class IoSocketController {
                         }
                         case "setPlayerDetailsMessage": {
                             socketManager.handleSetPlayerDetails(client, message.message.setPlayerDetailsMessage);
+                            break;
+                        }
+                        case "watchSpaceMessage": {
+                            void socketManager.handleJoinSpace(client, message.message.watchSpaceMessage.spaceName, message.message.watchSpaceMessage.spaceFilter);
+                            break;
+                        }
+                        case "unwatchSpaceMessage": {
+                            // TODO : Implement
                             break;
                         }
                         case "itemEventMessage":

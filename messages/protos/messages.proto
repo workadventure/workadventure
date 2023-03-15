@@ -229,6 +229,8 @@ message ClientToServerMessage {
     AddSpaceFilterMessage addSpaceFilterMessage = 25;
     RemoveSpaceFilterMessage removeSpaceFilterMessage = 26;
     UpdateSpaceFilterMessage updateSpaceFilterMessage = 27;
+    WatchSpaceMessage watchSpaceMessage = 28;
+    UnwatchSpaceMessage unwatchSpaceMessage = 29;
   }
 }
 
@@ -848,6 +850,7 @@ message BackToPusherSpaceMessage{
 message WatchSpaceMessage{
   string spaceName = 1;
   SpaceUser user = 2;
+  SpaceFilterMessage spaceFilter = 3;
 }
 message UnwatchSpaceMessage{
   string spaceName = 1;
@@ -920,10 +923,14 @@ message SpaceFilterMessage{
   oneof filter {
     SpaceFilterEverybody spaceFilterEverybody = 3;
     SpaceFilterContainName spaceFilterContainName = 4;
+    SpaceFilterLiveStreaming spaceFilterLiveStreaming = 5;
   }
 }
 message SpaceFilterContainName{
   string value = 1;
+}
+
+message SpaceFilterLiveStreaming{
 }
 
 message SpaceFilterEverybody{

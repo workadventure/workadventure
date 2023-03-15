@@ -241,6 +241,9 @@ export class Space implements CustomJsonReplacerInterface {
             case "spaceFilterEverybody": {
                 return true;
             }
+            case "spaceFilterLiveStreaming": {
+                return user.screenSharing || user.audioSharing || user.videoSharing;
+            }
             default: {
                 const _exhaustiveCheck: never = spaceFilters.filter;
             }
