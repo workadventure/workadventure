@@ -10,10 +10,8 @@ import { fileSystem } from "./fileSystem";
 import passport from "passport";
 import { passportStrategy } from "./Services/Authentication";
 import { mapPathUsingDomain } from "./Services/PathMapper";
-import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import bodyParser from "body-parser";
 import { WAMFileFormat } from "@workadventure/map-editor";
-import path from "path";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -48,13 +46,8 @@ app.get("*.wam", (req, res, next) => {
         const file = await fileSystem.readFileAsString(key);
         const wam = WAMFileFormat.parse(JSON.parse(file));
 
-        // TODO: Don't need to fetch tmj map here, fill up GameMap on map-storage side with a ITiledMap mock
-        const tmjMapUrl = path.normalize(`${path.dirname(key)}/${wam.mapUrl}`);
-        const tmjFile = await fileSystem.readFileAsString(tmjMapUrl);
-        const map = ITiledMap.parse(JSON.parse(tmjFile));
-
         if (!mapsManager.isMapAlreadyLoaded(key)) {
-            mapsManager.loadMapToMemory(key, wam, map);
+            mapsManager.loadWAMToMemory(key, wam);
         }
         res.send(wam);
     })().catch((e) => next());

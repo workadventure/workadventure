@@ -46,7 +46,6 @@ export class GameMap {
         this.flatLayers = flattenGroupLayersMap(this.map);
         this.tiledObjects = GameMap.getObjectsFromLayers(this.flatLayers);
 
-        console.log(this.wam);
         if (this.wam) {
             this.gameMapAreas = new GameMapAreas(this.wam);
             this.gameMapEntities = new GameMapEntities(this.wam);

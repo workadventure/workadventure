@@ -133,8 +133,8 @@ class MapsManager {
         return this.loadedMaps.has(key);
     }
 
-    public loadMapToMemory(key: string, wam: WAMFileFormat, map: ITiledMap): void {
-        this.loadedMaps.set(key, new GameMap(map, wam));
+    public loadWAMToMemory(key: string, wam: WAMFileFormat): void {
+        this.loadedMaps.set(key, new GameMap(this.getMockITiledMap(), wam));
     }
 
     public getEntityCollections(): EntityCollection[] {
@@ -152,17 +152,6 @@ class MapsManager {
         this.clearSaveMapInterval(key);
     }
 
-    private clearSaveMapInterval(key: string): boolean {
-        const interval = this.saveMapIntervals.get(key);
-        if (interval) {
-            clearInterval(interval);
-            this.saveMapIntervals.delete(key);
-            this.mapLastChangeTimestamp.delete(key);
-            return true;
-        }
-        return false;
-    }
-
     public addCommandToQueue(mapKey: string, message: EditMapCommandMessage): void {
         if (!this.loadedMapsCommandsQueue.has(mapKey)) {
             this.loadedMapsCommandsQueue.set(mapKey, []);
@@ -173,6 +162,26 @@ class MapsManager {
             this.setCommandDeletionTimeout(mapKey, message.id);
         }
         this.loadedMaps.get(mapKey)?.updateLastCommandIdProperty(message.id);
+    }
+
+    private getMockITiledMap(): ITiledMap {
+        return {
+            layers: [],
+            tiledversion: "",
+            tilesets: [],
+            type: "map",
+        };
+    }
+
+    private clearSaveMapInterval(key: string): boolean {
+        const interval = this.saveMapIntervals.get(key);
+        if (interval) {
+            clearInterval(interval);
+            this.saveMapIntervals.delete(key);
+            this.mapLastChangeTimestamp.delete(key);
+            return true;
+        }
+        return false;
     }
 
     private setCommandDeletionTimeout(mapKey: string, commandId: string): void {
