@@ -1045,7 +1045,8 @@ export class GameScene extends DirtyScene {
                     }
                 });
 
-                this._broadcastService = new BroadcastService(this.connection);
+                const broadcastService = new BroadcastService(this.connection);
+                this._broadcastService = broadcastService;
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
@@ -1099,6 +1100,8 @@ export class GameScene extends DirtyScene {
 
                 // Get position from UUID only after the connection to the pusher is established
                 this.tryMovePlayerWithMoveToUserParameter();
+
+                broadcastService.joinSpace("test");
 
                 gameSceneStore.set(this);
                 gameSceneIsLoadedStore.set(true);

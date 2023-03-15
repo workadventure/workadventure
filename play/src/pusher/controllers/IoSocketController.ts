@@ -590,8 +590,8 @@ export class IoSocketController {
 
                     // Let's join the room
                     const client = this.initClient(ws);
-                    /*
                     await socketManager.handleJoinRoom(client);
+                    /*
                     // TODO : Get prefix from Admin and joinSpace prefixed
                     const spaceName = client.roomId + "/space";
                     await socketManager.handleJoinSpace(client, spaceName, {
@@ -743,7 +743,11 @@ export class IoSocketController {
                             break;
                         }
                         case "watchSpaceMessage": {
-                            void socketManager.handleJoinSpace(client, message.message.watchSpaceMessage.spaceName, message.message.watchSpaceMessage.spaceFilter);
+                            void socketManager.handleJoinSpace(
+                                client,
+                                message.message.watchSpaceMessage.spaceName,
+                                message.message.watchSpaceMessage.spaceFilter
+                            );
                             break;
                         }
                         case "unwatchSpaceMessage": {

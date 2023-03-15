@@ -6,12 +6,17 @@ import { megaphoneEnabledStore } from "../Stores/MegaphoneStore";
 import { get, Readable, Unsubscriber } from "svelte/store";
 import { ForwardableStore } from "@workadventure/store-utils";
 import { JitsiTrackWrapper } from "./Jitsi/JitsiTrackWrapper";
+import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
+import { Space } from "../Space/Space";
+
+class BroadcastSpace extends Space {
+    public jitsiConference: JitsiConferenceWrapper | undefined;
+}
 
 export class BroadcastService {
     private megaphoneEnabledUnsubscribe: Unsubscriber;
-
-    private jitsiConference: JitsiConferenceWrapper | undefined;
-
+    private jitsiConnection: JitsiConnection | undefined;
+    private broadcastSpaces: BroadcastSpace[];
     private _jitsiTracks: ForwardableStore<JitsiTrackWrapper[]>;
 
     constructor(private connection: RoomConnection) {
@@ -23,39 +28,92 @@ export class BroadcastService {
          * - listening for a signal we should join a broadcast
          * - keep track of the Jitsi connexion / room and restart it if connexion is lost
          */
-
         this._jitsiTracks = new ForwardableStore<JitsiTrackWrapper[]>([]);
+
+        this.broadcastSpaces = [];
 
         this.megaphoneEnabledUnsubscribe = megaphoneEnabledStore.subscribe((megaphoneEnabled) => {
             if (megaphoneEnabled) {
-                this.jitsiConference?.broadcast(["video", "audio"]);
+                this.broadcastSpaces.forEach((broadcastSpace) => {
+                    broadcastSpace.jitsiConference?.broadcast(["video", "audio"]);
+                });
             } else {
-                this.jitsiConference?.broadcast([]);
+                this.broadcastSpaces.forEach((broadcastSpace) => {
+                    broadcastSpace.jitsiConference?.broadcast([]);
+                });
             }
         });
 
-        libJitsiFactory
-            .createConnection(
-                "jitsi.test.workadventu.re",
-                "prosody.test.workadventu.re",
-                "muc.prosody.test.workadventu.re"
-            )
-            //.createConnection("coremeet.workadventu.re", "prosody.workadventu.re", "muc.prosody.workadventu.re")
-            .then(async (connection) => {
-                this.jitsiConference = await JitsiConferenceWrapper.join(connection, "conferencetestfromjitsilib");
-                jitsiConferencesStore.set("conferencetestfromjitsilib", this.jitsiConference);
+        //libJitsiFactory.createConnection("jitsi.test.workadventu.re", "prosody.test.workadventu.re", "muc.prosody.test.workadventu.re").then((connection) => {
+    }
 
-                if (get(megaphoneEnabledStore)) {
-                    this.jitsiConference.broadcast(["video", "audio"]);
+    public joinSpace(spaceName: string) {
+        const spaceFilter = this.connection.emitWatchSpaceLiveStreaming(spaceName);
+        const broadcastSpace = new BroadcastSpace(this.connection, spaceName, spaceFilter);
+        broadcastSpace.users.subscribe((users) => {
+            if (users.size === 0) {
+                if (broadcastSpace.jitsiConference !== undefined) {
+                    broadcastSpace.jitsiConference
+                        .leave()
+                        .then(async () => {
+                            broadcastSpace.jitsiConference = undefined;
+                            if (this.canDisconnect()) {
+                                await this.jitsiConnection?.disconnect();
+                                this.jitsiConnection = undefined;
+                            }
+                        })
+                        .catch((e) => {
+                            console.error(e);
+                        });
                 }
+            } else {
+                if (broadcastSpace.jitsiConference === undefined) {
+                    this.joinJitsiConference(spaceName)
+                        .then((jitsiConference) => {
+                            broadcastSpace.jitsiConference = jitsiConference;
+                        })
+                        .catch((e) => {
+                            console.error(e);
+                        });
+                }
+            }
+        });
+        this.broadcastSpaces.push(broadcastSpace);
+    }
 
-                this._jitsiTracks.forward(this.jitsiConference.streamStore);
-            })
-            .catch((e) => console.error(e));
+    private async connect() {
+        this.jitsiConnection = await libJitsiFactory.createConnection(
+            "coremeet.workadventu.re",
+            "prosody.workadventu.re",
+            "muc.prosody.workadventu.re"
+        );
+    }
+
+    private async joinJitsiConference(roomName: string): Promise<JitsiConferenceWrapper> {
+        if (!this.jitsiConnection) {
+            await this.connect();
+        }
+        if (!this.jitsiConnection) {
+            throw new Error("Could not connect to Jitsi");
+        }
+        const jitsiConference = await JitsiConferenceWrapper.join(this.jitsiConnection, roomName);
+        jitsiConferencesStore.set(roomName, jitsiConference);
+
+        if (get(megaphoneEnabledStore)) {
+            jitsiConference.broadcast(["video", "audio"]);
+        }
+
+        this._jitsiTracks.forward(jitsiConference.streamStore);
+        return jitsiConference;
+    }
+
+    private canDisconnect(): boolean {
+        return this.broadcastSpaces.every((space) => space.isEmpty);
     }
 
     public destroy(): void {
         this.megaphoneEnabledUnsubscribe();
+        this.broadcastSpaces.forEach((space) => space.destroy());
     }
 
     public get jitsiTracks(): Readable<JitsiTrackWrapper[]> {

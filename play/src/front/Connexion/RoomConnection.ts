@@ -64,6 +64,8 @@ import {
     AddSpaceUserMessage,
     UpdateSpaceUserMessage,
     RemoveSpaceUserMessage,
+    WatchSpaceMessage,
+    SpaceFilterMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -1362,6 +1364,27 @@ export class RoomConnection implements RoomConnection {
                 }),
             },
         });
+    }
+
+    public emitWatchSpaceLiveStreaming(spaceName: string) {
+        const spaceFilter: SpaceFilterMessage = {
+            filterName: "testFilter",
+            spaceName,
+            filter: {
+                $case: "spaceFilterLiveStreaming",
+                spaceFilterLiveStreaming: {},
+            },
+        };
+        this.send({
+            message: {
+                $case: "watchSpaceMessage",
+                watchSpaceMessage: WatchSpaceMessage.fromPartial({
+                    spaceName,
+                    spaceFilter,
+                }),
+            },
+        });
+        return spaceFilter;
     }
 
     /**
