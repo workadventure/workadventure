@@ -1,4 +1,4 @@
-import { ENABLE_FEATURE_MAP_EDITOR, PUSHER_URL, UPLOADER_URL } from "../Enum/EnvironmentVariable";
+import { ENABLE_FEATURE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
@@ -58,6 +58,12 @@ import {
     WorldConnexionMessage,
     XmppSettingsMessage,
     RefreshRoomMessage,
+    AddSpaceFilterMessage,
+    UpdateSpaceFilterMessage,
+    RemoveSpaceFilterMessage,
+    AddSpaceUserMessage,
+    UpdateSpaceUserMessage,
+    RemoveSpaceUserMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -68,6 +74,7 @@ import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 import { assertObjectKeys } from "../Utils/CustomTypeGuards";
+import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
@@ -174,6 +181,12 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _leaveMucRoomMessageStream = new Subject<LeaveMucRoomMessage>();
     public readonly leaveMucRoomMessageStream = this._leaveMucRoomMessageStream.asObservable();
+    private readonly _addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
+    public readonly addSpaceUserMessageStream = this._addSpaceUserMessageStream.asObservable();
+    private readonly _updateSpaceUserMessageStream = new Subject<UpdateSpaceUserMessage>();
+    public readonly updateSpaceUserMessageStream = this._updateSpaceUserMessageStream.asObservable();
+    private readonly _removeSpaceUserMessageStream = new Subject<RemoveSpaceUserMessage>();
+    public readonly removeSpaceUserMessageStream = this._removeSpaceUserMessageStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -203,7 +216,7 @@ export class RoomConnection implements RoomConnection {
         availabilityStatus: AvailabilityStatus,
         lastCommandId?: string
     ) {
-        let url = new URL(PUSHER_URL, window.location.toString()).toString();
+        let url = ABSOLUTE_PUSHER_URL;
         url = url.replace("http://", "ws://").replace("https://", "wss://");
         if (!url.endsWith("/")) {
             url += "/";
@@ -349,6 +362,18 @@ export class RoomConnection implements RoomConnection {
                             case "leaveMucRoomMessage": {
                                 console.info("[sendChatMessagePrompt] RoomConnection => leaveMucRoomMessage received");
                                 this._leaveMucRoomMessageStream.next(subMessage.leaveMucRoomMessage);
+                                break;
+                            }
+                            case "addSpaceUserMessage": {
+                                this._addSpaceUserMessageStream.next(subMessage.addSpaceUserMessage);
+                                break;
+                            }
+                            case "updateSpaceUserMessage": {
+                                this._updateSpaceUserMessageStream.next(subMessage.updateSpaceUserMessage);
+                                break;
+                            }
+                            case "removeSpaceUserMessage": {
+                                this._removeSpaceUserMessageStream.next(subMessage.removeSpaceUserMessage);
                                 break;
                             }
                             default: {
@@ -1195,6 +1220,39 @@ export class RoomConnection implements RoomConnection {
                     userIdentifier: uuid,
                     playUri,
                 },
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitAddSpaceFilter(filter: AddSpaceFilterMessage) {
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "addSpaceFilterMessage",
+                addSpaceFilterMessage: filter,
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitUpdateSpaceFilter(filter: UpdateSpaceFilterMessage) {
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "updateSpaceFilterMessage",
+                updateSpaceFilterMessage: filter,
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitRemoveSpaceFilter(filter: RemoveSpaceFilterMessage) {
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "removeSpaceFilterMessage",
+                removeSpaceFilterMessage: filter,
             },
         }).finish();
 

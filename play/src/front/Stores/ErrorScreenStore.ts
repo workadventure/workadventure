@@ -49,7 +49,7 @@ function createErrorScreenStore() {
                             error.response.status +
                             " - " +
                             (error.response.data ? error.response.data : error.response.statusText),
-                        details: "An error occurred while accessing URL: " + error.response.config?.url,
+                        details: "An error occurred while accessing URL: " + error.config?.url,
                     })
                 );
                 return;

@@ -11,7 +11,7 @@
         <div style="padding: 10px; margin: 20px;">
             <h2>Upload map</h2>
             <p>Use this very simple web interface to upload a map (as a ZIP file).</p>
-            <form action="/upload" method="post" enctype="multipart/form-data">
+            <form action="./upload" method="post" enctype="multipart/form-data">
                 <label for="file">Select a file to upload:</label><br>
                 <input type="file" name="file" id="file" accept=".zip"><br>
                 <label for="directory">Directory:</label><br>
@@ -21,7 +21,7 @@
         </div>
         <div style="padding: 10px; margin: 20px;">
             <h2>Download map</h2>
-            <form action="/download" method="get">
+            <form action="./download" method="get">
                 <label for="directoryDownload">Directory:</label><br>
                 <input type="text" name="directory" id="directoryDownload" value="/"><br><br>
                 <input type="submit" value="Submit">

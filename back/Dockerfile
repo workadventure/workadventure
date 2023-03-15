@@ -5,7 +5,7 @@ COPY messages/package-lock.json messages/package.json ./
 RUN npm ci
 COPY messages .
 COPY libs ./../libs
-RUN npm run tag-version && npm run proto && npm run ts-proto
+RUN npm run tag-version && npm run ts-proto
 
 # final production image
 FROM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d

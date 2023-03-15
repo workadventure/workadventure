@@ -1,0 +1,135 @@
+import { describe, expect, it } from "vitest";
+import { Space } from "../src/Model/Space";
+import { SpacesWatcher } from "../src/Model/SpacesWatcher";
+import { BackToPusherSpaceMessage, PartialSpaceUser, SpaceUser } from "@workadventure/messages";
+import { SpaceSocket } from "../src/SpaceManager";
+import { mock } from "vitest-mock-extended";
+
+describe("Space", () => {
+    const space = new Space("test");
+    let eventsWatcher1: BackToPusherSpaceMessage[] = [];
+    const spaceSocketToPusher1 = mock<SpaceSocket>({
+        write(chunk: BackToPusherSpaceMessage): boolean {
+            eventsWatcher1.push(chunk);
+            return true;
+        },
+    });
+    let eventsWatcher2: BackToPusherSpaceMessage[] = [];
+    const spaceSocketToPusher2 = mock<SpaceSocket>({
+        write(chunk: BackToPusherSpaceMessage): boolean {
+            eventsWatcher2.push(chunk);
+            return true;
+        },
+    });
+    let eventsWatcher3: BackToPusherSpaceMessage[] = [];
+    const spaceSocketToPusher3 = mock<SpaceSocket>({
+        write(chunk: BackToPusherSpaceMessage): boolean {
+            eventsWatcher3.push(chunk);
+            return true;
+        },
+    });
+
+    let watcher1: SpacesWatcher;
+
+    it("should return true because Space is empty", () => {
+        expect(space.canBeDeleted()).toBe(true);
+    });
+    it("should emit event ONLY to other watcher on addUser", () => {
+        eventsWatcher1 = [];
+        const watcher1_ = new SpacesWatcher("uuid-watcher-1", spaceSocketToPusher1);
+        watcher1 = watcher1_;
+        space.addWatcher(watcher1_);
+
+        eventsWatcher2 = [];
+        const watcher2 = new SpacesWatcher("uuid-watcher-2", spaceSocketToPusher2);
+        space.addWatcher(watcher2);
+
+        const spaceUser: SpaceUser = SpaceUser.fromPartial({
+            uuid: "uuid-test",
+            name: "test",
+            playUri: "test",
+            color: "#000000",
+            roomName: "test",
+            isLogged: false,
+            availabilityStatus: 0,
+            videoSharing: false,
+            audioSharing: false,
+            screenSharing: false,
+        });
+        // Add user to space from watcher1
+        space.addUser(watcher1, spaceUser);
+
+        // Only watcher2 should have received the event
+        expect(eventsWatcher1.some((message) => message.message?.$case === "addSpaceUserMessage")).toBe(false);
+        expect(eventsWatcher2.some((message) => message.message?.$case === "addSpaceUserMessage")).toBe(true);
+
+        space.removeWatcher(watcher2);
+    });
+    it("should emit addUserEvent to new watcher", () => {
+        eventsWatcher3 = [];
+        const watcher = new SpacesWatcher("uuid-watcher-3", spaceSocketToPusher3);
+        space.addWatcher(watcher);
+
+        // should have received the addUser event
+        expect(eventsWatcher3.some((message) => message.message?.$case === "addSpaceUserMessage")).toBe(true);
+
+        space.removeWatcher(watcher);
+    });
+    it("should emit updateUserEvent to other watchers", () => {
+        eventsWatcher3 = [];
+        const watcher3 = new SpacesWatcher("uuid-watcher-3", spaceSocketToPusher3);
+        space.addWatcher(watcher3);
+
+        const spaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
+            uuid: "uuid-test",
+            name: "test2",
+            playUri: "test2",
+            color: "#FFFFFF",
+            roomName: "test2",
+            isLogged: true,
+            availabilityStatus: 1,
+            videoSharing: true,
+            audioSharing: true,
+            screenSharing: true,
+            visitCardUrl: "test2",
+        });
+
+        space.updateUser(watcher1, spaceUser);
+
+        // should have received the addUser event
+        expect(eventsWatcher3.some((message) => message.message?.$case === "updateSpaceUserMessage")).toBe(true);
+        const message = eventsWatcher3.find((message) => message.message?.$case === "updateSpaceUserMessage");
+        expect(message).toBeDefined();
+        const updateSpaceUserMessage = message?.message;
+        expect(updateSpaceUserMessage).toBeDefined();
+        if (message?.message?.$case === "updateSpaceUserMessage") {
+            const user = message.message.updateSpaceUserMessage.user;
+            expect(user?.name).toBe("test2");
+            expect(user?.playUri).toBe("test2");
+            expect(user?.color).toBe("#FFFFFF");
+            expect(user?.roomName).toBe("test2");
+            expect(user?.isLogged).toBe(true);
+            expect(user?.availabilityStatus).toBe(1);
+            expect(user?.videoSharing).toBe(true);
+            expect(user?.audioSharing).toBe(true);
+            expect(user?.screenSharing).toBe(true);
+            expect(user?.visitCardUrl).toBe("test2");
+        }
+
+        space.removeWatcher(watcher3);
+    });
+    it("should emit removeUserEvent to other watchers", () => {
+        eventsWatcher3 = [];
+        const watcher3 = new SpacesWatcher("uuid-watcher-3", spaceSocketToPusher3);
+        space.addWatcher(watcher3);
+
+        space.removeUser(watcher1, "uuid-test");
+
+        // should have received the removeUser event
+        expect(eventsWatcher3.some((message) => message.message?.$case === "removeSpaceUserMessage")).toBe(true);
+        space.removeWatcher(watcher3);
+    });
+    it("should return false because Space is not empty", () => {
+        expect(space.canBeDeleted()).toBe(false);
+    });
+});

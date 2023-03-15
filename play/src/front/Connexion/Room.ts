@@ -3,7 +3,6 @@ import {
     DISABLE_ANONYMOUS,
     OPID_LOGOUT_REDIRECT_URL,
     OPID_WOKA_NAME_POLICY,
-    PUSHER_URL,
 } from "../Enum/EnvironmentVariable";
 import { localUserStore } from "./LocalUserStore";
 import axios from "axios";
@@ -11,6 +10,7 @@ import { axiosWithRetry } from "./AxiosUtils";
 import type { MucRoomDefinition, LegalsData } from "@workadventure/messages";
 import { isMapDetailsData, isRoomRedirect, ErrorApiData, OpidWokaNamePolicy } from "@workadventure/messages";
 import { ApiError } from "../Stores/Errors/ApiError";
+import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 export class MapDetail {
     constructor(public readonly mapUrl?: string, public readonly wamUrl?: string) {}
 }
@@ -19,12 +19,10 @@ export interface RoomRedirect {
     redirectUrl: string;
 }
 
-console.log("pusher url !", PUSHER_URL);
-
 export class Room {
     public readonly id: string;
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
-    private _iframeAuthentication?: string = PUSHER_URL + "/login-screen";
+    private _iframeAuthentication?: string = new URL("login-screen", ABSOLUTE_PUSHER_URL).toString();
     private _opidLogoutRedirectUrl = "/";
     private _opidWokaNamePolicy: OpidWokaNamePolicy | undefined;
     private _mapUrl: string | undefined;
@@ -119,15 +117,12 @@ export class Room {
 
     private async getMapDetail(): Promise<MapDetail | RoomRedirect> {
         try {
-            const result = await axiosWithRetry.get<unknown>(
-                new URL("/map", new URL(PUSHER_URL, window.location.href)).toString(),
-                {
-                    params: {
-                        playUri: this.roomUrl.toString(),
-                        authToken: localUserStore.getAuthToken(),
-                    },
-                }
-            );
+            const result = await axiosWithRetry.get<unknown>("map", {
+                params: {
+                    playUri: this.roomUrl.toString(),
+                    authToken: localUserStore.getAuthToken(),
+                },
+            });
 
             const data = result.data;
 
@@ -153,7 +148,8 @@ export class Room {
                 this._group = data.group;
                 this._authenticationMandatory =
                     data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
-                this._iframeAuthentication = data.iframeAuthentication || PUSHER_URL + "/login-screen";
+                this._iframeAuthentication =
+                    data.iframeAuthentication || new URL("login-screen", ABSOLUTE_PUSHER_URL).toString();
                 this._opidLogoutRedirectUrl = data.opidLogoutRedirectUrl || OPID_LOGOUT_REDIRECT_URL || "/";
                 this._contactPage = data.contactPage || CONTACT_URL;
                 if (data.expireOn) {

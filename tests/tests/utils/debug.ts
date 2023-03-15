@@ -1,5 +1,6 @@
 import axios from "axios";
 import fs from 'fs';
+import {APIRequestContext, APIResponse} from "@playwright/test";
 
 const ADMIN_API_TOKEN = process.env.ADMIN_API_TOKEN;
 
@@ -29,18 +30,24 @@ export async function getBackDump(): Promise<Array<{roomUrl: string}>> {
     })).data;
 }
 
-export async function getPusherRooms(): Promise<Record<string, number>> {
+export async function getPusherRooms(request: APIRequestContext): Promise<APIResponse> {
     let url = 'http://play.workadventure.localhost/rooms';
     if (fs.existsSync('/project')) {
         // We are inside a container. Let's use a direct route
         url = 'http://play:3000/rooms';
     }
 
+    return request.get(url, {
+        headers: {
+            "Authorization": ADMIN_API_TOKEN,
+        }
+    })
+/*
     return (await axios({
         url,
         method: 'get',
         headers: {
             "Authorization": ADMIN_API_TOKEN
         }
-    })).data;
+    })).data;*/
 }

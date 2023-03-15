@@ -2,11 +2,12 @@ import { ENABLE_REPORT_ISSUES_MENU, REPORT_ISSUES_URL } from "./../Enum/Environm
 import { AddClassicButtonActionBarEvent, AddActionButtonActionBarEvent } from "./../Api/Events/Ui/ButtonActionBarEvent";
 import { derived, get, writable } from "svelte/store";
 import { userIsAdminStore } from "./GameStore";
-import { CONTACT_URL, OPID_PROFILE_SCREEN_PROVIDER, PUSHER_URL } from "../Enum/EnvironmentVariable";
+import { CONTACT_URL, OPID_PROFILE_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
 import type { Translation } from "../../i18n/i18n-types";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { connectionManager } from "../Connexion/ConnectionManager";
 import { AddButtonActionBarEvent, RemoveButtonActionBarEvent } from "../Api/Events/Ui/ButtonActionBarEvent";
+import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
@@ -219,10 +220,10 @@ export function handleMenuUnregisterEvent(menuName: string) {
 }
 
 export function getProfileUrl() {
-    return (
-        PUSHER_URL +
-        `/profile-callback?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`
-    );
+    return new URL(
+        `profile-callback?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`,
+        ABSOLUTE_PUSHER_URL
+    ).toString();
 }
 
 function createAdditionalButtonsMenu() {

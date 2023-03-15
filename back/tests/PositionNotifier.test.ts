@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import "jasmine";
+import { describe, expect, it } from "vitest";
 import { PositionNotifier } from "../src/Model/PositionNotifier";
 import { User, UserSocket } from "../src/Model/User";
 import { Zone } from "../src/Model/Zone";
 import { Movable } from "../src/Model/Movable";
 import { PositionInterface } from "../src/Model/PositionInterface";
 import { ZoneSocket } from "../src/RoomManager";
-import { AvailabilityStatus } from "../src/Messages/generated/messages_pb";
+import { AvailabilityStatus } from "@workadventure/messages";
 import { BrothersFinder } from "../src/Model/BrothersFinder";
 
 class VoidBrothersFinder implements BrothersFinder {

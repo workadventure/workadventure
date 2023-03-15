@@ -17,7 +17,7 @@ test.setTimeout(180000);
 test.describe('Variables', () => {
   // WARNING: Since this test restarts traefik and other components, it might fail when run against the vite dev server.
   // when running with --headed you can manually reload the page to avoid this issue.
-  test('storage works', async ({ page }) => {
+  test('storage works @docker', async ({ page }) => {
     await resetRedis();
 
     await Promise.all([rebootBack(), rebootPlay()]);
@@ -130,6 +130,7 @@ test.describe('Variables', () => {
   test('cache doesnt prevent setting a variable in case the map changes', async ({
     page,
     browser,
+    request,
   }) => {
     // Let's start by visiting a map that DOES not have the variable.
 
@@ -170,8 +171,11 @@ test.describe('Variables', () => {
 
     // Let's check the pusher getRooms endpoint returns 2 users on the map
     await expect.poll(async () => {
-      const rooms = await getPusherRooms();
-      return rooms['http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'];
+      const rooms = await getPusherRooms(request);
+      const json = await rooms.json();
+      // Note: the value can come from http or https (in case of single domain test)
+      const users = (json['http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'] ?? 0) + (json['https://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'] ?? 0);
+      return users;
     }).toBe(2);
 
     await page2.close();

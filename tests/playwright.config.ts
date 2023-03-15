@@ -27,6 +27,8 @@ const config: PlaywrightTestConfig = {
   retries: process.env.CI ? 2 : 0,
   /* Opt out of parallel tests. */
   workers: 1,
+  /* Limit failures to 9 in CI (to finish early) */
+  maxFailures: process.env.CI ? 9 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
     ['html'],
@@ -52,6 +54,7 @@ const config: PlaywrightTestConfig = {
       use: {
         ...devices['Desktop Chrome'],
         permissions: ["microphone","camera"],
+        ignoreHTTPSErrors: true,
         launchOptions: {
           args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
         },
@@ -69,6 +72,7 @@ const config: PlaywrightTestConfig = {
             "permissions.default.camera": 1,
           },
         },
+        ignoreHTTPSErrors: true,
         ...devices['Desktop Firefox'],
       },
     },
@@ -76,6 +80,7 @@ const config: PlaywrightTestConfig = {
     {
       name: 'webkit',
       use: {
+        ignoreHTTPSErrors: true,
         ...devices['Desktop Safari'],
       },
     },

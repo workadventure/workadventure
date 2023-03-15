@@ -21,7 +21,7 @@ import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { GameMapProperties } from "@workadventure/map-editor";
 import { connectionManager } from "../../Connexion/ConnectionManager";
-import { slugifyJitsiRoomName } from "@workadventure/shared-utils/src/Jitsi/slugify";
+import { Jitsi } from "@workadventure/shared-utils";
 
 interface OpenCoWebsite {
     actionId: string;
@@ -79,7 +79,7 @@ export class GameMapPropertiesListener {
                 }
             }
             const openJitsiRoomFunction = async () => {
-                const roomName = slugifyJitsiRoomName(newValue.toString(), this.scene.roomUrl, allProps);
+                const roomName = Jitsi.slugifyJitsiRoomName(newValue.toString(), this.scene.roomUrl, allProps);
                 let jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
 
                 let jwt: string | undefined;

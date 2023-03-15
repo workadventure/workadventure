@@ -43,7 +43,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: npm run ts-proto && npm run proto
+        run: npm run ts-proto
         working-directory: "messages"
 
       - name: "Generate i18n files"
@@ -186,7 +186,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: npm run proto && npm run ts-proto && npm run copy-to-back
+        run: npm run ts-proto
         working-directory: "messages"
 
       - name: "Typecheck"
@@ -197,7 +197,7 @@ jobs:
         run: npm run lint
         working-directory: "back"
 
-      - name: "Jasmine"
+      - name: "Unit tests"
         run: npm test
         working-directory: "back"
 
@@ -261,7 +261,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: npm run ts-proto && npm run proto
+        run: npm run ts-proto
         working-directory: "messages"
 
       - name: "Typecheck"
@@ -309,7 +309,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: npm run ts-proto && npm run proto
+        run: npm run ts-proto
         working-directory: "messages"
 
       - name: "Typecheck"

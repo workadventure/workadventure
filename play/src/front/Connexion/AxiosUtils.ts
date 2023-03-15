@@ -3,11 +3,18 @@ import axiosRetry, { isNetworkOrIdempotentRequestError } from "axios-retry";
 import { errorStore } from "../Stores/ErrorStore";
 import LL from "../../i18n/i18n-svelte";
 import { get } from "svelte/store";
+import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
+
+export const axiosToPusher = axios.create({
+    baseURL: ABSOLUTE_PUSHER_URL,
+});
 
 /**
  * This instance of Axios will retry in case of an issue and display an error message as a HTML overlay.
  */
-export const axiosWithRetry = axios.create();
+export const axiosWithRetry = axios.create({
+    baseURL: ABSOLUTE_PUSHER_URL,
+});
 
 axiosRetry(axiosWithRetry, {
     retryDelay: (retryCount: number) => {
