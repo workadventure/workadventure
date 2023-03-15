@@ -195,7 +195,7 @@ class MapsManager {
                     console.log(`saving map ${key}`);
                     const gameMap = this.loadedMaps.get(key);
                     if (gameMap) {
-                        await fileSystem.writeStringAsFile(key, JSON.stringify(gameMap.getMap()));
+                        await fileSystem.writeStringAsFile(key, JSON.stringify(gameMap.getWam()));
                     }
                     const lastChangeTimestamp = this.mapLastChangeTimestamp.get(key);
                     if (lastChangeTimestamp === undefined) {

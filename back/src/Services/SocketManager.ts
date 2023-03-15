@@ -1128,9 +1128,13 @@ export class SocketManager {
     }
 
     handleEditMapCommandMessage(room: GameRoom, user: User, message: EditMapCommandMessage) {
+        if (!room.wamUrl) {
+            emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
+            return;
+        }
         const messageWithKey = new EditMapCommandWithKeyMessage();
         messageWithKey.setEditmapcommandmessage(message);
-        messageWithKey.setMapkey(room.mapUrl);
+        messageWithKey.setMapkey(room.wamUrl);
 
         getMapStorageClient().handleEditMapCommandWithKeyMessage(
             messageWithKey,

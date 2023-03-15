@@ -139,6 +139,7 @@ export class GameRoom implements BrothersFinder {
             mapDetails.thirdParty ?? undefined,
             mapDetails.editable ?? false
         );
+        gameRoom._wamUrl = mapDetails.wamUrl;
         gameRoom._mapUrl = await mapFetcher.getMapUrl(
             mapDetails.mapUrl,
             mapDetails.wamUrl,
@@ -1034,6 +1035,10 @@ export class GameRoom implements BrothersFinder {
 
     get mapUrl(): string {
         return this._mapUrl;
+    }
+
+    get wamUrl(): string | undefined {
+        return this._wamUrl;
     }
 
     public destroy(): void {

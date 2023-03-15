@@ -103,6 +103,10 @@ export class GameMap {
         return this.map;
     }
 
+    public getWam(): WAMFileFormat | undefined {
+        return this.wam;
+    }
+
     public findLayer(layerName: string): ITiledMapLayer | undefined {
         return this.flatLayers.find((layer) => layer.name === layerName);
     }

@@ -13,6 +13,7 @@ import { mapPathUsingDomain } from "./Services/PathMapper";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import bodyParser from "body-parser";
 import { WAMFileFormat } from "@workadventure/map-editor";
+import path from "path";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -37,18 +38,19 @@ app.use(passport.initialize());
 
 app.get("*.wam", (req, res, next) => {
     (async () => {
-        const path = req.url;
+        const wamPath = req.url;
         const domain = req.hostname;
-        if (path.includes("..") || domain.includes("..")) {
+        if (wamPath.includes("..") || domain.includes("..")) {
             res.status(400).send("Invalid request");
             return;
         }
-        const key = mapPathUsingDomain(path, domain);
+        const key = mapPathUsingDomain(wamPath, domain);
         const file = await fileSystem.readFileAsString(key);
         const wam = WAMFileFormat.parse(JSON.parse(file));
 
         // TODO: Don't need to fetch tmj map here, fill up GameMap on map-storage side with a ITiledMap mock
-        const tmjFile = await fileSystem.readFileAsString(wam.mapUrl);
+        const tmjMapUrl = path.normalize(`${path.dirname(key)}/${wam.mapUrl}`);
+        const tmjFile = await fileSystem.readFileAsString(tmjMapUrl);
         const map = ITiledMap.parse(JSON.parse(tmjFile));
 
         if (!mapsManager.isMapAlreadyLoaded(key)) {
