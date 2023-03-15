@@ -1,21 +1,17 @@
-import { ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import _ from "lodash";
-import { EntityData } from "../types";
-import type { GameMap } from "./GameMap";
+import { EntityData, WAMFileFormat } from "../types";
 
 export class GameMapEntities {
-    private gameMap: GameMap;
+    private wam: WAMFileFormat;
 
     private entities: Map<string, EntityData> = new Map<string, EntityData>();
 
     private readonly MAP_PROPERTY_ENTITIES_NAME: string = "entities";
 
-    constructor(gameMap: GameMap) {
-        this.gameMap = gameMap;
+    constructor(wam: WAMFileFormat) {
+        this.wam = wam;
 
-        const entitiesData = EntityData.array().parse(structuredClone(this.getEntitiesMapProperty()?.value ?? []));
-
-        for (const entityData of entitiesData) {
+        for (const entityData of this.wam.entities) {
             this.addEntity(entityData, false);
         }
     }
@@ -26,7 +22,7 @@ export class GameMapEntities {
         }
         this.entities.set(entityData.id, entityData);
         if (addToMapProperties) {
-            return this.addEntityToMapProperties(entityData);
+            return this.addEntityToWAM(entityData);
         }
         return true;
     }
@@ -38,7 +34,7 @@ export class GameMapEntities {
     public deleteEntity(id: string): boolean {
         const deleted = this.entities.delete(id);
         if (deleted) {
-            return this.deleteEntityFromMapProperties(id);
+            return this.deleteEntityFromWAM(id);
         }
         return false;
     }
@@ -49,74 +45,39 @@ export class GameMapEntities {
             throw new Error(`Entity of id: ${id} does not exists!`);
         }
         _.merge(entity, config);
-        this.updateEntityInMapProperties(entity);
+        this.updateEntityInWAM(entity);
         return entity;
     }
 
-    private addEntityToMapProperties(entityData: EntityData): boolean {
-        if (this.gameMap.getMap().properties === undefined) {
-            this.gameMap.getMap().properties = [];
-        }
-        if (!this.getEntitiesMapProperty()) {
-            this.gameMap.getMap().properties?.push({
-                name: this.MAP_PROPERTY_ENTITIES_NAME,
-                type: "class",
-                value: JSON.parse(JSON.stringify([])) as Json,
-            });
-        }
-        const entitiesPropertyValues = JSON.parse(JSON.stringify(this.getEntitiesMapProperty()?.value)) as EntityData[];
-
-        if (entitiesPropertyValues.find((entity) => entity.id === entityData.id)) {
-            console.warn(`ADD ENTITY FAIL: ENTITY OF ID ${entityData.id} ALREADY EXISTS WITHIN THE GAMEMAP!`);
+    private addEntityToWAM(entityData: EntityData): boolean {
+        if (!this.wam.entities.find((entity) => entity.id === entityData.id)) {
+            this.wam.entities.push(entityData);
+        } else {
+            console.warn(`ADD ENTITY FAIL: ENTITY OF ID ${entityData.id} ALREADY EXISTS WITHIN WAM FILE!`);
             return false;
         }
-        entitiesPropertyValues.push(entityData);
-
-        const entitiesMapProperty = this.getEntitiesMapProperty();
-        if (entitiesMapProperty !== undefined) {
-            entitiesMapProperty.value = structuredClone(entitiesPropertyValues) as unknown as Json;
-        }
-
         return true;
     }
 
-    private deleteEntityFromMapProperties(id: string): boolean {
-        const entitiesPropertyValues = JSON.parse(JSON.stringify(this.getEntitiesMapProperty()?.value)) as EntityData[];
-        const indexToRemove = entitiesPropertyValues.findIndex((entityData) => entityData.id === id);
+    private deleteEntityFromWAM(id: string): boolean {
+        const indexToRemove = this.wam.entities.findIndex((entityData) => entityData.id === id);
         if (indexToRemove !== -1) {
-            entitiesPropertyValues.splice(indexToRemove, 1);
-            const entitiesMapProperty = this.getEntitiesMapProperty();
-            if (entitiesMapProperty !== undefined) {
-                entitiesMapProperty.value = JSON.parse(JSON.stringify(entitiesPropertyValues)) as Json;
-                return true;
-            } else {
-                return false;
-            }
-        }
-        return false;
-    }
-
-    private updateEntityInMapProperties(entityData: EntityData): boolean {
-        const entitiesPropertyValue = this.getEntitiesMapProperty()?.value as unknown as EntityData[];
-
-        const entityIndex = entitiesPropertyValue.findIndex((entity) => entity.id === entityData.id);
-
-        if (entityIndex === -1) {
-            console.warn(`CANNOT FIND ENTITY WITH ID: ${entityData.id} IN MAP PROPERTIES!`);
-            return false;
-        }
-
-        const entitiesMapProperty = this.getEntitiesMapProperty();
-        if (entitiesMapProperty !== undefined) {
-            entitiesPropertyValue[entityIndex] = entityData;
-            entitiesMapProperty.value = JSON.parse(JSON.stringify(entitiesPropertyValue)) as Json;
+            this.wam.entities.splice(indexToRemove, 1);
             return true;
         }
         return false;
     }
 
-    private getEntitiesMapProperty(): ITiledMapProperty | undefined {
-        return this.gameMap.getMapPropertyByKey(this.MAP_PROPERTY_ENTITIES_NAME);
+    private updateEntityInWAM(entityData: EntityData): boolean {
+        const entityIndex = this.wam.entities.findIndex((entity) => entity.id === entityData.id);
+
+        if (entityIndex === -1) {
+            console.warn(`CANNOT FIND ENTITY WITH ID: ${entityData.id} IN WAM FILE!`);
+            return false;
+        }
+
+        this.wam.entities[entityIndex] = entityData;
+        return true;
     }
 
     public getEntities(): EntityData[] {

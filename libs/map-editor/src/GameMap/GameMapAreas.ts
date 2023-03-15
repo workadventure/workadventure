@@ -29,8 +29,6 @@ export class GameMapAreas {
     constructor(wam: WAMFileFormat) {
         this.wam = wam;
 
-        console.log(this.wam);
-
         for (const areaData of this.wam.areas) {
             this.addArea(areaData, AreaType.Static, false);
         }

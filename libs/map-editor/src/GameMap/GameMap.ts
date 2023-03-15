@@ -50,7 +50,7 @@ export class GameMap {
         console.log(this.wam);
         if (this.wam) {
             this.gameMapAreas = new GameMapAreas(this.wam);
-            this.gameMapEntities = new GameMapEntities(this);
+            this.gameMapEntities = new GameMapEntities(this.wam);
         }
 
         for (const tileset of this.map.tilesets) {
