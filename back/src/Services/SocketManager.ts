@@ -112,26 +112,30 @@ export class SocketManager {
         let commandsToApply: EditMapCommandMessage[] | undefined = undefined;
 
         if (lastCommandId) {
-            const updateMapToNewestMessage = new UpdateMapToNewestMessage();
-            updateMapToNewestMessage.setCommandid(lastCommandId.getValue());
+            if (room.wamUrl) {
+                const updateMapToNewestMessage = new UpdateMapToNewestMessage();
+                updateMapToNewestMessage.setCommandid(lastCommandId.getValue());
 
-            const updateMapToNewestWithKeyMessage = new UpdateMapToNewestWithKeyMessage();
-            updateMapToNewestWithKeyMessage.setMapkey(room.mapUrl);
-            updateMapToNewestWithKeyMessage.setUpdatemaptonewestmessage(updateMapToNewestMessage);
+                const updateMapToNewestWithKeyMessage = new UpdateMapToNewestWithKeyMessage();
+                updateMapToNewestWithKeyMessage.setMapkey(room.wamUrl);
+                updateMapToNewestWithKeyMessage.setUpdatemaptonewestmessage(updateMapToNewestMessage);
 
-            commandsToApply = await new Promise<EditMapCommandMessage[]>((resolve, reject) => {
-                getMapStorageClient().handleUpdateMapToNewestMessage(
-                    updateMapToNewestWithKeyMessage,
-                    (err: unknown, message: EditMapCommandsArrayMessage) => {
-                        if (err) {
-                            emitError(user.socket, err);
-                            reject(err);
-                            return;
+                commandsToApply = await new Promise<EditMapCommandMessage[]>((resolve, reject) => {
+                    getMapStorageClient().handleUpdateMapToNewestMessage(
+                        updateMapToNewestWithKeyMessage,
+                        (err: unknown, message: EditMapCommandsArrayMessage) => {
+                            if (err) {
+                                emitError(user.socket, err);
+                                reject(err);
+                                return;
+                            }
+                            resolve(message.getEditmapcommandsList());
                         }
-                        resolve(message.getEditmapcommandsList());
-                    }
-                );
-            });
+                    );
+                });
+            } else {
+                emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
+            }
         }
 
         if (!socket.writable) {

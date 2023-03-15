@@ -35,7 +35,6 @@ export class GameMap {
     public readonly tiledObjects: ITiledMapObject[];
 
     private readonly DEFAULT_TILE_SIZE = 32;
-    private readonly MAP_PROPERTY_LAST_COMMAND_ID_KEY: string = "lastCommandId";
 
     public exitUrls: Array<string> = [];
 
@@ -234,21 +233,14 @@ export class GameMap {
     }
 
     public updateLastCommandIdProperty(commandId: string): void {
-        const property = this.getMapPropertyByKey(this.MAP_PROPERTY_LAST_COMMAND_ID_KEY);
-        if (!property) {
-            this.map.properties?.push({
-                name: this.MAP_PROPERTY_LAST_COMMAND_ID_KEY,
-                type: "string",
-                propertytype: "string",
-                value: commandId,
-            });
-        } else {
-            property.value = commandId;
+        if (!this.wam) {
+            return;
         }
+        this.wam.lastCommandId = commandId;
     }
 
     public getLastCommandId(): string | undefined {
-        return (this.getMapPropertyByKey(this.MAP_PROPERTY_LAST_COMMAND_ID_KEY)?.value as string) ?? undefined;
+        return this.wam?.lastCommandId;
     }
 
     public getMapPropertyByKey(key: string): ITiledMapProperty | undefined {

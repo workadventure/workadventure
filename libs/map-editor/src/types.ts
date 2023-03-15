@@ -131,6 +131,7 @@ export const WAMFileFormat = z.object({
     mapUrl: z.string(),
     entities: z.array(EntityData),
     areas: z.array(AreaData),
+    lastCommandId: z.string().optional(),
 });
 
 export type EntityRawPrefab = z.infer<typeof EntityRawPrefab>;
