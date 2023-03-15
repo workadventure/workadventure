@@ -244,7 +244,45 @@ Assuming your ZIP file contains a map named `somedir/my-map.tmj`, you can connec
 
 Are you connected? Congratulations! Share the URL with your friends and start using WorkAdventure!
 
-Not working? Read below.
+Not working? Jump to the [troubleshooting section](#troubleshooting).
+
+### Post-installation steps
+
+You can now customize your WorkAdventure instance by modifying the `.env` file.
+
+Please be sure to configure Jitsi, as it is the default video conferencing solution for large room,
+and Turn settings to ensure video is correctly relayed, even if your clients are in a restricted network.
+
+Keeping your server secure is also important. You can configure the `SECURITY_EMAIL` environment variable
+to receive security notifications from the WorkAdventure core team.
+You will be notified if your WorkAdventure version contains a known security flaw.
+
+If you want to connect WorkAdventure to an authentication provider, you can follow the [OpenID Connect documentation](../../docs/dev/openid.md).
+
+## Upgrading WorkAdventure
+
+The upgrade path will depend on the installation of WorkAdventure you are using.
+
+#### If you are using the `docker-compose.prod.yaml` file without any changes:
+
+- Download the `docker-compose.prod.yaml` for the version you want to upgrade to and replace it on your server
+- Now, edit the `.env` file and change the `VERSION` to the matching version.
+- Read the upgrade notes for the version you are upgrading to (see the [releases page](https://github.com/thecodingmachine/workadventure/releases/)), 
+  and apply any changes if needed (this might often be an additional variable to add to the `.env` file)
+
+Then, simply run:
+
+```console
+docker-compose up -d --force-recreate
+```
+
+#### If you are using a custom deployment method:
+
+The upgrade path will of course depend on your deployment method. Here are some tips to make it easy:
+
+- Download the `docker-compose.prod.yaml` for the version you want to upgrade to.
+- Download the `docker-compose.prod.yaml` for your current version.
+- Compare the two files. The differences will be the changes you need to apply to your deployment method.
 
 ## Troubleshooting
 
