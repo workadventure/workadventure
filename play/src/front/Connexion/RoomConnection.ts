@@ -1,4 +1,4 @@
-import { ENABLE_FEATURE_MAP_EDITOR, PUSHER_URL, UPLOADER_URL } from "../Enum/EnvironmentVariable";
+import { ENABLE_FEATURE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
@@ -74,6 +74,7 @@ import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 import { assertObjectKeys } from "../Utils/CustomTypeGuards";
+import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
@@ -215,7 +216,7 @@ export class RoomConnection implements RoomConnection {
         availabilityStatus: AvailabilityStatus,
         lastCommandId?: string
     ) {
-        let url = new URL(PUSHER_URL, window.location.toString()).toString();
+        let url = ABSOLUTE_PUSHER_URL;
         url = url.replace("http://", "ws://").replace("https://", "wss://");
         if (!url.endsWith("/")) {
             url += "/";

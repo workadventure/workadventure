@@ -6,7 +6,7 @@ type BoolAsString = z.infer<typeof BoolAsString>;
 const PositiveIntAsString = z.string().regex(/^\d*$/, { message: "Must be a positive integer number" });
 type PositiveIntAsString = z.infer<typeof PositiveIntAsString>;
 
-const AbsoluteOrRelativeUrl = z.string().url().or(z.string().startsWith("/"));
+const AbsoluteOrRelativeUrl = z.string().url().or(z.string().startsWith("/")).or(z.literal(""));
 
 const EnvironmentVariables = z.object({
     PLAY_URL: z.string().url(),

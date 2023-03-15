@@ -47,7 +47,7 @@ services:
       - DISABLE_ANONYMOUS
       - DISABLE_NOTIFICATIONS
       - SECRET_KEY
-      - API_URL
+      - API_URL=back:50051
       - FRONT_URL=https://${FRONT_HOST}
       - CHAT_URL=https://${CHAT_HOST}
       - PUBLIC_MAP_STORAGE_URL=https://${MAP_STORAGE_HOST}
@@ -65,6 +65,8 @@ services:
       # Report issues menu
       - ENABLE_REPORT_ISSUES_MENU=${ENABLE_REPORT_ISSUES_MENU}
       - REPORT_ISSUES_URL=${REPORT_ISSUES_URL}
+      - ENABLE_OPENAPI_ENDPOINT=true
+      - ADMIN_API_TOKEN
     labels:
       traefik.enable: "true"
       traefik.http.routers.play.rule: "Host(`${FRONT_HOST}`)"
@@ -215,6 +217,11 @@ services:
     image: thecodingmachine/workadventure-map-storage:${VERSION}
     environment:
       PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
+      AUTHENTICATION_STRATEGY: "$MAP_STORAGE_AUTHENTICATION_STRATEGY"
+      AUTHENTICATION_USER: "$MAP_STORAGE_AUTHENTICATION_USER"
+      AUTHENTICATION_PASSWORD: "$MAP_STORAGE_AUTHENTICATION_PASSWORD"
+      AUTHENTICATION_TOKEN: "$MAP_STORAGE_AUTHENTICATION_TOKEN"
+
     labels:
       traefik.enable: "true"
       traefik.http.routers.map-storage.rule: "Host(`${MAP_STORAGE_HOST}`)"

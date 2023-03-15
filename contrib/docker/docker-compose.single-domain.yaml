@@ -4,10 +4,10 @@ services:
     environment:
       - PUSHER_URL=/
       - ICON_URL=/icon
-      - API_URL=/api
       - FRONT_URL=/
-      - CHAT_URL=/chat
+      - CHAT_URL=/chat/
       - UPLOADER_URL=/uploader
+      - PUBLIC_MAP_STORAGE_URL=/map-storage
     labels:
       traefik.http.routers.play.rule: "Host(`${DOMAIN}`) && PathPrefix(`/`)"
       traefik.http.routers.play-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/`)"
@@ -16,6 +16,7 @@ services:
     environment:
       - PUSHER_URL=/
       - UPLOADER_URL=/uploader
+      - EJABBERD_WS_URI=wss://${DOMAIN}/xmpp/ws
     labels:
       traefik.http.middlewares.strip-chat-prefix.stripprefix.prefixes: "/chat"
       traefik.http.routers.chat.rule: "Host(`${DOMAIN}`) && PathPrefix(`/chat`)"
@@ -26,6 +27,7 @@ services:
   back:
     environment:
       - PUBLIC_MAP_STORAGE_URL=/map-storage
+      - PLAY_URL=https://${DOMAIN}
     labels:
       traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes: "/api"
       traefik.http.routers.back.rule: "Host(`${DOMAIN}`) && PathPrefix(`/api`)"

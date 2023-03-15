@@ -310,7 +310,7 @@ services:
         - "traefik.enable=true"
         - "traefik.http.routers.xmpp.rule=Host(`xmpp.workadventure.localhost`)"
         - "traefik.http.routers.xmpp.entryPoints=web"
-        - "traedocfik.http.services.xmpp.loadbalancer.server.port=5443"
+        - "traefik.http.services.xmpp.loadbalancer.server.port=5443"
 
     # A mock server to test OpenID connect connectivity
     oidc-server-mock:

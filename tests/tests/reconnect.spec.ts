@@ -4,7 +4,7 @@ import { login } from './utils/roles';
 
 test.setTimeout(180_000);
 test.describe('Connection', () => {
-  test('can succeed even if WorkAdventure starts while pusher is down', async ({ page }) => {
+  test('can succeed even if WorkAdventure starts while pusher is down @docker', async ({ page }) => {
     await page.goto(
       'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json'
     );

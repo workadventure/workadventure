@@ -15,6 +15,7 @@ export default defineConfig({
             clientPort: 80,
         },
     },
+    base: "./",
     build: {
         sourcemap: true,
         rollupOptions: {
