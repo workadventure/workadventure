@@ -34,9 +34,13 @@ export class BroadcastService {
             }
         });
 
-        //libJitsiFactory.createConnection("jitsi.test.workadventu.re", "prosody.test.workadventu.re", "muc.prosody.test.workadventu.re").then((connection) => {
         libJitsiFactory
-            .createConnection("coremeet.workadventu.re", "prosody.workadventu.re", "muc.prosody.workadventu.re")
+            .createConnection(
+                "jitsi.test.workadventu.re",
+                "prosody.test.workadventu.re",
+                "muc.prosody.test.workadventu.re"
+            )
+            //.createConnection("coremeet.workadventu.re", "prosody.workadventu.re", "muc.prosody.workadventu.re")
             .then(async (connection) => {
                 this.jitsiConference = await JitsiConferenceWrapper.join(connection, "conferencetestfromjitsilib");
                 jitsiConferencesStore.set("conferencetestfromjitsilib", this.jitsiConference);
