@@ -1,9 +1,9 @@
 <script lang="ts">
     import { userStore } from "../../Stores/LocalUserStore";
     import { iframeListener } from "../../IframeListener";
-    import Chat from "./Chat.svelte";
+    import Chat from "./View/Chat.svelte";
     import LL from "../../i18n/i18n-svelte";
-    import Header from "./Header.svelte";
+    import Header from "./Ui/Header.svelte";
 
     window.addEventListener("load", () => {
         iframeListener.sendChatIsReady();
@@ -19,7 +19,7 @@
 </script>
 
 <aside class="chatWindow tw-h-full tw-backdrop-blur-sm" bind:this={chatWindowElement}>
-    <section class="tw-p-0 tw-m-0 tw-w-full tw-overflow-x-hidden">
+    <section class="tw-p-0 tw-m-0 tw-w-full tw-overflow-x-hidden tw-relative">
         {#if !$userStore?.matrixUserId}
             <Header />
             <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { XIcon } from "svelte-feather-icons";
-    import { chatConnectionManager } from "../../Connection/ChatConnectionManager";
-    import Button from "./Button.svelte";
+    import { chatConnectionManager } from "../../../Connection/ChatConnectionManager";
+    import Button from "../Ui/Button.svelte";
 
     let name = "";
     export let close: () => void;

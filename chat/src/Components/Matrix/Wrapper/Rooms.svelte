@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { chatConnectionManager } from "../../Connection/ChatConnectionManager";
+    import { chatConnectionManager } from "../../../Connection/ChatConnectionManager";
     import Line from "./Line.svelte";
     import { get } from "svelte/store";
 

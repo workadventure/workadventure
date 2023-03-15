@@ -1,6 +1,6 @@
 <script lang="ts">
-    import Bubble from "./Bubble.svelte";
-    import { locale } from "../../i18n/i18n-svelte";
+    import Bubble from "../Ui/Bubble.svelte";
+    import { locale } from "../../../i18n/i18n-svelte";
     export let type: string;
     export let text: string;
     export let author: string;
@@ -9,7 +9,7 @@
     export let showAuthor: boolean = true;
 </script>
 
-<div id="message" class={`${type} ${type === "sent" ? "animation-slide-in-right" : "animation-slide-in-left"}`}>
+<div id="message" class={`${type} ${type === "sent" ? "animation-slide-in-right" : "animation-slide-in-left"} ${showAuthor ? 'author-shown':''}`}>
     <div class="content">
         <div class={`avatar ${showAvatar ? "" : "tw-opacity-0"}`}>
             <img src="https://via.placeholder.com/30" alt="avatar" />
@@ -84,5 +84,9 @@
                 }
             }
         }
+
+		&.author-shown{
+			@apply tw-mt-2;
+		}
     }
 </style>

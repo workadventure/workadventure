@@ -2,11 +2,11 @@
     import { MatrixEvent, Room } from "matrix-js-sdk";
     import { Writable } from "svelte/store";
     import { MoreHorizontalIcon } from "svelte-feather-icons";
-    import Button from "./Button.svelte";
-    import { selectedRoom } from "../../Stores/MatrixStore";
-    import { RoomWrapper } from "../../Matrix/MatrixClient";
-    import * as MatrixEventsUtils from "../../Utils/MatrixEventUtils";
-    import { chatConnectionManager } from "../../Connection/ChatConnectionManager";
+    import Button from "../Ui/Button.svelte";
+    import { selectedRoom } from "../../../Stores/MatrixStore";
+    import { RoomWrapper } from "../../../Matrix/MatrixClient";
+    import * as MatrixEventsUtils from "../../../Utils/MatrixEventUtils";
+    import { chatConnectionManager } from "../../../Connection/ChatConnectionManager";
 
     let lineDiv: HTMLDivElement;
     export let roomWrapper: RoomWrapper;

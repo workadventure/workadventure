@@ -223,6 +223,12 @@ aside.chatWindow nav ul li.active{
 .animation-slide-out-right{
     animation: slideOutRight 150ms ease-in;
 }
+.animation-slide-out-left{
+    animation: slideOutLeft 150ms ease-in;
+}
+.animation-slide-in-up{
+    animation: slideInUp 150ms ease-in;
+}
 
 
 @keyframes slideInRight {
@@ -259,5 +265,29 @@ aside.chatWindow nav ul li.active{
     100% {
         transform: translateX(25%);
         opacity: 0;
+    }
+}
+@keyframes slideOutLeft {
+    0% {
+        transform: translateX(0px);
+    }
+    80% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(-25%);
+        opacity: 0;
+    }
+}
+@keyframes slideInUp {
+    0% {
+        transform: translateY(25%);
+        opacity: 0;
+    }
+    80% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(0px);
     }
 }

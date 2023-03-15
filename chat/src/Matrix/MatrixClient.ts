@@ -74,14 +74,31 @@ export class MatrixClient {
                 cryptoStore: new sdk.IndexedDBCryptoStore(global.indexedDB, "crypto-store"),
             });
 
-            client.on(sdk.RoomEvent.Timeline, (message: MatrixEvent, room) => {
-                console.warn("MatrixClient => start => RoomEvent.Timeline", message.event.type, message, room);
+            client.on(sdk.RoomEvent.Timeline, async (message: MatrixEvent, room) => {
+                debugLog("MatrixClient => start => RoomEvent.Timeline", message.event.type, message, room);
                 if (room) {
                     const room_ = this.getRoomOrCreate(room);
                     if (message.event.type === "m.room.name") {
                         room_.room.set(room);
                     }
-                    console.log("message added to room");
+                    try {
+                        let body = 'encrypted';
+                        if (message.event.type === 'm.room.encrypted') {
+                            const event = await client.crypto?.decryptEvent(message);
+                            if (event) {
+                                ({body} = event.clearEvent.content);
+                            }
+                        } else {
+                            if(message.event.content) {
+                                ({body} = message.event.content);
+                            }
+                        }
+                        if (body && message.event.content) {
+                            message.event.content.body = body;
+                        }
+                    } catch (error) {
+                        console.error('#### ', error);
+                    }
                     room_.messages.update((messages) => {
                         messages.push(message);
                         return messages;
@@ -89,6 +106,7 @@ export class MatrixClient {
                     this.rooms.update(room_);
                 }
             });
+
 
             client.on(sdk.ClientEvent.Sync, (state, prevState) => {
                 switch (state) {
@@ -182,5 +200,13 @@ export class MatrixClient {
             this.rooms.push(room_);
         }
         return room_;
+    }
+
+
+    get userId(): string {
+        if(!this._userId){
+            throw new Error("User ID is not defined");
+        }
+        return this._userId;
     }
 }
