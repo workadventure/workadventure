@@ -9,8 +9,8 @@ infrastructure, and maintenance, which may not be feasible or practical for all 
 
 In order to self-host WorkAdventure, you will need:
 
-- at least 3 servers (recommended) to host WorkAdventure, Jitsi and Coturn
-- at least 3 domain names (one for each server)
+- at least one server for WorkAdventure, with a public facing IP and a DNS name
+- in addition, WorkAdventure requires to have 2 additional services: Jitsi and Coturn. In a typical setup, those services will be hosted on 2 additional servers (both with a public facing IP address and a DNS name)
 - a strong technical expertise regarding Docker and containers
 - a good understanding of networking concepts
 - ... and time (!), to keep up with the updates (about once a month)
