@@ -5,7 +5,7 @@
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { srcObject } from "./utils";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
-    import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
+    import type { EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { Color } from "@workadventure/shared-utils";

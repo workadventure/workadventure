@@ -7,7 +7,7 @@
     import Woka from "../Woka/Woka.svelte";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import { onDestroy, onMount } from "svelte";
-    import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
+    import type { EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import BanReportBox from "./BanReportBox.svelte";
