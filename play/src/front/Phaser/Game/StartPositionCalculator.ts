@@ -1,4 +1,4 @@
-import { AreaType, GameMapProperties } from "@workadventure/map-editor";
+import { GameMapProperties } from "@workadventure/map-editor";
 import { MathUtils } from "@workadventure/math-utils";
 import type {
     ITiledMap,
@@ -53,7 +53,7 @@ export class StartPositionCalculator {
             }
         }
 
-        const areas = this.gameMapFrontWrapper.getAreas(AreaType.Static);
+        const areas = this.gameMapFrontWrapper.getAreas();
 
         if (areas) {
             for (const area of Array.from(areas.values())) {
@@ -129,7 +129,7 @@ export class StartPositionCalculator {
     }
 
     private initPositionFromArea(startPositionName: string, needStartProperty = false): boolean {
-        const area = this.gameMapFrontWrapper.getAreaByName(startPositionName, AreaType.Static);
+        const area = this.gameMapFrontWrapper.getAreaByName(startPositionName);
         if (area) {
             if (needStartProperty) {
                 if (!area.properties["start"]) {

@@ -16,11 +16,6 @@ export type CommandConfig =
 
 export type AtLeast<T, K extends keyof T> = Partial<T> & Pick<T, K>;
 
-export enum AreaType {
-    Static = "Static",
-    Dynamic = "Dynamic",
-}
-
 // TODO: This probably won't be used in the future
 export interface PredefinedPropertyData {
     name: string;

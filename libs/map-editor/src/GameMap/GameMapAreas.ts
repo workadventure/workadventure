@@ -1,5 +1,4 @@
 import { AreaData, AreaDataProperties, GameMapProperties, WAMFileFormat } from "../types";
-import { AreaType } from "../types";
 import * as _ from "lodash";
 import { MathUtils } from "@workadventure/math-utils";
 
@@ -18,19 +17,13 @@ export class GameMapAreas {
      * Areas created from within map-editor
      */
     private readonly staticAreas: Map<string, AreaData> = new Map<string, AreaData>();
-    /**
-     * Areas that we can do CRUD operations on via scripting API
-     */
-    private readonly dynamicAreas: Map<string, AreaData> = new Map<string, AreaData>();
-
     private readonly areasPositionOffsetY: number = 16;
-    private readonly MAP_PROPERTY_AREAS_NAME: string = "areas";
 
     constructor(wam: WAMFileFormat) {
         this.wam = wam;
 
         for (const areaData of this.wam.areas) {
-            this.addArea(areaData, AreaType.Static, false);
+            this.addArea(areaData, false);
         }
     }
 
@@ -109,18 +102,13 @@ export class GameMapAreas {
         return areasChange;
     }
 
-    public addArea(
-        area: AreaData,
-        type: AreaType,
-        addToWAM = true,
-        playerPosition?: { x: number; y: number }
-    ): boolean {
-        if (this.getAreas(type).has(area.id)) {
+    public addArea(area: AreaData, addToWAM = true, playerPosition?: { x: number; y: number }): boolean {
+        if (this.staticAreas.has(area.id)) {
             return false;
         }
-        this.getAreas(type).set(area.id, area);
+        this.staticAreas.set(area.id, area);
 
-        if (playerPosition && this.isPlayerInsideAreaByName(area.name, type, playerPosition)) {
+        if (playerPosition && this.isPlayerInsideAreaByName(area.name, playerPosition)) {
             this.triggerSpecificAreaOnEnter(area);
         }
 
@@ -130,23 +118,20 @@ export class GameMapAreas {
         return true;
     }
 
-    public isPlayerInsideArea(id: string, type: AreaType, playerPosition: { x: number; y: number }): boolean {
+    public isPlayerInsideArea(id: string, playerPosition: { x: number; y: number }): boolean {
         return (
-            this.getAreasOnPosition(playerPosition, this.areasPositionOffsetY, type).findIndex(
-                (area) => area.id === id
-            ) !== -1
+            this.getAreasOnPosition(playerPosition, this.areasPositionOffsetY).findIndex((area) => area.id === id) !==
+            -1
         );
     }
 
-    public isPlayerInsideAreaByName(name: string, type: AreaType, position: { x: number; y: number }): boolean {
+    public isPlayerInsideAreaByName(name: string, position: { x: number; y: number }): boolean {
         return (
-            this.getAreasOnPosition(position, this.areasPositionOffsetY, type).findIndex(
-                (area) => area.name === name
-            ) !== -1
+            this.getAreasOnPosition(position, this.areasPositionOffsetY).findIndex((area) => area.name === name) !== -1
         );
     }
-    public updateAreaByName(name: string, type: AreaType, config: Partial<AreaData>): AreaData | undefined {
-        const area = this.getAreaByName(name, type);
+    public updateAreaByName(name: string, config: Partial<AreaData>): AreaData | undefined {
+        const area = this.getAreaByName(name);
         if (!area) {
             return;
         }
@@ -154,8 +139,8 @@ export class GameMapAreas {
         return area;
     }
 
-    public updateAreaById(id: string, type: AreaType, config: Partial<AreaData>): AreaData | undefined {
-        const area = this.getArea(id, type);
+    public updateAreaById(id: string, config: Partial<AreaData>): AreaData | undefined {
+        const area = this.staticAreas.get(id);
         if (!area) {
             return;
         }
@@ -163,40 +148,33 @@ export class GameMapAreas {
         return area;
     }
 
-    public deleteAreaByName(name: string, type: AreaType, playerPosition?: { x: number; y: number }): void {
+    public deleteAreaByName(name: string, playerPosition?: { x: number; y: number }): boolean {
         if (playerPosition) {
-            const area = this.getAreasOnPosition(playerPosition, this.areasPositionOffsetY, type).find(
+            const area = this.getAreasOnPosition(playerPosition, this.areasPositionOffsetY).find(
                 (area) => area.name === name
             );
             if (area) {
                 this.triggerSpecificAreaOnLeave(area);
             }
         }
-        const areas = Array.from(this.getAreas(type).values());
+        const areas = Array.from(this.staticAreas.values());
         const area = areas.find((area) => area.name === name);
         if (area) {
-            const id = area.id;
-            const deleted = this.getAreas(type).delete(id);
-            if (deleted && type === AreaType.Static) {
-                this.deleteStaticArea(id);
-            }
+            return this.deleteStaticArea(area.id);
         }
+        return false;
     }
 
-    public deleteAreaById(id: string, type: AreaType, playerPosition?: { x: number; y: number }): boolean {
+    public deleteAreaById(id: string, playerPosition?: { x: number; y: number }): boolean {
         if (playerPosition) {
-            const area = this.getAreasOnPosition(playerPosition, this.areasPositionOffsetY, type).find(
+            const area = this.getAreasOnPosition(playerPosition, this.areasPositionOffsetY).find(
                 (area) => area.id === id
             );
             if (area) {
                 this.triggerSpecificAreaOnLeave(area);
             }
         }
-        if (type === AreaType.Static) {
-            this.deleteStaticArea(id);
-            return true;
-        }
-        return false;
+        return this.deleteStaticArea(id);
     }
 
     private updateArea(area: AreaData, config: Partial<AreaData>): void {
@@ -236,23 +214,23 @@ export class GameMapAreas {
     }
 
     private deleteStaticArea(id: string): boolean {
-        const deleted = this.getAreas(AreaType.Static).delete(id);
+        const deleted = this.staticAreas.delete(id);
         if (deleted) {
             return this.deleteAreaFromWAM(id);
         }
         return false;
     }
 
-    public getAreas(areaType: AreaType): Map<string, AreaData> {
-        return areaType === AreaType.Dynamic ? this.dynamicAreas : this.staticAreas;
+    public getAreas(): Map<string, AreaData> {
+        return this.staticAreas;
     }
 
-    public getAreaByName(name: string, type: AreaType): AreaData | undefined {
-        return Array.from(this.getAreas(type).values()).find((area) => area.name === name);
+    public getAreaByName(name: string): AreaData | undefined {
+        return Array.from(this.staticAreas.values()).find((area) => area.name === name);
     }
 
-    public getArea(id: string, type: AreaType): AreaData | undefined {
-        return this.getAreas(type).get(id);
+    public getArea(id: string): AreaData | undefined {
+        return this.staticAreas.get(id);
     }
 
     /**
@@ -303,10 +281,8 @@ export class GameMapAreas {
         area.properties[key] = value;
     }
 
-    private getAreasOnPosition(position: { x: number; y: number }, offsetY = 0, areaType?: AreaType): AreaData[] {
-        const areasOfInterest = areaType
-            ? this.getAreas(areaType).values()
-            : [...this.staticAreas.values(), ...this.dynamicAreas.values()];
+    private getAreasOnPosition(position: { x: number; y: number }, offsetY = 0): AreaData[] {
+        const areasOfInterest = [...this.staticAreas.values()];
 
         const overlappedAreas: AreaData[] = [];
         for (const area of areasOfInterest) {

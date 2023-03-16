@@ -1,5 +1,4 @@
 import type { AreaData, CommandConfig } from "@workadventure/map-editor";
-import { AreaType } from "@workadventure/map-editor";
 import type { Subscription } from "rxjs";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
@@ -223,7 +222,7 @@ export class AreaEditorTool extends MapEditorTool {
 
     private handleAreaPreviewUpdate(config: AreaData): void {
         this.areaPreviews.find((area) => area.getConfig().id === config.id)?.updatePreview(config);
-        this.scene.getGameMapFrontWrapper().updateAreaById(config.id, AreaType.Static, config); // TODO: is this line needed?
+        this.scene.getGameMapFrontWrapper().updateAreaById(config.id, config); // TODO: is this line needed?
         this.scene.markDirty();
     }
 
@@ -233,7 +232,7 @@ export class AreaEditorTool extends MapEditorTool {
 
     private createAreaPreviews(): AreaPreview[] {
         this.areaPreviews = [];
-        const areaConfigs = this.scene.getGameMapFrontWrapper().getAreas(AreaType.Static);
+        const areaConfigs = this.scene.getGameMapFrontWrapper().getAreas();
 
         if (areaConfigs) {
             for (const config of Array.from(areaConfigs.values())) {
@@ -287,7 +286,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private updateAreaPreviews(): void {
-        const areaConfigs = this.scene.getGameMapFrontWrapper().getAreas(AreaType.Static);
+        const areaConfigs = this.scene.getGameMapFrontWrapper().getAreas();
 
         // find previews of areas that exist no longer
         const areaPreviewsToDelete: string[] = [];

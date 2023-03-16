@@ -1,6 +1,6 @@
 import { sendUnaryData, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
 import * as _ from "lodash";
-import { AreaData, AreaType, EntityDataProperties } from "@workadventure/map-editor";
+import { AreaData, EntityDataProperties } from "@workadventure/map-editor";
 import { mapsManager } from "./MapsManager";
 import {
     EditMapCommandMessage,
@@ -81,7 +81,7 @@ const mapStorageServer: MapStorageServer = {
             switch (editMapMessage.$case) {
                 case "modifyAreaMessage": {
                     const message = editMapMessage.modifyAreaMessage;
-                    const area = gameMap.getGameMapAreas()?.getArea(message.id, AreaType.Static);
+                    const area = gameMap.getGameMapAreas()?.getArea(message.id);
                     if (area) {
                         const areaObjectConfig: AreaData = structuredClone(area);
                         _.merge(areaObjectConfig, message);

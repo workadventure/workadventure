@@ -140,7 +140,7 @@ import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInt
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
-import { AreaDataProperties, AreaType, GameMap, GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
+import { AreaDataProperties, GameMap, GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
@@ -2070,11 +2070,10 @@ ${escapedMessage}
 
     private setAreaProperty<K extends keyof AreaDataProperties>(
         areaName: string,
-        areaType: AreaType,
         propertyName: K,
         propertyValue: AreaDataProperties[K]
     ): void {
-        this.gameMapFrontWrapper.setAreaProperty(areaName, areaType, propertyName, propertyValue);
+        this.gameMapFrontWrapper.setAreaProperty(areaName, propertyName, propertyValue);
     }
 
     public getMapDirUrl(): string {
