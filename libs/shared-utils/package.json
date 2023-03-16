@@ -20,7 +20,9 @@
   "dependencies": {
     "@workadventure/map-editor": "1.0.0",
     "@workadventure/tiled-map-type-guard": "^2.1.0",
-    "zod": "^3.19.1"
+    "zod": "^3.19.1",
+    "ipaddr.js": "^2.0.1"
+
   },
   "devDependencies": {
     "@jest/globals": "^29.3.1",
