@@ -1,6 +1,7 @@
 import { get, writable } from "svelte/store";
 import type { Streamable } from "./StreamableCollectionStore";
 import { peerStore } from "./PeerStore";
+import { JitsiTrackWrapper } from "../Streaming/Jitsi/JitsiTrackWrapper";
 
 /**
  * A store that contains the peer / media that has currently the "importance" focus.
@@ -31,6 +32,9 @@ export const videoFocusStore = createVideoFocusStore();
 
 peerStore.subscribe((peers) => {
     const focusedMedia: Streamable | null = get(videoFocusStore);
+    if (focusedMedia instanceof JitsiTrackWrapper) {
+        return;
+    }
     if (focusedMedia && focusedMedia.userId !== undefined && !peers.get(focusedMedia.userId)) {
         videoFocusStore.removeFocus();
     }

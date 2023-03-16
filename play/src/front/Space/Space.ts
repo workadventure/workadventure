@@ -66,11 +66,14 @@ export class Space {
                         if (partialUser.tags !== undefined) {
                             user.tags = partialUser.tags;
                         }
-                        if (partialUser.audioSharing !== undefined) {
-                            user.audioSharing = partialUser.audioSharing;
+                        if (partialUser.microphoneState !== undefined) {
+                            user.microphoneState = partialUser.microphoneState;
                         }
-                        if (partialUser.videoSharing !== undefined) {
-                            user.videoSharing = partialUser.videoSharing;
+                        if (partialUser.cameraState !== undefined) {
+                            user.cameraState = partialUser.cameraState;
+                        }
+                        if (partialUser.megaphoneState !== undefined) {
+                            user.megaphoneState = partialUser.megaphoneState;
                         }
                         if (partialUser.screenSharing !== undefined) {
                             user.screenSharing = partialUser.screenSharing;

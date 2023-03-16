@@ -45,9 +45,10 @@ describe("Space", () => {
             roomName: "test",
             isLogged: false,
             availabilityStatus: 0,
-            videoSharing: false,
-            audioSharing: false,
+            cameraState: false,
+            microphoneState: false,
             screenSharing: false,
+            megaphoneState: false,
             characterLayers: [],
             tags: [],
             visitCardUrl: undefined,
@@ -70,9 +71,10 @@ describe("Space", () => {
             roomName: "test2",
             isLogged: true,
             availabilityStatus: 1,
-            videoSharing: true,
-            audioSharing: true,
+            cameraState: true,
+            microphoneState: true,
             screenSharing: true,
+            megaphoneState: true,
             characterLayers: [],
             tags: [],
             visitCardUrl: "test",
@@ -97,8 +99,9 @@ describe("Space", () => {
         expect(user?.roomName).toBe("test2");
         expect(user?.isLogged).toBe(true);
         expect(user?.availabilityStatus).toBe(1);
-        expect(user?.videoSharing).toBe(true);
-        expect(user?.audioSharing).toBe(true);
+        expect(user?.cameraState).toBe(true);
+        expect(user?.microphoneState).toBe(true);
+        expect(user?.megaphoneState).toBe(true);
         expect(user?.screenSharing).toBe(true);
         expect(user?.visitCardUrl).toBe("test");
     });
@@ -152,9 +155,10 @@ describe("Space", () => {
             roomName: "test",
             isLogged: false,
             availabilityStatus: 0,
-            videoSharing: false,
-            audioSharing: false,
+            cameraState: false,
+            microphoneState: false,
             screenSharing: false,
+            megaphoneState: false,
             characterLayers: [],
             tags: [],
             visitCardUrl: undefined,
