@@ -7,6 +7,8 @@ This documentation is targeted at developers looking to open Pull Requests on Wo
 
 If you "only" want to design dynamic maps, please refer instead to the [scripting API documentation](https://workadventu.re/map-building/scripting.md).
 
+If you want to install a production server, please refer to the [install guide](../../contrib/docker/README.md).
+
 ## Contributing
 
 Check out the [contributing guide](../../CONTRIBUTING.md)
