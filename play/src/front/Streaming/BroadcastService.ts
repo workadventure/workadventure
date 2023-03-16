@@ -24,7 +24,7 @@ export class BroadcastService {
     private megaphoneEnabledUnsubscribe: Unsubscriber;
     private jitsiConnection: JitsiConnection | undefined;
     private broadcastSpaces: BroadcastSpace[];
-    private _jitsiTracks: ForwardableStore<JitsiTrackWrapper[]>;
+    private _jitsiTracks: ForwardableStore<Map<string, JitsiTrackWrapper>>;
 
     constructor(private connection: RoomConnection) {
         /**
@@ -35,7 +35,7 @@ export class BroadcastService {
          * - listening for a signal we should join a broadcast
          * - keep track of the Jitsi connexion / room and restart it if connexion is lost
          */
-        this._jitsiTracks = new ForwardableStore<JitsiTrackWrapper[]>([]);
+        this._jitsiTracks = new ForwardableStore<Map<string, JitsiTrackWrapper>>(new Map());
 
         this.broadcastSpaces = [];
 
@@ -125,7 +125,7 @@ export class BroadcastService {
         this.broadcastSpaces.forEach((space) => space.destroy());
     }
 
-    public get jitsiTracks(): Readable<JitsiTrackWrapper[]> {
+    public get jitsiTracks(): Readable<Map<string, JitsiTrackWrapper>> {
         return this._jitsiTracks;
     }
 }
