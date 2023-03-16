@@ -1,7 +1,6 @@
+// eslint-disable @typescript-eslint/ban-ts-comment
 import { Readable, Unsubscriber, Writable, writable } from "svelte/store";
-import JitsiParticipant from "lib-jitsi-meet/types/hand-crafted/JitsiParticipant";
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
-import { MapStore } from "@workadventure/store-utils";
 import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 import JitsiConference from "lib-jitsi-meet/types/hand-crafted/JitsiConference";
 import { jitsiLocalTracksStore } from "./JitsiLocalTracksStore";
@@ -14,7 +13,7 @@ export type DeviceType = "video" | "audio" | "desktop";
 const debug = Debug("libjitsi");
 
 export class JitsiConferenceWrapper {
-    public readonly participantStore: MapStore<string, JitsiParticipant>;
+    //public readonly participantStore: MapStore<string, JitsiParticipant>;
 
     private _streamStore: Writable<Map<string, JitsiTrackWrapper>>;
 
@@ -125,10 +124,11 @@ export class JitsiConferenceWrapper {
 
             const removeRemoteTrack = (track: JitsiTrack) => {
                 jitsiConferenceWrapper._streamStore.update((tracks) => {
+                    // @ts-ignore
                     const participantId = track.getParticipantId();
                     if (!participantId) {
                         console.error("Track has no participantId");
-                        return;
+                        return tracks;
                     }
 
                     const jitsiTrackWrapper = tracks.get(participantId);
@@ -151,10 +151,11 @@ export class JitsiConferenceWrapper {
 
             const addRemoteTrack = (track: JitsiTrack) => {
                 jitsiConferenceWrapper._streamStore.update((tracks) => {
+                    // @ts-ignore
                     const participantId = track.getParticipantId();
                     if (!participantId) {
                         console.error("Track has no participantId");
-                        return;
+                        return tracks;
                     }
                     let jitsiTrackWrapper = tracks.get(participantId);
                     if (!jitsiTrackWrapper) {
@@ -264,7 +265,7 @@ export class JitsiConferenceWrapper {
         return this._broadcastDevicesStore;
     }
 
-    get streamStore(): Readable<JitsiTrackWrapper[]> {
+    get streamStore(): Readable<Map<string, JitsiTrackWrapper>> {
         return this._streamStore;
     }
 }
