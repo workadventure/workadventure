@@ -154,6 +154,7 @@ import { checkCoturnServer } from "../../Components/Video/utils";
 import { faviconManager } from "./../../WebRtc/FaviconManager";
 import { z } from "zod";
 import { BroadcastService } from "../../Streaming/BroadcastService";
+import { megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -1203,6 +1204,10 @@ export class GameScene extends DirtyScene {
 
         requestedMicrophoneState.subscribe((state) => {
             this.connection?.emitMicrophoneState(state);
+        });
+
+        megaphoneEnabledStore.subscribe((state) => {
+            this.connection?.emitMegaphoneState(state);
         });
 
         const talkIconVolumeTreshold = 10;

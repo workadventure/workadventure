@@ -1,5 +1,5 @@
 import { SpaceManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
-import { uuid } from "uuidv4";
+import { v4 as uuid } from "uuid";
 import { SpacesWatcher } from "./Model/SpacesWatcher";
 import { BackToPusherSpaceMessage, PusherToBackSpaceMessage } from "@workadventure/messages";
 import { socketManager } from "./Services/SocketManager";

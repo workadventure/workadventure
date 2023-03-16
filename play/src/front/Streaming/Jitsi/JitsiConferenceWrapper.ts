@@ -55,7 +55,11 @@ export class JitsiConferenceWrapper {
                 console.error("CONNECTION_RESTORED");
             });
 
-            let oldTracks = new JitsiLocalTracks([]);
+            let oldTracks: JitsiLocalTracks = {
+                audio: undefined,
+                video: undefined,
+                screenSharing: undefined,
+            };
 
             jitsiConferenceWrapper.localTracksStoreUnsubscribe = jitsiLocalTracksStore.subscribe((result) => {
                 if (!result) {
@@ -113,7 +117,7 @@ export class JitsiConferenceWrapper {
                         }
                     }
 
-                    oldTracks = tracks;
+                    oldTracks = { ...tracks };
                 } else {
                     console.error(result.error);
                 }

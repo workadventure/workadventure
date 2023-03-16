@@ -8,6 +8,7 @@ import { ForwardableStore } from "@workadventure/store-utils";
 import { JitsiTrackWrapper } from "./Jitsi/JitsiTrackWrapper";
 import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 import { Space } from "../Space/Space";
+import pLimit from "p-limit";
 
 class BroadcastSpace extends Space {
     public jitsiConference: JitsiConferenceWrapper | undefined;
@@ -19,6 +20,7 @@ class BroadcastSpace extends Space {
 }
 
 export class BroadcastService {
+    private limit = pLimit(1);
     private megaphoneEnabledUnsubscribe: Unsubscriber;
     private jitsiConnection: JitsiConnection | undefined;
     private broadcastSpaces: BroadcastSpace[];
@@ -57,11 +59,10 @@ export class BroadcastService {
         const broadcastSpace = new BroadcastSpace(this.connection, spaceName, spaceFilter);
         broadcastSpace.unsubscribes.push(
             broadcastSpace.users.subscribe((users) => {
-                console.warn("BroadcastService => broadcastSpace", spaceName, users);
                 if (users.size === 0) {
                     if (broadcastSpace.jitsiConference !== undefined) {
-                        broadcastSpace.jitsiConference
-                            .leave()
+                        const jitsiConference = broadcastSpace.jitsiConference;
+                        this.limit(() => jitsiConference.leave())
                             .then(async () => {
                                 broadcastSpace.jitsiConference = undefined;
                                 if (this.canDisconnect()) {
@@ -75,7 +76,7 @@ export class BroadcastService {
                     }
                 } else {
                     if (broadcastSpace.jitsiConference === undefined) {
-                        this.joinJitsiConference(spaceName)
+                        this.limit(() => this.joinJitsiConference(spaceName))
                             .then((jitsiConference) => {
                                 broadcastSpace.jitsiConference = jitsiConference;
                             })

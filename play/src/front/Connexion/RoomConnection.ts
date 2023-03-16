@@ -1409,6 +1409,17 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitMegaphoneState(state: boolean) {
+        this.send({
+            message: {
+                $case: "megaphoneStateMessage",
+                megaphoneStateMessage: {
+                    value: state,
+                },
+            },
+        });
+    }
+
     /**
      * Unserializes a string received from the server.
      * If the value cannot be unserialized, returns undefined and outputs a console error.

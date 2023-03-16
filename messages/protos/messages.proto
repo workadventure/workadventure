@@ -233,6 +233,7 @@ message ClientToServerMessage {
     UnwatchSpaceMessage unwatchSpaceMessage = 29;
     CameraStateMessage cameraStateMessage = 30;
     MicrophoneStateMessage microphoneStateMessage = 31;
+    MegaphoneStateMessage megaphoneStateMessage = 32;
   }
 }
 
@@ -517,6 +518,10 @@ message CameraStateMessage {
 }
 
 message MicrophoneStateMessage {
+  bool value = 1;
+}
+
+message MegaphoneStateMessage {
   bool value = 1;
 }
 
@@ -878,9 +883,10 @@ message SpaceUser{
   google.protobuf.StringValue roomName = 8;
   google.protobuf.StringValue visitCardUrl = 9;
   repeated string tags = 10;
-  bool videoSharing = 11;
-  bool audioSharing = 12;
+  bool cameraState = 11;
+  bool microphoneState = 12;
   bool screenSharing = 13;
+  bool megaphoneState = 14;
 }
 
 message PartialSpaceUser{
@@ -894,9 +900,10 @@ message PartialSpaceUser{
   google.protobuf.StringValue roomName = 8;
   google.protobuf.StringValue visitCardUrl = 9;
   repeated string tags = 10;
-  google.protobuf.BoolValue videoSharing = 11;
-  google.protobuf.BoolValue audioSharing = 12;
+  google.protobuf.BoolValue cameraState = 11;
+  google.protobuf.BoolValue microphoneState = 12;
   google.protobuf.BoolValue screenSharing = 13;
+  google.protobuf.BoolValue megaphoneState = 14;
 }
 
 message AddSpaceUserMessage{

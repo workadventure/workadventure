@@ -33,11 +33,13 @@ import {
     WokaDetail,
     ApplicationDefinitionInterface,
     SpaceFilterMessage,
+    SpaceUser,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import { v4 as uuid } from "uuid";
 import { JID } from "stanza";
 import { validateWebsocketQuery } from "../services/QueryValidator";
+import { Color } from "@workadventure/shared-utils";
 
 type WebSocket = HyperExpress.compressors.WebSocket;
 
@@ -77,6 +79,7 @@ type UpgradeData = {
     activatedInviteUser?: boolean;
     isLogged: boolean;
     canEdit: boolean;
+    spaceUser: SpaceUser;
 };
 
 type UpgradeFailedInvalidData = {
@@ -509,6 +512,27 @@ export class IoSocketController {
                             },
                             isLogged,
                             messages: [],
+                            spaceUser: {
+                                uuid: userData.userUuid,
+                                name,
+                                playUri: roomId,
+                                // FIXME : Get room name from admin
+                                roomName: "",
+                                availabilityStatus,
+                                isLogged,
+                                color: Color.getColorByString(name),
+                                tags: memberTags,
+                                cameraState: false,
+                                screenSharing: false,
+                                microphoneState: false,
+                                megaphoneState: false,
+                                characterLayers: characterLayerObjs.map((characterLayer) => ({
+                                    url: characterLayer.url ?? "",
+                                    name: characterLayer.id,
+                                    layer: characterLayer.layer ?? "",
+                                })),
+                                visitCardUrl: memberVisitCardUrl ?? undefined,
+                            },
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */
@@ -762,6 +786,10 @@ export class IoSocketController {
                             socketManager.handleMicrophoneState(client, message.message.microphoneStateMessage.value);
                             break;
                         }
+                        case "megaphoneStateMessage": {
+                            socketManager.handleMegaphoneState(client, message.message.megaphoneStateMessage.value);
+                            break;
+                        }
                         case "itemEventMessage":
                         case "variableMessage":
                         case "webRtcSignalToServerMessage":
@@ -856,6 +884,9 @@ export class IoSocketController {
         };
         client.spaces = [];
         client.spacesFilters = new Map<string, SpaceFilterMessage[]>();
+        client.spaceUser = ws.spaceUser;
+        client.cameraState = ws.cameraState;
+        client.microphoneState = ws.microphoneState;
         return client;
     }
 }

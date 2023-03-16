@@ -35,7 +35,6 @@ import {
     ViewportMessage,
     XmppSettingsMessage,
     PusherToBackSpaceMessage,
-    SpaceUser,
     BackToPusherSpaceMessage,
     PartialSpaceUser,
     AddSpaceFilterMessage,
@@ -47,7 +46,6 @@ import {
 } from "@workadventure/messages";
 import { EJABBERD_DOMAIN } from "../enums/EnvironmentVariable";
 import { Space } from "../models/Space";
-import { Color } from "@workadventure/shared-utils";
 
 const debug = Debug("socket");
 
@@ -327,9 +325,7 @@ export class SocketManager implements ZoneEventListener {
                 const apiSpaceClient = await apiClientRepository.getSpaceClient(spaceName);
                 spaceStreamToPusher = apiSpaceClient.watchSpace() as BackSpaceConnection;
                 spaceStreamToPusher
-                    .on("data", (arrayBuffer) => {
-                        const message = BackToPusherSpaceMessage.decode(new Uint8Array(arrayBuffer));
-
+                    .on("data", (message: BackToPusherSpaceMessage) => {
                         if (!message.message) {
                             console.warn("spaceStreamToPusher => Empty message received.", message);
                             return;
@@ -414,28 +410,7 @@ export class SocketManager implements ZoneEventListener {
                 space.addClientWatcher(client);
             }
             client.spaces.push(space);
-            const spaceUser: SpaceUser = {
-                uuid: client.userUuid,
-                name: client.name,
-                playUri: client.roomId,
-                // FIXME : Get room name from admin
-                roomName: "",
-                availabilityStatus: client.availabilityStatus,
-                isLogged: client.isLogged,
-                color: Color.getColorByString(client.name),
-                tags: client.tags,
-                audioSharing: false,
-                screenSharing: false,
-                videoSharing: false,
-                characterLayers: client.characterLayers.map((characterLayer) => ({
-                    url: characterLayer.url ?? "",
-                    name: characterLayer.id,
-                    layer: characterLayer.layer ?? "",
-                })),
-                visitCardUrl: client.visitCardUrl ?? undefined,
-            };
 
-            client.spaceUser = spaceUser;
             if (filter) {
                 client.spacesFilters.set(spaceName, [filter]);
             }
@@ -448,7 +423,7 @@ export class SocketManager implements ZoneEventListener {
             // ];
 
             if (this.spaceStreamsToPusher.has(backId)) {
-                space.addUser(spaceUser);
+                space.addUser(client.spaceUser);
             } else {
                 this.spaceStreamsToPusher.set(backId, spaceStreamToPusher);
                 spaceStreamToPusher.write({
@@ -456,11 +431,11 @@ export class SocketManager implements ZoneEventListener {
                         $case: "watchSpaceMessage",
                         watchSpaceMessage: WatchSpaceMessage.fromPartial({
                             spaceName,
-                            user: spaceUser,
+                            user: client.spaceUser,
                         }),
                     },
                 });
-                space.localAddUser(spaceUser);
+                space.localAddUser(client.spaceUser);
             }
         } catch (e) {
             console.error('An error occurred on "join_space" event');
@@ -1034,9 +1009,9 @@ export class SocketManager implements ZoneEventListener {
 
     handleCameraState(client: ExSocketInterface, state: boolean) {
         client.cameraState = state;
-        client.spaceUser.videoSharing = state;
+        client.spaceUser.cameraState = state;
         const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
-            videoSharing: state,
+            cameraState: state,
             uuid: client.userUuid,
         });
         client.spaces.forEach((space) => {
@@ -1046,9 +1021,21 @@ export class SocketManager implements ZoneEventListener {
 
     handleMicrophoneState(client: ExSocketInterface, state: boolean) {
         client.microphoneState = state;
-        client.spaceUser.audioSharing = state;
+        client.spaceUser.microphoneState = state;
         const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
-            audioSharing: state,
+            microphoneState: state,
+            uuid: client.userUuid,
+        });
+        client.spaces.forEach((space) => {
+            space.updateUser(partialSpaceUser);
+        });
+    }
+
+    handleMegaphoneState(client: ExSocketInterface, state: boolean) {
+        client.megaphoneState = state;
+        client.spaceUser.megaphoneState = state;
+        const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
+            megaphoneState: state,
             uuid: client.userUuid,
         });
         client.spaces.forEach((space) => {
