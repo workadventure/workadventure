@@ -7,9 +7,9 @@ import {
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
 import type { AreaData } from "../types";
+import { GameMapProperties } from "../types";
 import type { AreaChangeCallback } from "./GameMapAreas";
 import { GameMapAreas } from "./GameMapAreas";
-import { GameMapProperties } from "../types";
 import { flattenGroupLayersMap } from "./LayersFlattener";
 import { GameMapEntities } from "./GameMapEntities";
 

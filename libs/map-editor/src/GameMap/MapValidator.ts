@@ -1,6 +1,6 @@
+import path from "node:path";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { z } from "zod";
-import path from "node:path";
 import { EntityData } from "../types";
 
 export type Success<T> = { ok: true; value: T };
