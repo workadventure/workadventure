@@ -34,9 +34,21 @@ export class Space implements CustomJsonReplacerInterface {
 
     public addClientWatcher(watcher: ExSocketInterface) {
         this.clientWatchers.set(watcher.userUuid, watcher);
+        this.users.forEach((user) => {
+            if (this.isWatcherTargeted(watcher, user)) {
+                const filterOfThisSpace = watcher.spacesFilters.get(this.name) ?? [];
+                const filtersTargeted = filterOfThisSpace.filter((spaceFilter) =>
+                    this.filterOneUser(spaceFilter, user)
+                );
+                if (filtersTargeted.length > 0) {
+                    filtersTargeted.forEach((spaceFilter) => {
+                        this.notifyMeAddUser(watcher, user, spaceFilter.filterName);
+                    });
+                }
+            }
+        });
     }
 
-    // FIXME: Is used ?
     public removeClientWatcher(watcher: ExSocketInterface) {
         this.clientWatchers.delete(watcher.userUuid);
     }

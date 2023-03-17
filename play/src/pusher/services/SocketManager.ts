@@ -402,6 +402,10 @@ export class SocketManager implements ZoneEventListener {
                     });
             }
 
+            if (filter) {
+                client.spacesFilters.set(spaceName, [filter]);
+            }
+
             let space: Space | undefined = this.spaces.get(spaceName);
             if (!space) {
                 space = new Space(spaceName, spaceStreamToPusher, backId, client);
@@ -410,10 +414,6 @@ export class SocketManager implements ZoneEventListener {
                 space.addClientWatcher(client);
             }
             client.spaces.push(space);
-
-            if (filter) {
-                client.spacesFilters.set(spaceName, [filter]);
-            }
 
             // client.spacesFilters = [
             //     new SpaceFilterMessage()
@@ -583,10 +583,13 @@ export class SocketManager implements ZoneEventListener {
     }
 
     leaveSpaces(socket: ExSocketInterface) {
+        socket.spacesFilters = new Map<string, SpaceFilterMessage[]>();
         socket.spaces.forEach((space) => {
+            space.removeClientWatcher(socket);
             space.removeUser(socket.spaceUser.uuid);
             this.deleteSpaceIfEmpty(space);
         });
+        socket.spaces = [];
     }
 
     private deleteSpaceIfEmpty(space: Space) {
