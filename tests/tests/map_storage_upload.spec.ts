@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
 import fs from "fs";
+import { expect, test } from '@playwright/test';
 
 test.use({
     baseURL: (process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://john.doe:password@" + (process.env.MAP_STORAGE_ENDPOINT ?? 'map-storage.workadventure.localhost'),

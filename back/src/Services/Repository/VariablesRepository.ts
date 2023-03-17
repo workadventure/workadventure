@@ -1,5 +1,5 @@
-import { RedisVariablesRepository } from "./RedisVariablesRepository";
 import { getRedisClient } from "../RedisClient";
+import { RedisVariablesRepository } from "./RedisVariablesRepository";
 import { VoidVariablesRepository } from "./VoidVariablesRepository";
 import { VariablesRepositoryInterface } from "./VariablesRepositoryInterface";
 

@@ -1,11 +1,11 @@
 import type { ModifyAreaMessage } from "@workadventure/messages";
+import { z } from "zod";
 import type { CreateAreaCommandConfig } from "./Commands/Area/CreateAreaCommand";
 import type { DeleteAreaCommandConfig } from "./Commands/Area/DeleteAreaCommand";
 import type { UpdateAreaCommandConfig } from "./Commands/Area/UpdateAreaCommand";
 import type { CreateEntityCommandConfig } from "./Commands/Entity/CreateEntityCommand";
 import type { DeleteEntityCommandConfig } from "./Commands/Entity/DeleteEntityCommand";
 import { UpdateEntityCommandConfig } from "./Commands/Entity/UpdateEntityCommand";
-import { z } from "zod";
 
 export type CommandConfig =
     | UpdateAreaCommandConfig

@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from "axios";
+import Debug from "debug";
 import { ADMIN_API_URL, PLAY_URL, SECURITY_EMAIL, TELEMETRY_URL } from "../Enum/EnvironmentVariable";
 import { version } from "./version";
-import Debug from "debug";
 
 const debug = Debug("telemetry");
 

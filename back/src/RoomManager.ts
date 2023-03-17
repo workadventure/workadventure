@@ -1,3 +1,4 @@
+import { clearInterval } from "timers";
 import {
     AdminGlobalMessage,
     AdminMessage,
@@ -26,6 +27,7 @@ import {
     ServerUnaryCall,
     ServerWritableStream,
 } from "@grpc/grpc-js";
+import Debug from "debug";
 import { socketManager } from "./Services/SocketManager";
 import {
     emitError,
@@ -35,9 +37,7 @@ import {
 } from "./Services/MessageHelpers";
 import { User, UserSocket } from "./Model/User";
 import { GameRoom } from "./Model/GameRoom";
-import Debug from "debug";
 import { Admin } from "./Model/Admin";
-import { clearInterval } from "timers";
 
 const debug = Debug("roommanager");
 

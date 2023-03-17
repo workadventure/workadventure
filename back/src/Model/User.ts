@@ -1,8 +1,3 @@
-import { Group } from "./Group";
-import { PointInterface } from "./Websocket/PointInterface";
-import { Zone } from "../Model/Zone";
-import { Movable } from "../Model/Movable";
-import { PositionNotifier } from "../Model/PositionNotifier";
 import { ServerDuplexStream } from "@grpc/grpc-js";
 import {
     ApplicationMessage,
@@ -15,9 +10,14 @@ import {
     SetPlayerVariableMessage_Scope,
     SubMessage,
 } from "@workadventure/messages";
+import { Zone } from "../Model/Zone";
+import { Movable } from "../Model/Movable";
+import { PositionNotifier } from "../Model/PositionNotifier";
 import { CharacterLayer } from "../Model/Websocket/CharacterLayer";
 import { PlayerVariables } from "../Services/PlayersRepository/PlayerVariables";
 import { getPlayersVariablesRepository } from "../Services/PlayersRepository/PlayersVariablesRepository";
+import { PointInterface } from "./Websocket/PointInterface";
+import { Group } from "./Group";
 import { BrothersFinder } from "./BrothersFinder";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 

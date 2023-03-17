@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
 import fs from 'fs';
+import { expect, test } from '@playwright/test';
 import {
   gotoWait200,
   rebootBack,

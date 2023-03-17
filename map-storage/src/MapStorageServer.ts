@@ -1,7 +1,6 @@
 import { sendUnaryData, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
 import * as _ from "lodash";
 import { AreaData, AreaType, EntityDataProperties } from "@workadventure/map-editor";
-import { mapsManager } from "./MapsManager";
 import {
     EditMapCommandMessage,
     EditMapCommandsArrayMessage,
@@ -14,6 +13,7 @@ import {
 } from "@workadventure/messages";
 
 import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
+import { mapsManager } from "./MapsManager";
 import { mapPathUsingDomain } from "./Services/PathMapper";
 import { uploadDetector } from "./Services/UploadDetector";
 
