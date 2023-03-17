@@ -1,9 +1,9 @@
 <script lang="ts">
+    import { afterUpdate, onMount } from "svelte";
     import { highlightedEmbedScreen } from "../../../Stores/EmbedScreensStore";
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
     import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
-    import { afterUpdate, onMount } from "svelte";
     import { isMediaBreakpointDown, isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
     import { peerStore } from "../../../Stores/PeerStore";
     import { myCameraStore } from "../../../Stores/MyMediaStore";

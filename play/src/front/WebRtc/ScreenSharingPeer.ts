@@ -1,12 +1,12 @@
-import type { RoomConnection } from "../Connexion/RoomConnection";
-import type { PeerStatus } from "./VideoPeer";
-import type { UserSimplePeerInterface } from "./SimplePeer";
+import { Buffer } from "buffer";
 import type { Readable, Writable } from "svelte/store";
 import { writable } from "svelte/store";
+import Peer from "simple-peer/simplepeer.min.js";
+import type { RoomConnection } from "../Connexion/RoomConnection";
 import { getIceServersConfig } from "../Components/Video/utils";
 import { highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
-import Peer from "simple-peer/simplepeer.min.js";
-import { Buffer } from "buffer";
+import type { PeerStatus } from "./VideoPeer";
+import type { UserSimplePeerInterface } from "./SimplePeer";
 import { StreamEndedMessage } from "./P2PMessages/StreamEndedMessage";
 
 /**

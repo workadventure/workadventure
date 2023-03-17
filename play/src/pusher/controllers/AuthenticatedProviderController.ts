@@ -1,9 +1,8 @@
-import { BaseHttpController } from "./BaseHttpController";
-import type { JWTTokenManager } from "../services/JWTTokenManager";
-import type { Request, Response } from "hyper-express";
-import type { Server } from "hyper-express";
-import { validateQuery } from "../services/QueryValidator";
+import type { Request, Response, Server } from "hyper-express";
 import { z } from "zod";
+import { validateQuery } from "../services/QueryValidator";
+import type { JWTTokenManager } from "../services/JWTTokenManager";
+import { BaseHttpController } from "./BaseHttpController";
 
 /*
  * Base class to expose authenticated pusher endpoints that will provide data based on room url

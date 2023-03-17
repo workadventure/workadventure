@@ -1,12 +1,12 @@
 /**
  * A class to get connections to the correct "api" server given a room name.
  */
-import * as grpc from "@grpc/grpc-js";
 import crypto from "crypto";
-import { API_URL } from "../enums/EnvironmentVariable";
+import * as grpc from "@grpc/grpc-js";
 
 import Debug from "debug";
 import { RoomManagerClient, SpaceManagerClient } from "@workadventure/messages/src/ts-proto-generated/services";
+import { API_URL } from "../enums/EnvironmentVariable";
 
 const debug = Debug("apiClientRespository");
 

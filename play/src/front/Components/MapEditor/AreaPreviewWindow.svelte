@@ -1,10 +1,10 @@
 <script lang="ts">
-    import { mapEditorSelectedAreaPreviewStore, mapEditorSelectedPropertyStore } from "../../Stores/MapEditorStore";
-    import { onDestroy } from "svelte";
     import type { Unsubscriber } from "svelte/store";
+    import type { AreaData, PredefinedPropertyData } from "@workadventure/map-editor";
+    import { onDestroy } from "svelte";
+    import { mapEditorSelectedAreaPreviewStore, mapEditorSelectedPropertyStore } from "../../Stores/MapEditorStore";
     import type { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import type { AreaData, PredefinedPropertyData } from "@workadventure/map-editor";
     import PropertyField from "./PropertyField.svelte";
     import PropertyPreviewSidebar from "./PropertyPreviewSidebar.svelte";
 

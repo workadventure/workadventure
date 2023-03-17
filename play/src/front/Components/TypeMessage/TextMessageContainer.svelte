@@ -1,7 +1,7 @@
 <script lang="ts">
     import { flip } from "svelte/animate";
-    import TextMessage from "./TextMessage.svelte";
     import { textMessageStore } from "../../Stores/TypeMessageStore/TextMessageStore";
+    import TextMessage from "./TextMessage.svelte";
 
     const MAX_MESSAGES = 3;
 </script>

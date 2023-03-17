@@ -1,22 +1,22 @@
 <script lang="ts">
+    import { onDestroy, onMount } from "svelte";
+    import { Color } from "@workadventure/shared-utils";
     import {
         cameraEnergySavingStore,
         localVolumeStore,
         mediaStreamConstraintsStore,
         requestedCameraState,
         silentStore,
+        localStreamStore,
     } from "../Stores/MediaStore";
-    import { localStreamStore } from "../Stores/MediaStore";
-    import SoundMeterWidget from "./SoundMeterWidget.svelte";
-    import { onDestroy, onMount } from "svelte";
-    import { srcObject } from "./Video/utils";
-    import { Color } from "@workadventure/shared-utils";
-    import LL from "../../i18n/i18n-svelte";
-    import Woka from "./Woka/Woka.svelte";
+    import { LL } from "../../i18n/i18n-svelte";
     import { localUserStore } from "../Connexion/LocalUserStore";
+    import { inExternalServiceStore } from "../Stores/MyMediaStore";
+    import SoundMeterWidget from "./SoundMeterWidget.svelte";
+    import { srcObject } from "./Video/utils";
+    import Woka from "./Woka/Woka.svelte";
     import microphoneOffImg from "./images/microphone-off.png";
     import cameraOffImg from "./images/camera-off.png";
-    import { inExternalServiceStore } from "../Stores/MyMediaStore";
 
     let stream: MediaStream | null;
     let userName = localUserStore.getName();

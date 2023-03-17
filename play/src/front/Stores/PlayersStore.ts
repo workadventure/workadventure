@@ -1,8 +1,8 @@
 import { writable } from "svelte/store";
-import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
-import type { RoomConnection } from "../Connexion/RoomConnection";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { Color } from "@workadventure/shared-utils";
+import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
+import type { RoomConnection } from "../Connexion/RoomConnection";
 import { localUserStore } from "../Connexion/LocalUserStore";
 
 let idCount = 0;

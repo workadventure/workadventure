@@ -10,15 +10,13 @@ import {
     wokaList,
     wokaTexture,
     isRoomRedirect,
-} from "@workadventure/messages";
-import { isFetchMemberDataByUuidResponse } from "./AdminApi";
-import type { SchemaObject } from "openapi3-ts";
-import {
     companionCollectionList,
     companionTextureCollection,
     isCompanionDetail,
     isCapabilities,
 } from "@workadventure/messages";
+import type { SchemaObject } from "openapi3-ts";
+import { isFetchMemberDataByUuidResponse } from "./AdminApi";
 
 class SwaggerGenerator {
     definitions(type: string | null): {

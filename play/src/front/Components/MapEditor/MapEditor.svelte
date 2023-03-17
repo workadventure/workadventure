@@ -1,10 +1,10 @@
 <script lang="ts">
+    import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
+    import { mapEditorSelectedToolStore } from "../../Stores/MapEditorStore";
     import AreaPreviewWindow from "./AreaPreviewWindow.svelte";
     import PropertyPreviewSidebar from "./PropertyPreviewSidebar.svelte";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import MapEntityEditor from "./MapEntityEditor.svelte";
-    import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
-    import { mapEditorSelectedToolStore } from "../../Stores/MapEditorStore";
 </script>
 
 <MapEditorSideBar />

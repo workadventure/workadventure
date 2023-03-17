@@ -5,22 +5,27 @@ import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { throttle } from "throttle-debounce";
 
+import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
+import { AreaType, GameMap, GameMapProperties } from "@workadventure/map-editor";
+import { MapStore } from "@workadventure/store-utils";
+import CancelablePromise from "cancelable-promise";
+import { Deferred } from "ts-deferred";
+import {
+    availabilityStatusToJSON,
+    AvailabilityStatus,
+    ErrorScreenMessage,
+    PositionMessage_Direction,
+} from "@workadventure/messages";
+import { z } from "zod";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connexion/ConnectionManager";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { urlManager } from "../../Url/UrlManager";
 import { mediaManager } from "../../WebRtc/MediaManager";
 import { UserInputManager } from "../UserInput/UserInputManager";
-import { gameManager } from "./GameManager";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
 import { waScaleManager } from "../Services/WaScaleManager";
-import { EmoteManager } from "./EmoteManager";
-import { soundManager } from "./SoundManager";
-import { SharedVariablesManager } from "./SharedVariablesManager";
-import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
-import { DynamicAreaManager } from "./DynamicAreaManager";
-
 import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoadingManager";
 import { CompanionTexturesLoadingManager } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
@@ -37,17 +42,11 @@ import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectC
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
 import { ErrorSceneName } from "../Reconnecting/ErrorScene";
 import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
-import { PlayerMovement } from "./PlayerMovement";
-import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
-import { DirtyScene } from "./DirtyScene";
 import { TextUtils } from "../Components/TextUtils";
 import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
-import { StartPositionCalculator } from "./StartPositionCalculator";
 import { PropertyUtils } from "../Map/PropertyUtils";
-import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { PathfindingManager } from "../../Utils/PathfindingManager";
-import { ActivatablesManager } from "./ActivatablesManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
     MessageUserJoined,
@@ -59,10 +58,6 @@ import type {
 import type { RoomConnection } from "../../Connexion/RoomConnection";
 import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
-import type { AddPlayerInterface } from "./AddPlayerInterface";
-import type { CameraManagerEventCameraUpdateData } from "./CameraManager";
-import { CameraManager, CameraManagerEvent } from "./CameraManager";
-
 import { peerStore } from "../../Stores/PeerStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
@@ -86,7 +81,67 @@ import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEve
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
 import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
+import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
+import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
+import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
+import type { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
+import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
+import { StringUtils } from "../../Utils/StringUtils";
+import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connexion/AxiosUtils";
+import {
+    availabilityStatusStore,
+    localVolumeStore,
+    requestedCameraState,
+    requestedMicrophoneState,
+} from "../../Stores/MediaStore";
+import { LL, locale } from "../../../i18n/i18n-svelte";
+import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
+import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
+import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
+import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
+import type { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
+import {
+    chatVisibilityStore,
+    _newChatMessageSubject,
+    _newChatMessageWritingStatusSubject,
+} from "../../Stores/ChatStore";
+import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
+import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
+import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
+import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
+import { modalVisibilityStore } from "../../Stores/ModalStore";
+import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
+import { mapEditorModeStore } from "../../Stores/MapEditorStore";
+import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
+import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
+import { checkCoturnServer } from "../../Components/Video/utils";
+import { gameManager } from "./GameManager";
+import { EmoteManager } from "./EmoteManager";
+import { soundManager } from "./SoundManager";
+import { SharedVariablesManager } from "./SharedVariablesManager";
+import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
+import { DynamicAreaManager } from "./DynamicAreaManager";
 
+import { PlayerMovement } from "./PlayerMovement";
+import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
+import { DirtyScene } from "./DirtyScene";
+import { StartPositionCalculator } from "./StartPositionCalculator";
+import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
+import { ActivatablesManager } from "./ActivatablesManager";
+import type { AddPlayerInterface } from "./AddPlayerInterface";
+import type { CameraManagerEventCameraUpdateData } from "./CameraManager";
+import { CameraManager, CameraManagerEvent } from "./CameraManager";
+
+import { MapEditorModeManager } from "./MapEditor/MapEditorModeManager";
+import { RemotePlayersRepository } from "./RemotePlayersRepository";
+import type { PlayerDetailsUpdate } from "./RemotePlayersRepository";
+import { IframeEventDispatcher } from "./IframeEventDispatcher";
+import { PlayerVariablesManager } from "./PlayerVariablesManager";
+import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
+import { uiWebsiteManager } from "./UI/UIWebsiteManager";
+import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
+import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
+import { faviconManager } from "./../../WebRtc/FaviconManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -96,62 +151,6 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
-import { MapStore } from "@workadventure/store-utils";
-import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
-import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
-import LL, { locale } from "../../../i18n/i18n-svelte";
-import {
-    availabilityStatusStore,
-    localVolumeStore,
-    requestedCameraState,
-    requestedMicrophoneState,
-} from "../../Stores/MediaStore";
-import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connexion/AxiosUtils";
-import { StringUtils } from "../../Utils/StringUtils";
-import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
-import type { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
-import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
-import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
-import CancelablePromise from "cancelable-promise";
-import { Deferred } from "ts-deferred";
-import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
-import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
-import {
-    availabilityStatusToJSON,
-    AvailabilityStatus,
-    ErrorScreenMessage,
-    PositionMessage_Direction,
-} from "@workadventure/messages";
-import { uiWebsiteManager } from "./UI/UIWebsiteManager";
-import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
-import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
-import { IframeEventDispatcher } from "./IframeEventDispatcher";
-import type { PlayerDetailsUpdate } from "./RemotePlayersRepository";
-import { RemotePlayersRepository } from "./RemotePlayersRepository";
-import { MapEditorModeManager } from "./MapEditor/MapEditorModeManager";
-import type { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
-import {
-    chatVisibilityStore,
-    _newChatMessageSubject,
-    _newChatMessageWritingStatusSubject,
-} from "../../Stores/ChatStore";
-import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
-import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
-import { PlayerVariablesManager } from "./PlayerVariablesManager";
-import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
-import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
-import { AreaType, GameMap, GameMapProperties } from "@workadventure/map-editor";
-import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
-import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
-import { modalVisibilityStore } from "../../Stores/ModalStore";
-import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import { mapEditorModeStore } from "../../Stores/MapEditorStore";
-import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
-import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
-import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
-import { checkCoturnServer } from "../../Components/Video/utils";
-import { faviconManager } from "./../../WebRtc/FaviconManager";
-import { z } from "zod";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;

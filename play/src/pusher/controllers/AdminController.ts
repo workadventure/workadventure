@@ -1,9 +1,9 @@
-import { apiClientRepository } from "../services/ApiClientRepository";
-import { adminToken } from "../middlewares/AdminToken";
-import { BaseHttpController } from "./BaseHttpController";
 import { Metadata } from "@grpc/grpc-js";
 import type { Request, Response } from "hyper-express";
 import { ChatMessagePrompt, RoomsList } from "@workadventure/messages";
+import { apiClientRepository } from "../services/ApiClientRepository";
+import { adminToken } from "../middlewares/AdminToken";
+import { BaseHttpController } from "./BaseHttpController";
 
 export class AdminController extends BaseHttpController {
     routes(): void {

@@ -1,8 +1,8 @@
+import { z } from "zod";
 import { openIDClient } from "../services/OpenIDClient";
 import { OPID_CLIENT_ISSUER } from "../enums/EnvironmentVariable";
-import { BaseHttpController } from "./BaseHttpController";
 import { validateQuery } from "../services/QueryValidator";
-import { z } from "zod";
+import { BaseHttpController } from "./BaseHttpController";
 
 export class OpenIdProfileController extends BaseHttpController {
     routes(): void {

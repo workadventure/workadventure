@@ -1,6 +1,5 @@
-import { BannerEvent } from "./../../Events/Ui/BannerEvent";
-
 import { sendToWorkadventure, IframeApiContribution } from "../IframeApiContribution";
+import { BannerEvent } from "./../../Events/Ui/BannerEvent";
 
 export class WorkadventureBannerCommands extends IframeApiContribution<WorkadventureBannerCommands> {
     callbacks = [];

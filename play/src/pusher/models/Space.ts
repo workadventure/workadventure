@@ -1,4 +1,3 @@
-import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import {
     PartialSpaceUser,
     PusherToBackSpaceMessage,
@@ -9,6 +8,7 @@ import {
     UpdateSpaceFilterMessage,
 } from "@workadventure/messages";
 import Debug from "debug";
+import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import { BackSpaceConnection, ExSocketInterface } from "./Websocket/ExSocketInterface";
 
 type SpaceUserExtended = { lowercaseName: string } & SpaceUser;

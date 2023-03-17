@@ -1,13 +1,13 @@
+import { get } from "svelte/store";
+import type CancelablePromise from "cancelable-promise";
+import { PositionMessage_Direction } from "@workadventure/messages";
 import type { GameScene } from "../Game/GameScene";
 import type { ActiveEventList } from "../UserInput/UserInputManager";
 import { UserInputEvent } from "../UserInput/UserInputManager";
 import { Character } from "../Entity/Character";
 
-import { get } from "svelte/store";
 import { userMovingStore } from "../../Stores/GameStore";
 import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
-import type CancelablePromise from "cancelable-promise";
-import { PositionMessage_Direction } from "@workadventure/messages";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";

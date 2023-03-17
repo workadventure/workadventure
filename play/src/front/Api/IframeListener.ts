@@ -1,6 +1,21 @@
-import { warningContainerStore } from "./../Stores/MenuStore";
 import { Subject } from "rxjs";
+import { availabilityStatusToJSON, XmppSettingsMessage } from "@workadventure/messages";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
+import {
+    additionnalButtonsMenu,
+    handleMenuRegistrationEvent,
+    handleMenuUnregisterEvent,
+    warningContainerStore,
+} from "../Stores/MenuStore";
+import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
+import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
+import type { MessageUserJoined } from "../Connexion/ConnexionModels";
+import { localUserStore } from "../Connexion/LocalUserStore";
+import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
+import { analyticsClient } from "../Administration/AnalyticsClient";
+import { bannerStore, requestVisitCardsStore } from "../Stores/GameStore";
+import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
+import { connectionManager } from "../Connexion/ConnectionManager";
 import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
 import type { OpenPopupEvent } from "./Events/OpenPopupEvent";
 import type { OpenTabEvent } from "./Events/OpenTabEvent";
@@ -18,7 +33,6 @@ import type { LayerEvent } from "./Events/LayerEvent";
 import type { SetTilesEvent } from "./Events/SetTilesEvent";
 import type { SetVariableEvent } from "./Events/SetVariableEvent";
 import type { ModifyEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
-import { additionnalButtonsMenu, handleMenuRegistrationEvent, handleMenuUnregisterEvent } from "../Stores/MenuStore";
 import type { ChangeLayerEvent } from "./Events/ChangeLayerEvent";
 import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
 import type { ChangeAreaEvent } from "./Events/ChangeAreaEvent";
@@ -31,22 +45,12 @@ import type { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import type { ModifyUIWebsiteEvent } from "./Events/Ui/UIWebsite";
 import type { ModifyAreaEvent } from "./Events/CreateAreaEvent";
 import type { AskPositionEvent } from "./Events/AskPositionEvent";
-import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import type { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
-import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
 import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
 import type { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
 import type { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
-import type { MessageUserJoined } from "../Connexion/ConnexionModels";
-import { availabilityStatusToJSON, XmppSettingsMessage } from "@workadventure/messages";
 import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
-import { localUserStore } from "../Connexion/LocalUserStore";
-import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
-import { analyticsClient } from "../Administration/AnalyticsClient";
 import type { ChatMessage } from "./Events/ChatEvent";
-import { bannerStore, requestVisitCardsStore } from "../Stores/GameStore";
-import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
-import { connectionManager } from "../Connexion/ConnectionManager";
 import { ModalEvent } from "./Events/ModalEvent";
 import { AddButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
 
