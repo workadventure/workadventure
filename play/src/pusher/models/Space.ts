@@ -146,6 +146,9 @@ export class Space implements CustomJsonReplacerInterface {
             if (spaceUser.megaphoneState !== undefined) {
                 user.megaphoneState = spaceUser.megaphoneState;
             }
+            if (spaceUser.jitsiParticipantId) {
+                user.jitsiParticipantId = spaceUser.jitsiParticipantId;
+            }
             //this.users.set(spaceUser.uuid, user);
             debug(`${this.name} : user updated ${spaceUser.uuid}`);
 

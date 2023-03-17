@@ -512,7 +512,7 @@ export class IoSocketController {
                             },
                             isLogged,
                             messages: [],
-                            spaceUser: {
+                            spaceUser: SpaceUser.fromPartial({
                                 uuid: userData.userUuid,
                                 name,
                                 playUri: roomId,
@@ -532,7 +532,7 @@ export class IoSocketController {
                                     layer: characterLayer.layer ?? "",
                                 })),
                                 visitCardUrl: memberVisitCardUrl ?? undefined,
-                            },
+                            }),
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */
@@ -788,6 +788,10 @@ export class IoSocketController {
                         }
                         case "megaphoneStateMessage": {
                             socketManager.handleMegaphoneState(client, message.message.megaphoneStateMessage.value);
+                            break;
+                        }
+                        case "jitsiParticipantIdSpaceMessage": {
+                            socketManager.handleJitsiParticipantIdSpace(client, message.message.jitsiParticipantIdSpaceMessage.spaceName, message.message.jitsiParticipantIdSpaceMessage.value);
                             break;
                         }
                         case "itemEventMessage":

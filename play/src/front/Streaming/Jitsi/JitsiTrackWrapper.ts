@@ -1,5 +1,5 @@
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
-import {Readable, readable, Unsubscriber, Writable, writable} from "svelte/store";
+import {Readable, readable, Unsubscriber} from "svelte/store";
 import {SoundMeter} from "../../Phaser/Components/SoundMeter";
 
 export class JitsiTrackWrapper {

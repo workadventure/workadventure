@@ -11,9 +11,8 @@
 	import microphoneOffImg from "../images/microphone-off.png";
 
 	import {Color} from "@workadventure/shared-utils";
-	import {readable} from "svelte/store";
 
-	export let clickable = false;
+	export const clickable = false;
 
 	export let peer: JitsiTrackWrapper;
 

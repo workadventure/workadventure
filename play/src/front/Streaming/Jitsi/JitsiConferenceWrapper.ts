@@ -284,4 +284,8 @@ export class JitsiConferenceWrapper {
     get streamStore(): Readable<Map<string, Readable<JitsiTrackWrapper>>> {
         return this._streamStore;
     }
+
+    get participantId(): string {
+        return this.jitsiConference.myUserId();
+    }
 }

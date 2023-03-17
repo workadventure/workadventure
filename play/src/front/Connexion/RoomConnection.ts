@@ -1420,6 +1420,18 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitJitsiParticipantIdSpace(spaceName: string, participantId: string) {
+        this.send({
+            message: {
+                $case: "jitsiParticipantIdSpaceMessage",
+                jitsiParticipantIdSpaceMessage: {
+                    spaceName,
+                    value: participantId,
+                },
+            },
+        });
+    }
+
     /**
      * Unserializes a string received from the server.
      * If the value cannot be unserialized, returns undefined and outputs a console error.

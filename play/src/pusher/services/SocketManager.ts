@@ -1045,6 +1045,17 @@ export class SocketManager implements ZoneEventListener {
             space.updateUser(partialSpaceUser);
         });
     }
+
+    handleJitsiParticipantIdSpace(client: ExSocketInterface, spaceName: string, jitsiParticipantId: string){
+        const space = client.spaces.find((space) => space.name === spaceName);
+        if(space) {
+            const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
+                jitsiParticipantId,
+                uuid: client.userUuid,
+            });
+            space.updateUser(partialSpaceUser);
+        }
+    }
 }
 
 export const socketManager = new SocketManager();

@@ -81,6 +81,9 @@ export class Space {
                         if (partialUser.screenSharing !== undefined) {
                             user.screenSharing = partialUser.screenSharing;
                         }
+                        if(partialUser.jitsiParticipantId !== undefined) {
+                            user.jitsiParticipantId = partialUser.jitsiParticipantId;
+                        }
                         this._users.set(partialUser.uuid, user);
                     }
                 }

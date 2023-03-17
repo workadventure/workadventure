@@ -80,6 +80,7 @@ export class BroadcastService {
                         this.limit(() => this.joinJitsiConference(spaceName))
                             .then((jitsiConference) => {
                                 broadcastSpace.jitsiConference = jitsiConference;
+                                this.connection.emitJitsiParticipantIdSpace(spaceName, jitsiConference.participantId);
                             })
                             .catch((e) => {
                                 console.error(e);

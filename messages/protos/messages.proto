@@ -234,6 +234,7 @@ message ClientToServerMessage {
     CameraStateMessage cameraStateMessage = 30;
     MicrophoneStateMessage microphoneStateMessage = 31;
     MegaphoneStateMessage megaphoneStateMessage = 32;
+    JitsiParticipantIdSpaceMessage  jitsiParticipantIdSpaceMessage = 33;
   }
 }
 
@@ -523,6 +524,11 @@ message MicrophoneStateMessage {
 
 message MegaphoneStateMessage {
   bool value = 1;
+}
+
+message JitsiParticipantIdSpaceMessage {
+  string spaceName = 1;
+  string value = 2;
 }
 
 
@@ -873,20 +879,21 @@ message UnwatchSpaceMessage{
 }
 
 message SpaceUser{
-  string uuid = 1;
-  string name = 2;
+  string uuid = 1; // used
+  string name = 2; // used
   string playUri = 3;
-  string color = 4;
+  string color = 4; // TO DELETE
   repeated CharacterLayerMessage characterLayers = 5;
   bool isLogged = 6;
   int32 availabilityStatus = 7;
   google.protobuf.StringValue roomName = 8;
   google.protobuf.StringValue visitCardUrl = 9;
   repeated string tags = 10;
-  bool cameraState = 11;
-  bool microphoneState = 12;
+  bool cameraState = 11; // used
+  bool microphoneState = 12; // used
   bool screenSharing = 13;
-  bool megaphoneState = 14;
+  bool megaphoneState = 14; // used
+  google.protobuf.StringValue jitsiParticipantId = 15; // used
 }
 
 message PartialSpaceUser{
@@ -904,6 +911,7 @@ message PartialSpaceUser{
   google.protobuf.BoolValue microphoneState = 12;
   google.protobuf.BoolValue screenSharing = 13;
   google.protobuf.BoolValue megaphoneState = 14;
+  google.protobuf.StringValue jitsiParticipantId = 15;
 }
 
 message AddSpaceUserMessage{
