@@ -3,24 +3,27 @@ import { MapStore } from "@workadventure/store-utils";
 import { Subscription } from "rxjs";
 import { RoomConnection } from "../Connexion/RoomConnection";
 import { Readable } from "svelte/store";
+import Debug from "debug";
+
+const debug = Debug("space");
 
 export class Space {
-    private _users: MapStore<string, SpaceUser>;
+    private readonly _users: MapStore<string, SpaceUser>;
     private subscribers: Subscription[];
 
     constructor(
         private connection: RoomConnection,
-        readonly spaceName: string,
+        readonly name: string,
         private spaceFilter: SpaceFilterMessage
     ) {
         this._users = new MapStore<string, SpaceUser>();
         this.subscribers = [];
         this.subscribers.push(
             this.connection.addSpaceUserMessageStream.subscribe((message) => {
-                console.log("Space => addSpaceUserMessageStream", message);
+                debug(`Space => ${this.name} => addSpaceUserMessageStream`, message);
                 const user = message.user;
                 if (
-                    message.spaceName === spaceName &&
+                    message.spaceName === name &&
                     message.filterName === spaceFilter.filterName &&
                     user !== undefined
                 ) {
@@ -30,10 +33,10 @@ export class Space {
         );
         this.subscribers.push(
             this.connection.updateSpaceUserMessageStream.subscribe((message) => {
-                console.log("Space => updateSpaceUserMessageStream", message);
+                debug(`Space => ${this.name} => updateSpaceUserMessageStream`, message);
                 const partialUser = message.user;
                 if (
-                    message.spaceName === spaceName &&
+                    message.spaceName === name &&
                     message.filterName === spaceFilter.filterName &&
                     partialUser !== undefined
                 ) {
@@ -85,8 +88,8 @@ export class Space {
         );
         this.subscribers.push(
             this.connection.removeSpaceUserMessageStream.subscribe((message) => {
-                console.log("Space => removeSpaceUserMessageStream", message);
-                if (message.spaceName === spaceName && message.filterName === spaceFilter.filterName) {
+                debug(`Space => ${this.name} => removeSpaceUserMessageStream`, message);
+                if (message.spaceName === name && message.filterName === spaceFilter.filterName) {
                     this._users.delete(message.userUuid);
                 }
             })
@@ -94,6 +97,7 @@ export class Space {
     }
 
     public destroy() {
+        debug(`Space => ${this.name} => destroying`);
         this.subscribers.forEach((subscriber) => subscriber.unsubscribe());
     }
 

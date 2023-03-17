@@ -1,67 +1,100 @@
 <script lang="ts">
-    //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
+	//STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
-    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+	import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 
-    import { onDestroy, onMount } from "svelte";
-    import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { JitsiTrackWrapper } from "../../Streaming/Jitsi/JitsiTrackWrapper";
+	import {afterUpdate, onDestroy, onMount} from "svelte";
+	import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+	import { LayoutMode } from "../../WebRtc/LayoutManager";
+	import { JitsiTrackWrapper } from "../../Streaming/Jitsi/JitsiTrackWrapper";
+	import SoundMeterWidget from "../SoundMeterWidget.svelte";
+	import microphoneOffImg from "../images/microphone-off.png";
 
-    export let clickable = false;
+	import {Color} from "@workadventure/shared-utils";
+	import {readable} from "svelte/store";
 
-    export let peer: JitsiTrackWrapper;
+	export let clickable = false;
 
-    //let embedScreen: EmbedScreen;
-    let videoContainer: HTMLDivElement;
-    let videoElement: HTMLVideoElement;
-    let minimized = isMediaBreakpointOnly("md");
-    let isMobile = isMediaBreakpointUp("md");
+	export let peer: JitsiTrackWrapper;
 
-    /*if (peer) {
-        embedScreen = {
-            type: "streamable",
-            embed: peer as unknown as Streamable,
-        };
-    }*/
+	//let embedScreen: EmbedScreen;
+	let videoContainer: HTMLDivElement;
+	let videoElement: HTMLVideoElement;
+	let minimized = isMediaBreakpointOnly("md");
+	let isMobile = isMediaBreakpointUp("md");
 
-    const resizeObserver = new ResizeObserver(() => {
-        minimized = isMediaBreakpointOnly("md");
-        isMobile = isMediaBreakpointUp("md");
-    });
+	let backGroundColor = Color.getColorByString("test");
+	let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
 
-    onMount(() => {
-        resizeObserver.observe(videoContainer);
+	/*if (peer) {
+		embedScreen = {
+			type: "streamable",
+			embed: peer as unknown as Streamable,
+		};
+	}*/
 
-        // TODO: Fix this
-        console.warn("PEER:", peer);
-        peer.videoTrack?.attach(videoElement);
-    });
+	const resizeObserver = new ResizeObserver(() => {
+		minimized = isMediaBreakpointOnly("md");
+		isMobile = isMediaBreakpointUp("md");
+	});
 
-    onDestroy(() => {});
+	onMount(() => {
+		resizeObserver.observe(videoContainer);
+		// TODO: Fix this
+		console.warn("PEER:", peer);
+		attachTrack();
+	});
+
+	afterUpdate(() => {
+		console.warn("PEER after Update:", peer);
+		attachTrack();
+	});
+
+	function attachTrack(){
+		peer.videoTrack?.attach(videoElement);
+		//peer.audioTrack?.attach(videoElement);
+	}
+
+	onDestroy(() => {});
 </script>
-
 <div class="video-container" bind:this={videoContainer}>
-    <div class="tw-flex tw-w-full tw-flex-col tw-h-full tw-border-orange tw-border-3 tw-border-solid">
-        <video
-            bind:this={videoElement}
-            class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
-            class="tw-h-full tw-max-w-full tw-rounded"
-            autoplay
-            playsinline
-        />
-    </div>
+	{#if peer.videoTrack}
+		<div class="tw-flex tw-w-full tw-flex-col tw-h-full tw-border-orange tw-border-3 tw-border-solid">
+			<video
+					bind:this={videoElement}
+					class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
+					class="tw-h-full tw-max-w-full tw-rounded"
+					autoplay
+					playsinline
+			/>
+		</div>
+	{/if}
+	{#if peer.audioTrack}
+		<SoundMeterWidget
+				classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+				barColor={textColor}
+		/>
+	{:else}
+		<img
+				draggable="false"
+				src={microphoneOffImg}
+				class="tw-flex tw-p-1 tw-h-8 tw-w-8 voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+				alt="Mute"
+				class:tw-brightness-0={textColor === "black"}
+				class:tw-brightness-100={textColor === "white"}
+		/>
+	{/if}
 </div>
 
 <style lang="scss">
-    video.no-video {
-        visibility: collapse;
-    }
+	video.no-video {
+		visibility: collapse;
+	}
 
-    video {
-        object-fit: cover;
-        &.object-contain {
-            object-fit: contain;
-        }
-    }
+	video {
+		object-fit: cover;
+		&.object-contain {
+			object-fit: contain;
+		}
+	}
 </style>

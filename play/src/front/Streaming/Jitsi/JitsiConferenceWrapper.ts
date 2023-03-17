@@ -1,5 +1,5 @@
 // eslint-disable @typescript-eslint/ban-ts-comment
-import { Readable, Unsubscriber, Writable, writable } from "svelte/store";
+import {get, Readable, Unsubscriber, Writable, writable} from "svelte/store";
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 import JitsiConference from "lib-jitsi-meet/types/hand-crafted/JitsiConference";
@@ -15,14 +15,14 @@ const debug = Debug("libjitsi");
 export class JitsiConferenceWrapper {
     //public readonly participantStore: MapStore<string, JitsiParticipant>;
 
-    private _streamStore: Writable<Map<string, JitsiTrackWrapper>>;
+    private _streamStore: Writable<Map<string, Writable<JitsiTrackWrapper>>>;
 
     private readonly _broadcastDevicesStore: Writable<DeviceType[]>;
 
     private localTracksStoreUnsubscribe: Unsubscriber | undefined;
 
     constructor(private jitsiConference: JitsiConference) {
-        this._streamStore = writable<Map<string, JitsiTrackWrapper>>(new Map<string, JitsiTrackWrapper>());
+        this._streamStore = writable<Map<string, Writable<JitsiTrackWrapper>>>(new Map<string, Writable<JitsiTrackWrapper>>());
         this._broadcastDevicesStore = writable<DeviceType[]>([]);
     }
 
@@ -65,37 +65,38 @@ export class JitsiConferenceWrapper {
                     return;
                 }
                 if (result.ok) {
+                    console.log("JitsiLocalTrackStore ========> ", result);
                     const tracks = result.value;
                     if (tracks.audio !== oldTracks.audio) {
                         if (tracks.audio === undefined && oldTracks.audio !== undefined) {
-                            console.warn("REMOVING AUDIO TRACK");
+                            console.warn("REMOVING LOCAL AUDIO TRACK");
                             room.removeTrack(oldTracks.audio);
                         } else if (tracks.audio !== undefined) {
                             if (oldTracks.audio !== undefined) {
-                                console.warn("REPLACING AUDIO TRACK");
+                                console.warn("REPLACING LOCAL AUDIO TRACK");
                                 room.replaceTrack(oldTracks.audio, tracks.audio).catch((e) =>
-                                    console.error("Error replacing track", e)
+                                    console.error("Error replacing local track", e)
                                 );
                             } else {
-                                console.warn("ADDING AUDIO TRACK");
-                                room.addTrack(tracks.audio).catch((e) => console.error("Error adding track", e));
+                                console.warn("ADDING LOCAL AUDIO TRACK");
+                                room.addTrack(tracks.audio).catch((e) => console.error("Error adding local track", e));
                             }
                         }
                     }
 
                     if (tracks.video !== oldTracks.video) {
                         if (tracks.video === undefined && oldTracks.video !== undefined) {
-                            debug("REMOVING VIDEO TRACK");
+                            console.warn("REMOVING LOCAL VIDEO TRACK");
                             room.removeTrack(oldTracks.video);
                         } else if (tracks.video !== undefined) {
                             if (oldTracks.video !== undefined) {
-                                debug("REPLACING VIDEO TRACK");
+                                console.warn("REPLACING LOCAL VIDEO TRACK");
                                 room.replaceTrack(oldTracks.video, tracks.video).catch((e) =>
                                     console.error("Error replacing track", e)
                                 );
                             } else {
-                                debug("ADDING VIDEO TRACK");
-                                room.addTrack(tracks.video).catch((e) => console.error("Error adding track", e));
+                                console.warn("ADDING LOCAL VIDEO TRACK");
+                                room.addTrack(tracks.video).catch((e) => console.error("Error adding local track", e));
                             }
                         }
                     }
@@ -106,11 +107,11 @@ export class JitsiConferenceWrapper {
                         } else if (tracks.screenSharing !== undefined) {
                             if (oldTracks.screenSharing !== undefined) {
                                 room.replaceTrack(oldTracks.screenSharing, tracks.screenSharing).catch((e) =>
-                                    console.error("Error replacing track", e)
+                                    console.error("Error replacing local track", e)
                                 );
                             } else {
                                 room.addTrack(tracks.screenSharing).catch((e) =>
-                                    console.error("Error adding track", e)
+                                    console.error("Error adding local track", e)
                                 );
                             }
                         }
@@ -131,25 +132,28 @@ export class JitsiConferenceWrapper {
                         return tracks;
                     }
 
-                    const jitsiTrackWrapper = tracks.get(participantId);
-                    if (!jitsiTrackWrapper) {
-                        throw new Error("JitsiTrackWrapper not found");
-                    }
-                    if (track.isAudioTrack()) {
-                        jitsiTrackWrapper.muteAudio();
-                    }
-                    if (track.isVideoTrack()) {
-                        jitsiTrackWrapper.muteVideo();
-                    }
-                    if (jitsiTrackWrapper.videoTrack === undefined && jitsiTrackWrapper.audioTrack === undefined) {
-                        tracks.delete(participantId);
+                    const jitsiTrackWrapperStore = tracks.get(participantId);
+                    if (jitsiTrackWrapperStore) {
+                        jitsiTrackWrapperStore.update((jitsiTrackWrapper) => {
+                            if (track.isAudioTrack()) {
+                                jitsiTrackWrapper.muteAudio();
+                            }
+                            if (track.isVideoTrack()) {
+                                jitsiTrackWrapper.muteVideo();
+                            }
+                            if (jitsiTrackWrapper.videoTrack === undefined && jitsiTrackWrapper.audioTrack === undefined) {
+                                tracks.delete(participantId);
+                            }
+                            return jitsiTrackWrapper;
+                        });
                     }
 
                     return tracks;
                 });
             };
 
-            const addRemoteTrack = (track: JitsiTrack) => {
+            const addRemoteTrack = (track: JitsiTrack, allowOverride: boolean) => {
+                console.log("JitsiConferenceWrapper => addRemoteTrack",  track.getType());
                 jitsiConferenceWrapper._streamStore.update((tracks) => {
                     // @ts-ignore
                     const participantId = track.getParticipantId();
@@ -157,12 +161,15 @@ export class JitsiConferenceWrapper {
                         console.error("Track has no participantId");
                         return tracks;
                     }
-                    let jitsiTrackWrapper = tracks.get(participantId);
-                    if (!jitsiTrackWrapper) {
-                        jitsiTrackWrapper = new JitsiTrackWrapper(track);
-                        tracks.set(participantId, jitsiTrackWrapper);
+                    let jitsiTrackWrapperStore = tracks.get(participantId);
+                    if (!jitsiTrackWrapperStore) {
+                        jitsiTrackWrapperStore = writable(new JitsiTrackWrapper(track));
+                        tracks.set(participantId, jitsiTrackWrapperStore);
                     } else {
-                        jitsiTrackWrapper.setJitsiTrack(track);
+                        jitsiTrackWrapperStore.update((jitsiTrackWrapper) => {
+                            jitsiTrackWrapper.setJitsiTrack(track, allowOverride);
+                            return jitsiTrackWrapper;
+                        });
                     }
 
                     return tracks;
@@ -172,11 +179,11 @@ export class JitsiConferenceWrapper {
             const trackStateChanged = (track: JitsiTrack) => {
                 //@ts-ignore
                 if (track.muted) {
-                    debug("remote track is muted");
+                    debug(`remote ${track.getType()} track is muted => removing`);
                     removeRemoteTrack(track);
                 } else {
-                    debug("remote track is emitting");
-                    addRemoteTrack(track);
+                    debug(`remote ${track.getType()} track is emitting => adding`);
+                    addRemoteTrack(track, true);
                 }
             };
 
@@ -189,13 +196,21 @@ export class JitsiConferenceWrapper {
                     return;
                 }
 
-                addRemoteTrack(track);
+                console.log("JitsiConferenceWrapper => onRemoteTrack");
+
+                addRemoteTrack(track, false);
 
                 /*track.addEventListener(
                     JitsiMeetJS.events.track.TRACK_AUDIO_LEVEL_CHANGED,
                     audioLevel => console.log(`Audio Level remote: ${audioLevel}`));*/
                 track.addEventListener(JitsiMeetJS.events.track.TRACK_MUTE_CHANGED, (event) => {
                     trackStateChanged(track);
+                });
+                track.addEventListener(JitsiMeetJS.events.track.NO_DATA_FROM_SOURCE, (event) => {
+                    console.log("track no data from source");
+                });
+                track.addEventListener(JitsiMeetJS.events.track.TRACK_VIDEOTYPE_CHANGED, (event) => {
+                    console.log("track video type changed");
                 });
                 track.addEventListener(JitsiMeetJS.events.track.LOCAL_TRACK_STOPPED, () => {
                     console.log("local track stopped");
@@ -225,7 +240,7 @@ export class JitsiConferenceWrapper {
                 if (track.isLocal()) {
                     return;
                 }
-                debug("remote track removed");
+                debug(`remote ${track.type} track removed`);
                 removeRemoteTrack(track);
             });
 
@@ -255,6 +270,7 @@ export class JitsiConferenceWrapper {
     }
 
     public leave(reason?: string): Promise<unknown> {
+        debug("JitsiConferenceWrapper => leaving ...");
         if (this.localTracksStoreUnsubscribe) {
             this.localTracksStoreUnsubscribe();
         }
@@ -265,7 +281,7 @@ export class JitsiConferenceWrapper {
         return this._broadcastDevicesStore;
     }
 
-    get streamStore(): Readable<Map<string, JitsiTrackWrapper>> {
+    get streamStore(): Readable<Map<string, Readable<JitsiTrackWrapper>>> {
         return this._streamStore;
     }
 }
