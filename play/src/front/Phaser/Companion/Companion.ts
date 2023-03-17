@@ -1,13 +1,13 @@
-import Sprite = Phaser.GameObjects.Sprite;
-import Container = Phaser.GameObjects.Container;
-import { PlayerAnimationTypes } from "../Player/Animation";
-import { TexturesHelper } from "../Helpers/TexturesHelper";
 import type { Writable } from "svelte/store";
 import { writable } from "svelte/store";
-import type { PictureStore } from "../../Stores/PictureStore";
 import type CancelablePromise from "cancelable-promise";
 import { PositionMessage_Direction } from "@workadventure/messages";
+import type { PictureStore } from "../../Stores/PictureStore";
+import { TexturesHelper } from "../Helpers/TexturesHelper";
+import { PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
+import Sprite = Phaser.GameObjects.Sprite;
+import Container = Phaser.GameObjects.Container;
 
 export interface CompanionStatus {
     x: number;

@@ -1,22 +1,21 @@
+import type { Observable } from "rxjs";
+import { Subject } from "rxjs";
+import type { RequireOnlyOne } from "../types";
+import type { ActionsMenuActionClickedEvent } from "../Events/ActionsMenuActionClickedEvent";
+import type { AddPlayerEvent } from "../Events/AddPlayerEvent";
 import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import type { ButtonClickedCallback, ButtonDescriptor } from "./Ui/ButtonDescriptor";
 import { Popup } from "./Ui/Popup";
 import { ActionMessage } from "./Ui/ActionMessage";
 import { Menu } from "./Ui/Menu";
-import type { RequireOnlyOne } from "../types";
-import type { ActionsMenuActionClickedEvent } from "../Events/ActionsMenuActionClickedEvent";
-import type { Observable } from "rxjs";
-import { Subject } from "rxjs";
 import type { UIWebsiteCommands } from "./Ui/UIWebsite";
 import website from "./Ui/UIWebsite";
 import { RemotePlayer } from "./Players/RemotePlayer";
-import type { AddPlayerEvent } from "../Events/AddPlayerEvent";
 import modal from "./Ui/Modal";
 import type { WorkadventureModalCommands } from "./Ui/Modal";
 import buttonActionBar, { WorkAdventureButtonActionBarCommands } from "./Ui/ButtonActionBar";
-import { WorkadventureBannerCommands } from "./Ui/Banner";
-import banner from "./Ui/Banner";
+import banner, { WorkadventureBannerCommands } from "./Ui/Banner";
 
 let popupId = 0;
 const popups: Map<number, Popup> = new Map<number, Popup>();

@@ -1,7 +1,7 @@
 import { get } from "svelte/store";
+import { v4 as uuidv4 } from "uuid";
 import type { CreateUIWebsiteEvent, ModifyUIWebsiteEvent, UIWebsite } from "../../../Api/Events/Ui/UIWebsite";
 import { iframeListener } from "../../../Api/IframeListener";
-import { v4 as uuidv4 } from "uuid";
 import { uiWebsitesStore } from "../../../Stores/UIWebsiteStore";
 
 class UIWebsiteManager {

@@ -1,10 +1,10 @@
-import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import CancelablePromise from "cancelable-promise";
 import { CompanionTexture, CompanionCollectionList, companionCollectionList } from "@workadventure/messages";
 import { gameManager } from "../Game/GameManager";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import type { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
+import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 
 export function companionListMetakey() {
     return "companion-list" + gameManager.currentStartedRoom.href;

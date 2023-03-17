@@ -1,9 +1,5 @@
-import type { ExSocketInterface } from "./Websocket/ExSocketInterface";
-import { apiClientRepository } from "../services/ApiClientRepository";
 import type { ClientReadableStream } from "@grpc/grpc-js";
-import type { PositionDispatcher } from "../models/PositionDispatcher";
 import Debug from "debug";
-import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import {
     AvailabilityStatus,
     BatchToPusherMessage,
@@ -22,6 +18,10 @@ import {
     UserMovedMessage,
     ZoneMessage,
 } from "@workadventure/messages";
+import { apiClientRepository } from "../services/ApiClientRepository";
+import type { PositionDispatcher } from "../models/PositionDispatcher";
+import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
+import type { ExSocketInterface } from "./Websocket/ExSocketInterface";
 
 const debug = Debug("zone");
 

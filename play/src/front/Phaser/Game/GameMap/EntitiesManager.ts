@@ -1,6 +1,7 @@
 import { AtLeast, EntityData, EntityDataProperties, EntityPrefab } from "@workadventure/map-editor";
 import { Observable, Subject } from "rxjs";
 import { get } from "svelte/store";
+import { z } from "zod";
 import { actionsMenuStore } from "../../../Stores/ActionsMenuStore";
 import {
     mapEditorModeStore,
@@ -14,7 +15,6 @@ import { Entity, EntityEvent } from "../../ECS/Entity";
 import { TexturesHelper } from "../../Helpers/TexturesHelper";
 import type { GameScene } from "../GameScene";
 import type { GameMapFrontWrapper } from "./GameMapFrontWrapper";
-import { z } from "zod";
 
 export const CopyEntityEventData = z.object({
     position: z.object({

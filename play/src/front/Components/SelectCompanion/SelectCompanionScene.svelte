@@ -1,5 +1,5 @@
 <script lang="ts">
-    import LL from "../../../i18n/i18n-svelte";
+    import { LL } from "../../../i18n/i18n-svelte";
     import type { Game } from "../../Phaser/Game/Game";
     import type { SelectCompanionScene } from "../../Phaser/Login/SelectCompanionScene";
     import { SelectCompanionSceneName } from "../../Phaser/Login/SelectCompanionScene";

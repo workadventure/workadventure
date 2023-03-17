@@ -1,5 +1,6 @@
 <script lang="ts">
-    import LL from "../../../i18n/i18n-svelte";
+    import { LocalizedString } from "typesafe-i18n";
+    import { LL } from "../../../i18n/i18n-svelte";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import { mapEditorSelectedToolStore } from "../../Stores/MapEditorStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -10,7 +11,6 @@
     import ZoomOutImg from "../images/zoom-out-icons.svg";
     import Tooltip from "../Util/Tooltip.svelte";
     import { ENABLE_MAP_EDITOR_AREAS_TOOL } from "../../Enum/EnvironmentVariable";
-    import { LocalizedString } from "typesafe-i18n";
 
     const gameScene = gameManager.getCurrentGameScene();
 

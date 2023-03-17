@@ -1,5 +1,5 @@
-import { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
 import { SubMessage, ServerToClientMessage } from "@workadventure/messages";
+import { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
 
 export function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
     socket.batchedMessages.payload.push(payload);

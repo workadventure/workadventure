@@ -1,5 +1,3 @@
-import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
-import type { AdminInterface } from "./AdminInterface";
 import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData } from "@workadventure/messages";
 import { OpidWokaNamePolicy } from "@workadventure/messages";
 import {
@@ -12,6 +10,8 @@ import {
     ENABLE_CHAT_ONLINE_LIST,
     ENABLE_CHAT_DISCONNECTED_LIST,
 } from "../enums/EnvironmentVariable";
+import type { AdminInterface } from "./AdminInterface";
+import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
 

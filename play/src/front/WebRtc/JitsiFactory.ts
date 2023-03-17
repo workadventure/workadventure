@@ -1,11 +1,11 @@
-import { JITSI_URL } from "../Enum/EnvironmentVariable";
-import { coWebsiteManager } from "./CoWebsiteManager";
-import { requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
 import { get } from "svelte/store";
 import CancelablePromise from "cancelable-promise";
+import { z } from "zod";
+import { requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { jitsiParticipantsCountStore, userIsJitsiDominantSpeakerStore } from "../Stores/GameStore";
-import { z } from "zod";
+import { JITSI_URL } from "../Enum/EnvironmentVariable";
+import { coWebsiteManager } from "./CoWebsiteManager";
 
 const JitsiConfig = z
     .object({

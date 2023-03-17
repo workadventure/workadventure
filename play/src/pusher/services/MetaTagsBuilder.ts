@@ -8,9 +8,9 @@ import {
     isRoomRedirect,
     ErrorApiData,
 } from "@workadventure/messages";
-import { adminService } from "./AdminService";
 import axios, { AxiosResponse } from "axios";
 import { ADMIN_API_URL } from "../enums/EnvironmentVariable";
+import { adminService } from "./AdminService";
 
 export const MetaTagsDefaultValue: RequiredMetaTagsData = {
     title: "WorkAdventure",

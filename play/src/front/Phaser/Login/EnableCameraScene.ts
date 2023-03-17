@@ -1,7 +1,7 @@
 import { gameManager } from "../Game/GameManager";
-import { ResizableScene } from "./ResizableScene";
 import { enableCameraSceneVisibilityStore } from "../../Stores/MediaStore";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
+import { ResizableScene } from "./ResizableScene";
 
 export const EnableCameraSceneName = "EnableCameraScene";
 

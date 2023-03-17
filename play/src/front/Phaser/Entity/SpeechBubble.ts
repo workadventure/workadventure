@@ -1,5 +1,5 @@
-import Scene = Phaser.Scene;
 import type { Character } from "./Character";
+import Scene = Phaser.Scene;
 
 //todo: improve this WIP
 export class SpeechBubble {

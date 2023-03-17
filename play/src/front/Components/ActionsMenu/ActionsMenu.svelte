@@ -1,10 +1,9 @@
 <script lang="ts">
-    import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
-    import { onDestroy } from "svelte";
-
-    import type { ActionsMenuAction } from "../../Stores/ActionsMenuStore";
     import type { Unsubscriber } from "svelte/store";
-    import type { ActionsMenuData } from "../../Stores/ActionsMenuStore";
+    import { onDestroy } from "svelte";
+    import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
+
+    import type { ActionsMenuAction, ActionsMenuData } from "../../Stores/ActionsMenuStore";
 
     let actionsMenuData: ActionsMenuData | undefined;
     let sortedActions: ActionsMenuAction[] | undefined;
