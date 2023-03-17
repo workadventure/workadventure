@@ -180,6 +180,7 @@ services:
       traefik.http.routers.uploader-ssl.service: "uploader"
       traefik.http.routers.uploader-ssl.tls: "true"
       traefik.http.routers.uploader-ssl.tls.certresolver: "myresolver"
+    restart: ${RESTART_POLICY}
 
   icon:
     image: matthiasluedtke/iconserver:v3.13.0
@@ -196,11 +197,13 @@ services:
       traefik.http.routers.icon-ssl.service: "icon"
       traefik.http.routers.icon-ssl.tls: "true"
       traefik.http.routers.icon-ssl.tls.certresolver: "myresolver"
+    restart: ${RESTART_POLICY}
 
   redis:
     image: redis:6
     volumes:
       - redisdata:/data
+    restart: ${RESTART_POLICY}
 
   ejabberd:
     image: workadventure/ejabberd:v1
@@ -227,6 +230,7 @@ services:
       traefik.http.routers.ejabberd-ssl.service: "ejabberd"
       traefik.http.routers.ejabberd-ssl.tls: "true"
       traefik.http.routers.ejabberd-ssl.tls.certresolver: "myresolver"
+    restart: ${RESTART_POLICY}
 
   map-storage:
     image: thecodingmachine/workadventure-map-storage:${VERSION}
@@ -250,6 +254,7 @@ services:
       traefik.http.routers.map-storage-ssl.service: "map-storage"
       traefik.http.routers.map-storage-ssl.tls: "true"
       traefik.http.routers.map-storage-ssl.tls.certresolver: "myresolver"
+    restart: ${RESTART_POLICY}
 
 volumes:
   redisdata:
