@@ -1,12 +1,5 @@
 <script lang="ts">
     import { fade, fly } from "svelte/transition";
-    import { MucRoom } from "../../Xmpp/MucRoom";
-    import { Message } from "../../Model/Message";
-    import LL, { locale } from "../../i18n/i18n-svelte";
-    import { selectedMessageToReact, selectedMessageToReply } from "../../Stores/ChatStore";
-    import { Writable } from "svelte/store";
-    import { EmojiButton } from "@joeattardi/emoji-button";
-    import { JID } from "stanza";
     import {
         AlertCircleIcon,
         CopyIcon,
@@ -16,11 +9,18 @@
         SmileIcon,
         Trash2Icon,
     } from "svelte-feather-icons";
+    import { Writable } from "svelte/store";
+    import { EmojiButton } from "@joeattardi/emoji-button";
+    import { JID } from "stanza";
+    import { MucRoom } from "../../Xmpp/MucRoom";
+    import { Message } from "../../Model/Message";
+    import { LL, locale } from "../../i18n/i18n-svelte";
+    import { selectedMessageToReact, selectedMessageToReply } from "../../Stores/ChatStore";
     import { HtmlUtils } from "../../Utils/HtmlUtils";
+    import { User } from "../../Xmpp/AbstractRoom";
     import HtmlMessage from "./HtmlMessage.svelte";
     import File from "./File.svelte";
     import Reactions from "./Reactions.svelte";
-    import { User } from "../../Xmpp/AbstractRoom";
 
     export let mucRoom: MucRoom;
     export let message: Message;

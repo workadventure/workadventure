@@ -1,17 +1,16 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
     import { MoreHorizontalIcon, ShieldOffIcon, ShieldIcon, SlashIcon, UsersIcon } from "svelte-feather-icons";
-    import LL from "../i18n/i18n-svelte";
-    import { defaultColor, defaultWoka } from "../Xmpp/AbstractRoom";
+    import { get } from "svelte/store";
+    import { LL } from "../i18n/i18n-svelte";
+    import { defaultColor, defaultWoka, User } from "../Xmpp/AbstractRoom";
     import { MucRoom } from "../Xmpp/MucRoom";
-    import { User } from "../Xmpp/AbstractRoom";
     import walk from "../../public/static/images/walk.svg";
     import teleport from "../../public/static/images/teleport.svg";
     import businessCard from "../../public/static/images/business-cards.svg";
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
     import { iframeListener } from "../IframeListener";
-    import { get } from "svelte/store";
 
     export let mucRoom: MucRoom;
     export let user: User;
