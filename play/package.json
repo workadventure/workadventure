@@ -71,6 +71,8 @@
     "@vitest/coverage-c8": "^0.29.1",
     "autoprefixer": "^10.4.4",
     "eslint": "^8.30.0",
+    "eslint-import-resolver-typescript": "^3.5.3",
+    "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-svelte3": "^4.0.0",
     "jsdom": "^20.0.1",
     "lint-staged": "^12.3.7",
