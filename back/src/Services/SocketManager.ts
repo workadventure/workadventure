@@ -1,4 +1,4 @@
-import { GameRoom } from "../Model/GameRoom";
+import crypto from "crypto";
 import {
     AnswerMessage,
     BanUserMessage,
@@ -44,26 +44,26 @@ import {
     AddSpaceUserMessage,
     RemoveSpaceUserMessage,
 } from "@workadventure/messages";
+import Jwt from "jsonwebtoken";
+import BigbluebuttonJs from "bigbluebutton-js";
+import Debug from "debug";
+import { GameRoom } from "../Model/GameRoom";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { Group } from "../Model/Group";
-import { cpuTracker } from "./CpuTracker";
 import { GROUP_RADIUS, MINIMUM_DISTANCE, TURN_STATIC_AUTH_SECRET } from "../Enum/EnvironmentVariable";
 import { Movable } from "../Model/Movable";
 import { PositionInterface } from "../Model/PositionInterface";
-import Jwt from "jsonwebtoken";
-import BigbluebuttonJs from "bigbluebutton-js";
-import { clientEventsEmitter } from "./ClientEventsEmitter";
-import { gaugeManager } from "./GaugeManager";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
 import { Zone } from "../Model/Zone";
-import Debug from "debug";
 import { Admin } from "../Model/Admin";
-import crypto from "crypto";
-import { getMapStorageClient } from "./MapStorageClient";
-import { emitError } from "./MessageHelpers";
 import { Space } from "../Model/Space";
 import { SpacesWatcher } from "../Model/SpacesWatcher";
+import { getMapStorageClient } from "./MapStorageClient";
+import { emitError } from "./MessageHelpers";
+import { gaugeManager } from "./GaugeManager";
+import { clientEventsEmitter } from "./ClientEventsEmitter";
+import { cpuTracker } from "./CpuTracker";
 
 const debug = Debug("socketmanager");
 

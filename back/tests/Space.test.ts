@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { BackToPusherSpaceMessage, PartialSpaceUser, SpaceUser } from "@workadventure/messages";
+import { mock } from "vitest-mock-extended";
 import { Space } from "../src/Model/Space";
 import { SpacesWatcher } from "../src/Model/SpacesWatcher";
-import { BackToPusherSpaceMessage, PartialSpaceUser, SpaceUser } from "@workadventure/messages";
 import { SpaceSocket } from "../src/SpaceManager";
-import { mock } from "vitest-mock-extended";
 
 describe("Space", () => {
     const space = new Space("test");

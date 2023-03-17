@@ -1,7 +1,7 @@
-import { ADMIN_API_TOKEN } from "../Enum/EnvironmentVariable";
 import { stringify } from "circular-json";
 import { HttpRequest, HttpResponse } from "uWebSockets.js";
 import { parse } from "query-string";
+import { ADMIN_API_TOKEN } from "../Enum/EnvironmentVariable";
 import { App } from "../Server/sifrr.server";
 import { socketManager } from "../Services/SocketManager";
 import { CustomJsonReplacerInterface } from "../Model/CustomJsonReplacerInterface";

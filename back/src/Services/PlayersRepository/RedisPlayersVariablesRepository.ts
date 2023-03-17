@@ -1,9 +1,9 @@
+import { RedisClient } from "../RedisClient";
 import {
     LoadVariablesReturn,
     PlayersVariablesRepositoryInterface,
     VariableWithScope,
 } from "./PlayersVariablesRepositoryInterface";
-import { RedisClient } from "../RedisClient";
 
 /**
  * Class in charge of saving/loading variables relative to a player in DB.
