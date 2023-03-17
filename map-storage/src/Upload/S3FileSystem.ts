@@ -1,3 +1,6 @@
+import { IncomingMessage } from "http";
+import { Readable } from "stream";
+import path from "path";
 import {
     CopyObjectCommand,
     DeleteObjectCommand,
@@ -11,18 +14,15 @@ import {
     PutObjectCommand,
     S3,
 } from "@aws-sdk/client-s3";
-import { FileSystemInterface } from "./FileSystemInterface";
-import { s3UploadConcurrencyLimit } from "../Services/S3Client";
 import mime from "mime";
 import { NextFunction, Response } from "express";
-import { IncomingMessage } from "http";
 import { Archiver } from "archiver";
-import { Readable } from "stream";
 import { StreamZipAsync, ZipEntry } from "node-stream-zip";
-import path from "path";
+import pLimit from "p-limit";
+import { s3UploadConcurrencyLimit } from "../Services/S3Client";
 import { UploadController } from "./UploadController";
 import { FileNotFoundError } from "./FileNotFoundError";
-import pLimit from "p-limit";
+import { FileSystemInterface } from "./FileSystemInterface";
 
 export class S3FileSystem implements FileSystemInterface {
     public constructor(private s3: S3, private bucketName: string) {}

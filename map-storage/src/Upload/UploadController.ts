@@ -1,20 +1,20 @@
 import * as fs from "fs";
-import multer from "multer";
-import { Express, Request } from "express";
-import { FileSystemInterface } from "./FileSystemInterface";
-import { MAX_UNCOMPRESSED_SIZE } from "../Enum/EnvironmentVariable";
-import { mapPath } from "../Services/PathMapper";
-import { z } from "zod";
 import path from "node:path";
+import { z } from "zod";
+import { Express, Request } from "express";
+import multer from "multer";
 import pLimit from "p-limit";
-import { passportAuthenticator } from "../Services/Authentication";
 import archiver from "archiver";
-import { fileSystem } from "../fileSystem";
 import StreamZip from "node-stream-zip";
 import { MapValidator, OrganizedErrors } from "@workadventure/map-editor/src/GameMap/MapValidator";
-import { FileNotFoundError } from "./FileNotFoundError";
+import { mapPath } from "../Services/PathMapper";
+import { MAX_UNCOMPRESSED_SIZE } from "../Enum/EnvironmentVariable";
+import { fileSystem } from "../fileSystem";
+import { passportAuthenticator } from "../Services/Authentication";
 import { mapsManager } from "../MapsManager";
 import { uploadDetector } from "../Services/UploadDetector";
+import { FileSystemInterface } from "./FileSystemInterface";
+import { FileNotFoundError } from "./FileNotFoundError";
 
 const upload = multer({
     storage: multer.diskStorage({}),
