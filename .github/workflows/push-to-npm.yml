@@ -34,8 +34,8 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           version: '3.x'
 
-      - name: "Install play dependencies"
-        run: npm ci --workspace=workadventure-play
+      - name: "Install dependencies"
+        run: npm ci #--workspace=workadventure-play
 
       - name: "Install messages dependencies"
         run: npm ci
@@ -58,7 +58,7 @@ jobs:
 
       - name: Install dependencies in package
         run: npm ci
-        working-directory: "play/packages/iframe-api-typings"
+        #working-directory: "play/packages/iframe-api-typings"
         if: ${{ github.event_name == 'release' }}
 
       - name: Publish package
