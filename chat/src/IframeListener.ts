@@ -105,9 +105,14 @@ class IframeListener {
                             }
                             const mucRoomDefault = mucRoomsStore.getDefaultRoom();
                             let userData = undefined;
-                            if (mucRoomDefault && iframeEvent.data.author.jid !== "fake") {
-                                userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
-                            } else {
+                            try {
+                                if (mucRoomDefault && iframeEvent.data.author.jid !== "fake") {
+                                    userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
+                                } else {
+                                    userData = iframeEvent.data.author;
+                                }
+                            } catch (e) {
+                                console.error("Error while getting user data from Ejabberd", e);
                                 userData = iframeEvent.data.author;
                             }
                             for (const chatMessageText of iframeEvent.data.text) {
