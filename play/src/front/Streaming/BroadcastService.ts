@@ -3,7 +3,7 @@ import { libJitsiFactory } from "./Jitsi/LibJitsiFactory";
 import { JitsiConferenceWrapper } from "./Jitsi/JitsiConferenceWrapper";
 import { jitsiConferencesStore } from "./Jitsi/JitsiConferencesStore";
 import { megaphoneEnabledStore } from "../Stores/MegaphoneStore";
-import { get, Readable, Unsubscriber } from "svelte/store";
+import { derived, get, Readable, Unsubscriber } from "svelte/store";
 import { ForwardableStore } from "@workadventure/store-utils";
 import { JitsiTrackWrapper } from "./Jitsi/JitsiTrackWrapper";
 import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
@@ -77,7 +77,7 @@ export class BroadcastService {
                     }
                 } else {
                     if (broadcastSpace.jitsiConference === undefined) {
-                        this.limit(() => this.joinJitsiConference(spaceName))
+                        this.limit(() => this.joinJitsiConference(spaceName, broadcastSpace))
                             .then((jitsiConference) => {
                                 broadcastSpace.jitsiConference = jitsiConference;
                                 this.connection.emitJitsiParticipantIdSpace(spaceName, jitsiConference.participantId);
@@ -100,7 +100,10 @@ export class BroadcastService {
         );
     }
 
-    private async joinJitsiConference(roomName: string): Promise<JitsiConferenceWrapper> {
+    private async joinJitsiConference(
+        roomName: string,
+        broadcastSpace: BroadcastSpace
+    ): Promise<JitsiConferenceWrapper> {
         if (!this.jitsiConnection) {
             await this.connect();
         }
@@ -115,7 +118,36 @@ export class BroadcastService {
             jitsiConference.broadcast(["video", "audio"]);
         }
 
-        this._jitsiTracks.forward(jitsiConference.streamStore);
+        const associatedStreamStore: Readable<Map<string, Readable<JitsiTrackWrapper>>> = derived(
+            [jitsiConference.streamStore, broadcastSpace.users],
+            ([$streamStore, $users]) => {
+                const filtered = new Map<string, Readable<JitsiTrackWrapper>>();
+                for (const [participantId, stream] of $streamStore) {
+                    let found = false;
+                    if (get(stream).spaceUser !== undefined) {
+                        filtered.set(participantId, stream);
+                        continue;
+                    }
+                    for (const user of $users.values()) {
+                        if (user.jitsiParticipantId === get(stream).uniqueId) {
+                            get(stream).spaceUser = user;
+                            filtered.set(participantId, stream);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        console.warn(
+                            "BroadcastService => joinJitsiConference => No associated spaceUser found for participantId",
+                            get(stream).uniqueId
+                        );
+                    }
+                }
+                return filtered;
+            }
+        );
+
+        this._jitsiTracks.forward(associatedStreamStore);
         return jitsiConference;
     }
 

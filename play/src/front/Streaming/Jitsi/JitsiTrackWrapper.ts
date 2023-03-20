@@ -1,18 +1,20 @@
+import { SpaceUser } from "@workadventure/messages";
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
-import {Readable, readable, Unsubscriber} from "svelte/store";
-import {SoundMeter} from "../../Phaser/Components/SoundMeter";
+import { Readable, readable, Unsubscriber } from "svelte/store";
+import { SoundMeter } from "../../Phaser/Components/SoundMeter";
 
 export class JitsiTrackWrapper {
+    private _spaceUser: SpaceUser | undefined;
     private _audioTrack: JitsiTrack | undefined;
     private _videoTrack: JitsiTrack | undefined;
 
     public userName = "test";
-    private volumeStore: Readable<number[]|undefined> | undefined
+    private volumeStore: Readable<number[] | undefined> | undefined;
     private volumeStoreSubscribe: Unsubscriber | undefined;
 
     constructor(jitsiTrack: JitsiTrack) {
         this.setJitsiTrack(jitsiTrack);
-        if(jitsiTrack.isAudioTrack()) {
+        if (jitsiTrack.isAudioTrack()) {
             this.volumeStore = readable<number[] | undefined>(undefined, (set) => {
                 if (this._audioTrack?.getOriginalStream()) {
                     const soundMeter = new SoundMeter(this._audioTrack.getOriginalStream());
@@ -80,5 +82,13 @@ export class JitsiTrackWrapper {
 
     muteVideo() {
         this._videoTrack = undefined;
+    }
+
+    get spaceUser(): SpaceUser | undefined {
+        return this._spaceUser;
+    }
+
+    set spaceUser(value: SpaceUser | undefined) {
+        this._spaceUser = value;
     }
 }
