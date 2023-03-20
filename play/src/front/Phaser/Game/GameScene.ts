@@ -1109,7 +1109,7 @@ export class GameScene extends DirtyScene {
                     });
                 });
 
-                this.gameMapFrontWrapper.onEnterDynamicArea((areas) => {
+                this.gameMapFrontWrapper.onLeaveDynamicArea((areas) => {
                     areas.forEach((area) => {
                         iframeListener.sendLeaveAreaEvent(area.name);
                     });
