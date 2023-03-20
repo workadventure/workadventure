@@ -1,11 +1,12 @@
 <script lang="ts">
     import { fade, fly } from "svelte/transition";
     import { MucRoom } from "../../Xmpp/MucRoom";
+    import { User } from "../../Xmpp/AbstractRoom";
 
     export let userJid: string;
     export let defaultMucRoom: MucRoom;
 
-    let userData = undefined;
+    let userData: User | undefined = undefined;
     try {
         userData = defaultMucRoom.getUserByJid(userJid);
     } catch (e) {
