@@ -96,6 +96,7 @@ class App {
         adminApi
             .initialise()
             .then((capabilities) => {
+                console.log("CAPABILITIES", capabilities);
                 companionListController.setCompanionService(CompanionService.get(capabilities));
                 wokaListController.setWokaService(WokaService.get(capabilities));
                 console.debug("Initialized companion and woka services");

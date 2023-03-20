@@ -30,6 +30,7 @@ export class CompanionTexturesLoadingManager {
                     withCredentials: true,
                 },
                 (_key, _type, data) => {
+                    console.log(data);
                     companionTextureList = companionCollectionList.parse(data);
                     processListCallback(companionTextureList);
                 }
@@ -47,7 +48,7 @@ export class CompanionTexturesLoadingManager {
             });
 
             this.loadTextures((companionList) => {
-                const texture = companionList
+                const texture = companionList.companion.collections
                     .flatMap((collection) => collection.textures)
                     .find((t) => t.name === textureName);
 
@@ -66,7 +67,7 @@ export class CompanionTexturesLoadingManager {
     public loadByTexture(texture: CompanionTexture, onLoaded: (_textureName: string) => void = () => {}) {
         if (this.loader.textureManager.exists(texture.name)) return onLoaded(texture.name);
 
-        this.loader.spritesheet(texture.name, texture.img, { frameWidth: 32, frameHeight: 32, endFrame: 12 });
+        this.loader.spritesheet(texture.name, texture.url, { frameWidth: 32, frameHeight: 32, endFrame: 12 });
         this.loader.once(`filecomplete-spritesheet-${texture.name}`, () => onLoaded(texture.name));
     }
 }
