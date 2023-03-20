@@ -106,7 +106,12 @@ class IframeListener {
                             const mucRoomDefault = mucRoomsStore.getDefaultRoom();
                             let userData = undefined;
                             if (mucRoomDefault && iframeEvent.data.author.jid !== "fake") {
-                                userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
+                                try {
+                                    userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
+                                } catch (e) {
+                                    console.warn("Can't fetch user data from Ejabberd", e);
+                                    userData = iframeEvent.data.author;
+                                }
                             } else {
                                 userData = iframeEvent.data.author;
                             }
