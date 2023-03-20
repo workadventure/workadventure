@@ -1,3 +1,4 @@
+import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameScene } from "./GameScene";
 import { scriptUtils } from "../../Api/ScriptUtils";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
@@ -371,6 +372,9 @@ export class GameMapPropertiesListener {
 
             //user in a zone with cowebsite opened or pressed SPACE to enter is a zone
             inOpenWebsite.set(true);
+
+            // analytics event for open website
+            analyticsClient.openedWebsite();
         };
 
         if (localUserStore.getForceCowebsiteTrigger() || websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {
