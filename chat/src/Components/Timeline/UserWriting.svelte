@@ -9,7 +9,7 @@
     try {
         userData = defaultMucRoom.getUserByJid(userJid);
     } catch (e) {
-        console.error("User data not found in default room", e);
+        console.warn("Can't fetch user data from Ejabberd", e);
     }
 </script>
 
