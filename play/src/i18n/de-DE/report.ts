@@ -9,11 +9,10 @@ const report: DeepPartial<Translation["report"]> = {
         block: "Blockiere diesen Nutzer",
     },
     title: "Melden",
-    content:
-        "Verfasse eine Beschwerde an die Administratoren dieses Raums. Diese können den Nutzer anschließend bannen.",
+    content: "Verfasse eine Meldung an die Administratoren dieses Raums. Diese können den Nutzer anschließend bannen.",
     message: {
         title: "Deine Nachricht: ",
-        empty: "Bitte Text eingeben.",
+        empty: "Das Feld darf nicht leer sein.",
         error: "Meldungsfehler melden, Sie können sich an den Administrator wenden.",
     },
     submit: "Diesen Nutzer melden",
@@ -21,7 +20,7 @@ const report: DeepPartial<Translation["report"]> = {
         title: "{userName} moderieren",
         block: "Blockieren",
         report: "Melden",
-        noSelect: "FEHLER : Es ist keine Handlung ausgewählt.",
+        noSelect: "FEHLER : Es ist keine Aktion ausgewählt.",
     },
 };
 
