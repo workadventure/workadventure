@@ -140,7 +140,7 @@ import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInt
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
-import { AreaDataProperties, GameMap, GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
+import { GameMap, GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
@@ -1101,13 +1101,15 @@ export class GameScene extends DirtyScene {
                     });
                 });
 
-                this.gameMapFrontWrapper.onEnterArea((areas) => {
+                // NOTE: Leaving events names as "enterArea" and "leaveArea" to not introduce any breaking changes.
+                //       We are only looking through dynamic areas when handling those events.
+                this.gameMapFrontWrapper.onEnterDynamicArea((areas) => {
                     areas.forEach((area) => {
                         iframeListener.sendEnterAreaEvent(area.name);
                     });
                 });
 
-                this.gameMapFrontWrapper.onLeaveArea((areas) => {
+                this.gameMapFrontWrapper.onEnterDynamicArea((areas) => {
                     areas.forEach((area) => {
                         iframeListener.sendLeaveAreaEvent(area.name);
                     });
@@ -1730,12 +1732,7 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.setAreaPropertyStream.subscribe((setProperty) => {
-                this.setAreaProperty(
-                    setProperty.areaName,
-                    AreaType.Dynamic,
-                    setProperty.propertyName,
-                    setProperty.propertyValue
-                );
+                this.setAreaProperty(setProperty.areaName, setProperty.propertyName, setProperty.propertyValue);
             })
         );
 
@@ -2068,12 +2065,8 @@ ${escapedMessage}
         this.gameMapFrontWrapper.setLayerProperty(layerName, propertyName, propertyValue);
     }
 
-    private setAreaProperty<K extends keyof AreaDataProperties>(
-        areaName: string,
-        propertyName: K,
-        propertyValue: AreaDataProperties[K]
-    ): void {
-        this.gameMapFrontWrapper.setAreaProperty(areaName, propertyName, propertyValue);
+    private setAreaProperty(areaName: string, propertyName: string, propertyValue: unknown): void {
+        this.gameMapFrontWrapper.setDynamicAreaProperty(areaName, propertyName, propertyValue);
     }
 
     public getMapDirUrl(): string {

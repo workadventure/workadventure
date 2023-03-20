@@ -613,6 +613,17 @@ export class GameMapFrontWrapper {
         this.gameMap.getGameMapAreas()?.triggerAreasChange(this.oldPosition, this.position);
     }
 
+    public setDynamicAreaProperty(areaName: string, propertyName: string, propertyValue: unknown): void {
+        const area = this.dynamicAreas.get(areaName);
+        if (area === undefined) {
+            console.warn('Could not find dynamic area "' + areaName + '" when calling setProperty');
+            return;
+        }
+        area.properties[propertyName] = propertyValue;
+        this.triggerAllProperties();
+        this.triggerDynamicAreasChange(this.oldPosition, this.position);
+    }
+
     public getAreas(): Map<string, AreaData> | undefined {
         return this.gameMap.getGameMapAreas()?.getAreas();
     }
@@ -781,6 +792,43 @@ export class GameMapFrontWrapper {
         };
     }
 
+    public mapDynamicAreaToTiledObject(dynamicArea: DynamicArea): ITiledPlace {
+        return {
+            id: dynamicArea.name,
+            type: "area",
+            class: "area",
+            name: dynamicArea.name,
+            visible: true,
+            x: dynamicArea.x,
+            y: dynamicArea.y,
+            width: dynamicArea.width,
+            height: dynamicArea.height,
+            properties: this.mapDynamicAreaPropertiesToTiledProperties(dynamicArea.properties),
+        };
+    }
+
+    private mapDynamicAreaPropertiesToTiledProperties(dynamicAreaProperties: {
+        [key: string]: unknown;
+    }): ITiledMapProperty[] {
+        const properties: ITiledMapProperty[] = [];
+        for (const key in dynamicAreaProperties) {
+            const property = dynamicAreaProperties[key];
+            if (typeof property === "string") {
+                properties.push({ name: key, type: "string", value: property });
+                continue;
+            }
+            if (typeof property === "number") {
+                properties.push({ name: key, type: "float", value: property });
+                continue;
+            }
+            if (typeof property === "boolean") {
+                properties.push({ name: key, type: "bool", value: property });
+                continue;
+            }
+        }
+        return properties;
+    }
+
     private mapAreaPropertiesToTiledProperties(areaProperties: AreaDataProperties): ITiledMapProperty[] {
         const properties: ITiledMapProperty[] = [];
 
@@ -898,6 +946,14 @@ export class GameMapFrontWrapper {
             const areasProperties = this.gameMap.getGameMapAreas()?.getProperties(this.position);
             if (areasProperties) {
                 properties = areasProperties;
+            }
+        }
+
+        // CHECK FOR DYNAMIC AREAS PROPERTIES
+        if (this.position) {
+            const dynamicAreasProperties = this.getDynamicAreasProperties(this.position);
+            if (dynamicAreasProperties) {
+                properties = dynamicAreasProperties;
             }
         }
 
@@ -1107,5 +1163,24 @@ export class GameMapFrontWrapper {
             }
         }
         return overlappedDynamicAreas;
+    }
+
+    private getDynamicAreasProperties(position: { x: number; y: number }): Map<string, string | number | boolean> {
+        const properties = new Map<string, string | number | boolean>();
+        for (const dynamicArea of this.getDynamicAreasOnPosition(position, 16)) {
+            if (dynamicArea.properties === undefined) {
+                continue;
+            }
+            for (const key in dynamicArea.properties) {
+                const property = dynamicArea.properties[key];
+                if (property === undefined) {
+                    continue;
+                }
+                if (typeof property === "string" || typeof property === "number" || typeof property === "boolean") {
+                    properties.set(key, property);
+                }
+            }
+        }
+        return properties;
     }
 }

@@ -277,6 +277,18 @@ export class GameMapPropertiesListener {
         this.gameMapFrontWrapper.onLeaveArea((oldAreas) => {
             this.onLeavePlaceHandler(oldAreas.map((area) => this.gameMapFrontWrapper.mapAreaToTiledObject(area)));
         });
+
+        this.gameMapFrontWrapper.onEnterDynamicArea((newAreas) => {
+            this.onEnterPlaceHandler(
+                newAreas.map((area) => this.gameMapFrontWrapper.mapDynamicAreaToTiledObject(area))
+            );
+        });
+
+        this.gameMapFrontWrapper.onLeaveDynamicArea((oldAreas) => {
+            this.onLeavePlaceHandler(
+                oldAreas.map((area) => this.gameMapFrontWrapper.mapDynamicAreaToTiledObject(area))
+            );
+        });
     }
 
     private onEnterPlaceHandler(places: ITiledPlace[]): void {
