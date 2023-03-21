@@ -1,10 +1,10 @@
 import { SpaceManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import { uuid } from "uuidv4";
-import { SpacesWatcher } from "./Model/SpacesWatcher";
 import { BackToPusherSpaceMessage, PusherToBackSpaceMessage } from "@workadventure/messages";
-import { socketManager } from "./Services/SocketManager";
 import Debug from "debug";
 import { ServerDuplexStream } from "@grpc/grpc-js";
+import { socketManager } from "./Services/SocketManager";
+import { SpacesWatcher } from "./Model/SpacesWatcher";
 
 export type SpaceSocket = ServerDuplexStream<PusherToBackSpaceMessage, BackToPusherSpaceMessage>;
 

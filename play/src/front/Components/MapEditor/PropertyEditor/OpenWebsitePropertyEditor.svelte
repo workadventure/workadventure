@@ -1,8 +1,8 @@
 <script lang="ts">
-    import LL from "../../../../i18n/i18n-svelte";
-    import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
     import { createEventDispatcher } from "svelte";
     import { OpenWebsitePropertyData } from "@workadventure/map-editor";
+    import { LL } from "../../../../i18n/i18n-svelte";
+    import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
 
     export let property: OpenWebsitePropertyData;
 

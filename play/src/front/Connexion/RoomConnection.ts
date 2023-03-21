@@ -1,30 +1,6 @@
-import { ENABLE_FEATURE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
-import Axios from "axios";
+import axios from "axios";
 
-import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
-import type {
-    GroupCreatedUpdatedMessageInterface,
-    GroupUsersUpdateMessageInterface,
-    MessageUserJoined,
-    PlayGlobalMessageInterface,
-    PositionInterface,
-    RoomJoinedMessageInterface,
-    ViewportInterface,
-    WebRtcSignalReceivedMessageInterface,
-} from "./ConnexionModels";
-import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
-import { adminMessagesService } from "./AdminMessagesService";
-import { connectionManager } from "./ConnectionManager";
 import { get } from "svelte/store";
-import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
-import {
-    inviteUserActivated,
-    mapEditorActivated,
-    menuIconVisiblilityStore,
-    menuVisiblilityStore,
-    warningContainerStore,
-} from "../Stores/MenuStore";
-import { localUserStore } from "./LocalUserStore";
 import {
     apiVersionHash,
     AnswerMessage,
@@ -66,15 +42,39 @@ import {
     RemoveSpaceUserMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
+import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
-import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
+import {
+    inviteUserActivated,
+    mapEditorActivated,
+    menuIconVisiblilityStore,
+    menuVisiblilityStore,
+    warningContainerStore,
+} from "../Stores/MenuStore";
+import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
+import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
+import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
+import { ENABLE_FEATURE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 import { assertObjectKeys } from "../Utils/CustomTypeGuards";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
+import { localUserStore } from "./LocalUserStore";
+import { connectionManager } from "./ConnectionManager";
+import { adminMessagesService } from "./AdminMessagesService";
+import type {
+    GroupCreatedUpdatedMessageInterface,
+    GroupUsersUpdateMessageInterface,
+    MessageUserJoined,
+    PlayGlobalMessageInterface,
+    PositionInterface,
+    RoomJoinedMessageInterface,
+    ViewportInterface,
+    WebRtcSignalReceivedMessageInterface,
+} from "./ConnexionModels";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
@@ -949,7 +949,8 @@ export class RoomConnection implements RoomConnection {
     }
 
     public uploadAudio(file: FormData) {
-        return Axios.post<unknown>(`${UPLOADER_URL}/upload-audio-message`, file)
+        return axios
+            .post<unknown>(`${UPLOADER_URL}/upload-audio-message`, file)
             .then((res: { data: unknown }) => {
                 return res.data;
             })

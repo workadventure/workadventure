@@ -1,4 +1,10 @@
 <script lang="ts">
+    import type { Unsubscriber } from "svelte/store";
+    import type { Subscription } from "rxjs";
+    import { onDestroy, onMount } from "svelte";
+    import { Color } from "@workadventure/shared-utils";
+    import { derived, get } from "svelte/store";
+    import { SpaceFilterMessage } from "@workadventure/messages";
     import {
         chatVisibilityStore,
         iframeLoadedStore,
@@ -6,25 +12,19 @@
         writingStatusMessageStore,
     } from "../../Stores/ChatStore";
     import { enableUserInputsStore } from "../../Stores/UserInputStore";
-    import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
     import { localUserStore } from "../../Connexion/LocalUserStore";
-    import { Color } from "@workadventure/shared-utils";
     import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-    import type { Unsubscriber } from "svelte/store";
-    import { derived, get } from "svelte/store";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { CHAT_URL } from "../../Enum/EnvironmentVariable";
     import { locale } from "../../../i18n/i18n-svelte";
     import { AdminMessageEventTypes, adminMessagesService } from "../../Connexion/AdminMessagesService";
     import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
-    import type { Subscription } from "rxjs";
     import { availabilityStatusStore } from "../../Stores/MediaStore";
     import { peerStore } from "../../Stores/PeerStore";
     import { connectionManager } from "../../Connexion/ConnectionManager";
     import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
     import { Locales } from "../../../i18n/i18n-types";
-    import { SpaceFilterMessage } from "@workadventure/messages";
 
     let chatIframe: HTMLIFrameElement;
     let searchElement: HTMLInputElement;

@@ -1,11 +1,11 @@
-import Axios from "axios";
-import ipaddr from "ipaddr.js";
 import { Resolver } from "dns";
 import { promisify } from "util";
+import path from "path";
+import { WAMFileFormat } from "@workadventure/map-editor";
+import ipaddr from "ipaddr.js";
+import axios from "axios";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { LocalUrlError } from "./LocalUrlError";
-import { WAMFileFormat } from "@workadventure/map-editor";
-import path from "path";
 
 class MapFetcher {
     async getMapUrl(
@@ -62,8 +62,8 @@ class MapFetcher {
 
     public async fetchFile(url: string, canLoadLocalUrl = false, storeVariableForLocalMaps = false) {
         // Note: mapUrl is provided by the client. A possible attack vector would be to use a rogue DNS server that
-        // returns local URLs. Alas, Axios cannot pin a URL to a given IP. So "isLocalUrl" and Axios.get could potentially
-        // target to different servers (and one could trick Axios.get into loading resources on the internal network
+        // returns local URLs. Alas, Axios cannot pin a URL to a given IP. So "isLocalUrl" and axios.get could potentially
+        // target to different servers (and one could trick axios.get into loading resources on the internal network
         // despite isLocalUrl checking that.
         // We can deem this problem not that important because:
         // - We make sure we are only passing "GET" requests
@@ -72,7 +72,7 @@ class MapFetcher {
             throw new LocalUrlError('URL for map "' + url + '" targets a local map');
         }
 
-        return await Axios.get(url, {
+        return await axios.get(url, {
             maxContentLength: 50 * 1024 * 1024, // Max content length: 50MB. Maps should not be bigger
             timeout: 10000, // Timeout after 10 seconds
         });

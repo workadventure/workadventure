@@ -1,7 +1,7 @@
+import { Subject } from "rxjs";
 import type { UserInputChatEvent } from "../Events/UserInputChatEvent";
 import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
-import { Subject } from "rxjs";
 
 const chatStream = new Subject<string>();
 

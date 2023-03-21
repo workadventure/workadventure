@@ -1,24 +1,24 @@
-import { HtmlUtils } from "./../WebRtc/HtmlUtils";
-import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
-import { RoomConnection } from "./RoomConnection";
-import type { OnConnectInterface, PositionInterface, ViewportInterface } from "./ConnexionModels";
-import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
-import { localUserStore } from "./LocalUserStore";
-import { LocalUser } from "./LocalUser";
-import { Room } from "./Room";
-import { _ServiceWorker } from "../Network/ServiceWorker";
-import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
-import { subMenusStore, userIsConnected, warningContainerStore } from "../Stores/MenuStore";
-import { analyticsClient } from "../Administration/AnalyticsClient";
-import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import type { AvailabilityStatus } from "@workadventure/messages";
 import { isRegisterData } from "@workadventure/messages";
+import { analyticsClient } from "../Administration/AnalyticsClient";
+import { subMenusStore, userIsConnected, warningContainerStore } from "../Stores/MenuStore";
+import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
+import { _ServiceWorker } from "../Network/ServiceWorker";
+import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
+import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { locales } from "../../i18n/i18n-util";
 import type { Locales } from "../../i18n/i18n-types";
 import { setCurrentLocale } from "../../i18n/locales";
+import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
+import { Room } from "./Room";
+import { LocalUser } from "./LocalUser";
+import { localUserStore } from "./LocalUserStore";
+import type { OnConnectInterface, PositionInterface, ViewportInterface } from "./ConnexionModels";
+import { RoomConnection } from "./RoomConnection";
+import { HtmlUtils } from "./../WebRtc/HtmlUtils";
 
 class ConnectionManager {
     private localUser!: LocalUser;

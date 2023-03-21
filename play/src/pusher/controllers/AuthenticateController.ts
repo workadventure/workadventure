@@ -1,14 +1,14 @@
 import { v4 } from "uuid";
-import { BaseHttpController } from "./BaseHttpController";
+import { ErrorApiData, RegisterData } from "@workadventure/messages";
+import { isAxiosError } from "axios";
+import { z } from "zod";
 import type { AuthTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager } from "../services/JWTTokenManager";
 import { openIDClient } from "../services/OpenIDClient";
 import { DISABLE_ANONYMOUS } from "../enums/EnvironmentVariable";
-import { ErrorApiData, RegisterData } from "@workadventure/messages";
 import { adminService } from "../services/AdminService";
-import Axios from "axios";
-import { z } from "zod";
 import { validateQuery } from "../services/QueryValidator";
+import { BaseHttpController } from "./BaseHttpController";
 
 export class AuthenticateController extends BaseHttpController {
     routes(): void {
@@ -235,7 +235,7 @@ export class AuthenticateController extends BaseHttpController {
                 });
                 return;
             } catch (err) {
-                if (Axios.isAxiosError(err)) {
+                if (isAxiosError(err)) {
                     const errorType = ErrorApiData.safeParse(err?.response?.data);
                     if (errorType.success) {
                         res.sendStatus(err?.response?.status ?? 500);

@@ -1,4 +1,5 @@
-import {StorageProvider} from "./StorageProvider";
+import AWS, {S3} from "aws-sdk";
+import {CORSRules} from "aws-sdk/clients/s3";
 import {
     AWS_ACCESS_KEY_ID,
     AWS_BUCKET,
@@ -7,8 +8,7 @@ import {
     AWS_SECRET_ACCESS_KEY,
     UPLOADER_AWS_SIGNED_URL_EXPIRATION
 } from "../Enum/EnvironmentVariable";
-import AWS, {S3} from "aws-sdk";
-import {CORSRules} from "aws-sdk/clients/s3";
+import {StorageProvider} from "./StorageProvider";
 import {TargetDevice} from "./TargetDevice";
 
 export class S3StorageProvider implements StorageProvider {

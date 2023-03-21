@@ -54,6 +54,14 @@ services:
       - START_ROOM_URL
       - OPID_PROMPT=login
       - OPID_WOKA_NAME_POLICY
+      - OPID_CLIENT_ID
+      - OPID_CLIENT_SECRET
+      - OPID_CLIENT_ISSUER
+      - OPID_PROFILE_SCREEN_PROVIDER
+      - OPID_SCOPE
+      - OPID_USERNAME_CLAIM
+      - OPID_LOCALE_CLAIM
+      - OPID_LOGOUT_REDIRECT_URL
       - ENABLE_CHAT
       - ENABLE_CHAT_UPLOAD
       - ENABLE_CHAT_ONLINE_LIST
@@ -180,6 +188,7 @@ services:
       traefik.http.routers.uploader-ssl.service: "uploader"
       traefik.http.routers.uploader-ssl.tls: "true"
       traefik.http.routers.uploader-ssl.tls.certresolver: "myresolver"
+    restart: ${RESTART_POLICY}
 
   icon:
     image: matthiasluedtke/iconserver:v3.13.0
@@ -196,11 +205,13 @@ services:
       traefik.http.routers.icon-ssl.service: "icon"
       traefik.http.routers.icon-ssl.tls: "true"
       traefik.http.routers.icon-ssl.tls.certresolver: "myresolver"
+    restart: ${RESTART_POLICY}
 
   redis:
     image: redis:6
     volumes:
       - redisdata:/data
+    restart: ${RESTART_POLICY}
 
   ejabberd:
     image: workadventure/ejabberd:v1
@@ -227,6 +238,7 @@ services:
       traefik.http.routers.ejabberd-ssl.service: "ejabberd"
       traefik.http.routers.ejabberd-ssl.tls: "true"
       traefik.http.routers.ejabberd-ssl.tls.certresolver: "myresolver"
+    restart: ${RESTART_POLICY}
 
   map-storage:
     image: thecodingmachine/workadventure-map-storage:${VERSION}
@@ -250,6 +262,7 @@ services:
       traefik.http.routers.map-storage-ssl.service: "map-storage"
       traefik.http.routers.map-storage-ssl.tls: "true"
       traefik.http.routers.map-storage-ssl.tls.certresolver: "myresolver"
+    restart: ${RESTART_POLICY}
 
 volumes:
   redisdata:

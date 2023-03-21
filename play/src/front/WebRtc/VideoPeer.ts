@@ -1,10 +1,9 @@
-import type { RoomConnection } from "../Connexion/RoomConnection";
-import { blackListManager } from "./BlackListManager";
+import { Buffer } from "buffer";
 import type { Subscription } from "rxjs";
-import type { UserSimplePeerInterface } from "./SimplePeer";
 import type { Readable, Writable, Unsubscriber } from "svelte/store";
 import { readable, writable } from "svelte/store";
-import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
+import Peer from "simple-peer/simplepeer.min.js";
+import type { RoomConnection } from "../Connexion/RoomConnection";
 import { localStreamStore, obtainedMediaConstraintStore } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
 import {
@@ -15,9 +14,10 @@ import {
 } from "../Stores/ChatStore";
 import { getIceServersConfig } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import Peer from "simple-peer/simplepeer.min.js";
-import { Buffer } from "buffer";
 import { gameManager } from "../Phaser/Game/GameManager";
+import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
+import type { UserSimplePeerInterface } from "./SimplePeer";
+import { blackListManager } from "./BlackListManager";
 import { MessageMessage } from "./P2PMessages/MessageMessage";
 import { MessageStatusMessage } from "./P2PMessages/MessageStatusMessage";
 import { P2PMessage } from "./P2PMessages/P2PMessage";

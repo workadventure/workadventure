@@ -1,12 +1,6 @@
-import { EnableCameraSceneName } from "./EnableCameraScene";
-import { loadAllLayers } from "../Entity/PlayerTexturesLoadingManager";
-import { gameManager } from "../Game/GameManager";
-import { localUserStore } from "../../Connexion/LocalUserStore";
-import { Loader } from "../Components/Loader";
-import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
-import { AbstractCharacterScene } from "./AbstractCharacterScene";
-import { areCharacterLayersValid } from "../../Connexion/LocalUser";
-import { SelectCharacterSceneName } from "./SelectCharacterScene";
+import { DraggableGrid } from "@home-based-studio/phaser3-utils";
+import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
+import { wokaList } from "@workadventure/messages";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import type { CustomWokaPreviewerConfig } from "../Components/CustomizeWoka/CustomWokaPreviewer";
@@ -17,17 +11,23 @@ import {
     WokaBodyPart,
     WokaBodyPartOrder,
 } from "../Components/CustomizeWoka/CustomWokaPreviewer";
-import { DraggableGrid } from "@home-based-studio/phaser3-utils";
 import type { WokaBodyPartSlotConfig } from "../Components/CustomizeWoka/WokaBodyPartSlot";
 import { WokaBodyPartSlot } from "../Components/CustomizeWoka/WokaBodyPartSlot";
-import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
 import { Button } from "../Components/Ui/Button";
-import { wokaList } from "@workadventure/messages";
+import { areCharacterLayersValid } from "../../Connexion/LocalUser";
+import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
+import { Loader } from "../Components/Loader";
+import { localUserStore } from "../../Connexion/LocalUserStore";
+import { gameManager } from "../Game/GameManager";
+import { loadAllLayers } from "../Entity/PlayerTexturesLoadingManager";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
 import type { IconButtonConfig } from "../Components/Ui/IconButton";
 import { IconButton, IconButtonEvent } from "../Components/Ui/IconButton";
 import { selectCharacterCustomizeSceneVisibleStore } from "../../Stores/SelectCharacterStore";
 import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
+import { SelectCharacterSceneName } from "./SelectCharacterScene";
+import { AbstractCharacterScene } from "./AbstractCharacterScene";
+import { EnableCameraSceneName } from "./EnableCameraScene";
 
 export const CustomizeSceneName = "CustomizeScene";
 

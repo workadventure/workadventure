@@ -1,7 +1,7 @@
-import type { GameScene } from "./GameScene";
-import { iframeListener } from "../../Api/IframeListener";
 import type { Subscription } from "rxjs";
+import { iframeListener } from "../../Api/IframeListener";
 import type { CreateEmbeddedWebsiteEvent, ModifyEmbeddedWebsiteEvent } from "../../Api/Events/EmbeddedWebsiteEvent";
+import type { GameScene } from "./GameScene";
 import DOMElement = Phaser.GameObjects.DOMElement;
 
 type EmbeddedWebsite = CreateEmbeddedWebsiteEvent & { iframe: HTMLIFrameElement; phaserObject: DOMElement };

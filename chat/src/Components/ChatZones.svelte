@@ -1,7 +1,7 @@
 <script lang="ts">
-    import ChatMucRoom from "./ChatMucRoom.svelte";
     import { MucRoom } from "../Xmpp/MucRoom";
     import { showChatZonesStore } from "../Stores/ChatStore";
+    import ChatMucRoom from "./ChatMucRoom.svelte";
 
     export let chatZones: MucRoom[];
     export let searchValue: string;

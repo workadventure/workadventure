@@ -1,9 +1,9 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import megaphoneImg from "./images/megaphone.svg";
-    import { soundPlayingStore } from "../../Stores/SoundPlayingStore";
     import { afterUpdate } from "svelte";
-    import LL from "../../../i18n/i18n-svelte";
+    import { soundPlayingStore } from "../../Stores/SoundPlayingStore";
+    import { LL } from "../../../i18n/i18n-svelte";
+    import megaphoneImg from "./images/megaphone.svg";
 
     export let url: string;
     let audio: HTMLAudioElement;

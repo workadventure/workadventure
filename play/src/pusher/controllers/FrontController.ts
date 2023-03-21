@@ -1,14 +1,14 @@
-import type { Request, Response, Server } from "hyper-express";
 import fs from "fs";
-import { BaseHttpController } from "./BaseHttpController";
-import { FRONT_ENVIRONMENT_VARIABLES, VITE_URL, LOGROCKET_ID } from "../enums/EnvironmentVariable";
-import { MetaTagsBuilder } from "../services/MetaTagsBuilder";
+import type { Request, Response, Server } from "hyper-express";
 import Mustache from "mustache";
+import { uuid } from "stanza/Utils";
+import { MetaTagsBuilder } from "../services/MetaTagsBuilder";
 import type { LiveDirectory } from "../models/LiveDirectory";
 import { adminService } from "../services/AdminService";
 import { notWaHost } from "../middlewares/NotWaHost";
 import { version } from "../../../package.json";
-import { uuid } from "stanza/Utils";
+import { FRONT_ENVIRONMENT_VARIABLES, VITE_URL, LOGROCKET_ID } from "../enums/EnvironmentVariable";
+import { BaseHttpController } from "./BaseHttpController";
 
 export class FrontController extends BaseHttpController {
     private indexFile: string;

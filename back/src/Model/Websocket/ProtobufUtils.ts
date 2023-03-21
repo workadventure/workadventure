@@ -1,4 +1,3 @@
-import { PointInterface } from "./PointInterface";
 import {
     CharacterLayerMessage,
     ItemEventMessage,
@@ -9,6 +8,7 @@ import {
 import { CharacterLayer } from "../../Model/Websocket/CharacterLayer";
 import { ItemEventMessageInterface } from "../../Model/Websocket/ItemEventMessage";
 import { PositionInterface } from "../../Model/PositionInterface";
+import { PointInterface } from "./PointInterface";
 
 export class ProtobufUtils {
     public static toPositionMessage(point: PointInterface): PositionMessage {

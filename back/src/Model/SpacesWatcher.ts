@@ -1,6 +1,6 @@
-import { SpaceSocket } from "../SpaceManager";
 import { BackToPusherSpaceMessage } from "@workadventure/messages";
 import Debug from "debug";
+import { SpaceSocket } from "../SpaceManager";
 
 const debug = Debug("space");
 

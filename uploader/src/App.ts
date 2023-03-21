@@ -1,9 +1,9 @@
 // lib/app.ts
-import {FileController} from "./Controller/FileController";
 import express, {Express} from 'express';
 import cors from 'cors';
 import bodyParser from "body-parser";
 import morgan from "morgan";
+import {FileController} from "./Controller/FileController";
 import {ALLOWED_CORS_ORIGIN} from "./Enum/EnvironmentVariable";
 
 class App {

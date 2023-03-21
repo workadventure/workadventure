@@ -1,6 +1,6 @@
-import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable";
-import Axios from "axios";
+import axios from "axios";
 import { isMapDetailsData, MapDetailsData, isRoomRedirect, RoomRedirect } from "@workadventure/messages";
+import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 
 class AdminApi {
     async fetchMapDetails(playUri: string): Promise<MapDetailsData | RoomRedirect> {
@@ -12,7 +12,7 @@ class AdminApi {
             playUri,
         };
 
-        const res = await Axios.get(ADMIN_API_URL + "/api/map", {
+        const res = await axios.get(ADMIN_API_URL + "/api/map", {
             headers: { Authorization: `${ADMIN_API_TOKEN ?? ""}` },
             params,
         });

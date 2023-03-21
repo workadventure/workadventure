@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { isNotification } from "./Notification";
 import { isUserData } from "@workadventure/messages";
+import { isNotification } from "./Notification";
 import { isLocale } from "./Locale";
 import { isLeaveMucEvent } from "./LeaveMucEvent";
 import { isJoinMucEvent } from "./JoinMucEvent";

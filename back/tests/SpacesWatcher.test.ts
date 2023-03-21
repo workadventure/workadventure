@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import { Writable } from "stream";
 import { describe, expect, it } from "vitest";
 import { BackToPusherSpaceMessage } from "@workadventure/messages";
-import { SpacesWatcher } from "../src/Model/SpacesWatcher";
 import { mock } from "vitest-mock-extended";
+import { SpacesWatcher } from "../src/Model/SpacesWatcher";
 import { SpaceSocket } from "../src/SpaceManager";
-import { Writable } from "stream";
 
 describe("SpacesWatcher", () => {
     it("should close the socket because no pong was answered to the ping within 20sec", async () => {

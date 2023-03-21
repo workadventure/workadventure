@@ -1,8 +1,8 @@
 import axios, { AxiosError, AxiosRequestConfig } from "axios";
-import axiosRetry, { isNetworkOrIdempotentRequestError } from "axios-retry";
-import { errorStore } from "../Stores/ErrorStore";
-import LL from "../../i18n/i18n-svelte";
+import axiosRetry, { isNetworkOrIdempotentRequestError, exponentialDelay } from "axios-retry";
 import { get } from "svelte/store";
+import { errorStore } from "../Stores/ErrorStore";
+import { LL } from "../../i18n/i18n-svelte";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 
 export const axiosToPusher = axios.create({
@@ -18,7 +18,7 @@ export const axiosWithRetry = axios.create({
 
 axiosRetry(axiosWithRetry, {
     retryDelay: (retryCount: number) => {
-        const time = axiosRetry.exponentialDelay(retryCount);
+        const time = exponentialDelay(retryCount);
         if (time >= 60_000) {
             return 60_000;
         }

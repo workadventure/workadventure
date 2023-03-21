@@ -20,6 +20,10 @@ Then, you need to configure these environment variables:
 - `OPID_CLIENT_SECRET` (*play container*): the secret of the OpenID client that you created in the OpenID Connect provider
 - `OPID_PROMPT` (*play container*): whether the Authorization Server prompts the End-User for reauthentication and consent. Used as the [`prompt` parameter of the authentication request](https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest) (Default: login)
 
+There are additional environment variables which can be used to configure the OpenID login process further:
+- `OPID_USERNAME_CLAIM` (*play container*): the claim attribute to be used as the username on login. (Default: username)
+- `OPID_LOCALE_CLAIM`: (*play container*): the claim attribute to use used as the locale on login. (Default: locale)
+- `OPID_SCOPE`: (*play container*): the OpenID scope identifiers to use (Default: openid email)
 
 ## Complete flow
 

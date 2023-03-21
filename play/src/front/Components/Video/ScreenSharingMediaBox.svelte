@@ -1,13 +1,13 @@
 <script lang="ts">
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
+    import { Color } from "@workadventure/shared-utils";
     import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
 
     import type { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import { srcObject } from "./utils";
-    import { Color } from "@workadventure/shared-utils";
     import BanReportBox from "./BanReportBox.svelte";
 
     export let clickable = false;

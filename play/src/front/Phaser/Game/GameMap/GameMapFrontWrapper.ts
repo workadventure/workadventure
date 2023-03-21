@@ -8,14 +8,12 @@ import type {
     ITiledMapTileLayer,
     Json,
 } from "@workadventure/tiled-map-type-guard";
-import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
-import { PathTileType } from "../../../Utils/PathfindingManager";
 import { MathUtils } from "@workadventure/math-utils";
+import { PathTileType } from "../../../Utils/PathfindingManager";
 import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
 import type { GameScene } from "../GameScene";
-import { EntitiesManager } from "./EntitiesManager";
 import { Entity } from "../../ECS/Entity";
 import { TexturesHelper } from "../../Helpers/TexturesHelper";
 import { ITiledPlace } from "../GameMapPropertiesListener";
@@ -28,6 +26,8 @@ export type DynamicArea = {
     height: number;
     properties: { [key: string]: unknown };
 };
+import { EntitiesManager } from "./EntitiesManager";
+import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 
 export type LayerChangeCallback = (
     layersChangedByAction: Array<ITiledMapLayer>,

@@ -1,5 +1,5 @@
-import axios from "axios";
 import fs from 'fs';
+import axios from "axios";
 import {APIRequestContext, APIResponse} from "@playwright/test";
 
 const ADMIN_API_TOKEN = process.env.ADMIN_API_TOKEN;

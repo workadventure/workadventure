@@ -1,6 +1,6 @@
 <script lang="ts">
     import { FileIcon, EyeIcon, DownloadCloudIcon, LoaderIcon } from "svelte-feather-icons";
-    import LL from "../../i18n/i18n-svelte";
+    import { LL } from "../../i18n/i18n-svelte";
     import { iframeListener } from "../../IframeListener";
     import { FileMessageManager } from "../../Services/FileMessageManager";
 

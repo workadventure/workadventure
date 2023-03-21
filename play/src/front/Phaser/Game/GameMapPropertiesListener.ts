@@ -1,9 +1,11 @@
-import type { GameScene } from "./GameScene";
+import { get } from "svelte/store";
+import type { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
+import { GameMapProperties } from "@workadventure/map-editor";
+import { Jitsi } from "@workadventure/shared-utils";
 import { scriptUtils } from "../../Api/ScriptUtils";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { localUserStore } from "../../Connexion/LocalUserStore";
-import { get } from "svelte/store";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
@@ -13,15 +15,13 @@ import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
 import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
-import LL from "../../../i18n/i18n-svelte";
+import { LL } from "../../../i18n/i18n-svelte";
 import { inJitsiStore, inBbbStore, silentStore, inOpenWebsite } from "../../Stores/MediaStore";
-import type { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 import { urlManager } from "../../Url/UrlManager";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
-import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
-import { GameMapProperties } from "@workadventure/map-editor";
 import { connectionManager } from "../../Connexion/ConnectionManager";
-import { Jitsi } from "@workadventure/shared-utils";
+import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
+import type { GameScene } from "./GameScene";
 
 interface OpenCoWebsite {
     actionId: string;

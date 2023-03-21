@@ -1,8 +1,8 @@
-import { ENV_VARS } from "../Enum/EnvironmentVariable";
 import { Strategy as BearerStrategy } from "passport-http-bearer";
 import { BasicStrategy, DigestStrategy } from "passport-http";
 import passport, { Authenticator, Strategy } from "passport";
-import { RequestHandler } from "express-serve-static-core";
+import { RequestHandler } from "express";
+import { ENV_VARS } from "../Enum/EnvironmentVariable";
 
 let strategy: Strategy;
 let authenticator: ReturnType<Authenticator["authenticate"]>;

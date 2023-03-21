@@ -1,7 +1,7 @@
+import Debug from "debug";
 import type { UserSimplePeerInterface } from "../../WebRtc/SimplePeer";
 import { STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER } from "../../Enum/EnvironmentVariable";
 import { helpWebRtcSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
-import Debug from "debug";
 
 export const debug = Debug("CheckTurn");
 

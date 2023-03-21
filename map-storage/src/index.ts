@@ -1,17 +1,17 @@
 import * as grpc from "@grpc/grpc-js";
 import express from "express";
 import cors from "cors";
+import { MapStorageService } from "@workadventure/messages/src/ts-proto-generated/services";
+import passport from "passport";
+import bodyParser from "body-parser";
+import { WAMFileFormat } from "@workadventure/map-editor";
 import { mapStorageServer } from "./MapStorageServer";
 import { mapsManager } from "./MapsManager";
-import { MapStorageService } from "@workadventure/messages/src/ts-proto-generated/services";
 import { proxyFiles } from "./FileFetcher/FileFetcher";
 import { UploadController } from "./Upload/UploadController";
 import { fileSystem } from "./fileSystem";
-import passport from "passport";
 import { passportStrategy } from "./Services/Authentication";
 import { mapPathUsingDomain } from "./Services/PathMapper";
-import bodyParser from "body-parser";
-import { WAMFileFormat } from "@workadventure/map-editor";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment

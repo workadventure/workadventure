@@ -1,13 +1,13 @@
 <script lang="ts">
-    import LL from "../../../i18n/i18n-svelte";
     import { onDestroy } from "svelte";
-    import { mapEditorSelectedEntityStore } from "../../Stores/MapEditorStore";
     import { slide } from "svelte/transition";
+    import { EntityDataProperties, EntityDataPropertiesKeys } from "@workadventure/map-editor";
+    import { LL } from "../../../i18n/i18n-svelte";
+    import { mapEditorSelectedEntityStore } from "../../Stores/MapEditorStore";
     import crossImg from "../images/cross-icon.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import TextPropertyEditor from "./PropertyEditor/TextPropertyEditor.svelte";
-    import { EntityDataProperties, EntityDataPropertiesKeys } from "@workadventure/map-editor";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
 
     interface EntityPropertyDescription<K extends EntityDataPropertiesKeys> {

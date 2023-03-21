@@ -1,17 +1,4 @@
-import { PointInterface } from "./Websocket/PointInterface";
-import { Group } from "./Group";
-import { User, UserSocket } from "./User";
-import { PositionInterface } from "../Model/PositionInterface";
-import {
-    EmoteCallback,
-    EntersCallback,
-    LeavesCallback,
-    LockGroupCallback,
-    MovesCallback,
-    PlayerDetailsUpdatedCallback,
-} from "../Model/Zone";
-import { PositionNotifier } from "./PositionNotifier";
-import { Movable } from "../Model/Movable";
+import path from "path";
 import {
     EmoteEventMessage,
     JoinRoomMessage,
@@ -22,13 +9,31 @@ import {
     RefreshRoomMessage,
     MapStorageUrlMessage,
     MapStorageToBackMessage,
+    isMapDetailsData,
+    MapDetailsData,
+    MapThirdPartyData,
+    MapBbbData,
+    MapJitsiData,
 } from "@workadventure/messages";
+import { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
+import { Jitsi } from "@workadventure/shared-utils";
+import { ClientReadableStream } from "@grpc/grpc-js";
+import { mapFetcher } from "@workadventure/shared-utils/src/MapFetcher";
+import { LocalUrlError } from "@workadventure/shared-utils/src/LocalUrlError";
+import { PositionInterface } from "../Model/PositionInterface";
+import {
+    EmoteCallback,
+    EntersCallback,
+    LeavesCallback,
+    LockGroupCallback,
+    MovesCallback,
+    PlayerDetailsUpdatedCallback,
+} from "../Model/Zone";
+import { Movable } from "../Model/Movable";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
 import { Admin } from "../Model/Admin";
 import { adminApi } from "../Services/AdminApi";
-import { isMapDetailsData, MapDetailsData, MapThirdPartyData, MapBbbData, MapJitsiData } from "@workadventure/messages";
-import { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import { VariablesManager } from "../Services/VariablesManager";
 import {
     ADMIN_API_URL,
@@ -47,13 +52,12 @@ import { VariableError } from "../Services/VariableError";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { MapLoadingError } from "../Services/MapLoadingError";
 import { MucManager } from "../Services/MucManager";
-import { BrothersFinder } from "./BrothersFinder";
-import { mapFetcher } from "@workadventure/shared-utils/src/MapFetcher";
-import { Jitsi } from "@workadventure/shared-utils";
 import { getMapStorageClient } from "../Services/MapStorageClient";
-import { ClientReadableStream } from "@grpc/grpc-js";
-import { LocalUrlError } from "@workadventure/shared-utils/src/LocalUrlError";
-import path from "path";
+import { BrothersFinder } from "./BrothersFinder";
+import { PositionNotifier } from "./PositionNotifier";
+import { User, UserSocket } from "./User";
+import { Group } from "./Group";
+import { PointInterface } from "./Websocket/PointInterface";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;

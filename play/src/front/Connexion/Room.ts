@@ -1,16 +1,16 @@
+import { isAxiosError } from "axios";
+import type { MucRoomDefinition, LegalsData } from "@workadventure/messages";
+import { isMapDetailsData, isRoomRedirect, ErrorApiData, OpidWokaNamePolicy } from "@workadventure/messages";
 import {
     CONTACT_URL,
     DISABLE_ANONYMOUS,
     OPID_LOGOUT_REDIRECT_URL,
     OPID_WOKA_NAME_POLICY,
 } from "../Enum/EnvironmentVariable";
-import { localUserStore } from "./LocalUserStore";
-import axios from "axios";
-import { axiosWithRetry } from "./AxiosUtils";
-import type { MucRoomDefinition, LegalsData } from "@workadventure/messages";
-import { isMapDetailsData, isRoomRedirect, ErrorApiData, OpidWokaNamePolicy } from "@workadventure/messages";
 import { ApiError } from "../Stores/Errors/ApiError";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
+import { axiosWithRetry } from "./AxiosUtils";
+import { localUserStore } from "./LocalUserStore";
 export class MapDetail {
     constructor(public readonly mapUrl?: string, public readonly wamUrl?: string) {}
 }
@@ -199,11 +199,11 @@ export class Room {
                 throw new Error("Data received by the /map endpoint of the Pusher is not in a valid format.");
             }
         } catch (e) {
-            if (axios.isAxiosError(e) && e.response?.status == 401 && e.response?.data === "The Token is invalid") {
+            if (isAxiosError(e) && e.response?.status == 401 && e.response?.data === "The Token is invalid") {
                 console.warn("JWT token sent could not be decrypted. Maybe it expired?");
                 localUserStore.setAuthToken(null);
                 window.location.reload();
-            } else if (axios.isAxiosError(e)) {
+            } else if (isAxiosError(e)) {
                 console.error("Error => getMapDetail", e, e.response);
             } else {
                 console.error("Error => getMapDetail", e);
