@@ -169,8 +169,8 @@ export class MapValidator {
     }
 
     // TODO: More detailed validation later on
-    public validateWAMFile(data: unknown): boolean {
-        return WAMFileFormat.safeParse(data).success;
+    public validateWAMFile(data: string): boolean {
+        return WAMFileFormat.safeParse(JSON.parse(data)).success;
     }
 
     private removeWarnings(errors: ValidationError[]) {

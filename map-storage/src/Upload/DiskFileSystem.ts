@@ -18,6 +18,27 @@ export class DiskFileSystem implements FileSystemInterface {
         }
     }
 
+    async deleteFilesExceptWAM(directory: string, filesFromZip: string[]): Promise<void> {
+        try {
+            const fullPath = this.getFullPath(directory);
+            if (await fs.pathExists(fullPath)) {
+                const files = await this.getAllFilesWithin(fullPath, fullPath);
+                for (const file of files) {
+                    if (file.includes(".wam")) {
+                        const tmjKey = file.slice().replace(".wam", ".tmj");
+                        // do not delete existing .wam file if there's no new version in zip and .tmj file with the same name exists
+                        if (filesFromZip.includes(tmjKey) && !filesFromZip.includes(file)) {
+                            continue;
+                        }
+                    }
+                    await fs.promises.unlink(path.resolve(fullPath, file));
+                }
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     async exist(virtualPath: string): Promise<boolean> {
         const fullPath = this.getFullPath(virtualPath);
         return await fs.pathExists(fullPath);
@@ -94,8 +115,10 @@ export class DiskFileSystem implements FileSystemInterface {
         }
     }
 
-    writeStringAsFile(virtualPath: string, content: string): Promise<void> {
+    async writeStringAsFile(virtualPath: string, content: string): Promise<void> {
         const fullPath = this.getFullPath(virtualPath);
+        const dir = path.dirname(fullPath);
+        await fs.mkdirp(dir);
         return fs.writeFile(fullPath, content, {
             encoding: "utf-8",
         });

@@ -5,6 +5,8 @@ import { StreamZipAsync, ZipEntry } from "node-stream-zip";
 export interface FileSystemInterface {
     deleteFiles(directory: string): Promise<void>;
 
+    deleteFilesExceptWAM(directory: string, filesFromZip: string[]): Promise<void>;
+
     writeFile(zipEntry: ZipEntry, targetFilePath: string, zip: StreamZipAsync): Promise<void>;
 
     exist(virtualPath: string): Promise<boolean>;
