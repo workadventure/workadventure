@@ -11,6 +11,7 @@
     import microphoneOffImg from "../images/microphone-off.png";
 
     import { Color } from "@workadventure/shared-utils";
+    import UserTag from "./UserTag.svelte";
 
     export const clickable = false;
 
@@ -22,7 +23,7 @@
     let minimized = isMediaBreakpointOnly("md");
     let isMobile = isMediaBreakpointUp("md");
 
-    let backGroundColor = Color.getColorByString("test");
+    let backGroundColor = Color.getColorByString(peer.spaceUser?.name ?? "");
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
 
     /*if (peer) {
@@ -58,40 +59,49 @@
 </script>
 
 <div
-    class="video-container tw-border-orange tw-border-2 tw-border-solid tw-relative tw-rounded"
-    bind:this={videoContainer}
+        id="container"
+        bind:this={videoContainer}
 >
     {#if peer.videoTrack}
-        <div class="tw-flex tw-w-full tw-flex-col tw-h-full">
+        <div class="tw-flex tw-w-full tw-flex-col tw-h-full tw-rounded-sm tw-overflow-hidden">
             <video
-                bind:this={videoElement}
-                class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
-                class="tw-h-full tw-max-w-full"
-                autoplay
-                playsinline
+                    bind:this={videoElement}
+                    class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
+                    class="tw-h-full tw-max-w-full"
+                    autoplay
+                    playsinline
             />
         </div>
     {/if}
     <div class="tw-absolute tw-top-0.5 tw-right-1">
         {#if peer.audioTrack}
             <SoundMeterWidget
-                classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
-                barColor={textColor}
+                    classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+                    barColor={textColor}
             />
         {:else}
             <img
-                draggable="false"
-                src={microphoneOffImg}
-                class="tw-flex tw-p-1 tw-h-8 tw-w-8 voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
-                alt="Mute"
-                class:tw-brightness-0={textColor === "black"}
-                class:tw-brightness-100={textColor === "white"}
+                    draggable="false"
+                    src={microphoneOffImg}
+                    class="tw-flex tw-p-1 tw-h-8 tw-w-8 voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+                    alt="Mute"
+                    class:tw-brightness-0={textColor === "black"}
+                    class:tw-brightness-100={textColor === "white"}
             />
         {/if}
     </div>
+    {#await peer.spaceUser.getWokaBase64()}
+        <div></div>
+    {:then wokaBase64}
+        <UserTag name={peer.spaceUser?.name} wokaSrc={wokaBase64} minimal={!!peer.videoTrack}/>
+    {/await}
 </div>
 
 <style lang="scss">
+    #container{
+        @apply tw-min-h-fit tw-flex tw-w-full tw-border-orange tw-border-2 tw-border-solid tw-relative tw-rounded;
+        transition: all 0.2s ease;
+    }
     video.no-video {
         visibility: collapse;
     }

@@ -12,7 +12,7 @@
     import { srcObject } from "./Video/utils";
     import { Color } from "@workadventure/shared-utils";
     import LL from "../../i18n/i18n-svelte";
-    import Woka from "./Woka/Woka.svelte";
+    import Woka from "./Woka/WokaFromUserId.svelte";
     import { localUserStore } from "../Connexion/LocalUserStore";
     import microphoneOffImg from "./images/microphone-off.png";
     import cameraOffImg from "./images/camera-off.png";

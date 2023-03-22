@@ -10,7 +10,7 @@
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { Color } from "@workadventure/shared-utils";
 
-    import Woka from "../Woka/Woka.svelte";
+    import Woka from "../Woka/WokaFromUserId.svelte";
     import { onDestroy, onMount } from "svelte";
     import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import BanReportBox from "./BanReportBox.svelte";

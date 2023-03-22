@@ -4,22 +4,29 @@ import { Subscription } from "rxjs";
 import { RoomConnection } from "../Connexion/RoomConnection";
 import { Readable } from "svelte/store";
 import Debug from "debug";
+import {CharacterLayerManager} from "../Phaser/Entity/CharacterLayerManager";
+import {gameManager} from "../Phaser/Game/GameManager";
 
 const debug = Debug("space");
 
+export interface SpaceUserExtended extends SpaceUser{
+    wokaPromise: Promise<string> | undefined;
+    getWokaBase64(): Promise<string>;
+}
+
 export class Space {
-    private readonly _users: MapStore<string, SpaceUser>;
+    private readonly _users: MapStore<string, SpaceUserExtended>;
     private subscribers: Subscription[];
 
     constructor(private connection: RoomConnection, readonly name: string, private spaceFilter: SpaceFilterMessage) {
-        this._users = new MapStore<string, SpaceUser>();
+        this._users = new MapStore<string, SpaceUserExtended>();
         this.subscribers = [];
         this.subscribers.push(
             this.connection.addSpaceUserMessageStream.subscribe((message) => {
                 debug(`Space => ${this.name} => addSpaceUserMessageStream`, message);
                 const user = message.user;
                 if (message.spaceName === name && message.filterName === spaceFilter.filterName && user !== undefined) {
-                    this._users.set(user.uuid, user);
+                    this._users.set(user.uuid, this.extendSpaceUser(user));
                 }
             })
         );
@@ -96,11 +103,24 @@ export class Space {
         this.subscribers.forEach((subscriber) => subscriber.unsubscribe());
     }
 
-    get users(): Readable<Map<string, SpaceUser>> {
+    get users(): Readable<Map<string, SpaceUserExtended>> {
         return this._users;
     }
 
     get isEmpty() {
         return this._users.size === 0;
+    }
+
+    private extendSpaceUser(user: SpaceUser): SpaceUserExtended{
+        return {
+            ...user,
+            wokaPromise: undefined,
+            getWokaBase64(): Promise<string> {
+                if (this.wokaPromise === undefined) {
+                    this.wokaPromise = CharacterLayerManager.wokaBase64(user.characterLayers);
+                }
+                return this.wokaPromise;
+            }
+        }
     }
 }

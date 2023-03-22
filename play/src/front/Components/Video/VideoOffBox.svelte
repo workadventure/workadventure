@@ -4,7 +4,7 @@
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import type { VideoPeer } from "../../WebRtc/VideoPeer";
     import { srcObject } from "./utils";
-    import Woka from "../Woka/Woka.svelte";
+    import Woka from "../Woka/WokaFromUserId.svelte";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import { onDestroy, onMount } from "svelte";
     import type { EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";

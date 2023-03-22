@@ -2,9 +2,10 @@ import { SpaceUser } from "@workadventure/messages";
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import { Readable, readable, Unsubscriber } from "svelte/store";
 import { SoundMeter } from "../../Phaser/Components/SoundMeter";
+import {SpaceUserExtended} from "../../Space/Space";
 
 export class JitsiTrackWrapper {
-    private _spaceUser: SpaceUser | undefined;
+    private _spaceUser: SpaceUserExtended | undefined;
     private _audioTrack: JitsiTrack | undefined;
     private _videoTrack: JitsiTrack | undefined;
 
@@ -84,11 +85,11 @@ export class JitsiTrackWrapper {
         this._videoTrack = undefined;
     }
 
-    get spaceUser(): SpaceUser | undefined {
+    get spaceUser(): SpaceUserExtended | undefined {
         return this._spaceUser;
     }
 
-    set spaceUser(value: SpaceUser | undefined) {
+    set spaceUser(value: SpaceUserExtended | undefined) {
         this._spaceUser = value;
     }
 }
