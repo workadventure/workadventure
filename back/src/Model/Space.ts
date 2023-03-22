@@ -79,7 +79,7 @@ export class Space implements CustomJsonReplacerInterface {
             if (spaceUser.megaphoneState !== undefined) {
                 user.megaphoneState = spaceUser.megaphoneState;
             }
-            if (spaceUser.jitsiParticipantId){
+            if (spaceUser.jitsiParticipantId) {
                 user.jitsiParticipantId = spaceUser.jitsiParticipantId;
             }
             usersList.set(spaceUser.uuid, user);
