@@ -1,5 +1,5 @@
 // eslint-disable @typescript-eslint/ban-ts-comment
-import {get, Readable, Unsubscriber, Writable, writable} from "svelte/store";
+import { Readable, Unsubscriber, Writable, writable } from "svelte/store";
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 import JitsiConference from "lib-jitsi-meet/types/hand-crafted/JitsiConference";
@@ -22,7 +22,9 @@ export class JitsiConferenceWrapper {
     private localTracksStoreUnsubscribe: Unsubscriber | undefined;
 
     constructor(private jitsiConference: JitsiConference) {
-        this._streamStore = writable<Map<string, Writable<JitsiTrackWrapper>>>(new Map<string, Writable<JitsiTrackWrapper>>());
+        this._streamStore = writable<Map<string, Writable<JitsiTrackWrapper>>>(
+            new Map<string, Writable<JitsiTrackWrapper>>()
+        );
         this._broadcastDevicesStore = writable<DeviceType[]>([]);
     }
 
@@ -141,7 +143,10 @@ export class JitsiConferenceWrapper {
                             if (track.isVideoTrack()) {
                                 jitsiTrackWrapper.muteVideo();
                             }
-                            if (jitsiTrackWrapper.videoTrack === undefined && jitsiTrackWrapper.audioTrack === undefined) {
+                            if (
+                                jitsiTrackWrapper.videoTrack === undefined &&
+                                jitsiTrackWrapper.audioTrack === undefined
+                            ) {
                                 tracks.delete(participantId);
                             }
                             return jitsiTrackWrapper;
@@ -153,7 +158,7 @@ export class JitsiConferenceWrapper {
             };
 
             const addRemoteTrack = (track: JitsiTrack, allowOverride: boolean) => {
-                console.log("JitsiConferenceWrapper => addRemoteTrack",  track.getType());
+                console.log("JitsiConferenceWrapper => addRemoteTrack", track.getType());
                 jitsiConferenceWrapper._streamStore.update((tracks) => {
                     // @ts-ignore
                     const participantId = track.getParticipantId();

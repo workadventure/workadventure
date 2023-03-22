@@ -16,6 +16,7 @@ const warning: BaseTranslation = {
     connectionLostSubtitle: "Reconnecting",
     waitingConnectionTitle: "Waiting for connection",
     waitingConnectionSubtitle: "Connecting",
+    megaphoneNeeds: "To use the megaphone, you must activate your camera or your microphone.",
 };
 
 export default warning;

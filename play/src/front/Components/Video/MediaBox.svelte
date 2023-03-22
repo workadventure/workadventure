@@ -11,7 +11,7 @@
     import { fly } from "svelte/transition";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { JitsiTrackWrapper } from "../../Streaming/Jitsi/JitsiTrackWrapper";
-    import JitsiVideoMediaBox from "./JitsiVideoMediaBox.svelte";
+    import JitsiMediaBox from "./JitsiMediaBox.svelte";
 
     export let streamable: Streamable;
     export let isHightlighted = false;
@@ -121,7 +121,7 @@
         }}
     >
         <div class="{isHightlighted ? 'tw-h-[32vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-flex screen-blocker">
-            <JitsiVideoMediaBox peer={streamable} clickable={isClickable} />
+            <JitsiMediaBox peer={streamable} clickable={isClickable} />
         </div>
     </div>
 {:else}

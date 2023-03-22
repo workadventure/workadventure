@@ -11,22 +11,14 @@ export class Space {
     private readonly _users: MapStore<string, SpaceUser>;
     private subscribers: Subscription[];
 
-    constructor(
-        private connection: RoomConnection,
-        readonly name: string,
-        private spaceFilter: SpaceFilterMessage
-    ) {
+    constructor(private connection: RoomConnection, readonly name: string, private spaceFilter: SpaceFilterMessage) {
         this._users = new MapStore<string, SpaceUser>();
         this.subscribers = [];
         this.subscribers.push(
             this.connection.addSpaceUserMessageStream.subscribe((message) => {
                 debug(`Space => ${this.name} => addSpaceUserMessageStream`, message);
                 const user = message.user;
-                if (
-                    message.spaceName === name &&
-                    message.filterName === spaceFilter.filterName &&
-                    user !== undefined
-                ) {
+                if (message.spaceName === name && message.filterName === spaceFilter.filterName && user !== undefined) {
                     this._users.set(user.uuid, user);
                 }
             })
@@ -81,7 +73,7 @@ export class Space {
                         if (partialUser.screenSharing !== undefined) {
                             user.screenSharing = partialUser.screenSharing;
                         }
-                        if(partialUser.jitsiParticipantId !== undefined) {
+                        if (partialUser.jitsiParticipantId !== undefined) {
                             user.jitsiParticipantId = partialUser.jitsiParticipantId;
                         }
                         this._users.set(partialUser.uuid, user);

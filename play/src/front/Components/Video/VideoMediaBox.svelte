@@ -115,10 +115,7 @@
             />
         {/if}
 
-        <div
-            class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height
-  "
-        >
+        <div class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height">
             <i class="tw-flex">
                 <span
                     style="background-color: {backGroundColor}; color: {textColor};"

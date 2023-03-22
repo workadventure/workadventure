@@ -791,7 +791,11 @@ export class IoSocketController {
                             break;
                         }
                         case "jitsiParticipantIdSpaceMessage": {
-                            socketManager.handleJitsiParticipantIdSpace(client, message.message.jitsiParticipantIdSpaceMessage.spaceName, message.message.jitsiParticipantIdSpaceMessage.value);
+                            socketManager.handleJitsiParticipantIdSpace(
+                                client,
+                                message.message.jitsiParticipantIdSpaceMessage.spaceName,
+                                message.message.jitsiParticipantIdSpaceMessage.value
+                            );
                             break;
                         }
                         case "itemEventMessage":

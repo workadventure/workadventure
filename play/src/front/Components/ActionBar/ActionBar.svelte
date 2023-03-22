@@ -30,7 +30,7 @@
     import closeImg from "../images/close.png";
     import penImg from "../images/pen.png";
     import hammerImg from "../images/hammer.png";
-    import megaphoneImg from "../images/audio.svg"; // TODO: change this image
+    import megaphoneImg from "../images/megaphone.svg";
     import WorkAdventureImg from "../images/icon-workadventure-white.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
@@ -69,7 +69,7 @@
     import { iframeListener } from "../../Api/IframeListener";
     import { onDestroy, onMount } from "svelte";
     import type { Unsubscriber } from "svelte/store";
-    import { writable } from "svelte/store";
+    import { get, writable } from "svelte/store";
     import { peerStore } from "../../Stores/PeerStore";
     import { StringUtils } from "../../Utils/StringUtils";
     import Tooltip from "../Util/Tooltip.svelte";
@@ -79,6 +79,7 @@
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
     import { megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
+    import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -86,6 +87,11 @@
     let microphoneActive = false;
     let selectedCamera: string | undefined = undefined;
     let selectedMicrophone: string | undefined = undefined;
+
+    let microphoneButton: HTMLButtonElement;
+    let cameraButton: HTMLButtonElement;
+
+    let megaphoneWarningTimeOut: NodeJS.Timeout | undefined = undefined;
 
     function screenSharingClick(): void {
         if ($silentStore) return;
@@ -102,6 +108,7 @@
             requestedCameraState.disableWebcam();
         } else {
             requestedCameraState.enableWebcam();
+            layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone");
         }
     }
 
@@ -111,6 +118,7 @@
             requestedMicrophoneState.disableMicrophone();
         } else {
             requestedMicrophoneState.enableMicrophone();
+            layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone");
         }
     }
 
@@ -155,6 +163,29 @@
     }
 
     function toggleMegaphone() {
+        if (!$megaphoneEnabledStore && !$requestedCameraState && !$requestedMicrophoneState) {
+            if (cameraButton) {
+                cameraButton.firstElementChild.classList.add("tw-animate-shaking");
+                setTimeout(() => cameraButton.firstElementChild.classList.remove("tw-animate-shaking"), 600);
+            }
+            if (microphoneButton) {
+                microphoneButton.firstElementChild.classList.add("tw-animate-shaking");
+                setTimeout(() => microphoneButton.firstElementChild.classList.remove("tw-animate-shaking"), 600);
+            }
+            if (megaphoneWarningTimeOut) {
+                clearTimeout(megaphoneWarningTimeOut);
+                megaphoneWarningTimeOut = undefined;
+            }
+            layoutManagerActionStore.addAction({
+                uuid: "megaphoneNeedCameraOrMicrophone",
+                type: "warning",
+                message: get(LL).warning.megaphoneNeeds(),
+                callback: () => layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone"),
+                userInputManager: this.userInputManager,
+            });
+            setTimeout(() => layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone"), 10_000);
+            return;
+        }
         $megaphoneEnabledStore = !$megaphoneEnabledStore;
     }
 
@@ -287,21 +318,21 @@
     }
 
     /*function register() {
-        modalIframeStore.set(
-            {
-                src: https://workadventu.re/funnel/connection?roomUrl=${window.location.toString()},
-                allow: "fullscreen",
-                allowApi: true,
-                position: "center",
-                title: $LL.menu.icon.open.register()
-            }
-        );
+		modalIframeStore.set(
+			{
+				src: https://workadventu.re/funnel/connection?roomUrl=${window.location.toString()},
+				allow: "fullscreen",
+				allowApi: true,
+				position: "center",
+				title: $LL.menu.icon.open.register()
+			}
+		);
 
-        //resetMenuVisibility();
-        //resetChatVisibility();
+		//resetMenuVisibility();
+		//resetChatVisibility();
 
-        window.open("https://workadventu.re/getting-started", "_blank");
-    }*/
+		window.open("https://workadventu.re/getting-started", "_blank");
+	}*/
 
     function resetModalVisibility() {
         modalVisibilityStore.set(false);
@@ -309,9 +340,9 @@
     }
 
     /*function resetMenuVisibility() {
-        menuVisiblilityStore.set(false);
-        activeSubMenuStore.set(0);
-    }*/
+		menuVisiblilityStore.set(false);
+		activeSubMenuStore.set(0);
+	}*/
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
@@ -504,6 +535,7 @@
                             <button
                                 class="tooltiptext sm:tw-w-56 md:tw-w-96"
                                 class:border-top-light={$requestedCameraState}
+                                bind:this={cameraButton}
                             >
                                 {#if $requestedCameraState && !$silentStore}
                                     <img
@@ -569,7 +601,7 @@
                         >
                             <Tooltip text={$LL.actionbar.microphone()} />
 
-                            <button class:border-top-light={$requestedMicrophoneState}>
+                            <button class:border-top-light={$requestedMicrophoneState} bind:this={microphoneButton}>
                                 {#if $requestedMicrophoneState && !$silentStore}
                                     <img
                                         draggable="false"
@@ -692,17 +724,29 @@
                         <img draggable="false" src={emojiPickOn} style="padding: 2px" alt="Toggle emoji picker" />
                     </button>
                 </div>
-                <div on:click={toggleMegaphone} class="bottom-action-button">
-                    <Tooltip
-                        text={$megaphoneEnabledStore
-                            ? $LL.actionbar.disableMegaphone()
-                            : $LL.actionbar.enableMegaphone()}
-                    />
+                {#if !$silentStore && ($myMicrophoneStore || $myCameraStore)}
+                    <div on:click={toggleMegaphone} class="bottom-action-button tw-relative">
+                        <Tooltip
+                            text={$megaphoneEnabledStore
+                                ? $LL.actionbar.disableMegaphone()
+                                : $LL.actionbar.enableMegaphone()}
+                        />
 
-                    <button class:border-top-light={$megaphoneEnabledStore}>
-                        <img draggable="false" src={megaphoneImg} style="padding: 2px" alt="Toggle megaphone" />
-                    </button>
-                </div>
+                        <button class:border-top-orange={$megaphoneEnabledStore}>
+                            <img draggable="false" src={megaphoneImg} style="padding: 2px" alt="Toggle megaphone" />
+                        </button>
+                        {#if $megaphoneEnabledStore}
+                            <div class="tw-absolute tw-top-[1.05rem] tw-right-1">
+                                <span
+                                    class="tw-w-3 tw-h-3 tw-bg-orange tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping tw-cursor-pointer"
+                                />
+                                <span
+                                    class="tw-w-2 tw-h-2 tw-bg-orange tw-block tw-rounded-full tw-absolute tw-top-0.5 tw-right-0.5 tw-cursor-pointer"
+                                />
+                            </div>
+                        {/if}
+                    </div>
+                {/if}
             </div>
 
             <div class="bottom-action-section tw-flex tw-flex-initial">
@@ -800,24 +844,24 @@
 
             <!-- TODO button must displayed by scripting API -->
             <!--
-            {#if ENABLE_OPENID && !$userIsConnected && }
-                <div
-                    class="bottom-action-section tw-flex tw-flex-initial"
-                    in:fly={{}}
-                    on:dragstart|preventDefault={noDrag}
-                    on:click={() => analyticsClient.openRegister()}
-                    on:click={register}
-                >
-                    <button
-                        class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base"
-                        id="register-btn"
-                        class:border-top-light={$menuVisiblilityStore}
-                    >
-                        {$LL.menu.icon.open.register()}
-                    </button>
-                </div>
-            {/if}
-            -->
+			{#if ENABLE_OPENID && !$userIsConnected && }
+				<div
+					class="bottom-action-section tw-flex tw-flex-initial"
+					in:fly={{}}
+					on:dragstart|preventDefault={noDrag}
+					on:click={() => analyticsClient.openRegister()}
+					on:click={register}
+				>
+					<button
+						class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base"
+						id="register-btn"
+						class:border-top-light={$menuVisiblilityStore}
+					>
+						{$LL.menu.icon.open.register()}
+					</button>
+				</div>
+			{/if}
+			-->
             {#each $addClassicButtonActionBarEvent as button}
                 <div
                     class="bottom-action-section tw-flex tw-flex-initial"
