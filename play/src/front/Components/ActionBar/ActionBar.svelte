@@ -165,12 +165,12 @@
     function toggleMegaphone() {
         if (!$megaphoneEnabledStore && !$requestedCameraState && !$requestedMicrophoneState) {
             if (cameraButton) {
-                cameraButton.firstElementChild.classList.add("tw-animate-shaking");
-                setTimeout(() => cameraButton.firstElementChild.classList.remove("tw-animate-shaking"), 600);
+                cameraButton.firstElementChild?.classList.add("tw-animate-shaking");
+                setTimeout(() => cameraButton.firstElementChild?.classList.remove("tw-animate-shaking"), 600);
             }
             if (microphoneButton) {
-                microphoneButton.firstElementChild.classList.add("tw-animate-shaking");
-                setTimeout(() => microphoneButton.firstElementChild.classList.remove("tw-animate-shaking"), 600);
+                microphoneButton.firstElementChild?.classList.add("tw-animate-shaking");
+                setTimeout(() => microphoneButton.firstElementChild?.classList.remove("tw-animate-shaking"), 600);
             }
             if (megaphoneWarningTimeOut) {
                 clearTimeout(megaphoneWarningTimeOut);
