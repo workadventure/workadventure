@@ -12,12 +12,13 @@
 
     import { Color } from "@workadventure/shared-utils";
     import UserTag from "./UserTag.svelte";
+    import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+    import { Streamable } from "../../Stores/StreamableCollectionStore";
 
-    export const clickable = false;
-
+    export let clickable = false;
     export let peer: JitsiTrackWrapper;
 
-    //let embedScreen: EmbedScreen;
+    let embedScreen: EmbedScreen;
     let videoContainer: HTMLDivElement;
     let videoElement: HTMLVideoElement;
     let minimized = isMediaBreakpointOnly("md");
@@ -26,12 +27,12 @@
     let backGroundColor = Color.getColorByString(peer.spaceUser?.name ?? "");
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
 
-    /*if (peer) {
-		embedScreen = {
-			type: "streamable",
-			embed: peer as unknown as Streamable,
-		};
-	}*/
+    if (peer) {
+        embedScreen = {
+            type: "streamable",
+            embed: peer as unknown as Streamable,
+        };
+    }
 
     const resizeObserver = new ResizeObserver(() => {
         minimized = isMediaBreakpointOnly("md");
@@ -59,46 +60,49 @@
 </script>
 
 <div
-        id="container"
-        bind:this={videoContainer}
+    id="container"
+    bind:this={videoContainer}
+    on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
     {#if peer.videoTrack}
         <div class="tw-flex tw-w-full tw-flex-col tw-h-full tw-rounded-sm tw-overflow-hidden">
             <video
-                    bind:this={videoElement}
-                    class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
-                    class="tw-h-full tw-max-w-full"
-                    autoplay
-                    playsinline
+                bind:this={videoElement}
+                class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
+                class="tw-h-full tw-max-w-full"
+                autoplay
+                playsinline
             />
         </div>
     {/if}
     <div class="tw-absolute tw-top-0.5 tw-right-1">
         {#if peer.audioTrack}
             <SoundMeterWidget
-                    classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
-                    barColor={textColor}
+                classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+                barColor={textColor}
             />
         {:else}
             <img
-                    draggable="false"
-                    src={microphoneOffImg}
-                    class="tw-flex tw-p-1 tw-h-8 tw-w-8 voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
-                    alt="Mute"
-                    class:tw-brightness-0={textColor === "black"}
-                    class:tw-brightness-100={textColor === "white"}
+                draggable="false"
+                src={microphoneOffImg}
+                class="tw-flex tw-p-1 tw-h-8 tw-w-8 voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+                alt="Mute"
+                class:tw-brightness-0={textColor === "black"}
+                class:tw-brightness-100={textColor === "white"}
             />
         {/if}
     </div>
-    {#await peer.spaceUser.getWokaBase64()}
-        <div></div>
-    {:then wokaBase64}
-        <UserTag name={peer.spaceUser?.name} wokaSrc={wokaBase64} minimal={!!peer.videoTrack}/>
-    {/await}
+    {#if peer.spaceUser}
+        {#await peer.spaceUser?.getWokaBase64()}
+            <div />
+        {:then wokaBase64}
+            <UserTag name={peer.spaceUser?.name ?? ""} wokaSrc={wokaBase64} minimal={!!peer.videoTrack} />
+        {/await}
+    {/if}
 </div>
 
 <style lang="scss">
-    #container{
+    #container {
         @apply tw-min-h-fit tw-flex tw-w-full tw-border-orange tw-border-2 tw-border-solid tw-relative tw-rounded;
         transition: all 0.2s ease;
     }
