@@ -42,7 +42,7 @@ export class GameMapEntities {
     public updateEntity(id: string, config: Partial<EntityData>): EntityData {
         const entity = this.getEntity(id);
         if (!entity) {
-            throw new Error(`Entity of id: ${id} does not exists!`);
+            throw new Error(`Entity of id: ${id} does not exist!`);
         }
         _.merge(entity, config);
         this.updateEntityInWAM(entity);

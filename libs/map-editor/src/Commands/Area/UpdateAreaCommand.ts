@@ -25,14 +25,14 @@ export class UpdateAreaCommand extends Command {
     }
 
     public execute(): UpdateAreaCommandConfig {
-        if (!this.gameMap.getGameMapAreas()?.updateAreaById(this.newConfig.id, this.newConfig)) {
+        if (!this.gameMap.getGameMapAreas()?.updateArea(this.newConfig.id, this.newConfig)) {
             throw new Error(`MapEditorError: Could not execute UpdateArea Command. Area ID: ${this.newConfig.id}`);
         }
         return { type: "UpdateAreaCommand", areaObjectConfig: this.newConfig };
     }
 
     public undo(): UpdateAreaCommandConfig {
-        if (!this.gameMap.getGameMapAreas()?.updateAreaById(this.oldConfig.id, this.oldConfig)) {
+        if (!this.gameMap.getGameMapAreas()?.updateArea(this.oldConfig.id, this.oldConfig)) {
             throw new Error(`MapEditorError: Could not undo UpdateArea Command. Area ID: ${this.newConfig.id}`);
         }
         return { type: "UpdateAreaCommand", areaObjectConfig: this.oldConfig };

@@ -27,7 +27,7 @@ export class CreateAreaCommand extends Command {
     }
 
     public undo(): DeleteAreaCommandConfig {
-        if (!this.gameMap.getGameMapAreas()?.deleteAreaById(this.areaConfig.id)) {
+        if (!this.gameMap.getGameMapAreas()?.deleteArea(this.areaConfig.id)) {
             throw new Error(`MapEditorError: Could not undo CreateArea Command. Area ID: ${this.areaConfig.id}`);
         }
         return { type: "DeleteAreaCommand", id: this.areaConfig.id };

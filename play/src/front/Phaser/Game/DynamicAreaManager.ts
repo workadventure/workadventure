@@ -13,12 +13,12 @@ export class DynamicAreaManager {
         this.registerIFrameEventAnswerers();
 
         this.subscription = iframeListener.modifyAreaStream.subscribe((modifyAreaEvent: ModifyDynamicAreaEvent) => {
-            const area = this.gameMapFrontWrapper.getDynamicAreaByName(modifyAreaEvent.name);
+            const area = this.gameMapFrontWrapper.getDynamicArea(modifyAreaEvent.name);
             if (!area) {
                 throw new Error(`Could not find dynamic area with the name "${modifyAreaEvent.name}" in your map`);
             }
 
-            const insideBefore = this.gameMapFrontWrapper.isPlayerInsideDynamicAreaByName(modifyAreaEvent.name);
+            const insideBefore = this.gameMapFrontWrapper.isPlayerInsideDynamicArea(modifyAreaEvent.name);
 
             if (modifyAreaEvent.x !== undefined) {
                 area.x = modifyAreaEvent.x;
@@ -33,7 +33,7 @@ export class DynamicAreaManager {
                 area.height = modifyAreaEvent.height;
             }
 
-            const insideAfter = this.gameMapFrontWrapper.isPlayerInsideDynamicAreaByName(modifyAreaEvent.name);
+            const insideAfter = this.gameMapFrontWrapper.isPlayerInsideDynamicArea(modifyAreaEvent.name);
 
             if (insideBefore && !insideAfter) {
                 this.gameMapFrontWrapper.triggerSpecificDynamicAreaOnLeave(area);
@@ -45,7 +45,7 @@ export class DynamicAreaManager {
 
     private registerIFrameEventAnswerers(): void {
         iframeListener.registerAnswerer("createArea", (createAreaEvent: CreateDynamicAreaEvent) => {
-            if (this.gameMapFrontWrapper.getDynamicAreaByName(createAreaEvent.name)) {
+            if (this.gameMapFrontWrapper.getDynamicArea(createAreaEvent.name)) {
                 throw new Error(`An area with the name "${createAreaEvent.name}" already exists in your map`);
             }
 
@@ -56,7 +56,7 @@ export class DynamicAreaManager {
         });
 
         iframeListener.registerAnswerer("getArea", (name: string) => {
-            const area = this.gameMapFrontWrapper.getDynamicAreaByName(name);
+            const area = this.gameMapFrontWrapper.getDynamicArea(name);
             if (area === undefined) {
                 throw new Error(`Cannot find dynamic area with name "${name}"`);
             }
@@ -70,7 +70,7 @@ export class DynamicAreaManager {
         });
 
         iframeListener.registerAnswerer("deleteArea", (name: string) => {
-            this.gameMapFrontWrapper.deleteDynamicAreaByName(name);
+            this.gameMapFrontWrapper.deleteDynamicArea(name);
         });
     }
 

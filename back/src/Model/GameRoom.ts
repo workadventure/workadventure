@@ -80,9 +80,6 @@ export class GameRoom implements BrothersFinder {
     private reconnectMapStorageTimeout: NodeJS.Timeout | undefined;
     private closing = false;
 
-    private _mapUrl!: string;
-    private _wamUrl?: string;
-
     private constructor(
         public readonly roomUrl: string,
         private roomGroup: string | null,
@@ -97,7 +94,9 @@ export class GameRoom implements BrothersFinder {
         onLockGroup: LockGroupCallback,
         onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
         private thirdParty: MapThirdPartyData | undefined,
-        private editable: boolean
+        private editable: boolean,
+        private _mapUrl: string,
+        private _wamUrl?: string
     ) {
         // A zone is 10 sprites wide.
         this.positionNotifier = new PositionNotifier(
@@ -126,6 +125,14 @@ export class GameRoom implements BrothersFinder {
         onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback
     ): Promise<GameRoom> {
         const mapDetails = await GameRoom.getMapDetails(roomUrl);
+        const wamUrl = mapDetails.wamUrl;
+        const mapUrl = await mapFetcher.getMapUrl(
+            mapDetails.mapUrl,
+            mapDetails.wamUrl,
+            false,
+            STORE_VARIABLES_FOR_LOCAL_MAPS
+        );
+
         const gameRoom = new GameRoom(
             roomUrl,
             mapDetails.group,
@@ -140,24 +147,19 @@ export class GameRoom implements BrothersFinder {
             onLockGroup,
             onPlayerDetailsUpdated,
             mapDetails.thirdParty ?? undefined,
-            mapDetails.editable ?? false
-        );
-        gameRoom._wamUrl = mapDetails.wamUrl;
-        gameRoom._mapUrl = await mapFetcher.getMapUrl(
-            mapDetails.mapUrl,
-            mapDetails.wamUrl,
-            false,
-            STORE_VARIABLES_FOR_LOCAL_MAPS
+            mapDetails.editable ?? false,
+            mapUrl,
+            wamUrl
         );
 
         gameRoom.connectToMapStorage();
 
-        // gameRoom
-        //     .getMucManager()
-        //     .then((mucManager) => {
-        //         mucManager.init(mapDetails).catch((err) => console.error(err));
-        //     })
-        //     .catch((err) => console.error("Error get Muc Manager: ", err));
+        gameRoom
+            .getMucManager()
+            .then((mucManager) => {
+                mucManager.init(mapDetails).catch((err) => console.error(err));
+            })
+            .catch((err) => console.error("Error get Muc Manager: ", err));
         return gameRoom;
     }
 

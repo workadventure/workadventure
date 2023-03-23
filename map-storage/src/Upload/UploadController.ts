@@ -183,12 +183,7 @@ export class UploadController {
                         promises.push(this.fileSystem.writeFile(zipEntry, key, zip));
                         if (path.extname(key) === ".tmj") {
                             if (!wamFilesNames.includes(path.parse(zipEntry.name).name)) {
-                                promises.push(
-                                    this.fileSystem.writeStringAsFile(
-                                        key.slice().replace(".tmj", ".wam"),
-                                        JSON.stringify(this.getFreshWAMFileContent(`./${path.basename(key)}`))
-                                    )
-                                );
+                                promises.push(this.createWAMFileIfMissing(key));
                             }
                             keysToPurge.push(key);
                         }
@@ -223,6 +218,16 @@ export class UploadController {
         const files = await fileSystem.listFiles(mapPath("/", req), ".tmj");
 
         await fileSystem.writeStringAsFile(mapPath("/" + UploadController.CACHE_NAME, req), JSON.stringify(files));
+    }
+
+    private async createWAMFileIfMissing(tmjKey: string): Promise<void> {
+        const wamPath = tmjKey.slice().replace(".tmj", ".wam");
+        if (!(await this.fileSystem.exist(wamPath))) {
+            await this.fileSystem.writeStringAsFile(
+                wamPath,
+                JSON.stringify(this.getFreshWAMFileContent(`./${path.basename(tmjKey)}`))
+            );
+        }
     }
 
     private getFreshWAMFileContent(tmjFilePath: string): WAMFileFormat {

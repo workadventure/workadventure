@@ -24,7 +24,7 @@ export class DeleteAreaCommand extends Command {
     }
 
     public execute(): DeleteAreaCommandConfig {
-        if (!this.gameMap.getGameMapAreas()?.deleteAreaById(this.areaConfig.id)) {
+        if (!this.gameMap.getGameMapAreas()?.deleteArea(this.areaConfig.id)) {
             throw new Error(`MapEditorError: Could not execute DeleteArea Command. Area ID: ${this.areaConfig.id}`);
         }
         return { type: "DeleteAreaCommand", id: this.areaConfig.id };

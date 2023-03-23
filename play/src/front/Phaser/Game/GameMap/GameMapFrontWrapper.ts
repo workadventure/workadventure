@@ -599,13 +599,13 @@ export class GameMapFrontWrapper {
     }
 
     public setAreaProperty<K extends keyof AreaDataProperties>(
-        areaName: string,
+        id: string,
         propertyName: K,
         propertyValue: AreaDataProperties[K]
     ): void {
-        const area = this.getAreaByName(areaName);
+        const area = this.getArea(id);
         if (area === undefined) {
-            console.warn('Could not find area "' + areaName + '" when calling setProperty');
+            console.warn('Could not find area "' + id + '" when calling setProperty');
             return;
         }
         this.gameMap.setAreaProperty(area, propertyName, propertyValue);
@@ -638,7 +638,7 @@ export class GameMapFrontWrapper {
         }
         this.dynamicAreas.set(area.name, area);
 
-        if (this.isPlayerInsideDynamicAreaByName(area.name)) {
+        if (this.isPlayerInsideDynamicArea(area.name)) {
             this.triggerSpecificDynamicAreaOnEnter(area);
         }
         return true;
@@ -672,45 +672,28 @@ export class GameMapFrontWrapper {
         return this.gameMap.getGameMapAreas()?.getArea(id);
     }
 
-    public getDynamicAreaByName(name: string): DynamicArea | undefined {
+    public getDynamicArea(name: string): DynamicArea | undefined {
         return this.dynamicAreas.get(name);
     }
 
-    public updateAreaByName(name: string, config: Partial<AreaData>): void {
+    public updateArea(id: string, config: Partial<AreaData>): void {
         const gameMapAreas = this.gameMap.getGameMapAreas();
         if (!gameMapAreas) {
             return;
         }
-        const area = gameMapAreas.updateAreaByName(name, config);
-        if (this.position && area && gameMapAreas.isPlayerInsideAreaByName(name, this.position)) {
-            gameMapAreas.triggerSpecificAreaOnEnter(area);
-        }
-        this.areaUpdatedSubject.next(gameMapAreas.getAreaByName(name));
-    }
-
-    public updateAreaById(id: string, config: Partial<AreaData>): void {
-        const gameMapAreas = this.gameMap.getGameMapAreas();
-        if (!gameMapAreas) {
-            return;
-        }
-        const area = gameMapAreas.updateAreaById(id, config);
+        const area = gameMapAreas.updateArea(id, config);
         if (this.position && area && gameMapAreas.isPlayerInsideArea(id, this.position)) {
             this.triggerSpecificAreaOnEnter(area);
         }
         this.areaUpdatedSubject.next(gameMapAreas.getArea(id));
     }
 
-    public deleteAreaByName(name: string): void {
-        this.gameMap.getGameMapAreas()?.deleteAreaByName(name, this.position);
+    public deleteArea(id: string): void {
+        this.gameMap.getGameMapAreas()?.deleteArea(id, this.position);
     }
 
-    public deleteAreaById(id: string): void {
-        this.gameMap.getGameMapAreas()?.deleteAreaById(id, this.position);
-    }
-
-    public deleteDynamicAreaByName(name: string): void {
+    public deleteDynamicArea(name: string): void {
         this.dynamicAreas.delete(name);
-        this.gameMap.getGameMapAreas()?.deleteAreaByName(name, this.position);
     }
 
     public isPlayerInsideArea(id: string): boolean {
@@ -720,14 +703,7 @@ export class GameMapFrontWrapper {
         return this.gameMap.getGameMapAreas()?.isPlayerInsideArea(id, this.position) || false;
     }
 
-    public isPlayerInsideAreaByName(name: string): boolean {
-        if (!this.position) {
-            return false;
-        }
-        return this.gameMap.getGameMapAreas()?.isPlayerInsideAreaByName(name, this.position) || false;
-    }
-
-    public isPlayerInsideDynamicAreaByName(name: string): boolean {
+    public isPlayerInsideDynamicArea(name: string): boolean {
         if (!this.position) {
             return false;
         }

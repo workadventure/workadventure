@@ -1,6 +1,6 @@
-import { AreaData, AreaDataProperties, GameMapProperties, WAMFileFormat } from "../types";
 import * as _ from "lodash";
 import { MathUtils } from "@workadventure/math-utils";
+import { AreaData, AreaDataProperties, GameMapProperties, WAMFileFormat } from "../types";
 
 export type AreaChangeCallback = (
     areasChangedByAction: Array<AreaData>,
@@ -130,42 +130,18 @@ export class GameMapAreas {
             this.getAreasOnPosition(position, this.areasPositionOffsetY).findIndex((area) => area.name === name) !== -1
         );
     }
-    public updateAreaByName(name: string, config: Partial<AreaData>): AreaData | undefined {
-        const area = this.getAreaByName(name);
-        if (!area) {
-            return;
-        }
-        this.updateArea(area, config);
-        return area;
-    }
 
-    public updateAreaById(id: string, config: Partial<AreaData>): AreaData | undefined {
+    public updateArea(id: string, config: Partial<AreaData>): AreaData | undefined {
         const area = this.staticAreas.get(id);
         if (!area) {
-            return;
+            throw new Error(`Area to update does not exist!`);
         }
-        this.updateArea(area, config);
+        _.merge(area, config);
+        this.updateAreaWAM(area);
         return area;
     }
 
-    public deleteAreaByName(name: string, playerPosition?: { x: number; y: number }): boolean {
-        if (playerPosition) {
-            const area = this.getAreasOnPosition(playerPosition, this.areasPositionOffsetY).find(
-                (area) => area.name === name
-            );
-            if (area) {
-                this.triggerSpecificAreaOnLeave(area);
-            }
-        }
-        const areas = Array.from(this.staticAreas.values());
-        const area = areas.find((area) => area.name === name);
-        if (area) {
-            return this.deleteStaticArea(area.id);
-        }
-        return false;
-    }
-
-    public deleteAreaById(id: string, playerPosition?: { x: number; y: number }): boolean {
+    public deleteArea(id: string, playerPosition?: { x: number; y: number }): boolean {
         if (playerPosition) {
             const area = this.getAreasOnPosition(playerPosition, this.areasPositionOffsetY).find(
                 (area) => area.id === id
@@ -175,14 +151,6 @@ export class GameMapAreas {
             }
         }
         return this.deleteStaticArea(id);
-    }
-
-    private updateArea(area: AreaData, config: Partial<AreaData>): void {
-        if (!area) {
-            throw new Error(`Area to update does not exists!`);
-        }
-        _.merge(area, config);
-        this.updateAreaWAM(area);
     }
 
     private addAreaToWAM(areaData: AreaData): boolean {

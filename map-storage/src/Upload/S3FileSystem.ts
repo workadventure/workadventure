@@ -90,9 +90,10 @@ export class S3FileSystem implements FileSystemInterface {
                             Objects: objects
                                 .filter((o) => {
                                     if (o.Key?.includes(".wam")) {
-                                        const tmjKey = o.Key?.slice().replace(".wam", ".tmj");
+                                        const wamKey = o.Key?.slice().replace(directory, "");
+                                        const tmjKey = wamKey.slice().replace(".wam", ".tmj");
                                         // do not delete existing .wam file if there's no new version in zip and .tmj file with the same name exists
-                                        if (o.Key?.includes(tmjKey) && !filesFromZip.includes(o.Key)) {
+                                        if (filesFromZip.includes(tmjKey) && !filesFromZip.includes(wamKey)) {
                                             return false;
                                         }
                                     }
