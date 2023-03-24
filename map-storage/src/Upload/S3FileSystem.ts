@@ -62,6 +62,55 @@ export class S3FileSystem implements FileSystemInterface {
         } while (listObjectsResponse.IsTruncated);
     }
 
+    async deleteFilesExceptWAM(directory: string, filesFromZip: string[]): Promise<void> {
+        if (!directory.endsWith("/")) {
+            directory += "/";
+        }
+
+        // Delete all files in the S3 bucket
+        let listObjectsResponse: ListObjectsCommandOutput;
+        let pageMarker: string | undefined;
+        do {
+            const command: ListObjectsCommandInput = {
+                Bucket: this.bucketName,
+                MaxKeys: 1000,
+                Prefix: directory,
+            };
+            if (pageMarker) {
+                command.Marker = pageMarker;
+            }
+            listObjectsResponse = await this.s3.send(new ListObjectsCommand(command));
+            const objects = listObjectsResponse.Contents;
+
+            if (objects && objects.length > 0) {
+                await this.s3.send(
+                    new DeleteObjectsCommand({
+                        Bucket: this.bucketName,
+                        Delete: {
+                            Objects: objects
+                                .filter((o) => {
+                                    if (o.Key?.includes(".wam")) {
+                                        const wamKey = o.Key?.slice().replace(directory, "");
+                                        const tmjKey = wamKey.slice().replace(".wam", ".tmj");
+                                        // do not delete existing .wam file if there's no new version in zip and .tmj file with the same name exists
+                                        if (filesFromZip.includes(tmjKey) && !filesFromZip.includes(wamKey)) {
+                                            return false;
+                                        }
+                                    }
+                                    return true;
+                                })
+                                .map((o) => ({ Key: o.Key })),
+                        },
+                    })
+                );
+
+                if (listObjectsResponse.IsTruncated) {
+                    pageMarker = objects.slice(-1)[0].Key;
+                }
+            }
+        } while (listObjectsResponse.IsTruncated);
+    }
+
     async exist(virtualPath: string): Promise<boolean> {
         return (await this.listFiles(virtualPath)).length > 0;
     }

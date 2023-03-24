@@ -43,7 +43,7 @@ import type { ActionsMenuActionClickedEvent } from "./Events/ActionsMenuActionCl
 import type { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveActionsMenuKeyFromRemotePlayerEvent";
 import type { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import type { ModifyUIWebsiteEvent } from "./Events/Ui/UIWebsite";
-import type { ModifyAreaEvent } from "./Events/CreateAreaEvent";
+import type { ModifyDynamicAreaEvent } from "./Events/CreateDynamicAreaEvent";
 import type { AskPositionEvent } from "./Events/AskPositionEvent";
 import type { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
 import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
@@ -169,7 +169,7 @@ class IframeListener {
     private readonly _modifyEmbeddedWebsiteStream: Subject<ModifyEmbeddedWebsiteEvent> = new Subject();
     public readonly modifyEmbeddedWebsiteStream = this._modifyEmbeddedWebsiteStream.asObservable();
 
-    private readonly _modifyAreaStream: Subject<ModifyAreaEvent> = new Subject();
+    private readonly _modifyAreaStream: Subject<ModifyDynamicAreaEvent> = new Subject();
     public readonly modifyAreaStream = this._modifyAreaStream.asObservable();
 
     private readonly _modifyUIWebsiteStream: Subject<ModifyUIWebsiteEvent> = new Subject();

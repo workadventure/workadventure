@@ -22,7 +22,7 @@
                 const area = WA.room.area.create({
                         name: 'Center',
                         x: 224,
-                        y: 254,
+                        y: 256,
                         width: 514,
                         height: 292,
                     });

@@ -1,12 +1,12 @@
 import type { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
-import type { CreateAreaEvent } from "../../Events/CreateAreaEvent";
+import type { CreateDynamicAreaEvent } from "../../Events/CreateDynamicAreaEvent";
 import { sendToWorkadventure } from "../IframeApiContribution";
 
 // TODO: Include more properties to extends functionality later on
 export type IArea = Omit<ITiledMapObject, "id" | "gid" | "visible" | "rotation" | "ellipse" | "polygon" | "polyline">;
 
 export class Area implements IArea {
-    private config: CreateAreaEvent;
+    private config: CreateDynamicAreaEvent;
 
     public readonly name: string;
     public readonly type: string = "area";
@@ -16,7 +16,7 @@ export class Area implements IArea {
     private _width: number;
     private _height: number;
 
-    constructor(config: CreateAreaEvent) {
+    constructor(config: CreateDynamicAreaEvent) {
         this.config = config;
 
         this.name = config.name;

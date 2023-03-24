@@ -1,4 +1,3 @@
-import type { ModifyAreaMessage } from "@workadventure/messages";
 import { z } from "zod";
 import type { CreateAreaCommandConfig } from "./Commands/Area/CreateAreaCommand";
 import type { DeleteAreaCommandConfig } from "./Commands/Area/DeleteAreaCommand";
@@ -16,13 +15,6 @@ export type CommandConfig =
     | DeleteEntityCommandConfig;
 
 export type AtLeast<T, K extends keyof T> = Partial<T> & Pick<T, K>;
-
-export type AreaData = Required<ModifyAreaMessage> & { visible: boolean }; // move visible to messages also
-
-export enum AreaType {
-    Static = "Static",
-    Dynamic = "Dynamic",
-}
 
 // TODO: This probably won't be used in the future
 export interface PredefinedPropertyData {
@@ -42,13 +34,21 @@ export enum Direction {
 export const TextHeaderPropertyData = z.string();
 
 export const ActionsMenuData = z.object({
-    buttonLabel: z.string(),
+    buttonLabel: z.string().optional(),
+});
+
+export const FocusablePropertyData = z.object({
+    zoom_margin: z.number().optional(),
 });
 
 export const JitsiRoomConfigData = z.object({
     startWithAudioMuted: z.boolean().optional(),
     startWithVideoMuted: z.boolean().optional(),
 });
+
+export const StartPropertyData = z.boolean();
+
+export const SilentPropertyData = z.boolean();
 
 export const JitsiRoomPropertyData = ActionsMenuData.extend({
     roomName: z.string(),
@@ -59,16 +59,37 @@ export const PlayAudioPropertyData = ActionsMenuData.extend({
     audioLink: z.string(),
 });
 
-export const OpenTabPropertyData = ActionsMenuData.extend({
+export const OpenWebsitePropertyData = ActionsMenuData.extend({
     link: z.string(),
-    inNewTab: z.boolean(),
+    newTab: z.boolean().optional(),
+});
+
+// TODO: Can they vary between Entity and Area or should it be the same type?
+export const AreaDataProperties = z.object({
+    start: StartPropertyData.optional().nullable(),
+    silent: SilentPropertyData.optional().nullable(),
+    focusable: FocusablePropertyData.optional().nullable(),
+    jitsiRoom: JitsiRoomPropertyData.optional().nullable(),
+    playAudio: PlayAudioPropertyData.optional().nullable(),
+    openWebsite: OpenWebsitePropertyData.optional().nullable(),
+});
+
+export const AreaData = z.object({
+    id: z.string(),
+    name: z.string(),
+    x: z.number(),
+    y: z.number(),
+    width: z.number(),
+    height: z.number(),
+    visible: z.boolean(),
+    properties: AreaDataProperties,
 });
 
 export const EntityDataProperties = z.object({
     textHeader: TextHeaderPropertyData.optional().nullable(),
     jitsiRoom: JitsiRoomPropertyData.optional().nullable(),
     playAudio: PlayAudioPropertyData.optional().nullable(),
-    openTab: OpenTabPropertyData.optional().nullable(),
+    openWebsite: OpenWebsitePropertyData.optional().nullable(),
 });
 
 export const EntityRawPrefab = z.object({
@@ -100,18 +121,33 @@ export const EntityData = z.object({
     prefab: EntityPrefab,
 });
 
+export const WAMFileFormat = z.object({
+    version: z.string(),
+    mapUrl: z.string(),
+    entities: z.array(EntityData),
+    areas: z.array(AreaData),
+    lastCommandId: z.string().optional(),
+});
+
 export type EntityRawPrefab = z.infer<typeof EntityRawPrefab>;
 export type EntityPrefab = z.infer<typeof EntityPrefab>;
 export type EntityCollection = z.infer<typeof EntityCollection>;
 export type EntityData = z.infer<typeof EntityData>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
 export type EntityDataPropertiesKeys = keyof z.infer<typeof EntityDataProperties>;
+export type AreaData = z.infer<typeof AreaData>;
+export type AreaDataProperties = z.infer<typeof AreaDataProperties>;
+export type AreaDataPropertiesKeys = keyof z.infer<typeof AreaDataProperties>;
 export type TextHeaderPropertyData = z.infer<typeof TextHeaderPropertyData>;
 export type ActionsMenuData = z.infer<typeof ActionsMenuData>;
+export type StartPropertyData = z.infer<typeof StartPropertyData>;
+export type SilentPropertyData = z.infer<typeof SilentPropertyData>;
+export type FocusablePropertyData = z.infer<typeof FocusablePropertyData>;
 export type JitsiRoomConfigData = z.infer<typeof JitsiRoomConfigData>;
 export type JitsiRoomPropertyData = z.infer<typeof JitsiRoomPropertyData>;
 export type PlayAudioPropertyData = z.infer<typeof PlayAudioPropertyData>;
-export type OpenTabPropertyData = z.infer<typeof OpenTabPropertyData>;
+export type OpenWebsitePropertyData = z.infer<typeof OpenWebsitePropertyData>;
+export type WAMFileFormat = z.infer<typeof WAMFileFormat>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",

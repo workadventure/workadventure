@@ -1,10 +1,10 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { OpenTabPropertyData } from "@workadventure/map-editor";
+    import { OpenWebsitePropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
 
-    export let property: OpenTabPropertyData;
+    export let property: OpenWebsitePropertyData;
 
     const dispatch = createEventDispatcher();
 
@@ -38,13 +38,7 @@
 </div>
 <div class="value-switch">
     <label for="newTab">{$LL.mapEditor.entityEditor.linkProperties.newTabLabel()}</label>
-    <input
-        id="newTab"
-        type="checkbox"
-        class="input-switch"
-        bind:checked={property.inNewTab}
-        on:change={onValueChange}
-    />
+    <input id="newTab" type="checkbox" class="input-switch" bind:checked={property.newTab} on:change={onValueChange} />
 </div>
 
 <style lang="scss">

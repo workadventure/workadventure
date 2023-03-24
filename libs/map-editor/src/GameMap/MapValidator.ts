@@ -1,7 +1,7 @@
 import path from "node:path";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { z } from "zod";
-import { EntityData } from "../types";
+import { EntityData, WAMFileFormat } from "../types";
 
 export type Success<T> = { ok: true; value: T };
 export type Failure<E> = { ok: false; error: E };
@@ -166,6 +166,11 @@ export class MapValidator {
             ok: true,
             value: map,
         };
+    }
+
+    // TODO: More detailed validation later on
+    public validateWAMFile(data: string): boolean {
+        return WAMFileFormat.safeParse(JSON.parse(data)).success;
     }
 
     private removeWarnings(errors: ValidationError[]) {

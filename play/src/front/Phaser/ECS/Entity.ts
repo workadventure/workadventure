@@ -211,7 +211,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             const roomName = properties.jitsiRoom.roomName;
             const roomConfig = properties.jitsiRoom.jitsiRoomConfig;
             actions.push({
-                actionName: properties.jitsiRoom.buttonLabel,
+                actionName: properties.jitsiRoom.buttonLabel ?? "",
                 protected: true,
                 priority: 1,
                 callback: () => {
@@ -229,15 +229,15 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                 },
             });
         }
-        if (properties.openTab) {
-            const link = properties.openTab.link;
-            const inNewTab = properties.openTab.inNewTab;
+        if (properties.openWebsite) {
+            const link = properties.openWebsite.link;
+            const newTab = properties.openWebsite.newTab;
             actions.push({
-                actionName: properties.openTab.buttonLabel,
+                actionName: properties.openWebsite.buttonLabel ?? "",
                 protected: true,
                 priority: 1,
                 callback: () => {
-                    if (inNewTab) {
+                    if (newTab) {
                         this.emit(EntityEvent.PropertyActivated, {
                             propertyName: GameMapProperties.OPEN_TAB,
                             propertyValue: link,
@@ -255,7 +255,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         if (properties.playAudio) {
             const audioLink = properties.playAudio.audioLink;
             actions.push({
-                actionName: properties.playAudio.buttonLabel,
+                actionName: properties.playAudio.buttonLabel ?? "",
                 protected: true,
                 priority: 1,
                 callback: () => {

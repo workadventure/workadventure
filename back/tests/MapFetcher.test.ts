@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapFetcher } from "../src/Services/MapFetcher";
+import { mapFetcher } from "@workadventure/shared-utils/src/MapFetcher";
 
 describe("MapFetcher", () => {
     it("should return true on localhost ending URLs", async () => {

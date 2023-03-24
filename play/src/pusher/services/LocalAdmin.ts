@@ -1,3 +1,4 @@
+import path from "path";
 import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData } from "@workadventure/messages";
 import { OpidWokaNamePolicy } from "@workadventure/messages";
 import {
@@ -65,11 +66,19 @@ class LocalAdmin implements AdminInterface {
             });
         }
 
-        let mapUrl = "";
+        let mapUrl = undefined;
+        let wamUrl = undefined;
+        const canEdit = false;
         const entityCollectionsUrls = [];
+
         let match = /\/~\/(.+)/.exec(roomUrl.pathname);
         if (match) {
-            mapUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
+            if (path.extname(roomUrl.pathname) === ".tmj") {
+                return Promise.resolve({
+                    redirectUrl: roomUrl.toString().replace(".tmj", ".wam"),
+                });
+            }
+            wamUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
             entityCollectionsUrls.push(`${PUBLIC_MAP_STORAGE_URL}/entityCollections`);
         } else {
             match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);
@@ -90,6 +99,8 @@ class LocalAdmin implements AdminInterface {
 
         return Promise.resolve({
             mapUrl,
+            wamUrl,
+            canEdit,
             entityCollectionsUrls,
             authenticationMandatory: DISABLE_ANONYMOUS,
             contactPage: null,

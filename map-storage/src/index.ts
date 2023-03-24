@@ -3,8 +3,8 @@ import express from "express";
 import cors from "cors";
 import { MapStorageService } from "@workadventure/messages/src/ts-proto-generated/services";
 import passport from "passport";
-import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import bodyParser from "body-parser";
+import { WAMFileFormat } from "@workadventure/map-editor";
 import { mapStorageServer } from "./MapStorageServer";
 import { mapsManager } from "./MapsManager";
 import { proxyFiles } from "./FileFetcher/FileFetcher";
@@ -34,22 +34,22 @@ app.use(bodyParser.json());
 passport.use(passportStrategy);
 app.use(passport.initialize());
 
-app.get("*.tmj", (req, res, next) => {
+app.get("*.wam", (req, res, next) => {
     (async () => {
-        const path = req.url;
+        const wamPath = req.url;
         const domain = req.hostname;
-        if (path.includes("..") || domain.includes("..")) {
+        if (wamPath.includes("..") || domain.includes("..")) {
             res.status(400).send("Invalid request");
             return;
         }
-        const key = mapPathUsingDomain(path, domain);
+        const key = mapPathUsingDomain(wamPath, domain);
         const file = await fileSystem.readFileAsString(key);
-        const map = ITiledMap.parse(JSON.parse(file));
+        const wam = WAMFileFormat.parse(JSON.parse(file));
 
         if (!mapsManager.isMapAlreadyLoaded(key)) {
-            mapsManager.loadMapToMemory(key, map);
+            mapsManager.loadWAMToMemory(key, wam);
         }
-        res.send(map);
+        res.send(wam);
     })().catch((e) => next());
 });
 

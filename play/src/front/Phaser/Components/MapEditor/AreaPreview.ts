@@ -116,6 +116,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
             if ((pointer.event.target as Element)?.localName !== "canvas") {
                 return;
             }
+            console.log(this.config);
             this.emit(AreaPreviewEvent.Clicked);
         });
         this.preview.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
@@ -261,7 +262,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         return this.config.name;
     }
 
-    public getId(): number {
+    public getId(): string {
         return this.config.id;
     }
 }

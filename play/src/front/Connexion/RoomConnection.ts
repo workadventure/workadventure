@@ -1080,7 +1080,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorDeleteArea(commandId: string, id: number): void {
+    public emitMapEditorDeleteArea(commandId: string, id: string): void {
         this.send({
             message: {
                 $case: "editMapCommandMessage",

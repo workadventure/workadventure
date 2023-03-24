@@ -5,7 +5,7 @@ import App from "./src/App";
 import { roomManager } from "./src/RoomManager";
 import { HTTP_PORT, GRPC_PORT, ENABLE_TELEMETRY } from "./src/Enum/EnvironmentVariable";
 import { telemetryService } from "./src/Services/TelemetryService";
-import {spaceManager} from "./src/SpaceManager";
+import { spaceManager } from "./src/SpaceManager";
 
 if (ENABLE_TELEMETRY) {
     telemetryService.startTelemetry().catch((e) => console.error(e));

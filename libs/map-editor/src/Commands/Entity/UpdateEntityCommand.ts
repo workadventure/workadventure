@@ -16,7 +16,7 @@ export class UpdateEntityCommand extends Command {
     constructor(gameMap: GameMap, config: UpdateEntityCommandConfig, commandId?: string) {
         super(commandId);
         this.gameMap = gameMap;
-        const oldConfig = gameMap.getGameMapEntities().getEntity(config.dataToModify.id);
+        const oldConfig = gameMap.getGameMapEntities()?.getEntity(config.dataToModify.id);
         if (!oldConfig) {
             throw new Error("Trying to update a non existing Entity!");
         }
@@ -25,14 +25,14 @@ export class UpdateEntityCommand extends Command {
     }
 
     public execute(): UpdateEntityCommandConfig {
-        if (!this.gameMap.getGameMapEntities().updateEntity(this.newConfig.id, this.newConfig)) {
+        if (!this.gameMap.getGameMapEntities()?.updateEntity(this.newConfig.id, this.newConfig)) {
             throw new Error(`MapEditorError: Could not execute UpdateEntity Command. Area ID: ${this.newConfig.id}`);
         }
         return { type: "UpdateEntityCommand", dataToModify: this.newConfig };
     }
 
     public undo(): UpdateEntityCommandConfig {
-        if (!this.gameMap.getGameMapEntities().updateEntity(this.oldConfig.id, this.oldConfig)) {
+        if (!this.gameMap.getGameMapEntities()?.updateEntity(this.oldConfig.id, this.oldConfig)) {
             throw new Error(`MapEditorError: Could not undo UpdateEntity Command. Area ID: ${this.newConfig.id}`);
         }
         return { type: "UpdateEntityCommand", dataToModify: this.oldConfig };
