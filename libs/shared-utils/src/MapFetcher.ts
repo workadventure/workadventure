@@ -88,6 +88,7 @@ class MapFetcher {
         if (
             [
                 "http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json",
+                "http://maps.workadventure.localhost/tests/Properties/mapProperties.json",
                 "http://play.workadventure.localhost/~/maps/areas.wam",
             ].includes(url)
         ) {
