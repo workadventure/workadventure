@@ -7,7 +7,6 @@ import {
     mapEditorSelectedEntityDraggedStore,
     mapEditorSelectedEntityPrefabStore,
     mapEditorSelectedEntityStore,
-    MapEntityEditorMode,
     mapEntityEditorModeStore,
 } from "../../../../Stores/MapEditorStore";
 import { Entity } from "../../../ECS/Entity";
@@ -60,7 +59,7 @@ export class EntityEditorTool extends MapEditorTool {
 
     public update(time: number, dt: number): void {}
     public clear(): void {
-        mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
+        mapEntityEditorModeStore.set("ADD");
         this.entitiesManager.clearAllEntitiesTint();
         this.entitiesManager.clearAllEntitiesEditOutlines();
         this.cleanPreview();
@@ -84,13 +83,13 @@ export class EntityEditorTool extends MapEditorTool {
     public handleKeyDownEvent(event: KeyboardEvent): void {
         switch (event.key.toLowerCase()) {
             case "escape": {
-                mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
+                mapEntityEditorModeStore.set("ADD");
                 break;
             }
             case "delete": {
                 get(mapEditorSelectedEntityStore)?.delete();
                 mapEditorSelectedEntityStore.set(undefined);
-                mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
+                mapEntityEditorModeStore.set("ADD");
                 break;
             }
         }
@@ -205,12 +204,12 @@ export class EntityEditorTool extends MapEditorTool {
         const entity = this.entitiesManager.addEntity(
             structuredClone(config),
             undefined,
-            get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode
+            get(mapEntityEditorModeStore) === "EDIT"
         );
         if (localCommand) {
             mapEditorSelectedEntityStore.set(entity);
             mapEditorSelectedEntityPrefabStore.set(undefined);
-            mapEntityEditorModeStore.set(MapEntityEditorMode.EditMode);
+            mapEntityEditorModeStore.set("EDIT");
         }
     }
 
@@ -281,11 +280,11 @@ export class EntityEditorTool extends MapEditorTool {
                 return;
             }
             switch (mode) {
-                case MapEntityEditorMode.AddMode: {
+                case "ADD": {
                     this.entitiesManager.makeAllEntitiesInteractive();
                     break;
                 }
-                case MapEntityEditorMode.EditMode: {
+                case "EDIT": {
                     this.entitiesManager.makeAllEntitiesInteractive();
                     this.cleanPreview();
                     break;
@@ -382,8 +381,8 @@ export class EntityEditorTool extends MapEditorTool {
     }
 
     private handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        if (get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode && gameObjects.length === 0) {
-            mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
+        if (get(mapEntityEditorModeStore) === "EDIT" && gameObjects.length === 0) {
+            mapEntityEditorModeStore.set("ADD");
             mapEditorSelectedEntityStore.set(undefined);
         }
         if (!this.entityPrefabPreview || !this.entityPrefab) {

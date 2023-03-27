@@ -7,7 +7,6 @@ import {
     mapEditorModeStore,
     mapEditorSelectedEntityPrefabStore,
     mapEditorSelectedEntityStore,
-    MapEntityEditorMode,
     mapEntityEditorModeStore,
     mapEditorSelectedEntityDraggedStore,
 } from "../../../Stores/MapEditorStore";
@@ -196,12 +195,12 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             this.emit(EntitiesManagerEvent.UpdateEntity, data);
         });
         entity.on(Phaser.Input.Events.DRAG_START, () => {
-            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
+            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === "EDIT") {
                 mapEditorSelectedEntityDraggedStore.set(true);
             }
         });
         entity.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
+            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === "EDIT") {
                 const collisitonGrid = entity.getEntityData().prefab.collisionGrid;
                 const depthOffset = entity.getEntityData().prefab.depthOffset ?? 0;
                 const tileDim = this.scene.getGameMapFrontWrapper().getTileDimensions();
@@ -235,7 +234,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             }
         });
         entity.on(Phaser.Input.Events.DRAG_END, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
+            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === "EDIT") {
                 mapEditorSelectedEntityDraggedStore.set(false);
                 if (
                     !this.scene
@@ -267,7 +266,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         });
         entity.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             if (get(mapEditorModeStore) && !get(mapEditorSelectedEntityPrefabStore)) {
-                mapEntityEditorModeStore.set(MapEntityEditorMode.EditMode);
+                mapEntityEditorModeStore.set("EDIT");
                 mapEditorSelectedEntityStore.set(entity);
             }
         });

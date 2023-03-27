@@ -5,6 +5,8 @@ import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
 import { Entity } from "../Phaser/ECS/Entity";
 import { mapEditorActivated } from "./MenuStore";
 
+type ObjectValues<T> = T[keyof T];
+
 function createMapEditorModeStore() {
     const { set, subscribe } = writable(false);
 
@@ -30,7 +32,20 @@ function createMapEditorSelectedEntityStore() {
     };
 }
 
-export enum MapEntityEditorMode {
+const MAP_EDITOR_ENTITY_TOOL_MODE = {
+    ADD: "ADD",
+    EDIT: "EDIT",
+} as const;
+
+const MAP_EDITOR_AREA_TOOL_MODE = {
+    ADD: "ADD",
+    EDIT: "EDIT",
+} as const;
+
+export type MapEditorEntityToolMode = ObjectValues<typeof MAP_EDITOR_ENTITY_TOOL_MODE>;
+export type MapEditorAreaToolMode = ObjectValues<typeof MAP_EDITOR_AREA_TOOL_MODE>;
+
+export enum MapEditorAreaMode {
     AddMode = "AddMode",
     EditMode = "EditMode",
 }
@@ -53,6 +68,8 @@ export const mapEditorInputStore = writable(false);
 
 export const mapEditorSelectedAreaPreviewStore = writable<AreaPreview | undefined>(undefined);
 
+export const mapEditorAreaModeStore = writable<MapEditorEntityToolMode>("ADD");
+
 export const mapEditorSelectedPropertyStore = writable<PredefinedPropertyData | undefined>(undefined);
 
 export const mapEditorSelectedToolStore = writable<EditorToolName | undefined>(undefined);
@@ -61,4 +78,4 @@ export const mapEditorSelectedEntityPrefabStore = writable<EntityPrefab | undefi
 
 export const mapEditorCopiedEntityDataPropertiesStore = writable<EntityDataProperties | undefined>(undefined);
 
-export const mapEntityEditorModeStore = writable<MapEntityEditorMode>(MapEntityEditorMode.AddMode);
+export const mapEntityEditorModeStore = writable<MapEditorEntityToolMode>("ADD");
