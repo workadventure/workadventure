@@ -159,7 +159,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     public getAreaPreviewConfig(id: string): AreaData | undefined {
-        return this.getAreaPreview(id)?.getConfig();
+        return this.getAreaPreview(id)?.getAreaData();
     }
 
     public handleKeyDownEvent(event: KeyboardEvent): void {
@@ -221,7 +221,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private handleAreaPreviewUpdate(config: AreaData): void {
-        this.areaPreviews.find((area) => area.getConfig().id === config.id)?.updatePreview(config);
+        this.areaPreviews.find((area) => area.getAreaData().id === config.id)?.updatePreview(config);
         this.scene.getGameMapFrontWrapper().updateArea(config.id, config);
         this.scene.markDirty();
     }
@@ -252,7 +252,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private deleteAreaPreview(id: string): boolean {
-        const index = this.areaPreviews.findIndex((preview) => preview.getConfig().id === id);
+        const index = this.areaPreviews.findIndex((preview) => preview.getAreaData().id === id);
         if (index !== -1) {
             this.areaPreviews.splice(index, 1)[0].destroy();
             return true;
@@ -280,7 +280,7 @@ export class AreaEditorTool extends MapEditorTool {
         areaPreview.on(AreaPreviewEvent.Changed, () => {
             this.mapEditorModeManager.executeCommand({
                 type: "UpdateAreaCommand",
-                areaObjectConfig: areaPreview.getConfig(),
+                areaObjectConfig: areaPreview.getAreaData(),
             });
         });
     }

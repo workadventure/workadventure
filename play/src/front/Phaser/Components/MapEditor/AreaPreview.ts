@@ -1,4 +1,4 @@
-import type { AreaData } from "@workadventure/map-editor";
+import type { AreaData, AreaDataProperties } from "@workadventure/map-editor";
 import { GameScene } from "../../Game/GameScene";
 import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
 
@@ -9,7 +9,7 @@ export enum AreaPreviewEvent {
 }
 
 export class AreaPreview extends Phaser.GameObjects.Container {
-    private config: AreaData;
+    private areaData: AreaData;
 
     private preview: Phaser.GameObjects.Rectangle;
     private squares: SizeAlteringSquare[];
@@ -18,15 +18,15 @@ export class AreaPreview extends Phaser.GameObjects.Container {
     private moved: boolean;
     private squareSelected: boolean;
 
-    constructor(scene: Phaser.Scene, config: AreaData) {
+    constructor(scene: Phaser.Scene, areaData: AreaData) {
         super(scene, 0, 0);
 
-        this.config = config;
+        this.areaData = areaData;
         this.selected = false;
         this.moved = false;
         this.squareSelected = false;
 
-        this.preview = this.createPreview(config);
+        this.preview = this.createPreview(areaData);
         this.squares = [
             new SizeAlteringSquare(this.scene, this.preview.getTopLeft()),
             new SizeAlteringSquare(this.scene, this.preview.getTopCenter()),
@@ -76,26 +76,30 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         return this;
     }
 
-    public updatePreview(config: AreaData): void {
-        this.config = {
-            ...this.config,
-            ...structuredClone(config),
+    public updatePreview(areaData: AreaData): void {
+        this.areaData = {
+            ...this.areaData,
+            ...structuredClone(areaData),
         };
-        // this.setPosition(config.x + config.width * 0.5, config.y + config.height * 0.5);
-        this.preview.x = config.x + config.width * 0.5;
-        this.preview.y = config.y + config.height * 0.5;
-        this.preview.displayWidth = config.width;
-        this.preview.displayHeight = config.height;
+        this.preview.x = areaData.x + areaData.width * 0.5;
+        this.preview.y = areaData.y + areaData.height * 0.5;
+        this.preview.displayWidth = areaData.width;
+        this.preview.displayHeight = areaData.height;
         this.updateSquaresPositions();
     }
 
-    private createPreview(config: AreaData): Phaser.GameObjects.Rectangle {
+    public setProperty<K extends keyof AreaDataProperties>(key: K, value: AreaDataProperties[K]): void {
+        this.areaData.properties[key] = value;
+        this.emit(AreaPreviewEvent.Changed);
+    }
+
+    private createPreview(areaData: AreaData): Phaser.GameObjects.Rectangle {
         const preview = this.scene.add
             .rectangle(
-                config.x + config.width * 0.5,
-                config.y + config.height * 0.5,
-                config.width,
-                config.height,
+                areaData.x + areaData.width * 0.5,
+                areaData.y + areaData.height * 0.5,
+                areaData.width,
+                areaData.height,
                 0x0000ff,
                 0.5
             )
@@ -116,7 +120,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
             if ((pointer.event.target as Element)?.localName !== "canvas") {
                 return;
             }
-            console.log(this.config);
+            console.log(this.areaData);
             this.emit(AreaPreviewEvent.Clicked);
         });
         this.preview.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
@@ -135,7 +139,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         this.preview.on(Phaser.Input.Events.POINTER_UP, (pointer: Phaser.Input.Pointer) => {
             if (this.selected && this.moved) {
                 this.moved = false;
-                this.updateConfigWithSquaresAdjustments();
+                this.updateAreaDataWithSquaresAdjustments();
                 this.emit(AreaPreviewEvent.Changed);
             }
         });
@@ -227,7 +231,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
 
             square.on(SizeAlteringSquareEvent.Released, () => {
                 this.squareSelected = false;
-                this.updateConfigWithSquaresAdjustments();
+                this.updateAreaDataWithSquaresAdjustments();
                 this.emit(AreaPreviewEvent.Changed);
             });
         });
@@ -244,9 +248,9 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         this.squares[7].setPosition(this.preview.getBottomRight().x, this.preview.getBottomRight().y);
     }
 
-    private updateConfigWithSquaresAdjustments(): void {
-        this.config = {
-            ...this.config,
+    private updateAreaDataWithSquaresAdjustments(): void {
+        this.areaData = {
+            ...this.areaData,
             x: this.preview.x - this.preview.displayWidth * 0.5,
             y: this.preview.y - this.preview.displayHeight * 0.5,
             width: this.preview.displayWidth,
@@ -254,15 +258,15 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         };
     }
 
-    public getConfig(): AreaData {
-        return this.config;
+    public getAreaData(): AreaData {
+        return this.areaData;
     }
 
     public getName(): string {
-        return this.config.name;
+        return this.areaData.name;
     }
 
     public getId(): string {
-        return this.config.id;
+        return this.areaData.id;
     }
 }
