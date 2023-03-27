@@ -76,6 +76,10 @@ export const FALLBACK_LOCALE: string | undefined = env.FALLBACK_LOCALE;
 // Logrocket id
 export const LOGROCKET_ID: string | undefined = env.LOGROCKET_ID;
 
+// RoomAPI
+export const ROOM_API_PORT = env.ROOM_API_PORT;
+export const ROOM_API_SECRET_KEY = env.ROOM_API_SECRET_KEY;
+
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     DEBUG_MODE: env.DEBUG_MODE,
