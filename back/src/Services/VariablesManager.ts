@@ -176,7 +176,7 @@ export class VariablesManager {
      * @param value
      * @param user
      */
-    setVariable(name: string, value: string, user: User): string | undefined | false {
+    setVariable(name: string, value: string, user: User | "RoomApi"): string | undefined | false {
         let readableBy: string | undefined;
         let variableObject: Variable | undefined;
         if (this.variableObjects) {
@@ -187,7 +187,7 @@ export class VariablesManager {
                 );
             }
 
-            if (variableObject.writableBy && !user.tags.includes(variableObject.writableBy)) {
+            if (variableObject.writableBy && user !== "RoomApi" && !user.tags.includes(variableObject.writableBy)) {
                 throw new VariableError(
                     'Trying to set a variable "' +
                         name +
