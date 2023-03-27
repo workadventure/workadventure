@@ -9,5 +9,5 @@ if (fs.existsSync("dist") && !fs.existsSync("src")) {
 }
 
 app.listen(PUSHER_HTTP_PORT)
-    .then(() => console.log(`WorkAdventure starting on port ${PUSHER_HTTP_PORT}!`))
+    .then(() => console.log(`WorkAdventure Pusher started on port ${PUSHER_HTTP_PORT}!`))
     .catch((e) => console.error(e));
