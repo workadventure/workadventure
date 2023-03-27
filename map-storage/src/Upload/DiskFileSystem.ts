@@ -131,19 +131,27 @@ export class DiskFileSystem implements FileSystemInterface {
     }
 
     async getAllFilesWithin(dir: string, startingDir: string): Promise<string[]> {
-        let results: string[] = [];
-        const list = await fs.promises.readdir(dir);
-        for (let file of list) {
-            file = path.resolve(dir, file);
-            const stat = await fs.promises.stat(file);
-            if (stat && stat.isDirectory()) {
-                /* Recurse into a subdirectory */
-                results = results.concat(await this.getAllFilesWithin(file, startingDir));
-            } else {
-                /* Is a file */
-                results.push(path.relative(startingDir, file));
+        try {
+            let results: string[] = [];
+            const list = await fs.promises.readdir(dir);
+            for (let file of list) {
+                file = path.resolve(dir, file);
+                const stat = await fs.promises.stat(file);
+                if (stat && stat.isDirectory()) {
+                    /* Recurse into a subdirectory */
+                    results = results.concat(await this.getAllFilesWithin(file, startingDir));
+                } else {
+                    /* Is a file */
+                    results.push(path.relative(startingDir, file));
+                }
             }
+            return results;
+        } catch (e) {
+            const nodeError = NodeError.safeParse(e);
+            if (e instanceof Error && nodeError.success && nodeError.data.code === "ENOENT") {
+                return [];
+            }
+            throw e;
         }
-        return results;
     }
 }
