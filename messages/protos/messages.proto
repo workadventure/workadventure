@@ -755,11 +755,6 @@ message RoomsList {
   repeated RoomDescription roomDescription = 1;
 }
 
-message EmptyMessage {
-
-}
-
-
 
 /********************************************************************************
  * Start Chat Messages
@@ -913,6 +908,17 @@ message SpaceFilterContainName{
 }
 
 message SpaceFilterEverybody{
+}
+
+message VariableRequest {
+  string room = 1;
+  string name = 2;
+}
+
+message SaveVariableRequest {
+  string room = 1;
+  string name = 2;
+  google.protobuf.Value value = 3;
 }
 
 /*
