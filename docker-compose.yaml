@@ -30,6 +30,8 @@ services:
                     - 'oidc.workadventure.localhost'
                     - 'map-storage.workadventure.localhost'
                     - 'xmpp.workadventure.localhost'
+                    - 'mongoexpress.workadventure.localhost'
+                    - 'marketplace.workadventure.localhost'
 
     play:
         image: thecodingmachine/nodejs:v2-18-bullseye
@@ -385,6 +387,48 @@ services:
         healthcheck:
             #disable: true
             timeout: 5s
+
+    mongoexpress:
+        image: mongo-express
+        environment:
+            ME_CONFIG_MONGODB_ADMINUSERNAME: root
+            ME_CONFIG_MONGODB_ADMINPASSWORD: root
+            ME_CONFIG_MONGODB_URL: mongodb://root:root@marketplacemongodb:27017/
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.mongoexpress.rule=Host(`mongoexpress.workadventure.localhost`)"
+            - "traefik.http.routers.mongoexpress.entryPoints=web"
+            - "traefik.http.services.mongoexpress.loadbalancer.server.port=8081"
+
+    marketplacemongodb:
+        image: mongo
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: root
+            MONGO_INITDB_ROOT_PASSWORD: root
+            MONGO_INITDB_DATABASE: marketplace
+            MONGO_INIT_USER: root
+            MONGO_INIT_PASSWORD: root
+        volumes:
+            - ./workadventure/marketplace/database/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
+
+    marketplace:
+        image: thecodingmachine/nodejs:v2-18-bullseye
+        command: npm run start:dev
+        environment:
+            DEBUG: "*"
+            STARTUP_COMMAND_1: npm install
+            NODE_ENV: development
+            MONGO_HOST: marketplacemongodb
+            MONGO_PORT: 27017
+            MONGO_DB: marketplace
+        volumes:
+            - ./workadventure/marketplace:/usr/src/app
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.marketplace.rule=Host(`marketplace.workadventure.localhost`)"
+            - "traefik.http.routers.marketplace.entryPoints=web"
+            - "traefik.http.services.marketplace.loadbalancer.server.port=8080"
+
 
 #  coturn:
 #    image: coturn/coturn:4.5.2

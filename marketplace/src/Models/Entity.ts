@@ -1,13 +1,11 @@
-import { Schema, model, connect } from 'mongoose';
+import { Schema, model, connect, Document } from 'mongoose';
 
-// Create interface for entity 'Entity' with properties id, name, description, image, price, category, tags, author, authorId, createdAt, updatedAt
-export interface Entity {
-    id: string;
+// Create interface for entity 'Entity' with properties name, imagePath, direction, color, tags, author, authorId, createdAt, updatedAt
+export interface IEntity extends Document {
     name: string;
-    description: string;
-    image: string;
-    price: number;
-    category: string;
+    imagePath: string;
+    direction: String;
+    color: string;
     tags: string[];
     author: string;
     authorId: string;
@@ -16,17 +14,15 @@ export interface Entity {
 }
 
 // Create a Schema corresponding to the document interface.
-const EntitySchema = new Schema<Entity>({
-    id: { type: String, required: true },
+const EntitySchema = new Schema<IEntity>({
     name: { type: String, required: true },
-    description: { type: String, required: true },
-    image: { type: String, required: true },
-    price: { type: Number, required: true },
-    category: { type: String, required: true },
-    tags: { type: [String], required: true },
-    author: { type: String, required: true },
-    authorId: { type: String, required: true },
-}, { timestamps: true });
+    imagePath: { type: String, required: true },
+    direction: { type: String, required: true },
+    color: { type: String, required: true },
+    tags: { type: [String], required: false },
+    author: { type: String, required: false },
+    authorId: { type: String, required: false },
+}, { timestamps: true, id: true });
 
 // Create a Model.
-export const User = model<Entity>('User', EntitySchema);
+export const Entity = model<IEntity>('Entity', EntitySchema);

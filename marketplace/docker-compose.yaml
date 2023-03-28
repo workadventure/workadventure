@@ -1,0 +1,63 @@
+version: "3.6"
+services:
+    reverse-proxy:
+        image: traefik:v2.8
+        expose:
+            - "8080"
+        ports:
+            - "80:80"
+        command:
+            - --api.insecure=true
+            - --providers.docker
+            - --entryPoints.web.address=:80
+            - --providers.docker.exposedbydefault=false
+        labels:
+            - "traefik.enable=true"
+            - "traefik.port=8080"
+            - "traefik.http.routers.traefik.rule=Host(`traefik.workadventure.localhost`)"
+            - "traefik.http.routers.traefik.service=api@internal"
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+        networks:
+            default:
+                aliases:
+                    - 'mongoexpress.workadventure.localhost'
+                    - 'marketplace.workadventure.localhost'
+
+    marketplacemongodb:
+        image: mongo
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: root
+            MONGO_INITDB_ROOT_PASSWORD: root
+
+    mongoexpress:
+        image: mongo-express
+        environment:
+            ME_CONFIG_MONGODB_ADMINUSERNAME: root
+            ME_CONFIG_MONGODB_ADMINPASSWORD: root
+            ME_CONFIG_MONGODB_URL: mongodb://root:root@marketplacemongodb:27017/marketplace
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.mongoexpress.rule=Host(`mongoexpress.workadventure.localhost`)"
+            - "traefik.http.routers.mongoexpress.entryPoints=web"
+            - "traefik.http.services.mongoexpress.loadbalancer.server.port=8081"
+
+    marketplace:
+        image: thecodingmachine/nodejs:v2-16-bullseye
+        command: npm run start:dev
+        environment:
+            DEBUG: "*"
+            STARTUP_COMMAND_1: npm install
+            NODE_ENV: development
+            MONGO_HOST: marketplacemongodb
+            MONGO_PORT: 27017
+            MONGO_DB: marketplace
+            MONGO_USERNAME: root
+            MONGO_PASSWORD: root
+        volumes:
+            - ./workadventure/marketplace:/usr/src/app
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.marketplace.rule=Host(`marketplace.workadventure.localhost`)"
+            - "traefik.http.routers.marketplace.entryPoints=web"
+            - "traefik.http.services.marketplace.loadbalancer.server.port=8080"
