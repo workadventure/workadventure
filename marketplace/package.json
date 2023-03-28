@@ -1,0 +1,26 @@
+{
+  "name": "marketplace",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx tsc",
+    "start": "ts-node --transpileOnly ./src/index.ts",
+    "start:dev": "ts-node-dev --inspect=0.0.0.0:9229 --exit-child --respawn ./src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/dotenv": "^8.2.0",
+    "@types/express": "^4.17.17",
+    "@types/node": "^18.15.10",
+    "nodemon": "^2.0.22",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.0.2"
+  },
+  "dependencies": {
+    "@types/mongoose": "^5.11.97"
+  }
+}
