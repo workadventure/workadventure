@@ -16,7 +16,7 @@ const authenticator: AuthenticatorInterface = (apiKey, room) => {
             return resolve({
                 success: false,
                 code: Status.PERMISSION_DENIED,
-                details: "You cannot interact with room!",
+                details: "You cannot interact with this room!",
             });
         }
 
