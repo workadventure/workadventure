@@ -25,17 +25,19 @@
         on:blur={onMapEditorInputUnfocus}
     />
 </div>
-<div class="value-input">
-    <label for="audioButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
-    <input
-        id="audioButtonLabel"
-        type="text"
-        bind:value={property.buttonLabel}
-        on:change={onValueChange}
-        on:focus={onMapEditorInputFocus}
-        on:blur={onMapEditorInputUnfocus}
-    />
-</div>
+{#if !property.hideButtonLabel}
+    <div class="value-input">
+        <label for="audioButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
+        <input
+            id="audioButtonLabel"
+            type="text"
+            bind:value={property.buttonLabel}
+            on:change={onValueChange}
+            on:focus={onMapEditorInputFocus}
+            on:blur={onMapEditorInputUnfocus}
+        />
+    </div>
+{/if}
 
 <style lang="scss">
     .value-input {

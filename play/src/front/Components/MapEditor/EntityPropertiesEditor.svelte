@@ -86,6 +86,7 @@
     });
 
     function onPropertyChecked(property: EntityPropertyDescription<EntityDataPropertiesKeys>) {
+        console.log(property);
         if ($mapEditorSelectedEntityStore) {
             if (property.active) {
                 if (!property.currentValue) {

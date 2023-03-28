@@ -3,7 +3,7 @@
     import { slide } from "svelte/transition";
     import { AreaDataProperties, AreaDataPropertiesKeys } from "@workadventure/map-editor";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { mapEditorSelectedAreaPreviewStore, mapEditorSelectedEntityStore } from "../../Stores/MapEditorStore";
+    import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
     import crossImg from "../images/cross-icon.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
@@ -26,8 +26,8 @@
             currentValue: undefined,
             component: JitsiRoomPropertyEditor,
             defaultValue: {
-                buttonLabel: $LL.mapEditor.entityEditor.jitsiProperties.defaultButtonLabel(),
                 roomName: "",
+                hideButtonLabel: true,
                 jitsiRoomConfig: {},
             },
         },
@@ -38,8 +38,8 @@
             currentValue: undefined,
             component: PlayAudioPropertyEditor,
             defaultValue: {
-                buttonLabel: $LL.mapEditor.entityEditor.audioProperties.defaultButtonLabel(),
                 audioLink: "",
+                hideButtonLabel: true,
             },
         },
         {
@@ -49,8 +49,8 @@
             currentValue: undefined,
             component: OpenWebsitePropertyEditor,
             defaultValue: {
-                buttonLabel: $LL.mapEditor.entityEditor.linkProperties.defaultButtonLabel(),
                 link: "",
+                hideButtonLabel: true,
                 newTab: true,
             },
         },
@@ -76,6 +76,7 @@
     });
 
     function onPropertyChecked(property: AreaPropertyDescription<AreaDataPropertiesKeys>) {
+        console.log(property);
         if ($mapEditorSelectedAreaPreviewStore) {
             if (property.active) {
                 if (!property.currentValue) {
@@ -95,20 +96,20 @@
     }
 
     function onTestInteraction() {
-        if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.TestActivation();
-        }
+        // if ($mapEditorSelectedAreaPreviewStore) {
+        //     $mapEditorSelectedAreaPreviewStore.TestActivation();
+        // }
     }
 
-    function onDeleteEntity() {
-        if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.delete();
-            mapEditorSelectedEntityStore.set(undefined);
+    function onDeleteAreaPreview() {
+        if ($mapEditorSelectedAreaPreviewStore) {
+            // $mapEditorSelectedAreaPreviewStore.delete();
+            mapEditorSelectedAreaPreviewStore.set(undefined);
         }
     }
 </script>
 
-{#if $mapEditorSelectedEntityStore === undefined}
+{#if $mapEditorSelectedAreaPreviewStore === undefined}
     {$LL.mapEditor.entityEditor.editInstructions()}
 {:else}
     <div class="entity-properties">
@@ -127,7 +128,7 @@
                 <div class="property-container" transition:slide|local>
                     <svelte:component
                         this={property.component}
-                        bind:property={property.currentValue}
+                        property={property.currentValue}
                         on:change={() => onUpdateProperty(property)}
                     />
                 </div>
@@ -136,7 +137,7 @@
     </div>
     <div class="action-button">
         <button on:click={onTestInteraction}>{$LL.mapEditor.entityEditor.testInteractionButton()}</button>
-        <button class="delete-button" on:click={onDeleteEntity}
+        <button class="delete-button" on:click={onDeleteAreaPreview}
             ><div>{$LL.mapEditor.entityEditor.deleteButton()}</div>
             <img src={crossImg} alt="" /></button
         >

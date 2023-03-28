@@ -143,7 +143,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
     }
 
     public makeAllEntitiesNonInteractive(): void {
-        console.log("disable interactive");
         this.entities.forEach((entity) => {
             entity.disableInteractive();
         });

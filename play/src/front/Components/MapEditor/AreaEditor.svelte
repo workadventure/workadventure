@@ -1,11 +1,11 @@
 <script lang="ts">
     import { mapEditorAreaModeStore } from "../../Stores/MapEditorStore";
-    import AreaPropertyEditor from "./AreaPropertyEditor.svelte";
+    import AreaPropertiesEditor from "./AreaPropertiesEditor.svelte";
 </script>
 
 {#if $mapEditorAreaModeStore === "ADD"}
-    add Area mode
+    <AreaPropertiesEditor />
 {/if}
 {#if $mapEditorAreaModeStore === "EDIT"}
-    <AreaPropertyEditor />
+    <AreaPropertiesEditor />
 {/if}

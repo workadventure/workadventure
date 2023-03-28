@@ -35,6 +35,7 @@ export const TextHeaderPropertyData = z.string();
 
 export const ActionsMenuData = z.object({
     buttonLabel: z.string().optional(),
+    hideButtonLabel: z.boolean().optional(),
 });
 
 export const FocusablePropertyData = z.object({

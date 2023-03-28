@@ -152,10 +152,10 @@ export class AreaEditorTool extends MapEditorTool {
             return;
         }
         areaPreview.updatePreview(config);
-        // HACK: A way to update AreaPreviewWindow component values after performin undo / redo operations
-        if (get(mapEditorSelectedAreaPreviewStore) !== undefined) {
-            mapEditorSelectedAreaPreviewStore.set(areaPreview);
-        }
+        // // HACK: A way to update AreaPreviewWindow component values after performin undo / redo operations
+        // if (get(mapEditorSelectedAreaPreviewStore) !== undefined) {
+        //     mapEditorSelectedAreaPreviewStore.set(areaPreview);
+        // }
     }
 
     public getAreaPreviewConfig(id: string): AreaData | undefined {

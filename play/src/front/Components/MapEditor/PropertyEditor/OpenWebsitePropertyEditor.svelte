@@ -25,17 +25,19 @@
         on:blur={onMapEditorInputUnfocus}
     />
 </div>
-<div class="value-input">
-    <label for="linkButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
-    <input
-        id="linkButtonlabel"
-        type="text"
-        bind:value={property.buttonLabel}
-        on:change={onValueChange}
-        on:focus={onMapEditorInputFocus}
-        on:blur={onMapEditorInputUnfocus}
-    />
-</div>
+{#if !property.hideButtonLabel}
+    <div class="value-input">
+        <label for="linkButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
+        <input
+            id="linkButtonlabel"
+            type="text"
+            bind:value={property.buttonLabel}
+            on:change={onValueChange}
+            on:focus={onMapEditorInputFocus}
+            on:blur={onMapEditorInputUnfocus}
+        />
+    </div>
+{/if}
 <div class="value-switch">
     <label for="newTab">{$LL.mapEditor.entityEditor.linkProperties.newTabLabel()}</label>
     <input id="newTab" type="checkbox" class="input-switch" bind:checked={property.newTab} on:change={onValueChange} />
