@@ -2,18 +2,12 @@ import { RoomApiServer as RoomApiServerInterface } from "@workadventure/messages
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import { apiClientRepository } from "../pusher/services/ApiClientRepository";
 import AuthenticationGuard from "./guards/AuthenticationGuard";
+import { GuardError } from "./types/GuardError";
 
 export default {
     readVariable: function (call, callback) {
         AuthenticationGuard(call.metadata, call.request.room)
-            .then((authentication) => {
-                if (!authentication.success) {
-                    return callback({
-                        code: authentication.code,
-                        details: authentication.details,
-                    });
-                }
-
+            .then(() => {
                 apiClientRepository
                     .getClient("room-api:" + call.request.room)
                     .then((apiClient) => {
@@ -22,7 +16,7 @@ export default {
                                 return callback(error);
                             }
 
-                            callback(null, response);
+                            return callback(null, response);
                         });
                     })
                     .catch((error) => {
@@ -34,27 +28,36 @@ export default {
                     });
             })
             .catch((error) => {
+                if (error instanceof GuardError) {
+                    return callback({
+                        code: error.code,
+                        details: error.details,
+                    });
+                }
+
+                if ("code" in error && "details" in error) {
+                    return callback({
+                        code: error.code,
+                        details: error.details,
+                    });
+                }
+
+                console.error("Internal authentication error:", error);
                 return callback({
-                    code: error.code,
-                    details: error.details,
+                    code: Status.INTERNAL,
+                    details: "Internal error, please contact us!",
                 });
             });
     },
     listenVariable: (call) => {
         AuthenticationGuard(call.metadata, call.request.room)
-            .then((authentication) => {
-                if (!authentication.success) {
-                    call.destroy(new Error(authentication.details));
-                    return;
-                }
-
+            .then(() => {
                 apiClientRepository
                     .getClient("room-api:" + call.request.room)
                     .then((apiClient) => {
                         const variableListener = apiClient.listenVariable(call.request);
 
                         variableListener.on("data", (response) => {
-                            console.log(response);
                             call.write(response);
                         });
 
@@ -69,7 +72,8 @@ export default {
                         call.on("cancelled", () => {
                             variableListener.cancel();
                             call.end();
-                        }).on("error", (e) => {
+                        });
+                        call.on("error", (e) => {
                             variableListener.cancel();
                             call.end();
                         });
@@ -81,19 +85,12 @@ export default {
                     });
             })
             .catch((error) => {
-                return call.destroy(new Error("Internal authentication error"));
+                return call.destroy(error);
             });
     },
     saveVariable: (call, callback) => {
         AuthenticationGuard(call.metadata, call.request.room)
             .then((authentication) => {
-                if (!authentication.success) {
-                    return callback({
-                        code: authentication.code,
-                        details: authentication.details,
-                    });
-                }
-
                 apiClientRepository
                     .getClient("room-api:" + call.request.room)
                     .then((apiClient) => {
@@ -114,9 +111,24 @@ export default {
                     });
             })
             .catch((error) => {
+                if (error instanceof GuardError) {
+                    return callback({
+                        code: error.code,
+                        details: error.details,
+                    });
+                }
+
+                if ("code" in error && "details" in error) {
+                    return callback({
+                        code: error.code,
+                        details: error.details,
+                    });
+                }
+
+                console.error("Internal authentication error:", error);
                 return callback({
-                    code: error.code,
-                    details: error.details,
+                    code: Status.INTERNAL,
+                    details: "Internal error, please contact us!",
                 });
             });
     },
