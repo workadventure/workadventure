@@ -38,7 +38,7 @@ export const ActionsMenuData = z.object({
     hideButtonLabel: z.boolean().optional(),
 });
 
-export const FocusablePropertyData = z.object({
+export const FocusablePropertyData = ActionsMenuData.extend({
     zoom_margin: z.number().optional(),
 });
 

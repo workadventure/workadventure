@@ -929,7 +929,9 @@ export class GameMapFrontWrapper {
         if (this.position) {
             const dynamicAreasProperties = this.getDynamicAreasProperties(this.position);
             if (dynamicAreasProperties) {
-                properties = dynamicAreasProperties;
+                for (const [key, value] of dynamicAreasProperties) {
+                    properties.set(key, value);
+                }
             }
         }
 
@@ -950,8 +952,8 @@ export class GameMapFrontWrapper {
 
         // CHECK FOR ENTITIES PROPERTIES
         if (this.entitiesManager) {
-            for (const property of this.entitiesManager.getProperties()) {
-                properties.set(property[0], property[1]);
+            for (const [key, value] of this.entitiesManager.getProperties()) {
+                properties.set(key, value);
             }
         }
 

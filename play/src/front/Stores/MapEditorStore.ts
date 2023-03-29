@@ -45,11 +45,6 @@ const MAP_EDITOR_AREA_TOOL_MODE = {
 export type MapEditorEntityToolMode = ObjectValues<typeof MAP_EDITOR_ENTITY_TOOL_MODE>;
 export type MapEditorAreaToolMode = ObjectValues<typeof MAP_EDITOR_AREA_TOOL_MODE>;
 
-export enum MapEditorAreaMode {
-    AddMode = "AddMode",
-    EditMode = "EditMode",
-}
-
 export function onMapEditorInputFocus() {
     mapEditorInputStore.set(true);
 }

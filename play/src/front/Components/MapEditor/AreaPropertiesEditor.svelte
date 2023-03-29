@@ -8,6 +8,7 @@
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
+    import FocusablePropertyEditor from "./PropertyEditor/FocusablePropertyEditor.svelte";
 
     interface AreaPropertyDescription<K extends AreaDataPropertiesKeys> {
         key: K;
@@ -19,6 +20,17 @@
     }
 
     let possibleProperties: AreaPropertyDescription<AreaDataPropertiesKeys>[] = [
+        {
+            key: "focusable",
+            name: $LL.mapEditor.entityEditor.focusableProperties.label(),
+            active: false,
+            currentValue: undefined,
+            component: FocusablePropertyEditor,
+            defaultValue: {
+                zoom_margin: 0,
+                hideButtonLabel: true,
+            },
+        },
         {
             key: "jitsiRoom",
             name: $LL.mapEditor.entityEditor.jitsiProperties.label(),
@@ -76,7 +88,6 @@
     });
 
     function onPropertyChecked(property: AreaPropertyDescription<AreaDataPropertiesKeys>) {
-        console.log(property);
         if ($mapEditorSelectedAreaPreviewStore) {
             if (property.active) {
                 if (!property.currentValue) {
@@ -112,7 +123,7 @@
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
     {$LL.mapEditor.entityEditor.editInstructions()}
 {:else}
-    <div class="entity-properties">
+    <div class="area-properties">
         {#each possibleProperties as property (property.key)}
             <div class="property-enabler">
                 <label for={property.key}>{property.name}</label>
@@ -128,7 +139,7 @@
                 <div class="property-container" transition:slide|local>
                     <svelte:component
                         this={property.component}
-                        property={property.currentValue}
+                        bind:property={property.currentValue}
                         on:change={() => onUpdateProperty(property)}
                     />
                 </div>
@@ -145,7 +156,7 @@
 {/if}
 
 <style lang="scss">
-    .entity-properties {
+    .area-properties {
         overflow-y: auto;
         overflow-x: hidden;
         .property-enabler {

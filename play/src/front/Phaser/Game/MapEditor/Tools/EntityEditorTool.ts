@@ -296,14 +296,14 @@ export class EntityEditorTool extends MapEditorTool {
     private bindEntitiesManagerEventHandlers(): void {
         this.entitiesManager.on(EntitiesManagerEvent.RemoveEntity, (entity: Entity) => {
             this.mapEditorModeManager.executeCommand({
-                id: entity.getEntityData().id,
                 type: "DeleteEntityCommand",
+                id: entity.getEntityData().id,
             });
         });
         this.entitiesManager.on(EntitiesManagerEvent.UpdateEntity, (entityData: AtLeast<EntityData, "id">) => {
             this.mapEditorModeManager.executeCommand({
-                dataToModify: entityData,
                 type: "UpdateEntityCommand",
+                dataToModify: entityData,
             });
         });
         this.entitiesManager.on(EntitiesManagerEvent.CopyEntity, (data: CopyEntityEventData) => {
@@ -318,8 +318,8 @@ export class EntityEditorTool extends MapEditorTool {
                 properties: data.properties ?? {},
             };
             this.mapEditorModeManager.executeCommand({
-                entityData,
                 type: "CreateEntityCommand",
+                entityData,
             });
             this.cleanPreview();
         });

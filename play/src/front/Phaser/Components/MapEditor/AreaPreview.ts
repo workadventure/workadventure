@@ -1,11 +1,12 @@
-import type { AreaData, AreaDataProperties } from "@workadventure/map-editor";
+import type { AreaData, AreaDataProperties, AtLeast } from "@workadventure/map-editor";
+import _ from "lodash";
 import { GameScene } from "../../Game/GameScene";
 import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
 
 export enum AreaPreviewEvent {
     Clicked = "AreaPreview:Clicked",
     DoubleClicked = "AreaPreview:DoubleClicked",
-    Changed = "AreaPreview:Changed",
+    Update = "AreaPreview:Update",
 }
 
 export class AreaPreview extends Phaser.GameObjects.Container {
@@ -76,21 +77,22 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         return this;
     }
 
-    public updatePreview(areaData: AreaData): void {
-        this.areaData = {
-            ...this.areaData,
-            ...structuredClone(areaData),
-        };
-        this.preview.x = areaData.x + areaData.width * 0.5;
-        this.preview.y = areaData.y + areaData.height * 0.5;
-        this.preview.displayWidth = areaData.width;
-        this.preview.displayHeight = areaData.height;
+    public updatePreview(dataToModify: AtLeast<AreaData, "id">): void {
+        _.merge(this.areaData, dataToModify);
+        this.preview.x = this.areaData.x + this.areaData.width * 0.5;
+        this.preview.y = this.areaData.y + this.areaData.height * 0.5;
+        this.preview.displayWidth = this.areaData.width;
+        this.preview.displayHeight = this.areaData.height;
         this.updateSquaresPositions();
     }
 
     public setProperty<K extends keyof AreaDataProperties>(key: K, value: AreaDataProperties[K]): void {
         this.areaData.properties[key] = value;
-        this.emit(AreaPreviewEvent.Changed);
+        const data: AtLeast<AreaData, "id"> = {
+            id: this.getAreaData().id,
+            properties: { [key]: value },
+        };
+        this.emit(AreaPreviewEvent.Update, data);
     }
 
     private createPreview(areaData: AreaData): Phaser.GameObjects.Rectangle {
@@ -120,7 +122,6 @@ export class AreaPreview extends Phaser.GameObjects.Container {
             if ((pointer.event.target as Element)?.localName !== "canvas") {
                 return;
             }
-            console.log(this.areaData);
             this.emit(AreaPreviewEvent.Clicked);
         });
         this.preview.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
@@ -140,7 +141,14 @@ export class AreaPreview extends Phaser.GameObjects.Container {
             if (this.selected && this.moved) {
                 this.moved = false;
                 this.updateAreaDataWithSquaresAdjustments();
-                this.emit(AreaPreviewEvent.Changed);
+                const data: AtLeast<AreaData, "id"> = {
+                    id: this.getAreaData().id,
+                    x: this.preview.x - this.preview.displayWidth * 0.5,
+                    y: this.preview.y - this.preview.displayHeight * 0.5,
+                    width: this.preview.displayWidth,
+                    height: this.preview.displayHeight,
+                };
+                this.emit(AreaPreviewEvent.Update, data);
             }
         });
         this.squares.forEach((square, index) => {
@@ -232,7 +240,14 @@ export class AreaPreview extends Phaser.GameObjects.Container {
             square.on(SizeAlteringSquareEvent.Released, () => {
                 this.squareSelected = false;
                 this.updateAreaDataWithSquaresAdjustments();
-                this.emit(AreaPreviewEvent.Changed);
+                const data: AtLeast<AreaData, "id"> = {
+                    id: this.getAreaData().id,
+                    x: this.preview.x - this.preview.displayWidth * 0.5,
+                    y: this.preview.y - this.preview.displayHeight * 0.5,
+                    width: this.preview.displayWidth,
+                    height: this.preview.displayHeight,
+                };
+                this.emit(AreaPreviewEvent.Update, data);
             });
         });
     }

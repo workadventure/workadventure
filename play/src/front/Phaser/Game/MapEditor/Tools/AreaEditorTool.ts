@@ -1,4 +1,4 @@
-import type { AreaData, CommandConfig } from "@workadventure/map-editor";
+import type { AreaData, AtLeast, CommandConfig } from "@workadventure/map-editor";
 import type { Subscription } from "rxjs";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
@@ -70,7 +70,7 @@ export class AreaEditorTool extends MapEditorTool {
                 this.mapEditorModeManager.executeCommand(
                     {
                         type: "UpdateAreaCommand",
-                        areaObjectConfig: data as AreaData,
+                        dataToModify: data as AreaData,
                     },
                     false,
                     false,
@@ -128,7 +128,7 @@ export class AreaEditorTool extends MapEditorTool {
                 break;
             }
             case "UpdateAreaCommand": {
-                this.handleAreaPreviewUpdate(commandConfig.areaObjectConfig);
+                this.handleAreaPreviewUpdate(commandConfig.dataToModify);
                 break;
             }
             default: {
@@ -220,7 +220,7 @@ export class AreaEditorTool extends MapEditorTool {
         this.scene.markDirty();
     }
 
-    private handleAreaPreviewUpdate(config: AreaData): void {
+    private handleAreaPreviewUpdate(config: AtLeast<AreaData, "id">): void {
         this.areaPreviews.find((area) => area.getAreaData().id === config.id)?.updatePreview(config);
         this.scene.getGameMapFrontWrapper().updateArea(config.id, config);
         this.scene.markDirty();
@@ -277,10 +277,10 @@ export class AreaEditorTool extends MapEditorTool {
         areaPreview.on(AreaPreviewEvent.Clicked, () => {
             mapEditorSelectedAreaPreviewStore.set(areaPreview);
         });
-        areaPreview.on(AreaPreviewEvent.Changed, () => {
+        areaPreview.on(AreaPreviewEvent.Update, (data: AtLeast<AreaData, "id">) => {
             this.mapEditorModeManager.executeCommand({
                 type: "UpdateAreaCommand",
-                areaObjectConfig: areaPreview.getAreaData(),
+                dataToModify: data,
             });
         });
     }

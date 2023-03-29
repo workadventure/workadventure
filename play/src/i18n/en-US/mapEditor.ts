@@ -24,6 +24,11 @@ const mapEditor: BaseTranslation = {
             label: "Header Text",
             placeholder: "Input here text which will be displayed when interacting with the object",
         },
+        focusableProperties: {
+            label: "Focusable",
+            zoomMarginLabel: "Zoom Margin",
+            defaultButtonLabel: "Focus on",
+        },
         jitsiProperties: {
             label: "Jitsi Room",
             roomNameLabel: "Room Name",
