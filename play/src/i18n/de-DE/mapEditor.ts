@@ -8,21 +8,7 @@ const mapEditor: BaseTranslation = {
         entityEditor: "Entität bearbeiten",
         tileEditor: "Kachel bearbeiten",
     },
-    entityEditor: {
-        itemPicker: {
-            searchPlaceholder: "Nach namen oder Tags suchen",
-            selectVariationInstructions: "Variante auswählen",
-        },
-        addButton: "Hinzufügen",
-        editButton: "Bearbeiten",
-        deleteButton: "Löschen",
-        testInteractionButton: "Interaktion testen",
-        buttonLabel: "Knopfbeschrifung",
-        editInstructions: "Klicken Sie auf ein Objekt, um seine Eigenschaften zu ändern.",
-        textProperties: {
-            label: "Überschrift",
-            placeholder: "Geben Sie hier Text ein, der bei der Interaktion mit dem Objekt angezeigt wird",
-        },
+    properties: {
         jitsiProperties: {
             label: "Jitsi-Raum",
             roomNameLabel: "Room Name",
@@ -50,6 +36,20 @@ const mapEditor: BaseTranslation = {
             newTabLabel: "In neuen Tab öffnen",
             linkPlaceholder: "https://play.staging.workadventu.re/",
             defaultButtonLabel: "Link öffnen",
+        },
+    },
+    entityEditor: {
+        itemPicker: {
+            searchPlaceholder: "Nach namen oder Tags suchen",
+            selectVariationInstructions: "Variante auswählen",
+        },
+        deleteButton: "Löschen",
+        testInteractionButton: "Interaktion testen",
+        buttonLabel: "Knopfbeschrifung",
+        editInstructions: "Klicken Sie auf ein Objekt, um seine Eigenschaften zu ändern.",
+        textProperties: {
+            label: "Überschrift",
+            placeholder: "Geben Sie hier Text ein, der bei der Interaktion mit dem Objekt angezeigt wird",
         },
     },
 };

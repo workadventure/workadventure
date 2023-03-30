@@ -9,17 +9,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         entityEditor: "Outil d'édition d'entités",
         tileEditor: "Outil d'édition de tuiles",
     },
-    entityEditor: {
-        itemPicker: {
-            searchPlaceholder: "Rechercher nom ou tag",
-            selectVariationInstructions: "Sélectionnez une variation",
-        },
-        addButton: "Ajouter",
-        editButton: "Éditer",
-        deleteButton: "Supprimer",
-        testInteractionButton: "Tester interaction",
-        buttonLabel: "Texte du bouton",
-        editInstructions: "Sélectionnez un objet pour modifier ses propriétés.",
+    properties: {
         textProperties: {
             label: "Texte d'Entête",
             placeholder: "Entrez ici le texte qui sera affiché lorsque l'on interagit avec l'objet.",
@@ -52,6 +42,16 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             linkPlaceholder: "https://play.staging.workadventu.re/",
             defaultButtonLabel: "Ouvrir le lien",
         },
+    },
+    entityEditor: {
+        itemPicker: {
+            searchPlaceholder: "Rechercher nom ou tag",
+            selectVariationInstructions: "Sélectionnez une variation",
+        },
+        deleteButton: "Supprimer",
+        testInteractionButton: "Tester interaction",
+        buttonLabel: "Texte du bouton",
+        editInstructions: "Sélectionnez un objet pour modifier ses propriétés.",
     },
 };
 

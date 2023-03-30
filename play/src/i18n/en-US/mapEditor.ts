@@ -8,18 +8,7 @@ const mapEditor: BaseTranslation = {
         entityEditor: "Entity editor tool",
         tileEditor: "Tile editor tool",
     },
-    entityEditor: {
-        itemPicker: {
-            searchPlaceholder: "Search for name or tags",
-            selectVariationInstructions: "Select a variant",
-        },
-        addButton: "Add",
-        editButton: "Edit",
-        deleteButton: "Delete",
-        testInteractionButton: "Test Interaction",
-        buttonLabel: "Button Label",
-        editInstructions: "Click an object to modify its properties.",
-        removeInstructions: "Click an object to delete it.",
+    properties: {
         textProperties: {
             label: "Header Text",
             placeholder: "Input here text which will be displayed when interacting with the object",
@@ -57,6 +46,16 @@ const mapEditor: BaseTranslation = {
             linkPlaceholder: "https://play.staging.workadventu.re/",
             defaultButtonLabel: "Open Link",
         },
+    },
+    entityEditor: {
+        itemPicker: {
+            searchPlaceholder: "Search for name or tags",
+            selectVariationInstructions: "Select a variant",
+        },
+        deleteButton: "Delete",
+        testInteractionButton: "Test Interaction",
+        buttonLabel: "Button Label",
+        editInstructions: "Click an entity to modify its properties.",
     },
 };
 
