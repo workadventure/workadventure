@@ -105,6 +105,12 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         super.destroy();
     }
 
+    public updateData(dataToChange: Partial<AreaData>): void {
+        const data = { id: this.areaData.id, ...dataToChange };
+        this.updatePreview(data);
+        this.emit(AreaPreviewEvent.Update, data);
+    }
+
     private createPreview(areaData: AreaData): Phaser.GameObjects.Rectangle {
         const preview = this.scene.add
             .rectangle(

@@ -167,7 +167,7 @@ message CreateAreaMessage {
   uint32 y = 3;
   uint32 width = 4;
   uint32 height = 5;
-  optional string name = 6;
+  string name = 6;
   map<string, google.protobuf.Value> properties = 7;
 }
 

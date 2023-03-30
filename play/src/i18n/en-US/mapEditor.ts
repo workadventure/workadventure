@@ -47,6 +47,9 @@ const mapEditor: BaseTranslation = {
             defaultButtonLabel: "Open Link",
         },
     },
+    areaEditor: {
+        nameLabel: "Name",
+    },
     entityEditor: {
         itemPicker: {
             searchPlaceholder: "Search for name or tags",

@@ -106,12 +106,6 @@
         }
     }
 
-    function onTestInteraction() {
-        // if ($mapEditorSelectedAreaPreviewStore) {
-        //     $mapEditorSelectedAreaPreviewStore.TestActivation();
-        // }
-    }
-
     function onDeleteAreaPreview() {
         if ($mapEditorSelectedAreaPreviewStore) {
             $mapEditorSelectedAreaPreviewStore.delete();
@@ -147,7 +141,6 @@
         {/each}
     </div>
     <div class="action-button">
-        <button on:click={onTestInteraction}>{$LL.mapEditor.entityEditor.testInteractionButton()}</button>
         <button class="delete-button" on:click={onDeleteAreaPreview}
             ><div>{$LL.mapEditor.entityEditor.deleteButton()}</div>
             <img src={crossImg} alt="" /></button

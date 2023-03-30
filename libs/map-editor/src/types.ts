@@ -74,7 +74,7 @@ export const AreaData = z.object({
     width: z.number(),
     height: z.number(),
     visible: z.boolean(),
-    name: z.string().optional(),
+    name: z.string(),
     properties: AreaDataProperties,
 });
 
