@@ -1,13 +1,15 @@
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
-import {Readable, Unsubscriber, writable, Writable} from "svelte/store";
+import { Readable, Unsubscriber, writable, Writable, readable } from "svelte/store";
 import { SoundMeter } from "../../Phaser/Components/SoundMeter";
-import {SpaceUserExtended} from "../../Space/Space";
+import { SpaceUserExtended } from "../../Space/Space";
 
 export class JitsiTrackWrapper {
     private _spaceUser: SpaceUserExtended | undefined;
     private _audioTrack: JitsiTrack | undefined;
     private _videoTrack: JitsiTrack | undefined;
-    private _volumeStore: Writable<number[] | undefined>;
+    private _volumeStore: Writable<number[] | undefined> | undefined;
+    private _audioStreamStore: Writable<MediaStream | null> = writable<MediaStream | null>(null);
+    private _volumeStoreV2: Readable<number[] | undefined> | undefined;
 
     private soundMeter: SoundMeter | undefined;
     private timeout: NodeJS.Timeout | undefined;
@@ -15,6 +17,51 @@ export class JitsiTrackWrapper {
 
     constructor(jitsiTrack: JitsiTrack) {
         this.setJitsiTrack(jitsiTrack);
+        this._volumeStoreV2 = readable<number[] | undefined>(undefined, (set) => {
+            if (this.volumeStoreSubscribe) {
+                this.volumeStoreSubscribe();
+            }
+            let soundMeter: SoundMeter;
+            let timeout: NodeJS.Timeout;
+
+            this.volumeStoreSubscribe = this._audioStreamStore?.subscribe((mediaStream) => {
+                if (soundMeter) {
+                    soundMeter.stop();
+                }
+                if (mediaStream === null || mediaStream.getAudioTracks().length <= 0) {
+                    set(undefined);
+                    return;
+                }
+                soundMeter = new SoundMeter(mediaStream);
+                let error = false;
+
+                if (timeout) {
+                    clearTimeout(timeout);
+                }
+                timeout = setInterval(() => {
+                    try {
+                        set(soundMeter?.getVolume());
+                        console.log("Volume", soundMeter?.getVolume());
+                    } catch (err) {
+                        if (!error) {
+                            console.error(err);
+                            error = true;
+                        }
+                    }
+                }, 100);
+            });
+
+            return () => {
+                set(undefined);
+                if (soundMeter) {
+                    soundMeter.stop();
+                }
+                if (timeout) {
+                    clearTimeout(timeout);
+                }
+            };
+        });
+        /*
         this._volumeStore = writable<number[] | undefined>(undefined, set => {
             let error = false;
             if (this.timeout) {
@@ -35,6 +82,7 @@ export class JitsiTrackWrapper {
                 }
             }, 100);
         });
+         */
     }
 
     get uniqueId(): string {
@@ -48,7 +96,7 @@ export class JitsiTrackWrapper {
 
     setJitsiTrack(jitsiTrack: JitsiTrack, allowOverride = false) {
         if (jitsiTrack.isAudioTrack()) {
-            console.log("new track is audio", {allowOverride: allowOverride});
+            console.log("new track is audio", { allowOverride: allowOverride });
             if (this._audioTrack !== undefined) {
                 if (!allowOverride) {
                     throw new Error("An audio track is already defined");
@@ -57,7 +105,9 @@ export class JitsiTrackWrapper {
                 }
             }
             this._audioTrack = jitsiTrack;
-            this.soundMeter = new SoundMeter(jitsiTrack.getOriginalStream());
+            //this.soundMeter = new SoundMeter(jitsiTrack.getOriginalStream());
+
+            this._audioStreamStore.set(jitsiTrack.getOriginalStream());
         } else if (jitsiTrack.isVideoTrack()) {
             if (this._videoTrack !== undefined) {
                 if (!allowOverride) {
@@ -102,12 +152,13 @@ export class JitsiTrackWrapper {
     }
 
     get volumeStore(): Readable<number[] | undefined> | undefined {
-        return this._volumeStore;
+        return this._volumeStoreV2;
     }
 
     unsubscribe() {
         this.volumeStoreSubscribe?.();
         this._volumeStore?.set(undefined);
+        this._audioStreamStore.set(null);
         if (this.soundMeter) {
             this.soundMeter.stop();
         }
