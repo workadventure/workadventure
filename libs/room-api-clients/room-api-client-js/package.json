@@ -13,6 +13,7 @@
     "example": "ts-node ./src/example.ts",
     "lint": "eslint --ext .js,.ts .",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
+    "format-check": "prettier --ignore-path .gitignore \"**/*.+(js|ts|json)\"",
     "precommit": "lint-staged"
   },
   "repository": {
