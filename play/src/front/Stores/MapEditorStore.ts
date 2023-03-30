@@ -71,4 +71,4 @@ export const mapEditorSelectedEntityPrefabStore = writable<EntityPrefab | undefi
 
 export const mapEditorCopiedEntityDataPropertiesStore = writable<EntityDataProperties | undefined>(undefined);
 
-export const mapEntityEditorModeStore = writable<MapEditorEntityToolMode>("ADD");
+export const mapEditorEntityModeStore = writable<MapEditorEntityToolMode>("ADD");

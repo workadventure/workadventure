@@ -3,7 +3,7 @@ import type { Subscription } from "rxjs";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import type { EditMapCommandMessage } from "@workadventure/messages";
-import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
+import { mapEditorAreaModeStore, mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import type { GameScene } from "../../GameScene";
@@ -23,9 +23,14 @@ export class AreaEditorTool extends MapEditorTool {
 
     private currentlySelectedPreview: AreaPreview | undefined;
 
+    private active: boolean;
+
     private selectedAreaPreviewStoreSubscriber!: Unsubscriber;
 
-    private active: boolean;
+    private pointerDownEventHandler!: (
+        pointer: Phaser.Input.Pointer,
+        gameObjects: Phaser.GameObjects.GameObject[]
+    ) => void;
 
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super();
@@ -46,18 +51,21 @@ export class AreaEditorTool extends MapEditorTool {
         this.active = false;
         mapEditorSelectedAreaPreviewStore.set(undefined);
         this.setAreaPreviewsVisibility(false);
+        this.unbindEventHandlers();
     }
 
     public activate(): void {
         this.active = true;
         this.updateAreaPreviews();
         this.setAreaPreviewsVisibility(true);
+        this.bindEventHandlers();
         this.scene.markDirty();
     }
 
     public destroy(): void {
         this.gameMapAreaUpdateSubscription.unsubscribe();
         this.selectedAreaPreviewStoreSubscriber();
+        this.unbindEventHandlers();
     }
 
     public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): void {
@@ -205,6 +213,28 @@ export class AreaEditorTool extends MapEditorTool {
         }
     }
 
+    private bindEventHandlers(): void {
+        this.pointerDownEventHandler = (
+            pointer: Phaser.Input.Pointer,
+            gameObjects: Phaser.GameObjects.GameObject[]
+        ) => {
+            this.handlePointerDownEvent(pointer, gameObjects);
+        };
+
+        this.scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
+    }
+
+    private unbindEventHandlers(): void {
+        this.scene.input.off(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
+    }
+
+    private handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        if (get(mapEditorAreaModeStore) === "EDIT" && gameObjects.length === 0) {
+            mapEditorAreaModeStore.set("ADD");
+            mapEditorSelectedAreaPreviewStore.set(undefined);
+        }
+    }
+
     private handleAreaPreviewDeletion(id: string): void {
         this.deleteAreaPreview(id);
         this.scene.markDirty();
@@ -273,6 +303,7 @@ export class AreaEditorTool extends MapEditorTool {
 
     private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {
         areaPreview.on(AreaPreviewEvent.Clicked, () => {
+            mapEditorAreaModeStore.set("EDIT");
             mapEditorSelectedAreaPreviewStore.set(areaPreview);
         });
         areaPreview.on(AreaPreviewEvent.Update, (data: AtLeast<AreaData, "id">) => {

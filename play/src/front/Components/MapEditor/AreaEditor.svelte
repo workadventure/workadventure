@@ -4,7 +4,7 @@
 </script>
 
 {#if $mapEditorAreaModeStore === "ADD"}
-    <AreaPropertiesEditor />
+    <!-- <AreaPropertiesEditor /> -->
 {/if}
 {#if $mapEditorAreaModeStore === "EDIT"}
     <AreaPropertiesEditor />
