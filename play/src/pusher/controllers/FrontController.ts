@@ -220,6 +220,9 @@ export class FrontController extends BaseHttpController {
         // Read the access_key from the query parameter. If it is set, redirect to the admin to attempt a login.
         const accessKey = req.query.access_key;
         if (accessKey && typeof accessKey === "string" && accessKey.length > 0) {
+            if (!ADMIN_URL) {
+                return res.status(400).send("ADMIN_URL is not configured.");
+            }
             const html = Mustache.render(this.redirectToAdminFile, {
                 accessKey,
                 ADMIN_URL,
