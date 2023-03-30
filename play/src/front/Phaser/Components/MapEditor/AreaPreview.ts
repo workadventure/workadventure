@@ -7,6 +7,7 @@ export enum AreaPreviewEvent {
     Clicked = "AreaPreview:Clicked",
     DoubleClicked = "AreaPreview:DoubleClicked",
     Update = "AreaPreview:Update",
+    Delete = "AreaPreview:Delete",
 }
 
 export class AreaPreview extends Phaser.GameObjects.Container {
@@ -61,6 +62,10 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         }
     }
 
+    public delete(): void {
+        this.emit(AreaPreviewEvent.Delete);
+    }
+
     public select(value: boolean): void {
         if (this.selected === value) {
             return;
@@ -93,6 +98,11 @@ export class AreaPreview extends Phaser.GameObjects.Container {
             properties: { [key]: value },
         };
         this.emit(AreaPreviewEvent.Update, data);
+    }
+
+    public destroy(): void {
+        this.removeAll(true);
+        super.destroy();
     }
 
     private createPreview(areaData: AreaData): Phaser.GameObjects.Rectangle {

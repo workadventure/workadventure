@@ -294,7 +294,7 @@ export class EntityEditorTool extends MapEditorTool {
     }
 
     private bindEntitiesManagerEventHandlers(): void {
-        this.entitiesManager.on(EntitiesManagerEvent.RemoveEntity, (entity: Entity) => {
+        this.entitiesManager.on(EntitiesManagerEvent.DeleteEntity, (entity: Entity) => {
             this.mapEditorModeManager.executeCommand({
                 type: "DeleteEntityCommand",
                 id: entity.getEntityData().id,

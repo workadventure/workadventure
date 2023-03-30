@@ -19,7 +19,7 @@ import { OutlineableInterface } from "../Game/OutlineableInterface";
 
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
-    Remove = "EntityEvent:Removed",
+    Delete = "EntityEvent:Delete",
     PropertiesUpdated = "EntityEvent:PropertiesUpdated",
     PropertyActivated = "EntityEvent:PropertyActivated",
 }
@@ -89,7 +89,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         }
     }
 
-    public destroy(fromScene?: boolean | undefined): void {
+    public destroy(): void {
         this.outlineColorStoreUnsubscribe();
         super.destroy();
     }
@@ -169,7 +169,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public delete() {
-        this.emit(EntityEvent.Remove);
+        this.emit(EntityEvent.Delete);
     }
 
     private getOutlinePlugin(): OutlinePipelinePlugin | undefined {

@@ -114,7 +114,7 @@
 
     function onDeleteAreaPreview() {
         if ($mapEditorSelectedAreaPreviewStore) {
-            // $mapEditorSelectedAreaPreviewStore.delete();
+            $mapEditorSelectedAreaPreviewStore.delete();
             mapEditorSelectedAreaPreviewStore.set(undefined);
         }
     }

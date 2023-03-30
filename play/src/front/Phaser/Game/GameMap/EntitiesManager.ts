@@ -27,7 +27,7 @@ export const CopyEntityEventData = z.object({
 export type CopyEntityEventData = z.infer<typeof CopyEntityEventData>;
 
 export enum EntitiesManagerEvent {
-    RemoveEntity = "EntitiesManagerEvent:RemoveEntity",
+    DeleteEntity = "EntitiesManagerEvent:DeleteEntity",
     UpdateEntity = "EntitiesManagerEvent:UpdateEntity",
     CopyEntity = "EntitiesManagerEvent:CopyEntity",
 }
@@ -175,8 +175,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
     }
 
     private bindEntityEventHandlers(entity: Entity): void {
-        entity.on(EntityEvent.Remove, () => {
-            this.emit(EntitiesManagerEvent.RemoveEntity, entity);
+        entity.on(EntityEvent.Delete, () => {
+            this.emit(EntitiesManagerEvent.DeleteEntity, entity);
         });
         // get the type! Switch to rxjs?
         entity.on(

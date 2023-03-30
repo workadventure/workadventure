@@ -16,14 +16,6 @@ export type CommandConfig =
 
 export type AtLeast<T, K extends keyof T> = Partial<T> & Pick<T, K>;
 
-// TODO: This probably won't be used in the future
-export interface PredefinedPropertyData {
-    name: string;
-    description: string;
-    turnedOn: boolean;
-    additionalProperties: Record<string, string | number | boolean | object | undefined>;
-}
-
 export enum Direction {
     Left = "Left",
     Up = "Up",

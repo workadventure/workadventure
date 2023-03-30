@@ -3,7 +3,7 @@ import type { Subscription } from "rxjs";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import type { EditMapCommandMessage } from "@workadventure/messages";
-import { mapEditorSelectedAreaPreviewStore, mapEditorSelectedPropertyStore } from "../../../../Stores/MapEditorStore";
+import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import type { GameScene } from "../../GameScene";
@@ -45,7 +45,6 @@ export class AreaEditorTool extends MapEditorTool {
     public clear(): void {
         this.active = false;
         mapEditorSelectedAreaPreviewStore.set(undefined);
-        mapEditorSelectedPropertyStore.set(undefined);
         this.setAreaPreviewsVisibility(false);
     }
 
@@ -210,7 +209,6 @@ export class AreaEditorTool extends MapEditorTool {
         this.deleteAreaPreview(id);
         this.scene.markDirty();
         mapEditorSelectedAreaPreviewStore.set(undefined);
-        mapEditorSelectedPropertyStore.set(undefined);
     }
 
     private handleAreaPreviewCreation(config: AreaData): void {
@@ -281,6 +279,12 @@ export class AreaEditorTool extends MapEditorTool {
             this.mapEditorModeManager.executeCommand({
                 type: "UpdateAreaCommand",
                 dataToModify: data,
+            });
+        });
+        areaPreview.on(AreaPreviewEvent.Delete, () => {
+            this.mapEditorModeManager.executeCommand({
+                type: "DeleteAreaCommand",
+                id: areaPreview.getAreaData().id,
             });
         });
     }
