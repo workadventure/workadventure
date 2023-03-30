@@ -3,19 +3,16 @@
 
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 
-    import { srcObject } from "./utils";
     import { afterUpdate, onDestroy, onMount } from "svelte";
     import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { JitsiTrackWrapper } from "../../Streaming/Jitsi/JitsiTrackWrapper";
-    import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import microphoneOffImg from "../images/microphone-off.png";
 
     import { Color } from "@workadventure/shared-utils";
     import UserTag from "./UserTag.svelte";
     import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { Streamable } from "../../Stores/StreamableCollectionStore";
-    import {writable} from "svelte/store";
     import SoundMeterWidgetWrapper from "../SoundMeterWidgetWrapper.svelte";
 
     export let clickable = false;
@@ -51,15 +48,15 @@
     });
 
     afterUpdate(() => {
-        console.warn("PEER after Update:", {video: !!peer.videoTrack, audio: !!peer.audioTrack});
+        console.warn("PEER after Update:", { video: !!peer.videoTrack, audio: !!peer.audioTrack });
         attachTrack();
     });
 
     function attachTrack() {
-        if(peer.audioTrack) {
+        if (peer.audioTrack) {
             peer.audioTrack.attach(audioElement);
         }
-        if(peer.videoTrack) {
+        if (peer.videoTrack) {
             peer.videoTrack.attach(videoElement);
         }
     }
@@ -85,9 +82,9 @@
             />
         </div>
     {/if}
-    <div class={`tw-absolute ${peer.videoTrack ? 'tw-top-0.5 tw-right-2': 'tw-top-1 tw-right-3'}`}>
+    <div class={`tw-absolute ${peer.videoTrack ? "tw-top-0.5 tw-right-2" : "tw-top-1 tw-right-3"}`}>
         {#if peer.audioTrack}
-            <audio autoplay='1' muted='false' bind:this={audioElement} />
+            <audio autoplay muted={false} bind:this={audioElement} />
             <SoundMeterWidgetWrapper
                 classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
                 barColor="blue"
