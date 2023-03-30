@@ -40,10 +40,10 @@ export class SoundMeter {
         // //this.slow = 0.95 * that.slow + 0.05 * that.instant;
         // //this.clip = clipcount / input.length;
 
-        return this.getFrenquenciesByBar();
+        return this.getFrequenciesByBar();
     }
 
-    public getFrenquenciesByBar() {
+    public getFrequenciesByBar() {
         const spectrum: number[] = [0, 0, 0, 0, 0, 0, 0];
 
         if (!this.dataArray) {

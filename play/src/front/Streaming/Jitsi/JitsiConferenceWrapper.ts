@@ -1,12 +1,16 @@
 // eslint-disable @typescript-eslint/ban-ts-comment
-import { Readable, Unsubscriber, Writable, writable } from "svelte/store";
+import {get, readable, Readable, Unsubscriber, Writable, writable} from "svelte/store";
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 import JitsiConference from "lib-jitsi-meet/types/hand-crafted/JitsiConference";
-import { jitsiLocalTracksStore } from "./JitsiLocalTracksStore";
 import { JitsiLocalTracks } from "./JitsiLocalTracks";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
 import Debug from "debug";
+import {requestedCameraState, requestedMicrophoneState} from "../../Stores/MediaStore";
+import {Result} from "@workadventure/map-editor";
+import JitsiLocalTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiLocalTrack";
+import {JitsiConferenceErrors} from "lib-jitsi-meet/types/hand-crafted/JitsiConferenceErrors";
+import {megaphoneEnabledStore} from "../../Stores/MegaphoneStore";
 
 export type DeviceType = "video" | "audio" | "desktop";
 
@@ -19,13 +23,25 @@ export class JitsiConferenceWrapper {
 
     private readonly _broadcastDevicesStore: Writable<DeviceType[]>;
 
-    private localTracksStoreUnsubscribe: Unsubscriber | undefined;
+    private localTracksStore: Readable<Result<JitsiLocalTracks, Error> | undefined>;
+
+    private requestedCameraStateUnsubscriber: Unsubscriber | undefined;
+    private requestedMicrophoneStateUnsubscriber: Unsubscriber | undefined;
+
+    private tracks: JitsiLocalTracks = {
+        audio: undefined,
+        video: undefined,
+        screenSharing: undefined,
+    };
+
+    private firstLocalTrackInitialization = false;
 
     constructor(private jitsiConference: JitsiConference) {
         this._streamStore = writable<Map<string, Writable<JitsiTrackWrapper>>>(
             new Map<string, Writable<JitsiTrackWrapper>>()
         );
         this._broadcastDevicesStore = writable<DeviceType[]>([]);
+        this.localTracksStore = readable<Result<JitsiLocalTracks, Error> | undefined>(undefined);
     }
 
     public static join(connection: JitsiConnection, jitsiRoomName: string): Promise<JitsiConferenceWrapper> {
@@ -48,6 +64,7 @@ export class JitsiConferenceWrapper {
             });
             room.on(JitsiMeetJS.events.conference.CONNECTION_ESTABLISHED, () => {
                 console.error("CONNECTION_ESTABLISHED");
+                void jitsiConferenceWrapper.firstLocalTrackInit();
             });
             room.on(JitsiMeetJS.events.conference.CONNECTION_INTERRUPTED, () => {
                 console.error("CONNECTION_INTERRUPTED");
@@ -56,141 +73,29 @@ export class JitsiConferenceWrapper {
                 console.error("CONNECTION_RESTORED");
             });
 
-            let oldTracks: JitsiLocalTracks = {
-                audio: undefined,
-                video: undefined,
-                screenSharing: undefined,
-            };
-
-            jitsiConferenceWrapper.localTracksStoreUnsubscribe = jitsiLocalTracksStore.subscribe((result) => {
-                if (!result) {
-                    return;
-                }
-                if (result.ok) {
-                    console.log("JitsiLocalTrackStore ========> ", result);
-                    const tracks = result.value;
-                    if (tracks.audio !== oldTracks.audio) {
-                        if (tracks.audio === undefined && oldTracks.audio !== undefined) {
-                            console.warn("REMOVING LOCAL AUDIO TRACK");
-                            room.removeTrack(oldTracks.audio);
-                        } else if (tracks.audio !== undefined) {
-                            if (oldTracks.audio !== undefined) {
-                                console.warn("REPLACING LOCAL AUDIO TRACK");
-                                room.replaceTrack(oldTracks.audio, tracks.audio).catch((e) =>
-                                    console.error("Error replacing local track", e)
-                                );
-                            } else {
-                                console.warn("ADDING LOCAL AUDIO TRACK");
-                                room.addTrack(tracks.audio).catch((e) => console.error("Error adding local track", e));
-                            }
-                        }
-                    }
-
-                    if (tracks.video !== oldTracks.video) {
-                        if (tracks.video === undefined && oldTracks.video !== undefined) {
-                            console.warn("REMOVING LOCAL VIDEO TRACK");
-                            room.removeTrack(oldTracks.video);
-                        } else if (tracks.video !== undefined) {
-                            if (oldTracks.video !== undefined) {
-                                console.warn("REPLACING LOCAL VIDEO TRACK");
-                                room.replaceTrack(oldTracks.video, tracks.video).catch((e) =>
-                                    console.error("Error replacing track", e)
-                                );
-                            } else {
-                                console.warn("ADDING LOCAL VIDEO TRACK");
-                                room.addTrack(tracks.video).catch((e) => console.error("Error adding local track", e));
-                            }
-                        }
-                    }
-
-                    if (tracks.screenSharing !== oldTracks.screenSharing) {
-                        if (tracks.screenSharing === undefined && oldTracks.screenSharing !== undefined) {
-                            room.removeTrack(oldTracks.screenSharing);
-                        } else if (tracks.screenSharing !== undefined) {
-                            if (oldTracks.screenSharing !== undefined) {
-                                room.replaceTrack(oldTracks.screenSharing, tracks.screenSharing).catch((e) =>
-                                    console.error("Error replacing local track", e)
-                                );
-                            } else {
-                                room.addTrack(tracks.screenSharing).catch((e) =>
-                                    console.error("Error adding local track", e)
-                                );
-                            }
-                        }
-                    }
-
-                    oldTracks = { ...tracks };
-                } else {
-                    console.error(result.error);
+            jitsiConferenceWrapper.requestedCameraStateUnsubscriber = requestedCameraState.subscribe((requestedCameraState) => {
+                if(jitsiConferenceWrapper.firstLocalTrackInitialization) {
+                    (async (): Promise<JitsiLocalTracks> => jitsiConferenceWrapper.handleLocalTrackState("video", requestedCameraState))()
+                        .then((newTracks) => {
+                            console.log("this is a success");
+                        })
+                        .catch((e) => {
+                            console.error("jitsiLocalTracks", e);
+                        });
                 }
             });
 
-            const removeRemoteTrack = (track: JitsiTrack) => {
-                jitsiConferenceWrapper._streamStore.update((tracks) => {
-                    // @ts-ignore
-                    const participantId = track.getParticipantId();
-                    if (!participantId) {
-                        console.error("Track has no participantId");
-                        return tracks;
-                    }
-
-                    const jitsiTrackWrapperStore = tracks.get(participantId);
-                    if (jitsiTrackWrapperStore) {
-                        jitsiTrackWrapperStore.update((jitsiTrackWrapper) => {
-                            if (track.isAudioTrack()) {
-                                jitsiTrackWrapper.muteAudio();
-                            }
-                            if (track.isVideoTrack()) {
-                                jitsiTrackWrapper.muteVideo();
-                            }
-                            if (
-                                jitsiTrackWrapper.videoTrack === undefined &&
-                                jitsiTrackWrapper.audioTrack === undefined
-                            ) {
-                                tracks.delete(participantId);
-                            }
-                            return jitsiTrackWrapper;
+            jitsiConferenceWrapper.requestedMicrophoneStateUnsubscriber = requestedMicrophoneState.subscribe((requestedMicrophoneState) => {
+                if(jitsiConferenceWrapper.firstLocalTrackInitialization) {
+                    (async (): Promise<JitsiLocalTracks> => jitsiConferenceWrapper.handleLocalTrackState("audio", requestedMicrophoneState))()
+                        .then((newTracks) => {
+                            console.log("this is a success");
+                        })
+                        .catch((e) => {
+                            console.error("jitsiLocalTracks", e);
                         });
-                    }
-
-                    return tracks;
-                });
-            };
-
-            const addRemoteTrack = (track: JitsiTrack, allowOverride: boolean) => {
-                console.log("JitsiConferenceWrapper => addRemoteTrack", track.getType());
-                jitsiConferenceWrapper._streamStore.update((tracks) => {
-                    // @ts-ignore
-                    const participantId = track.getParticipantId();
-                    if (!participantId) {
-                        console.error("Track has no participantId");
-                        return tracks;
-                    }
-                    let jitsiTrackWrapperStore = tracks.get(participantId);
-                    if (!jitsiTrackWrapperStore) {
-                        jitsiTrackWrapperStore = writable(new JitsiTrackWrapper(track));
-                        tracks.set(participantId, jitsiTrackWrapperStore);
-                    } else {
-                        jitsiTrackWrapperStore.update((jitsiTrackWrapper) => {
-                            jitsiTrackWrapper.setJitsiTrack(track, allowOverride);
-                            return jitsiTrackWrapper;
-                        });
-                    }
-
-                    return tracks;
-                });
-            };
-
-            const trackStateChanged = (track: JitsiTrack) => {
-                //@ts-ignore
-                if (track.muted) {
-                    debug(`remote ${track.getType()} track is muted => removing`);
-                    removeRemoteTrack(track);
-                } else {
-                    debug(`remote ${track.getType()} track is emitting => adding`);
-                    addRemoteTrack(track, true);
                 }
-            };
+            });
 
             /**
              * Handles remote tracks
@@ -203,13 +108,13 @@ export class JitsiConferenceWrapper {
 
                 console.log("JitsiConferenceWrapper => onRemoteTrack");
 
-                addRemoteTrack(track, false);
+                jitsiConferenceWrapper.addRemoteTrack(track, false);
 
                 /*track.addEventListener(
                     JitsiMeetJS.events.track.TRACK_AUDIO_LEVEL_CHANGED,
                     audioLevel => console.log(`Audio Level remote: ${audioLevel}`));*/
                 track.addEventListener(JitsiMeetJS.events.track.TRACK_MUTE_CHANGED, (event) => {
-                    trackStateChanged(track);
+                    jitsiConferenceWrapper.trackStateChanged(track);
                 });
                 track.addEventListener(JitsiMeetJS.events.track.NO_DATA_FROM_SOURCE, (event) => {
                     console.log("track no data from source");
@@ -223,6 +128,10 @@ export class JitsiConferenceWrapper {
                 track.addEventListener(JitsiMeetJS.events.track.TRACK_AUDIO_OUTPUT_CHANGED, (deviceId) =>
                     console.log(`track audio output device was changed to ${deviceId}`)
                 );
+
+                track.addEventListener(JitsiMeetJS.events.track.TRACK_AUDIO_LEVEL_CHANGED, (event) => {
+                    console.log(`track audio output level was changed to ${event}`);
+                });
                 /*const id = participant + track.getType() + idx;
 
                 if (track.getType() === 'video') {
@@ -245,8 +154,8 @@ export class JitsiConferenceWrapper {
                 if (track.isLocal()) {
                     return;
                 }
-                debug(`remote ${track.type} track removed`);
-                removeRemoteTrack(track);
+                console.log(`remote ${track.type} track removed`);
+                jitsiConferenceWrapper.removeRemoteTrack(track);
             });
 
             /*room.on(JitsiMeetJS.events.conference.USER_JOINED, id => {
@@ -275,11 +184,160 @@ export class JitsiConferenceWrapper {
     }
 
     public leave(reason?: string): Promise<unknown> {
-        debug("JitsiConferenceWrapper => leaving ...");
-        if (this.localTracksStoreUnsubscribe) {
-            this.localTracksStoreUnsubscribe();
+        console.log("JitsiConferenceWrapper => leaving ...");
+        if(this.requestedMicrophoneStateUnsubscriber) {
+            this.requestedMicrophoneStateUnsubscriber();
+        }
+        if(this.requestedCameraStateUnsubscriber) {
+            this.requestedCameraStateUnsubscriber();
         }
         return this.jitsiConference.leave(reason);
+    }
+
+    private async createLocalTracks(types: DeviceType[]){
+        const newTracks = await window.JitsiMeetJS.createLocalTracks({devices: types});
+        if (!(newTracks instanceof Array)) {
+            // newTracks is a JitsiConferenceError
+            throw newTracks;
+        }
+        return newTracks;
+    }
+
+    private async handleTrack (oldTrack: JitsiLocalTrack | undefined, track: JitsiLocalTrack | undefined){
+        if (oldTrack && track) {
+            console.warn(`REPLACING LOCAL ${oldTrack.getType()} TRACK`);
+            await this.jitsiConference.replaceTrack(oldTrack, track);
+        } else if (oldTrack && !track) {
+            console.warn(`REMOVING LOCAL ${oldTrack.getType()} TRACK`);
+            await oldTrack.dispose();
+            //room.removeTrack(oldTrack);
+            //await oldTrack.dispose();
+        } else if(!oldTrack && track){
+            console.warn(`ADDING LOCAL ${track.getType()} TRACK`);
+            await this.jitsiConference.addTrack(track);
+        }
+    }
+
+    public async firstLocalTrackInit(){
+        if (get(megaphoneEnabledStore)) {
+            const requestedDevices: DeviceType[] = [];
+            if (get(requestedCameraState)) {
+                requestedDevices.push("video");
+            }
+            if (get(requestedMicrophoneState)) {
+                requestedDevices.push("audio");
+            }
+            let newTracks: JitsiLocalTrack[] | JitsiConferenceErrors = [];
+            if (requestedDevices.length > 0) {
+                newTracks = await this.createLocalTracks(requestedDevices);
+            }
+
+            if (requestedDevices.length > 0) {
+                for (const track of newTracks) {
+                    if (track.isAudioTrack()) {
+                        await this.handleTrack(this.tracks.audio, track);
+                        this.tracks.audio = track;
+                    } else if (track.isVideoTrack()) {
+                        await this.handleTrack(this.tracks.video, track);
+                        this.tracks.video = track;
+                    } else if (track.isScreenSharing()) {
+                        await this.handleTrack(this.tracks.screenSharing, track);
+                        this.tracks.screenSharing = track;
+                    }
+                }
+            }
+            console.log("JitsiConferenceWrapper => handleFirstLocalTrack => success");
+            this.firstLocalTrackInitialization = true;
+        }
+    }
+
+    private async handleLocalTrackState (type: DeviceType, state: boolean) {
+        console.log("JitsiConferenceWrapper => handleLocalTrackState", type, state);
+        let newTrack: JitsiLocalTrack | undefined = undefined;
+        if (state) {
+            newTrack = (await this.createLocalTracks([type]))[0];
+        }
+
+        if(type === "video"){
+            await this.handleTrack(this.tracks.video, newTrack);
+            this.tracks.video = newTrack;
+        } else if(type === "audio"){
+            await this.handleTrack(this.tracks.audio, newTrack);
+            this.tracks.audio = newTrack;
+        } else if(type === "desktop"){
+            await this.handleTrack(this.tracks.screenSharing, newTrack);
+            this.tracks.screenSharing = newTrack;
+        }
+
+        return this.tracks;
+    }
+
+    private addRemoteTrack(track: JitsiTrack, allowOverride: boolean){
+        console.log("JitsiConferenceWrapper => addRemoteTrack", track.getType());
+        this._streamStore.update((tracks) => {
+            // @ts-ignore
+            const participantId = track.getParticipantId();
+            if (!participantId) {
+                console.error("Track has no participantId");
+                return tracks;
+            }
+            let jitsiTrackWrapperStore = tracks.get(participantId);
+            if (!jitsiTrackWrapperStore) {
+                jitsiTrackWrapperStore = writable(new JitsiTrackWrapper(track));
+                tracks.set(participantId, jitsiTrackWrapperStore);
+            } else {
+                jitsiTrackWrapperStore.update((jitsiTrackWrapper) => {
+                    jitsiTrackWrapper.setJitsiTrack(track, allowOverride);
+                    return jitsiTrackWrapper;
+                });
+            }
+
+            return tracks;
+        });
+    }
+
+    private trackStateChanged(track: JitsiTrack){
+        //@ts-ignore
+        if (track.muted) {
+            console.log(`remote ${track.getType()} track is muted => removing`);
+            this.removeRemoteTrack(track);
+        } else {
+            console.log(`remote ${track.getType()} track is emitting => adding`);
+            this.addRemoteTrack(track, true);
+        }
+    }
+
+    private removeRemoteTrack(track: JitsiTrack){
+        this._streamStore.update((tracks) => {
+            // @ts-ignore
+            const participantId = track.getParticipantId();
+            if (!participantId) {
+                console.error("Track has no participantId");
+                return tracks;
+            }
+
+            const jitsiTrackWrapperStore = tracks.get(participantId);
+            if (jitsiTrackWrapperStore) {
+                jitsiTrackWrapperStore.update((jitsiTrackWrapper) => {
+                    if (track.isAudioTrack()) {
+                        jitsiTrackWrapper.muteAudio();
+                    }
+                    if (track.isVideoTrack()) {
+                        jitsiTrackWrapper.muteVideo();
+                    }
+                    if (
+                        jitsiTrackWrapper.videoTrack === undefined &&
+                        jitsiTrackWrapper.audioTrack === undefined
+                    ) {
+                        jitsiTrackWrapper.unsubscribe();
+                        tracks.delete(participantId);
+                    }
+                    return jitsiTrackWrapper;
+                });
+            }
+
+            return tracks;
+        });
     }
 
     get broadcastDevicesStore(): Readable<DeviceType[]> {
