@@ -22,7 +22,7 @@
     let possibleProperties: AreaPropertyDescription<AreaDataPropertiesKeys>[] = [
         {
             key: "focusable",
-            name: $LL.mapEditor.entityEditor.focusableProperties.label(),
+            name: $LL.mapEditor.properties.focusableProperties.label(),
             active: false,
             currentValue: undefined,
             component: FocusablePropertyEditor,
@@ -33,7 +33,7 @@
         },
         {
             key: "jitsiRoom",
-            name: $LL.mapEditor.entityEditor.jitsiProperties.label(),
+            name: $LL.mapEditor.properties.jitsiProperties.label(),
             active: false,
             currentValue: undefined,
             component: JitsiRoomPropertyEditor,
@@ -45,7 +45,7 @@
         },
         {
             key: "playAudio",
-            name: $LL.mapEditor.entityEditor.audioProperties.label(),
+            name: $LL.mapEditor.properties.audioProperties.label(),
             active: false,
             currentValue: undefined,
             component: PlayAudioPropertyEditor,
@@ -56,7 +56,7 @@
         },
         {
             key: "openWebsite",
-            name: $LL.mapEditor.entityEditor.linkProperties.label(),
+            name: $LL.mapEditor.properties.linkProperties.label(),
             active: false,
             currentValue: undefined,
             component: OpenWebsitePropertyEditor,

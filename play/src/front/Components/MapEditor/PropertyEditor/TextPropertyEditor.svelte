@@ -13,7 +13,7 @@
 <div class="value-input">
     <textarea
         type="text"
-        placeholder={$LL.mapEditor.entityEditor.textProperties.placeholder()}
+        placeholder={$LL.mapEditor.properties.textProperties.placeholder()}
         rows="5"
         bind:value={property}
         on:change={onValueChange}

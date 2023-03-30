@@ -14,7 +14,7 @@
 </script>
 
 <div class="value-input">
-    <label for="zoomMarginName">{$LL.mapEditor.entityEditor.focusableProperties.zoomMarginLabel()}</label>
+    <label for="zoomMarginName">{$LL.mapEditor.properties.focusableProperties.zoomMarginLabel()}</label>
     <input
         id="zoomMarginName"
         type="number"

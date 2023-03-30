@@ -22,7 +22,7 @@
     let possibleProperties: EntityPropertyDescription<EntityDataPropertiesKeys>[] = [
         {
             key: "textHeader",
-            name: $LL.mapEditor.entityEditor.textProperties.label(),
+            name: $LL.mapEditor.properties.textProperties.label(),
             active: false,
             currentValue: undefined,
             component: TextPropertyEditor,
@@ -30,35 +30,35 @@
         },
         {
             key: "jitsiRoom",
-            name: $LL.mapEditor.entityEditor.jitsiProperties.label(),
+            name: $LL.mapEditor.properties.jitsiProperties.label(),
             active: false,
             currentValue: undefined,
             component: JitsiRoomPropertyEditor,
             defaultValue: {
-                buttonLabel: $LL.mapEditor.entityEditor.jitsiProperties.defaultButtonLabel(),
+                buttonLabel: $LL.mapEditor.properties.jitsiProperties.defaultButtonLabel(),
                 roomName: "",
                 jitsiRoomConfig: {},
             },
         },
         {
             key: "playAudio",
-            name: $LL.mapEditor.entityEditor.audioProperties.label(),
+            name: $LL.mapEditor.properties.audioProperties.label(),
             active: false,
             currentValue: undefined,
             component: PlayAudioPropertyEditor,
             defaultValue: {
-                buttonLabel: $LL.mapEditor.entityEditor.audioProperties.defaultButtonLabel(),
+                buttonLabel: $LL.mapEditor.properties.audioProperties.defaultButtonLabel(),
                 audioLink: "",
             },
         },
         {
             key: "openWebsite",
-            name: $LL.mapEditor.entityEditor.linkProperties.label(),
+            name: $LL.mapEditor.properties.linkProperties.label(),
             active: false,
             currentValue: undefined,
             component: OpenWebsitePropertyEditor,
             defaultValue: {
-                buttonLabel: $LL.mapEditor.entityEditor.linkProperties.defaultButtonLabel(),
+                buttonLabel: $LL.mapEditor.properties.linkProperties.defaultButtonLabel(),
                 link: "",
                 newTab: true,
             },
