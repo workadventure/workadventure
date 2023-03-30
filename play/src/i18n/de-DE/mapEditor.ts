@@ -19,7 +19,6 @@ const mapEditor: BaseTranslation = {
         testInteractionButton: "Interaktion testen",
         buttonLabel: "Knopfbeschrifung",
         editInstructions: "Klicken Sie auf ein Objekt, um seine Eigenschaften zu ändern.",
-        removeInstructions: "Klicken Sie auf ein Objekt um es zu löschen.",
         textProperties: {
             label: "Überschrift",
             placeholder: "Geben Sie hier Text ein, der bei der Interaktion mit dem Objekt angezeigt wird",

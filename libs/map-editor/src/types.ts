@@ -69,12 +69,12 @@ export const AreaDataProperties = z.object({
 
 export const AreaData = z.object({
     id: z.string(),
-    name: z.string(),
     x: z.number(),
     y: z.number(),
     width: z.number(),
     height: z.number(),
     visible: z.boolean(),
+    name: z.string().optional(),
     properties: AreaDataProperties,
 });
 

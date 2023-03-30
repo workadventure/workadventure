@@ -269,7 +269,6 @@ export class AreaEditorTool extends MapEditorTool {
             type: "CreateAreaCommand",
             areaObjectConfig: {
                 id,
-                name: `STATIC_AREA_${id}`,
                 visible: true,
                 properties: {},
                 width: 50,
