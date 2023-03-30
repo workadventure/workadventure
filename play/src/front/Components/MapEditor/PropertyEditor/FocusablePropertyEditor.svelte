@@ -57,13 +57,4 @@
             margin-bottom: 0;
         }
     }
-
-    button {
-        flex: 1 1 0px;
-        border: 1px solid grey;
-        margin-bottom: 0.5em;
-    }
-    button:hover {
-        background-color: rgb(77 75 103);
-    }
 </style>
