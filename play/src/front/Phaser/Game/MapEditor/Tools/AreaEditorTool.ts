@@ -127,7 +127,7 @@ export class AreaEditorTool extends MapEditorTool {
         }
         switch (commandConfig.type) {
             case "CreateAreaCommand": {
-                this.handleAreaPreviewCreation(commandConfig.areaObjectConfig);
+                this.handleAreaPreviewCreation(commandConfig.areaObjectConfig, localCommand);
                 break;
             }
             case "DeleteAreaCommand": {
@@ -204,10 +204,9 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        if (get(mapEditorAreaModeStore) === "ADD" && gameObjects.length === 0) {
+        if (pointer.leftButtonDown() && get(mapEditorAreaModeStore) === "ADD" && gameObjects.length === 0) {
             this.createNewArea();
-            // mapEditorAreaModeStore.set("EDIT");
-            // mapEditorSelectedAreaPreviewStore.set(undefined);
+            return;
         }
         if (get(mapEditorAreaModeStore) === "EDIT" && gameObjects.length === 0) {
             mapEditorAreaModeStore.set("ADD");
@@ -221,11 +220,16 @@ export class AreaEditorTool extends MapEditorTool {
         mapEditorSelectedAreaPreviewStore.set(undefined);
     }
 
-    private handleAreaPreviewCreation(config: AreaData): void {
+    private handleAreaPreviewCreation(config: AreaData, localCommand: boolean): void {
         const areaPreview = new AreaPreview(this.scene, structuredClone(config));
         this.bindAreaPreviewEventHandlers(areaPreview);
         this.areaPreviews.push(areaPreview);
         this.scene.markDirty();
+
+        if (localCommand) {
+            mapEditorAreaModeStore.set("EDIT");
+            mapEditorSelectedAreaPreviewStore.set(areaPreview);
+        }
     }
 
     private handleAreaPreviewUpdate(config: AtLeast<AreaData, "id">): void {
