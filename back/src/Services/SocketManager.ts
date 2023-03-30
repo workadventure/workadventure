@@ -259,12 +259,8 @@ export class SocketManager {
     async readVariable(roomUrl: string, variable: string): Promise<string | undefined> {
         const room = await this.getOrCreateRoom(roomUrl);
         // Info: Admin tag is given to bypass the tags checking
-        const variables = await room.getVariablesForTags(["admin"]);
+        const variables = await room.getVariablesForTags(undefined);
         return variables.get(variable);
-    }
-
-    async listenVariable(roomUrl: string, variable: string) {
-        // todo
     }
 
     async saveVariable(roomUrl: string, variable: string, newValue: string): Promise<void> {

@@ -232,7 +232,7 @@ export class VariablesManager {
             if (variableObject === undefined) {
                 throw new Error('Unexpected variable "' + key + '" found has no associated variableObject.');
             }
-            if (!variableObject.readableBy || tags.includes(variableObject.readableBy)) {
+            if (!tags || !variableObject.readableBy || tags.includes(variableObject.readableBy)) {
                 readableVariables.set(key, value);
             }
         }

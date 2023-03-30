@@ -9,7 +9,7 @@ export default {
         AuthenticationGuard(call.metadata, call.request.room)
             .then(() => {
                 apiClientRepository
-                    .getClient("room-api:" + call.request.room)
+                    .getClient(call.request.room)
                     .then((apiClient) => {
                         apiClient.readVariable(call.request, (error, response) => {
                             if (error) {
@@ -53,7 +53,7 @@ export default {
         AuthenticationGuard(call.metadata, call.request.room)
             .then(() => {
                 apiClientRepository
-                    .getClient("room-api:" + call.request.room)
+                    .getClient(call.request.room)
                     .then((apiClient) => {
                         const variableListener = apiClient.listenVariable(call.request);
 
@@ -92,7 +92,7 @@ export default {
         AuthenticationGuard(call.metadata, call.request.room)
             .then((authentication) => {
                 apiClientRepository
-                    .getClient("room-api:" + call.request.room)
+                    .getClient(call.request.room)
                     .then((apiClient) => {
                         apiClient.saveVariable(call.request, (error, response) => {
                             if (error) {

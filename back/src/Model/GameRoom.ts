@@ -555,13 +555,13 @@ export class GameRoom implements BrothersFinder {
             });
 
             // Dispatch the variable update to variable listeners
-            this.variableListeners.forEach((listener) => {
+            for (const listener of this.variableListeners.values()) {
                 if (listener.request.name !== name) {
                     return;
                 }
 
                 listener.write(Value.wrap(JSON.parse(value)));
-            });
+            }
         } catch (e) {
             if (e instanceof VariableError) {
                 // Ok, we have an error setting a variable. Either the user is trying to hack the map... or the map
@@ -786,7 +786,7 @@ export class GameRoom implements BrothersFinder {
         return this.variableManagerPromise;
     }
 
-    public async getVariablesForTags(tags: string[]): Promise<Map<string, string>> {
+    public async getVariablesForTags(tags: string[] | undefined): Promise<Map<string, string>> {
         const variablesManager = await this.getVariableManager();
         return variablesManager.getVariablesForTags(tags);
     }

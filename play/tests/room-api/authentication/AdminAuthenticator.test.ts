@@ -17,14 +17,17 @@ describe("AdminAuthenticator", () => {
 
         vi.mock("axios", () => {
             return {
-                isAxiosError: (error: any) => {
-                    return "response" in error;
+                isAxiosError: (error: unknown) => {
+                    return error !== null && error !== undefined && typeof error === "object" && "response" in error;
                 },
                 default: {
-                    get: (_url: string, options: {
-                        headers?: { "X-API-Key": string };
-                        params?: { roomUrl: string };
-                    }) => {
+                    get: (
+                        _url: string,
+                        options: {
+                            headers?: { "X-API-Key": string };
+                            params?: { roomUrl: string };
+                        }
+                    ) => {
                         return new Promise((resolve, reject) => {
                             if (!options.headers || !options.headers["X-API-Key"]) {
                                 return reject({
@@ -142,7 +145,7 @@ describe("AdminAuthenticator", () => {
         }
     });
 
-    test("an weird success status has been returned", async () => {
+    test("a weird success status has been returned", async () => {
         let thrownError: unknown;
 
         try {
