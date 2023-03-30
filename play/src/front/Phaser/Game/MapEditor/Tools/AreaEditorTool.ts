@@ -182,31 +182,6 @@ export class AreaEditorTool extends MapEditorTool {
                 });
                 break;
             }
-            case "l": {
-                const id = crypto.randomUUID();
-                this.mapEditorModeManager.executeCommand({
-                    type: "CreateAreaCommand",
-                    areaObjectConfig: {
-                        id,
-                        name: `STATIC_AREA_${id}`,
-                        visible: true,
-                        properties: {
-                            focusable: {
-                                zoom_margin: 0.5,
-                            },
-                            jitsiRoom: {
-                                roomName: "elomelo",
-                                jitsiRoomConfig: {},
-                            },
-                        },
-                        width: 100,
-                        height: 100,
-                        x: this.scene.input.activePointer.worldX - 50,
-                        y: this.scene.input.activePointer.worldY - 50,
-                    },
-                });
-                break;
-            }
             default: {
                 break;
             }
@@ -229,6 +204,11 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        if (get(mapEditorAreaModeStore) === "ADD" && gameObjects.length === 0) {
+            this.createNewArea();
+            // mapEditorAreaModeStore.set("EDIT");
+            // mapEditorSelectedAreaPreviewStore.set(undefined);
+        }
         if (get(mapEditorAreaModeStore) === "EDIT" && gameObjects.length === 0) {
             mapEditorAreaModeStore.set("ADD");
             mapEditorSelectedAreaPreviewStore.set(undefined);
@@ -277,6 +257,23 @@ export class AreaEditorTool extends MapEditorTool {
         const areaPreview = new AreaPreview(this.scene, { ...areaConfig });
         this.bindAreaPreviewEventHandlers(areaPreview);
         return areaPreview;
+    }
+
+    private createNewArea(): void {
+        const id = crypto.randomUUID();
+        this.mapEditorModeManager.executeCommand({
+            type: "CreateAreaCommand",
+            areaObjectConfig: {
+                id,
+                name: `STATIC_AREA_${id}`,
+                visible: true,
+                properties: {},
+                width: 50,
+                height: 50,
+                x: this.scene.input.activePointer.worldX - 25,
+                y: this.scene.input.activePointer.worldY - 25,
+            },
+        });
     }
 
     private deleteAreaPreview(id: string): boolean {
