@@ -1,16 +1,16 @@
 // eslint-disable @typescript-eslint/ban-ts-comment
-import {get, readable, Readable, Unsubscriber, Writable, writable} from "svelte/store";
+import { get, readable, Readable, Unsubscriber, Writable, writable } from "svelte/store";
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 import JitsiConference from "lib-jitsi-meet/types/hand-crafted/JitsiConference";
 import { JitsiLocalTracks } from "./JitsiLocalTracks";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
 import Debug from "debug";
-import {requestedCameraState, requestedMicrophoneState} from "../../Stores/MediaStore";
-import {Result} from "@workadventure/map-editor";
+import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+import { Result } from "@workadventure/map-editor";
 import JitsiLocalTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiLocalTrack";
-import {JitsiConferenceErrors} from "lib-jitsi-meet/types/hand-crafted/JitsiConferenceErrors";
-import {megaphoneEnabledStore} from "../../Stores/MegaphoneStore";
+import { JitsiConferenceErrors } from "lib-jitsi-meet/types/hand-crafted/JitsiConferenceErrors";
+import { megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
 
 export type DeviceType = "video" | "audio" | "desktop";
 
@@ -19,7 +19,7 @@ const debug = Debug("libjitsi");
 export class JitsiConferenceWrapper {
     //public readonly participantStore: MapStore<string, JitsiParticipant>;
 
-    private _streamStore: Writable<Map<string, Writable<JitsiTrackWrapper>>>;
+    private _streamStore: Writable<Map<string, JitsiTrackWrapper>>;
 
     private readonly _broadcastDevicesStore: Writable<DeviceType[]>;
 
@@ -37,9 +37,7 @@ export class JitsiConferenceWrapper {
     private firstLocalTrackInitialization = false;
 
     constructor(private jitsiConference: JitsiConference) {
-        this._streamStore = writable<Map<string, Writable<JitsiTrackWrapper>>>(
-            new Map<string, Writable<JitsiTrackWrapper>>()
-        );
+        this._streamStore = writable<Map<string, JitsiTrackWrapper>>(new Map<string, JitsiTrackWrapper>());
         this._broadcastDevicesStore = writable<DeviceType[]>([]);
         this.localTracksStore = readable<Result<JitsiLocalTracks, Error> | undefined>(undefined);
     }
@@ -64,7 +62,9 @@ export class JitsiConferenceWrapper {
             });
             room.on(JitsiMeetJS.events.conference.CONNECTION_ESTABLISHED, () => {
                 console.error("CONNECTION_ESTABLISHED");
-                void jitsiConferenceWrapper.firstLocalTrackInit();
+                setTimeout(() => {
+                    void jitsiConferenceWrapper.firstLocalTrackInit();
+                }, 5_000);
             });
             room.on(JitsiMeetJS.events.conference.CONNECTION_INTERRUPTED, () => {
                 console.error("CONNECTION_INTERRUPTED");
@@ -73,29 +73,35 @@ export class JitsiConferenceWrapper {
                 console.error("CONNECTION_RESTORED");
             });
 
-            jitsiConferenceWrapper.requestedCameraStateUnsubscriber = requestedCameraState.subscribe((requestedCameraState) => {
-                if(jitsiConferenceWrapper.firstLocalTrackInitialization) {
-                    (async (): Promise<JitsiLocalTracks> => jitsiConferenceWrapper.handleLocalTrackState("video", requestedCameraState))()
-                        .then((newTracks) => {
-                            console.log("this is a success");
-                        })
-                        .catch((e) => {
-                            console.error("jitsiLocalTracks", e);
-                        });
+            jitsiConferenceWrapper.requestedCameraStateUnsubscriber = requestedCameraState.subscribe(
+                (requestedCameraState) => {
+                    if (jitsiConferenceWrapper.firstLocalTrackInitialization) {
+                        (async (): Promise<JitsiLocalTracks> =>
+                            jitsiConferenceWrapper.handleLocalTrackState("video", requestedCameraState))()
+                            .then((newTracks) => {
+                                console.log("this is a success");
+                            })
+                            .catch((e) => {
+                                console.error("jitsiLocalTracks", e);
+                            });
+                    }
                 }
-            });
+            );
 
-            jitsiConferenceWrapper.requestedMicrophoneStateUnsubscriber = requestedMicrophoneState.subscribe((requestedMicrophoneState) => {
-                if(jitsiConferenceWrapper.firstLocalTrackInitialization) {
-                    (async (): Promise<JitsiLocalTracks> => jitsiConferenceWrapper.handleLocalTrackState("audio", requestedMicrophoneState))()
-                        .then((newTracks) => {
-                            console.log("this is a success");
-                        })
-                        .catch((e) => {
-                            console.error("jitsiLocalTracks", e);
-                        });
+            jitsiConferenceWrapper.requestedMicrophoneStateUnsubscriber = requestedMicrophoneState.subscribe(
+                (requestedMicrophoneState) => {
+                    if (jitsiConferenceWrapper.firstLocalTrackInitialization) {
+                        (async (): Promise<JitsiLocalTracks> =>
+                            jitsiConferenceWrapper.handleLocalTrackState("audio", requestedMicrophoneState))()
+                            .then((newTracks) => {
+                                console.log("this is a success");
+                            })
+                            .catch((e) => {
+                                console.error("jitsiLocalTracks", e);
+                            });
+                    }
                 }
-            });
+            );
 
             /**
              * Handles remote tracks
@@ -129,9 +135,6 @@ export class JitsiConferenceWrapper {
                     console.log(`track audio output device was changed to ${deviceId}`)
                 );
 
-                track.addEventListener(JitsiMeetJS.events.track.TRACK_AUDIO_LEVEL_CHANGED, (event) => {
-                    console.log(`track audio output level was changed to ${event}`);
-                });
                 /*const id = participant + track.getType() + idx;
 
                 if (track.getType() === 'video') {
@@ -185,17 +188,17 @@ export class JitsiConferenceWrapper {
 
     public leave(reason?: string): Promise<unknown> {
         console.log("JitsiConferenceWrapper => leaving ...");
-        if(this.requestedMicrophoneStateUnsubscriber) {
+        if (this.requestedMicrophoneStateUnsubscriber) {
             this.requestedMicrophoneStateUnsubscriber();
         }
-        if(this.requestedCameraStateUnsubscriber) {
+        if (this.requestedCameraStateUnsubscriber) {
             this.requestedCameraStateUnsubscriber();
         }
         return this.jitsiConference.leave(reason);
     }
 
-    private async createLocalTracks(types: DeviceType[]){
-        const newTracks = await window.JitsiMeetJS.createLocalTracks({devices: types});
+    private async createLocalTracks(types: DeviceType[]) {
+        const newTracks = await window.JitsiMeetJS.createLocalTracks({ devices: types });
         if (!(newTracks instanceof Array)) {
             // newTracks is a JitsiConferenceError
             throw newTracks;
@@ -203,7 +206,7 @@ export class JitsiConferenceWrapper {
         return newTracks;
     }
 
-    private async handleTrack (oldTrack: JitsiLocalTrack | undefined, track: JitsiLocalTrack | undefined){
+    private async handleTrack(oldTrack: JitsiLocalTrack | undefined, track: JitsiLocalTrack | undefined) {
         if (oldTrack && track) {
             console.warn(`REPLACING LOCAL ${oldTrack.getType()} TRACK`);
             await this.jitsiConference.replaceTrack(oldTrack, track);
@@ -212,13 +215,13 @@ export class JitsiConferenceWrapper {
             await oldTrack.dispose();
             //room.removeTrack(oldTrack);
             //await oldTrack.dispose();
-        } else if(!oldTrack && track){
+        } else if (!oldTrack && track) {
             console.warn(`ADDING LOCAL ${track.getType()} TRACK`);
             await this.jitsiConference.addTrack(track);
         }
     }
 
-    public async firstLocalTrackInit(){
+    public async firstLocalTrackInit() {
         if (get(megaphoneEnabledStore)) {
             const requestedDevices: DeviceType[] = [];
             if (get(requestedCameraState)) {
@@ -251,28 +254,38 @@ export class JitsiConferenceWrapper {
         }
     }
 
-    private async handleLocalTrackState (type: DeviceType, state: boolean) {
+    private async handleLocalTrackState(type: DeviceType, state: boolean) {
         console.log("JitsiConferenceWrapper => handleLocalTrackState", type, state);
         let newTrack: JitsiLocalTrack | undefined = undefined;
         if (state) {
             newTrack = (await this.createLocalTracks([type]))[0];
         }
 
-        if(type === "video"){
-            await this.handleTrack(this.tracks.video, newTrack);
-            this.tracks.video = newTrack;
-        } else if(type === "audio"){
-            await this.handleTrack(this.tracks.audio, newTrack);
-            this.tracks.audio = newTrack;
-        } else if(type === "desktop"){
-            await this.handleTrack(this.tracks.screenSharing, newTrack);
-            this.tracks.screenSharing = newTrack;
+        switch (type) {
+            case "audio": {
+                await this.handleTrack(this.tracks.audio, newTrack);
+                this.tracks.audio = newTrack;
+                break;
+            }
+            case "video": {
+                await this.handleTrack(this.tracks.video, newTrack);
+                this.tracks.video = newTrack;
+                break;
+            }
+            case "desktop": {
+                await this.handleTrack(this.tracks.screenSharing, newTrack);
+                this.tracks.screenSharing = newTrack;
+                break;
+            }
+            default: {
+                throw new Error("This type of localTrack is not supported: " + type);
+            }
         }
 
         return this.tracks;
     }
 
-    private addRemoteTrack(track: JitsiTrack, allowOverride: boolean){
+    private addRemoteTrack(track: JitsiTrack, allowOverride: boolean) {
         console.log("JitsiConferenceWrapper => addRemoteTrack", track.getType());
         this._streamStore.update((tracks) => {
             // @ts-ignore
@@ -281,22 +294,19 @@ export class JitsiConferenceWrapper {
                 console.error("Track has no participantId");
                 return tracks;
             }
-            let jitsiTrackWrapperStore = tracks.get(participantId);
-            if (!jitsiTrackWrapperStore) {
-                jitsiTrackWrapperStore = writable(new JitsiTrackWrapper(track));
-                tracks.set(participantId, jitsiTrackWrapperStore);
+            let jitsiTrackWrapper = tracks.get(participantId);
+            if (!jitsiTrackWrapper) {
+                jitsiTrackWrapper = new JitsiTrackWrapper(track);
+                tracks.set(participantId, jitsiTrackWrapper);
             } else {
-                jitsiTrackWrapperStore.update((jitsiTrackWrapper) => {
-                    jitsiTrackWrapper.setJitsiTrack(track, allowOverride);
-                    return jitsiTrackWrapper;
-                });
+                jitsiTrackWrapper.setJitsiTrack(track, allowOverride);
             }
 
             return tracks;
         });
     }
 
-    private trackStateChanged(track: JitsiTrack){
+    private trackStateChanged(track: JitsiTrack) {
         //@ts-ignore
         if (track.muted) {
             console.log(`remote ${track.getType()} track is muted => removing`);
@@ -307,7 +317,7 @@ export class JitsiConferenceWrapper {
         }
     }
 
-    private removeRemoteTrack(track: JitsiTrack){
+    private removeRemoteTrack(track: JitsiTrack) {
         this._streamStore.update((tracks) => {
             // @ts-ignore
             const participantId = track.getParticipantId();
@@ -316,24 +326,18 @@ export class JitsiConferenceWrapper {
                 return tracks;
             }
 
-            const jitsiTrackWrapperStore = tracks.get(participantId);
-            if (jitsiTrackWrapperStore) {
-                jitsiTrackWrapperStore.update((jitsiTrackWrapper) => {
-                    if (track.isAudioTrack()) {
-                        jitsiTrackWrapper.muteAudio();
-                    }
-                    if (track.isVideoTrack()) {
-                        jitsiTrackWrapper.muteVideo();
-                    }
-                    if (
-                        jitsiTrackWrapper.videoTrack === undefined &&
-                        jitsiTrackWrapper.audioTrack === undefined
-                    ) {
-                        jitsiTrackWrapper.unsubscribe();
-                        tracks.delete(participantId);
-                    }
-                    return jitsiTrackWrapper;
-                });
+            const jitsiTrackWrapper = tracks.get(participantId);
+            if (jitsiTrackWrapper) {
+                if (track.isAudioTrack()) {
+                    jitsiTrackWrapper.muteAudio();
+                }
+                if (track.isVideoTrack()) {
+                    jitsiTrackWrapper.muteVideo();
+                }
+                if (jitsiTrackWrapper.videoTrack === undefined && jitsiTrackWrapper.audioTrack === undefined) {
+                    jitsiTrackWrapper.unsubscribe();
+                    tracks.delete(participantId);
+                }
             }
 
             return tracks;
@@ -344,7 +348,7 @@ export class JitsiConferenceWrapper {
         return this._broadcastDevicesStore;
     }
 
-    get streamStore(): Readable<Map<string, Readable<JitsiTrackWrapper>>> {
+    get streamStore(): Readable<Map<string, JitsiTrackWrapper>> {
         return this._streamStore;
     }
 

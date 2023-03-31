@@ -4,16 +4,14 @@ import { Subscription } from "rxjs";
 import { RoomConnection } from "../Connexion/RoomConnection";
 import { Readable } from "svelte/store";
 import Debug from "debug";
-import {CharacterLayerManager} from "../Phaser/Entity/CharacterLayerManager";
-import {gameManager} from "../Phaser/Game/GameManager";
+import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
 
 const debug = Debug("space");
 
-export interface SpaceUserExtended extends SpaceUser{
+export interface SpaceUserExtended extends SpaceUser {
     wokaPromise: Promise<string> | undefined;
     getWokaBase64(): Promise<string>;
 }
-
 export class Space {
     private readonly _users: MapStore<string, SpaceUserExtended>;
     private subscribers: Subscription[];
@@ -111,7 +109,7 @@ export class Space {
         return this._users.size === 0;
     }
 
-    private extendSpaceUser(user: SpaceUser): SpaceUserExtended{
+    private extendSpaceUser(user: SpaceUser): SpaceUserExtended {
         return {
             ...user,
             wokaPromise: undefined,
@@ -120,7 +118,7 @@ export class Space {
                     this.wokaPromise = CharacterLayerManager.wokaBase64(user.characterLayers);
                 }
                 return this.wokaPromise;
-            }
-        }
+            },
+        };
     }
 }

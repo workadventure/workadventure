@@ -8,7 +8,6 @@
     function noDrag() {
         return false;
     }
-
 </script>
 
 <img

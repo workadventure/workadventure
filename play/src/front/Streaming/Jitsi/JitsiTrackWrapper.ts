@@ -1,30 +1,26 @@
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
-import { Readable, Unsubscriber, writable, Writable, readable } from "svelte/store";
+import { Readable, Unsubscriber, writable, Writable, readable, get } from "svelte/store";
 import { SoundMeter } from "../../Phaser/Components/SoundMeter";
 import { SpaceUserExtended } from "../../Space/Space";
 
 export class JitsiTrackWrapper {
     private _spaceUser: SpaceUserExtended | undefined;
-    private _audioTrack: JitsiTrack | undefined;
-    private _videoTrack: JitsiTrack | undefined;
-    private _volumeStore: Writable<number[] | undefined> | undefined;
+    private _audioTrack: Writable<JitsiTrack | undefined> = writable<JitsiTrack | undefined>(undefined);
+    private _videoTrack: Writable<JitsiTrack | undefined> = writable<JitsiTrack | undefined>(undefined);
     private _audioStreamStore: Writable<MediaStream | null> = writable<MediaStream | null>(null);
-    private _volumeStoreV2: Readable<number[] | undefined> | undefined;
-
-    private soundMeter: SoundMeter | undefined;
-    private timeout: NodeJS.Timeout | undefined;
+    private _volumeStore: Readable<number[] | undefined> | undefined;
     private volumeStoreSubscribe: Unsubscriber | undefined;
 
     constructor(jitsiTrack: JitsiTrack) {
         this.setJitsiTrack(jitsiTrack);
-        this._volumeStoreV2 = readable<number[] | undefined>(undefined, (set) => {
+        this._volumeStore = readable<number[] | undefined>(undefined, (set) => {
             if (this.volumeStoreSubscribe) {
                 this.volumeStoreSubscribe();
             }
             let soundMeter: SoundMeter;
             let timeout: NodeJS.Timeout;
 
-            this.volumeStoreSubscribe = this._audioStreamStore?.subscribe((mediaStream) => {
+            this.volumeStoreSubscribe = this._audioStreamStore.subscribe((mediaStream) => {
                 if (soundMeter) {
                     soundMeter.stop();
                 }
@@ -61,28 +57,6 @@ export class JitsiTrackWrapper {
                 }
             };
         });
-        /*
-        this._volumeStore = writable<number[] | undefined>(undefined, set => {
-            let error = false;
-            if (this.timeout) {
-                clearTimeout(this.timeout);
-                this.timeout = undefined;
-            }
-            this.timeout = setInterval(() => {
-                try {
-                    if(this.soundMeter) {
-                        set(this.soundMeter.getVolume());
-                        console.log("Volume", this.soundMeter.getVolume());
-                    }
-                } catch (err) {
-                    if (!error) {
-                        console.error(err);
-                        error = true;
-                    }
-                }
-            }, 100);
-        });
-         */
     }
 
     get uniqueId(): string {
@@ -101,10 +75,10 @@ export class JitsiTrackWrapper {
                 if (!allowOverride) {
                     throw new Error("An audio track is already defined");
                 } else {
-                    this._audioTrack.dispose();
+                    get(this._audioTrack)?.dispose();
                 }
             }
-            this._audioTrack = jitsiTrack;
+            this._audioTrack.set(jitsiTrack);
             //this.soundMeter = new SoundMeter(jitsiTrack.getOriginalStream());
 
             this._audioStreamStore.set(jitsiTrack.getOriginalStream());
@@ -113,34 +87,31 @@ export class JitsiTrackWrapper {
                 if (!allowOverride) {
                     throw new Error("A video track is already defined");
                 } else {
-                    this._videoTrack.dispose();
+                    get(this._videoTrack)?.dispose();
                 }
             }
-            this._videoTrack = jitsiTrack;
+            this._videoTrack.set(jitsiTrack);
         } else {
             throw new Error("Jitsi Track is neither audio nor video");
         }
     }
 
-    get videoTrack(): JitsiTrack | undefined {
+    get videoTrack(): Readable<JitsiTrack | undefined> {
         return this._videoTrack;
     }
 
-    get audioTrack(): JitsiTrack | undefined {
+    get audioTrack(): Readable<JitsiTrack | undefined> {
         return this._audioTrack;
     }
 
     muteAudio() {
-        this._audioTrack = undefined;
-        if (this.soundMeter) {
-            this.soundMeter.stop();
-            this.soundMeter = undefined;
-        }
+        this._audioTrack.set(undefined);
+        this._audioStreamStore.set(null);
         console.log("JitsiTrackWrapper => Audio is muted, unsubscribe from volume store");
     }
 
     muteVideo() {
-        this._videoTrack = undefined;
+        this._videoTrack.set(undefined);
     }
 
     get spaceUser(): SpaceUserExtended | undefined {
@@ -152,19 +123,11 @@ export class JitsiTrackWrapper {
     }
 
     get volumeStore(): Readable<number[] | undefined> | undefined {
-        return this._volumeStoreV2;
+        return this._volumeStore;
     }
 
     unsubscribe() {
         this.volumeStoreSubscribe?.();
-        this._volumeStore?.set(undefined);
         this._audioStreamStore.set(null);
-        if (this.soundMeter) {
-            this.soundMeter.stop();
-        }
-        if (this.timeout) {
-            clearTimeout(this.timeout);
-            this.timeout = undefined;
-        }
     }
 }

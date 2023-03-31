@@ -69,7 +69,7 @@ export const jitsiLocalTracksStore = derived<Readable<Set<DeviceType>>, Result<J
             const requestedDevices: DeviceType[] = [];
 
             if (oldDevices.has("audio") && !$jitsiDevicesStore.has("audio")) {
-               // await tracks.audio?.dispose();
+                // await tracks.audio?.dispose();
                 tracks.audio = undefined;
             } else if (!oldDevices.has("audio") && $jitsiDevicesStore.has("audio")) {
                 requestedDevices.push("audio");

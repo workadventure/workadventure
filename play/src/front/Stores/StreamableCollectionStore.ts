@@ -12,12 +12,10 @@ import { GameScene } from "../Phaser/Game/GameScene";
 
 export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackWrapper;
 
-const jitsiTracksStore = createNestedStore<GameScene | undefined, Map<string, Readable<JitsiTrackWrapper>>>(
+const jitsiTracksStore = createNestedStore<GameScene | undefined, Map<string, JitsiTrackWrapper>>(
     gameSceneStore,
     (gameScene) =>
-        gameScene
-            ? gameScene.broadcastService.jitsiTracks
-            : writable<Map<string, Readable<JitsiTrackWrapper>>>(new Map())
+        gameScene ? gameScene.broadcastService.jitsiTracks : writable<Map<string, JitsiTrackWrapper>>(new Map())
 );
 
 /**
@@ -35,7 +33,7 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 
             $screenSharingStreamStore.forEach(addPeer);
             $peerStore.forEach(addPeer);
-            $jitsiTracksStore.forEach((jitsiTrackStore) => addPeer(get(jitsiTrackStore)));
+            $jitsiTracksStore.forEach((jitsiTrackStore) => addPeer(jitsiTrackStore));
 
             if ($screenSharingLocalMedia?.stream) {
                 addPeer($screenSharingLocalMedia);

@@ -25,4 +25,4 @@
     onDestroy(unsubscribe);
 </script>
 
-<Woka src={src} customWidth={customWidth} customHeight={customHeight}/>
+<Woka {src} {customWidth} {customHeight} />

@@ -1,6 +1,4 @@
 <script lang="ts">
-    //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
-
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 
     import { afterUpdate, onDestroy, onMount } from "svelte";
@@ -18,12 +16,15 @@
     export let clickable = false;
     export let peer: JitsiTrackWrapper;
 
+    let videoTrackStore = peer.videoTrack;
+    let audioTrackStore = peer.audioTrack;
+
     let embedScreen: EmbedScreen;
     let videoContainer: HTMLDivElement;
     let videoElement: HTMLVideoElement;
     let audioElement: HTMLAudioElement;
-    let minimized = isMediaBreakpointOnly("md");
-    let isMobile = isMediaBreakpointUp("md");
+    let minimized: boolean;
+    let isMobile: boolean;
 
     let backGroundColor = Color.getColorByString(peer.spaceUser?.name ?? "");
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
@@ -54,10 +55,10 @@
 
     function attachTrack() {
         if (peer.audioTrack) {
-            peer.audioTrack.attach(audioElement);
+            $audioTrackStore?.attach(audioElement);
         }
         if (peer.videoTrack) {
-            peer.videoTrack.attach(videoElement);
+            $videoTrackStore?.attach(videoElement);
         }
     }
 
@@ -71,7 +72,7 @@
     bind:this={videoContainer}
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
-    {#if peer.videoTrack}
+    {#if $videoTrackStore}
         <div class="tw-flex tw-w-full tw-flex-col tw-h-full tw-rounded-sm tw-overflow-hidden">
             <video
                 bind:this={videoElement}
@@ -83,7 +84,7 @@
         </div>
     {/if}
     <div class={`tw-absolute ${peer.videoTrack ? "tw-top-0.5 tw-right-2" : "tw-top-1 tw-right-3"}`}>
-        {#if peer.audioTrack}
+        {#if $audioTrackStore}
             <audio autoplay muted={false} bind:this={audioElement} />
             <SoundMeterWidgetWrapper
                 classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
