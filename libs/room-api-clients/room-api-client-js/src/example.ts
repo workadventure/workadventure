@@ -9,11 +9,14 @@ if (!apiKey) {
 
 const client = createRoomApiClient(apiKey, "room-api.workadventure.localhost");
 
+const roomUrl = "http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json";
+const variableName = "textField";
+
 async function init() {
-  // Save a variable (In 5sec)
+  // Save a variable
   await client.saveVariable({
-    name: "textField",
-    room: "http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json",
+    name: variableName,
+    room: roomUrl,
     value: "Default Value",
   });
 
@@ -21,17 +24,17 @@ async function init() {
 
   // Read a variable
   const value = await client.readVariable({
-    name: "textField",
-    room: "http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json",
+    name: variableName,
+    room: roomUrl,
   });
 
   console.log("Value read:", Value.unwrap(value));
 
-  // Save a variable (In 5sec)
+  // Save a variable in 5sec
   setTimeout(async () => {
     await client.saveVariable({
-      name: "textField",
-      room: "http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json",
+      name: variableName,
+      room: roomUrl,
       value: "New Value",
     });
 
@@ -40,8 +43,8 @@ async function init() {
 
   // Listen a variable
   const listenVariable = client.listenVariable({
-    name: "textField",
-    room: "http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json",
+    name: variableName,
+    room: roomUrl,
   });
 
   for await (const value of listenVariable) {
