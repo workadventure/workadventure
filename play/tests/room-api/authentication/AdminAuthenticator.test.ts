@@ -1,5 +1,7 @@
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import { describe, test, expect, vi, beforeAll, it } from "vitest";
+import { AxiosInstance } from "axios";
+import { CacheOptions } from "axios-cache-interceptor";
 import authenticator from "../../../src/room-api/authentication/AdminAuthenticator";
 import { GuardError } from "../../../src/room-api/types/GuardError";
 
@@ -15,12 +17,9 @@ describe("AdminAuthenticator", () => {
             };
         });
 
-        vi.mock("axios", () => {
+        vi.mock("axios-cache-interceptor", () => {
             return {
-                isAxiosError: (error: unknown) => {
-                    return error !== null && error !== undefined && typeof error === "object" && "response" in error;
-                },
-                default: {
+                setupCache: (instance: AxiosInstance, options: CacheOptions = {}) => ({
                     get: (
                         _url: string,
                         options: {
@@ -106,7 +105,16 @@ describe("AdminAuthenticator", () => {
                             });
                         });
                     },
+                }),
+            };
+        });
+
+        vi.mock("axios", () => {
+            return {
+                isAxiosError: (error: unknown) => {
+                    return error !== null && error !== undefined && typeof error === "object" && "response" in error;
                 },
+                default: {},
             };
         });
     });
