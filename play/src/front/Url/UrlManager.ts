@@ -3,7 +3,7 @@ import { localUserStore } from "../Connexion/LocalUserStore";
 
 export enum GameConnexionTypes {
     room = 1,
-    register /*@deprecated*/,
+    //register /*@deprecated*/,
     empty,
     unknown,
     jwt /*@deprecated*/,
@@ -22,23 +22,15 @@ class UrlManager {
             return GameConnexionTypes.jwt;
         } else if (url.includes("_/") || url.includes("*/") || url.includes("@/") || url.includes("~/")) {
             return GameConnexionTypes.room;
-        }
-        //@deprecated register url will be replaced by "?token=<private access token>"
-        else if (url.includes("register/")) {
-            return GameConnexionTypes.register;
+            //}
+            //@deprecated register url will be replaced by "?token=<private access token>"
+            //else if (url.includes("register/")) {
+            //    return GameConnexionTypes.register;
         } else if (url === "/") {
             return GameConnexionTypes.empty;
         } else {
             return GameConnexionTypes.unknown;
         }
-    }
-
-    /**
-     * @deprecated
-     */
-    public getOrganizationToken(): string | null {
-        const match = /\/register\/(.+)/.exec(window.location.pathname.toString());
-        return match ? match[1] : null;
     }
 
     public pushRoomIdToUrl(room: Room): void {

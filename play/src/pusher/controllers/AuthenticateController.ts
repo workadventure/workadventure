@@ -1,5 +1,5 @@
 import { v4 } from "uuid";
-import { ErrorApiData, RegisterData } from "@workadventure/messages";
+import { ErrorApiData } from "@workadventure/messages";
 import { isAxiosError } from "axios";
 import { z } from "zod";
 import type { AuthTokenData } from "../services/JWTTokenManager";
@@ -345,88 +345,6 @@ export class AuthenticateController extends BaseHttpController {
             // FIXME: possibly redirect to Admin instead.
             res.redirect(playUri + "?token=" + encodeURIComponent(authToken));
             return;
-        });
-    }
-
-    /**
-     * @openapi
-     * /register:
-     *   post:
-     *     description: Try to login with an admin token
-     *     parameters:
-     *      - name: "organizationMemberToken"
-     *        in: "body"
-     *        description: "A token allowing a user to connect to a given world"
-     *        required: true
-     *        type: "string"
-     *     responses:
-     *       200:
-     *         description: The details of the logged user
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: object
-     *               properties:
-     *                 authToken:
-     *                   type: string
-     *                   description: A unique identification JWT token
-     *                 userUuid:
-     *                   type: string
-     *                   description: Unique user ID
-     *                 email:
-     *                   type: string|null
-     *                   description: The email of the user
-     *                   example: john.doe@example.com
-     *                 roomUrl:
-     *                   type: string
-     *                   description: The room URL to connect to
-     *                   example: https://play.workadventu.re/@/foo/bar/baz
-     *                 organizationMemberToken:
-     *                   type: string|null
-     *                   description: TODO- unclear. It seems to be sent back from the request?
-     *                   example: ???
-     *                 mapUrlStart:
-     *                   type: string
-     *                   description: TODO- unclear. I cannot find any use of this
-     *                   example: ???
-     *                 messages:
-     *                   type: array
-     *                   description: The list of messages to be displayed when the user logs?
-     *                   example: ???
-     */
-    private register(): void {
-        this.app.options("/register", (req, res) => {
-            res.status(200).send("");
-        });
-
-        this.app.post("/register", async (req, res) => {
-            const param = await req.json();
-
-            //todo: what to do if the organizationMemberToken is already used?
-            const organizationMemberToken: string | null = param.organizationMemberToken;
-            const playUri: string | null = param.playUri;
-
-            if (typeof organizationMemberToken != "string") throw new Error("No organization token");
-            const data = await adminService.fetchMemberDataByToken(
-                organizationMemberToken,
-                playUri,
-                req.header("accept-language")
-            );
-            const userUuid = data.userUuid;
-            const email = data.email;
-            const roomUrl = data.roomUrl;
-            const mapUrlStart = data.mapUrlStart;
-
-            const authToken = jwtTokenManager.createAuthToken(email || userUuid);
-
-            res.json({
-                authToken,
-                userUuid,
-                email,
-                roomUrl,
-                mapUrlStart,
-                organizationMemberToken,
-            } satisfies RegisterData);
         });
     }
 
