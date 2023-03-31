@@ -2,6 +2,7 @@ import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack
 import { Readable, Unsubscriber, writable, Writable, readable, get } from "svelte/store";
 import { SoundMeter } from "../../Phaser/Components/SoundMeter";
 import { SpaceUserExtended } from "../../Space/Space";
+import {v4 as uuid} from "uuid";
 
 export class JitsiTrackWrapper {
     private _spaceUser: SpaceUserExtended | undefined;
@@ -61,9 +62,10 @@ export class JitsiTrackWrapper {
 
     get uniqueId(): string {
         //@ts-ignore
-        const trackId = this.videoTrack?.getParticipantId() ?? this.audioTrack?.getParticipantId();
+        const trackId = get(this._videoTrack)?.getParticipantId() ?? get(this._audioTrack)?.getParticipantId();
         if (!trackId) {
-            throw new Error("Jitsi Track has no ID");
+            //throw new Error("Jitsi Track has no ID");
+            return uuid();
         }
         return trackId;
     }
@@ -71,7 +73,7 @@ export class JitsiTrackWrapper {
     setJitsiTrack(jitsiTrack: JitsiTrack, allowOverride = false) {
         if (jitsiTrack.isAudioTrack()) {
             console.log("new track is audio", { allowOverride: allowOverride });
-            if (this._audioTrack !== undefined) {
+            if (get(this._audioTrack) !== undefined) {
                 if (!allowOverride) {
                     throw new Error("An audio track is already defined");
                 } else {
@@ -83,7 +85,7 @@ export class JitsiTrackWrapper {
 
             this._audioStreamStore.set(jitsiTrack.getOriginalStream());
         } else if (jitsiTrack.isVideoTrack()) {
-            if (this._videoTrack !== undefined) {
+            if (get(this._videoTrack) !== undefined) {
                 if (!allowOverride) {
                     throw new Error("A video track is already defined");
                 } else {

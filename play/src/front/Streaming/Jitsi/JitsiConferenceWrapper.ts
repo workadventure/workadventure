@@ -64,7 +64,7 @@ export class JitsiConferenceWrapper {
                 console.error("CONNECTION_ESTABLISHED");
                 setTimeout(() => {
                     void jitsiConferenceWrapper.firstLocalTrackInit();
-                }, 5_000);
+                }, 10);
             });
             room.on(JitsiMeetJS.events.conference.CONNECTION_INTERRUPTED, () => {
                 console.error("CONNECTION_INTERRUPTED");
