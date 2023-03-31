@@ -116,6 +116,7 @@
     "@xmpp/jid": "^0.13.1",
     "@xmpp/xml": "^0.13.1",
     "axios": "^1.3.2",
+    "axios-cache-interceptor": "^1.0.1",
     "axios-retry": "^3.4.0",
     "buffer": "^6.0.3",
     "cancelable-promise": "^4.3.0",
