@@ -1,7 +1,7 @@
 import { Status } from "@grpc/grpc-js/build/src/constants";
-import { describe, test, expect, vi, beforeAll, it } from "vitest";
-import AuthenticationGuard from "../../../src/room-api/guards/AuthenticationGuard";
+import { describe, expect, vi, beforeAll, it } from "vitest";
 import { Metadata } from "@grpc/grpc-js";
+import AuthenticationGuard from "../../../src/room-api/guards/AuthenticationGuard";
 import { GuardError } from "../../../src/room-api/types/GuardError";
 
 describe("AuthenticationGuard", () => {

@@ -1,15 +1,15 @@
 import { Status } from "@grpc/grpc-js/build/src/constants";
-import Axios, { isAxiosError } from "axios";
+import axios, { isAxiosError } from "axios";
 import { setupCache } from "axios-cache-interceptor";
 import { ADMIN_API_URL } from "../../pusher/enums/EnvironmentVariable";
 import { GuardError } from "../types/GuardError";
 import { AuthenticatorInterface } from "./AuthenticatorInterface";
 
-const axios = setupCache(Axios);
+const client = setupCache(axios);
 
 const authenticator: AuthenticatorInterface = async (apiKey, room) => {
     try {
-        const response = await axios.get(ADMIN_API_URL + "/api/room-api/authorization", {
+        const response = await client.get(ADMIN_API_URL + "/api/room-api/authorization", {
             headers: {
                 "X-API-Key": apiKey,
             },

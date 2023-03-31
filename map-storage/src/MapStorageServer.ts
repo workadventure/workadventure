@@ -4,22 +4,22 @@ import {
     EditMapCommandMessage,
     EditMapCommandsArrayMessage,
     EditMapCommandWithKeyMessage,
-    EmptyMessage,
     MapStorageToBackMessage,
     MapStorageUrlMessage,
     PingMessage,
     UpdateMapToNewestWithKeyMessage,
 } from "@workadventure/messages";
-
 import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
+import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import { mapsManager } from "./MapsManager";
+
 import { mapPathUsingDomain } from "./Services/PathMapper";
 import { uploadDetector } from "./Services/UploadDetector";
 
 export type MapStorageStream = ServerWritableStream<MapStorageUrlMessage, MapStorageToBackMessage>;
 
 const mapStorageServer: MapStorageServer = {
-    ping(call: ServerUnaryCall<PingMessage, EmptyMessage>, callback: sendUnaryData<PingMessage>): void {
+    ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
         callback(null, call.request);
     },
     listenToMessages(call: MapStorageStream): void {
@@ -31,7 +31,7 @@ const mapStorageServer: MapStorageServer = {
         });
     },
     handleUpdateMapToNewestMessage(
-        call: ServerUnaryCall<UpdateMapToNewestWithKeyMessage, EmptyMessage>,
+        call: ServerUnaryCall<UpdateMapToNewestWithKeyMessage, Empty>,
         callback: sendUnaryData<EditMapCommandsArrayMessage>
     ): void {
         const mapUrl = new URL(call.request.mapKey);
@@ -54,7 +54,7 @@ const mapStorageServer: MapStorageServer = {
     },
 
     handleEditMapCommandWithKeyMessage(
-        call: ServerUnaryCall<EditMapCommandWithKeyMessage, EmptyMessage>,
+        call: ServerUnaryCall<EditMapCommandWithKeyMessage, Empty>,
         callback: sendUnaryData<EditMapCommandMessage>
     ): void {
         const editMapCommandMessage = call.request.editMapCommandMessage;

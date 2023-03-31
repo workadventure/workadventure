@@ -1,7 +1,7 @@
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import { PUSHER_URL, ROOM_API_SECRET_KEY } from "../../pusher/enums/EnvironmentVariable";
-import { AuthenticatorInterface } from "./AuthenticatorInterface";
 import { GuardError } from "../types/GuardError";
+import { AuthenticatorInterface } from "./AuthenticatorInterface";
 
 const authenticator: AuthenticatorInterface = (apiKey, room) => {
     return new Promise((resolve, reject) => {

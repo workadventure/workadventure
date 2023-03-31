@@ -220,7 +220,7 @@ export class VariablesManager {
         return readableBy;
     }
 
-    public getVariablesForTags(tags: string[]): Map<string, string> {
+    public getVariablesForTags(tags: string[] | undefined): Map<string, string> {
         if (this.variableObjects === undefined) {
             return this._variables;
         }
@@ -232,7 +232,7 @@ export class VariablesManager {
             if (variableObject === undefined) {
                 throw new Error('Unexpected variable "' + key + '" found has no associated variableObject.');
             }
-            if (!tags || !variableObject.readableBy || tags.includes(variableObject.readableBy)) {
+            if (tags === undefined || !variableObject.readableBy || tags.includes(variableObject.readableBy)) {
                 readableVariables.set(key, value);
             }
         }
