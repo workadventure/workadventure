@@ -18,6 +18,9 @@
     <input
         id="zoomMarginName"
         type="number"
+        min="0"
+        max="2"
+        step="0.1"
         bind:value={property.zoom_margin}
         on:change={onValueChange}
         on:focus={onMapEditorInputFocus}
