@@ -10,6 +10,7 @@ import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 import { Space } from "../Space/Space";
 import pLimit from "p-limit";
 import { SpaceFilterMessage } from "@workadventure/messages";
+import {gameManager} from "../Phaser/Game/GameManager";
 
 const limit = pLimit(1);
 
@@ -123,11 +124,14 @@ export class BroadcastService {
                 throw new Error("Could not connect to Jitsi");
             }
         }
+
         const jitsiConference = await JitsiConferenceWrapper.join(this.jitsiConnection, roomName);
         jitsiConferencesStore.set(roomName, jitsiConference);
 
         if (get(megaphoneEnabledStore)) {
             jitsiConference.broadcast(["video", "audio"]);
+        } else {
+            gameManager.getCurrentGameScene().playSound("audio-megaphone");
         }
 
         const associatedStreamStore: Readable<Map<string, JitsiTrackWrapper>> = derived(

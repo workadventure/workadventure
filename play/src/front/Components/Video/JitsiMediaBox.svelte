@@ -43,13 +43,10 @@
 
     onMount(() => {
         resizeObserver.observe(videoContainer);
-        // TODO: Fix this
-        console.warn("PEER:", peer);
         attachTrack();
     });
 
     afterUpdate(() => {
-        console.warn("PEER after Update:", { peer: !!peer, video: !!peer.videoTrack, audio: !!peer.audioTrack });
         attachTrack();
     });
 

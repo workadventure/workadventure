@@ -18,7 +18,7 @@ const debug = Debug("libjitsi");
 
 export class JitsiConferenceWrapper {
     //public readonly participantStore: MapStore<string, JitsiParticipant>;
-
+    private myParticipantId: string | undefined;
     private _streamStore: Writable<Map<string, JitsiTrackWrapper>>;
 
     private readonly _broadcastDevicesStore: Writable<DeviceType[]>;
@@ -200,6 +200,7 @@ export class JitsiConferenceWrapper {
             room.on(
                 JitsiMeetJS.events.conference.PHONE_NUMBER_CHANGED,
                 () => console.log(`${room.getPhoneNumber()} - ${room.getPhonePin()}`));*/
+            jitsiConferenceWrapper.myParticipantId = room.myUserId();
             room.join("");
         });
     }
@@ -347,8 +348,9 @@ export class JitsiConferenceWrapper {
 
     private removeRemoteTrack(track: JitsiTrack) {
         this._streamStore.update((tracks) => {
+            // Because Jitsi is nicely designed, if the track is local we need to get the participantId from the conference and not from the track
             // @ts-ignore
-            const participantId = track.getParticipantId();
+            const participantId = track.isLocal() ? this.myParticipantId : track.getParticipantId();
             if (!participantId) {
                 console.error("Track has no participantId");
                 return tracks;
