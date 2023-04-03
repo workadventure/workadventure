@@ -8,6 +8,7 @@
     import { myCameraStore } from "../../../Stores/MyMediaStore";
     import MyCamera from "../../MyCamera.svelte";
     import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
+    import { megaphoneEnabledStore } from "../../../Stores/MegaphoneStore";
 
     function closeCoWebsite() {
         if ($highlightedEmbedScreen?.type === "cowebsite") {
@@ -93,7 +94,7 @@
                 {#if $streamableCollectionStore.size > 0}
                     <CamerasContainer highlightedEmbedScreen={$highlightedEmbedScreen} />
                 {/if}
-                {#if $myCameraStore}
+                {#if $myCameraStore && !$megaphoneEnabledStore}
                     <MyCamera />
                 {/if}
             </div>

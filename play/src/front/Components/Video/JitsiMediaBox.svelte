@@ -49,15 +49,15 @@
     });
 
     afterUpdate(() => {
-        console.warn("PEER after Update:", { video: !!peer.videoTrack, audio: !!peer.audioTrack });
+        console.warn("PEER after Update:", { peer: !!peer, video: !!peer.videoTrack, audio: !!peer.audioTrack });
         attachTrack();
     });
 
     function attachTrack() {
-        if (peer.audioTrack) {
+        if ($audioTrackStore && !$audioTrackStore?.isLocal()) {
             $audioTrackStore?.attach(audioElement);
         }
-        if (peer.videoTrack) {
+        if ($videoTrackStore) {
             $videoTrackStore?.attach(videoElement);
         }
     }
@@ -106,7 +106,12 @@
         {#await peer.spaceUser?.getWokaBase64()}
             <div />
         {:then wokaBase64}
-            <UserTag name={peer.spaceUser?.name ?? ""} wokaSrc={wokaBase64} minimal={!!peer.videoTrack} />
+            <UserTag
+                isMe={$audioTrackStore?.isLocal() || $videoTrackStore?.isLocal()}
+                name={peer.spaceUser?.name ?? ""}
+                wokaSrc={wokaBase64}
+                minimal={!!peer.videoTrack}
+            />
         {/await}
     {/if}
 </div>
