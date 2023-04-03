@@ -108,9 +108,19 @@ export class JitsiConferenceWrapper {
              * @param track JitsiTrackWrapper object
              */
             function onRemoteTrack(track: JitsiTrack) {
+                /*
                 if (track.isLocal()) {
+                    console.log("Received my remote track", track);
+                    jitsiConferenceWrapper._myStreamStore.update((old) => {
+                        if(old){
+                            old.setJitsiTrack(track);
+                            return old;
+                        }
+                        return new JitsiTrackWrapper(room.myUserId(), track);
+                    });
                     return;
                 }
+                 */
 
                 console.log("JitsiConferenceWrapper => onRemoteTrack");
 
@@ -154,9 +164,21 @@ export class JitsiConferenceWrapper {
 
             room.on(JitsiMeetJS.events.conference.TRACK_ADDED, onRemoteTrack);
             room.on(JitsiMeetJS.events.conference.TRACK_REMOVED, (track) => {
+                /*
                 if (track.isLocal()) {
+                    jitsiConferenceWrapper._myStreamStore.update((old) => {
+                        if(old){
+                            if(track.isAudioTrack()) {
+                                old.muteAudio();
+                            } else if(track.isVideoTrack()) {
+                                old.muteVideo();
+                            }
+                        }
+                        return old;
+                    });
                     return;
                 }
+                 */
                 console.log(`remote ${track.type} track removed`);
                 jitsiConferenceWrapper.removeRemoteTrack(track);
             });
