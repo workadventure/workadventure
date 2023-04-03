@@ -30,7 +30,11 @@ const authenticator: AuthenticatorInterface = async (apiKey, room) => {
         }
 
         if (isAxiosError(error) && error?.response?.data.error) {
-            if (error.response.status === 404) {
+            if (error.response.status === 400) {
+                throw new GuardError(Status.UNKNOWN, error.response.data.error);
+            } else if (error.response.status === 401) {
+                throw new GuardError(Status.UNAUTHENTICATED, error.response.data.error);
+            } else if (error.response.status === 404) {
                 throw new GuardError(Status.NOT_FOUND, error.response.data.error);
             } else if (error.response.status === 403) {
                 throw new GuardError(Status.PERMISSION_DENIED, error.response.data.error);
