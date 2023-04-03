@@ -12,6 +12,7 @@ import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/Are
 import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import type { GameScene } from "../../GameScene";
 import type { MapEditorModeManager } from "../MapEditorModeManager";
+import { SizeAlteringSquare } from "../../../Components/MapEditor/SizeAlteringSquare";
 import { MapEditorTool } from "./MapEditorTool";
 
 export class AreaEditorTool extends MapEditorTool {
@@ -213,13 +214,54 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        if (pointer.leftButtonDown() && get(mapEditorAreaModeStore) === "ADD" && gameObjects.length === 0) {
-            this.createNewArea();
+        if (pointer.rightButtonDown()) {
             return;
         }
-        if (get(mapEditorAreaModeStore) === "EDIT" && gameObjects.length === 0) {
-            this.changeAreaMode("ADD");
-            mapEditorSelectedAreaPreviewStore.set(undefined);
+
+        const mode = get(mapEditorAreaModeStore);
+
+        if (gameObjects.length === 0) {
+            if (mode === "ADD") {
+                this.createNewArea();
+                return;
+            }
+            if (mode === "EDIT") {
+                this.changeAreaMode("ADD");
+                mapEditorSelectedAreaPreviewStore.set(undefined);
+                return;
+            }
+            return;
+        }
+
+        for (const obj of gameObjects) {
+            if (this.isSizeAlteringSquare(obj)) {
+                return;
+            }
+        }
+
+        const sortedAreaPreviews = (gameObjects.filter((obj) => this.isAreaPreview(obj)) as AreaPreview[]).sort(
+            (a1, a2) => {
+                return a1.getSize() - a2.getSize();
+            }
+        );
+
+        if (mode === "ADD") {
+            this.changeAreaMode("EDIT");
+            mapEditorSelectedAreaPreviewStore.set(sortedAreaPreviews[0]);
+            return;
+        }
+        if (mode === "EDIT") {
+            const currentlySelectedArea = get(mapEditorSelectedAreaPreviewStore);
+
+            if (currentlySelectedArea) {
+                if (!sortedAreaPreviews.includes(currentlySelectedArea)) {
+                    mapEditorSelectedAreaPreviewStore.set(sortedAreaPreviews[0]);
+                } else {
+                    const nextAreaIndex =
+                        (sortedAreaPreviews.indexOf(currentlySelectedArea) + 1) % sortedAreaPreviews.length;
+                    mapEditorSelectedAreaPreviewStore.set(sortedAreaPreviews[nextAreaIndex]);
+                }
+            }
         }
     }
 
@@ -317,10 +359,10 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {
-        areaPreview.on(AreaPreviewEvent.Clicked, () => {
-            this.changeAreaMode("EDIT");
-            mapEditorSelectedAreaPreviewStore.set(areaPreview);
-        });
+        // areaPreview.on(AreaPreviewEvent.Clicked, () => {
+        //     this.changeAreaMode("EDIT");
+        //     mapEditorSelectedAreaPreviewStore.set(areaPreview);
+        // });
         areaPreview.on(AreaPreviewEvent.Update, (data: AtLeast<AreaData, "id">) => {
             this.mapEditorModeManager.executeCommand({
                 type: "UpdateAreaCommand",
@@ -370,5 +412,13 @@ export class AreaEditorTool extends MapEditorTool {
         // NOTE: I would really like to use Phaser Layers here but it seems that there's a problem with Areas still being
         //       interactive when we hide whole Layer and thus forEach is needed.
         this.areaPreviews.forEach((area) => area.setVisible(visible));
+    }
+
+    private isAreaPreview(obj: Phaser.GameObjects.GameObject): obj is AreaPreview {
+        return obj instanceof AreaPreview;
+    }
+
+    private isSizeAlteringSquare(obj: Phaser.GameObjects.GameObject): obj is SizeAlteringSquare {
+        return obj instanceof SizeAlteringSquare;
     }
 }

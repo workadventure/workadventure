@@ -263,7 +263,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 this.scene.markDirty();
             }
         });
-        entity.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+        entity.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
             if (get(mapEditorModeStore) && !get(mapEditorSelectedEntityPrefabStore)) {
                 mapEditorEntityModeStore.set("EDIT");
                 mapEditorSelectedEntityStore.set(entity);

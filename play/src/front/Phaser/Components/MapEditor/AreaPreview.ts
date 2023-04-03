@@ -10,40 +10,47 @@ export enum AreaPreviewEvent {
     Delete = "AreaPreview:Delete",
 }
 
-export class AreaPreview extends Phaser.GameObjects.Container {
-    private areaData: AreaData;
-
-    private preview: Phaser.GameObjects.Rectangle;
+export class AreaPreview extends Phaser.GameObjects.Rectangle {
     private squares: SizeAlteringSquare[];
 
+    private areaData: AreaData;
     private selected: boolean;
     private moved: boolean;
     private squareSelected: boolean;
 
     constructor(scene: Phaser.Scene, areaData: AreaData) {
-        super(scene, 0, 0);
+        super(
+            scene,
+            areaData.x + areaData.width * 0.5,
+            areaData.y + areaData.height * 0.5,
+            areaData.width,
+            areaData.height,
+            0x0000ff,
+            0.5
+        );
 
         this.areaData = areaData;
         this.selected = false;
         this.moved = false;
         this.squareSelected = false;
 
-        this.preview = this.createPreview(areaData);
         this.squares = [
-            new SizeAlteringSquare(this.scene, this.preview.getTopLeft()),
-            new SizeAlteringSquare(this.scene, this.preview.getTopCenter()),
-            new SizeAlteringSquare(this.scene, this.preview.getTopRight()),
-            new SizeAlteringSquare(this.scene, this.preview.getLeftCenter()),
-            new SizeAlteringSquare(this.scene, this.preview.getRightCenter()),
-            new SizeAlteringSquare(this.scene, this.preview.getBottomLeft()),
-            new SizeAlteringSquare(this.scene, this.preview.getBottomCenter()),
-            new SizeAlteringSquare(this.scene, this.preview.getBottomRight()),
+            new SizeAlteringSquare(this.scene, this.getTopLeft()),
+            new SizeAlteringSquare(this.scene, this.getTopCenter()),
+            new SizeAlteringSquare(this.scene, this.getTopRight()),
+            new SizeAlteringSquare(this.scene, this.getLeftCenter()),
+            new SizeAlteringSquare(this.scene, this.getRightCenter()),
+            new SizeAlteringSquare(this.scene, this.getBottomLeft()),
+            new SizeAlteringSquare(this.scene, this.getBottomCenter()),
+            new SizeAlteringSquare(this.scene, this.getBottomRight()),
         ];
 
-        this.add([this.preview, ...this.squares]);
+        this.squares.forEach((square) => square.setDepth(this.depth + 1));
 
         const bounds = this.getBounds();
         this.setSize(bounds.width, bounds.height);
+        this.setInteractive({ cursor: "pointer" });
+        this.scene.input.setDraggable(this);
 
         this.showSizeAlteringSquares(false);
 
@@ -75,7 +82,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
     }
 
     public setVisible(value: boolean): this {
-        this.preview.setVisible(value);
+        this.visible = value;
         if (!value) {
             this.showSizeAlteringSquares(false);
         }
@@ -84,11 +91,15 @@ export class AreaPreview extends Phaser.GameObjects.Container {
 
     public updatePreview(dataToModify: AtLeast<AreaData, "id">): void {
         _.merge(this.areaData, dataToModify);
-        this.preview.x = this.areaData.x + this.areaData.width * 0.5;
-        this.preview.y = this.areaData.y + this.areaData.height * 0.5;
-        this.preview.displayWidth = this.areaData.width;
-        this.preview.displayHeight = this.areaData.height;
+        this.x = this.areaData.x + this.areaData.width * 0.5;
+        this.y = this.areaData.y + this.areaData.height * 0.5;
+        this.displayWidth = this.areaData.width;
+        this.displayHeight = this.areaData.height;
         this.updateSquaresPositions();
+    }
+
+    public getSize(): number {
+        return this.width * this.height;
     }
 
     public setProperty<K extends keyof AreaDataProperties>(key: K, value: AreaDataProperties[K]): void {
@@ -101,49 +112,34 @@ export class AreaPreview extends Phaser.GameObjects.Container {
     }
 
     public destroy(): void {
-        this.removeAll(true);
         super.destroy();
+        this.squares.forEach((square) => square.destroy());
     }
 
-    public updateData(dataToChange: Partial<AreaData>): void {
+    public updateAreaData(dataToChange: Partial<AreaData>): void {
         const data = { id: this.areaData.id, ...dataToChange };
         this.updatePreview(data);
         this.emit(AreaPreviewEvent.Update, data);
     }
 
-    private createPreview(areaData: AreaData): Phaser.GameObjects.Rectangle {
-        const preview = this.scene.add
-            .rectangle(
-                areaData.x + areaData.width * 0.5,
-                areaData.y + areaData.height * 0.5,
-                areaData.width,
-                areaData.height,
-                0x0000ff,
-                0.5
-            )
-            .setInteractive({ cursor: "pointer" });
-        this.scene.input.setDraggable(preview);
-        return preview;
-    }
-
     private showSizeAlteringSquares(show = true): void {
-        if (show && !this.preview.visible) {
+        if (show && !this.visible) {
             return;
         }
         this.squares.forEach((square) => square.setVisible(show));
     }
 
     private bindEventHandlers(): void {
-        this.preview.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
+        this.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer, gameObjects) => {
             if ((pointer.event.target as Element)?.localName !== "canvas") {
                 return;
             }
             this.emit(AreaPreviewEvent.Clicked);
         });
-        this.preview.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+        this.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             if (pointer.isDown && this.selected && !this.squareSelected) {
-                this.preview.x = dragX;
-                this.preview.y = dragY;
+                this.x = dragX;
+                this.y = dragY;
                 this.updateSquaresPositions();
                 this.moved = true;
                 if (this.scene instanceof GameScene) {
@@ -153,16 +149,16 @@ export class AreaPreview extends Phaser.GameObjects.Container {
                 }
             }
         });
-        this.preview.on(Phaser.Input.Events.POINTER_UP, (pointer: Phaser.Input.Pointer) => {
+        this.on(Phaser.Input.Events.POINTER_UP, (pointer: Phaser.Input.Pointer) => {
             if (this.selected && this.moved) {
                 this.moved = false;
                 this.updateAreaDataWithSquaresAdjustments();
                 const data: AtLeast<AreaData, "id"> = {
                     id: this.getAreaData().id,
-                    x: this.preview.x - this.preview.displayWidth * 0.5,
-                    y: this.preview.y - this.preview.displayHeight * 0.5,
-                    width: this.preview.displayWidth,
-                    height: this.preview.displayHeight,
+                    x: this.x - this.displayWidth * 0.5,
+                    y: this.y - this.displayHeight * 0.5,
+                    width: this.displayWidth,
+                    height: this.displayHeight,
                 };
                 this.emit(AreaPreviewEvent.Update, data);
             }
@@ -189,43 +185,43 @@ export class AreaPreview extends Phaser.GameObjects.Container {
                     const newHeight = this.squares[Edge.BottomCenter].y - this.squares[Edge.TopCenter].y;
 
                     if (newWidth >= 32) {
-                        this.preview.displayWidth = newWidth;
-                        this.preview.x = this.squares[Edge.LeftCenter].x + this.preview.displayWidth * 0.5;
+                        this.displayWidth = newWidth;
+                        this.x = this.squares[Edge.LeftCenter].x + this.displayWidth * 0.5;
                     } else {
                         square.x = oldX;
                     }
                     if (newHeight >= 32) {
-                        this.preview.displayHeight = newHeight;
-                        this.preview.y = this.squares[Edge.TopCenter].y + this.preview.displayHeight * 0.5;
+                        this.displayHeight = newHeight;
+                        this.y = this.squares[Edge.TopCenter].y + this.displayHeight * 0.5;
                     } else {
                         square.y = oldY;
                     }
                 } else {
                     switch (index) {
                         case Edge.TopLeft: {
-                            newWidth = this.preview.getRightCenter().x - square.x;
-                            newHeight = this.preview.getBottomCenter().y - square.y;
+                            newWidth = this.getRightCenter().x - square.x;
+                            newHeight = this.getBottomCenter().y - square.y;
                             newCenterX = square.x + newWidth * 0.5;
                             newCenterY = square.y + newHeight * 0.5;
                             break;
                         }
                         case Edge.TopRight: {
-                            newWidth = square.x - this.preview.getLeftCenter().x;
-                            newHeight = this.preview.getBottomCenter().y - square.y;
+                            newWidth = square.x - this.getLeftCenter().x;
+                            newHeight = this.getBottomCenter().y - square.y;
                             newCenterX = square.x - newWidth * 0.5;
                             newCenterY = square.y + newHeight * 0.5;
                             break;
                         }
                         case Edge.BottomLeft: {
-                            newWidth = this.preview.getRightCenter().x - square.x;
-                            newHeight = square.y - this.preview.getTopCenter().y;
+                            newWidth = this.getRightCenter().x - square.x;
+                            newHeight = square.y - this.getTopCenter().y;
                             newCenterX = square.x + newWidth * 0.5;
                             newCenterY = square.y - newHeight * 0.5;
                             break;
                         }
                         case Edge.BottomRight: {
-                            newWidth = square.x - this.preview.getLeftCenter().x;
-                            newHeight = square.y - this.preview.getTopCenter().y;
+                            newWidth = square.x - this.getLeftCenter().x;
+                            newHeight = square.y - this.getTopCenter().y;
                             newCenterX = square.x - newWidth * 0.5;
                             newCenterY = square.y - newHeight * 0.5;
                             break;
@@ -234,14 +230,14 @@ export class AreaPreview extends Phaser.GameObjects.Container {
                 }
 
                 if (newWidth >= 32) {
-                    this.preview.displayWidth = newWidth;
-                    this.preview.x = newCenterX;
+                    this.displayWidth = newWidth;
+                    this.x = newCenterX;
                 } else {
                     square.x = oldX;
                 }
                 if (newHeight >= 32) {
-                    this.preview.displayHeight = newHeight;
-                    this.preview.y = newCenterY;
+                    this.displayHeight = newHeight;
+                    this.y = newCenterY;
                 } else {
                     square.y = oldY;
                 }
@@ -258,10 +254,10 @@ export class AreaPreview extends Phaser.GameObjects.Container {
                 this.updateAreaDataWithSquaresAdjustments();
                 const data: AtLeast<AreaData, "id"> = {
                     id: this.getAreaData().id,
-                    x: this.preview.x - this.preview.displayWidth * 0.5,
-                    y: this.preview.y - this.preview.displayHeight * 0.5,
-                    width: this.preview.displayWidth,
-                    height: this.preview.displayHeight,
+                    x: this.x - this.displayWidth * 0.5,
+                    y: this.y - this.displayHeight * 0.5,
+                    width: this.displayWidth,
+                    height: this.displayHeight,
                 };
                 this.emit(AreaPreviewEvent.Update, data);
             });
@@ -269,23 +265,23 @@ export class AreaPreview extends Phaser.GameObjects.Container {
     }
 
     private updateSquaresPositions(): void {
-        this.squares[0].setPosition(this.preview.getTopLeft().x, this.preview.getTopLeft().y);
-        this.squares[1].setPosition(this.preview.getTopCenter().x, this.preview.getTopCenter().y);
-        this.squares[2].setPosition(this.preview.getTopRight().x, this.preview.getTopRight().y);
-        this.squares[3].setPosition(this.preview.getLeftCenter().x, this.preview.getLeftCenter().y);
-        this.squares[4].setPosition(this.preview.getRightCenter().x, this.preview.getRightCenter().y);
-        this.squares[5].setPosition(this.preview.getBottomLeft().x, this.preview.getBottomLeft().y);
-        this.squares[6].setPosition(this.preview.getBottomCenter().x, this.preview.getBottomCenter().y);
-        this.squares[7].setPosition(this.preview.getBottomRight().x, this.preview.getBottomRight().y);
+        this.squares[0].setPosition(this.getTopLeft().x, this.getTopLeft().y);
+        this.squares[1].setPosition(this.getTopCenter().x, this.getTopCenter().y);
+        this.squares[2].setPosition(this.getTopRight().x, this.getTopRight().y);
+        this.squares[3].setPosition(this.getLeftCenter().x, this.getLeftCenter().y);
+        this.squares[4].setPosition(this.getRightCenter().x, this.getRightCenter().y);
+        this.squares[5].setPosition(this.getBottomLeft().x, this.getBottomLeft().y);
+        this.squares[6].setPosition(this.getBottomCenter().x, this.getBottomCenter().y);
+        this.squares[7].setPosition(this.getBottomRight().x, this.getBottomRight().y);
     }
 
     private updateAreaDataWithSquaresAdjustments(): void {
         this.areaData = {
             ...this.areaData,
-            x: this.preview.x - this.preview.displayWidth * 0.5,
-            y: this.preview.y - this.preview.displayHeight * 0.5,
-            width: this.preview.displayWidth,
-            height: this.preview.displayHeight,
+            x: this.x - this.displayWidth * 0.5,
+            y: this.y - this.displayHeight * 0.5,
+            width: this.displayWidth,
+            height: this.displayHeight,
         };
     }
 

@@ -549,6 +549,7 @@ export class GameScene extends DirtyScene {
 
     //hook create scene
     create(): void {
+        this.input.topOnly = false;
         this.preloading = false;
         this.cleanupDone = false;
 

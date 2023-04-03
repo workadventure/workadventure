@@ -20,7 +20,7 @@
 
     function onUpdate(data: Partial<AreaData>) {
         if ($mapEditorSelectedAreaPreviewStore) {
-            $mapEditorSelectedAreaPreviewStore.updateData(data);
+            $mapEditorSelectedAreaPreviewStore.updateAreaData(data);
         }
     }
 
