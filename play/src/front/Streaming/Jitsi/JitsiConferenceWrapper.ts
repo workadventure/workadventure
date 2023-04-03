@@ -194,6 +194,12 @@ export class JitsiConferenceWrapper {
         if (this.requestedCameraStateUnsubscriber) {
             this.requestedCameraStateUnsubscriber();
         }
+        this._streamStore.update((tracks) => {
+            tracks.forEach((track) => {
+                track.unsubscribe();
+            });
+            return new Map<string, JitsiTrackWrapper>();
+        });
         return this.jitsiConference.leave(reason);
     }
 
@@ -296,7 +302,7 @@ export class JitsiConferenceWrapper {
             }
             let jitsiTrackWrapper = tracks.get(participantId);
             if (!jitsiTrackWrapper) {
-                jitsiTrackWrapper = new JitsiTrackWrapper(track);
+                jitsiTrackWrapper = new JitsiTrackWrapper(participantId, track);
                 tracks.set(participantId, jitsiTrackWrapper);
             } else {
                 jitsiTrackWrapper.setJitsiTrack(track, allowOverride);

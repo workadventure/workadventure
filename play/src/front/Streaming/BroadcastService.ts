@@ -51,7 +51,7 @@ class BroadcastSpace extends Space {
                                 broadcastService.emitJitsiParticipantIdSpace(spaceName, jitsiConference.participantId);
                             })
                             .catch((e) => {
-                                console.error(e);
+                                console.error("Error while joining the conference", e);
                             });
                     }
                 }
@@ -114,12 +114,15 @@ export class BroadcastService {
 
     async joinJitsiConference(roomName: string, broadcastSpace: BroadcastSpace): Promise<JitsiConferenceWrapper> {
         if (!this.jitsiConnection) {
-            await this.connect();
+            try {
+                await this.connect();
+            }catch (e) {
+                console.log("Error while connecting to Jitsi", e);
+            }
+            if(!this.jitsiConnection){
+                throw new Error("Could not connect to Jitsi");
+            }
         }
-        if (!this.jitsiConnection) {
-            throw new Error("Could not connect to Jitsi");
-        }
-        console.log("Joined jitsi connection");
         const jitsiConference = await JitsiConferenceWrapper.join(this.jitsiConnection, roomName);
         jitsiConferencesStore.set(roomName, jitsiConference);
 
@@ -134,7 +137,9 @@ export class BroadcastService {
                 for (const [participantId, stream] of $streamStore) {
                     let found = false;
                     if (stream.spaceUser !== undefined) {
-                        filtered.set(participantId, stream);
+                        if($users.has(stream.spaceUser.uuid)) {
+                            filtered.set(participantId, stream);
+                        }
                         continue;
                     }
                     for (const user of $users.values()) {

@@ -12,7 +12,7 @@ export class JitsiTrackWrapper {
     private _volumeStore: Readable<number[] | undefined> | undefined;
     private volumeStoreSubscribe: Unsubscriber | undefined;
 
-    constructor(jitsiTrack: JitsiTrack) {
+    constructor(readonly participantId: string, jitsiTrack: JitsiTrack) {
         this.setJitsiTrack(jitsiTrack);
         this._volumeStore = readable<number[] | undefined>(undefined, (set) => {
             if (this.volumeStoreSubscribe) {
@@ -25,6 +25,9 @@ export class JitsiTrackWrapper {
                 if (soundMeter) {
                     soundMeter.stop();
                 }
+                if (timeout) {
+                    clearTimeout(timeout);
+                }
                 if (mediaStream === null || mediaStream.getAudioTracks().length <= 0) {
                     set(undefined);
                     return;
@@ -32,9 +35,6 @@ export class JitsiTrackWrapper {
                 soundMeter = new SoundMeter(mediaStream);
                 let error = false;
 
-                if (timeout) {
-                    clearTimeout(timeout);
-                }
                 timeout = setInterval(() => {
                     try {
                         set(soundMeter?.getVolume());
@@ -61,6 +61,9 @@ export class JitsiTrackWrapper {
     }
 
     get uniqueId(): string {
+        return this.participantId;
+        // FIXME: What is following should not be necessary, a track must be set by a participant, so he definitely has a participantId that is set when he is instantiated
+
         //@ts-ignore
         const trackId = get(this._videoTrack)?.getParticipantId() ?? get(this._audioTrack)?.getParticipantId();
         if (!trackId) {
@@ -129,7 +132,9 @@ export class JitsiTrackWrapper {
     }
 
     unsubscribe() {
-        this.volumeStoreSubscribe?.();
+        this._audioTrack.set(undefined);
+        this._videoTrack.set(undefined);
         this._audioStreamStore.set(null);
+        this._spaceUser = undefined;
     }
 }
