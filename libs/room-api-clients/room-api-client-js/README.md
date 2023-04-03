@@ -1,7 +1,7 @@
 
 # @workadventure/room-api-client
 
-Easily create a GRPC client to connect your service to the [Room API](https://github.com/thecodingmachine/workadventure/blob/rapi/docs/master/roomAPI.md) of a [WorkAdventure](https://workadventu.re) server.
+Easily create a GRPC client to connect your service to the [Room API](https://github.com/thecodingmachine/workadventure/blob/master/docs/master/roomAPI.md) of a [WorkAdventure](https://workadventu.re) server.
 
 
 ## Installation
@@ -24,7 +24,7 @@ import { createRoomApiClient } from "@workadventure/room-api-client";
 const client = createRoomApiClient("My AWESOME KEY");
 
 // URL of the room you wish to interact with
-const roomUrl = "http://play.workadventu.re/_/global/maps.workadventu.re/tests/Variables/shared_variables.json";
+const roomUrl = "https://play.workadventu.re/@/my-team/my-world";
 
 // Name of the variable with which you want to interact
 const variableName = "textField";
@@ -73,3 +73,7 @@ async function init() {
 init();
 
 ```
+
+## Warning
+
+You can see in the example we are using the `Value.unwrap` function, this is because the variable functions return a `Value` object, which is a wrapper around the actual value. This is because the functions can return nothing due to an error, and the `Value` object allows you to check if the value is an error or not.

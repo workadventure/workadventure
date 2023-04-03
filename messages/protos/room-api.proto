@@ -18,6 +18,6 @@ message SaveVariableRequest {
 
 service RoomApi {
     rpc readVariable(VariableRequest) returns (google.protobuf.Value); // Get the current value of the given variable
-    rpc listenVariable(VariableRequest) returns (stream google.protobuf.Value); // Listen value updates of the given variable
+    rpc listenVariable(VariableRequest) returns (stream google.protobuf.Value); // Listen to value updates for a given variable
     rpc saveVariable(SaveVariableRequest) returns (google.protobuf.Empty); // Set the value of the given variable
 }
