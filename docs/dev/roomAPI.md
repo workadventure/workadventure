@@ -12,6 +12,16 @@ In WorkAdventure, the state of a room is stored in [variables](../maps/variables
 
 The Room API lets you monitor those room variables, but also allows you to edit them. Through variables, you can therefore establish a 2-ways data channel between your server and what happens in a WorkAdventure room.
 
+```mermaid
+flowchart LR
+    c[Your application] -- GRPC --> p[Play Service]
+    p -- Authentication --> p
+    p -- Request --> b[Back Service]
+    b -- Response --> p
+    p -- Response --> c
+
+```
+
 ## Protocol
 
 You connect to the Room API using gRPC over HTTP2.
