@@ -3,7 +3,11 @@ import type { Subscription } from "rxjs";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import type { EditMapCommandMessage } from "@workadventure/messages";
-import { mapEditorAreaModeStore, mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
+import {
+    MapEditorAreaToolMode,
+    mapEditorAreaModeStore,
+    mapEditorSelectedAreaPreviewStore,
+} from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import type { GameScene } from "../../GameScene";
@@ -51,6 +55,7 @@ export class AreaEditorTool extends MapEditorTool {
         this.active = false;
         mapEditorSelectedAreaPreviewStore.set(undefined);
         this.setAreaPreviewsVisibility(false);
+        this.scene.input.setDefaultCursor("auto");
         this.unbindEventHandlers();
     }
 
@@ -59,6 +64,9 @@ export class AreaEditorTool extends MapEditorTool {
         this.updateAreaPreviews();
         this.setAreaPreviewsVisibility(true);
         this.bindEventHandlers();
+        if (get(mapEditorAreaModeStore) === "ADD") {
+            this.scene.input.setDefaultCursor("copy");
+        }
         this.scene.markDirty();
     }
 
@@ -66,6 +74,7 @@ export class AreaEditorTool extends MapEditorTool {
         this.gameMapAreaUpdateSubscription.unsubscribe();
         this.selectedAreaPreviewStoreSubscriber();
         this.unbindEventHandlers();
+        this.scene.input.setDefaultCursor("auto");
     }
 
     public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): void {
@@ -209,9 +218,14 @@ export class AreaEditorTool extends MapEditorTool {
             return;
         }
         if (get(mapEditorAreaModeStore) === "EDIT" && gameObjects.length === 0) {
-            mapEditorAreaModeStore.set("ADD");
+            this.changeAreaMode("ADD");
             mapEditorSelectedAreaPreviewStore.set(undefined);
         }
+    }
+
+    private changeAreaMode(mode: MapEditorAreaToolMode): void {
+        mapEditorAreaModeStore.set(mode);
+        this.scene.input.setDefaultCursor(mode === "ADD" ? "copy" : "auto");
     }
 
     private handleAreaPreviewDeletion(id: string): void {
@@ -227,7 +241,7 @@ export class AreaEditorTool extends MapEditorTool {
         this.scene.markDirty();
 
         if (localCommand) {
-            mapEditorAreaModeStore.set("EDIT");
+            this.changeAreaMode("EDIT");
             mapEditorSelectedAreaPreviewStore.set(areaPreview);
         }
     }
@@ -304,7 +318,7 @@ export class AreaEditorTool extends MapEditorTool {
 
     private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {
         areaPreview.on(AreaPreviewEvent.Clicked, () => {
-            mapEditorAreaModeStore.set("EDIT");
+            this.changeAreaMode("EDIT");
             mapEditorSelectedAreaPreviewStore.set(areaPreview);
         });
         areaPreview.on(AreaPreviewEvent.Update, (data: AtLeast<AreaData, "id">) => {
