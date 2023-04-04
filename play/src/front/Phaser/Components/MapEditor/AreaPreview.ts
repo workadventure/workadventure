@@ -5,6 +5,7 @@ import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition
 
 export enum AreaPreviewEvent {
     Clicked = "AreaPreview:Clicked",
+    Released = "AreaPreview:Released",
     DoubleClicked = "AreaPreview:DoubleClicked",
     Update = "AreaPreview:Update",
     Delete = "AreaPreview:Delete",
@@ -130,12 +131,24 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     }
 
     private bindEventHandlers(): void {
-        this.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer, gameObjects) => {
-            if ((pointer.event.target as Element)?.localName !== "canvas") {
-                return;
+        this.on(
+            Phaser.Input.Events.POINTER_DOWN,
+            (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
+                if ((pointer.event.target as Element)?.localName !== "canvas") {
+                    return;
+                }
+                this.emit(AreaPreviewEvent.Clicked);
             }
-            this.emit(AreaPreviewEvent.Clicked);
-        });
+        );
+        this.on(
+            Phaser.Input.Events.POINTER_UP,
+            (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
+                if ((pointer.event.target as Element)?.localName !== "canvas") {
+                    return;
+                }
+                this.emit(AreaPreviewEvent.Released);
+            }
+        );
         this.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             if (pointer.isDown && this.selected && !this.squareSelected) {
                 this.x = dragX;
