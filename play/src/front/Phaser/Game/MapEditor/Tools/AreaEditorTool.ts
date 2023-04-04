@@ -237,6 +237,65 @@ export class AreaEditorTool extends MapEditorTool {
         this.scene.input.off(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
     }
 
+    private handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        const areaEditorToolObjects = this.getAreaEditorToolsObjectsFromGameObjects(gameObjects);
+        if (pointer.rightButtonDown()) {
+            return;
+        }
+
+        const mode = get(mapEditorAreaModeStore);
+
+        if (areaEditorToolObjects.length === 0) {
+            if (mode === "ADD") {
+                this.drawingNewArea = true;
+                this.drawinNewAreaStartPos = { x: pointer.worldX, y: pointer.worldY };
+                return;
+            }
+            if (mode === "EDIT") {
+                this.changeAreaMode("ADD");
+                this.drawingNewArea = true;
+                this.drawinNewAreaStartPos = { x: pointer.worldX, y: pointer.worldY };
+                return;
+            }
+            return;
+        }
+
+        for (const obj of gameObjects) {
+            if (this.isSizeAlteringSquare(obj)) {
+                return;
+            }
+        }
+
+        const sortedAreaPreviews = (gameObjects.filter((obj) => this.isAreaPreview(obj)) as AreaPreview[]).sort(
+            (a1, a2) => {
+                return a1.getSize() - a2.getSize();
+            }
+        );
+
+        if (mode === "ADD") {
+            this.changeAreaMode("EDIT", sortedAreaPreviews[0]);
+            return;
+        }
+        if (mode === "EDIT") {
+            const currentlySelectedArea = get(mapEditorSelectedAreaPreviewStore);
+
+            if (currentlySelectedArea) {
+                if (!sortedAreaPreviews.includes(currentlySelectedArea)) {
+                    mapEditorSelectedAreaPreviewStore.set(sortedAreaPreviews[0]);
+                } else {
+                    const nextAreaIndex =
+                        (sortedAreaPreviews.indexOf(currentlySelectedArea) + 1) % sortedAreaPreviews.length;
+                    mapEditorSelectedAreaPreviewStore.set(sortedAreaPreviews[nextAreaIndex]);
+                }
+                // can happen after we delete an Area
+            } else {
+                if (sortedAreaPreviews.length > 0) {
+                    mapEditorSelectedAreaPreviewStore.set(sortedAreaPreviews[0]);
+                }
+            }
+        }
+    }
+
     private handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
         const mode = get(mapEditorAreaModeStore);
         if (mode === "ADD" && this.drawinNewAreaStartPos) {
@@ -262,61 +321,6 @@ export class AreaEditorTool extends MapEditorTool {
                 return;
             }
             this.changeAreaMode("ADD");
-            mapEditorSelectedAreaPreviewStore.set(undefined);
-        }
-    }
-
-    private handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        const areaEditorToolObjects = this.getAreaEditorToolsObjectsFromGameObjects(gameObjects);
-        if (pointer.rightButtonDown()) {
-            return;
-        }
-
-        const mode = get(mapEditorAreaModeStore);
-
-        if (areaEditorToolObjects.length === 0) {
-            if (mode === "ADD") {
-                this.drawingNewArea = true;
-                this.drawinNewAreaStartPos = { x: pointer.worldX, y: pointer.worldY };
-                return;
-            }
-            return;
-        }
-
-        for (const obj of gameObjects) {
-            if (this.isSizeAlteringSquare(obj)) {
-                return;
-            }
-        }
-
-        const sortedAreaPreviews = (gameObjects.filter((obj) => this.isAreaPreview(obj)) as AreaPreview[]).sort(
-            (a1, a2) => {
-                return a1.getSize() - a2.getSize();
-            }
-        );
-
-        if (mode === "ADD") {
-            this.changeAreaMode("EDIT");
-            mapEditorSelectedAreaPreviewStore.set(sortedAreaPreviews[0]);
-            return;
-        }
-        if (mode === "EDIT") {
-            const currentlySelectedArea = get(mapEditorSelectedAreaPreviewStore);
-
-            if (currentlySelectedArea) {
-                if (!sortedAreaPreviews.includes(currentlySelectedArea)) {
-                    mapEditorSelectedAreaPreviewStore.set(sortedAreaPreviews[0]);
-                } else {
-                    const nextAreaIndex =
-                        (sortedAreaPreviews.indexOf(currentlySelectedArea) + 1) % sortedAreaPreviews.length;
-                    mapEditorSelectedAreaPreviewStore.set(sortedAreaPreviews[nextAreaIndex]);
-                }
-                // can happen after we delete an Area
-            } else {
-                if (sortedAreaPreviews.length > 0) {
-                    mapEditorSelectedAreaPreviewStore.set(sortedAreaPreviews[0]);
-                }
-            }
         }
     }
 
@@ -342,9 +346,10 @@ export class AreaEditorTool extends MapEditorTool {
         return [...areaPreviews, ...sizeAlteringSquares];
     }
 
-    private changeAreaMode(mode: MapEditorAreaToolMode): void {
+    private changeAreaMode(mode: MapEditorAreaToolMode, areaPreview?: AreaPreview): void {
         mapEditorAreaModeStore.set(mode);
         this.scene.input.setDefaultCursor(mode === "ADD" ? "copy" : "auto");
+        mapEditorSelectedAreaPreviewStore.set(areaPreview);
     }
 
     private handleAreaPreviewDeletion(id: string): void {
@@ -360,8 +365,7 @@ export class AreaEditorTool extends MapEditorTool {
         this.scene.markDirty();
 
         if (localCommand) {
-            this.changeAreaMode("EDIT");
-            mapEditorSelectedAreaPreviewStore.set(areaPreview);
+            this.changeAreaMode("EDIT", areaPreview);
         }
     }
 
@@ -436,10 +440,6 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {
-        // areaPreview.on(AreaPreviewEvent.Clicked, () => {
-        //     this.changeAreaMode("EDIT");
-        //     mapEditorSelectedAreaPreviewStore.set(areaPreview);
-        // });
         areaPreview.on(AreaPreviewEvent.Update, (data: AtLeast<AreaData, "id">) => {
             this.mapEditorModeManager.executeCommand({
                 type: "UpdateAreaCommand",
