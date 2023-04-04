@@ -222,7 +222,7 @@ services:
         #command: npm run profile
         working_dir: /usr/src/app/map-storage
         environment:
-            DEBUG: "*"
+            #DEBUG: "*"
             STARTUP_COMMAND_1: ../npm-install.sh
             NODE_ENV: development
             PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"

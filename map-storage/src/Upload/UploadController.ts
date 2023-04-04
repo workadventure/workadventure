@@ -8,6 +8,7 @@ import archiver from "archiver";
 import StreamZip from "node-stream-zip";
 import { MapValidator, OrganizedErrors } from "@workadventure/map-editor/src/GameMap/MapValidator";
 import { WAMFileFormat } from "@workadventure/map-editor";
+import { ZipFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/ZipFileFetcher";
 import { mapPath } from "../Services/PathMapper";
 import { MAX_UNCOMPRESSED_SIZE } from "../Enum/EnvironmentVariable";
 import { fileSystem } from "../fileSystem";
@@ -97,6 +98,8 @@ export class UploadController {
                         totalSize += zipEntry.size;
                     }
 
+                    const availableFiles = zipEntries.map((entry) => entry.name);
+
                     if (totalSize > MAX_UNCOMPRESSED_SIZE) {
                         res.status(413).send(
                             `File too large. Unzipped files should be less than ${MAX_UNCOMPRESSED_SIZE} bytes.`
@@ -104,13 +107,14 @@ export class UploadController {
                         return;
                     }
 
-                    // Let's validate the archive
-                    const mapValidator = new MapValidator("error");
-                    const availableFiles = zipEntries.map((entry) => entry.name);
-
                     const errors: { [key: string]: Partial<OrganizedErrors> } = {};
 
                     for (const zipEntry of zipEntries) {
+                        // Let's validate the archive
+                        const zipFileFetcher = new ZipFileFetcher(zipEntry.name, availableFiles);
+
+                        const mapValidator = new MapValidator("error", zipFileFetcher);
+
                         const extension = path.extname(zipEntry.name);
                         if (
                             extension === ".json" &&
@@ -149,11 +153,7 @@ export class UploadController {
                             continue;
                         }
 
-                        const result = mapValidator.validateStringMap(
-                            (await zip.entryData(zipEntry)).toString(),
-                            zipEntry.name,
-                            availableFiles
-                        );
+                        const result = await mapValidator.validateStringMap((await zip.entryData(zipEntry)).toString());
                         if (!result.ok) {
                             errors[zipEntry.name] = result.error;
                         }

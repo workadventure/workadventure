@@ -18,7 +18,7 @@ import {
 import { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import { Jitsi } from "@workadventure/shared-utils";
 import { ClientReadableStream } from "@grpc/grpc-js";
-import { mapFetcher } from "@workadventure/shared-utils/src/MapFetcher";
+import { mapFetcher } from "@workadventure/map-editor";
 import { LocalUrlError } from "@workadventure/shared-utils/src/LocalUrlError";
 import { Value } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/struct";
 import { PositionInterface } from "../Model/PositionInterface";

@@ -12,7 +12,6 @@ import {
 import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import { mapsManager } from "./MapsManager";
-
 import { mapPathUsingDomain } from "./Services/PathMapper";
 import { uploadDetector } from "./Services/UploadDetector";
 
