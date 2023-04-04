@@ -197,13 +197,13 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     const newWidth = this.squares[Edge.RightCenter].x - this.squares[Edge.LeftCenter].x;
                     const newHeight = this.squares[Edge.BottomCenter].y - this.squares[Edge.TopCenter].y;
 
-                    if (newWidth >= 32) {
+                    if (newWidth >= 10) {
                         this.displayWidth = newWidth;
                         this.x = this.squares[Edge.LeftCenter].x + this.displayWidth * 0.5;
                     } else {
                         square.x = oldX;
                     }
-                    if (newHeight >= 32) {
+                    if (newHeight >= 10) {
                         this.displayHeight = newHeight;
                         this.y = this.squares[Edge.TopCenter].y + this.displayHeight * 0.5;
                     } else {
@@ -242,13 +242,13 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     }
                 }
 
-                if (newWidth >= 32) {
+                if (newWidth >= 10) {
                     this.displayWidth = newWidth;
                     this.x = newCenterX;
                 } else {
                     square.x = oldX;
                 }
-                if (newHeight >= 32) {
+                if (newHeight >= 10) {
                     this.displayHeight = newHeight;
                     this.y = newCenterY;
                 } else {

@@ -279,10 +279,9 @@ export class AreaEditorTool extends MapEditorTool {
             }
         );
 
-        if (mode === "ADD") {
-            if (sortedAreaPreviews.length > 0) {
-                this.changeAreaMode("EDIT", sortedAreaPreviews[0]);
-            }
+        if (sortedAreaPreviews.length === 1) {
+            this.changeAreaMode("EDIT", sortedAreaPreviews[0]);
+            this.wasAreaMoved = true;
         }
     }
 
