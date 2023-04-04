@@ -29,8 +29,17 @@ export class AreaEditorTool extends MapEditorTool {
     private currentlySelectedPreview: AreaPreview | undefined;
 
     private active: boolean;
+    private drawingNewArea: boolean;
+    private drawinNewAreaStartPos?: { x: number; y: number };
+    private newAreaPreview!: Phaser.GameObjects.Graphics;
 
     private selectedAreaPreviewStoreSubscriber!: Unsubscriber;
+
+    private pointerMoveEventHandler!: (pointer: Phaser.Input.Pointer) => void;
+    private pointerUpEventHandler!: (
+        pointer: Phaser.Input.Pointer,
+        gameObjects: Phaser.GameObjects.GameObject[]
+    ) => void;
 
     private pointerDownEventHandler!: (
         pointer: Phaser.Input.Pointer,
@@ -44,6 +53,9 @@ export class AreaEditorTool extends MapEditorTool {
 
         this.areaPreviews = this.createAreaPreviews();
         this.active = false;
+        this.drawingNewArea = false;
+        this.drawinNewAreaStartPos = undefined;
+        this.newAreaPreview = this.scene.add.graphics();
 
         this.subscribeToStores();
     }
@@ -54,6 +66,8 @@ export class AreaEditorTool extends MapEditorTool {
 
     public clear(): void {
         this.active = false;
+        this.drawingNewArea = false;
+        this.drawinNewAreaStartPos = undefined;
         mapEditorSelectedAreaPreviewStore.set(undefined);
         this.setAreaPreviewsVisibility(false);
         this.scene.input.setDefaultCursor("auto");
@@ -199,6 +213,12 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private bindEventHandlers(): void {
+        this.pointerMoveEventHandler = (pointer: Phaser.Input.Pointer) => {
+            this.handlePointerMoveEvent(pointer);
+        };
+        this.pointerUpEventHandler = (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
+            this.handlePointerUpEvent(pointer, gameObjects);
+        };
         this.pointerDownEventHandler = (
             pointer: Phaser.Input.Pointer,
             gameObjects: Phaser.GameObjects.GameObject[]
@@ -206,28 +226,58 @@ export class AreaEditorTool extends MapEditorTool {
             this.handlePointerDownEvent(pointer, gameObjects);
         };
 
+        this.scene.input.on(Phaser.Input.Events.POINTER_UP, this.pointerUpEventHandler);
         this.scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
+        this.scene.input.on(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
     }
 
     private unbindEventHandlers(): void {
+        this.scene.input.off(Phaser.Input.Events.POINTER_UP, this.pointerUpEventHandler);
         this.scene.input.off(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
+        this.scene.input.off(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
+    }
+
+    private handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        const mode = get(mapEditorAreaModeStore);
+        if (mode === "ADD" && this.drawinNewAreaStartPos) {
+            const width = Math.abs(pointer.worldX - this.drawinNewAreaStartPos.x);
+            const height = Math.abs(pointer.worldY - this.drawinNewAreaStartPos.y);
+            if (width > 0 && height > 0) {
+                this.createNewArea(
+                    Math.min(this.drawinNewAreaStartPos.x, pointer.worldX),
+                    Math.min(this.drawinNewAreaStartPos.y, pointer.worldY),
+                    width,
+                    height
+                );
+            }
+            this.drawinNewAreaStartPos = undefined;
+            this.drawingNewArea = false;
+            this.newAreaPreview.clear();
+            this.scene.markDirty();
+            return;
+        }
+        if (mode === "EDIT") {
+            const areaEditorToolObjects = this.getAreaEditorToolsObjectsFromGameObjects(gameObjects);
+            if (areaEditorToolObjects.length > 0) {
+                return;
+            }
+            this.changeAreaMode("ADD");
+            mapEditorSelectedAreaPreviewStore.set(undefined);
+        }
     }
 
     private handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        const areaEditorToolObjects = this.getAreaEditorToolsObjectsFromGameObjects(gameObjects);
         if (pointer.rightButtonDown()) {
             return;
         }
 
         const mode = get(mapEditorAreaModeStore);
 
-        if (gameObjects.length === 0) {
+        if (areaEditorToolObjects.length === 0) {
             if (mode === "ADD") {
-                this.createNewArea();
-                return;
-            }
-            if (mode === "EDIT") {
-                this.changeAreaMode("ADD");
-                mapEditorSelectedAreaPreviewStore.set(undefined);
+                this.drawingNewArea = true;
+                this.drawinNewAreaStartPos = { x: pointer.worldX, y: pointer.worldY };
                 return;
             }
             return;
@@ -261,8 +311,35 @@ export class AreaEditorTool extends MapEditorTool {
                         (sortedAreaPreviews.indexOf(currentlySelectedArea) + 1) % sortedAreaPreviews.length;
                     mapEditorSelectedAreaPreviewStore.set(sortedAreaPreviews[nextAreaIndex]);
                 }
+                // can happen after we delete an Area
+            } else {
+                if (sortedAreaPreviews.length > 0) {
+                    mapEditorSelectedAreaPreviewStore.set(sortedAreaPreviews[0]);
+                }
             }
         }
+    }
+
+    private handlePointerMoveEvent(pointer: Phaser.Input.Pointer): void {
+        if (this.drawingNewArea && this.drawinNewAreaStartPos) {
+            this.newAreaPreview.clear();
+            this.newAreaPreview.fillStyle(0x0000ff, 0.5);
+            this.newAreaPreview.fillRect(
+                this.drawinNewAreaStartPos.x,
+                this.drawinNewAreaStartPos.y,
+                pointer.worldX - this.drawinNewAreaStartPos.x,
+                pointer.worldY - this.drawinNewAreaStartPos.y
+            );
+            this.scene.markDirty();
+        }
+    }
+
+    private getAreaEditorToolsObjectsFromGameObjects(
+        gameObjects: Phaser.GameObjects.GameObject[]
+    ): (AreaPreview | SizeAlteringSquare)[] {
+        const areaPreviews = gameObjects.filter((obj) => this.isAreaPreview(obj)) as AreaPreview[];
+        const sizeAlteringSquares = gameObjects.filter((obj) => this.isSizeAlteringSquare(obj)) as SizeAlteringSquare[];
+        return [...areaPreviews, ...sizeAlteringSquares];
     }
 
     private changeAreaMode(mode: MapEditorAreaToolMode): void {
@@ -319,7 +396,7 @@ export class AreaEditorTool extends MapEditorTool {
         return areaPreview;
     }
 
-    private createNewArea(): void {
+    private createNewArea(x: number, y: number, width: number, height: number): void {
         const id = crypto.randomUUID();
         this.mapEditorModeManager.executeCommand({
             type: "CreateAreaCommand",
@@ -328,10 +405,10 @@ export class AreaEditorTool extends MapEditorTool {
                 name: "",
                 visible: true,
                 properties: {},
-                width: 50,
-                height: 50,
-                x: this.scene.input.activePointer.worldX - 25,
-                y: this.scene.input.activePointer.worldY - 25,
+                width,
+                height,
+                x,
+                y,
             },
         });
     }
