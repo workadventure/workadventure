@@ -248,11 +248,10 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        const areaEditorToolObjects = this.getAreaEditorToolsObjectsFromGameObjects(gameObjects);
+        const areaEditorToolObjects = this.getAreaEditorToolObjectsFromGameObjects(gameObjects);
         if (pointer.rightButtonDown()) {
             return;
         }
-
         const mode = get(mapEditorAreaModeStore);
 
         if (areaEditorToolObjects.length === 0) {
@@ -273,38 +272,16 @@ export class AreaEditorTool extends MapEditorTool {
             return;
         }
 
-        const sortedAreaPreviews = (gameObjects.filter((obj) => this.isAreaPreview(obj)) as AreaPreview[]).sort(
-            (a1, a2) => {
-                return a1.getSize() - a2.getSize();
+        if (areaEditorToolObjects.length === 1) {
+            if (this.isAreaPreview(areaEditorToolObjects[0])) {
+                this.changeAreaMode("EDIT", areaEditorToolObjects[0]);
+                this.wasAreaMoved = true;
             }
-        );
-
-        if (sortedAreaPreviews.length === 1) {
-            this.changeAreaMode("EDIT", sortedAreaPreviews[0]);
-            this.wasAreaMoved = true;
         }
     }
 
     private handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
         const mode = get(mapEditorAreaModeStore);
-        if (mode === "ADD" && this.drawinNewAreaStartPos) {
-            const width = Math.abs(pointer.worldX - this.drawinNewAreaStartPos.x);
-            const height = Math.abs(pointer.worldY - this.drawinNewAreaStartPos.y);
-            if (width > 0 && height > 0) {
-                this.createNewArea(
-                    Math.min(this.drawinNewAreaStartPos.x, pointer.worldX),
-                    Math.min(this.drawinNewAreaStartPos.y, pointer.worldY),
-                    width,
-                    height
-                );
-            }
-            this.drawinNewAreaStartPos = undefined;
-            this.drawingNewArea = false;
-            this.newAreaPreview.clear();
-            this.scene.markDirty();
-            return;
-        }
-
         const sortedAreaPreviews = (gameObjects.filter((obj) => this.isAreaPreview(obj)) as AreaPreview[]).sort(
             (a1, a2) => {
                 return a1.getSize() - a2.getSize();
@@ -312,10 +289,25 @@ export class AreaEditorTool extends MapEditorTool {
         );
 
         if (mode === "ADD") {
+            if (this.drawinNewAreaStartPos) {
+                const width = Math.abs(pointer.worldX - this.drawinNewAreaStartPos.x);
+                const height = Math.abs(pointer.worldY - this.drawinNewAreaStartPos.y);
+                if (width >= 10 && height >= 10) {
+                    this.createNewArea(
+                        Math.min(this.drawinNewAreaStartPos.x, pointer.worldX),
+                        Math.min(this.drawinNewAreaStartPos.y, pointer.worldY),
+                        width,
+                        height
+                    );
+                }
+                this.drawinNewAreaStartPos = undefined;
+                this.drawingNewArea = false;
+                this.newAreaPreview.clear();
+                this.scene.markDirty();
+                return;
+            }
             this.changeAreaMode("EDIT", sortedAreaPreviews[0]);
-            return;
-        }
-        if (mode === "EDIT") {
+        } else if (mode === "EDIT") {
             const currentlySelectedArea = get(mapEditorSelectedAreaPreviewStore);
 
             for (const obj of gameObjects) {
@@ -361,12 +353,11 @@ export class AreaEditorTool extends MapEditorTool {
             this.scene.markDirty();
         }
         if (this.draggingdArea) {
-            console.log("AREA MOVED");
             this.wasAreaMoved = true;
         }
     }
 
-    private getAreaEditorToolsObjectsFromGameObjects(
+    private getAreaEditorToolObjectsFromGameObjects(
         gameObjects: Phaser.GameObjects.GameObject[]
     ): (AreaPreview | SizeAlteringSquare)[] {
         const areaPreviews = gameObjects.filter((obj) => this.isAreaPreview(obj)) as AreaPreview[];
