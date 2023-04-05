@@ -80,12 +80,12 @@
             />
         </div>
     {/if}
-    <div class={`tw-absolute ${peer.videoTrack ? "tw-top-0.5 tw-right-2" : "tw-top-1 tw-right-3"}`}>
+    <div class={`tw-absolute ${$videoTrackStore ? "tw-top-0.5 tw-right-2" : "tw-top-1 tw-right-3"}`}>
         {#if $audioTrackStore}
             <audio autoplay muted={false} bind:this={audioElement} />
             <SoundMeterWidgetWrapper
                 classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
-                barColor="blue"
+                barColor={$videoTrackStore ? "blue" : "black"}
                 volume={peer.volumeStore}
             />
         {:else}
@@ -94,8 +94,8 @@
                 src={microphoneOffImg}
                 class="tw-flex tw-p-1 tw-h-8 tw-w-8 voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
                 alt="Mute"
-                class:tw-brightness-0={textColor === "black" && !peer.videoTrack}
-                class:tw-brightness-100={textColor === "white" && !peer.videoTrack}
+                class:tw-brightness-0={textColor === "black" && !$videoTrackStore}
+                class:tw-brightness-100={textColor === "white" && !$videoTrackStore}
             />
         {/if}
     </div>
@@ -107,7 +107,7 @@
                 isMe={$audioTrackStore?.isLocal() || $videoTrackStore?.isLocal()}
                 name={peer.spaceUser?.name ?? ""}
                 wokaSrc={wokaBase64}
-                minimal={!!peer.videoTrack}
+                minimal={!!$videoTrackStore}
             />
         {/await}
     {/if}
