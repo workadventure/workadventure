@@ -102,6 +102,9 @@ services:
             REPORT_ISSUES_URL: $REPORT_ISSUES_URL
             # LogRocket
             LOGROCKET_ID: $LOGROCKET_ID
+            # Sentry integration
+            SENTRY_DNS: $SENTRY_DNS
+            SENTRY_RELEASE: $SENTRY_RELEASE
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"
