@@ -262,7 +262,7 @@ export class MapEditorModeManager {
                 break;
             }
             case "z": {
-                if (this.ctrlKey) {
+                if (this.ctrlKey.isDown) {
                     this.shiftKey.isDown ? this.redoCommand() : this.undoCommand();
                 }
                 break;
