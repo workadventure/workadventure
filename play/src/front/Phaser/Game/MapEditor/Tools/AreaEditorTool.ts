@@ -1,5 +1,4 @@
 import type { AreaData, AtLeast, CommandConfig } from "@workadventure/map-editor";
-import type { Subscription } from "rxjs";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import type { EditMapCommandMessage } from "@workadventure/messages";
@@ -23,8 +22,6 @@ export class AreaEditorTool extends MapEditorTool {
      * Visual representations of map Areas objects
      */
     private areaPreviews: AreaPreview[];
-
-    private gameMapAreaUpdateSubscription!: Subscription;
 
     private currentlySelectedPreview: AreaPreview | undefined;
 
@@ -96,7 +93,6 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     public destroy(): void {
-        this.gameMapAreaUpdateSubscription.unsubscribe();
         this.selectedAreaPreviewStoreSubscriber();
         this.unbindEventHandlers();
         this.scene.input.setDefaultCursor("auto");
