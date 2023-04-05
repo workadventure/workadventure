@@ -2,8 +2,6 @@ import type { BaseTranslation } from "../i18n-types";
 
 const mapEditor: BaseTranslation = {
     sideBar: {
-        zoomIn: "Vergrößern",
-        zoomOut: "Verkleinern",
         areaEditor: "Fläche bearbeiten",
         entityEditor: "Entität bearbeiten",
         tileEditor: "Kachel bearbeiten",

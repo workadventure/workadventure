@@ -79,6 +79,7 @@ export class AreaEditorTool extends MapEditorTool {
         this.setAreaPreviewsVisibility(false);
         this.scene.input.setDefaultCursor("auto");
         this.unbindEventHandlers();
+        this.scene.markDirty();
     }
 
     public activate(): void {

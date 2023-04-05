@@ -450,9 +450,4 @@ export class EntityEditorTool extends MapEditorTool {
             y: Math.floor(this.entityPrefabPreview.displayHeight / 32) % 2 === 1 ? 16 : 0,
         };
     }
-
-    // private setSelectedEntityStoreValue(entity: Entity | undefined): void {
-    //     get(mapEditorSelectedEntityStore)?.removeEditColor();
-    //     mapEditorSelectedEntityStore.set(entity);
-    // }
 }

@@ -3,8 +3,6 @@ import type { Translation } from "../i18n-types";
 
 const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     sideBar: {
-        zoomIn: "Zoom",
-        zoomOut: "Dézoom",
         areaEditor: "Outil d'édition de zone",
         entityEditor: "Outil d'édition d'entités",
         tileEditor: "Outil d'édition de tuiles",
