@@ -2,7 +2,7 @@ import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack
 import { Readable, Unsubscriber, writable, Writable, readable, get } from "svelte/store";
 import { SoundMeter } from "../../Phaser/Components/SoundMeter";
 import { SpaceUserExtended } from "../../Space/Space";
-import {v4 as uuid} from "uuid";
+import { v4 as uuid } from "uuid";
 
 export class JitsiTrackWrapper {
     private _spaceUser: SpaceUserExtended | undefined;
@@ -38,7 +38,7 @@ export class JitsiTrackWrapper {
                 timeout = setInterval(() => {
                     try {
                         set(soundMeter?.getVolume());
-                        console.log("Volume", soundMeter?.getVolume());
+                        //console.log("Volume", soundMeter?.getVolume());
                     } catch (err) {
                         if (!error) {
                             console.error(err);

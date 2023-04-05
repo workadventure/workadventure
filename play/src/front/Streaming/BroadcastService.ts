@@ -3,14 +3,16 @@ import { libJitsiFactory } from "./Jitsi/LibJitsiFactory";
 import { JitsiConferenceWrapper } from "./Jitsi/JitsiConferenceWrapper";
 import { jitsiConferencesStore } from "./Jitsi/JitsiConferencesStore";
 import { megaphoneEnabledStore } from "../Stores/MegaphoneStore";
-import { derived, get, Readable, Unsubscriber } from "svelte/store";
+import { derived, get, Readable, Unsubscriber, writable } from "svelte/store";
 import { ForwardableStore } from "@workadventure/store-utils";
 import { JitsiTrackWrapper } from "./Jitsi/JitsiTrackWrapper";
 import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 import { Space } from "../Space/Space";
 import pLimit from "p-limit";
 import { SpaceFilterMessage } from "@workadventure/messages";
-import {gameManager} from "../Phaser/Game/GameManager";
+import { gameManager } from "../Phaser/Game/GameManager";
+
+export const jitsiLoadingStore = writable<boolean>(false);
 
 const limit = pLimit(1);
 
@@ -43,6 +45,7 @@ class BroadcastSpace extends Space {
                     if (this.jitsiConference === undefined) {
                         limit(async () => {
                             if (this.jitsiConference === undefined) {
+                                jitsiLoadingStore.set(true);
                                 return await broadcastService.joinJitsiConference(spaceName, this);
                             }
                             throw new Error("Jitsi conference already exists");
@@ -50,6 +53,7 @@ class BroadcastSpace extends Space {
                             .then((jitsiConference) => {
                                 this.jitsiConference = jitsiConference;
                                 broadcastService.emitJitsiParticipantIdSpace(spaceName, jitsiConference.participantId);
+                                jitsiLoadingStore.set(false);
                             })
                             .catch((e) => {
                                 console.error("Error while joining the conference", e);
@@ -117,10 +121,11 @@ export class BroadcastService {
         if (!this.jitsiConnection) {
             try {
                 await this.connect();
-            }catch (e) {
+            } catch (e) {
                 console.log("Error while connecting to Jitsi", e);
             }
-            if(!this.jitsiConnection){
+            if (!this.jitsiConnection) {
+                jitsiLoadingStore.set(false);
                 throw new Error("Could not connect to Jitsi");
             }
         }
@@ -141,7 +146,7 @@ export class BroadcastService {
                 for (const [participantId, stream] of $streamStore) {
                     let found = false;
                     if (stream.spaceUser !== undefined) {
-                        if($users.has(stream.spaceUser.uuid)) {
+                        if ($users.has(stream.spaceUser.uuid)) {
                             filtered.set(participantId, stream);
                         }
                         continue;
