@@ -408,7 +408,7 @@ services:
             MONGO_INIT_USER: root
             MONGO_INIT_PASSWORD: root
         volumes:
-            - ./workadventure/marketplace/database/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
+            - ./workadventure/marketplace/database/migrations:/docker-entrypoint-initdb.d
 
     marketplace:
         image: thecodingmachine/nodejs:v2-18-bullseye

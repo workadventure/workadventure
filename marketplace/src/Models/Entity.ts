@@ -9,6 +9,8 @@ export interface IEntity extends Document {
     tags: string[];
     author: string;
     authorId: string;
+    depthOffset: number;
+    collisionGrid: Array<unknown>;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -22,6 +24,8 @@ const EntitySchema = new Schema<IEntity>({
     tags: { type: [String], required: false },
     author: { type: String, required: false },
     authorId: { type: String, required: false },
+    depthOffset: { type: Number, required: false },
+    collisionGrid: { type: Array<unknown>, required: false },
 }, { timestamps: true, id: true });
 
 // Create a Model.
