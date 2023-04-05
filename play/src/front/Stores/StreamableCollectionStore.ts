@@ -1,9 +1,9 @@
 import type { Readable } from "svelte/store";
 import { derived, get } from "svelte/store";
+import type { RemotePeer } from "../WebRtc/SimplePeer";
 import type { ScreenSharingLocalMedia } from "./ScreenSharingStore";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
 import { peerStore, screenSharingStreamStore } from "./PeerStore";
-import type { RemotePeer } from "../WebRtc/SimplePeer";
 import { highlightedEmbedScreen } from "./EmbedScreensStore";
 
 export type Streamable = RemotePeer | ScreenSharingLocalMedia;

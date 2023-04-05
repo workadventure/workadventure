@@ -1,5 +1,8 @@
+import crypto from "crypto";
 import type { Client, IntrospectionResponse, OpenIDCallbackChecks } from "openid-client";
 import { Issuer, generators } from "openid-client";
+import { v4 } from "uuid";
+import type { Request, Response } from "hyper-express";
 import {
     OPID_CLIENT_ID,
     OPID_CLIENT_SECRET,
@@ -11,9 +14,6 @@ import {
     OPID_PROMPT,
     SECRET_KEY,
 } from "../enums/EnvironmentVariable";
-import { v4 } from "uuid";
-import crypto from "crypto";
-import type { Request, Response } from "hyper-express";
 
 class OpenIDClient {
     private issuerPromise: Promise<Client> | null = null;
@@ -127,9 +127,9 @@ class OpenIDClient {
                 return client.userinfo(tokenSet).then((res) => {
                     return {
                         ...res,
-                        email: res.email as string,
+                        email: res.email ?? "",
                         sub: res.sub,
-                        access_token: tokenSet.access_token as string,
+                        access_token: tokenSet.access_token ?? "",
                         username: res[OPID_USERNAME_CLAIM] as string,
                         locale: res[OPID_LOCALE_CLAIM] as string,
                     };

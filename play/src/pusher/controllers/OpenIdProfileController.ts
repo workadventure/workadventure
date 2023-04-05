@@ -1,8 +1,8 @@
+import { z } from "zod";
 import { openIDClient } from "../services/OpenIDClient";
 import { OPID_CLIENT_ISSUER } from "../enums/EnvironmentVariable";
-import { BaseHttpController } from "./BaseHttpController";
 import { validateQuery } from "../services/QueryValidator";
-import { z } from "zod";
+import { BaseHttpController } from "./BaseHttpController";
 
 export class OpenIdProfileController extends BaseHttpController {
     routes(): void {
@@ -26,13 +26,7 @@ export class OpenIdProfileController extends BaseHttpController {
                 throw new Error("Email was not found");
             }
             res.setHeader("Content-Type", "text/html");
-            res.send(
-                this.buildHtml(
-                    OPID_CLIENT_ISSUER,
-                    resCheckTokenAuth.sub
-                    /*resCheckTokenAuth.picture as string | undefined*/
-                )
-            );
+            res.send(this.buildHtml(OPID_CLIENT_ISSUER, resCheckTokenAuth.sub));
             return;
         });
     }

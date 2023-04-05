@@ -1,11 +1,11 @@
 import { writable } from "svelte/store";
-import { playersStore } from "./PlayersStore";
+import { Subject } from "rxjs";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import { iframeListener } from "../Api/IframeListener";
-import { Subject } from "rxjs";
 import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
 import type { ChatMessage } from "../Api/Events/ChatEvent";
 import { ChatMessageTypes } from "../Api/Events/ChatEvent";
+import { playersStore } from "./PlayersStore";
 
 export const chatZoneLiveStore = writable(false);
 export const chatVisibilityStore = writable(false);

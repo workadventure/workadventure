@@ -1,5 +1,5 @@
 import type { AreaData } from "@workadventure/map-editor";
-import type { GameScene } from "../../Game/GameScene";
+import { GameScene } from "../../Game/GameScene";
 import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
 
 export enum AreaPreviewEvent {
@@ -116,6 +116,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
             if ((pointer.event.target as Element)?.localName !== "canvas") {
                 return;
             }
+            console.log(this.config);
             this.emit(AreaPreviewEvent.Clicked);
         });
         this.preview.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
@@ -124,7 +125,11 @@ export class AreaPreview extends Phaser.GameObjects.Container {
                 this.preview.y = dragY;
                 this.updateSquaresPositions();
                 this.moved = true;
-                (this.scene as GameScene).markDirty();
+                if (this.scene instanceof GameScene) {
+                    this.scene.markDirty();
+                } else {
+                    throw new Error("Not the Game Scene");
+                }
             }
         });
         this.preview.on(Phaser.Input.Events.POINTER_UP, (pointer: Phaser.Input.Pointer) => {
@@ -213,7 +218,11 @@ export class AreaPreview extends Phaser.GameObjects.Container {
                     square.y = oldY;
                 }
                 this.updateSquaresPositions();
-                (this.scene as GameScene).markDirty();
+                if (this.scene instanceof GameScene) {
+                    this.scene.markDirty();
+                } else {
+                    throw new Error("Not the Game Scene");
+                }
             });
 
             square.on(SizeAlteringSquareEvent.Released, () => {
@@ -253,7 +262,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         return this.config.name;
     }
 
-    public getId(): number {
+    public getId(): string {
         return this.config.id;
     }
 }

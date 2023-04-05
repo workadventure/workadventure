@@ -1,7 +1,7 @@
 <script lang="ts">
-    import ChatMucRoom from "./ChatMucRoom.svelte";
     import { derived } from "svelte/store";
     import { MucRoom } from "../Xmpp/MucRoom";
+    import ChatMucRoom from "./ChatMucRoom.svelte";
 
     export let searchValue: string;
     export let forums: MucRoom[];

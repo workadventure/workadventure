@@ -1,10 +1,13 @@
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameScene } from "./GameScene";
+import { get } from "svelte/store";
+import type { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
+import { GameMapProperties } from "@workadventure/map-editor";
+import { Jitsi } from "@workadventure/shared-utils";
 import { scriptUtils } from "../../Api/ScriptUtils";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { localUserStore } from "../../Connexion/LocalUserStore";
-import { get } from "svelte/store";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
@@ -14,22 +17,20 @@ import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
 import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
-import LL from "../../../i18n/i18n-svelte";
+import { LL } from "../../../i18n/i18n-svelte";
 import { inJitsiStore, inBbbStore, silentStore, inOpenWebsite } from "../../Stores/MediaStore";
-import type { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 import { urlManager } from "../../Url/UrlManager";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
-import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
-import { GameMapProperties } from "@workadventure/map-editor";
 import { connectionManager } from "../../Connexion/ConnectionManager";
-import { slugifyJitsiRoomName } from "@workadventure/shared-utils/src/Jitsi/slugify";
+import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 
 interface OpenCoWebsite {
     actionId: string;
     coWebsite?: CoWebsite;
 }
 
-export type ITiledPlace = ITiledMapLayer | ITiledMapObject;
+// NOTE: We need to change id type to fit both ITiledMapObjects and UUID's from MapEditor
+export type ITiledPlace = Omit<ITiledMapLayer | ITiledMapObject, "id"> & { id?: string | number };
 
 export class GameMapPropertiesListener {
     private coWebsitesOpenByPlace = new Map<string, OpenCoWebsite>();
@@ -79,7 +80,7 @@ export class GameMapPropertiesListener {
                 }
             }
             const openJitsiRoomFunction = async () => {
-                const roomName = slugifyJitsiRoomName(newValue.toString(), this.scene.roomUrl, allProps);
+                const roomName = Jitsi.slugifyJitsiRoomName(newValue.toString(), this.scene.roomUrl, allProps);
                 let jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
 
                 let jwt: string | undefined;
@@ -176,7 +177,7 @@ export class GameMapPropertiesListener {
                         Room.getRoomPathFromExitSceneUrl(
                             newValue as string,
                             window.location.toString(),
-                            this.scene.MapUrlFile
+                            this.scene.mapUrlFile
                         )
                     )
                     .catch((e) => console.error(e));
@@ -262,12 +263,32 @@ export class GameMapPropertiesListener {
             this.onLeavePlaceHandler(oldLayers);
         });
 
+        this.gameMapFrontWrapper.onEnterTiledArea((newTiledAreas) => {
+            this.onEnterPlaceHandler(newTiledAreas);
+        });
+
+        this.gameMapFrontWrapper.onLeaveTiledArea((oldTiledAreas) => {
+            this.onLeavePlaceHandler(oldTiledAreas);
+        });
+
         this.gameMapFrontWrapper.onEnterArea((newAreas) => {
             this.onEnterPlaceHandler(newAreas.map((area) => this.gameMapFrontWrapper.mapAreaToTiledObject(area)));
         });
 
         this.gameMapFrontWrapper.onLeaveArea((oldAreas) => {
             this.onLeavePlaceHandler(oldAreas.map((area) => this.gameMapFrontWrapper.mapAreaToTiledObject(area)));
+        });
+
+        this.gameMapFrontWrapper.onEnterDynamicArea((newAreas) => {
+            this.onEnterPlaceHandler(
+                newAreas.map((area) => this.gameMapFrontWrapper.mapDynamicAreaToTiledObject(area))
+            );
+        });
+
+        this.gameMapFrontWrapper.onLeaveDynamicArea((oldAreas) => {
+            this.onLeavePlaceHandler(
+                oldAreas.map((area) => this.gameMapFrontWrapper.mapDynamicAreaToTiledObject(area))
+            );
         });
     }
 
@@ -357,7 +378,7 @@ export class GameMapPropertiesListener {
 
         const openCoWebsiteFunction = () => {
             const coWebsite = new SimpleCoWebsite(
-                new URL(openWebsiteProperty ?? "", this.scene.MapUrlFile),
+                new URL(openWebsiteProperty ?? "", this.scene.mapUrlFile),
                 allowApiProperty,
                 websitePolicyProperty,
                 websiteWidthProperty,
@@ -393,7 +414,7 @@ export class GameMapPropertiesListener {
             });
         } else if (websiteTriggerProperty === ON_ICON_TRIGGER_BUTTON) {
             const coWebsite = new SimpleCoWebsite(
-                new URL(openWebsiteProperty ?? "", this.scene.MapUrlFile),
+                new URL(openWebsiteProperty ?? "", this.scene.mapUrlFile),
                 allowApiProperty,
                 websitePolicyProperty,
                 websiteWidthProperty

@@ -1,9 +1,9 @@
+import type { SetPlayerVariableMessage } from "@workadventure/messages";
 import type { RoomConnection } from "../../Connexion/RoomConnection";
 import { iframeListener } from "../../Api/IframeListener";
 import type { SetPlayerVariableEvent } from "../../Api/Events/SetPlayerVariableEvent";
-import type { IframeEventDispatcher } from "./IframeEventDispatcher";
-import type { SetPlayerVariableMessage } from "@workadventure/messages";
 import { localUserStore } from "../../Connexion/LocalUserStore";
+import type { IframeEventDispatcher } from "./IframeEventDispatcher";
 
 /**
  * Stores variables and provides a bridge between scripts and the pusher server.

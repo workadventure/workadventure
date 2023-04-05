@@ -1,6 +1,6 @@
 import { sendUnaryData, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
 import * as _ from "lodash";
-import { AreaData, AreaType } from "@workadventure/map-editor";
+import { AreaData, EntityDataProperties } from "@workadventure/map-editor";
 import { mapsManager } from "./MapsManager";
 import {
     EditMapCommandMessage,
@@ -81,7 +81,7 @@ const mapStorageServer: MapStorageServer = {
             switch (editMapMessage.$case) {
                 case "modifyAreaMessage": {
                     const message = editMapMessage.modifyAreaMessage;
-                    const area = gameMap.getGameMapAreas().getArea(message.id, AreaType.Static);
+                    const area = gameMap.getGameMapAreas()?.getArea(message.id);
                     if (area) {
                         const areaObjectConfig: AreaData = structuredClone(area);
                         _.merge(areaObjectConfig, message);
@@ -102,9 +102,6 @@ const mapStorageServer: MapStorageServer = {
                     const message = editMapMessage.createAreaMessage;
                     const areaObjectConfig: AreaData = {
                         ...message,
-                        properties: {
-                            customProperties: {},
-                        },
                         visible: true,
                     };
                     mapsManager.executeCommand(
@@ -131,7 +128,7 @@ const mapStorageServer: MapStorageServer = {
                 }
                 case "modifyEntityMessage": {
                     const message = editMapMessage.modifyEntityMessage;
-                    const entity = gameMap.getGameMapEntities().getEntity(message.id);
+                    const entity = gameMap.getGameMapEntities()?.getEntity(message.id);
                     if (entity) {
                         mapsManager.executeCommand(
                             mapKey,
@@ -161,6 +158,7 @@ const mapStorageServer: MapStorageServer = {
                                 prefab: entityPrefab,
                                 x: message.x,
                                 y: message.y,
+                                properties: message.properties as EntityDataProperties,
                             },
                         },
                         commandId

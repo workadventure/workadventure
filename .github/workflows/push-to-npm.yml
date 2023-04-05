@@ -42,7 +42,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: npm run ts-proto && npm run copy-to-play
+        run: npm run ts-proto
         working-directory: "messages"
 
       - name: "Generate i18n files"

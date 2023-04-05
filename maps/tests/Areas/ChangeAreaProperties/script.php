@@ -21,10 +21,10 @@
 
                 const area = WA.room.area.create({
                         name: 'Center',
-                        x: 0,
-                        y: 0,
+                        x: 224,
+                        y: 254,
                         width: 514,
-                        height: 288,
+                        height: 292,
                     });
 
                     area.setProperty('focusable', true);

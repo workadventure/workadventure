@@ -10,7 +10,7 @@ export * from './JsonMessages/ErrorApiData';
 export * from './JsonMessages/MapDetailsData';
 export * from './JsonMessages/MetaTagFavicon';
 export * from './JsonMessages/MetaTagManifestIcon';
-export * from './JsonMessages/MucRoomDefinitionInterface';
+export * from './JsonMessages/MucRoomDefinition';
 export * from './JsonMessages/PlayerTextures';
 export * from './JsonMessages/RegisterData';
 export * from './JsonMessages/RoomRedirect';

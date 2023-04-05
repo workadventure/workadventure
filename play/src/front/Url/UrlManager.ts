@@ -23,7 +23,7 @@ class UrlManager {
         } else if (url.includes("_/") || url.includes("*/") || url.includes("@/") || url.includes("~/")) {
             return GameConnexionTypes.room;
         }
-        //@deprecated register url will be replace by "?token=<private access token>"
+        //@deprecated register url will be replaced by "?token=<private access token>"
         else if (url.includes("register/")) {
             return GameConnexionTypes.register;
         } else if (url === "/") {

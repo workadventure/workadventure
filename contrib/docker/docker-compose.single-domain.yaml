@@ -1,69 +1,6 @@
 version: "3.6"
 services:
-  play:
-    environment:
-      - PUSHER_URL=/
-      - ICON_URL=/icon
-      - API_URL=/api
-      - FRONT_URL=/
-      - CHAT_URL=/chat
-      - UPLOADER_URL=/uploader
-    labels:
-      traefik.http.routers.play.rule: "Host(`${DOMAIN}`) && PathPrefix(`/`)"
-      traefik.http.routers.play-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/`)"
-
-  chat:
-    environment:
-      - PUSHER_URL=/
-      - UPLOADER_URL=/uploader
-    labels:
-      traefik.http.middlewares.strip-chat-prefix.stripprefix.prefixes: "/chat"
-      traefik.http.routers.chat.rule: "Host(`${DOMAIN}`) && PathPrefix(`/chat`)"
-      traefik.http.routers.chat.middlewares: "strip-chat-prefix@docker"
-      traefik.http.routers.chat-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/chat`)"
-      traefik.http.routers.chat-ssl.middlewares: "strip-chat-prefix@docker"
-
-  back:
-    environment:
-      - PUBLIC_MAP_STORAGE_URL=/map-storage
-    labels:
-      traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes: "/api"
-      traefik.http.routers.back.rule: "Host(`${DOMAIN}`) && PathPrefix(`/api`)"
-      traefik.http.routers.back.middlewares: "strip-api-prefix@docker"
-      traefik.http.routers.back-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/api`)"
-      traefik.http.routers.back-ssl.middlewares: "strip-api-prefix@docker"
-
-  uploader:
-    environment:
-      - UPLOADER_URL=https://${DOMAIN}/uploader
-    labels:
-      traefik.http.middlewares.strip-uploader-prefix.stripprefix.prefixes: "/uploader"
-      traefik.http.routers.uploader.rule: "Host(`${DOMAIN}`) && PathPrefix(`/uploader`)"
-      traefik.http.routers.uploader.middlewares: "strip-uploader-prefix@docker"
-      traefik.http.routers.uploader-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/uploader`)"
-      traefik.http.routers.uploader-ssl.middlewares: "strip-uploader-prefix@docker"
-
-  icon:
-    labels:
-      traefik.http.middlewares.strip-icon-prefix.stripprefix.prefixes: "/icon"
-      traefik.http.routers.icon.rule: "Host(`${DOMAIN}`) && PathPrefix(`/icon`)"
-      traefik.http.routers.icon.middlewares: "strip-icon-prefix@docker"
-      traefik.http.routers.icon-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/icon`)"
-      traefik.http.routers.icon-ssl.middlewares: "strip-icon-prefix@docker"
-
-  ejabberd:
-    labels:
-      traefik.http.middlewares.strip-ejabberd-prefix.stripprefix.prefixes: "/xmpp"
-      traefik.http.routers.ejabberd.rule: "Host(`${DOMAIN}`) && PathPrefix(`/xmpp`)"
-      traefik.http.routers.ejabberd.middlewares: "strip-ejabberd-prefix@docker"
-      traefik.http.routers.ejabberd-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/xmpp`)"
-      traefik.http.routers.ejabberd-ssl.middlewares: "strip-ejabberd-prefix@docker"
 
   map-storage:
     labels:
-      traefik.http.middlewares.strip-map-storage-prefix.stripprefix.prefixes: "/map-storage"
-      traefik.http.routers.map-storage.rule: "Host(`${DOMAIN}`) && PathPrefix(`/map-storage`)"
-      traefik.http.routers.map-storage.middlewares: "strip-map-storage-prefix@docker"
-      traefik.http.routers.map-storage-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/map-storage`)"
-      traefik.http.routers.map-storage-ssl.middlewares: "strip-map-storage-prefix@docker"
 

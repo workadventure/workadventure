@@ -1,27 +1,27 @@
-import {
-    ADMIN_API_TOKEN,
-    ADMIN_API_URL,
-    OPID_PROFILE_SCREEN_PROVIDER,
-    ADMIN_API_RETRY_DELAY,
-} from "../enums/EnvironmentVariable";
-import Axios from "axios";
+import axios, { isAxiosError } from "axios";
 import type { AxiosResponse } from "axios";
 import {
     isMapDetailsData,
     isRoomRedirect,
     isAdminApiData,
-    isWokaDetail,
-    isMucRoomDefinition,
+    WokaDetail,
+    MucRoomDefinition,
     isApplicationDefinitionInterface,
     isCapabilities,
     Capabilities,
 } from "@workadventure/messages";
 import type { MapDetailsData, RoomRedirect, AdminApiData } from "@workadventure/messages";
 import { z } from "zod";
+import { extendApi } from "@anatine/zod-openapi";
+import {
+    ADMIN_API_TOKEN,
+    ADMIN_API_URL,
+    OPID_PROFILE_SCREEN_PROVIDER,
+    ADMIN_API_RETRY_DELAY,
+} from "../enums/EnvironmentVariable";
 import type { AdminInterface } from "./AdminInterface";
 import { jwtTokenManager } from "./JWTTokenManager";
 import type { AuthTokenData } from "./JWTTokenManager";
-import { extendApi } from "@anatine/zod-openapi";
 import type { AdminCapabilities } from "./adminApi/AdminCapabilities";
 import { RemoteCapabilities } from "./adminApi/RemoteCapabilities";
 import { LocalCapabilities } from "./adminApi/LocalCapabilities";
@@ -52,7 +52,7 @@ export const isFetchMemberDataByUuidResponse = z.object({
         description: "URL of the visitCard of the user fetched.",
         example: "https://mycompany.com/contact/me",
     }),
-    textures: extendApi(z.array(isWokaDetail), {
+    textures: extendApi(z.array(WokaDetail), {
         description: "This data represents the textures (WOKA) that will be available to users.",
     }),
     messages: extendApi(z.array(z.unknown()), {
@@ -72,7 +72,7 @@ export const isFetchMemberDataByUuidResponse = z.object({
     jabberPassword: extendApi(z.string().nullable().optional(), {
         description: "The password to connect to the XMPP server of this user",
     }),
-    mucRooms: extendApi(z.nullable(z.array(isMucRoomDefinition)), {
+    mucRooms: extendApi(z.nullable(z.array(MucRoomDefinition)), {
         description: "The MUC room is a room of message",
     }),
     activatedInviteUser: extendApi(z.boolean().nullable().optional(), {
@@ -114,13 +114,13 @@ class AdminApi implements AdminInterface {
                 resolve(0);
             } catch (ex) {
                 // ignore errors when querying capabilities
-                const status = (ex as { response: { status: number } })?.response?.status;
-                if (status === 404) {
+                if (isAxiosError(ex) && ex.response?.status === 404) {
                     // 404 probably means and older api version
                     resolve(0);
                     console.warn(`Admin API server does not implement capabilities, default to basic capabilities`);
                     return;
                 }
+
                 // if we get here, it might be due to connectivity issues
                 if (!warnIssued)
                     console.warn(
@@ -161,7 +161,7 @@ class AdminApi implements AdminInterface {
          *       404:
          *         description: Endpoint not found. If the admin api does not implement, will use default capabilities
          */
-        const res = await Axios.get<unknown, AxiosResponse<string[]>>(ADMIN_API_URL + "/api/capabilities");
+        const res = await axios.get<unknown, AxiosResponse<string[]>>(ADMIN_API_URL + "/api/capabilities");
 
         return isCapabilities.parse(res.data);
     }
@@ -242,7 +242,7 @@ class AdminApi implements AdminInterface {
          *             $ref: '#/definitions/ErrorApiErrorData'
          *
          */
-        const res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/map", {
+        const res = await axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/map", {
             headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
             params,
         });
@@ -337,7 +337,7 @@ class AdminApi implements AdminInterface {
          *             $ref: '#/definitions/ErrorApiErrorData'
          *
          */
-        const res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/room/access", {
+        const res = await axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/room/access", {
             params: {
                 userIdentifier,
                 playUri,
@@ -404,7 +404,7 @@ class AdminApi implements AdminInterface {
          *
          */
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
-        const res = await Axios.get(ADMIN_API_URL + "/api/login-url/" + organizationMemberToken, {
+        const res = await axios.get(ADMIN_API_URL + "/api/login-url/" + organizationMemberToken, {
             params: { playUri },
             headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
         });
@@ -421,7 +421,7 @@ class AdminApi implements AdminInterface {
     }
 
     async fetchWellKnownChallenge(host: string): Promise<string> {
-        const res = await Axios.get(`${ADMIN_API_URL}/white-label/cf-challenge`, {
+        const res = await axios.get(`${ADMIN_API_URL}/white-label/cf-challenge`, {
             params: { host },
         });
 
@@ -470,7 +470,7 @@ class AdminApi implements AdminInterface {
          *       200:
          *         description: The report has been successfully saved
          */
-        return Axios.post(
+        return axios.post(
             `${ADMIN_API_URL}/api/report`,
             {
                 reportedUserUuid,
@@ -538,19 +538,21 @@ class AdminApi implements AdminInterface {
          *             $ref: '#/definitions/ErrorApiErrorData'
          */
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
-        return Axios.get(
-            ADMIN_API_URL +
-                "/api/ban" +
-                "?ipAddress=" +
-                encodeURIComponent(ipAddress) +
-                "&token=" +
-                encodeURIComponent(userUuid) +
-                "&roomUrl=" +
-                encodeURIComponent(roomUrl),
-            { headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" } }
-        ).then((data) => {
-            return data.data;
-        });
+        return axios
+            .get(
+                ADMIN_API_URL +
+                    "/api/ban" +
+                    "?ipAddress=" +
+                    encodeURIComponent(ipAddress) +
+                    "&token=" +
+                    encodeURIComponent(userUuid) +
+                    "&roomUrl=" +
+                    encodeURIComponent(roomUrl),
+                { headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" } }
+            )
+            .then((data) => {
+                return data.data;
+            });
     }
 
     async getUrlRoomsFromSameWorld(roomUrl: string, locale?: string): Promise<string[]> {
@@ -585,11 +587,13 @@ class AdminApi implements AdminInterface {
          *         schema:
          *             $ref: '#/definitions/ErrorApiErrorData'
          */
-        return Axios.get(ADMIN_API_URL + "/api/room/sameWorld" + "?roomUrl=" + encodeURIComponent(roomUrl), {
-            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
-        }).then((data) => {
-            return data.data;
-        });
+        return axios
+            .get(ADMIN_API_URL + "/api/room/sameWorld" + "?roomUrl=" + encodeURIComponent(roomUrl), {
+                headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
+            })
+            .then((data) => {
+                return data.data;
+            });
     }
 
     getProfileUrl(accessToken: string, playUri: string): string {
@@ -600,7 +604,7 @@ class AdminApi implements AdminInterface {
     }
 
     async logoutOauth(token: string): Promise<void> {
-        await Axios.get(ADMIN_API_URL + `/oauth/logout?token=${token}`);
+        await axios.get(ADMIN_API_URL + `/oauth/logout?token=${token}`);
     }
 
     async banUserByUuid(
@@ -611,7 +615,7 @@ class AdminApi implements AdminInterface {
         byUserEmail: string
     ): Promise<boolean> {
         try {
-            return Axios.post(
+            return axios.post(
                 ADMIN_API_URL + "/api/ban",
                 { uuidToBan, playUri, name, message, byUserEmail },
                 {

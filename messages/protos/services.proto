@@ -21,6 +21,13 @@ service RoomManager {
 }
 
 /**
+ * Service handled by the "back" about spaces. Pusher servers connect to this service.
+ */
+service SpaceManager {
+  rpc watchSpace(stream PusherToBackSpaceMessage) returns (stream BackToPusherSpaceMessage);
+}
+
+/**
  * Service handled by the "map-storage". Back servers connect to this service.
  */
 service MapStorage {

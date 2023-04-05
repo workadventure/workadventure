@@ -1,16 +1,16 @@
+import { CompanionTexture, CompanionCollectionList } from "@workadventure/messages";
 import { Loader } from "../Components/Loader";
 import { gameManager } from "../Game/GameManager";
-import { ResizableScene } from "./ResizableScene";
-import { EnableCameraSceneName } from "./EnableCameraScene";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
 import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-import { CompanionTexture, CompanionCollectionList } from "@workadventure/messages";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { companionListMetakey, CompanionTexturesLoadingManager } from "../Companion/CompanionTexturesLoadingManager";
+import { EnableCameraSceneName } from "./EnableCameraScene";
+import { ResizableScene } from "./ResizableScene";
 
 export const SelectCompanionSceneName = "SelectCompanionScene";
 

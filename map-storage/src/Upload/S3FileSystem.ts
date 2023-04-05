@@ -1,3 +1,6 @@
+import { IncomingMessage } from "http";
+import { Readable } from "stream";
+import path from "path";
 import {
     CopyObjectCommand,
     DeleteObjectCommand,
@@ -11,18 +14,15 @@ import {
     PutObjectCommand,
     S3,
 } from "@aws-sdk/client-s3";
-import { FileSystemInterface } from "./FileSystemInterface";
-import { s3UploadConcurrencyLimit } from "../Services/S3Client";
 import mime from "mime";
 import { NextFunction, Response } from "express";
-import { IncomingMessage } from "http";
 import { Archiver } from "archiver";
-import { Readable } from "stream";
 import { StreamZipAsync, ZipEntry } from "node-stream-zip";
-import path from "path";
+import pLimit from "p-limit";
+import { s3UploadConcurrencyLimit } from "../Services/S3Client";
 import { UploadController } from "./UploadController";
 import { FileNotFoundError } from "./FileNotFoundError";
-import pLimit from "p-limit";
+import { FileSystemInterface } from "./FileSystemInterface";
 
 export class S3FileSystem implements FileSystemInterface {
     public constructor(private s3: S3, private bucketName: string) {}
@@ -52,6 +52,55 @@ export class S3FileSystem implements FileSystemInterface {
                     new DeleteObjectsCommand({
                         Bucket: this.bucketName,
                         Delete: { Objects: objects.map((o) => ({ Key: o.Key })) },
+                    })
+                );
+
+                if (listObjectsResponse.IsTruncated) {
+                    pageMarker = objects.slice(-1)[0].Key;
+                }
+            }
+        } while (listObjectsResponse.IsTruncated);
+    }
+
+    async deleteFilesExceptWAM(directory: string, filesFromZip: string[]): Promise<void> {
+        if (!directory.endsWith("/")) {
+            directory += "/";
+        }
+
+        // Delete all files in the S3 bucket
+        let listObjectsResponse: ListObjectsCommandOutput;
+        let pageMarker: string | undefined;
+        do {
+            const command: ListObjectsCommandInput = {
+                Bucket: this.bucketName,
+                MaxKeys: 1000,
+                Prefix: directory,
+            };
+            if (pageMarker) {
+                command.Marker = pageMarker;
+            }
+            listObjectsResponse = await this.s3.send(new ListObjectsCommand(command));
+            const objects = listObjectsResponse.Contents;
+
+            if (objects && objects.length > 0) {
+                await this.s3.send(
+                    new DeleteObjectsCommand({
+                        Bucket: this.bucketName,
+                        Delete: {
+                            Objects: objects
+                                .filter((o) => {
+                                    if (o.Key?.includes(".wam")) {
+                                        const wamKey = o.Key?.slice().replace(directory, "");
+                                        const tmjKey = wamKey.slice().replace(".wam", ".tmj");
+                                        // do not delete existing .wam file if there's no new version in zip and .tmj file with the same name exists
+                                        if (filesFromZip.includes(tmjKey) && !filesFromZip.includes(wamKey)) {
+                                            return false;
+                                        }
+                                    }
+                                    return true;
+                                })
+                                .map((o) => ({ Key: o.Key })),
+                        },
                     })
                 );
 

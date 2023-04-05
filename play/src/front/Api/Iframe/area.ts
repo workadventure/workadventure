@@ -1,7 +1,7 @@
 import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
 import type { ChangeAreaEvent } from "../Events/ChangeAreaEvent";
-import type { CreateAreaEvent } from "../Events/CreateAreaEvent";
+import type { CreateDynamicAreaEvent } from "../Events/CreateDynamicAreaEvent";
 import { Area } from "./Area/Area";
 import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
@@ -32,7 +32,7 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
      * @param {{name: string, x: number, y: number, width: number, height: number}} createAreaEvent Define the name, position and size of the area
      * @returns {Area} Area object
      */
-    create(createAreaEvent: CreateAreaEvent): Area {
+    create(createAreaEvent: CreateDynamicAreaEvent): Area {
         void queryWorkadventure({
             type: "createArea",
             data: createAreaEvent,

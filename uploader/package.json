@@ -78,6 +78,8 @@
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
     "eslint": "^6.8.0",
+    "eslint-import-resolver-typescript": "^3.5.3",
+    "eslint-plugin-import": "^2.27.5",
     "form-data": "^4.0.0",
     "jasmine": "^4.0.3",
     "jest": "^29.3.1",

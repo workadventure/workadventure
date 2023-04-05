@@ -1,21 +1,21 @@
 import type { Readable } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
+import { AvailabilityStatus } from "@workadventure/messages";
+import deepEqual from "fast-deep-equal";
 import { localUserStore } from "../Connexion/LocalUserStore";
-import { userMovingStore } from "./GameStore";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
+import { getNavigatorType, isIOS, NavigatorType } from "../WebRtc/DeviceUtils";
+import { SoundMeter } from "../Phaser/Components/SoundMeter";
+import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
+import { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/ConstraintMessage";
+import { userMovingStore } from "./GameStore";
 import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
 import { errorStore } from "./ErrorStore";
-import { getNavigatorType, isIOS, NavigatorType } from "../WebRtc/DeviceUtils";
 import { WebviewOnOldIOS } from "./Errors/WebviewOnOldIOS";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeetingStore } from "./MyMediaStore";
 import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
-import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { AvailabilityStatus } from "@workadventure/messages";
-
-import deepEqual from "fast-deep-equal";
-import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -623,11 +623,6 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
         })().catch((e) => console.error(e));
     }
 );
-
-export interface ObtainedMediaStreamConstraints {
-    video: boolean;
-    audio: boolean;
-}
 
 let obtainedMediaConstraint: ObtainedMediaStreamConstraints = {
     audio: true,

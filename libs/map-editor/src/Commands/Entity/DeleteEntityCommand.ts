@@ -16,7 +16,7 @@ export class DeleteEntityCommand extends Command {
     constructor(gameMap: GameMap, config: DeleteEntityCommandConfig, commandId?: string) {
         super(commandId);
         this.gameMap = gameMap;
-        const entityData = gameMap.getGameMapEntities().getEntity(config.id);
+        const entityData = gameMap.getGameMapEntities()?.getEntity(config.id);
         if (!entityData) {
             throw new Error("Trying to delete a non existing Entity!");
         }
@@ -24,14 +24,14 @@ export class DeleteEntityCommand extends Command {
     }
 
     public execute(): DeleteEntityCommandConfig {
-        if (!this.gameMap.getGameMapEntities().deleteEntity(this.entityData.id)) {
+        if (!this.gameMap.getGameMapEntities()?.deleteEntity(this.entityData.id)) {
             throw new Error(`MapEditorError: Could not execute DeleteEntity Command. Entity ID: ${this.entityData.id}`);
         }
         return { type: "DeleteEntityCommand", id: this.entityData.id };
     }
 
     public undo(): CreateEntityCommandConfig {
-        if (!this.gameMap.getGameMapEntities().addEntity(this.entityData)) {
+        if (!this.gameMap.getGameMapEntities()?.addEntity(this.entityData)) {
             throw new Error(`MapEditorError: Could not undo DeleteEntity Command. Entity ID: ${this.entityData.id}`);
         }
         return { type: "CreateEntityCommand", entityData: this.entityData };

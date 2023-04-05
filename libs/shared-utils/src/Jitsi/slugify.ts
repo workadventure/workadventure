@@ -1,6 +1,6 @@
-import { shortHash } from "../String/shartHash";
 import { GameMapProperties } from "@workadventure/map-editor";
 import { Json } from "@workadventure/tiled-map-type-guard";
+import { shortHash } from "../String/shortHash";
 
 const slugify = (...args: (string | number)[]): string => {
     const value = args.join(" ");
@@ -14,7 +14,7 @@ const slugify = (...args: (string | number)[]): string => {
         .replace(/\s+/g, "-"); // separator
 };
 
-export function slugifyJitsiRoomName(
+function slugifyJitsiRoomName(
     roomName: string,
     roomId: string,
     allProps: Map<string, string | number | boolean | Json>
@@ -25,3 +25,5 @@ export function slugifyJitsiRoomName(
     }
     return slugify((addPrefix ? shortHash(roomId) + "-" : "") + roomName);
 }
+
+export { slugifyJitsiRoomName };

@@ -6,17 +6,16 @@ import {
     TextHeaderPropertyData,
 } from "@workadventure/map-editor";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
+import { get, Unsubscriber } from "svelte/store";
+import * as _ from "lodash";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
-import { get, Unsubscriber } from "svelte/store";
 import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
 import { mapEditorModeStore, MapEntityEditorMode, mapEntityEditorModeStore } from "../../Stores/MapEditorStore";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import { ActivatableInterface } from "../Game/ActivatableInterface";
-import type { GameScene } from "../Game/GameScene";
+import { GameScene } from "../Game/GameScene";
 import { OutlineableInterface } from "../Game/OutlineableInterface";
-
-import * as _ from "lodash";
 
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
@@ -65,7 +64,12 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                     outlineColor: color,
                 });
             }
-            (this.scene as GameScene).markDirty();
+
+            if (this.scene instanceof GameScene) {
+                this.scene.markDirty();
+            } else {
+                throw new Error("Not the Game Scene");
+            }
         });
 
         this.scene.add.existing(this);
@@ -132,6 +136,22 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.outlineColorStore.removeApiColor();
     }
 
+    public setEditColor(color: number): void {
+        this.outlineColorStore.setEditColor(color);
+    }
+
+    public removeEditColor(): void {
+        this.outlineColorStore.removeEditColor();
+    }
+
+    public setPointedToEditColor(color: number): void {
+        this.outlineColorStore.setPointedToEditColor(color);
+    }
+
+    public removePointedToEditColor(): void {
+        this.outlineColorStore.removePointedToEditColor();
+    }
+
     public pointerOverOutline(color: number): void {
         this.outlineColorStore.pointerOver(color);
     }
@@ -191,7 +211,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             const roomName = properties.jitsiRoom.roomName;
             const roomConfig = properties.jitsiRoom.jitsiRoomConfig;
             actions.push({
-                actionName: properties.jitsiRoom.buttonLabel,
+                actionName: properties.jitsiRoom.buttonLabel ?? "",
                 protected: true,
                 priority: 1,
                 callback: () => {
@@ -209,15 +229,15 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                 },
             });
         }
-        if (properties.openTab) {
-            const link = properties.openTab.link;
-            const inNewTab = properties.openTab.inNewTab;
+        if (properties.openWebsite) {
+            const link = properties.openWebsite.link;
+            const newTab = properties.openWebsite.newTab;
             actions.push({
-                actionName: properties.openTab.buttonLabel,
+                actionName: properties.openWebsite.buttonLabel ?? "",
                 protected: true,
                 priority: 1,
                 callback: () => {
-                    if (inNewTab) {
+                    if (newTab) {
                         this.emit(EntityEvent.PropertyActivated, {
                             propertyName: GameMapProperties.OPEN_TAB,
                             propertyValue: link,
@@ -235,7 +255,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         if (properties.playAudio) {
             const audioLink = properties.playAudio.audioLink;
             actions.push({
-                actionName: properties.playAudio.buttonLabel,
+                actionName: properties.playAudio.buttonLabel ?? "",
                 protected: true,
                 priority: 1,
                 callback: () => {
@@ -271,9 +291,5 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     public getOldPosition(): { x: number; y: number } {
         return this.oldPosition;
-    }
-
-    public setOldPosition(x: number, y: number): void {
-        this.oldPosition = { x, y };
     }
 }

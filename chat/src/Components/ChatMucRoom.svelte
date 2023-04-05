@@ -1,10 +1,10 @@
 <script lang="ts">
     import { MoreHorizontalIcon, RefreshCwIcon, EyeIcon } from "svelte-feather-icons";
-    import OnlineUsers from "./OnlineUsers.svelte";
-    import LL from "../i18n/i18n-svelte";
     import highlightWords from "highlight-words";
+    import { LL } from "../i18n/i18n-svelte";
     import { MucRoom } from "../Xmpp/MucRoom";
     import { activeThreadStore } from "../Stores/ActiveThreadStore";
+    import OnlineUsers from "./OnlineUsers.svelte";
 
     export let mucRoom: MucRoom;
     export let searchValue: string;
@@ -34,7 +34,7 @@
 
 <div class={`wa-chat-item`} on:mouseleave={closeChatUserMenu}>
     <div class="tw-relative" on:click|stopPropagation={() => open()}>
-        <img class={``} src="/static/images/logo-wa-2.png" alt="Send" width="35" />
+        <img class={``} src="./static/images/logo-wa-2.png" alt="Send" width="35" />
         <div class="tw-block tw-absolute tw-right-0 tw-top-0 tw-transform tw-translate-x-2 -tw-translate-y-1">
             {#if mucRoom.type === "live"}
                 <div class="tw-block tw-relative">

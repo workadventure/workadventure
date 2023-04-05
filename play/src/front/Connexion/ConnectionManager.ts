@@ -1,25 +1,24 @@
-import { HtmlUtils } from "./../WebRtc/HtmlUtils";
-import Axios from "axios";
-import { ENABLE_OPENID, PUSHER_URL } from "../Enum/EnvironmentVariable";
-import { RoomConnection } from "./RoomConnection";
-import type { OnConnectInterface, PositionInterface, ViewportInterface } from "./ConnexionModels";
-import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
-import { localUserStore } from "./LocalUserStore";
-import { LocalUser } from "./LocalUser";
-import { Room } from "./Room";
-import { _ServiceWorker } from "../Network/ServiceWorker";
-import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
-import { subMenusStore, userIsConnected, warningContainerStore } from "../Stores/MenuStore";
-import { analyticsClient } from "../Administration/AnalyticsClient";
-import { axiosWithRetry } from "./AxiosUtils";
 import type { AvailabilityStatus } from "@workadventure/messages";
 import { isRegisterData } from "@workadventure/messages";
+import { analyticsClient } from "../Administration/AnalyticsClient";
+import { subMenusStore, userIsConnected, warningContainerStore } from "../Stores/MenuStore";
+import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
+import { _ServiceWorker } from "../Network/ServiceWorker";
+import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
+import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { locales } from "../../i18n/i18n-util";
 import type { Locales } from "../../i18n/i18n-types";
 import { setCurrentLocale } from "../../i18n/locales";
+import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
+import { Room } from "./Room";
+import { LocalUser } from "./LocalUser";
+import { localUserStore } from "./LocalUserStore";
+import type { OnConnectInterface, PositionInterface, ViewportInterface } from "./ConnexionModels";
+import { RoomConnection } from "./RoomConnection";
+import { HtmlUtils } from "./../WebRtc/HtmlUtils";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -72,7 +71,7 @@ class ConnectionManager {
 
         //Logout user in pusher and hydra
         const token = localUserStore.getAuthToken();
-        await Axios.get(`${PUSHER_URL}/logout-callback`, { params: { token } }).then((res) => res.data);
+        await axiosToPusher.get("logout-callback", { params: { token } }).then((res) => res.data);
         localUserStore.setAuthToken(null);
 
         //Go on root page
@@ -119,9 +118,7 @@ class ConnectionManager {
         //@deprecated
         else if (this.connexionType === GameConnexionTypes.register) {
             const organizationMemberToken = urlManager.getOrganizationToken();
-            const result = await Axios.post(`${PUSHER_URL}/register`, { organizationMemberToken }).then(
-                (res) => res.data
-            );
+            const result = await axiosToPusher.post("register", { organizationMemberToken }).then((res) => res.data);
 
             const registerDataChecking = isRegisterData.safeParse(result);
 
@@ -218,6 +215,7 @@ class ConnectionManager {
                     }
                 }
             }
+            // Todo: Replace with a real typing
             this.localUser = localUserStore.getLocalUser() as LocalUser; //if authToken exist in localStorage then localUser cannot be null
         }
         if (this._currentRoom == undefined) {
@@ -247,7 +245,7 @@ class ConnectionManager {
     }
 
     public async anonymousLogin(isBenchmark = false): Promise<void> {
-        const data = await axiosWithRetry.post(`${PUSHER_URL}/anonymLogin`).then((res) => res.data);
+        const data = await axiosWithRetry.post("anonymLogin").then((res) => res.data);
         this.localUser = new LocalUser(data.userUuid, data.email);
         this.authToken = data.authToken;
         if (!isBenchmark) {
@@ -373,14 +371,13 @@ class ConnectionManager {
         //set connected store for menu at false
         userIsConnected.set(false);
 
-        const { authToken, userUuid, email, username, locale, textures, visitCardUrl } = await Axios.get(
-            `${PUSHER_URL}/me`,
-            {
+        const { authToken, userUuid, email, username, locale, textures, visitCardUrl } = await axiosToPusher
+            .get("me", {
                 params: { token, playUri: this.currentRoom?.key },
-            }
-        ).then((res) => {
-            return res.data;
-        });
+            })
+            .then((res) => {
+                return res.data;
+            });
 
         localUserStore.setAuthToken(authToken);
         this.localUser = new LocalUser(userUuid, email);

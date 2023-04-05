@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import { afterUpdate, onDestroy } from "svelte";
+    import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
     import MediaBox from "./MediaBox.svelte";
 
