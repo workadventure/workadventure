@@ -178,26 +178,7 @@ export class AreaEditorTool extends MapEditorTool {
         }
     }
 
-    public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
-        this.gameMapAreaUpdateSubscription = gameMapFrontWrapper
-            .getAreaUpdatedObservable()
-            .subscribe((areaConfig: AreaData) => {
-                this.updateAreaPreview(areaConfig);
-                this.scene.markDirty();
-            });
-    }
-
-    public updateAreaPreview(config: AreaData): void {
-        const areaPreview = this.getAreaPreview(config.id);
-        if (!areaPreview) {
-            return;
-        }
-        areaPreview.updatePreview(config);
-        // // HACK: A way to update AreaPreviewWindow component values after performin undo / redo operations
-        // if (get(mapEditorSelectedAreaPreviewStore) !== undefined) {
-        //     mapEditorSelectedAreaPreviewStore.set(areaPreview);
-        // }
-    }
+    public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {}
 
     public getAreaPreviewConfig(id: string): AreaData | undefined {
         return this.getAreaPreview(id)?.getAreaData();

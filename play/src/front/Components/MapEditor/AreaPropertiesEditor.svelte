@@ -95,7 +95,7 @@
                 }
                 $mapEditorSelectedAreaPreviewStore.setProperty(property.key, property.currentValue);
             } else {
-                $mapEditorSelectedAreaPreviewStore.setProperty(property.key, undefined);
+                $mapEditorSelectedAreaPreviewStore.setProperty(property.key, null);
             }
         }
     }

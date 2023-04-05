@@ -94,7 +94,7 @@
                 }
                 $mapEditorSelectedEntityStore.setProperty(property.key, property.currentValue);
             } else {
-                $mapEditorSelectedEntityStore.setProperty(property.key, undefined);
+                $mapEditorSelectedEntityStore.setProperty(property.key, null);
             }
         }
     }
