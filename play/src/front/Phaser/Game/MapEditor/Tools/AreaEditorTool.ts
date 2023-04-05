@@ -22,7 +22,6 @@ export class AreaEditorTool extends MapEditorTool {
      * Visual representations of map Areas objects
      */
     private areaPreviews: AreaPreview[];
-
     private currentlySelectedPreview: AreaPreview | undefined;
 
     private active: boolean;
@@ -33,6 +32,8 @@ export class AreaEditorTool extends MapEditorTool {
 
     private draggingdArea: boolean;
     private wasAreaMoved: boolean;
+
+    private shiftKey: Phaser.Input.Keyboard.Key;
 
     private selectedAreaPreviewStoreSubscriber!: Unsubscriber;
 
@@ -51,6 +52,8 @@ export class AreaEditorTool extends MapEditorTool {
         super();
         this.mapEditorModeManager = mapEditorModeManager;
         this.scene = this.mapEditorModeManager.getScene();
+
+        this.shiftKey = this.scene.input.keyboard.addKey("SHIFT");
 
         this.areaPreviews = this.createAreaPreviews();
         this.active = false;
@@ -217,6 +220,18 @@ export class AreaEditorTool extends MapEditorTool {
         this.scene.input.on(Phaser.Input.Events.POINTER_UP, this.pointerUpEventHandler);
         this.scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
         this.scene.input.on(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
+
+        this.shiftKey.on(Phaser.Input.Keyboard.Events.DOWN, () => {
+            if (this.drawingNewArea && this.drawinNewAreaStartPos) {
+                this.drawNewArea(this.scene.input.activePointer);
+            }
+        });
+
+        this.shiftKey.on(Phaser.Input.Keyboard.Events.UP, () => {
+            if (this.drawingNewArea && this.drawinNewAreaStartPos) {
+                this.drawNewArea(this.scene.input.activePointer);
+            }
+        });
     }
 
     private unbindEventHandlers(): void {
@@ -268,15 +283,10 @@ export class AreaEditorTool extends MapEditorTool {
 
         if (mode === "ADD") {
             if (this.drawinNewAreaStartPos) {
-                const width = Math.abs(pointer.worldX - this.drawinNewAreaStartPos.x);
-                const height = Math.abs(pointer.worldY - this.drawinNewAreaStartPos.y);
-                if (width >= 10 && height >= 10) {
-                    this.createNewArea(
-                        Math.min(this.drawinNewAreaStartPos.x, pointer.worldX),
-                        Math.min(this.drawinNewAreaStartPos.y, pointer.worldY),
-                        width,
-                        height
-                    );
+                const drawingData = this.getNewAreaDrawingData(pointer);
+
+                if (drawingData.width >= 10 && drawingData.height >= 10) {
+                    this.createNewArea(drawingData.x, drawingData.y, drawingData.width, drawingData.height);
                 }
                 this.drawinNewAreaStartPos = undefined;
                 this.drawingNewArea = false;
@@ -320,19 +330,48 @@ export class AreaEditorTool extends MapEditorTool {
 
     private handlePointerMoveEvent(pointer: Phaser.Input.Pointer): void {
         if (this.drawingNewArea && this.drawinNewAreaStartPos) {
-            this.newAreaPreview.clear();
-            this.newAreaPreview.fillStyle(0x0000ff, 0.5);
-            this.newAreaPreview.fillRect(
-                this.drawinNewAreaStartPos.x,
-                this.drawinNewAreaStartPos.y,
-                pointer.worldX - this.drawinNewAreaStartPos.x,
-                pointer.worldY - this.drawinNewAreaStartPos.y
-            );
-            this.scene.markDirty();
+            this.drawNewArea(pointer);
         }
         if (this.draggingdArea) {
             this.wasAreaMoved = true;
         }
+    }
+
+    private drawNewArea(pointer: Phaser.Input.Pointer): void {
+        const drawingData = this.getNewAreaDrawingData(pointer);
+        this.newAreaPreview.clear();
+        this.newAreaPreview.fillStyle(0x0000ff, 0.5);
+        this.newAreaPreview.fillRect(drawingData.x, drawingData.y, drawingData.width, drawingData.height);
+        this.scene.markDirty();
+    }
+
+    private getNewAreaDrawingData(pointer: Phaser.Input.Pointer): {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    } {
+        if (!this.drawinNewAreaStartPos) {
+            return { x: 0, y: 0, width: 0, height: 0 };
+        }
+        const width = Math.abs(pointer.worldX - this.drawinNewAreaStartPos.x);
+        const height = Math.abs(pointer.worldY - this.drawinNewAreaStartPos.y);
+        const x = Math.min(this.drawinNewAreaStartPos.x, pointer.worldX);
+        const y = Math.min(this.drawinNewAreaStartPos.y, pointer.worldY);
+        if (this.shiftKey.isDown) {
+            return {
+                x: Math.floor(x / 32) * 32,
+                y: Math.floor(y / 32) * 32,
+                width: Math.floor(width / 32) * 32 + 32,
+                height: Math.floor(height / 32) * 32 + 32,
+            };
+        }
+        return {
+            x,
+            y,
+            width,
+            height,
+        };
     }
 
     private getAreaEditorToolObjectsFromGameObjects(
