@@ -511,7 +511,7 @@ jobs:
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
           cache: "npm"
           cache-dependency-path: 'tests/package-lock.json'
 
@@ -529,6 +529,14 @@ jobs:
       - name: "Build proto messages"
         run: npm run ts-proto
         working-directory: "messages"
+
+      - name: "Install Room API client dependencies"
+        run: npm ci
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: "Build Room API proto files"
+        run: npm run ts-proto
+        working-directory: "libs/room-api-clients/room-api-client-js"
 
       - name: "Build API typings"
         run: npm run build-typings

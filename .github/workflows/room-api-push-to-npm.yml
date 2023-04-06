@@ -38,7 +38,7 @@ jobs:
         run: npm ci
         working-directory: "libs/room-api-clients/room-api-client-js"
 
-      - name: "Build proto messages"
+      - name: "Build proto"
         run: npm run ts-proto
         working-directory: "libs/room-api-clients/room-api-client-js"
 
