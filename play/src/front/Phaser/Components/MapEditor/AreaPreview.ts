@@ -196,8 +196,13 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 const oldX = square.x;
                 const oldY = square.y;
 
-                square.x = dragX;
-                square.y = dragY;
+                if (this.shiftKey.isDown) {
+                    square.x = Math.floor(dragX / 32) * 32;
+                    square.y = Math.floor(dragY / 32) * 32;
+                } else {
+                    square.x = dragX;
+                    square.y = dragY;
+                }
 
                 let newWidth = 0;
                 let newHeight = 0;
