@@ -30,7 +30,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         audioProperties: {
             label: "Jouer un fichier audio",
             audioLinkLabel: "Lien vers l'audio",
-            audioLinkPlaceholder: "https://xxx.yyy/qqchose.mp3",
+            audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
             defaultButtonLabel: "Jouer de la musique",
         },
         linkProperties: {
