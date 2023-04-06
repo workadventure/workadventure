@@ -19,7 +19,9 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     private moved: boolean;
     private squareSelected: boolean;
 
-    constructor(scene: Phaser.Scene, areaData: AreaData) {
+    private shiftKey: Phaser.Input.Keyboard.Key;
+
+    constructor(scene: Phaser.Scene, areaData: AreaData, shiftKey: Phaser.Input.Keyboard.Key) {
         super(
             scene,
             areaData.x + areaData.width * 0.5,
@@ -29,6 +31,8 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
             0x0000ff,
             0.5
         );
+
+        this.shiftKey = shiftKey;
 
         this.areaData = areaData;
         this.selected = false;
@@ -100,7 +104,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     }
 
     public getSize(): number {
-        return this.width * this.height;
+        return this.displayWidth * this.displayHeight;
     }
 
     public setProperty<K extends keyof AreaDataProperties>(key: K, value: AreaDataProperties[K]): void {
@@ -151,8 +155,15 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         );
         this.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             if (pointer.isDown && this.selected && !this.squareSelected) {
-                this.x = dragX;
-                this.y = dragY;
+                if (this.shiftKey.isDown) {
+                    const topLeftX = Math.floor((dragX - this.displayWidth * 0.5) / 32) * 32;
+                    const topLeftY = Math.floor((dragY - this.displayHeight * 0.5) / 32) * 32;
+                    this.x = topLeftX + this.displayWidth * 0.5;
+                    this.y = topLeftY + this.displayHeight * 0.5;
+                } else {
+                    this.x = dragX;
+                    this.y = dragY;
+                }
                 this.updateSquaresPositions();
                 this.moved = true;
                 if (this.scene instanceof GameScene) {

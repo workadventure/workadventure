@@ -395,9 +395,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private handleAreaPreviewCreation(config: AreaData, localCommand: boolean): void {
-        const areaPreview = new AreaPreview(this.scene, structuredClone(config));
-        this.bindAreaPreviewEventHandlers(areaPreview);
-        this.areaPreviews.push(areaPreview);
+        const areaPreview = this.createAreaPreview(config);
         this.scene.markDirty();
 
         if (localCommand) {
@@ -421,7 +419,7 @@ export class AreaEditorTool extends MapEditorTool {
 
         if (areaConfigs) {
             for (const config of Array.from(areaConfigs.values())) {
-                this.areaPreviews.push(this.createAreaPreview(config));
+                this.createAreaPreview(config);
             }
         }
 
@@ -431,8 +429,9 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private createAreaPreview(areaConfig: AreaData): AreaPreview {
-        const areaPreview = new AreaPreview(this.scene, { ...areaConfig });
+        const areaPreview = new AreaPreview(this.scene, structuredClone(areaConfig), this.shiftKey);
         this.bindAreaPreviewEventHandlers(areaPreview);
+        this.areaPreviews.push(areaPreview);
         return areaPreview;
     }
 
@@ -521,7 +520,7 @@ export class AreaEditorTool extends MapEditorTool {
                 if (areaPreview) {
                     areaPreview.updatePreview(config);
                 } else {
-                    this.areaPreviews.push(this.createAreaPreview(config));
+                    this.createAreaPreview(config);
                 }
             }
         }
