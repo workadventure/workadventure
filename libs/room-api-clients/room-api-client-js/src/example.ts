@@ -7,7 +7,7 @@ if (!apiKey) {
   throw new Error("No ROOM_API_SECRET_KEY defined on environment variables!");
 }
 
-const client = createRoomApiClient(apiKey, "room-api.workadventure.localhost");
+const client = createRoomApiClient(apiKey, "room-api.workadventure.localhost", 80);
 
 const roomUrl = "http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json";
 const variableName = "textField";
