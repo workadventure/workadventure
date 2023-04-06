@@ -32,9 +32,7 @@ describe("AdminAuthenticator", () => {
                                 return reject({
                                     response: {
                                         status: 401,
-                                        data: {
-                                            error: "X-API-Key header not found",
-                                        },
+                                        data: "X-API-Key header not found",
                                     },
                                 });
                             }
@@ -43,9 +41,7 @@ describe("AdminAuthenticator", () => {
                                 return reject({
                                     response: {
                                         status: 400,
-                                        data: {
-                                            error: "roomUrl parameter not found",
-                                        },
+                                        data: "roomUrl parameter not found",
                                     },
                                 });
                             }
@@ -54,9 +50,7 @@ describe("AdminAuthenticator", () => {
                                 return reject({
                                     response: {
                                         status: 401,
-                                        data: {
-                                            error: "Unknown API key",
-                                        },
+                                        data: "Unknown API key",
                                     },
                                 });
                             }
@@ -72,27 +66,21 @@ describe("AdminAuthenticator", () => {
                                 return reject({
                                     response: {
                                         status: 500,
-                                        data: {
-                                            error: "Internal error! Please contact us!",
-                                        },
+                                        data: "Internal error! Please contact us!",
                                     },
                                 });
                             } else if (options.params.roomUrl === roomUrl + "undefined") {
                                 return reject({
                                     response: {
                                         status: 404,
-                                        data: {
-                                            error: "Room not found",
-                                        },
+                                        data: "Room not found",
                                     },
                                 });
                             } else if (options.params.roomUrl !== roomUrl) {
                                 return reject({
                                     response: {
                                         status: 403,
-                                        data: {
-                                            error: "You cannot interact with this room!",
-                                        },
+                                        data: "You cannot interact with this room!",
                                     },
                                 });
                             }
