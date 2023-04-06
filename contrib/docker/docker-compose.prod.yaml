@@ -75,6 +75,8 @@ services:
       - REPORT_ISSUES_URL=${REPORT_ISSUES_URL}
       - ENABLE_OPENAPI_ENDPOINT=true
       - ADMIN_API_TOKEN
+      - ROOM_API_PORT=50051
+      - ROOM_API_SECRET_KEY=${ROOM_API_SECRET_KEY}
     labels:
       traefik.enable: "true"
       traefik.http.routers.play.rule: "Host(`${DOMAIN}`) && PathPrefix(`/`)"
@@ -85,6 +87,18 @@ services:
       traefik.http.routers.play-ssl.tls: "true"
       traefik.http.routers.play-ssl.tls.certresolver: "myresolver"
       traefik.http.routers.play-ssl.service: "play"
+
+      traefik.http.middlewares.strip-room-api-prefix.stripprefix.prefixes: "/room-api"
+      traefik.http.routers.room-api.rule: "Host(`${DOMAIN}`) && PathPrefix(`/room-api`)"
+      traefik.http.routers.room-api.middlewares: "strip-room-api-prefix@docker"
+      traefik.http.routers.room-api.entryPoints: "web"
+      traefik.http.services.room-api.loadbalancer.server.port: "50051"
+      traefik.http.routers.room-api-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/room-api`)"
+      traefik.http.routers.room-api-ssl.middlewares: "strip-room-api-prefix@docker"
+      traefik.http.routers.room-api-ssl.entryPoints: "websecure"
+      traefik.http.routers.room-api-ssl.service: "room-api"
+      traefik.http.routers.room-api-ssl.tls: "true"
+      traefik.http.routers.room-api-ssl.tls.certresolver: "myresolver"
     restart: ${RESTART_POLICY}
 
   chat:
