@@ -10,14 +10,14 @@ if (!apiKey) {
   throw new Error("No ROOM_API_SECRET_KEY defined on environment variables!");
 }
 
-const client = createRoomApiClient(apiKey, "room-api.workadventure.localhost", 80);
+const client = createRoomApiClient(apiKey, process.env.ROOM_API_HOSTNAME ?? "room-api.workadventure.localhost", 80);
 
 const roomUrl = "http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json";
 const variableName = "textField";
 
 test.describe('Room API', async () => {
     test("With a bad API key", async () => {
-        const badClient = createRoomApiClient("BAD KEY", "room-api.workadventure.localhost", 80);
+        const badClient = createRoomApiClient("BAD KEY", process.env.ROOM_API_HOSTNAME ?? "room-api.workadventure.localhost", 80);
 
         try {
             await badClient.saveVariable({
