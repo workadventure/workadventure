@@ -79,7 +79,7 @@ export const EnvironmentVariables = z.object({
     LOGROCKET_ID: z.string().optional(),
 
     // RoomAPI related environment variables
-    ROOM_API_PORT: PositiveIntAsString.transform((val) => toNumber(val, 50051)),
+    ROOM_API_PORT: PositiveIntAsString.optional().transform((val) => toNumber(val, 50051)),
     ROOM_API_SECRET_KEY: z.string().optional(),
 });
 
