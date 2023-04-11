@@ -1,78 +1,80 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
     import { slide } from "svelte/transition";
-    import { EntityDataProperties, EntityDataPropertiesKeys } from "@workadventure/map-editor";
+    import { AreaDataProperties, AreaDataPropertiesKeys } from "@workadventure/map-editor";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { mapEditorSelectedEntityStore } from "../../Stores/MapEditorStore";
+    import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
     import crossImg from "../images/cross-icon.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
-    import TextPropertyEditor from "./PropertyEditor/TextPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
+    import FocusablePropertyEditor from "./PropertyEditor/FocusablePropertyEditor.svelte";
 
-    interface EntityPropertyDescription<K extends EntityDataPropertiesKeys> {
+    interface AreaPropertyDescription<K extends AreaDataPropertiesKeys> {
         key: K;
         name: string;
         active: boolean;
-        currentValue: EntityDataProperties[K];
+        currentValue: AreaDataProperties[K];
         component: unknown;
-        defaultValue: EntityDataProperties[K];
+        defaultValue: AreaDataProperties[K];
     }
 
-    let possibleProperties: EntityPropertyDescription<EntityDataPropertiesKeys>[] = [
+    let possibleProperties: AreaPropertyDescription<AreaDataPropertiesKeys>[] = [
         {
-            key: "textHeader",
-            name: $LL.mapEditor.entityEditor.textProperties.label(),
+            key: "focusable",
+            name: $LL.mapEditor.properties.focusableProperties.label(),
             active: false,
             currentValue: undefined,
-            component: TextPropertyEditor,
-            defaultValue: "",
+            component: FocusablePropertyEditor,
+            defaultValue: {
+                zoom_margin: 0,
+                hideButtonLabel: true,
+            },
         },
         {
             key: "jitsiRoom",
-            name: $LL.mapEditor.entityEditor.jitsiProperties.label(),
+            name: $LL.mapEditor.properties.jitsiProperties.label(),
             active: false,
             currentValue: undefined,
             component: JitsiRoomPropertyEditor,
             defaultValue: {
-                buttonLabel: $LL.mapEditor.entityEditor.jitsiProperties.defaultButtonLabel(),
                 roomName: "",
+                hideButtonLabel: true,
                 jitsiRoomConfig: {},
             },
         },
         {
             key: "playAudio",
-            name: $LL.mapEditor.entityEditor.audioProperties.label(),
+            name: $LL.mapEditor.properties.audioProperties.label(),
             active: false,
             currentValue: undefined,
             component: PlayAudioPropertyEditor,
             defaultValue: {
-                buttonLabel: $LL.mapEditor.entityEditor.audioProperties.defaultButtonLabel(),
                 audioLink: "",
+                hideButtonLabel: true,
             },
         },
         {
             key: "openWebsite",
-            name: $LL.mapEditor.entityEditor.linkProperties.label(),
+            name: $LL.mapEditor.properties.linkProperties.label(),
             active: false,
             currentValue: undefined,
             component: OpenWebsitePropertyEditor,
             defaultValue: {
-                buttonLabel: $LL.mapEditor.entityEditor.linkProperties.defaultButtonLabel(),
                 link: "",
+                hideButtonLabel: true,
                 newTab: true,
             },
         },
     ];
 
-    let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((currentEntity) => {
-        if (currentEntity) {
-            currentEntity.setEditColor(0x00ffff);
+    let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
+        if (currentAreaPreview) {
             for (let property of possibleProperties) {
                 property.active =
-                    currentEntity.getProperties()[property.key] !== undefined &&
-                    currentEntity.getProperties()[property.key] !== null;
-                property.currentValue = currentEntity.getProperties()[property.key];
+                    currentAreaPreview.getAreaData().properties[property.key] !== undefined &&
+                    currentAreaPreview.getAreaData().properties[property.key] !== null;
+                property.currentValue = currentAreaPreview.getAreaData().properties[property.key];
                 if (!property.currentValue) {
                     property.currentValue = structuredClone(property.defaultValue);
                 }
@@ -82,46 +84,40 @@
     });
 
     onDestroy(() => {
-        selectedEntityUnsubscriber();
+        selectedAreaPreviewUnsubscriber();
     });
 
-    function onPropertyChecked(property: EntityPropertyDescription<EntityDataPropertiesKeys>) {
-        if ($mapEditorSelectedEntityStore) {
+    function onPropertyChecked(property: AreaPropertyDescription<AreaDataPropertiesKeys>) {
+        if ($mapEditorSelectedAreaPreviewStore) {
             if (property.active) {
                 if (!property.currentValue) {
                     property.currentValue = possibleProperties.find((v) => v.key === property.key)?.defaultValue; //initialize here the property value
                 }
-                $mapEditorSelectedEntityStore.setProperty(property.key, property.currentValue);
+                $mapEditorSelectedAreaPreviewStore.setProperty(property.key, property.currentValue);
             } else {
-                $mapEditorSelectedEntityStore.setProperty(property.key, undefined);
+                $mapEditorSelectedAreaPreviewStore.setProperty(property.key, null);
             }
         }
     }
 
-    function onUpdateProperty(property: EntityPropertyDescription<EntityDataPropertiesKeys>) {
-        if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.setProperty(property.key, property.currentValue);
+    function onUpdateProperty(property: AreaPropertyDescription<AreaDataPropertiesKeys>) {
+        if ($mapEditorSelectedAreaPreviewStore) {
+            $mapEditorSelectedAreaPreviewStore.setProperty(property.key, property.currentValue);
         }
     }
 
-    function onTestInteraction() {
-        if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.TestActivation();
-        }
-    }
-
-    function onDeleteEntity() {
-        if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.delete();
-            mapEditorSelectedEntityStore.set(undefined);
+    function onDeleteAreaPreview() {
+        if ($mapEditorSelectedAreaPreviewStore) {
+            $mapEditorSelectedAreaPreviewStore.delete();
+            mapEditorSelectedAreaPreviewStore.set(undefined);
         }
     }
 </script>
 
-{#if $mapEditorSelectedEntityStore === undefined}
+{#if $mapEditorSelectedAreaPreviewStore === undefined}
     {$LL.mapEditor.entityEditor.editInstructions()}
 {:else}
-    <div class="entity-properties">
+    <div class="area-properties">
         {#each possibleProperties as property (property.key)}
             <div class="property-enabler">
                 <label for={property.key}>{property.name}</label>
@@ -145,8 +141,7 @@
         {/each}
     </div>
     <div class="action-button">
-        <button on:click={onTestInteraction}>{$LL.mapEditor.entityEditor.testInteractionButton()}</button>
-        <button class="delete-button" on:click={onDeleteEntity}
+        <button class="delete-button" on:click={onDeleteAreaPreview}
             ><div>{$LL.mapEditor.entityEditor.deleteButton()}</div>
             <img src={crossImg} alt="" /></button
         >
@@ -154,7 +149,7 @@
 {/if}
 
 <style lang="scss">
-    .entity-properties {
+    .area-properties {
         overflow-y: auto;
         overflow-x: hidden;
         .property-enabler {

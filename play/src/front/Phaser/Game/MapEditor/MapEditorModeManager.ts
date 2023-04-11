@@ -262,7 +262,7 @@ export class MapEditorModeManager {
                 break;
             }
             case "z": {
-                if (this.ctrlKey) {
+                if (this.ctrlKey.isDown) {
                     this.shiftKey.isDown ? this.redoCommand() : this.undoCommand();
                 }
                 break;
@@ -321,7 +321,7 @@ export class MapEditorModeManager {
         const func = () => {
             switch (commandConfig.type) {
                 case "UpdateAreaCommand": {
-                    this.scene.connection?.emitMapEditorModifyArea(commandId, commandConfig.areaObjectConfig);
+                    this.scene.connection?.emitMapEditorModifyArea(commandId, commandConfig.dataToModify);
                     break;
                 }
                 case "CreateAreaCommand": {

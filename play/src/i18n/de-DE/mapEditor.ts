@@ -2,28 +2,11 @@ import type { BaseTranslation } from "../i18n-types";
 
 const mapEditor: BaseTranslation = {
     sideBar: {
-        zoomIn: "Vergrößern",
-        zoomOut: "Verkleinern",
         areaEditor: "Fläche bearbeiten",
         entityEditor: "Entität bearbeiten",
         tileEditor: "Kachel bearbeiten",
     },
-    entityEditor: {
-        itemPicker: {
-            searchPlaceholder: "Nach namen oder Tags suchen",
-            selectVariationInstructions: "Variante auswählen",
-        },
-        addButton: "Hinzufügen",
-        editButton: "Bearbeiten",
-        deleteButton: "Löschen",
-        testInteractionButton: "Interaktion testen",
-        buttonLabel: "Knopfbeschrifung",
-        editInstructions: "Klicken Sie auf ein Objekt, um seine Eigenschaften zu ändern.",
-        removeInstructions: "Klicken Sie auf ein Objekt um es zu löschen.",
-        textProperties: {
-            label: "Überschrift",
-            placeholder: "Geben Sie hier Text ein, der bei der Interaktion mit dem Objekt angezeigt wird",
-        },
+    properties: {
         jitsiProperties: {
             label: "Jitsi-Raum",
             roomNameLabel: "Room Name",
@@ -49,8 +32,22 @@ const mapEditor: BaseTranslation = {
             label: "Link öffnen",
             linkLabel: "Link URL",
             newTabLabel: "In neuen Tab öffnen",
-            linkPlaceholder: "https://play.staging.workadventu.re/",
+            linkPlaceholder: "https://example.com",
             defaultButtonLabel: "Link öffnen",
+        },
+    },
+    entityEditor: {
+        itemPicker: {
+            searchPlaceholder: "Nach namen oder Tags suchen",
+            selectVariationInstructions: "Variante auswählen",
+        },
+        deleteButton: "Löschen",
+        testInteractionButton: "Interaktion testen",
+        buttonLabel: "Knopfbeschrifung",
+        editInstructions: "Klicken Sie auf ein Objekt, um seine Eigenschaften zu ändern.",
+        textProperties: {
+            label: "Überschrift",
+            placeholder: "Geben Sie hier Text ein, der bei der Interaktion mit dem Objekt angezeigt wird",
         },
     },
 };

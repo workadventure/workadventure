@@ -102,7 +102,6 @@ export class GameMapFrontWrapper {
      * Firing on map change, containing newest collision grid array
      */
     private mapChangedSubject = new Subject<number[][]>();
-    private areaUpdatedSubject = new Subject<AreaData>();
 
     constructor(
         scene: GameScene,
@@ -685,7 +684,6 @@ export class GameMapFrontWrapper {
         if (this.position && area && gameMapAreas.isPlayerInsideArea(id, this.position)) {
             this.triggerSpecificAreaOnEnter(area);
         }
-        this.areaUpdatedSubject.next(gameMapAreas.getArea(id));
     }
 
     public deleteArea(id: string): void {
@@ -712,10 +710,6 @@ export class GameMapFrontWrapper {
 
     public getMapChangedObservable(): Observable<number[][]> {
         return this.mapChangedSubject.asObservable();
-    }
-
-    public getAreaUpdatedObservable(): Observable<AreaData> {
-        return this.areaUpdatedSubject.asObservable();
     }
 
     public getFlatLayers(): ITiledMapLayer[] {
@@ -929,7 +923,9 @@ export class GameMapFrontWrapper {
         if (this.position) {
             const dynamicAreasProperties = this.getDynamicAreasProperties(this.position);
             if (dynamicAreasProperties) {
-                properties = dynamicAreasProperties;
+                for (const [key, value] of dynamicAreasProperties) {
+                    properties.set(key, value);
+                }
             }
         }
 
@@ -950,8 +946,8 @@ export class GameMapFrontWrapper {
 
         // CHECK FOR ENTITIES PROPERTIES
         if (this.entitiesManager) {
-            for (const property of this.entitiesManager.getProperties()) {
-                properties.set(property[0], property[1]);
+            for (const [key, value] of this.entitiesManager.getProperties()) {
+                properties.set(key, value);
             }
         }
 

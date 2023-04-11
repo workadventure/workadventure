@@ -7,8 +7,7 @@ import {
     mapEditorModeStore,
     mapEditorSelectedEntityPrefabStore,
     mapEditorSelectedEntityStore,
-    MapEntityEditorMode,
-    mapEntityEditorModeStore,
+    mapEditorEntityModeStore,
     mapEditorSelectedEntityDraggedStore,
 } from "../../../Stores/MapEditorStore";
 import { Entity, EntityEvent } from "../../ECS/Entity";
@@ -28,7 +27,7 @@ export const CopyEntityEventData = z.object({
 export type CopyEntityEventData = z.infer<typeof CopyEntityEventData>;
 
 export enum EntitiesManagerEvent {
-    RemoveEntity = "EntitiesManagerEvent:RemoveEntity",
+    DeleteEntity = "EntitiesManagerEvent:DeleteEntity",
     UpdateEntity = "EntitiesManagerEvent:UpdateEntity",
     CopyEntity = "EntitiesManagerEvent:CopyEntity",
 }
@@ -144,7 +143,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
     }
 
     public makeAllEntitiesNonInteractive(): void {
-        console.log("disable interactive");
         this.entities.forEach((entity) => {
             entity.disableInteractive();
         });
@@ -177,8 +175,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
     }
 
     private bindEntityEventHandlers(entity: Entity): void {
-        entity.on(EntityEvent.Remove, () => {
-            this.emit(EntitiesManagerEvent.RemoveEntity, entity);
+        entity.on(EntityEvent.Delete, () => {
+            this.emit(EntitiesManagerEvent.DeleteEntity, entity);
         });
         // get the type! Switch to rxjs?
         entity.on(
@@ -196,12 +194,12 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             this.emit(EntitiesManagerEvent.UpdateEntity, data);
         });
         entity.on(Phaser.Input.Events.DRAG_START, () => {
-            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
+            if (get(mapEditorModeStore) && get(mapEditorEntityModeStore) === "EDIT") {
                 mapEditorSelectedEntityDraggedStore.set(true);
             }
         });
         entity.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
+            if (get(mapEditorModeStore) && get(mapEditorEntityModeStore) === "EDIT") {
                 const collisitonGrid = entity.getEntityData().prefab.collisionGrid;
                 const depthOffset = entity.getEntityData().prefab.depthOffset ?? 0;
                 const tileDim = this.scene.getGameMapFrontWrapper().getTileDimensions();
@@ -235,7 +233,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             }
         });
         entity.on(Phaser.Input.Events.DRAG_END, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore) && get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode) {
+            if (get(mapEditorModeStore) && get(mapEditorEntityModeStore) === "EDIT") {
                 mapEditorSelectedEntityDraggedStore.set(false);
                 if (
                     !this.scene
@@ -265,9 +263,9 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 this.scene.markDirty();
             }
         });
-        entity.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+        entity.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
             if (get(mapEditorModeStore) && !get(mapEditorSelectedEntityPrefabStore)) {
-                mapEntityEditorModeStore.set(MapEntityEditorMode.EditMode);
+                mapEditorEntityModeStore.set("EDIT");
                 mapEditorSelectedEntityStore.set(entity);
             }
         });

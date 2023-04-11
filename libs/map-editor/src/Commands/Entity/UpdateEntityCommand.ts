@@ -26,14 +26,14 @@ export class UpdateEntityCommand extends Command {
 
     public execute(): UpdateEntityCommandConfig {
         if (!this.gameMap.getGameMapEntities()?.updateEntity(this.newConfig.id, this.newConfig)) {
-            throw new Error(`MapEditorError: Could not execute UpdateEntity Command. Area ID: ${this.newConfig.id}`);
+            throw new Error(`MapEditorError: Could not execute UpdateEntity Command. Entity ID: ${this.newConfig.id}`);
         }
         return { type: "UpdateEntityCommand", dataToModify: this.newConfig };
     }
 
     public undo(): UpdateEntityCommandConfig {
         if (!this.gameMap.getGameMapEntities()?.updateEntity(this.oldConfig.id, this.oldConfig)) {
-            throw new Error(`MapEditorError: Could not undo UpdateEntity Command. Area ID: ${this.newConfig.id}`);
+            throw new Error(`MapEditorError: Could not undo UpdateEntity Command. Entity ID: ${this.newConfig.id}`);
         }
         return { type: "UpdateEntityCommand", dataToModify: this.oldConfig };
     }
