@@ -1,0 +1,174 @@
+{ "compressionlevel":-1,
+ "height":10,
+ "infinite":false,
+ "layers":[
+        {
+         "data":[1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+         "height":10,
+         "id":1,
+         "name":"floor",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":10,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            12, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         "height":10,
+         "id":2,
+         "name":"start",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":10,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[0, 0, 0, 0, 0, 34, 34, 34, 34, 34,
+            0, 0, 0, 0, 0, 34, 34, 34, 34, 34,
+            0, 0, 0, 0, 0, 34, 34, 34, 34, 34,
+            0, 0, 0, 0, 0, 34, 34, 34, 34, 34,
+            0, 0, 0, 0, 0, 34, 34, 34, 34, 34,
+            0, 0, 0, 0, 0, 34, 34, 34, 34, 34,
+            0, 0, 0, 0, 0, 34, 34, 34, 34, 34,
+            0, 0, 0, 0, 0, 34, 34, 34, 34, 34,
+            0, 0, 0, 0, 0, 34, 34, 34, 34, 34,
+            0, 0, 0, 0, 0, 34, 34, 34, 34, 34],
+         "height":10,
+         "id":8,
+         "name":"firstCoWebsite",
+         "opacity":1,
+         "properties":[
+                {
+                 "name":"openWebsite",
+                 "type":"string",
+                 "value":"https:\/\/workadventu.re"
+                }, 
+                {
+                 "name":"openWebsiteClosable",
+                 "type":"bool",
+                 "value":false
+                }, 
+                {
+                 "name":"openWebsiteTrigger",
+                 "type":"string",
+                 "value":"onicon"
+                }],
+         "type":"tilelayer",
+         "visible":true,
+         "width":10,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 23, 23, 23, 23, 23,
+            0, 0, 0, 0, 0, 23, 23, 23, 23, 23,
+            0, 0, 0, 0, 0, 23, 23, 23, 23, 23,
+            0, 0, 0, 0, 0, 23, 23, 23, 23, 23,
+            0, 0, 0, 0, 0, 23, 23, 23, 23, 23,
+            0, 0, 0, 0, 0, 23, 23, 23, 23, 23,
+            0, 0, 0, 0, 0, 23, 23, 23, 23, 23,
+            0, 0, 0, 0, 0, 23, 23, 23, 23, 23],
+         "height":10,
+         "id":11,
+         "name":"secondCoWebsite",
+         "opacity":1,
+         "properties":[
+                {
+                 "name":"openWebsite",
+                 "type":"string",
+                 "value":"https:\/\/wikipedia.org"
+                }, 
+                {
+                 "name":"openWebsiteClosable",
+                 "type":"bool",
+                 "value":false
+                }, 
+                {
+                 "name":"openWebsiteTrigger",
+                 "type":"string",
+                 "value":"onicon"
+                }],
+         "type":"tilelayer",
+         "visible":true,
+         "width":10,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":3,
+         "name":"floorLayer",
+         "objects":[
+                {
+                 "height":141,
+                 "id":1,
+                 "name":"Tests",
+                 "rotation":0,
+                 "text":
+                    {
+                     "fontfamily":"Sans Serif",
+                     "pixelsize":11,
+                     "text":"Test:\nWalk on the blue carpet, an iframe open, walk on the white carpet another one to open another one\nResult:\n2 co-websites must be opened and not closable\n\nTest:\nClick on the bottom right button to close one cowebsite\nClick on the bottom right button to open one cowebsite",
+                     "wrap":true
+                    },
+                 "type":"",
+                 "visible":true,
+                 "width":316.770833333333,
+                 "x":0.28125,
+                 "y":187.833333333333
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":13,
+ "nextobjectid":3,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.10.0",
+ "tileheight":32,
+ "tilesets":[
+        {
+         "columns":11,
+         "firstgid":1,
+         "image":"tileset1.png",
+         "imageheight":352,
+         "imagewidth":352,
+         "margin":0,
+         "name":"tileset1",
+         "spacing":0,
+         "tilecount":121,
+         "tileheight":32,
+         "tilewidth":32
+        }],
+ "tilewidth":32,
+ "type":"map",
+ "version":"1.10",
+ "width":10
+}
