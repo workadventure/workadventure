@@ -689,7 +689,7 @@ jobs:
         run: sleep 30
       - name: Run Playwright tests
         # Run all tests, except the ones needing to restart Docker and the ones relying on an OIDC server
-        run: NODE_TLS_REJECT_UNAUTHORIZED=0 ROOM_API_HOSTNAME=https://workadventure.localhost ROOM_API_PORT=50051 npm run test-single-domain-install
+        run: npm run test-single-domain-install
         working-directory: tests
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
