@@ -1,4 +1,4 @@
-name: Push @workadventure/iframe-api-typings to NPM
+name: Push @workadventure/room-api-client to NPM
 on:
   release:
     types: [created]
