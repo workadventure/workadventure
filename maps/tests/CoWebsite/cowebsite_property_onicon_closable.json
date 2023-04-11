@@ -132,7 +132,7 @@
                     {
                      "fontfamily":"Sans Serif",
                      "pixelsize":11,
-                     "text":"Test:\nWalk on the blue carpet, an iframe open, walk on the white carpet another one to open another one\nResult:\n2 co-websites must be opened\n\nTest:\nGo outside of carpets\nResult:\nAll co-websites must disapeared",
+                     "text":"Test:\nWalk on the blue carpet, an iframe open, walk on the white carpet another one to open another one\nResult:\n2 co-websites must be opened and not closable\n\nTest:\nClick on the bottom right button to close one cowebsite\nClick on the bottom right button to open one cowebsite",
                      "wrap":true
                     },
                  "type":"",
