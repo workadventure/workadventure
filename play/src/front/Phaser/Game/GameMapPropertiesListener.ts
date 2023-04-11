@@ -20,6 +20,7 @@ import { inJitsiStore, inBbbStore, silentStore, inOpenWebsite } from "../../Stor
 import { urlManager } from "../../Url/UrlManager";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { connectionManager } from "../../Connexion/ConnectionManager";
+import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
 
@@ -392,6 +393,9 @@ export class GameMapPropertiesListener {
 
             //user in a zone with cowebsite opened or pressed SPACE to enter is a zone
             inOpenWebsite.set(true);
+
+            // analytics event for open website
+            analyticsClient.openedWebsite();
         };
 
         if (localUserStore.getForceCowebsiteTrigger() || websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {

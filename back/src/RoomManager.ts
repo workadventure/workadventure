@@ -218,6 +218,10 @@ const roomManager: RoomManagerServer = {
             if (pingIntervalId) {
                 clearInterval(pingIntervalId);
             }
+            if (pongTimeoutId) {
+                clearTimeout(pongTimeoutId);
+                pongTimeoutId = undefined;
+            }
             call.end();
             room = null;
             user = null;
