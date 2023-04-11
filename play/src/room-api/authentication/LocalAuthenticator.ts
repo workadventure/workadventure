@@ -9,7 +9,7 @@ const authenticator: AuthenticatorInterface = (apiKey, room) => {
             return reject(new GuardError(Status.UNAUTHENTICATED, "Wrong API key"));
         }
 
-        if (!room.startsWith(PUSHER_URL)) {
+        if (PUSHER_URL !== "/" && !room.startsWith(PUSHER_URL)) {
             return reject(new GuardError(Status.PERMISSION_DENIED, "You cannot interact with this room!"));
         }
 
