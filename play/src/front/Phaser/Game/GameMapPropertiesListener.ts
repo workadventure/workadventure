@@ -396,7 +396,8 @@ export class GameMapPropertiesListener {
                 new URL(openWebsiteProperty ?? "", this.scene.MapUrlFile),
                 allowApiProperty,
                 websitePolicyProperty,
-                websiteWidthProperty
+                websiteWidthProperty,
+                websiteClosableProperty
             );
 
             coWebsiteOpen.coWebsite = coWebsite;
