@@ -1,5 +1,5 @@
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
-import { mapFetcher } from "@workadventure/map-editor";
+import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 import {
     MetaTagsData,
     RequiredMetaTagsData,

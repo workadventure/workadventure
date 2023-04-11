@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapFetcher } from "@workadventure/map-editor";
+import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 
 // TODO: move this test to libs/map-editor
 describe("MapFetcher", () => {

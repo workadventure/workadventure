@@ -2,7 +2,7 @@ import { z } from "zod";
 import { Express } from "express";
 import { MapValidator } from "@workadventure/map-editor/src/GameMap/MapValidator";
 import { HttpFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/HttpFileFetcher";
-import { mapFetcher } from "@workadventure/map-editor";
+import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 import { passportAuthenticator } from "../Services/Authentication";
 import { validateQuery } from "./ValidateQuery";
 

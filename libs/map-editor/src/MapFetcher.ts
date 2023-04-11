@@ -4,7 +4,7 @@ import path from "path";
 import ipaddr from "ipaddr.js";
 import axios from "axios";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
-import { LocalUrlError } from "@workadventure/shared-utils/src/LocalUrlError";
+import { LocalUrlError } from "./LocalUrlError";
 import { WAMFileFormat } from "./types";
 
 class MapFetcher {
