@@ -10,7 +10,7 @@ export type SpaceSocket = ServerDuplexStream<PusherToBackSpaceMessage, BackToPus
 
 const debug = Debug("space");
 
-const spaceManager: SpaceManagerServer = {
+const spaceManager = {
     watchSpace: (call: SpaceSocket): void => {
         debug("watchSpace => called");
         const pusherUuid = uuid();
@@ -70,6 +70,6 @@ const spaceManager: SpaceManagerServer = {
                 call.end();
             });
     },
-};
+} satisfies SpaceManagerServer;
 
 export { spaceManager };

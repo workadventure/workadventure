@@ -77,6 +77,10 @@ export const EnvironmentVariables = z.object({
     ENABLE_REPORT_ISSUES_MENU: BoolAsString.optional().transform((val) => toBool(val, false)),
     REPORT_ISSUES_URL: z.string().url().optional().or(z.literal("")),
     LOGROCKET_ID: z.string().optional(),
+
+    // RoomAPI related environment variables
+    ROOM_API_PORT: PositiveIntAsString.optional().transform((val) => toNumber(val, 50051)),
+    ROOM_API_SECRET_KEY: z.string().optional(),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

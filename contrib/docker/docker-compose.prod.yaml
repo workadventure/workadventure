@@ -11,6 +11,7 @@ services:
       - --entrypoints.web.http.redirections.entryPoint.to=websecure
       - --entrypoints.web.http.redirections.entryPoint.scheme=https
       - --entryPoints.websecure.address=:${HTTPS_PORT}
+      - --entryPoints.grpc.address=:${GRPC_PORT}
       # HTTP challenge
       - --certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}
       - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
@@ -21,6 +22,7 @@ services:
     ports:
       - "${HTTP_PORT}:80"
       - "${HTTPS_PORT}:443"
+      - "${GRPC_PORT}:50051"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${DATA_DIR}/letsencrypt/:/letsencrypt/
@@ -75,6 +77,10 @@ services:
       - REPORT_ISSUES_URL=${REPORT_ISSUES_URL}
       - ENABLE_OPENAPI_ENDPOINT=true
       - ADMIN_API_TOKEN
+      - ROOM_API_PORT=50051
+      - ROOM_API_SECRET_KEY=${ROOM_API_SECRET_KEY}
+      - GRPC_VERBOSITY=DEBUG
+      - GRPC_TRACE=all
     labels:
       traefik.enable: "true"
       traefik.http.routers.play.rule: "Host(`${DOMAIN}`) && PathPrefix(`/`)"
@@ -85,6 +91,14 @@ services:
       traefik.http.routers.play-ssl.tls: "true"
       traefik.http.routers.play-ssl.tls.certresolver: "myresolver"
       traefik.http.routers.play-ssl.service: "play"
+
+      traefik.http.routers.room-api.rule: "Host(`${DOMAIN}`)"
+      traefik.http.routers.room-api.entryPoints: "grpc"
+      traefik.http.routers.room-api.service: "room-api"
+      traefik.http.services.room-api.loadbalancer.server.port: "50051"
+      traefik.http.services.room-api.loadbalancer.server.scheme: "h2c"
+      traefik.http.routers.room-api.tls: "true"
+      traefik.http.routers.room-api.tls.certresolver: "myresolver"
     restart: ${RESTART_POLICY}
 
   chat:

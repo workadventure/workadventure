@@ -83,8 +83,9 @@
         "image": "thecodingmachine/workadventure-play:"+tag,
         "host": {
           "url": "play-"+url,
+          "containerPort": 3000
         },
-        "ports": [3000],
+        "ports": [3000, 50051],
         "env": {
           "SECRET_KEY": "tempSecretKeyNeedsToChange",
           "JITSI_ISS": env.JITSI_ISS,
@@ -283,10 +284,37 @@
                 }
               }
             },
+            service+: {
+              metadata+: {
+                annotations+: {
+                  "traefik.ingress.kubernetes.io/service.serversscheme": "h2c"
+                }
+              }
+            },
             ingress+: {
               spec+: {
+                rules+:[
+                  {
+                    host: "room-api-"+url,
+                    http: {
+                      paths: [
+                        {
+                          backend: {
+                            service: {
+                              name: "play",
+                              port: {
+                                number: 50051
+                              }
+                            }
+                          },
+                          pathType: "ImplementationSpecific"
+                        }
+                      ]
+                    }
+                  }
+                ],
                 tls+: [{
-                  hosts: ["play-"+url],
+                  hosts: ["play-"+url, "room-api-"+url],
                   secretName: "certificate-tls"
                 }]
               }

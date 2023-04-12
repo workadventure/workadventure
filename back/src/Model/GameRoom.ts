@@ -20,6 +20,7 @@ import { Jitsi } from "@workadventure/shared-utils";
 import { ClientReadableStream } from "@grpc/grpc-js";
 import { mapFetcher } from "@workadventure/shared-utils/src/MapFetcher";
 import { LocalUrlError } from "@workadventure/shared-utils/src/LocalUrlError";
+import { Value } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/struct";
 import { PositionInterface } from "../Model/PositionInterface";
 import {
     EmoteCallback,
@@ -31,7 +32,7 @@ import {
 } from "../Model/Zone";
 import { Movable } from "../Model/Movable";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
-import { RoomSocket, ZoneSocket } from "../RoomManager";
+import { RoomSocket, VariableSocket, ZoneSocket } from "../RoomManager";
 import { Admin } from "../Model/Admin";
 import { adminApi } from "../Services/AdminApi";
 import { VariablesManager } from "../Services/VariablesManager";
@@ -76,6 +77,7 @@ export class GameRoom implements BrothersFinder {
     private nextUserId = 1;
 
     private roomListeners: Set<RoomSocket> = new Set<RoomSocket>();
+    private variableListeners: Set<VariableSocket> = new Set<VariableSocket>();
     private mapStorageClientMessagesStream: ClientReadableStream<MapStorageToBackMessage> | undefined;
     private reconnectMapStorageTimeout: NodeJS.Timeout | undefined;
     private closing = false;
@@ -523,7 +525,7 @@ export class GameRoom implements BrothersFinder {
         return this.itemsState;
     }
 
-    public async setVariable(name: string, value: string, user: User): Promise<void> {
+    public async setVariable(name: string, value: string, user: User | "RoomApi"): Promise<void> {
         // First, let's check if "user" is allowed to modify the variable.
         const variableManager = await this.getVariableManager();
 
@@ -551,6 +553,15 @@ export class GameRoom implements BrothersFinder {
                     variableMessage: VariableWithTagMessage.fromPartial(variableMessage),
                 },
             });
+
+            // Dispatch the variable update to variable listeners
+            for (const listener of this.variableListeners.values()) {
+                if (listener.request.name !== name) {
+                    return;
+                }
+
+                listener.write(Value.wrap(JSON.parse(value)));
+            }
         } catch (e) {
             if (e instanceof VariableError) {
                 // Ok, we have an error setting a variable. Either the user is trying to hack the map... or the map
@@ -639,6 +650,14 @@ export class GameRoom implements BrothersFinder {
 
     public removeRoomListener(socket: RoomSocket) {
         this.roomListeners.delete(socket);
+    }
+
+    public addVariableListener(socket: VariableSocket) {
+        this.variableListeners.add(socket);
+    }
+
+    public removeVariableListener(socket: VariableSocket) {
+        this.variableListeners.delete(socket);
     }
 
     /**
@@ -767,7 +786,7 @@ export class GameRoom implements BrothersFinder {
         return this.variableManagerPromise;
     }
 
-    public async getVariablesForTags(tags: string[]): Promise<Map<string, string>> {
+    public async getVariablesForTags(tags: string[] | undefined): Promise<Map<string, string>> {
         const variablesManager = await this.getVariableManager();
         return variablesManager.getVariablesForTags(tags);
     }
