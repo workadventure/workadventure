@@ -1,6 +1,6 @@
 <script lang="ts">
     import { localUserStore } from "../../Connexion/LocalUserStore";
-    import {frameRateStore, videoConstraintStore} from "../../Stores/MediaStore";
+    import { frameRateStore } from "../../Stores/MediaStore";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { menuVisiblilityStore } from "../../Stores/MenuStore";
     import LL, { locale } from "../../../i18n/i18n-svelte";

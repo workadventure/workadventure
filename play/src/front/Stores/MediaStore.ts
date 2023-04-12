@@ -1,4 +1,4 @@
-import type {Readable, Writable} from "svelte/store";
+import type { Readable, Writable } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { userMovingStore } from "./GameStore";
@@ -175,38 +175,41 @@ export const cameraEnergySavingStore = derived(
     }
 );
 
-export const requestedCameraDeviceIdStore: Writable<string|undefined> = writable();
-export const frameRateStore: Writable<number|undefined> = writable();
-export const requestedMicrophoneDeviceIdStore: Writable<string|undefined> = writable();
-export const usedCameraDeviceIdStore: Writable<string|undefined> = writable();
-export const usedMicrophoneDeviceIdStore: Writable<string|undefined> = writable();
+export const requestedCameraDeviceIdStore: Writable<string | undefined> = writable();
+export const frameRateStore: Writable<number | undefined> = writable();
+export const requestedMicrophoneDeviceIdStore: Writable<string | undefined> = writable();
+export const usedCameraDeviceIdStore: Writable<string | undefined> = writable();
+export const usedMicrophoneDeviceIdStore: Writable<string | undefined> = writable();
 
 export const inOpenWebsite = writable(false);
 
 /**
  * A store that contains video constraints.
  */
-export const videoConstraintStore = derived([requestedCameraDeviceIdStore, frameRateStore], ([$cameraDeviceIdStore, $frameRateStore]) => {
-    const constraints = {
-        width: { min: 640, ideal: 1280, max: 1920 },
-        height: { min: 400, ideal: 720 },
-        frameRate: { ideal: localUserStore.getVideoQualityValue() },
-        facingMode: "user",
-        resizeMode: "crop-and-scale",
-        aspectRatio: 1.777777778,
-    } as MediaTrackConstraints;
+export const videoConstraintStore = derived(
+    [requestedCameraDeviceIdStore, frameRateStore],
+    ([$cameraDeviceIdStore, $frameRateStore]) => {
+        const constraints = {
+            width: { min: 640, ideal: 1280, max: 1920 },
+            height: { min: 400, ideal: 720 },
+            frameRate: { ideal: localUserStore.getVideoQualityValue() },
+            facingMode: "user",
+            resizeMode: "crop-and-scale",
+            aspectRatio: 1.777777778,
+        } as MediaTrackConstraints;
 
-    if ($cameraDeviceIdStore !== undefined) {
-        constraints.deviceId = {
-            exact: $cameraDeviceIdStore,
-        };
-    }
-    if($frameRateStore !== undefined) {
-        constraints.frameRate = { ideal: $frameRateStore };
-    }
+        if ($cameraDeviceIdStore !== undefined) {
+            constraints.deviceId = {
+                exact: $cameraDeviceIdStore,
+            };
+        }
+        if ($frameRateStore !== undefined) {
+            constraints.frameRate = { ideal: $frameRateStore };
+        }
 
-    return constraints;
-});
+        return constraints;
+    }
+);
 
 /**
  * A store that contains video constraints.
@@ -275,7 +278,7 @@ export const mediaStreamConstraintsStore = derived(
         privacyShutdownStore,
         cameraEnergySavingStore,
         availabilityStatusStore,
-        megaphoneEnabledStore
+        megaphoneEnabledStore,
     ],
     (
         [
@@ -290,7 +293,7 @@ export const mediaStreamConstraintsStore = derived(
             $privacyShutdownStore,
             $cameraEnergySavingStore,
             $availabilityStatusStore,
-            $megaphoneEnabledStore
+            $megaphoneEnabledStore,
         ],
         set
     ) => {
@@ -350,7 +353,7 @@ export const mediaStreamConstraintsStore = derived(
             currentAudioConstraint = false;
         }
 
-        if($megaphoneEnabledStore) {
+        if ($megaphoneEnabledStore) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
@@ -484,10 +487,10 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                             type: "success",
                             stream: currentStream,
                         });
-                        if(currentStream.getVideoTracks().length > 0) {
+                        if (currentStream.getVideoTracks().length > 0) {
                             usedCameraDeviceIdStore.set(currentStream.getVideoTracks()[0]?.getSettings().deviceId);
                         }
-                        if(currentStream.getAudioTracks().length > 0) {
+                        if (currentStream.getAudioTracks().length > 0) {
                             usedMicrophoneDeviceIdStore.set(currentStream.getAudioTracks()[0]?.getSettings().deviceId);
                         }
                         return stream;

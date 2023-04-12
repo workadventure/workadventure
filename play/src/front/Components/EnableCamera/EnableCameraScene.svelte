@@ -6,11 +6,11 @@
         requestedCameraDeviceIdStore,
         cameraListStore,
         localStreamStore,
-        localVolumeStore, requestedMicrophoneDeviceIdStore,
+        localVolumeStore,
+        requestedMicrophoneDeviceIdStore,
         microphoneListStore,
         requestedCameraState,
         requestedMicrophoneState,
-        videoConstraintStore,
     } from "../../Stores/MediaStore";
     import { onDestroy, onMount } from "svelte";
     import HorizontalSoundMeterWidget from "./HorizontalSoundMeterWidget.svelte";
