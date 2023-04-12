@@ -91,7 +91,10 @@ export class BroadcastService {
         this.megaphoneEnabledUnsubscribe = megaphoneEnabledStore.subscribe((megaphoneEnabled) => {
             if (megaphoneEnabled) {
                 this.broadcastSpaces.forEach((broadcastSpace) => {
-                    broadcastSpace.jitsiConference?.broadcast(["video", "audio"]);
+                    if (broadcastSpace.jitsiConference) {
+                        broadcastSpace.jitsiConference.broadcast(["video", "audio"]);
+                        void broadcastSpace.jitsiConference.firstLocalTrackInit();
+                    }
                 });
             } else {
                 this.broadcastSpaces.forEach((broadcastSpace) => {
