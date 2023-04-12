@@ -27,6 +27,8 @@
             currentValue: undefined,
             component: FocusablePropertyEditor,
             defaultValue: {
+                id: crypto.randomUUID(),
+                type: "focusable",
                 zoom_margin: 0,
                 hideButtonLabel: true,
             },
@@ -38,6 +40,8 @@
             currentValue: undefined,
             component: JitsiRoomPropertyEditor,
             defaultValue: {
+                id: crypto.randomUUID(),
+                type: "jitsiRoomProperty",
                 roomName: "",
                 hideButtonLabel: true,
                 jitsiRoomConfig: {},
@@ -50,6 +54,8 @@
             currentValue: undefined,
             component: PlayAudioPropertyEditor,
             defaultValue: {
+                type: "playAudio",
+                id: crypto.randomUUID(),
                 audioLink: "",
                 hideButtonLabel: true,
             },
@@ -61,6 +67,8 @@
             currentValue: undefined,
             component: OpenWebsitePropertyEditor,
             defaultValue: {
+                type: "openWebsite",
+                id: crypto.randomUUID(),
                 link: "",
                 hideButtonLabel: true,
                 newTab: true,

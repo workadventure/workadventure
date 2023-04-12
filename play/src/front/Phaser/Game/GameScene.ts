@@ -393,6 +393,7 @@ export class GameScene extends DirtyScene {
                     undefined,
                     undefined,
                     (key: string, type: string, wamFile: unknown) => {
+                        console.log(wamFile);
                         this.wamFile = WAMFileFormat.parse(wamFile);
                         this.mapUrlFile = new URL(this.wamFile.mapUrl, this.wamUrlFile).toString();
                         this.doLoadTMJFile(this.mapUrlFile);

@@ -1129,13 +1129,13 @@ export class RoomConnection implements RoomConnection {
 
     public emitMapEditorModifyEntity(commandId: string, config: AtLeast<EntityData, "id">): void {
         // NOTE: THIS IS CHANGING VALUE IN ALL PLACES BY REFERENCE!
-        if (config.properties) {
-            for (const key of assertObjectKeys(config.properties)) {
-                if (config.properties[key] === undefined) {
-                    config.properties[key] = null;
-                }
-            }
-        }
+        // if (config.properties) {
+        //     for (const key of assertObjectKeys(config.properties)) {
+        //         if (config.properties[key] === undefined) {
+        //             config.properties[key] = null;
+        //         }
+        //     }
+        // }
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1146,8 +1146,7 @@ export class RoomConnection implements RoomConnection {
                             $case: "modifyEntityMessage",
                             modifyEntityMessage: {
                                 ...config,
-                                // We need to declare properties due to the protobuf limitations - make new custom type to use optional flag?
-                                properties: config.properties ?? {},
+                                properties: config.properties ?? [],
                             },
                         },
                     },
@@ -1171,7 +1170,7 @@ export class RoomConnection implements RoomConnection {
                                 y: config.y,
                                 collectionName: config.prefab.collectionName,
                                 prefabId: config.prefab.id,
-                                properties: config.properties ?? {},
+                                properties: config.properties ?? [],
                             },
                         },
                     },

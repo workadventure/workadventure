@@ -23,14 +23,20 @@ export enum Direction {
     Right = "Right",
 }
 
-export const TextHeaderPropertyData = z.string();
+export const TextHeaderPropertyData = z.object({
+    id: z.string(),
+    type: z.literal("textHeader"),
+    header: z.string(),
+});
 
-export const ActionsMenuData = z.object({
+export const PropertyBase = z.object({
+    id: z.string(),
     buttonLabel: z.string().optional(),
     hideButtonLabel: z.boolean().optional(),
 });
 
-export const FocusablePropertyData = ActionsMenuData.extend({
+export const FocusablePropertyData = PropertyBase.extend({
+    type: z.literal("focusable"),
     zoom_margin: z.number().optional(),
 });
 
@@ -43,16 +49,19 @@ export const StartPropertyData = z.boolean();
 
 export const SilentPropertyData = z.boolean();
 
-export const JitsiRoomPropertyData = ActionsMenuData.extend({
+export const JitsiRoomPropertyData = PropertyBase.extend({
+    type: z.literal("jitsiRoomProperty"),
     roomName: z.string(),
     jitsiRoomConfig: JitsiRoomConfigData,
 });
 
-export const PlayAudioPropertyData = ActionsMenuData.extend({
+export const PlayAudioPropertyData = PropertyBase.extend({
+    type: z.literal("playAudio"),
     audioLink: z.string(),
 });
 
-export const OpenWebsitePropertyData = ActionsMenuData.extend({
+export const OpenWebsitePropertyData = PropertyBase.extend({
+    type: z.literal("openWebsite"),
     link: z.string(),
     newTab: z.boolean().optional(),
 });
@@ -78,12 +87,21 @@ export const AreaData = z.object({
     properties: AreaDataProperties,
 });
 
-export const EntityDataProperties = z.object({
-    textHeader: TextHeaderPropertyData.optional().nullable(),
-    jitsiRoom: JitsiRoomPropertyData.optional().nullable(),
-    playAudio: PlayAudioPropertyData.optional().nullable(),
-    openWebsite: OpenWebsitePropertyData.optional().nullable(),
-});
+export const EntityDataProperty = z.union([
+    TextHeaderPropertyData,
+    JitsiRoomPropertyData,
+    PlayAudioPropertyData,
+    OpenWebsitePropertyData,
+]);
+
+export const EntityDataProperties = z.array(EntityDataProperty);
+
+// export const EntityDataProperties = z.object({
+//     textHeader: TextHeaderPropertyData.optional().nullable(),
+//     jitsiRoom: JitsiRoomPropertyData.optional().nullable(),
+//     playAudio: PlayAudioPropertyData.optional().nullable(),
+//     openWebsite: OpenWebsitePropertyData.optional().nullable(),
+// });
 
 export const EntityRawPrefab = z.object({
     name: z.string(),
@@ -127,12 +145,14 @@ export type EntityPrefab = z.infer<typeof EntityPrefab>;
 export type EntityCollection = z.infer<typeof EntityCollection>;
 export type EntityData = z.infer<typeof EntityData>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
-export type EntityDataPropertiesKeys = keyof z.infer<typeof EntityDataProperties>;
+export type EntityDataProperty = z.infer<typeof EntityDataProperty>;
+// export type EntityDataPropertiesKeys = keyof z.infer<typeof EntityDataProperties>;
+export type EntityDataPropertiesKeys = "textHeader" | "jitsiRoomProperty" | "playAudio" | "openWebsite";
 export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;
 export type AreaDataPropertiesKeys = keyof z.infer<typeof AreaDataProperties>;
 export type TextHeaderPropertyData = z.infer<typeof TextHeaderPropertyData>;
-export type ActionsMenuData = z.infer<typeof ActionsMenuData>;
+export type ActionsMenuData = z.infer<typeof PropertyBase>;
 export type StartPropertyData = z.infer<typeof StartPropertyData>;
 export type SilentPropertyData = z.infer<typeof SilentPropertyData>;
 export type FocusablePropertyData = z.infer<typeof FocusablePropertyData>;

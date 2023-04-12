@@ -1,115 +1,7 @@
 <script lang="ts">
-    import { onDestroy } from "svelte";
-    import { slide } from "svelte/transition";
-    import { EntityDataProperties, EntityDataPropertiesKeys } from "@workadventure/map-editor";
     import { LL } from "../../../i18n/i18n-svelte";
     import { mapEditorSelectedEntityStore } from "../../Stores/MapEditorStore";
     import crossImg from "../images/cross-icon.svg";
-    import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
-    import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
-    import TextPropertyEditor from "./PropertyEditor/TextPropertyEditor.svelte";
-    import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
-
-    interface EntityPropertyDescription<K extends EntityDataPropertiesKeys> {
-        key: K;
-        name: string;
-        active: boolean;
-        currentValue: EntityDataProperties[K];
-        component: unknown;
-        defaultValue: EntityDataProperties[K];
-    }
-
-    let possibleProperties: EntityPropertyDescription<EntityDataPropertiesKeys>[] = [
-        {
-            key: "textHeader",
-            name: $LL.mapEditor.properties.textProperties.label(),
-            active: false,
-            currentValue: undefined,
-            component: TextPropertyEditor,
-            defaultValue: "",
-        },
-        {
-            key: "jitsiRoom",
-            name: $LL.mapEditor.properties.jitsiProperties.label(),
-            active: false,
-            currentValue: undefined,
-            component: JitsiRoomPropertyEditor,
-            defaultValue: {
-                buttonLabel: $LL.mapEditor.properties.jitsiProperties.defaultButtonLabel(),
-                roomName: "",
-                jitsiRoomConfig: {},
-            },
-        },
-        {
-            key: "playAudio",
-            name: $LL.mapEditor.properties.audioProperties.label(),
-            active: false,
-            currentValue: undefined,
-            component: PlayAudioPropertyEditor,
-            defaultValue: {
-                buttonLabel: $LL.mapEditor.properties.audioProperties.defaultButtonLabel(),
-                audioLink: "",
-            },
-        },
-        {
-            key: "openWebsite",
-            name: $LL.mapEditor.properties.linkProperties.label(),
-            active: false,
-            currentValue: undefined,
-            component: OpenWebsitePropertyEditor,
-            defaultValue: {
-                buttonLabel: $LL.mapEditor.properties.linkProperties.defaultButtonLabel(),
-                link: "",
-                newTab: true,
-            },
-        },
-    ];
-
-    let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((currentEntity) => {
-        if (currentEntity) {
-            currentEntity.setEditColor(0x00ffff);
-            for (let property of possibleProperties) {
-                property.active =
-                    currentEntity.getProperties()[property.key] !== undefined &&
-                    currentEntity.getProperties()[property.key] !== null;
-                property.currentValue = currentEntity.getProperties()[property.key];
-                if (!property.currentValue) {
-                    property.currentValue = structuredClone(property.defaultValue);
-                }
-            }
-        }
-        possibleProperties = possibleProperties;
-    });
-
-    onDestroy(() => {
-        selectedEntityUnsubscriber();
-    });
-
-    function onPropertyChecked(property: EntityPropertyDescription<EntityDataPropertiesKeys>) {
-        console.log(property);
-        if ($mapEditorSelectedEntityStore) {
-            if (property.active) {
-                if (!property.currentValue) {
-                    property.currentValue = possibleProperties.find((v) => v.key === property.key)?.defaultValue; //initialize here the property value
-                }
-                $mapEditorSelectedEntityStore.setProperty(property.key, property.currentValue);
-            } else {
-                $mapEditorSelectedEntityStore.setProperty(property.key, null);
-            }
-        }
-    }
-
-    function onUpdateProperty(property: EntityPropertyDescription<EntityDataPropertiesKeys>) {
-        if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.setProperty(property.key, property.currentValue);
-        }
-    }
-
-    function onTestInteraction() {
-        if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.TestActivation();
-        }
-    }
 
     function onDeleteEntity() {
         if ($mapEditorSelectedEntityStore) {
@@ -122,31 +14,8 @@
 {#if $mapEditorSelectedEntityStore === undefined}
     {$LL.mapEditor.entityEditor.editInstructions()}
 {:else}
-    <div class="entity-properties">
-        {#each possibleProperties as property (property.key)}
-            <div class="property-enabler">
-                <label for={property.key}>{property.name}</label>
-                <input
-                    id={property.key}
-                    type="checkbox"
-                    class="input-switch"
-                    bind:checked={property.active}
-                    on:change={() => onPropertyChecked(property)}
-                />
-            </div>
-            {#if property.active}
-                <div class="property-container" transition:slide|local>
-                    <svelte:component
-                        this={property.component}
-                        bind:property={property.currentValue}
-                        on:change={() => onUpdateProperty(property)}
-                    />
-                </div>
-            {/if}
-        {/each}
-    </div>
+    <div class="entity-properties" />
     <div class="action-button">
-        <button on:click={onTestInteraction}>{$LL.mapEditor.entityEditor.testInteractionButton()}</button>
         <button class="delete-button" on:click={onDeleteEntity}
             ><div>{$LL.mapEditor.entityEditor.deleteButton()}</div>
             <img src={crossImg} alt="" /></button
