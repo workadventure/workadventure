@@ -6,7 +6,12 @@ import JitsiConference from "lib-jitsi-meet/types/hand-crafted/JitsiConference";
 import { JitsiLocalTracks } from "./JitsiLocalTracks";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
 import Debug from "debug";
-import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+import {
+    requestedCameraDeviceIdStore,
+    requestedMicrophoneDeviceIdStore,
+    requestedCameraState,
+    requestedMicrophoneState, usedCameraDeviceIdStore, usedMicrophoneDeviceIdStore
+} from "../../Stores/MediaStore";
 import { Result } from "@workadventure/map-editor";
 import JitsiLocalTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiLocalTrack";
 import { JitsiConferenceErrors } from "lib-jitsi-meet/types/hand-crafted/JitsiConferenceErrors";
@@ -27,6 +32,10 @@ export class JitsiConferenceWrapper {
 
     private requestedCameraStateUnsubscriber: Unsubscriber | undefined;
     private requestedMicrophoneStateUnsubscriber: Unsubscriber | undefined;
+    private cameraDeviceIdStoreUnsubscriber: Unsubscriber | undefined;
+    private microphoneDeviceIdStoreUnsubscriber: Unsubscriber | undefined;
+    private cameraDeviceId: string|undefined = undefined;
+    private microphoneDeviceId: string|undefined = undefined;
 
     private tracks: JitsiLocalTracks = {
         audio: undefined,
@@ -102,6 +111,30 @@ export class JitsiConferenceWrapper {
                     }
                 }
             );
+
+            jitsiConferenceWrapper.cameraDeviceIdStoreUnsubscriber = requestedCameraDeviceIdStore.subscribe((cameraDeviceId) => {
+                if (jitsiConferenceWrapper.firstLocalTrackInitialization && cameraDeviceId !== jitsiConferenceWrapper.cameraDeviceId) {
+                    (async ()=> jitsiConferenceWrapper.handleLocalTrackState("video", true))()
+                        .then((newTracks) => {
+                            console.log("this is a success");
+                        })
+                        .catch((e) => {
+                            console.error("jitsiLocalTracks", e);
+                        });
+                }
+            });
+
+            jitsiConferenceWrapper.microphoneDeviceIdStoreUnsubscriber = requestedMicrophoneDeviceIdStore.subscribe((microphoneDeviceId) => {
+                if (jitsiConferenceWrapper.firstLocalTrackInitialization && microphoneDeviceId !== jitsiConferenceWrapper.microphoneDeviceId) {
+                    (async ()=> jitsiConferenceWrapper.handleLocalTrackState("audio", true))()
+                        .then((newTracks) => {
+                            console.log("this is a success");
+                        })
+                        .catch((e) => {
+                            console.error("jitsiLocalTracks", e);
+                        });
+                }
+            });
 
             /**
              * Handles remote tracks
@@ -217,6 +250,12 @@ export class JitsiConferenceWrapper {
         if (this.requestedCameraStateUnsubscriber) {
             this.requestedCameraStateUnsubscriber();
         }
+        if(this.microphoneDeviceIdStoreUnsubscriber){
+            this.microphoneDeviceIdStoreUnsubscriber();
+        }
+        if(this.cameraDeviceIdStoreUnsubscriber){
+            this.cameraDeviceIdStoreUnsubscriber();
+        }
         this._streamStore.update((tracks) => {
             tracks.forEach((track) => {
                 track.unsubscribe();
@@ -226,11 +265,22 @@ export class JitsiConferenceWrapper {
         return this.jitsiConference.leave(reason);
     }
 
-    private async createLocalTracks(types: DeviceType[]) {
-        const newTracks = await window.JitsiMeetJS.createLocalTracks({ devices: types });
+    private async createLocalTracks(types: DeviceType[]): Promise<JitsiLocalTrack[]> {
+        this.cameraDeviceId = get(requestedCameraDeviceIdStore);
+        this.microphoneDeviceId = get(requestedMicrophoneDeviceIdStore);
+
+        const newTracks = await window.JitsiMeetJS.createLocalTracks({ devices: types, cameraDeviceId: this.cameraDeviceId, micDeviceId: this.microphoneDeviceId });
         if (!(newTracks instanceof Array)) {
             // newTracks is a JitsiConferenceError
             throw newTracks;
+        } else {
+            newTracks.forEach((track) => {
+                if(track.isVideoTrack()){
+                    usedCameraDeviceIdStore.set(track.getDeviceId());
+                } else if(track.isAudioTrack()){
+                    usedMicrophoneDeviceIdStore.set(track.getDeviceId());
+                }
+            });
         }
         return newTracks;
     }

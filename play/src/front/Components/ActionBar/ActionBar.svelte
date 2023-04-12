@@ -1,7 +1,6 @@
 <script lang="ts">
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
-        audioConstraintStore,
         cameraListStore,
         localStreamStore,
         microphoneListStore,
@@ -9,8 +8,11 @@
         requestedCameraState,
         requestedMicrophoneState,
         silentStore,
-        videoConstraintStore,
         speakerSelectedStore,
+        requestedMicrophoneDeviceIdStore,
+        requestedCameraDeviceIdStore,
+        usedCameraDeviceIdStore,
+        usedMicrophoneDeviceIdStore,
     } from "../../Stores/MediaStore";
     import { ChevronDownIcon, ChevronUpIcon, CheckIcon } from "svelte-feather-icons";
     import cameraImg from "../images/camera.png";
@@ -85,8 +87,6 @@
 
     let cameraActive = false;
     let microphoneActive = false;
-    let selectedCamera: string | undefined = undefined;
-    let selectedMicrophone: string | undefined = undefined;
 
     let microphoneButton: HTMLButtonElement;
     let cameraButton: HTMLButtonElement;
@@ -353,12 +353,12 @@
     }
 
     function selectCamera(deviceId: string) {
-        videoConstraintStore.setDeviceId(deviceId);
+        requestedCameraDeviceIdStore.set(deviceId);
         cameraActive = false;
     }
 
     function selectMicrophone(deviceId: string) {
-        audioConstraintStore.setDeviceId(deviceId);
+        requestedMicrophoneDeviceIdStore.set(deviceId);
         microphoneActive = false;
     }
 
@@ -384,15 +384,8 @@
             stream = value.stream;
 
             if (stream !== null) {
-                const videoTracks = stream.getVideoTracks();
-                if (videoTracks.length > 0) {
-                    selectedCamera = videoTracks[0].getSettings().deviceId;
-                }
                 const audioTracks = stream.getAudioTracks();
                 if (audioTracks.length > 0) {
-                    // set first track
-                    selectedMicrophone = audioTracks[0].getSettings().deviceId;
-
                     // set default speaker selected
                     if ($speakerListStore.length > 0) {
                         speakerSelectedStore.set($speakerListStore[0].deviceId);
@@ -401,8 +394,6 @@
             }
         } else {
             stream = null;
-            selectedCamera = undefined;
-            selectedMicrophone = undefined;
         }
     });
 
@@ -582,7 +573,7 @@
                                                 selectCamera(camera.deviceId)}
                                         >
                                             {StringUtils.normalizeDeviceName(camera.label)}
-                                            {#if selectedCamera === camera.deviceId}
+                                            {#if $usedCameraDeviceIdStore === camera.deviceId}
                                                 <CheckIcon size="13" class="tw-ml-1" />
                                             {/if}
                                         </span>
@@ -652,7 +643,7 @@
                                                     selectMicrophone(microphone.deviceId)}
                                             >
                                                 {StringUtils.normalizeDeviceName(microphone.label)}
-                                                {#if selectedMicrophone === microphone.deviceId}
+                                                {#if $usedMicrophoneDeviceIdStore === microphone.deviceId}
                                                     <CheckIcon size="13" />
                                                 {/if}
                                             </span>

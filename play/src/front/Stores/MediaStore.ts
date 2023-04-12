@@ -1,4 +1,4 @@
-import type { Readable } from "svelte/store";
+import type {Readable, Writable} from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { userMovingStore } from "./GameStore";
@@ -175,43 +175,59 @@ export const cameraEnergySavingStore = derived(
     }
 );
 
+export const requestedCameraDeviceIdStore: Writable<string|undefined> = writable();
+export const frameRateStore: Writable<number|undefined> = writable();
+export const requestedMicrophoneDeviceIdStore: Writable<string|undefined> = writable();
+export const usedCameraDeviceIdStore: Writable<string|undefined> = writable();
+export const usedMicrophoneDeviceIdStore: Writable<string|undefined> = writable();
+
+export const inOpenWebsite = writable(false);
+
 /**
  * A store that contains video constraints.
  */
-function createVideoConstraintStore() {
-    const { subscribe, update } = writable({
+export const videoConstraintStore = derived([requestedCameraDeviceIdStore, frameRateStore], ([$cameraDeviceIdStore, $frameRateStore]) => {
+    const constraints = {
         width: { min: 640, ideal: 1280, max: 1920 },
         height: { min: 400, ideal: 720 },
         frameRate: { ideal: localUserStore.getVideoQualityValue() },
         facingMode: "user",
         resizeMode: "crop-and-scale",
         aspectRatio: 1.777777778,
-    } as MediaTrackConstraints);
+    } as MediaTrackConstraints;
 
-    return {
-        subscribe,
-        setDeviceId: (deviceId: string | undefined) =>
-            update((constraints) => {
-                if (deviceId !== undefined) {
-                    constraints.deviceId = {
-                        exact: deviceId,
-                    };
-                } else {
-                    delete constraints.deviceId;
-                }
+    if ($cameraDeviceIdStore !== undefined) {
+        constraints.deviceId = {
+            exact: $cameraDeviceIdStore,
+        };
+    }
+    if($frameRateStore !== undefined) {
+        constraints.frameRate = { ideal: $frameRateStore };
+    }
 
-                return constraints;
-            }),
-        setFrameRate: (frameRate: number) =>
-            update((constraints) => {
-                constraints.frameRate = { ideal: frameRate };
-                localUserStore.setVideoQualityValue(frameRate);
-                return constraints;
-            }),
-    };
-}
+    return constraints;
+});
 
-export const inOpenWebsite = writable(false);
+/**
+ * A store that contains video constraints.
+ */
+export const audioConstraintStore = derived(requestedMicrophoneDeviceIdStore, ($microphoneDeviceIdStore) => {
+    let constraints = {
+        //TODO: make these values configurable in the game settings menu and store them in localstorage
+        autoGainControl: false,
+        echoCancellation: true,
+        noiseSuppression: true,
+    } as boolean | MediaTrackConstraints;
+
+    if (typeof constraints === "boolean") {
+        constraints = {};
+    }
+    if ($microphoneDeviceIdStore !== undefined && navigator.mediaDevices.getSupportedConstraints().deviceId === true) {
+        constraints.deviceId = { exact: $microphoneDeviceIdStore };
+    }
+    return constraints;
+});
+
 export const inJitsiStore = writable(false);
 export const inBbbStore = writable(false);
 
@@ -238,37 +254,6 @@ export const availabilityStatusStore = derived(
     AvailabilityStatus.ONLINE
 );
 
-export const videoConstraintStore = createVideoConstraintStore();
-
-/**
- * A store that contains video constraints.
- */
-function createAudioConstraintStore() {
-    const { subscribe, update } = writable({
-        //TODO: make these values configurable in the game settings menu and store them in localstorage
-        autoGainControl: false,
-        echoCancellation: true,
-        noiseSuppression: true,
-    } as boolean | MediaTrackConstraints);
-    return {
-        subscribe,
-        setDeviceId: (deviceId: string | undefined) =>
-            update((constraints) => {
-                if (typeof constraints === "boolean") {
-                    constraints = {};
-                }
-                if (deviceId !== undefined && navigator.mediaDevices.getSupportedConstraints().deviceId === true) {
-                    constraints.deviceId = { exact: deviceId };
-                } else {
-                    delete constraints.deviceId;
-                }
-                return constraints;
-            }),
-    };
-}
-
-export const audioConstraintStore = createAudioConstraintStore();
-
 let timeout: NodeJS.Timeout;
 
 let previousComputedVideoConstraint: boolean | MediaTrackConstraints = false;
@@ -290,6 +275,7 @@ export const mediaStreamConstraintsStore = derived(
         privacyShutdownStore,
         cameraEnergySavingStore,
         availabilityStatusStore,
+        megaphoneEnabledStore
     ],
     (
         [
@@ -304,6 +290,7 @@ export const mediaStreamConstraintsStore = derived(
             $privacyShutdownStore,
             $cameraEnergySavingStore,
             $availabilityStatusStore,
+            $megaphoneEnabledStore
         ],
         set
     ) => {
@@ -359,6 +346,11 @@ export const mediaStreamConstraintsStore = derived(
             $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
             $availabilityStatusStore === AvailabilityStatus.SILENT
         ) {
+            currentVideoConstraint = false;
+            currentAudioConstraint = false;
+        }
+
+        if($megaphoneEnabledStore) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
@@ -492,6 +484,12 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                             type: "success",
                             stream: currentStream,
                         });
+                        if(currentStream.getVideoTracks().length > 0) {
+                            usedCameraDeviceIdStore.set(currentStream.getVideoTracks()[0]?.getSettings().deviceId);
+                        }
+                        if(currentStream.getAudioTracks().length > 0) {
+                            usedMicrophoneDeviceIdStore.set(currentStream.getAudioTracks()[0]?.getSettings().deviceId);
+                        }
                         return stream;
                     })
                     .catch((e) => {
@@ -770,7 +768,7 @@ cameraListStore.subscribe((devices) => {
     // If we cannot find the device ID, let's remove it.
     if (isConstrainDOMStringParameters(deviceId)) {
         if (!devices.find((device) => device.deviceId === deviceId.exact)) {
-            videoConstraintStore.setDeviceId(undefined);
+            requestedCameraDeviceIdStore.set(undefined);
         }
     }
 });
@@ -789,7 +787,7 @@ microphoneListStore.subscribe((devices) => {
     // If we cannot find the device ID, let's remove it.
     if (isConstrainDOMStringParameters(deviceId)) {
         if (!devices.find((device) => device.deviceId === deviceId.exact)) {
-            audioConstraintStore.setDeviceId(undefined);
+            requestedMicrophoneDeviceIdStore.set(undefined);
         }
     }
 });

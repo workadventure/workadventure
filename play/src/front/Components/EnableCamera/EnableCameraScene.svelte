@@ -3,10 +3,10 @@
     import type { EnableCameraScene } from "../../Phaser/Login/EnableCameraScene";
     import { EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
     import {
-        audioConstraintStore,
+        requestedCameraDeviceIdStore,
         cameraListStore,
         localStreamStore,
-        localVolumeStore,
+        localVolumeStore, requestedMicrophoneDeviceIdStore,
         microphoneListStore,
         requestedCameraState,
         requestedMicrophoneState,
@@ -83,7 +83,7 @@
             return;
         }
         requestedCameraState.enableWebcam();
-        videoConstraintStore.setDeviceId(selectedCamera);
+        requestedCameraDeviceIdStore.set(selectedCamera);
     }
 
     function selectMicrophone() {
@@ -92,7 +92,7 @@
             return;
         }
         requestedMicrophoneState.enableMicrophone();
-        audioConstraintStore.setDeviceId(selectedMicrophone);
+        requestedMicrophoneDeviceIdStore.set(selectedMicrophone);
     }
 </script>
 
