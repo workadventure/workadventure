@@ -7,11 +7,11 @@ services:
       - --providers.docker
       - --providers.docker.exposedbydefault=false
       # Entry points
-      - --entryPoints.web.address=80
+      - --entryPoints.web.address=:80
       - --entrypoints.web.http.redirections.entryPoint.to=websecure
       - --entrypoints.web.http.redirections.entryPoint.scheme=https
-      - --entryPoints.websecure.address=443
-      - --entryPoints.grpc.address=50051
+      - --entryPoints.websecure.address=:443
+      - --entryPoints.grpc.address=:50051
       # HTTP challenge
       - --certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}
       - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
