@@ -809,6 +809,16 @@ export class SocketManager {
         const jwt = Jwt.sign(
             {
                 aud: "jitsi",
+                context: {
+                    user: {
+                        id: user.uuid,
+                        name: user.name,
+                    },
+                    features: {
+                        livestreaming: isAdmin,
+                        recording: isAdmin,
+                    },
+                },
                 iss: jitsiSettings.iss,
                 sub: jitsiSettings.url,
                 room: jitsiRoom,
@@ -824,7 +834,8 @@ export class SocketManager {
                 },
             }
         );
-
+        console.log("jwt", jwt);
+        console.log("TEEEEEEEEEST", jitsiSettings.url);
         return {
             jwt,
             url: jitsiSettings.url,
