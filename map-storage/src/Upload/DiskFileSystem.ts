@@ -11,10 +11,10 @@ import { NodeError } from "./NodeError";
 export class DiskFileSystem implements FileSystemInterface {
     public constructor(private baseDirectory: string) {}
 
-    async deleteFiles(directory: string): Promise<void> {
-        const fullPath = this.getFullPath(directory);
+    async deleteFiles(path: string): Promise<void> {
+        const fullPath = this.getFullPath(path);
         if (await fs.pathExists(fullPath)) {
-            await fs.emptyDir(fullPath);
+            await fs.rm(fullPath, { recursive: true, force: true });
         }
     }
 

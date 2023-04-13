@@ -45,7 +45,8 @@ export class UploadController {
         this.getDownload();
         this.move();
         this.copy();
-        this.delete();
+        this.deleteDirectory();
+        this.deleteFile();
         this.getMaps();
     }
 
@@ -422,7 +423,7 @@ export class UploadController {
         });
     }
 
-    private delete() {
+    private deleteDirectory() {
         this.app.delete("/delete", passportAuthenticator, (req, res, next) => {
             (async () => {
                 const directoryRaw = req.query.directory;
@@ -437,6 +438,28 @@ export class UploadController {
                 const virtualDirectory = mapPath(directory, req);
 
                 await fileSystem.deleteFiles(virtualDirectory);
+
+                await this.generateCacheFile(req);
+
+                res.sendStatus(204);
+            })().catch((e) => next(e));
+        });
+    }
+
+    private deleteFile() {
+        this.app.delete("/*", passportAuthenticator, (req, res, next) => {
+            (async () => {
+                const filePath = req.path;
+
+                if (filePath.includes("..")) {
+                    // Attempt to override filesystem. That' a hack!
+                    res.status(400).send("Invalid path");
+                    return;
+                }
+
+                const virtualPath = mapPath(filePath, req);
+
+                await fileSystem.deleteFiles(virtualPath);
 
                 await this.generateCacheFile(req);
 

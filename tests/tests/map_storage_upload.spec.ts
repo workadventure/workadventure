@@ -431,6 +431,14 @@ test.describe('Map-storage Upload API', () => {
         const listOfMaps = await request.get("maps");
         const maps : string[] = JSON.parse(await listOfMaps.text());
         await expect(maps.includes("single-map.wam")).toBeTruthy();
+
+        const deleteFile = await request.delete(`single-map.wam`);
+        await expect(deleteFile.ok()).toBeTruthy();
+
+        const listOfMaps2 = await request.get("maps");
+        const maps2 : string[] = JSON.parse(await listOfMaps2.text());
+        await expect(maps2.includes("single-map.wam")).toBeFalsy();
+
     });
 
     test('special characters support', async ({
