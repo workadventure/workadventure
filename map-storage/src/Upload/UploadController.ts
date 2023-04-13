@@ -6,10 +6,12 @@ import multer from "multer";
 import pLimit from "p-limit";
 import archiver from "archiver";
 import StreamZip from "node-stream-zip";
+import * as jsonpatch from "fast-json-patch";
 import { MapValidator, OrganizedErrors } from "@workadventure/map-editor/src/GameMap/MapValidator";
 import { WAMFileFormat } from "@workadventure/map-editor";
 import { ZipFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/ZipFileFetcher";
 import { HttpFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/HttpFileFetcher";
+import { Operation } from "fast-json-patch";
 import { mapPath } from "../Services/PathMapper";
 import { MAX_UNCOMPRESSED_SIZE } from "../Enum/EnvironmentVariable";
 import { fileSystem } from "../fileSystem";
@@ -48,6 +50,7 @@ export class UploadController {
         this.deleteDirectory();
         this.deleteFile();
         this.getMaps();
+        this.patch();
     }
 
     private index() {
@@ -317,6 +320,81 @@ export class UploadController {
                     await this.generateCacheFile(req);
 
                     res.send("File successfully uploaded.");
+                });
+
+                if (limiter.activeCount === 0 && limiter.pendingCount === 0) {
+                    this.uploadLimiter.delete(virtualPath);
+                }
+            })().catch((e) => next(e));
+        });
+    }
+
+    private patch() {
+        /**
+         * This endpoint is used to patch aany WAM file using the JSON Patch notation.
+         */
+        this.app.patch("/*.wam", passportAuthenticator, (req, res, next) => {
+            (async () => {
+                const filePath = req.path;
+
+                if (filePath.includes("..")) {
+                    // Attempt to override filesystem. That' a hack!
+                    res.status(400).send("Invalid path");
+                    return;
+                }
+
+                // Let's explicitly forbid 2 patches from running at the same time using a p-limit of 1.
+                // Uploads will be serialized.
+                const virtualPath = mapPath(filePath, req);
+                let limiter = this.uploadLimiter.get(filePath);
+                if (limiter === undefined) {
+                    limiter = pLimit(1);
+                    this.uploadLimiter.set(virtualPath, limiter);
+                }
+
+                await limiter(async () => {
+                    const mapValidator = new MapValidator("error", new HttpFileFetcher(req.url));
+
+                    const errors: { [key: string]: Partial<OrganizedErrors> } = {};
+
+                    //eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                    const content = JSON.parse(await this.fileSystem.readFileAsString(virtualPath));
+
+                    //eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                    const patchedContent = jsonpatch.applyPatch(
+                        content,
+                        req.body as Operation[],
+                        true,
+                        false
+                    ).newDocument;
+
+                    const patchedContentString = JSON.stringify(patchedContent);
+                    const result = mapValidator.validateWAMFile(patchedContentString);
+                    if (!result) {
+                        errors[filePath] = {
+                            map: [
+                                {
+                                    type: "error",
+                                    message: "Invalid WAM file format.",
+                                    details: "",
+                                },
+                            ],
+                        };
+                    }
+
+                    if (Object.keys(errors).length > 0) {
+                        res.status(400).json(errors);
+                        return;
+                    }
+
+                    await this.fileSystem.writeStringAsFile(virtualPath, patchedContentString);
+
+                    mapsManager.clearAfterUpload(virtualPath);
+                    uploadDetector.refresh(virtualPath);
+
+                    await this.generateCacheFile(req);
+
+                    res.json({ success: true });
                 });
 
                 if (limiter.activeCount === 0 && limiter.pendingCount === 0) {

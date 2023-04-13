@@ -404,7 +404,7 @@ test.describe('Map-storage Upload API', () => {
         await expect((await uploadFile1.json())['map.json']['map'][0]['message']).toBe('Invalid file extension. Maps should end with the ".tmj" extension.');
     });
 
-    test('upload single file', async ({
+    test('upload / patch / delete single file', async ({
                                                request,
                                            }) => {
         const uploadFile1 = await request.put("single-map.wam", {
@@ -431,6 +431,21 @@ test.describe('Map-storage Upload API', () => {
         const listOfMaps = await request.get("maps");
         const maps : string[] = JSON.parse(await listOfMaps.text());
         await expect(maps.includes("single-map.wam")).toBeTruthy();
+
+        const patch = await request.patch(`single-map.wam`, {
+            headers: {
+                "Content-Type": "application/json-patch+json",
+            },
+            data: JSON.stringify([
+                { "op": "replace", "path": "/mapUrl", "value": "https://example.com/newmap.tmj" },
+            ])
+        });
+        await expect(patch.ok()).toBeTruthy();
+
+        const accessFile2 = await request.get(`single-map.wam`);
+        await expect(accessFile2.ok()).toBeTruthy();
+        await expect(await accessFile2.text()).toContain("https://example.com/newmap.tmj");
+
 
         const deleteFile = await request.delete(`single-map.wam`);
         await expect(deleteFile.ok()).toBeTruthy();
