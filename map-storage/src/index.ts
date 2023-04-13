@@ -12,6 +12,7 @@ import { UploadController } from "./Upload/UploadController";
 import { fileSystem } from "./fileSystem";
 import { passportStrategy } from "./Services/Authentication";
 import { mapPathUsingDomain } from "./Services/PathMapper";
+import { ValidatorController } from "./Upload/ValidatorController";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -58,6 +59,7 @@ app.get("/entityCollections", (req, res) => {
 });
 
 new UploadController(app, fileSystem);
+new ValidatorController(app);
 
 app.use(proxyFiles(fileSystem));
 

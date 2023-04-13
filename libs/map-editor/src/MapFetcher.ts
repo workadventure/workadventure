@@ -1,11 +1,11 @@
 import { Resolver } from "dns";
 import { promisify } from "util";
 import path from "path";
-import { WAMFileFormat } from "@workadventure/map-editor";
 import ipaddr from "ipaddr.js";
 import axios from "axios";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { LocalUrlError } from "./LocalUrlError";
+import { WAMFileFormat } from "./types";
 
 class MapFetcher {
     async getMapUrl(
@@ -56,15 +56,15 @@ class MapFetcher {
             //throw new Error("Invalid map format for map " + mapUrl);
             console.error("Invalid map format for map '" + url + "':", parseResult.error);
         }
-        /* eslint-disable-next-line @typescript-eslint/no-unsafe-return */
-        return res.data;
+
+        return res.data as ITiledMap;
     }
 
     public async fetchFile(url: string, canLoadLocalUrl = false, storeVariableForLocalMaps = false) {
         // Note: mapUrl is provided by the client. A possible attack vector would be to use a rogue DNS server that
         // returns local URLs. Alas, Axios cannot pin a URL to a given IP. So "isLocalUrl" and axios.get could potentially
         // target to different servers (and one could trick axios.get into loading resources on the internal network
-        // despite isLocalUrl checking that.
+        // despite isLocalUrl checking that).
         // We can deem this problem not that important because:
         // - We make sure we are only passing "GET" requests
         // - The result of the query is never displayed to the end user
@@ -72,7 +72,7 @@ class MapFetcher {
             throw new LocalUrlError('URL for map "' + url + '" targets a local map');
         }
 
-        return await axios.get(url, {
+        return await axios.get<unknown>(url, {
             maxContentLength: 50 * 1024 * 1024, // Max content length: 50MB. Maps should not be bigger
             timeout: 10000, // Timeout after 10 seconds
         });
