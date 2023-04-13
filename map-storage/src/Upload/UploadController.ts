@@ -9,6 +9,7 @@ import StreamZip from "node-stream-zip";
 import { MapValidator, OrganizedErrors } from "@workadventure/map-editor/src/GameMap/MapValidator";
 import { WAMFileFormat } from "@workadventure/map-editor";
 import { ZipFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/ZipFileFetcher";
+import { HttpFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/HttpFileFetcher";
 import { mapPath } from "../Services/PathMapper";
 import { MAX_UNCOMPRESSED_SIZE } from "../Enum/EnvironmentVariable";
 import { fileSystem } from "../fileSystem";
@@ -40,6 +41,7 @@ export class UploadController {
         this.uploadLimiter = new Map<string, pLimit.Limit>();
         this.index();
         this.postUpload();
+        this.putUpload();
         this.getDownload();
         this.move();
         this.copy();
@@ -185,6 +187,7 @@ export class UploadController {
                             if (!wamFilesNames.includes(path.parse(zipEntry.name).name)) {
                                 promises.push(this.createWAMFileIfMissing(key));
                             }
+                        } else if (path.extname(key) === ".wam") {
                             keysToPurge.push(key);
                         }
                     }
@@ -214,8 +217,116 @@ export class UploadController {
         });
     }
 
+    private putUpload() {
+        this.app.put("/*", passportAuthenticator, upload.single("file"), (req, res, next) => {
+            (async () => {
+                // Make sure a file was uploaded
+                if (!req.file) {
+                    res.status(400).send("No file was uploaded.");
+                    return;
+                }
+
+                // Get the uploaded file
+                const file = req.file;
+
+                const filePath = req.path;
+
+                if (filePath.includes("..")) {
+                    // Attempt to override filesystem. That' a hack!
+                    res.status(400).send("Invalid path");
+                    return;
+                }
+
+                // Let's explicitly forbid 2 uploads from running at the same time using a p-limit of 1.
+                // Uploads will be serialized.
+                const virtualPath = mapPath(filePath, req);
+                let limiter = this.uploadLimiter.get(filePath);
+                if (limiter === undefined) {
+                    limiter = pLimit(1);
+                    this.uploadLimiter.set(virtualPath, limiter);
+                }
+
+                await limiter(async () => {
+                    if (file.size > MAX_UNCOMPRESSED_SIZE) {
+                        res.status(413).send(
+                            `File too large. Files should be less than ${MAX_UNCOMPRESSED_SIZE} bytes.`
+                        );
+                        return;
+                    }
+
+                    // Let's validate the archive
+                    const mapValidator = new MapValidator("error", new HttpFileFetcher(req.url));
+
+                    const errors: { [key: string]: Partial<OrganizedErrors> } = {};
+
+                    const content = await fs.promises.readFile(file.path, "utf8");
+
+                    const extension = path.extname(filePath);
+                    if (extension === ".json" && mapValidator.doesStringLooksLikeMap(content)) {
+                        // We forbid Maps in JSON format.
+                        errors[filePath] = {
+                            map: [
+                                {
+                                    type: "error",
+                                    message: 'Invalid file extension. Maps should end with the ".tmj" extension.',
+                                    details: "",
+                                },
+                            ],
+                        };
+                    } else if (extension === ".wam") {
+                        const result = mapValidator.validateWAMFile(content);
+                        if (!result) {
+                            errors[filePath] = {
+                                map: [
+                                    {
+                                        type: "error",
+                                        message: "Invalid WAM file format.",
+                                        details: "",
+                                    },
+                                ],
+                            };
+                        }
+                    } else if (extension === ".tmj") {
+                        const result = await mapValidator.validateStringMap(content);
+                        if (!result.ok) {
+                            errors[filePath] = result.error;
+                        }
+                    }
+
+                    if (Object.keys(errors).length > 0) {
+                        res.status(400).json(errors);
+                        return;
+                    }
+
+                    // TODO: create a "stream" version of this method to avoid loading the whole file in memory
+                    await this.fileSystem.writeStringAsFile(virtualPath, content);
+
+                    // Delete the uploaded file from the disk
+                    fs.unlink(file.path, (err) => {
+                        if (err) {
+                            console.error("Error deleting file:", err);
+                        }
+                    });
+
+                    if (extension === ".wam") {
+                        mapsManager.clearAfterUpload(virtualPath);
+                        uploadDetector.refresh(virtualPath);
+                    }
+
+                    await this.generateCacheFile(req);
+
+                    res.send("File successfully uploaded.");
+                });
+
+                if (limiter.activeCount === 0 && limiter.pendingCount === 0) {
+                    this.uploadLimiter.delete(virtualPath);
+                }
+            })().catch((e) => next(e));
+        });
+    }
+
     private async generateCacheFile(req: Request): Promise<void> {
-        const files = await fileSystem.listFiles(mapPath("/", req), ".tmj");
+        const files = await fileSystem.listFiles(mapPath("/", req), ".wam");
 
         await fileSystem.writeStringAsFile(mapPath("/" + UploadController.CACHE_NAME, req), JSON.stringify(files));
     }
@@ -225,7 +336,7 @@ export class UploadController {
         if (!(await this.fileSystem.exist(wamPath))) {
             await this.fileSystem.writeStringAsFile(
                 wamPath,
-                JSON.stringify(this.getFreshWAMFileContent(`./${path.basename(tmjKey)}`))
+                JSON.stringify(this.getFreshWAMFileContent(`./${path.basename(tmjKey)}`), null, 4)
             );
         }
     }
@@ -242,7 +353,7 @@ export class UploadController {
     /**
      * Let's filter out any file starting with "."
      */
-    public filterFile(path: string): boolean {
+    private filterFile(path: string): boolean {
         const paths = path.split(/[/\\]/);
         for (const subPath of paths) {
             if (subPath.startsWith(".")) {
