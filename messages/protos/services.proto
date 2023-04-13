@@ -1,5 +1,8 @@
 syntax = "proto3";
+
 import "messages.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/empty.proto";
 
 /**
  * Service handled by the "back". Pusher servers connect to this service.
@@ -9,15 +12,25 @@ service RoomManager {
   rpc listenZone(ZoneMessage) returns (stream BatchToPusherMessage); // Connection used to send to a pusher messages related to a given zone of a given room
   rpc listenRoom(RoomMessage) returns (stream BatchToPusherRoomMessage); // Connection used to send to a pusher messages related to a given room
   rpc adminRoom(stream AdminPusherToBackMessage) returns (stream ServerToAdminClientMessage);
-  rpc sendAdminMessage(AdminMessage) returns (EmptyMessage);
-  rpc sendGlobalAdminMessage(AdminGlobalMessage) returns (EmptyMessage);
-  rpc ban(BanMessage) returns (EmptyMessage);
-  rpc sendAdminMessageToRoom(AdminRoomMessage) returns (EmptyMessage);
-  rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (EmptyMessage);
-  rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (EmptyMessage);
-  rpc sendChatMessagePrompt(ChatMessagePrompt) returns (EmptyMessage);
-  rpc getRooms(EmptyMessage) returns (RoomsList);
+  rpc sendAdminMessage(AdminMessage) returns (google.protobuf.Empty);
+  rpc sendGlobalAdminMessage(AdminGlobalMessage) returns (google.protobuf.Empty);
+  rpc ban(BanMessage) returns (google.protobuf.Empty);
+  rpc sendAdminMessageToRoom(AdminRoomMessage) returns (google.protobuf.Empty);
+  rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (google.protobuf.Empty);
+  rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (google.protobuf.Empty);
+  rpc sendChatMessagePrompt(ChatMessagePrompt) returns (google.protobuf.Empty);
+  rpc getRooms(google.protobuf.Empty) returns (RoomsList);
   rpc ping(PingMessage) returns (PingMessage);
+  rpc readVariable(VariableRequest) returns (google.protobuf.Value);
+  rpc listenVariable(VariableRequest) returns (stream google.protobuf.Value);
+  rpc saveVariable(SaveVariableRequest) returns (google.protobuf.Empty);
+}
+
+/**
+ * Service handled by the "back" about spaces. Pusher servers connect to this service.
+ */
+service SpaceManager {
+  rpc watchSpace(stream PusherToBackSpaceMessage) returns (stream BackToPusherSpaceMessage);
 }
 
 /**

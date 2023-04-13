@@ -1,6 +1,6 @@
 <script lang="ts">
-    import LL from "../../../../i18n/i18n-svelte";
     import { createEventDispatcher } from "svelte";
+    import { LL } from "../../../../i18n/i18n-svelte";
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
     const dispatch = createEventDispatcher();
 
@@ -13,7 +13,7 @@
 <div class="value-input">
     <textarea
         type="text"
-        placeholder={$LL.mapEditor.entityEditor.textProperties.placeholder()}
+        placeholder={$LL.mapEditor.properties.textProperties.placeholder()}
         rows="5"
         bind:value={property}
         on:change={onValueChange}

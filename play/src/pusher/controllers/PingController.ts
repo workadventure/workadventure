@@ -1,7 +1,7 @@
-import { BaseHttpController } from "./BaseHttpController";
-import { apiClientRepository } from "../services/ApiClientRepository";
 import { PingMessage } from "@workadventure/messages";
 import { Metadata } from "@grpc/grpc-js";
+import { apiClientRepository } from "../services/ApiClientRepository";
+import { BaseHttpController } from "./BaseHttpController";
 
 export class PingController extends BaseHttpController {
     // Returns a map mapping map name to file name of the map

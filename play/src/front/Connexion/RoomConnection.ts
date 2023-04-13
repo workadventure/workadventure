@@ -1,30 +1,6 @@
-import { ENABLE_FEATURE_MAP_EDITOR, PUSHER_URL, UPLOADER_URL } from "../Enum/EnvironmentVariable";
-import Axios from "axios";
+import axios from "axios";
 
-import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
-import type {
-    GroupCreatedUpdatedMessageInterface,
-    GroupUsersUpdateMessageInterface,
-    MessageUserJoined,
-    PlayGlobalMessageInterface,
-    PositionInterface,
-    RoomJoinedMessageInterface,
-    ViewportInterface,
-    WebRtcSignalReceivedMessageInterface,
-} from "./ConnexionModels";
-import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
-import { adminMessagesService } from "./AdminMessagesService";
-import { connectionManager } from "./ConnectionManager";
 import { get } from "svelte/store";
-import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
-import {
-    inviteUserActivated,
-    mapEditorActivated,
-    menuIconVisiblilityStore,
-    menuVisiblilityStore,
-    warningContainerStore,
-} from "../Stores/MenuStore";
-import { localUserStore } from "./LocalUserStore";
 import {
     apiVersionHash,
     AnswerMessage,
@@ -58,16 +34,47 @@ import {
     WorldConnexionMessage,
     XmppSettingsMessage,
     RefreshRoomMessage,
+    AddSpaceFilterMessage,
+    UpdateSpaceFilterMessage,
+    RemoveSpaceFilterMessage,
+    AddSpaceUserMessage,
+    UpdateSpaceUserMessage,
+    RemoveSpaceUserMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
+import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
-import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
+import {
+    inviteUserActivated,
+    mapEditorActivated,
+    menuIconVisiblilityStore,
+    menuVisiblilityStore,
+    warningContainerStore,
+} from "../Stores/MenuStore";
+import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
+import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
+import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
+import { ENABLE_FEATURE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 import { assertObjectKeys } from "../Utils/CustomTypeGuards";
+import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
+import { localUserStore } from "./LocalUserStore";
+import { connectionManager } from "./ConnectionManager";
+import { adminMessagesService } from "./AdminMessagesService";
+import type {
+    GroupCreatedUpdatedMessageInterface,
+    GroupUsersUpdateMessageInterface,
+    MessageUserJoined,
+    PlayGlobalMessageInterface,
+    PositionInterface,
+    RoomJoinedMessageInterface,
+    ViewportInterface,
+    WebRtcSignalReceivedMessageInterface,
+} from "./ConnexionModels";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
@@ -174,6 +181,12 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _leaveMucRoomMessageStream = new Subject<LeaveMucRoomMessage>();
     public readonly leaveMucRoomMessageStream = this._leaveMucRoomMessageStream.asObservable();
+    private readonly _addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
+    public readonly addSpaceUserMessageStream = this._addSpaceUserMessageStream.asObservable();
+    private readonly _updateSpaceUserMessageStream = new Subject<UpdateSpaceUserMessage>();
+    public readonly updateSpaceUserMessageStream = this._updateSpaceUserMessageStream.asObservable();
+    private readonly _removeSpaceUserMessageStream = new Subject<RemoveSpaceUserMessage>();
+    public readonly removeSpaceUserMessageStream = this._removeSpaceUserMessageStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -203,14 +216,16 @@ export class RoomConnection implements RoomConnection {
         availabilityStatus: AvailabilityStatus,
         lastCommandId?: string
     ) {
-        let url = new URL(PUSHER_URL, window.location.toString()).toString();
+        let url = ABSOLUTE_PUSHER_URL;
         url = url.replace("http://", "ws://").replace("https://", "wss://");
         if (!url.endsWith("/")) {
             url += "/";
         }
         url += "room";
         url += "?roomId=" + encodeURIComponent(roomUrl);
-        url += "&token=" + (token ? encodeURIComponent(token) : "");
+        if (token) {
+            url += "&token=" + encodeURIComponent(token);
+        }
         url += "&name=" + encodeURIComponent(name);
         for (const layer of characterLayers) {
             url += "&characterLayers=" + encodeURIComponent(layer);
@@ -221,16 +236,13 @@ export class RoomConnection implements RoomConnection {
         url += "&bottom=" + Math.floor(viewport.bottom);
         url += "&left=" + Math.floor(viewport.left);
         url += "&right=" + Math.floor(viewport.right);
-        if (typeof companion === "string") {
+        if (companion) {
             url += "&companion=" + encodeURIComponent(companion);
         }
-        if (typeof availabilityStatus === "number") {
-            url += "&availabilityStatus=" + availabilityStatus;
-        }
+        url += "&availabilityStatus=" + availabilityStatus;
         if (lastCommandId) {
             url += "&lastCommandId=" + lastCommandId;
         }
-
         url += "&version=" + apiVersionHash;
 
         if (RoomConnection.websocketFactory) {
@@ -350,6 +362,18 @@ export class RoomConnection implements RoomConnection {
                             case "leaveMucRoomMessage": {
                                 console.info("[sendChatMessagePrompt] RoomConnection => leaveMucRoomMessage received");
                                 this._leaveMucRoomMessageStream.next(subMessage.leaveMucRoomMessage);
+                                break;
+                            }
+                            case "addSpaceUserMessage": {
+                                this._addSpaceUserMessageStream.next(subMessage.addSpaceUserMessage);
+                                break;
+                            }
+                            case "updateSpaceUserMessage": {
+                                this._updateSpaceUserMessageStream.next(subMessage.updateSpaceUserMessage);
+                                break;
+                            }
+                            case "removeSpaceUserMessage": {
+                                this._removeSpaceUserMessageStream.next(subMessage.removeSpaceUserMessage);
                                 break;
                             }
                             default: {
@@ -925,7 +949,8 @@ export class RoomConnection implements RoomConnection {
     }
 
     public uploadAudio(file: FormData) {
-        return Axios.post<unknown>(`${UPLOADER_URL}/upload-audio-message`, file)
+        return axios
+            .post<unknown>(`${UPLOADER_URL}/upload-audio-message`, file)
             .then((res: { data: unknown }) => {
                 return res.data;
             })
@@ -1038,7 +1063,15 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorModifyArea(commandId: string, config: AreaData): void {
+    public emitMapEditorModifyArea(commandId: string, config: AtLeast<AreaData, "id">): void {
+        // NOTE: THIS IS CHANGING VALUE IN ALL PLACES BY REFERENCE!
+        if (config.properties) {
+            for (const key of assertObjectKeys(config.properties)) {
+                if (config.properties[key] === undefined) {
+                    config.properties[key] = null;
+                }
+            }
+        }
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1047,7 +1080,10 @@ export class RoomConnection implements RoomConnection {
                     editMapMessage: {
                         message: {
                             $case: "modifyAreaMessage",
-                            modifyAreaMessage: config,
+                            modifyAreaMessage: {
+                                ...config,
+                                properties: config.properties ?? {},
+                            },
                         },
                     },
                 },
@@ -1055,7 +1091,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorDeleteArea(commandId: string, id: number): void {
+    public emitMapEditorDeleteArea(commandId: string, id: string): void {
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1092,6 +1128,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitMapEditorModifyEntity(commandId: string, config: AtLeast<EntityData, "id">): void {
+        // NOTE: THIS IS CHANGING VALUE IN ALL PLACES BY REFERENCE!
         if (config.properties) {
             for (const key of assertObjectKeys(config.properties)) {
                 if (config.properties[key] === undefined) {
@@ -1134,6 +1171,7 @@ export class RoomConnection implements RoomConnection {
                                 y: config.y,
                                 collectionName: config.prefab.collectionName,
                                 prefabId: config.prefab.id,
+                                properties: config.properties ?? {},
                             },
                         },
                     },
@@ -1195,6 +1233,39 @@ export class RoomConnection implements RoomConnection {
                     userIdentifier: uuid,
                     playUri,
                 },
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitAddSpaceFilter(filter: AddSpaceFilterMessage) {
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "addSpaceFilterMessage",
+                addSpaceFilterMessage: filter,
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitUpdateSpaceFilter(filter: UpdateSpaceFilterMessage) {
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "updateSpaceFilterMessage",
+                updateSpaceFilterMessage: filter,
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitRemoveSpaceFilter(filter: RemoveSpaceFilterMessage) {
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "removeSpaceFilterMessage",
+                removeSpaceFilterMessage: filter,
             },
         }).finish();
 

@@ -1,18 +1,14 @@
-import { GameRoom } from "../Model/GameRoom";
+import crypto from "crypto";
 import {
     AnswerMessage,
     BanUserMessage,
     BatchToPusherMessage,
-    BatchToPusherRoomMessage,
     EmoteEventMessage,
     EmotePromptMessage,
-    ErrorMessage,
     FollowAbortMessage,
     FollowConfirmationMessage,
     FollowRequestMessage,
-    GroupLeftZoneMessage,
     GroupUpdateZoneMessage,
-    GroupUsersUpdateMessage,
     ItemEventMessage,
     ItemStateMessage,
     JitsiJwtAnswer,
@@ -22,64 +18,60 @@ import {
     JoinRoomMessage,
     LockGroupPromptMessage,
     PlayerDetailsUpdatedMessage,
-    PointMessage,
     QueryMessage,
-    RefreshRoomMessage,
     RoomDescription,
     RoomJoinedMessage,
     RoomsList,
     SendUserMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
-    SubMessage,
     SubToPusherMessage,
     UserJoinedZoneMessage,
-    UserLeftZoneMessage,
-    UserMovedMessage,
     UserMovesMessage,
     VariableMessage,
-    WebRtcDisconnectMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
     WebRtcStartMessage,
-    WorldFullWarningMessage,
     Zone as ProtoZone,
     AskPositionMessage,
-    MoveToPositionMessage,
-    SubToPusherRoomMessage,
-    EditMapCommandWithKeyMessage,
     EditMapCommandMessage,
     ChatMessagePrompt,
     UpdateMapToNewestWithKeyMessage,
     EditMapCommandsArrayMessage,
-    UpdateMapToNewestMessage,
-} from "../Messages/generated/messages_pb";
+    WatchSpaceMessage,
+    UnwatchSpaceMessage,
+    UpdateSpaceUserMessage,
+    AddSpaceUserMessage,
+    RemoveSpaceUserMessage,
+} from "@workadventure/messages";
+import Jwt from "jsonwebtoken";
+import BigbluebuttonJs from "bigbluebutton-js";
+import Debug from "debug";
+import { GameRoom } from "../Model/GameRoom";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { Group } from "../Model/Group";
-import { cpuTracker } from "./CpuTracker";
 import { GROUP_RADIUS, MINIMUM_DISTANCE, TURN_STATIC_AUTH_SECRET } from "../Enum/EnvironmentVariable";
 import { Movable } from "../Model/Movable";
 import { PositionInterface } from "../Model/PositionInterface";
-import Jwt from "jsonwebtoken";
-import BigbluebuttonJs from "bigbluebutton-js";
-import { clientEventsEmitter } from "./ClientEventsEmitter";
-import { gaugeManager } from "./GaugeManager";
-import { RoomSocket, ZoneSocket } from "../RoomManager";
+import { RoomSocket, VariableSocket, ZoneSocket } from "../RoomManager";
 import { Zone } from "../Model/Zone";
-import Debug from "debug";
 import { Admin } from "../Model/Admin";
-import crypto from "crypto";
-import QueryCase = QueryMessage.QueryCase;
+import { Space } from "../Model/Space";
+import { SpacesWatcher } from "../Model/SpacesWatcher";
+import { gaugeManager } from "./GaugeManager";
+import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { getMapStorageClient } from "./MapStorageClient";
 import { emitError } from "./MessageHelpers";
+import { cpuTracker } from "./CpuTracker";
 
-const debug = Debug("sockermanager");
+const debug = Debug("socketmanager");
 
 function emitZoneMessage(subMessage: SubToPusherMessage, socket: ZoneSocket): void {
     // TODO: should we batch those every 100ms?
-    const batchMessage = new BatchToPusherMessage();
-    batchMessage.addPayload(subMessage);
+    const batchMessage: BatchToPusherMessage = {
+        payload: [subMessage],
+    };
     socket.write(batchMessage);
 }
 
@@ -92,6 +84,8 @@ export class SocketManager {
     private resolvedRooms = new Map<string, GameRoom>();
     // List of rooms (or rooms in process of loading).
     private roomsPromises = new Map<string, PromiseLike<GameRoom>>();
+
+    private spaces = new Map<string, Space>();
 
     constructor() {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
@@ -108,30 +102,34 @@ export class SocketManager {
     ): Promise<{ room: GameRoom; user: User }> {
         //join new previous room
         const { room, user } = await this.joinRoom(socket, joinRoomMessage);
-        const lastCommandId = joinRoomMessage.getLastcommandid();
+        const lastCommandId = joinRoomMessage.lastCommandId;
         let commandsToApply: EditMapCommandMessage[] | undefined = undefined;
 
         if (lastCommandId) {
-            const updateMapToNewestMessage = new UpdateMapToNewestMessage();
-            updateMapToNewestMessage.setCommandid(lastCommandId.getValue());
+            if (room.wamUrl) {
+                const updateMapToNewestWithKeyMessage: UpdateMapToNewestWithKeyMessage = {
+                    mapKey: room.wamUrl,
+                    updateMapToNewestMessage: {
+                        commandId: lastCommandId,
+                    },
+                };
 
-            const updateMapToNewestWithKeyMessage = new UpdateMapToNewestWithKeyMessage();
-            updateMapToNewestWithKeyMessage.setMapkey(room.mapUrl);
-            updateMapToNewestWithKeyMessage.setUpdatemaptonewestmessage(updateMapToNewestMessage);
-
-            commandsToApply = await new Promise<EditMapCommandMessage[]>((resolve, reject) => {
-                getMapStorageClient().handleUpdateMapToNewestMessage(
-                    updateMapToNewestWithKeyMessage,
-                    (err: unknown, message: EditMapCommandsArrayMessage) => {
-                        if (err) {
-                            emitError(user.socket, err);
-                            reject(err);
-                            return;
+                commandsToApply = await new Promise<EditMapCommandMessage[]>((resolve, reject) => {
+                    getMapStorageClient().handleUpdateMapToNewestMessage(
+                        updateMapToNewestWithKeyMessage,
+                        (err: unknown, message: EditMapCommandsArrayMessage) => {
+                            if (err) {
+                                emitError(user.socket, err);
+                                reject(err);
+                                return;
+                            }
+                            resolve(message.editMapCommands);
                         }
-                        resolve(message.getEditmapcommandsList());
-                    }
-                );
-            });
+                    );
+                });
+            } else {
+                emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
+            }
         }
 
         if (!socket.writable) {
@@ -141,62 +139,69 @@ export class SocketManager {
                 user,
             };
         }
-        const roomJoinedMessage = new RoomJoinedMessage();
-        roomJoinedMessage.setUserjid(joinRoomMessage.getUserjid());
-        roomJoinedMessage.setTagList(joinRoomMessage.getTagList());
-        roomJoinedMessage.setUserroomtoken(joinRoomMessage.getUserroomtoken());
-        roomJoinedMessage.setCharacterlayerList(joinRoomMessage.getCharacterlayerList());
-        roomJoinedMessage.setCanedit(joinRoomMessage.getCanedit());
 
+        let editMapCommandsArrayMessage: EditMapCommandsArrayMessage | undefined = undefined;
         if (commandsToApply) {
-            const editMapCommandsArrayMessage = new EditMapCommandsArrayMessage();
-            editMapCommandsArrayMessage.setEditmapcommandsList(commandsToApply);
-            roomJoinedMessage.setEditmapcommandsarraymessage(editMapCommandsArrayMessage);
+            editMapCommandsArrayMessage = {
+                editMapCommands: commandsToApply,
+            };
         }
 
+        const itemStateMessage: ItemStateMessage[] = [];
         for (const [itemId, item] of room.getItemsState().entries()) {
-            const itemStateMessage = new ItemStateMessage();
-            itemStateMessage.setItemid(itemId);
-            itemStateMessage.setStatejson(JSON.stringify(item));
-
-            roomJoinedMessage.addItem(itemStateMessage);
+            itemStateMessage.push({
+                itemId: itemId,
+                stateJson: JSON.stringify(item),
+            });
         }
 
         const variables = await room.getVariablesForTags(user.tags);
+        const variablesMessage: VariableMessage[] = [];
 
         for (const [name, value] of variables.entries()) {
-            const variableMessage = new VariableMessage();
-            variableMessage.setName(name);
-            variableMessage.setValue(value);
-
-            roomJoinedMessage.addVariable(variableMessage);
-        }
-
-        roomJoinedMessage.setCurrentuserid(user.id);
-        roomJoinedMessage.setActivatedinviteuser(
-            user.activatedInviteUser != undefined ? user.activatedInviteUser : true
-        );
-        if (user.applications != undefined) {
-            roomJoinedMessage.setApplicationsList(user.applications);
+            variablesMessage.push({
+                name: name,
+                value: value,
+            });
         }
 
         const playerVariables = user.getVariables().getVariables();
+        const playerVariablesMessage: VariableMessage[] = [];
 
         for (const [name, value] of playerVariables.entries()) {
-            const variableMessage = new VariableMessage();
-            variableMessage.setName(name);
-            variableMessage.setValue(value.value);
-
-            roomJoinedMessage.addPlayervariable(variableMessage);
+            playerVariablesMessage.push({
+                name: name,
+                value: value.value,
+            });
         }
+
+        const roomJoinedMessage: Partial<RoomJoinedMessage> = {
+            userJid: joinRoomMessage.userJid,
+            tag: joinRoomMessage.tag,
+            userRoomToken: joinRoomMessage.userRoomToken,
+            characterLayer: joinRoomMessage.characterLayer,
+            canEdit: joinRoomMessage.canEdit,
+            editMapCommandsArrayMessage,
+            item: itemStateMessage,
+            variable: variablesMessage,
+            currentUserId: user.id,
+            activatedInviteUser: user.activatedInviteUser != undefined ? user.activatedInviteUser : true,
+            applications: user.applications ?? [],
+            playerVariable: playerVariablesMessage,
+        };
 
         if (TURN_STATIC_AUTH_SECRET) {
             const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-            roomJoinedMessage.setWebrtcusername(username);
-            roomJoinedMessage.setWebrtcpassword(password);
+            roomJoinedMessage.webrtcUserName = username;
+            roomJoinedMessage.webrtcPassword = password;
         }
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setRoomjoinedmessage(roomJoinedMessage);
+
+        const serverToClientMessage: ServerToClientMessage = {
+            message: {
+                $case: "roomJoinedMessage",
+                roomJoinedMessage: RoomJoinedMessage.fromPartial(roomJoinedMessage),
+            },
+        };
         socket.write(serverToClientMessage);
 
         return {
@@ -205,9 +210,8 @@ export class SocketManager {
         };
     }
 
-    handleUserMovesMessage(room: GameRoom, user: User, userMovesMessage: UserMovesMessage) {
-        const userMoves = userMovesMessage.toObject();
-        const position = userMovesMessage.getPosition();
+    handleUserMovesMessage(room: GameRoom, user: User, userMoves: UserMovesMessage) {
+        const position = userMoves.position;
 
         // If CPU is high, let's drop messages of users moving (we will only dispatch the final position)
         if (cpuTracker.isOverHeating() && userMoves.position?.moving === true) {
@@ -234,83 +238,102 @@ export class SocketManager {
     handleItemEvent(room: GameRoom, user: User, itemEventMessage: ItemEventMessage) {
         const itemEvent = ProtobufUtils.toItemEvent(itemEventMessage);
 
-        const subMessage = new SubMessage();
-        subMessage.setItemeventmessage(itemEventMessage);
-
         // Let's send the event without using the SocketIO room.
         // TODO: move this in the GameRoom class.
         for (const user of room.getUsers().values()) {
-            user.emitInBatch(subMessage);
+            user.emitInBatch({
+                message: {
+                    $case: "itemEventMessage",
+                    itemEventMessage,
+                },
+            });
         }
 
         room.setItemState(itemEvent.itemId, itemEvent.state);
     }
 
     handleVariableEvent(room: GameRoom, user: User, variableMessage: VariableMessage): Promise<void> {
-        return room.setVariable(variableMessage.getName(), variableMessage.getValue(), user);
+        return room.setVariable(variableMessage.name, variableMessage.value, user);
     }
 
-    // handleSharedPlayerVariableEvent(room: GameRoom, user: User, variableMessage: VariableMessage): Promise<void> {
-    //     return room.setSharedPlayerVariable(variableMessage.getName(), variableMessage.getValue(), user);
-    // }
+    async readVariable(roomUrl: string, variable: string): Promise<string | undefined> {
+        const room = await this.getOrCreateRoom(roomUrl);
+        // Info: Admin tag is given to bypass the tags checking
+        const variables = await room.getVariablesForTags(undefined);
+        return variables.get(variable);
+    }
+
+    async saveVariable(roomUrl: string, variable: string, newValue: string): Promise<void> {
+        const room = await this.getOrCreateRoom(roomUrl);
+        await room.setVariable(variable, newValue, "RoomApi");
+    }
 
     emitVideo(room: GameRoom, user: User, data: WebRtcSignalToServerMessage): void {
         //send only at user
-        const remoteUser = room.getUsers().get(data.getReceiverid());
+        const remoteUser = room.getUsers().get(data.receiverId);
         if (remoteUser === undefined) {
             console.warn(
                 "While exchanging a WebRTC signal: client with id ",
-                data.getReceiverid(),
+                data.receiverId,
                 " does not exist. This might be a race condition."
             );
             return;
         }
 
-        const webrtcSignalToClient = new WebRtcSignalToClientMessage();
-        webrtcSignalToClient.setUserid(user.id);
-        webrtcSignalToClient.setSignal(data.getSignal());
+        const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
+            userId: user.id,
+            signal: data.signal,
+        };
+
         // TODO: only compute credentials if data.signal.type === "offer"
         if (TURN_STATIC_AUTH_SECRET) {
             const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-            webrtcSignalToClient.setWebrtcusername(username);
-            webrtcSignalToClient.setWebrtcpassword(password);
+            webrtcSignalToClientMessage.webrtcUserName = username;
+            webrtcSignalToClientMessage.webrtcPassword = password;
         }
 
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setWebrtcsignaltoclientmessage(webrtcSignalToClient);
-
         //if (!client.disconnecting) {
-        remoteUser.socket.write(serverToClientMessage);
+        remoteUser.socket.write({
+            message: {
+                $case: "webRtcSignalToClientMessage",
+                webRtcSignalToClientMessage: WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
+            },
+        });
         //}
     }
 
     emitScreenSharing(room: GameRoom, user: User, data: WebRtcSignalToServerMessage): void {
         //send only at user
-        const remoteUser = room.getUsers().get(data.getReceiverid());
+        const remoteUser = room.getUsers().get(data.receiverId);
         if (remoteUser === undefined) {
             console.warn(
                 "While exchanging a WEBRTC_SCREEN_SHARING signal: client with id ",
-                data.getReceiverid(),
+                data.receiverId,
                 " does not exist. This might be a race condition."
             );
             return;
         }
 
-        const webrtcSignalToClient = new WebRtcSignalToClientMessage();
-        webrtcSignalToClient.setUserid(user.id);
-        webrtcSignalToClient.setSignal(data.getSignal());
+        const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
+            userId: user.id,
+            signal: data.signal,
+        };
+
         // TODO: only compute credentials if data.signal.type === "offer"
         if (TURN_STATIC_AUTH_SECRET) {
             const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-            webrtcSignalToClient.setWebrtcusername(username);
-            webrtcSignalToClient.setWebrtcpassword(password);
+            webrtcSignalToClientMessage.webrtcUserName = username;
+            webrtcSignalToClientMessage.webrtcPassword = password;
         }
 
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setWebrtcscreensharingsignaltoclientmessage(webrtcSignalToClient);
-
         //if (!client.disconnecting) {
-        remoteUser.socket.write(serverToClientMessage);
+        remoteUser.socket.write({
+            message: {
+                $case: "webRtcScreenSharingSignalToClientMessage",
+                webRtcScreenSharingSignalToClientMessage:
+                    WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
+            },
+        });
         //}
     }
 
@@ -375,7 +398,7 @@ export class SocketManager {
         socket: UserSocket,
         joinRoomMessage: JoinRoomMessage
     ): Promise<{ room: GameRoom; user: User }> {
-        const roomId = joinRoomMessage.getRoomid();
+        const roomId = joinRoomMessage.roomId;
 
         const room = await socketManager.getOrCreateRoom(roomId);
 
@@ -400,58 +423,64 @@ export class SocketManager {
     }
 
     private static toUserJoinedZoneMessage(user: User, fromZone?: Zone | null): SubToPusherMessage {
-        const userJoinedZoneMessage = new UserJoinedZoneMessage();
         if (!Number.isInteger(user.id)) {
             throw new Error(`clientUser.userId is not an integer ${user.id}`);
         }
-        userJoinedZoneMessage.setUserid(user.id);
-        userJoinedZoneMessage.setUserjid(user.userJid);
-        userJoinedZoneMessage.setUseruuid(user.uuid);
-        userJoinedZoneMessage.setName(user.name);
-        userJoinedZoneMessage.setAvailabilitystatus(user.getAvailabilityStatus());
-        userJoinedZoneMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(user.characterLayers));
-        userJoinedZoneMessage.setPosition(ProtobufUtils.toPositionMessage(user.getPosition()));
+        const userJoinedZoneMessage: Partial<UserJoinedZoneMessage> = {
+            userId: user.id,
+            userJid: user.userJid,
+            userUuid: user.uuid,
+            name: user.name,
+            availabilityStatus: user.getAvailabilityStatus(),
+            characterLayers: ProtobufUtils.toCharacterLayerMessages(user.characterLayers),
+            position: ProtobufUtils.toPositionMessage(user.getPosition()),
+        };
         if (fromZone) {
-            userJoinedZoneMessage.setFromzone(SocketManager.toProtoZone(fromZone));
+            userJoinedZoneMessage.fromZone = SocketManager.toProtoZone(fromZone);
         }
         if (user.visitCardUrl) {
-            userJoinedZoneMessage.setVisitcardurl(user.visitCardUrl);
+            userJoinedZoneMessage.visitCardUrl = user.visitCardUrl;
         }
-        userJoinedZoneMessage.setCompanion(user.companion);
+        userJoinedZoneMessage.companion = user.companion;
         const outlineColor = user.getOutlineColor();
         if (outlineColor === undefined) {
-            userJoinedZoneMessage.setHasoutline(false);
+            userJoinedZoneMessage.hasOutline = false;
         } else {
-            userJoinedZoneMessage.setHasoutline(true);
-            userJoinedZoneMessage.setOutlinecolor(outlineColor);
+            userJoinedZoneMessage.hasOutline = true;
+            userJoinedZoneMessage.outlineColor = outlineColor;
         }
+        userJoinedZoneMessage.variables = {};
         for (const entry of user.getVariables().getVariables().entries()) {
             const key = entry[0];
             const value = entry[1].value;
             const isPublic = entry[1].isPublic;
             if (isPublic) {
-                userJoinedZoneMessage.getVariablesMap().set(key, value);
+                userJoinedZoneMessage.variables[key] = value;
             }
         }
 
-        const subMessage = new SubToPusherMessage();
-        subMessage.setUserjoinedzonemessage(userJoinedZoneMessage);
-
-        return subMessage;
+        return {
+            message: {
+                $case: "userJoinedZoneMessage",
+                userJoinedZoneMessage: UserJoinedZoneMessage.fromPartial(userJoinedZoneMessage),
+            },
+        };
     }
 
     private onClientMove(thing: Movable, position: PositionInterface, listener: ZoneSocket): void {
         if (thing instanceof User) {
-            const userMovedMessage = new UserMovedMessage();
-            userMovedMessage.setUserid(thing.id);
-            userMovedMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
-
-            const subMessage = new SubToPusherMessage();
-            subMessage.setUsermovedmessage(userMovedMessage);
-
-            emitZoneMessage(subMessage, listener);
-            //listener.emitInBatch(subMessage);
-            //console.log("Sending USER_MOVED event");
+            emitZoneMessage(
+                {
+                    message: {
+                        $case: "userMovedMessage",
+                        userMovedMessage: {
+                            userId: thing.id,
+                            position: ProtobufUtils.toPositionMessage(thing.getPosition()),
+                        },
+                    },
+                },
+                listener
+            );
         } else if (thing instanceof Group) {
             this.emitCreateUpdateGroupEvent(listener, null, thing);
         } else {
@@ -470,10 +499,15 @@ export class SocketManager {
     }
 
     private onEmote(emoteEventMessage: EmoteEventMessage, client: ZoneSocket) {
-        const subMessage = new SubToPusherMessage();
-        subMessage.setEmoteeventmessage(emoteEventMessage);
-
-        emitZoneMessage(subMessage, client);
+        emitZoneMessage(
+            {
+                message: {
+                    $case: "emoteEventMessage",
+                    emoteEventMessage,
+                },
+            },
+            client
+        );
     }
 
     private async onLockGroup(
@@ -492,68 +526,89 @@ export class SocketManager {
     }
 
     private onPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, client: ZoneSocket) {
-        const subMessage = new SubToPusherMessage();
-        subMessage.setPlayerdetailsupdatedmessage(playerDetailsUpdatedMessage);
-        emitZoneMessage(subMessage, client);
+        emitZoneMessage(
+            {
+                message: {
+                    $case: "playerDetailsUpdatedMessage",
+                    playerDetailsUpdatedMessage,
+                },
+            },
+            client
+        );
     }
 
     private emitCreateUpdateGroupEvent(client: ZoneSocket, fromZone: Zone | null, group: Group): void {
         const position = group.getPosition();
-        const pointMessage = new PointMessage();
-        pointMessage.setX(Math.floor(position.x));
-        pointMessage.setY(Math.floor(position.y));
-        const groupUpdateMessage = new GroupUpdateZoneMessage();
-        groupUpdateMessage.setGroupid(group.getId());
-        groupUpdateMessage.setPosition(pointMessage);
-        groupUpdateMessage.setGroupsize(group.getSize);
-        groupUpdateMessage.setFromzone(SocketManager.toProtoZone(fromZone));
-        groupUpdateMessage.setLocked(group.isLocked());
-
-        const subMessage = new SubToPusherMessage();
-        subMessage.setGroupupdatezonemessage(groupUpdateMessage);
-
-        emitZoneMessage(subMessage, client);
-        //client.emitInBatch(subMessage);
+        emitZoneMessage(
+            {
+                message: {
+                    $case: "groupUpdateZoneMessage",
+                    groupUpdateZoneMessage: {
+                        groupId: group.getId(),
+                        position: {
+                            x: Math.floor(position.x),
+                            y: Math.floor(position.y),
+                        },
+                        groupSize: group.getSize,
+                        fromZone: SocketManager.toProtoZone(fromZone),
+                        locked: group.isLocked(),
+                    },
+                },
+            },
+            client
+        );
     }
 
     private emitDeleteGroupEvent(client: ZoneSocket, groupId: number, newZone: Zone | null): void {
-        const groupDeleteMessage = new GroupLeftZoneMessage();
-        groupDeleteMessage.setGroupid(groupId);
-        groupDeleteMessage.setTozone(SocketManager.toProtoZone(newZone));
-
-        const subMessage = new SubToPusherMessage();
-        subMessage.setGroupleftzonemessage(groupDeleteMessage);
-        emitZoneMessage(subMessage, client);
-        //user.emitInBatch(subMessage);
+        emitZoneMessage(
+            {
+                message: {
+                    $case: "groupLeftZoneMessage",
+                    groupLeftZoneMessage: {
+                        groupId,
+                        toZone: SocketManager.toProtoZone(newZone),
+                    },
+                },
+            },
+            client
+        );
     }
 
     private emitUserLeftEvent(client: ZoneSocket, userId: number, newZone: Zone | null): void {
-        const userLeftMessage = new UserLeftZoneMessage();
-        userLeftMessage.setUserid(userId);
-        userLeftMessage.setTozone(SocketManager.toProtoZone(newZone));
-
-        const subMessage = new SubToPusherMessage();
-        subMessage.setUserleftzonemessage(userLeftMessage);
-        emitZoneMessage(subMessage, client);
+        emitZoneMessage(
+            {
+                message: {
+                    $case: "userLeftZoneMessage",
+                    userLeftZoneMessage: {
+                        userId,
+                        toZone: SocketManager.toProtoZone(newZone),
+                    },
+                },
+            },
+            client
+        );
     }
 
     private static toProtoZone(zone: Zone | null): ProtoZone | undefined {
         if (zone !== null) {
-            const zoneMessage = new ProtoZone();
-            zoneMessage.setX(zone.x);
-            zoneMessage.setY(zone.y);
-            return zoneMessage;
+            return {
+                x: zone.x,
+                y: zone.y,
+            };
         }
         return undefined;
     }
 
     private sendGroupUsersUpdateToGroupMembers(group: Group) {
-        const groupUserUpdateMessage = new GroupUsersUpdateMessage();
-        groupUserUpdateMessage.setGroupid(group.getId());
-        groupUserUpdateMessage.setUseridsList(group.getUsers().map((user) => user.id));
-
-        const clientMessage = new ServerToClientMessage();
-        clientMessage.setGroupusersupdatemessage(groupUserUpdateMessage);
+        const clientMessage: ServerToClientMessage = {
+            message: {
+                $case: "groupUsersUpdateMessage",
+                groupUsersUpdateMessage: {
+                    groupId: group.getId(),
+                    userIds: group.getUsers().map((user) => user.id),
+                },
+            },
+        };
 
         group.getUsers().forEach((currentUser: User) => {
             currentUser.socket.write(clientMessage);
@@ -567,36 +622,42 @@ export class SocketManager {
             }
 
             // Let's send 2 messages: one to the user joining the group and one to the other user
-            const webrtcStartMessage1 = new WebRtcStartMessage();
-            webrtcStartMessage1.setUserid(otherUser.id);
-            webrtcStartMessage1.setInitiator(true);
+            const webrtcStartMessage1: Partial<WebRtcStartMessage> = {
+                userId: otherUser.id,
+                initiator: true,
+            };
             if (TURN_STATIC_AUTH_SECRET) {
                 const { username, password } = this.getTURNCredentials(
                     otherUser.id.toString(),
                     TURN_STATIC_AUTH_SECRET
                 );
-                webrtcStartMessage1.setWebrtcusername(username);
-                webrtcStartMessage1.setWebrtcpassword(password);
+                webrtcStartMessage1.webrtcUserName = username;
+                webrtcStartMessage1.webrtcPassword = password;
             }
 
-            const serverToClientMessage1 = new ServerToClientMessage();
-            serverToClientMessage1.setWebrtcstartmessage(webrtcStartMessage1);
+            user.socket.write({
+                message: {
+                    $case: "webRtcStartMessage",
+                    webRtcStartMessage: WebRtcStartMessage.fromPartial(webrtcStartMessage1),
+                },
+            });
 
-            user.socket.write(serverToClientMessage1);
-
-            const webrtcStartMessage2 = new WebRtcStartMessage();
-            webrtcStartMessage2.setUserid(user.id);
-            webrtcStartMessage2.setInitiator(false);
+            const webrtcStartMessage2: Partial<WebRtcStartMessage> = {
+                userId: user.id,
+                initiator: false,
+            };
             if (TURN_STATIC_AUTH_SECRET) {
                 const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-                webrtcStartMessage2.setWebrtcusername(username);
-                webrtcStartMessage2.setWebrtcpassword(password);
+                webrtcStartMessage2.webrtcUserName = username;
+                webrtcStartMessage2.webrtcPassword = password;
             }
 
-            const serverToClientMessage2 = new ServerToClientMessage();
-            serverToClientMessage2.setWebrtcstartmessage(webrtcStartMessage2);
-
-            otherUser.socket.write(serverToClientMessage2);
+            otherUser.socket.write({
+                message: {
+                    $case: "webRtcStartMessage",
+                    webRtcStartMessage: WebRtcStartMessage.fromPartial(webrtcStartMessage2),
+                },
+            });
         }
     }
 
@@ -612,7 +673,7 @@ export class SocketManager {
         hmac.setEncoding("base64");
         hmac.write(username);
         hmac.end();
-        const password = hmac.read() as string;
+        const password = String(hmac.read() || "");
         return {
             username,
             password,
@@ -631,24 +692,26 @@ export class SocketManager {
                 continue;
             }
 
-            const webrtcDisconnectMessage1 = new WebRtcDisconnectMessage();
-            webrtcDisconnectMessage1.setUserid(user.id);
-
-            const serverToClientMessage1 = new ServerToClientMessage();
-            serverToClientMessage1.setWebrtcdisconnectmessage(webrtcDisconnectMessage1);
-
             //if (!otherUser.socket.disconnecting) {
-            otherUser.socket.write(serverToClientMessage1);
+            otherUser.socket.write({
+                message: {
+                    $case: "webRtcDisconnectMessage",
+                    webRtcDisconnectMessage: {
+                        userId: user.id,
+                    },
+                },
+            });
             //}
 
-            const webrtcDisconnectMessage2 = new WebRtcDisconnectMessage();
-            webrtcDisconnectMessage2.setUserid(otherUser.id);
-
-            const serverToClientMessage2 = new ServerToClientMessage();
-            serverToClientMessage2.setWebrtcdisconnectmessage(webrtcDisconnectMessage2);
-
             //if (!user.socket.disconnecting) {
-            user.socket.write(serverToClientMessage2);
+            user.socket.write({
+                message: {
+                    $case: "webRtcDisconnectMessage",
+                    webRtcDisconnectMessage: {
+                        userId: otherUser.id,
+                    },
+                },
+            });
             //}
         }
     }
@@ -658,30 +721,39 @@ export class SocketManager {
     }
 
     public async handleQueryMessage(gameRoom: GameRoom, user: User, queryMessage: QueryMessage): Promise<void> {
-        const queryCase = queryMessage.getQueryCase();
-        const answerMessage = new AnswerMessage();
-        answerMessage.setId(queryMessage.getId());
+        if (!queryMessage.query) {
+            console.error("QueryMessage has no query");
+            return;
+        }
+        const queryCase = queryMessage.query.$case;
+        const answerMessage: Partial<AnswerMessage> = {
+            id: queryMessage.id,
+        };
 
         try {
             switch (queryCase) {
-                case QueryCase.QUERY_NOT_SET:
-                    throw new Error("Query case not set");
-                case QueryMessage.QueryCase.JITSIJWTQUERY: {
+                case "jitsiJwtQuery": {
                     const answer = await this.handleQueryJitsiJwtMessage(
                         gameRoom,
                         user,
-                        queryMessage.getJitsijwtquery() as JitsiJwtQuery
+                        queryMessage.query.jitsiJwtQuery
                     );
-                    answerMessage.setJitsijwtanswer(answer);
+                    answerMessage.answer = {
+                        $case: "jitsiJwtAnswer",
+                        jitsiJwtAnswer: answer,
+                    };
                     break;
                 }
-                case QueryMessage.QueryCase.JOINBBBMEETINGQUERY: {
+                case "joinBBBMeetingQuery": {
                     const answer = await this.handleJoinBBBMeetingMessage(
                         gameRoom,
                         user,
-                        queryMessage.getJoinbbbmeetingquery() as JoinBBBMeetingQuery
+                        queryMessage.query.joinBBBMeetingQuery
                     );
-                    answerMessage.setJoinbbbmeetinganswer(answer);
+                    answerMessage.answer = {
+                        $case: "joinBBBMeetingAnswer",
+                        joinBBBMeetingAnswer: answer,
+                    };
                     break;
                 }
                 default: {
@@ -690,17 +762,25 @@ export class SocketManager {
             }
         } catch (e) {
             console.error("An error happened while answering a query:", e);
-            const errorMessage = new ErrorMessage();
-            errorMessage.setMessage(
-                e !== null && typeof e === "object" ? e.toString() : typeof e === "string" ? e : "Unknown error"
-            );
-            answerMessage.setError(errorMessage);
+            answerMessage.answer = {
+                $case: "error",
+                error: {
+                    message:
+                        e !== null && typeof e === "object"
+                            ? e.toString()
+                            : typeof e === "string"
+                            ? e
+                            : "Unknown error",
+                },
+            };
         }
 
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setAnswermessage(answerMessage);
-
-        user.socket.write(serverToClientMessage);
+        user.socket.write({
+            message: {
+                $case: "answerMessage",
+                answerMessage: AnswerMessage.fromPartial(answerMessage),
+            },
+        });
     }
 
     public async handleQueryJitsiJwtMessage(
@@ -708,7 +788,7 @@ export class SocketManager {
         user: User,
         queryJitsiJwtMessage: JitsiJwtQuery
     ): Promise<JitsiJwtAnswer> {
-        const jitsiRoom = queryJitsiJwtMessage.getJitsiroom();
+        const jitsiRoom = queryJitsiJwtMessage.jitsiRoom;
         const jitsiSettings = gameRoom.getJitsiSettings();
 
         if (jitsiSettings === undefined || !jitsiSettings.secret) {
@@ -745,11 +825,10 @@ export class SocketManager {
             }
         );
 
-        const jitsiJwtAnswer = new JitsiJwtAnswer();
-        jitsiJwtAnswer.setJwt(jwt);
-        jitsiJwtAnswer.setUrl(jitsiSettings.url);
-
-        return jitsiJwtAnswer;
+        return {
+            jwt,
+            url: jitsiSettings.url,
+        };
     }
 
     public async handleJoinBBBMeetingMessage(
@@ -757,9 +836,9 @@ export class SocketManager {
         user: User,
         joinBBBMeetingQuery: JoinBBBMeetingQuery
     ): Promise<JoinBBBMeetingAnswer> {
-        const meetingId = joinBBBMeetingQuery.getMeetingid();
-        const localMeetingId = joinBBBMeetingQuery.getLocalmeetingid();
-        const meetingName = joinBBBMeetingQuery.getMeetingname();
+        const meetingId = joinBBBMeetingQuery.meetingId;
+        const localMeetingId = joinBBBMeetingQuery.localMeetingId;
+        const meetingName = joinBBBMeetingQuery.meetingName;
         const bbbSettings = gameRoom.getBbbSettings();
 
         if (bbbSettings === undefined) {
@@ -817,31 +896,28 @@ export class SocketManager {
             }.`
         );
 
-        const bbbMeetingAnswer = new JoinBBBMeetingAnswer();
-        bbbMeetingAnswer.setMeetingid(meetingId);
-        bbbMeetingAnswer.setClienturl(clientURL);
-
-        return bbbMeetingAnswer;
+        return {
+            meetingId,
+            clientURL,
+        };
     }
 
     public handleSendUserMessage(user: User, sendUserMessageToSend: SendUserMessage) {
-        const sendUserMessage = new SendUserMessage();
-        sendUserMessage.setMessage(sendUserMessageToSend.getMessage());
-        sendUserMessage.setType(sendUserMessageToSend.getType());
-
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setSendusermessage(sendUserMessage);
-        user.socket.write(serverToClientMessage);
+        user.socket.write({
+            message: {
+                $case: "sendUserMessage",
+                sendUserMessage: sendUserMessageToSend,
+            },
+        });
     }
 
-    public handlerBanUserMessage(room: GameRoom, user: User, banUserMessageToSend: BanUserMessage) {
-        const banUserMessage = new BanUserMessage();
-        banUserMessage.setMessage(banUserMessageToSend.getMessage());
-        banUserMessage.setType(banUserMessageToSend.getType());
-
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setSendusermessage(banUserMessage);
-        user.socket.write(serverToClientMessage);
+    public handleBanUserMessage(room: GameRoom, user: User, banUserMessageToSend: BanUserMessage) {
+        user.socket.write({
+            message: {
+                $case: "sendUserMessage",
+                sendUserMessage: banUserMessageToSend,
+            },
+        });
 
         setTimeout(() => {
             // Let's leave the room now.
@@ -859,23 +935,28 @@ export class SocketManager {
 
         const things = room.addZoneListener(call, x, y);
 
-        const batchMessage = new BatchToPusherMessage();
+        const batchMessage: BatchToPusherMessage = {
+            payload: [],
+        };
 
         for (const thing of things) {
             if (thing instanceof User) {
                 const subMessage = SocketManager.toUserJoinedZoneMessage(thing);
 
-                batchMessage.addPayload(subMessage);
+                batchMessage.payload.push(subMessage);
             } else if (thing instanceof Group) {
-                const groupUpdateMessage = new GroupUpdateZoneMessage();
-                groupUpdateMessage.setGroupid(thing.getId());
-                groupUpdateMessage.setPosition(ProtobufUtils.toPointMessage(thing.getPosition()));
-                groupUpdateMessage.setLocked(thing.isLocked());
+                const groupUpdateMessage: Partial<GroupUpdateZoneMessage> = {
+                    groupId: thing.getId(),
+                    position: ProtobufUtils.toPointMessage(thing.getPosition()),
+                    locked: thing.isLocked(),
+                };
 
-                const subMessage = new SubToPusherMessage();
-                subMessage.setGroupupdatezonemessage(groupUpdateMessage);
-
-                batchMessage.addPayload(subMessage);
+                batchMessage.payload.push({
+                    message: {
+                        $case: "groupUpdateZoneMessage",
+                        groupUpdateZoneMessage: GroupUpdateZoneMessage.fromPartial(groupUpdateMessage),
+                    },
+                });
             } else {
                 console.error("Unexpected type for Movable returned by setViewport");
             }
@@ -903,9 +984,9 @@ export class SocketManager {
 
         room.addRoomListener(call);
 
-        const batchMessage = new BatchToPusherRoomMessage();
+        /*const batchMessage = new BatchToPusherRoomMessage();
 
-        call.write(batchMessage);
+        call.write(batchMessage);*/
     }
 
     async removeRoomListener(call: RoomSocket, roomId: string) {
@@ -915,6 +996,24 @@ export class SocketManager {
         }
 
         room.removeRoomListener(call);
+    }
+
+    async addVariableListener(call: VariableSocket) {
+        const room = await this.getOrCreateRoom(call.request.room);
+        if (!room) {
+            throw new Error("In addVariableListener, could not find room with id '" + call.request.room + "'");
+        }
+
+        room.addVariableListener(call);
+    }
+
+    async removeVariableListener(call: VariableSocket) {
+        const room = await this.roomsPromises.get(call.request.room);
+        if (!room) {
+            throw new Error("In removeVariableListener, could not find room with id '" + call.request.room + "'");
+        }
+
+        room.removeVariableListener(call);
     }
 
     public async handleJoinAdminRoom(admin: Admin, roomId: string): Promise<GameRoom> {
@@ -964,14 +1063,15 @@ export class SocketManager {
         }
 
         for (const recipient of recipients) {
-            const sendUserMessage = new SendUserMessage();
-            sendUserMessage.setMessage(message);
-            sendUserMessage.setType(type);
-
-            const serverToClientMessage = new ServerToClientMessage();
-            serverToClientMessage.setSendusermessage(sendUserMessage);
-
-            recipient.socket.write(serverToClientMessage);
+            recipient.socket.write({
+                message: {
+                    $case: "sendUserMessage",
+                    sendUserMessage: {
+                        message,
+                        type,
+                    },
+                },
+            });
         }
     }
 
@@ -1000,15 +1100,16 @@ export class SocketManager {
             // Let's leave the room now.
             room.leave(recipient);
 
-            const banUserMessage = new BanUserMessage();
-            banUserMessage.setMessage(message);
-            banUserMessage.setType("banned");
-
-            const serverToClientMessage = new ServerToClientMessage();
-            serverToClientMessage.setBanusermessage(banUserMessage);
-
             // Let's close the connection when the user is banned.
-            recipient.socket.write(serverToClientMessage);
+            recipient.socket.write({
+                message: {
+                    $case: "banUserMessage",
+                    banUserMessage: {
+                        message,
+                        type: "banned",
+                    },
+                },
+            });
             recipient.socket.end();
         }
     }
@@ -1026,14 +1127,15 @@ export class SocketManager {
         }
 
         room.getUsers().forEach((recipient) => {
-            const sendUserMessage = new SendUserMessage();
-            sendUserMessage.setMessage(message);
-            sendUserMessage.setType(type);
-
-            const clientMessage = new ServerToClientMessage();
-            clientMessage.setSendusermessage(sendUserMessage);
-
-            recipient.socket.write(clientMessage);
+            recipient.socket.write({
+                message: {
+                    $case: "sendUserMessage",
+                    sendUserMessage: {
+                        message,
+                        type,
+                    },
+                },
+            });
         });
     }
 
@@ -1050,12 +1152,12 @@ export class SocketManager {
         }
 
         room.getUsers().forEach((recipient) => {
-            const worldFullMessage = new WorldFullWarningMessage();
-
-            const clientMessage = new ServerToClientMessage();
-            clientMessage.setWorldfullwarningmessage(worldFullMessage);
-
-            recipient.socket.write(clientMessage);
+            recipient.socket.write({
+                message: {
+                    $case: "worldFullWarningMessage",
+                    worldFullWarningMessage: {},
+                },
+            });
         });
     }
 
@@ -1067,32 +1169,36 @@ export class SocketManager {
 
         const versionNumber = await room.incrementVersion();
         room.getUsers().forEach((recipient) => {
-            const refreshRoomMessage = new RefreshRoomMessage();
-            refreshRoomMessage.setRoomid(roomId);
-            refreshRoomMessage.setVersionnumber(versionNumber);
-
-            const clientMessage = new ServerToClientMessage();
-            clientMessage.setRefreshroommessage(refreshRoomMessage);
-
-            recipient.socket.write(clientMessage);
+            recipient.socket.write({
+                message: {
+                    $case: "refreshRoomMessage",
+                    refreshRoomMessage: {
+                        roomId,
+                        versionNumber,
+                    },
+                },
+            });
         });
     }
 
     handleEmoteEventMessage(room: GameRoom, user: User, emotePromptMessage: EmotePromptMessage) {
-        const emoteEventMessage = new EmoteEventMessage();
-        emoteEventMessage.setEmote(emotePromptMessage.getEmote());
-        emoteEventMessage.setActoruserid(user.id);
-        room.emitEmoteEvent(user, emoteEventMessage);
+        room.emitEmoteEvent(user, {
+            emote: emotePromptMessage.emote,
+            actorUserId: user.id,
+        });
     }
 
     handleFollowRequestMessage(room: GameRoom, user: User, message: FollowRequestMessage) {
-        const clientMessage = new ServerToClientMessage();
-        clientMessage.setFollowrequestmessage(message);
-        room.sendToOthersInGroupIncludingUser(user, clientMessage);
+        room.sendToOthersInGroupIncludingUser(user, {
+            message: {
+                $case: "followRequestMessage",
+                followRequestMessage: message,
+            },
+        });
     }
 
     handleFollowConfirmationMessage(room: GameRoom, user: User, message: FollowConfirmationMessage) {
-        const leader = room.getUserById(message.getLeader());
+        const leader = room.getUserById(message.leader);
         if (!leader) {
             const message = `Could not follow user "{message.getLeader()}" in room "{room.roomUrl}".`;
             console.info(message, "Maybe the user just left.");
@@ -1109,11 +1215,11 @@ export class SocketManager {
     }
 
     handleFollowAbortMessage(room: GameRoom, user: User, message: FollowAbortMessage) {
-        if (user.id === message.getLeader()) {
+        if (user.id === message.leader) {
             user?.group?.leader?.stopLeading();
         } else {
             // Forward message
-            const leader = room.getUserById(message.getLeader());
+            const leader = room.getUserById(message.leader);
             leader?.delFollower(user);
         }
     }
@@ -1123,25 +1229,31 @@ export class SocketManager {
         if (!group) {
             return;
         }
-        group.lock(message.getLock());
+        group.lock(message.lock);
         room.emitLockGroupEvent(user, group.getId());
     }
 
     handleEditMapCommandMessage(room: GameRoom, user: User, message: EditMapCommandMessage) {
-        const messageWithKey = new EditMapCommandWithKeyMessage();
-        messageWithKey.setEditmapcommandmessage(message);
-        messageWithKey.setMapkey(room.mapUrl);
-
+        if (!room.wamUrl) {
+            emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
+            return;
+        }
         getMapStorageClient().handleEditMapCommandWithKeyMessage(
-            messageWithKey,
-            (err: unknown, editMapMessage: EditMapCommandMessage) => {
+            {
+                mapKey: room.wamUrl,
+                editMapCommandMessage: message,
+            },
+            (err: unknown, editMapCommandMessage: EditMapCommandMessage) => {
                 if (err) {
                     emitError(user.socket, err);
                     return;
                 }
-                const subMessage = new SubToPusherRoomMessage();
-                subMessage.setEditmapcommandmessage(editMapMessage);
-                room.dispatchRoomMessage(subMessage);
+                room.dispatchRoomMessage({
+                    message: {
+                        $case: "editMapCommandMessage",
+                        editMapCommandMessage,
+                    },
+                });
             }
         );
     }
@@ -1154,42 +1266,49 @@ export class SocketManager {
                     emitError(user.socket, err);
                     throw err;
                 }
-                const commands = message.getEditmapcommandsList();
+                const commands = message.editMapCommands;
                 for (const editMapCommandMessage of commands) {
-                    const subMessage = new SubMessage();
-                    subMessage.setEditmapcommandmessage(editMapCommandMessage);
-                    user.emitInBatch(subMessage);
+                    user.emitInBatch({
+                        message: {
+                            $case: "editMapCommandMessage",
+                            editMapCommandMessage,
+                        },
+                    });
                 }
             }
         );
     }
 
     getAllRooms(): RoomsList {
-        const roomsList = new RoomsList();
+        const roomsList: RoomDescription[] = [];
 
         for (const room of this.resolvedRooms.values()) {
-            const roomDescription = new RoomDescription();
-            roomDescription.setRoomid(room.roomUrl);
-            roomDescription.setNbusers(room.getUsers().size);
+            const roomDescription = {
+                roomId: room.roomUrl,
+                nbUsers: room.getUsers().size,
+            };
 
-            roomsList.addRoomdescription(roomDescription);
+            roomsList.push(roomDescription);
         }
 
-        return roomsList;
+        return {
+            roomDescription: roomsList,
+        };
     }
 
     handleAskPositionMessage(room: GameRoom, user: User, askPositionMessage: AskPositionMessage) {
-        const moveToPositionMessage = new MoveToPositionMessage();
-
         if (room) {
-            const userToJoin = room.getUserByUuid(askPositionMessage.getUseridentifier());
+            const userToJoin = room.getUserByUuid(askPositionMessage.userIdentifier);
             const position = userToJoin?.getPosition();
             if (position) {
-                moveToPositionMessage.setPosition(ProtobufUtils.toPositionMessage(position));
-
-                const clientMessage = new ServerToClientMessage();
-                clientMessage.setMovetopositionmessage(moveToPositionMessage);
-                user.socket.write(clientMessage);
+                user.socket.write({
+                    message: {
+                        $case: "moveToPositionMessage",
+                        moveToPositionMessage: {
+                            position: ProtobufUtils.toPositionMessage(position),
+                        },
+                    },
+                });
             }
 
             if (room.isEmpty()) {
@@ -1199,21 +1318,85 @@ export class SocketManager {
     }
 
     async dispatchChatMessagePrompt(chatMessagePrompt: ChatMessagePrompt): Promise<boolean> {
-        const room = await this.roomsPromises.get(chatMessagePrompt.getRoomid());
-        console.log(chatMessagePrompt.getRoomid());
+        const room = await this.roomsPromises.get(chatMessagePrompt.roomId);
+        console.log(chatMessagePrompt.roomId);
         if (!room) {
             return false;
         }
 
-        const subMessage = new SubToPusherRoomMessage();
-        if (chatMessagePrompt.hasJoinmucroommessage()) {
-            subMessage.setJoinmucroommessage(chatMessagePrompt.getJoinmucroommessage());
-        } else if (chatMessagePrompt.hasLeavemucroommessage()) {
-            subMessage.setLeavemucroommessage(chatMessagePrompt.getLeavemucroommessage());
+        if (!chatMessagePrompt.message) {
+            console.error("ChatMessagePrompt has no message");
+            return false;
         }
-        room.sendSubMessageToRoom(subMessage);
+        switch (chatMessagePrompt.message.$case) {
+            case "joinMucRoomMessage":
+            case "leaveMucRoomMessage": {
+                room.sendSubMessageToRoom(chatMessagePrompt);
+                break;
+            }
+        }
 
         return true;
+    }
+
+    handleWatchSpaceMessage(pusher: SpacesWatcher, watchSpaceMessage: WatchSpaceMessage) {
+        let space: Space | undefined = this.spaces.get(watchSpaceMessage.spaceName);
+        if (!space) {
+            space = new Space(watchSpaceMessage.spaceName);
+            this.spaces.set(watchSpaceMessage.spaceName, space);
+        }
+        pusher.watchSpace(space.name);
+        space.addWatcher(pusher);
+        if (watchSpaceMessage.user) {
+            space.addUser(pusher, watchSpaceMessage.user);
+        }
+    }
+
+    handleUnwatchSpaceMessage(pusher: SpacesWatcher, unwatchSpaceMessage: UnwatchSpaceMessage) {
+        const space: Space | undefined = this.spaces.get(unwatchSpaceMessage.spaceName);
+        if (!space) {
+            throw new Error("Cant unwatch space, space not found");
+        }
+        this.removeSpaceWatcher(pusher, space);
+    }
+
+    handleUnwatchAllSpaces(pusher: SpacesWatcher) {
+        pusher.spacesWatched.forEach((spaceName) => {
+            const space = this.spaces.get(spaceName);
+            if (!space) {
+                throw new Error("Cant unwatch space, space not found");
+            }
+            this.removeSpaceWatcher(pusher, space);
+        });
+    }
+
+    private removeSpaceWatcher(watcher: SpacesWatcher, space: Space) {
+        space.removeWatcher(watcher);
+        // If no anymore watchers we delete the space
+        if (space.canBeDeleted()) {
+            debug("[space] Space %s => deleted", space.name);
+            this.spaces.delete(space.name);
+            watcher.unwatchSpace(space.name);
+        }
+    }
+
+    handleAddSpaceUserMessage(pusher: SpacesWatcher, addSpaceUserMessage: AddSpaceUserMessage) {
+        const space = this.spaces.get(addSpaceUserMessage.spaceName);
+        if (space && addSpaceUserMessage.user) {
+            space.addUser(pusher, addSpaceUserMessage.user);
+        }
+    }
+    handleUpdateSpaceUserMessage(pusher: SpacesWatcher, updateSpaceUserMessage: UpdateSpaceUserMessage) {
+        const space = this.spaces.get(updateSpaceUserMessage.spaceName);
+        if (space && updateSpaceUserMessage.user) {
+            space.updateUser(pusher, updateSpaceUserMessage.user);
+        }
+    }
+    handleRemoveSpaceUserMessage(pusher: SpacesWatcher, removeSpaceUserMessage: RemoveSpaceUserMessage) {
+        const space = this.spaces.get(removeSpaceUserMessage.spaceName);
+        if (space) {
+            space.removeUser(pusher, removeSpaceUserMessage.userUuid);
+        }
     }
 }
 

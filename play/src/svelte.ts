@@ -1,6 +1,8 @@
 import "phaser";
 import "./front/style/index.scss";
 
+import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
+import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { DEBUG_MODE } from "./front/Enum/EnvironmentVariable";
 import { LoginScene } from "./front/Phaser/Login/LoginScene";
 import { ReconnectingScene } from "./front/Phaser/Reconnecting/ReconnectingScene";
@@ -8,8 +10,6 @@ import { SelectCharacterScene } from "./front/Phaser/Login/SelectCharacterScene"
 import { SelectCompanionScene } from "./front/Phaser/Login/SelectCompanionScene";
 import { EnableCameraScene } from "./front/Phaser/Login/EnableCameraScene";
 import { CustomizeScene } from "./front/Phaser/Login/CustomizeScene";
-import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
-import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { EntryScene } from "./front/Phaser/Login/EntryScene";
 import { coWebsiteManager } from "./front/WebRtc/CoWebsiteManager";
 import { ErrorScene } from "./front/Phaser/Reconnecting/ErrorScene";

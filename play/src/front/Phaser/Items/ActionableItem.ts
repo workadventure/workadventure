@@ -2,10 +2,10 @@
  * An actionable item represents an in-game object that can be activated using the space-bar.
  * It has coordinates and an "activation radius"
  */
-import Sprite = Phaser.GameObjects.Sprite;
-import type { GameScene } from "../Game/GameScene";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
+import type { GameScene } from "../Game/GameScene";
 import type { ActivatableInterface } from "../Game/ActivatableInterface";
+import Sprite = Phaser.GameObjects.Sprite;
 
 type EventCallback = (state: unknown, parameters: unknown) => void;
 

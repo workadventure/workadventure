@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import axios from "axios";
 
 test.describe('Meta tags', () => {
-  test('check they are populated when the user-agent is a bot.', async ({
+  test('check they are populated when the user-agent is a bot. @selfsigned', async ({
     page,
   }) => {
     const data: string = (await axios({
@@ -33,7 +33,7 @@ test.describe('Meta tags', () => {
     await expect(data2).not.toContain('Cette carte est tr');
   });
 
-  test('there is no error an funky URLs with bots.', async ({
+  test('there is no error an funky URLs with bots. @selfsigned', async ({
                                                                           request,
                                                                         }) => {
 

@@ -43,7 +43,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: npm run ts-proto && npm run proto
+        run: npm run ts-proto
         working-directory: "messages"
 
       - name: "Generate i18n files"
@@ -186,7 +186,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: npm run proto && npm run ts-proto && npm run copy-to-back
+        run: npm run ts-proto
         working-directory: "messages"
 
       - name: "Typecheck"
@@ -197,7 +197,7 @@ jobs:
         run: npm run lint
         working-directory: "back"
 
-      - name: "Jasmine"
+      - name: "Unit tests"
         run: npm test
         working-directory: "back"
 
@@ -261,7 +261,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: npm run ts-proto && npm run proto
+        run: npm run ts-proto
         working-directory: "messages"
 
       - name: "Typecheck"
@@ -309,7 +309,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: npm run ts-proto && npm run proto
+        run: npm run ts-proto
         working-directory: "messages"
 
       - name: "Typecheck"
@@ -376,6 +376,47 @@ jobs:
       - name: "Prettier"
         run: npm run format
         working-directory: "map-storage"
+
+  continuous-integration-room-api-client:
+    name: "Continuous Integration Room API Client"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: "npm"
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          version: '3.x'
+
+      - name: "Install dependencies"
+        run: npm ci
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: "Build proto messages"
+        run: npm run ts-proto
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: "Build"
+        run: npm run build
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: "Lint"
+        run: npm run lint
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: "Pretty"
+        run: npm run format-check
+        working-directory: "libs/room-api-clients/room-api-client-js"
 
   continuous-integration-desktop:
     name: "Continuous Integration Desktop"
@@ -470,7 +511,7 @@ jobs:
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
           cache: "npm"
           cache-dependency-path: 'tests/package-lock.json'
 
@@ -488,6 +529,14 @@ jobs:
       - name: "Build proto messages"
         run: npm run ts-proto
         working-directory: "messages"
+
+      - name: "Install Room API client dependencies"
+        run: npm ci
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: "Build Room API proto files"
+        run: npm run ts-proto
+        working-directory: "libs/room-api-clients/room-api-client-js"
 
       - name: "Build API typings"
         run: npm run build-typings

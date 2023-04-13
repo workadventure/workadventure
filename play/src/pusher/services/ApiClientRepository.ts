@@ -1,23 +1,23 @@
 /**
  * A class to get connections to the correct "api" server given a room name.
  */
-import * as grpc from "@grpc/grpc-js";
 import crypto from "crypto";
-import { API_URL } from "../enums/EnvironmentVariable";
+import * as grpc from "@grpc/grpc-js";
 
 import Debug from "debug";
-import { RoomManagerClient } from "@workadventure/messages/src/ts-proto-generated/services";
+import { RoomManagerClient, SpaceManagerClient } from "@workadventure/messages/src/ts-proto-generated/services";
+import { API_URL } from "../enums/EnvironmentVariable";
 
 const debug = Debug("apiClientRespository");
 
 class ApiClientRepository {
     private roomManagerClients: RoomManagerClient[] = [];
+    private spaceManagerClients: SpaceManagerClient[] = [];
 
     public constructor(private apiUrls: string[]) {}
 
     public async getClient(roomId: string): Promise<RoomManagerClient> {
-        const array = new Uint32Array(crypto.createHash("md5").update(roomId).digest());
-        const index = array[0] % this.apiUrls.length;
+        const index = this.getIndex(roomId);
 
         let client = this.roomManagerClients[index];
         if (client === undefined) {
@@ -38,6 +38,26 @@ class ApiClientRepository {
             }
         }
         return Promise.resolve(this.roomManagerClients);
+    }
+
+    async getSpaceClient(spaceName: string) {
+        const index = this.getIndex(spaceName);
+
+        let client = this.spaceManagerClients[index];
+        if (client === undefined) {
+            this.spaceManagerClients[index] = client = new SpaceManagerClient(
+                this.apiUrls[index],
+                grpc.credentials.createInsecure()
+            );
+        }
+        debug("Mapping room %s to API server %s", spaceName, this.apiUrls[index]);
+
+        return Promise.resolve(client);
+    }
+
+    public getIndex(name: string) {
+        const array = new Uint32Array(crypto.createHash("md5").update(name).digest());
+        return array[0] % this.apiUrls.length;
     }
 }
 

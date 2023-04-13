@@ -1,8 +1,6 @@
-//import Docker from "dockerode";
-//import * as Dockerode from "dockerode";
+import { execSync } from 'child_process';
 import { Page } from '@playwright/test';
 import Dockerode from 'dockerode';
-import { execSync } from 'child_process';
 
 /**
  * Execute Docker compose, passing the correct host directory

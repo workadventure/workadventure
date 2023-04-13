@@ -1,18 +1,18 @@
 import { XmppSettingsMessage } from "@workadventure/messages";
-import { EJABBERD_WS_URI } from "../Enum/EnvironmentVariable";
 import CancelablePromise from "cancelable-promise";
 import Debug from "debug";
-import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
-import { MucRoom } from "./MucRoom";
 import { get } from "svelte/store";
-import { activeThreadStore } from "../Stores/ActiveThreadStore";
-import { userStore } from "../Stores/LocalUserStore";
 import * as Stanza from "stanza";
-import WaCustomPlugin, { WaReceivedReactions } from "./Lib/Plugin";
 import * as StanzaProtocol from "stanza/protocol";
 import { JSONData } from "stanza/jxt";
 import { ChatStateMessage, JID } from "stanza";
 import { ParsedJID } from "stanza/JID";
+import { userStore } from "../Stores/LocalUserStore";
+import { activeThreadStore } from "../Stores/ActiveThreadStore";
+import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
+import { EJABBERD_WS_URI } from "../Enum/EnvironmentVariable";
+import WaCustomPlugin, { WaReceivedReactions } from "./Lib/Plugin";
+import { MucRoom } from "./MucRoom";
 import Timer = NodeJS.Timer;
 
 const debug = Debug("chat");

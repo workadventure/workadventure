@@ -1,11 +1,11 @@
+import type { BatchToPusherRoomMessage } from "@workadventure/messages";
+import Debug from "debug";
+import type { ClientReadableStream } from "@grpc/grpc-js";
+import { apiClientRepository } from "../services/ApiClientRepository";
 import type { ExSocketInterface } from "./Websocket/ExSocketInterface";
 import { PositionDispatcher } from "./PositionDispatcher";
 import type { ViewportInterface } from "./Websocket/ViewportMessage";
 import type { ZoneEventListener } from "./Zone";
-import { apiClientRepository } from "../services/ApiClientRepository";
-import type { BatchToPusherRoomMessage } from "@workadventure/messages";
-import Debug from "debug";
-import type { ClientReadableStream } from "@grpc/grpc-js";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 
 const debug = Debug("room");

@@ -509,7 +509,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
       - name: Install dependencies
         run: npm ci
         working-directory: tests
@@ -523,6 +523,18 @@ jobs:
         run: echo "Pulling images with tag ${DOCKER_TAG}"
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+
+      - name: "Install Room Api client dependencies"
+        run: npm ci
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: "Build Room Api client proto files"
+        run: npm run ts-proto
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: Fill .env file
+        run: |
+          sed -i "s/ROOM_API_SECRET_KEY=/ROOM_API_SECRET_KEY=MYAWESOMEKEY/g" .env
 
       -
         name: Download artifact
@@ -614,6 +626,98 @@ jobs:
           name: playwright-report-${{ matrix.browser }}
           path: tests/playwright-report/
           retention-days: 30
+
+  prod-single-domain-deploy-tests:
+    name: "Test production docker-compose"
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [ 'chromium' ]
+    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
+    needs:
+      - build-play
+      - build-chat
+      - build-back
+      - build-maps
+      - build-uploader
+      - build-map-storage
+      - build-ejabberd
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: npm ci
+        working-directory: tests
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+        working-directory: tests
+      - name: 'Setup .env file'
+        run: cp .env.prod.template .env
+        working-directory: contrib/docker
+      - uses: rlespinasse/github-slug-action@3.1.0
+
+      - name: "Install Room Api client dependencies"
+        run: npm ci
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: "Build Room Api client proto files"
+        run: npm run ts-proto
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: Fill .env file
+        run: |
+          sed -i "s/SECRET_KEY=/SECRET_KEY=someSecret/g" .env
+          sed -i "s/VERSION=master/VERSION=${DOCKER_TAG}/g" .env
+          sed -i "s/DOMAIN=workadventure.localhost/DOMAIN=play.workadventure.localhost/g" .env
+          sed -i "s/MAP_STORAGE_AUTHENTICATION_USER=/MAP_STORAGE_AUTHENTICATION_USER=john.doe/g" .env
+          sed -i "s/MAP_STORAGE_AUTHENTICATION_PASSWORD=/MAP_STORAGE_AUTHENTICATION_PASSWORD=password/g" .env
+          sed -i "s/ADMIN_API_TOKEN=/ADMIN_API_TOKEN=123/g" .env
+          sed -i "s/ROOM_API_SECRET_KEY=/ROOM_API_SECRET_KEY=MYAWESOMEKEY/g" .env
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        working-directory: contrib/docker
+      - name: Start WorkAdventure
+        run: docker-compose -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml up -d
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        working-directory: contrib/docker
+      - name: Wait for environment to Start
+        run: sleep 30
+      - name: Run Playwright tests
+        # Run all tests, except the ones needing to restart Docker and the ones relying on an OIDC server
+        run: npm run test-single-domain-install
+        working-directory: tests
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+      - name: Display docker-compose logs on failure
+        run: docker-compose  -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml logs
+        if: failure()
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        working-directory: contrib/docker
+      - name: Display containers state
+        run: docker-compose  -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml ps
+        if: failure()
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        working-directory: contrib/docker
+      - name: Side-load docker-compose logs in the playwright report
+        run: docker-compose  -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml logs > ../../tests/playwright-report/docker-compose.log
+        if: failure()
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        working-directory: contrib/docker
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: playwright-report-single-domain
+          path: tests/playwright-report/
+          retention-days: 30
+
 
   deeploy:
     needs:

@@ -162,7 +162,7 @@
                         {
                          "name":"focusable",
                          "type":"bool",
-                         "value":true
+                         "value":false
                         }, 
                         {
                          "name":"jitsiRoom",
@@ -243,14 +243,14 @@
                 }, 
                 {
                  "class":"area",
-                 "height":130,
+                 "height":101.103347769816,
                  "id":38,
                  "name":"STATIC_AREA_4",
                  "properties":[
                         {
                          "name":"focusable",
                          "type":"bool",
-                         "value":true
+                         "value":false
                         }, 
                         {
                          "name":"silent",
@@ -264,9 +264,9 @@
                         }],
                  "rotation":359.673874230518,
                  "visible":true,
-                 "width":256,
-                 "x":294,
-                 "y":305
+                 "width":233.1512036511,
+                 "x":735.080663090233,
+                 "y":349.108066309023
                 }, 
                 {
                  "class":"",
@@ -284,28 +284,6 @@
                  "width":99.2734,
                  "x":522.644913123718,
                  "y":366.596710526316
-                }, 
-                {
-                 "class":"area",
-                 "height":72,
-                 "id":41,
-                 "name":"STATIC_AREA_5",
-                 "properties":[
-                        {
-                         "name":"focusable",
-                         "type":"bool",
-                         "value":true
-                        }, 
-                        {
-                         "name":"silent",
-                         "type":"bool",
-                         "value":true
-                        }],
-                 "rotation":0,
-                 "visible":true,
-                 "width":100,
-                 "x":603,
-                 "y":95
                 }, 
                 {
                  "class":"",
@@ -329,6 +307,12 @@
                  "height":127,
                  "id":34,
                  "name":"STATIC_AREA_2",
+                 "properties":[
+                        {
+                         "name":"openWebsite",
+                         "type":"string",
+                         "value":"https:\/\/google.com"
+                        }],
                  "rotation":0,
                  "visible":true,
                  "width":220,
@@ -337,20 +321,47 @@
                 }, 
                 {
                  "class":"area",
-                 "height":134,
+                 "height":131.123386979846,
                  "id":297,
                  "name":"STATIC_AREA_297",
                  "properties":[
                         {
                          "name":"focusable",
                          "type":"bool",
-                         "value":false
+                         "value":true
                         }],
                  "rotation":0,
                  "visible":true,
-                 "width":320,
-                 "x":272,
-                 "y":98
+                 "width":253.837900536465,
+                 "x":448.432265236093,
+                 "y":313.745976511527
+                }, 
+                {
+                 "class":"area",
+                 "height":130,
+                 "id":314,
+                 "name":"STATIC_AREA_5",
+                 "properties":[
+                        {
+                         "name":"focusable",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"jitsiRoom",
+                         "type":"string",
+                         "value":"MeetingRoom"
+                        }, 
+                        {
+                         "name":"jitsiTrigger",
+                         "type":"string",
+                         "value":"onaction"
+                        }],
+                 "rotation":0,
+                 "visible":true,
+                 "width":331.995166980813,
+                 "x":255.905659465468,
+                 "y":95.1314581218887
                 }],
          "opacity":1,
          "properties":[
@@ -365,7 +376,7 @@
          "y":0
         }],
  "nextlayerid":41,
- "nextobjectid":314,
+ "nextobjectid":315,
  "orientation":"orthogonal",
  "properties":[
         {

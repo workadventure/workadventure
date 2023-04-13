@@ -1,5 +1,5 @@
-import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
 import type { PostHog } from "posthog-js";
+import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
 import { Emoji } from "../Stores/Utils/emojiSchema";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare let window: any;
@@ -303,6 +303,14 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_multiiframe_switch");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openedWebsite(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_opened_website");
             })
             .catch((e) => console.error(e));
     }

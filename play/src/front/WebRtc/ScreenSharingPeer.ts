@@ -1,14 +1,13 @@
-import type { RoomConnection } from "../Connexion/RoomConnection";
-import type { PeerStatus } from "./VideoPeer";
-import { MESSAGE_TYPE_CONSTRAINT } from "./VideoPeer";
-import type { UserSimplePeerInterface } from "./SimplePeer";
+import { Buffer } from "buffer";
 import type { Readable, Writable } from "svelte/store";
-import { readable, writable } from "svelte/store";
+import { writable } from "svelte/store";
+import Peer from "simple-peer/simplepeer.min.js";
+import type { RoomConnection } from "../Connexion/RoomConnection";
 import { getIceServersConfig } from "../Components/Video/utils";
 import { highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
-import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
-import Peer from "simple-peer/simplepeer.min.js";
-import { Buffer } from "buffer";
+import type { PeerStatus } from "./VideoPeer";
+import type { UserSimplePeerInterface } from "./SimplePeer";
+import { StreamEndedMessage } from "./P2PMessages/StreamEndedMessage";
 
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
@@ -22,7 +21,7 @@ export class ScreenSharingPeer extends Peer {
     public _connected = false;
     public readonly userId: number;
     public readonly uniqueId: string;
-    public readonly streamStore: Readable<MediaStream | null>;
+    private readonly _streamStore: Writable<MediaStream | null>;
     private readonly _statusStore: Writable<PeerStatus>;
 
     constructor(
@@ -42,33 +41,40 @@ export class ScreenSharingPeer extends Peer {
         this.userId = user.userId;
         this.uniqueId = "screensharing_" + this.userId;
 
-        this.streamStore = readable<MediaStream | null>(null, (set) => {
-            const onStream = (stream: MediaStream | null) => {
-                highlightedEmbedScreen.highlight({
-                    type: "streamable",
-                    embed: this,
-                });
-                set(stream);
-            };
-            const onData = (chunk: Buffer) => {
-                // We unfortunately need to rely on an event to let the other party know a stream has stopped.
-                // It seems there is no native way to detect that.
-                // TODO: we might rely on the "ended" event: https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/ended_event
-                const message = JSON.parse(chunk.toString("utf8"));
-                if (message.streamEnded !== true) {
-                    console.error("Unexpected message on screen sharing peer connection");
-                    return;
-                }
-                set(null);
-            };
+        this._streamStore = writable<MediaStream | null>(null);
 
-            this.on("stream", onStream);
-            this.on("data", onData);
+        this.on("stream", (stream: MediaStream | null) => {
+            highlightedEmbedScreen.highlight({
+                type: "streamable",
+                embed: this,
+            });
+            this._streamStore.set(stream);
+        });
 
-            return () => {
-                this.off("stream", onStream);
-                this.off("data", onData);
-            };
+        this.on("data", (chunk: Buffer) => {
+            try {
+                const data = JSON.parse(chunk.toString("utf8"));
+
+                // The only message type we can send is a StreamEndedMessage
+                StreamEndedMessage.parse(data);
+                this._streamStore.set(null);
+                /*const message = P2PScreenSharingMessage.parse(data);
+                switch (message.type) {
+                    // We unfortunately need to rely on an event to let the other party know a stream has stopped.
+                    // It seems there is no native way to detect that.
+                    // TODO: we might rely on the "ended" event: https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/ended_event
+                    case "stream_ended": {
+                        this._streamStore.set(null);
+                        break;
+                    }
+                    default: {
+                        const _exhaustiveCheck: never = message;
+                    }
+                }*/
+            } catch (e) {
+                console.error("Unexpected P2P screen sharing message received from peer: ", e);
+                this._statusStore.set("error");
+            }
         });
 
         this._statusStore = writable<PeerStatus>("connecting");
@@ -172,15 +178,17 @@ export class ScreenSharingPeer extends Peer {
         this.write(
             new Buffer(
                 JSON.stringify({
-                    type: MESSAGE_TYPE_CONSTRAINT,
-                    streamEnded: true,
-                    isMobile: isMediaBreakpointUp("md"),
-                })
+                    type: "stream_ended",
+                } as StreamEndedMessage)
             )
         );
     }
 
     public get statusStore(): Readable<PeerStatus> {
         return this._statusStore;
+    }
+
+    get streamStore(): Readable<MediaStream | null> {
+        return this._streamStore;
     }
 }

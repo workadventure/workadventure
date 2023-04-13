@@ -1,7 +1,7 @@
 <script lang="ts">
+    import { onDestroy } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import type { PictureStore } from "../../Stores/PictureStore";
-    import { onDestroy } from "svelte";
 
     export let userId: number;
     export let placeholderSrc: string;

@@ -148,41 +148,27 @@ message EditMapCommandWithKeyMessage {
 }
 
 message ModifyAreaMessage {
-  int32 id = 1;
+  string id = 1;
   optional string name = 2;
   optional uint32 x = 3;
   optional uint32 y = 4;
   optional uint32 width = 5;
   optional uint32 height = 6;
-  optional AreaProperties properties = 7;
-}
-
-message AreaProperties {
-  optional bool focusable = 1;
-  optional float zoom_margin = 2;
-  optional bool silent = 3;
-  map<string, google.protobuf.Value> customProperties = 4;
-}
-
-message CustomAreaProperty {
-  oneof value {
-    bool boolVal = 1;
-    float numberVal = 2;
-    string stringVal = 3;
-  }
+  map<string, google.protobuf.Value> properties = 7;
 }
 
 message DeleteAreaMessage {
-  int32 id = 1;
+  string id = 1;
 }
 
 message CreateAreaMessage {
-  int32 id = 1;
+  string id = 1;
   uint32 x = 2;
   uint32 y = 3;
   uint32 width = 4;
   uint32 height = 5;
   string name = 6;
+  map<string, google.protobuf.Value> properties = 7;
 }
 
 message CreateEntityMessage {
@@ -191,6 +177,7 @@ message CreateEntityMessage {
   uint32 y = 3;
   string collectionName = 4;
   string prefabId = 5;
+  map<string, google.protobuf.Value> properties = 6;
 }
 
 message DeleteEntityMessage {
@@ -225,6 +212,9 @@ message ClientToServerMessage {
     //XmppMessage xmppMessage = 22;
     AskPositionMessage askPositionMessage = 23;
     EditMapCommandMessage editMapCommandMessage = 24;
+    AddSpaceFilterMessage addSpaceFilterMessage = 25;
+    RemoveSpaceFilterMessage removeSpaceFilterMessage = 26;
+    UpdateSpaceFilterMessage updateSpaceFilterMessage = 27;
   }
 }
 
@@ -347,6 +337,9 @@ message SubMessage {
     EditMapCommandMessage editMapCommandMessage = 13;
     JoinMucRoomMessage joinMucRoomMessage = 14;
     LeaveMucRoomMessage leaveMucRoomMessage = 15;
+    AddSpaceUserMessage addSpaceUserMessage = 16;
+    UpdateSpaceUserMessage updateSpaceUserMessage = 17;
+    RemoveSpaceUserMessage removeSpaceUserMessage = 18;
   }
 }
 
@@ -621,7 +614,6 @@ message PusherToBackMessage {
     SetPlayerDetailsMessage setPlayerDetailsMessage = 5;
     WebRtcSignalToServerMessage webRtcSignalToServerMessage = 6;
     WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 7;
-    ReportPlayerMessage reportPlayerMessage = 10;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
     EmotePromptMessage emotePromptMessage = 14;
@@ -763,11 +755,6 @@ message RoomsList {
   repeated RoomDescription roomDescription = 1;
 }
 
-message EmptyMessage {
-
-}
-
-
 
 /********************************************************************************
  * Start Chat Messages
@@ -810,4 +797,144 @@ message BanUserByUuidMessage{
 }
 /*********************************************************************************
  * End Chat Messages
+ *********************************************************************************/
+
+
+
+
+
+/********************************************************************************
+ * Start Spaces messages
+ ********************************************************************************/
+message PusherToBackSpaceMessage{
+  oneof message {
+    WatchSpaceMessage watchSpaceMessage = 1;
+    UnwatchSpaceMessage unwatchSpaceMessage = 2;
+    AddSpaceUserMessage addSpaceUserMessage = 3;
+    UpdateSpaceUserMessage updateSpaceUserMessage = 4;
+    RemoveSpaceUserMessage removeSpaceUserMessage = 5;
+    PingMessage pongMessage = 6;
+  }
+}
+
+message BackToPusherSpaceMessage{
+  oneof message {
+    AddSpaceUserMessage addSpaceUserMessage = 1;
+    UpdateSpaceUserMessage updateSpaceUserMessage = 2;
+    RemoveSpaceUserMessage removeSpaceUserMessage = 3;
+    PingMessage pingMessage = 4;
+  }
+}
+
+message WatchSpaceMessage{
+  string spaceName = 1;
+  SpaceUser user = 2;
+}
+message UnwatchSpaceMessage{
+  string spaceName = 1;
+  string userUuid = 2;
+}
+
+message SpaceUser{
+  string uuid = 1;
+  string name = 2;
+  string playUri = 3;
+  string color = 4;
+  repeated CharacterLayerMessage characterLayers = 5;
+  bool isLogged = 6;
+  int32 availabilityStatus = 7;
+  google.protobuf.StringValue roomName = 8;
+  google.protobuf.StringValue visitCardUrl = 9;
+  repeated string tags = 10;
+  bool videoSharing = 11;
+  bool audioSharing = 12;
+  bool screenSharing = 13;
+}
+
+message PartialSpaceUser{
+  string uuid = 1;
+  google.protobuf.StringValue name = 2;
+  google.protobuf.StringValue playUri = 3;
+  google.protobuf.StringValue color = 4;
+  repeated CharacterLayerMessage characterLayers = 5;
+  google.protobuf.BoolValue isLogged = 6;
+  google.protobuf.Int32Value availabilityStatus = 7;
+  google.protobuf.StringValue roomName = 8;
+  google.protobuf.StringValue visitCardUrl = 9;
+  repeated string tags = 10;
+  google.protobuf.BoolValue videoSharing = 11;
+  google.protobuf.BoolValue audioSharing = 12;
+  google.protobuf.BoolValue screenSharing = 13;
+}
+
+message AddSpaceUserMessage{
+  string spaceName = 1;
+  SpaceUser user = 2;
+  google.protobuf.StringValue filterName = 3;
+}
+message UpdateSpaceUserMessage{
+  string spaceName = 1;
+  PartialSpaceUser user = 2;
+  google.protobuf.StringValue filterName = 3;
+}
+message RemoveSpaceUserMessage{
+  string spaceName = 1;
+  string userUuid = 2;
+  google.protobuf.StringValue filterName = 3;
+}
+
+
+
+/** Filter **/
+message AddSpaceFilterMessage{
+  SpaceFilterMessage spaceFilterMessage = 1;
+}
+message UpdateSpaceFilterMessage{
+  SpaceFilterMessage spaceFilterMessage = 1;
+}
+message RemoveSpaceFilterMessage{
+  SpaceFilterMessage spaceFilterMessage = 1;
+}
+message SpaceFilterMessage{
+  string filterName = 1;
+  string spaceName = 2;
+  oneof filter {
+    SpaceFilterEverybody spaceFilterEverybody = 3;
+    SpaceFilterContainName spaceFilterContainName = 4;
+  }
+}
+message SpaceFilterContainName{
+  string value = 1;
+}
+
+message SpaceFilterEverybody{
+}
+
+message VariableRequest {
+  string room = 1;
+  string name = 2;
+}
+
+message SaveVariableRequest {
+  string room = 1;
+  string name = 2;
+  google.protobuf.Value value = 3;
+}
+
+/*
+message Filter {
+  enum Operator {
+    EQUAL = 0;
+    GREATER_THAN = 1;
+    LESS_THAN = 2;
+    CONTAINS = 3;
+  }
+
+  string fieldName = 1;
+  Operator operator = 2;
+  string value = 3;
+}
+ */
+/*********************************************************************************
+ * End Spaces messages
  *********************************************************************************/

@@ -1,21 +1,19 @@
 <script lang="ts">
-    import AreaPreviewWindow from "./AreaPreviewWindow.svelte";
-    import PropertyPreviewSidebar from "./PropertyPreviewSidebar.svelte";
-    import MapEditorSideBar from "./MapEditorSideBar.svelte";
-    import MapEntityEditor from "./MapEntityEditor.svelte";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import { mapEditorSelectedToolStore } from "../../Stores/MapEditorStore";
+    import MapEditorSideBar from "./MapEditorSideBar.svelte";
+    import EntityEditor from "./EntityEditor.svelte";
+    import AreaEditor from "./AreaEditor.svelte";
 </script>
 
 <MapEditorSideBar />
 <div class="map-editor tw-bg-dark-blue/95">
     <div class="sidebar">
         {#if $mapEditorSelectedToolStore === EditorToolName.EntityEditor}
-            <MapEntityEditor />
+            <EntityEditor />
         {/if}
         {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor}
-            <AreaPreviewWindow />
-            <PropertyPreviewSidebar />
+            <AreaEditor />
         {/if}
     </div>
 </div>

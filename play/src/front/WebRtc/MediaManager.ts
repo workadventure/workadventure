@@ -1,10 +1,8 @@
+import { get } from "svelte/store";
 import type { UserInputManager } from "../Phaser/UserInput/UserInputManager";
 import { localStreamStore } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { helpCameraSettingsVisibleStore } from "../Stores/HelpSettingsStore";
-
-export type StartScreenSharingCallback = (media: MediaStream) => void;
-export type StopScreenSharingCallback = (media: MediaStream) => void;
 
 import {
     myCameraBlockedStore,
@@ -16,9 +14,11 @@ import {
 import { layoutManagerActionStore } from "../Stores/LayoutManagerStore";
 import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
 import { localUserStore } from "../Connexion/LocalUserStore";
-import LL from "../../i18n/i18n-svelte";
-import { get } from "svelte/store";
+import { LL } from "../../i18n/i18n-svelte";
 import { localeDetector } from "../../i18n/locales";
+
+export type StartScreenSharingCallback = (media: MediaStream) => void;
+export type StopScreenSharingCallback = (media: MediaStream) => void;
 
 export enum NotificationType {
     discussion = 1,
@@ -163,9 +163,13 @@ export class MediaManager {
     public playNewMessageNotification() {
         //play notification message
         const elementAudioNewMessageNotification = document.getElementById("newMessageSound");
-        if (this.canPlayNotificationMessage && elementAudioNewMessageNotification) {
-            (elementAudioNewMessageNotification as HTMLAudioElement).volume = 0.2;
-            (elementAudioNewMessageNotification as HTMLAudioElement)
+        if (
+            this.canPlayNotificationMessage &&
+            elementAudioNewMessageNotification &&
+            elementAudioNewMessageNotification instanceof HTMLAudioElement
+        ) {
+            elementAudioNewMessageNotification.volume = 0.2;
+            elementAudioNewMessageNotification
                 .play()
                 .then(() => {
                     this.canPlayNotificationMessage = false;

@@ -28,3 +28,4 @@ dist
 /public/iframe_api.js.map
 /public/es.js
 /svelte-check-watch/public/iframe_api.js
+/coverage/

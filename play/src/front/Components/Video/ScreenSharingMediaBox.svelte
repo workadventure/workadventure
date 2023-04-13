@@ -1,12 +1,13 @@
 <script lang="ts">
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
+    import { Color } from "@workadventure/shared-utils";
     import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
 
     import type { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
-    import { getColorByString, srcObject, getTextColorByBackgroundColor } from "./utils";
+    import { srcObject } from "./utils";
     import BanReportBox from "./BanReportBox.svelte";
 
     export let clickable = false;
@@ -14,8 +15,8 @@
     export let peer: ScreenSharingPeer;
     let streamStore = peer.streamStore;
     let name = peer.userName;
-    let backGroundColor = getColorByString(peer.userName);
-    let textColor = getTextColorByBackgroundColor(backGroundColor);
+    let backGroundColor = Color.getColorByString(peer.userName);
+    let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
 
     let embedScreen: EmbedScreen;

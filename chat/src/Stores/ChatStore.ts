@@ -2,9 +2,9 @@ import { derived, writable } from "svelte/store";
 import { Subject } from "rxjs";
 import { FileExt, UploadedFile, uploadingState } from "../Services/FileMessageManager";
 import { User } from "../Xmpp/AbstractRoom";
+import { Message } from "../Model/Message";
 import { mucRoomsStore } from "./MucRoomsStore";
 import { userStore } from "./LocalUserStore";
-import { Message } from "../Model/Message";
 
 // Global config store for the whole chat
 export const enableChat = writable<boolean>(true);

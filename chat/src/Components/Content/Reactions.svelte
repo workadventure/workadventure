@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { MucRoom } from "../../Xmpp/MucRoom";
     import { MapStore } from "@workadventure/store-utils";
     import { get, Readable } from "svelte/store";
     import { JID } from "stanza";
+    import { MucRoom } from "../../Xmpp/MucRoom";
 
     export let mucRoom: MucRoom;
     export let messageId: string;

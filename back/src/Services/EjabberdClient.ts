@@ -1,4 +1,4 @@
-import Axios, { AxiosError, AxiosInstance } from "axios";
+import axios, { AxiosError, AxiosInstance } from "axios";
 import { EJABBERD_DOMAIN, EJABBERD_PASSWORD, EJABBERD_API_URI, EJABBERD_USER } from "../Enum/EnvironmentVariable";
 import { ChatZone } from "./MucManager";
 import { ChatClient } from "./ChatClient";
@@ -21,7 +21,7 @@ export class EjabberdClient implements ChatClient {
             const auth = Buffer.from(EJABBERD_USER + "@" + EJABBERD_DOMAIN + ":" + EJABBERD_PASSWORD).toString(
                 "base64"
             );
-            this.axios = Axios.create({
+            this.axios = axios.create({
                 baseURL: EJABBERD_API_URI + "/",
                 headers: {
                     Authorization: "Basic " + auth,

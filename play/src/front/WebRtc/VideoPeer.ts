@@ -1,10 +1,9 @@
-import type { RoomConnection } from "../Connexion/RoomConnection";
-import { blackListManager } from "./BlackListManager";
+import { Buffer } from "buffer";
 import type { Subscription } from "rxjs";
-import type { UserSimplePeerInterface } from "./SimplePeer";
 import type { Readable, Writable, Unsubscriber } from "svelte/store";
 import { readable, writable } from "svelte/store";
-import type { ObtainedMediaStreamConstraints } from "../Stores/MediaStore";
+import Peer from "simple-peer/simplepeer.min.js";
+import type { RoomConnection } from "../Connexion/RoomConnection";
 import { localStreamStore, obtainedMediaConstraintStore } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
 import {
@@ -14,19 +13,19 @@ import {
     writingStatusMessageStore,
 } from "../Stores/ChatStore";
 import { getIceServersConfig } from "../Components/Video/utils";
-import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import Peer from "simple-peer/simplepeer.min.js";
-import { Buffer } from "buffer";
 import { gameManager } from "../Phaser/Game/GameManager";
+import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
+import type { UserSimplePeerInterface } from "./SimplePeer";
+import { blackListManager } from "./BlackListManager";
+import { MessageMessage } from "./P2PMessages/MessageMessage";
+import { MessageStatusMessage } from "./P2PMessages/MessageStatusMessage";
+import { P2PMessage } from "./P2PMessages/P2PMessage";
+import { BlockMessage } from "./P2PMessages/BlockMessage";
+import { UnblockMessage } from "./P2PMessages/UnblockMessage";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
-export const MESSAGE_TYPE_CONSTRAINT = "constraint";
-export const MESSAGE_TYPE_MESSAGE = "message";
-export const MESSAGE_TYPE_MESSAGE_STATUS = "message_status";
-export const MESSAGE_TYPE_BLOCKED = "blocked";
-export const MESSAGE_TYPE_UNBLOCKED = "unblocked";
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
  */
@@ -44,12 +43,12 @@ export class VideoPeer extends Peer {
     public readonly volumeStore: Readable<number[] | undefined>;
     private readonly _statusStore: Writable<PeerStatus> = writable<PeerStatus>("closed");
     private readonly _constraintsStore: Writable<ObtainedMediaStreamConstraints | null>;
-    private newMessageSubscribtion: Subscription | undefined;
+    private newMessageSubscription: Subscription | undefined;
     private closing = false; //this is used to prevent destroy() from being called twice
-    private newWritingStatusMessageSubscribtion: Subscription | undefined;
+    private newWritingStatusMessageSubscription: Subscription | undefined;
     private volumeStoreSubscribe?: Unsubscriber;
-    private localStreamStoreSubscribe: Unsubscriber;
-    private obtainedMediaConstraintStoreSubscribe: Unsubscriber;
+    private readonly localStreamStoreSubscribe: Unsubscriber;
+    private readonly obtainedMediaConstraintStoreSubscribe: Unsubscriber;
 
     constructor(
         public user: UserSimplePeerInterface,
@@ -144,54 +143,74 @@ export class VideoPeer extends Peer {
             this._connected = true;
             chatMessagesStore.addIncomingUser(this.userId);
 
-            this.newMessageSubscribtion = newChatMessageSubject.subscribe((newMessage) => {
+            this.newMessageSubscription = newChatMessageSubject.subscribe((newMessage) => {
                 if (!newMessage) return;
                 this.write(
                     new Buffer(
                         JSON.stringify({
-                            type: MESSAGE_TYPE_MESSAGE,
+                            type: "message",
                             message: newMessage,
-                        })
+                        } as MessageMessage)
                     )
                 );
             });
 
-            this.newWritingStatusMessageSubscribtion = newChatMessageWritingStatusSubject.subscribe((status) => {
+            this.newWritingStatusMessageSubscription = newChatMessageWritingStatusSubject.subscribe((status) => {
                 if (status == undefined) return;
                 this.write(
                     new Buffer(
                         JSON.stringify({
-                            type: MESSAGE_TYPE_MESSAGE_STATUS,
+                            type: "message_status",
                             message: status,
-                        })
+                        } as MessageStatusMessage)
                     )
                 );
             });
         });
 
         this.on("data", (chunk: Buffer) => {
-            const message = JSON.parse(chunk.toString("utf8"));
-            if (message.type === MESSAGE_TYPE_CONSTRAINT) {
-                this._constraintsStore.set(message);
-            } else if (message.type === MESSAGE_TYPE_MESSAGE) {
-                if (!blackListManager.isBlackListed(this.userUuid)) {
-                    chatMessagesStore.addExternalMessage(this.userId, message.message);
+            try {
+                const data = JSON.parse(chunk.toString("utf8"));
+                const message = P2PMessage.parse(data);
+                switch (message.type) {
+                    case "constraint": {
+                        this._constraintsStore.set(message.message);
+                        break;
+                    }
+                    case "message": {
+                        if (!blackListManager.isBlackListed(this.userUuid)) {
+                            chatMessagesStore.addExternalMessage(this.userId, message.message);
+                        }
+                        break;
+                    }
+                    case "message_status": {
+                        if (!blackListManager.isBlackListed(this.userUuid)) {
+                            writingStatusMessageStore.addWritingStatus(this.userId, message.message);
+                        }
+                        break;
+                    }
+                    case "blocked": {
+                        //FIXME when A blacklists B, the output stream from A is muted in B's js client. This is insecure since B can manipulate the code to unmute A stream.
+                        // Find a way to block A's output stream in A's js client
+                        //However, the output stream stream B is correctly blocked in A client
+                        this.blocked = true;
+                        this.toggleRemoteStream(false);
+                        const simplePeer = gameManager.getCurrentGameScene().getSimplePeer();
+                        simplePeer.blockedFromRemotePlayer(this.userId);
+                        break;
+                    }
+                    case "unblocked": {
+                        this.blocked = false;
+                        this.toggleRemoteStream(true);
+                        break;
+                    }
+                    default: {
+                        const _exhaustiveCheck: never = message;
+                    }
                 }
-            } else if (message.type === MESSAGE_TYPE_MESSAGE_STATUS) {
-                if (!blackListManager.isBlackListed(this.userUuid)) {
-                    writingStatusMessageStore.addWritingStatus(this.userId, message.message);
-                }
-            } else if (message.type === MESSAGE_TYPE_BLOCKED) {
-                //FIXME when A blacklists B, the output stream from A is muted in B's js client. This is insecure since B can manipulate the code to unmute A stream.
-                // Find a way to block A's output stream in A's js client
-                //However, the output stream stream B is correctly blocked in A client
-                this.blocked = true;
-                this.toggleRemoteStream(false);
-                const simplePeer = gameManager.getCurrentGameScene().getSimplePeer();
-                simplePeer.blockedFromRemotePlayer(message.userId);
-            } else if (message.type === MESSAGE_TYPE_UNBLOCKED) {
-                this.blocked = false;
-                this.toggleRemoteStream(true);
+            } catch (e) {
+                console.error("Unexpected P2P message received from peer: ", e);
+                this._statusStore.set("error");
             }
         });
 
@@ -225,10 +244,9 @@ export class VideoPeer extends Peer {
             this.write(
                 new Buffer(
                     JSON.stringify({
-                        type: MESSAGE_TYPE_CONSTRAINT,
-                        ...constraints,
-                        isMobile: isMediaBreakpointUp("md"),
-                    })
+                        type: "constraint",
+                        message: constraints,
+                    } as ConstraintMessage)
                 )
             );
         });
@@ -238,11 +256,8 @@ export class VideoPeer extends Peer {
         this.write(
             new Buffer(
                 JSON.stringify({
-                    type: blocking ? MESSAGE_TYPE_BLOCKED : MESSAGE_TYPE_UNBLOCKED,
-                    name: this.userName.toUpperCase(),
-                    userId: this.userId,
-                    message: "",
-                })
+                    type: blocking ? "blocked" : "unblocked",
+                } as BlockMessage | UnblockMessage)
             )
         );
     }
@@ -287,8 +302,8 @@ export class VideoPeer extends Peer {
             this.closing = true;
             this.onBlockSubscribe.unsubscribe();
             this.onUnBlockSubscribe.unsubscribe();
-            this.newMessageSubscribtion?.unsubscribe();
-            this.newWritingStatusMessageSubscribtion?.unsubscribe();
+            this.newMessageSubscription?.unsubscribe();
+            this.newWritingStatusMessageSubscription?.unsubscribe();
             chatMessagesStore.addOutcomingUser(this.userId);
             if (this.localStreamStoreSubscribe) this.localStreamStoreSubscribe();
             if (this.obtainedMediaConstraintStoreSubscribe) this.obtainedMediaConstraintStoreSubscribe();

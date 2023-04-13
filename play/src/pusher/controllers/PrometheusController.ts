@@ -1,7 +1,7 @@
 import { register, collectDefaultMetrics } from "prom-client";
 import type { Request, Response, Server } from "hyper-express";
-import { BaseHttpController } from "./BaseHttpController";
 import { PROMETHEUS_AUTHORIZATION_TOKEN } from "../enums/EnvironmentVariable";
+import { BaseHttpController } from "./BaseHttpController";
 
 export class PrometheusController extends BaseHttpController {
     constructor(app: Server) {

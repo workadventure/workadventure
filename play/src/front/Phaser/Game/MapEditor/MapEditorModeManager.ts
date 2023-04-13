@@ -1,17 +1,23 @@
-import { CommandConfig, Command, UpdateEntityCommand } from "@workadventure/map-editor";
-import { UpdateAreaCommand, CreateAreaCommand, DeleteAreaCommand } from "@workadventure/map-editor";
+import {
+    CommandConfig,
+    Command,
+    UpdateEntityCommand,
+    UpdateAreaCommand,
+    CreateAreaCommand,
+    DeleteAreaCommand,
+} from "@workadventure/map-editor";
 import type { Unsubscriber } from "svelte/store";
+import { CreateEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/CreateEntityCommand";
+import { DeleteEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/DeleteEntityCommand";
+import { EditMapCommandMessage } from "@workadventure/messages";
 import type { RoomConnection } from "../../../Connexion/RoomConnection";
 import type { GameScene } from "../GameScene";
 import { mapEditorModeStore, mapEditorSelectedToolStore } from "../../../Stores/MapEditorStore";
+import { ENABLE_MAP_EDITOR_AREAS_TOOL } from "../../../Enum/EnvironmentVariable";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
 import { EntityEditorTool } from "./Tools/EntityEditorTool";
-import { CreateEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/CreateEntityCommand";
-import { DeleteEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/DeleteEntityCommand";
-import { EditMapCommandMessage } from "@workadventure/messages";
-import { ENABLE_MAP_EDITOR_AREAS_TOOL } from "../../../Enum/EnvironmentVariable";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
@@ -136,7 +142,7 @@ export class MapEditorModeManager {
             const executedCommandConfig = command.execute();
 
             // do any necessary changes for active tool interface
-            this.handleCommandExecutionByTools(executedCommandConfig);
+            this.handleCommandExecutionByTools(executedCommandConfig, emitMapEditorUpdate);
 
             if (emitMapEditorUpdate) {
                 this.emitMapEditorUpdate(command.id, commandConfig, delay);
@@ -170,7 +176,7 @@ export class MapEditorModeManager {
             this.pendingCommands.push(command);
 
             // do any necessary changes for active tool interface
-            this.handleCommandExecutionByTools(commandConfig);
+            this.handleCommandExecutionByTools(commandConfig, true);
 
             // this should not be called with every change. Use some sort of debounce
             this.emitMapEditorUpdate(`${command.id}`, commandConfig);
@@ -195,7 +201,7 @@ export class MapEditorModeManager {
             this.pendingCommands.push(command);
 
             // do any necessary changes for active tool interface
-            this.handleCommandExecutionByTools(commandConfig);
+            this.handleCommandExecutionByTools(commandConfig, true);
 
             // this should not be called with every change. Use some sort of debounce
             this.emitMapEditorUpdate(command.id, commandConfig);
@@ -256,7 +262,7 @@ export class MapEditorModeManager {
                 break;
             }
             case "z": {
-                if (this.ctrlKey) {
+                if (this.ctrlKey.isDown) {
                     this.shiftKey.isDown ? this.redoCommand() : this.undoCommand();
                 }
                 break;
@@ -315,7 +321,7 @@ export class MapEditorModeManager {
         const func = () => {
             switch (commandConfig.type) {
                 case "UpdateAreaCommand": {
-                    this.scene.connection?.emitMapEditorModifyArea(commandId, commandConfig.areaObjectConfig);
+                    this.scene.connection?.emitMapEditorModifyArea(commandId, commandConfig.dataToModify);
                     break;
                 }
                 case "CreateAreaCommand": {
@@ -377,9 +383,9 @@ export class MapEditorModeManager {
         }
     }
 
-    private handleCommandExecutionByTools(commandConfig: CommandConfig): void {
+    private handleCommandExecutionByTools(commandConfig: CommandConfig, localCommand: boolean): void {
         for (const tool of Object.values(this.editorTools)) {
-            tool.handleCommandExecution(commandConfig);
+            tool.handleCommandExecution(commandConfig, localCommand);
         }
     }
 
