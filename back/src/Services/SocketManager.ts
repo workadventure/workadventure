@@ -834,8 +834,7 @@ export class SocketManager {
                 },
             }
         );
-        console.log("jwt", jwt);
-        console.log("TEEEEEEEEEST", jitsiSettings.url);
+
         return {
             jwt,
             url: jitsiSettings.url,
