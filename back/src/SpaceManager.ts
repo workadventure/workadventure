@@ -1,16 +1,16 @@
 import { SpaceManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import { v4 as uuid } from "uuid";
-import { SpacesWatcher } from "./Model/SpacesWatcher";
 import { BackToPusherSpaceMessage, PusherToBackSpaceMessage } from "@workadventure/messages";
-import { socketManager } from "./Services/SocketManager";
 import Debug from "debug";
 import { ServerDuplexStream } from "@grpc/grpc-js";
+import { socketManager } from "./Services/SocketManager";
+import { SpacesWatcher } from "./Model/SpacesWatcher";
 
 export type SpaceSocket = ServerDuplexStream<PusherToBackSpaceMessage, BackToPusherSpaceMessage>;
 
 const debug = Debug("space");
 
-const spaceManager: SpaceManagerServer = {
+const spaceManager = {
     watchSpace: (call: SpaceSocket): void => {
         debug("watchSpace => called");
         const pusherUuid = uuid();
@@ -70,6 +70,6 @@ const spaceManager: SpaceManagerServer = {
                 call.end();
             });
     },
-};
+} satisfies SpaceManagerServer;
 
 export { spaceManager };

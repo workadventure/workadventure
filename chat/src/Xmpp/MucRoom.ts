@@ -1,7 +1,13 @@
 import type { Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
-import { mucRoomsStore } from "../Stores/MucRoomsStore";
 import { v4 as uuid } from "uuid";
+import * as StanzaProtocol from "stanza/protocol";
+import { ParsedJID } from "stanza/JID";
+import { ChatStateMessage, JID } from "stanza";
+import { ChatState, MUCAffiliation } from "stanza/Constants";
+import { SearchableArrayStore } from "@workadventure/store-utils";
+import Debug from "debug";
+import { mucRoomsStore } from "../Stores/MucRoomsStore";
 import { userStore } from "../Stores/LocalUserStore";
 import { fileMessageManager } from "../Services/FileMessageManager";
 import { mediaManager, NotificationType } from "../Media/MediaManager";
@@ -11,16 +17,10 @@ import {
     filesUploadStore,
     mentionsUserStore,
 } from "../Stores/ChatStore";
+import { Message } from "../Model/Message";
 import { AbstractRoom, MessageType, User } from "./AbstractRoom";
 import { XmppClient } from "./XmppClient";
-import * as StanzaProtocol from "stanza/protocol";
 import { WaLink, WaReceivedReactions, WaUserInfo } from "./Lib/Plugin";
-import { ParsedJID } from "stanza/JID";
-import { ChatStateMessage, JID } from "stanza";
-import { ChatState, MUCAffiliation } from "stanza/Constants";
-import { Message } from "../Model/Message";
-import { SearchableArrayStore } from "@workadventure/store-utils";
-import Debug from "debug";
 
 const debug = Debug("chat");
 

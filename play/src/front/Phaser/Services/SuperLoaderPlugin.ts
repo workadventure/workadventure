@@ -126,8 +126,8 @@ export class SuperLoaderPlugin {
 
             const errorCallback = (file: { src: string }) => {
                 if (file.src !== url) return;
-                console.error("Failed loading " + type + ": ", url);
-                rej(new Error('Failed loading "+type+": "' + url + '"'));
+                console.error(`Failed loading "${type}": "${url}"`);
+                rej(new Error(`Failed loading "${type}": "${url}"`));
                 unloadCallbacks();
             };
 

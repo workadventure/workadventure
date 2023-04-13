@@ -1,17 +1,5 @@
-import { PusherRoom } from "../models/PusherRoom";
-import type { ExSocketInterface, BackSpaceConnection } from "../models/Websocket/ExSocketInterface";
-
-import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
-import { emitInBatch } from "./IoSocketHelpers";
-import { clientEventsEmitter } from "./ClientEventsEmitter";
-import { gaugeManager } from "./GaugeManager";
-import { apiClientRepository } from "./ApiClientRepository";
-import type { GroupDescriptor, UserDescriptor } from "../models/Zone";
-import type { ZoneEventListener } from "../models/Zone";
 import Debug from "debug";
-import type { AdminConnection, ExAdminSocketInterface } from "../models/Websocket/ExAdminSocketInterface";
 import type { compressors } from "hyper-express";
-import { adminService } from "./AdminService";
 import {
     AdminMessage,
     AdminPusherToBackMessage,
@@ -44,8 +32,20 @@ import {
     SpaceFilterMessage,
     WatchSpaceMessage,
 } from "@workadventure/messages";
+import { Color } from "@workadventure/shared-utils";
+import { PusherRoom } from "../models/PusherRoom";
+import type { ExSocketInterface, BackSpaceConnection } from "../models/Websocket/ExSocketInterface";
+
+import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
+import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
+import type { AdminConnection, ExAdminSocketInterface } from "../models/Websocket/ExAdminSocketInterface";
 import { EJABBERD_DOMAIN } from "../enums/EnvironmentVariable";
 import { Space } from "../models/Space";
+import { emitInBatch } from "./IoSocketHelpers";
+import { clientEventsEmitter } from "./ClientEventsEmitter";
+import { gaugeManager } from "./GaugeManager";
+import { apiClientRepository } from "./ApiClientRepository";
+import { adminService } from "./AdminService";
 
 const debug = Debug("socket");
 

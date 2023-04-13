@@ -1,4 +1,4 @@
-import { getEnvConfig } from "@geprog/vite-plugin-env-config/getEnvConfig";
+import { getEnvConfig } from "@geprog/vite-plugin-env-config/getEnvConfig"; // eslint-disable-line import/no-unresolved
 
 const PUSHER_URL = getEnvConfig("PUSHER_URL") || "//play.workadventure.localhost";
 const ADMIN_API_URL = getEnvConfig("ADMIN_API_URL") || undefined;

@@ -1,12 +1,12 @@
-import { gameManager } from "../Game/GameManager";
-import { EnableCameraSceneName } from "./EnableCameraScene";
-import { CustomizeSceneName } from "./CustomizeScene";
+import { DraggableGrid } from "@home-based-studio/phaser3-utils";
+import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
+import { wokaList } from "@workadventure/messages";
+import { get } from "svelte/store";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { loadAllDefaultModels } from "../Entity/PlayerTexturesLoadingManager";
 import { Loader } from "../Components/Loader";
 import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
 import { PlayerTextures } from "../Entity/PlayerTextures";
-import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { areCharacterLayersValid } from "../../Connexion/LocalUser";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
@@ -18,13 +18,13 @@ import {
     customizeAvailableStore,
     selectedCollection,
 } from "../../Stores/SelectCharacterSceneStore";
-import { DraggableGrid } from "@home-based-studio/phaser3-utils";
 import { WokaSlot } from "../Components/SelectWoka/WokaSlot";
-import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
-import { wokaList } from "@workadventure/messages";
 import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
-import { get } from "svelte/store";
+import { gameManager } from "../Game/GameManager";
 import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
+import { AbstractCharacterScene } from "./AbstractCharacterScene";
+import { CustomizeSceneName } from "./CustomizeScene";
+import { EnableCameraSceneName } from "./EnableCameraScene";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";

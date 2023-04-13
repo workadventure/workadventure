@@ -8,6 +8,18 @@
     import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
     import { menuVisiblilityStore, warningContainerStore } from "../Stores/MenuStore";
     import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
+    import { followStateStore } from "../Stores/FollowStore";
+    import { peerStore } from "../Stores/PeerStore";
+    import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
+    import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
+    import { soundPlayingStore } from "../Stores/SoundPlayingStore";
+    import { showLimitRoomModalStore, modalVisibilityStore } from "../Stores/ModalStore";
+    import { actionsMenuStore } from "../Stores/ActionsMenuStore";
+    import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
+    import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
+    import { coWebsites } from "../Stores/CoWebsiteStore";
+    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
+    import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
@@ -20,26 +32,14 @@
     import WarningContainer from "./WarningContainer/WarningContainer.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
     import FollowMenu from "./FollowMenu/FollowMenu.svelte";
-    import { followStateStore } from "../Stores/FollowStore";
-    import { peerStore } from "../Stores/PeerStore";
-    import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import BanMessageContainer from "./TypeMessage/BanMessageContainer.svelte";
-    import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import TextMessageContainer from "./TypeMessage/TextMessageContainer.svelte";
-    import { soundPlayingStore } from "../Stores/SoundPlayingStore";
     import AudioPlaying from "./UI/AudioPlaying.svelte";
-    import { showLimitRoomModalStore, modalVisibilityStore } from "../Stores/ModalStore";
     import LimitRoomModal from "./Modal/LimitRoomModal.svelte";
-    import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import ActionsMenu from "./ActionsMenu/ActionsMenu.svelte";
     import Lazy from "./Lazy.svelte";
-    import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
     import UiWebsiteContainer from "./UI/Website/UIWebsiteContainer.svelte";
-    import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
     import Modal from "./Modal/Modal.svelte";
-    import { coWebsites } from "../Stores/CoWebsiteStore";
-    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
-    import { proximityMeetingStore } from "../Stores/MyMediaStore";
 
     let mainLayout: HTMLDivElement;
 

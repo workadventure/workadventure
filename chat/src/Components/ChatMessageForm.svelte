@@ -10,11 +10,14 @@
         XCircleIcon,
         ArrowRightCircleIcon,
     } from "svelte-feather-icons";
-    import { MucRoom } from "../Xmpp/MucRoom";
-    import { defaultWoka, User } from "../Xmpp/AbstractRoom";
-    import LL, { locale } from "../i18n/i18n-svelte";
     import { createEventDispatcher, onMount } from "svelte";
     import { EmojiButton } from "@joeattardi/emoji-button";
+    import { UserData } from "@workadventure/messages";
+    import { ChatState } from "stanza/Constants";
+    import { get } from "svelte/store";
+    import { MucRoom } from "../Xmpp/MucRoom";
+    import { defaultWoka, User } from "../Xmpp/AbstractRoom";
+    import { LL, locale } from "../i18n/i18n-svelte";
     import {
         selectedMessageToReply,
         filesUploadStore,
@@ -23,15 +26,12 @@
         mentionsUserStore,
         enableChatUpload,
     } from "../Stores/ChatStore";
-    import { UserData } from "@workadventure/messages";
     import { userStore } from "../Stores/LocalUserStore";
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
     import { FileExt, fileMessageManager, UploadedFile, uploadingState } from "../Services/FileMessageManager";
-    import File from "./Content/File.svelte";
     import crown from "../../public/static/svg/icone-premium-crown.svg";
     import { iframeListener } from "../IframeListener";
-    import { ChatState } from "stanza/Constants";
-    import { get } from "svelte/store";
+    import File from "./Content/File.svelte";
 
     export let mucRoom: MucRoom;
 

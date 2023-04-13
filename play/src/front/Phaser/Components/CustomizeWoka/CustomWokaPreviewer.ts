@@ -1,6 +1,6 @@
+import { PositionMessage_Direction } from "@workadventure/messages";
 import { Easing } from "../../../types";
 import { getPlayerAnimations, PlayerAnimationTypes } from "../../Player/Animation";
-import { PositionMessage_Direction } from "@workadventure/messages";
 import { ProtobufClientUtils } from "../../../Network/ProtobufClientUtils";
 
 export const WokaBodyPart = ["Body", "Eyes", "Hair", "Clothes", "Hat", "Accessory"] as const;

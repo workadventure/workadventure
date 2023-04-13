@@ -1,20 +1,21 @@
 import * as fs from "fs";
-import multer from "multer";
-import { Express, Request } from "express";
-import { FileSystemInterface } from "./FileSystemInterface";
-import { MAX_UNCOMPRESSED_SIZE } from "../Enum/EnvironmentVariable";
-import { mapPath } from "../Services/PathMapper";
-import { z } from "zod";
 import path from "node:path";
+import { z } from "zod";
+import { Express, Request } from "express";
+import multer from "multer";
 import pLimit from "p-limit";
-import { passportAuthenticator } from "../Services/Authentication";
 import archiver from "archiver";
-import { fileSystem } from "../fileSystem";
 import StreamZip from "node-stream-zip";
 import { MapValidator, OrganizedErrors } from "@workadventure/map-editor/src/GameMap/MapValidator";
-import { FileNotFoundError } from "./FileNotFoundError";
+import { WAMFileFormat } from "@workadventure/map-editor";
+import { mapPath } from "../Services/PathMapper";
+import { MAX_UNCOMPRESSED_SIZE } from "../Enum/EnvironmentVariable";
+import { fileSystem } from "../fileSystem";
+import { passportAuthenticator } from "../Services/Authentication";
 import { mapsManager } from "../MapsManager";
 import { uploadDetector } from "../Services/UploadDetector";
+import { FileSystemInterface } from "./FileSystemInterface";
+import { FileNotFoundError } from "./FileNotFoundError";
 
 const upload = multer({
     storage: multer.diskStorage({}),
@@ -128,6 +129,21 @@ export class UploadController {
 
                             continue;
                         }
+                        if (extension === ".wam") {
+                            const result = mapValidator.validateWAMFile((await zip.entryData(zipEntry)).toString());
+                            if (!result) {
+                                errors[zipEntry.name] = {
+                                    map: [
+                                        {
+                                            type: "error",
+                                            message: "Invalid WAM file format.",
+                                            details: "",
+                                        },
+                                    ],
+                                };
+                            }
+                            continue;
+                        }
 
                         if (extension !== ".tmj") {
                             continue;
@@ -148,17 +164,27 @@ export class UploadController {
                         return;
                     }
 
-                    // Delete all files in the S3 bucket
-                    await this.fileSystem.deleteFiles(mapPath(directory, req));
+                    const filesPathsFromZip = zipEntries
+                        .filter((zipEntry) => zipEntry.name.includes(".wam") || zipEntry.name.includes(".tmj"))
+                        .map((zipEntry) => zipEntry.name);
+
+                    // Delete all files in the given filesystem (disk or s3) with the exception of some .wam files
+                    await this.fileSystem.deleteFilesExceptWAM(mapPath(directory, req), filesPathsFromZip);
 
                     const promises: Promise<void>[] = [];
                     const keysToPurge: string[] = [];
+                    const wamFilesNames = zipEntries
+                        .filter((zipEntry) => zipEntry.name.includes(".wam"))
+                        .map((zipEntry) => path.parse(zipEntry.name).name);
                     // Iterate over the entries in the ZIP archive
                     for (const zipEntry of zipEntries) {
                         const key = mapPath(path.join(directory, zipEntry.name), req);
                         // Store the file
                         promises.push(this.fileSystem.writeFile(zipEntry, key, zip));
                         if (path.extname(key) === ".tmj") {
+                            if (!wamFilesNames.includes(path.parse(zipEntry.name).name)) {
+                                promises.push(this.createWAMFileIfMissing(key));
+                            }
                             keysToPurge.push(key);
                         }
                     }
@@ -192,6 +218,25 @@ export class UploadController {
         const files = await fileSystem.listFiles(mapPath("/", req), ".tmj");
 
         await fileSystem.writeStringAsFile(mapPath("/" + UploadController.CACHE_NAME, req), JSON.stringify(files));
+    }
+
+    private async createWAMFileIfMissing(tmjKey: string): Promise<void> {
+        const wamPath = tmjKey.slice().replace(".tmj", ".wam");
+        if (!(await this.fileSystem.exist(wamPath))) {
+            await this.fileSystem.writeStringAsFile(
+                wamPath,
+                JSON.stringify(this.getFreshWAMFileContent(`./${path.basename(tmjKey)}`))
+            );
+        }
+    }
+
+    private getFreshWAMFileContent(tmjFilePath: string): WAMFileFormat {
+        return {
+            version: "1.0.0",
+            mapUrl: tmjFilePath,
+            areas: [],
+            entities: [],
+        };
     }
 
     /**

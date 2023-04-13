@@ -1,8 +1,4 @@
-import type { PointInterface } from "./PointInterface";
-import type { Identificable } from "./Identificable";
-import type { ViewportInterface } from "./ViewportMessage";
 import type { ClientDuplexStream } from "@grpc/grpc-js";
-import type { Zone } from "../Zone";
 import type { compressors } from "hyper-express";
 import type {
     WokaDetail,
@@ -18,10 +14,14 @@ import type {
     SpaceFilterMessage,
     SpaceUser,
 } from "@workadventure/messages";
+import { AvailabilityStatus } from "@workadventure/messages";
+import type { Zone } from "../Zone";
 import type { PusherRoom } from "../PusherRoom";
 import { CustomJsonReplacerInterface } from "../CustomJsonReplacerInterface";
-import { AvailabilityStatus } from "@workadventure/messages";
 import { Space } from "../Space";
+import type { ViewportInterface } from "./ViewportMessage";
+import type { Identificable } from "./Identificable";
+import type { PointInterface } from "./PointInterface";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 export type BackSpaceConnection_ = ClientDuplexStream<PusherToBackSpaceMessage, BackToPusherSpaceMessage>;

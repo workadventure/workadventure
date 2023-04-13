@@ -1,16 +1,14 @@
 <script lang="ts">
-    import LL from "../../../i18n/i18n-svelte";
+    import { LocalizedString } from "typesafe-i18n";
+    import { LL } from "../../../i18n/i18n-svelte";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import { mapEditorSelectedToolStore } from "../../Stores/MapEditorStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import AreaToolImg from "../images/icon-tool-area.png";
     // import FloorToolImg from "../images/icon-tool-floor.png";
     import EntityToolImg from "../images/icon-tool-entity.svg";
-    import ZoomInImg from "../images/zoom-in-icons.svg";
-    import ZoomOutImg from "../images/zoom-out-icons.svg";
     import Tooltip from "../Util/Tooltip.svelte";
     import { ENABLE_MAP_EDITOR_AREAS_TOOL } from "../../Enum/EnvironmentVariable";
-    import { LocalizedString } from "typesafe-i18n";
 
     const gameScene = gameManager.getCurrentGameScene();
 
@@ -34,34 +32,13 @@
     );
 
     function switchTool(newTool: EditorToolName) {
-        console.log(JSON.stringify($LL));
         gameScene.getMapEditorModeManager().equipTool(newTool);
-    }
-
-    const zoomDelta = 10;
-    function zoomIn() {
-        gameScene.zoomByFactor(1 + (zoomDelta / 53) * 0.1);
-    }
-    function zoomOut() {
-        gameScene.zoomByFactor(1 - (zoomDelta / 53) * 0.1);
     }
 </script>
 
 <section class="side-bar-container">
     <!--put a section to avoid lower div to be affected by some css-->
     <div class="side-bar">
-        <div class="tool-button">
-            <button on:click|preventDefault={zoomIn} type="button"
-                ><img src={ZoomInImg} alt={$LL.mapEditor.sideBar.zoomIn()} /></button
-            >
-            <Tooltip text={$LL.mapEditor.sideBar.zoomIn()} rightPosition="true" />
-        </div>
-        <div class="tool-button">
-            <button on:click|preventDefault={zoomOut} type="button"
-                ><img src={ZoomOutImg} alt={$LL.mapEditor.sideBar.zoomOut()} /></button
-            >
-            <Tooltip text={$LL.mapEditor.sideBar.zoomOut()} rightPosition="true" />
-        </div>
         {#each availableTools as tool (tool.toolName)}
             <div class="tool-button">
                 <button

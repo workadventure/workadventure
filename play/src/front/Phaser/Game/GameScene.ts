@@ -4,23 +4,27 @@ import { Queue } from "queue-typescript";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { throttle } from "throttle-debounce";
-
+import { MapStore } from "@workadventure/store-utils";
+import CancelablePromise from "cancelable-promise";
+import { Deferred } from "ts-deferred";
+import {
+    availabilityStatusToJSON,
+    AvailabilityStatus,
+    ErrorScreenMessage,
+    PositionMessage_Direction,
+} from "@workadventure/messages";
+import { z } from "zod";
+import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
+import { GameMap, GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connexion/ConnectionManager";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { urlManager } from "../../Url/UrlManager";
 import { mediaManager } from "../../WebRtc/MediaManager";
 import { UserInputManager } from "../UserInput/UserInputManager";
-import { gameManager } from "./GameManager";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
 import { waScaleManager } from "../Services/WaScaleManager";
-import { EmoteManager } from "./EmoteManager";
-import { soundManager } from "./SoundManager";
-import { SharedVariablesManager } from "./SharedVariablesManager";
-import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
-import { DynamicAreaManager } from "./DynamicAreaManager";
-
 import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoadingManager";
 import { CompanionTexturesLoadingManager } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
@@ -37,17 +41,11 @@ import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectC
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
 import { ErrorSceneName } from "../Reconnecting/ErrorScene";
 import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
-import { PlayerMovement } from "./PlayerMovement";
-import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
-import { DirtyScene } from "./DirtyScene";
 import { TextUtils } from "../Components/TextUtils";
 import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
-import { StartPositionCalculator } from "./StartPositionCalculator";
 import { PropertyUtils } from "../Map/PropertyUtils";
-import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { PathfindingManager } from "../../Utils/PathfindingManager";
-import { ActivatablesManager } from "./ActivatablesManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
     MessageUserJoined,
@@ -59,10 +57,6 @@ import type {
 import type { RoomConnection } from "../../Connexion/RoomConnection";
 import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
-import type { AddPlayerInterface } from "./AddPlayerInterface";
-import type { CameraManagerEventCameraUpdateData } from "./CameraManager";
-import { CameraManager, CameraManagerEvent } from "./CameraManager";
-
 import { peerStore } from "../../Stores/PeerStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
@@ -86,26 +80,23 @@ import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEve
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
 import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
-
-import EVENT_TYPE = Phaser.Scenes.Events;
-import Texture = Phaser.Textures.Texture;
-import Sprite = Phaser.GameObjects.Sprite;
-import CanvasTexture = Phaser.Textures.CanvasTexture;
-import GameObject = Phaser.GameObjects.GameObject;
-import DOMElement = Phaser.GameObjects.DOMElement;
-import Tileset = Phaser.Tilemaps.Tileset;
-import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
-import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
-import { MapStore } from "@workadventure/store-utils";
-import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
-import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
-import LL, { locale } from "../../../i18n/i18n-svelte";
+import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
+import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
+import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
+import type { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
+import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
+import { StringUtils } from "../../Utils/StringUtils";
+import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connexion/AxiosUtils";
 import {
     availabilityStatusStore,
     localVolumeStore,
     requestedCameraState,
     requestedMicrophoneState,
 } from "../../Stores/MediaStore";
+import { LL, locale } from "../../../i18n/i18n-svelte";
+import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
+import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
+import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connexion/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
@@ -126,35 +117,63 @@ import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
-import { IframeEventDispatcher } from "./IframeEventDispatcher";
-import type { PlayerDetailsUpdate } from "./RemotePlayersRepository";
-import { RemotePlayersRepository } from "./RemotePlayersRepository";
-import { MapEditorModeManager } from "./MapEditor/MapEditorModeManager";
 import type { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
 import {
     chatVisibilityStore,
     _newChatMessageSubject,
     _newChatMessageWritingStatusSubject,
 } from "../../Stores/ChatStore";
-import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
+import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
 import { gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
-import { AreaType, GameMap, GameMapProperties } from "@workadventure/map-editor";
-import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
 import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
-import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
 import { checkCoturnServer } from "../../Components/Video/utils";
+import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
+import { gameManager } from "./GameManager";
+import { EmoteManager } from "./EmoteManager";
+import { soundManager } from "./SoundManager";
+import { SharedVariablesManager } from "./SharedVariablesManager";
+import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
+import { DynamicAreaManager } from "./DynamicAreaManager";
+
+import { PlayerMovement } from "./PlayerMovement";
+import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
+import { DirtyScene } from "./DirtyScene";
+import { StartPositionCalculator } from "./StartPositionCalculator";
+import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
+import { ActivatablesManager } from "./ActivatablesManager";
+import type { AddPlayerInterface } from "./AddPlayerInterface";
+import type { CameraManagerEventCameraUpdateData } from "./CameraManager";
+import { CameraManager, CameraManagerEvent } from "./CameraManager";
+
+import { MapEditorModeManager } from "./MapEditor/MapEditorModeManager";
+import { RemotePlayersRepository } from "./RemotePlayersRepository";
+import type { PlayerDetailsUpdate } from "./RemotePlayersRepository";
+import { IframeEventDispatcher } from "./IframeEventDispatcher";
+import { PlayerVariablesManager } from "./PlayerVariablesManager";
+import { uiWebsiteManager } from "./UI/UIWebsiteManager";
+import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
+import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 import { faviconManager } from "./../../WebRtc/FaviconManager";
 import { z } from "zod";
 import { BroadcastService } from "../../Streaming/BroadcastService";
 import { megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
+import EVENT_TYPE = Phaser.Scenes.Events;
+import Texture = Phaser.Textures.Texture;
+import Sprite = Phaser.GameObjects.Sprite;
+import CanvasTexture = Phaser.Textures.CanvasTexture;
+import GameObject = Phaser.GameObjects.GameObject;
+import DOMElement = Phaser.GameObjects.DOMElement;
+import Tileset = Phaser.Tilemaps.Tileset;
+import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
+import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -178,6 +197,7 @@ export class GameScene extends DirtyScene {
     Map!: Phaser.Tilemaps.Tilemap;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
     mapFile!: ITiledMap;
+    wamFile!: WAMFileFormat;
     animatedTiles!: AnimatedTiles;
     groups: Map<number, Sprite>;
     circleTexture!: CanvasTexture;
@@ -210,7 +230,8 @@ export class GameScene extends DirtyScene {
 
     private modalVisibilityStoreUnsubscriber!: Unsubscriber;
 
-    MapUrlFile: string;
+    mapUrlFile!: string;
+    wamUrlFile?: string;
     roomUrl: string;
 
     currentTick!: number;
@@ -265,14 +286,19 @@ export class GameScene extends DirtyScene {
     private playersDebugLogAlreadyDisplayed = false;
     private _broadcastService: BroadcastService | undefined;
 
-    constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
+    constructor(private room: Room, customKey?: string | undefined) {
         super({
             key: customKey ?? room.key,
         });
         this.Terrains = [];
         this.groups = new Map<number, Sprite>();
 
-        this.MapUrlFile = MapUrlFile;
+        // TODO: How to get mapUrl from WAM here?
+        if (room.mapUrl) {
+            this.mapUrlFile = room.mapUrl;
+        } else if (room.wamUrl) {
+            this.wamUrlFile = room.wamUrl;
+        }
         this.roomUrl = room.key;
 
         this.entitiesCollectionsManager = new EntitiesCollectionsManager();
@@ -315,15 +341,15 @@ export class GameScene extends DirtyScene {
             // If we happen to be in HTTP and we are trying to load a URL in HTTPS only... (this happens only in dev environments)
             if (
                 window.location.protocol === "http:" &&
-                file.src === this.MapUrlFile &&
+                file.src === this.mapUrlFile &&
                 file.src.startsWith("http:") &&
                 this.originalMapUrl === undefined
             ) {
-                this.originalMapUrl = this.MapUrlFile;
-                this.MapUrlFile = this.MapUrlFile.replace("http://", "https://");
-                this.load.tilemapTiledJSON(this.MapUrlFile, this.MapUrlFile);
+                this.originalMapUrl = this.mapUrlFile;
+                this.mapUrlFile = this.mapUrlFile.replace("http://", "https://");
+                this.load.tilemapTiledJSON(this.mapUrlFile, this.mapUrlFile);
                 this.load.on(
-                    "filecomplete-tilemapJSON-" + this.MapUrlFile,
+                    "filecomplete-tilemapJSON-" + this.mapUrlFile,
                     (key: string, type: string, data: unknown) => {
                         this.onMapLoad(data).catch((e) => console.error(e));
                     }
@@ -339,23 +365,23 @@ export class GameScene extends DirtyScene {
             const host = url.host.split(":")[0];
             if (
                 window.location.protocol === "https:" &&
-                file.src === this.MapUrlFile &&
+                file.src === this.mapUrlFile &&
                 (host === "127.0.0.1" || host === "localhost" || host.endsWith(".localhost")) &&
                 this.originalMapUrl === undefined
             ) {
-                this.originalMapUrl = this.MapUrlFile;
-                this.MapUrlFile = this.MapUrlFile.replace("https://", "http://");
-                this.load.tilemapTiledJSON(this.MapUrlFile, this.MapUrlFile);
+                this.originalMapUrl = this.mapUrlFile;
+                this.mapUrlFile = this.mapUrlFile.replace("https://", "http://");
+                this.load.tilemapTiledJSON(this.mapUrlFile, this.mapUrlFile);
                 this.load.on(
-                    "filecomplete-tilemapJSON-" + this.MapUrlFile,
+                    "filecomplete-tilemapJSON-" + this.mapUrlFile,
                     (key: string, type: string, data: unknown) => {
                         this.onMapLoad(data).catch((e) => console.error(e));
                     }
                 );
                 // If the map has already been loaded as part of another GameScene, the "on load" event will not be triggered.
                 // In this case, we check in the cache to see if the map is here and trigger the event manually.
-                if (this.cache.tilemap.exists(this.MapUrlFile)) {
-                    const data = this.cache.tilemap.get(this.MapUrlFile);
+                if (this.cache.tilemap.exists(this.mapUrlFile)) {
+                    const data = this.cache.tilemap.get(this.mapUrlFile);
                     this.onMapLoad(data).catch((e) => console.error(e));
                 }
                 return;
@@ -384,16 +410,25 @@ export class GameScene extends DirtyScene {
         });
 
         this.load.scenePlugin("AnimatedTiles", AnimatedTiles, "animatedTiles", "animatedTiles");
-        this.load.on("filecomplete-tilemapJSON-" + this.MapUrlFile, (key: string, type: string, data: unknown) => {
-            this.onMapLoad(data).catch((e) => console.error(e));
-        });
-        //TODO strategy to add access token
-        this.load.tilemapTiledJSON(this.MapUrlFile, this.MapUrlFile);
-        // If the map has already been loaded as part of another GameScene, the "on load" event will not be triggered.
-        // In this case, we check in the cache to see if the map is here and trigger the event manually.
-        if (this.cache.tilemap.exists(this.MapUrlFile)) {
-            const data = this.cache.tilemap.get(this.MapUrlFile);
-            this.onMapLoad(data).catch((e) => console.error(e));
+
+        if (this.wamUrlFile) {
+            this.superLoad
+                .json(
+                    this.wamUrlFile,
+                    this.wamUrlFile,
+                    undefined,
+                    undefined,
+                    (key: string, type: string, wamFile: unknown) => {
+                        this.wamFile = WAMFileFormat.parse(wamFile);
+                        this.mapUrlFile = new URL(this.wamFile.mapUrl, this.wamUrlFile).toString();
+                        this.doLoadTMJFile(this.mapUrlFile);
+                    }
+                )
+                .catch((e) => {
+                    console.error(e);
+                });
+        } else {
+            this.doLoadTMJFile(this.mapUrlFile);
         }
 
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -408,14 +443,29 @@ export class GameScene extends DirtyScene {
         this.loader.addLoader();
     }
 
+    private doLoadTMJFile(mapUrlFile: string): void {
+        this.load.on("filecomplete-tilemapJSON-" + mapUrlFile, (key: string, type: string, data: unknown) => {
+            this.onMapLoad(data).catch((e) => console.error(e));
+        });
+        this.load.tilemapTiledJSON(mapUrlFile, mapUrlFile);
+        // If the map has already been loaded as part of another GameScene, the "on load" event will not be triggered.
+        // In this case, we check in the cache to see if the map is here and trigger the event manually.
+        if (this.cache.tilemap.exists(mapUrlFile)) {
+            const data = this.cache.tilemap.get(mapUrlFile);
+            this.onMapLoad(data).catch((e) => console.error(e));
+        }
+    }
+
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async onMapLoad(data: any): Promise<void> {
         // Triggered when the map is loaded
         // Load tiles attached to the map recursively
-
         // The map file can be modified by the scripting API and we don't want to tamper the Phaser cache (in case we come back on the map after visiting other maps)
         // So we are doing a deep copy
+
+        console.log(data.data);
+
         this.mapFile = structuredClone(data.data);
 
         // Safe parse can take up to 600ms on a 17MB map.
@@ -425,11 +475,11 @@ export class GameScene extends DirtyScene {
             console.warn("Your map file seems to be invalid. Errors: ", parseResult.error);
         }*/
 
-        const url = this.MapUrlFile.substring(0, this.MapUrlFile.lastIndexOf("/"));
+        const url = this.mapUrlFile.substring(0, this.mapUrlFile.lastIndexOf("/"));
         this.mapFile.tilesets.forEach((tileset) => {
             if ("source" in tileset) {
                 throw new Error(
-                    `Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.MapUrlFile}".`
+                    `Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.mapUrlFile}".`
                 );
             }
             if (typeof tileset.name === "undefined" || typeof tileset.image === "undefined") {
@@ -525,6 +575,7 @@ export class GameScene extends DirtyScene {
 
     //hook create scene
     create(): void {
+        this.input.topOnly = false;
         this.preloading = false;
         this.cleanupDone = false;
 
@@ -549,12 +600,12 @@ export class GameScene extends DirtyScene {
         this.characterLayers = gameManager.getCharacterLayers();
         this.companion = gameManager.getCompanion();
 
-        this.Map = this.add.tilemap(this.MapUrlFile);
-        const mapDirUrl = this.MapUrlFile.substring(0, this.MapUrlFile.lastIndexOf("/"));
+        this.Map = this.add.tilemap(this.mapUrlFile);
+        const mapDirUrl = this.mapUrlFile.substring(0, this.mapUrlFile.lastIndexOf("/"));
         this.mapFile.tilesets.forEach((tileset: ITiledMapTileset) => {
             if ("source" in tileset) {
                 throw new Error(
-                    `Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.MapUrlFile}".`
+                    `Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.mapUrlFile}".`
                 );
             }
             this.Terrains.push(
@@ -579,13 +630,18 @@ export class GameScene extends DirtyScene {
         this.embeddedWebsiteManager = new EmbeddedWebsiteManager(this);
 
         //add layer on map
-        this.gameMapFrontWrapper = new GameMapFrontWrapper(this, new GameMap(this.mapFile), this.Map, this.Terrains);
+        this.gameMapFrontWrapper = new GameMapFrontWrapper(
+            this,
+            new GameMap(this.mapFile, this.wamFile),
+            this.Map,
+            this.Terrains
+        );
         for (const layer of this.gameMapFrontWrapper.getFlatLayers()) {
             if (layer.type === "tilelayer") {
                 const exitSceneUrl = this.getExitSceneUrl(layer);
                 if (exitSceneUrl !== undefined) {
                     this.loadNextGame(
-                        Room.getRoomPathFromExitSceneUrl(exitSceneUrl, window.location.toString(), this.MapUrlFile)
+                        Room.getRoomPathFromExitSceneUrl(exitSceneUrl, window.location.toString(), this.mapUrlFile)
                     ).catch((e) => console.error(e));
                 }
                 const exitUrl = this.getExitUrl(layer);
@@ -1073,13 +1129,15 @@ export class GameScene extends DirtyScene {
                     });
                 });
 
-                this.gameMapFrontWrapper.onEnterArea((areas) => {
+                // NOTE: Leaving events names as "enterArea" and "leaveArea" to not introduce any breaking changes.
+                //       We are only looking through dynamic areas when handling those events.
+                this.gameMapFrontWrapper.onEnterDynamicArea((areas) => {
                     areas.forEach((area) => {
                         iframeListener.sendEnterAreaEvent(area.name);
                     });
                 });
 
-                this.gameMapFrontWrapper.onLeaveArea((areas) => {
+                this.gameMapFrontWrapper.onLeaveDynamicArea((areas) => {
                     areas.forEach((area) => {
                         iframeListener.sendLeaveAreaEvent(area.name);
                     });
@@ -1567,7 +1625,7 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.playSoundStream.subscribe((playSoundEvent) => {
-                const url = new URL(playSoundEvent.url, this.MapUrlFile);
+                const url = new URL(playSoundEvent.url, this.mapUrlFile);
                 soundManager
                     .playSound(this.load, this.sound, url.toString(), playSoundEvent.config)
                     .catch((e) => console.error(e));
@@ -1576,7 +1634,7 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.stopSoundStream.subscribe((stopSoundEvent) => {
-                const url = new URL(stopSoundEvent.url, this.MapUrlFile);
+                const url = new URL(stopSoundEvent.url, this.mapUrlFile);
                 soundManager.stopSound(this.sound, url.toString());
             })
         );
@@ -1660,7 +1718,7 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.loadSoundStream.subscribe((loadSoundEvent) => {
-                const url = new URL(loadSoundEvent.url, this.MapUrlFile);
+                const url = new URL(loadSoundEvent.url, this.mapUrlFile);
                 soundManager.loadSound(this.load, this.sound, url.toString()).catch((e) => console.error(e));
             })
         );
@@ -1718,12 +1776,7 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.setAreaPropertyStream.subscribe((setProperty) => {
-                this.setAreaProperty(
-                    setProperty.areaName,
-                    AreaType.Dynamic,
-                    setProperty.propertyName,
-                    setProperty.propertyValue
-                );
+                this.setAreaProperty(setProperty.areaName, setProperty.propertyName, setProperty.propertyValue);
             })
         );
 
@@ -1806,7 +1859,7 @@ ${escapedMessage}
             // for the connection to send back the answer.
             await this.connectionAnswerPromiseDeferred.promise;
             return {
-                mapUrl: this.MapUrlFile,
+                mapUrl: this.mapUrlFile,
                 startLayerName: this.startPositionCalculator.getStartPositionName() ?? undefined,
                 uuid: localUserStore.getLocalUser()?.uuid,
                 nickname: this.playerName,
@@ -1915,7 +1968,7 @@ ${escapedMessage}
                             //Create a new GameMap with the changed file
                             this.gameMapFrontWrapper = new GameMapFrontWrapper(
                                 this,
-                                new GameMap(this.mapFile),
+                                new GameMap(this.mapFile, this.wamFile),
                                 this.Map,
                                 this.Terrains
                             );
@@ -2056,17 +2109,12 @@ ${escapedMessage}
         this.gameMapFrontWrapper.setLayerProperty(layerName, propertyName, propertyValue);
     }
 
-    private setAreaProperty(
-        areaName: string,
-        areaType: AreaType,
-        propertyName: string,
-        propertyValue: string | number | boolean | undefined
-    ): void {
-        this.gameMapFrontWrapper.setAreaProperty(areaName, areaType, propertyName, propertyValue);
+    private setAreaProperty(areaName: string, propertyName: string, propertyValue: unknown): void {
+        this.gameMapFrontWrapper.setDynamicAreaProperty(areaName, propertyName, propertyValue);
     }
 
     public getMapDirUrl(): string {
-        return this.MapUrlFile.substring(0, this.MapUrlFile.lastIndexOf("/"));
+        return this.mapUrlFile.substring(0, this.mapUrlFile.lastIndexOf("/"));
     }
 
     public async onMapExit(roomUrl: URL) {
@@ -2288,7 +2336,7 @@ ${escapedMessage}
             return [];
         }
 
-        return script.split("\n").map((scriptSplit) => new URL(scriptSplit, this.MapUrlFile).toString());
+        return script.split("\n").map((scriptSplit) => new URL(scriptSplit, this.mapUrlFile).toString());
     }
 
     private loadNextGameFromExitUrl(exitUrl: string): Promise<void> {
@@ -2902,7 +2950,7 @@ ${escapedMessage}
 
     public createSuccessorGameScene(autostart: boolean, reconnecting: boolean) {
         const gameSceneKey = "somekey" + Math.round(Math.random() * 10000);
-        const game = new GameScene(this.room, this.MapUrlFile, gameSceneKey);
+        const game = new GameScene(this.room, gameSceneKey);
         this.scene.add(gameSceneKey, game, autostart, {
             initPosition: {
                 x: this.CurrentPlayer.x,

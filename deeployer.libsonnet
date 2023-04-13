@@ -32,7 +32,7 @@
          "EJABBERD_USER": "admin",
          "EJABBERD_PASSWORD": "apideo",
          "ENABLE_FEATURE_MAP_EDITOR":"true",
-         "ENABLE_MAP_EDITOR_AREAS_TOOL":"false",
+         "ENABLE_MAP_EDITOR_AREAS_TOOL":"true",
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -67,7 +67,7 @@
               "EJABBERD_USER": "admin",
               "EJABBERD_PASSWORD": "apideo",
               "ENABLE_FEATURE_MAP_EDITOR":"true",
-              "ENABLE_MAP_EDITOR_AREAS_TOOL":"false",
+              "ENABLE_MAP_EDITOR_AREAS_TOOL":"true",
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -83,8 +83,9 @@
         "image": "thecodingmachine/workadventure-play:"+tag,
         "host": {
           "url": "play-"+url,
+          "containerPort": 3000
         },
-        "ports": [3000],
+        "ports": [3000, 50051],
         "env": {
           "SECRET_KEY": "tempSecretKeyNeedsToChange",
           "JITSI_ISS": env.JITSI_ISS,
@@ -103,7 +104,7 @@
           "TURN_SERVER": "turn:coturn.workadventure.fr:443,turns:coturn.workadventure.fr:443",
           "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
           "ENABLE_FEATURE_MAP_EDITOR":"true",
-          "ENABLE_MAP_EDITOR_AREAS_TOOL":"false",
+          "ENABLE_MAP_EDITOR_AREAS_TOOL":"true",
           "ICON_URL": "https://icon-"+url,
           "CHAT_URL": "https://chat-"+url,
           "LOGROCKET_ID": env.LOGROCKET_ID,
@@ -283,10 +284,37 @@
                 }
               }
             },
+            service+: {
+              metadata+: {
+                annotations+: {
+                  "traefik.ingress.kubernetes.io/service.serversscheme": "h2c"
+                }
+              }
+            },
             ingress+: {
               spec+: {
+                rules+:[
+                  {
+                    host: "room-api-"+url,
+                    http: {
+                      paths: [
+                        {
+                          backend: {
+                            service: {
+                              name: "play",
+                              port: {
+                                number: 50051
+                              }
+                            }
+                          },
+                          pathType: "ImplementationSpecific"
+                        }
+                      ]
+                    }
+                  }
+                ],
                 tls+: [{
-                  hosts: ["play-"+url],
+                  hosts: ["play-"+url, "room-api-"+url],
                   secretName: "certificate-tls"
                 }]
               }

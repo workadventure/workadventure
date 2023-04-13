@@ -6,10 +6,10 @@ import {
     Json,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
-import type { AreaData } from "../types";
+import type { AreaData, AreaDataProperties, WAMFileFormat } from "../types";
+import { GameMapProperties } from "../types";
 import type { AreaChangeCallback } from "./GameMapAreas";
 import { GameMapAreas } from "./GameMapAreas";
-import { GameMapProperties } from "../types";
 import { flattenGroupLayersMap } from "./LayersFlattener";
 import { GameMapEntities } from "./GameMapEntities";
 
@@ -20,13 +20,14 @@ export class GameMap {
     /**
      * Component responsible for holding gameMap Areas related logic
      */
-    private gameMapAreas: GameMapAreas;
+    private gameMapAreas?: GameMapAreas;
     /**
      * Component responsible for holding gameMap entities related logic
      */
-    private gameMapEntities: GameMapEntities;
+    private gameMapEntities?: GameMapEntities;
 
     private readonly map: ITiledMap;
+    private readonly wam?: WAMFileFormat;
     private tileNameMap = new Map<string, number>();
 
     private tileSetPropertyMap: { [tile_index: number]: Array<ITiledMapProperty> } = {};
@@ -34,19 +35,21 @@ export class GameMap {
     public readonly tiledObjects: ITiledMapObject[];
 
     private readonly DEFAULT_TILE_SIZE = 32;
-    private readonly MAP_PROPERTY_LAST_COMMAND_ID_KEY: string = "lastCommandId";
 
     public exitUrls: Array<string> = [];
 
     public hasStartTile = false;
 
-    public constructor(map: ITiledMap) {
+    public constructor(map: ITiledMap, wam?: WAMFileFormat) {
         this.map = upgradeMapToNewest(map);
+        this.wam = wam; // upgrade if necessary
         this.flatLayers = flattenGroupLayersMap(this.map);
         this.tiledObjects = GameMap.getObjectsFromLayers(this.flatLayers);
 
-        this.gameMapAreas = new GameMapAreas(this);
-        this.gameMapEntities = new GameMapEntities(this);
+        if (this.wam) {
+            this.gameMapAreas = new GameMapAreas(this.wam);
+            this.gameMapEntities = new GameMapEntities(this.wam);
+        }
 
         for (const tileset of this.map.tilesets) {
             if ("tiles" in tileset) {
@@ -98,6 +101,10 @@ export class GameMap {
         return this.map;
     }
 
+    public getWam(): WAMFileFormat | undefined {
+        return this.wam;
+    }
+
     public findLayer(layerName: string): ITiledMapLayer | undefined {
         return this.flatLayers.find((layer) => layer.name === layerName);
     }
@@ -143,8 +150,12 @@ export class GameMap {
         property.value = propertyValue;
     }
 
-    public setAreaProperty(area: AreaData, key: string, value: string | number | boolean | undefined): void {
-        this.gameMapAreas.setProperty(area, key, value);
+    public setAreaProperty<K extends keyof AreaDataProperties>(
+        area: AreaData,
+        key: K,
+        value: AreaDataProperties[K]
+    ): void {
+        this.gameMapAreas?.setProperty(area, key, value);
     }
 
     public getTiledObjectProperty(
@@ -172,7 +183,7 @@ export class GameMap {
      * Registers a callback called when the user moves inside another area.
      */
     public onEnterArea(callback: AreaChangeCallback) {
-        this.gameMapAreas.onEnterArea(callback);
+        this.gameMapAreas?.onEnterArea(callback);
     }
 
     public getTileProperty(index: number): Array<ITiledMapProperty> {
@@ -221,21 +232,14 @@ export class GameMap {
     }
 
     public updateLastCommandIdProperty(commandId: string): void {
-        const property = this.getMapPropertyByKey(this.MAP_PROPERTY_LAST_COMMAND_ID_KEY);
-        if (!property) {
-            this.map.properties?.push({
-                name: this.MAP_PROPERTY_LAST_COMMAND_ID_KEY,
-                type: "string",
-                propertytype: "string",
-                value: commandId,
-            });
-        } else {
-            property.value = commandId;
+        if (!this.wam) {
+            return;
         }
+        this.wam.lastCommandId = commandId;
     }
 
     public getLastCommandId(): string | undefined {
-        return (this.getMapPropertyByKey(this.MAP_PROPERTY_LAST_COMMAND_ID_KEY)?.value as string) ?? undefined;
+        return this.wam?.lastCommandId;
     }
 
     public getMapPropertyByKey(key: string): ITiledMapProperty | undefined {
@@ -246,11 +250,11 @@ export class GameMap {
         return this.DEFAULT_TILE_SIZE;
     }
 
-    public getGameMapAreas(): GameMapAreas {
+    public getGameMapAreas(): GameMapAreas | undefined {
         return this.gameMapAreas;
     }
 
-    public getGameMapEntities(): GameMapEntities {
+    public getGameMapEntities(): GameMapEntities | undefined {
         return this.gameMapEntities;
     }
 
@@ -268,13 +272,6 @@ export class GameMap {
             }
         }
         return false;
-    }
-
-    /**
-     * @return lowest possible available id for new object to be created
-     */
-    public getNextObjectId(): number | undefined {
-        return this.map.nextobjectid;
     }
 
     public incrementNextObjectId(): void {

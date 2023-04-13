@@ -1,6 +1,6 @@
-import {StorageProvider} from "./StorageProvider";
-import {REDIS_DB_NUMBER, REDIS_HOST, REDIS_PASSWORD, REDIS_PORT} from "../Enum/EnvironmentVariable";
 import {commandOptions, createClient} from "redis";
+import {REDIS_DB_NUMBER, REDIS_HOST, REDIS_PASSWORD, REDIS_PORT} from "../Enum/EnvironmentVariable";
+import {StorageProvider} from "./StorageProvider";
 import {TempStorageProvider} from "./TempStorageProvider";
 import {TargetDevice} from "./TargetDevice";
 

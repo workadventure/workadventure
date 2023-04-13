@@ -1,9 +1,9 @@
 import type { Readable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
+import type { RemotePeer } from "../WebRtc/SimplePeer";
 import type { ScreenSharingLocalMedia } from "./ScreenSharingStore";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
 import { peerStore, screenSharingStreamStore } from "./PeerStore";
-import type { RemotePeer } from "../WebRtc/SimplePeer";
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
 import { gameSceneStore } from "./GameSceneStore";
 import { createNestedStore } from "@workadventure/store-utils";

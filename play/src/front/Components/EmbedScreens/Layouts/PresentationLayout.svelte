@@ -1,9 +1,9 @@
 <script lang="ts">
+    import { afterUpdate, onMount } from "svelte";
     import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
     import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
-    import { afterUpdate, onMount } from "svelte";
     import { isMediaBreakpointDown, isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
     import { myCameraStore } from "../../../Stores/MyMediaStore";
     import MyCamera from "../../MyCamera.svelte";
@@ -81,9 +81,15 @@
                                     class="highlighted-cowebsite"
                                 />
                                 <div class="actions">
-                                    <button type="button" class="close-window top-right-btn" on:click={closeCoWebsite}
-                                        >&times;
-                                    </button>
+                                    {#if $highlightedEmbedScreen.embed.isClosable()}
+                                        <button
+                                            type="button"
+                                            class="close-window top-right-btn"
+                                            on:click={closeCoWebsite}
+                                        >
+                                            &times;
+                                        </button>
+                                    {/if}
                                 </div>
                             </div>
                         {/key}

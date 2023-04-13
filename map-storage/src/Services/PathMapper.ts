@@ -1,6 +1,6 @@
+import path from "node:path";
 import { Request } from "express";
 import { USE_DOMAIN_NAME_IN_PATH } from "../Enum/EnvironmentVariable";
-import path from "node:path";
 
 /**
  * Maps a path to the storage path.

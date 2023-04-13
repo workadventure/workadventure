@@ -21,7 +21,7 @@
     import btnProfileSubMenuCompanion from "../images/btn-menu-profile-companion.svg";
     import Woka from "../Woka/WokaFromUserId.svelte";
     import Companion from "../Companion/Companion.svelte";
-    import LL from "../../../i18n/i18n-svelte";
+    import { LL } from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
 

@@ -1,3 +1,5 @@
+import { get } from "svelte/store";
+import Debug from "debug";
 import {
     isLookingLikeIframeEventWrapper,
     isIframeEventWrapper,
@@ -21,17 +23,15 @@ import {
     timelineActiveStore,
     timelineMessagesToSee,
     writingStatusMessageStore,
+    chatVisibilityStore,
 } from "./Stores/ChatStore";
 import { setCurrentLocale } from "./i18n/locales";
 import { Locales } from "./i18n/i18n-types";
 import { mucRoomsStore } from "./Stores/MucRoomsStore";
 import { chatConnectionManager } from "./Connection/ChatConnectionManager";
-import { chatVisibilityStore } from "./Stores/ChatStore";
 import { NotificationType } from "./Media/MediaManager";
 import { activeThreadStore } from "./Stores/ActiveThreadStore";
-import { get } from "svelte/store";
 import { emojiRegex } from "./Utils/HtmlUtils";
-import Debug from "debug";
 
 const debug = Debug("chat");
 
@@ -106,7 +106,12 @@ class IframeListener {
                             const mucRoomDefault = mucRoomsStore.getDefaultRoom();
                             let userData = undefined;
                             if (mucRoomDefault && iframeEvent.data.author.jid !== "fake") {
-                                userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
+                                try {
+                                    userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
+                                } catch (e) {
+                                    console.warn("Can't fetch user data from Ejabberd", e);
+                                    userData = iframeEvent.data.author;
+                                }
                             } else {
                                 userData = iframeEvent.data.author;
                             }

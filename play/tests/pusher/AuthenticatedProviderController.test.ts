@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AuthenticatedProviderController } from "../../src/pusher/controllers/AuthenticatedProviderController";
 import type { Request, Response, Server } from "hyper-express";
+import { AuthenticatedProviderController } from "../../src/pusher/controllers/AuthenticatedProviderController";
 
 const NOT_A_SECRET = "foo";
 class MockAuthenticatedProviderController extends AuthenticatedProviderController<string> {

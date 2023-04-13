@@ -1,12 +1,12 @@
 import type { Request, Response } from "hyper-express";
-import axios from "axios";
+import { isAxiosError } from "axios";
 import { ErrorApiData } from "@workadventure/messages";
 import { DEBUG_ERROR_MESSAGES } from "../enums/EnvironmentVariable";
 
 export function globalErrorHandler(request: Request, response: Response, error: unknown) {
     if (error instanceof Error) {
         let url: string | undefined;
-        if (axios.isAxiosError(error)) {
+        if (isAxiosError(error)) {
             url = error.config?.url;
             if (url !== undefined) {
                 url = " for URL: " + url;
@@ -21,7 +21,7 @@ export function globalErrorHandler(request: Request, response: Response, error: 
         console.error(error);
     }
 
-    if (axios.isAxiosError(error) && error.response) {
+    if (isAxiosError(error) && error.response) {
         response.status(error.response.status);
         const errorType = ErrorApiData.safeParse(error?.response?.data);
         if (!errorType.success) {

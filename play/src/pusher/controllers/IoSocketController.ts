@@ -1,3 +1,22 @@
+import { isAxiosError } from "axios";
+import type HyperExpress from "hyper-express";
+import { z } from "zod";
+import {
+    apiVersionHash,
+    AvailabilityStatus,
+    ClientToServerMessage,
+    CompanionMessage,
+    ErrorApiData,
+    MucRoomDefinition,
+    ServerToClientMessage as ServerToClientMessageTsProto,
+    SubMessage,
+    WokaDetail,
+    ApplicationDefinitionInterface,
+    SpaceFilterMessage,
+} from "@workadventure/messages";
+import Jwt from "jsonwebtoken";
+import { v4 as uuid } from "uuid";
+import { JID } from "stanza";
 import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
 import { PointInterface } from "../models/Websocket/PointInterface";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
@@ -16,10 +35,6 @@ import type { Zone } from "../models/Zone";
 import type { ExAdminSocketInterface } from "../models/Websocket/ExAdminSocketInterface";
 import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
-import Axios from "axios";
-import { InvalidTokenError } from "./InvalidTokenError";
-import type HyperExpress from "hyper-express";
-import { z } from "zod";
 import { adminService } from "../services/AdminService";
 import {
     apiVersionHash,
@@ -40,6 +55,7 @@ import { v4 as uuid } from "uuid";
 import { JID } from "stanza";
 import { validateWebsocketQuery } from "../services/QueryValidator";
 import { Color } from "@workadventure/shared-utils";
+import { InvalidTokenError } from "./InvalidTokenError";
 
 type WebSocket = HyperExpress.compressors.WebSocket;
 
@@ -383,7 +399,7 @@ export class IoSocketController {
                                     locale
                                 );
                             } catch (err) {
-                                if (Axios.isAxiosError(err)) {
+                                if (isAxiosError(err)) {
                                     const errorType = ErrorApiData.safeParse(err?.response?.data);
                                     if (errorType.success) {
                                         if (upgradeAborted.aborted) {

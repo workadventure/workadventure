@@ -1,9 +1,9 @@
+import type { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
+import { GameMapProperties } from "@workadventure/map-editor";
 import type { RoomConnection } from "../../Connexion/RoomConnection";
 import { iframeListener } from "../../Api/IframeListener";
 import type { SetVariableEvent } from "../../Api/Events/SetVariableEvent";
-import type { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
-import { GameMapProperties } from "@workadventure/map-editor";
 
 interface Variable {
     defaultValue: unknown;

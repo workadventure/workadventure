@@ -8,10 +8,10 @@ import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
 import { EnableCameraSceneName } from "../Login/EnableCameraScene";
 import { LoginSceneName } from "../Login/LoginScene";
 import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
-import { GameScene } from "./GameScene";
 import { EmptySceneName } from "../Login/EmptyScene";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraStore } from "../../Stores/MyMediaStore";
+import { GameScene } from "./GameScene";
 
 /**
  * This class should be responsible for any scene starting/stopping
@@ -105,7 +105,7 @@ export class GameManager {
 
         const gameIndex = this.scenePlugin.getIndex(roomID);
         if (gameIndex === -1) {
-            const game: Phaser.Scene = new GameScene(room, room.mapUrl);
+            const game: Phaser.Scene = new GameScene(room);
             this.scenePlugin.add(roomID, game, false);
         }
     }

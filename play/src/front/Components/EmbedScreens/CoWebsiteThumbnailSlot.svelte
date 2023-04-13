@@ -7,13 +7,12 @@
     import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
-    import { iframeStates } from "../../WebRtc/CoWebsiteManager";
-    import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
+    import { iframeStates, coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 
     import jitsiIcon from "../images/jitsi.png";
     import meetingIcon from "../images/meeting.svg";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import LL from "../../../i18n/i18n-svelte";
+    import { LL } from "../../../i18n/i18n-svelte";
 
     export let index: number;
     export let coWebsite: CoWebsite;

@@ -1,5 +1,3 @@
-import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
-import { SpacesWatcher } from "./SpacesWatcher";
 import {
     AddSpaceUserMessage,
     BackToPusherSpaceMessage,
@@ -9,6 +7,8 @@ import {
     UpdateSpaceUserMessage,
 } from "@workadventure/messages";
 import Debug from "debug";
+import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
+import { SpacesWatcher } from "./SpacesWatcher";
 
 const debug = Debug("space");
 

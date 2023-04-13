@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { mock } from "vitest-mock-extended";
+import { PartialSpaceUser, PusherToBackSpaceMessage, SpaceFilterMessage, SubMessage } from "@workadventure/messages";
 import { Space } from "../../src/pusher/models/Space";
 import { BackSpaceConnection, ExSocketInterface } from "../../src/pusher/models/Websocket/ExSocketInterface";
-import { mock } from "vitest-mock-extended";
 import {
     PartialSpaceUser,
     PusherToBackSpaceMessage,

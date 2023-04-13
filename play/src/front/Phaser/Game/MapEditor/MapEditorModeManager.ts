@@ -1,17 +1,23 @@
-import { CommandConfig, Command, UpdateEntityCommand } from "@workadventure/map-editor";
-import { UpdateAreaCommand, CreateAreaCommand, DeleteAreaCommand } from "@workadventure/map-editor";
+import {
+    CommandConfig,
+    Command,
+    UpdateEntityCommand,
+    UpdateAreaCommand,
+    CreateAreaCommand,
+    DeleteAreaCommand,
+} from "@workadventure/map-editor";
 import type { Unsubscriber } from "svelte/store";
+import { CreateEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/CreateEntityCommand";
+import { DeleteEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/DeleteEntityCommand";
+import { EditMapCommandMessage } from "@workadventure/messages";
 import type { RoomConnection } from "../../../Connexion/RoomConnection";
 import type { GameScene } from "../GameScene";
 import { mapEditorModeStore, mapEditorSelectedToolStore } from "../../../Stores/MapEditorStore";
+import { ENABLE_MAP_EDITOR_AREAS_TOOL } from "../../../Enum/EnvironmentVariable";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
 import { EntityEditorTool } from "./Tools/EntityEditorTool";
-import { CreateEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/CreateEntityCommand";
-import { DeleteEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/DeleteEntityCommand";
-import { EditMapCommandMessage } from "@workadventure/messages";
-import { ENABLE_MAP_EDITOR_AREAS_TOOL } from "../../../Enum/EnvironmentVariable";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
@@ -256,7 +262,7 @@ export class MapEditorModeManager {
                 break;
             }
             case "z": {
-                if (this.ctrlKey) {
+                if (this.ctrlKey.isDown) {
                     this.shiftKey.isDown ? this.redoCommand() : this.undoCommand();
                 }
                 break;
@@ -315,7 +321,7 @@ export class MapEditorModeManager {
         const func = () => {
             switch (commandConfig.type) {
                 case "UpdateAreaCommand": {
-                    this.scene.connection?.emitMapEditorModifyArea(commandId, commandConfig.areaObjectConfig);
+                    this.scene.connection?.emitMapEditorModifyArea(commandId, commandConfig.dataToModify);
                     break;
                 }
                 case "CreateAreaCommand": {

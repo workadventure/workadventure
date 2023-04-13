@@ -1,10 +1,10 @@
-import { BaseHttpController } from "./BaseHttpController";
 import fs from "fs";
+import path from "path";
+import swaggerJsdoc from "swagger-jsdoc";
+import * as cheerio from "cheerio";
 import { ADMIN_URL } from "../enums/EnvironmentVariable";
 import SwaggerGenerator from "../services/SwaggerGenerator";
-import swaggerJsdoc from "swagger-jsdoc";
-import path from "path";
-import * as cheerio from "cheerio";
+import { BaseHttpController } from "./BaseHttpController";
 
 export class SwaggerController extends BaseHttpController {
     routes(): void {

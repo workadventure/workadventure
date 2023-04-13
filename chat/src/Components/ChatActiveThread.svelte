@@ -1,15 +1,15 @@
 <script lang="ts">
     import { ArrowLeftIcon, RefreshCwIcon, EyeIcon, EyeOffIcon } from "svelte-feather-icons";
-    import ChatMessageForm from "./ChatMessageForm.svelte";
-    import LL from "../i18n/i18n-svelte";
+    import { onDestroy } from "svelte";
+    import { get } from "svelte/store";
+    import { LL } from "../i18n/i18n-svelte";
     import { activeThreadStore, settingsViewStore, usersListViewStore } from "../Stores/ActiveThreadStore";
+    import { MucRoom } from "../Xmpp/MucRoom";
+    import ChatMessageForm from "./ChatMessageForm.svelte";
     import ChatUser from "./ChatUser.svelte";
     import ChatMessagesList from "./ChatMessagesList.svelte";
     import OnlineUsers from "./OnlineUsers.svelte";
-    import { MucRoom } from "../Xmpp/MucRoom";
-    import { onDestroy } from "svelte";
     import Loader from "./Loader.svelte";
-    import { get } from "svelte/store";
 
     export let activeThread: MucRoom;
 

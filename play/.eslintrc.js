@@ -9,7 +9,9 @@ module.exports = {
         "eslint:recommended",
         "plugin:@typescript-eslint/eslint-recommended",
         "plugin:@typescript-eslint/recommended",
-        "plugin:@typescript-eslint/recommended-requiring-type-checking"
+        "plugin:@typescript-eslint/recommended-requiring-type-checking",
+        "plugin:import/recommended",
+        "plugin:import/typescript"
     ],
     "globals": {
         "Atomics": "readonly",
@@ -50,6 +52,7 @@ module.exports = {
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/ban-ts-comment": "off",
         "@typescript-eslint/ban-ts-ignore": "off",
+        "import/order": "error",
     },
     "settings": {
         "svelte3/typescript": () => require('typescript'),
@@ -57,5 +60,7 @@ module.exports = {
         "svelte3/ignore-warnings": (warning) => {
             return  (warning.code === "a11y-click-events-have-key-events" || warning.code === "security-anchor-rel-noreferrer");
         },
+        "typescript": true,
+        "node": true,
     }
 }

@@ -1,7 +1,7 @@
-import type { LocalUser } from "./LocalUser";
-import { areCharacterLayersValid, isUserNameValid } from "./LocalUser";
 import { z } from "zod";
 import { arrayEmoji, Emoji } from "../Stores/Utils/emojiSchema";
+import type { LocalUser } from "./LocalUser";
+import { areCharacterLayersValid, isUserNameValid } from "./LocalUser";
 
 const playerNameKey = "playerName";
 const selectedPlayerKey = "selectedPlayer";

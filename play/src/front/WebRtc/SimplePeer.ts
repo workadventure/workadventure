@@ -1,17 +1,17 @@
+import { get } from "svelte/store";
+import type { Subscription } from "rxjs";
 import type {
     WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "../Connexion/ConnexionModels";
-import { mediaManager, NotificationType } from "./MediaManager";
-import { ScreenSharingPeer } from "./ScreenSharingPeer";
-import { VideoPeer } from "./VideoPeer";
 import type { RoomConnection } from "../Connexion/RoomConnection";
-import { blackListManager } from "./BlackListManager";
-import { get } from "svelte/store";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { playersStore } from "../Stores/PlayersStore";
 import { peerStore, screenSharingPeerStore } from "../Stores/PeerStore";
-import type { Subscription } from "rxjs";
+import { mediaManager, NotificationType } from "./MediaManager";
+import { ScreenSharingPeer } from "./ScreenSharingPeer";
+import { VideoPeer } from "./VideoPeer";
+import { blackListManager } from "./BlackListManager";
 
 export interface UserSimplePeerInterface {
     userId: number;

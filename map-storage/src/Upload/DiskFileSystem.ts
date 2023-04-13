@@ -1,9 +1,9 @@
-import { FileSystemInterface } from "./FileSystemInterface";
-import * as fs from "fs-extra";
 import path from "path";
+import * as fs from "fs-extra";
 import { NextFunction, Response } from "express";
 import { Archiver } from "archiver";
 import { StreamZipAsync, ZipEntry } from "node-stream-zip";
+import { FileSystemInterface } from "./FileSystemInterface";
 import { UploadController } from "./UploadController";
 import { FileNotFoundError } from "./FileNotFoundError";
 import { NodeError } from "./NodeError";
@@ -15,6 +15,27 @@ export class DiskFileSystem implements FileSystemInterface {
         const fullPath = this.getFullPath(directory);
         if (await fs.pathExists(fullPath)) {
             await fs.emptyDir(fullPath);
+        }
+    }
+
+    async deleteFilesExceptWAM(directory: string, filesFromZip: string[]): Promise<void> {
+        try {
+            const fullPath = this.getFullPath(directory);
+            if (await fs.pathExists(fullPath)) {
+                const files = await this.getAllFilesWithin(fullPath, fullPath);
+                for (const file of files) {
+                    if (file.includes(".wam")) {
+                        const tmjKey = file.slice().replace(".wam", ".tmj");
+                        // do not delete existing .wam file if there's no new version in zip and .tmj file with the same name exists
+                        if (filesFromZip.includes(tmjKey) && !filesFromZip.includes(file)) {
+                            continue;
+                        }
+                    }
+                    await fs.promises.unlink(path.resolve(fullPath, file));
+                }
+            }
+        } catch (error) {
+            console.log(error);
         }
     }
 
@@ -94,8 +115,10 @@ export class DiskFileSystem implements FileSystemInterface {
         }
     }
 
-    writeStringAsFile(virtualPath: string, content: string): Promise<void> {
+    async writeStringAsFile(virtualPath: string, content: string): Promise<void> {
         const fullPath = this.getFullPath(virtualPath);
+        const dir = path.dirname(fullPath);
+        await fs.mkdirp(dir);
         return fs.writeFile(fullPath, content, {
             encoding: "utf-8",
         });
@@ -108,19 +131,27 @@ export class DiskFileSystem implements FileSystemInterface {
     }
 
     async getAllFilesWithin(dir: string, startingDir: string): Promise<string[]> {
-        let results: string[] = [];
-        const list = await fs.promises.readdir(dir);
-        for (let file of list) {
-            file = path.resolve(dir, file);
-            const stat = await fs.promises.stat(file);
-            if (stat && stat.isDirectory()) {
-                /* Recurse into a subdirectory */
-                results = results.concat(await this.getAllFilesWithin(file, startingDir));
-            } else {
-                /* Is a file */
-                results.push(path.relative(startingDir, file));
+        try {
+            let results: string[] = [];
+            const list = await fs.promises.readdir(dir);
+            for (let file of list) {
+                file = path.resolve(dir, file);
+                const stat = await fs.promises.stat(file);
+                if (stat && stat.isDirectory()) {
+                    /* Recurse into a subdirectory */
+                    results = results.concat(await this.getAllFilesWithin(file, startingDir));
+                } else {
+                    /* Is a file */
+                    results.push(path.relative(startingDir, file));
+                }
             }
+            return results;
+        } catch (e) {
+            const nodeError = NodeError.safeParse(e);
+            if (e instanceof Error && nodeError.success && nodeError.data.code === "ENOENT") {
+                return [];
+            }
+            throw e;
         }
-        return results;
     }
 }

@@ -1,6 +1,6 @@
-import { ADMIN_SOCKETS_TOKEN, SECRET_KEY } from "../enums/EnvironmentVariable";
 import Jwt from "jsonwebtoken";
 import z from "zod";
+import { ADMIN_SOCKETS_TOKEN, SECRET_KEY } from "../enums/EnvironmentVariable";
 import { InvalidTokenError } from "../controllers/InvalidTokenError";
 
 export const AuthTokenData = z.object({

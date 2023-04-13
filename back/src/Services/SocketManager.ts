@@ -1,4 +1,4 @@
-import { GameRoom } from "../Model/GameRoom";
+import crypto from "crypto";
 import {
     AnswerMessage,
     BanUserMessage,
@@ -44,26 +44,26 @@ import {
     AddSpaceUserMessage,
     RemoveSpaceUserMessage,
 } from "@workadventure/messages";
+import Jwt from "jsonwebtoken";
+import BigbluebuttonJs from "bigbluebutton-js";
+import Debug from "debug";
+import { GameRoom } from "../Model/GameRoom";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { Group } from "../Model/Group";
-import { cpuTracker } from "./CpuTracker";
 import { GROUP_RADIUS, MINIMUM_DISTANCE, TURN_STATIC_AUTH_SECRET } from "../Enum/EnvironmentVariable";
 import { Movable } from "../Model/Movable";
 import { PositionInterface } from "../Model/PositionInterface";
-import Jwt from "jsonwebtoken";
-import BigbluebuttonJs from "bigbluebutton-js";
-import { clientEventsEmitter } from "./ClientEventsEmitter";
-import { gaugeManager } from "./GaugeManager";
-import { RoomSocket, ZoneSocket } from "../RoomManager";
+import { RoomSocket, VariableSocket, ZoneSocket } from "../RoomManager";
 import { Zone } from "../Model/Zone";
-import Debug from "debug";
 import { Admin } from "../Model/Admin";
-import crypto from "crypto";
-import { getMapStorageClient } from "./MapStorageClient";
-import { emitError } from "./MessageHelpers";
 import { Space } from "../Model/Space";
 import { SpacesWatcher } from "../Model/SpacesWatcher";
+import { gaugeManager } from "./GaugeManager";
+import { clientEventsEmitter } from "./ClientEventsEmitter";
+import { getMapStorageClient } from "./MapStorageClient";
+import { emitError } from "./MessageHelpers";
+import { cpuTracker } from "./CpuTracker";
 
 const debug = Debug("socketmanager");
 
@@ -106,26 +106,30 @@ export class SocketManager {
         let commandsToApply: EditMapCommandMessage[] | undefined = undefined;
 
         if (lastCommandId) {
-            const updateMapToNewestWithKeyMessage: UpdateMapToNewestWithKeyMessage = {
-                mapKey: room.mapUrl,
-                updateMapToNewestMessage: {
-                    commandId: lastCommandId,
-                },
-            };
+            if (room.wamUrl) {
+                const updateMapToNewestWithKeyMessage: UpdateMapToNewestWithKeyMessage = {
+                    mapKey: room.wamUrl,
+                    updateMapToNewestMessage: {
+                        commandId: lastCommandId,
+                    },
+                };
 
-            commandsToApply = await new Promise<EditMapCommandMessage[]>((resolve, reject) => {
-                getMapStorageClient().handleUpdateMapToNewestMessage(
-                    updateMapToNewestWithKeyMessage,
-                    (err: unknown, message: EditMapCommandsArrayMessage) => {
-                        if (err) {
-                            emitError(user.socket, err);
-                            reject(err);
-                            return;
+                commandsToApply = await new Promise<EditMapCommandMessage[]>((resolve, reject) => {
+                    getMapStorageClient().handleUpdateMapToNewestMessage(
+                        updateMapToNewestWithKeyMessage,
+                        (err: unknown, message: EditMapCommandsArrayMessage) => {
+                            if (err) {
+                                emitError(user.socket, err);
+                                reject(err);
+                                return;
+                            }
+                            resolve(message.editMapCommands);
                         }
-                        resolve(message.editMapCommands);
-                    }
-                );
-            });
+                    );
+                });
+            } else {
+                emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
+            }
         }
 
         if (!socket.writable) {
@@ -252,9 +256,17 @@ export class SocketManager {
         return room.setVariable(variableMessage.name, variableMessage.value, user);
     }
 
-    // handleSharedPlayerVariableEvent(room: GameRoom, user: User, variableMessage: VariableMessage): Promise<void> {
-    //     return room.setSharedPlayerVariable(variableMessage.getName(), variableMessage.getValue(), user);
-    // }
+    async readVariable(roomUrl: string, variable: string): Promise<string | undefined> {
+        const room = await this.getOrCreateRoom(roomUrl);
+        // Info: Admin tag is given to bypass the tags checking
+        const variables = await room.getVariablesForTags(undefined);
+        return variables.get(variable);
+    }
+
+    async saveVariable(roomUrl: string, variable: string, newValue: string): Promise<void> {
+        const room = await this.getOrCreateRoom(roomUrl);
+        await room.setVariable(variable, newValue, "RoomApi");
+    }
 
     emitVideo(room: GameRoom, user: User, data: WebRtcSignalToServerMessage): void {
         //send only at user
@@ -986,6 +998,24 @@ export class SocketManager {
         room.removeRoomListener(call);
     }
 
+    async addVariableListener(call: VariableSocket) {
+        const room = await this.getOrCreateRoom(call.request.room);
+        if (!room) {
+            throw new Error("In addVariableListener, could not find room with id '" + call.request.room + "'");
+        }
+
+        room.addVariableListener(call);
+    }
+
+    async removeVariableListener(call: VariableSocket) {
+        const room = await this.roomsPromises.get(call.request.room);
+        if (!room) {
+            throw new Error("In removeVariableListener, could not find room with id '" + call.request.room + "'");
+        }
+
+        room.removeVariableListener(call);
+    }
+
     public async handleJoinAdminRoom(admin: Admin, roomId: string): Promise<GameRoom> {
         const room = await socketManager.getOrCreateRoom(roomId);
 
@@ -1204,9 +1234,13 @@ export class SocketManager {
     }
 
     handleEditMapCommandMessage(room: GameRoom, user: User, message: EditMapCommandMessage) {
+        if (!room.wamUrl) {
+            emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
+            return;
+        }
         getMapStorageClient().handleEditMapCommandWithKeyMessage(
             {
-                mapKey: room.mapUrl,
+                mapKey: room.wamUrl,
                 editMapCommandMessage: message,
             },
             (err: unknown, editMapCommandMessage: EditMapCommandMessage) => {

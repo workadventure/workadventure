@@ -1,15 +1,15 @@
 <script lang="ts">
-    import { PeerStatus, VideoPeer } from "../../WebRtc/VideoPeer";
-    import VideoMediaBox from "./VideoMediaBox.svelte";
-    import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
-    import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
-    import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
-    import type { Streamable } from "../../Stores/StreamableCollectionStore";
-    import VideoOffBox from "./VideoOffBox.svelte";
-    import type { ObtainedMediaStreamConstraints } from "../../WebRtc/P2PMessages/ConstraintMessage";
     import type { Readable } from "svelte/store";
     import { fly } from "svelte/transition";
+    import { PeerStatus, VideoPeer } from "../../WebRtc/VideoPeer";
+    import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
+    import type { Streamable } from "../../Stores/StreamableCollectionStore";
+    import type { ObtainedMediaStreamConstraints } from "../../WebRtc/P2PMessages/ConstraintMessage";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import VideoMediaBox from "./VideoMediaBox.svelte";
+    import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
+    import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
+    import VideoOffBox from "./VideoOffBox.svelte";
     import { JitsiTrackWrapper } from "../../Streaming/Jitsi/JitsiTrackWrapper";
     import JitsiMediaBox from "./JitsiMediaBox.svelte";
 

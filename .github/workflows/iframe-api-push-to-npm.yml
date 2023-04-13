@@ -5,7 +5,7 @@ on:
   push:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:
@@ -34,8 +34,8 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           version: '3.x'
 
-      - name: "Install play dependencies"
-        run: npm ci --workspace=workadventure-play
+      - name: "Install dependencies"
+        run: npm ci #--workspace=workadventure-play
 
       - name: "Install messages dependencies"
         run: npm ci
@@ -56,10 +56,10 @@ jobs:
           ADMIN_URL: "//localhost:80"
         working-directory: "play"
 
-      - name: Install dependencies in package
-        run: npm ci
-        working-directory: "play/packages/iframe-api-typings"
-        if: ${{ github.event_name == 'release' }}
+#      - name: Install dependencies in package
+#        run: npm ci
+#        working-directory: "play/packages/iframe-api-typings"
+#        if: ${{ github.event_name == 'release' }}
 
       - name: Publish package
         run: npm publish

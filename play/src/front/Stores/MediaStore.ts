@@ -1,11 +1,16 @@
 import type { Readable, Writable } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
+import { AvailabilityStatus } from "@workadventure/messages";
+import deepEqual from "fast-deep-equal";
 import { localUserStore } from "../Connexion/LocalUserStore";
-import { userMovingStore } from "./GameStore";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
+import { getNavigatorType, isIOS, NavigatorType } from "../WebRtc/DeviceUtils";
+import { SoundMeter } from "../Phaser/Components/SoundMeter";
+import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
+import { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/ConstraintMessage";
+import { userMovingStore } from "./GameStore";
 import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
 import { errorStore } from "./ErrorStore";
-import { getNavigatorType, isIOS, NavigatorType } from "../WebRtc/DeviceUtils";
 import { WebviewOnOldIOS } from "./Errors/WebviewOnOldIOS";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeetingStore } from "./MyMediaStore";
 import { peerStore } from "./PeerStore";

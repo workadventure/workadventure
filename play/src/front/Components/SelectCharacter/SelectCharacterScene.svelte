@@ -2,7 +2,7 @@
     import type { Game } from "../../Phaser/Game/Game";
     import type { SelectCharacterScene } from "../../Phaser/Login/SelectCharacterScene";
     import { SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
-    import LL from "../../../i18n/i18n-svelte";
+    import { LL } from "../../../i18n/i18n-svelte";
     import {
         collectionsSizeStore,
         customizeAvailableStore,

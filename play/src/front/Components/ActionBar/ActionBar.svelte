@@ -1,4 +1,9 @@
 <script lang="ts">
+    import type { Unsubscriber } from "svelte/store";
+    import { ChevronDownIcon, ChevronUpIcon, CheckIcon } from "svelte-feather-icons";
+    import { fly } from "svelte/transition";
+    import { onDestroy, onMount } from "svelte";
+    import { writable } from "svelte/store";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
         cameraListStore,
@@ -14,7 +19,6 @@
         usedCameraDeviceIdStore,
         usedMicrophoneDeviceIdStore,
     } from "../../Stores/MediaStore";
-    import { ChevronDownIcon, ChevronUpIcon, CheckIcon } from "svelte-feather-icons";
     import cameraImg from "../images/camera.png";
     import cameraOffImg from "../images/camera-off.png";
     import microphoneImg from "../images/microphone.png";
@@ -41,7 +45,12 @@
     import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { chatVisibilityStore, chatZoneLiveStore } from "../../Stores/ChatStore";
-    import { proximityMeetingStore } from "../../Stores/MyMediaStore";
+    import {
+        proximityMeetingStore,
+        inExternalServiceStore,
+        myCameraStore,
+        myMicrophoneStore,
+    } from "../../Stores/MyMediaStore";
     import type { MenuItem, TranslatedMenu } from "../../Stores/MenuStore";
     import {
         activeSubMenuStore,
@@ -62,16 +71,11 @@
         emoteMenuSubStore,
         emoteStore,
     } from "../../Stores/EmoteStore";
-    import LL from "../../../i18n/i18n-svelte";
+    import { LL } from "../../../i18n/i18n-svelte";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
-    import { fly } from "svelte/transition";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import { mapEditorModeStore } from "../../Stores/MapEditorStore";
     import { iframeListener } from "../../Api/IframeListener";
-    import { onDestroy, onMount } from "svelte";
-    import type { Unsubscriber } from "svelte/store";
-    import { get, writable } from "svelte/store";
     import { peerStore } from "../../Stores/PeerStore";
     import { StringUtils } from "../../Utils/StringUtils";
     import Tooltip from "../Util/Tooltip.svelte";

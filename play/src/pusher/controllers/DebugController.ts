@@ -1,8 +1,8 @@
-import { ADMIN_API_TOKEN } from "../enums/EnvironmentVariable";
 import { stringify } from "circular-json";
+import { ADMIN_API_TOKEN } from "../enums/EnvironmentVariable";
 import { socketManager } from "../services/SocketManager";
-import { BaseHttpController } from "./BaseHttpController";
 import { CustomJsonReplacerInterface } from "../models/CustomJsonReplacerInterface";
+import { BaseHttpController } from "./BaseHttpController";
 
 export class DebugController extends BaseHttpController {
     routes(): void {
