@@ -21,8 +21,12 @@ import { OutlineableInterface } from "../Game/OutlineableInterface";
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
     Delete = "EntityEvent:Delete",
-    PropertiesUpdated = "EntityEvent:PropertiesUpdated",
+    /**
+     * Any change done to this Entity properties. Adding new one, deleting or modifying existing one.
+     * We send whole array of properties with this event.
+     */
     PropertyActivated = "EntityEvent:PropertyActivated",
+    PropertiesUpdated = "EntityEvent:PropertiesUpdated",
 }
 
 // NOTE: Tiles-based entity for now. Individual images later on
@@ -191,10 +195,8 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             actionsMenuStore.clear();
             return;
         }
-        actionsMenuStore.initialize(
-            TextHeaderPropertyData.parse(this.entityData.properties.find((property) => property.type === "textHeader"))
-                ?.header ?? ""
-        );
+        const textHeader = this.entityData.properties.find((property) => property.type === "textHeader");
+        actionsMenuStore.initialize(textHeader ? TextHeaderPropertyData.parse(textHeader).header : "");
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
         }
@@ -207,9 +209,12 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         const actions: ActionsMenuAction[] = [];
         const properties = this.entityData.properties;
 
+        console.log(properties);
+
         for (const property of properties) {
             switch (property.type) {
                 case "jitsiRoomProperty": {
+                    console.log(property);
                     const roomName = property.roomName;
                     const roomConfig = property.jitsiRoomConfig;
                     actions.push({
@@ -288,20 +293,28 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         return this.entityData.properties;
     }
 
-    // public setProperty<K extends keyof EntityDataProperties>(key: K, value: EntityDataProperties[K]): void {
-    //     this.entityData.properties[key] = value;
-    //     this.emit(EntityEvent.PropertiesUpdated, key, value);
-    // }
+    public addProperty(property: EntityDataProperty): void {
+        this.entityData.properties.push(property);
+        this.emit(EntityEvent.PropertiesUpdated, this.entityData.properties);
+    }
 
-    // @ts-ignore
-    public setProperty(value: EntityDataProperty): void {
-        const property = this.entityData.properties.find((property) => property.id === value.id);
+    public updateProperty(changes: AtLeast<EntityDataProperty, "id">): void {
+        const property = this.entityData.properties.find((property) => property.id === changes.id);
         if (property) {
-            _.merge(property, value);
-        } else {
-            this.entityData.properties.push(value);
+            _.merge(property, changes);
         }
-        this.emit(EntityEvent.PropertiesUpdated, value);
+        this.emit(EntityEvent.PropertiesUpdated, this.entityData.properties);
+    }
+
+    public deleteProperty(id: string): boolean {
+        const index = this.entityData.properties.findIndex((property) => property.id === id);
+        if (index !== -1) {
+            this.entityData.properties.splice(index, 1);
+            this.emit(EntityEvent.PropertiesUpdated, this.entityData.properties);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public getOldPosition(): { x: number; y: number } {

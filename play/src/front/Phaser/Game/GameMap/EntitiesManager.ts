@@ -1,4 +1,4 @@
-import { AtLeast, EntityData, EntityDataProperties, EntityDataProperty, EntityPrefab } from "@workadventure/map-editor";
+import { AtLeast, EntityData, EntityDataProperties, EntityPrefab } from "@workadventure/map-editor";
 import { Observable, Subject } from "rxjs";
 import { get } from "svelte/store";
 import { z } from "zod";
@@ -186,11 +186,10 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 this.gameMapFrontWrapper.handleEntityActionTrigger();
             }
         );
-        entity.on(EntityEvent.PropertiesUpdated, (value: EntityDataProperty) => {
+        entity.on(EntityEvent.PropertiesUpdated, (properties: EntityDataProperties) => {
             const data: AtLeast<EntityData, "id"> = {
                 id: entity.getEntityData().id,
-                // properties: { [key]: value },
-                properties: [value],
+                properties,
             };
             this.emit(EntitiesManagerEvent.UpdateEntity, data);
         });

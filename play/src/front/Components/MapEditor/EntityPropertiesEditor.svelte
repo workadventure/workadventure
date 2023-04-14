@@ -1,12 +1,66 @@
 <script lang="ts">
+    import { EntityDataPropertiesKeys, EntityDataProperty } from "@workadventure/map-editor";
     import { LL } from "../../../i18n/i18n-svelte";
     import { mapEditorSelectedEntityStore } from "../../Stores/MapEditorStore";
-    import crossImg from "../images/cross-icon.svg";
+    import plusImg from "../images/plus.svg";
 
-    function onDeleteEntity() {
+    let properties = $mapEditorSelectedEntityStore?.getProperties() ?? [];
+
+    function onAddProperty(type: EntityDataPropertiesKeys) {
+        console.log("try to add property");
         if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.delete();
-            mapEditorSelectedEntityStore.set(undefined);
+            $mapEditorSelectedEntityStore.addProperty(getPropertyFromType(type));
+            // refresh properties
+            properties = $mapEditorSelectedEntityStore?.getProperties();
+        }
+    }
+
+    function getPropertyFromType(type: EntityDataPropertiesKeys): EntityDataProperty {
+        const id = crypto.randomUUID();
+        switch (type) {
+            case "jitsiRoomProperty":
+                return {
+                    id,
+                    type,
+                    jitsiRoomConfig: {},
+                    roomName: "JITSI ROOM",
+                    buttonLabel: "Connect to Jitsi",
+                };
+            case "openWebsite":
+                return {
+                    id,
+                    type,
+                    buttonLabel: "Open Website",
+                    link: "https://google.com",
+                    newTab: true,
+                };
+            case "playAudio":
+                return {
+                    id,
+                    type,
+                    buttonLabel: "Play audio",
+                    audioLink: "",
+                };
+            case "textHeader":
+                return {
+                    id,
+                    type,
+                    header: "text header",
+                };
+        }
+    }
+
+    function onDeleteProperty(id: string) {
+        console.log("try to delete property");
+        if ($mapEditorSelectedEntityStore) {
+            const result = $mapEditorSelectedEntityStore.deleteProperty(id);
+            if (result) {
+                console.log(`SUCCESFULLY DELETED PROPERTY: ${id}`);
+            } else {
+                console.log(`CANNOT DELETE PROPERTY: ${id}`);
+            }
+            // refresh properties
+            properties = $mapEditorSelectedEntityStore?.getProperties();
         }
     }
 </script>
@@ -14,13 +68,65 @@
 {#if $mapEditorSelectedEntityStore === undefined}
     {$LL.mapEditor.entityEditor.editInstructions()}
 {:else}
-    <div class="entity-properties" />
-    <div class="action-button">
+    <div class="properties-buttons">
+        <div>
+            <button
+                class="add-property-button"
+                on:click={() => {
+                    onAddProperty("jitsiRoomProperty");
+                }}
+            >
+                <div>
+                    {$LL.mapEditor.properties.jitsiProperties.label()}
+                </div>
+                <img src={plusImg} alt="" />
+            </button>
+        </div>
+        <div>
+            <button
+                class="add-property-button"
+                on:click={() => {
+                    onAddProperty("playAudio");
+                }}
+            >
+                <div>
+                    {$LL.mapEditor.properties.audioProperties.label()}
+                </div>
+                <img src={plusImg} alt="" />
+            </button>
+        </div>
+        <div>
+            <button
+                class="add-property-button"
+                on:click={() => {
+                    onAddProperty("openWebsite");
+                }}
+            >
+                <div>
+                    {$LL.mapEditor.properties.linkProperties.label()}
+                </div>
+                <img src={plusImg} alt="" />
+            </button>
+        </div>
+    </div>
+    <!-- <div class="action-button">
         <button class="delete-button" on:click={onDeleteEntity}
             ><div>{$LL.mapEditor.entityEditor.deleteButton()}</div>
             <img src={crossImg} alt="" /></button
         >
-    </div>
+    </div> -->
+
+    {#each properties as property}
+        <div>
+            <button
+                on:click={() => {
+                    onDeleteProperty(property.id);
+                }}
+            >
+                <p>{property.id}: {property.type}</p>
+            </button>
+        </div>
+    {/each}
 {/if}
 
 <style lang="scss">
@@ -48,6 +154,31 @@
         }
         .property-container {
             padding-left: 1em;
+        }
+    }
+
+    .properties-buttons {
+        margin-top: 1em;
+        display: flex;
+        flex-direction: column;
+        button:hover {
+            background-color: rgb(77 75 103);
+        }
+        .add-property-button {
+            border-color: gray;
+            color: gray;
+            width: 100%;
+            border: 1px solid grey;
+            position: relative;
+            div {
+                display: flex;
+                flex-grow: 1;
+            }
+            img {
+                object-fit: contain;
+                max-width: 2em;
+                max-height: 2em;
+            }
         }
     }
 

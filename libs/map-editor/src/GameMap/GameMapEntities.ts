@@ -45,6 +45,10 @@ export class GameMapEntities {
             throw new Error(`Entity of id: ${id} does not exist!`);
         }
         _.merge(entity, config);
+        // TODO: Find a way to update it without need of using conditions
+        if (config.properties !== undefined) {
+            entity.properties = config.properties;
+        }
         this.updateEntityInWAM(entity);
         return entity;
     }
