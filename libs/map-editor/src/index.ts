@@ -8,5 +8,6 @@ export * from "./Commands/Area/DeleteAreaCommand";
 export * from "./Commands/Entity/UpdateEntityCommand";
 export * from "./Commands/Entity/CreateEntityCommand";
 export * from "./Commands/Entity/DeleteEntityCommand";
+export * from "./Commands/WAM/UpdateWAMSettingCommand";
 export * from "./Commands/Command";
 export * from "./FunctionalTypes/Result";

@@ -5,6 +5,7 @@ import type { UpdateAreaCommandConfig } from "./Commands/Area/UpdateAreaCommand"
 import type { CreateEntityCommandConfig } from "./Commands/Entity/CreateEntityCommand";
 import type { DeleteEntityCommandConfig } from "./Commands/Entity/DeleteEntityCommand";
 import { UpdateEntityCommandConfig } from "./Commands/Entity/UpdateEntityCommand";
+import { UpdateWAMSettingCommandConfig } from "./Commands/WAM/UpdateWAMSettingCommand";
 
 export type CommandConfig =
     | UpdateAreaCommandConfig
@@ -12,7 +13,8 @@ export type CommandConfig =
     | CreateAreaCommandConfig
     | UpdateEntityCommandConfig
     | CreateEntityCommandConfig
-    | DeleteEntityCommandConfig;
+    | DeleteEntityCommandConfig
+    | UpdateWAMSettingCommandConfig;
 
 export type AtLeast<T, K extends keyof T> = Partial<T> & Pick<T, K>;
 
@@ -114,12 +116,26 @@ export const EntityData = z.object({
     prefab: EntityPrefab,
 });
 
+export const MegaphoneSettings = z.object({
+    enabled: z.boolean(),
+    title: z.string().optional(),
+    scope: z.string().optional(),
+    rights: z.array(z.string()).optional(),
+});
+
+export type MegaphoneSettings = z.infer<typeof MegaphoneSettings>;
+
 export const WAMFileFormat = z.object({
     version: z.string(),
     mapUrl: z.string(),
     entities: z.array(EntityData),
     areas: z.array(AreaData),
     lastCommandId: z.string().optional(),
+    settings: z
+        .object({
+            megaphone: MegaphoneSettings.optional(),
+        })
+        .optional(),
 });
 
 export type EntityRawPrefab = z.infer<typeof EntityRawPrefab>;

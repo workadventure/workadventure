@@ -9,7 +9,7 @@
     import EntityToolImg from "../images/icon-tool-entity.svg";
     import Tooltip from "../Util/Tooltip.svelte";
     import { ENABLE_MAP_EDITOR_AREAS_TOOL } from "../../Enum/EnvironmentVariable";
-
+    import ConfigureImg from "../images/configure.svg";
     const gameScene = gameManager.getCurrentGameScene();
 
     const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
@@ -22,13 +22,20 @@
         });
     }
     availableTools.push(
-        {
-            toolName: EditorToolName.EntityEditor,
-            img: EntityToolImg,
-            tooltiptext: $LL.mapEditor.sideBar.entityEditor(),
-        }
-        // NOTE: Hide it untill FloorEditing is done
-        // { toolName: EditorToolName.FloorEditor, img: FloorToolImg, tooltiptext: $LL.mapEditor.sideBar.tileEditor() }
+            {
+                toolName: EditorToolName.EntityEditor,
+                img: EntityToolImg,
+                tooltiptext: $LL.mapEditor.sideBar.entityEditor(),
+            }
+            // NOTE: Hide it untill FloorEditing is done
+            // { toolName: EditorToolName.FloorEditor, img: FloorToolImg, tooltiptext: $LL.mapEditor.sideBar.tileEditor() }
+    );
+    availableTools.push(
+            {
+                toolName: EditorToolName.ConfigureMyRoom,
+                img: ConfigureImg,
+                tooltiptext: $LL.mapEditor.sideBar.configureMyRoom(),
+            }
     );
 
     function switchTool(newTool: EditorToolName) {
@@ -42,9 +49,9 @@
         {#each availableTools as tool (tool.toolName)}
             <div class="tool-button">
                 <button
-                    class={tool.toolName == $mapEditorSelectedToolStore ? "active" : ""}
-                    on:click|preventDefault={() => switchTool(tool.toolName)}
-                    type="button"><img src={tool.img} alt="open tool {tool.toolName}" /></button
+                        class={tool.toolName == $mapEditorSelectedToolStore ? "active" : ""}
+                        on:click|preventDefault={() => switchTool(tool.toolName)}
+                        type="button"><img src={tool.img} alt="open tool {tool.toolName}" /></button
                 >
                 <Tooltip text={tool.tooltiptext} rightPosition="true" />
             </div>

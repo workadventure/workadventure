@@ -174,6 +174,19 @@ const mapStorageServer: MapStorageServer = {
                     );
                     break;
                 }
+                case "updateMegaphoneSettingMessage": {
+                    const message = editMapMessage.updateMegaphoneSettingMessage;
+                    mapsManager.executeCommand(
+                        mapKey,
+                        {
+                            type: "UpdateWAMSettingCommand",
+                            name: "megaphone",
+                            dataToModify: message,
+                        },
+                        commandId
+                    );
+                    break;
+                }
                 default: {
                     const _exhaustiveCheck: never = editMapMessage;
                 }

@@ -17,7 +17,6 @@
     import Woka from "./Woka/WokaFromUserId.svelte";
     import microphoneOffImg from "./images/microphone-off.png";
     import cameraOffImg from "./images/camera-off.png";
-    import { inExternalServiceStore } from "../Stores/MyMediaStore";
     import { megaphoneEnabledStore } from "../Stores/MegaphoneStore";
 
     let stream: MediaStream | null;

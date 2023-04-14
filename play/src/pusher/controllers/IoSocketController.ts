@@ -17,6 +17,8 @@ import {
 import Jwt from "jsonwebtoken";
 import { v4 as uuid } from "uuid";
 import { JID } from "stanza";
+import {SpaceUser} from "@workadventure/messages";
+import {Color} from "@workadventure/shared-utils";
 import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
 import { PointInterface } from "../models/Websocket/PointInterface";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
@@ -36,25 +38,7 @@ import type { ExAdminSocketInterface } from "../models/Websocket/ExAdminSocketIn
 import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { adminService } from "../services/AdminService";
-import {
-    apiVersionHash,
-    AvailabilityStatus,
-    ClientToServerMessage,
-    CompanionMessage,
-    ErrorApiData,
-    MucRoomDefinition,
-    ServerToClientMessage as ServerToClientMessageTsProto,
-    SubMessage,
-    WokaDetail,
-    ApplicationDefinitionInterface,
-    SpaceFilterMessage,
-    SpaceUser,
-} from "@workadventure/messages";
-import Jwt from "jsonwebtoken";
-import { v4 as uuid } from "uuid";
-import { JID } from "stanza";
 import { validateWebsocketQuery } from "../services/QueryValidator";
-import { Color } from "@workadventure/shared-utils";
 import { InvalidTokenError } from "./InvalidTokenError";
 
 type WebSocket = HyperExpress.compressors.WebSocket;

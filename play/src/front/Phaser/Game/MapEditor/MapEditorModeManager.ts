@@ -4,7 +4,7 @@ import {
     UpdateEntityCommand,
     UpdateAreaCommand,
     CreateAreaCommand,
-    DeleteAreaCommand,
+    DeleteAreaCommand, UpdateWAMSettingCommand,
 } from "@workadventure/map-editor";
 import type { Unsubscriber } from "svelte/store";
 import { CreateEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/CreateEntityCommand";
@@ -18,11 +18,13 @@ import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
 import { EntityEditorTool } from "./Tools/EntityEditorTool";
+import {WAMEditorTool} from "./Tools/WAMEditorTool";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
     FloorEditor = "FloorEditor",
     EntityEditor = "EntityEditor",
+    ConfigureMyRoom = "ConfigureMyRoom"
 }
 
 export class MapEditorModeManager {
@@ -78,6 +80,7 @@ export class MapEditorModeManager {
             [EditorToolName.AreaEditor]: new AreaEditorTool(this),
             [EditorToolName.EntityEditor]: new EntityEditorTool(this),
             [EditorToolName.FloorEditor]: new FloorEditorTool(this),
+            [EditorToolName.ConfigureMyRoom]: new WAMEditorTool(this),
         };
         this.activeTool = undefined;
 
@@ -128,6 +131,10 @@ export class MapEditorModeManager {
                 }
                 case "DeleteEntityCommand": {
                     command = new DeleteEntityCommand(this.scene.getGameMap(), commandConfig, commandId);
+                    break;
+                }
+                case "UpdateWAMSettingCommand": {
+                    command = new UpdateWAMSettingCommand(this.scene.wamFile, commandConfig, commandId);
                     break;
                 }
                 default: {

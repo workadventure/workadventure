@@ -236,6 +236,7 @@ export class UploadController {
             mapUrl: tmjFilePath,
             areas: [],
             entities: [],
+            settings: undefined
         };
     }
 

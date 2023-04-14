@@ -41,7 +41,7 @@ import {
     UpdateSpaceUserMessage,
     RemoveSpaceUserMessage,
     WatchSpaceMessage,
-    SpaceFilterMessage,
+    SpaceFilterMessage, UpdateMegaphoneSettingMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
@@ -1086,6 +1086,23 @@ export class RoomConnection implements RoomConnection {
                                 ...config,
                                 properties: config.properties ?? {},
                             },
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitUpdateMegaphoneSettingMessage(commandId: string, updateMegaphoneSettingMessage: UpdateMegaphoneSettingMessage){
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "updateMegaphoneSettingMessage",
+                            updateMegaphoneSettingMessage
                         },
                     },
                 },

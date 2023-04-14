@@ -1,21 +1,27 @@
 <script lang="ts">
+    import { fly } from "svelte/transition";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import { mapEditorSelectedToolStore } from "../../Stores/MapEditorStore";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import EntityEditor from "./EntityEditor.svelte";
     import AreaEditor from "./AreaEditor.svelte";
+    import ConfigureMyRoom from "./ConfigureMyRoom.svelte";
 </script>
 
 <MapEditorSideBar />
 <div class="map-editor tw-bg-dark-blue/95">
-    <div class="sidebar">
-        {#if $mapEditorSelectedToolStore === EditorToolName.EntityEditor}
-            <EntityEditor />
-        {/if}
-        {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor}
-            <AreaEditor />
-        {/if}
-    </div>
+    {#if $mapEditorSelectedToolStore === EditorToolName.ConfigureMyRoom}
+        <ConfigureMyRoom />
+    {:else}
+        <div class="sidebar" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
+            {#if $mapEditorSelectedToolStore === EditorToolName.EntityEditor}
+                <EntityEditor />
+            {/if}
+            {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor}
+                <AreaEditor />
+            {/if}
+        </div>
+    {/if}
 </div>
 
 <style lang="scss">

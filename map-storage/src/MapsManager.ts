@@ -8,6 +8,7 @@ import {
     CreateAreaCommand,
     CreateEntityCommand,
     DeleteEntityCommand,
+    UpdateWAMSettingCommand,
     EntityCollection,
     EntityPrefab,
     EntityRawPrefab,
@@ -101,6 +102,15 @@ class MapsManager {
             }
             case "DeleteEntityCommand": {
                 command = new DeleteEntityCommand(gameMap, commandConfig, commandId);
+                command.execute();
+                break;
+            }
+            case "UpdateWAMSettingCommand": {
+                const wam = gameMap.getWam();
+                if (!wam) {
+                    throw new Error("WAM is not defined");
+                }
+                command = new UpdateWAMSettingCommand(wam, commandConfig, commandId);
                 command.execute();
                 break;
             }

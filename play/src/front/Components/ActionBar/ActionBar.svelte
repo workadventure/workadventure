@@ -183,7 +183,7 @@
             layoutManagerActionStore.addAction({
                 uuid: "megaphoneNeedCameraOrMicrophone",
                 type: "warning",
-                message: get(LL).warning.megaphoneNeeds(),
+                message: $LL.warning.megaphoneNeeds(),
                 callback: () => layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone"),
                 userInputManager: this.userInputManager,
             });

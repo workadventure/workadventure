@@ -6,6 +6,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaEditor: "Outil d'édition de zone",
         entityEditor: "Outil d'édition d'entités",
         tileEditor: "Outil d'édition de tuiles",
+        configureMyRoom: "Configurer la salle",
     },
     properties: {
         textProperties: {

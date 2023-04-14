@@ -5,6 +5,7 @@ const mapEditor: BaseTranslation = {
         areaEditor: "Area editor tool",
         entityEditor: "Entity editor tool",
         tileEditor: "Tile editor tool",
+        configureMyRoom: "Configure my room",
     },
     properties: {
         textProperties: {

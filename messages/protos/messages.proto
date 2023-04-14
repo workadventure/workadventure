@@ -130,7 +130,15 @@ message EditMapMessage {
     ModifyEntityMessage modifyEntityMessage = 4;
     CreateEntityMessage createEntityMessage = 5;
     DeleteEntityMessage deleteEntityMessage = 6;
+    UpdateMegaphoneSettingMessage updateMegaphoneSettingMessage = 7;
   }
+}
+
+message UpdateMegaphoneSettingMessage {
+  bool enabled = 1;
+  optional string title = 2;
+  optional string scope = 3;
+  repeated string rights = 4;
 }
 
 message EditMapCommandMessage {

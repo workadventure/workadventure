@@ -6,7 +6,7 @@
     import { Unsubscriber } from "svelte/store";
     import type { VideoPeer } from "../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
-    import { highlightedEmbedScreen, embedScreenLayoutStore } from "../../Stores/HighlightedEmbedScreenStore";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
 
@@ -15,6 +15,7 @@
     import microphoneOffImg from "../images/microphone-off-blue.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { speakerSelectedStore } from "../../Stores/MediaStore";
+    import {embedScreenLayoutStore} from "../../Stores/EmbedScreensStore";
     import BanReportBox from "./BanReportBox.svelte";
     import { srcObject } from "./utils";
 
