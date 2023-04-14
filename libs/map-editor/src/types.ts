@@ -120,6 +120,22 @@ export const WAMFileFormat = z.object({
     entities: z.array(EntityData),
     areas: z.array(AreaData),
     lastCommandId: z.string().optional(),
+    metadata: z
+        .object({
+            name: z.string().optional().describe("The name of the map."),
+            description: z
+                .string()
+                .optional()
+                .describe("A description of the map. Can be used in social networks when sharing a link to the map."),
+            copyright: z
+                .string()
+                .optional()
+                .describe(
+                    "Copyright notice for this map. Can be a link to a license. Parts of this map like tilesets or images can have their own copyright."
+                ),
+        })
+        .optional()
+        .describe("Contains metadata about the map (name, description, copyright, etc.)"),
     vendor: z
         .unknown()
         .optional()
