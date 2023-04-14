@@ -20,7 +20,9 @@
   "dependencies": {
     "@workadventure/map-editor": "1.0.0",
     "@workadventure/tiled-map-type-guard": "^2.1.0",
-    "zod": "^3.19.1"
+    "@grpc/grpc-js": "^1.8.12",
+    "zod": "^3.19.1",
+    "debug": "^4.3.4"
   },
   "devDependencies": {
     "@jest/globals": "^29.3.1",

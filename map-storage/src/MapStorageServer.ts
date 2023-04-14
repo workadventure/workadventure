@@ -4,6 +4,7 @@ import {
     EditMapCommandMessage,
     EditMapCommandsArrayMessage,
     EditMapCommandWithKeyMessage,
+    MapStorageClearAfterUploadMessage,
     MapStorageToBackMessage,
     MapStorageUrlMessage,
     PingMessage,
@@ -28,6 +29,12 @@ const mapStorageServer: MapStorageServer = {
         call.on("close", () => {
             uploadDetector.clearStream(mapKey, call);
         });
+    },
+    handleClearAfterUpload(
+        call: ServerUnaryCall<MapStorageClearAfterUploadMessage, Empty>,
+        callback: sendUnaryData<Empty>
+    ): void {
+        console.log("HANDLE CLEAR AFTER UPLOAD CALLED");
     },
     handleUpdateMapToNewestMessage(
         call: ServerUnaryCall<UpdateMapToNewestWithKeyMessage, Empty>,

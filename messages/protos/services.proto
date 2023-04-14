@@ -40,5 +40,6 @@ service MapStorage {
   rpc ping(PingMessage) returns (PingMessage);
   rpc handleEditMapCommandWithKeyMessage(EditMapCommandWithKeyMessage) returns (EditMapCommandMessage);
   rpc handleUpdateMapToNewestMessage(UpdateMapToNewestWithKeyMessage) returns (EditMapCommandsArrayMessage);
+  rpc handleClearAfterUpload(MapStorageClearAfterUploadMessage) returns (google.protobuf.Empty);
   rpc listenToMessages(MapStorageUrlMessage) returns (stream MapStorageToBackMessage);
 }
