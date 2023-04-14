@@ -96,6 +96,8 @@ const defaultInterfaceConfig = {
         "recording",
         "livestreaming",
         "etherpad",
+        "shareaudio",
+        "noisesuppression",
         "sharedvideo",
         "settings",
         "raisehand",
