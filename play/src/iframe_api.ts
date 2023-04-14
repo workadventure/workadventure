@@ -28,6 +28,22 @@ import type { Popup } from "./front/Api/Iframe/Ui/Popup";
 import type { Sound } from "./front/Api/Iframe/Sound/Sound";
 import { answerPromises, queryWorkadventure } from "./front/Api/Iframe/IframeApiContribution";
 import camera from "./front/Api/Iframe/camera";
+export type {
+    CreateUIWebsiteEvent,
+    ModifyUIWebsiteEvent,
+    UIWebsiteEvent,
+    UIWebsiteCSSValue,
+    UIWebsiteMargin,
+    UIWebsitePosition,
+    UIWebsiteSize,
+    ViewportPositionHorizontal,
+    ViewportPositionVertical,
+} from "./front/Api/Events/Ui/UIWebsiteEvent";
+export type {
+    CreateEmbeddedWebsiteEvent,
+    ModifyEmbeddedWebsiteEvent,
+    Rectangle,
+} from "./front/Api/Events/EmbeddedWebsiteEvent";
 export type { UIWebsite } from "./front/Api/Iframe/Ui/UIWebsite";
 export type { Menu } from "./front/Api/Iframe/Ui/Menu";
 export type { ActionMessage } from "./front/Api/Iframe/Ui/ActionMessage";

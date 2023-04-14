@@ -1,22 +1,22 @@
 import { writable } from "svelte/store";
-import type { UIWebsite } from "../Api/Events/Ui/UIWebsite";
+import type { UIWebsiteEvent } from "../Api/Events/Ui/UIWebsiteEvent";
 
 function createUIWebsiteStore() {
-    const { subscribe, update, set } = writable(Array<UIWebsite>());
+    const { subscribe, update, set } = writable(Array<UIWebsiteEvent>());
 
-    set(Array<UIWebsite>());
+    set(Array<UIWebsiteEvent>());
 
     return {
         subscribe,
-        add: (uiWebsite: UIWebsite) => {
+        add: (uiWebsite: UIWebsiteEvent) => {
             update((currentArray) => [...currentArray, uiWebsite]);
         },
-        update: (uiWebsite: UIWebsite) => {
+        update: (uiWebsite: UIWebsiteEvent) => {
             update((currentArray) =>
                 currentArray.map((currentWebsite) => (currentWebsite.id === uiWebsite.id ? uiWebsite : currentWebsite))
             );
         },
-        remove: (uiWebsite: UIWebsite) => {
+        remove: (uiWebsite: UIWebsiteEvent) => {
             update((currentArray) => currentArray.filter((currentWebsite) => currentWebsite.id !== uiWebsite.id));
         },
     };
