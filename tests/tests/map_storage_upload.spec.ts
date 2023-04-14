@@ -296,7 +296,7 @@ test.describe('Map-storage Upload API', () => {
 
         const deleteRoot = await request.delete(`delete?path=/`);
 
-        await expect(deleteRoot.status() === 204).toBeTruthy();
+        await expect(deleteRoot.status()).toBe(204);
 
         listOfMaps = await request.get("maps");
         await expect(await listOfMaps.text() === JSON.stringify([])).toBeTruthy();

@@ -14,7 +14,7 @@ export class DiskFileSystem implements FileSystemInterface {
     async deleteFiles(path: string): Promise<void> {
         const fullPath = this.getFullPath(path);
         if (await fs.pathExists(fullPath)) {
-            if (path === "/" || path === "") {
+            if (path === "/" || path === "" || path === "./") {
                 // Special case: if root dir, empty the directory but don't try to remove it (we might not have the right to do so)
                 await fs.emptyDir(fullPath);
             } else {
