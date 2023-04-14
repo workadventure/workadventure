@@ -280,6 +280,14 @@ jobs:
         run: npm test
         working-directory: "libs/map-editor"
 
+      - name: "Check WAM Jsonschema is in sync of Zod"
+        run: |
+          npm run export-json-schema
+          echo "Check if there is a diff between the generated json schema and the one in the repo"
+          echo "If there is a diff, you need to run 'npm run export-json-schema' and commit the changes"
+          git diff --exit-code
+        working-directory: "libs/map-editor"
+
   continuous-integration-shared-utils:
     name: "Continuous Integration shared-utils Library"
 
