@@ -4,6 +4,10 @@ var urlGettingStarted = "https://workadventu.re/getting-started";
 var urlRelativeMap = "script_api.json";
 var isCoWebSiteOpened = false;
 
-WA.room.onEnterLayer("trigger").subscribe(() => {
+WA.room.onEnterLayer("triggerArea").subscribe(() => {
     WA.nav.goToRoom("#teleportTo")
+});
+
+WA.room.onEnterLayer("triggerLayer").subscribe(() => {
+    WA.nav.goToRoom("#teleportToLayer")
 });
