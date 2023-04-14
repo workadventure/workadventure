@@ -266,7 +266,7 @@ test.describe('Map-storage Upload API', () => {
         await expect(uploadFileToDir.ok()).toBeTruthy();
 
         let listOfMaps = await request.get("maps");
-        await expect(await listOfMaps.text() === JSON.stringify(["foo/map.tmj", "map.tmj"])).toBeTruthy();
+        await expect(await listOfMaps.text() === JSON.stringify(["foo/map.wam", "map.wam"])).toBeTruthy();
 
         const uploadFileAlone = await request.post("upload", {
             multipart: {
@@ -277,7 +277,7 @@ test.describe('Map-storage Upload API', () => {
 
         await expect(uploadFileAlone.ok()).toBeTruthy();
         listOfMaps = await request.get("maps");
-        await expect(await listOfMaps.text() === JSON.stringify(["map.tmj"])).toBeTruthy();
+        await expect(await listOfMaps.text() === JSON.stringify(["map.wam"])).toBeTruthy();
     });
 
     test("delete the root folder", async ({
@@ -292,11 +292,11 @@ test.describe('Map-storage Upload API', () => {
         await expect(uploadFileToDir.ok()).toBeTruthy();
 
         let listOfMaps = await request.get("maps");
-        await expect(await listOfMaps.text() === JSON.stringify(["map.tmj"])).toBeTruthy();
+        await expect(await listOfMaps.text() === JSON.stringify(["map.wam"])).toBeTruthy();
 
         const deleteRoot = await request.delete(`delete?path=/`);
 
-        await expect(deleteRoot.status() === 204).toBeTruthy();
+        await expect(deleteRoot.status()).toBe(204);
 
         listOfMaps = await request.get("maps");
         await expect(await listOfMaps.text() === JSON.stringify([])).toBeTruthy();
@@ -314,7 +314,7 @@ test.describe('Map-storage Upload API', () => {
         await expect(uploadFileToDir.ok()).toBeTruthy();
 
         let listOfMaps = await request.get("maps");
-        await expect(await listOfMaps.text() === JSON.stringify(["toDelete/map.tmj"])).toBeTruthy();
+        await expect(await listOfMaps.text() === JSON.stringify(["toDelete/map.wam"])).toBeTruthy();
 
         const deleteRoot = await request.delete(`delete?path=/toDelete`);
 
@@ -336,7 +336,7 @@ test.describe('Map-storage Upload API', () => {
         await expect(uploadFileToDir.ok()).toBeTruthy();
 
         let listOfMaps = await request.get("maps");
-        await expect(JSON.parse(await listOfMaps.text()).includes("toMove/map.tmj")).toBeTruthy();
+        await expect(JSON.parse(await listOfMaps.text()).includes("toMove/map.wam")).toBeTruthy();
 
         const moveDir = await request.post(`move`, {
             data: {
@@ -348,8 +348,8 @@ test.describe('Map-storage Upload API', () => {
         await expect(moveDir.ok()).toBeTruthy();
 
         listOfMaps = await request.get("maps");
-        await expect(JSON.parse(await listOfMaps.text()).includes("moved/map.tmj")).toBeTruthy();
-        await expect(JSON.parse(await listOfMaps.text()).includes("toMove/map.tmj")).toBeFalsy();
+        await expect(JSON.parse(await listOfMaps.text()).includes("moved/map.wam")).toBeTruthy();
+        await expect(JSON.parse(await listOfMaps.text()).includes("toMove/map.wam")).toBeFalsy();
     });
 
     test("copy a folder", async ({
@@ -364,7 +364,7 @@ test.describe('Map-storage Upload API', () => {
         await expect(uploadFileToDir.ok()).toBeTruthy();
 
         let listOfMaps = await request.get("maps");
-        await expect(JSON.parse(await listOfMaps.text()).includes("toCopy/map.tmj")).toBeTruthy();
+        await expect(JSON.parse(await listOfMaps.text()).includes("toCopy/map.wam")).toBeTruthy();
 
         const copyDir = await request.post(`copy`, {
             data: {
@@ -377,7 +377,7 @@ test.describe('Map-storage Upload API', () => {
 
         listOfMaps = await request.get("maps");
         const maps = JSON.parse(await listOfMaps.text());
-        await expect(["toCopy/map.tmj", "copied/map.tmj"].every((value) => maps.includes(value))).toBeTruthy();
+        await expect(["toCopy/map.wam", "copied/map.wam"].every((value) => maps.includes(value))).toBeTruthy();
     });
 
     test('fails on invalid maps', async ({
@@ -402,6 +402,58 @@ test.describe('Map-storage Upload API', () => {
         });
         await expect(uploadFile1.ok()).toBeFalsy();
         await expect((await uploadFile1.json())['map.json']['map'][0]['message']).toBe('Invalid file extension. Maps should end with the ".tmj" extension.');
+    });
+
+    test('upload / patch / delete single file', async ({
+                                               request,
+                                           }) => {
+        const uploadFile1 = await request.put("single-map.wam", {
+            multipart: {
+                file: {
+                    name: "single-map.wam",
+                    mimeType: "application/json",
+                    buffer: Buffer.from(JSON.stringify({
+                        version: "1.0.0",
+                        mapUrl: "https://example.com/map.tmj",
+                        areas: [],
+                        entities: [],
+                    })),
+                }
+            }
+        });
+        await expect(uploadFile1.ok()).toBeTruthy();
+
+        // Now, let's try to fetch the file.
+        const accessFile1 = await request.get(`single-map.wam`);
+        await expect(accessFile1.ok()).toBeTruthy();
+        await expect(await accessFile1.text()).toContain("https://example.com/map.tmj");
+
+        const listOfMaps = await request.get("maps");
+        const maps : string[] = JSON.parse(await listOfMaps.text());
+        await expect(maps.includes("single-map.wam")).toBeTruthy();
+
+        const patch = await request.patch(`single-map.wam`, {
+            headers: {
+                "Content-Type": "application/json-patch+json",
+            },
+            data: JSON.stringify([
+                { "op": "replace", "path": "/mapUrl", "value": "https://example.com/newmap.tmj" },
+            ])
+        });
+        await expect(patch.ok()).toBeTruthy();
+
+        const accessFile2 = await request.get(`single-map.wam`);
+        await expect(accessFile2.ok()).toBeTruthy();
+        await expect(await accessFile2.text()).toContain("https://example.com/newmap.tmj");
+
+
+        const deleteFile = await request.delete(`single-map.wam`);
+        await expect(deleteFile.ok()).toBeTruthy();
+
+        const listOfMaps2 = await request.get("maps");
+        const maps2 : string[] = JSON.parse(await listOfMaps2.text());
+        await expect(maps2.includes("single-map.wam")).toBeFalsy();
+
     });
 
     test('special characters support', async ({

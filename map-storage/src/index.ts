@@ -30,7 +30,11 @@ server.bindAsync(`0.0.0.0:50053`, grpc.ServerCredentials.createInsecure(), (err,
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json());
+app.use(
+    bodyParser.json({
+        type: ["application/json", "application/json-patch+json"],
+    })
+);
 
 passport.use(passportStrategy);
 app.use(passport.initialize());
