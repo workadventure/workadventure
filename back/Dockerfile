@@ -7,6 +7,17 @@ COPY messages .
 COPY libs ./../libs
 RUN npm run tag-version && npm run ts-proto
 
+# Sentry push source maps
+RUN --mount=type=secret,id=SENTRY_RELEASE \
+    --mount=type=secret,id=SENTRY_AUTH_TOKEN \
+    --mount=type=secret,id=SENTRY_ORG \
+    --mount=type=secret,id=SENTRY_PROJECT \
+    export SENTRY_RELEASE=$(cat /run/secrets/SENTRY_RELEASE) && \
+    export SENTRY_AUTH_TOKEN=$(cat /run/secrets/SENTRY_AUTH_TOKEN) && \
+    export SENTRY_ORG=$(cat /run/secrets/SENTRY_ORG) && \
+    export SENTRY_PROJECT=$(cat /run/secrets/SENTRY_PROJECT) && \
+    npm run push-sentry-sourcemaps
+
 # final production image
 FROM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d
 EXPOSE 8080 50051

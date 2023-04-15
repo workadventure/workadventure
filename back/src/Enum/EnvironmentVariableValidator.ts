@@ -61,6 +61,11 @@ Note that anonymous players don't have any TTL limit because their data is store
             'This email address will be notified if your WorkAdventure version contains a known security flaw. ENABLE_TELEMETRY must be set to "true" for this.'
         ),
     TELEMETRY_URL: z.string().optional().default("https://stats.workadventu.re"),
+    SENTRY_DNS: z.string().optional().describe("If set, WorkAdventure will send errors to Sentry"),
+    SENTRY_RELEASE: z
+        .string()
+        .optional()
+        .describe("If set, WorkAdventure will send errors to Sentry with the good relase version"),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

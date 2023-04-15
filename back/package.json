@@ -15,7 +15,8 @@
     "fix": "DEBUG= eslint --fix src/ . --ext .ts",
     "precommit": "lint-staged",
     "pretty": "prettier --write 'src/**/*.{ts,tsx}'",
-    "pretty-check": "prettier --check 'src/**/*.{ts,tsx}'"
+    "pretty-check": "prettier --check 'src/**/*.{ts,tsx}'",
+    "push-sentry-sourcemaps": "tsc && sentry-cli releases -o $SENTRY_ORG -p $SENTRY_PROJECT new $SENTRY_RELEASE && sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps dist --rewrite --url-prefix '~/workadventure/dist' && sentry-cli releases finalize $SENTRY_RELEASE"
   },
   "repository": {
     "type": "git",
@@ -43,6 +44,7 @@
   "dependencies": {
     "@anatine/zod-openapi": "^1.3.0",
     "@grpc/grpc-js": "^1.7.1",
+    "@sentry/node": "^7.48.0",
     "@workadventure/messages": "1.0.0",
     "@workadventure/shared-utils": "1.0.0",
     "@workadventure/tiled-map-type-guard": "^2.1.0",
@@ -66,6 +68,7 @@
     "zod": "^3.19.1"
   },
   "devDependencies": {
+    "@sentry/cli": "^2.17.2",
     "@types/bigbluebutton-js": "^0.2.1",
     "@types/busboy": "^0.2.3",
     "@types/circular-json": "^0.4.0",

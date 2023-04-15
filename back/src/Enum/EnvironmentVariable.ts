@@ -60,3 +60,6 @@ export const ENABLE_CHAT_UPLOAD = env.ENABLE_CHAT_UPLOAD;
 export const ENABLE_TELEMETRY = env.ENABLE_TELEMETRY;
 export const SECURITY_EMAIL = env.SECURITY_EMAIL;
 export const TELEMETRY_URL = env.TELEMETRY_URL;
+
+export const SENTRY_DNS = env.SENTRY_DNS;
+export const SENTRY_RELEASE = env.SENTRY_RELEASE;

@@ -215,6 +215,9 @@ services:
             EJABBERD_PASSWORD: $EJABBERD_PASSWORD
             ENABLE_CHAT: "$ENABLE_CHAT"
             ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
+            # Sentry integration
+            SENTRY_DNS: $SENTRY_DNS
+            SENTRY_RELEASE: $SENTRY_RELEASE
         volumes:
             - .:/usr/src/app
         ports:
