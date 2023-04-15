@@ -11,6 +11,7 @@ services:
             - --providers.docker
             - --entryPoints.web.address=:80
             - --providers.docker.exposedbydefault=false
+            #- --log.level=DEBUG
         labels:
             - "traefik.enable=true"
             - "traefik.port=8080"
@@ -26,6 +27,7 @@ services:
                 aliases:
                     - 'front.workadventure.localhost'
                     - 'play.workadventure.localhost'
+                    - 'room-api.workadventure.localhost'
                     - 'maps.workadventure.localhost'
                     - 'oidc.workadventure.localhost'
                     - 'map-storage.workadventure.localhost'
@@ -39,6 +41,7 @@ services:
             - .:/usr/src/app
         ports:
             - "9231:9229"
+            - "9235:9235"
         environment:
             # On startup, we ask the messages container to regenerate the files.
             # Note: we need to use this "messages" container because of ARM64 processors that are not supported with protoc (used in "messages" container)
@@ -105,11 +108,20 @@ services:
             # Sentry integration
             SENTRY_DNS: $SENTRY_DNS
             SENTRY_RELEASE: $SENTRY_RELEASE
+            # Room API
+            ROOM_API_PORT: "50051"
+            ROOM_API_SECRET_KEY: ${ROOM_API_SECRET_KEY}
+            #GRPC_VERBOSITY: DEBUG
+            #GRPC_TRACE: all
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"
             - "traefik.http.routers.front.service=front"
             - "traefik.http.services.front.loadbalancer.server.port=8080"
+            - "traefik.http.routers.room-api.rule=Host(`room-api.workadventure.localhost`)"
+            - "traefik.http.routers.room-api.service=room-api"
+            - "traefik.http.services.room-api.loadbalancer.server.port=50051"
+            - "traefik.http.services.room-api.loadbalancer.server.scheme=h2c"
             - "traefik.http.routers.play.rule=HostRegexp(`{domain:.*}`)"
             - "traefik.http.routers.play.priority=1"
             - "traefik.http.routers.play.service=play"
@@ -219,7 +231,7 @@ services:
         #command: npm run profile
         working_dir: /usr/src/app/map-storage
         environment:
-            DEBUG: "*"
+            #DEBUG: "*"
             STARTUP_COMMAND_1: ../npm-install.sh
             NODE_ENV: development
             PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"

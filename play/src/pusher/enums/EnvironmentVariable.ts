@@ -79,6 +79,9 @@ export const LOGROCKET_ID: string | undefined = env.LOGROCKET_ID;
 // Sentry integration
 export const SENTRY_DNS: string | undefined = env.SENTRY_DNS;
 export const SENTRY_RELEASE: string | undefined = env.SENTRY_RELEASE;
+// RoomAPI
+export const ROOM_API_PORT = env.ROOM_API_PORT;
+export const ROOM_API_SECRET_KEY = env.ROOM_API_SECRET_KEY;
 
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {

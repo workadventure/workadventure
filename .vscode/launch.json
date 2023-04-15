@@ -13,6 +13,17 @@
             "skipFiles": ["<node_internals>/**"]
         },
         {
+            "name": "Debug: Play (RoomAPI)",
+            "type": "node",
+            "request": "attach",
+            "remoteRoot": "/usr/src/app",
+            "localRoot": "${workspaceFolder}",
+            "port": 9235,
+            "restart": true,
+            "address": "0.0.0.0",
+            "skipFiles": ["<node_internals>/**"]
+        },
+        {
             "name": "Debug: Back",
             "type": "node",
             "request": "attach",

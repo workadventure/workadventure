@@ -72,6 +72,10 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 mapEditorModeStore.switchMode(!get(mapEditorModeStore));
                 break;
             }
+            case "KeyR": {
+                this.gameScene.CurrentPlayer.rotate();
+                break;
+            }
             default: {
                 break;
             }

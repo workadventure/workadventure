@@ -1,26 +1,24 @@
 import { sendUnaryData, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
-import * as _ from "lodash";
 import { AreaData, EntityDataProperties } from "@workadventure/map-editor";
-import { mapsManager } from "./MapsManager";
 import {
     EditMapCommandMessage,
     EditMapCommandsArrayMessage,
     EditMapCommandWithKeyMessage,
-    EmptyMessage,
     MapStorageToBackMessage,
     MapStorageUrlMessage,
     PingMessage,
     UpdateMapToNewestWithKeyMessage,
 } from "@workadventure/messages";
-
 import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
+import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
+import { mapsManager } from "./MapsManager";
 import { mapPathUsingDomain } from "./Services/PathMapper";
 import { uploadDetector } from "./Services/UploadDetector";
 
 export type MapStorageStream = ServerWritableStream<MapStorageUrlMessage, MapStorageToBackMessage>;
 
 const mapStorageServer: MapStorageServer = {
-    ping(call: ServerUnaryCall<PingMessage, EmptyMessage>, callback: sendUnaryData<PingMessage>): void {
+    ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
         callback(null, call.request);
     },
     listenToMessages(call: MapStorageStream): void {
@@ -32,7 +30,7 @@ const mapStorageServer: MapStorageServer = {
         });
     },
     handleUpdateMapToNewestMessage(
-        call: ServerUnaryCall<UpdateMapToNewestWithKeyMessage, EmptyMessage>,
+        call: ServerUnaryCall<UpdateMapToNewestWithKeyMessage, Empty>,
         callback: sendUnaryData<EditMapCommandsArrayMessage>
     ): void {
         const mapUrl = new URL(call.request.mapKey);
@@ -55,7 +53,7 @@ const mapStorageServer: MapStorageServer = {
     },
 
     handleEditMapCommandWithKeyMessage(
-        call: ServerUnaryCall<EditMapCommandWithKeyMessage, EmptyMessage>,
+        call: ServerUnaryCall<EditMapCommandWithKeyMessage, Empty>,
         callback: sendUnaryData<EditMapCommandMessage>
     ): void {
         const editMapCommandMessage = call.request.editMapCommandMessage;
@@ -83,13 +81,11 @@ const mapStorageServer: MapStorageServer = {
                     const message = editMapMessage.modifyAreaMessage;
                     const area = gameMap.getGameMapAreas()?.getArea(message.id);
                     if (area) {
-                        const areaObjectConfig: AreaData = structuredClone(area);
-                        _.merge(areaObjectConfig, message);
                         mapsManager.executeCommand(
                             mapKey,
                             {
                                 type: "UpdateAreaCommand",
-                                areaObjectConfig,
+                                dataToModify: message,
                             },
                             commandId
                         );

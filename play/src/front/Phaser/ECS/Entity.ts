@@ -11,7 +11,7 @@ import * as _ from "lodash";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
-import { mapEditorModeStore, MapEntityEditorMode, mapEntityEditorModeStore } from "../../Stores/MapEditorStore";
+import { mapEditorModeStore, mapEditorEntityModeStore } from "../../Stores/MapEditorStore";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import { ActivatableInterface } from "../Game/ActivatableInterface";
 import { GameScene } from "../Game/GameScene";
@@ -19,7 +19,7 @@ import { OutlineableInterface } from "../Game/OutlineableInterface";
 
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
-    Remove = "EntityEvent:Removed",
+    Delete = "EntityEvent:Delete",
     PropertiesUpdated = "EntityEvent:PropertiesUpdated",
     PropertyActivated = "EntityEvent:PropertyActivated",
 }
@@ -89,7 +89,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         }
     }
 
-    public destroy(fromScene?: boolean | undefined): void {
+    public destroy(): void {
         this.outlineColorStoreUnsubscribe();
         super.destroy();
     }
@@ -99,7 +99,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public activate(): void {
-        if (!(get(mapEditorModeStore) && get(mapEntityEditorModeStore) == MapEntityEditorMode.EditMode)) {
+        if (!(get(mapEditorModeStore) && get(mapEditorEntityModeStore) === "EDIT")) {
             this.toggleActionsMenu();
         }
     }
@@ -169,7 +169,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public delete() {
-        this.emit(EntityEvent.Remove);
+        this.emit(EntityEvent.Delete);
     }
 
     private getOutlinePlugin(): OutlinePipelinePlugin | undefined {

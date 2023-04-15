@@ -14,28 +14,30 @@
 </script>
 
 <div class="value-input">
-    <label for="audioLink">{$LL.mapEditor.entityEditor.audioProperties.audioLinkLabel()}</label>
+    <label for="audioLink">{$LL.mapEditor.properties.audioProperties.audioLinkLabel()}</label>
     <input
         id="audioLink"
         type="text"
-        placeholder={$LL.mapEditor.entityEditor.audioProperties.audioLinkPlaceholder()}
+        placeholder={$LL.mapEditor.properties.audioProperties.audioLinkPlaceholder()}
         bind:value={property.audioLink}
         on:change={onValueChange}
         on:focus={onMapEditorInputFocus}
         on:blur={onMapEditorInputUnfocus}
     />
 </div>
-<div class="value-input">
-    <label for="audioButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
-    <input
-        id="audioButtonLabel"
-        type="text"
-        bind:value={property.buttonLabel}
-        on:change={onValueChange}
-        on:focus={onMapEditorInputFocus}
-        on:blur={onMapEditorInputUnfocus}
-    />
-</div>
+{#if !property.hideButtonLabel}
+    <div class="value-input">
+        <label for="audioButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
+        <input
+            id="audioButtonLabel"
+            type="text"
+            bind:value={property.buttonLabel}
+            on:change={onValueChange}
+            on:focus={onMapEditorInputFocus}
+            on:blur={onMapEditorInputUnfocus}
+        />
+    </div>
+{/if}
 
 <style lang="scss">
     .value-input {

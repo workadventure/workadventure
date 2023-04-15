@@ -2,27 +2,19 @@ import type { BaseTranslation } from "../i18n-types";
 
 const mapEditor: BaseTranslation = {
     sideBar: {
-        zoomIn: "Zoom in",
-        zoomOut: "Zoom out",
         areaEditor: "Area editor tool",
         entityEditor: "Entity editor tool",
         tileEditor: "Tile editor tool",
     },
-    entityEditor: {
-        itemPicker: {
-            searchPlaceholder: "Search for name or tags",
-            selectVariationInstructions: "Select a variant",
-        },
-        addButton: "Add",
-        editButton: "Edit",
-        deleteButton: "Delete",
-        testInteractionButton: "Test Interaction",
-        buttonLabel: "Button Label",
-        editInstructions: "Click an object to modify its properties.",
-        removeInstructions: "Click an object to delete it.",
+    properties: {
         textProperties: {
             label: "Header Text",
             placeholder: "Input here text which will be displayed when interacting with the object",
+        },
+        focusableProperties: {
+            label: "Focusable",
+            zoomMarginLabel: "Zoom Margin",
+            defaultButtonLabel: "Focus on",
         },
         jitsiProperties: {
             label: "Jitsi Room",
@@ -49,9 +41,22 @@ const mapEditor: BaseTranslation = {
             label: "Open Link",
             linkLabel: "Link URL",
             newTabLabel: "Open in new tab",
-            linkPlaceholder: "https://play.staging.workadventu.re/",
+            linkPlaceholder: "https://example.com",
             defaultButtonLabel: "Open Link",
         },
+    },
+    areaEditor: {
+        nameLabel: "Name",
+    },
+    entityEditor: {
+        itemPicker: {
+            searchPlaceholder: "Search for name or tags",
+            selectVariationInstructions: "Select a variant",
+        },
+        deleteButton: "Delete",
+        testInteractionButton: "Test Interaction",
+        buttonLabel: "Button Label",
+        editInstructions: "Click an entity to modify its properties.",
     },
 };
 

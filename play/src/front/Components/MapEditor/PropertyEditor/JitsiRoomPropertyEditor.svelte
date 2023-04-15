@@ -22,32 +22,34 @@
 </script>
 
 <div class="value-input">
-    <label for="roomName">{$LL.mapEditor.entityEditor.jitsiProperties.roomNameLabel()}</label>
+    <label for="roomName">{$LL.mapEditor.properties.jitsiProperties.roomNameLabel()}</label>
     <input
         id="roomName"
         type="text"
-        placeholder={$LL.mapEditor.entityEditor.jitsiProperties.roomNamePlaceholder()}
+        placeholder={$LL.mapEditor.properties.jitsiProperties.roomNamePlaceholder()}
         bind:value={property.roomName}
         on:change={onValueChange}
         on:focus={onMapEditorInputFocus}
         on:blur={onMapEditorInputUnfocus}
     />
 </div>
-<div class="value-input">
-    <label for="jitsiButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
-    <input
-        id="jitsiButtonLabel"
-        type="text"
-        bind:value={property.buttonLabel}
-        on:change={onValueChange}
-        on:focus={onMapEditorInputFocus}
-        on:blur={onMapEditorInputUnfocus}
-    />
-</div>
+{#if !property.hideButtonLabel}
+    <div class="value-input">
+        <label for="jitsiButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
+        <input
+            id="jitsiButtonLabel"
+            type="text"
+            bind:value={property.buttonLabel}
+            on:change={onValueChange}
+            on:focus={onMapEditorInputFocus}
+            on:blur={onMapEditorInputUnfocus}
+        />
+    </div>
+{/if}
 <button
     on:click={() => {
         jitsiConfigModalOpened = true;
-    }}>{$LL.mapEditor.entityEditor.jitsiProperties.moreOptionsLabel()}</button
+    }}>{$LL.mapEditor.properties.jitsiProperties.moreOptionsLabel()}</button
 >
 {#if jitsiConfigModalOpened}
     <JitsiRoomConfigEditor

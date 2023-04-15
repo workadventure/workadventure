@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { fade, fly } from "svelte/transition";
+    import { fly } from "svelte/transition";
     import { ArrowLeftIcon, RefreshCwIcon, SmileIcon, SendIcon } from "svelte-feather-icons";
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import { Unsubscriber } from "svelte/store";
@@ -18,6 +18,7 @@
     import { mucRoomsStore } from "../../Stores/MucRoomsStore";
     import { HtmlUtils } from "../../Utils/HtmlUtils";
     import { defaultWoka } from "../../Xmpp/AbstractRoom";
+    import UserWriting from "./UserWriting.svelte";
 
     const dispatch = createEventDispatcher();
     const defaultMucRoom = mucRoomsStore.getDefaultRoom();
@@ -363,62 +364,8 @@
         {/each}
 
         {#if defaultMucRoom}
-            {#each [...$writingStatusMessageStore] as userUuid}
-                <div class={`tw-mt-2`}>
-                    <div class={`tw-flex tw-justify-start`}>
-                        <div
-                            class={`tw-mt-4 tw-relative wa-avatar-mini tw-mr-2 tw-z-10`}
-                            style={`background-color: ${defaultMucRoom?.getUserByJid(userUuid).color}`}
-                            in:fade={{ duration: 100 }}
-                            out:fade={{ delay: 200, duration: 100 }}
-                        >
-                            <div class="wa-container">
-                                <img class="tw-w-full" src={defaultMucRoom.getUserByJid(userUuid).woka} alt="Avatar" />
-                            </div>
-                        </div>
-                        <div
-                            class={`tw-w-3/4`}
-                            in:fly={{ x: -10, delay: 100, duration: 200 }}
-                            out:fly={{ x: -10, duration: 200 }}
-                        >
-                            <div class="tw-w-fit">
-                                <div
-                                    style={`border-bottom-color:${defaultMucRoom.getUserByJid(userUuid).color}`}
-                                    class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-pb-1`}
-                                >
-                                    <span class="tw-text-lighter-purple tw-text-xxs">
-                                        {defaultMucRoom.getUserByJid(userUuid).name.match(/\[\d*]/)
-                                            ? defaultMucRoom
-                                                  .getUserByJid(userUuid)
-                                                  .name.substring(
-                                                      0,
-                                                      defaultMucRoom.getUserByJid(userUuid).name.search(/\[\d*]/)
-                                                  )
-                                            : defaultMucRoom.getUserByJid(userUuid).name}
-                                        {#if defaultMucRoom.getUserByJid(userUuid).name.match(/\[\d*]/)}
-                                            <span class="tw-font-light tw-text-xs tw-text-gray">
-                                                #{defaultMucRoom
-                                                    .getUserByJid(userUuid)
-                                                    .name.match(/\[\d*]/)
-                                                    ?.join()
-                                                    ?.replace("[", "")
-                                                    ?.replace("]", "")}
-                                            </span>
-                                        {/if}</span
-                                    >
-                                </div>
-                                <div class="tw-rounded-lg tw-bg-dark tw-text-xs tw-p-3">
-                                    <!-- loading animation -->
-                                    <div class="loading-group">
-                                        <span class="loading-dot" />
-                                        <span class="loading-dot" />
-                                        <span class="loading-dot" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            {#each [...$writingStatusMessageStore] as userJid}
+                <UserWriting {defaultMucRoom} {userJid} />
             {/each}
         {/if}
     </div>

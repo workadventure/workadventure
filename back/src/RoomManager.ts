@@ -7,7 +7,6 @@ import {
     BanMessage,
     BatchToPusherMessage,
     BatchToPusherRoomMessage,
-    EmptyMessage,
     PusherToBackMessage,
     RefreshRoomPromptMessage,
     RoomMessage,
@@ -18,6 +17,7 @@ import {
     PingMessage,
     ChatMessagePrompt,
     ServerToClientMessage,
+    VariableRequest,
 } from "@workadventure/messages";
 import { RoomManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import {
@@ -28,6 +28,8 @@ import {
     ServerWritableStream,
 } from "@grpc/grpc-js";
 import Debug from "debug";
+import { Value } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/struct";
+import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import { socketManager } from "./Services/SocketManager";
 import {
     emitError,
@@ -44,13 +46,14 @@ const debug = Debug("roommanager");
 export type AdminSocket = ServerDuplexStream<AdminPusherToBackMessage, ServerToAdminClientMessage>;
 export type ZoneSocket = ServerWritableStream<ZoneMessage, BatchToPusherMessage>;
 export type RoomSocket = ServerWritableStream<RoomMessage, BatchToPusherRoomMessage>;
+export type VariableSocket = ServerWritableStream<VariableRequest, unknown>;
 
 // Maximum time to wait for a pong answer to a ping before closing connection.
 // Note: PONG_TIMEOUT must be less than PING_INTERVAL
 const PONG_TIMEOUT = 70000; // PONG_TIMEOUT is > 1 minute because of Chrome heavy throttling. See: https://docs.google.com/document/d/11FhKHRcABGS4SWPFGwoL6g0ALMqrFKapCk5ZTKKupEk/edit#
 const PING_INTERVAL = 80000;
 
-const roomManager: RoomManagerServer = {
+const roomManager = {
     joinRoom: (call: UserSocket): void => {
         console.log("joinRoom called");
 
@@ -218,6 +221,10 @@ const roomManager: RoomManagerServer = {
             if (pingIntervalId) {
                 clearInterval(pingIntervalId);
             }
+            if (pongTimeoutId) {
+                clearTimeout(pongTimeoutId);
+                pongTimeoutId = undefined;
+            }
             call.end();
             room = null;
             user = null;
@@ -372,7 +379,7 @@ const roomManager: RoomManagerServer = {
             console.error("An error occurred in joinAdminRoom stream:", err);
         });
     },
-    sendAdminMessage(call: ServerUnaryCall<AdminMessage, EmptyMessage>, callback: sendUnaryData<EmptyMessage>): void {
+    sendAdminMessage(call: ServerUnaryCall<AdminMessage, Empty>, callback: sendUnaryData<Empty>): void {
         const adminMessage = call.request;
         socketManager
             .sendAdminMessage(adminMessage.roomId, adminMessage.recipientUuid, adminMessage.message, adminMessage.type)
@@ -380,15 +387,12 @@ const roomManager: RoomManagerServer = {
 
         callback(null, {});
     },
-    sendGlobalAdminMessage(
-        call: ServerUnaryCall<AdminGlobalMessage, EmptyMessage>,
-        callback: sendUnaryData<EmptyMessage>
-    ): void {
+    sendGlobalAdminMessage(call: ServerUnaryCall<AdminGlobalMessage, Empty>, callback: sendUnaryData<Empty>): void {
         throw new Error("Not implemented yet");
         // TODO
         callback(null, {});
     },
-    ban(call: ServerUnaryCall<BanMessage, EmptyMessage>, callback: sendUnaryData<EmptyMessage>): void {
+    ban(call: ServerUnaryCall<BanMessage, Empty>, callback: sendUnaryData<Empty>): void {
         // FIXME Work in progress
         socketManager
             .banUser(call.request.roomId, call.request.recipientUuid, call.request.message)
@@ -396,10 +400,7 @@ const roomManager: RoomManagerServer = {
 
         callback(null, {});
     },
-    sendAdminMessageToRoom(
-        call: ServerUnaryCall<AdminRoomMessage, EmptyMessage>,
-        callback: sendUnaryData<EmptyMessage>
-    ): void {
+    sendAdminMessageToRoom(call: ServerUnaryCall<AdminRoomMessage, Empty>, callback: sendUnaryData<Empty>): void {
         // FIXME: we could improve return message by returning a Success|ErrorMessage message
         socketManager
             .sendAdminRoomMessage(call.request.roomId, call.request.message, call.request.type)
@@ -407,31 +408,28 @@ const roomManager: RoomManagerServer = {
         callback(null, {});
     },
     sendWorldFullWarningToRoom(
-        call: ServerUnaryCall<WorldFullWarningToRoomMessage, EmptyMessage>,
-        callback: sendUnaryData<EmptyMessage>
+        call: ServerUnaryCall<WorldFullWarningToRoomMessage, Empty>,
+        callback: sendUnaryData<Empty>
     ): void {
         // FIXME: we could improve return message by returning a Success|ErrorMessage message
         socketManager.dispatchWorldFullWarning(call.request.roomId).catch((e) => console.error(e));
         callback(null, {});
     },
     sendRefreshRoomPrompt(
-        call: ServerUnaryCall<RefreshRoomPromptMessage, EmptyMessage>,
-        callback: sendUnaryData<EmptyMessage>
+        call: ServerUnaryCall<RefreshRoomPromptMessage, Empty>,
+        callback: sendUnaryData<Empty>
     ): void {
         // FIXME: we could improve return message by returning a Success|ErrorMessage message
         socketManager.dispatchRoomRefresh(call.request.roomId).catch((e) => console.error(e));
         callback(null, {});
     },
-    getRooms(call: ServerUnaryCall<EmptyMessage, EmptyMessage>, callback: sendUnaryData<RoomsList>): void {
+    getRooms(call: ServerUnaryCall<Empty, Empty>, callback: sendUnaryData<RoomsList>): void {
         callback(null, socketManager.getAllRooms());
     },
-    ping(call: ServerUnaryCall<PingMessage, EmptyMessage>, callback: sendUnaryData<PingMessage>): void {
+    ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
         callback(null, call.request);
     },
-    sendChatMessagePrompt(
-        call: ServerUnaryCall<ChatMessagePrompt, EmptyMessage>,
-        callback: sendUnaryData<EmptyMessage>
-    ): void {
+    sendChatMessagePrompt(call: ServerUnaryCall<ChatMessagePrompt, Empty>, callback: sendUnaryData<Empty>): void {
         socketManager
             .dispatchChatMessagePrompt(call.request)
             .then(() => {
@@ -442,6 +440,43 @@ const roomManager: RoomManagerServer = {
                 callback(err as ServerErrorResponse, {});
             });
     },
-};
+    readVariable(call, callback) {
+        socketManager
+            .readVariable(call.request.room, call.request.name)
+            .then((value) => {
+                callback(null, Value.wrap(value === undefined ? undefined : JSON.parse(value)));
+            })
+            .catch((error) => {
+                throw error;
+            });
+    },
+    listenVariable(call) {
+        socketManager.addVariableListener(call).catch((e) => {
+            call.end();
+        });
+
+        call.on("cancelled", () => {
+            socketManager.removeVariableListener(call).catch((e) => console.error(e));
+            call.end();
+        });
+
+        call.on("close", () => {
+            socketManager.removeVariableListener(call).catch((e) => console.error(e));
+        }).on("error", (e) => {
+            socketManager.removeVariableListener(call).catch((e) => console.error(e));
+            call.end(e);
+        });
+    },
+    saveVariable(call, callback) {
+        socketManager
+            .saveVariable(call.request.room, call.request.name, JSON.stringify(call.request.value))
+            .then(() => {
+                callback(null);
+            })
+            .catch((error) => {
+                throw error;
+            });
+    },
+} satisfies RoomManagerServer;
 
 export { roomManager };

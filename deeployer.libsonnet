@@ -8,11 +8,122 @@
   "$schema": "https://raw.githubusercontent.com/thecodingmachine/deeployer/master/deeployer.schema.json",
   "version": "1.0",
   "containers": {
-    "back1": {
-      "image": "thecodingmachine/workadventure-back:"+tag,
-      "host": {
-        "url": "api1-"+url,
-        "containerPort": 8080
+     "back1": {
+       "image": "thecodingmachine/workadventure-back:"+tag,
+       "host": {
+         "url": "api1-"+url,
+         "containerPort": 8080
+       },
+       "ports": [8080, 50051],
+       "env": {
+         "PLAY_URL": "https://play-"+url,
+         "SECRET_KEY": "tempSecretKeyNeedsToChange",
+         "JITSI_ISS": env.JITSI_ISS,
+         "JITSI_URL": env.JITSI_URL,
+         "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
+         "TURN_STATIC_AUTH_SECRET": env.TURN_STATIC_AUTH_SECRET,
+         "REDIS_HOST": "redis",
+         "REDIS_PORT": "6379",
+         "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
+         "BBB_URL": "https://test-install.blindsidenetworks.com/bigbluebutton/",
+         "MAP_STORAGE_URL": "map-storage:50053",
+         "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
+         "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
+         "EJABBERD_USER": "admin",
+         "EJABBERD_PASSWORD": "apideo",
+         "ENABLE_FEATURE_MAP_EDITOR":"true",
+         "ENABLE_MAP_EDITOR_AREAS_TOOL":"true",
+       } + (if adminUrl != null then {
+         "ADMIN_API_URL": adminUrl,
+         "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
+         "EJABBERD_API_URI": "http://xmpp-"+std.strReplace(adminUrl, "https://", "")+"/api/",
+         "TELEMETRY_URL": adminUrl,
+       } else {
+         "EJABBERD_API_URI": "http://ejabberd:5443/api/",
+         "TELEMETRY_URL": "https://staging.workadventu.re",
+       })
+     },
+     "back2": {
+            "image": "thecodingmachine/workadventure-back:"+tag,
+            "host": {
+              "url": "api2-"+url,
+              "containerPort": 8080
+            },
+            "ports": [8080, 50051],
+            "env": {
+              "PLAY_URL": "https://play-"+url,
+              "SECRET_KEY": "tempSecretKeyNeedsToChange",
+              "JITSI_ISS": env.JITSI_ISS,
+              "JITSI_URL": env.JITSI_URL,
+              "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
+              "TURN_STATIC_AUTH_SECRET": env.TURN_STATIC_AUTH_SECRET,
+              "REDIS_HOST": "redis",
+              "REDIS_PORT": "6379",
+              "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
+              "BBB_URL": "https://test-install.blindsidenetworks.com/bigbluebutton/",
+              "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
+              "MAP_STORAGE_URL": "map-storage:50053",
+              "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
+              "EJABBERD_USER": "admin",
+              "EJABBERD_PASSWORD": "apideo",
+              "ENABLE_FEATURE_MAP_EDITOR":"true",
+              "ENABLE_MAP_EDITOR_AREAS_TOOL":"true",
+            } + (if adminUrl != null then {
+              "ADMIN_API_URL": adminUrl,
+              "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
+              "EJABBERD_API_URI": "http://xmpp-"+std.strReplace(adminUrl, "https://", "")+"/api/",
+              "TELEMETRY_URL": adminUrl,
+            } else {
+              "EJABBERD_API_URI": "http://ejabberd:5443/api/",
+              "TELEMETRY_URL": "https://staging.workadventu.re",
+            })
+     },
+     "play": {
+        "replicas": 2,
+        "image": "thecodingmachine/workadventure-play:"+tag,
+        "host": {
+          "url": "play-"+url,
+          "containerPort": 3000
+        },
+        "ports": [3000, 50051],
+        "env": {
+          "SECRET_KEY": "tempSecretKeyNeedsToChange",
+          "JITSI_ISS": env.JITSI_ISS,
+          "JITSI_URL": env.JITSI_URL,
+          "API_URL": "back1:50051,back2:50051",
+          "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
+          "FRONT_URL": "https://play-"+url,
+          "PUSHER_URL": "https://play-"+url,
+          "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
+          "ENABLE_OPENAPI_ENDPOINT": "true",
+          "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
+          "UPLOADER_URL": "https://uploader-"+url,
+          #POSTHOG
+          "POSTHOG_API_KEY": if namespace == "master" then env.POSTHOG_API_KEY else "",
+          "POSTHOG_URL": if namespace == "master" then env.POSTHOG_URL else "",
+          "TURN_SERVER": "turn:coturn.workadventure.fr:443,turns:coturn.workadventure.fr:443",
+          "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
+          "ENABLE_FEATURE_MAP_EDITOR":"true",
+          "ENABLE_MAP_EDITOR_AREAS_TOOL":"true",
+          "ICON_URL": "https://icon-"+url,
+          "CHAT_URL": "https://chat-"+url,
+          "LOGROCKET_ID": env.LOGROCKET_ID,
+        } + (if adminUrl != null then {
+          # Admin
+          "ADMIN_URL": adminUrl,
+          "ADMIN_API_URL": adminUrl,
+          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
+          "ADMIN_SOCKETS_TOKEN": env.ADMIN_SOCKETS_TOKEN,
+          # Opid client
+          "OPID_CLIENT_ID": "auth-code-client",
+          "OPID_CLIENT_SECRET": env.ADMIN_API_TOKEN,
+          "OPID_CLIENT_ISSUER": "https://publichydra-"+url,
+          "START_ROOM_URL": "/_/global/maps-"+url+"/starter/map.json",
+        } else {
+          # Ejabberd
+          "EJABBERD_DOMAIN": "xmpp-"+url,
+          "EJABBERD_JWT_SECRET": env.EJABBERD_JWT_SECRET,
+        })
       },
       "ports": [8080, 50051],
       "env": {
@@ -285,10 +396,37 @@
                 }
               }
             },
+            service+: {
+              metadata+: {
+                annotations+: {
+                  "traefik.ingress.kubernetes.io/service.serversscheme": "h2c"
+                }
+              }
+            },
             ingress+: {
               spec+: {
+                rules+:[
+                  {
+                    host: "room-api-"+url,
+                    http: {
+                      paths: [
+                        {
+                          backend: {
+                            service: {
+                              name: "play",
+                              port: {
+                                number: 50051
+                              }
+                            }
+                          },
+                          pathType: "ImplementationSpecific"
+                        }
+                      ]
+                    }
+                  }
+                ],
                 tls+: [{
-                  hosts: ["play-"+url],
+                  hosts: ["play-"+url, "room-api-"+url],
                   secretName: "certificate-tls"
                 }]
               }

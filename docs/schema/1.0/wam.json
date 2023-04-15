@@ -1,0 +1,406 @@
+{
+  "$ref": "#/definitions/WAMFileFormat",
+  "definitions": {
+    "WAMFileFormat": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "mapUrl": {
+          "type": "string"
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "properties": {
+                "type": "object",
+                "properties": {
+                  "textHeader": {
+                    "anyOf": [
+                      {
+                        "anyOf": [
+                          {
+                            "not": {}
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "jitsiRoom": {
+                    "anyOf": [
+                      {
+                        "anyOf": [
+                          {
+                            "not": {}
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "buttonLabel": {
+                                "type": "string"
+                              },
+                              "hideButtonLabel": {
+                                "type": "boolean"
+                              },
+                              "roomName": {
+                                "type": "string"
+                              },
+                              "jitsiRoomConfig": {
+                                "type": "object",
+                                "properties": {
+                                  "startWithAudioMuted": {
+                                    "type": "boolean"
+                                  },
+                                  "startWithVideoMuted": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "roomName",
+                              "jitsiRoomConfig"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "playAudio": {
+                    "anyOf": [
+                      {
+                        "anyOf": [
+                          {
+                            "not": {}
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "buttonLabel": {
+                                "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/properties/jitsiRoom/anyOf/0/anyOf/1/properties/buttonLabel"
+                              },
+                              "hideButtonLabel": {
+                                "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/properties/jitsiRoom/anyOf/0/anyOf/1/properties/hideButtonLabel"
+                              },
+                              "audioLink": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "audioLink"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "openWebsite": {
+                    "anyOf": [
+                      {
+                        "anyOf": [
+                          {
+                            "not": {}
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "buttonLabel": {
+                                "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/properties/jitsiRoom/anyOf/0/anyOf/1/properties/buttonLabel"
+                              },
+                              "hideButtonLabel": {
+                                "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/properties/jitsiRoom/anyOf/0/anyOf/1/properties/hideButtonLabel"
+                              },
+                              "link": {
+                                "type": "string"
+                              },
+                              "newTab": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "link"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              },
+              "prefab": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "imagePath": {
+                    "type": "string"
+                  },
+                  "direction": {
+                    "type": "string",
+                    "enum": [
+                      "Left",
+                      "Up",
+                      "Down",
+                      "Right"
+                    ]
+                  },
+                  "color": {
+                    "type": "string"
+                  },
+                  "collisionGrid": {
+                    "type": "array",
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      }
+                    }
+                  },
+                  "depthOffset": {
+                    "type": "number"
+                  },
+                  "collectionName": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "tags",
+                  "imagePath",
+                  "direction",
+                  "color",
+                  "collectionName",
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "x",
+              "y",
+              "prefab"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "areas": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "width": {
+                "type": "number"
+              },
+              "height": {
+                "type": "number"
+              },
+              "visible": {
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "properties": {
+                "type": "object",
+                "properties": {
+                  "start": {
+                    "anyOf": [
+                      {
+                        "anyOf": [
+                          {
+                            "not": {}
+                          },
+                          {
+                            "type": "boolean"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "silent": {
+                    "anyOf": [
+                      {
+                        "anyOf": [
+                          {
+                            "not": {}
+                          },
+                          {
+                            "type": "boolean"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "focusable": {
+                    "anyOf": [
+                      {
+                        "anyOf": [
+                          {
+                            "not": {}
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "buttonLabel": {
+                                "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/properties/jitsiRoom/anyOf/0/anyOf/1/properties/buttonLabel"
+                              },
+                              "hideButtonLabel": {
+                                "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/properties/jitsiRoom/anyOf/0/anyOf/1/properties/hideButtonLabel"
+                              },
+                              "zoom_margin": {
+                                "type": "number"
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "jitsiRoom": {
+                    "anyOf": [
+                      {
+                        "anyOf": [
+                          {
+                            "not": {}
+                          },
+                          {
+                            "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/properties/jitsiRoom/anyOf/0/anyOf/1"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "playAudio": {
+                    "anyOf": [
+                      {
+                        "anyOf": [
+                          {
+                            "not": {}
+                          },
+                          {
+                            "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/properties/playAudio/anyOf/0/anyOf/1"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "openWebsite": {
+                    "anyOf": [
+                      {
+                        "anyOf": [
+                          {
+                            "not": {}
+                          },
+                          {
+                            "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/properties/openWebsite/anyOf/0/anyOf/1"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "x",
+              "y",
+              "width",
+              "height",
+              "visible",
+              "name",
+              "properties"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "lastCommandId": {
+          "type": "string"
+        },
+        "vendor": {
+          "description": "Use this field to store data that is not handled directly by WorkAdventure. This is a good place to store data generated by an admin (like access rights)"
+        }
+      },
+      "required": [
+        "version",
+        "mapUrl",
+        "entities",
+        "areas"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

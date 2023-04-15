@@ -12,6 +12,7 @@ import { UploadController } from "./Upload/UploadController";
 import { fileSystem } from "./fileSystem";
 import { passportStrategy } from "./Services/Authentication";
 import { mapPathUsingDomain } from "./Services/PathMapper";
+import { ValidatorController } from "./Upload/ValidatorController";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -29,7 +30,11 @@ server.bindAsync(`0.0.0.0:50053`, grpc.ServerCredentials.createInsecure(), (err,
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json());
+app.use(
+    bodyParser.json({
+        type: ["application/json", "application/json-patch+json"],
+    })
+);
 
 passport.use(passportStrategy);
 app.use(passport.initialize());
@@ -58,6 +63,7 @@ app.get("/entityCollections", (req, res) => {
 });
 
 new UploadController(app, fileSystem);
+new ValidatorController(app);
 
 app.use(proxyFiles(fileSystem));
 
