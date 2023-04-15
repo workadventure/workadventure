@@ -334,8 +334,7 @@
         "EJABBERD_PASSWORD": "apideo",
       }
     }
-  } else {
-  }),
+  } else {})+
   "config": {
     k8sextension(k8sConf)::
         k8sConf + {
