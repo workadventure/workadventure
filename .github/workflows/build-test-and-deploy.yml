@@ -130,6 +130,11 @@ jobs:
             type=registry,ref=thecodingmachine/workadventure-chat:develop
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
+          secrets: |
+            "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
+            "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
+            "SENTRY_PROJECT=chat"
+            "SENTRY_RELEASE=${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}"
 
       - name: Build test image
         uses: docker/build-push-action@v3
