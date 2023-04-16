@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import * as grpc from "@grpc/grpc-js";
 import express from "express";
 import cors from "cors";
@@ -13,6 +14,30 @@ import { fileSystem } from "./fileSystem";
 import { passportStrategy } from "./Services/Authentication";
 import { mapPathUsingDomain } from "./Services/PathMapper";
 import { ValidatorController } from "./Upload/ValidatorController";
+import { SENTRY_DNS, SENTRY_RELEASE } from "./Enum/EnvironmentVariable";
+
+// Sentry integration
+if (SENTRY_DNS != undefined) {
+    try {
+        const sentryOptions: Sentry.NodeOptions = {
+            dsn: SENTRY_DNS,
+            // Set tracesSampleRate to 1.0 to capture 100%
+            // of transactions for performance monitoring.
+            // We recommend adjusting this value in production
+            // To set a uniform sample rate
+            tracesSampleRate: 0.2,
+        };
+        if (SENTRY_RELEASE != undefined) {
+            // Make sure this value is identical to the name you give the release that you
+            // create below using Sentry CLI
+            sentryOptions.release = SENTRY_RELEASE;
+        }
+        Sentry.init(sentryOptions);
+        console.info("Sentry initialized");
+    } catch (e) {
+        console.error("Error while initializing Sentry", e);
+    }
+}
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment

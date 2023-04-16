@@ -16,7 +16,7 @@
     "precommit": "lint-staged",
     "pretty": "prettier --write 'src/**/*.{ts,tsx}'",
     "pretty-check": "prettier --check 'src/**/*.{ts,tsx}'",
-    "push-sentry-sourcemaps": "tsc && sentry-cli releases new local1 && sentry-cli releases files local1 upload-sourcemaps dist && sentry-cli releases finalize local1"
+    "push-sentry-sourcemaps": "tsc && sentry-cli releases new $SENTRY_RELEASE && sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps dist && sentry-cli releases finalize $SENTRY_RELEASE"
   },
   "repository": {
     "type": "git",

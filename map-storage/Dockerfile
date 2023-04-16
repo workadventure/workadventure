@@ -2,6 +2,22 @@
 # See: https://github.com/grpc/grpc-node/issues/1405
 # When the issue above is closed, we can move back messages building inside Dockerfile
 
+# typescript build
+FROM --platform=$BUILDPLATFORM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d as sentry-sourcemaps
+WORKDIR /usr/src/map-storage
+COPY . .
+# Sentry push source maps
+RUN npm install && \
+    --mount=type=secret,id=SENTRY_RELEASE \
+    --mount=type=secret,id=SENTRY_AUTH_TOKEN \
+    --mount=type=secret,id=SENTRY_ORG \
+    --mount=type=secret,id=SENTRY_PROJECT \
+    export SENTRY_RELEASE=$(cat /run/secrets/SENTRY_RELEASE) && \
+    export SENTRY_AUTH_TOKEN=$(cat /run/secrets/SENTRY_AUTH_TOKEN) && \
+    export SENTRY_ORG=$(cat /run/secrets/SENTRY_ORG) && \
+    export SENTRY_PROJECT=$(cat /run/secrets/SENTRY_PROJECT) && \
+    npm run push-sentry-sourcemaps
+
 # protobuf build
 FROM --platform=$BUILDPLATFORM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d as proto-builder
 WORKDIR /usr/src

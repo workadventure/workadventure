@@ -1,14 +1,10 @@
-# protobuf build
-FROM --platform=$BUILDPLATFORM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d as proto-builder
-WORKDIR /usr/src
-COPY messages/package-lock.json messages/package.json ./
-RUN npm ci
-COPY messages .
-COPY libs ./../libs
-RUN npm run tag-version && npm run ts-proto
-
+# typescript build
+FROM --platform=$BUILDPLATFORM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d as sentry-sourcemaps
+WORKDIR /usr/src/back
+COPY . .
 # Sentry push source maps
-RUN --mount=type=secret,id=SENTRY_RELEASE \
+RUN npm install && \
+    --mount=type=secret,id=SENTRY_RELEASE \
     --mount=type=secret,id=SENTRY_AUTH_TOKEN \
     --mount=type=secret,id=SENTRY_ORG \
     --mount=type=secret,id=SENTRY_PROJECT \
@@ -17,6 +13,16 @@ RUN --mount=type=secret,id=SENTRY_RELEASE \
     export SENTRY_ORG=$(cat /run/secrets/SENTRY_ORG) && \
     export SENTRY_PROJECT=$(cat /run/secrets/SENTRY_PROJECT) && \
     npm run push-sentry-sourcemaps
+
+# protobuf build
+FROM --platform=$BUILDPLATFORM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d as proto-builder
+WORKDIR /usr/src
+COPY messages/package-lock.json messages/package.json ./
+COPY back ./back
+RUN npm ci
+COPY messages .
+COPY libs ./../libs
+RUN npm run tag-version && npm run ts-proto
 
 # final production image
 FROM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d
