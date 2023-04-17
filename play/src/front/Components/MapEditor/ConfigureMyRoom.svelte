@@ -1,6 +1,7 @@
 <script lang="ts">
     import {fly} from "svelte/transition";
     import {SvelteComponent} from "svelte";
+    import {ChevronRightIcon} from "svelte-feather-icons";
     import LL from "../../../i18n/i18n-svelte";
     import {gameManager} from "../../Phaser/Game/GameManager";
     import {EditorToolName} from "../../Phaser/Game/MapEditor/MapEditorModeManager";
@@ -22,7 +23,10 @@
     <div class="menu">
         <h3>{$LL.mapEditor.sideBar.configureMyRoom()}</h3>
         <ul>
-            <li class:selected={currentTab?.name === "megaphone"} on:click={() => currentTab = {name: "megaphone", component: Megaphone}}>Megaphone</li>
+            <li class:selected={currentTab?.name === "megaphone"} on:click={() => currentTab = {name: "megaphone", component: Megaphone}}>
+                <span>Megaphone</span>
+                <ChevronRightIcon class={`tw--mr-2 ${currentTab?.name !== "megaphone" && "tw-text-lighter-purple"}`} />
+            </li>
         </ul>
     </div>
     <div class="content">
@@ -59,7 +63,7 @@
             ul{
                 @apply tw-list-none tw-m-0 tw-p-0 tw-border-0 tw-border-b tw-border-solid tw-border-lighter-purple/50;
                 li{
-                    @apply tw-cursor-pointer tw-px-5 tw-py-3 tw-text-lg;
+                    @apply tw-cursor-pointer tw-px-5 tw-py-3 tw-text-lg tw-flex tw-flex-wrap tw-justify-between tw-items-center;
                     &:nth-of-type(1n+1){
                         @apply tw-border-0 tw-border-t tw-border-solid tw-border-lighter-purple/50;
                     }
