@@ -10,9 +10,6 @@ export class CompanionService {
             CompanionService.instance = AdminCompanionService.isEnabled(capabilities)
                 ? new AdminCompanionService()
                 : new LocalCompanionSevice();
-        console.log("------------- DANS IF -------------", AdminCompanionService.isEnabled(capabilities));
-
-        console.log("--------- INSTANCE -------------", CompanionService.instance);
         return CompanionService.instance;
     }
 }

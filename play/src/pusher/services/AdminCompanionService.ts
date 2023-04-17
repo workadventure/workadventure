@@ -58,8 +58,6 @@ export class AdminCompanionService implements CompanionServiceInterface {
                 },
             })
             .then((res) => {
-                console.log("COMPANION LIST", res.data);
-                console.log("COMPANION LIST type of", typeof res.data);
                 return companionCollectionList.parse(res.data);
             })
             .catch((err) => {
