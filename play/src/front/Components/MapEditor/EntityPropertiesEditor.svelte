@@ -3,6 +3,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { mapEditorSelectedEntityStore } from "../../Stores/MapEditorStore";
     import plusImg from "../images/plus.svg";
+    import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
 
     let properties = $mapEditorSelectedEntityStore?.getProperties() ?? [];
 
@@ -109,23 +110,20 @@
             </button>
         </div>
     </div>
-    <!-- <div class="action-button">
-        <button class="delete-button" on:click={onDeleteEntity}
-            ><div>{$LL.mapEditor.entityEditor.deleteButton()}</div>
-            <img src={crossImg} alt="" /></button
-        >
-    </div> -->
-
     {#each properties as property}
-        <div>
-            <button
-                on:click={() => {
-                    onDeleteProperty(property.id);
-                }}
-            >
-                <p>{property.id}: {property.type}</p>
-            </button>
-        </div>
+        {#if property.type === "jitsiRoomProperty"}
+            <JitsiRoomPropertyEditor {property} />
+        {:else}
+            <div>
+                <button
+                    on:click={() => {
+                        onDeleteProperty(property.id);
+                    }}
+                >
+                    <p>{property.id}: {property.type}</p>
+                </button>
+            </div>
+        {/if}
     {/each}
 {/if}
 
@@ -165,7 +163,6 @@
             background-color: rgb(77 75 103);
         }
         .add-property-button {
-            border-color: gray;
             color: gray;
             width: 100%;
             border: 1px solid grey;

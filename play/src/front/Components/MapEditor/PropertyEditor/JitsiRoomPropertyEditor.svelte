@@ -2,6 +2,7 @@
     import { createEventDispatcher } from "svelte";
     import { JitsiRoomConfigData, JitsiRoomPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
+    import trashImg from "../../images/trash-x-filled.svg";
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
     import JitsiRoomConfigEditor from "./JitsiRoomConfigEditor.svelte";
 
@@ -21,45 +22,67 @@
     }
 </script>
 
-<div class="value-input">
-    <label for="roomName">{$LL.mapEditor.properties.jitsiProperties.roomNameLabel()}</label>
-    <input
-        id="roomName"
-        type="text"
-        placeholder={$LL.mapEditor.properties.jitsiProperties.roomNamePlaceholder()}
-        bind:value={property.roomName}
-        on:change={onValueChange}
-        on:focus={onMapEditorInputFocus}
-        on:blur={onMapEditorInputUnfocus}
-    />
-</div>
-{#if !property.hideButtonLabel}
+<div class="property-settings-container">
+    <button class="close-button">
+        <img src={trashImg} alt="" />
+    </button>
     <div class="value-input">
-        <label for="jitsiButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
+        <label for="roomName">{$LL.mapEditor.properties.jitsiProperties.roomNameLabel()}</label>
         <input
-            id="jitsiButtonLabel"
+            id="roomName"
             type="text"
-            bind:value={property.buttonLabel}
+            placeholder={$LL.mapEditor.properties.jitsiProperties.roomNamePlaceholder()}
+            bind:value={property.roomName}
             on:change={onValueChange}
             on:focus={onMapEditorInputFocus}
             on:blur={onMapEditorInputUnfocus}
         />
     </div>
-{/if}
-<button
-    on:click={() => {
-        jitsiConfigModalOpened = true;
-    }}>{$LL.mapEditor.properties.jitsiProperties.moreOptionsLabel()}</button
->
-{#if jitsiConfigModalOpened}
-    <JitsiRoomConfigEditor
-        bind:visibilityValue={jitsiConfigModalOpened}
-        on:change={onConfigChange}
-        bind:config={property.jitsiRoomConfig}
-    />
-{/if}
+    {#if !property.hideButtonLabel}
+        <div class="value-input">
+            <label for="jitsiButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
+            <input
+                id="jitsiButtonLabel"
+                type="text"
+                bind:value={property.buttonLabel}
+                on:change={onValueChange}
+                on:focus={onMapEditorInputFocus}
+                on:blur={onMapEditorInputUnfocus}
+            />
+        </div>
+    {/if}
+    <button
+        on:click={() => {
+            jitsiConfigModalOpened = true;
+        }}>{$LL.mapEditor.properties.jitsiProperties.moreOptionsLabel()}</button
+    >
+    {#if jitsiConfigModalOpened}
+        <JitsiRoomConfigEditor
+            bind:visibilityValue={jitsiConfigModalOpened}
+            on:change={onConfigChange}
+            bind:config={property.jitsiRoomConfig}
+        />
+    {/if}
+</div>
 
 <style lang="scss">
+    .property-settings-container {
+        border: 1px solid grey;
+        border-radius: 5px;
+        padding: 15px;
+        .close-button {
+            float: right;
+            border-color: red;
+            img {
+                object-fit: contain;
+                max-width: 2em;
+                max-height: 2em;
+            }
+            :hover {
+                background-color: red;
+            }
+        }
+    }
     .value-input {
         display: flex;
         width: 100%;
