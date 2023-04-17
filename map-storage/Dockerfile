@@ -4,7 +4,6 @@
 
 # typescript build
 FROM --platform=$BUILDPLATFORM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d as sentry-sourcemaps
-WORKDIR /usr/src/map-storage
 COPY . .
 # Sentry push source maps
 RUN npm install && \
