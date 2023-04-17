@@ -56,7 +56,6 @@ class AdminWokaService implements WokaServiceInterface {
                 },
             })
             .then((res) => {
-                console.log("WOKA DATA", res.data);
                 return wokaList.parse(res.data);
             })
             .catch((err) => {

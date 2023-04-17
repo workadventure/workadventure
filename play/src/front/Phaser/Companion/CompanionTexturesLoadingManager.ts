@@ -33,7 +33,6 @@ export class CompanionTexturesLoadingManager {
                     withCredentials: true,
                 },
                 (_key, _type, data) => {
-                    console.log(data);
                     companionTextureList = companionCollectionList.parse(data);
                     processListCallback(companionTextureList);
                 }
