@@ -205,10 +205,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          cache-from: |
-            type=registry,ref=thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-            type=registry,ref=thecodingmachine/workadventure-back:develop
-          cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
           secrets: |
             "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"

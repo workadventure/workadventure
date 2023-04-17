@@ -32,7 +32,6 @@ COPY --from=proto-builder /usr/src/generated ./back/src/Messages/generated
 
 WORKDIR /usr/src/back
 
-# Sentry push source maps
 RUN --mount=type=secret,id=SENTRY_RELEASE \
     --mount=type=secret,id=SENTRY_AUTH_TOKEN \
     --mount=type=secret,id=SENTRY_ORG \
