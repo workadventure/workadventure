@@ -1084,6 +1084,7 @@ export class GameRoom implements BrothersFinder {
         if (this.editable && this.mapStorageClientMessagesStream === undefined) {
             const mapStorageUrlMessage: MapStorageUrlMessage = {
                 mapUrl: this.mapUrl,
+                roomId: this.roomUrl,
             };
             this.mapStorageClientMessagesStream = getMapStorageClient().listenToMessages(mapStorageUrlMessage);
             this.mapStorageClientMessagesStream.on("data", (data: MapStorageToBackMessage) => {

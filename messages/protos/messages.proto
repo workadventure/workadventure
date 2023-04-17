@@ -717,6 +717,7 @@ message MapStorageRefreshMessage {
 
 message MapStorageUrlMessage {
   string mapUrl = 1;
+  string roomId = 2;
 }
 
 message MapStorageClearAfterUploadMessage {
