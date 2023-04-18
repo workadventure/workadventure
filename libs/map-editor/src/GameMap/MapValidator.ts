@@ -1,5 +1,5 @@
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 import { EntityData, WAMFileFormat } from "../types";
 import { FileFetcherInterface } from "./Validator/FileFetcherInterface";
 
@@ -8,6 +8,7 @@ export type Failure<E> = { ok: false; error: E };
 export type Result<T, E> = Success<T> | Failure<E>;
 
 export type MapValidation = Result<ITiledMap, Partial<OrganizedErrors>>;
+export type WamValidation = Result<WAMFileFormat, Partial<ZodError>>;
 
 export const isFailure = <T, E>(Y: Result<T, E>): Y is Failure<E> => {
     return !Y.ok;
@@ -169,8 +170,19 @@ export class MapValidator {
     }
 
     // TODO: More detailed validation later on
-    public validateWAMFile(data: string): boolean {
-        return WAMFileFormat.safeParse(JSON.parse(data)).success;
+    public validateWAMFile(data: string): WamValidation {
+        const parsedWAM = WAMFileFormat.safeParse(JSON.parse(data));
+        if (!parsedWAM.success) {
+            return {
+                ok: false,
+                error: parsedWAM.error,
+            };
+        } else {
+            return {
+                ok: true,
+                value: parsedWAM.data,
+            };
+        }
     }
 
     private removeWarnings(errors: ValidationError[]) {

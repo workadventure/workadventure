@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import path from "node:path";
-import { z } from "zod";
-import { Express, Request } from "express";
+import { z, ZodError } from "zod";
+import { Express } from "express";
 import multer from "multer";
 import pLimit from "p-limit";
 import archiver from "archiver";
@@ -14,10 +14,10 @@ import { HttpFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator
 import { Operation } from "fast-json-patch";
 import { mapPath } from "../Services/PathMapper";
 import { MAX_UNCOMPRESSED_SIZE } from "../Enum/EnvironmentVariable";
-import { fileSystem } from "../fileSystem";
 import { passportAuthenticator } from "../Services/Authentication";
 import { mapsManager } from "../MapsManager";
 import { uploadDetector } from "../Services/UploadDetector";
+import { MapListService } from "../Services/MapListService";
 import { FileSystemInterface } from "./FileSystemInterface";
 import { FileNotFoundError } from "./FileNotFoundError";
 
@@ -34,12 +34,9 @@ export class UploadController {
      * This is not perfect (because we should actually forbid an upload on "/" if "/foo" is being uploaded), but it's
      * already a start of a check.
      */
-
-    public static readonly CACHE_NAME = "__cache.json";
-
     private uploadLimiter: Map<string, pLimit.Limit>;
 
-    constructor(private app: Express, private fileSystem: FileSystemInterface) {
+    constructor(private app: Express, private fileSystem: FileSystemInterface, private mapListService: MapListService) {
         this.uploadLimiter = new Map<string, pLimit.Limit>();
         this.index();
         this.postUpload();
@@ -141,7 +138,7 @@ export class UploadController {
                         }
                         if (extension === ".wam") {
                             const result = mapValidator.validateWAMFile((await zip.entryData(zipEntry)).toString());
-                            if (!result) {
+                            if (!result.ok) {
                                 errors[zipEntry.name] = {
                                     map: [
                                         {
@@ -209,7 +206,7 @@ export class UploadController {
                         mapsManager.clearAfterUpload(key);
                         uploadDetector.refresh(key);
                     }
-                    await this.generateCacheFile(req);
+                    await this.mapListService.generateCacheFile(req.hostname);
 
                     res.send("File successfully uploaded.");
                 });
@@ -226,7 +223,15 @@ export class UploadController {
             (async () => {
                 // Make sure a file was uploaded
                 if (!req.file) {
-                    res.status(400).send("No file was uploaded.");
+                    res.status(400).send({
+                        request: [
+                            {
+                                type: "error",
+                                message: "No file was uploaded",
+                                details: "",
+                            },
+                        ],
+                    });
                     return;
                 }
 
@@ -266,6 +271,7 @@ export class UploadController {
                     const content = await fs.promises.readFile(file.path, "utf8");
 
                     const extension = path.extname(filePath);
+                    let wamFile: WAMFileFormat | undefined;
                     if (extension === ".json" && mapValidator.doesStringLooksLikeMap(content)) {
                         // We forbid Maps in JSON format.
                         errors[filePath] = {
@@ -279,7 +285,7 @@ export class UploadController {
                         };
                     } else if (extension === ".wam") {
                         const result = mapValidator.validateWAMFile(content);
-                        if (!result) {
+                        if (!result.ok) {
                             errors[filePath] = {
                                 map: [
                                     {
@@ -289,6 +295,8 @@ export class UploadController {
                                     },
                                 ],
                             };
+                        } else {
+                            wamFile = result.value;
                         }
                     } else if (extension === ".tmj") {
                         const result = await mapValidator.validateStringMap(content);
@@ -312,12 +320,11 @@ export class UploadController {
                         }
                     });
 
-                    if (extension === ".wam") {
+                    if (extension === ".wam" && wamFile) {
                         mapsManager.clearAfterUpload(virtualPath);
                         uploadDetector.refresh(virtualPath);
+                        await this.mapListService.updateWAMFileInCache(req.hostname, filePath, wamFile);
                     }
-
-                    await this.generateCacheFile(req);
 
                     res.send("File successfully uploaded.");
                 });
@@ -370,19 +377,16 @@ export class UploadController {
 
                     const patchedContentString = JSON.stringify(patchedContent);
                     const result = mapValidator.validateWAMFile(patchedContentString);
-                    if (!result) {
+                    if (!result.ok) {
                         errors[filePath] = {
                             map: [
                                 {
                                     type: "error",
                                     message: "Invalid WAM file format.",
-                                    details: "",
+                                    details: "", // TODO: add details
                                 },
                             ],
                         };
-                    }
-
-                    if (Object.keys(errors).length > 0) {
                         res.status(400).json(errors);
                         return;
                     }
@@ -392,7 +396,7 @@ export class UploadController {
                     mapsManager.clearAfterUpload(virtualPath);
                     uploadDetector.refresh(virtualPath);
 
-                    await this.generateCacheFile(req);
+                    await this.mapListService.updateWAMFileInCache(req.hostname, filePath, result.value);
 
                     res.json({ success: true });
                 });
@@ -402,12 +406,6 @@ export class UploadController {
                 }
             })().catch((e) => next(e));
         });
-    }
-
-    private async generateCacheFile(req: Request): Promise<void> {
-        const files = await fileSystem.listFiles(mapPath("/", req), ".wam");
-
-        await fileSystem.writeStringAsFile(mapPath("/" + UploadController.CACHE_NAME, req), JSON.stringify(files));
     }
 
     private async createWAMFileIfMissing(tmjKey: string): Promise<void> {
@@ -494,7 +492,7 @@ export class UploadController {
                 // pipe archive data to the file
                 archive.pipe(res);
 
-                await fileSystem.archiveDirectory(archive, virtualDirectory);
+                await this.fileSystem.archiveDirectory(archive, virtualDirectory);
 
                 await archive.finalize();
             })().catch((e) => next(e));
@@ -515,9 +513,9 @@ export class UploadController {
 
                 const virtualDirectory = mapPath(directory, req);
 
-                await fileSystem.deleteFiles(virtualDirectory);
+                await this.fileSystem.deleteFiles(virtualDirectory);
 
-                await this.generateCacheFile(req);
+                await this.mapListService.generateCacheFile(req.hostname);
 
                 res.sendStatus(204);
             })().catch((e) => next(e));
@@ -537,9 +535,11 @@ export class UploadController {
 
                 const virtualPath = mapPath(filePath, req);
 
-                await fileSystem.deleteFiles(virtualPath);
+                await this.fileSystem.deleteFiles(virtualPath);
 
-                await this.generateCacheFile(req);
+                if (filePath.endsWith(".wam")) {
+                    await this.mapListService.deleteWAMFileInCache(req.hostname, filePath);
+                }
 
                 res.sendStatus(204);
             })().catch((e) => next(e));
@@ -572,13 +572,13 @@ export class UploadController {
                 const virtualPath = mapPath(source, req);
                 const newVirtualPath = mapPath(destination, req);
 
-                if (await fileSystem.exist(newVirtualPath)) {
+                if (await this.fileSystem.exist(newVirtualPath)) {
                     res.status(409).send("Destination already exist!");
                     return;
                 }
 
-                await fileSystem.move(virtualPath, newVirtualPath);
-                await this.generateCacheFile(req);
+                await this.fileSystem.move(virtualPath, newVirtualPath);
+                await this.mapListService.generateCacheFile(req.hostname);
                 res.sendStatus(200);
             })().catch((e) => next(e));
         });
@@ -610,13 +610,13 @@ export class UploadController {
                 const virtualPath = mapPath(source, req);
                 const newVirtualPath = mapPath(destination, req);
 
-                if (await fileSystem.exist(newVirtualPath)) {
+                if (await this.fileSystem.exist(newVirtualPath)) {
                     res.status(409).send("Destination already exist!");
                     return;
                 }
 
-                await fileSystem.copy(virtualPath, newVirtualPath);
-                await this.generateCacheFile(req);
+                await this.fileSystem.copy(virtualPath, newVirtualPath);
+                await this.mapListService.generateCacheFile(req.hostname);
                 res.sendStatus(201);
             })().catch((e) => next(e));
         });
@@ -626,16 +626,16 @@ export class UploadController {
         this.app.get("/maps", (req, res, next) => {
             (async () => {
                 try {
-                    const data = await fileSystem.readFileAsString(mapPath(`/${UploadController.CACHE_NAME}`, req));
-                    res.json(JSON.parse(data));
+                    const parsedCacheFile = await this.mapListService.readCacheFile(req.hostname);
+                    res.json(parsedCacheFile);
                     return;
                 } catch (e) {
-                    if (e instanceof FileNotFoundError) {
-                        // No cache file? What the hell? Let's try to regenerate the cache file
-                        await this.generateCacheFile(req);
+                    if (e instanceof FileNotFoundError || e instanceof ZodError) {
+                        // No cache file or invalid cache file? What the hell? Let's try to regenerate the cache file
+                        await this.mapListService.generateCacheFile(req.hostname);
                         // Now that the cache file is generated, let's retry serving the file.
-                        const data = await fileSystem.readFileAsString(mapPath(`/${UploadController.CACHE_NAME}`, req));
-                        res.json(JSON.parse(data));
+                        const parsedCacheFile = this.mapListService.readCacheFile(req.hostname);
+                        res.json(parsedCacheFile);
                         return;
                     }
                     throw e;
