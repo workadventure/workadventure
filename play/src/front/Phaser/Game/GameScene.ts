@@ -2359,7 +2359,7 @@ ${escapedMessage}
                 PositionMessage_Direction.DOWN,
                 false,
                 this.companion,
-                this.companionLoadingManager?.lazyLoadByName(this.companion)
+                this.companionLoadingManager?.lazyLoadById(this.companion)
             );
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOverOutline(0x365dff);
@@ -2556,7 +2556,7 @@ ${escapedMessage}
             addPlayerData.position.moving,
             addPlayerData.visitCardUrl,
             addPlayerData.companion,
-            this.companionLoadingManager?.lazyLoadByName(addPlayerData.companion)
+            this.companionLoadingManager?.lazyLoadById(addPlayerData.companion)
         );
         if (addPlayerData.outlineColor !== undefined) {
             player.setApiOutlineColor(addPlayerData.outlineColor);

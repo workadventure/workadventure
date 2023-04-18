@@ -42,8 +42,8 @@ export class CompanionTexturesLoadingManager {
             });
     }
 
-    public lazyLoadByName(textureName: string | null): CancelablePromise<string> | undefined {
-        if (!textureName) return undefined;
+    public lazyLoadById(textureId: string | null): CancelablePromise<string> | undefined {
+        if (!textureId) return undefined;
         return new CancelablePromise((resolve, reject, cancel) => {
             cancel(() => {
                 return;
@@ -52,11 +52,11 @@ export class CompanionTexturesLoadingManager {
             this.loadTextures((companionList) => {
                 const texture = companionList.companion.collections
                     .flatMap((collection) => collection.textures)
-                    .find((t) => t.name === textureName);
-
+                    .find((t) => t.id === textureId);
+                console.log(texture);
                 if (!texture) {
-                    console.error(`Companion texture ${textureName} not found`);
-                    return reject(`Companion texture '${textureName}' not found!`);
+                    console.error(`Companion texture ${textureId} not found`);
+                    return reject(`Companion texture '${textureId}' not found!`);
                 }
 
                 this.loadByTexture(texture, resolve);
@@ -66,10 +66,10 @@ export class CompanionTexturesLoadingManager {
         });
     }
 
-    public loadByTexture(texture: CompanionTexture, onLoaded: (_textureName: string) => void = () => {}) {
-        if (this.loader.textureManager.exists(texture.name)) return onLoaded(texture.name);
+    public loadByTexture(texture: CompanionTexture, onLoaded: (_textureId: string) => void = () => {}) {
+        if (this.loader.textureManager.exists(texture.id)) return onLoaded(texture.id);
 
-        this.loader.spritesheet(texture.name, texture.url, { frameWidth: 32, frameHeight: 32, endFrame: 12 });
-        this.loader.once(`filecomplete-spritesheet-${texture.name}`, () => onLoaded(texture.name));
+        this.loader.spritesheet(texture.id, texture.url, { frameWidth: 32, frameHeight: 32, endFrame: 12 });
+        this.loader.once(`filecomplete-spritesheet-${texture.id}`, () => onLoaded(texture.id));
     }
 }
