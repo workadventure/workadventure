@@ -8,14 +8,13 @@ class UploadDetector {
         this.apiClientRepository = new ApiClientRepository(API_URL.split(","));
     }
 
-    public async refresh(wamKey: string, mapUrl: string): Promise<void> {
+    public async refresh(wamUrl: string): Promise<void> {
         // send only where mapUrl is matching with the one from GameRoom
         const clients = await this.apiClientRepository.getAllClients();
         for (const client of clients) {
             client.handleMapStorageUploadMapDetected(
                 {
-                    wamKey,
-                    mapUrl,
+                    wamUrl,
                 },
                 (err) => {
                     console.error(err);

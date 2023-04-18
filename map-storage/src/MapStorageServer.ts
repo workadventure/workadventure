@@ -21,8 +21,10 @@ const mapStorageServer: MapStorageServer = {
         call: ServerUnaryCall<MapStorageClearAfterUploadMessage, Empty>,
         callback: sendUnaryData<Empty>
     ): void {
-        const key = call.request.wamKey;
-        mapsManager.clearAfterUpload(key);
+        const wamUrl = call.request.wamUrl;
+        const url = new URL(wamUrl);
+        const wamKey = mapPathUsingDomain(url.pathname, url.hostname);
+        mapsManager.clearAfterUpload(wamKey);
         callback(null);
     },
     handleUpdateMapToNewestMessage(

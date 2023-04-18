@@ -714,8 +714,7 @@ message MapStorageUrlMessage {
 }
 
 message MapStorageClearAfterUploadMessage {
-  string wamKey = 1;
-  string mapUrl = 2;
+  string wamUrl = 1;
 }
 
 // A message sent by an administrator to a recipient

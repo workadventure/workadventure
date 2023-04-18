@@ -482,18 +482,17 @@ const roomManager = {
     handleMapStorageUploadMapDetected(call) {
         getMapStorageClient().handleClearAfterUpload(
             {
-                wamKey: call.request.wamKey,
-                // probably no need to send that to the map storage
-                mapUrl: call.request.mapUrl,
+                wamUrl: call.request.wamUrl,
             },
             (err) => {
                 if (err) {
-                    throw err;
+                    console.error(err);
+                    return;
                 }
                 Promise.all(socketManager.getWorlds().values())
                     .then((gameRooms) => {
                         for (const gameRoom of gameRooms) {
-                            if (gameRoom.wamUrl === call.request.mapUrl) {
+                            if (gameRoom.wamUrl === call.request.wamUrl) {
                                 gameRoom.getUsers().forEach((user) =>
                                     user.socket.write({
                                         message: {
@@ -510,7 +509,7 @@ const roomManager = {
                         }
                     })
                     .catch((error) => {
-                        throw error;
+                        console.error(error);
                     });
             }
         );
