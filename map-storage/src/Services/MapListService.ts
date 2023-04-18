@@ -3,9 +3,11 @@ import pLimit from "p-limit";
 import { fileSystem } from "../fileSystem";
 import { FileSystemInterface } from "../Upload/FileSystemInterface";
 import { mapPathUsingDomain } from "./PathMapper";
+import {WebHookService} from "./WebHookService";
 
 /**
  * Manages the cache file containing the list of maps.
+ * Also, will call the webhook automatically when an update is made to the cache file.
  */
 export class MapListService {
     /**
@@ -15,7 +17,7 @@ export class MapListService {
 
     public static readonly CACHE_NAME = "__cache.json";
 
-    constructor(private fileSystem: FileSystemInterface) {
+    constructor(private fileSystem: FileSystemInterface, private webHookService: WebHookService) {
         this.limiters = new Map<string, pLimit.Limit>();
     }
     public generateCacheFile(domain: string): Promise<void> {
@@ -39,6 +41,7 @@ export class MapListService {
                 mapPathUsingDomain("/" + MapListService.CACHE_NAME, domain),
                 JSON.stringify(wamFiles, null, 2)
             );
+            this.webHookService.callWebHook(domain, undefined, "update");
         });
     }
 
@@ -82,6 +85,7 @@ export class MapListService {
                 vendor: wamFile.vendor,
             };
             await this.fileSystem.writeStringAsFile(cacheFilePath, JSON.stringify(cacheFile, null, 2));
+            this.webHookService.callWebHook(domain, wamFilePath, "update");
         });
     }
 
@@ -95,6 +99,7 @@ export class MapListService {
             }
             delete cacheFile[wamFilePath];
             await this.fileSystem.writeStringAsFile(cacheFilePath, JSON.stringify(cacheFile, null, 2));
+            this.webHookService.callWebHook(domain, wamFilePath, "delete");
         });
     }
 
