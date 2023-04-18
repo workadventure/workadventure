@@ -7,24 +7,6 @@ COPY messages .
 COPY libs ./../libs
 RUN npm run tag-version && npm run ts-proto
 
-# sentry push sourcemaps
-FROM thecodingmachine/nodejs:v2-18-bullseye as sentry
-WORKDIR /usr/src/app
-COPY --chown=docker . .
-COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
-COPY --from=proto-builder /usr/src/generated ./back/src/Messages/generated
-RUN --mount=type=secret,id=SENTRY_RELEASE \
-    --mount=type=secret,id=SENTRY_AUTH_TOKEN \
-    --mount=type=secret,id=SENTRY_ORG \
-    --mount=type=secret,id=SENTRY_PROJECT \
-    export SENTRY_RELEASE=$(cat /run/secrets/SENTRY_RELEASE) && \
-    export SENTRY_AUTH_TOKEN=$(cat /run/secrets/SENTRY_AUTH_TOKEN) && \
-    export SENTRY_ORG=$(cat /run/secrets/SENTRY_ORG) && \
-    export SENTRY_PROJECT=$(cat /run/secrets/SENTRY_PROJECT) && \
-    cd back && \
-    && npm install && \
-    SENTRY_RELEASE=$SENTRY_RELEASE SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN SENTRY_ORG=$SENTRY_ORG SENTRY_PROJECT=$SENTRY_PROJECT NODE_OPTIONS="--max-old-space-size=6144" npm run push-sentry-sourcemaps
-
 # final production image
 FROM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d
 EXPOSE 8080 50051
