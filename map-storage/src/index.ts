@@ -14,8 +14,8 @@ import { passportStrategy } from "./Services/Authentication";
 import { mapPathUsingDomain } from "./Services/PathMapper";
 import { ValidatorController } from "./Upload/ValidatorController";
 import { MapListService } from "./Services/MapListService";
-import {WebHookService} from "./Services/WebHookService";
-import {WEB_HOOK_URL} from "./Enum/EnvironmentVariable";
+import { WebHookService } from "./Services/WebHookService";
+import { WEB_HOOK_URL } from "./Enum/EnvironmentVariable";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -32,6 +32,8 @@ server.bindAsync(`0.0.0.0:50053`, grpc.ServerCredentials.createInsecure(), (err,
 });
 
 const app = express();
+// We need to trust the proxy in order to be able to bind the "X-Forwarded-Host" header to the hostname.
+app.set("trust proxy", true);
 app.use(cors());
 app.use(
     bodyParser.json({

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { WEB_HOOK_API_TOKEN } from "../Enum/EnvironmentVariable";
 
 /**
  * Calls a webhook each time a WAM map is created, updated or deleted.
@@ -16,6 +17,12 @@ export class WebHookService {
         if (!this.webHookUrl) {
             return;
         }
+
+        const headers: Record<string, string> = {};
+        if (WEB_HOOK_API_TOKEN) {
+            headers["Authorization"] = WEB_HOOK_API_TOKEN;
+        }
+
         // Make a POST request to the webhook URL using axios. Don't wait for the answer but log an error in case of problem.
         axios
             .post(
@@ -29,6 +36,7 @@ export class WebHookService {
                     maxContentLength: 1000000,
                     headers: {
                         "Content-Type": "application/json",
+                        ...headers,
                     },
                     timeout: 10000,
                 }
