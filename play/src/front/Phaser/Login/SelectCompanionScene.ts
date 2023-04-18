@@ -96,7 +96,6 @@ export class SelectCompanionScene extends ResizableScene {
     }
 
     public selectCompanion(): void {
-        console.log(this.companionModels[this.currentCompanion]);
         localUserStore.setCompanion(this.companionModels[this.currentCompanion].id);
         gameManager.setCompanion(this.companionModels[this.currentCompanion].id);
 

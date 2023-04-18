@@ -53,7 +53,6 @@ export class CompanionTexturesLoadingManager {
                 const texture = companionList.companion.collections
                     .flatMap((collection) => collection.textures)
                     .find((t) => t.id === textureId);
-                console.log(texture);
                 if (!texture) {
                     console.error(`Companion texture ${textureId} not found`);
                     return reject(`Companion texture '${textureId}' not found!`);
