@@ -205,23 +205,11 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          labels: ${{ steps.meta.outputs.labels }}
           cache-from: |
             type=registry,ref=thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
             type=registry,ref=thecodingmachine/workadventure-back:develop
-
-      - name: Sentry push sourcemaps
-        uses: docker/build-push-action@v3
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
-        with:
-          context: .
-          file: back/Dockerfile.sentry
-          platforms: linux/amd64,linux/arm64
-          secrets: |
-            "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
-            "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
-            "SENTRY_PROJECT=back"
-            "SENTRY_RELEASE=${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}"
+          cache-to: type=inline
+          labels: ${{ steps.meta.outputs.labels }}
 
       - name: Build test image
         uses: docker/build-push-action@v3
@@ -237,6 +225,25 @@ jobs:
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/back.tar
+
+      - name: Sentry push source maps
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: back/Dockerfile.sentry
+          platforms: linux/amd64
+          push: false
+          tags: thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: |
+            type=registry,ref=thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+            type=registry,ref=thecodingmachine/workadventure-back:develop
+          cache-to: type=inline
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
+            "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
+            "SENTRY_PROJECT=back"
+            "SENTRY_RELEASE=${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}"
 
       - name: Zip image
         run: gzip back.tar
@@ -418,11 +425,6 @@ jobs:
             type=registry,ref=thecodingmachine/workadventure-map-storage:develop
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
-          secrets: |
-            "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
-            "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
-            "SENTRY_PROJECT=map-storage"
-            "SENTRY_RELEASE=${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}"
 
       - name: Build test image
         uses: docker/build-push-action@v3
@@ -438,6 +440,23 @@ jobs:
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/map-storage.tar
+
+      - name: Sentry push sourcemaps
+        uses: docker/build-push-action@v3
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+        with:
+          context: .
+          file: map-storage/Dockerfile.sentry
+          platforms: linux/amd64
+          push: false
+          cache-from: |
+            type=registry,ref=thecodingmachine/workadventure-map-storage:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+            type=registry,ref=thecodingmachine/workadventure-map-storage:develop
+          build-args: |
+            "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
+            "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
+            "SENTRY_PROJECT=map-storage"
+            "SENTRY_RELEASE=${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}"
 
       - name: Zip image
         run: gzip map-storage.tar

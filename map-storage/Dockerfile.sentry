@@ -11,18 +11,19 @@ FROM thecodingmachine/nodejs:v2-18-bullseye
 WORKDIR /usr/src/app
 COPY --chown=docker . .
 COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
-COPY --from=proto-builder /usr/src/generated ./back/src/Messages/generated
+COPY --from=proto-builder /usr/src/generated ./map-storage/src/Messages/generated
 
+# upgrade RAM available to 6G
 ARG SENTRY_RELEASE
 ARG SENTRY_AUTH_TOKEN
 ARG SENTRY_ORG
 ARG SENTRY_PROJECT
 
-RUN cd back && \
+RUN cd map-storage && \
     npm install && \
     SENTRY_RELEASE=$SENTRY_RELEASE SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN SENTRY_ORG=$SENTRY_ORG SENTRY_PROJECT=$SENTRY_PROJECT NODE_OPTIONS="--max-old-space-size=6144" npm run push-sentry-sourcemaps
 
-WORKDIR /usr/src/app/back
+WORKDIR /usr/src/app/map-storage
 
 USER node
 CMD ["npm", "run", "start"]
