@@ -21,7 +21,7 @@ import { Archiver } from "archiver";
 import { StreamZipAsync, ZipEntry } from "node-stream-zip";
 import pLimit from "p-limit";
 import { s3UploadConcurrencyLimit } from "../Services/S3Client";
-import { UploadController } from "./UploadController";
+import { MapListService } from "../Services/MapListService";
 import { FileNotFoundError } from "./FileNotFoundError";
 import { FileSystemInterface } from "./FileSystemInterface";
 
@@ -353,7 +353,7 @@ export class S3FileSystem implements FileSystemInterface {
                         // a directory. Let's bypass this.
                         continue;
                     }
-                    if (file.Key.includes(UploadController.CACHE_NAME)) {
+                    if (file.Key.includes(MapListService.CACHE_NAME)) {
                         // we do not want cache file to be downloaded
                         continue;
                     }

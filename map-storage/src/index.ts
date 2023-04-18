@@ -13,6 +13,9 @@ import { fileSystem } from "./fileSystem";
 import { passportStrategy } from "./Services/Authentication";
 import { mapPathUsingDomain } from "./Services/PathMapper";
 import { ValidatorController } from "./Upload/ValidatorController";
+import { MapListService } from "./Services/MapListService";
+import { WebHookService } from "./Services/WebHookService";
+import { WEB_HOOK_URL } from "./Enum/EnvironmentVariable";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -62,7 +65,8 @@ app.get("/entityCollections", (req, res) => {
     res.send(mapsManager.getEntityCollections());
 });
 
-new UploadController(app, fileSystem);
+const mapListService = new MapListService(fileSystem, new WebHookService(WEB_HOOK_URL));
+new UploadController(app, fileSystem, mapListService);
 new ValidatorController(app);
 
 app.use(proxyFiles(fileSystem));
