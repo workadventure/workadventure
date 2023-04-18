@@ -756,6 +756,10 @@ export class SocketManager {
                     };
                     break;
                 }
+                case "roomTagsQuery": {
+                    // Nothing to do, the message will never be received in the back
+                    break;
+                }
                 default: {
                     const _exhaustiveCheck: never = queryCase;
                 }

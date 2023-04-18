@@ -798,11 +798,18 @@ export class IoSocketController {
                             );
                             break;
                         }
+                        case "queryMessage": {
+                            if(message.message.queryMessage.query?.$case === "roomTagsQuery") {
+                                void socketManager.handleRoomTagsQuery(client, message.message.queryMessage);
+                            } else {
+                                socketManager.forwardMessageToBack(client, message.message);
+                            }
+                            break;
+                        }
                         case "itemEventMessage":
                         case "variableMessage":
                         case "webRtcSignalToServerMessage":
                         case "webRtcScreenSharingSignalToServerMessage":
-                        case "queryMessage":
                         case "emotePromptMessage":
                         case "followRequestMessage":
                         case "followConfirmationMessage":

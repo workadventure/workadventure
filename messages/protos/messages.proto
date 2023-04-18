@@ -290,6 +290,7 @@ message QueryMessage {
   oneof query {
     JitsiJwtQuery jitsiJwtQuery = 2;
     JoinBBBMeetingQuery joinBBBMeetingQuery = 20;
+    RoomTagsQuery roomTagsQuery = 3;
   }
 }
 
@@ -305,12 +306,16 @@ message JoinBBBMeetingQuery {
   // map<string, string> userdata = 3;
 }
 
+message RoomTagsQuery {
+}
+
 message AnswerMessage {
   int32 id = 1;
   oneof answer {
     ErrorMessage error = 2;
     JitsiJwtAnswer jitsiJwtAnswer = 3;
     JoinBBBMeetingAnswer joinBBBMeetingAnswer = 4;
+    RoomTagsAnswer roomTagsAnswer = 5;
   }
 }
 
@@ -322,6 +327,10 @@ message JitsiJwtAnswer {
 message JoinBBBMeetingAnswer {
   string meetingId = 1;
   string clientURL = 2;
+}
+
+message RoomTagsAnswer {
+  repeated string tags = 1;
 }
 
 /*********** SERVER TO CLIENT MESSAGES *************/

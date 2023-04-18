@@ -41,7 +41,7 @@ import {
     UpdateSpaceUserMessage,
     RemoveSpaceUserMessage,
     WatchSpaceMessage,
-    SpaceFilterMessage, UpdateMegaphoneSettingMessage,
+    SpaceFilterMessage, UpdateMegaphoneSettingMessage, RoomTagsAnswer,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
@@ -1460,6 +1460,17 @@ export class RoomConnection implements RoomConnection {
                 },
             },
         });
+    }
+
+    public async queryRoomTags(): Promise<string[]> {
+        const answer = await this.query({
+            $case: "roomTagsQuery",
+            roomTagsQuery: {},
+        });
+        if (answer.$case !== "roomTagsAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.roomTagsAnswer.tags;
     }
 
     /**

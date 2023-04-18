@@ -9,7 +9,7 @@
 
     type Tab = {
         name: string;
-        component: SvelteComponent;
+        component: typeof SvelteComponent;
     };
 
     let currentTab: Tab | undefined;
