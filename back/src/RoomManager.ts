@@ -18,6 +18,7 @@ import {
     ChatMessagePrompt,
     ServerToClientMessage,
     VariableRequest,
+    RefreshRoomMessage,
 } from "@workadventure/messages";
 import { RoomManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import {
@@ -40,6 +41,7 @@ import {
 import { User, UserSocket } from "./Model/User";
 import { GameRoom } from "./Model/GameRoom";
 import { Admin } from "./Model/Admin";
+import { getMapStorageClient } from "./Services/MapStorageClient";
 
 const debug = Debug("roommanager");
 
@@ -476,6 +478,42 @@ const roomManager = {
             .catch((error) => {
                 throw error;
             });
+    },
+    handleMapStorageUploadMapDetected(call) {
+        getMapStorageClient().handleClearAfterUpload(
+            {
+                wamKey: call.request.wamKey,
+                // probably no need to send that to the map storage
+                mapUrl: call.request.mapUrl,
+            },
+            (err) => {
+                if (err) {
+                    throw err;
+                }
+                Promise.all(socketManager.getWorlds().values())
+                    .then((gameRooms) => {
+                        for (const gameRoom of gameRooms) {
+                            if (gameRoom.wamUrl === call.request.mapUrl) {
+                                gameRoom.getUsers().forEach((user) =>
+                                    user.socket.write({
+                                        message: {
+                                            $case: "refreshRoomMessage",
+                                            refreshRoomMessage: RefreshRoomMessage.fromPartial({
+                                                roomId: gameRoom.roomUrl,
+                                                comment: "New version of map detected. Refresh needed",
+                                                timeToRefresh: 30,
+                                            }),
+                                        },
+                                    })
+                                );
+                            }
+                        }
+                    })
+                    .catch((error) => {
+                        throw error;
+                    });
+            }
+        );
     },
 } satisfies RoomManagerServer;
 

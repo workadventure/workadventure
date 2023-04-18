@@ -704,13 +704,6 @@ message AdminPusherToBackMessage {
   }
 }
 
-
-message MapStorageToBackMessage {
-  oneof message {
-    MapStorageRefreshMessage mapStorageRefreshMessage = 1;
-  }
-}
-
 message MapStorageRefreshMessage {
   string comment = 1;
 }
@@ -721,7 +714,8 @@ message MapStorageUrlMessage {
 }
 
 message MapStorageClearAfterUploadMessage {
-  string mapKey = 1;
+  string wamKey = 1;
+  string mapUrl = 2;
 }
 
 // A message sent by an administrator to a recipient
@@ -924,6 +918,7 @@ message SaveVariableRequest {
   string room = 1;
   string name = 2;
   google.protobuf.Value value = 3;
+
 }
 
 /*

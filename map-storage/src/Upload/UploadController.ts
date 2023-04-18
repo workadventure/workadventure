@@ -16,7 +16,6 @@ import { mapPath } from "../Services/PathMapper";
 import { MAX_UNCOMPRESSED_SIZE } from "../Enum/EnvironmentVariable";
 import { fileSystem } from "../fileSystem";
 import { passportAuthenticator } from "../Services/Authentication";
-import { mapsManager } from "../MapsManager";
 import { uploadDetector } from "../Services/UploadDetector";
 import { FileSystemInterface } from "./FileSystemInterface";
 import { FileNotFoundError } from "./FileNotFoundError";
@@ -178,7 +177,7 @@ export class UploadController {
                     await this.fileSystem.deleteFilesExceptWAM(mapPath(directory, req), filesPathsFromZip);
 
                     const promises: Promise<void>[] = [];
-                    const keysToPurge: string[] = [];
+                    const keysToPurge: { mapKey: string; mapUrl: string }[] = [];
                     const wamFilesNames = zipEntries
                         .filter((zipEntry) => zipEntry.name.includes(".wam"))
                         .map((zipEntry) => path.parse(zipEntry.name).name);
@@ -192,7 +191,8 @@ export class UploadController {
                                 promises.push(this.createWAMFileIfMissing(key));
                             }
                         } else if (path.extname(key) === ".wam") {
-                            keysToPurge.push(key);
+                            const mapUrl = `${req.protocol}://${req.hostname}${directory}/${zipEntry.name}`;
+                            keysToPurge.push({ mapKey: key, mapUrl });
                         }
                     }
 
@@ -205,9 +205,8 @@ export class UploadController {
                             console.error("Error deleting file:", err);
                         }
                     });
-                    for (const key of keysToPurge) {
-                        mapsManager.clearAfterUpload(key);
-                        uploadDetector.refresh(key);
+                    for (const { mapKey, mapUrl } of keysToPurge) {
+                        void uploadDetector.refresh(mapKey, mapUrl);
                     }
                     await this.generateCacheFile(req);
 
@@ -313,8 +312,8 @@ export class UploadController {
                     });
 
                     if (extension === ".wam") {
-                        mapsManager.clearAfterUpload(virtualPath);
-                        uploadDetector.refresh(virtualPath);
+                        const mapUrl = `${req.protocol}://${req.hostname}${virtualPath}`;
+                        void uploadDetector.refresh(virtualPath, mapUrl);
                     }
 
                     await this.generateCacheFile(req);
@@ -389,8 +388,8 @@ export class UploadController {
 
                     await this.fileSystem.writeStringAsFile(virtualPath, patchedContentString);
 
-                    mapsManager.clearAfterUpload(virtualPath);
-                    uploadDetector.refresh(virtualPath);
+                    const mapUrl = `${req.protocol}://${req.hostname}${virtualPath}`;
+                    void uploadDetector.refresh(virtualPath, mapUrl);
 
                     await this.generateCacheFile(req);
 

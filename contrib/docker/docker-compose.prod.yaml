@@ -257,6 +257,7 @@ services:
   map-storage:
     image: thecodingmachine/workadventure-map-storage:${VERSION}
     environment:
+      API_URL: back:50051
       PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
       AUTHENTICATION_STRATEGY: "$MAP_STORAGE_AUTHENTICATION_STRATEGY"
       AUTHENTICATION_USER: "$MAP_STORAGE_AUTHENTICATION_USER"

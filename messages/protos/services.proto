@@ -24,6 +24,7 @@ service RoomManager {
   rpc readVariable(VariableRequest) returns (google.protobuf.Value);
   rpc listenVariable(VariableRequest) returns (stream google.protobuf.Value);
   rpc saveVariable(SaveVariableRequest) returns (google.protobuf.Empty);
+  rpc handleMapStorageUploadMapDetected(MapStorageClearAfterUploadMessage) returns (google.protobuf.Empty);
 }
 
 /**
@@ -41,5 +42,4 @@ service MapStorage {
   rpc handleEditMapCommandWithKeyMessage(EditMapCommandWithKeyMessage) returns (EditMapCommandMessage);
   rpc handleUpdateMapToNewestMessage(UpdateMapToNewestWithKeyMessage) returns (EditMapCommandsArrayMessage);
   rpc handleClearAfterUpload(MapStorageClearAfterUploadMessage) returns (google.protobuf.Empty);
-  rpc listenToMessages(MapStorageUrlMessage) returns (stream MapStorageToBackMessage);
 }

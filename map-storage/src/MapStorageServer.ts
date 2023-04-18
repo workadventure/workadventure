@@ -1,12 +1,10 @@
-import { sendUnaryData, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
+import { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
 import { AreaData, EntityDataProperties } from "@workadventure/map-editor";
 import {
     EditMapCommandMessage,
     EditMapCommandsArrayMessage,
     EditMapCommandWithKeyMessage,
     MapStorageClearAfterUploadMessage,
-    MapStorageToBackMessage,
-    MapStorageUrlMessage,
     PingMessage,
     UpdateMapToNewestWithKeyMessage,
 } from "@workadventure/messages";
@@ -14,27 +12,18 @@ import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated
 import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import { mapsManager } from "./MapsManager";
 import { mapPathUsingDomain } from "./Services/PathMapper";
-import { uploadDetector } from "./Services/UploadDetector";
-
-export type MapStorageStream = ServerWritableStream<MapStorageUrlMessage, MapStorageToBackMessage>;
 
 const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
         callback(null, call.request);
     },
-    listenToMessages(call: MapStorageStream): void {
-        const url = new URL(call.request.mapUrl);
-        const mapKey = mapPathUsingDomain(url.pathname, url.hostname);
-        uploadDetector.registerStream(mapKey, call);
-        call.on("close", () => {
-            uploadDetector.clearStream(mapKey, call);
-        });
-    },
     handleClearAfterUpload(
         call: ServerUnaryCall<MapStorageClearAfterUploadMessage, Empty>,
         callback: sendUnaryData<Empty>
     ): void {
-        console.log("HANDLE CLEAR AFTER UPLOAD CALLED");
+        const key = call.request.wamKey;
+        mapsManager.clearAfterUpload(key);
+        callback(null);
     },
     handleUpdateMapToNewestMessage(
         call: ServerUnaryCall<UpdateMapToNewestWithKeyMessage, Empty>,

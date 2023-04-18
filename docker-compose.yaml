@@ -221,6 +221,7 @@ services:
         command: npm run start:dev
         #command: npm run profile
         working_dir: /usr/src/app/map-storage
+        scale: 2
         environment:
             #DEBUG: "*"
             STARTUP_COMMAND_1: ../npm-install.sh
@@ -229,10 +230,11 @@ services:
             AUTHENTICATION_STRATEGY: "Basic"
             AUTHENTICATION_USER: "john.doe"
             AUTHENTICATION_PASSWORD: "password"
+            API_URL: back:50051
         volumes:
             - .:/usr/src/app
-        ports:
-            - "9233:9229"
+        # ports:
+        #     - "9233:9229"
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.map-storage.rule=Host(`map-storage.workadventure.localhost`)"
