@@ -106,7 +106,7 @@ services:
             # LogRocket
             LOGROCKET_ID: $LOGROCKET_ID
             # Sentry integration
-            SENTRY_DNS: $SENTRY_DNS
+            SENTRY_DSN: $SENTRY_DSN_PLAY
             SENTRY_RELEASE: $SENTRY_RELEASE
             # Room API
             ROOM_API_PORT: "50051"
@@ -143,7 +143,7 @@ services:
             ENABLE_OPENID: "$OPID_CLIENT_ID"
             ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
             # Sentry integration
-            SENTRY_DNS: "$SENTRY_DNS"
+            SENTRY_DSN: "$SENTRY_DSN_CHAT"
             SENTRY_ORG: "workadventure"
             SENTRY_PROJECT: "chat"
             SENTRY_AUTH_TOKEN: "$SENTRY_AUTH_TOKEN"
@@ -216,7 +216,7 @@ services:
             ENABLE_CHAT: "$ENABLE_CHAT"
             ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
             # Sentry integration
-            SENTRY_DNS: $SENTRY_DNS
+            SENTRY_DSN: $SENTRY_DSN_BACK
             SENTRY_RELEASE: $SENTRY_RELEASE
         volumes:
             - .:/usr/src/app
@@ -241,6 +241,9 @@ services:
             AUTHENTICATION_STRATEGY: "Basic"
             AUTHENTICATION_USER: "john.doe"
             AUTHENTICATION_PASSWORD: "password"
+            # Sentry integration
+            SENTRY_DSN: $SENTRY_DSN_MAPSTORAGE
+            SENTRY_RELEASE: $SENTRY_RELEASE
         volumes:
             - .:/usr/src/app
         ports:
