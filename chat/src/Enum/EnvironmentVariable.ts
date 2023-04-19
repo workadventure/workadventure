@@ -14,7 +14,7 @@ const ENABLE_OPENID =
 const EJABBERD_DOMAIN: string = getEnvConfig("EJABBERD_DOMAIN") || "";
 const EJABBERD_WS_URI: string = getEnvConfig("EJABBERD_WS_URI") || "";
 
-const SENTRY_DNS = getEnvConfig("SENTRY_DNS");
+const SENTRY_DSN = getEnvConfig("SENTRY_DSN");
 const SENTRY_RELEASE = getEnvConfig("SENTRY_RELEASE");
 
 export {
@@ -28,6 +28,6 @@ export {
     ADMIN_API_URL,
     EJABBERD_DOMAIN,
     EJABBERD_WS_URI,
-    SENTRY_DNS,
+    SENTRY_DSN,
     SENTRY_RELEASE,
 };

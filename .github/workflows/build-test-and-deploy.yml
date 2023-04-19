@@ -831,7 +831,10 @@ jobs:
           ENABLE_REPORT_ISSUES_MENU: ${{ secrets.ENABLE_REPORT_ISSUES_MENU }}
           REPORT_ISSUES_URL: ${{ secrets.REPORT_ISSUES_URL }}
           LOGROCKET_ID: ${{ secrets.LOGROCKET_ID }}
-          SENTRY_DNS: ${{ secrets.SENTRY_DNS }}
+          SENTRY_DSN_BACK: ${{ secrets.SENTRY_DSN_BACK }}
+          SENTRY_DSN_CHAT: ${{ secrets.SENTRY_DSN_CHAT }}
+          SENTRY_DSN_PLAY: ${{ secrets.SENTRY_DSN_PLAY }}
+          SENTRY_DSN_MAPSTORAGE: ${{ secrets.SENTRY_DSN_MAPSTORAGE }}
           SENTRY_RELEASE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         with:
           namespace: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}

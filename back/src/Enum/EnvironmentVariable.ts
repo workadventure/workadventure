@@ -61,5 +61,5 @@ export const ENABLE_TELEMETRY = env.ENABLE_TELEMETRY;
 export const SECURITY_EMAIL = env.SECURITY_EMAIL;
 export const TELEMETRY_URL = env.TELEMETRY_URL;
 
-export const SENTRY_DNS = env.SENTRY_DNS;
+export const SENTRY_DSN = env.SENTRY_DSN;
 export const SENTRY_RELEASE = env.SENTRY_RELEASE;

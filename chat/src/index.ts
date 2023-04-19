@@ -1,15 +1,15 @@
 import "../style/index.scss";
 
 import * as Sentry from "@sentry/browser";
-import { SENTRY_DNS, SENTRY_RELEASE } from "./Enum/EnvironmentVariable";
+import { SENTRY_DSN, SENTRY_RELEASE } from "./Enum/EnvironmentVariable";
 import { HtmlUtils } from "./Utils/HtmlUtils";
 import App from "./Components/App.svelte";
 import { iframeListener } from "./IframeListener";
 
-if (SENTRY_DNS != undefined) {
+if (SENTRY_DSN != undefined) {
     try {
         const sentryOptions: Sentry.BrowserOptions = {
-            dsn: SENTRY_DNS,
+            dsn: SENTRY_DSN,
             integrations: [new Sentry.BrowserTracing()],
             // Set tracesSampleRate to 1.0 to capture 100%
             // of transactions for performance monitoring.

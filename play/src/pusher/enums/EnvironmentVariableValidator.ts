@@ -77,7 +77,7 @@ export const EnvironmentVariables = z.object({
     ENABLE_REPORT_ISSUES_MENU: BoolAsString.optional().transform((val) => toBool(val, false)),
     REPORT_ISSUES_URL: z.string().url().optional().or(z.literal("")),
     LOGROCKET_ID: z.string().optional(),
-    SENTRY_DNS: z.string().optional(),
+    SENTRY_DSN: z.string().optional(),
     SENTRY_RELEASE: z.string().optional(),
 
     // RoomAPI related environment variables

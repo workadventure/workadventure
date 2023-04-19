@@ -9,7 +9,7 @@ import {
     ADMIN_API_URL,
     ROOM_API_PORT,
     ROOM_API_SECRET_KEY,
-    SENTRY_DNS,
+    SENTRY_DSN,
     SENTRY_RELEASE,
 } from "./pusher/enums/EnvironmentVariable";
 import RoomApiServer from "./room-api/RoomApiServer";
@@ -24,10 +24,10 @@ app.listen(PUSHER_HTTP_PORT)
     .catch((e) => console.error(e));
 
 // Sentry integration
-if (SENTRY_DNS != undefined) {
+if (SENTRY_DSN != undefined) {
     try {
         const sentryOptions: Sentry.NodeOptions = {
-            dsn: SENTRY_DNS,
+            dsn: SENTRY_DSN,
             // Set tracesSampleRate to 1.0 to capture 100%
             // of transactions for performance monitoring.
             // We recommend adjusting this value in production

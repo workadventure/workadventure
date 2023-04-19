@@ -14,13 +14,13 @@ import { fileSystem } from "./fileSystem";
 import { passportStrategy } from "./Services/Authentication";
 import { mapPathUsingDomain } from "./Services/PathMapper";
 import { ValidatorController } from "./Upload/ValidatorController";
-import { SENTRY_DNS, SENTRY_RELEASE } from "./Enum/EnvironmentVariable";
+import { SENTRY_DSN, SENTRY_RELEASE } from "./Enum/EnvironmentVariable";
 
 // Sentry integration
-if (SENTRY_DNS != undefined) {
+if (SENTRY_DSN != undefined) {
     try {
         const sentryOptions: Sentry.NodeOptions = {
-            dsn: SENTRY_DNS,
+            dsn: SENTRY_DSN,
             // Set tracesSampleRate to 1.0 to capture 100%
             // of transactions for performance monitoring.
             // We recommend adjusting this value in production

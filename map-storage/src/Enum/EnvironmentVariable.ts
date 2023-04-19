@@ -42,5 +42,5 @@ export const STORAGE_DIRECTORY = env.STORAGE_DIRECTORY || "./public";
 export const CACHE_CONTROL = env.CACHE_CONTROL || "public, s-max-age=10";
 export const ENV_VARS = env;
 
-export const SENTRY_DNS = env.SENTRY_DNS;
+export const SENTRY_DSN = env.SENTRY_DSN;
 export const SENTRY_RELEASE = env.SENTRY_RELEASE;

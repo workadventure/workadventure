@@ -4,7 +4,7 @@ import * as Sentry from "@sentry/node";
 import { RoomManagerService, SpaceManagerService } from "@workadventure/messages/src/ts-proto-generated/services";
 import App from "./src/App";
 import { roomManager } from "./src/RoomManager";
-import { HTTP_PORT, GRPC_PORT, ENABLE_TELEMETRY, SENTRY_DNS, SENTRY_RELEASE } from "./src/Enum/EnvironmentVariable";
+import { HTTP_PORT, GRPC_PORT, ENABLE_TELEMETRY, SENTRY_DSN, SENTRY_RELEASE } from "./src/Enum/EnvironmentVariable";
 import { telemetryService } from "./src/Services/TelemetryService";
 import { spaceManager } from "./src/SpaceManager";
 
@@ -14,10 +14,10 @@ if (ENABLE_TELEMETRY) {
 App.listen(HTTP_PORT, () => console.log(`WorkAdventure HTTP API starting on port %d!`, HTTP_PORT));
 
 // Sentry integration
-if (SENTRY_DNS != undefined) {
+if (SENTRY_DSN != undefined) {
     try {
         const sentryOptions: Sentry.NodeOptions = {
-            dsn: SENTRY_DNS,
+            dsn: SENTRY_DSN,
             // Set tracesSampleRate to 1.0 to capture 100%
             // of transactions for performance monitoring.
             // We recommend adjusting this value in production

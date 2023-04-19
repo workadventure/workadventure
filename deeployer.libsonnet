@@ -35,7 +35,7 @@
          "ENABLE_MAP_EDITOR_AREAS_TOOL":"true",
         # Sentry integration
         "SENTRY_RELEASE": env.SENTRY_RELEASE,
-        "SENTRY_DNS": env.SENTRY_DNS,
+        "SENTRY_DSN": env.SENTRY_DSN_BACK,
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -73,7 +73,7 @@
               "ENABLE_MAP_EDITOR_AREAS_TOOL":"true",
               # Sentry integration
               "SENTRY_RELEASE": env.SENTRY_RELEASE,
-              "SENTRY_DNS": env.SENTRY_DNS,
+              "SENTRY_DSN": env.SENTRY_DSN_BACK,
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -116,7 +116,7 @@
           "LOGROCKET_ID": env.LOGROCKET_ID,
           # Sentry integration
           "SENTRY_RELEASE": env.SENTRY_RELEASE,
-          "SENTRY_DNS": env.SENTRY_DNS,
+          "SENTRY_DSN": env.SENTRY_DSN_PLAY,
         } + (if adminUrl != null then {
           # Admin
           "ADMIN_URL": adminUrl,
@@ -149,7 +149,7 @@
         "EJABBERD_DOMAIN": "xmpp-"+url,
         # Sentry integration
         "SENTRY_RELEASE": env.SENTRY_RELEASE,
-        "SENTRY_DNS": env.SENTRY_DNS,
+        "SENTRY_DSN": env.SENTRY_DSN_CHAT,
       } + (if adminUrl != null then {
         # Admin
         "ENABLE_OPENID": "1",
@@ -169,6 +169,8 @@
              "AUTHENTICATION_PASSWORD": "password",
              "AUTHENTICATION_TOKEN": "SomeSecretToken",
              "USE_DOMAIN_NAME_IN_PATH": if (adminUrl == null) then "false" else "true",
+             "SENTRY_RELEASE": env.SENTRY_RELEASE,
+             "SENTRY_DSN": env.SENTRY_DSN_MAPSTORAGE,
            }
          },
     "uploaderredis":{

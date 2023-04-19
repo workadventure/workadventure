@@ -33,7 +33,7 @@ const BasicEnvironmentVariables = z.object({
         .describe(
             'The cache-control HTTP header to be used for "normal" ressources. Note: resources containing a hash in the name will be set to "immutable", whatever this setting is.'
         ),
-    SENTRY_DNS: z.string().optional().describe("If set, WorkAdventure will send errors to Sentry"),
+    SENTRY_DSN: z.string().optional().describe("If set, WorkAdventure will send errors to Sentry"),
     SENTRY_RELEASE: z
         .string()
         .optional()
