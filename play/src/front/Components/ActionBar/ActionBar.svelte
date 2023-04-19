@@ -84,7 +84,7 @@
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
-    import { megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
+    import {megaphoneCanBeUsedStore, megaphoneEnabledStore} from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
@@ -719,7 +719,7 @@
                         <img draggable="false" src={emojiPickOn} style="padding: 2px" alt="Toggle emoji picker" />
                     </button>
                 </div>
-                {#if !$silentStore && ($myMicrophoneStore || $myCameraStore)}
+                {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
                     <div on:click={toggleMegaphone} class="bottom-action-button tw-relative">
                         <Tooltip
                             text={$megaphoneEnabledStore

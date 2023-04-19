@@ -80,13 +80,6 @@ import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEve
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
 import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
-import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
-import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
-import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
-import type { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
-import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
-import { StringUtils } from "../../Utils/StringUtils";
-import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connexion/AxiosUtils";
 import {
     availabilityStatusStore,
     localVolumeStore,
@@ -96,24 +89,13 @@ import {
 import { LL, locale } from "../../../i18n/i18n-svelte";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
-import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connexion/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 import type { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
-import CancelablePromise from "cancelable-promise";
-import { Deferred } from "ts-deferred";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
-import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
-import {
-    availabilityStatusToJSON,
-    AvailabilityStatus,
-    ErrorScreenMessage,
-    PositionMessage_Direction,
-} from "@workadventure/messages";
-import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
@@ -124,9 +106,7 @@ import {
     _newChatMessageWritingStatusSubject,
 } from "../../Stores/ChatStore";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
-import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
-import { PlayerVariablesManager } from "./PlayerVariablesManager";
-import { gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
+import {gameSceneIsLoadedStore, gameSceneStore} from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
@@ -135,6 +115,8 @@ import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
 import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
+import { BroadcastService } from "../../Streaming/BroadcastService";
+import {megaphoneCanBeUsedStore, megaphoneEnabledStore} from "../../Stores/MegaphoneStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -162,9 +144,6 @@ import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
 import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 import { faviconManager } from "./../../WebRtc/FaviconManager";
-import { z } from "zod";
-import { BroadcastService } from "../../Streaming/BroadcastService";
-import { megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -1105,6 +1084,13 @@ export class GameScene extends DirtyScene {
 
                 const broadcastService = new BroadcastService(this.connection);
                 this._broadcastService = broadcastService;
+                
+                this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
+                    megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
+                    if(megaphoneSettingsMessage.url){
+                        broadcastService.joinSpace(megaphoneSettingsMessage.url);
+                    }
+                });
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
@@ -1160,8 +1146,6 @@ export class GameScene extends DirtyScene {
 
                 // Get position from UUID only after the connection to the pusher is established
                 this.tryMovePlayerWithMoveToUserParameter();
-
-                broadcastService.joinSpace("test");
 
                 gameSceneStore.set(this);
                 gameSceneIsLoadedStore.set(true);

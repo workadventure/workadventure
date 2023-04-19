@@ -188,6 +188,10 @@ export class SocketManager {
             activatedInviteUser: user.activatedInviteUser != undefined ? user.activatedInviteUser : true,
             applications: user.applications ?? [],
             playerVariable: playerVariablesMessage,
+            megaphoneSettings: {
+                enabled: room.canUseMegaphone(user),
+                url: room.getMegaphoneUrl()
+            }
         };
 
         if (TURN_STATIC_AUTH_SECRET) {
@@ -1235,31 +1239,6 @@ export class SocketManager {
         }
         group.lock(message.lock);
         room.emitLockGroupEvent(user, group.getId());
-    }
-
-    handleEditMapCommandMessage(room: GameRoom, user: User, message: EditMapCommandMessage) {
-        if (!room.wamUrl) {
-            emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
-            return;
-        }
-        getMapStorageClient().handleEditMapCommandWithKeyMessage(
-            {
-                mapKey: room.wamUrl,
-                editMapCommandMessage: message,
-            },
-            (err: unknown, editMapCommandMessage: EditMapCommandMessage) => {
-                if (err) {
-                    emitError(user.socket, err);
-                    return;
-                }
-                room.dispatchRoomMessage({
-                    message: {
-                        $case: "editMapCommandMessage",
-                        editMapCommandMessage,
-                    },
-                });
-            }
-        );
     }
 
     handleUpdateMapToNewestMessage(room: GameRoom, user: User, message: UpdateMapToNewestWithKeyMessage) {

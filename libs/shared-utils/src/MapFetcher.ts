@@ -23,8 +23,11 @@ class MapFetcher {
         const mapPath = (await this.fetchWamFile(wamUrl, canLoadLocalUrl, storeVariableForLocalMaps)).mapUrl;
         return path.normalize(`${path.dirname(wamUrl)}/${mapPath}`);
     }
+    normalizeMapUrl(mapUrl: string, wamUrl: string): string {
+        return path.normalize(`${path.dirname(wamUrl)}/${mapUrl}`);
+    }
 
-    private async fetchWamFile(
+    async fetchWamFile(
         wamUrl: string,
         canLoadLocalUrl = false,
         storeVariableForLocalMaps = false

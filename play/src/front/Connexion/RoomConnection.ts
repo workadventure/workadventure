@@ -41,7 +41,7 @@ import {
     UpdateSpaceUserMessage,
     RemoveSpaceUserMessage,
     WatchSpaceMessage,
-    SpaceFilterMessage, UpdateMegaphoneSettingMessage, RoomTagsAnswer,
+    SpaceFilterMessage, UpdateMegaphoneSettingMessage, MegaphoneSettings
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
@@ -189,6 +189,8 @@ export class RoomConnection implements RoomConnection {
     public readonly updateSpaceUserMessageStream = this._updateSpaceUserMessageStream.asObservable();
     private readonly _removeSpaceUserMessageStream = new Subject<RemoveSpaceUserMessage>();
     public readonly removeSpaceUserMessageStream = this._removeSpaceUserMessageStream.asObservable();
+    private readonly _megaphoneSettingsMessageStream = new Subject<MegaphoneSettings>();
+    public readonly megaphoneSettingsMessageStream = this._megaphoneSettingsMessageStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -462,6 +464,10 @@ export class RoomConnection implements RoomConnection {
                             webrtcPassword: roomJoinedMessage.webrtcPassword,
                         } as RoomJoinedMessageInterface,
                     });
+
+                    if(roomJoinedMessage.megaphoneSettings) {
+                        this._megaphoneSettingsMessageStream.next(roomJoinedMessage.megaphoneSettings);
+                    }
 
                     break;
                 }

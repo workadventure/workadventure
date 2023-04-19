@@ -452,6 +452,12 @@ message RoomJoinedMessage {
   string webrtcUserName = 14;
   string webrtcPassword = 15;
   bool canEdit = 16;
+  MegaphoneSettings megaphoneSettings = 17;
+}
+
+message MegaphoneSettings{
+  bool enabled = 1;
+  optional string url = 2;
 }
 
 message WebRtcStartMessage {
