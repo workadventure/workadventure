@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import path from "node:path";
 import { z, ZodError } from "zod";
-import { Express } from "express";
+import { Express, Request } from "express";
 import multer from "multer";
 import pLimit from "p-limit";
 import archiver from "archiver";
@@ -322,7 +322,7 @@ export class UploadController {
                     });
 
                     if (extension === ".wam" && wamFile) {
-                        uploadDetector.refresh(req.url).catch((err) => {
+                        uploadDetector.refresh(this.getFullUrlFromRequest(req)).catch((err) => {
                             console.error(err);
                         });
                         await this.mapListService.updateWAMFileInCache(req.hostname, filePath, wamFile);
@@ -395,7 +395,7 @@ export class UploadController {
 
                     await this.fileSystem.writeStringAsFile(virtualPath, patchedContentString);
 
-                    uploadDetector.refresh(req.url).catch((err) => {
+                    uploadDetector.refresh(this.getFullUrlFromRequest(req)).catch((err) => {
                         console.error(err);
                     });
 
@@ -543,7 +543,7 @@ export class UploadController {
                 await this.fileSystem.deleteFiles(virtualPath);
 
                 if (filePath.endsWith(".wam")) {
-                    uploadDetector.refresh(req.url).catch((err) => {
+                    uploadDetector.refresh(this.getFullUrlFromRequest(req)).catch((err) => {
                         console.error(err);
                     });
                     await this.mapListService.deleteWAMFileInCache(req.hostname, filePath);
@@ -552,6 +552,10 @@ export class UploadController {
                 res.sendStatus(204);
             })().catch((e) => next(e));
         });
+    }
+
+    private getFullUrlFromRequest(req: Request): string {
+        return `${req.protocol}://${req.hostname}${req.originalUrl}`;
     }
 
     private move() {

@@ -521,24 +521,25 @@ test.describe('Map-storage Upload API', () => {
         await login(page2, 'Bob');
       
         // Let's trigger a reload of map 1 only
-        // const uploadFile3 = await request.put("map1.wam", {
-        //     multipart: {
-        //         file: {
-        //             name: "map1.wam",
-        //             mimeType: "application/json",
-        //             buffer: Buffer.from(JSON.stringify({
-        //                 version: "1.0.0",
-        //                 mapUrl: "http://maps.workadventure.localhost/tests/E2E/empty.json",
-        //                 areas: [],
-        //                 entities: [],
-        //             })),
-        //         }
-        //     }
-        // });
-        await expect(uploadFile1.ok()).toBeTruthy();
+        const uploadFile3 = await request.put("map1.wam", {
+            multipart: {
+                file: {
+                    name: "map1.wam",
+                    mimeType: "application/json",
+                    buffer: Buffer.from(JSON.stringify({
+                        version: "1.0.0",
+                        mapUrl: "http://maps.workadventure.localhost/tests/E2E/empty.json",
+                        areas: [],
+                        entities: [],
+                    })),
+                }
+            }
+        });
+        await expect(uploadFile3.ok()).toBeTruthy();
 
         // Now let's check the user in map1 did reload, but not on map2
-        await page.pause();
+        await expect(page.getByText("New version of map detected. Refresh needed")).toBeVisible();
+        await expect(page2.getByText("New version of map detected. Refresh needed")).toBeHidden();
 
     });
 

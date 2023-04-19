@@ -499,7 +499,6 @@ const roomManager = {
                                             $case: "refreshRoomMessage",
                                             refreshRoomMessage: RefreshRoomMessage.fromPartial({
                                                 roomId: gameRoom.roomUrl,
-                                                comment: "New version of map detected. Refresh needed",
                                                 timeToRefresh: 30,
                                             }),
                                         },
