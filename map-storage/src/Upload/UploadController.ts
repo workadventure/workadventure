@@ -12,6 +12,7 @@ import { WAMFileFormat } from "@workadventure/map-editor";
 import { ZipFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/ZipFileFetcher";
 import { HttpFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/HttpFileFetcher";
 import { Operation } from "fast-json-patch";
+import { generateErrorMessage } from "zod-error";
 import { mapPath } from "../Services/PathMapper";
 import { MAX_UNCOMPRESSED_SIZE } from "../Enum/EnvironmentVariable";
 import { passportAuthenticator } from "../Services/Authentication";
@@ -144,7 +145,7 @@ export class UploadController {
                                         {
                                             type: "error",
                                             message: "Invalid WAM file format.",
-                                            details: "",
+                                            details: generateErrorMessage(result.error.issues ?? []),
                                         },
                                     ],
                                 };
@@ -266,7 +267,7 @@ export class UploadController {
                     // Let's validate the archive
                     const mapValidator = new MapValidator("error", new HttpFileFetcher(req.url));
 
-                    const errors: { [key: string]: Partial<OrganizedErrors> } = {};
+                    let errors: Partial<OrganizedErrors> = {};
 
                     const content = await fs.promises.readFile(file.path, "utf8");
 
@@ -274,7 +275,7 @@ export class UploadController {
                     let wamFile: WAMFileFormat | undefined;
                     if (extension === ".json" && mapValidator.doesStringLooksLikeMap(content)) {
                         // We forbid Maps in JSON format.
-                        errors[filePath] = {
+                        errors = {
                             map: [
                                 {
                                     type: "error",
@@ -286,12 +287,12 @@ export class UploadController {
                     } else if (extension === ".wam") {
                         const result = mapValidator.validateWAMFile(content);
                         if (!result.ok) {
-                            errors[filePath] = {
+                            errors = {
                                 map: [
                                     {
                                         type: "error",
                                         message: "Invalid WAM file format.",
-                                        details: "",
+                                        details: generateErrorMessage(result.error.issues ?? []),
                                     },
                                 ],
                             };
@@ -301,7 +302,7 @@ export class UploadController {
                     } else if (extension === ".tmj") {
                         const result = await mapValidator.validateStringMap(content);
                         if (!result.ok) {
-                            errors[filePath] = result.error;
+                            errors = result.error;
                         }
                     }
 
@@ -362,7 +363,7 @@ export class UploadController {
                 await limiter(async () => {
                     const mapValidator = new MapValidator("error", new HttpFileFetcher(req.url));
 
-                    const errors: { [key: string]: Partial<OrganizedErrors> } = {};
+                    let errors: Partial<OrganizedErrors> = {};
 
                     //eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                     const content = JSON.parse(await this.fileSystem.readFileAsString(virtualPath));
@@ -378,12 +379,12 @@ export class UploadController {
                     const patchedContentString = JSON.stringify(patchedContent);
                     const result = mapValidator.validateWAMFile(patchedContentString);
                     if (!result.ok) {
-                        errors[filePath] = {
+                        errors = {
                             map: [
                                 {
                                     type: "error",
                                     message: "Invalid WAM file format.",
-                                    details: "", // TODO: add details
+                                    details: generateErrorMessage(result.error.issues ?? []),
                                 },
                             ],
                         };
