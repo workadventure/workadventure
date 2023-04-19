@@ -32,6 +32,8 @@ server.bindAsync(`0.0.0.0:50053`, grpc.ServerCredentials.createInsecure(), (err,
 });
 
 const app = express();
+// We need to trust the proxy in order to be able to bind the "X-Forwarded-Host" header to the hostname.
+app.set("trust proxy", true);
 app.use(cors());
 app.use(
     bodyParser.json({

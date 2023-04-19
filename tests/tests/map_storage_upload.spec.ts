@@ -269,8 +269,8 @@ test.describe('Map-storage Upload API', () => {
 
         let listOfMaps = await request.get("maps");
         let maps = await listOfMaps.json();
-        await expect(maps["map.wam"]).toBeDefined();
-        await expect(maps["foo/map.wam"]).toBeDefined();
+        await expect(maps["maps"]["map.wam"]).toBeDefined();
+        await expect(maps["maps"]["foo/map.wam"]).toBeDefined();
 
         const uploadFileAlone = await request.post("upload", {
             multipart: {
@@ -282,8 +282,8 @@ test.describe('Map-storage Upload API', () => {
         await expect(uploadFileAlone.ok()).toBeTruthy();
         listOfMaps = await request.get("maps");
         maps = await listOfMaps.json();
-        await expect(maps["map.wam"]).toBeDefined();
-        await expect(Object.keys(maps)).toHaveLength(1);
+        await expect(maps["maps"]["map.wam"]).toBeDefined();
+        await expect(Object.keys(maps["maps"])).toHaveLength(1);
     });
 
     test("delete the root folder", async ({
@@ -299,8 +299,8 @@ test.describe('Map-storage Upload API', () => {
 
         let listOfMaps = await request.get("maps");
         let maps = await listOfMaps.json();
-        await expect(maps["map.wam"]).toBeDefined();
-        await expect(Object.keys(maps)).toHaveLength(1);
+        await expect(maps["maps"]["map.wam"]).toBeDefined();
+        await expect(Object.keys(maps["maps"])).toHaveLength(1);
 
         const deleteRoot = await request.delete(`delete?path=/`);
 
@@ -308,7 +308,7 @@ test.describe('Map-storage Upload API', () => {
 
         listOfMaps = await request.get("maps");
         maps = await listOfMaps.json();
-        await expect(Object.keys(maps)).toHaveLength(0);
+        await expect(Object.keys(maps["maps"])).toHaveLength(0);
     });
 
     test("delete a folder", async ({
@@ -324,7 +324,7 @@ test.describe('Map-storage Upload API', () => {
 
         let listOfMaps = await request.get("maps");
         let maps = await listOfMaps.json();
-        await expect(maps["toDelete/map.wam"]).toBeDefined();
+        await expect(maps["maps"]["toDelete/map.wam"]).toBeDefined();
 
         const deleteRoot = await request.delete(`delete?path=/toDelete`);
 
@@ -332,7 +332,7 @@ test.describe('Map-storage Upload API', () => {
 
         listOfMaps = await request.get("maps");
         maps = await listOfMaps.json();
-        await expect(maps).toEqual({});
+        await expect(maps["maps"]).toEqual({});
     });
 
     test("move a folder", async ({
@@ -348,7 +348,7 @@ test.describe('Map-storage Upload API', () => {
 
         let listOfMaps = await request.get("maps");
         let maps = await listOfMaps.json();
-        await expect(maps["toMove/map.wam"]).toBeDefined();
+        await expect(maps["maps"]["toMove/map.wam"]).toBeDefined();
 
         const moveDir = await request.post(`move`, {
             data: {
@@ -361,8 +361,8 @@ test.describe('Map-storage Upload API', () => {
 
         listOfMaps = await request.get("maps");
         maps = await listOfMaps.json();
-        await expect(maps["moved/map.wam"]).toBeDefined();
-        await expect(maps["toMove/map.wam"]).toBeUndefined();
+        await expect(maps["maps"]["moved/map.wam"]).toBeDefined();
+        await expect(maps["maps"]["toMove/map.wam"]).toBeUndefined();
     });
 
     test("copy a folder", async ({
@@ -378,7 +378,7 @@ test.describe('Map-storage Upload API', () => {
 
         let listOfMaps = await request.get("maps");
         let maps = await listOfMaps.json();
-        await expect(maps["toCopy/map.wam"]).toBeDefined();
+        await expect(maps["maps"]["toCopy/map.wam"]).toBeDefined();
 
         const copyDir = await request.post(`copy`, {
             data: {
@@ -391,8 +391,8 @@ test.describe('Map-storage Upload API', () => {
 
         listOfMaps = await request.get("maps");
         maps = await listOfMaps.json();
-        await expect(maps["toCopy/map.wam"]).toBeDefined();
-        await expect(maps["copied/map.wam"]).toBeDefined();
+        await expect(maps["maps"]["toCopy/map.wam"]).toBeDefined();
+        await expect(maps["maps"]["copied/map.wam"]).toBeDefined();
     });
 
     test('fails on invalid maps', async ({
@@ -445,7 +445,7 @@ test.describe('Map-storage Upload API', () => {
 
         const listOfMaps = await request.get("maps");
         const maps = await listOfMaps.json();
-        await expect(maps["single-map.wam"]).toBeDefined();
+        await expect(maps["maps"]["single-map.wam"]).toBeDefined();
 
         const patch = await request.patch(`single-map.wam`, {
             headers: {
