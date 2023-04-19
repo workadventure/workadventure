@@ -1060,7 +1060,8 @@ export class SocketManager implements ZoneEventListener {
         let tags: string[];
         try{
             tags = await adminService.getTagsList(client.roomId);
-        } catch (_) {
+        } catch (e) {
+            console.error("SocketManager => handleRoomTagsQuery => error while getting tags list", e);
             // Nothing to do with the error
             tags = [];
         }

@@ -9,11 +9,11 @@
     import InputSelect from "../Input/InputSelect.svelte";
     import InputTags from "../Input/InputTags.svelte";
 
-    let enabled: boolean = gameManager.getCurrentGameScene().wamFile.settings?.megaphone?.enabled ?? false;
+    let enabled: boolean = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.enabled ?? false;
 
-    let rights: string[] = gameManager.getCurrentGameScene().wamFile.settings?.megaphone?.rights ?? [];
-    let title: string = gameManager.getCurrentGameScene().wamFile.settings?.megaphone?.title ?? "";
-    let scope: string = gameManager.getCurrentGameScene().wamFile.settings?.megaphone?.scope ?? "WORLD";
+    let rights: string[] = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.rights ?? [];
+    let title: string = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.title ?? "";
+    let scope: string = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.scope ?? "WORLD";
     let scopes = [{value:"WORLD",label:"World"},{value:"ROOM",label:"Room"}];
 
     let error = {
