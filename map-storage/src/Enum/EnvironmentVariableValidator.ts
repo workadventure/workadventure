@@ -41,6 +41,12 @@ const BasicEnvironmentVariables = z.object({
         .describe(
             "The URL of the webhook to call when a WAM file is created / updated / deleted. The URL will be called using POST."
         ),
+    WEB_HOOK_API_TOKEN: z
+        .string()
+        .optional()
+        .describe(
+            "The (optional) API token to use when calling the webhook. The token will be sent in the Authorization header of the POST request."
+        ),
 });
 
 const BearerAuthEnvVariables = z.object({
