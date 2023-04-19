@@ -926,7 +926,6 @@ export class GameScene extends DirtyScene {
 
                 this.connection.refreshRoomMessageStream.subscribe((message) => {
                     refreshPromptStore.set({
-                        comment: message.comment,
                         timeToRefresh: message.timeToRefresh,
                     });
                 });

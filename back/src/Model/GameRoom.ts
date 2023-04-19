@@ -11,6 +11,7 @@ import {
     MapThirdPartyData,
     MapBbbData,
     MapJitsiData,
+    RefreshRoomMessage,
 } from "@workadventure/messages";
 import { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import { Jitsi } from "@workadventure/shared-utils";
@@ -166,6 +167,20 @@ export class GameRoom implements BrothersFinder {
                 payload: [message],
             });
         }
+    }
+
+    public sendRefreshRoomMessageToUsers(): void {
+        this.users.forEach((user) =>
+            user.socket.write({
+                message: {
+                    $case: "refreshRoomMessage",
+                    refreshRoomMessage: RefreshRoomMessage.fromPartial({
+                        roomId: this.roomUrl,
+                        timeToRefresh: 30,
+                    }),
+                },
+            })
+        );
     }
 
     public getUserByUuid(uuid: string): User | undefined {

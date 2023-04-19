@@ -18,7 +18,6 @@ import {
     ChatMessagePrompt,
     ServerToClientMessage,
     VariableRequest,
-    RefreshRoomMessage,
 } from "@workadventure/messages";
 import { RoomManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import {
@@ -498,17 +497,7 @@ const roomManager = {
                     .then((gameRooms) => {
                         for (const gameRoom of gameRooms) {
                             if (gameRoom.wamUrl === call.request.wamUrl) {
-                                gameRoom.getUsers().forEach((user) =>
-                                    user.socket.write({
-                                        message: {
-                                            $case: "refreshRoomMessage",
-                                            refreshRoomMessage: RefreshRoomMessage.fromPartial({
-                                                roomId: gameRoom.roomUrl,
-                                                timeToRefresh: 30,
-                                            }),
-                                        },
-                                    })
-                                );
+                                gameRoom.sendRefreshRoomMessageToUsers();
                             }
                         }
                     })
