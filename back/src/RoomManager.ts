@@ -480,6 +480,11 @@ const roomManager = {
             });
     },
     handleMapStorageUploadMapDetected(call) {
+        /**
+         * We are calling the mapstorage connected to this back server and asking to purge the wamUrl from memory.
+         * We are not sure this particular mapstorage has this particular WAM map in memory. But since the message
+         * is dispatched to all back servers, one of the back servers will be connected to the correct map storage.
+         */
         getMapStorageClient().handleClearAfterUpload(
             {
                 wamUrl: call.request.wamUrl,
