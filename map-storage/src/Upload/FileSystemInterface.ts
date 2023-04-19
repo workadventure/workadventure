@@ -3,7 +3,7 @@ import { Archiver } from "archiver";
 import { StreamZipAsync, ZipEntry } from "node-stream-zip";
 
 export interface FileSystemInterface {
-    deleteFiles(directory: string): Promise<void>;
+    deleteFiles(path: string): Promise<void>;
 
     deleteFilesExceptWAM(directory: string, filesFromZip: string[]): Promise<void>;
 

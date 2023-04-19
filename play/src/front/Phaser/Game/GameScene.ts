@@ -106,7 +106,7 @@ import {
     _newChatMessageWritingStatusSubject,
 } from "../../Stores/ChatStore";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
-import {gameSceneIsLoadedStore, gameSceneStore} from "../../Stores/GameSceneStore";
+import { gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
@@ -116,7 +116,7 @@ import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
 import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
-import {megaphoneCanBeUsedStore, megaphoneEnabledStore} from "../../Stores/MegaphoneStore";
+import { megaphoneCanBeUsedStore, megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -1084,10 +1084,10 @@ export class GameScene extends DirtyScene {
 
                 const broadcastService = new BroadcastService(this.connection);
                 this._broadcastService = broadcastService;
-                
+
                 this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
                     megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
-                    if(megaphoneSettingsMessage.url){
+                    if (megaphoneSettingsMessage.url) {
                         broadcastService.joinSpace(megaphoneSettingsMessage.url);
                     }
                 });
@@ -2145,7 +2145,7 @@ ${escapedMessage}
             this.scene.remove(this.scene.key);
         } else {
             //if the exit points to the current map, we simply teleport the user back to the startLayer
-            this.startPositionCalculator.initStartXAndStartY(roomUrl.hash);
+            this.startPositionCalculator.initStartXAndStartY(urlManager.getStartPositionNameFromUrl());
             this.CurrentPlayer.x = this.startPositionCalculator.startPosition.x;
             this.CurrentPlayer.y = this.startPositionCalculator.startPosition.y;
             this.CurrentPlayer.finishFollowingPath(true);

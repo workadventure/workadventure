@@ -26,12 +26,26 @@ const BasicEnvironmentVariables = z.object({
     STORAGE_DIRECTORY: z
         .string()
         .optional()
+        .default("./public")
         .describe("Storage directory for the maps on physical disk. Used if S3 storage is not configured."),
     CACHE_CONTROL: z
         .string()
         .optional()
+        .default("public, s-max-age=10")
         .describe(
-            'The cache-control HTTP header to be used for "normal" ressources. Note: resources containing a hash in the name will be set to "immutable", whatever this setting is.'
+            'The cache-control HTTP header to be used for "normal" resources. Note: resources containing a hash in the name will be set to "immutable", whatever this setting is.'
+        ),
+    WEB_HOOK_URL: z
+        .string()
+        .optional()
+        .describe(
+            "The URL of the webhook to call when a WAM file is created / updated / deleted. The URL will be called using POST."
+        ),
+    WEB_HOOK_API_TOKEN: z
+        .string()
+        .optional()
+        .describe(
+            "The (optional) API token to use when calling the webhook. The token will be sent in the Authorization header of the POST request."
         ),
 });
 

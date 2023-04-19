@@ -6,6 +6,7 @@ import {
     DeleteObjectCommand,
     DeleteObjectsCommand,
     GetObjectCommand,
+    HeadObjectCommand,
     ListObjectsCommand,
     ListObjectsCommandInput,
     ListObjectsCommandOutput,
@@ -20,14 +21,24 @@ import { Archiver } from "archiver";
 import { StreamZipAsync, ZipEntry } from "node-stream-zip";
 import pLimit from "p-limit";
 import { s3UploadConcurrencyLimit } from "../Services/S3Client";
-import { UploadController } from "./UploadController";
+import { MapListService } from "../Services/MapListService";
 import { FileNotFoundError } from "./FileNotFoundError";
 import { FileSystemInterface } from "./FileSystemInterface";
 
 export class S3FileSystem implements FileSystemInterface {
     public constructor(private s3: S3, private bucketName: string) {}
 
-    async deleteFiles(directory: string): Promise<void> {
+    async deleteFiles(path: string): Promise<void> {
+        if (!path.endsWith("/")) {
+            // The path might be a single file
+            if (await this.isFile(path)) {
+                await this.s3.send(new DeleteObjectCommand({ Bucket: this.bucketName, Key: path }));
+                return;
+            }
+        }
+
+        let directory = path;
+
         if (!directory.endsWith("/")) {
             directory += "/";
         }
@@ -60,6 +71,18 @@ export class S3FileSystem implements FileSystemInterface {
                 }
             }
         } while (listObjectsResponse.IsTruncated);
+    }
+
+    private async isFile(path: string): Promise<boolean> {
+        try {
+            await this.s3.send(new HeadObjectCommand({ Bucket: this.bucketName, Key: path }));
+            return true;
+        } catch (e) {
+            if (e instanceof NoSuchKey) {
+                return false;
+            }
+            throw e;
+        }
     }
 
     async deleteFilesExceptWAM(directory: string, filesFromZip: string[]): Promise<void> {
@@ -330,7 +353,7 @@ export class S3FileSystem implements FileSystemInterface {
                         // a directory. Let's bypass this.
                         continue;
                     }
-                    if (file.Key.includes(UploadController.CACHE_NAME)) {
+                    if (file.Key.includes(MapListService.CACHE_NAME)) {
                         // we do not want cache file to be downloaded
                         continue;
                     }

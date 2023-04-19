@@ -13,15 +13,16 @@ import {
     MapDetailsData,
     MapThirdPartyData,
     MapBbbData,
-    MapJitsiData, EditMapCommandMessage,
+    MapJitsiData,
+    EditMapCommandMessage,
 } from "@workadventure/messages";
 import { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import { Jitsi } from "@workadventure/shared-utils";
 import { ClientReadableStream } from "@grpc/grpc-js";
-import { mapFetcher } from "@workadventure/shared-utils/src/MapFetcher";
-import { LocalUrlError } from "@workadventure/shared-utils/src/LocalUrlError";
+import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
+import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
 import { Value } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/struct";
-import {WAMFileFormat} from "@workadventure/map-editor";
+import { WAMFileFormat } from "@workadventure/map-editor";
 import { PositionInterface } from "../Model/PositionInterface";
 import {
     EmoteCallback,
@@ -49,7 +50,7 @@ import {
     SECRET_JITSI_KEY,
     STORE_VARIABLES_FOR_LOCAL_MAPS,
 } from "../Enum/EnvironmentVariable";
-import {emitError, emitErrorOnRoomSocket} from "../Services/MessageHelpers";
+import { emitError, emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { MapLoadingError } from "../Services/MapLoadingError";
@@ -134,9 +135,9 @@ export class GameRoom implements BrothersFinder {
         let mapUrl: string;
         let wamFile: WAMFileFormat | undefined = undefined;
 
-        if(!wamUrl && mapDetails.mapUrl){
+        if (!wamUrl && mapDetails.mapUrl) {
             mapUrl = mapDetails.mapUrl;
-        } else if(wamUrl){
+        } else if (wamUrl) {
             wamFile = await mapFetcher.fetchWamFile(wamUrl, false, STORE_VARIABLES_FOR_LOCAL_MAPS);
             mapUrl = mapFetcher.normalizeMapUrl(wamUrl, wamFile.mapUrl);
         } else {
@@ -1163,11 +1164,12 @@ export class GameRoom implements BrothersFinder {
                     emitError(user.socket, err);
                     return;
                 }
-                if(editMapCommandMessage.editMapMessage?.message?.$case === "updateMegaphoneSettingMessage") {
-                    if(!this._wamSettings){
+                if (editMapCommandMessage.editMapMessage?.message?.$case === "updateMegaphoneSettingMessage") {
+                    if (!this._wamSettings) {
                         this._wamSettings = {};
                     }
-                    this._wamSettings.megaphone = editMapCommandMessage.editMapMessage.message.updateMegaphoneSettingMessage;
+                    this._wamSettings.megaphone =
+                        editMapCommandMessage.editMapMessage.message.updateMegaphoneSettingMessage;
                 }
                 this.dispatchRoomMessage({
                     message: {
@@ -1179,24 +1181,29 @@ export class GameRoom implements BrothersFinder {
         );
     }
 
-    canUseMegaphone(user: User): boolean{
-        if(!this._wamSettings || !this._wamSettings.megaphone || !this._wamSettings.megaphone.enabled){
+    canUseMegaphone(user: User): boolean {
+        if (!this._wamSettings || !this._wamSettings.megaphone || !this._wamSettings.megaphone.enabled) {
             return false;
         }
         const rights = this._wamSettings.megaphone.rights;
-        if(!rights || rights.length === 0){
+        if (!rights || rights.length === 0) {
             return true;
         }
         return rights.filter((right) => user.tags.includes(right)).length > 0;
     }
 
     getMegaphoneUrl() {
-        if(this._wamSettings && this._wamSettings.megaphone && this._wamSettings.megaphone.enabled && this._wamSettings.megaphone.scope){
+        if (
+            this._wamSettings &&
+            this._wamSettings.megaphone &&
+            this._wamSettings.megaphone.enabled &&
+            this._wamSettings.megaphone.scope
+        ) {
             let mainURI = this.roomGroup;
-            if(this._wamSettings.megaphone.scope === "room"){
+            if (this._wamSettings.megaphone.scope === "room") {
                 mainURI = this.roomUrl;
             }
-            if(!mainURI){
+            if (!mainURI) {
                 throw new Error("Cannot get megaphone url without room url or room group");
             }
             return `${mainURI}/megaphone`;

@@ -52,7 +52,6 @@
     "circular-json": "^0.5.9",
     "debug": "^4.3.1",
     "google-protobuf": "^3.21.0",
-    "ipaddr.js": "^2.0.1",
     "jsonwebtoken": "^9.0.0",
     "mkdirp": "^1.0.4",
     "openapi3-ts": "^3.0.2",

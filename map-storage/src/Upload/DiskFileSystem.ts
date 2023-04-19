@@ -3,18 +3,23 @@ import * as fs from "fs-extra";
 import { NextFunction, Response } from "express";
 import { Archiver } from "archiver";
 import { StreamZipAsync, ZipEntry } from "node-stream-zip";
+import { MapListService } from "../Services/MapListService";
 import { FileSystemInterface } from "./FileSystemInterface";
-import { UploadController } from "./UploadController";
 import { FileNotFoundError } from "./FileNotFoundError";
 import { NodeError } from "./NodeError";
 
 export class DiskFileSystem implements FileSystemInterface {
     public constructor(private baseDirectory: string) {}
 
-    async deleteFiles(directory: string): Promise<void> {
-        const fullPath = this.getFullPath(directory);
+    async deleteFiles(path: string): Promise<void> {
+        const fullPath = this.getFullPath(path);
         if (await fs.pathExists(fullPath)) {
-            await fs.emptyDir(fullPath);
+            if (path === "/" || path === "" || path === "./") {
+                // Special case: if root dir, empty the directory but don't try to remove it (we might not have the right to do so)
+                await fs.emptyDir(fullPath);
+            } else {
+                await fs.rm(fullPath, { recursive: true, force: true });
+            }
         }
     }
 
@@ -126,7 +131,7 @@ export class DiskFileSystem implements FileSystemInterface {
 
     archiveDirectory(archiver: Archiver, virtualPath: string): Promise<void> {
         const fullPath = this.getFullPath(virtualPath);
-        archiver.glob("**/*", { cwd: fullPath, ignore: UploadController.CACHE_NAME });
+        archiver.glob("**/*", { cwd: fullPath, ignore: MapListService.CACHE_NAME });
         return Promise.resolve();
     }
 
