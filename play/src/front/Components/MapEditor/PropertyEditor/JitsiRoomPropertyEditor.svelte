@@ -23,7 +23,12 @@
 </script>
 
 <div class="property-settings-container">
-    <button class="close-button">
+    <button
+        class="close-button"
+        on:click={() => {
+            dispatch("close");
+        }}
+    >
         <img src={trashImg} alt="" />
     </button>
     <div class="value-input">
@@ -78,9 +83,9 @@
                 max-width: 2em;
                 max-height: 2em;
             }
-            :hover {
-                background-color: red;
-            }
+        }
+        .close-button:hover {
+            background-color: red;
         }
     }
     .value-input {

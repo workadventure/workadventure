@@ -3,6 +3,7 @@
     import { OpenWebsitePropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
+    import trashImg from "../../images/trash-x-filled.svg";
 
     export let property: OpenWebsitePropertyData;
 
@@ -13,37 +14,71 @@
     }
 </script>
 
-<div class="value-input">
-    <label for="tabLink">{$LL.mapEditor.properties.linkProperties.linkLabel()}</label>
-    <input
-        id="tabLink"
-        type="text"
-        placeholder={$LL.mapEditor.properties.linkProperties.linkPlaceholder()}
-        bind:value={property.link}
-        on:change={onValueChange}
-        on:focus={onMapEditorInputFocus}
-        on:blur={onMapEditorInputUnfocus}
-    />
-</div>
-{#if !property.hideButtonLabel}
+<div class="property-settings-container">
+    <button
+        class="close-button"
+        on:click={() => {
+            dispatch("close");
+        }}
+    >
+        <img src={trashImg} alt="" />
+    </button>
     <div class="value-input">
-        <label for="linkButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
+        <label for="tabLink">{$LL.mapEditor.properties.linkProperties.linkLabel()}</label>
         <input
-            id="linkButtonlabel"
+            id="tabLink"
             type="text"
-            bind:value={property.buttonLabel}
+            placeholder={$LL.mapEditor.properties.linkProperties.linkPlaceholder()}
+            bind:value={property.link}
             on:change={onValueChange}
             on:focus={onMapEditorInputFocus}
             on:blur={onMapEditorInputUnfocus}
         />
     </div>
-{/if}
-<div class="value-switch">
-    <label for="newTab">{$LL.mapEditor.properties.linkProperties.newTabLabel()}</label>
-    <input id="newTab" type="checkbox" class="input-switch" bind:checked={property.newTab} on:change={onValueChange} />
+    {#if !property.hideButtonLabel}
+        <div class="value-input">
+            <label for="linkButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
+            <input
+                id="linkButtonlabel"
+                type="text"
+                bind:value={property.buttonLabel}
+                on:change={onValueChange}
+                on:focus={onMapEditorInputFocus}
+                on:blur={onMapEditorInputUnfocus}
+            />
+        </div>
+    {/if}
+    <div class="value-switch">
+        <label for="newTab">{$LL.mapEditor.properties.linkProperties.newTabLabel()}</label>
+        <input
+            id="newTab"
+            type="checkbox"
+            class="input-switch"
+            bind:checked={property.newTab}
+            on:change={onValueChange}
+        />
+    </div>
 </div>
 
 <style lang="scss">
+    .property-settings-container {
+        border: 1px solid grey;
+        border-radius: 5px;
+        padding: 15px;
+        .close-button {
+            float: right;
+            border-color: red;
+            img {
+                object-fit: contain;
+                max-width: 2em;
+                max-height: 2em;
+            }
+        }
+        .close-button:hover {
+            background-color: red;
+        }
+    }
+
     .value-input {
         display: flex;
         width: 100%;

@@ -3,6 +3,7 @@
     import { PlayAudioPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
+    import trashImg from "../../images/trash-x-filled.svg";
 
     export let property: PlayAudioPropertyData;
 
@@ -13,33 +14,60 @@
     }
 </script>
 
-<div class="value-input">
-    <label for="audioLink">{$LL.mapEditor.properties.audioProperties.audioLinkLabel()}</label>
-    <input
-        id="audioLink"
-        type="text"
-        placeholder={$LL.mapEditor.properties.audioProperties.audioLinkPlaceholder()}
-        bind:value={property.audioLink}
-        on:change={onValueChange}
-        on:focus={onMapEditorInputFocus}
-        on:blur={onMapEditorInputUnfocus}
-    />
-</div>
-{#if !property.hideButtonLabel}
+<div class="property-settings-container">
+    <button
+        class="close-button"
+        on:click={() => {
+            dispatch("close");
+        }}
+    >
+        <img src={trashImg} alt="" />
+    </button>
     <div class="value-input">
-        <label for="audioButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
+        <label for="audioLink">{$LL.mapEditor.properties.audioProperties.audioLinkLabel()}</label>
         <input
-            id="audioButtonLabel"
+            id="audioLink"
             type="text"
-            bind:value={property.buttonLabel}
+            placeholder={$LL.mapEditor.properties.audioProperties.audioLinkPlaceholder()}
+            bind:value={property.audioLink}
             on:change={onValueChange}
             on:focus={onMapEditorInputFocus}
             on:blur={onMapEditorInputUnfocus}
         />
     </div>
-{/if}
+    {#if !property.hideButtonLabel}
+        <div class="value-input">
+            <label for="audioButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
+            <input
+                id="audioButtonLabel"
+                type="text"
+                bind:value={property.buttonLabel}
+                on:change={onValueChange}
+                on:focus={onMapEditorInputFocus}
+                on:blur={onMapEditorInputUnfocus}
+            />
+        </div>
+    {/if}
+</div>
 
 <style lang="scss">
+    .property-settings-container {
+        border: 1px solid grey;
+        border-radius: 5px;
+        padding: 15px;
+        .close-button {
+            float: right;
+            border-color: red;
+            img {
+                object-fit: contain;
+                max-width: 2em;
+                max-height: 2em;
+            }
+        }
+        .close-button:hover {
+            background-color: red;
+        }
+    }
     .value-input {
         display: flex;
         width: 100%;

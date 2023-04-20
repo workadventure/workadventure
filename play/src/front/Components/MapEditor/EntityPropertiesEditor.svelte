@@ -4,6 +4,8 @@
     import { mapEditorSelectedEntityStore } from "../../Stores/MapEditorStore";
     import plusImg from "../images/plus.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
+    import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
+    import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
 
     let properties = $mapEditorSelectedEntityStore?.getProperties() ?? [];
 
@@ -110,49 +112,58 @@
             </button>
         </div>
     </div>
-    {#each properties as property}
-        {#if property.type === "jitsiRoomProperty"}
-            <JitsiRoomPropertyEditor {property} />
-        {:else}
-            <div>
-                <button
-                    on:click={() => {
-                        onDeleteProperty(property.id);
-                    }}
-                >
-                    <p>{property.id}: {property.type}</p>
-                </button>
+    <div class="properties-container">
+        {#each properties as property}
+            <div class="property-box">
+                {#if property.type === "jitsiRoomProperty"}
+                    <JitsiRoomPropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                    />
+                {:else if property.type === "playAudio"}
+                    <PlayAudioPropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                    />
+                {:else if property.type === "openWebsite"}
+                    <OpenWebsitePropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                    />
+                {:else}
+                    <div>
+                        <button
+                            on:click={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                        >
+                            <p>{property.id}: {property.type}</p>
+                        </button>
+                    </div>
+                {/if}
             </div>
-        {/if}
-    {/each}
+        {/each}
+    </div>
 {/if}
 
 <style lang="scss">
-    .entity-properties {
+    .properties-container {
         overflow-y: auto;
         overflow-x: hidden;
-        .property-enabler {
-            border-radius: 0.1em;
-            display: flex;
-            background-color: rgb(77 75 103);
-            margin-top: 1px;
-            margin-top: 1px;
-            align-items: center;
-            padding-right: 1em;
-            label {
-                padding-top: 1em;
-                padding-bottom: 1em;
-                padding-left: 1em;
-                flex-grow: 1;
-                margin: 0;
-            }
-        }
-        .property-enabler:hover {
-            background-color: rgb(85 85 113);
-        }
-        .property-container {
-            padding-left: 1em;
-        }
+    }
+
+    .properties-container::-webkit-scrollbar {
+        display: none;
+    }
+
+    .property-box {
+        margin-top: 5px;
     }
 
     .properties-buttons {
