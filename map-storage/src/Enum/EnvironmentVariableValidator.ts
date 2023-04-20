@@ -37,7 +37,7 @@ const BasicEnvironmentVariables = z.object({
     SENTRY_RELEASE: z
         .string()
         .optional()
-        .describe("If set, WorkAdventure will send errors to Sentry with the good relase version"),
+        .describe("The Sentry release we target. Only used if SENTRY_DSN is configured."),
 });
 
 const BearerAuthEnvVariables = z.object({
