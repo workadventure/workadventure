@@ -12,7 +12,8 @@ class MapFetcher {
         mapUrl: string | undefined,
         wamUrl: string | undefined,
         canLoadLocalUrl = false,
-        storeVariableForLocalMaps = false
+        storeVariableForLocalMaps = false,
+        internalMapStorageUrl: string | undefined = undefined
     ): Promise<string> {
         if (mapUrl) {
             return mapUrl;
@@ -20,16 +21,19 @@ class MapFetcher {
         if (!wamUrl) {
             throw new Error("Both mapUrl and wamUrl are undefined. Can't get mapUrl.");
         }
-        const mapPath = (await this.fetchWamFile(wamUrl, canLoadLocalUrl, storeVariableForLocalMaps)).mapUrl;
+        const mapPath = (
+            await this.fetchWamFile(wamUrl, canLoadLocalUrl, storeVariableForLocalMaps, internalMapStorageUrl)
+        ).mapUrl;
         return path.normalize(`${path.dirname(wamUrl)}/${mapPath}`);
     }
 
     private async fetchWamFile(
         wamUrl: string,
         canLoadLocalUrl = false,
-        storeVariableForLocalMaps = false
+        storeVariableForLocalMaps = false,
+        internalMapStorageUrl: string | undefined = undefined
     ): Promise<WAMFileFormat> {
-        const result = await this.fetchFile(wamUrl, canLoadLocalUrl, storeVariableForLocalMaps);
+        const result = await this.fetchFile(wamUrl, canLoadLocalUrl, storeVariableForLocalMaps, internalMapStorageUrl);
         const parseResult = WAMFileFormat.safeParse(result.data);
         if (!parseResult) {
             throw new LocalUrlError(`Invalid wam file format for: ${wamUrl}`);
@@ -42,9 +46,10 @@ class MapFetcher {
         mapUrl: string | undefined,
         wamUrl: string | undefined,
         canLoadLocalUrl = false,
-        storeVariableForLocalMaps = false
+        storeVariableForLocalMaps = false,
+        internalMapStorageUrl: string | undefined = undefined
     ): Promise<ITiledMap> {
-        const url = await this.getMapUrl(mapUrl, wamUrl);
+        const url = await this.getMapUrl(mapUrl, wamUrl, false, false, internalMapStorageUrl);
 
         // Before trying to make the query, let's verify the map is actually on the open internet (and not a local test map)
 
@@ -60,7 +65,12 @@ class MapFetcher {
         return res.data as ITiledMap;
     }
 
-    public async fetchFile(url: string, canLoadLocalUrl = false, storeVariableForLocalMaps = false) {
+    public async fetchFile(
+        url: string,
+        canLoadLocalUrl = false,
+        storeVariableForLocalMaps = false,
+        internalUrl: string | undefined = undefined
+    ) {
         // Note: mapUrl is provided by the client. A possible attack vector would be to use a rogue DNS server that
         // returns local URLs. Alas, Axios cannot pin a URL to a given IP. So "isLocalUrl" and axios.get could potentially
         // target to different servers (and one could trick axios.get into loading resources on the internal network
@@ -68,13 +78,32 @@ class MapFetcher {
         // We can deem this problem not that important because:
         // - We make sure we are only passing "GET" requests
         // - The result of the query is never displayed to the end user
-        if ((await this.isLocalUrl(url)) && !storeVariableForLocalMaps && !canLoadLocalUrl) {
+        if (
+            internalUrl === undefined &&
+            (await this.isLocalUrl(url)) &&
+            !storeVariableForLocalMaps &&
+            !canLoadLocalUrl
+        ) {
             throw new LocalUrlError('URL for map "' + url + '" targets a local map');
+        }
+
+        const headers: Record<string, string> = {};
+        if (internalUrl) {
+            // Let's rewrite the request to hit the internal URL instead. We will use the X-Forwarded-Host header to
+            // tell the map-storage the real domain name.
+            const urlObj = new URL(url);
+            const domainUrl = urlObj.host;
+
+            headers["X-Forwarded-Host"] = domainUrl;
+
+            // Rewrite the URL to use the internalUrl instead
+            url = internalUrl + urlObj.pathname + urlObj.search;
         }
 
         return await axios.get<unknown>(url, {
             maxContentLength: 50 * 1024 * 1024, // Max content length: 50MB. Maps should not be bigger
             timeout: 10000, // Timeout after 10 seconds
+            headers,
         });
     }
 

@@ -42,6 +42,7 @@ import {
     BBB_URL,
     ENABLE_CHAT,
     ENABLE_CHAT_UPLOAD,
+    INTERNAL_MAP_STORAGE_URL,
     JITSI_ISS,
     JITSI_URL,
     PUBLIC_MAP_STORAGE_URL,
@@ -132,7 +133,8 @@ export class GameRoom implements BrothersFinder {
             mapDetails.mapUrl,
             mapDetails.wamUrl,
             false,
-            STORE_VARIABLES_FOR_LOCAL_MAPS
+            STORE_VARIABLES_FOR_LOCAL_MAPS,
+            INTERNAL_MAP_STORAGE_URL
         );
 
         const gameRoom = new GameRoom(
@@ -623,7 +625,8 @@ export class GameRoom implements BrothersFinder {
             mapDetails.mapUrl,
             mapDetails.wamUrl,
             false,
-            STORE_VARIABLES_FOR_LOCAL_MAPS
+            STORE_VARIABLES_FOR_LOCAL_MAPS,
+            INTERNAL_MAP_STORAGE_URL
         );
         if (this._mapUrl !== mapUrl) {
             this._mapUrl = mapUrl;
@@ -728,7 +731,8 @@ export class GameRoom implements BrothersFinder {
                 this._mapUrl,
                 this._wamUrl,
                 canLoadLocalUrl,
-                STORE_VARIABLES_FOR_LOCAL_MAPS
+                STORE_VARIABLES_FOR_LOCAL_MAPS,
+                INTERNAL_MAP_STORAGE_URL
             );
         }
 
