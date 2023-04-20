@@ -1,5 +1,5 @@
 import { sendUnaryData, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
-import { AreaData, EntityDataProperties } from "@workadventure/map-editor";
+import { AreaData, AtLeast, EntityData, EntityDataProperties } from "@workadventure/map-editor";
 import {
     EditMapCommandMessage,
     EditMapCommandsArrayMessage,
@@ -125,13 +125,21 @@ const mapStorageServer: MapStorageServer = {
                 }
                 case "modifyEntityMessage": {
                     const message = editMapMessage.modifyEntityMessage;
+
+                    // NOTE: protobuf does not distinguish between null and empty array, we cannot create optional repeated value.
+                    //       Because of that, we send additional "modifyProperties" flag set properties value as "undefined" so they won't get erased
+                    //       by [] value which was supposed to be null.
+                    const dataToModify: AtLeast<EntityData, "id"> = structuredClone(message);
+                    if (!message.modifyProperties) {
+                        dataToModify.properties = undefined;
+                    }
                     const entity = gameMap.getGameMapEntities()?.getEntity(message.id);
                     if (entity) {
                         mapsManager.executeCommand(
                             mapKey,
                             {
                                 type: "UpdateEntityCommand",
-                                dataToModify: message,
+                                dataToModify,
                             },
                             commandId
                         );

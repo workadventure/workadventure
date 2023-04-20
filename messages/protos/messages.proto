@@ -189,6 +189,7 @@ message ModifyEntityMessage {
   optional uint32 x = 2;
   optional uint32 y = 3;
   repeated google.protobuf.Value properties = 4;
+  optional bool modifyProperties = 5;
 }
 
 message ClientToServerMessage {

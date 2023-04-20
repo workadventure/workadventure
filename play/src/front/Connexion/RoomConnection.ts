@@ -1147,6 +1147,7 @@ export class RoomConnection implements RoomConnection {
                             modifyEntityMessage: {
                                 ...config,
                                 properties: config.properties ?? [],
+                                modifyProperties: config.properties !== undefined,
                             },
                         },
                     },
