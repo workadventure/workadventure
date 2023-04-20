@@ -62,13 +62,13 @@
         <EnableCameraScene {game} />
     </div>
 {:else if $gameSceneIsLoadedStore && !$selectCharacterCustomizeSceneVisibleStore}
+    {#if $refreshPromptStore}
+        <RefreshPrompt />
+    {/if}
     {#key unique}
         <Chat />
         {#if $mapEditorModeStore}
             <MapEditor />
-        {/if}
-        {#if $refreshPromptStore}
-            <RefreshPrompt />
         {/if}
         <MainLayout />
     {/key}

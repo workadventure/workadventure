@@ -230,6 +230,7 @@ services:
             AUTHENTICATION_STRATEGY: "Basic"
             AUTHENTICATION_USER: "john.doe"
             AUTHENTICATION_PASSWORD: "password"
+            API_URL: back:50051
         volumes:
             - .:/usr/src/app
         ports:

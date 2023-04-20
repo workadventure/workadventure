@@ -7,6 +7,7 @@ import {
 } from "@workadventure/shared-utils/src/EnvironmentVariables/EnvironmentVariableUtils";
 
 const BasicEnvironmentVariables = z.object({
+    API_URL: z.string().min(1).describe("The URI(s) of the back server"),
     AWS_ACCESS_KEY_ID: z.string().optional(),
     AWS_SECRET_ACCESS_KEY: z.string().optional(),
     AWS_DEFAULT_REGION: z.string().optional(),

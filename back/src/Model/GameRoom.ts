@@ -6,18 +6,15 @@ import {
     SubToPusherRoomMessage,
     VariableWithTagMessage,
     ServerToClientMessage,
-    RefreshRoomMessage,
-    MapStorageUrlMessage,
-    MapStorageToBackMessage,
     isMapDetailsData,
     MapDetailsData,
     MapThirdPartyData,
     MapBbbData,
     MapJitsiData,
+    RefreshRoomMessage,
 } from "@workadventure/messages";
 import { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import { Jitsi } from "@workadventure/shared-utils";
-import { ClientReadableStream } from "@grpc/grpc-js";
 import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
 import { Value } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/struct";
@@ -54,7 +51,6 @@ import { VariableError } from "../Services/VariableError";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { MapLoadingError } from "../Services/MapLoadingError";
 import { MucManager } from "../Services/MucManager";
-import { getMapStorageClient } from "../Services/MapStorageClient";
 import { BrothersFinder } from "./BrothersFinder";
 import { PositionNotifier } from "./PositionNotifier";
 import { User, UserSocket } from "./User";
@@ -79,9 +75,6 @@ export class GameRoom implements BrothersFinder {
 
     private roomListeners: Set<RoomSocket> = new Set<RoomSocket>();
     private variableListeners: Set<VariableSocket> = new Set<VariableSocket>();
-    private mapStorageClientMessagesStream: ClientReadableStream<MapStorageToBackMessage> | undefined;
-    private reconnectMapStorageTimeout: NodeJS.Timeout | undefined;
-    private closing = false;
 
     private constructor(
         public readonly roomUrl: string,
@@ -156,8 +149,6 @@ export class GameRoom implements BrothersFinder {
             wamUrl
         );
 
-        gameRoom.connectToMapStorage();
-
         gameRoom
             .getMucManager()
             .then((mucManager) => {
@@ -178,6 +169,20 @@ export class GameRoom implements BrothersFinder {
                 payload: [message],
             });
         }
+    }
+
+    public sendRefreshRoomMessageToUsers(): void {
+        this.users.forEach((user) =>
+            user.socket.write({
+                message: {
+                    $case: "refreshRoomMessage",
+                    refreshRoomMessage: RefreshRoomMessage.fromPartial({
+                        roomId: this.roomUrl,
+                        timeToRefresh: 30,
+                    }),
+                },
+            })
+        );
     }
 
     public getUserByUuid(uuid: string): User | undefined {
@@ -1063,83 +1068,5 @@ export class GameRoom implements BrothersFinder {
 
     get wamUrl(): string | undefined {
         return this._wamUrl;
-    }
-
-    public destroy(): void {
-        this.closing = true;
-        if (this.mapStorageClientMessagesStream) {
-            this.mapStorageClientMessagesStream.cancel();
-            this.mapStorageClientMessagesStream = undefined;
-        }
-    }
-
-    private killAndRetryMapStorageConnection(): void {
-        if (this.mapStorageClientMessagesStream) {
-            this.mapStorageClientMessagesStream.cancel();
-            this.mapStorageClientMessagesStream = undefined;
-            this.reconnectMapStorageTimeout = setTimeout(() => {
-                this.reconnectMapStorageTimeout = undefined;
-                this.connectToMapStorage();
-            }, 5_000);
-        }
-    }
-
-    private connectToMapStorage(): void {
-        if (this.editable && this.mapStorageClientMessagesStream === undefined) {
-            const mapStorageUrlMessage: MapStorageUrlMessage = {
-                mapUrl: this.mapUrl,
-            };
-            this.mapStorageClientMessagesStream = getMapStorageClient().listenToMessages(mapStorageUrlMessage);
-            this.mapStorageClientMessagesStream.on("data", (data: MapStorageToBackMessage) => {
-                const message = data.message;
-                if (!message) {
-                    console.error("Received empty message from mapStorageClientMessagesStream");
-                    return;
-                }
-                switch (message.$case) {
-                    case "mapStorageRefreshMessage": {
-                        const msg: Partial<RefreshRoomMessage> = {
-                            roomId: this.roomUrl,
-                            comment: message.mapStorageRefreshMessage.comment,
-                            timeToRefresh: 30,
-                        };
-                        this.users.forEach((user: User) => {
-                            user.socket.write({
-                                message: {
-                                    $case: "refreshRoomMessage",
-                                    refreshRoomMessage: RefreshRoomMessage.fromPartial(msg),
-                                },
-                            });
-                        });
-                        break;
-                    }
-                    default: {
-                        const _exhaustiveCheck: never = message.$case;
-                    }
-                }
-            });
-            this.mapStorageClientMessagesStream.on("close", () => {
-                if (this.closing) {
-                    return;
-                }
-                console.log(
-                    "Connection to map-storage closed for GameRoom ",
-                    this.roomUrl,
-                    ". Retrying connection in 5 seconds"
-                );
-                this.killAndRetryMapStorageConnection();
-            });
-            this.mapStorageClientMessagesStream.on("error", () => {
-                if (this.closing) {
-                    return;
-                }
-                console.log(
-                    "An error occurred in the connection to map-storage for GameRoom ",
-                    this.roomUrl,
-                    ". Canceling and recreating connection in 5 seconds"
-                );
-                this.killAndRetryMapStorageConnection();
-            });
-        }
     }
 }
