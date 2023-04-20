@@ -8,38 +8,32 @@
           {
             "id": "dog1",
             "name": "dog1",
-            "url": "resources/characters/pipoya/Dog 01-1.png",
-            "position": 0
+            "url": "resources/characters/pipoya/Dog 01-1.png"
           },
           {
             "id": "dog2",
             "name": "dog2",
-            "url": "resources/characters/pipoya/Dog 01-2.png",
-            "position": 1
+            "url": "resources/characters/pipoya/Dog 01-2.png"
           },
           {
             "id": "dog3",
             "name": "dog3",
-            "url": "resources/characters/pipoya/Dog 01-3.png",
-            "position": 2
+            "url": "resources/characters/pipoya/Dog 01-3.png"
           },
           {
             "id": "cat1",
             "name": "cat1",
-            "url": "resources/characters/pipoya/Cat 01-1.png",
-            "position": 3
+            "url": "resources/characters/pipoya/Cat 01-1.png"
           },
           {
             "id": "cat2",
             "name": "cat2",
-            "url": "resources/characters/pipoya/Cat 01-2.png",
-            "position": 4
+            "url": "resources/characters/pipoya/Cat 01-2.png"
           },
           {
             "id": "cat3",
             "name": "cat3",
-            "url": "resources/characters/pipoya/Cat 01-3.png",
-            "position": 5
+            "url": "resources/characters/pipoya/Cat 01-3.png"
           }
         ]
       }
