@@ -14,7 +14,6 @@ import {
     MapThirdPartyData,
     MapBbbData,
     MapJitsiData,
-    EditMapCommandMessage,
 } from "@workadventure/messages";
 import { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import { Jitsi } from "@workadventure/shared-utils";
@@ -22,7 +21,6 @@ import { ClientReadableStream } from "@grpc/grpc-js";
 import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
 import { Value } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/struct";
-import { WAMFileFormat } from "@workadventure/map-editor";
 import { PositionInterface } from "../Model/PositionInterface";
 import {
     EmoteCallback,
@@ -44,13 +42,14 @@ import {
     BBB_URL,
     ENABLE_CHAT,
     ENABLE_CHAT_UPLOAD,
+    INTERNAL_MAP_STORAGE_URL,
     JITSI_ISS,
     JITSI_URL,
     PUBLIC_MAP_STORAGE_URL,
     SECRET_JITSI_KEY,
     STORE_VARIABLES_FOR_LOCAL_MAPS,
 } from "../Enum/EnvironmentVariable";
-import { emitError, emitErrorOnRoomSocket } from "../Services/MessageHelpers";
+import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { MapLoadingError } from "../Services/MapLoadingError";
@@ -61,6 +60,7 @@ import { PositionNotifier } from "./PositionNotifier";
 import { User, UserSocket } from "./User";
 import { Group } from "./Group";
 import { PointInterface } from "./Websocket/PointInterface";
+import {WAMFileFormat} from "@workadventure/map-editor";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -132,6 +132,18 @@ export class GameRoom implements BrothersFinder {
         const mapDetails = await GameRoom.getMapDetails(roomUrl);
         const wamUrl = mapDetails.wamUrl;
 
+        /*
+        const mapDetails = await GameRoom.getMapDetails(roomUrl);
+        const wamUrl = mapDetails.wamUrl;
+        const mapUrl = await mapFetcher.getMapUrl(
+            mapDetails.mapUrl,
+            mapDetails.wamUrl,
+            false,
+            STORE_VARIABLES_FOR_LOCAL_MAPS,
+            INTERNAL_MAP_STORAGE_URL
+        );
+         */
+
         let mapUrl: string;
         let wamFile: WAMFileFormat | undefined = undefined;
 
@@ -186,6 +198,20 @@ export class GameRoom implements BrothersFinder {
                 payload: [message],
             });
         }
+    }
+
+    public sendRefreshRoomMessageToUsers(): void {
+        this.users.forEach((user) =>
+            user.socket.write({
+                message: {
+                    $case: "refreshRoomMessage",
+                    refreshRoomMessage: RefreshRoomMessage.fromPartial({
+                        roomId: this.roomUrl,
+                        timeToRefresh: 30,
+                    }),
+                },
+            })
+        );
     }
 
     public getUserByUuid(uuid: string): User | undefined {
@@ -633,7 +659,8 @@ export class GameRoom implements BrothersFinder {
             mapDetails.mapUrl,
             mapDetails.wamUrl,
             false,
-            STORE_VARIABLES_FOR_LOCAL_MAPS
+            STORE_VARIABLES_FOR_LOCAL_MAPS,
+            INTERNAL_MAP_STORAGE_URL
         );
         if (this._mapUrl !== mapUrl) {
             this._mapUrl = mapUrl;
@@ -738,7 +765,8 @@ export class GameRoom implements BrothersFinder {
                 this._mapUrl,
                 this._wamUrl,
                 canLoadLocalUrl,
-                STORE_VARIABLES_FOR_LOCAL_MAPS
+                STORE_VARIABLES_FOR_LOCAL_MAPS,
+                INTERNAL_MAP_STORAGE_URL
             );
         }
 

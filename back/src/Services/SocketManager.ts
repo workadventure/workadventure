@@ -1039,7 +1039,6 @@ export class SocketManager {
 
     private cleanupRoomIfEmpty(room: GameRoom): void {
         if (room.isEmpty()) {
-            room.destroy();
             this.roomsPromises.delete(room.roomUrl);
             const deleted = this.resolvedRooms.delete(room.roomUrl);
             if (deleted) {

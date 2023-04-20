@@ -930,14 +930,9 @@ export class GameScene extends DirtyScene {
                 });
 
                 this.connection.refreshRoomMessageStream.subscribe((message) => {
-                    if (message.comment) {
-                        refreshPromptStore.set({
-                            comment: message.comment,
-                            timeToRefresh: message.timeToRefresh,
-                        });
-                    } else {
-                        window.location.reload();
-                    }
+                    refreshPromptStore.set({
+                        timeToRefresh: message.timeToRefresh,
+                    });
                 });
 
                 this.connection.playerDetailsUpdatedMessageStream.subscribe((message) => {

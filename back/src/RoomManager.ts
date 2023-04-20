@@ -40,6 +40,7 @@ import {
 import { User, UserSocket } from "./Model/User";
 import { GameRoom } from "./Model/GameRoom";
 import { Admin } from "./Model/Admin";
+import { getMapStorageClient } from "./Services/MapStorageClient";
 
 const debug = Debug("roommanager");
 
@@ -472,6 +473,35 @@ const roomManager = {
             .catch((error) => {
                 throw error;
             });
+    },
+    handleMapStorageUploadMapDetected(call) {
+        /**
+         * We are calling the mapstorage connected to this back server and asking to purge the wamUrl from memory.
+         * We are not sure this particular mapstorage has this particular WAM map in memory. But since the message
+         * is dispatched to all back servers, one of the back servers will be connected to the correct map storage.
+         */
+        getMapStorageClient().handleClearAfterUpload(
+            {
+                wamUrl: call.request.wamUrl,
+            },
+            (err) => {
+                if (err) {
+                    console.error(err);
+                    return;
+                }
+                Promise.all(socketManager.getWorlds().values())
+                    .then((gameRooms) => {
+                        for (const gameRoom of gameRooms) {
+                            if (gameRoom.wamUrl === call.request.wamUrl) {
+                                gameRoom.sendRefreshRoomMessageToUsers();
+                            }
+                        }
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                    });
+            }
+        );
     },
 } satisfies RoomManagerServer;
 
