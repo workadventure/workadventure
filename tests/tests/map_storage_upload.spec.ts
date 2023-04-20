@@ -538,7 +538,7 @@ test.describe('Map-storage Upload API', () => {
         await expect(uploadFile3.ok()).toBeTruthy();
 
         // Now let's check the user in map1 did reload, but not on map2
-        await expect(page.getByText("New version of map detected. Refresh needed")).toBeVisible();
+        await expect((await (page.locator(".test-class")).innerText())).toEqual("New version of map detected. Refresh needed");
         await expect(page2.getByText("New version of map detected. Refresh needed")).toBeHidden();
 
     });
