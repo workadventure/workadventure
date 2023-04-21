@@ -51,5 +51,7 @@ COPY --from=builder --chown=node:node /usr/src/play /usr/src/play
 
 WORKDIR /usr/src/play
 
+HEALTHCHECK --interval=10s --timeout=10s --start-period=5s --retries=5 CMD curl -f http://localhost:3000 || exit 1
+
 USER node
 CMD ["npm", "run", "start"]

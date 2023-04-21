@@ -29,5 +29,7 @@ COPY --from=proto-builder /usr/src/generated ./back/src/Messages/generated
 
 WORKDIR /usr/src/back
 
+HEALTHCHECK --interval=10s --timeout=10s --start-period=5s --retries=5 CMD curl -f http://localhost:8080 || exit 1
+
 USER node
 CMD ["npm", "run", "runprod"]
