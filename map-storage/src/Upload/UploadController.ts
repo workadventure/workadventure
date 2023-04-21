@@ -367,8 +367,17 @@ export class UploadController {
 
                     let errors: Partial<OrganizedErrors> = {};
 
-                    //eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                    const content = JSON.parse(await this.fileSystem.readFileAsString(virtualPath));
+                    const content = WAMFileFormat.parse(
+                        JSON.parse(await this.fileSystem.readFileAsString(virtualPath))
+                    );
+
+                    // Let's make things easy: if "vendor" or "metadata" is not defined, let's add an empty object.
+                    if (!content.vendor) {
+                        content.vendor = {};
+                    }
+                    if (!content.metadata) {
+                        content.metadata = {};
+                    }
 
                     //eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                     const patchedContent = jsonpatch.applyPatch(
