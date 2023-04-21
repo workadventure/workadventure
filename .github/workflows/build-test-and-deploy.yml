@@ -234,9 +234,6 @@ jobs:
           SENTRY_RELEASE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         run: |
             docker run --rm \
-              -v $(pwd)/back:/app \
-              -v $(pwd)/sentry-cli:/sentry-cli \
-              -w /app \
               -e SENTRY_AUTH_TOKEN \
               -e SENTRY_ORG \
               -e SENTRY_PROJECT \
@@ -448,9 +445,6 @@ jobs:
           SENTRY_RELEASE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         run: |
           docker run --rm \
-            -v $(pwd)/map-storage:/app \
-            -v $(pwd)/sentry-cli:/sentry-cli \
-            -w /app \
             -e SENTRY_AUTH_TOKEN \
             -e SENTRY_ORG \
             -e SENTRY_PROJECT \
