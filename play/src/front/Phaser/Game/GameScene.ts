@@ -1081,9 +1081,11 @@ export class GameScene extends DirtyScene {
                 this._broadcastService = broadcastService;
 
                 this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
-                    megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
-                    if (megaphoneSettingsMessage.url) {
-                        broadcastService.joinSpace(megaphoneSettingsMessage.url);
+                    if(megaphoneSettingsMessage) {
+                        megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
+                        if (megaphoneSettingsMessage.url) {
+                            broadcastService.joinSpace(megaphoneSettingsMessage.url);
+                        }
                     }
                 });
 

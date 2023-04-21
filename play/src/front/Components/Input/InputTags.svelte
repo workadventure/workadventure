@@ -23,6 +23,8 @@
               placeholder="Select rights"
               on:focus={onFocus}
               on:blur={onBlur}
+              creatable={true}
+              creatablePrefix=""
     >
     </Svelecte>
     {#if errorHelperText}

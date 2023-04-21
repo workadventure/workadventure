@@ -189,7 +189,7 @@ export class RoomConnection implements RoomConnection {
     public readonly updateSpaceUserMessageStream = this._updateSpaceUserMessageStream.asObservable();
     private readonly _removeSpaceUserMessageStream = new Subject<RemoveSpaceUserMessage>();
     public readonly removeSpaceUserMessageStream = this._removeSpaceUserMessageStream.asObservable();
-    private readonly _megaphoneSettingsMessageStream = new Subject<MegaphoneSettings>();
+    private readonly _megaphoneSettingsMessageStream = new BehaviorSubject<MegaphoneSettings | undefined>(undefined);
     public readonly megaphoneSettingsMessageStream = this._megaphoneSettingsMessageStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -62,6 +62,22 @@ const mapEditor: BaseTranslation = {
         buttonLabel: "Button Label",
         editInstructions: "Click an entity to modify its properties.",
     },
+    settings: {
+        loading: "Loading",
+        megaphone: {
+            title: "Megaphone",
+            description: "The megaphone is a tool that allows you to broadcast a video/audio stream to all players in the room/world.",
+            inputs: {
+                spaceName: "Space name",
+                spaceNameHelper: "If you want to broadcast a stream to all the users that are on different rooms but in the same world, you must set the same SpaceName for all the megaphone settings in each room and set the scope to 'World'.",
+                scope: "Scope",
+                world: "World",
+                room: "Room",
+                rights: "Rights",
+                rightsHelper: "The rights define who can use the megaphone. If you leave it empty, anyone can use it. If you set it, only users that have one of those 'tag' can use it.",
+            }
+        }
+    }
 };
 
 export default mapEditor;

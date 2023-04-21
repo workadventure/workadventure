@@ -77,7 +77,7 @@
             }
         }
         .content {
-            @apply tw-px-5 tw-py-3 tw-w-3/4;
+            @apply tw-px-5 tw-py-3 tw-w-3/4 tw-flex tw-flex-wrap tw-flex-col;
         }
     }
 

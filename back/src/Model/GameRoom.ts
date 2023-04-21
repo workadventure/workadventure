@@ -6,21 +6,19 @@ import {
     SubToPusherRoomMessage,
     VariableWithTagMessage,
     ServerToClientMessage,
-    RefreshRoomMessage,
-    MapStorageUrlMessage,
-    MapStorageToBackMessage,
     isMapDetailsData,
     MapDetailsData,
     MapThirdPartyData,
     MapBbbData,
     MapJitsiData,
+    RefreshRoomMessage, EditMapCommandMessage,
 } from "@workadventure/messages";
 import { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import { Jitsi } from "@workadventure/shared-utils";
-import { ClientReadableStream } from "@grpc/grpc-js";
 import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
 import { Value } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/struct";
+import {WAMFileFormat} from "@workadventure/map-editor";
 import { PositionInterface } from "../Model/PositionInterface";
 import {
     EmoteCallback,
@@ -49,18 +47,17 @@ import {
     SECRET_JITSI_KEY,
     STORE_VARIABLES_FOR_LOCAL_MAPS,
 } from "../Enum/EnvironmentVariable";
-import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
+import {emitError, emitErrorOnRoomSocket} from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { MapLoadingError } from "../Services/MapLoadingError";
 import { MucManager } from "../Services/MucManager";
-import { getMapStorageClient } from "../Services/MapStorageClient";
+import {getMapStorageClient} from "../Services/MapStorageClient";
 import { BrothersFinder } from "./BrothersFinder";
 import { PositionNotifier } from "./PositionNotifier";
 import { User, UserSocket } from "./User";
 import { Group } from "./Group";
 import { PointInterface } from "./Websocket/PointInterface";
-import {WAMFileFormat} from "@workadventure/map-editor";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -80,9 +77,6 @@ export class GameRoom implements BrothersFinder {
 
     private roomListeners: Set<RoomSocket> = new Set<RoomSocket>();
     private variableListeners: Set<VariableSocket> = new Set<VariableSocket>();
-    private mapStorageClientMessagesStream: ClientReadableStream<MapStorageToBackMessage> | undefined;
-    private reconnectMapStorageTimeout: NodeJS.Timeout | undefined;
-    private closing = false;
 
     private constructor(
         public readonly roomUrl: string,
@@ -132,25 +126,13 @@ export class GameRoom implements BrothersFinder {
         const mapDetails = await GameRoom.getMapDetails(roomUrl);
         const wamUrl = mapDetails.wamUrl;
 
-        /*
-        const mapDetails = await GameRoom.getMapDetails(roomUrl);
-        const wamUrl = mapDetails.wamUrl;
-        const mapUrl = await mapFetcher.getMapUrl(
-            mapDetails.mapUrl,
-            mapDetails.wamUrl,
-            false,
-            STORE_VARIABLES_FOR_LOCAL_MAPS,
-            INTERNAL_MAP_STORAGE_URL
-        );
-         */
-
         let mapUrl: string;
         let wamFile: WAMFileFormat | undefined = undefined;
 
         if (!wamUrl && mapDetails.mapUrl) {
             mapUrl = mapDetails.mapUrl;
         } else if (wamUrl) {
-            wamFile = await mapFetcher.fetchWamFile(wamUrl, false, STORE_VARIABLES_FOR_LOCAL_MAPS);
+            wamFile = await mapFetcher.fetchWamFile(wamUrl, false, STORE_VARIABLES_FOR_LOCAL_MAPS, INTERNAL_MAP_STORAGE_URL);
             mapUrl = mapFetcher.normalizeMapUrl(wamUrl, wamFile.mapUrl);
         } else {
             throw new Error("No mapUrl or wamUrl");
@@ -175,8 +157,6 @@ export class GameRoom implements BrothersFinder {
             wamUrl,
             wamFile ? wamFile.settings : undefined
         );
-
-        gameRoom.connectToMapStorage();
 
         gameRoom
             .getMucManager()
@@ -609,8 +589,8 @@ export class GameRoom implements BrothersFinder {
                 if (lastLoaded < 10000) {
                     console.log(
                         'An error occurred while setting the "' +
-                            name +
-                            "\" variable. But we tried to reload the map less than 10 seconds ago, so let's fail."
+                        name +
+                        "\" variable. But we tried to reload the map less than 10 seconds ago, so let's fail."
                     );
                     // Do not try to reload if we tried to reload less than 10 seconds ago.
                     throw e;
@@ -1091,92 +1071,6 @@ export class GameRoom implements BrothersFinder {
         }
     }
 
-    get mapUrl(): string {
-        return this._mapUrl;
-    }
-
-    get wamUrl(): string | undefined {
-        return this._wamUrl;
-    }
-
-    public destroy(): void {
-        this.closing = true;
-        if (this.mapStorageClientMessagesStream) {
-            this.mapStorageClientMessagesStream.cancel();
-            this.mapStorageClientMessagesStream = undefined;
-        }
-    }
-
-    private killAndRetryMapStorageConnection(): void {
-        if (this.mapStorageClientMessagesStream) {
-            this.mapStorageClientMessagesStream.cancel();
-            this.mapStorageClientMessagesStream = undefined;
-            this.reconnectMapStorageTimeout = setTimeout(() => {
-                this.reconnectMapStorageTimeout = undefined;
-                this.connectToMapStorage();
-            }, 5_000);
-        }
-    }
-
-    private connectToMapStorage(): void {
-        if (this.editable && this.mapStorageClientMessagesStream === undefined) {
-            const mapStorageUrlMessage: MapStorageUrlMessage = {
-                mapUrl: this.mapUrl,
-            };
-            this.mapStorageClientMessagesStream = getMapStorageClient().listenToMessages(mapStorageUrlMessage);
-            this.mapStorageClientMessagesStream.on("data", (data: MapStorageToBackMessage) => {
-                const message = data.message;
-                if (!message) {
-                    console.error("Received empty message from mapStorageClientMessagesStream");
-                    return;
-                }
-                switch (message.$case) {
-                    case "mapStorageRefreshMessage": {
-                        const msg: Partial<RefreshRoomMessage> = {
-                            roomId: this.roomUrl,
-                            comment: message.mapStorageRefreshMessage.comment,
-                            timeToRefresh: 30,
-                        };
-                        this.users.forEach((user: User) => {
-                            user.socket.write({
-                                message: {
-                                    $case: "refreshRoomMessage",
-                                    refreshRoomMessage: RefreshRoomMessage.fromPartial(msg),
-                                },
-                            });
-                        });
-                        break;
-                    }
-                    default: {
-                        const _exhaustiveCheck: never = message.$case;
-                    }
-                }
-            });
-            this.mapStorageClientMessagesStream.on("close", () => {
-                if (this.closing) {
-                    return;
-                }
-                console.log(
-                    "Connection to map-storage closed for GameRoom ",
-                    this.roomUrl,
-                    ". Retrying connection in 5 seconds"
-                );
-                this.killAndRetryMapStorageConnection();
-            });
-            this.mapStorageClientMessagesStream.on("error", () => {
-                if (this.closing) {
-                    return;
-                }
-                console.log(
-                    "An error occurred in the connection to map-storage for GameRoom ",
-                    this.roomUrl,
-                    ". Canceling and recreating connection in 5 seconds"
-                );
-                this.killAndRetryMapStorageConnection();
-            });
-        }
-    }
-
     forwardEditMapCommandMessage(user: User, message: EditMapCommandMessage) {
         if (!this._wamUrl) {
             emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
@@ -1237,5 +1131,13 @@ export class GameRoom implements BrothersFinder {
             return `${mainURI}/megaphone`;
         }
         return undefined;
+    }
+
+    get mapUrl(): string {
+        return this._mapUrl;
+    }
+
+    get wamUrl(): string | undefined {
+        return this._wamUrl;
     }
 }
