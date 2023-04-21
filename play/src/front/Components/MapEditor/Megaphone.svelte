@@ -15,10 +15,11 @@
     type Option = {
         value: string;
         label: string;
+        created: undefined | boolean;
     };
 
     let enabled: boolean = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.enabled ?? false;
-    const oldRights: string[] = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.rights;
+    const oldRights: string[] = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.rights ?? [];
     let rights: Option[] = [];
     let title: string = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.title ?? "";
     let scope: string = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.scope ?? "WORLD";
@@ -48,7 +49,7 @@
         }
     }
 
-    function save() {
+    function save(): Promise<string> {
         return new Promise((resolve, reject) => {
             if (loading) return;
             loading = true;
@@ -69,26 +70,22 @@
         });
     }
 
-    async function getTags() {
+    async function getTags(): Promise<Option[]> {
         loading = true;
-        rights = oldRights?.map((right) => ({ value: right, label: right.toLocaleUpperCase() })) ?? [];
+        rights = oldRights.map((right) => ({ value: right, label: right.toLocaleUpperCase(), created: undefined }));
         //await new Promise((resolve => setTimeout(() => {}, 100_000)));
-        const _tags = ((await gameManager.getCurrentGameScene().connection?.queryRoomTags()) ?? []).concat(oldRights ?? []);
+        const _tags = ((await gameManager.getCurrentGameScene().connection?.queryRoomTags()) ?? []).concat(
+            oldRights ?? []
+        );
         loading = false;
         return _tags
             .filter((item, index) => _tags.indexOf(item) === index)
-            .map((tag) => ({ value: tag, label: tag.toLocaleUpperCase() }));
+            .map((tag) => ({ value: tag, label: tag.toLocaleUpperCase(), created: undefined }));
     }
 </script>
 
 <div class="tw-flex tw-flex-wrap tw-gap-x-4 tw-items-center tw-h-fit">
-    <input
-        type="checkbox"
-        class="input-switch"
-        bind:checked={enabled}
-        on:change={partialSave}
-        disabled={loading ? "disabled" : ""}
-    />
+    <input type="checkbox" class="input-switch" bind:checked={enabled} on:change={partialSave} disabled={loading} />
     <h3>{$LL.mapEditor.settings.megaphone.title()}</h3>
 </div>
 <p class="tw-h-fit">{$LL.mapEditor.settings.megaphone.description()}</p>
