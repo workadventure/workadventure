@@ -32,6 +32,6 @@ COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
 COPY --chown=node:node map-storage map-storage
 
 WORKDIR /usr/src/map-storage
-
+RUN mkdir ./dist && chown -R node:node ./dist
 USER node
 CMD ["npm", "run", "start"]
