@@ -1,5 +1,6 @@
 import fs from "fs";
 import { APIResponse, expect, test } from '@playwright/test';
+import { login } from './utils/roles';
 
 test.use({
     baseURL: (process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://john.doe:password@" + (process.env.MAP_STORAGE_ENDPOINT ?? 'map-storage.workadventure.localhost'),
@@ -268,8 +269,8 @@ test.describe('Map-storage Upload API', () => {
 
         let listOfMaps = await request.get("maps");
         let maps = await listOfMaps.json();
-        await expect(maps["map.wam"]).toBeDefined();
-        await expect(maps["foo/map.wam"]).toBeDefined();
+        await expect(maps["maps"]["map.wam"]).toBeDefined();
+        await expect(maps["maps"]["foo/map.wam"]).toBeDefined();
 
         const uploadFileAlone = await request.post("upload", {
             multipart: {
@@ -281,8 +282,8 @@ test.describe('Map-storage Upload API', () => {
         await expect(uploadFileAlone.ok()).toBeTruthy();
         listOfMaps = await request.get("maps");
         maps = await listOfMaps.json();
-        await expect(maps["map.wam"]).toBeDefined();
-        await expect(Object.keys(maps)).toHaveLength(1);
+        await expect(maps["maps"]["map.wam"]).toBeDefined();
+        await expect(Object.keys(maps["maps"])).toHaveLength(1);
     });
 
     test("delete the root folder", async ({
@@ -298,8 +299,8 @@ test.describe('Map-storage Upload API', () => {
 
         let listOfMaps = await request.get("maps");
         let maps = await listOfMaps.json();
-        await expect(maps["map.wam"]).toBeDefined();
-        await expect(Object.keys(maps)).toHaveLength(1);
+        await expect(maps["maps"]["map.wam"]).toBeDefined();
+        await expect(Object.keys(maps["maps"])).toHaveLength(1);
 
         const deleteRoot = await request.delete(`delete?path=/`);
 
@@ -307,7 +308,7 @@ test.describe('Map-storage Upload API', () => {
 
         listOfMaps = await request.get("maps");
         maps = await listOfMaps.json();
-        await expect(Object.keys(maps)).toHaveLength(0);
+        await expect(Object.keys(maps["maps"])).toHaveLength(0);
     });
 
     test("delete a folder", async ({
@@ -323,7 +324,7 @@ test.describe('Map-storage Upload API', () => {
 
         let listOfMaps = await request.get("maps");
         let maps = await listOfMaps.json();
-        await expect(maps["toDelete/map.wam"]).toBeDefined();
+        await expect(maps["maps"]["toDelete/map.wam"]).toBeDefined();
 
         const deleteRoot = await request.delete(`delete?path=/toDelete`);
 
@@ -331,7 +332,7 @@ test.describe('Map-storage Upload API', () => {
 
         listOfMaps = await request.get("maps");
         maps = await listOfMaps.json();
-        await expect(maps).toEqual({});
+        await expect(maps["maps"]).toEqual({});
     });
 
     test("move a folder", async ({
@@ -347,7 +348,7 @@ test.describe('Map-storage Upload API', () => {
 
         let listOfMaps = await request.get("maps");
         let maps = await listOfMaps.json();
-        await expect(maps["toMove/map.wam"]).toBeDefined();
+        await expect(maps["maps"]["toMove/map.wam"]).toBeDefined();
 
         const moveDir = await request.post(`move`, {
             data: {
@@ -360,8 +361,8 @@ test.describe('Map-storage Upload API', () => {
 
         listOfMaps = await request.get("maps");
         maps = await listOfMaps.json();
-        await expect(maps["moved/map.wam"]).toBeDefined();
-        await expect(maps["toMove/map.wam"]).toBeUndefined();
+        await expect(maps["maps"]["moved/map.wam"]).toBeDefined();
+        await expect(maps["maps"]["toMove/map.wam"]).toBeUndefined();
     });
 
     test("copy a folder", async ({
@@ -377,7 +378,7 @@ test.describe('Map-storage Upload API', () => {
 
         let listOfMaps = await request.get("maps");
         let maps = await listOfMaps.json();
-        await expect(maps["toCopy/map.wam"]).toBeDefined();
+        await expect(maps["maps"]["toCopy/map.wam"]).toBeDefined();
 
         const copyDir = await request.post(`copy`, {
             data: {
@@ -390,8 +391,8 @@ test.describe('Map-storage Upload API', () => {
 
         listOfMaps = await request.get("maps");
         maps = await listOfMaps.json();
-        await expect(maps["toCopy/map.wam"]).toBeDefined();
-        await expect(maps["copied/map.wam"]).toBeDefined();
+        await expect(maps["maps"]["toCopy/map.wam"]).toBeDefined();
+        await expect(maps["maps"]["copied/map.wam"]).toBeDefined();
     });
 
     test('fails on invalid maps', async ({
@@ -419,8 +420,8 @@ test.describe('Map-storage Upload API', () => {
     });
 
     test('upload / patch / delete single file', async ({
-                                               request,
-                                           }) => {
+        request,
+    }) => {
         const uploadFile1 = await request.put("single-map.wam", {
             multipart: {
                 file: {
@@ -444,7 +445,7 @@ test.describe('Map-storage Upload API', () => {
 
         const listOfMaps = await request.get("maps");
         const maps = await listOfMaps.json();
-        await expect(maps["single-map.wam"]).toBeDefined();
+        await expect(maps["maps"]["single-map.wam"]).toBeDefined();
 
         const patch = await request.patch(`single-map.wam`, {
             headers: {
@@ -469,6 +470,79 @@ test.describe('Map-storage Upload API', () => {
         await expect(maps2["single-map.wam"]).toBeUndefined();
 
     });
+
+    test('users are asked to reconnect when a map is updated', async ({
+        request, page, browser
+    }) => {
+        const uploadFile1 = await request.put("map1.wam", {
+            multipart: {
+                file: {
+                    name: "map1.wam",
+                    mimeType: "application/json",
+                    buffer: Buffer.from(JSON.stringify({
+                        version: "1.0.0",
+                        mapUrl: "http://maps.workadventure.localhost/tests/E2E/empty.json",
+                        areas: [],
+                        entities: [],
+                    })),
+                }
+            }
+        });
+        await expect(uploadFile1.ok()).toBeTruthy();
+
+        const uploadFile2 = await request.put("map2.wam", {
+            multipart: {
+                file: {
+                    name: "map2.wam",
+                    mimeType: "application/json",
+                    buffer: Buffer.from(JSON.stringify({
+                        version: "1.0.0",
+                        mapUrl: "http://maps.workadventure.localhost/tests/E2E/empty.json",
+                        areas: [],
+                        entities: [],
+                    })),
+                }
+            }
+        });
+        await expect(uploadFile2.ok()).toBeTruthy();
+
+        await page.goto(
+            'http://play.workadventure.localhost/~/map1.wam'
+          );
+        await login(page, 'Alice');
+      
+        const newBrowser = await browser.browserType().launch();
+        const page2 = await newBrowser.newPage();
+      
+        await page2.goto(
+          'http://play.workadventure.localhost/~/map2.wam'
+        );
+      
+        await login(page2, 'Bob');
+      
+        // Let's trigger a reload of map 1 only
+        const uploadFile3 = await request.put("map1.wam", {
+            multipart: {
+                file: {
+                    name: "map1.wam",
+                    mimeType: "application/json",
+                    buffer: Buffer.from(JSON.stringify({
+                        version: "1.0.0",
+                        mapUrl: "http://maps.workadventure.localhost/tests/E2E/empty.json",
+                        areas: [],
+                        entities: [],
+                    })),
+                }
+            }
+        });
+        await expect(uploadFile3.ok()).toBeTruthy();
+
+        // Now let's check the user in map1 did reload, but not on map2
+        await expect((await (page.locator(".test-class")).innerText())).toEqual("New version of map detected. Refresh needed");
+        await expect(page2.getByText("New version of map detected. Refresh needed")).toBeHidden();
+
+    });
+
 
     test('special characters support', async ({
         request,

@@ -1,6 +1,9 @@
 import type { BaseTranslation } from "../i18n-types";
 
 const mapEditor: BaseTranslation = {
+    map: {
+        refreshPrompt: "New version of map detected. Refresh needed",
+    },
     sideBar: {
         areaEditor: "Area editor tool",
         entityEditor: "Entity editor tool",

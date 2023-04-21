@@ -1,11 +1,10 @@
-import { sendUnaryData, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
+import { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
 import { AreaData, EntityDataProperties } from "@workadventure/map-editor";
 import {
     EditMapCommandMessage,
     EditMapCommandsArrayMessage,
     EditMapCommandWithKeyMessage,
-    MapStorageToBackMessage,
-    MapStorageUrlMessage,
+    MapStorageClearAfterUploadMessage,
     PingMessage,
     UpdateMapToNewestWithKeyMessage,
 } from "@workadventure/messages";
@@ -13,43 +12,64 @@ import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated
 import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import { mapsManager } from "./MapsManager";
 import { mapPathUsingDomain } from "./Services/PathMapper";
-import { uploadDetector } from "./Services/UploadDetector";
-
-export type MapStorageStream = ServerWritableStream<MapStorageUrlMessage, MapStorageToBackMessage>;
 
 const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
         callback(null, call.request);
     },
-    listenToMessages(call: MapStorageStream): void {
-        const url = new URL(call.request.mapUrl);
-        const mapKey = mapPathUsingDomain(url.pathname, url.hostname);
-        uploadDetector.registerStream(mapKey, call);
-        call.on("close", () => {
-            uploadDetector.clearStream(mapKey, call);
-        });
+    handleClearAfterUpload(
+        call: ServerUnaryCall<MapStorageClearAfterUploadMessage, Empty>,
+        callback: sendUnaryData<Empty>
+    ): void {
+        try {
+            const wamUrl = call.request.wamUrl;
+            const url = new URL(wamUrl);
+            const wamKey = mapPathUsingDomain(url.pathname, url.hostname);
+            mapsManager.clearAfterUpload(wamKey);
+            callback(null);
+        } catch (e: unknown) {
+            console.error("An error occured in handleClearAfterUpload", e);
+            let message: string;
+            if (typeof e === "object" && e !== null) {
+                message = e.toString();
+            } else {
+                message = "Unknown error";
+            }
+            callback({ name: "MapStorageError", message }, null);
+        }
     },
     handleUpdateMapToNewestMessage(
         call: ServerUnaryCall<UpdateMapToNewestWithKeyMessage, Empty>,
         callback: sendUnaryData<EditMapCommandsArrayMessage>
     ): void {
-        const mapUrl = new URL(call.request.mapKey);
-        const mapKey = mapPathUsingDomain(mapUrl.pathname, mapUrl.hostname);
-        const updateMapToNewestMessage = call.request.updateMapToNewestMessage;
-        if (!updateMapToNewestMessage) {
-            callback({ name: "MapStorageError", message: "UpdateMapToNewest message does not exist" }, null);
-            return;
+        try {
+            const mapUrl = new URL(call.request.mapKey);
+            const mapKey = mapPathUsingDomain(mapUrl.pathname, mapUrl.hostname);
+            const updateMapToNewestMessage = call.request.updateMapToNewestMessage;
+            if (!updateMapToNewestMessage) {
+                callback({ name: "MapStorageError", message: "UpdateMapToNewest message does not exist" }, null);
+                return;
+            }
+            const clientCommandId = updateMapToNewestMessage.commandId;
+            const lastCommandId = mapsManager.getGameMap(mapKey)?.getLastCommandId();
+            let commandsToApply: EditMapCommandMessage[] = [];
+            if (clientCommandId !== lastCommandId) {
+                commandsToApply = mapsManager.getCommandsNewerThan(mapKey, updateMapToNewestMessage.commandId);
+            }
+            const editMapCommandsArrayMessage: EditMapCommandsArrayMessage = {
+                editMapCommands: commandsToApply,
+            };
+            callback(null, editMapCommandsArrayMessage);
+        } catch (e: unknown) {
+            console.error("An error occured in handleClearAfterUpload", e);
+            let message: string;
+            if (typeof e === "object" && e !== null) {
+                message = e.toString();
+            } else {
+                message = "Unknown error";
+            }
+            callback({ name: "MapStorageError", message }, null);
         }
-        const clientCommandId = updateMapToNewestMessage.commandId;
-        const lastCommandId = mapsManager.getGameMap(mapKey)?.getLastCommandId();
-        let commandsToApply: EditMapCommandMessage[] = [];
-        if (clientCommandId !== lastCommandId) {
-            commandsToApply = mapsManager.getCommandsNewerThan(mapKey, updateMapToNewestMessage.commandId);
-        }
-        const editMapCommandsArrayMessage: EditMapCommandsArrayMessage = {
-            editMapCommands: commandsToApply,
-        };
-        callback(null, editMapCommandsArrayMessage);
     },
 
     handleEditMapCommandWithKeyMessage(

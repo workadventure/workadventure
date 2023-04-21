@@ -208,6 +208,7 @@ services:
             PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
             MAP_STORAGE_URL: "map-storage:50053"
             PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
+            INTERNAL_MAP_STORAGE_URL: "http://map-storage:3000"
             PLAYER_VARIABLES_MAX_TTL: $PLAYER_VARIABLES_MAX_TTL
             EJABBERD_API_URI: http://ejabberd:5443/api/
             EJABBERD_DOMAIN: $EJABBERD_DOMAIN
@@ -241,6 +242,7 @@ services:
             AUTHENTICATION_STRATEGY: "Basic"
             AUTHENTICATION_USER: "john.doe"
             AUTHENTICATION_PASSWORD: "password"
+            API_URL: back:50051
             # Sentry integration
             SENTRY_DSN: $SENTRY_DSN_MAPSTORAGE
             SENTRY_RELEASE: $SENTRY_RELEASE

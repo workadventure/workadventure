@@ -14,7 +14,7 @@ import { fileSystem } from "./fileSystem";
 import { passportStrategy } from "./Services/Authentication";
 import { mapPathUsingDomain } from "./Services/PathMapper";
 import { ValidatorController } from "./Upload/ValidatorController";
-import { SENTRY_DSN, SENTRY_RELEASE } from "./Enum/EnvironmentVariable";
+import { SENTRY_DSN, SENTRY_RELEASE, WEB_HOOK_URL } from "./Enum/EnvironmentVariable";
 
 // Sentry integration
 if (SENTRY_DSN != undefined) {
@@ -39,6 +39,7 @@ if (SENTRY_DSN != undefined) {
     }
 }
 import { MapListService } from "./Services/MapListService";
+import { WebHookService } from "./Services/WebHookService";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -55,6 +56,8 @@ server.bindAsync(`0.0.0.0:50053`, grpc.ServerCredentials.createInsecure(), (err,
 });
 
 const app = express();
+// We need to trust the proxy in order to be able to bind the "X-Forwarded-Host" header to the hostname.
+app.set("trust proxy", true);
 app.use(cors());
 app.use(
     bodyParser.json({
@@ -88,7 +91,7 @@ app.get("/entityCollections", (req, res) => {
     res.send(mapsManager.getEntityCollections());
 });
 
-const mapListService = new MapListService(fileSystem);
+const mapListService = new MapListService(fileSystem, new WebHookService(WEB_HOOK_URL));
 new UploadController(app, fileSystem, mapListService);
 new ValidatorController(app);
 

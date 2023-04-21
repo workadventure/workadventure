@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import path from "node:path";
 import { z, ZodError } from "zod";
-import { Express } from "express";
+import { Express, Request } from "express";
 import multer from "multer";
 import pLimit from "p-limit";
 import archiver from "archiver";
@@ -12,10 +12,10 @@ import { WAMFileFormat } from "@workadventure/map-editor";
 import { ZipFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/ZipFileFetcher";
 import { HttpFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/HttpFileFetcher";
 import { Operation } from "fast-json-patch";
+import { generateErrorMessage } from "zod-error";
 import { mapPath } from "../Services/PathMapper";
 import { MAX_UNCOMPRESSED_SIZE } from "../Enum/EnvironmentVariable";
 import { passportAuthenticator } from "../Services/Authentication";
-import { mapsManager } from "../MapsManager";
 import { uploadDetector } from "../Services/UploadDetector";
 import { MapListService } from "../Services/MapListService";
 import { FileSystemInterface } from "./FileSystemInterface";
@@ -144,7 +144,7 @@ export class UploadController {
                                         {
                                             type: "error",
                                             message: "Invalid WAM file format.",
-                                            details: "",
+                                            details: generateErrorMessage(result.error.issues ?? []),
                                         },
                                     ],
                                 };
@@ -175,7 +175,7 @@ export class UploadController {
                     await this.fileSystem.deleteFilesExceptWAM(mapPath(directory, req), filesPathsFromZip);
 
                     const promises: Promise<void>[] = [];
-                    const keysToPurge: string[] = [];
+                    const wamToPurge: string[] = [];
                     const wamFilesNames = zipEntries
                         .filter((zipEntry) => zipEntry.name.includes(".wam"))
                         .map((zipEntry) => path.parse(zipEntry.name).name);
@@ -189,7 +189,8 @@ export class UploadController {
                                 promises.push(this.createWAMFileIfMissing(key));
                             }
                         } else if (path.extname(key) === ".wam") {
-                            keysToPurge.push(key);
+                            const wamUrl = `${req.protocol}://${req.hostname}${directory}/${zipEntry.name}`;
+                            wamToPurge.push(wamUrl);
                         }
                     }
 
@@ -202,9 +203,10 @@ export class UploadController {
                             console.error("Error deleting file:", err);
                         }
                     });
-                    for (const key of keysToPurge) {
-                        mapsManager.clearAfterUpload(key);
-                        uploadDetector.refresh(key);
+                    for (const wamUrl of wamToPurge) {
+                        uploadDetector.refresh(wamUrl).catch((err) => {
+                            console.error(err);
+                        });
                     }
                     await this.mapListService.generateCacheFile(req.hostname);
 
@@ -266,7 +268,7 @@ export class UploadController {
                     // Let's validate the archive
                     const mapValidator = new MapValidator("error", new HttpFileFetcher(req.url));
 
-                    const errors: { [key: string]: Partial<OrganizedErrors> } = {};
+                    let errors: Partial<OrganizedErrors> = {};
 
                     const content = await fs.promises.readFile(file.path, "utf8");
 
@@ -274,7 +276,7 @@ export class UploadController {
                     let wamFile: WAMFileFormat | undefined;
                     if (extension === ".json" && mapValidator.doesStringLooksLikeMap(content)) {
                         // We forbid Maps in JSON format.
-                        errors[filePath] = {
+                        errors = {
                             map: [
                                 {
                                     type: "error",
@@ -286,12 +288,12 @@ export class UploadController {
                     } else if (extension === ".wam") {
                         const result = mapValidator.validateWAMFile(content);
                         if (!result.ok) {
-                            errors[filePath] = {
+                            errors = {
                                 map: [
                                     {
                                         type: "error",
                                         message: "Invalid WAM file format.",
-                                        details: "",
+                                        details: generateErrorMessage(result.error.issues ?? []),
                                     },
                                 ],
                             };
@@ -301,7 +303,7 @@ export class UploadController {
                     } else if (extension === ".tmj") {
                         const result = await mapValidator.validateStringMap(content);
                         if (!result.ok) {
-                            errors[filePath] = result.error;
+                            errors = result.error;
                         }
                     }
 
@@ -321,8 +323,9 @@ export class UploadController {
                     });
 
                     if (extension === ".wam" && wamFile) {
-                        mapsManager.clearAfterUpload(virtualPath);
-                        uploadDetector.refresh(virtualPath);
+                        uploadDetector.refresh(this.getFullUrlFromRequest(req)).catch((err) => {
+                            console.error(err);
+                        });
                         await this.mapListService.updateWAMFileInCache(req.hostname, filePath, wamFile);
                     }
 
@@ -362,10 +365,19 @@ export class UploadController {
                 await limiter(async () => {
                     const mapValidator = new MapValidator("error", new HttpFileFetcher(req.url));
 
-                    const errors: { [key: string]: Partial<OrganizedErrors> } = {};
+                    let errors: Partial<OrganizedErrors> = {};
 
-                    //eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                    const content = JSON.parse(await this.fileSystem.readFileAsString(virtualPath));
+                    const content = WAMFileFormat.parse(
+                        JSON.parse(await this.fileSystem.readFileAsString(virtualPath))
+                    );
+
+                    // Let's make things easy: if "vendor" or "metadata" is not defined, let's add an empty object.
+                    if (!content.vendor) {
+                        content.vendor = {};
+                    }
+                    if (!content.metadata) {
+                        content.metadata = {};
+                    }
 
                     //eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                     const patchedContent = jsonpatch.applyPatch(
@@ -378,12 +390,12 @@ export class UploadController {
                     const patchedContentString = JSON.stringify(patchedContent);
                     const result = mapValidator.validateWAMFile(patchedContentString);
                     if (!result.ok) {
-                        errors[filePath] = {
+                        errors = {
                             map: [
                                 {
                                     type: "error",
                                     message: "Invalid WAM file format.",
-                                    details: "", // TODO: add details
+                                    details: generateErrorMessage(result.error.issues ?? []),
                                 },
                             ],
                         };
@@ -393,8 +405,9 @@ export class UploadController {
 
                     await this.fileSystem.writeStringAsFile(virtualPath, patchedContentString);
 
-                    mapsManager.clearAfterUpload(virtualPath);
-                    uploadDetector.refresh(virtualPath);
+                    uploadDetector.refresh(this.getFullUrlFromRequest(req)).catch((err) => {
+                        console.error(err);
+                    });
 
                     await this.mapListService.updateWAMFileInCache(req.hostname, filePath, result.value);
 
@@ -513,6 +526,8 @@ export class UploadController {
 
                 const virtualDirectory = mapPath(directory, req);
 
+                // TODO: Also send a refresh here to purge map-storage
+
                 await this.fileSystem.deleteFiles(virtualDirectory);
 
                 await this.mapListService.generateCacheFile(req.hostname);
@@ -538,12 +553,19 @@ export class UploadController {
                 await this.fileSystem.deleteFiles(virtualPath);
 
                 if (filePath.endsWith(".wam")) {
+                    uploadDetector.refresh(this.getFullUrlFromRequest(req)).catch((err) => {
+                        console.error(err);
+                    });
                     await this.mapListService.deleteWAMFileInCache(req.hostname, filePath);
                 }
 
                 res.sendStatus(204);
             })().catch((e) => next(e));
         });
+    }
+
+    private getFullUrlFromRequest(req: Request): string {
+        return `${req.protocol}://${req.hostname}${req.originalUrl}`;
     }
 
     private move() {

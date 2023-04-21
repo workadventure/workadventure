@@ -126,6 +126,12 @@ export const WAMMetadata = z.object({
         .describe(
             "Copyright notice for this map. Can be a link to a license. Parts of this map like tilesets or images can have their own copyright."
         ),
+    thumbnail: z
+        .string()
+        .optional()
+        .describe(
+            "URL to a thumbnail image. This image will be used in social networks when sharing a link to the map."
+        ),
 });
 
 export const WAMVendor = z
@@ -150,9 +156,12 @@ export const MapsCacheSingleMapFormat = z.object({
     metadata: WAMMetadata.optional(),
     vendor: WAMVendor.optional(),
 });
-export const MapsCacheFileFormat = z
-    .record(z.string(), MapsCacheSingleMapFormat)
-    .describe("The format of the output of the /maps API call on the map-storage container.");
+export const MapsCacheFileFormat = z.object({
+    version: z.string(),
+    maps: z
+        .record(z.string(), MapsCacheSingleMapFormat)
+        .describe("The format of the output of the /maps API call on the map-storage container."),
+});
 
 export type EntityRawPrefab = z.infer<typeof EntityRawPrefab>;
 export type EntityPrefab = z.infer<typeof EntityPrefab>;

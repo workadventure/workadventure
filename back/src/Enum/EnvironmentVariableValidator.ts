@@ -32,8 +32,19 @@ export const EnvironmentVariables = z.object({
     REDIS_PASSWORD: z.string().optional().transform(emptyStringToUndefined),
     STORE_VARIABLES_FOR_LOCAL_MAPS: BoolAsString.optional().transform((val) => toBool(val, false)),
     PROMETHEUS_AUTHORIZATION_TOKEN: z.string().optional().transform(emptyStringToUndefined),
-    MAP_STORAGE_URL: z.string().optional().transform(emptyStringToUndefined),
-    PUBLIC_MAP_STORAGE_URL: AbsoluteOrRelativeUrl.optional().transform(emptyStringToUndefined),
+    MAP_STORAGE_URL: z
+        .string()
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe(
+            'The URL to the gRPC endpoint of the map-storage server (for instance: "map-storage.example.com:50053"'
+        ),
+    PUBLIC_MAP_STORAGE_URL: AbsoluteOrRelativeUrl.optional()
+        .transform(emptyStringToUndefined)
+        .describe('The public URL to the map-storage server (for instance: "https://map-storage.example.com"'),
+    INTERNAL_MAP_STORAGE_URL: AbsoluteOrRelativeUrl.optional()
+        .transform(emptyStringToUndefined)
+        .describe('The internal URL to the map-storage server (for instance: "https://map-storage:3000"'),
     EJABBERD_API_URI: AbsoluteOrRelativeUrl.optional().transform((val) => val?.replace(/\/+$/, "")),
     EJABBERD_DOMAIN: z.string().optional().transform(emptyStringToUndefined),
     EJABBERD_USER: z.string().optional().transform(emptyStringToUndefined),

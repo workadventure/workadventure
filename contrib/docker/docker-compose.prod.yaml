@@ -7,11 +7,11 @@ services:
       - --providers.docker
       - --providers.docker.exposedbydefault=false
       # Entry points
-      - --entryPoints.web.address=:${HTTP_PORT}
+      - --entryPoints.web.address=:80
       - --entrypoints.web.http.redirections.entryPoint.to=websecure
       - --entrypoints.web.http.redirections.entryPoint.scheme=https
-      - --entryPoints.websecure.address=:${HTTPS_PORT}
-      - --entryPoints.grpc.address=:${GRPC_PORT}
+      - --entryPoints.websecure.address=:443
+      - --entryPoints.grpc.address=:50051
       # HTTP challenge
       - --certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}
       - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
@@ -257,6 +257,7 @@ services:
   map-storage:
     image: thecodingmachine/workadventure-map-storage:${VERSION}
     environment:
+      API_URL: back:50051
       PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
       AUTHENTICATION_STRATEGY: "$MAP_STORAGE_AUTHENTICATION_STRATEGY"
       AUTHENTICATION_USER: "$MAP_STORAGE_AUTHENTICATION_USER"
