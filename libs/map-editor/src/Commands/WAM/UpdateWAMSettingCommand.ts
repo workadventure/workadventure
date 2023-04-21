@@ -22,8 +22,10 @@ export class UpdateWAMSettingCommand extends Command {
         }
         // NOTE : Override the old config with the new config even if the new one is partially defined
         const newSettings: MegaphoneSettings = {
-            ...this.oldConfig,
-            ...JSON.parse(JSON.stringify(this.command.dataToModify)),
+            scope: this.command.dataToModify?.scope ?? this.oldConfig?.scope,
+            title: this.command.dataToModify?.title ?? this.oldConfig?.title,
+            rights: this.command.dataToModify?.rights ?? this.oldConfig?.rights,
+            enabled: this.command.dataToModify?.enabled ?? this.oldConfig?.enabled ?? false,
         };
         if (this.command.name === "megaphone") {
             this.wam.settings.megaphone = newSettings;
