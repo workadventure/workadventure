@@ -150,7 +150,7 @@
     "source-map-support": "^0.5.21",
     "standardized-audio-context": "^25.2.4",
     "stanza": "^12.18.0",
-    "svelecte": "^3.16.0",
+    "svelte-select": "^5.6.0",
     "swagger-jsdoc": "^6.2.5",
     "swagger-ui-dist": "^4.14.2",
     "throttle-debounce": "^5.0.0",

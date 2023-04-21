@@ -12,9 +12,14 @@
     import PureLoader from "../PureLoader.svelte";
     import ButtonState from "../Input/ButtonState.svelte";
 
-    let enabled: boolean = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.enabled ?? false;
+    type Option = {
+        value: string;
+        label: string;
+    };
 
-    let rights: string[] = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.rights ?? [];
+    let enabled: boolean = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.enabled ?? false;
+    const oldRights: string[] = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.rights;
+    let rights: Option[] = [];
     let title: string = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.title ?? "";
     let scope: string = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.scope ?? "WORLD";
     let scopes = [
@@ -57,7 +62,7 @@
                 enabled,
                 scope,
                 title,
-                rights,
+                rights: rights.map((right) => right.value),
             });
             loading = false;
             resolve("Successfully saved !");
@@ -66,8 +71,9 @@
 
     async function getTags() {
         loading = true;
+        rights = oldRights?.map((right) => ({ value: right, label: right.toLocaleUpperCase() })) ?? [];
         //await new Promise((resolve => setTimeout(() => {}, 100_000)));
-        const _tags = ((await gameManager.getCurrentGameScene().connection?.queryRoomTags()) ?? []).concat(rights);
+        const _tags = ((await gameManager.getCurrentGameScene().connection?.queryRoomTags()) ?? []).concat(oldRights ?? []);
         loading = false;
         return _tags
             .filter((item, index) => _tags.indexOf(item) === index)

@@ -34,7 +34,6 @@
 
         select {
             @apply tw-w-full tw-bg-white tw-text-brand-blue tw-border-lighter-purple tw-border-solid tw-m-0;
-            border-width: 1.5px !important;
             &.error {
                 @apply tw-border-pop-red;
             }
