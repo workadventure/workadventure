@@ -14,20 +14,20 @@
         "pretty-check": "yarn prettier --check 'src/**/*.{ts,tsx}'"
     },
     "devDependencies": {
-        "@sveltejs/vite-plugin-svelte": "^1.0.0-next.30",
-        "@tsconfig/svelte": "^2.0.1",
-        "prettier": "^2.5.1",
-        "prettier-plugin-svelte": "^2.6.0",
+        "@sveltejs/vite-plugin-svelte": "^2.0.4",
+        "@tsconfig/svelte": "^3.0.0",
+        "prettier": "^2.8.7",
+        "prettier-plugin-svelte": "^2.10.0",
         "rollup-plugin-svelte-svg": "^1.0.0-beta.6",
-        "svelte": "^3.44.0",
-        "svelte-check": "^2.2.7",
-        "svelte-navigator": "^3.1.5",
-        "svelte-preprocess": "^4.9.8",
-        "tslib": "^2.3.1",
-        "typescript": "^4.5.4",
-        "vite": "^2.8.0",
-        "vite-plugin-windicss": "^1.7.1",
-        "windicss": "^3.4.3"
+        "svelte": "^3.58.0",
+        "svelte-check": "^3.2.0",
+        "svelte-navigator": "^3.2.2",
+        "svelte-preprocess": "^5.0.3",
+        "tslib": "^2.5.0",
+        "typescript": "^4.9.5",
+        "vite": "^4.3.1",
+        "vite-plugin-windicss": "^1.8.10",
+        "windicss": "^3.5.6"
     },
     "dependencies": {
         "@16bits/nes.css": "^2.3.2",
