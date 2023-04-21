@@ -37,6 +37,9 @@ services:
         image: thecodingmachine/nodejs:v2-18-bullseye
         command: npm run dev
         working_dir: /usr/src/app/play
+        depends_on:
+            messages:
+                condition: service_healthy
         volumes:
             - .:/usr/src/app
         ports:
@@ -128,6 +131,9 @@ services:
         image: thecodingmachine/nodejs:v2-18-bullseye
         command: npm run start
         working_dir: /usr/src/app/chat
+        depends_on:
+            messages:
+                condition: service_healthy
         environment:
             STARTUP_COMMAND_2: ../npm-install.sh
             STARTUP_COMMAND_3: npm run typesafe-i18n
@@ -171,7 +177,9 @@ services:
         image: thecodingmachine/nodejs:v2-18-bullseye
         command: npm run dev
         working_dir: /usr/src/app/back
-        #command: npm run profile
+        depends_on:
+            messages:
+                condition: service_healthy
         environment:
             DEBUG: "*"
             PLAY_URL: http://play.workadventure.localhost
@@ -222,6 +230,9 @@ services:
         command: npm run start:dev
         #command: npm run profile
         working_dir: /usr/src/app/map-storage
+        depends_on:
+            messages:
+                condition: service_healthy
         environment:
             #DEBUG: "*"
             STARTUP_COMMAND_1: ../npm-install.sh
@@ -233,6 +244,12 @@ services:
             API_URL: back:50051
         volumes:
             - .:/usr/src/app
+        healthcheck:
+            test: curl -f http://localhost:3000/health || exit 1
+            interval: 5s
+            timeout: 10s
+            retries: 10
+            start_period: 10s
         ports:
             - "9233:9229"
         labels:
@@ -274,13 +291,18 @@ services:
             - "traefik.http.services.uploader.loadbalancer.server.port=8080"
 
     messages:
-        image: thecodingmachine/workadventure-back-base:v1-18
+        image: thecodingmachine/nodejs:v2-18-bullseye
         platform:
           linux/amd64
         environment:
             #STARTUP_COMMAND_0: sudo apt-get install -y inotify-tools
             STARTUP_COMMAND_1: npm install
             STARTUP_COMMAND_2: npm run proto:watch
+        healthcheck:
+            test: bash -c "[ -f /usr/src/libs/messages/src/ts-proto-generated/messages.ts ]"
+            interval: 5s
+            timeout: 10s
+            retries: 20
         volumes:
             - ./messages:/usr/src/app
             - ./back:/usr/src/back
