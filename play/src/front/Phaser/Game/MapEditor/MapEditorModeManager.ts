@@ -4,7 +4,8 @@ import {
     UpdateEntityCommand,
     UpdateAreaCommand,
     CreateAreaCommand,
-    DeleteAreaCommand, UpdateWAMSettingCommand,
+    DeleteAreaCommand,
+    UpdateWAMSettingCommand,
 } from "@workadventure/map-editor";
 import type { Unsubscriber } from "svelte/store";
 import { CreateEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/CreateEntityCommand";
@@ -18,13 +19,13 @@ import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
 import { EntityEditorTool } from "./Tools/EntityEditorTool";
-import {WAMEditorTool} from "./Tools/WAMEditorTool";
+import { WAMEditorTool } from "./Tools/WAMEditorTool";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
     FloorEditor = "FloorEditor",
     EntityEditor = "EntityEditor",
-    ConfigureMyRoom = "ConfigureMyRoom"
+    ConfigureMyRoom = "ConfigureMyRoom",
 }
 
 export class MapEditorModeManager {

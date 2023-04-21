@@ -22,21 +22,19 @@
         });
     }
     availableTools.push(
-            {
-                toolName: EditorToolName.EntityEditor,
-                img: EntityToolImg,
-                tooltiptext: $LL.mapEditor.sideBar.entityEditor(),
-            }
-            // NOTE: Hide it untill FloorEditing is done
-            // { toolName: EditorToolName.FloorEditor, img: FloorToolImg, tooltiptext: $LL.mapEditor.sideBar.tileEditor() }
+        {
+            toolName: EditorToolName.EntityEditor,
+            img: EntityToolImg,
+            tooltiptext: $LL.mapEditor.sideBar.entityEditor(),
+        }
+        // NOTE: Hide it untill FloorEditing is done
+        // { toolName: EditorToolName.FloorEditor, img: FloorToolImg, tooltiptext: $LL.mapEditor.sideBar.tileEditor() }
     );
-    availableTools.push(
-            {
-                toolName: EditorToolName.ConfigureMyRoom,
-                img: ConfigureImg,
-                tooltiptext: $LL.mapEditor.sideBar.configureMyRoom(),
-            }
-    );
+    availableTools.push({
+        toolName: EditorToolName.ConfigureMyRoom,
+        img: ConfigureImg,
+        tooltiptext: $LL.mapEditor.sideBar.configureMyRoom(),
+    });
 
     function switchTool(newTool: EditorToolName) {
         gameScene.getMapEditorModeManager().equipTool(newTool);
@@ -49,9 +47,9 @@
         {#each availableTools as tool (tool.toolName)}
             <div class="tool-button">
                 <button
-                        class={tool.toolName == $mapEditorSelectedToolStore ? "active" : ""}
-                        on:click|preventDefault={() => switchTool(tool.toolName)}
-                        type="button"><img src={tool.img} alt="open tool {tool.toolName}" /></button
+                    class={tool.toolName == $mapEditorSelectedToolStore ? "active" : ""}
+                    on:click|preventDefault={() => switchTool(tool.toolName)}
+                    type="button"><img src={tool.img} alt="open tool {tool.toolName}" /></button
                 >
                 <Tooltip text={tool.tooltiptext} rightPosition="true" />
             </div>

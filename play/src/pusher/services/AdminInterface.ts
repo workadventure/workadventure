@@ -99,5 +99,4 @@ export interface AdminInterface {
     ): Promise<boolean>;
 
     getTagsList(roomUrl: string): Promise<string[]>;
-
 }

@@ -17,8 +17,8 @@ import {
 import Jwt from "jsonwebtoken";
 import { v4 as uuid } from "uuid";
 import { JID } from "stanza";
-import {SpaceUser} from "@workadventure/messages";
-import {Color} from "@workadventure/shared-utils";
+import { SpaceUser } from "@workadventure/messages";
+import { Color } from "@workadventure/shared-utils";
 import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
 import { PointInterface } from "../models/Websocket/PointInterface";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
@@ -799,7 +799,7 @@ export class IoSocketController {
                             break;
                         }
                         case "queryMessage": {
-                            if(message.message.queryMessage.query?.$case === "roomTagsQuery") {
+                            if (message.message.queryMessage.query?.$case === "roomTagsQuery") {
                                 void socketManager.handleRoomTagsQuery(client, message.message.queryMessage);
                             } else {
                                 socketManager.forwardMessageToBack(client, message.message);

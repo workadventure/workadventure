@@ -1,13 +1,13 @@
 import type { Readable, Writable } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
-import { AvailabilityStatus } from "@workadventure/messages";
 import deepEqual from "fast-deep-equal";
+import { AvailabilityStatus } from "@workadventure/messages";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import { getNavigatorType, isIOS, NavigatorType } from "../WebRtc/DeviceUtils";
-import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 import { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/ConstraintMessage";
+import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
+import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { userMovingStore } from "./GameStore";
 import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
 import { errorStore } from "./ErrorStore";
@@ -16,12 +16,7 @@ import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeet
 import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
-import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { AvailabilityStatus } from "@workadventure/messages";
 
-import deepEqual from "fast-deep-equal";
-import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
-import { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/ConstraintMessage";
 import { megaphoneEnabledStore } from "./MegaphoneStore";
 
 /**

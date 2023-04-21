@@ -12,25 +12,26 @@
     export let onBlur: () => void;
     export let errorHelperText: string | undefined = undefined;
 </script>
+
 <div class="input-tags">
     <label>
         {label}
     </label>
-    <Svelecte {options}
-              bind:value={value}
-              multiple
-              highlightFirstItem={false}
-              placeholder="Select rights"
-              on:focus={onFocus}
-              on:blur={onBlur}
-              creatable={true}
-              creatablePrefix=""
-    >
-    </Svelecte>
+    <Svelecte
+        {options}
+        bind:value
+        multiple
+        highlightFirstItem={false}
+        placeholder="Select rights"
+        on:focus={onFocus}
+        on:blur={onBlur}
+        creatable={true}
+        creatablePrefix=""
+    />
     {#if errorHelperText}
-<span>
-    {errorHelperText}
-</span>
+        <span>
+            {errorHelperText}
+        </span>
     {/if}
 </div>
 
@@ -40,7 +41,7 @@
         label {
             @apply tw-font-medium tw-mb-1.5;
         }
-        span{
+        span {
             @apply tw-text-xs tw-text-pop-red;
         }
     }
@@ -54,7 +55,7 @@
                 border-color: transparent !important;
             }
         }
-        &.error{
+        &.error {
             @apply tw-border-pop-red;
         }
     }
@@ -67,7 +68,7 @@
         outline-color: white;
         box-shadow: none;
     }
-    :global(.sv-dropdown .sv-dropdown-content .empty-list-row){
+    :global(.sv-dropdown .sv-dropdown-content .empty-list-row) {
         @apply tw-text-brand-blue;
     }
 </style>

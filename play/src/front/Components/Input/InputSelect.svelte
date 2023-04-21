@@ -8,19 +8,20 @@
     export let options: Option[];
     export let errorHelperText: string | undefined = undefined;
 </script>
+
 <div class="input-select">
     <label for="input">
         {label}
     </label>
-    <select id="input" bind:value={value}>
+    <select id="input" bind:value>
         {#each options as option}
             <option value={option.value}>{option.label}</option>
         {/each}
     </select>
     {#if errorHelperText}
-<span>
-    {errorHelperText}
-</span>
+        <span>
+            {errorHelperText}
+        </span>
     {/if}
 </div>
 
@@ -34,11 +35,11 @@
         select {
             @apply tw-w-full tw-bg-white tw-text-brand-blue tw-border-lighter-purple tw-border-solid tw-m-0;
             border-width: 1.5px !important;
-            &.error{
+            &.error {
                 @apply tw-border-pop-red;
             }
         }
-        span{
+        span {
             @apply tw-text-xs tw-text-pop-red;
         }
     }

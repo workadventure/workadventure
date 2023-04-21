@@ -30,7 +30,8 @@ import {
     RemoveSpaceFilterMessage,
     SetPlayerDetailsMessage,
     SpaceFilterMessage,
-    WatchSpaceMessage, QueryMessage,
+    WatchSpaceMessage,
+    QueryMessage,
 } from "@workadventure/messages";
 import { PusherRoom } from "../models/PusherRoom";
 import type { ExSocketInterface, BackSpaceConnection } from "../models/Websocket/ExSocketInterface";
@@ -149,10 +150,10 @@ export class SocketManager implements ZoneEventListener {
                 if (!client.disconnecting) {
                     console.warn(
                         "Admin connection lost to back server '" +
-                        apiClient.getChannel().getTarget() +
-                        "' for room '" +
-                        roomId +
-                        "'"
+                            apiClient.getChannel().getTarget() +
+                            "' for room '" +
+                            roomId +
+                            "'"
                     );
                     this.closeWebsocketConnection(client, 1011, "Admin Connection lost to back server");
                 }
@@ -160,10 +161,10 @@ export class SocketManager implements ZoneEventListener {
             .on("error", (err: Error) => {
                 console.error(
                     "Error in connection to back server '" +
-                    apiClient.getChannel().getTarget() +
-                    "' for room '" +
-                    roomId +
-                    "':",
+                        apiClient.getChannel().getTarget() +
+                        "' for room '" +
+                        roomId +
+                        "':",
                     err
                 );
                 if (!client.disconnecting) {
@@ -273,10 +274,10 @@ export class SocketManager implements ZoneEventListener {
                     if (!client.disconnecting) {
                         console.warn(
                             "Connection lost to back server '" +
-                            apiClient.getChannel().getTarget() +
-                            "' for room '" +
-                            client.roomId +
-                            "'"
+                                apiClient.getChannel().getTarget() +
+                                "' for room '" +
+                                client.roomId +
+                                "'"
                         );
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
                     }
@@ -284,10 +285,10 @@ export class SocketManager implements ZoneEventListener {
                 .on("error", (err: Error) => {
                     console.error(
                         "Error in connection to back server '" +
-                        apiClient.getChannel().getTarget() +
-                        "' for room '" +
-                        client.roomId +
-                        "':",
+                            apiClient.getChannel().getTarget() +
+                            "' for room '" +
+                            client.roomId +
+                            "':",
                         err
                     );
                     if (!client.disconnecting) {
@@ -392,10 +393,10 @@ export class SocketManager implements ZoneEventListener {
                     .on("error", (err: Error) => {
                         console.error(
                             "Error in connection to back server '" +
-                            apiSpaceClient.getChannel().getTarget() +
-                            "' for space '" +
-                            spaceName +
-                            "':",
+                                apiSpaceClient.getChannel().getTarget() +
+                                "' for space '" +
+                                spaceName +
+                                "':",
                             err
                         );
                     });
@@ -1058,28 +1059,30 @@ export class SocketManager implements ZoneEventListener {
 
     async handleRoomTagsQuery(client: ExSocketInterface, queryMessage: QueryMessage) {
         let tags: string[];
-        try{
+        try {
             tags = await adminService.getTagsList(client.roomId);
         } catch (e) {
             console.error("SocketManager => handleRoomTagsQuery => error while getting tags list", e);
             // Nothing to do with the error
             tags = [];
         }
-        client.send(ServerToClientMessage.encode({
-            message: {
-                $case: "answerMessage",
-                answerMessage:
-                    {
+        client.send(
+            ServerToClientMessage.encode({
+                message: {
+                    $case: "answerMessage",
+                    answerMessage: {
                         id: queryMessage.id,
                         answer: {
                             $case: "roomTagsAnswer",
                             roomTagsAnswer: {
                                 tags,
-                            }
-                        }
-                    }
-            }
-        }).finish(), true);
+                            },
+                        },
+                    },
+                },
+            }).finish(),
+            true
+        );
     }
 }
 

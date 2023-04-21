@@ -13,7 +13,7 @@
     import microphoneOffImg from "../images/microphone-off.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { speakerSelectedStore } from "../../Stores/MediaStore";
-    import {embedScreenLayoutStore} from "../../Stores/EmbedScreensStore";
+    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import BanReportBox from "./BanReportBox.svelte";
     import { srcObject } from "./utils";
 

@@ -190,8 +190,8 @@ export class SocketManager {
             playerVariable: playerVariablesMessage,
             megaphoneSettings: {
                 enabled: room.canUseMegaphone(user),
-                url: room.getMegaphoneUrl()
-            }
+                url: room.getMegaphoneUrl(),
+            },
         };
 
         if (TURN_STATIC_AUTH_SECRET) {

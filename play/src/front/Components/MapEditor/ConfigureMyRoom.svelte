@@ -1,10 +1,10 @@
 <script lang="ts">
-    import {fly} from "svelte/transition";
-    import {SvelteComponent} from "svelte";
-    import {ChevronRightIcon} from "svelte-feather-icons";
+    import { fly } from "svelte/transition";
+    import { SvelteComponent } from "svelte";
+    import { ChevronRightIcon } from "svelte-feather-icons";
     import LL from "../../../i18n/i18n-svelte";
-    import {gameManager} from "../../Phaser/Game/GameManager";
-    import {EditorToolName} from "../../Phaser/Game/MapEditor/MapEditorModeManager";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+    import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import Megaphone from "./Megaphone.svelte";
 
     type Tab = {
@@ -14,16 +14,20 @@
 
     let currentTab: Tab | undefined;
 
-    function close(){
+    function close() {
         gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.EntityEditor);
     }
 </script>
+
 <div class="modal" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
     <button class="close-window" on:click={close}>&#215;</button>
     <div class="menu">
         <h3>{$LL.mapEditor.sideBar.configureMyRoom()}</h3>
         <ul>
-            <li class:selected={currentTab?.name === "megaphone"} on:click={() => currentTab = {name: "megaphone", component: Megaphone}}>
+            <li
+                class:selected={currentTab?.name === "megaphone"}
+                on:click={() => (currentTab = { name: "megaphone", component: Megaphone })}
+            >
                 <span>Megaphone</span>
                 <ChevronRightIcon class={`tw--mr-2 ${currentTab?.name !== "megaphone" && "tw-text-lighter-purple"}`} />
             </li>
@@ -37,7 +41,7 @@
 </div>
 
 <style lang="scss">
-    .modal{
+    .modal {
         @apply tw-rounded-xl tw-bg-dark-blue/90 tw-backdrop-blur tw-flex tw-flex-wrap;
         width: 70vw !important;
         min-height: 60vh;
@@ -47,30 +51,31 @@
         transform: translate(-20%, -50%);
         transition: all 100ms ease-in-out;
 
-        .close-window{
+        .close-window {
             @apply tw-top-1.5 tw-right-2.5;
         }
 
-        h3{
+        h3 {
             @apply tw-text-light-blue tw-m-0;
         }
 
-        .menu{
+        .menu {
             @apply tw-border-0 tw-border-r tw-border-solid tw-border-lighter-purple/50 tw-w-1/4;
-            h3{
+            h3 {
                 @apply tw-px-5 tw-py-3.5;
             }
-            ul{
+            ul {
                 @apply tw-list-none tw-m-0 tw-p-0 tw-border-0 tw-border-b tw-border-solid tw-border-lighter-purple/50;
-                li{
+                li {
                     @apply tw-cursor-pointer tw-px-5 tw-py-3 tw-text-lg tw-flex tw-flex-wrap tw-justify-between tw-items-center;
-                    &:nth-of-type(1n+1){
+                    &:nth-of-type(1n + 1) {
                         @apply tw-border-0 tw-border-t tw-border-solid tw-border-lighter-purple/50;
                     }
-                    &:hover, &.selected{
+                    &:hover,
+                    &.selected {
                         @apply tw-bg-white/10;
                     }
-                    &.selected{
+                    &.selected {
                         @apply tw-font-bold tw-cursor-default;
                     }
                 }
@@ -80,7 +85,6 @@
             @apply tw-px-5 tw-py-3 tw-w-3/4 tw-flex tw-flex-wrap tw-flex-col;
         }
     }
-
 
     :global(.input-switch) {
         position: relative;

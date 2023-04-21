@@ -44,11 +44,12 @@ export class WAMEditorTool extends MapEditorTool {
      */
     public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): void {
         console.log("WAMEditorTool handleIncomingCommandMessage");
-        if(editMapCommandMessage.editMapMessage?.message?.$case === "updateMegaphoneSettingMessage") {
-            if(this.scene.wamFile.settings === undefined) {
+        if (editMapCommandMessage.editMapMessage?.message?.$case === "updateMegaphoneSettingMessage") {
+            if (this.scene.wamFile.settings === undefined) {
                 this.scene.wamFile.settings = {};
             }
-            this.scene.wamFile.settings.megaphone = editMapCommandMessage.editMapMessage.message.updateMegaphoneSettingMessage;
+            this.scene.wamFile.settings.megaphone =
+                editMapCommandMessage.editMapMessage.message.updateMegaphoneSettingMessage;
         }
     }
 }

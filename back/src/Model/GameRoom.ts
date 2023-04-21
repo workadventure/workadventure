@@ -11,14 +11,15 @@ import {
     MapThirdPartyData,
     MapBbbData,
     MapJitsiData,
-    RefreshRoomMessage, EditMapCommandMessage,
+    RefreshRoomMessage,
+    EditMapCommandMessage,
 } from "@workadventure/messages";
 import { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import { Jitsi } from "@workadventure/shared-utils";
 import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
 import { Value } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/struct";
-import {WAMFileFormat} from "@workadventure/map-editor";
+import { WAMFileFormat } from "@workadventure/map-editor";
 import { PositionInterface } from "../Model/PositionInterface";
 import {
     EmoteCallback,
@@ -47,12 +48,12 @@ import {
     SECRET_JITSI_KEY,
     STORE_VARIABLES_FOR_LOCAL_MAPS,
 } from "../Enum/EnvironmentVariable";
-import {emitError, emitErrorOnRoomSocket} from "../Services/MessageHelpers";
+import { emitError, emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { MapLoadingError } from "../Services/MapLoadingError";
 import { MucManager } from "../Services/MucManager";
-import {getMapStorageClient} from "../Services/MapStorageClient";
+import { getMapStorageClient } from "../Services/MapStorageClient";
 import { BrothersFinder } from "./BrothersFinder";
 import { PositionNotifier } from "./PositionNotifier";
 import { User, UserSocket } from "./User";
@@ -132,7 +133,12 @@ export class GameRoom implements BrothersFinder {
         if (!wamUrl && mapDetails.mapUrl) {
             mapUrl = mapDetails.mapUrl;
         } else if (wamUrl) {
-            wamFile = await mapFetcher.fetchWamFile(wamUrl, false, STORE_VARIABLES_FOR_LOCAL_MAPS, INTERNAL_MAP_STORAGE_URL);
+            wamFile = await mapFetcher.fetchWamFile(
+                wamUrl,
+                false,
+                STORE_VARIABLES_FOR_LOCAL_MAPS,
+                INTERNAL_MAP_STORAGE_URL
+            );
             mapUrl = mapFetcher.normalizeMapUrl(wamUrl, wamFile.mapUrl);
         } else {
             throw new Error("No mapUrl or wamUrl");
@@ -589,8 +595,8 @@ export class GameRoom implements BrothersFinder {
                 if (lastLoaded < 10000) {
                     console.log(
                         'An error occurred while setting the "' +
-                        name +
-                        "\" variable. But we tried to reload the map less than 10 seconds ago, so let's fail."
+                            name +
+                            "\" variable. But we tried to reload the map less than 10 seconds ago, so let's fail."
                     );
                     // Do not try to reload if we tried to reload less than 10 seconds ago.
                     throw e;
