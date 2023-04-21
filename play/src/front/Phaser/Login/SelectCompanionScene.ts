@@ -39,7 +39,7 @@ export class SelectCompanionScene extends ResizableScene {
         const companionLoadingManager = new CompanionTexturesLoadingManager(this.superLoad, this.load);
 
         companionLoadingManager.loadTextures((collections: CompanionCollectionList) => {
-            collections.forEach((list) => {
+            collections.companion.collections.forEach((list) => {
                 list.textures.forEach((texture) => {
                     this.companionModels.push(texture);
                     companionLoadingManager.loadByTexture(texture);
@@ -67,7 +67,7 @@ export class SelectCompanionScene extends ResizableScene {
 
         if (localUserStore.getCompanion()) {
             const companionIndex = this.companionModels.findIndex(
-                (companion) => companion.name === localUserStore.getCompanion()
+                (companion) => companion.id === localUserStore.getCompanion()
             );
             if (companionIndex > -1 || companionIndex < this.companions.length) {
                 this.currentCompanion = companionIndex;
@@ -96,8 +96,8 @@ export class SelectCompanionScene extends ResizableScene {
     }
 
     public selectCompanion(): void {
-        localUserStore.setCompanion(this.companionModels[this.currentCompanion].name);
-        gameManager.setCompanion(this.companionModels[this.currentCompanion].name);
+        localUserStore.setCompanion(this.companionModels[this.currentCompanion].id);
+        gameManager.setCompanion(this.companionModels[this.currentCompanion].id);
 
         this.closeScene();
     }
@@ -115,11 +115,11 @@ export class SelectCompanionScene extends ResizableScene {
         for (let i = 0; i < this.companionModels.length; i++) {
             const companionResource = this.companionModels[i];
             const [middleX, middleY] = this.getCompanionPosition();
-            const companion = this.physics.add.sprite(middleX, middleY, companionResource.name, 0);
+            const companion = this.physics.add.sprite(middleX, middleY, companionResource.id, 0);
             this.setUpCompanion(companion, i);
             this.anims.create({
-                key: companionResource.name,
-                frames: this.anims.generateFrameNumbers(companionResource.name, { start: 0, end: 2 }),
+                key: companionResource.id,
+                frames: this.anims.generateFrameNumbers(companionResource.id, { start: 0, end: 2 }),
                 frameRate: 10,
                 repeat: -1,
             });
@@ -149,7 +149,7 @@ export class SelectCompanionScene extends ResizableScene {
     private updateSelectedCompanion(): void {
         this.selectedCompanion?.anims.pause();
         const companion = this.companions[this.currentCompanion];
-        companion.play(this.companionModels[this.currentCompanion].name);
+        companion.play(this.companionModels[this.currentCompanion].id);
         this.selectedCompanion = companion;
     }
 
