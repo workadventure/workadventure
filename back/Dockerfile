@@ -26,7 +26,9 @@ COPY libs ./libs
 COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
 COPY back ./back
 COPY --from=proto-builder /usr/src/generated ./back/src/Messages/generated
+RUN chown -R node:node /usr/src/node_modules
 WORKDIR /usr/src/back
 RUN mkdir ./dist && chown -R node:node ./dist
 USER node
 CMD ["npm", "run", "runprod"]
+
