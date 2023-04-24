@@ -31,6 +31,7 @@ COPY libs ./libs
 COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
 COPY --chown=node:node map-storage map-storage
 RUN chown -R node:node /usr/src/node_modules
+RUN chown -R node:node /usr/src/map-storage/node_modules
 WORKDIR /usr/src/map-storage
 RUN mkdir ./dist && chown -R node:node ./dist
 USER node
