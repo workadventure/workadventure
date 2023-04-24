@@ -11,7 +11,6 @@
     export let options: Option[];
     export let onFocus: () => void;
     export let onBlur: () => void;
-    export let errorHelperText: string | undefined = undefined;
 
     let filterText = "";
 
@@ -53,11 +52,6 @@
             {item.label}
         </div>
     </Select>
-    {#if errorHelperText}
-        <span>
-            {errorHelperText}
-        </span>
-    {/if}
 </div>
 
 <style lang="scss">
@@ -94,6 +88,5 @@
     }
     :global(.svelte-select .indicators svg) {
         @apply tw-text-brand-blue;
-        //@apply tw-text-brand-blue;
     }
 </style>

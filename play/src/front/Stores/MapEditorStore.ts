@@ -72,3 +72,11 @@ export const mapEditorSelectedEntityPrefabStore = writable<EntityPrefab | undefi
 export const mapEditorCopiedEntityDataPropertiesStore = writable<EntityDataProperties | undefined>(undefined);
 
 export const mapEditorEntityModeStore = writable<MapEditorEntityToolMode>("ADD");
+
+export enum CONFIGURE_MY_ROOM_MENU_ITEM {
+    Megaphone = "Megaphone",
+}
+
+export const mapEditorConfigureMyRoomCurrentMenuItemStore = writable<CONFIGURE_MY_ROOM_MENU_ITEM | undefined>(
+    undefined
+);

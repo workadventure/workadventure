@@ -3,14 +3,14 @@
     import { fade } from "svelte/transition";
     import { UpdateMegaphoneSettingMessage } from "@workadventure/messages";
     import { InfoIcon } from "svelte-feather-icons";
-    import { gameManager } from "../../Phaser/Game/GameManager";
-    import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../Stores/MapEditorStore";
-    import LL from "../../../i18n/i18n-svelte";
-    import InputText from "../Input/InputText.svelte";
-    import InputSelect from "../Input/InputSelect.svelte";
-    import InputTags from "../Input/InputTags.svelte";
-    import PureLoader from "../PureLoader.svelte";
-    import ButtonState from "../Input/ButtonState.svelte";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
+    import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
+    import LL from "../../../../i18n/i18n-svelte";
+    import InputText from "../../Input/InputText.svelte";
+    import InputSelect from "../../Input/InputSelect.svelte";
+    import InputTags from "../../Input/InputTags.svelte";
+    import PureLoader from "../../PureLoader.svelte";
+    import ButtonState from "../../Input/ButtonState.svelte";
 
     type Option = {
         value: string;
@@ -73,7 +73,6 @@
     async function getTags(): Promise<Option[]> {
         loading = true;
         rights = oldRights.map((right) => ({ value: right, label: right.toLocaleUpperCase(), created: undefined }));
-        //await new Promise((resolve => setTimeout(() => {}, 100_000)));
         const _tags = ((await gameManager.getCurrentGameScene().connection?.queryRoomTags()) ?? []).concat(
             oldRights ?? []
         );

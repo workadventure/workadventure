@@ -1,20 +1,28 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { SvelteComponent } from "svelte";
     import { ChevronRightIcon } from "svelte-feather-icons";
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
-    import Megaphone from "./Megaphone.svelte";
+    import {
+        CONFIGURE_MY_ROOM_MENU_ITEM,
+        mapEditorConfigureMyRoomCurrentMenuItemStore,
+    } from "../../Stores/MapEditorStore";
+    import Megaphone from "./ConfigureMyRoom/Megaphone.svelte";
 
-    type Tab = {
-        name: string;
-        component: typeof SvelteComponent;
-    };
-
-    let currentTab: Tab | undefined;
+    function getCurrentComponent() {
+        switch ($mapEditorConfigureMyRoomCurrentMenuItemStore) {
+            case CONFIGURE_MY_ROOM_MENU_ITEM.Megaphone: {
+                return Megaphone;
+            }
+            default: {
+                return "Component not found.";
+            }
+        }
+    }
 
     function close() {
+        mapEditorConfigureMyRoomCurrentMenuItemStore.set(undefined);
         gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.EntityEditor);
     }
 </script>
@@ -25,17 +33,17 @@
         <h3>{$LL.mapEditor.sideBar.configureMyRoom()}</h3>
         <ul>
             <li
-                class:selected={currentTab?.name === "megaphone"}
-                on:click={() => (currentTab = { name: "megaphone", component: Megaphone })}
+                class:selected={$mapEditorConfigureMyRoomCurrentMenuItemStore === CONFIGURE_MY_ROOM_MENU_ITEM.Megaphone}
+                on:click={() => mapEditorConfigureMyRoomCurrentMenuItemStore.set(CONFIGURE_MY_ROOM_MENU_ITEM.Megaphone)}
             >
                 <span>Megaphone</span>
-                <ChevronRightIcon class={`tw--mr-2 ${currentTab?.name !== "megaphone" && "tw-text-lighter-purple"}`} />
+                <ChevronRightIcon class={`tw--mr-2`} />
             </li>
         </ul>
     </div>
     <div class="content">
-        {#if currentTab}
-            <svelte:component this={currentTab.component} />
+        {#if $mapEditorConfigureMyRoomCurrentMenuItemStore !== undefined}
+            <svelte:component this={getCurrentComponent()} />
         {/if}
     </div>
 </div>
@@ -44,7 +52,7 @@
     .modal {
         @apply tw-rounded-xl tw-bg-dark-blue/90 tw-backdrop-blur tw-flex tw-flex-wrap;
         width: 70vw !important;
-        min-height: 60vh;
+        min-height: 50vh;
         height: fit-content !important;
         top: 50%;
         right: 50%;

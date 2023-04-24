@@ -753,6 +753,12 @@ message MapStorageRefreshMessage {
   string comment = 1;
 }
 
+message MapStorageToBackMessage {
+  oneof message {
+    MapStorageRefreshMessage mapStorageRefreshMessage = 1;
+  }
+}
+
 message MapStorageUrlMessage {
   string mapUrl = 1;
   string roomId = 2;

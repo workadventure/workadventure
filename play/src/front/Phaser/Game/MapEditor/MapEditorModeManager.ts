@@ -156,7 +156,7 @@ export class MapEditorModeManager {
                 this.emitMapEditorUpdate(command.id, commandConfig, delay);
             }
 
-            if (addToLocalCommandsHistory) {
+            if (addToLocalCommandsHistory && !(command instanceof UpdateWAMSettingCommand)) {
                 // if we are not at the end of commands history and perform an action, get rid of commands later in history than our current point in time
                 if (this.currentCommandIndex !== this.localCommandsHistory.length - 1) {
                     this.localCommandsHistory.splice(this.currentCommandIndex + 1);

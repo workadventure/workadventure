@@ -72,6 +72,7 @@ import type { MenuItem, TranslatedMenu } from "../../Stores/MenuStore";
 import {
     activeSubMenuStore,
     contactPageStore,
+    mapEditorActivated,
     menuVisiblilityStore,
     SubMenusInterface,
     subMenusStore,
@@ -111,7 +112,12 @@ import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyM
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import { mapEditorModeStore } from "../../Stores/MapEditorStore";
+import {
+    CONFIGURE_MY_ROOM_MENU_ITEM,
+    mapEditorConfigureMyRoomCurrentMenuItemStore,
+    mapEditorModeStore,
+    mapEditorSelectedToolStore,
+} from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
 import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
@@ -135,7 +141,7 @@ import type { AddPlayerInterface } from "./AddPlayerInterface";
 import type { CameraManagerEventCameraUpdateData } from "./CameraManager";
 import { CameraManager, CameraManagerEvent } from "./CameraManager";
 
-import { MapEditorModeManager } from "./MapEditor/MapEditorModeManager";
+import { EditorToolName, MapEditorModeManager } from "./MapEditor/MapEditorModeManager";
 import { RemotePlayersRepository } from "./RemotePlayersRepository";
 import type { PlayerDetailsUpdate } from "./RemotePlayersRepository";
 import { IframeEventDispatcher } from "./IframeEventDispatcher";
@@ -874,6 +880,8 @@ export class GameScene extends DirtyScene {
                 if (commandsToApply) {
                     this.mapEditorModeManager?.updateMapToNewest(commandsToApply);
                 }
+
+                this.tryOpenMapEditorWithToolEditorParameter();
 
                 this.subscribeToStores();
 
@@ -2250,6 +2258,72 @@ ${escapedMessage}
             }
         });
         this.MapPlayersByKey.clear();
+    }
+
+    private tryOpenMapEditorWithToolEditorParameter(): void {
+        const toolEditorParam = urlManager.getHashParameter("mapEditor");
+        if (toolEditorParam) {
+            if (!get(mapEditorActivated)) {
+                layoutManagerActionStore.addAction({
+                    uuid: "mapEditorNotEnabled",
+                    type: "warning",
+                    message: get(LL).warning.mapEditorNotEnabled(),
+                    callback: () => layoutManagerActionStore.removeAction("mapEditorNotEnabled"),
+                    userInputManager: this.userInputManager,
+                });
+                setTimeout(() => layoutManagerActionStore.removeAction("mapEditorNotEnabled"), 6_000);
+            } else {
+                switch (toolEditorParam) {
+                    case "configureMyRoom": {
+                        mapEditorModeStore.switchMode(true);
+                        mapEditorSelectedToolStore.set(EditorToolName.ConfigureMyRoom);
+                        const menuItem = urlManager.getHashParameter("menuItem");
+                        if (menuItem) {
+                            switch (menuItem) {
+                                case "megaphone": {
+                                    mapEditorConfigureMyRoomCurrentMenuItemStore.set(
+                                        CONFIGURE_MY_ROOM_MENU_ITEM.Megaphone
+                                    );
+                                    break;
+                                }
+                                default: {
+                                    mapEditorConfigureMyRoomCurrentMenuItemStore.set(undefined);
+                                    break;
+                                }
+                            }
+                        }
+                        break;
+                    }
+                    case "floor": {
+                        mapEditorModeStore.switchMode(true);
+                        mapEditorSelectedToolStore.set(EditorToolName.FloorEditor);
+                        break;
+                    }
+                    case "entity": {
+                        mapEditorModeStore.switchMode(true);
+                        mapEditorSelectedToolStore.set(EditorToolName.EntityEditor);
+                        break;
+                    }
+                    case "area": {
+                        mapEditorModeStore.switchMode(true);
+                        mapEditorSelectedToolStore.set(EditorToolName.AreaEditor);
+                        break;
+                    }
+                    default: {
+                        layoutManagerActionStore.addAction({
+                            uuid: "mapEditorShortCut",
+                            type: "warning",
+                            message: get(LL).warning.mapEditorShortCut(),
+                            callback: () => layoutManagerActionStore.removeAction("mapEditorShortCut"),
+                            userInputManager: this.userInputManager,
+                        });
+                        setTimeout(() => layoutManagerActionStore.removeAction("mapEditorShortCut"), 6_000);
+                        break;
+                    }
+                }
+            }
+            urlManager.clearHashParameter();
+        }
     }
 
     private tryMovePlayerWithMoveToParameter(): void {
