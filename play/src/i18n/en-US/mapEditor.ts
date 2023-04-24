@@ -7,6 +7,9 @@ const mapEditor: BaseTranslation = {
         tileEditor: "Tile editor tool",
     },
     properties: {
+        silentProperty: {
+            label: "Silent",
+        },
         textProperties: {
             label: "Header Text",
             placeholder: "Input here text which will be displayed when interacting with the object",
@@ -46,6 +49,7 @@ const mapEditor: BaseTranslation = {
         },
     },
     areaEditor: {
+        editInstructions: "Click an area to modify its properties.",
         nameLabel: "Name",
     },
     entityEditor: {

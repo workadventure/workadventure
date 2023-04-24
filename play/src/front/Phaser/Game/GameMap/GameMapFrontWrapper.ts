@@ -1,4 +1,4 @@
-import { AreaDataProperties, GameMapProperties } from "@workadventure/map-editor";
+import { GameMapProperties } from "@workadventure/map-editor";
 import type { AreaChangeCallback, AreaData, GameMap } from "@workadventure/map-editor";
 import type {
     ITiledMap,
@@ -595,21 +595,6 @@ export class GameMapFrontWrapper {
      */
     public onLeaveArea(callback: AreaChangeCallback) {
         this.gameMap.getGameMapAreas()?.onLeaveArea(callback);
-    }
-
-    public setAreaProperty<K extends keyof AreaDataProperties>(
-        id: string,
-        propertyName: K,
-        propertyValue: AreaDataProperties[K]
-    ): void {
-        const area = this.getArea(id);
-        if (area === undefined) {
-            console.warn('Could not find area "' + id + '" when calling setProperty');
-            return;
-        }
-        this.gameMap.setAreaProperty(area, propertyName, propertyValue);
-        this.triggerAllProperties();
-        this.gameMap.getGameMapAreas()?.triggerAreasChange(this.oldPosition, this.position);
     }
 
     public setDynamicAreaProperty(areaName: string, propertyName: string, propertyValue: unknown): void {

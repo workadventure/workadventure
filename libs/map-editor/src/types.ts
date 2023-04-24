@@ -45,9 +45,13 @@ export const JitsiRoomConfigData = z.object({
     startWithVideoMuted: z.boolean().optional(),
 });
 
-export const StartPropertyData = z.boolean();
+export const SilentPropertyData = PropertyBase.extend({
+    type: z.literal("silent"),
+});
 
-export const SilentPropertyData = z.boolean();
+export const StartPropertyData = PropertyBase.extend({
+    type: z.literal("start"),
+});
 
 export const JitsiRoomPropertyData = PropertyBase.extend({
     type: z.literal("jitsiRoomProperty"),
@@ -66,15 +70,17 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
     newTab: z.boolean().optional(),
 });
 
-// TODO: Can they vary between Entity and Area or should it be the same type?
-export const AreaDataProperties = z.object({
-    start: StartPropertyData.optional().nullable(),
-    silent: SilentPropertyData.optional().nullable(),
-    focusable: FocusablePropertyData.optional().nullable(),
-    jitsiRoom: JitsiRoomPropertyData.optional().nullable(),
-    playAudio: PlayAudioPropertyData.optional().nullable(),
-    openWebsite: OpenWebsitePropertyData.optional().nullable(),
-});
+export const AreaDataProperty = z.union([
+    StartPropertyData,
+    FocusablePropertyData,
+    SilentPropertyData,
+    TextHeaderPropertyData,
+    JitsiRoomPropertyData,
+    PlayAudioPropertyData,
+    OpenWebsitePropertyData,
+]);
+
+export const AreaDataProperties = z.array(AreaDataProperty);
 
 export const AreaData = z.object({
     id: z.string(),
@@ -146,11 +152,18 @@ export type EntityCollection = z.infer<typeof EntityCollection>;
 export type EntityData = z.infer<typeof EntityData>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
 export type EntityDataProperty = z.infer<typeof EntityDataProperty>;
-// export type EntityDataPropertiesKeys = keyof z.infer<typeof EntityDataProperties>;
 export type EntityDataPropertiesKeys = "textHeader" | "jitsiRoomProperty" | "playAudio" | "openWebsite";
 export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;
-export type AreaDataPropertiesKeys = keyof z.infer<typeof AreaDataProperties>;
+export type AreaDataProperty = z.infer<typeof AreaDataProperty>;
+export type AreaDataPropertiesKeys =
+    | "textHeader"
+    | "focusable"
+    | "silent"
+    | "start"
+    | "jitsiRoomProperty"
+    | "playAudio"
+    | "openWebsite";
 export type TextHeaderPropertyData = z.infer<typeof TextHeaderPropertyData>;
 export type ActionsMenuData = z.infer<typeof PropertyBase>;
 export type StartPropertyData = z.infer<typeof StartPropertyData>;

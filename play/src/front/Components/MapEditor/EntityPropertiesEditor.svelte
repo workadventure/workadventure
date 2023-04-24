@@ -10,7 +10,6 @@
     let properties = $mapEditorSelectedEntityStore?.getProperties() ?? [];
 
     function onAddProperty(type: EntityDataPropertiesKeys) {
-        console.log("try to add property");
         if ($mapEditorSelectedEntityStore) {
             $mapEditorSelectedEntityStore.addProperty(getPropertyFromType(type));
             // refresh properties
@@ -54,14 +53,8 @@
     }
 
     function onDeleteProperty(id: string) {
-        console.log("try to delete property");
         if ($mapEditorSelectedEntityStore) {
-            const result = $mapEditorSelectedEntityStore.deleteProperty(id);
-            if (result) {
-                console.log(`SUCCESFULLY DELETED PROPERTY: ${id}`);
-            } else {
-                console.log(`CANNOT DELETE PROPERTY: ${id}`);
-            }
+            $mapEditorSelectedEntityStore.deleteProperty(id);
             // refresh properties
             properties = $mapEditorSelectedEntityStore?.getProperties();
         }

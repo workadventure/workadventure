@@ -1,158 +1,179 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
-    import { slide } from "svelte/transition";
-    import { AreaDataProperties, AreaDataPropertiesKeys } from "@workadventure/map-editor";
+    import { AreaDataProperty, AreaDataPropertiesKeys } from "@workadventure/map-editor";
     import { LL } from "../../../i18n/i18n-svelte";
     import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
-    import crossImg from "../images/cross-icon.svg";
+    import plusImg from "../images/plus.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
     import FocusablePropertyEditor from "./PropertyEditor/FocusablePropertyEditor.svelte";
+    import SilentPropertyEditor from "./PropertyEditor/SilentPropertyEditor.svelte";
 
-    interface AreaPropertyDescription<K extends AreaDataPropertiesKeys> {
-        key: K;
-        name: string;
-        active: boolean;
-        currentValue: AreaDataProperties[K];
-        component: unknown;
-        defaultValue: AreaDataProperties[K];
-    }
+    let properties = $mapEditorSelectedAreaPreviewStore?.getProperties() ?? [];
 
-    let possibleProperties: AreaPropertyDescription<AreaDataPropertiesKeys>[] = [
-        {
-            key: "focusable",
-            name: $LL.mapEditor.properties.focusableProperties.label(),
-            active: false,
-            currentValue: undefined,
-            component: FocusablePropertyEditor,
-            defaultValue: {
-                id: crypto.randomUUID(),
-                type: "focusable",
-                zoom_margin: 0,
-                hideButtonLabel: true,
-            },
-        },
-        {
-            key: "jitsiRoom",
-            name: $LL.mapEditor.properties.jitsiProperties.label(),
-            active: false,
-            currentValue: undefined,
-            component: JitsiRoomPropertyEditor,
-            defaultValue: {
-                id: crypto.randomUUID(),
-                type: "jitsiRoomProperty",
-                roomName: "",
-                hideButtonLabel: true,
-                jitsiRoomConfig: {},
-            },
-        },
-        {
-            key: "playAudio",
-            name: $LL.mapEditor.properties.audioProperties.label(),
-            active: false,
-            currentValue: undefined,
-            component: PlayAudioPropertyEditor,
-            defaultValue: {
-                type: "playAudio",
-                id: crypto.randomUUID(),
-                audioLink: "",
-                hideButtonLabel: true,
-            },
-        },
-        {
-            key: "openWebsite",
-            name: $LL.mapEditor.properties.linkProperties.label(),
-            active: false,
-            currentValue: undefined,
-            component: OpenWebsitePropertyEditor,
-            defaultValue: {
-                type: "openWebsite",
-                id: crypto.randomUUID(),
-                link: "",
-                hideButtonLabel: true,
-                newTab: true,
-            },
-        },
-    ];
-
-    let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
-        if (currentAreaPreview) {
-            for (let property of possibleProperties) {
-                property.active =
-                    currentAreaPreview.getAreaData().properties[property.key] !== undefined &&
-                    currentAreaPreview.getAreaData().properties[property.key] !== null;
-                property.currentValue = currentAreaPreview.getAreaData().properties[property.key];
-                if (!property.currentValue) {
-                    property.currentValue = structuredClone(property.defaultValue);
-                }
-            }
-        }
-        possibleProperties = possibleProperties;
-    });
-
-    onDestroy(() => {
-        selectedAreaPreviewUnsubscriber();
-    });
-
-    function onPropertyChecked(property: AreaPropertyDescription<AreaDataPropertiesKeys>) {
-        if ($mapEditorSelectedAreaPreviewStore) {
-            if (property.active) {
-                if (!property.currentValue) {
-                    property.currentValue = possibleProperties.find((v) => v.key === property.key)?.defaultValue; //initialize here the property value
-                }
-                $mapEditorSelectedAreaPreviewStore.setProperty(property.key, property.currentValue);
-            } else {
-                $mapEditorSelectedAreaPreviewStore.setProperty(property.key, null);
-            }
+    function getPropertyFromType(type: AreaDataPropertiesKeys): AreaDataProperty {
+        const id = crypto.randomUUID();
+        switch (type) {
+            case "start":
+                return {
+                    id,
+                    type,
+                };
+            case "silent":
+                return {
+                    id,
+                    type,
+                };
+            case "focusable":
+                return {
+                    id,
+                    type,
+                    zoom_margin: 0.5,
+                };
+            case "jitsiRoomProperty":
+                return {
+                    id,
+                    type,
+                    jitsiRoomConfig: {},
+                    roomName: "JITSI ROOM",
+                };
+            case "openWebsite":
+                return {
+                    id,
+                    type,
+                    link: "https://google.com",
+                    newTab: true,
+                };
+            case "playAudio":
+                return {
+                    id,
+                    type,
+                    audioLink: "",
+                };
+            case "textHeader":
+                return {
+                    id,
+                    type,
+                    header: "text header",
+                };
         }
     }
 
-    function onUpdateProperty(property: AreaPropertyDescription<AreaDataPropertiesKeys>) {
+    onDestroy(() => {});
+
+    function onAddProperty(type: AreaDataPropertiesKeys) {
         if ($mapEditorSelectedAreaPreviewStore) {
-            $mapEditorSelectedAreaPreviewStore.setProperty(property.key, property.currentValue);
+            $mapEditorSelectedAreaPreviewStore.addProperty(getPropertyFromType(type));
+            // refresh properties
+            properties = $mapEditorSelectedAreaPreviewStore?.getProperties();
         }
     }
 
-    function onDeleteAreaPreview() {
+    function onDeleteProperty(id: string) {
         if ($mapEditorSelectedAreaPreviewStore) {
-            $mapEditorSelectedAreaPreviewStore.delete();
-            mapEditorSelectedAreaPreviewStore.set(undefined);
+            $mapEditorSelectedAreaPreviewStore.deleteProperty(id);
+            // refresh properties
+            properties = $mapEditorSelectedAreaPreviewStore?.getProperties();
         }
     }
 </script>
 
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
-    {$LL.mapEditor.entityEditor.editInstructions()}
+    {$LL.mapEditor.areaEditor.editInstructions()}
 {:else}
-    <div class="area-properties">
-        {#each possibleProperties as property (property.key)}
-            <div class="property-enabler">
-                <label for={property.key}>{property.name}</label>
-                <input
-                    id={property.key}
-                    type="checkbox"
-                    class="input-switch"
-                    bind:checked={property.active}
-                    on:change={() => onPropertyChecked(property)}
-                />
-            </div>
-            {#if property.active}
-                <div class="property-container" transition:slide|local>
-                    <svelte:component
-                        this={property.component}
-                        bind:property={property.currentValue}
-                        on:change={() => onUpdateProperty(property)}
-                    />
+    <div class="properties-buttons">
+        <div>
+            <button
+                class="add-property-button"
+                on:click={() => {
+                    onAddProperty("jitsiRoomProperty");
+                }}
+            >
+                <div>
+                    {$LL.mapEditor.properties.jitsiProperties.label()}
                 </div>
-            {/if}
-        {/each}
+                <img src={plusImg} alt="" />
+            </button>
+        </div>
+        <div>
+            <button
+                class="add-property-button"
+                on:click={() => {
+                    onAddProperty("playAudio");
+                }}
+            >
+                <div>
+                    {$LL.mapEditor.properties.audioProperties.label()}
+                </div>
+                <img src={plusImg} alt="" />
+            </button>
+        </div>
+        <div>
+            <button
+                class="add-property-button"
+                on:click={() => {
+                    onAddProperty("openWebsite");
+                }}
+            >
+                <div>
+                    {$LL.mapEditor.properties.linkProperties.label()}
+                </div>
+                <img src={plusImg} alt="" />
+            </button>
+        </div>
     </div>
-    <div class="action-button">
-        <button class="delete-button" on:click={onDeleteAreaPreview}
-            ><div>{$LL.mapEditor.entityEditor.deleteButton()}</div>
-            <img src={crossImg} alt="" /></button
-        >
+    <div class="properties-container">
+        {#each properties as property}
+            <div class="property-box">
+                {#if property.type === "focusable"}
+                    <FocusablePropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                    />
+                {:else if property.type === "silent"}
+                    <SilentPropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                    />
+                {:else if property.type === "jitsiRoomProperty"}
+                    <JitsiRoomPropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                    />
+                {:else if property.type === "playAudio"}
+                    <PlayAudioPropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                    />
+                {:else if property.type === "openWebsite"}
+                    <OpenWebsitePropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                    />
+                {:else}
+                    <div>
+                        <button
+                            on:click={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                        >
+                            <p>{property.id}: {property.type}</p>
+                        </button>
+                    </div>
+                {/if}
+            </div>
+        {/each}
     </div>
 {/if}
 

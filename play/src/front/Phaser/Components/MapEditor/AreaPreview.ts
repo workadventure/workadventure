@@ -1,4 +1,4 @@
-import type { AreaData, AreaDataProperties, AtLeast } from "@workadventure/map-editor";
+import type { AreaData, AreaDataProperties, AreaDataProperty, AtLeast } from "@workadventure/map-editor";
 import _ from "lodash";
 import { GameScene } from "../../Game/GameScene";
 import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
@@ -107,13 +107,32 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         return this.displayWidth * this.displayHeight;
     }
 
-    public setProperty<K extends keyof AreaDataProperties>(key: K, value: AreaDataProperties[K]): void {
-        this.areaData.properties[key] = value;
-        const data: AtLeast<AreaData, "id"> = {
-            id: this.getAreaData().id,
-            properties: { [key]: value },
-        };
-        this.emit(AreaPreviewEvent.Update, data);
+    public addProperty(property: AreaDataProperty): void {
+        this.areaData.properties.push(property);
+        this.emit(AreaPreviewEvent.Update, this.areaData.properties);
+    }
+
+    public updateProperty(changes: AtLeast<AreaDataProperty, "id">): void {
+        const property = this.areaData.properties.find((property) => property.id === changes.id);
+        if (property) {
+            _.merge(property, changes);
+        }
+        this.emit(AreaPreviewEvent.Update, this.areaData);
+    }
+
+    public deleteProperty(id: string): boolean {
+        const index = this.areaData.properties.findIndex((property) => property.id === id);
+        if (index !== -1) {
+            this.areaData.properties.splice(index, 1);
+            this.emit(AreaPreviewEvent.Update, this.areaData);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public getProperties(): AreaDataProperties {
+        return this.areaData.properties;
     }
 
     public destroy(): void {

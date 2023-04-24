@@ -6,7 +6,7 @@ import {
     Json,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
-import type { AreaData, AreaDataProperties, WAMFileFormat } from "../types";
+import type { WAMFileFormat } from "../types";
 import { GameMapProperties } from "../types";
 import type { AreaChangeCallback } from "./GameMapAreas";
 import { GameMapAreas } from "./GameMapAreas";
@@ -148,14 +148,6 @@ export class GameMap {
             holder.properties.splice(index, 1);
         }
         property.value = propertyValue;
-    }
-
-    public setAreaProperty<K extends keyof AreaDataProperties>(
-        area: AreaData,
-        key: K,
-        value: AreaDataProperties[K]
-    ): void {
-        this.gameMapAreas?.setProperty(area, key, value);
     }
 
     public getTiledObjectProperty(
