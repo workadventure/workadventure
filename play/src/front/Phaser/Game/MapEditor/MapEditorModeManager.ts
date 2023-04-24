@@ -119,7 +119,6 @@ export class MapEditorModeManager {
                     break;
                 }
                 case "UpdateEntityCommand": {
-                    console.log(commandConfig);
                     command = new UpdateEntityCommand(this.scene.getGameMap(), commandConfig, commandId);
                     break;
                 }

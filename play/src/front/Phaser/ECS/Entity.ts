@@ -82,6 +82,10 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     public updateEntity(dataToModify: AtLeast<EntityData, "id">): void {
         _.merge(this.entityData, dataToModify);
+        // TODO: Find a way to update it without need of using conditions
+        if (dataToModify.properties !== undefined) {
+            this.entityData.properties = dataToModify.properties;
+        }
 
         this.setPosition(this.entityData.x, this.entityData.y);
         this.oldPosition = this.getPosition();
@@ -214,7 +218,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         for (const property of properties) {
             switch (property.type) {
                 case "jitsiRoomProperty": {
-                    console.log(property);
                     const roomName = property.roomName;
                     const roomConfig = property.jitsiRoomConfig;
                     actions.push({
