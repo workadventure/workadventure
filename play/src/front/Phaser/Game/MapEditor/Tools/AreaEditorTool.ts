@@ -405,7 +405,6 @@ export class AreaEditorTool extends MapEditorTool {
 
     private handleAreaPreviewUpdate(config: AtLeast<AreaData, "id">): void {
         this.areaPreviews.find((area) => area.getAreaData().id === config.id)?.updatePreview(config);
-        this.scene.getGameMapFrontWrapper().updateArea(config.id, config);
         this.scene.markDirty();
     }
 
@@ -443,7 +442,7 @@ export class AreaEditorTool extends MapEditorTool {
                 id,
                 name: "",
                 visible: true,
-                properties: {},
+                properties: [],
                 width,
                 height,
                 x,

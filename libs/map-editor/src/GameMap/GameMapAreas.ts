@@ -145,6 +145,10 @@ export class GameMapAreas {
             throw new Error(`Area to update does not exist!`);
         }
         _.merge(area, config);
+        // TODO: Find a way to update it without need of using conditions
+        if (config.properties !== undefined) {
+            area.properties = config.properties;
+        }
         this.updateAreaWAM(area);
         return area;
     }

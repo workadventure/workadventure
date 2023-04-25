@@ -80,13 +80,20 @@ const mapStorageServer: MapStorageServer = {
             switch (editMapMessage.$case) {
                 case "modifyAreaMessage": {
                     const message = editMapMessage.modifyAreaMessage;
+                    // NOTE: protobuf does not distinguish between null and empty array, we cannot create optional repeated value.
+                    //       Because of that, we send additional "modifyProperties" flag set properties value as "undefined" so they won't get erased
+                    //       by [] value which was supposed to be null.
+                    const dataToModify: AtLeast<EntityData, "id"> = structuredClone(message);
+                    if (!message.modifyProperties) {
+                        dataToModify.properties = undefined;
+                    }
                     const area = gameMap.getGameMapAreas()?.getArea(message.id);
                     if (area) {
                         mapsManager.executeCommand(
                             mapKey,
                             {
                                 type: "UpdateAreaCommand",
-                                dataToModify: message,
+                                dataToModify,
                             },
                             commandId
                         );

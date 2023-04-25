@@ -96,6 +96,9 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
 
     public updatePreview(dataToModify: AtLeast<AreaData, "id">): void {
         _.merge(this.areaData, dataToModify);
+        if (dataToModify.properties !== undefined) {
+            this.areaData.properties = dataToModify.properties;
+        }
         this.x = this.areaData.x + this.areaData.width * 0.5;
         this.y = this.areaData.y + this.areaData.height * 0.5;
         this.displayWidth = this.areaData.width;
@@ -109,7 +112,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
 
     public addProperty(property: AreaDataProperty): void {
         this.areaData.properties.push(property);
-        this.emit(AreaPreviewEvent.Update, this.areaData.properties);
+        this.emit(AreaPreviewEvent.Update, this.areaData);
     }
 
     public updateProperty(changes: AtLeast<AreaDataProperty, "id">): void {
