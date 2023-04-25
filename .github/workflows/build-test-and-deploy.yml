@@ -239,7 +239,8 @@ jobs:
               -e SENTRY_PROJECT \
               -e SENTRY_RELEASE \
               thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} \
-              npm install -w workadventureback && npm run push-sentry-sourcemaps -w back
+              /bin/sh -c 'cd /usr/src && npm ci -w workadventureback && cd /usr/src/back && npm run push-sentry-sourcemaps'
+
 
       - name: Zip image
         run: gzip back.tar
@@ -450,7 +451,7 @@ jobs:
             -e SENTRY_PROJECT \
             -e SENTRY_RELEASE \
             thecodingmachine/workadventure-map-storage:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} \
-            npm install -w map-storage && npm run push-sentry-sourcemaps -w map-storage
+            /bin/sh -c 'cd /usr/src && npm ci -w map-storage && cd /usr/src/map-storage && npm run push-sentry-sourcemaps'
 
       - name: Zip image
         run: gzip map-storage.tar
