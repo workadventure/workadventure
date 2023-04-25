@@ -239,7 +239,7 @@ jobs:
               -e SENTRY_PROJECT \
               -e SENTRY_RELEASE \
               thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} \
-              /bin/sh -c 'cd .. && npm install --dev && cd back && npm install --dev && npm run push-sentry-sourcemaps'
+              /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
 
 
       - name: Zip image
