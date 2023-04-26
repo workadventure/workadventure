@@ -111,7 +111,10 @@ export class AreaEditorTool extends MapEditorTool {
                 this.mapEditorModeManager.executeCommand(
                     {
                         type: "UpdateAreaCommand",
-                        dataToModify: data as AreaData,
+                        dataToModify: {
+                            ...data,
+                            properties: data.modifyProperties ? data.properties : undefined,
+                        },
                     },
                     false,
                     false,

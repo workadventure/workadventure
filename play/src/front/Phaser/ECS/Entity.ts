@@ -4,7 +4,6 @@ import {
     EntityDataProperties,
     EntityDataProperty,
     GameMapProperties,
-    TextHeaderPropertyData,
 } from "@workadventure/map-editor";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { get, Unsubscriber } from "svelte/store";
@@ -199,8 +198,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             actionsMenuStore.clear();
             return;
         }
-        const textHeader = this.entityData.properties.find((property) => property.type === "textHeader");
-        actionsMenuStore.initialize(textHeader ? TextHeaderPropertyData.parse(textHeader).header : "");
+        actionsMenuStore.initialize(this.entityData.name ?? "");
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
         }
@@ -212,8 +210,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         }
         const actions: ActionsMenuAction[] = [];
         const properties = this.entityData.properties;
-
-        console.log(properties);
 
         for (const property of properties) {
             switch (property.type) {

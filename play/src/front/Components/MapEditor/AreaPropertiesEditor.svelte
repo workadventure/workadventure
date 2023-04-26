@@ -51,12 +51,6 @@
                     type,
                     audioLink: "",
                 };
-            case "textHeader":
-                return {
-                    id,
-                    type,
-                    header: "text header",
-                };
         }
     }
 

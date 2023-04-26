@@ -178,7 +178,10 @@ export class EntityEditorTool extends MapEditorTool {
                 this.mapEditorModeManager.executeCommand(
                     {
                         type: "UpdateEntityCommand",
-                        dataToModify: data as EntityData,
+                        dataToModify: {
+                            ...data,
+                            properties: data.modifyProperties ? data.properties : undefined,
+                        },
                     },
                     false,
                     false,

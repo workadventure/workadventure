@@ -1,13 +1,18 @@
 <script lang="ts">
     import { EntityDataPropertiesKeys, EntityDataProperty } from "@workadventure/map-editor";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { mapEditorSelectedEntityStore } from "../../Stores/MapEditorStore";
+    import {
+        mapEditorSelectedEntityStore,
+        onMapEditorInputFocus,
+        onMapEditorInputUnfocus,
+    } from "../../Stores/MapEditorStore";
     import plusImg from "../images/plus.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
 
     let properties = $mapEditorSelectedEntityStore?.getProperties() ?? [];
+    let entityName = $mapEditorSelectedEntityStore?.getEntityData().name;
 
     function onAddProperty(type: EntityDataPropertiesKeys) {
         if ($mapEditorSelectedEntityStore) {
@@ -42,12 +47,6 @@
                     type,
                     buttonLabel: "Play audio",
                     audioLink: "",
-                };
-            case "textHeader":
-                return {
-                    id,
-                    type,
-                    header: "text header",
                 };
         }
     }
@@ -105,6 +104,17 @@
             </button>
         </div>
     </div>
+    <div class="entity-name-container">
+        <p>Object name</p>
+        <input
+            id="objectName"
+            type="text"
+            placeholder="Value"
+            bind:value={entityName}
+            on:focus={onMapEditorInputFocus}
+            on:blur={onMapEditorInputUnfocus}
+        />
+    </div>
     <div class="properties-container">
         {#each properties as property}
             <div class="property-box">
@@ -129,16 +139,6 @@
                             onDeleteProperty(property.id);
                         }}
                     />
-                {:else}
-                    <div>
-                        <button
-                            on:click={() => {
-                                onDeleteProperty(property.id);
-                            }}
-                        >
-                            <p>{property.id}: {property.type}</p>
-                        </button>
-                    </div>
                 {/if}
             </div>
         {/each}
@@ -181,97 +181,5 @@
                 max-height: 2em;
             }
         }
-    }
-
-    .action-button {
-        margin-top: 1em;
-        display: flex;
-        button {
-            flex: 1 1 0px;
-            border: 1px solid grey;
-        }
-        button:hover {
-            background-color: rgb(77 75 103);
-        }
-        .delete-button {
-            border-color: red;
-            color: red;
-            display: flex;
-            div {
-                text-align: left;
-                flex-grow: 1;
-            }
-            img {
-                object-fit: contain;
-                max-width: 2em;
-                max-height: 2em;
-            }
-        }
-        .delete-button:hover {
-            background-color: rgb(103 75 75);
-        }
-    }
-
-    .input-switch {
-        position: relative;
-        top: 0px;
-        right: 0px;
-        bottom: 0px;
-        left: 0px;
-        display: inline-block;
-        height: 1rem;
-        width: 2rem;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        border-radius: 9999px;
-        border-width: 1px;
-        border-style: solid;
-        --tw-border-opacity: 1;
-        border-color: rgb(77 75 103 / var(--tw-border-opacity));
-        --tw-bg-opacity: 1;
-        background-color: rgb(15 31 45 / var(--tw-bg-opacity));
-        padding: 0px;
-        --tw-text-opacity: 1;
-        color: rgb(242 253 255 / var(--tw-text-opacity));
-        outline: 2px solid transparent;
-        outline-offset: 2px;
-    }
-
-    .input-switch::before {
-        position: absolute;
-        left: -3px;
-        top: -3px;
-        height: 1.25rem;
-        width: 1.25rem;
-        border-radius: 9999px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(146 142 187 / var(--tw-bg-opacity));
-        transition-property: all;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        transition-duration: 150ms;
-        --tw-content: "";
-        content: var(--tw-content);
-    }
-
-    .input-switch:checked {
-        --tw-border-opacity: 1;
-        border-color: rgb(146 142 187 / var(--tw-border-opacity));
-    }
-
-    .input-switch:checked::before {
-        left: 13px;
-        top: -3px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(86 234 255 / var(--tw-bg-opacity));
-        content: var(--tw-content);
-        --tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
-        --tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
-        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
-    }
-
-    .input-switch:disabled {
-        cursor: not-allowed;
-        opacity: 0.4;
     }
 </style>

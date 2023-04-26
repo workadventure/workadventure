@@ -23,12 +23,6 @@ export enum Direction {
     Right = "Right",
 }
 
-export const TextHeaderPropertyData = z.object({
-    id: z.string(),
-    type: z.literal("textHeader"),
-    header: z.string(),
-});
-
 export const PropertyBase = z.object({
     id: z.string(),
     buttonLabel: z.string().optional(),
@@ -74,7 +68,6 @@ export const AreaDataProperty = z.union([
     StartPropertyData,
     FocusablePropertyData,
     SilentPropertyData,
-    TextHeaderPropertyData,
     JitsiRoomPropertyData,
     PlayAudioPropertyData,
     OpenWebsitePropertyData,
@@ -93,21 +86,9 @@ export const AreaData = z.object({
     properties: AreaDataProperties,
 });
 
-export const EntityDataProperty = z.union([
-    TextHeaderPropertyData,
-    JitsiRoomPropertyData,
-    PlayAudioPropertyData,
-    OpenWebsitePropertyData,
-]);
+export const EntityDataProperty = z.union([JitsiRoomPropertyData, PlayAudioPropertyData, OpenWebsitePropertyData]);
 
 export const EntityDataProperties = z.array(EntityDataProperty);
-
-// export const EntityDataProperties = z.object({
-//     textHeader: TextHeaderPropertyData.optional().nullable(),
-//     jitsiRoom: JitsiRoomPropertyData.optional().nullable(),
-//     playAudio: PlayAudioPropertyData.optional().nullable(),
-//     openWebsite: OpenWebsitePropertyData.optional().nullable(),
-// });
 
 export const EntityRawPrefab = z.object({
     name: z.string(),
@@ -134,6 +115,7 @@ export const EntityData = z.object({
     id: z.string(),
     x: z.number(),
     y: z.number(),
+    name: z.string().optional(),
     properties: EntityDataProperties.optional(),
     prefab: EntityPrefab,
 });
@@ -152,19 +134,17 @@ export type EntityCollection = z.infer<typeof EntityCollection>;
 export type EntityData = z.infer<typeof EntityData>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
 export type EntityDataProperty = z.infer<typeof EntityDataProperty>;
-export type EntityDataPropertiesKeys = "textHeader" | "jitsiRoomProperty" | "playAudio" | "openWebsite";
+export type EntityDataPropertiesKeys = "jitsiRoomProperty" | "playAudio" | "openWebsite";
 export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;
 export type AreaDataProperty = z.infer<typeof AreaDataProperty>;
 export type AreaDataPropertiesKeys =
-    | "textHeader"
     | "focusable"
     | "silent"
     | "start"
     | "jitsiRoomProperty"
     | "playAudio"
     | "openWebsite";
-export type TextHeaderPropertyData = z.infer<typeof TextHeaderPropertyData>;
 export type ActionsMenuData = z.infer<typeof PropertyBase>;
 export type StartPropertyData = z.infer<typeof StartPropertyData>;
 export type SilentPropertyData = z.infer<typeof SilentPropertyData>;
