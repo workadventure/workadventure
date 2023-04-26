@@ -12,13 +12,25 @@
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
 
     let properties = $mapEditorSelectedEntityStore?.getProperties() ?? [];
-    let entityName = $mapEditorSelectedEntityStore?.getEntityData().name;
+    let entityName = $mapEditorSelectedEntityStore?.getEntityData().name ?? "";
 
     function onAddProperty(type: EntityDataPropertiesKeys) {
         if ($mapEditorSelectedEntityStore) {
             $mapEditorSelectedEntityStore.addProperty(getPropertyFromType(type));
             // refresh properties
             properties = $mapEditorSelectedEntityStore?.getProperties();
+        }
+    }
+
+    function onUpdateName() {
+        if ($mapEditorSelectedEntityStore) {
+            $mapEditorSelectedEntityStore.setEntityName(entityName);
+        }
+    }
+
+    function onUpdateProperty(property: EntityDataProperty) {
+        if ($mapEditorSelectedEntityStore) {
+            $mapEditorSelectedEntityStore.updateProperty(property);
         }
     }
 
@@ -113,6 +125,7 @@
             bind:value={entityName}
             on:focus={onMapEditorInputFocus}
             on:blur={onMapEditorInputUnfocus}
+            on:change={onUpdateName}
         />
     </div>
     <div class="properties-container">
@@ -124,6 +137,7 @@
                         on:close={() => {
                             onDeleteProperty(property.id);
                         }}
+                        on:change={() => onUpdateProperty(property)}
                     />
                 {:else if property.type === "playAudio"}
                     <PlayAudioPropertyEditor
@@ -131,6 +145,7 @@
                         on:close={() => {
                             onDeleteProperty(property.id);
                         }}
+                        on:change={() => onUpdateProperty(property)}
                     />
                 {:else if property.type === "openWebsite"}
                     <OpenWebsitePropertyEditor
@@ -138,6 +153,7 @@
                         on:close={() => {
                             onDeleteProperty(property.id);
                         }}
+                        on:change={() => onUpdateProperty(property)}
                     />
                 {/if}
             </div>

@@ -19,13 +19,13 @@ import { OutlineableInterface } from "../Game/OutlineableInterface";
 
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
+    Updated = "EntityEvent:Updated",
     Delete = "EntityEvent:Delete",
     /**
      * Any change done to this Entity properties. Adding new one, deleting or modifying existing one.
      * We send whole array of properties with this event.
      */
     PropertyActivated = "EntityEvent:PropertyActivated",
-    PropertiesUpdated = "EntityEvent:PropertiesUpdated",
 }
 
 // NOTE: Tiles-based entity for now. Individual images later on
@@ -47,6 +47,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
         this.entityData = {
             ...data,
+            name: data.name ?? "",
             properties: data.properties ?? [],
         };
 
@@ -79,6 +80,9 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.scene.add.existing(this);
     }
 
+    /**
+     * This method is being used after command execution from outside and it will not trigger any emits
+     */
     public updateEntity(dataToModify: AtLeast<EntityData, "id">): void {
         _.merge(this.entityData, dataToModify);
         // TODO: Find a way to update it without need of using conditions
@@ -294,7 +298,12 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     public addProperty(property: EntityDataProperty): void {
         this.entityData.properties.push(property);
-        this.emit(EntityEvent.PropertiesUpdated, this.entityData.properties);
+        this.emit(EntityEvent.Updated, this.appendId({ properties: this.entityData.properties }));
+    }
+
+    public setEntityName(name: string): void {
+        this.entityData.name = name;
+        this.emit(EntityEvent.Updated, this.appendId({ name }));
     }
 
     public updateProperty(changes: AtLeast<EntityDataProperty, "id">): void {
@@ -302,14 +311,14 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         if (property) {
             _.merge(property, changes);
         }
-        this.emit(EntityEvent.PropertiesUpdated, this.entityData.properties);
+        this.emit(EntityEvent.Updated, this.appendId({ properties: this.entityData.properties }));
     }
 
     public deleteProperty(id: string): boolean {
         const index = this.entityData.properties.findIndex((property) => property.id === id);
         if (index !== -1) {
             this.entityData.properties.splice(index, 1);
-            this.emit(EntityEvent.PropertiesUpdated, this.entityData.properties);
+            this.emit(EntityEvent.Updated, this.appendId({ properties: this.entityData.properties }));
             return true;
         } else {
             return false;
@@ -318,5 +327,12 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     public getOldPosition(): { x: number; y: number } {
         return this.oldPosition;
+    }
+
+    private appendId(data: Partial<EntityData>): AtLeast<EntityData, "id"> {
+        return {
+            ...data,
+            id: this.entityData.id,
+        };
     }
 }
