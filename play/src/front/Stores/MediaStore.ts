@@ -348,9 +348,7 @@ export const mediaStreamConstraintsStore = derived(
         // Disable webcam for energy reasons (the user is not moving and we are talking to no one)
         if ($cameraEnergySavingStore === true && $enableCameraSceneVisibilityStore === false) {
             currentVideoConstraint = false;
-            //this optimization is desactivated because of sound issues on chrome
-            //todo: fix this conflicts and reactivate this optimization
-            //currentAudioConstraint = false;
+            currentAudioConstraint = false;
         }
 
         if (
@@ -361,7 +359,7 @@ export const mediaStreamConstraintsStore = derived(
             currentAudioConstraint = false;
         }
 
-        // Let's make the changes only if the new value is different from the old one.tile
+        // Let's make the changes only if the new value is different from the old one.
         if (
             !deepEqual(previousComputedVideoConstraint, currentVideoConstraint) ||
             !deepEqual(previousComputedAudioConstraint, currentAudioConstraint)
