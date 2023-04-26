@@ -106,7 +106,8 @@ services:
             # LogRocket
             LOGROCKET_ID: $LOGROCKET_ID
             # Sentry integration
-            SENTRY_DSN: $SENTRY_DSN_PLAY
+            SENTRY_DSN_FRONT: $SENTRY_DSN_FRONT
+            SENTRY_DSN_PUSHER: $SENTRY_DSN_PUSHER
             SENTRY_RELEASE: $SENTRY_RELEASE
             # Room API
             ROOM_API_PORT: "50051"

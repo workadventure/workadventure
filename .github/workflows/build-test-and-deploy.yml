@@ -77,6 +77,22 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/play.tar
 
+      - name: Sentry push source maps
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: play
+          SENTRY_RELEASE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        run: |
+          docker run --rm \
+            -e SENTRY_AUTH_TOKEN \
+            -e SENTRY_ORG \
+            -e SENTRY_PROJECT \
+            -e SENTRY_RELEASE \
+            thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} \
+            /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
+      
+
       - name: Zip image
         run: gzip play.tar
         working-directory: /tmp

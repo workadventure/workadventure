@@ -77,7 +77,7 @@ export const FALLBACK_LOCALE: string | undefined = env.FALLBACK_LOCALE;
 export const LOGROCKET_ID: string | undefined = env.LOGROCKET_ID;
 
 // Sentry integration
-export const SENTRY_DSN: string | undefined = env.SENTRY_DSN;
+export const SENTRY_DSN: string | undefined = env.SENTRY_DSN_PUSHER;
 export const SENTRY_RELEASE: string | undefined = env.SENTRY_RELEASE;
 // RoomAPI
 export const ROOM_API_PORT = env.ROOM_API_PORT;
@@ -116,6 +116,7 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     OPID_WOKA_NAME_POLICY,
     ENABLE_REPORT_ISSUES_MENU: env.ENABLE_REPORT_ISSUES_MENU,
     REPORT_ISSUES_URL: env.REPORT_ISSUES_URL,
-    SENTRY_DSN: env.SENTRY_DSN,
+    SENTRY_DSN_FRONT: env.SENTRY_DSN_FRONT,
+    SENTRY_DSN_PUSHER: env.SENTRY_DSN_PUSHER,
     SENTRY_RELEASE: env.SENTRY_RELEASE,
 };

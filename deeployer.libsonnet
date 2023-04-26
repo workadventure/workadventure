@@ -118,7 +118,8 @@
           "LOGROCKET_ID": env.LOGROCKET_ID,
           # Sentry integration
           "SENTRY_RELEASE": env.SENTRY_RELEASE,
-          "SENTRY_DSN": env.SENTRY_DSN_PLAY,
+          "SENTRY_DSN_FRONT": env.SENTRY_DSN_FRONT,
+          "SENTRY_DSN_PUSHER": env.SENTRY_DSN_PUSHER,
         } + (if adminUrl != null then {
           # Admin
           "ADMIN_URL": adminUrl,
