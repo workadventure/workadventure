@@ -18,8 +18,8 @@
     let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((currentEntity) => {
         if (currentEntity) {
             currentEntity.setEditColor(0x00ffff);
-            properties = $mapEditorSelectedEntityStore?.getProperties() ?? [];
-            entityName = $mapEditorSelectedEntityStore?.getEntityData().name ?? "";
+            properties = currentEntity.getProperties() ?? [];
+            entityName = currentEntity.getEntityData().name ?? "";
         }
     });
 

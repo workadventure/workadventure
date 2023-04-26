@@ -7,7 +7,7 @@ export enum AreaPreviewEvent {
     Clicked = "AreaPreview:Clicked",
     Released = "AreaPreview:Released",
     DoubleClicked = "AreaPreview:DoubleClicked",
-    Update = "AreaPreview:Update",
+    Updated = "AreaPreview:Updated",
     Delete = "AreaPreview:Delete",
 }
 
@@ -112,7 +112,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
 
     public addProperty(property: AreaDataProperty): void {
         this.areaData.properties.push(property);
-        this.emit(AreaPreviewEvent.Update, this.areaData);
+        this.emit(AreaPreviewEvent.Updated, this.areaData);
     }
 
     public updateProperty(changes: AtLeast<AreaDataProperty, "id">): void {
@@ -120,14 +120,14 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         if (property) {
             _.merge(property, changes);
         }
-        this.emit(AreaPreviewEvent.Update, this.areaData);
+        this.emit(AreaPreviewEvent.Updated, this.areaData);
     }
 
     public deleteProperty(id: string): boolean {
         const index = this.areaData.properties.findIndex((property) => property.id === id);
         if (index !== -1) {
             this.areaData.properties.splice(index, 1);
-            this.emit(AreaPreviewEvent.Update, this.areaData);
+            this.emit(AreaPreviewEvent.Updated, this.areaData);
             return true;
         } else {
             return false;
@@ -146,7 +146,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     public updateAreaData(dataToChange: Partial<AreaData>): void {
         const data = { id: this.areaData.id, ...dataToChange };
         this.updatePreview(data);
-        this.emit(AreaPreviewEvent.Update, data);
+        this.emit(AreaPreviewEvent.Updated, data);
     }
 
     private showSizeAlteringSquares(show = true): void {
@@ -206,7 +206,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     width: this.displayWidth,
                     height: this.displayHeight,
                 };
-                this.emit(AreaPreviewEvent.Update, data);
+                this.emit(AreaPreviewEvent.Updated, data);
             }
         });
         this.squares.forEach((square, index) => {
@@ -310,7 +310,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     width: this.displayWidth,
                     height: this.displayHeight,
                 };
-                this.emit(AreaPreviewEvent.Update, data);
+                this.emit(AreaPreviewEvent.Updated, data);
             });
         });
     }
@@ -340,8 +340,10 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         return this.areaData;
     }
 
-    public getName(): string {
-        return this.areaData.name;
+    public setAreaName(name: string): void {
+        this.areaData.name = name;
+        const data = { id: this.areaData.id, name };
+        this.emit(AreaPreviewEvent.Updated, data);
     }
 
     public getId(): string {

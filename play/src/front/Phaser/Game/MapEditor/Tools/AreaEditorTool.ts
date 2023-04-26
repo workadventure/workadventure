@@ -483,7 +483,7 @@ export class AreaEditorTool extends MapEditorTool {
         areaPreview.on(AreaPreviewEvent.Released, (data: AtLeast<AreaData, "id">) => {
             this.draggingdArea = false;
         });
-        areaPreview.on(AreaPreviewEvent.Update, (data: AtLeast<AreaData, "id">) => {
+        areaPreview.on(AreaPreviewEvent.Updated, (data: AtLeast<AreaData, "id">) => {
             this.mapEditorModeManager.executeCommand({
                 type: "UpdateAreaCommand",
                 dataToModify: data,
