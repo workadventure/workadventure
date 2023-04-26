@@ -33,7 +33,8 @@ COPY --chown=node:node map-storage map-storage
 
 WORKDIR /usr/src/map-storage
 
-HEALTHCHECK --interval=10s --timeout=10s --start-period=5s --retries=5 CMD curl -f http://localhost:3000/health || exit 1
+RUN apt-get update && apt-get install -y curl
+HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=10 CMD curl -f http://localhost:3000/health || exit 1
 
 USER node
 CMD ["npm", "run", "start"]

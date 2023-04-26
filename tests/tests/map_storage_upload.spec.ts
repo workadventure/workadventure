@@ -510,16 +510,16 @@ test.describe('Map-storage Upload API', () => {
             'http://play.workadventure.localhost/~/map1.wam'
           );
         await login(page, 'Alice');
-      
+
         const newBrowser = await browser.browserType().launch();
         const page2 = await newBrowser.newPage();
-      
+
         await page2.goto(
           'http://play.workadventure.localhost/~/map2.wam'
         );
-      
+
         await login(page2, 'Bob');
-      
+
         // Let's trigger a reload of map 1 only
         const uploadFile3 = await request.put("map1.wam", {
             multipart: {

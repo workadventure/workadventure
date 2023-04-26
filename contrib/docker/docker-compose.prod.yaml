@@ -2,11 +2,6 @@ version: "3.6"
 services:
   reverse-proxy:
     image: traefik:v2.8
-    depends_on:
-      play:
-        condition: service_healthy
-      back:
-        condition: service_healthy
     command:
       - --log.level=${LOG_LEVEL}
       - --providers.docker
