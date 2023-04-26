@@ -263,7 +263,7 @@ test.describe('Map-storage Upload API', () => {
                 directory: "/foo"
             }
         });
-        //await page.pause();
+
         await expect(uploadFile.ok()).toBeTruthy();
         await expect(uploadFileToDir.ok()).toBeTruthy();
 
@@ -481,7 +481,7 @@ test.describe('Map-storage Upload API', () => {
                     mimeType: "application/json",
                     buffer: Buffer.from(JSON.stringify({
                         version: "1.0.0",
-                        mapUrl: "http://maps.workadventure.localhost/tests/E2E/empty.json",
+                        mapUrl: `${(process.env.MAP_STORAGE_PROTOCOL ?? "http")}://maps.workadventure.localhost/tests/E2E/empty.json`,
                         areas: [],
                         entities: [],
                     })),
@@ -497,7 +497,7 @@ test.describe('Map-storage Upload API', () => {
                     mimeType: "application/json",
                     buffer: Buffer.from(JSON.stringify({
                         version: "1.0.0",
-                        mapUrl: "http://maps.workadventure.localhost/tests/E2E/empty.json",
+                        mapUrl: `${(process.env.MAP_STORAGE_PROTOCOL ?? "http")}://maps.workadventure.localhost/tests/E2E/empty.json`,
                         areas: [],
                         entities: [],
                     })),

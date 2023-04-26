@@ -52,7 +52,7 @@ services:
       - API_URL=back:50051
       - FRONT_URL=/
       - CHAT_URL=/chat/
-      - PUBLIC_MAP_STORAGE_URL=/map-storage
+      - PUBLIC_MAP_STORAGE_URL=https://${DOMAIN}/map-storage
       - START_ROOM_URL
       - OPID_PROMPT=login
       - OPID_WOKA_NAME_POLICY
@@ -148,7 +148,8 @@ services:
       - REDIS_HOST=redis
       - PROMETHEUS_AUTHORIZATION_TOKEN
       - MAP_STORAGE_URL=map-storage:50053
-      - PUBLIC_MAP_STORAGE_URL=/map-storage
+      - INTERNAL_MAP_STORAGE_URL=http://map-storage:3000
+      - PUBLIC_MAP_STORAGE_URL=https://${DOMAIN}/map-storage
       - PLAYER_VARIABLES_MAX_TTL
       - EJABBERD_API_URI
       - EJABBERD_DOMAIN=${EJABBERD_DOMAIN}
@@ -263,7 +264,8 @@ services:
       AUTHENTICATION_USER: "$MAP_STORAGE_AUTHENTICATION_USER"
       AUTHENTICATION_PASSWORD: "$MAP_STORAGE_AUTHENTICATION_PASSWORD"
       AUTHENTICATION_TOKEN: "$MAP_STORAGE_AUTHENTICATION_TOKEN"
-
+    volumes:
+      - map-storage-data:/maps
     labels:
       traefik.enable: "true"
       traefik.http.middlewares.strip-map-storage-prefix.stripprefix.prefixes: "/map-storage"
@@ -281,3 +283,4 @@ services:
 
 volumes:
   redisdata:
+  map-storage-data:

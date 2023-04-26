@@ -130,7 +130,7 @@ export const isMapDetailsData = z.object({
         description: "The full URL to the JSON map file",
         example: "https://myuser.github.io/myrepo/map.json",
     }),
-    wamUrl: extendApi(z.string().optional(), {
+    wamUrl: extendApi(z.string().url().optional(), {
         description: "The full URL to the WAM map file",
         example: "https://myuser.github.io/myrepo/map.wam",
     }),
