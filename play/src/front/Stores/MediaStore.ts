@@ -267,7 +267,7 @@ function createAudioConstraintStore() {
 
 export const audioConstraintStore = createAudioConstraintStore();
 
-let timeout: NodeJS.Timeout;
+//let timeout: NodeJS.Timeout;
 
 let previousComputedVideoConstraint: boolean | MediaTrackConstraints = false;
 let previousComputedAudioConstraint: boolean | MediaTrackConstraints = false;
@@ -374,17 +374,19 @@ export const mediaStreamConstraintsStore = derived(
                 previousComputedAudioConstraint = { ...previousComputedAudioConstraint };
             }
 
-            if (timeout) {
+            /*if (timeout) {
                 clearTimeout(timeout);
-            }
+            }*/
 
             // Let's wait a little bit to avoid sending too many constraint changes.
-            timeout = setTimeout(() => {
-                set({
-                    video: currentVideoConstraint,
-                    audio: currentAudioConstraint,
-                });
-            }, 100);
+            // PREVIOUSLY, WE TRIED TO THROTTLE CALLS TO getUserMedia, BUT setTimeout CAN BE THROTTLED BY THE CHROME
+            //timeout = setTimeout(() => {
+            set({
+                video: currentVideoConstraint,
+                audio: currentAudioConstraint,
+            });
+            /*    timeout = undefined;
+            }, 100);*/
         }
 
         if ($enableCameraSceneVisibilityStore) {
