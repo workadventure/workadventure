@@ -60,7 +60,8 @@ RUN npm ci --omit=dev --workspace workadventure-play
 COPY --from=builder /usr/src/libs /usr/src/libs
 COPY --from=builder --chown=node:node /usr/src/play /usr/src/play
 #COPY play/src/pusher/data /usr/src/play/dist/pusher/data
-
+RUN chown -R node:node /usr/src/node_modules
+RUN chown -R node:node /usr/src/package-lock.json
 WORKDIR /usr/src/play
 
 USER node
