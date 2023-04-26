@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { EntityDataPropertiesKeys, EntityDataProperty } from "@workadventure/map-editor";
+    import { onDestroy } from "svelte";
+    import { EntityDataProperties, EntityDataPropertiesKeys, EntityDataProperty } from "@workadventure/map-editor";
     import { LL } from "../../../i18n/i18n-svelte";
     import {
         mapEditorSelectedEntityStore,
@@ -11,8 +12,16 @@
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
 
-    let properties = $mapEditorSelectedEntityStore?.getProperties() ?? [];
-    let entityName = $mapEditorSelectedEntityStore?.getEntityData().name ?? "";
+    let properties: EntityDataProperties = [];
+    let entityName = "";
+
+    let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((currentEntity) => {
+        if (currentEntity) {
+            currentEntity.setEditColor(0x00ffff);
+            properties = $mapEditorSelectedEntityStore?.getProperties() ?? [];
+            entityName = $mapEditorSelectedEntityStore?.getEntityData().name ?? "";
+        }
+    });
 
     function onAddProperty(type: EntityDataPropertiesKeys) {
         if ($mapEditorSelectedEntityStore) {
@@ -70,6 +79,10 @@
             properties = $mapEditorSelectedEntityStore?.getProperties();
         }
     }
+
+    onDestroy(() => {
+        selectedEntityUnsubscriber();
+    });
 </script>
 
 {#if $mapEditorSelectedEntityStore === undefined}
