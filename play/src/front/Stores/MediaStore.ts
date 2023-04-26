@@ -491,7 +491,7 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                         return stream;
                     })
                     .catch((e) => {
-                        if (constraints.video !== false || constraints.audio !== false) {
+                        if (constraints.video !== false /* || constraints.audio !== false*/) {
                             console.info(
                                 "Error. Unable to get microphone and/or camera access. Trying audio only.",
                                 constraints,
@@ -503,12 +503,12 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                                 error: e instanceof Error ? e : new Error("An unknown error happened"),
                             });
                             // Let's try without video constraints
-                            if (constraints.video !== false) {
-                                requestedCameraState.disableWebcam();
-                            }
-                            if (constraints.audio !== false) {
+                            //if (constraints.video !== false) {
+                            requestedCameraState.disableWebcam();
+                            //}
+                            /*if (constraints.audio !== false) {
                                 requestedMicrophoneState.disableMicrophone();
-                            }
+                            }*/
                         } else if (!constraints.video && !constraints.audio) {
                             set({
                                 type: "error",
