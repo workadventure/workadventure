@@ -844,7 +844,8 @@ jobs:
           LOGROCKET_ID: ${{ secrets.LOGROCKET_ID }}
           SENTRY_DSN_BACK: ${{ secrets.SENTRY_DSN_BACK }}
           SENTRY_DSN_CHAT: ${{ secrets.SENTRY_DSN_CHAT }}
-          SENTRY_DSN_PLAY: ${{ secrets.SENTRY_DSN_PLAY }}
+          SENTRY_DSN_FRONT: ${{ secrets.SENTRY_DSN_FRONT }}
+          SENTRY_DSN_PUSHER: ${{ secrets.SENTRY_DSN_PUSHER }}
           SENTRY_DSN_MAPSTORAGE: ${{ secrets.SENTRY_DSN_MAPSTORAGE }}
           SENTRY_RELEASE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         with:
