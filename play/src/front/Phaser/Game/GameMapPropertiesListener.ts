@@ -113,9 +113,10 @@ export class GameMapPropertiesListener {
 
                 inJitsiStore.set(true);
 
-                const closable = allProps.get(GameMapProperties.OPEN_WEBSITE_CLOSABLE) as boolean | undefined;
+                // TODO create new property to allow to close the jitsi room
+                //const closable = allProps.get(GameMapProperties.OPEN_WEBSITE_CLOSABLE) as boolean | undefined;
 
-                const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, closable);
+                const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, true);
 
                 coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
                 this.scene.initialiseJitsi(coWebsite, roomName, jwt, domainWithoutProtocol);

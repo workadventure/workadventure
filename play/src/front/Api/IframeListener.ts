@@ -42,7 +42,7 @@ import type { AddActionsMenuKeyToRemotePlayerEvent } from "./Events/AddActionsMe
 import type { ActionsMenuActionClickedEvent } from "./Events/ActionsMenuActionClickedEvent";
 import type { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveActionsMenuKeyFromRemotePlayerEvent";
 import type { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
-import type { ModifyUIWebsiteEvent } from "./Events/Ui/UIWebsite";
+import type { ModifyUIWebsiteEvent } from "./Events/Ui/UIWebsiteEvent";
 import type { ModifyDynamicAreaEvent } from "./Events/CreateDynamicAreaEvent";
 import type { AskPositionEvent } from "./Events/AskPositionEvent";
 import type { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
