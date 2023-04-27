@@ -12,6 +12,7 @@ import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { playersStore } from "../Stores/PlayersStore";
 import { peerStore, screenSharingPeerStore } from "../Stores/PeerStore";
 import type { Subscription } from "rxjs";
+import { batchGetUserMediaStore } from "../Stores/MediaStore";
 
 export interface UserSimplePeerInterface {
     userId: number;
@@ -93,8 +94,10 @@ export class SimplePeer {
             )
         );
 
+        batchGetUserMediaStore.startBatch();
         mediaManager.enableMyCamera();
         mediaManager.enableMyMicrophone();
+        batchGetUserMediaStore.commitChanges();
 
         //receive message start
         this.rxJsUnsubscribers.push(

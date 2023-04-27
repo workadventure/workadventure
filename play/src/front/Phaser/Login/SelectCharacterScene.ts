@@ -25,6 +25,7 @@ import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/g
 import { wokaList } from "@workadventure/messages";
 import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
 import { get } from "svelte/store";
+import { batchGetUserMediaStore } from "../../Stores/MediaStore";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
@@ -150,8 +151,10 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             return;
         }
         this.selectedWoka = null;
+        batchGetUserMediaStore.startBatch();
         myCameraStore.set(false);
         myMicrophoneStore.set(false);
+        batchGetUserMediaStore.commitChanges();
         this.scene.sleep(SelectCharacterSceneName);
         this.scene.run(CustomizeSceneName);
         selectCharacterSceneVisibleStore.set(false);
