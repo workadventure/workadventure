@@ -153,6 +153,7 @@
            },
            "ports": [3000, 50053],
            "env": {
+             "API_URL": "back1:50051,back2:50051",
              "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
              "AUTHENTICATION_STRATEGY": if (adminUrl == null) then "Basic" else "Bearer",
              "AUTHENTICATION_USER": "john.doe",
