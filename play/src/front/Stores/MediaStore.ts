@@ -73,6 +73,26 @@ export const requestedMicrophoneState = createRequestedMicrophoneState();
 export const enableCameraSceneVisibilityStore = createEnableCameraSceneVisibilityStore();
 
 /**
+ * GetUserMedia is impacted by a number of stores (proximityMeetingStore, myCameraStore, myMicrophoneStore, inExternalServiceStore, privacyShutdownStore...).
+ * Each time a change is done to one of these store, we will make a new GetUserMedia call.
+ * If we plan to do many changes at once, we want to call GetUserMedia only once.
+ *
+ * To do this, you can use this store.
+ * Use startBatch() to start a batch of changes (this will disable changes to GetUserMedia), and commitChanges() after the final change to call GetUserMedia.
+ */
+function createBatchGetUserMediaStore() {
+    const { subscribe, set } = writable(false);
+
+    return {
+        subscribe,
+        startBatch: () => set(true),
+        commitChanges: () => set(false),
+    };
+}
+
+export const batchGetUserMediaStore = createBatchGetUserMediaStore();
+
+/**
  * A store containing whether the webcam was enabled in the last 10 seconds
  */
 const enabledWebCam10secondsAgoStore = readable(false, function start(set) {
@@ -288,6 +308,7 @@ export const mediaStreamConstraintsStore = derived(
         privacyShutdownStore,
         cameraEnergySavingStore,
         availabilityStatusStore,
+        batchGetUserMediaStore,
     ],
     (
         [
@@ -302,9 +323,15 @@ export const mediaStreamConstraintsStore = derived(
             $privacyShutdownStore,
             $cameraEnergySavingStore,
             $availabilityStatusStore,
+            $batchGetUserMediaStore,
         ],
         set
     ) => {
+        // If a batch is in process, don't do anything.
+        if ($batchGetUserMediaStore) {
+            return;
+        }
+
         let currentVideoConstraint: boolean | MediaTrackConstraints = $videoConstraintStore;
         let currentAudioConstraint: boolean | MediaTrackConstraints = $audioConstraintStore;
 
@@ -374,19 +401,10 @@ export const mediaStreamConstraintsStore = derived(
                 previousComputedAudioConstraint = { ...previousComputedAudioConstraint };
             }
 
-            /*if (timeout) {
-                clearTimeout(timeout);
-            }*/
-
-            // Let's wait a little bit to avoid sending too many constraint changes.
-            // PREVIOUSLY, WE TRIED TO THROTTLE CALLS TO getUserMedia, BUT setTimeout CAN BE THROTTLED BY THE CHROME
-            //timeout = setTimeout(() => {
             set({
                 video: currentVideoConstraint,
                 audio: currentAudioConstraint,
             });
-            /*    timeout = undefined;
-            }, 100);*/
         }
 
         if ($enableCameraSceneVisibilityStore) {
