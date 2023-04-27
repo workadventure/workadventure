@@ -78,9 +78,15 @@
                                     class="highlighted-cowebsite"
                                 />
                                 <div class="actions">
-                                    <button type="button" class="close-window top-right-btn" on:click={closeCoWebsite}
-                                        >&times;
-                                    </button>
+                                    {#if $highlightedEmbedScreen.embed.isClosable()}
+                                        <button
+                                            type="button"
+                                            class="close-window top-right-btn"
+                                            on:click={closeCoWebsite}
+                                        >
+                                            &times;
+                                        </button>
+                                    {/if}
                                 </div>
                             </div>
                         {/key}

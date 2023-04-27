@@ -60,6 +60,18 @@ export class Player extends Character {
         this.inputStep(activeUserInputEvents, x, y);
     }
 
+    public rotate(): void {
+        const direction = (this.lastDirection + 1) % (PositionMessage_Direction.LEFT + 1);
+        this.emit(hasMovedEventName, {
+            moving: false,
+            direction: (this.lastDirection + 1) % (PositionMessage_Direction.LEFT + 1),
+            x: this.x,
+            y: this.y,
+        });
+        this.lastDirection = direction;
+        this.playAnimation(this.lastDirection, false);
+    }
+
     public sendFollowRequest() {
         this.scene.connection?.emitFollowRequest();
         followRoleStore.set("leader");

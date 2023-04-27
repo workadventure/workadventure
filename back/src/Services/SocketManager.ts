@@ -54,15 +54,15 @@ import { Group } from "../Model/Group";
 import { GROUP_RADIUS, MINIMUM_DISTANCE, TURN_STATIC_AUTH_SECRET } from "../Enum/EnvironmentVariable";
 import { Movable } from "../Model/Movable";
 import { PositionInterface } from "../Model/PositionInterface";
-import { RoomSocket, ZoneSocket } from "../RoomManager";
+import { RoomSocket, VariableSocket, ZoneSocket } from "../RoomManager";
 import { Zone } from "../Model/Zone";
 import { Admin } from "../Model/Admin";
 import { Space } from "../Model/Space";
 import { SpacesWatcher } from "../Model/SpacesWatcher";
-import { getMapStorageClient } from "./MapStorageClient";
-import { emitError } from "./MessageHelpers";
 import { gaugeManager } from "./GaugeManager";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
+import { getMapStorageClient } from "./MapStorageClient";
+import { emitError } from "./MessageHelpers";
 import { cpuTracker } from "./CpuTracker";
 
 const debug = Debug("socketmanager");
@@ -256,9 +256,17 @@ export class SocketManager {
         return room.setVariable(variableMessage.name, variableMessage.value, user);
     }
 
-    // handleSharedPlayerVariableEvent(room: GameRoom, user: User, variableMessage: VariableMessage): Promise<void> {
-    //     return room.setSharedPlayerVariable(variableMessage.getName(), variableMessage.getValue(), user);
-    // }
+    async readVariable(roomUrl: string, variable: string): Promise<string | undefined> {
+        const room = await this.getOrCreateRoom(roomUrl);
+        // Info: Admin tag is given to bypass the tags checking
+        const variables = await room.getVariablesForTags(undefined);
+        return variables.get(variable);
+    }
+
+    async saveVariable(roomUrl: string, variable: string, newValue: string): Promise<void> {
+        const room = await this.getOrCreateRoom(roomUrl);
+        await room.setVariable(variable, newValue, "RoomApi");
+    }
 
     emitVideo(room: GameRoom, user: User, data: WebRtcSignalToServerMessage): void {
         //send only at user
@@ -990,6 +998,24 @@ export class SocketManager {
         room.removeRoomListener(call);
     }
 
+    async addVariableListener(call: VariableSocket) {
+        const room = await this.getOrCreateRoom(call.request.room);
+        if (!room) {
+            throw new Error("In addVariableListener, could not find room with id '" + call.request.room + "'");
+        }
+
+        room.addVariableListener(call);
+    }
+
+    async removeVariableListener(call: VariableSocket) {
+        const room = await this.roomsPromises.get(call.request.room);
+        if (!room) {
+            throw new Error("In removeVariableListener, could not find room with id '" + call.request.room + "'");
+        }
+
+        room.removeVariableListener(call);
+    }
+
     public async handleJoinAdminRoom(admin: Admin, roomId: string): Promise<GameRoom> {
         const room = await socketManager.getOrCreateRoom(roomId);
 
@@ -1005,7 +1031,6 @@ export class SocketManager {
 
     private cleanupRoomIfEmpty(room: GameRoom): void {
         if (room.isEmpty()) {
-            room.destroy();
             this.roomsPromises.delete(room.roomUrl);
             const deleted = this.resolvedRooms.delete(room.roomUrl);
             if (deleted) {

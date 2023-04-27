@@ -473,7 +473,6 @@ message RefreshRoomPromptMessage{
 message RefreshRoomMessage{
   string roomId = 1;
   int32 versionNumber = 2;
-  optional string comment = 3;
   optional int32 timeToRefresh = 4;
 }
 
@@ -708,19 +707,17 @@ message AdminPusherToBackMessage {
   }
 }
 
-
-message MapStorageToBackMessage {
-  oneof message {
-    MapStorageRefreshMessage mapStorageRefreshMessage = 1;
-  }
-}
-
 message MapStorageRefreshMessage {
   string comment = 1;
 }
 
 message MapStorageUrlMessage {
   string mapUrl = 1;
+  string roomId = 2;
+}
+
+message MapStorageClearAfterUploadMessage {
+  string wamUrl = 1;
 }
 
 // A message sent by an administrator to a recipient
@@ -758,11 +755,6 @@ message RoomDescription {
 message RoomsList {
   repeated RoomDescription roomDescription = 1;
 }
-
-message EmptyMessage {
-
-}
-
 
 
 /********************************************************************************
@@ -917,6 +909,18 @@ message SpaceFilterContainName{
 }
 
 message SpaceFilterEverybody{
+}
+
+message VariableRequest {
+  string room = 1;
+  string name = 2;
+}
+
+message SaveVariableRequest {
+  string room = 1;
+  string name = 2;
+  google.protobuf.Value value = 3;
+
 }
 
 /*

@@ -1,41 +1,25 @@
-import { MapStorageStream } from "../MapStorageServer";
+import { ApiClientRepository } from "@workadventure/shared-utils/src/ApiClientRepository";
+import { API_URL } from "../Enum/EnvironmentVariable";
 
 class UploadDetector {
-    private streams: Map<string, Set<MapStorageStream>> = new Map<string, Set<MapStorageStream>>();
+    private apiClientRepository: ApiClientRepository;
 
-    public registerStream(mapKey: string, stream: MapStorageStream): void {
-        let givenStreams = this.streams.get(mapKey);
-        if (!givenStreams) {
-            givenStreams = new Set<MapStorageStream>();
-            this.streams.set(mapKey, givenStreams);
-        }
-
-        givenStreams.add(stream);
+    public constructor() {
+        this.apiClientRepository = new ApiClientRepository(API_URL.split(","));
     }
 
-    public clearStream(mapKey: string, stream: MapStorageStream): void {
-        const mapStreams = this.streams.get(mapKey);
-        mapStreams?.delete(stream);
-
-        if (mapStreams?.size === 0) {
-            this.streams.delete(mapKey);
-        }
-    }
-
-    public refresh(mapKey: string): void {
-        const streams = this.streams.get(mapKey);
-        if (!streams) {
-            return;
-        }
-        for (const stream of streams) {
-            stream.write({
-                message: {
-                    $case: "mapStorageRefreshMessage",
-                    mapStorageRefreshMessage: {
-                        comment: "New version of map detected. Refresh needed",
-                    },
+    public async refresh(wamUrl: string): Promise<void> {
+        // send only where mapUrl is matching with the one from GameRoom
+        const clients = await this.apiClientRepository.getAllClients();
+        for (const client of clients) {
+            client.handleMapStorageUploadMapDetected(
+                {
+                    wamUrl,
                 },
-            });
+                (err) => {
+                    console.error(err);
+                }
+            );
         }
     }
 }

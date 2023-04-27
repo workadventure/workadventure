@@ -28,6 +28,7 @@
          "BBB_URL": "https://test-install.blindsidenetworks.com/bigbluebutton/",
          "MAP_STORAGE_URL": "map-storage:50053",
          "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
+         "INTERNAL_MAP_STORAGE_URL": "http://map-storage:3000",
          "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
          "EJABBERD_USER": "admin",
          "EJABBERD_PASSWORD": "apideo",
@@ -64,6 +65,7 @@
               "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
               "MAP_STORAGE_URL": "map-storage:50053",
               "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
+              "INTERNAL_MAP_STORAGE_URL": "http://map-storage:3000",
               "EJABBERD_USER": "admin",
               "EJABBERD_PASSWORD": "apideo",
               "ENABLE_FEATURE_MAP_EDITOR":"true",
@@ -83,8 +85,9 @@
         "image": "thecodingmachine/workadventure-play:"+tag,
         "host": {
           "url": "play-"+url,
+          "containerPort": 3000
         },
-        "ports": [3000],
+        "ports": [3000, 50051],
         "env": {
           "SECRET_KEY": "tempSecretKeyNeedsToChange",
           "JITSI_ISS": env.JITSI_ISS,
@@ -283,10 +286,37 @@
                 }
               }
             },
+            service+: {
+              metadata+: {
+                annotations+: {
+                  "traefik.ingress.kubernetes.io/service.serversscheme": "h2c"
+                }
+              }
+            },
             ingress+: {
               spec+: {
+                rules+:[
+                  {
+                    host: "room-api-"+url,
+                    http: {
+                      paths: [
+                        {
+                          backend: {
+                            service: {
+                              name: "play",
+                              port: {
+                                number: 50051
+                              }
+                            }
+                          },
+                          pathType: "ImplementationSpecific"
+                        }
+                      ]
+                    }
+                  }
+                ],
                 tls+: [{
-                  hosts: ["play-"+url],
+                  hosts: ["play-"+url, "room-api-"+url],
                   secretName: "certificate-tls"
                 }]
               }

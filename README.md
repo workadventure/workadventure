@@ -22,7 +22,7 @@ Check out resources developed by the WorkAdventure community at [awesome-workadv
 
 We provide a [reference installation method](https://github.com/thecodingmachine/workadventure/tree/master/contrib/docker): 
 a production-ready `docker-compose` file that you can use out-of-the-box in the [contrib/docker](https://github.com/thecodingmachine/workadventure/tree/master/contrib/docker) directory.
-The way you set up your production environment will ultimately depend on your servers. Fill free to adapt the `docker-compose` file to your needs.
+The way you set up your production environment will ultimately depend on your servers. Feel free to adapt the `docker-compose` file to your needs.
 
 > **Note**
 > WorkAdventure also provides a [hosted version](https://workadventu.re) of the application. Using the hosted version is 

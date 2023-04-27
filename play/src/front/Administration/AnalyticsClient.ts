@@ -307,6 +307,14 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    openedWebsite(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_opened_website");
+            })
+            .catch((e) => console.error(e));
+    }
+
     closeMultiIframe(): void {
         this.posthogPromise
             ?.then((posthog) => {

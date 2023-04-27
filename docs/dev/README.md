@@ -9,6 +9,8 @@ If you "only" want to design dynamic maps, please refer instead to the [scriptin
 
 If you want to install a production server, please refer to the [install guide](../../contrib/docker/README.md).
 
+If you want to interact with the variables or events of a room from another server, please refer to the [Room API documentation](roomAPI.md).
+
 ## Contributing
 
 Check out the [contributing guide](../../CONTRIBUTING.md)

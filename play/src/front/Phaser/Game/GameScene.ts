@@ -386,6 +386,7 @@ export class GameScene extends DirtyScene {
         this.load.scenePlugin("AnimatedTiles", AnimatedTiles, "animatedTiles", "animatedTiles");
 
         if (this.wamUrlFile) {
+            const absoluteWamFileUrl = new URL(this.wamUrlFile, window.location.href).toString();
             this.superLoad
                 .json(
                     this.wamUrlFile,
@@ -395,7 +396,7 @@ export class GameScene extends DirtyScene {
                     (key: string, type: string, wamFile: unknown) => {
                         console.log(wamFile);
                         this.wamFile = WAMFileFormat.parse(wamFile);
-                        this.mapUrlFile = new URL(this.wamFile.mapUrl, this.wamUrlFile).toString();
+                        this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
                         this.doLoadTMJFile(this.mapUrlFile);
                     }
                 )
@@ -926,14 +927,9 @@ export class GameScene extends DirtyScene {
                 });
 
                 this.connection.refreshRoomMessageStream.subscribe((message) => {
-                    if (message.comment) {
-                        refreshPromptStore.set({
-                            comment: message.comment,
-                            timeToRefresh: message.timeToRefresh,
-                        });
-                    } else {
-                        window.location.reload();
-                    }
+                    refreshPromptStore.set({
+                        timeToRefresh: message.timeToRefresh,
+                    });
                 });
 
                 this.connection.playerDetailsUpdatedMessageStream.subscribe((message) => {
@@ -2117,7 +2113,7 @@ ${escapedMessage}
             this.scene.remove(this.scene.key);
         } else {
             //if the exit points to the current map, we simply teleport the user back to the startLayer
-            this.startPositionCalculator.initStartXAndStartY(roomUrl.hash);
+            this.startPositionCalculator.initStartXAndStartY(urlManager.getStartPositionNameFromUrl());
             this.CurrentPlayer.x = this.startPositionCalculator.startPosition.x;
             this.CurrentPlayer.y = this.startPositionCalculator.startPosition.y;
             this.CurrentPlayer.finishFollowingPath(true);
@@ -2360,7 +2356,7 @@ ${escapedMessage}
                 PositionMessage_Direction.DOWN,
                 false,
                 this.companion,
-                this.companionLoadingManager?.lazyLoadByName(this.companion)
+                this.companionLoadingManager?.lazyLoadById(this.companion)
             );
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOverOutline(0x365dff);
@@ -2557,7 +2553,7 @@ ${escapedMessage}
             addPlayerData.position.moving,
             addPlayerData.visitCardUrl,
             addPlayerData.companion,
-            this.companionLoadingManager?.lazyLoadByName(addPlayerData.companion)
+            this.companionLoadingManager?.lazyLoadById(addPlayerData.companion)
         );
         if (addPlayerData.outlineColor !== undefined) {
             player.setApiOutlineColor(addPlayerData.outlineColor);

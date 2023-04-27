@@ -57,8 +57,13 @@ export class FileController {
     downloadAudioMessage(){
         this.App.get("/download-audio-message/:id", (request, response) => {
             const id = request.params['id'];
-            const targetDevice = new HttpResponseDevice(id, response);
-            uploaderService.copyFile(id, targetDevice);
+            uploaderService.getTemp(id).then((buffer) => {
+                const targetDevice = new HttpResponseDevice(id, response);
+                return targetDevice.copyFromBuffer(buffer);
+            }).catch((e) => {
+                console.error(e);
+                return response.status(500).send("Internal server error");
+            });
         });
     }
 
