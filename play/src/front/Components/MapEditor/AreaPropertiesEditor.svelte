@@ -7,12 +7,12 @@
         onMapEditorInputFocus,
         onMapEditorInputUnfocus,
     } from "../../Stores/MapEditorStore";
-    import plusImg from "../images/plus.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
     import FocusablePropertyEditor from "./PropertyEditor/FocusablePropertyEditor.svelte";
     import SilentPropertyEditor from "./PropertyEditor/SilentPropertyEditor.svelte";
+    import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -103,48 +103,30 @@
     {$LL.mapEditor.areaEditor.editInstructions()}
 {:else}
     <div class="properties-buttons">
-        <div>
-            <button
-                class="add-property-button"
-                on:click={() => {
-                    onAddProperty("jitsiRoomProperty");
-                }}
-            >
-                <div>
-                    {$LL.mapEditor.properties.jitsiProperties.label()}
-                </div>
-                <img src={plusImg} alt="" />
-            </button>
-        </div>
-        <div>
-            <button
-                class="add-property-button"
-                on:click={() => {
-                    onAddProperty("playAudio");
-                }}
-            >
-                <div>
-                    {$LL.mapEditor.properties.audioProperties.label()}
-                </div>
-                <img src={plusImg} alt="" />
-            </button>
-        </div>
-        <div>
-            <button
-                class="add-property-button"
-                on:click={() => {
-                    onAddProperty("openWebsite");
-                }}
-            >
-                <div>
-                    {$LL.mapEditor.properties.linkProperties.label()}
-                </div>
-                <img src={plusImg} alt="" />
-            </button>
-        </div>
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.jitsiProperties.label()}
+            descriptionText="Lorem ipsum dolor sit amet"
+            on:click={() => {
+                onAddProperty("jitsiRoomProperty");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.audioProperties.label()}
+            descriptionText="Lorem ipsum dolor sit amet"
+            on:click={() => {
+                onAddProperty("playAudio");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.linkProperties.label()}
+            descriptionText="Lorem ipsum dolor sit amet"
+            on:click={() => {
+                onAddProperty("openWebsite");
+            }}
+        />
     </div>
-    <div class="entity-name-container">
-        <p>Area name</p>
+    <div class="area-name-container">
+        <h3>Area name</h3>
         <input
             id="objectName"
             type="text"
@@ -205,4 +187,21 @@
 {/if}
 
 <style lang="scss">
+    .properties-container {
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .properties-container::-webkit-scrollbar {
+        display: none;
+    }
+
+    .area-name-container {
+        input {
+            background-color: white;
+            color: black;
+            font-weight: 700;
+            width: 100%;
+        }
+    }
 </style>

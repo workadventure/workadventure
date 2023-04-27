@@ -2,9 +2,9 @@
     import { createEventDispatcher } from "svelte";
     import { JitsiRoomConfigData, JitsiRoomPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import trashImg from "../../images/trash-x-filled.svg";
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
     import JitsiRoomConfigEditor from "./JitsiRoomConfigEditor.svelte";
+    import CloseButton from "./CloseButton.svelte";
 
     export let property: JitsiRoomPropertyData;
 
@@ -23,14 +23,14 @@
 </script>
 
 <div class="property-settings-container">
-    <button
-        class="close-button"
-        on:click={() => {
-            dispatch("close");
-        }}
-    >
-        <img src={trashImg} alt="" />
-    </button>
+    <div class="header">
+        {$LL.mapEditor.properties.jitsiProperties.label()}
+        <CloseButton
+            on:click={() => {
+                dispatch("close");
+            }}
+        />
+    </div>
     <div class="value-input">
         <label for="roomName">{$LL.mapEditor.properties.jitsiProperties.roomNameLabel()}</label>
         <input
@@ -71,22 +71,17 @@
 </div>
 
 <style lang="scss">
+    .header {
+        display: flex;
+        font-size: 25px;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
     .property-settings-container {
         border: 1px solid grey;
         border-radius: 5px;
-        padding: 15px;
-        .close-button {
-            float: right;
-            border-color: red;
-            img {
-                object-fit: contain;
-                max-width: 2em;
-                max-height: 2em;
-            }
-        }
-        .close-button:hover {
-            background-color: red;
-        }
+        padding: 5px;
     }
     .value-input {
         display: flex;
@@ -105,6 +100,13 @@
         * {
             margin-bottom: 0;
         }
+    }
+
+    input {
+        background-color: white;
+        color: black;
+        font-weight: 700;
+        width: 100%;
     }
 
     button {

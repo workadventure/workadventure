@@ -7,10 +7,10 @@
         onMapEditorInputFocus,
         onMapEditorInputUnfocus,
     } from "../../Stores/MapEditorStore";
-    import plusImg from "../images/plus.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
+    import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
 
     let properties: EntityDataProperties = [];
     let entityName = "";
@@ -88,49 +88,34 @@
 {#if $mapEditorSelectedEntityStore === undefined}
     {$LL.mapEditor.entityEditor.editInstructions()}
 {:else}
+    <div class="header-container">
+        <h2>Editing {$mapEditorSelectedEntityStore.getEntityData().prefab.name}</h2>
+    </div>
     <div class="properties-buttons">
-        <div>
-            <button
-                class="add-property-button"
-                on:click={() => {
-                    onAddProperty("jitsiRoomProperty");
-                }}
-            >
-                <div>
-                    {$LL.mapEditor.properties.jitsiProperties.label()}
-                </div>
-                <img src={plusImg} alt="" />
-            </button>
-        </div>
-        <div>
-            <button
-                class="add-property-button"
-                on:click={() => {
-                    onAddProperty("playAudio");
-                }}
-            >
-                <div>
-                    {$LL.mapEditor.properties.audioProperties.label()}
-                </div>
-                <img src={plusImg} alt="" />
-            </button>
-        </div>
-        <div>
-            <button
-                class="add-property-button"
-                on:click={() => {
-                    onAddProperty("openWebsite");
-                }}
-            >
-                <div>
-                    {$LL.mapEditor.properties.linkProperties.label()}
-                </div>
-                <img src={plusImg} alt="" />
-            </button>
-        </div>
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.jitsiProperties.label()}
+            descriptionText="Lorem ipsum dolor sit amet"
+            on:click={() => {
+                onAddProperty("jitsiRoomProperty");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.audioProperties.label()}
+            descriptionText="Lorem ipsum dolor sit amet"
+            on:click={() => {
+                onAddProperty("playAudio");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.linkProperties.label()}
+            descriptionText="Lorem ipsum dolor sit amet"
+            on:click={() => {
+                onAddProperty("openWebsite");
+            }}
+        />
     </div>
     <div class="entity-name-container">
-        <p>Object name</p>
+        <h3>Object name</h3>
         <input
             id="objectName"
             type="text"
@@ -175,6 +160,9 @@
 {/if}
 
 <style lang="scss">
+    .header-container {
+        color: cyan;
+    }
     .properties-container {
         overflow-y: auto;
         overflow-x: hidden;
@@ -188,27 +176,14 @@
         margin-top: 5px;
     }
 
-    .properties-buttons {
-        margin-top: 1em;
-        display: flex;
-        flex-direction: column;
-        button:hover {
-            background-color: rgb(77 75 103);
-        }
-        .add-property-button {
-            color: gray;
+    .entity-name-container {
+        input,
+        select,
+        textarea {
+            background-color: white;
+            color: black;
+            font-weight: 700;
             width: 100%;
-            border: 1px solid grey;
-            position: relative;
-            div {
-                display: flex;
-                flex-grow: 1;
-            }
-            img {
-                object-fit: contain;
-                max-width: 2em;
-                max-height: 2em;
-            }
         }
     }
 </style>
