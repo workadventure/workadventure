@@ -87,7 +87,7 @@
           "url": "play-"+url,
           "containerPort": 3000
         },
-        "ports": [3000, 50051],
+        "ports": [3000],
         "env": {
           "SECRET_KEY": "tempSecretKeyNeedsToChange",
           "JITSI_ISS": env.JITSI_ISS,
@@ -110,6 +110,7 @@
           "ICON_URL": "https://icon-"+url,
           "CHAT_URL": "https://chat-"+url,
           "LOGROCKET_ID": env.LOGROCKET_ID,
+          "ROOM_API_PORT": "50051",
         } + (if adminUrl != null then {
           # Admin
           "ADMIN_URL": adminUrl,
@@ -125,6 +126,8 @@
           # Ejabberd
           "EJABBERD_DOMAIN": "xmpp-"+url,
           "EJABBERD_JWT_SECRET": env.EJABBERD_JWT_SECRET,
+          # Room API
+          "ROOM_API_SECRET_KEY": "ROOM_API_SECRET_KEY",
         })
       },
     "chat": {
@@ -287,12 +290,29 @@
                 }
               }
             },
-            service+: {
-              metadata+: {
-                annotations+: {
-                  "traefik.ingress.kubernetes.io/service.serversscheme": "h2c"
+            serviceroomapi: {
+                "apiVersion": "v1",
+                "kind": "Service",
+                "metadata": {
+                    "annotations": {
+                        "traefik.ingress.kubernetes.io/service.serversscheme": "h2c"
+                    },
+                    "name": "room-api"
+                },
+                "spec": {
+                    "ports": [
+                        {
+                            "name": "room-api-p50051",
+                            "port": 50051,
+                            "protocol": "TCP",
+                            "targetPort": 50051
+                        }
+                    ],
+                    "selector": {
+                        "name": "play"
+                    },
+                    "type": "ClusterIP"
                 }
-              }
             },
             ingress+: {
               spec+: {
@@ -304,7 +324,7 @@
                         {
                           backend: {
                             service: {
-                              name: "play",
+                              name: "room-api",
                               port: {
                                 number: 50051
                               }
