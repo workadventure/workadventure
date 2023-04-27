@@ -302,13 +302,6 @@
                 }
               }
             },
-            service+: {
-              metadata+: {
-                annotations+: {
-                  "traefik.ingress.kubernetes.io/service.serversscheme": "h2c"
-                }
-              }
-            },
             ingress+: {
               spec+: {
                 rules+:[
