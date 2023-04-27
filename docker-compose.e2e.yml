@@ -3,6 +3,12 @@ services:
   # overrides for e2e tests to be closer to production
   # use with command:
   # docker-compose -f docker-compose.yaml -f docker-compose.e2e.yml up -d --build
+  reverse-proxy:
+    depends_on:
+      play:
+        condition: service_healthy
+      back:
+        condition: service_healthy
 
   play:
     image: thecodingmachine/workadventure-play:${DOCKER_TAG:-develop}

@@ -1,5 +1,11 @@
 version: "3.6"
 services:
+  reverse-proxy:
+    depends_on:
+      play:
+        condition: service_healthy
+      back:
+        condition: service_healthy
   maps:
     image: thecodingmachine/php:8.1-v4-apache-node12
     environment:
