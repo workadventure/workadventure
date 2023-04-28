@@ -387,6 +387,7 @@ export class GameScene extends DirtyScene {
         this.load.scenePlugin("AnimatedTiles", AnimatedTiles, "animatedTiles", "animatedTiles");
 
         if (this.wamUrlFile) {
+            const absoluteWamFileUrl = new URL(this.wamUrlFile, window.location.href).toString();
             this.superLoad
                 .json(
                     this.wamUrlFile,
@@ -395,7 +396,7 @@ export class GameScene extends DirtyScene {
                     undefined,
                     (key: string, type: string, wamFile: unknown) => {
                         this.wamFile = WAMFileFormat.parse(wamFile);
-                        this.mapUrlFile = new URL(this.wamFile.mapUrl, this.wamUrlFile).toString();
+                        this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
                         this.doLoadTMJFile(this.mapUrlFile);
                     }
                 )

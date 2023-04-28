@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { fly, fade } from "svelte/transition";
+    import { fly } from "svelte/transition";
     import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
     import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import MediaBox from "../Video/MediaBox.svelte";
@@ -9,7 +9,7 @@
     $: clickable = !full;
 </script>
 
-<aside class="cameras-container" class:full in:fly={{ x: 200, duration: 100 }} out:fade>
+<aside class="cameras-container" class:full in:fly|local={{ x: 200, duration: 100 }}>
     <div class="other-cameras">
         {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
             {#if !highlightedEmbedScreen || highlightedEmbedScreen.type !== "streamable" || (highlightedEmbedScreen.type === "streamable" && highlightedEmbedScreen.embed !== peer)}

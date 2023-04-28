@@ -29,6 +29,10 @@ COPY --from=proto-builder /usr/src/generated ./back/src/Messages/generated
 RUN chown -R node:node /usr/src/node_modules
 RUN chown -R node:node /usr/src/package-lock.json
 WORKDIR /usr/src/back
+
+RUN apt-get update && apt-get install -y curl
+HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=10 CMD curl -f http://localhost:8080/ping || exit 1
+
 RUN mkdir ./dist && chown -R node:node ./dist
 USER node
 CMD ["npm", "run", "runprod"]

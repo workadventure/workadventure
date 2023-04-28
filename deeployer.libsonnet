@@ -93,7 +93,7 @@
           "url": "play-"+url,
           "containerPort": 3000
         },
-        "ports": [3000, 50051],
+        "ports": [3000],
         "env": {
           "SECRET_KEY": "tempSecretKeyNeedsToChange",
           "JITSI_ISS": env.JITSI_ISS,
@@ -116,6 +116,7 @@
           "ICON_URL": "https://icon-"+url,
           "CHAT_URL": "https://chat-"+url,
           "LOGROCKET_ID": env.LOGROCKET_ID,
+          "ROOM_API_PORT": "50051",
           # Sentry integration
           "SENTRY_RELEASE": env.SENTRY_RELEASE,
           "SENTRY_DSN_FRONT": env.SENTRY_DSN_FRONT,
@@ -135,6 +136,8 @@
           # Ejabberd
           "EJABBERD_DOMAIN": "xmpp-"+url,
           "EJABBERD_JWT_SECRET": env.EJABBERD_JWT_SECRET,
+          # Room API
+          "ROOM_API_SECRET_KEY": "ROOM_API_SECRET_KEY",
         })
       },
     "chat": {
@@ -166,6 +169,7 @@
            },
            "ports": [3000, 50053],
            "env": {
+             "API_URL": "back1:50051,back2:50051",
              "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
              "AUTHENTICATION_STRATEGY": if (adminUrl == null) then "Basic" else "Bearer",
              "AUTHENTICATION_USER": "john.doe",
@@ -302,6 +306,30 @@
                 }
               }
             },
+            serviceroomapi: {
+                "apiVersion": "v1",
+                "kind": "Service",
+                "metadata": {
+                    "annotations": {
+                        "traefik.ingress.kubernetes.io/service.serversscheme": "h2c"
+                    },
+                    "name": "room-api"
+                },
+                "spec": {
+                    "ports": [
+                        {
+                            "name": "room-api-p50051",
+                            "port": 50051,
+                            "protocol": "TCP",
+                            "targetPort": 50051
+                        }
+                    ],
+                    "selector": {
+                        "name": "play"
+                    },
+                    "type": "ClusterIP"
+                }
+            },
             ingress+: {
               spec+: {
                 rules+:[
@@ -312,7 +340,7 @@
                         {
                           backend: {
                             service: {
-                              name: "play",
+                              name: "room-api",
                               port: {
                                 number: 50051
                               }

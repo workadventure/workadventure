@@ -11,13 +11,13 @@
 
     function closeCoWebsite() {
         if ($highlightedEmbedScreen?.type === "cowebsite") {
+            /* if the co-website is closable, would like we to close it instead of unloading it?
             if ($highlightedEmbedScreen.embed.isClosable()) {
                 coWebsiteManager.closeCoWebsite($highlightedEmbedScreen.embed);
-            } else {
-                coWebsiteManager.unloadCoWebsite($highlightedEmbedScreen.embed).catch((err) => {
-                    console.error("Cannot unload co-website", err);
-                });
-            }
+            }*/
+            coWebsiteManager.unloadCoWebsite($highlightedEmbedScreen.embed).catch((err) => {
+                console.error("Cannot unload co-website", err);
+            });
         }
     }
 

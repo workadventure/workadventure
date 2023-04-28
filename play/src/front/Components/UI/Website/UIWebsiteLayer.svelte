@@ -1,9 +1,9 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import type { UIWebsite } from "../../../Api/Events/Ui/UIWebsite";
+    import type { UIWebsiteEvent } from "../../../Api/Events/Ui/UIWebsiteEvent";
     import { iframeListener } from "../../../Api/IframeListener";
 
-    export let uiWebsite: UIWebsite;
+    export let uiWebsite: UIWebsiteEvent;
     let main: HTMLDivElement;
     const iframe = document.createElement("iframe");
     iframe.id = `ui-website-${uiWebsite.id}`;

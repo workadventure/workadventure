@@ -54,5 +54,7 @@ COPY chat/start_nginx.sh /start_nginx.sh
 
 COPY --from=builder /usr/src/chat/dist /usr/share/nginx/html
 
+HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=10 CMD curl -f http://localhost || exit 1
+
 EXPOSE 80
 CMD ["/start_nginx.sh"]

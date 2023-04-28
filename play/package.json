@@ -22,7 +22,7 @@
     "profile": "tsc && node --prof ./dist/server.js",
     "push-sentry-sourcemaps": "tsc --project tsconfig-pusher.json && sentry-cli releases new $SENTRY_RELEASE && sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps dist && sentry-cli releases finalize $SENTRY_RELEASE",
     "build-iframe-api": "vite --config iframe-api.vite.config.ts build",
-    "watch-iframe-api": "npm run build-iframe-api --watch",
+    "watch-iframe-api": "npm run build-iframe-api -- --watch",
     "build-typings": "cross-env tsc --project tsconfig-for-iframe-api-typings.json",
     "precommit": "lint-staged",
     "test": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest --config ./vitest.config.ts",

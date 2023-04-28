@@ -91,6 +91,10 @@ app.get("/entityCollections", (req, res) => {
     res.send(mapsManager.getEntityCollections());
 });
 
+app.get("/ping", (req, res) => {
+    res.send("pong");
+});
+
 const mapListService = new MapListService(fileSystem, new WebHookService(WEB_HOOK_URL));
 new UploadController(app, fileSystem, mapListService);
 new ValidatorController(app);

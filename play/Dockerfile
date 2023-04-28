@@ -64,5 +64,8 @@ RUN chown -R node:node /usr/src/node_modules
 RUN chown -R node:node /usr/src/package-lock.json
 WORKDIR /usr/src/play
 
+RUN apt-get update && apt-get install -y curl
+HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=10 CMD curl -f http://localhost:3000 || exit 1
+
 USER node
 CMD ["npm", "run", "start"]

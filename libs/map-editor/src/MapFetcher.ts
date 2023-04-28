@@ -11,9 +11,8 @@ class MapFetcher {
     async getMapUrl(
         mapUrl: string | undefined,
         wamUrl: string | undefined,
-        canLoadLocalUrl = false,
-        storeVariableForLocalMaps = false,
-        internalMapStorageUrl: string | undefined = undefined
+        internalMapStorageUrl: string | undefined = undefined,
+        stripPrefix: string | undefined = undefined
     ): Promise<string> {
         if (mapUrl) {
             return mapUrl;
@@ -21,19 +20,16 @@ class MapFetcher {
         if (!wamUrl) {
             throw new Error("Both mapUrl and wamUrl are undefined. Can't get mapUrl.");
         }
-        const mapPath = (
-            await this.fetchWamFile(wamUrl, canLoadLocalUrl, storeVariableForLocalMaps, internalMapStorageUrl)
-        ).mapUrl;
+        const mapPath = (await this.fetchWamFile(wamUrl, internalMapStorageUrl, stripPrefix)).mapUrl;
         return path.normalize(`${path.dirname(wamUrl)}/${mapPath}`);
     }
 
     private async fetchWamFile(
         wamUrl: string,
-        canLoadLocalUrl = false,
-        storeVariableForLocalMaps = false,
-        internalMapStorageUrl: string | undefined = undefined
+        internalMapStorageUrl: string | undefined,
+        stripPrefix: string | undefined
     ): Promise<WAMFileFormat> {
-        const result = await this.fetchFile(wamUrl, canLoadLocalUrl, storeVariableForLocalMaps, internalMapStorageUrl);
+        const result = await this.fetchFile(wamUrl, true, true, internalMapStorageUrl, stripPrefix);
         const parseResult = WAMFileFormat.safeParse(result.data);
         if (!parseResult) {
             throw new LocalUrlError(`Invalid wam file format for: ${wamUrl}`);
@@ -47,10 +43,10 @@ class MapFetcher {
         wamUrl: string | undefined,
         canLoadLocalUrl = false,
         storeVariableForLocalMaps = false,
-        internalMapStorageUrl: string | undefined = undefined
+        internalMapStorageUrl: string | undefined = undefined,
+        stripPrefix: string | undefined = undefined
     ): Promise<ITiledMap> {
-        const url = await this.getMapUrl(mapUrl, wamUrl, false, false, internalMapStorageUrl);
-
+        const url = await this.getMapUrl(mapUrl, wamUrl, internalMapStorageUrl, stripPrefix);
         // Before trying to make the query, let's verify the map is actually on the open internet (and not a local test map)
 
         const res = await this.fetchFile(url, canLoadLocalUrl, storeVariableForLocalMaps);
@@ -69,7 +65,8 @@ class MapFetcher {
         url: string,
         canLoadLocalUrl = false,
         storeVariableForLocalMaps = false,
-        internalUrl: string | undefined = undefined
+        internalUrl: string | undefined = undefined,
+        stripPrefix: string | undefined = undefined
     ) {
         // Note: mapUrl is provided by the client. A possible attack vector would be to use a rogue DNS server that
         // returns local URLs. Alas, Axios cannot pin a URL to a given IP. So "isLocalUrl" and axios.get could potentially
@@ -91,13 +88,19 @@ class MapFetcher {
         if (internalUrl) {
             // Let's rewrite the request to hit the internal URL instead. We will use the X-Forwarded-Host header to
             // tell the map-storage the real domain name.
-            const urlObj = new URL(url);
+
+            const urlObj = new URL(url, internalUrl);
             const domainUrl = urlObj.host;
 
             headers["X-Forwarded-Host"] = domainUrl;
 
+            let path = urlObj.pathname;
+            if (stripPrefix && stripPrefix !== "/" && path.startsWith(stripPrefix)) {
+                path = path.substring(stripPrefix.length);
+            }
+
             // Rewrite the URL to use the internalUrl instead
-            url = internalUrl + urlObj.pathname + urlObj.search;
+            url = internalUrl + path + urlObj.search;
         }
 
         return await axios.get<unknown>(url, {

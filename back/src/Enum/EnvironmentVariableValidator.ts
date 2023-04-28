@@ -39,7 +39,10 @@ export const EnvironmentVariables = z.object({
         .describe(
             'The URL to the gRPC endpoint of the map-storage server (for instance: "map-storage.example.com:50053"'
         ),
-    PUBLIC_MAP_STORAGE_URL: AbsoluteOrRelativeUrl.optional()
+    PUBLIC_MAP_STORAGE_URL: z
+        .string()
+        .url()
+        .optional()
         .transform(emptyStringToUndefined)
         .describe('The public URL to the map-storage server (for instance: "https://map-storage.example.com"'),
     INTERNAL_MAP_STORAGE_URL: AbsoluteOrRelativeUrl.optional()

@@ -35,5 +35,9 @@ RUN chown -R node:node /usr/src/map-storage/node_modules
 RUN chown -R node:node /usr/src/package-lock.json
 WORKDIR /usr/src/map-storage
 RUN mkdir ./dist && chown -R node:node ./dist
+
+RUN apt-get update && apt-get install -y curl
+HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=10 CMD curl -f http://localhost:3000/ping || exit 1
+
 USER node
 CMD ["npm", "run", "start"]
