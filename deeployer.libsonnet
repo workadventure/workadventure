@@ -178,7 +178,6 @@
              "USE_DOMAIN_NAME_IN_PATH": if (adminUrl == null) then "false" else "true",
              "SENTRY_RELEASE": env.SENTRY_RELEASE,
              "SENTRY_DSN": env.SENTRY_DSN_MAPSTORAGE,
-             "API_URL": "back1:50051,back2:50051",
            }
          },
     "uploaderredis":{
