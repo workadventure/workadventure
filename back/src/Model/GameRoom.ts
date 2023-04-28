@@ -1128,7 +1128,7 @@ export class GameRoom implements BrothersFinder {
             this._wamSettings.megaphone.scope
         ) {
             let mainURI = this.roomGroup;
-            if (this._wamSettings.megaphone.scope === "room") {
+            if (this._wamSettings.megaphone.scope === "ROOM") {
                 mainURI = this.roomUrl;
             }
             if (!mainURI) {
