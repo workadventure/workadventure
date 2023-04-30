@@ -458,7 +458,7 @@ class IframeListener {
                             this.messagesToChatQueue = [];
                         }
                     } else if (iframeEvent.type == "openBanner") {
-                        warningContainerStore.activateWarningContainer();
+                        warningContainerStore.activateWarningContainer(iframeEvent.data.timeToClose);
                         bannerStore.set(iframeEvent.data);
                     } else if (iframeEvent.type == "closeBanner") {
                         warningContainerStore.set(false);
