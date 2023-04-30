@@ -24,7 +24,7 @@ function createWarningContainerStore() {
     return {
         subscribe,
         set,
-        activateWarningContainer(timeToClose: number) {
+        activateWarningContainer(timeToClose = 120000) {
             set(true);
             if (warningContainerTimeout) clearTimeout(warningContainerTimeout);
             if (timeToClose !== 0) {
