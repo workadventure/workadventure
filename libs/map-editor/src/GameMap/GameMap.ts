@@ -178,6 +178,13 @@ export class GameMap {
         this.gameMapAreas?.onEnterArea(callback);
     }
 
+    /**
+     * Registers a callback called when the user moves outside another area.
+     */
+    public onLeaveArea(callback: AreaChangeCallback) {
+        this.gameMapAreas?.onLeaveArea(callback);
+    }
+
     public getTileProperty(index: number): Array<ITiledMapProperty> {
         if (this.tileSetPropertyMap[index]) {
             return this.tileSetPropertyMap[index];

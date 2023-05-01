@@ -364,6 +364,20 @@ export class GameMapFrontWrapper {
         this.leaveDynamicAreaCallbacks.push(callback);
     }
 
+    /**
+     * Registers a callback called when the user moves inside another area.
+     */
+    public onEnterArea(callback: AreaChangeCallback) {
+        this.gameMap.onEnterArea(callback);
+    }
+
+    /**
+     * Registers a callback called when the user moves outside another area.
+     */
+    public onLeaveArea(callback: AreaChangeCallback) {
+        this.gameMap.getGameMapAreas()?.onLeaveArea(callback);
+    }
+
     public findLayer(layerName: string): ITiledMapLayer | undefined {
         return this.gameMap.findLayer(layerName);
     }
@@ -581,20 +595,6 @@ export class GameMapFrontWrapper {
 
     public getObjectWithName(name: string): ITiledMapObject | undefined {
         return this.gameMap.getObjectWithName(name);
-    }
-
-    /**
-     * Registers a callback called when the user moves inside another area.
-     */
-    public onEnterArea(callback: AreaChangeCallback) {
-        this.gameMap.onEnterArea(callback);
-    }
-
-    /**
-     * Registers a callback called when the user moves outside another area.
-     */
-    public onLeaveArea(callback: AreaChangeCallback) {
-        this.gameMap.getGameMapAreas()?.onLeaveArea(callback);
     }
 
     public setDynamicAreaProperty(areaName: string, propertyName: string, propertyValue: unknown): void {
