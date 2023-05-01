@@ -522,8 +522,8 @@ guaranteed and we might break the signature of these methods at any moment. Use 
 - text: dexcription displyed in the banner,
 - bgColor (optional): background color of your banner,
 - textColor (optional): text color into the banner,
-- closable (optional): let the possoibility for user to close the banner. By default is `true`,
-- timeToClose (optional): let the possibility for user to define the time to close. If set to 0, the banner will not close automatically. By default is `120000`
+- closable (optional): let the possoibility for the user to close the banner. By default is `true`,
+- timeToClose (optional): let the possibility for the user to define the time (in milliseconds) to close. If set to 0, the banner will not close automatically. By default is `120000`
 - link (optional): link added into the banner. The link has two mandatory parameter `url` and `label`:
     - url: Url link,
     - label: text dsiplayed for the banner link.
