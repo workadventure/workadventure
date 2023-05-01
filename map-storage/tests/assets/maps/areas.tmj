@@ -216,13 +216,13 @@
                  "text":
                     {
                      "halign":"center",
-                     "text":"OPEN WEBSITE AND FOCUSABLE",
+                     "text":"OPEN WEBSITE IN NEW TAB",
                      "wrap":true
                     },
                  "visible":true,
                  "width":99.2734,
-                 "x":798.345318341308,
-                 "y":110.061016108453
+                 "x":741.771928944952,
+                 "y":108.143274095017
                 }, 
                 {
                  "class":"area",
@@ -304,23 +304,6 @@
                 }, 
                 {
                  "class":"area",
-                 "height":127,
-                 "id":34,
-                 "name":"STATIC_AREA_2",
-                 "properties":[
-                        {
-                         "name":"openWebsite",
-                         "type":"string",
-                         "value":"https:\/\/google.com"
-                        }],
-                 "rotation":0,
-                 "visible":true,
-                 "width":220,
-                 "x":736,
-                 "y":96
-                }, 
-                {
-                 "class":"area",
                  "height":131.123386979846,
                  "id":297,
                  "name":"STATIC_AREA_297",
@@ -362,6 +345,57 @@
                  "width":331.995166980813,
                  "x":255.905659465468,
                  "y":95.1314581218887
+                }, 
+                {
+                 "class":"area",
+                 "height":123.319,
+                 "id":318,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"openTab",
+                         "type":"string",
+                         "value":"https:\/\/google.com"
+                        }],
+                 "rotation":0,
+                 "visible":true,
+                 "width":105.645963220724,
+                 "x":740.163340945339,
+                 "y":96.5542161084529
+                }, 
+                {
+                 "class":"area",
+                 "height":120.817746846455,
+                 "id":319,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"openWebsite",
+                         "type":"string",
+                         "value":"https:\/\/google.com"
+                        }],
+                 "rotation":0,
+                 "visible":true,
+                 "width":97.8048426852255,
+                 "x":861.066164032671,
+                 "y":99.7225846986612
+                }, 
+                {
+                 "class":"",
+                 "height":102.175,
+                 "id":321,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "halign":"center",
+                     "text":"OPEN WEBSITE",
+                     "wrap":true
+                    },
+                 "visible":true,
+                 "width":99.2734,
+                 "x":862.24962738872,
+                 "y":111.920571142042
                 }],
          "opacity":1,
          "properties":[
@@ -376,7 +410,7 @@
          "y":0
         }],
  "nextlayerid":41,
- "nextobjectid":315,
+ "nextobjectid":322,
  "orientation":"orthogonal",
  "properties":[
         {

@@ -1,4 +1,4 @@
-import { GameMapProperties } from "@workadventure/map-editor";
+import { AreaDataProperties, GameMapProperties } from "@workadventure/map-editor";
 import type { AreaChangeCallback, AreaData, GameMap } from "@workadventure/map-editor";
 import type {
     ITiledMap,
@@ -787,67 +787,76 @@ export class GameMapFrontWrapper {
     private mapAreaPropertiesToTiledProperties(areaProperties: AreaDataProperties): ITiledMapProperty[] {
         const properties: ITiledMapProperty[] = [];
 
-        if (areaProperties.focusable) {
-            properties.push({ name: GameMapProperties.FOCUSABLE, type: "bool", value: true });
-            if (areaProperties.focusable.zoom_margin) {
-                properties.push({
-                    name: GameMapProperties.ZOOM_MARGIN,
-                    type: "float",
-                    value: areaProperties.focusable.zoom_margin,
-                });
+        for (const property of areaProperties) {
+            switch (property.type) {
+                case "focusable": {
+                    properties.push({ name: GameMapProperties.FOCUSABLE, type: "bool", value: true });
+                    if (property.zoom_margin) {
+                        properties.push({
+                            name: GameMapProperties.ZOOM_MARGIN,
+                            type: "float",
+                            value: property.zoom_margin,
+                        });
+                    }
+                    break;
+                }
+                case "jitsiRoomProperty": {
+                    properties.push({
+                        name: GameMapProperties.JITSI_ROOM,
+                        type: "string",
+                        value: property.roomName ?? "",
+                    });
+                    if (property.jitsiRoomConfig) {
+                        properties.push({
+                            name: GameMapProperties.JITSI_CONFIG,
+                            type: "class",
+                            value: property.jitsiRoomConfig,
+                        });
+                    }
+                    break;
+                }
+                case "openWebsite": {
+                    if (property.newTab) {
+                        properties.push({
+                            name: GameMapProperties.OPEN_TAB,
+                            type: "string",
+                            value: property.link,
+                        });
+                    } else {
+                        properties.push({
+                            name: GameMapProperties.OPEN_WEBSITE,
+                            type: "string",
+                            value: property.link,
+                        });
+                    }
+                    break;
+                }
+                case "playAudio": {
+                    properties.push({
+                        name: GameMapProperties.PLAY_AUDIO,
+                        type: "string",
+                        value: property.audioLink,
+                    });
+                    break;
+                }
+                case "silent": {
+                    properties.push({
+                        name: GameMapProperties.SILENT,
+                        type: "bool",
+                        value: true,
+                    });
+                    break;
+                }
+                case "start": {
+                    properties.push({
+                        name: GameMapProperties.START,
+                        type: "bool",
+                        value: true,
+                    });
+                    break;
+                }
             }
         }
-        if (areaProperties.jitsiRoom) {
-            properties.push({
-                name: GameMapProperties.JITSI_ROOM,
-                type: "string",
-                value: areaProperties.jitsiRoom.roomName ?? "",
-            });
-            if (areaProperties.jitsiRoom.jitsiRoomConfig) {
-                properties.push({
-                    name: GameMapProperties.JITSI_CONFIG,
-                    type: "class",
-                    value: areaProperties.jitsiRoom.jitsiRoomConfig,
-                });
-            }
-        }
-        if (areaProperties.openWebsite) {
-            if (areaProperties.openWebsite.newTab) {
-                properties.push({
-                    name: GameMapProperties.OPEN_TAB,
-                    type: "string",
-                    value: areaProperties.openWebsite.link,
-                });
-            } else {
-                properties.push({
-                    name: GameMapProperties.OPEN_WEBSITE,
-                    type: "string",
-                    value: areaProperties.openWebsite.link,
-                });
-            }
-        }
-        if (areaProperties.playAudio) {
-            properties.push({
-                name: GameMapProperties.PLAY_AUDIO,
-                type: "string",
-                value: areaProperties.playAudio.audioLink,
-            });
-        }
-        if (areaProperties.start) {
-            properties.push({
-                name: GameMapProperties.START,
-                type: "bool",
-                value: areaProperties.start,
-            });
-        }
-        if (areaProperties.silent) {
-            properties.push({
-                name: GameMapProperties.SILENT,
-                type: "bool",
-                value: areaProperties.silent,
-            });
-        }
-
         return properties;
     }
 
@@ -971,7 +980,6 @@ export class GameMapFrontWrapper {
                 });
             }
         }
-
         return properties;
     }
 
