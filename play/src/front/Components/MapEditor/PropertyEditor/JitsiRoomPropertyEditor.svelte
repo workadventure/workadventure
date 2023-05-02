@@ -65,7 +65,7 @@
         width: 100%;
         margin-bottom: 0.5em;
         margin-top: 0.5em;
-        align-items: center;
+        flex-direction: column;
         label {
             min-width: fit-content;
             margin-right: 0.5em;

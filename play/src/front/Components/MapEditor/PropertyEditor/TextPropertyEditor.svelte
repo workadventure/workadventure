@@ -10,7 +10,7 @@
     export let property: string;
 </script>
 
-<div class="value-input">
+<div class="value-input tw-flex tw-flex-col">
     <textarea
         type="text"
         placeholder={$LL.mapEditor.properties.textProperties.placeholder()}
@@ -28,7 +28,7 @@
         width: 100%;
         margin-bottom: 0.5em;
         margin-top: 0.5em;
-        align-items: center;
+        flex-direction: column;
         textarea {
             flex-grow: 1;
             min-width: 0;

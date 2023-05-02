@@ -49,7 +49,7 @@
         width: 100%;
         margin-bottom: 0.5em;
         margin-top: 0.5em;
-        align-items: center;
+        flex-direction: column;
         label {
             min-width: fit-content;
             margin-right: 0.5em;
@@ -73,7 +73,6 @@
         label {
             min-width: fit-content;
             margin-right: 0.5em;
-            flex-grow: 1;
         }
         input {
             min-width: 0;
@@ -102,11 +101,13 @@
         border-color: rgb(77 75 103 / var(--tw-border-opacity));
         --tw-bg-opacity: 1;
         background-color: rgb(15 31 45 / var(--tw-bg-opacity));
+        background-image: none;
         padding: 0px;
         --tw-text-opacity: 1;
         color: rgb(242 253 255 / var(--tw-text-opacity));
         outline: 2px solid transparent;
         outline-offset: 2px;
+        cursor: url(/src/front/style/images/cursor_pointer.png), pointer;
     }
 
     .input-switch::before {
@@ -134,11 +135,11 @@
         left: 13px;
         top: -3px;
         --tw-bg-opacity: 1;
-        background-color: rgb(86 234 255 / var(--tw-bg-opacity));
+        background-color: rgb(65 86 246 / var(--tw-bg-opacity));
         content: var(--tw-content);
-        --tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
+        /*--tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
         --tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
-        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
     }
 
     .input-switch:disabled {

@@ -3,7 +3,7 @@
     import { slide } from "svelte/transition";
     import { EntityDataProperties, EntityDataPropertiesKeys } from "@workadventure/map-editor";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { mapEditorSelectedEntityStore } from "../../Stores/MapEditorStore";
+    import { mapEditorEntityModeStore, mapEditorSelectedEntityStore } from "../../Stores/MapEditorStore";
     import crossImg from "../images/cross-icon.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
@@ -115,6 +115,7 @@
         if ($mapEditorSelectedEntityStore) {
             $mapEditorSelectedEntityStore.delete();
             mapEditorSelectedEntityStore.set(undefined);
+            mapEditorEntityModeStore.set("ADD");
         }
     }
 </script>
@@ -124,7 +125,7 @@
 {:else}
     <div class="entity-properties">
         {#each possibleProperties as property (property.key)}
-            <div class="property-enabler">
+            <div class="property-enabler tw-bg-dark-purple tw-rounded-lg">
                 <label for={property.key}>{property.name}</label>
                 <input
                     id={property.key}
@@ -135,7 +136,7 @@
                 />
             </div>
             {#if property.active}
-                <div class="property-container" transition:slide|local>
+                <div class="property-container tw-flex tw-flex-col" transition:slide|local>
                     <svelte:component
                         this={property.component}
                         bind:property={property.currentValue}
@@ -159,13 +160,12 @@
         overflow-y: auto;
         overflow-x: hidden;
         .property-enabler {
-            border-radius: 0.1em;
             display: flex;
-            background-color: rgb(77 75 103);
             margin-top: 1px;
             margin-top: 1px;
             align-items: center;
             padding-right: 1em;
+            cursor: url(/src/front/style/images/cursor_pointer.png), pointer;
             label {
                 padding-top: 1em;
                 padding-bottom: 1em;
@@ -179,6 +179,10 @@
         }
         .property-container {
             padding-left: 1em;
+            border-left-style: solid;
+            border-left-color: #4d4b67;
+            border-left-width: 1px;
+            margin: 20px 0px;
         }
     }
 
@@ -230,11 +234,13 @@
         border-color: rgb(77 75 103 / var(--tw-border-opacity));
         --tw-bg-opacity: 1;
         background-color: rgb(15 31 45 / var(--tw-bg-opacity));
+        background-image: none;
         padding: 0px;
         --tw-text-opacity: 1;
         color: rgb(242 253 255 / var(--tw-text-opacity));
         outline: 2px solid transparent;
         outline-offset: 2px;
+        cursor: url(/src/front/style/images/cursor_pointer.png), pointer;
     }
 
     .input-switch::before {
@@ -262,11 +268,11 @@
         left: 13px;
         top: -3px;
         --tw-bg-opacity: 1;
-        background-color: rgb(86 234 255 / var(--tw-bg-opacity));
+        background-color: rgb(65 86 246 / var(--tw-bg-opacity));
         content: var(--tw-content);
-        --tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
+        /*--tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
         --tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
-        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
     }
 
     .input-switch:disabled {
