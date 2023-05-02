@@ -3,7 +3,7 @@
     import { slide } from "svelte/transition";
     import { EntityDataProperties, EntityDataPropertiesKeys } from "@workadventure/map-editor";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { mapEditorSelectedEntityStore } from "../../Stores/MapEditorStore";
+    import { mapEditorEntityModeStore, mapEditorSelectedEntityStore } from "../../Stores/MapEditorStore";
     import crossImg from "../images/cross-icon.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
@@ -115,6 +115,7 @@
         if ($mapEditorSelectedEntityStore) {
             $mapEditorSelectedEntityStore.delete();
             mapEditorSelectedEntityStore.set(undefined);
+            mapEditorEntityModeStore.set("ADD");
         }
     }
 </script>
