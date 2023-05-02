@@ -1,0 +1,70 @@
+{
+    "collectionName": "LimeZu Modern Interior",
+    "tags": [
+        "LimeZu",
+        "Modern",
+        "Interior"
+    ],
+    "collection": [
+        {
+            "name": "Hight chair",
+            "tags": [
+                "chair",
+                "bar"
+            ],
+            "imagePath": "LimeZu_Modern_Interior/Hight_chair__Down__#4280dd__chair_bar.png",
+            "direction": "Down",
+            "color": "#4280dd"
+        },
+        {
+            "name": "Hight chair",
+            "tags": [
+                "chair",
+                "bar"
+            ],
+            "imagePath": "LimeZu_Modern_Interior/Hight_chair__Down__#d93232__chair_bar.png",
+            "direction": "Down",
+            "color": "#d93232"
+        },
+        {
+            "name": "Hight chair",
+            "tags": [
+                "chair",
+                "bar"
+            ],
+            "imagePath": "LimeZu_Modern_Interior/Hight_chair__Down__#f2b22b__chair_bar.png",
+            "direction": "Down",
+            "color": "#f2b22b"
+        },
+        {
+            "name": "Wooden round table",
+            "tags": [
+                "wood",
+                "table"
+            ],
+            "imagePath": "LimeZu_Modern_Interior/Wooden_round_table__Down__#b35e3f__wood_table.png",
+            "direction": "Down",
+            "color": "#b35e3f"
+        },
+        {
+            "name": "Wooden round table",
+            "tags": [
+                "wood",
+                "table"
+            ],
+            "imagePath": "LimeZu_Modern_Interior/Wooden_round_table__Down__#d0be9c__wood_table.png",
+            "direction": "Down",
+            "color": "#d0be9c"
+        },
+        {
+            "name": "Wooden round table",
+            "tags": [
+                "wood",
+                "table"
+            ],
+            "imagePath": "LimeZu_Modern_Interior/Wooden_round_table__Down__#d7a968__wood_table.png",
+            "direction": "Down",
+            "color": "#d7a968"
+        }
+    ]
+}
