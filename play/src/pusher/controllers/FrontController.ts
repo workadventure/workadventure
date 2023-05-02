@@ -139,11 +139,6 @@ export class FrontController extends BaseHttpController {
             return this.displayFront(req, res, this.getFullUrl(req));
         });
 
-        // @deprecated
-        this.app.get("/register", (req: Request, res: Response) => {
-            return this.displayFront(req, res, this.getFullUrl(req));
-        });
-
         this.app.get(
             "/.well-known/cf-custom-hostname-challenge/*",
             [notWaHost],

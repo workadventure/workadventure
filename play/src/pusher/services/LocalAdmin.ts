@@ -1,5 +1,5 @@
 import path from "path";
-import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData } from "@workadventure/messages";
+import type { MapDetailsData, RoomRedirect, ErrorApiData } from "@workadventure/messages";
 import { OpidWokaNamePolicy } from "@workadventure/messages";
 import {
     DISABLE_ANONYMOUS,
@@ -122,14 +122,6 @@ class LocalAdmin implements AdminInterface {
                 ...MetaTagsDefaultValue,
             },
         });
-    }
-
-    async fetchMemberDataByToken(
-        organizationMemberToken: string,
-        playUri: string | null,
-        locale?: string
-    ): Promise<AdminApiData> {
-        return Promise.reject(new Error("No admin backoffice set!"));
     }
 
     fetchWellKnownChallenge(host: string): Promise<string> {

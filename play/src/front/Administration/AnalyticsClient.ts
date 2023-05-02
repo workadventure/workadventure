@@ -35,14 +35,6 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
-    loggedWithToken(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-logged-token");
-            })
-            .catch((e) => console.error(e));
-    }
-
     enteredRoom(roomId: string, roomGroup: string | null): void {
         this.posthogPromise
             ?.then((posthog) => {
