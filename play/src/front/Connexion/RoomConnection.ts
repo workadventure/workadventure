@@ -382,6 +382,10 @@ export class RoomConnection implements RoomConnection {
                                 this._removeSpaceUserMessageStream.next(subMessage.removeSpaceUserMessage);
                                 break;
                             }
+                            case "megaphoneSettingsMessage": {
+                                this._megaphoneSettingsMessageStream.next(subMessage.megaphoneSettingsMessage);
+                                break;
+                            }
                             default: {
                                 // Security check: if we forget a "case", the line below will catch the error at compile-time.
                                 //@ts-ignore

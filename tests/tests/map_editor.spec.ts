@@ -1,37 +1,45 @@
-import { expect, test } from '@playwright/test';
-import * as Menu from "./utils/menu";
+import { test } from '@playwright/test';
+import Menu from "./utils/menu";
 import {login} from "./utils/roles";
-import * as MapEditor from "./utils/mapeditor";
-import * as ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
+import MapEditor from "./utils/mapeditor";
+import Megaphone from "./utils/map-editor/megaphone";
+import Map from "./utils/map";
+import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 
 test.describe('Map editor', () => {
-  test('Successfully set the megaphone feature', async ({ page }) => {
+  test('Successfully set the megaphone feature', async ({ page, browser }) => {
     await page.goto('http://play.workadventure.localhost/~/maps/areas.wam');
     await login(page, "test", 3);
 
-    await Menu.openMapEditor(page);
-
-    await MapEditor.openConfigureMyRoom(page);
-    await ConfigureMyRoom.selectMegaphoneItemInCMR(page);
-
-    await ConfigureMyRoom.toggleMegaphone(page);
-    await ConfigureMyRoom.isMegaphoneEnabled(page);
-    await ConfigureMyRoom.megaphoneInputNameSpace(page);
-    await ConfigureMyRoom.megaphoneSelectScope(page);
-    await ConfigureMyRoom.megaphoneAddNewRights(page);
-    await ConfigureMyRoom.megaphoneSave(page);
-
-    await expect(await page.locator('.map-editor .modal .content button:disabled')).toContainText('Successfully saved');
-
-    await page.reload();
+    // Second browser
+    const newBrowser = await browser.browserType().launch();
+    const page2 = await newBrowser.newPage();
+    await page2.goto('http://play.workadventure.localhost/~/maps/areas.wam');
+    await login(page2, "test2", 5);
+    await Map.walkTo(page2, 'ArrowLeft', 1_500);
 
     await Menu.openMapEditor(page);
     await MapEditor.openConfigureMyRoom(page);
     await ConfigureMyRoom.selectMegaphoneItemInCMR(page);
-    await ConfigureMyRoom.isMegaphoneEnabled(page);
 
-    // TODO : Add test if in menu bar there is the megaphone icon
-    // TODO : Add test if tag are correctly filtered
+    // Enabling megaphone and settings default value
+    await Megaphone.toggleMegaphone(page);
+    await Megaphone.isMegaphoneEnabled(page);
+    await Megaphone.megaphoneInputNameSpace(page);
+    await Megaphone.megaphoneSelectScope(page);
+    await Megaphone.megaphoneAddNewRights(page, 'example');
+    await Megaphone.megaphoneSave(page);
+    await Megaphone.isCorrectlySaved(page);
+    // Test if tags are working correctly, current users doesn't have the tag "example" to use megaphone
+    await Menu.isNotThereMegaphoneButton(page);
+    await Menu.isNotThereMegaphoneButton(page2);
+    // Remove rights
+    await Megaphone.megaphoneRemoveRights(page, 'example');
+    await Megaphone.megaphoneSave(page);
+    await Megaphone.isCorrectlySaved(page);
+    // Megaphone should be displayed and usable by current users
+    await Menu.isThereMegaphoneButton(page);
+    await Menu.isThereMegaphoneButton(page2);
     // TODO : Add test if sound is correctly played
     // TODO : Add test is conference is correctly opened
     // TODO : Add test if the megaphone is correctly displayed in the map of other users

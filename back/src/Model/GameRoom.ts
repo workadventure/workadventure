@@ -80,8 +80,8 @@ export class GameRoom implements BrothersFinder {
     private variableListeners: Set<VariableSocket> = new Set<VariableSocket>();
 
     private constructor(
-        public readonly roomUrl: string,
-        private roomGroup: string | null,
+        public readonly _roomUrl: string,
+        private _roomGroup: string | null,
         private readonly connectCallback: ConnectCallback,
         private readonly disconnectCallback: DisconnectCallback,
         private readonly minDistance: number,
@@ -192,7 +192,7 @@ export class GameRoom implements BrothersFinder {
                 message: {
                     $case: "refreshRoomMessage",
                     refreshRoomMessage: RefreshRoomMessage.fromPartial({
-                        roomId: this.roomUrl,
+                        roomId: this._roomUrl,
                         timeToRefresh: 30,
                     }),
                 },
@@ -236,8 +236,8 @@ export class GameRoom implements BrothersFinder {
             joinRoomMessage.visitCardUrl ?? null,
             joinRoomMessage.name,
             ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.characterLayer),
-            this.roomUrl,
-            this.roomGroup ?? undefined,
+            this._roomUrl,
+            this._roomGroup ?? undefined,
             this,
             joinRoomMessage.companion,
             undefined,
@@ -347,7 +347,7 @@ export class GameRoom implements BrothersFinder {
                 } else {
                     const closestUser: User = closestItem;
                     const group: Group = new Group(
-                        this.roomUrl,
+                        this._roomUrl,
                         [user, closestUser],
                         this.groupRadius,
                         this.connectCallback,
@@ -431,7 +431,7 @@ export class GameRoom implements BrothersFinder {
 
                     // Re-create a group with the followers
                     const newGroup: Group = new Group(
-                        this.roomUrl,
+                        this._roomUrl,
                         [user, ...followingMembers],
                         this.groupRadius,
                         this.connectCallback,
@@ -640,7 +640,7 @@ export class GameRoom implements BrothersFinder {
 
     public async incrementVersion(): Promise<number> {
         // Let's check if the mapUrl has changed
-        const mapDetails = await GameRoom.getMapDetails(this.roomUrl);
+        const mapDetails = await GameRoom.getMapDetails(this._roomUrl);
         const mapUrl = await mapFetcher.getMapUrl(
             mapDetails.mapUrl,
             mapDetails.wamUrl,
@@ -767,7 +767,7 @@ export class GameRoom implements BrothersFinder {
             this.variableManagerLastLoad = new Date();
             this.variableManagerPromise = this.getMap()
                 .then(async (map) => {
-                    const variablesManager = await VariablesManager.create(this.roomUrl, map);
+                    const variablesManager = await VariablesManager.create(this._roomUrl, map);
                     return variablesManager.init();
                 })
                 .catch(async (e) => {
@@ -785,7 +785,7 @@ export class GameRoom implements BrothersFinder {
                             }
                         }, 1000);
 
-                        const variablesManager = await VariablesManager.create(this.roomUrl, null);
+                        const variablesManager = await VariablesManager.create(this._roomUrl, null);
                         return variablesManager.init();
                     } else {
                         // An error occurred while loading the map
@@ -802,7 +802,7 @@ export class GameRoom implements BrothersFinder {
                             }
                         }, 1000);
 
-                        const variablesManager = await VariablesManager.create(this.roomUrl, null);
+                        const variablesManager = await VariablesManager.create(this._roomUrl, null);
                         return variablesManager.init();
                     }
                 });
@@ -854,7 +854,7 @@ export class GameRoom implements BrothersFinder {
                                     }
                                 }
                                 return {
-                                    mainValue: Jitsi.slugifyJitsiRoomName(mainValue, this.roomUrl, allProps),
+                                    mainValue: Jitsi.slugifyJitsiRoomName(mainValue, this._roomUrl, allProps),
                                     tagValue,
                                 };
                             }
@@ -1030,7 +1030,7 @@ export class GameRoom implements BrothersFinder {
             this.mucManagerLastLoad = new Date();
             this.mucManagerPromise = this.getMap(true)
                 .then((map) => {
-                    return new MucManager(this.roomUrl, map);
+                    return new MucManager(this._roomUrl, map);
                 })
                 .catch((e) => {
                     if (e instanceof LocalUrlError) {
@@ -1061,7 +1061,7 @@ export class GameRoom implements BrothersFinder {
                             }
                         }, 1000);
                     }
-                    return new MucManager(this.roomUrl, null);
+                    return new MucManager(this._roomUrl, null);
                 });
         }
         this._mapUrl = lastMapUrl;
@@ -1109,41 +1109,23 @@ export class GameRoom implements BrothersFinder {
         );
     }
 
-    canUseMegaphone(user: User): boolean {
-        if (!this._wamSettings || !this._wamSettings.megaphone || !this._wamSettings.megaphone.enabled) {
-            return false;
-        }
-        const rights = this._wamSettings.megaphone.rights;
-        if (!rights || rights.length === 0) {
-            return true;
-        }
-        return rights.filter((right) => user.tags.includes(right)).length > 0;
-    }
-
-    getMegaphoneUrl() {
-        if (
-            this._wamSettings &&
-            this._wamSettings.megaphone &&
-            this._wamSettings.megaphone.enabled &&
-            this._wamSettings.megaphone.scope
-        ) {
-            let mainURI = this.roomGroup;
-            if (this._wamSettings.megaphone.scope === "ROOM") {
-                mainURI = this.roomUrl;
-            }
-            if (!mainURI) {
-                throw new Error("Cannot get megaphone url without room url or room group");
-            }
-            return `${mainURI}/megaphone`;
-        }
-        return undefined;
-    }
-
     get mapUrl(): string {
         return this._mapUrl;
     }
 
     get wamUrl(): string | undefined {
         return this._wamUrl;
+    }
+
+    get roomUrl(): string {
+        return this._roomUrl;
+    }
+
+    get roomGroup(): string | null {
+        return this._roomGroup;
+    }
+
+    get wamSettings(): WAMFileFormat["settings"] {
+        return this._wamSettings;
     }
 }

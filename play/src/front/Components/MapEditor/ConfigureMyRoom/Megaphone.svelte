@@ -5,7 +5,7 @@
     import { InfoIcon } from "svelte-feather-icons";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
-    import LL from "../../../../i18n/i18n-svelte";
+    import { LL } from "../../../../i18n/i18n-svelte";
     import InputText from "../../Input/InputText.svelte";
     import InputSelect from "../../Input/InputSelect.svelte";
     import InputTags from "../../Input/InputTags.svelte";
@@ -63,7 +63,7 @@
                 enabled,
                 scope,
                 title,
-                rights: rights.map((right) => right.value),
+                rights: (rights || []).map((right) => right.value),
             });
             loading = false;
             resolve("Successfully saved !");

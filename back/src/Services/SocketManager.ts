@@ -47,6 +47,7 @@ import {
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
 import Debug from "debug";
+import { WAMSettingsUtils } from "@workadventure/map-editor";
 import { GameRoom } from "../Model/GameRoom";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -189,8 +190,8 @@ export class SocketManager {
             applications: user.applications ?? [],
             playerVariable: playerVariablesMessage,
             megaphoneSettings: {
-                enabled: room.canUseMegaphone(user),
-                url: room.getMegaphoneUrl(),
+                enabled: WAMSettingsUtils.canUseMegaphone(room.wamSettings, user.tags),
+                url: WAMSettingsUtils.getMegaphoneUrl(room.wamSettings, room.roomGroup, room.roomUrl),
             },
         };
 

@@ -363,6 +363,7 @@ message SubMessage {
     AddSpaceUserMessage addSpaceUserMessage = 16;
     UpdateSpaceUserMessage updateSpaceUserMessage = 17;
     RemoveSpaceUserMessage removeSpaceUserMessage = 18;
+    MegaphoneSettings megaphoneSettingsMessage = 19;
   }
 }
 
@@ -537,6 +538,10 @@ message MegaphoneStateMessage {
 message JitsiParticipantIdSpaceMessage {
   string spaceName = 1;
   string value = 2;
+}
+
+message MegaphoneEnabledMessage {
+  bool value = 1;
 }
 
 

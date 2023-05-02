@@ -95,6 +95,7 @@
     let microphoneButton: HTMLButtonElement;
     let cameraButton: HTMLButtonElement;
 
+    // eslint-disable-next-line no-undef
     let megaphoneWarningTimeOut: NodeJS.Timeout | undefined = undefined;
 
     function screenSharingClick(): void {
@@ -727,7 +728,7 @@
                                 : $LL.actionbar.enableMegaphone()}
                         />
 
-                        <button class:border-top-orange={$megaphoneEnabledStore}>
+                        <button class:border-top-orange={$megaphoneEnabledStore} id="megaphone">
                             <img draggable="false" src={megaphoneImg} style="padding: 2px" alt="Toggle megaphone" />
                         </button>
                         {#if $megaphoneEnabledStore}
