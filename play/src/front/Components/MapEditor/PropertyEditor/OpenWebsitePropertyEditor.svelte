@@ -48,6 +48,14 @@
             />
         </div>
     {/if}
+    <div>
+        <label for="trigger">{$LL.mapEditor.properties.linkProperties.trigger()}</label>
+        <select id="trigger" class="tw-w-full" bind:value={property.trigger} on:change={onValueChange}>
+            <option value={undefined}>Show Immediately</option>
+            <option value="onicon">On Click</option>
+            <option value="onaction">On Action</option>
+        </select>
+    </div>
     <div class="value-switch">
         <label for="newTab">{$LL.mapEditor.properties.linkProperties.newTabLabel()}</label>
         <input
@@ -55,6 +63,16 @@
             type="checkbox"
             class="input-switch"
             bind:checked={property.newTab}
+            on:change={onValueChange}
+        />
+    </div>
+    <div class="value-switch">
+        <label for="closable">{$LL.mapEditor.properties.linkProperties.closable()}</label>
+        <input
+            id="closable"
+            type="checkbox"
+            class="input-switch"
+            bind:checked={property.closable}
             on:change={onValueChange}
         />
     </div>

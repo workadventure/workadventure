@@ -27,49 +27,6 @@ export class GameMapAreas {
         }
     }
 
-    private flattenAreaProperties(areaProperties: AreaDataProperties): Record<string, string | boolean | number> {
-        const flattenedProperties: Record<string, string | boolean | number> = {};
-        for (const property of areaProperties) {
-            switch (property.type) {
-                case "focusable": {
-                    flattenedProperties[GameMapProperties.FOCUSABLE] = true;
-                    if (property.zoom_margin) {
-                        flattenedProperties[GameMapProperties.ZOOM_MARGIN] = property.zoom_margin;
-                    }
-                    break;
-                }
-                case "jitsiRoomProperty": {
-                    flattenedProperties[GameMapProperties.JITSI_ROOM] = property.roomName ?? "";
-                    if (property.jitsiRoomConfig) {
-                        flattenedProperties[GameMapProperties.JITSI_CONFIG] = JSON.stringify(property.jitsiRoomConfig);
-                    }
-                    break;
-                }
-                case "openWebsite": {
-                    if (property.newTab) {
-                        flattenedProperties[GameMapProperties.OPEN_TAB] = property.link;
-                    } else {
-                        flattenedProperties[GameMapProperties.OPEN_WEBSITE] = property.link;
-                    }
-                    break;
-                }
-                case "playAudio": {
-                    flattenedProperties[GameMapProperties.PLAY_AUDIO] = property.audioLink;
-                    break;
-                }
-                case "start": {
-                    flattenedProperties[GameMapProperties.START] = true;
-                    break;
-                }
-                case "silent": {
-                    flattenedProperties[GameMapProperties.SILENT] = true;
-                    break;
-                }
-            }
-        }
-        return flattenedProperties;
-    }
-
     /**
      * @returns If there were any areas changes
      */
@@ -251,6 +208,49 @@ export class GameMapAreas {
             }
         }
         return properties;
+    }
+
+    private flattenAreaProperties(areaProperties: AreaDataProperties): Record<string, string | boolean | number> {
+        const flattenedProperties: Record<string, string | boolean | number> = {};
+        for (const property of areaProperties) {
+            switch (property.type) {
+                case "focusable": {
+                    flattenedProperties[GameMapProperties.FOCUSABLE] = true;
+                    if (property.zoom_margin) {
+                        flattenedProperties[GameMapProperties.ZOOM_MARGIN] = property.zoom_margin;
+                    }
+                    break;
+                }
+                case "jitsiRoomProperty": {
+                    flattenedProperties[GameMapProperties.JITSI_ROOM] = property.roomName ?? "";
+                    if (property.jitsiRoomConfig) {
+                        flattenedProperties[GameMapProperties.JITSI_CONFIG] = JSON.stringify(property.jitsiRoomConfig);
+                    }
+                    break;
+                }
+                case "openWebsite": {
+                    if (property.newTab) {
+                        flattenedProperties[GameMapProperties.OPEN_TAB] = property.link;
+                    } else {
+                        flattenedProperties[GameMapProperties.OPEN_WEBSITE] = property.link;
+                    }
+                    break;
+                }
+                case "playAudio": {
+                    flattenedProperties[GameMapProperties.PLAY_AUDIO] = property.audioLink;
+                    break;
+                }
+                case "start": {
+                    flattenedProperties[GameMapProperties.START] = true;
+                    break;
+                }
+                case "silent": {
+                    flattenedProperties[GameMapProperties.SILENT] = true;
+                    break;
+                }
+            }
+        }
+        return flattenedProperties;
     }
 
     private getAreasOnPosition(position: { x: number; y: number }, offsetY = 0): AreaData[] {

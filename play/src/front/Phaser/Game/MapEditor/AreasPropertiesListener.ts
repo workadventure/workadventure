@@ -33,6 +33,10 @@ export class AreasPropertiesListener {
             for (const property of area.properties) {
                 switch (property.type) {
                     case "openWebsite": {
+                        // TODO: Do we want to handle it here or leave new tab as it is in GameMapPropertiesListener?
+                        if (property.newTab) {
+                            break;
+                        }
                         this.handleOpenWebsitePropertiesOnEnter(property);
                         break;
                     }
@@ -73,14 +77,14 @@ export class AreasPropertiesListener {
 
     private handleOpenWebsitePropertiesOnEnter(property: OpenWebsitePropertyData): void {
         const openWebsiteProperty: string | undefined = property.link;
+        const websiteClosableProperty: boolean | undefined = property.closable;
+        const websiteTriggerProperty: string | undefined = property.trigger;
         // TODO:
         let allowApiProperty: boolean | undefined;
         let websitePolicyProperty: string | undefined;
         let websiteWidthProperty: number | undefined;
         let websitePositionProperty: number | undefined;
-        let websiteTriggerProperty: string | undefined;
         let websiteTriggerMessageProperty: string | undefined;
-        let websiteClosableProperty: boolean | undefined;
 
         const actionId = "openWebsite-" + (Math.random() + 1).toString(36).substring(7);
 
@@ -184,8 +188,7 @@ export class AreasPropertiesListener {
 
     private handleOpenWebsitePropertiesOnLeave(property: OpenWebsitePropertyData): void {
         const openWebsiteProperty: string | undefined = property.link;
-        // TODO:
-        let websiteTriggerProperty: string | undefined;
+        const websiteTriggerProperty: string | undefined = property.trigger;
 
         if (!openWebsiteProperty) {
             return;

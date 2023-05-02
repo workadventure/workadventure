@@ -62,6 +62,8 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
     type: z.literal("openWebsite"),
     link: z.string(),
     newTab: z.boolean().optional(),
+    closable: z.boolean().optional(),
+    trigger: z.union([z.literal("onaction"), z.literal("onicon")]).optional(),
 });
 
 export const AreaDataProperty = z.union([

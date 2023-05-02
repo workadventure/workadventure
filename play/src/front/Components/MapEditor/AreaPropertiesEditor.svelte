@@ -55,7 +55,9 @@
                     id,
                     type,
                     link: "https://google.com",
-                    newTab: true,
+                    newTab: false,
+                    hideButtonLabel: true,
+                    trigger: undefined,
                 };
             case "playAudio":
                 return {

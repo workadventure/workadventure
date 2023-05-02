@@ -47,6 +47,8 @@ const mapEditor: BaseTranslation = {
             label: "Open Link",
             linkLabel: "Link URL",
             newTabLabel: "Open in new tab",
+            trigger: "Trigger",
+            closable: "Closable",
             linkPlaceholder: "https://example.com",
             defaultButtonLabel: "Open Link",
         },
