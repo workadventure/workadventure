@@ -16,11 +16,13 @@
 
     let properties: AreaDataProperties = [];
     let areaName = "";
+    let hasJitsiRoomProperty: boolean;
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
         if (currentAreaPreview) {
             properties = currentAreaPreview.getProperties() ?? [];
             areaName = currentAreaPreview.getAreaData().name;
+            refreshFlags();
         }
     });
 
@@ -77,6 +79,7 @@
             $mapEditorSelectedAreaPreviewStore.addProperty(getPropertyFromType(type));
             // refresh properties
             properties = $mapEditorSelectedAreaPreviewStore?.getProperties();
+            refreshFlags();
         }
     }
 
@@ -85,6 +88,7 @@
             $mapEditorSelectedAreaPreviewStore.deleteProperty(id);
             // refresh properties
             properties = $mapEditorSelectedAreaPreviewStore?.getProperties();
+            refreshFlags();
         }
     }
 
@@ -99,19 +103,29 @@
             $mapEditorSelectedAreaPreviewStore.updateProperty(property);
         }
     }
+
+    function hasProperty(propertyType: AreaDataPropertiesKeys): boolean {
+        return properties.find((property) => property.type === propertyType) !== undefined;
+    }
+
+    function refreshFlags(): void {
+        hasJitsiRoomProperty = hasProperty("jitsiRoomProperty");
+    }
 </script>
 
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
     {$LL.mapEditor.areaEditor.editInstructions()}
 {:else}
     <div class="properties-buttons">
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.jitsiProperties.label()}
-            descriptionText="Lorem ipsum dolor sit amet"
-            on:click={() => {
-                onAddProperty("jitsiRoomProperty");
-            }}
-        />
+        {#if !hasJitsiRoomProperty}
+            <AddPropertyButton
+                headerText={$LL.mapEditor.properties.jitsiProperties.label()}
+                descriptionText="Lorem ipsum dolor sit amet"
+                on:click={() => {
+                    onAddProperty("jitsiRoomProperty");
+                }}
+            />
+        {/if}
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.audioProperties.label()}
             descriptionText="Lorem ipsum dolor sit amet"

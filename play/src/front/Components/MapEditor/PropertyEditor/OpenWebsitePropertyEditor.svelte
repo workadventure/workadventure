@@ -6,8 +6,14 @@
     import CloseButton from "./CloseButton.svelte";
 
     export let property: OpenWebsitePropertyData;
+    export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
 
     const dispatch = createEventDispatcher();
+
+    function onTriggerValueChange() {
+        triggerOnActionChoosen = property.trigger === "onaction";
+        dispatch("change");
+    }
 
     function onValueChange() {
         dispatch("change");
@@ -35,11 +41,25 @@
             on:blur={onMapEditorInputUnfocus}
         />
     </div>
+    <div class="">
+        <label for="websiteWidth">{$LL.mapEditor.properties.linkProperties.width()}: {property.width}%</label>
+        <input
+            id="websiteWidth"
+            type="range"
+            min="0"
+            max="100"
+            placeholder="50"
+            bind:value={property.width}
+            on:change={onValueChange}
+            on:focus={onMapEditorInputFocus}
+            on:blur={onMapEditorInputUnfocus}
+        />
+    </div>
     {#if !property.hideButtonLabel}
         <div class="value-input">
-            <label for="linkButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
+            <label for="linkButton">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
             <input
-                id="linkButtonlabel"
+                id="linkButton"
                 type="text"
                 bind:value={property.buttonLabel}
                 on:change={onValueChange}
@@ -50,12 +70,25 @@
     {/if}
     <div>
         <label for="trigger">{$LL.mapEditor.properties.linkProperties.trigger()}</label>
-        <select id="trigger" class="tw-w-full" bind:value={property.trigger} on:change={onValueChange}>
-            <option value={undefined}>Show Immediately</option>
-            <option value="onicon">On Click</option>
-            <option value="onaction">On Action</option>
+        <select id="trigger" class="tw-w-full" bind:value={property.trigger} on:change={onTriggerValueChange}>
+            <option value={undefined}>{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option>
+            <option value="onicon">{$LL.mapEditor.properties.linkProperties.triggerOnClick()}</option>
+            <option value="onaction">{$LL.mapEditor.properties.linkProperties.triggerOnAction()}</option>
         </select>
     </div>
+    {#if triggerOnActionChoosen}
+        <div class="value-input">
+            <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>
+            <input
+                id="triggerMessage"
+                type="text"
+                bind:value={property.triggerMessage}
+                on:change={onValueChange}
+                on:focus={onMapEditorInputFocus}
+                on:blur={onMapEditorInputUnfocus}
+            />
+        </div>
+    {/if}
     <div class="value-switch">
         <label for="newTab">{$LL.mapEditor.properties.linkProperties.newTabLabel()}</label>
         <input
@@ -74,6 +107,28 @@
             class="input-switch"
             bind:checked={property.closable}
             on:change={onValueChange}
+        />
+    </div>
+    <div class="value-switch">
+        <label for="allowAPI">{$LL.mapEditor.properties.linkProperties.allowAPI()}</label>
+        <input
+            id="allowAPI"
+            type="checkbox"
+            class="input-switch"
+            bind:checked={property.allowAPI}
+            on:change={onValueChange}
+        />
+    </div>
+    <div class="value-input">
+        <label for="policy">{$LL.mapEditor.properties.linkProperties.policy()}</label>
+        <input
+            id="policy"
+            type="text"
+            placeholder={$LL.mapEditor.properties.linkProperties.policyPlaceholder()}
+            bind:value={property.policy}
+            on:change={onValueChange}
+            on:focus={onMapEditorInputFocus}
+            on:blur={onMapEditorInputUnfocus}
         />
     </div>
 </div>

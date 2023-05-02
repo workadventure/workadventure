@@ -79,12 +79,12 @@ export class AreasPropertiesListener {
         const openWebsiteProperty: string | undefined = property.link;
         const websiteClosableProperty: boolean | undefined = property.closable;
         const websiteTriggerProperty: string | undefined = property.trigger;
+        const allowApiProperty: boolean | undefined = property.allowAPI;
+        const websiteWidthProperty: number | undefined = property.width;
+        const websitePolicyProperty: string | undefined = property.policy;
+        let websiteTriggerMessageProperty: string | undefined = property.triggerMessage;
         // TODO:
-        let allowApiProperty: boolean | undefined;
-        let websitePolicyProperty: string | undefined;
-        let websiteWidthProperty: number | undefined;
         let websitePositionProperty: number | undefined;
-        let websiteTriggerMessageProperty: string | undefined;
 
         const actionId = "openWebsite-" + (Math.random() + 1).toString(36).substring(7);
 
