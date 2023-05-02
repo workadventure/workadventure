@@ -160,6 +160,9 @@
 
 <style lang="scss">
     .item-picker {
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
         align-content: center;
         .item-filter {
             .filter-input {
@@ -207,6 +210,7 @@
         .item-variant-picker-container {
             overflow-y: hidden;
             height: 5em;
+            min-height: 80px;
         }
         .color-container {
             display: flex;
