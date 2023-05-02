@@ -1,0 +1,40 @@
+{
+    "collectionName": "LimeZu Modern Exterior",
+    "tags": [
+        "LimeZu",
+        "Modern",
+        "Exterior"
+    ],
+    "collection": [
+        {
+            "name": "Wood bench",
+            "tags": [
+                "wood",
+                "bench"
+            ],
+            "imagePath": "LimeZu_Modern_Exterior/Wood_bench__Down__#e0b870__wood_bench.png",
+            "direction": "Down",
+            "color": "#e0b870"
+        },
+        {
+            "name": "Wood bench",
+            "tags": [
+                "wood",
+                "bench"
+            ],
+            "imagePath": "LimeZu_Modern_Exterior/Wood_bench__Left__#e0b870__wood_bench.png",
+            "direction": "Left",
+            "color": "#e0b870"
+        },
+        {
+            "name": "Wood bench",
+            "tags": [
+                "wood",
+                "bench"
+            ],
+            "imagePath": "LimeZu_Modern_Exterior/Wood_bench__Right__#e0b870__wood_bench.png",
+            "direction": "Right",
+            "color": "#e0b870"
+        }
+    ]
+}
