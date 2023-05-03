@@ -14,6 +14,10 @@ class Menu {
         await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).toHaveClass(/border-top-light/);
     }
 
+    async toggleMegaphoneButton(page: Page) {
+        await page.locator('.bottom-action-bar .bottom-action-button #megaphone').click();
+    }
+
     async isThereMegaphoneButton(page: Page) {
         await expect(await page.locator('.bottom-action-bar .bottom-action-button #megaphone')).toBeDefined();
     }

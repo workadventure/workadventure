@@ -40,7 +40,10 @@ test.describe('Map editor', () => {
     // Megaphone should be displayed and usable by current users
     await Menu.isThereMegaphoneButton(page);
     await Menu.isThereMegaphoneButton(page2);
-    // TODO : Add test if sound is correctly played
+
+    await Menu.toggleMegaphoneButton(page);
+
+    // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     // TODO : Add test is conference is correctly opened
     // TODO : Add test if the megaphone is correctly displayed in the map of other users
   });
