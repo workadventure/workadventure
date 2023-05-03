@@ -30,7 +30,7 @@ class BroadcastSpace extends Space {
             this.users.subscribe((users) => {
                 if (users.size === 0) {
                     if (this.jitsiConference !== undefined) {
-                        limit(() => this.jitsiConference?.leave())
+                        limit(() => this.jitsiConference?.leave("Nobody is streaming anymore ..."))
                             .then(() => {
                                 this.jitsiConference = undefined;
                             })

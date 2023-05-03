@@ -274,7 +274,14 @@ export class JitsiConferenceWrapper {
             });
             return new Map<string, JitsiTrackWrapper>();
         });
-        return this.jitsiConference.leave(reason);
+        return this.jitsiConference.leave(reason).then(() => {
+            if (this.tracks.audio) {
+                void this.handleTrack(this.tracks.audio, undefined);
+            }
+            if(this.tracks.video) {
+                void this.handleTrack(this.tracks.video, undefined);
+            }
+        });
     }
 
     private async createLocalTracks(types: DeviceType[]): Promise<JitsiLocalTrack[]> {

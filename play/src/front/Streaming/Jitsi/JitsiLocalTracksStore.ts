@@ -4,11 +4,11 @@
 // - at least one Jitsi conference requires to be broadcast
 
 import { derived, Readable } from "svelte/store";
-import { jitsiConferencesStore } from "./JitsiConferencesStore";
-import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
-import { DeviceType } from "./JitsiConferenceWrapper";
-import { failure, Result, success } from "@workadventure/map-editor";
 import { CreateLocalTracksOptions } from "lib-jitsi-meet/types/hand-crafted/JitsiMeetJS";
+import { failure, Result, success } from "@workadventure/map-editor";
+import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+import { jitsiConferencesStore } from "./JitsiConferencesStore";
+import { DeviceType } from "./JitsiConferenceWrapper";
 import { JitsiLocalTracks } from "./JitsiLocalTracks";
 
 /**
