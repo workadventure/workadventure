@@ -1,17 +1,17 @@
 <script lang="ts">
+    import { afterUpdate, onDestroy, onMount } from "svelte";
+    import { Color } from "@workadventure/shared-utils";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 
-    import { afterUpdate, onDestroy, onMount } from "svelte";
     import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { JitsiTrackWrapper } from "../../Streaming/Jitsi/JitsiTrackWrapper";
     import microphoneOffImg from "../images/microphone-off.png";
 
-    import { Color } from "@workadventure/shared-utils";
-    import UserTag from "./UserTag.svelte";
     import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { Streamable } from "../../Stores/StreamableCollectionStore";
     import SoundMeterWidgetWrapper from "../SoundMeterWidgetWrapper.svelte";
+    import UserTag from "./UserTag.svelte";
 
     export let clickable = false;
     export let peer: JitsiTrackWrapper;
@@ -66,6 +66,7 @@
 
 <div
     id="container"
+    class="jitsi-video"
     bind:this={videoContainer}
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
