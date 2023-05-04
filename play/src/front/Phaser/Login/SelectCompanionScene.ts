@@ -9,6 +9,8 @@ import { waScaleManager } from "../Services/WaScaleManager";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { companionListMetakey, CompanionTexturesLoadingManager } from "../Companion/CompanionTexturesLoadingManager";
+import {CompanionTextures} from "../Companion/CompanionTextures";
+import {collectionsSizeStore, selectedCollection} from "../../Stores/SelectCharacterSceneStore";
 import { EnableCameraSceneName } from "./EnableCameraScene";
 import { ResizableScene } from "./ResizableScene";
 
@@ -18,7 +20,15 @@ export class SelectCompanionScene extends ResizableScene {
     private selectedCompanion!: Phaser.Physics.Arcade.Sprite;
     private companions: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
     private companionModels: Array<CompanionTexture> = [];
+    private companionCollection:  Array<CompanionCollectionList> = [];
 
+    private selectedGridItemIndex?: number;
+
+    private gridRowsCount = 1;
+
+    private companionCollectionIndex = 0;
+    private companionTextures: CompanionTextures;
+    private companionCollectionKeys: string[] = [];
     private currentCompanion = 0;
     private pointerClicked = false;
     private pointerTimer = 0;
@@ -29,6 +39,7 @@ export class SelectCompanionScene extends ResizableScene {
         super({
             key: SelectCompanionSceneName,
         });
+        this.companionTextures = new CompanionTextures();
         this.loader = new Loader(this);
         this.superLoad = new SuperLoaderPlugin(this);
     }
@@ -39,19 +50,17 @@ export class SelectCompanionScene extends ResizableScene {
         const companionLoadingManager = new CompanionTexturesLoadingManager(this.superLoad, this.load);
 
         companionLoadingManager.loadTextures((collections: CompanionCollectionList) => {
-            collections.companion.collections.forEach((list) => {
-                list.textures.forEach((texture) => {
-                    this.companionModels.push(texture);
-                    companionLoadingManager.loadByTexture(texture);
-                });
-            });
+            this.companionTextures.mapTexturesMetadataIntoResources(collections);
+            collectionsSizeStore.set(this.companionTextures.getCollectionsKeys().length);
+            this.companionModels = companionLoadingManager.loadModels(this.load, collections);
         });
         this.loader.addLoader();
     }
 
     create() {
         selectCompanionSceneVisibleStore.set(true);
-
+        this.companionCollectionKeys = this.companionTextures.getCollectionsKeys();
+        selectedCollection.set(this.getSelectedCollectionName());
         waScaleManager.saveZoom();
         waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 2 : 1;
 
@@ -175,6 +184,31 @@ export class SelectCompanionScene extends ResizableScene {
         }
         this.currentCompanion -= 1;
         this.moveCompanion();
+    }
+
+    public getSelectedCollectionName(): string {
+        return this.companionCollectionKeys[this.companionCollectionIndex] ?? "";
+    }
+
+    public selectPreviousCompanionCollection() {
+        this.companionCollectionIndex = (this.companionCollectionIndex + 1) % this.companionCollectionKeys.length;
+        selectedCollection.set(this.getSelectedCollectionName());
+        // this.moveCompanion();
+    }
+
+    public selectNextCompanionCollection() {
+        if (this.companionCollectionKeys.length === 1) {
+            return;
+        }
+        this.companionCollectionIndex =
+            this.companionCollectionIndex - 1 < 0 ? this.companionCollectionKeys.length - 1 : this.companionCollectionIndex - 1;
+        selectedCollection.set(this.getSelectedCollectionName());
+        // this.moveCompanion();
+    }
+
+    public populateCompanionCollection() {
+        // this.companionCollectionKeys = Object.keys(companionCollectionStore.get());
+        // this.companionCollectionIndex = this.companionCollectionKeys.indexOf(selectedCollection.get());
     }
 
     private defineSetupCompanion(num: number) {

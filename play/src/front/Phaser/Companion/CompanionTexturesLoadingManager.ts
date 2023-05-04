@@ -1,18 +1,21 @@
 import CancelablePromise from "cancelable-promise";
-import { CompanionTexture, CompanionCollectionList, companionCollectionList } from "@workadventure/messages";
-import { gameManager } from "../Game/GameManager";
-import { localUserStore } from "../../Connexion/LocalUserStore";
-import type { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
-import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
+import {CompanionTexture, CompanionCollectionList, companionCollectionList} from "@workadventure/messages";
+import {gameManager} from "../Game/GameManager";
+import {localUserStore} from "../../Connexion/LocalUserStore";
+import type {SuperLoaderPlugin} from "../Services/SuperLoaderPlugin";
+import {ABSOLUTE_PUSHER_URL} from "../../Enum/ComputedConst";
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
+import {CompanionTextures} from "./CompanionTextures";
 
 export function companionListMetakey() {
     return "companion-list" + gameManager.currentStartedRoom.href;
 }
 
 let companionTextureList: CompanionCollectionList | null = null;
+
 export class CompanionTexturesLoadingManager {
-    constructor(private superLoad: SuperLoaderPlugin, private loader: LoaderPlugin) {}
+    constructor(private superLoad: SuperLoaderPlugin, private loader: LoaderPlugin) {
+    }
 
     loadTextures(processListCallback: (_l: CompanionCollectionList) => void) {
         if (companionTextureList) return processListCallback(companionTextureList);
@@ -65,10 +68,45 @@ export class CompanionTexturesLoadingManager {
         });
     }
 
-    public loadByTexture(texture: CompanionTexture, onLoaded: (_textureId: string) => void = () => {}) {
+   // public lazyLoadCompanionTextures = (
+   //      superLoaderPlugin: SuperLoaderPlugin,
+   //      texture: CompanionTexture
+   //  ): CancelablePromise<string[]> => {
+   //      const promisesList: CancelablePromise<Texture>[] = [];
+   //      for (const texture of textures) {
+   //          promisesList.push(
+   //              superLoaderPlugin.spritesheet(texture.id, texture.img, {
+   //                  frameWidth: 32,
+   //                  frameHeight: 32,
+   //              })
+   //          );
+   //      }
+   //      const returnPromise: CancelablePromise<Texture[]> = CancelablePromise.all(promisesList);
+   //
+   //      return returnPromise.then(() =>
+   //          textures.map((key) => {
+   //              return key.id;
+   //          })
+   //      );
+   //  };
+
+    loadModels(load: LoaderPlugin, collections: CompanionCollectionList): Array<CompanionTexture> {
+        const textures: Array<CompanionTexture> = [];
+        collections.companion.collections.forEach((list) => {
+            list.textures.forEach((texture) => {
+                textures.push(texture)
+                load.spritesheet(texture.id, texture.url, { frameWidth: 32, frameHeight: 32 });
+                // this.loadByTexture(texture);
+            });
+        });
+        return textures;
+    }
+
+    public loadByTexture(texture: CompanionTexture, onLoaded: (_textureId: string) => void = () => {
+    }) {
         if (this.loader.textureManager.exists(texture.id)) return onLoaded(texture.id);
 
-        this.loader.spritesheet(texture.id, texture.url, { frameWidth: 32, frameHeight: 32, endFrame: 12 });
+        this.loader.spritesheet(texture.id, texture.url, {frameWidth: 32, frameHeight: 32, endFrame: 12});
         this.loader.once(`filecomplete-spritesheet-${texture.id}`, () => onLoaded(texture.id));
     }
 }

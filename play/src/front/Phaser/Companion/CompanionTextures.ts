@@ -1,14 +1,41 @@
+import {CompanionCollectionList} from "@workadventure/messages";
+
 export interface CompanionResourceDescriptionInterface {
-    name: string;
+    id: string;
     img: string;
-    behaviour: "dog" | "cat";
+    behaviour?: "dog" | "cat";
+}
+export class CompanionTextures {
+    private companionCollections = new Map<string, CompanionResourceDescriptionInterface[]>;
+
+    public loadCompanionTexturesMetadata(metadata: CompanionCollectionList): void {
+        this.mapTexturesMetadataIntoResources(metadata);
+    }
+
+    public getTexturesResources(): CompanionResourceDescriptionInterface[] | undefined {
+        return this.companionCollections.get("default");
+    }
+
+    public getCollectionsKeys(): string[] {
+        return Array.from(this.companionCollections.keys());
+    }
+
+    public getCompanionCollectionTextures(key: string): CompanionResourceDescriptionInterface[] {
+        return this.companionCollections.get(key) ?? [];
+    }
+
+    public mapTexturesMetadataIntoResources(metadata: CompanionCollectionList): void {
+        if(!metadata){
+            return;
+        }
+        for (const collection of metadata.companion.collections) {
+            const textures: CompanionResourceDescriptionInterface[] = [];
+            for (const texture of collection.textures) {
+                textures.push({ id: texture.id, img: texture.url});
+                this.companionCollections.set(collection.name, textures);
+            }
+        }
+    }
 }
 
-export const COMPANION_RESOURCES: CompanionResourceDescriptionInterface[] = [
-    { name: "dog1", img: "resources/characters/pipoya/Dog 01-1.png", behaviour: "dog" },
-    { name: "dog2", img: "resources/characters/pipoya/Dog 01-2.png", behaviour: "dog" },
-    { name: "dog3", img: "resources/characters/pipoya/Dog 01-3.png", behaviour: "dog" },
-    { name: "cat1", img: "resources/characters/pipoya/Cat 01-1.png", behaviour: "cat" },
-    { name: "cat2", img: "resources/characters/pipoya/Cat 01-2.png", behaviour: "cat" },
-    { name: "cat3", img: "resources/characters/pipoya/Cat 01-3.png", behaviour: "cat" },
-];
+
