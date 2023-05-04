@@ -67,43 +67,12 @@ export class CompanionTexturesLoadingManager {
         });
     }
 
-    // public lazyLoadCompanionTextures = (
-    //      superLoaderPlugin: SuperLoaderPlugin,
-    //      texture: CompanionTexture
-    //  ): CancelablePromise<string[]> => {
-    //      const promisesList: CancelablePromise<Texture>[] = [];
-    //      for (const texture of textures) {
-    //          promisesList.push(
-    //              superLoaderPlugin.spritesheet(texture.id, texture.img, {
-    //                  frameWidth: 32,
-    //                  frameHeight: 32,
-    //              })
-    //          );
-    //      }
-    //      const returnPromise: CancelablePromise<Texture[]> = CancelablePromise.all(promisesList);
-    //
-    //      return returnPromise.then(() =>
-    //          textures.map((key) => {
-    //              return key.id;
-    //          })
-    //      );
-    //  };
-
     loadModels(load: LoaderPlugin, companionTextures: CompanionTextures): CompanionResourceDescriptionInterface[] {
         const returnArray = Object.values(companionTextures.getCompanionResources());
         returnArray.forEach((companionResource) => {
             load.spritesheet(companionResource.id, companionResource.img, { frameWidth: 32, frameHeight: 32 });
         });
         return returnArray;
-        // const textures: Array<CompanionTexture> = [];
-        // collections.companion.collections.forEach((list) => {
-        //     list.textures.forEach((texture) => {
-        //         textures.push(texture)
-        //         load.spritesheet(texture.id, texture.url, { frameWidth: 32, frameHeight: 32 });
-        //         // this.loadByTexture(texture);
-        //     });
-        // });
-        // return textures;
     }
 
     public loadByTexture(texture: CompanionTexture, onLoaded: (_textureId: string) => void = () => {}) {

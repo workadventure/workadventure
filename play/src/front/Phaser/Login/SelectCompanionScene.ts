@@ -95,7 +95,6 @@ export class SelectCompanionScene extends ResizableScene {
     }
 
     public selectCompanion(): void {
-        console.log(this.companionCurrentCollection);
         localUserStore.setCompanion(this.companionCurrentCollection[this.currentCompanion].id);
         gameManager.setCompanion(this.companionCurrentCollection[this.currentCompanion].id);
 
@@ -115,7 +114,6 @@ export class SelectCompanionScene extends ResizableScene {
         this.companionCurrentCollection = this.companionTextures.getCompanionCollectionTextures(
             this.getSelectedCollectionName()
         );
-        console.log("textures: ", this.companionCurrentCollection);
         this.companionCurrentCollection.forEach((companionResource, index) => {
             const [middleX, middleY] = this.getCompanionPosition();
             const companion = this.physics.add.sprite(middleX, middleY, companionResource.id, 0);
@@ -137,8 +135,6 @@ export class SelectCompanionScene extends ResizableScene {
                 this.pointerClicked = true;
                 this.pointerTimer = 250;
                 this.currentCompanion = index;
-                console.log(this.currentCompanion);
-                console.log(companion);
                 this.moveCompanion();
             });
 
@@ -155,12 +151,10 @@ export class SelectCompanionScene extends ResizableScene {
         this.selectedCompanion?.anims.pause();
         const companion = this.companions[this.currentCompanion];
         companion.play(this.companionCurrentCollection[this.currentCompanion].id);
-        console.log(this.companionCurrentCollection);
         this.selectedCompanion = companion;
     }
 
     private moveCompanion() {
-        console.log("move companion", this.companions);
         for (let i = 0; i < this.companions.length; i++) {
             const companion = this.companions[i];
             this.setUpCompanion(companion, i);
@@ -169,7 +163,6 @@ export class SelectCompanionScene extends ResizableScene {
     }
 
     public moveToRight() {
-        console.log(this.companions);
         if (this.currentCompanion === this.companions.length - 1) {
             return;
         }
@@ -186,14 +179,11 @@ export class SelectCompanionScene extends ResizableScene {
     }
 
     public getSelectedCollectionName(): string {
-        console.log(this.companionCollectionKeys);
-        console.log(this.selectedCollectionIndex);
         return this.companionCollectionKeys[this.selectedCollectionIndex] ?? "";
     }
 
     public selectPreviousCompanionCollection() {
         this.selectedCollectionIndex = (this.selectedCollectionIndex + 1) % this.companionCollectionKeys.length;
-        console.log(this.selectedCollectionIndex);
         selectedCollection.set(this.getSelectedCollectionName());
         this.populateCompanionCollection();
     }
@@ -206,7 +196,6 @@ export class SelectCompanionScene extends ResizableScene {
             this.selectedCollectionIndex - 1 < 0
                 ? this.companionCollectionKeys.length - 1
                 : this.selectedCollectionIndex - 1;
-        console.log(this.selectedCollectionIndex);
         selectedCollection.set(this.getSelectedCollectionName());
         this.populateCompanionCollection();
     }
@@ -216,12 +205,8 @@ export class SelectCompanionScene extends ResizableScene {
         this.companions = [];
         this.selectedCompanion = null;
         this.currentCompanion = 0;
-        console.log(this.selectedCompanion);
         this.createCurrentCompanion();
         this.moveCompanion();
-        // this.updateSelectedCompanion();
-        // this.companionCollectionKeys = Object.keys(companionCollectionStore.get());
-        // this.companionCollectionIndex = this.companionCollectionKeys.indexOf(selectedCollection.get());
     }
 
     private defineSetupCompanion(num: number) {

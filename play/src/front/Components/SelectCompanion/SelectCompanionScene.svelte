@@ -36,9 +36,6 @@
 </script>
 
 <form class="selectCompanionScene">
-    <!--    <section class="category tw-flex tw-flex-row tw-justify-center">-->
-
-    <!--    </section>-->
     <section class="text-center">
         <h2 class="tw-text-white tw-text-2xl">{$LL.companion.select.title()}</h2>
         {#if $collectionsSizeStore > 1 && $selectedCollection}
