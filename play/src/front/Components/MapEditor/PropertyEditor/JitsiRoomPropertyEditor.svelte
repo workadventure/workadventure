@@ -49,6 +49,28 @@
                 on:blur={onMapEditorInputUnfocus}
             />
         </div>
+        <div class="value-switch">
+            <label for="noPrefix">{$LL.mapEditor.properties.jitsiProperties.noPrefix()}</label>
+            <input
+                id="noPrefix"
+                type="checkbox"
+                class="input-switch"
+                bind:checked={property.noPrefix}
+                on:change={onValueChange}
+            />
+        </div>
+        <div class="value-input">
+            <label for="jitsiUrl">{$LL.mapEditor.properties.jitsiProperties.jitsiUrl()}</label>
+            <input
+                id="jitsiUrl"
+                type="text"
+                placeholder={$LL.mapEditor.properties.jitsiProperties.jitsiUrlPlaceholder()}
+                bind:value={property.jitsiUrl}
+                on:change={onValueChange}
+                on:focus={onMapEditorInputFocus}
+                on:blur={onMapEditorInputUnfocus}
+            />
+        </div>
         {#if !property.hideButtonLabel}
             <div class="value-input">
                 <label for="jitsiButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
@@ -83,16 +105,6 @@
                 />
             </div>
         {/if}
-        <div class="value-switch">
-            <label for="noPrefix">{$LL.mapEditor.properties.jitsiProperties.noPrefix()}</label>
-            <input
-                id="noPrefix"
-                type="checkbox"
-                class="input-switch"
-                bind:checked={property.noPrefix}
-                on:change={onValueChange}
-            />
-        </div>
         <button
             on:click={() => {
                 jitsiConfigModalOpened = true;

@@ -204,7 +204,7 @@ export class AreasPropertiesListener {
 
     private handleJitsiRoomPropertyOnEnter(property: JitsiRoomPropertyData): void {
         const openJitsiRoomFunction = async () => {
-            const roomName = Jitsi.slugifyJitsiRoomName(property.roomName, this.scene.roomUrl, property.noPrefix);
+            const roomName = Jitsi.slugifyJitsiRoomName(property.roomName, this.scene.roomUrl, !property.noPrefix);
             let jitsiUrl = property.jitsiUrl;
 
             let jwt: string | undefined;

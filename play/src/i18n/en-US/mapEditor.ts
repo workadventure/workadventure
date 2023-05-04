@@ -25,6 +25,8 @@ const mapEditor: BaseTranslation = {
         jitsiProperties: {
             label: "Jitsi Room",
             roomNameLabel: "Room Name",
+            jitsiUrl: "Jitsi URL",
+            jitsiUrlPlaceholder: "meet.jit.si",
             roomNamePlaceholder: "Room Name",
             defaultButtonLabel: "Open Jitsi Room",
             audioMutedLabel: "Muted by default",
