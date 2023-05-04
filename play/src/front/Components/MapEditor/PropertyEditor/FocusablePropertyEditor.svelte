@@ -14,7 +14,11 @@
     }
 </script>
 
-<PropertyEditorBase>
+<PropertyEditorBase
+    on:close={() => {
+        dispatch("close");
+    }}
+>
     <span slot="header">
         {$LL.mapEditor.properties.focusableProperties.label()}
     </span>

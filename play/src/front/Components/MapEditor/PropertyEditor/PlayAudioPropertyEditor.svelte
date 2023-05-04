@@ -3,7 +3,7 @@
     import { PlayAudioPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
-    import CloseButton from "./CloseButton.svelte";
+    import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: PlayAudioPropertyData;
 
@@ -14,55 +14,44 @@
     }
 </script>
 
-<div class="property-settings-container">
-    <div class="header">
+<PropertyEditorBase
+    on:close={() => {
+        dispatch("close");
+    }}
+>
+    <span slot="header">
         {$LL.mapEditor.properties.audioProperties.label()}
-        <CloseButton
-            on:click={() => {
-                dispatch("close");
-            }}
-        />
-    </div>
-    <div class="value-input">
-        <label for="audioLink">{$LL.mapEditor.properties.audioProperties.audioLinkLabel()}</label>
-        <input
-            id="audioLink"
-            type="text"
-            placeholder={$LL.mapEditor.properties.audioProperties.audioLinkPlaceholder()}
-            bind:value={property.audioLink}
-            on:change={onValueChange}
-            on:focus={onMapEditorInputFocus}
-            on:blur={onMapEditorInputUnfocus}
-        />
-    </div>
-    {#if !property.hideButtonLabel}
+    </span>
+    <span slot="content">
         <div class="value-input">
-            <label for="audioButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
+            <label for="audioLink">{$LL.mapEditor.properties.audioProperties.audioLinkLabel()}</label>
             <input
-                id="audioButtonLabel"
+                id="audioLink"
                 type="text"
-                bind:value={property.buttonLabel}
+                placeholder={$LL.mapEditor.properties.audioProperties.audioLinkPlaceholder()}
+                bind:value={property.audioLink}
                 on:change={onValueChange}
                 on:focus={onMapEditorInputFocus}
                 on:blur={onMapEditorInputUnfocus}
             />
         </div>
-    {/if}
-</div>
+        {#if !property.hideButtonLabel}
+            <div class="value-input">
+                <label for="audioButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
+                <input
+                    id="audioButtonLabel"
+                    type="text"
+                    bind:value={property.buttonLabel}
+                    on:change={onValueChange}
+                    on:focus={onMapEditorInputFocus}
+                    on:blur={onMapEditorInputUnfocus}
+                />
+            </div>
+        {/if}
+    </span>
+</PropertyEditorBase>
 
 <style lang="scss">
-    .header {
-        display: flex;
-        font-size: 25px;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .property-settings-container {
-        border: 1px solid grey;
-        border-radius: 5px;
-        padding: 5px;
-    }
     .value-input {
         display: flex;
         width: 100%;
