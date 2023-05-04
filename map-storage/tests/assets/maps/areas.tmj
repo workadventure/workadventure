@@ -216,7 +216,7 @@
                  "text":
                     {
                      "halign":"center",
-                     "text":"OPEN WEBSITE IN NEW TAB",
+                     "text":"OPEN 2 WEBSITES IN NEW TAB",
                      "wrap":true
                     },
                  "visible":true,
@@ -396,6 +396,23 @@
                  "width":99.2734,
                  "x":862.24962738872,
                  "y":111.920571142042
+                }, 
+                {
+                 "class":"area",
+                 "height":123.319,
+                 "id":322,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"openTab",
+                         "type":"string",
+                         "value":"https:\/\/google.pl"
+                        }],
+                 "rotation":0,
+                 "visible":true,
+                 "width":105.646,
+                 "x":742.081064569136,
+                 "y":97.5130871151709
                 }],
          "opacity":1,
          "properties":[
@@ -410,7 +427,7 @@
          "y":0
         }],
  "nextlayerid":41,
- "nextobjectid":322,
+ "nextobjectid":323,
  "orientation":"orthogonal",
  "properties":[
         {

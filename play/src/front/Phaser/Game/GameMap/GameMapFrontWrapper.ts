@@ -904,14 +904,15 @@ export class GameMapFrontWrapper {
     }
 
     private getProperties(key: number): Map<string, string | boolean | number> {
-        let properties = new Map<string, string | boolean | number>();
+        const properties = new Map<string, string | boolean | number>();
+        // NOTE: WE DO NOT WANT AREAS TO BE THE PART OF THE OLD PROPERTIES CHANGE SYSTEM
         // CHECK FOR AREAS PROPERTIES
-        if (this.position) {
-            const areasProperties = this.gameMap.getGameMapAreas()?.getProperties(this.position);
-            if (areasProperties) {
-                properties = areasProperties;
-            }
-        }
+        // if (this.position) {
+        //     const areasProperties = this.gameMap.getGameMapAreas()?.getProperties(this.position);
+        //     if (areasProperties) {
+        //         properties = areasProperties;
+        //     }
+        // }
 
         // CHECK FOR DYNAMIC AREAS PROPERTIES
         if (this.position) {

@@ -29,6 +29,13 @@ const mapEditor: BaseTranslation = {
             defaultButtonLabel: "Open Jitsi Room",
             audioMutedLabel: "Muted by default",
             moreOptionsLabel: "More Options",
+            trigger: "Trigger",
+            triggerMessage: "Trigger Message",
+            triggerShowImmediately: "Show Immediately",
+            triggerOnClick: "On Click",
+            triggerOnAction: "On Action",
+            closable: "Closable",
+            noPrefix: "No Prefix",
             jitsiRoomConfig: {
                 addConfig: "Add an option",
                 startWithAudioMuted: "Start with microphone muted",

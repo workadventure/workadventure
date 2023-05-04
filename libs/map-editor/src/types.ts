@@ -50,6 +50,11 @@ export const StartPropertyData = PropertyBase.extend({
 export const JitsiRoomPropertyData = PropertyBase.extend({
     type: z.literal("jitsiRoomProperty"),
     roomName: z.string(),
+    jitsiUrl: z.string().optional(),
+    closable: z.boolean().optional(),
+    trigger: z.union([z.literal("onaction"), z.literal("onicon")]).optional(),
+    triggerMessage: z.string().optional(),
+    noPrefix: z.boolean().optional(),
     jitsiRoomConfig: JitsiRoomConfigData,
 });
 

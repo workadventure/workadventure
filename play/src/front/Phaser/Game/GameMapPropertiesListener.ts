@@ -85,7 +85,11 @@ export class GameMapPropertiesListener {
                 }
             }
             const openJitsiRoomFunction = async () => {
-                const roomName = Jitsi.slugifyJitsiRoomName(newValue.toString(), this.scene.roomUrl, allProps);
+                const roomName = Jitsi.slugifyJitsiRoomName(
+                    newValue.toString(),
+                    this.scene.roomUrl,
+                    allProps.has(GameMapProperties.JITSI_NO_PREFIX)
+                );
                 let jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
 
                 let jwt: string | undefined;

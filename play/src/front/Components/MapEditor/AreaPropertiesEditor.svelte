@@ -52,6 +52,7 @@
                     id,
                     type,
                     jitsiRoomConfig: {},
+                    hideButtonLabel: true,
                     roomName: "JITSI ROOM",
                 };
             case "openWebsite":
@@ -218,6 +219,10 @@
     .properties-container {
         overflow-y: auto;
         overflow-x: hidden;
+    }
+
+    .property-box {
+        margin-top: 5px;
     }
 
     .properties-container::-webkit-scrollbar {

@@ -1,5 +1,11 @@
 import { get } from "svelte/store";
-import { AreaData, FocusablePropertyData, OpenWebsitePropertyData } from "@workadventure/map-editor";
+import {
+    AreaData,
+    FocusablePropertyData,
+    JitsiRoomPropertyData,
+    OpenWebsitePropertyData,
+} from "@workadventure/map-editor";
+import { Jitsi } from "@workadventure/shared-utils";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWesbite";
 import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
@@ -10,7 +16,9 @@ import { localUserStore } from "../../../Connexion/LocalUserStore";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../../WebRtc/LayoutManager";
 import { LL } from "../../../../i18n/i18n-svelte";
 import { GameScene } from "../GameScene";
-import { inOpenWebsite } from "../../../Stores/MediaStore";
+import { inJitsiStore, inOpenWebsite } from "../../../Stores/MediaStore";
+import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
+import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -37,11 +45,15 @@ export class AreasPropertiesListener {
                         if (property.newTab) {
                             break;
                         }
-                        this.handleOpenWebsitePropertiesOnEnter(property);
+                        this.handleOpenWebsitePropertyOnEnter(property);
                         break;
                     }
                     case "focusable": {
-                        this.handleFocusablePropertiesOnEnter(area.x, area.y, area.width, area.height, property);
+                        this.handleFocusablePropertysOnEnter(area.x, area.y, area.width, area.height, property);
+                        break;
+                    }
+                    case "jitsiRoomProperty": {
+                        this.handleJitsiRoomPropertyOnEnter(property);
                         break;
                     }
                     default: {
@@ -67,6 +79,10 @@ export class AreasPropertiesListener {
                         this.handleFocusablePropertiesOnLeave(property);
                         break;
                     }
+                    case "jitsiRoomProperty": {
+                        this.handleJitsiRoomPropertyOnLeave(property);
+                        break;
+                    }
                     default: {
                         break;
                     }
@@ -75,7 +91,7 @@ export class AreasPropertiesListener {
         }
     }
 
-    private handleOpenWebsitePropertiesOnEnter(property: OpenWebsitePropertyData): void {
+    private handleOpenWebsitePropertyOnEnter(property: OpenWebsitePropertyData): void {
         const openWebsiteProperty: string | undefined = property.link;
         const websiteClosableProperty: boolean | undefined = property.closable;
         const websiteTriggerProperty: string | undefined = property.trigger;
@@ -164,7 +180,7 @@ export class AreasPropertiesListener {
         }
     }
 
-    private handleFocusablePropertiesOnEnter(
+    private handleFocusablePropertysOnEnter(
         x: number,
         y: number,
         width: number,
@@ -184,6 +200,72 @@ export class AreasPropertiesListener {
             },
             zoomMargin
         );
+    }
+
+    private handleJitsiRoomPropertyOnEnter(property: JitsiRoomPropertyData): void {
+        const openJitsiRoomFunction = async () => {
+            const roomName = Jitsi.slugifyJitsiRoomName(property.roomName, this.scene.roomUrl, property.noPrefix);
+            let jitsiUrl = property.jitsiUrl;
+
+            let jwt: string | undefined;
+            if (JITSI_PRIVATE_MODE && !jitsiUrl) {
+                if (!this.scene.connection) {
+                    console.log("Cannot connect to Jitsi. No connection to Pusher server.");
+                    return;
+                }
+                const answer = await this.scene.connection.queryJitsiJwtToken(roomName);
+                jwt = answer.jwt;
+                jitsiUrl = answer.url;
+            }
+
+            let domain = jitsiUrl || JITSI_URL;
+            if (domain === undefined) {
+                throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
+            }
+
+            let domainWithoutProtocol = domain;
+            if (domain.substring(0, 7) !== "http://" && domain.substring(0, 8) !== "https://") {
+                domainWithoutProtocol = domain;
+                domain = `${location.protocol}//${domain}`;
+            } else {
+                if (domain.startsWith("http://")) {
+                    domainWithoutProtocol = domain.substring(7);
+                } else {
+                    domainWithoutProtocol = domain.substring(8);
+                }
+            }
+
+            inJitsiStore.set(true);
+
+            const closable = property.closable;
+
+            const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, closable);
+
+            coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
+            this.scene.initialiseJitsi(coWebsite, roomName, jwt, domainWithoutProtocol);
+
+            layoutManagerActionStore.removeAction("jitsi");
+        };
+
+        const jitsiTriggerValue = property.trigger;
+        const forceTrigger = localUserStore.getForceCowebsiteTrigger();
+        if (forceTrigger || jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
+            let message = property.triggerMessage;
+            if (message === undefined) {
+                message = get(LL).trigger.jitsiRoom();
+            }
+            layoutManagerActionStore.addAction({
+                uuid: "jitsi",
+                type: "message",
+                message: message,
+                callback: () => {
+                    openJitsiRoomFunction().catch((e) => console.error(e));
+                },
+                userInputManager: this.scene.userInputManager,
+            });
+        } else {
+            openJitsiRoomFunction().catch((e) => console.error(e));
+        }
     }
 
     private handleOpenWebsitePropertiesOnLeave(property: OpenWebsitePropertyData): void {
@@ -238,5 +320,15 @@ export class AreasPropertiesListener {
             return;
         }
         this.scene.getCameraManager().leaveFocusMode(this.scene.CurrentPlayer, 1000);
+    }
+
+    private handleJitsiRoomPropertyOnLeave(property: JitsiRoomPropertyData): void {
+        layoutManagerActionStore.removeAction("jitsi");
+        coWebsiteManager.getCoWebsites().forEach((coWebsite) => {
+            if (coWebsite instanceof JitsiCoWebsite) {
+                coWebsiteManager.closeCoWebsite(coWebsite);
+            }
+        });
+        inJitsiStore.set(false);
     }
 }

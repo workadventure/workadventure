@@ -42,7 +42,7 @@
             />
         </div>
         <div class="">
-            <label for="websiteWidth">{$LL.mapEditor.properties.linkProperties.width()}: {property.width}%</label>
+            <label for="websiteWidth">{$LL.mapEditor.properties.linkProperties.width()}: {property.width ?? 50}%</label>
             <input
                 id="websiteWidth"
                 type="range"
