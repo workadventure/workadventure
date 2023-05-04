@@ -3,19 +3,19 @@
     import type { Game } from "../../Phaser/Game/Game";
     import type { SelectCompanionScene } from "../../Phaser/Login/SelectCompanionScene";
     import { SelectCompanionSceneName } from "../../Phaser/Login/SelectCompanionScene";
-    import {collectionsSizeStore, selectedCollection} from "../../Stores/SelectCharacterSceneStore";
+    import { collectionsSizeStore, selectedCollection } from "../../Stores/SelectCharacterSceneStore";
 
     export let game: Game;
 
     const selectCompanionScene = game.scene.getScene(SelectCompanionSceneName) as SelectCompanionScene;
 
-    // function selectLeft() {
-    //     selectCompanionScene.moveToLeft();
-    // }
-    //
-    // function selectRight() {
-    //     selectCompanionScene.moveToRight();
-    // }
+    function selectLeft() {
+        selectCompanionScene.moveToLeft();
+    }
+
+    function selectRight() {
+        selectCompanionScene.moveToRight();
+    }
 
     function noCompanion() {
         selectCompanionScene.closeScene();
@@ -32,25 +32,36 @@
     function selectRightCollection() {
         selectCompanionScene.selectNextCompanionCollection();
     }
+    console.log(selectedCollection);
 </script>
 
 <form class="selectCompanionScene">
-<!--    <section class="category tw-flex tw-flex-row tw-justify-center">-->
+    <!--    <section class="category tw-flex tw-flex-row tw-justify-center">-->
 
-<!--    </section>-->
+    <!--    </section>-->
     <section class="text-center">
         <h2 class="tw-text-white tw-text-2xl">{$LL.companion.select.title()}</h2>
         {#if $collectionsSizeStore > 1 && $selectedCollection}
-            <button class="outline tw-mr-2 selectCharacterButton selectCharacterButtonLeft" on:click|preventDefault={selectLeftCollection}> &lt; </button>
+            <button
+                class="outline tw-mr-2 selectCompanionCollectionButton selectCharacterButtonLeft"
+                on:click|preventDefault={selectLeftCollection}
+            >
+                &lt;
+            </button>
             <strong class="category-text">{$selectedCollection}</strong>
-            <button class="outline tw-ml-2 selectCharacterButton selectCharacterButtonRight" on:click|preventDefault={selectRightCollection}> &gt; </button>
+            <button
+                class="outline tw-ml-2 selectCompanionCollectionButton selectCompanionButtonRight"
+                on:click|preventDefault={selectRightCollection}
+            >
+                &gt;
+            </button>
         {/if}
-<!--        <button class="outline selectCharacterButton selectCharacterButtonLeft" on:click|preventDefault={selectLeft}>-->
-<!--            &lt;-->
-<!--        </button>-->
-<!--        <button class="outline selectCharacterButton selectCharacterButtonRight" on:click|preventDefault={selectRight}>-->
-<!--            &gt;-->
-<!--        </button>-->
+        <button class="outline selectCharacterButton selectCharacterButtonLeft" on:click|preventDefault={selectLeft}>
+            &lt;
+        </button>
+        <button class="outline selectCharacterButton selectCharacterButtonRight" on:click|preventDefault={selectRight}>
+            &gt;
+        </button>
     </section>
     <section class="action tw-flex tw-flex-row tw-justify-center">
         <button href="/" class="outline tw-mr-2 selectCompanionSceneFormBack" on:click|preventDefault={noCompanion}
@@ -92,6 +103,11 @@
                 top: 33vh;
                 margin: 0;
             }
+
+            button.selectCompanionCollectionButton {
+                position: absolute;
+                margin: 0;
+            }
         }
 
         button.selectCharacterButtonLeft {
@@ -100,6 +116,11 @@
 
         button.selectCharacterButtonRight {
             right: 33vw;
+        }
+
+        button.selectCompanionButtonRight {
+            right: 33vw;
+            top: 4.5vh;
         }
     }
 

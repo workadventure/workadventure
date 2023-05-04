@@ -96,6 +96,8 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.selectedWoka = null;
         this.selectedCollectionIndex = 0;
         this.collectionKeys = this.playerTextures.getCollectionsKeys();
+        console.log("collectionKeys", this.collectionKeys);
+        console.log(this.getSelectedCollectionName());
         selectedCollection.set(this.getSelectedCollectionName());
 
         customizeAvailableStore.set(this.isCustomizationAvailable());
