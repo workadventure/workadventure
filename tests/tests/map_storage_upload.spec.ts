@@ -263,7 +263,7 @@ test.describe('Map-storage Upload API', () => {
                 directory: "/foo"
             }
         });
-        //await page.pause();
+
         await expect(uploadFile.ok()).toBeTruthy();
         await expect(uploadFileToDir.ok()).toBeTruthy();
 
@@ -481,7 +481,7 @@ test.describe('Map-storage Upload API', () => {
                     mimeType: "application/json",
                     buffer: Buffer.from(JSON.stringify({
                         version: "1.0.0",
-                        mapUrl: "http://maps.workadventure.localhost/tests/E2E/empty.json",
+                        mapUrl: `${(process.env.MAP_STORAGE_PROTOCOL ?? "http")}://maps.workadventure.localhost/tests/E2E/empty.json`,
                         areas: [],
                         entities: [],
                     })),
@@ -497,7 +497,7 @@ test.describe('Map-storage Upload API', () => {
                     mimeType: "application/json",
                     buffer: Buffer.from(JSON.stringify({
                         version: "1.0.0",
-                        mapUrl: "http://maps.workadventure.localhost/tests/E2E/empty.json",
+                        mapUrl: `${(process.env.MAP_STORAGE_PROTOCOL ?? "http")}://maps.workadventure.localhost/tests/E2E/empty.json`,
                         areas: [],
                         entities: [],
                     })),
@@ -510,16 +510,16 @@ test.describe('Map-storage Upload API', () => {
             'http://play.workadventure.localhost/~/map1.wam'
           );
         await login(page, 'Alice');
-      
+
         const newBrowser = await browser.browserType().launch();
         const page2 = await newBrowser.newPage();
-      
+
         await page2.goto(
           'http://play.workadventure.localhost/~/map2.wam'
         );
-      
+
         await login(page2, 'Bob');
-      
+
         // Let's trigger a reload of map 1 only
         const uploadFile3 = await request.put("map1.wam", {
             multipart: {

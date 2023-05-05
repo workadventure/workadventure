@@ -55,6 +55,55 @@
         <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 
         <script>
+            if (localStorage && localStorage.getItem("debug_throttle")) {
+                // This is a TEMPORARY TEST MODE that overloads setTimeout to detect when Chrome is throttling the page.
+                // If you see this message in the console, it means that Chrome is throttling the page.
+                console.log("Debug mode: setTimeout/setInterval are overloaded to detect when Chrome is throttling the page.")
+
+                // To test, see: https://docs.google.com/document/d/11FhKHRcABGS4SWPFGwoL6g0ALMqrFKapCk5ZTKKupEk/edit
+                // google-chrome --enable-features="IntensiveWakeUpThrottling:grace_period_seconds/10,OptOutZeroTimeoutTimersFromThrottling,AllowAggressiveThrottlingWithWebSocket"
+
+                var _ = setTimeout;
+                var __ = setInterval;
+                window.setTimeout = function (callback, delay) {
+                    const startTimestamp = Date.now();
+                    return _(() => {
+                        const endTimestamp = Date.now();
+                        // If the delay is more than 500ms longer than expected, it means that Chrome throttled the page.
+                        if (endTimestamp - startTimestamp > delay + 500) {
+                            console.warn(
+                                'setTimeout was throttled by Chrome! Delay was ' +
+                                (endTimestamp - startTimestamp) +
+                                'ms, but should have been ' +
+                                delay +
+                                'ms.'
+                            );
+                            console.trace();
+                        }
+                        callback();
+                    }, delay);
+                };
+                window.setInterval = function (callback, delay) {
+                    let timestamp = Date.now();
+                    return __(() => {
+                        const newTimestamp = Date.now();
+                        if (newTimestamp - timestamp > delay + 500) {
+                            console.warn(
+                                'setInterval was throttled by Chrome! Delay was ' +
+                                (newTimestamp - timestamp) +
+                                'ms, but should have been ' +
+                                delay +
+                                'ms.'
+                            );
+                            console.trace();
+                        }
+                        timestamp = newTimestamp;
+                        callback();
+                    }, delay);
+                };
+            }
+        </script>
+        <script>
             {{{ script }}}
         </script>
 

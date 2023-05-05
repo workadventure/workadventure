@@ -22,6 +22,7 @@ import { WokaSlot } from "../Components/SelectWoka/WokaSlot";
 import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
 import { gameManager } from "../Game/GameManager";
 import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
+import { batchGetUserMediaStore } from "../../Stores/MediaStore";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { CustomizeSceneName } from "./CustomizeScene";
 import { EnableCameraSceneName } from "./EnableCameraScene";
@@ -153,8 +154,10 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             return;
         }
         this.selectedWoka = null;
+        batchGetUserMediaStore.startBatch();
         myCameraStore.set(false);
         myMicrophoneStore.set(false);
+        batchGetUserMediaStore.commitChanges();
         this.scene.sleep(SelectCharacterSceneName);
         this.scene.run(CustomizeSceneName);
         selectCharacterSceneVisibleStore.set(false);

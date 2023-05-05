@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { Readable } from "svelte/store";
-    import { fly } from "svelte/transition";
+    import { onMount } from "svelte";
     import { PeerStatus, VideoPeer } from "../../WebRtc/VideoPeer";
     import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
@@ -31,9 +31,9 @@
 
     const gameScene = gameManager.getCurrentGameScene();
 
-    function triggerReposition() {
+    onMount(() => {
         gameScene.reposition();
-    }
+    });
 </script>
 
 {#if streamable instanceof VideoPeer}
@@ -48,13 +48,6 @@
             class:mozaic-duo={mozaicDuo}
             class:mozaic-full-width={mozaicSolo}
             class:mozaic-quarter={mozaicQuarter}
-            transition:fly={{ x: 200, duration: 250 }}
-            on:introend={() => {
-                triggerReposition();
-            }}
-            on:outroend={() => {
-                triggerReposition();
-            }}
         >
             <div class="{isHightlighted ? 'tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-flex screen-blocker">
                 <VideoOffBox peer={streamable} clickable={false} />
@@ -69,13 +62,6 @@
             class:mozaic-duo={mozaicDuo}
             class:mozaic-full-width={mozaicSolo}
             class:mozaic-quarter={mozaicQuarter}
-            transition:fly={{ x: 200, duration: 250 }}
-            on:introend={() => {
-                triggerReposition();
-            }}
-            on:outroend={() => {
-                triggerReposition();
-            }}
         >
             <div class="{isHightlighted ? 'tw-h-[32vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-flex screen-blocker">
                 <VideoMediaBox peer={streamable} clickable={isClickable} />
@@ -91,13 +77,6 @@
         class:mozaic-duo={mozaicDuo}
         class:mozaic-full-width={mozaicSolo}
         class:mozaic-quarter={mozaicQuarter}
-        transition:fly={{ x: 200, duration: 250 }}
-        on:introend={() => {
-            triggerReposition();
-        }}
-        on:outroend={() => {
-            triggerReposition();
-        }}
     >
         <div class="{isHightlighted ? 'tw-h-[41vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-h-full tw-flex screen-blocker">
             <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
@@ -133,13 +112,6 @@
         class:mozaic-duo={mozaicDuo}
         class:mozaic-full-width={mozaicSolo}
         class:mozaic-quarter={mozaicQuarter}
-        transition:fly={{ x: 200, duration: 250 }}
-        on:introend={() => {
-            triggerReposition();
-        }}
-        on:outroend={() => {
-            triggerReposition();
-        }}
     >
         <div
             class="{isHightlighted ? 'tw-h-[41vw] tw-mr-6' : 'tw-mx-auto'}   tw-w-full tw-h-full tw-flex screen-blocker"

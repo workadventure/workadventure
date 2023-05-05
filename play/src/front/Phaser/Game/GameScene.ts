@@ -397,6 +397,7 @@ export class GameScene extends DirtyScene {
         this.load.scenePlugin("AnimatedTiles", AnimatedTiles, "animatedTiles", "animatedTiles");
 
         if (this.wamUrlFile) {
+            const absoluteWamFileUrl = new URL(this.wamUrlFile, window.location.href).toString();
             this.superLoad
                 .json(
                     this.wamUrlFile,
@@ -405,7 +406,7 @@ export class GameScene extends DirtyScene {
                     undefined,
                     (key: string, type: string, wamFile: unknown) => {
                         this.wamFile = WAMFileFormat.parse(wamFile);
-                        this.mapUrlFile = new URL(this.wamFile.mapUrl, this.wamUrlFile).toString();
+                        this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
                         this.doLoadTMJFile(this.mapUrlFile);
                     }
                 )
@@ -2461,7 +2462,7 @@ ${escapedMessage}
                 PositionMessage_Direction.DOWN,
                 false,
                 this.companion,
-                this.companionLoadingManager?.lazyLoadByName(this.companion)
+                this.companionLoadingManager?.lazyLoadById(this.companion)
             );
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOverOutline(0x365dff);
@@ -2658,7 +2659,7 @@ ${escapedMessage}
             addPlayerData.position.moving,
             addPlayerData.visitCardUrl,
             addPlayerData.companion,
-            this.companionLoadingManager?.lazyLoadByName(addPlayerData.companion)
+            this.companionLoadingManager?.lazyLoadById(addPlayerData.companion)
         );
         if (addPlayerData.outlineColor !== undefined) {
             player.setApiOutlineColor(addPlayerData.outlineColor);

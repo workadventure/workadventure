@@ -4,6 +4,7 @@
     import { EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
     import {
         requestedCameraDeviceIdStore,
+        batchGetUserMediaStore,
         cameraListStore,
         localStreamStore,
         localVolumeStore,
@@ -70,11 +71,13 @@
     });
 
     onMount(() => {
-        //init the componenent to enable webcam and microphone
+        //init the component to enable webcam and microphone
+        batchGetUserMediaStore.startBatch();
         myCameraStore.set(true);
         myMicrophoneStore.set(true);
         requestedCameraState.enableWebcam();
         requestedMicrophoneState.enableMicrophone();
+        batchGetUserMediaStore.commitChanges();
     });
 
     function selectCamera() {

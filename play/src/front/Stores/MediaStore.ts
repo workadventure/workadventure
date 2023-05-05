@@ -75,6 +75,26 @@ export const requestedMicrophoneState = createRequestedMicrophoneState();
 export const enableCameraSceneVisibilityStore = createEnableCameraSceneVisibilityStore();
 
 /**
+ * GetUserMedia is impacted by a number of stores (proximityMeetingStore, myCameraStore, myMicrophoneStore, inExternalServiceStore, privacyShutdownStore...).
+ * Each time a change is done to one of these store, we will make a new GetUserMedia call.
+ * If we plan to do many changes at once, we want to call GetUserMedia only once.
+ *
+ * To do this, you can use this store.
+ * Use startBatch() to start a batch of changes (this will disable changes to GetUserMedia), and commitChanges() after the final change to call GetUserMedia.
+ */
+function createBatchGetUserMediaStore() {
+    const { subscribe, set } = writable(false);
+
+    return {
+        subscribe,
+        startBatch: () => set(true),
+        commitChanges: () => set(false),
+    };
+}
+
+export const batchGetUserMediaStore = createBatchGetUserMediaStore();
+
+/**
  * A store containing whether the webcam was enabled in the last 10 seconds
  */
 const enabledWebCam10secondsAgoStore = readable(false, function start(set) {
@@ -257,6 +277,38 @@ export const availabilityStatusStore = derived(
     AvailabilityStatus.ONLINE
 );
 
+export const videoConstraintStore = createVideoConstraintStore();
+
+/**
+ * A store that contains video constraints.
+ */
+function createAudioConstraintStore() {
+    const { subscribe, update } = writable({
+        //TODO: make these values configurable in the game settings menu and store them in localstorage
+        autoGainControl: false,
+        echoCancellation: true,
+        noiseSuppression: true,
+    } as boolean | MediaTrackConstraints);
+    return {
+        subscribe,
+        setDeviceId: (deviceId: string | undefined) =>
+            update((constraints) => {
+                if (typeof constraints === "boolean") {
+                    constraints = {};
+                }
+                if (deviceId !== undefined && navigator.mediaDevices.getSupportedConstraints().deviceId === true) {
+                    constraints.deviceId = { exact: deviceId };
+                } else {
+                    delete constraints.deviceId;
+                }
+                return constraints;
+            }),
+    };
+}
+
+export const audioConstraintStore = createAudioConstraintStore();
+
+//let timeout: NodeJS.Timeout;
 let timeout: NodeJS.Timeout;
 
 let previousComputedVideoConstraint: boolean | MediaTrackConstraints = false;
@@ -279,6 +331,7 @@ export const mediaStreamConstraintsStore = derived(
         cameraEnergySavingStore,
         availabilityStatusStore,
         megaphoneEnabledStore,
+        batchGetUserMediaStore,
     ],
     (
         [
@@ -294,9 +347,15 @@ export const mediaStreamConstraintsStore = derived(
             $cameraEnergySavingStore,
             $availabilityStatusStore,
             $megaphoneEnabledStore,
+            $batchGetUserMediaStore,
         ],
         set
     ) => {
+        // If a batch is in process, don't do anything.
+        if ($batchGetUserMediaStore) {
+            return;
+        }
+
         let currentVideoConstraint: boolean | MediaTrackConstraints = $videoConstraintStore;
         let currentAudioConstraint: boolean | MediaTrackConstraints = $audioConstraintStore;
 
@@ -340,9 +399,7 @@ export const mediaStreamConstraintsStore = derived(
         // Disable webcam for energy reasons (the user is not moving and we are talking to no one)
         if ($cameraEnergySavingStore === true && $enableCameraSceneVisibilityStore === false) {
             currentVideoConstraint = false;
-            //this optimization is desactivated because of sound issues on chrome
-            //todo: fix this conflicts and reactivate this optimization
-            //currentAudioConstraint = false;
+            currentAudioConstraint = false;
         }
 
         if (
@@ -358,7 +415,7 @@ export const mediaStreamConstraintsStore = derived(
             currentAudioConstraint = false;
         }
 
-        // Let's make the changes only if the new value is different from the old one.tile
+        // Let's make the changes only if the new value is different from the old one.
         if (
             !deepEqual(previousComputedVideoConstraint, currentVideoConstraint) ||
             !deepEqual(previousComputedAudioConstraint, currentAudioConstraint)
@@ -373,17 +430,10 @@ export const mediaStreamConstraintsStore = derived(
                 previousComputedAudioConstraint = { ...previousComputedAudioConstraint };
             }
 
-            if (timeout) {
-                clearTimeout(timeout);
-            }
-
-            // Let's wait a little bit to avoid sending too many constraint changes.
-            timeout = setTimeout(() => {
-                set({
-                    video: currentVideoConstraint,
-                    audio: currentAudioConstraint,
-                });
-            }, 100);
+            set({
+                video: currentVideoConstraint,
+                audio: currentAudioConstraint,
+            });
         }
 
         if ($enableCameraSceneVisibilityStore) {
@@ -496,7 +546,7 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                         return stream;
                     })
                     .catch((e) => {
-                        if (constraints.video !== false || constraints.audio !== false) {
+                        if (constraints.video !== false /* || constraints.audio !== false*/) {
                             console.info(
                                 "Error. Unable to get microphone and/or camera access. Trying audio only.",
                                 constraints,
@@ -508,12 +558,12 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                                 error: e instanceof Error ? e : new Error("An unknown error happened"),
                             });
                             // Let's try without video constraints
-                            if (constraints.video !== false) {
-                                requestedCameraState.disableWebcam();
-                            }
-                            if (constraints.audio !== false) {
+                            //if (constraints.video !== false) {
+                            requestedCameraState.disableWebcam();
+                            //}
+                            /*if (constraints.audio !== false) {
                                 requestedMicrophoneState.disableMicrophone();
-                            }
+                            }*/
                         } else if (!constraints.video && !constraints.audio) {
                             set({
                                 type: "error",

@@ -44,6 +44,7 @@ import {
     INTERNAL_MAP_STORAGE_URL,
     JITSI_ISS,
     JITSI_URL,
+    PUBLIC_MAP_STORAGE_PREFIX,
     PUBLIC_MAP_STORAGE_URL,
     SECRET_JITSI_KEY,
     STORE_VARIABLES_FOR_LOCAL_MAPS,
@@ -137,7 +138,7 @@ export class GameRoom implements BrothersFinder {
                 wamUrl,
                 false,
                 STORE_VARIABLES_FOR_LOCAL_MAPS,
-                INTERNAL_MAP_STORAGE_URL
+                PUBLIC_MAP_STORAGE_PREFIX
             );
             mapUrl = mapFetcher.normalizeMapUrl(wamUrl, wamFile.mapUrl);
         } else {
@@ -644,9 +645,8 @@ export class GameRoom implements BrothersFinder {
         const mapUrl = await mapFetcher.getMapUrl(
             mapDetails.mapUrl,
             mapDetails.wamUrl,
-            false,
-            STORE_VARIABLES_FOR_LOCAL_MAPS,
-            INTERNAL_MAP_STORAGE_URL
+            INTERNAL_MAP_STORAGE_URL,
+            PUBLIC_MAP_STORAGE_PREFIX
         );
         if (this._mapUrl !== mapUrl) {
             this._mapUrl = mapUrl;
@@ -752,7 +752,8 @@ export class GameRoom implements BrothersFinder {
                 this._wamUrl,
                 canLoadLocalUrl,
                 STORE_VARIABLES_FOR_LOCAL_MAPS,
-                INTERNAL_MAP_STORAGE_URL
+                INTERNAL_MAP_STORAGE_URL,
+                PUBLIC_MAP_STORAGE_PREFIX
             );
         }
 

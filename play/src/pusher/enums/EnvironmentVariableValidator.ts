@@ -28,7 +28,7 @@ export const EnvironmentVariables = z.object({
     // Use "*" to allow any domain
     ALLOWED_CORS_ORIGIN: z.string().url().or(z.literal("*")).optional(),
     PUSHER_URL: AbsoluteOrRelativeUrl.optional(),
-    PUBLIC_MAP_STORAGE_URL: AbsoluteOrRelativeUrl.optional(),
+    PUBLIC_MAP_STORAGE_URL: z.string().url().optional(),
     OPID_CLIENT_ID: z.string().optional(),
     OPID_CLIENT_SECRET: z.string().optional(),
     OPID_CLIENT_ISSUER: z.string().optional(),

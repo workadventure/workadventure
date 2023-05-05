@@ -53,11 +53,11 @@
     onMount(() => {
         resizeObserver.observe(videoContainer);
         subscribeChangeOutput = speakerSelectedStore.subscribe((deviceId) => {
-            if (deviceId != undefined) setAudioOutPut(deviceId);
+            if (deviceId != undefined) setAudioOutput(deviceId);
         });
 
         subscribeStreamStore = streamStore.subscribe(() => {
-            if ($speakerSelectedStore != undefined) setAudioOutPut($speakerSelectedStore);
+            if ($speakerSelectedStore != undefined) setAudioOutput($speakerSelectedStore);
         });
     });
 
@@ -67,13 +67,15 @@
     });
 
     //sets the ID of the audio device to use for output
-    function setAudioOutPut(deviceId: string) {
+    function setAudioOutput(deviceId: string) {
         // Check HTMLMediaElement.setSinkId() compatibility for browser => https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
         try {
             // @ts-ignore
             if (videoElement != undefined && videoElement.setSinkId != undefined) {
                 // @ts-ignore
-                videoElement.setSinkId(deviceId);
+                videoElement.setSinkId(deviceId).catch((e) => {
+                    console.info("Error setting the audio output device: ", e);
+                });
             }
         } catch (err) {
             console.info(

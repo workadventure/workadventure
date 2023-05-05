@@ -6,8 +6,8 @@ import type {
     UIWebsiteSize,
     ViewportPositionHorizontal,
     ViewportPositionVertical,
-    UIWebsite as UIWebsiteCore,
-} from "../../Events/Ui/UIWebsite";
+    UIWebsiteEvent,
+} from "../../Events/Ui/UIWebsiteEvent";
 import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "../IframeApiContribution";
 
 class UIWebsitePositionInternal {
@@ -200,7 +200,7 @@ export class UIWebsite {
     private _size: UIWebsiteSizeInternal;
     private _margin: UIWebsiteMarginInternal;
 
-    constructor(config: UIWebsiteCore) {
+    constructor(config: UIWebsiteEvent) {
         this.id = config.id;
         this._url = config.url;
         this._visible = config.visible ?? true;

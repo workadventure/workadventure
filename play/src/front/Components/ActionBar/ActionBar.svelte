@@ -29,7 +29,7 @@
     import followImg from "../images/follow.png";
     import lockOpenImg from "../images/lock-opened.png";
     import lockCloseImg from "../images/lock-closed.png";
-    import logoRegister from "../images/logo-register-pixel.png";
+    import mapBuilder from "../images/maps-builder.png";
     import screenshareOn from "../images/screenshare-on.png";
     import screenshareOff from "../images/screenshare-off.png";
     import emojiPickOn from "../images/emoji-on.png";
@@ -766,7 +766,7 @@
                     >
                         <Tooltip text={$LL.actionbar.mapEditor()} />
                         <button id="mapEditorIcon" class:border-top-light={$mapEditorModeStore}>
-                            <img draggable="false" src={logoRegister} style="padding: 2px" alt="toggle-map-editor" />
+                            <img draggable="false" src={mapBuilder} style="padding: 2px" alt="toggle-map-editor" />
                         </button>
                     </div>
                 {/if}

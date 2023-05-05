@@ -61,7 +61,7 @@ export const isModifyUIWebsiteEvent = z.object({
 
 export type ModifyUIWebsiteEvent = z.infer<typeof isModifyUIWebsiteEvent>;
 
-export const isUIWebsite = z.object({
+export const isUIWebsiteEvent = z.object({
     id: z.string(),
     url: z.string(),
     visible: z.boolean(),
@@ -72,4 +72,4 @@ export const isUIWebsite = z.object({
     margin: isUIWebsiteMargin.partial().optional(),
 });
 
-export type UIWebsite = z.infer<typeof isUIWebsite>;
+export type UIWebsiteEvent = z.infer<typeof isUIWebsiteEvent>;

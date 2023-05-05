@@ -255,9 +255,9 @@ export abstract class Character extends Container implements OutlineableInterfac
         return this.statusDot.availabilityStatus;
     }
 
-    public addCompanion(name: string, texturePromise?: CancelablePromise<string>): void {
+    public addCompanion(id: string, texturePromise?: CancelablePromise<string>): void {
         if (typeof texturePromise !== "undefined") {
-            this.companion = new Companion(this.scene, this.x, this.y, name, texturePromise);
+            this.companion = new Companion(this.scene, this.x, this.y, id, texturePromise);
         }
     }
 
