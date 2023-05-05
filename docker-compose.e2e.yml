@@ -83,7 +83,7 @@ services:
     command: npm run start
     volumes: []
     environment:
-      STARTUP_COMMAND_1: ""
+      STARTUP_COMMAND_1: npm run upload-test-map
       STARTUP_COMMAND_2: ""
 
   maps:
