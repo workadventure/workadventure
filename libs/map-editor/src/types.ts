@@ -73,6 +73,7 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
     triggerMessage: z.string().optional(),
     width: z.number().optional(),
     policy: z.string().optional(),
+    position: z.number().optional(),
 });
 
 export const AreaDataProperty = z.union([

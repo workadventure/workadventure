@@ -42,10 +42,6 @@ export class AreasPropertiesListener {
             for (const property of area.properties) {
                 switch (property.type) {
                     case "openWebsite": {
-                        // TODO: Do we want to handle it here or leave new tab as it is in GameMapPropertiesListener?
-                        // if (property.newTab) {
-                        //     break;
-                        // }
                         this.handleOpenWebsitePropertyOnEnter(property);
                         break;
                     }
@@ -93,24 +89,13 @@ export class AreasPropertiesListener {
     }
 
     private handleOpenWebsitePropertyOnEnter(property: OpenWebsitePropertyData): void {
-        const openWebsiteProperty: string | undefined = property.link;
-        const websiteClosableProperty: boolean | undefined = property.closable;
-        const websiteTriggerProperty: string | undefined = property.trigger;
-        const allowApiProperty: boolean | undefined = property.allowAPI;
-        const websiteWidthProperty: number | undefined = property.width;
-        const websitePolicyProperty: string | undefined = property.policy;
-        const newTab: boolean | undefined = property.newTab;
-        let websiteTriggerMessageProperty: string | undefined = property.triggerMessage;
-        // TODO:
-        let websitePositionProperty: number | undefined;
-
         const actionId = "openWebsite-" + (Math.random() + 1).toString(36).substring(7);
 
-        if (newTab) {
+        if (property.newTab) {
             const forceTrigger = localUserStore.getForceCowebsiteTrigger();
-            if (forceTrigger || websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {
+            if (forceTrigger || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
                 this.coWebsitesActionTriggers.set(property.id, actionId);
-                let message = websiteTriggerMessageProperty;
+                let message = property.triggerMessage;
                 if (message === undefined) {
                     message = get(LL).trigger.newTab();
                 }
@@ -118,11 +103,11 @@ export class AreasPropertiesListener {
                     uuid: actionId,
                     type: "message",
                     message: message,
-                    callback: () => scriptUtils.openTab(openWebsiteProperty),
+                    callback: () => scriptUtils.openTab(property.link),
                     userInputManager: this.scene.userInputManager,
                 });
             } else {
-                scriptUtils.openTab(openWebsiteProperty);
+                scriptUtils.openTab(property.link);
             }
             return;
         }
@@ -137,39 +122,10 @@ export class AreasPropertiesListener {
 
         this.openedCoWebsites.set(property.id, coWebsiteOpen);
 
-        const loadCoWebsiteFunction = (coWebsite: CoWebsite) => {
-            coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
-                console.error("Error during loading a co-website: " + coWebsite.getUrl());
-            });
-
-            layoutManagerActionStore.removeAction(actionId);
-        };
-
-        const openCoWebsiteFunction = () => {
-            const coWebsite = new SimpleCoWebsite(
-                new URL(openWebsiteProperty ?? "", this.scene.mapUrlFile),
-                allowApiProperty,
-                websitePolicyProperty,
-                websiteWidthProperty,
-                websiteClosableProperty
-            );
-
-            coWebsiteOpen.coWebsite = coWebsite;
-
-            coWebsiteManager.addCoWebsiteToStore(coWebsite, websitePositionProperty);
-
-            loadCoWebsiteFunction(coWebsite);
-
-            //user in a zone with cowebsite opened or pressed SPACE to enter is a zone
-            inOpenWebsite.set(true);
-
-            // analytics event for open website
-            analyticsClient.openedWebsite();
-        };
-
-        if (localUserStore.getForceCowebsiteTrigger() || websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {
-            if (!websiteTriggerMessageProperty) {
-                websiteTriggerMessageProperty = get(LL).trigger.cowebsite();
+        if (localUserStore.getForceCowebsiteTrigger() || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
+            let message = property.triggerMessage;
+            if (!message) {
+                message = get(LL).trigger.cowebsite();
             }
 
             this.coWebsitesActionTriggers.set(property.id, actionId);
@@ -177,29 +133,29 @@ export class AreasPropertiesListener {
             layoutManagerActionStore.addAction({
                 uuid: actionId,
                 type: "message",
-                message: websiteTriggerMessageProperty,
-                callback: () => openCoWebsiteFunction(),
+                message: message,
+                callback: () => this.openCoWebsiteFunction(property, coWebsiteOpen, actionId),
                 userInputManager: this.scene.userInputManager,
             });
-        } else if (websiteTriggerProperty === ON_ICON_TRIGGER_BUTTON) {
+        } else if (property.trigger === ON_ICON_TRIGGER_BUTTON) {
             const coWebsite = new SimpleCoWebsite(
-                new URL(openWebsiteProperty ?? "", this.scene.mapUrlFile),
-                allowApiProperty,
-                websitePolicyProperty,
-                websiteWidthProperty,
-                websiteClosableProperty
+                new URL(property.link ?? "", this.scene.mapUrlFile),
+                property.allowAPI,
+                property.policy,
+                property.width,
+                property.closable
             );
 
             coWebsiteOpen.coWebsite = coWebsite;
 
-            coWebsiteManager.addCoWebsiteToStore(coWebsite, websitePositionProperty);
+            coWebsiteManager.addCoWebsiteToStore(coWebsite, property.position);
 
-            //user in zone to open cowesite with only icone
+            //user in zone to open cowesite with only icon
             inOpenWebsite.set(true);
         }
 
-        if (!websiteTriggerProperty) {
-            openCoWebsiteFunction();
+        if (!property.trigger) {
+            this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
         }
     }
 
@@ -351,5 +307,39 @@ export class AreasPropertiesListener {
             }
         });
         inJitsiStore.set(false);
+    }
+
+    private openCoWebsiteFunction(
+        property: OpenWebsitePropertyData,
+        coWebsiteOpen: OpenCoWebsite,
+        actionId: string
+    ): void {
+        const coWebsite = new SimpleCoWebsite(
+            new URL(property.link ?? "", this.scene.mapUrlFile),
+            property.allowAPI,
+            property.policy,
+            property.width,
+            property.closable
+        );
+
+        coWebsiteOpen.coWebsite = coWebsite;
+
+        coWebsiteManager.addCoWebsiteToStore(coWebsite, property.position);
+
+        this.loadCoWebsiteFunction(coWebsite, actionId);
+
+        //user in a zone with cowebsite opened or pressed SPACE to enter is a zone
+        inOpenWebsite.set(true);
+
+        // analytics event for open website
+        analyticsClient.openedWebsite();
+    }
+
+    private loadCoWebsiteFunction(coWebsite: CoWebsite, actionId: string): void {
+        coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
+            console.error("Error during loading a co-website: " + coWebsite.getUrl());
+        });
+
+        layoutManagerActionStore.removeAction(actionId);
     }
 }
