@@ -277,40 +277,6 @@ export const availabilityStatusStore = derived(
     AvailabilityStatus.ONLINE
 );
 
-export const videoConstraintStore = createVideoConstraintStore();
-
-/**
- * A store that contains video constraints.
- */
-function createAudioConstraintStore() {
-    const { subscribe, update } = writable({
-        //TODO: make these values configurable in the game settings menu and store them in localstorage
-        autoGainControl: false,
-        echoCancellation: true,
-        noiseSuppression: true,
-    } as boolean | MediaTrackConstraints);
-    return {
-        subscribe,
-        setDeviceId: (deviceId: string | undefined) =>
-            update((constraints) => {
-                if (typeof constraints === "boolean") {
-                    constraints = {};
-                }
-                if (deviceId !== undefined && navigator.mediaDevices.getSupportedConstraints().deviceId === true) {
-                    constraints.deviceId = { exact: deviceId };
-                } else {
-                    delete constraints.deviceId;
-                }
-                return constraints;
-            }),
-    };
-}
-
-export const audioConstraintStore = createAudioConstraintStore();
-
-//let timeout: NodeJS.Timeout;
-let timeout: NodeJS.Timeout;
-
 let previousComputedVideoConstraint: boolean | MediaTrackConstraints = false;
 let previousComputedAudioConstraint: boolean | MediaTrackConstraints = false;
 
