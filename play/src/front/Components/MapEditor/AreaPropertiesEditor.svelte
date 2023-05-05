@@ -18,6 +18,7 @@
     let areaName = "";
     let hasJitsiRoomProperty: boolean;
     let hasFocusableProperty: boolean;
+    let hasSilentProperty: boolean;
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
         if (currentAreaPreview) {
@@ -39,6 +40,7 @@
                 return {
                     id,
                     type,
+                    hideButtonLabel: true,
                 };
             case "focusable":
                 return {
@@ -114,6 +116,7 @@
     function refreshFlags(): void {
         hasJitsiRoomProperty = hasProperty("jitsiRoomProperty");
         hasFocusableProperty = hasProperty("focusable");
+        hasSilentProperty = hasProperty("silent");
     }
 </script>
 
@@ -127,6 +130,15 @@
                 descriptionText="Lorem ipsum dolor sit amet"
                 on:click={() => {
                     onAddProperty("focusable");
+                }}
+            />
+        {/if}
+        {#if !hasSilentProperty}
+            <AddPropertyButton
+                headerText={$LL.mapEditor.properties.silentProperty.label()}
+                descriptionText="Lorem ipsum dolor sit amet"
+                on:click={() => {
+                    onAddProperty("silent");
                 }}
             />
         {/if}
