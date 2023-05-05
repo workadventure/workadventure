@@ -83,8 +83,9 @@ services:
     command: npm run start
     volumes: []
     environment:
-      STARTUP_COMMAND_1: apt install zip -Y
-      STARTUP_COMMAND_2: npm run upload-test-map
+      STARTUP_COMMAND_1: ""
+      STARTUP_COMMAND_2: ""
+
   maps:
     image: thecodingmachine/workadventure-maps:${DOCKER_TAG:-develop}
     build:
