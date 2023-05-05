@@ -64,6 +64,7 @@ export class JitsiConferenceWrapper {
             //const localTracks: any[] = [];
             room.on(JitsiMeetJS.events.conference.CONFERENCE_JOINED, () => {
                 //isJoined = true;
+                void jitsiConferenceWrapper.firstLocalTrackInit();
                 resolve(jitsiConferenceWrapper);
                 console.error("conference joined");
             });
@@ -73,9 +74,6 @@ export class JitsiConferenceWrapper {
             });
             room.on(JitsiMeetJS.events.conference.CONNECTION_ESTABLISHED, () => {
                 console.error("CONNECTION_ESTABLISHED");
-                setTimeout(() => {
-                    void jitsiConferenceWrapper.firstLocalTrackInit();
-                }, 10);
             });
             room.on(JitsiMeetJS.events.conference.CONNECTION_INTERRUPTED, () => {
                 console.error("CONNECTION_INTERRUPTED");
@@ -153,19 +151,10 @@ export class JitsiConferenceWrapper {
              * @param track JitsiTrackWrapper object
              */
             function onRemoteTrack(track: JitsiTrack) {
-                /*
+
                 if (track.isLocal()) {
                     console.log("Received my remote track", track);
-                    jitsiConferenceWrapper._myStreamStore.update((old) => {
-                        if(old){
-                            old.setJitsiTrack(track);
-                            return old;
-                        }
-                        return new JitsiTrackWrapper(room.myUserId(), track);
-                    });
-                    return;
                 }
-                 */
 
                 console.log("JitsiConferenceWrapper => onRemoteTrack");
 
