@@ -1,4 +1,5 @@
 <script lang="ts">
+    import {fly} from "svelte/transition";
     import type { Readable } from "svelte/store";
     import { onMount } from "svelte";
     import { PeerStatus, VideoPeer } from "../../WebRtc/VideoPeer";
@@ -6,11 +7,11 @@
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import type { ObtainedMediaStreamConstraints } from "../../WebRtc/P2PMessages/ConstraintMessage";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { JitsiTrackWrapper } from "../../Streaming/Jitsi/JitsiTrackWrapper";
     import VideoMediaBox from "./VideoMediaBox.svelte";
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import VideoOffBox from "./VideoOffBox.svelte";
-    import { JitsiTrackWrapper } from "../../Streaming/Jitsi/JitsiTrackWrapper";
     import JitsiMediaBox from "./JitsiMediaBox.svelte";
 
     export let streamable: Streamable;
@@ -92,12 +93,6 @@
         class:mozaic-full-width={mozaicSolo}
         class:mozaic-quarter={mozaicQuarter}
         transition:fly={{ x: 200, duration: 250 }}
-        on:introend={() => {
-            triggerReposition();
-        }}
-        on:outroend={() => {
-            triggerReposition();
-        }}
     >
         <div class="{isHightlighted ? 'tw-h-[32vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-flex screen-blocker">
             <JitsiMediaBox peer={streamable} clickable={isClickable} />
