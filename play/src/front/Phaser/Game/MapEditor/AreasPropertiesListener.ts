@@ -19,6 +19,7 @@ import { GameScene } from "../GameScene";
 import { inJitsiStore, inOpenWebsite } from "../../../Stores/MediaStore";
 import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
+import { scriptUtils } from "../../../Api/ScriptUtils";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -42,9 +43,9 @@ export class AreasPropertiesListener {
                 switch (property.type) {
                     case "openWebsite": {
                         // TODO: Do we want to handle it here or leave new tab as it is in GameMapPropertiesListener?
-                        if (property.newTab) {
-                            break;
-                        }
+                        // if (property.newTab) {
+                        //     break;
+                        // }
                         this.handleOpenWebsitePropertyOnEnter(property);
                         break;
                     }
@@ -98,11 +99,33 @@ export class AreasPropertiesListener {
         const allowApiProperty: boolean | undefined = property.allowAPI;
         const websiteWidthProperty: number | undefined = property.width;
         const websitePolicyProperty: string | undefined = property.policy;
+        const newTab: boolean | undefined = property.newTab;
         let websiteTriggerMessageProperty: string | undefined = property.triggerMessage;
         // TODO:
         let websitePositionProperty: number | undefined;
 
         const actionId = "openWebsite-" + (Math.random() + 1).toString(36).substring(7);
+
+        if (newTab) {
+            const forceTrigger = localUserStore.getForceCowebsiteTrigger();
+            if (forceTrigger || websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {
+                this.coWebsitesActionTriggers.set(property.id, actionId);
+                let message = websiteTriggerMessageProperty;
+                if (message === undefined) {
+                    message = get(LL).trigger.newTab();
+                }
+                layoutManagerActionStore.addAction({
+                    uuid: actionId,
+                    type: "message",
+                    message: message,
+                    callback: () => scriptUtils.openTab(openWebsiteProperty),
+                    userInputManager: this.scene.userInputManager,
+                });
+            } else {
+                scriptUtils.openTab(openWebsiteProperty);
+            }
+            return;
+        }
 
         if (this.openedCoWebsites.has(property.id)) {
             return;
@@ -278,14 +301,12 @@ export class AreasPropertiesListener {
 
         const coWebsiteOpen = this.openedCoWebsites.get(property.id);
 
-        if (!coWebsiteOpen) {
-            return;
-        }
+        if (coWebsiteOpen) {
+            const coWebsite = coWebsiteOpen.coWebsite;
 
-        const coWebsite = coWebsiteOpen.coWebsite;
-
-        if (coWebsite) {
-            coWebsiteManager.closeCoWebsite(coWebsite);
+            if (coWebsite) {
+                coWebsiteManager.closeCoWebsite(coWebsite);
+            }
         }
 
         this.openedCoWebsites.delete(property.id);
