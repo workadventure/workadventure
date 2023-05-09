@@ -9,7 +9,7 @@
 
 <div
     aria-label="Loading..."
-    class={`tw-flex tw-flex-wrap tw-flex-col tw-items-center tw-justify-center ${customClass}`}
+    class={`pure-loader tw-flex tw-flex-wrap tw-flex-col tw-items-center tw-justify-center ${customClass}`}
 >
     <svg class={`tw-h-${size} tw-w-${size} tw-animate-spin tw-mb-3 tw-text-${color}`} viewBox="3 3 18 18">
         <path
@@ -19,13 +19,3 @@
     </svg>
     <p class={`tw-text-${color}`}>{loadingText} ...</p>
 </div>
-
-<style lang="scss">
-    .svg {
-        @apply tw-bg-contain tw-bg-no-repeat tw-bg-center tw-w-7 tw-h-7 tw-ml-3;
-        content: "";
-    }
-    p {
-        @apply tw-text-center tw-animate-pulse;
-    }
-</style>

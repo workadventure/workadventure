@@ -220,3 +220,43 @@
 .mozaic-grid {
     @apply tw-gap-1 lg:tw-gap-4 tw-grid-cols-1 lg:tw-grid-cols-2;
 }
+
+
+
+
+////////////////////
+// Loading.svelte //
+////////////////////
+#loading {
+    @apply tw-h-fit tw-flex tw-bg-orange tw-relative tw-rounded tw-py-2 tw-my-2;
+    transition: all 0.2s ease;
+    .wrapper {
+        @apply tw-flex tw-flex-wrap tw-justify-items-center tw-items-center tw-justify-center tw-text-brand-blue tw-text-center tw-mx-auto;
+        .svg {
+            @apply tw-bg-contain tw-bg-no-repeat tw-bg-center tw-bg-brand-blue tw-w-7 tw-h-7 tw-ml-3;
+            content: "";
+        }
+    }
+}
+
+
+
+
+////////////////////
+// UserTag.svelte //
+////////////////////
+#tag {
+    @apply tw-flex tw-rounded-sm tw-items-center tw-w-full tw-p-2 tw-h-fit;
+    &.minimal {
+        @apply tw-absolute tw-left-0 tw-bottom-0 tw-p-0 tw-pr-2 tw-pb-[1px] tw-items-end tw-w-fit tw-rounded-none tw-rounded-bl-sm tw-rounded-tr-lg;
+        #name {
+            @apply tw-ml-0.5 tw-text-xs tw-leading-[0.875rem] tw-px-0;
+        }
+        #woka {
+            @apply tw--mt-3;
+        }
+    }
+    #name {
+        @apply tw-font-semibold tw-text-sm tw-not-italic tw-break-words tw-px-2 tw-overflow-y-auto tw-max-h-10 tw-flex;
+    }
+}

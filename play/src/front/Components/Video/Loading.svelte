@@ -19,17 +19,3 @@
         />
     </div>
 </div>
-
-<style lang="scss">
-    #loading {
-        @apply tw-h-fit tw-flex tw-bg-orange tw-relative tw-rounded tw-py-2 tw-my-2;
-        transition: all 0.2s ease;
-        .wrapper {
-            @apply tw-flex tw-flex-wrap tw-justify-items-center tw-items-center tw-justify-center tw-text-brand-blue tw-text-center tw-mx-auto;
-            .svg {
-                @apply tw-bg-contain tw-bg-no-repeat tw-bg-center tw-bg-brand-blue tw-w-7 tw-h-7 tw-ml-3;
-                content: "";
-            }
-        }
-    }
-</style>
