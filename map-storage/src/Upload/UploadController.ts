@@ -565,7 +565,7 @@ export class UploadController {
     }
 
     private getFullUrlFromRequest(req: Request): string {
-        return `${req.protocol}://${req.hostname}${req.originalUrl}`;
+        return `${req.protocol}://${req.hostname}${req.header("x-forwarded-prefix") || ""}${req.originalUrl}`;
     }
 
     private move() {

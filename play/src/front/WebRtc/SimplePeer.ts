@@ -8,6 +8,7 @@ import type { RoomConnection } from "../Connexion/RoomConnection";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { playersStore } from "../Stores/PlayersStore";
 import { peerStore, screenSharingPeerStore } from "../Stores/PeerStore";
+import { batchGetUserMediaStore } from "../Stores/MediaStore";
 import { mediaManager, NotificationType } from "./MediaManager";
 import { ScreenSharingPeer } from "./ScreenSharingPeer";
 import { VideoPeer } from "./VideoPeer";
@@ -93,8 +94,10 @@ export class SimplePeer {
             )
         );
 
+        batchGetUserMediaStore.startBatch();
         mediaManager.enableMyCamera();
         mediaManager.enableMyMicrophone();
+        batchGetUserMediaStore.commitChanges();
 
         //receive message start
         this.rxJsUnsubscribers.push(

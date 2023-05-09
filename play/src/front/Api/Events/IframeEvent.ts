@@ -28,7 +28,7 @@ import { isMovePlayerToEventAnswer } from "./MovePlayerToEventAnswer";
 import { isAddActionsMenuKeyToRemotePlayerEvent } from "./AddActionsMenuKeyToRemotePlayerEvent";
 import { isRemoveActionsMenuKeyFromRemotePlayerEvent } from "./RemoveActionsMenuKeyFromRemotePlayerEvent";
 import { isSetAreaPropertyEvent } from "./SetAreaPropertyEvent";
-import { isCreateUIWebsiteEvent, isModifyUIWebsiteEvent, isUIWebsite } from "./Ui/UIWebsite";
+import { isCreateUIWebsiteEvent, isModifyUIWebsiteEvent, isUIWebsiteEvent } from "./Ui/UIWebsiteEvent";
 import { isDynamicAreaEvent, isCreateDynamicAreaEvent } from "./CreateDynamicAreaEvent";
 import { isUserInputChatEvent } from "./UserInputChatEvent";
 import { isEnterLeaveEvent } from "./EnterLeaveEvent";
@@ -544,7 +544,7 @@ export const iframeQueryMapTypeGuards = {
     },
     openUIWebsite: {
         query: isCreateUIWebsiteEvent,
-        answer: isUIWebsite,
+        answer: isUIWebsiteEvent,
     },
     closeUIWebsite: {
         query: z.string(),
@@ -552,11 +552,11 @@ export const iframeQueryMapTypeGuards = {
     },
     getUIWebsites: {
         query: z.undefined(),
-        answer: z.array(isUIWebsite),
+        answer: z.array(isUIWebsiteEvent),
     },
     getUIWebsiteById: {
         query: z.string(),
-        answer: isUIWebsite,
+        answer: isUIWebsiteEvent,
     },
     enablePlayersTracking: {
         query: isEnablePlayersTrackingEvent,
