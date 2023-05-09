@@ -54,7 +54,7 @@ export class AreasPropertiesListener {
                         break;
                     }
                     case "silent": {
-                        this.handleSilentPropertyOnEnter(property);
+                        this.handleSilentPropertyOnEnter();
                         break;
                     }
                     default: {
@@ -85,7 +85,7 @@ export class AreasPropertiesListener {
                         break;
                     }
                     case "silent": {
-                        this.handleSilentPropertyOnLeave(property);
+                        this.handleSilentPropertyOnLeave();
                         break;
                     }
                     default: {
