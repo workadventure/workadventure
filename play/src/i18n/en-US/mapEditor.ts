@@ -48,6 +48,7 @@ const mapEditor: BaseTranslation = {
         },
         audioProperties: {
             label: "Play Audio File",
+            volumeLabel: "Volume",
             audioLinkLabel: "Audio Link",
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
             defaultButtonLabel: "Play music",

@@ -4,6 +4,7 @@ import {
     FocusablePropertyData,
     JitsiRoomPropertyData,
     OpenWebsitePropertyData,
+    PlayAudioPropertyData,
 } from "@workadventure/map-editor";
 import { Jitsi } from "@workadventure/shared-utils";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
@@ -20,6 +21,7 @@ import { inJitsiStore, inOpenWebsite, silentStore } from "../../../Stores/MediaS
 import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
 import { scriptUtils } from "../../../Api/ScriptUtils";
+import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -43,6 +45,10 @@ export class AreasPropertiesListener {
                 switch (property.type) {
                     case "openWebsite": {
                         this.handleOpenWebsitePropertyOnEnter(property);
+                        break;
+                    }
+                    case "playAudio": {
+                        this.handlePlayAudioPropertyOnEnter(property);
                         break;
                     }
                     case "focusable": {
@@ -76,6 +82,10 @@ export class AreasPropertiesListener {
                         this.handleOpenWebsitePropertiesOnLeave(property);
                         break;
                     }
+                    case "playAudio": {
+                        this.handlePlayAudioPropertyOnLeave();
+                        break;
+                    }
                     case "focusable": {
                         this.handleFocusablePropertiesOnLeave(property);
                         break;
@@ -94,6 +104,12 @@ export class AreasPropertiesListener {
                 }
             }
         }
+    }
+
+    private handlePlayAudioPropertyOnEnter(property: PlayAudioPropertyData): void {
+        // playAudioLoop is supposedly deprecated. Should we ignore it?
+        audioManagerFileStore.playAudio(property.audioLink, this.scene.getMapDirUrl(), property.volume);
+        audioManagerVisibilityStore.set(true);
     }
 
     private handleOpenWebsitePropertyOnEnter(property: OpenWebsitePropertyData): void {
@@ -313,6 +329,11 @@ export class AreasPropertiesListener {
 
     private handleSilentPropertyOnLeave(): void {
         silentStore.setAreaSilent(false);
+    }
+
+    private handlePlayAudioPropertyOnLeave(): void {
+        audioManagerFileStore.unloadAudio();
+        audioManagerVisibilityStore.set(false);
     }
 
     private handleJitsiRoomPropertyOnLeave(property: JitsiRoomPropertyData): void {

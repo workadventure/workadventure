@@ -61,6 +61,7 @@ export const JitsiRoomPropertyData = PropertyBase.extend({
 export const PlayAudioPropertyData = PropertyBase.extend({
     type: z.literal("playAudio"),
     audioLink: z.string(),
+    volume: z.number().optional(),
 });
 
 export const OpenWebsitePropertyData = PropertyBase.extend({

@@ -35,6 +35,20 @@
                 on:blur={onMapEditorInputUnfocus}
             />
         </div>
+        <div class="value-input">
+            <label for="volume">{$LL.mapEditor.properties.audioProperties.volumeLabel()}</label>
+            <input
+                id="volume"
+                type="number"
+                min="0"
+                max="1"
+                step="0.05"
+                bind:value={property.volume}
+                on:change={onValueChange}
+                on:focus={onMapEditorInputFocus}
+                on:blur={onMapEditorInputUnfocus}
+            />
+        </div>
         {#if !property.hideButtonLabel}
             <div class="value-input">
                 <label for="audioButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
