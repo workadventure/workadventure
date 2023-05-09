@@ -12,8 +12,8 @@ const slugify = (...args: (string | number)[]): string => {
         .replace(/\s+/g, "-"); // separator
 };
 
-function slugifyJitsiRoomName(roomName: string, roomId: string, addPrefix = true): string {
-    return slugify((addPrefix ? shortHash(roomId) + "-" : "") + roomName);
+function slugifyJitsiRoomName(roomName: string, roomId: string, noPrefix = true): string {
+    return slugify((noPrefix ? "" : shortHash(roomId) + "-") + roomName);
 }
 
 export { slugifyJitsiRoomName };
