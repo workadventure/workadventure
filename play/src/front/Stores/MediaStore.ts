@@ -16,6 +16,7 @@ import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeet
 import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
+import { createSilentStore } from "./SilentStore";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -241,7 +242,7 @@ export const inCowebsiteZone = derived(
     false
 );
 
-export const silentStore = writable(false);
+export const silentStore = createSilentStore();
 
 export const availabilityStatusStore = derived(
     [inJitsiStore, inBbbStore, silentStore, privacyShutdownStore, proximityMeetingStore],

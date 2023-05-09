@@ -163,37 +163,9 @@
 {/if}
 
 <style lang="scss">
-    .header-container {
-        color: cyan;
-    }
     .properties-container {
         overflow-y: auto;
         overflow-x: hidden;
-        .property-enabler {
-            display: flex;
-            margin-top: 1px;
-            margin-top: 1px;
-            align-items: center;
-            padding-right: 1em;
-            cursor: url(/src/front/style/images/cursor_pointer.png), pointer;
-            label {
-                padding-top: 1em;
-                padding-bottom: 1em;
-                padding-left: 1em;
-                flex-grow: 1;
-                margin: 0;
-            }
-        }
-        .property-enabler:hover {
-            background-color: rgb(85 85 113);
-        }
-        .property-container {
-            padding-left: 1em;
-            border-left-style: solid;
-            border-left-color: #4d4b67;
-            border-left-width: 1px;
-            margin: 20px 0px;
-        }
     }
 
     .properties-container::-webkit-scrollbar {
@@ -205,9 +177,7 @@
     }
 
     .entity-name-container {
-        input,
-        select,
-        textarea {
+        input {
             background-color: white;
             color: black;
             font-weight: 700;

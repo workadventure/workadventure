@@ -16,7 +16,7 @@ import { localUserStore } from "../../../Connexion/LocalUserStore";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../../WebRtc/LayoutManager";
 import { LL } from "../../../../i18n/i18n-svelte";
 import { GameScene } from "../GameScene";
-import { inJitsiStore, inOpenWebsite } from "../../../Stores/MediaStore";
+import { inJitsiStore, inOpenWebsite, silentStore } from "../../../Stores/MediaStore";
 import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
 import { scriptUtils } from "../../../Api/ScriptUtils";
@@ -53,6 +53,10 @@ export class AreasPropertiesListener {
                         this.handleJitsiRoomPropertyOnEnter(property);
                         break;
                     }
+                    case "silent": {
+                        this.handleSilentPropertyOnEnter(property);
+                        break;
+                    }
                     default: {
                         break;
                     }
@@ -78,6 +82,10 @@ export class AreasPropertiesListener {
                     }
                     case "jitsiRoomProperty": {
                         this.handleJitsiRoomPropertyOnLeave(property);
+                        break;
+                    }
+                    case "silent": {
+                        this.handleSilentPropertyOnLeave(property);
                         break;
                     }
                     default: {
@@ -247,6 +255,10 @@ export class AreasPropertiesListener {
         }
     }
 
+    private handleSilentPropertyOnEnter(): void {
+        silentStore.setAreaSilent(true);
+    }
+
     private handleOpenWebsitePropertiesOnLeave(property: OpenWebsitePropertyData): void {
         const openWebsiteProperty: string | undefined = property.link;
         const websiteTriggerProperty: string | undefined = property.trigger;
@@ -297,6 +309,10 @@ export class AreasPropertiesListener {
             return;
         }
         this.scene.getCameraManager().leaveFocusMode(this.scene.CurrentPlayer, 1000);
+    }
+
+    private handleSilentPropertyOnLeave(): void {
+        silentStore.setAreaSilent(false);
     }
 
     private handleJitsiRoomPropertyOnLeave(property: JitsiRoomPropertyData): void {

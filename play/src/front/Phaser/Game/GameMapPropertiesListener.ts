@@ -212,9 +212,9 @@ export class GameMapPropertiesListener {
 
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.SILENT, (newValue) => {
             if (newValue === undefined || newValue === false || newValue === "") {
-                silentStore.set(false);
+                silentStore.setOthersSilent(false);
             } else {
-                silentStore.set(true);
+                silentStore.setOthersSilent(true);
             }
         });
 

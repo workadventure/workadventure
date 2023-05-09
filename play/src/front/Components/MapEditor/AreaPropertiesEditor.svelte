@@ -191,7 +191,6 @@
                     />
                 {:else if property.type === "silent"}
                     <SilentPropertyEditor
-                        {property}
                         on:close={() => {
                             onDeleteProperty(property.id);
                         }}
