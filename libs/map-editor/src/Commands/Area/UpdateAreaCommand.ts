@@ -1,4 +1,4 @@
-import { AtLeast, AreaData, AreaDataProperties, AreaDataPropertiesKeys } from "../../types";
+import { AtLeast, AreaData, AreaDataProperties, AreaDataPropertiesKeys, AreaDataProperty } from "../../types";
 import type { GameMap } from "../../GameMap/GameMap";
 import { Command } from "../Command";
 
@@ -72,6 +72,6 @@ export class UpdateAreaCommand extends Command {
             }
         }
         const validData = structuredClone(data);
-        return validData.filter((property) => !propertiesToRemove.includes(property.id));
+        return validData.filter((property: AreaDataProperty) => !propertiesToRemove.includes(property.id));
     }
 }

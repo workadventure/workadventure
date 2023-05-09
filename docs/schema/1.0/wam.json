@@ -24,140 +24,156 @@
               "y": {
                 "type": "number"
               },
+              "name": {
+                "type": "string"
+              },
               "properties": {
-                "type": "object",
-                "properties": {
-                  "textHeader": {
-                    "anyOf": [
-                      {
-                        "anyOf": [
-                          {
-                            "not": {}
-                          },
-                          {
-                            "type": "string"
-                          }
-                        ]
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "jitsiRoom": {
-                    "anyOf": [
-                      {
-                        "anyOf": [
-                          {
-                            "not": {}
-                          },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "buttonLabel": {
-                                "type": "string"
-                              },
-                              "hideButtonLabel": {
-                                "type": "boolean"
-                              },
-                              "roomName": {
-                                "type": "string"
-                              },
-                              "jitsiRoomConfig": {
-                                "type": "object",
-                                "properties": {
-                                  "startWithAudioMuted": {
-                                    "type": "boolean"
-                                  },
-                                  "startWithVideoMuted": {
-                                    "type": "boolean"
-                                  }
-                                },
-                                "additionalProperties": false
-                              }
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "buttonLabel": {
+                          "type": "string"
+                        },
+                        "hideButtonLabel": {
+                          "type": "boolean"
+                        },
+                        "type": {
+                          "type": "string",
+                          "const": "jitsiRoomProperty"
+                        },
+                        "roomName": {
+                          "type": "string"
+                        },
+                        "jitsiUrl": {
+                          "type": "string"
+                        },
+                        "closable": {
+                          "type": "boolean"
+                        },
+                        "trigger": {
+                          "type": "string",
+                          "enum": [
+                            "onaction",
+                            "onicon"
+                          ]
+                        },
+                        "triggerMessage": {
+                          "type": "string"
+                        },
+                        "noPrefix": {
+                          "type": "boolean"
+                        },
+                        "jitsiRoomConfig": {
+                          "type": "object",
+                          "properties": {
+                            "startWithAudioMuted": {
+                              "type": "boolean"
                             },
-                            "required": [
-                              "roomName",
-                              "jitsiRoomConfig"
-                            ],
-                            "additionalProperties": false
-                          }
-                        ]
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "playAudio": {
-                    "anyOf": [
-                      {
-                        "anyOf": [
-                          {
-                            "not": {}
+                            "startWithVideoMuted": {
+                              "type": "boolean"
+                            }
                           },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "buttonLabel": {
-                                "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/properties/jitsiRoom/anyOf/0/anyOf/1/properties/buttonLabel"
-                              },
-                              "hideButtonLabel": {
-                                "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/properties/jitsiRoom/anyOf/0/anyOf/1/properties/hideButtonLabel"
-                              },
-                              "audioLink": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "audioLink"
-                            ],
-                            "additionalProperties": false
-                          }
-                        ]
+                          "additionalProperties": false
+                        }
                       },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "openWebsite": {
-                    "anyOf": [
-                      {
-                        "anyOf": [
-                          {
-                            "not": {}
-                          },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "buttonLabel": {
-                                "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/properties/jitsiRoom/anyOf/0/anyOf/1/properties/buttonLabel"
-                              },
-                              "hideButtonLabel": {
-                                "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/properties/jitsiRoom/anyOf/0/anyOf/1/properties/hideButtonLabel"
-                              },
-                              "link": {
-                                "type": "string"
-                              },
-                              "newTab": {
-                                "type": "boolean"
-                              }
-                            },
-                            "required": [
-                              "link"
-                            ],
-                            "additionalProperties": false
-                          }
-                        ]
+                      "required": [
+                        "id",
+                        "type",
+                        "roomName",
+                        "jitsiRoomConfig"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/id"
+                        },
+                        "buttonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/buttonLabel"
+                        },
+                        "hideButtonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "type": {
+                          "type": "string",
+                          "const": "playAudio"
+                        },
+                        "audioLink": {
+                          "type": "string"
+                        }
                       },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  }
-                },
-                "additionalProperties": false
+                      "required": [
+                        "id",
+                        "type",
+                        "audioLink"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/id"
+                        },
+                        "buttonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/buttonLabel"
+                        },
+                        "hideButtonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "type": {
+                          "type": "string",
+                          "const": "openWebsite"
+                        },
+                        "link": {
+                          "type": "string"
+                        },
+                        "newTab": {
+                          "type": "boolean"
+                        },
+                        "closable": {
+                          "type": "boolean"
+                        },
+                        "allowAPI": {
+                          "type": "boolean"
+                        },
+                        "trigger": {
+                          "type": "string",
+                          "enum": [
+                            "onaction",
+                            "onicon"
+                          ]
+                        },
+                        "triggerMessage": {
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "number"
+                        },
+                        "policy": {
+                          "type": "string"
+                        },
+                        "position": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type",
+                        "link"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                }
               },
               "prefab": {
                 "type": "object",
@@ -253,124 +269,92 @@
                 "type": "string"
               },
               "properties": {
-                "type": "object",
-                "properties": {
-                  "start": {
-                    "anyOf": [
-                      {
-                        "anyOf": [
-                          {
-                            "not": {}
-                          },
-                          {
-                            "type": "boolean"
-                          }
-                        ]
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/id"
+                        },
+                        "buttonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/buttonLabel"
+                        },
+                        "hideButtonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "type": {
+                          "type": "string",
+                          "const": "start"
+                        }
                       },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "silent": {
-                    "anyOf": [
-                      {
-                        "anyOf": [
-                          {
-                            "not": {}
-                          },
-                          {
-                            "type": "boolean"
-                          }
-                        ]
+                      "required": [
+                        "id",
+                        "type"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/id"
+                        },
+                        "buttonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/buttonLabel"
+                        },
+                        "hideButtonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "type": {
+                          "type": "string",
+                          "const": "focusable"
+                        },
+                        "zoom_margin": {
+                          "type": "number"
+                        }
                       },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "focusable": {
-                    "anyOf": [
-                      {
-                        "anyOf": [
-                          {
-                            "not": {}
-                          },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "buttonLabel": {
-                                "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/properties/jitsiRoom/anyOf/0/anyOf/1/properties/buttonLabel"
-                              },
-                              "hideButtonLabel": {
-                                "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/properties/jitsiRoom/anyOf/0/anyOf/1/properties/hideButtonLabel"
-                              },
-                              "zoom_margin": {
-                                "type": "number"
-                              }
-                            },
-                            "additionalProperties": false
-                          }
-                        ]
+                      "required": [
+                        "id",
+                        "type"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/id"
+                        },
+                        "buttonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/buttonLabel"
+                        },
+                        "hideButtonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "type": {
+                          "type": "string",
+                          "const": "silent"
+                        }
                       },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "jitsiRoom": {
-                    "anyOf": [
-                      {
-                        "anyOf": [
-                          {
-                            "not": {}
-                          },
-                          {
-                            "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/properties/jitsiRoom/anyOf/0/anyOf/1"
-                          }
-                        ]
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "playAudio": {
-                    "anyOf": [
-                      {
-                        "anyOf": [
-                          {
-                            "not": {}
-                          },
-                          {
-                            "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/properties/playAudio/anyOf/0/anyOf/1"
-                          }
-                        ]
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "openWebsite": {
-                    "anyOf": [
-                      {
-                        "anyOf": [
-                          {
-                            "not": {}
-                          },
-                          {
-                            "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/properties/openWebsite/anyOf/0/anyOf/1"
-                          }
-                        ]
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  }
-                },
-                "additionalProperties": false
+                      "required": [
+                        "id",
+                        "type"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0"
+                    },
+                    {
+                      "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/1"
+                    },
+                    {
+                      "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/2"
+                    }
+                  ]
+                }
               }
             },
             "required": [
