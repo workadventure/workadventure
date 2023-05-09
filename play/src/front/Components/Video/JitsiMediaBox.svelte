@@ -3,7 +3,7 @@
     import { Color } from "@workadventure/shared-utils";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 
-    import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+    import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { JitsiTrackWrapper } from "../../Streaming/Jitsi/JitsiTrackWrapper";
     import microphoneOffImg from "../images/microphone-off.png";
@@ -23,7 +23,7 @@
     let videoContainer: HTMLDivElement;
     let videoElement: HTMLVideoElement;
     let audioElement: HTMLAudioElement;
-    let minimized: boolean;
+    //let minimized: boolean;
     let isMobile: boolean;
 
     let backGroundColor = Color.getColorByString(peer.spaceUser?.name ?? "");
@@ -37,7 +37,7 @@
     }
 
     const resizeObserver = new ResizeObserver(() => {
-        minimized = isMediaBreakpointOnly("md");
+        //minimized = isMediaBreakpointOnly("md");
         isMobile = isMediaBreakpointUp("md");
     });
 
@@ -119,9 +119,9 @@
         @apply tw-h-fit tw-min-h-fit tw-flex tw-w-full tw-border-orange tw-border-2 tw-border-solid tw-relative tw-rounded;
         transition: all 0.2s ease;
     }
-    video.no-video {
+/*    video.no-video {
         visibility: collapse;
-    }
+    }*/
 
     video {
         object-fit: cover;

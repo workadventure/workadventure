@@ -87,7 +87,7 @@
     <input type="checkbox" class="input-switch" bind:checked={enabled} on:change={partialSave} disabled={loading} />
     <h3>{$LL.mapEditor.settings.megaphone.title()}</h3>
 </div>
-<p class="tw-h-fit">{$LL.mapEditor.settings.megaphone.description()}</p>
+<p class="help-text tw-h-fit">{$LL.mapEditor.settings.megaphone.description()}</p>
 {#if enabled}
     <div class="settings tw-flex-grow tw-flex-auto tw-flex-shrink" transition:fade={{ duration: 200 }}>
         {#await getTags()}
@@ -103,7 +103,7 @@
                 onBlur={onMapEditorInputUnfocus}
             />
             <InputSelect label={$LL.mapEditor.settings.megaphone.inputs.scope()} options={scopes} bind:value={scope} />
-            <p><InfoIcon size="18" /> {$LL.mapEditor.settings.megaphone.inputs.spaceNameHelper()}</p>
+            <p class="help-text"><InfoIcon size="18" /> {$LL.mapEditor.settings.megaphone.inputs.spaceNameHelper()}</p>
             <InputTags
                 label={$LL.mapEditor.settings.megaphone.inputs.rights()}
                 options={tags ?? []}
@@ -111,19 +111,10 @@
                 onFocus={onMapEditorInputFocus}
                 onBlur={onMapEditorInputUnfocus}
             />
-            <p><InfoIcon size="18" /> {$LL.mapEditor.settings.megaphone.inputs.rightsHelper()}</p>
+            <p class="help-text"><InfoIcon size="18" /> {$LL.mapEditor.settings.megaphone.inputs.rightsHelper()}</p>
             <ButtonState promise={save} initialText={$LL.menu.settings.save.button()} loadingText="Saving" />
         {:catch error}
-            <p>{error}</p>
+            <p class="help-text">{error}</p>
         {/await}
     </div>
 {/if}
-
-<style lang="scss">
-    p {
-        @apply tw-text-sm tw-text-lighter-purple tw-m-0;
-        &.success {
-            @apply tw-text-pop-green tw-text-center;
-        }
-    }
-</style>

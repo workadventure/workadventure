@@ -27,7 +27,7 @@
     }
 </script>
 
-<button type="button" class={`light tw-mt-5 ${state}`} on:click={click} disabled={state !== "ready"}>
+<button type="button" class={`light tw-mt-5 ${state} button-state`} on:click={click} disabled={state !== "ready"}>
     {#if state === "ready"}
         {initialText}
     {:else if state === "loading"}
@@ -54,24 +54,3 @@
         {finalText}
     {/if}
 </button>
-
-<style lang="scss">
-    button {
-        transition: all 0.2s ease-in-out;
-        @apply tw-mx-auto;
-        &:disabled {
-            @apply tw-cursor-default;
-            &:hover {
-                filter: initial;
-            }
-        }
-        &.loading {
-        }
-        &.success {
-            @apply tw-bg-pop-green tw-text-white;
-        }
-        &.error {
-            @apply tw-bg-pop-red tw-text-white;
-        }
-    }
-</style>
