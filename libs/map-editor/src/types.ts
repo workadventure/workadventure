@@ -192,13 +192,7 @@ export type EntityDataPropertiesKeys = "jitsiRoomProperty" | "playAudio" | "open
 export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;
 export type AreaDataProperty = z.infer<typeof AreaDataProperty>;
-export type AreaDataPropertiesKeys =
-    | "focusable"
-    | "silent"
-    | "start"
-    | "jitsiRoomProperty"
-    | "playAudio"
-    | "openWebsite";
+export type AreaDataPropertiesKeys = AreaDataProperty["type"];
 export type ActionsMenuData = z.infer<typeof PropertyBase>;
 export type StartPropertyData = z.infer<typeof StartPropertyData>;
 export type SilentPropertyData = z.infer<typeof SilentPropertyData>;
