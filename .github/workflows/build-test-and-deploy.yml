@@ -599,7 +599,8 @@ jobs:
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
       - name: Upload test-map
-        run: cd map-storage && npm run upload-test-map
+        run: sleep 10 && npm run upload-test-map
+        working-directory: map-storage
       - name: Run Playwright tests
         run: npm run test-prod-like -- --project=${{ matrix.browser }}
         working-directory: tests
