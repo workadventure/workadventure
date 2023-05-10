@@ -37,9 +37,9 @@
             icon.src = meetingIcon;
             cowebsiteName = "BigBlueButton meeting";
         } else {
-            icon.src = `${ICON_URL}/icon?url=${
-                coWebsite.getUrl().hostname
-            }&size=64..96..256&fallback_icon_color=14304c`;
+            icon.src = `${ICON_URL}/icon?url=${encodeURIComponent(
+                coWebsite.getUrl().toString()
+            )}&size=64..96..256&fallback_icon_color=14304c`;
             cowebsiteName = coWebsite.getUrl().hostname;
         }
         icon.alt = coWebsite.getUrl().hostname;
