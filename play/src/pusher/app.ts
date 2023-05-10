@@ -1,6 +1,7 @@
 import fs from "fs";
 import type { Server } from "hyper-express";
 import HyperExpress from "hyper-express";
+import * as Sentry from "@sentry/node";
 import { IoSocketController } from "./controllers/IoSocketController";
 import { AuthenticateController } from "./controllers/AuthenticateController";
 import { MapController } from "./controllers/MapController";
@@ -101,6 +102,7 @@ class App {
                 console.debug("Initialized companion and woka services");
             })
             .catch((reason) => {
+                Sentry.captureException(`Failed to initialized companion and woka services : ${reason}`);
                 console.error(`Failed to initialized companion and woka services : ${reason}`);
             });
     }

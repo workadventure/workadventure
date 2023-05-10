@@ -2,6 +2,7 @@ import { v4 } from "uuid";
 import { ErrorApiData, RegisterData } from "@workadventure/messages";
 import { isAxiosError } from "axios";
 import { z } from "zod";
+import * as Sentry from "@sentry/node";
 import type { AuthTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager } from "../services/JWTTokenManager";
 import { openIDClient } from "../services/OpenIDClient";
@@ -284,6 +285,7 @@ export class AuthenticateController extends BaseHttpController {
                 }
                 await openIDClient.logoutUser(authTokenData.accessToken);
             } catch (error) {
+                Sentry.captureException(`openIDCallback => logout-callback: ${error}`);
                 console.error("openIDCallback => logout-callback", error);
             }
 
@@ -325,6 +327,7 @@ export class AuthenticateController extends BaseHttpController {
                 userInfo = await openIDClient.getUserInfo(req, res);
             } catch (err) {
                 //if no access on openid provider, return error
+                Sentry.captureException("An error occurred while connecting to OpenID Provider => " + err);
                 console.error("An error occurred while connecting to OpenID Provider => ", err);
                 res.status(500);
                 res.send("An error occurred while connecting to OpenID Provider");

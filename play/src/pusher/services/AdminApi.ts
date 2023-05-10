@@ -13,6 +13,7 @@ import {
 import type { MapDetailsData, RoomRedirect, AdminApiData } from "@workadventure/messages";
 import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
+import * as Sentry from "@sentry/node";
 import {
     ADMIN_API_TOKEN,
     ADMIN_API_URL,
@@ -260,7 +261,9 @@ class AdminApi implements AdminInterface {
         }
 
         console.error(mapDetailData.error.issues);
+        Sentry.captureException(mapDetailData.error.issues);
         console.error(roomRedirect.error.issues);
+        Sentry.captureException(roomRedirect.error.issues);
         throw new Error(
             "Invalid answer received from the admin for the /api/map endpoint. Received: " + JSON.stringify(res.data)
         );
@@ -356,6 +359,7 @@ class AdminApi implements AdminInterface {
         }
 
         console.error(fetchMemberDataByUuidResponse.error.issues);
+        Sentry.captureException(fetchMemberDataByUuidResponse.error.issues);
         throw new Error(
             "Invalid answer received from the admin for the /api/room/access endpoint. Received: " +
                 JSON.stringify(res.data)
@@ -416,7 +420,12 @@ class AdminApi implements AdminInterface {
         }
 
         console.error(adminApiData.error.issues);
+        Sentry.captureException(adminApiData.error.issues);
         console.error("Message received from /api/login-url is not in the expected format. Message: ", res.data);
+        Sentry.captureException(
+            "Message received from /api/login-url is not in the expected format. Message: ",
+            res.data
+        );
         throw new Error("Message received from /api/login-url is not in the expected format.");
     }
 

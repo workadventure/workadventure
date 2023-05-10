@@ -8,6 +8,7 @@ import {
     UpdateSpaceFilterMessage,
 } from "@workadventure/messages";
 import Debug from "debug";
+import * as Sentry from "@sentry/node";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import { BackSpaceConnection, ExSocketInterface } from "./Websocket/ExSocketInterface";
 
@@ -180,6 +181,7 @@ export class Space implements CustomJsonReplacerInterface {
             this.notifyAll(subMessage, user);
         } else {
             console.error(`Space => ${this.name} : user not found ${userUuid}`);
+            Sentry.captureException(`Space => ${this.name} : user not found ${userUuid}`);
         }
     }
 
@@ -229,6 +231,7 @@ export class Space implements CustomJsonReplacerInterface {
 
     private filterOneUser(spaceFilters: SpaceFilterMessage, user: SpaceUserExtended): boolean {
         if (!spaceFilters.filter) {
+            Sentry.captureException("Empty filter received" + spaceFilters.spaceName);
             console.error("Empty filter received");
             return false;
         }

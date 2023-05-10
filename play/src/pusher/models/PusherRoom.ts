@@ -1,6 +1,7 @@
 import type { BatchToPusherRoomMessage } from "@workadventure/messages";
 import Debug from "debug";
 import type { ClientReadableStream } from "@grpc/grpc-js";
+import * as Sentry from "@sentry/node";
 import { apiClientRepository } from "../services/ApiClientRepository";
 import type { ExSocketInterface } from "./Websocket/ExSocketInterface";
 import { PositionDispatcher } from "./PositionDispatcher";
@@ -78,6 +79,7 @@ export class PusherRoom implements CustomJsonReplacerInterface {
         this.backConnection.on("data", (batch: BatchToPusherRoomMessage) => {
             for (const message of batch.payload) {
                 if (!message.message) {
+                    Sentry.captureException("Message is undefined for backConnection in PusherRoom" + this.roomUrl);
                     console.error("Message is undefined for backConnection in PusherRoom");
                     continue;
                 }
@@ -166,6 +168,7 @@ export class PusherRoom implements CustomJsonReplacerInterface {
                     listener.disconnecting = true;
                     listener.end(1011, "Connection error between pusher and back server");
                     console.error("Connection error between pusher and back server", err);
+                    Sentry.captureException("Connection error between pusher and back server" + err);
                 }
             }
         });
