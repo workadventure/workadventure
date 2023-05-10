@@ -115,18 +115,7 @@
 </div>
 
 <style lang="scss">
-    #container {
-        @apply tw-h-fit tw-min-h-fit tw-flex tw-w-full tw-border-orange tw-border-2 tw-border-solid tw-relative tw-rounded;
-        transition: all 0.2s ease;
-    }
-/*    video.no-video {
+    /*    video.no-video {
         visibility: collapse;
     }*/
-
-    video {
-        object-fit: cover;
-        &.object-contain {
-            object-fit: contain;
-        }
-    }
 </style>

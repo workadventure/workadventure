@@ -260,3 +260,21 @@
         @apply tw-font-semibold tw-text-sm tw-not-italic tw-break-words tw-px-2 tw-overflow-y-auto tw-max-h-10 tw-flex;
     }
 }
+
+
+
+
+//////////////////////////
+// JitsiMediaBox.svelte //
+//////////////////////////
+.jitsi-video{
+    @apply tw-h-fit tw-min-h-fit tw-flex tw-w-full tw-border-orange tw-border-2 tw-border-solid tw-relative tw-rounded;
+    transition: all 0.2s ease;
+
+    video {
+        object-fit: cover;
+        &.object-contain {
+            object-fit: contain;
+        }
+    }
+}
