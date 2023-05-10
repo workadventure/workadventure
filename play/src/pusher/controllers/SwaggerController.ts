@@ -17,7 +17,7 @@ export class SwaggerController extends BaseHttpController {
                         version: "1.0.0",
                     },
                 },
-                apis: ["./src/Controller/*.ts"],
+                apis: ["./src/pusher/controllers/*.ts"],
             };
 
             res.json(swaggerJsdoc(options));
@@ -52,7 +52,7 @@ export class SwaggerController extends BaseHttpController {
                     },
                     ...SwaggerGenerator.definitions(null),
                 },
-                apis: ["./src/Services/*.ts"],
+                apis: ["./src/pusher/services/*.ts"],
             };
             if (ADMIN_URL && options.swaggerDefinition) {
                 options.swaggerDefinition.host = "pusher." + ADMIN_URL.replace("//", "");
