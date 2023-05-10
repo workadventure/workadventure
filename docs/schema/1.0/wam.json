@@ -108,6 +108,9 @@
                         },
                         "audioLink": {
                           "type": "string"
+                        },
+                        "volume": {
+                          "type": "number"
                         }
                       },
                       "required": [

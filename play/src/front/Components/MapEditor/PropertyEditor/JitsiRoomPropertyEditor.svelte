@@ -50,6 +50,16 @@
             />
         </div>
         <div class="value-switch">
+            <label for="closable">{$LL.mapEditor.properties.jitsiProperties.closable()}</label>
+            <input
+                id="closable"
+                type="checkbox"
+                class="input-switch"
+                bind:checked={property.closable}
+                on:change={onValueChange}
+            />
+        </div>
+        <div class="value-switch">
             <label for="noPrefix">{$LL.mapEditor.properties.jitsiProperties.noPrefix()}</label>
             <input
                 id="noPrefix"

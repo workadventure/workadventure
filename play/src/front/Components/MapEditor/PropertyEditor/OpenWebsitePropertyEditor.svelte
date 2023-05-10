@@ -15,6 +15,15 @@
         dispatch("change");
     }
 
+    function onNewTabValueChange() {
+        if (property.newTab) {
+            if (property.trigger === "onicon") {
+                property.trigger = undefined;
+            }
+        }
+        dispatch("change");
+    }
+
     function onValueChange() {
         dispatch("change");
     }
@@ -41,20 +50,6 @@
                 on:blur={onMapEditorInputUnfocus}
             />
         </div>
-        <div class="">
-            <label for="websiteWidth">{$LL.mapEditor.properties.linkProperties.width()}: {property.width ?? 50}%</label>
-            <input
-                id="websiteWidth"
-                type="range"
-                min="0"
-                max="100"
-                placeholder="50"
-                bind:value={property.width}
-                on:change={onValueChange}
-                on:focus={onMapEditorInputFocus}
-                on:blur={onMapEditorInputUnfocus}
-            />
-        </div>
         {#if !property.hideButtonLabel}
             <div class="value-input">
                 <label for="linkButton">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
@@ -72,7 +67,9 @@
             <label for="trigger">{$LL.mapEditor.properties.linkProperties.trigger()}</label>
             <select id="trigger" class="tw-w-full" bind:value={property.trigger} on:change={onTriggerValueChange}>
                 <option value={undefined}>{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option>
-                <option value="onicon">{$LL.mapEditor.properties.linkProperties.triggerOnClick()}</option>
+                {#if !property.newTab}
+                    <option value="onicon">{$LL.mapEditor.properties.linkProperties.triggerOnClick()}</option>
+                {/if}
                 <option value="onaction">{$LL.mapEditor.properties.linkProperties.triggerOnAction()}</option>
             </select>
         </div>
@@ -96,9 +93,25 @@
                 type="checkbox"
                 class="input-switch"
                 bind:checked={property.newTab}
-                on:change={onValueChange}
+                on:change={onNewTabValueChange}
             />
         </div>
+        {#if !property.newTab}
+            <div class="">
+                <label for="websiteWidth"
+                    >{$LL.mapEditor.properties.linkProperties.width()}: {property.width ?? 50}%</label
+                >
+                <input
+                    id="websiteWidth"
+                    type="range"
+                    min="0"
+                    max="100"
+                    placeholder="50"
+                    bind:value={property.width}
+                    on:change={onValueChange}
+                />
+            </div>
+        {/if}
         <div class="value-switch">
             <label for="closable">{$LL.mapEditor.properties.linkProperties.closable()}</label>
             <input

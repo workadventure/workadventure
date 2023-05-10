@@ -127,7 +127,7 @@
         {#if !hasFocusableProperty}
             <AddPropertyButton
                 headerText={$LL.mapEditor.properties.focusableProperties.label()}
-                descriptionText="Lorem ipsum dolor sit amet"
+                descriptionText={$LL.mapEditor.properties.focusableProperties.description()}
                 on:click={() => {
                     onAddProperty("focusable");
                 }}
@@ -136,7 +136,7 @@
         {#if !hasSilentProperty}
             <AddPropertyButton
                 headerText={$LL.mapEditor.properties.silentProperty.label()}
-                descriptionText="Lorem ipsum dolor sit amet"
+                descriptionText={$LL.mapEditor.properties.silentProperty.description()}
                 on:click={() => {
                     onAddProperty("silent");
                 }}
@@ -145,7 +145,7 @@
         {#if !hasJitsiRoomProperty}
             <AddPropertyButton
                 headerText={$LL.mapEditor.properties.jitsiProperties.label()}
-                descriptionText="Lorem ipsum dolor sit amet"
+                descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
                 on:click={() => {
                     onAddProperty("jitsiRoomProperty");
                 }}
@@ -153,14 +153,14 @@
         {/if}
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.audioProperties.label()}
-            descriptionText="Lorem ipsum dolor sit amet"
+            descriptionText={$LL.mapEditor.properties.audioProperties.description()}
             on:click={() => {
                 onAddProperty("playAudio");
             }}
         />
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.linkProperties.label()}
-            descriptionText="Lorem ipsum dolor sit amet"
+            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
             on:click={() => {
                 onAddProperty("openWebsite");
             }}
