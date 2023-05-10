@@ -2,6 +2,7 @@
  * Handles variables shared between the scripting API and the server.
  */
 import { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
+import * as Sentry from "@sentry/node";
 import { User } from "../Model/User";
 import { getVariablesRepository } from "./Repository/VariablesRepository";
 import { VariableError } from "./VariableError";
@@ -212,9 +213,10 @@ export class VariablesManager {
         this._variables.set(name, value);
 
         if (variableObject !== undefined && variableObject.persist) {
-            this.variablesRepository
-                .saveVariable(this.roomUrl, name, value)
-                .catch((e) => console.error("Error while saving variable in Redis:", e));
+            this.variablesRepository.saveVariable(this.roomUrl, name, value).catch((e) => {
+                console.error("Error while saving variable in Redis:", e);
+                Sentry.captureException(`Error while saving variable in Redis: ${JSON.stringify(e)}`);
+            });
         }
 
         return readableBy;

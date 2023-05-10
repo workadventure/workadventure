@@ -10,6 +10,7 @@ import {
     SetPlayerVariableMessage_Scope,
     SubMessage,
 } from "@workadventure/messages";
+import * as Sentry from "@sentry/node";
 import { Zone } from "../Model/Zone";
 import { Movable } from "../Model/Movable";
 import { PositionNotifier } from "../Model/PositionNotifier";
@@ -237,7 +238,10 @@ export class User implements Movable, CustomJsonReplacerInterface {
                         setVariable.ttl,
                         setVariable.persist
                     )
-                    .catch((e) => console.error("An error occurred while saving world variable: ", e));
+                    .catch((e) => {
+                        console.error("An error occurred while saving world variable: ", e);
+                        Sentry.captureException(`An error occurred while saving world variable: ${JSON.stringify(e)}`);
+                    });
 
                 this.updateDataUserSameUUID(setVariable, details);
             } else if (scope === SetPlayerVariableMessage_Scope.ROOM) {
@@ -249,7 +253,10 @@ export class User implements Movable, CustomJsonReplacerInterface {
                         setVariable.ttl,
                         setVariable.persist
                     )
-                    .catch((e) => console.error("An error occurred while saving room variable: ", e));
+                    .catch((e) => {
+                        console.error("An error occurred while saving room variable: ", e);
+                        Sentry.captureException(`An error occurred while saving room variable: ${JSON.stringify(e)}`);
+                    });
 
                 this.updateDataUserSameUUID(setVariable, details);
             } else if (scope === SetPlayerVariableMessage_Scope.UNRECOGNIZED) {
@@ -286,9 +293,14 @@ export class User implements Movable, CustomJsonReplacerInterface {
                         // We don't need to persist this for every player as this will write in the same place in DB.
                         false
                     )
-                    .catch((e) =>
-                        console.error("An error occurred while saving room variable for a user with same UUID: ", e)
-                    );
+                    .catch((e) => {
+                        console.error("An error occurred while saving room variable for a user with same UUID: ", e);
+                        Sentry.captureException(
+                            `An error occurred while saving room variable for a user with same UUID: ${JSON.stringify(
+                                e
+                            )}`
+                        );
+                    });
 
                 // Let's dispatch the message to the user.
                 brother.emitInBatch({

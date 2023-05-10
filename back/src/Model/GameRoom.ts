@@ -18,6 +18,7 @@ import { Jitsi } from "@workadventure/shared-utils";
 import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
 import { Value } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/struct";
+import * as Sentry from "@sentry/node";
 import { PositionInterface } from "../Model/PositionInterface";
 import {
     EmoteCallback,
@@ -152,9 +153,15 @@ export class GameRoom implements BrothersFinder {
         gameRoom
             .getMucManager()
             .then((mucManager) => {
-                mucManager.init(mapDetails).catch((err) => console.error(err));
+                mucManager.init(mapDetails).catch((err) => {
+                    console.error(err);
+                    Sentry.captureException(err);
+                });
             })
-            .catch((err) => console.error("Error get Muc Manager: ", err));
+            .catch((err) => {
+                console.error("Error get Muc Manager: ", err);
+                Sentry.captureException(`Error get Muc Manager: ${JSON.stringify(err)}`);
+            });
         return gameRoom;
     }
 
@@ -692,6 +699,7 @@ export class GameRoom implements BrothersFinder {
                 const match = /\/_\/[^/]+\/(.+)/.exec(roomUrlObj.pathname);
                 if (!match) {
                     console.error("Unexpected room URL", roomUrl);
+                    Sentry.captureException(`Unexpected room URL ${roomUrl}`);
                     throw new Error('Unexpected room URL "' + roomUrl + '"');
                 }
 
@@ -719,6 +727,10 @@ export class GameRoom implements BrothersFinder {
 
         console.error(result.error.issues);
         console.error("Unexpected room redirect received while querying map details", result);
+        Sentry.captureException(result.error.issues);
+        Sentry.captureException(
+            `Unexpected room redirect received while querying map details ${JSON.stringify(result)}`
+        );
         throw new Error("Unexpected room redirect received while querying map details");
     }
 

@@ -47,6 +47,7 @@ import {
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
 import Debug from "debug";
+import * as Sentry from "@sentry/node";
 import { GameRoom } from "../Model/GameRoom";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -419,6 +420,7 @@ export class SocketManager {
             this.emitCreateUpdateGroupEvent(listener, fromZone, thing);
         } else {
             console.error("Unexpected type for Movable.");
+            Sentry.captureException("Unexpected type for Movable.");
         }
     }
 
@@ -485,6 +487,7 @@ export class SocketManager {
             this.emitCreateUpdateGroupEvent(listener, null, thing);
         } else {
             console.error("Unexpected type for Movable.");
+            Sentry.captureException("Unexpected type for Movable.");
         }
     }
 
@@ -495,6 +498,7 @@ export class SocketManager {
             this.emitDeleteGroupEvent(listener, thing.getId(), newZone);
         } else {
             console.error("Unexpected type for Movable.");
+            Sentry.captureException("Unexpected type for Movable.");
         }
     }
 
@@ -723,6 +727,7 @@ export class SocketManager {
     public async handleQueryMessage(gameRoom: GameRoom, user: User, queryMessage: QueryMessage): Promise<void> {
         if (!queryMessage.query) {
             console.error("QueryMessage has no query");
+            Sentry.captureException("QueryMessage has no query");
             return;
         }
         const queryCase = queryMessage.query.$case;
@@ -762,6 +767,7 @@ export class SocketManager {
             }
         } catch (e) {
             console.error("An error happened while answering a query:", e);
+            Sentry.captureException(`An error happened while answering a query: ${JSON.stringify(e)}`);
             answerMessage.answer = {
                 $case: "error",
                 error: {
@@ -969,6 +975,7 @@ export class SocketManager {
                 });
             } else {
                 console.error("Unexpected type for Movable returned by setViewport");
+                Sentry.captureException("Unexpected type for Movable returned by setViewport");
             }
         }
 
@@ -1058,12 +1065,22 @@ export class SocketManager {
                     roomId +
                     "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
             );
+            Sentry.captureException(
+                "In sendAdminMessage, could not find room with id '" +
+                    roomId +
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+            );
             return;
         }
 
         const recipients = room.getUsersByUuid(recipientUuid);
         if (recipients.size === 0) {
             console.error(
+                "In sendAdminMessage, could not find user with id '" +
+                    recipientUuid +
+                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
+            );
+            Sentry.captureException(
                 "In sendAdminMessage, could not find user with id '" +
                     recipientUuid +
                     "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
@@ -1092,12 +1109,22 @@ export class SocketManager {
                     roomId +
                     "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
             );
+            Sentry.captureException(
+                "In banUser, could not find room with id '" +
+                    roomId +
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+            );
             return;
         }
 
         const recipients = room.getUsersByUuid(recipientUuid);
         if (recipients.size === 0) {
             console.error(
+                "In banUser, could not find user with id '" +
+                    recipientUuid +
+                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
+            );
+            Sentry.captureException(
                 "In banUser, could not find user with id '" +
                     recipientUuid +
                     "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
@@ -1132,6 +1159,11 @@ export class SocketManager {
                     roomId +
                     "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
             );
+            Sentry.captureException(
+                "In sendAdminRoomMessage, could not find room with id '" +
+                    roomId +
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+            );
             return;
         }
 
@@ -1153,6 +1185,11 @@ export class SocketManager {
         if (!room) {
             //todo: this should cause the http call to return a 500
             console.error(
+                "In dispatchWorldFullWarning, could not find room with id '" +
+                    roomId +
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+            );
+            Sentry.captureException(
                 "In dispatchWorldFullWarning, could not find room with id '" +
                     roomId +
                     "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
@@ -1335,6 +1372,7 @@ export class SocketManager {
 
         if (!chatMessagePrompt.message) {
             console.error("ChatMessagePrompt has no message");
+            Sentry.captureException("ChatMessagePrompt has no message");
             return false;
         }
         switch (chatMessagePrompt.message.$case) {

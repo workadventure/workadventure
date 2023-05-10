@@ -1,4 +1,5 @@
 import { createClient, RedisClientOptions } from "redis";
+import * as Sentry from "@sentry/node";
 import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT } from "../Enum/EnvironmentVariable";
 
 const config: RedisClientOptions = {
@@ -16,6 +17,7 @@ const redisClient = REDIS_HOST !== undefined ? createClient(config) : null;
 
 redisClient?.on("error", (err: unknown) => {
     console.error("Error connecting to Redis:", err);
+    Sentry.captureException(`Error connecting to Redis: ${JSON.stringify(err)}`);
 });
 redisClient?.on("connect", () => console.log("Redis client is connected"));
 redisClient?.on("reconnecting", () => console.log("Redis client is reconnecting"));
