@@ -118,7 +118,7 @@
         />
     </div>
     <div class="entity-name-container">
-        <h3>Object name</h3>
+        <label for="objectName">Object name</label>
         <input
             id="objectName"
             type="text"
@@ -177,11 +177,21 @@
     }
 
     .entity-name-container {
+        display: flex;
+        width: 100%;
+        margin-bottom: 0.5em;
+        margin-top: 0.5em;
+        flex-direction: column;
+        label {
+            min-width: fit-content;
+            margin-right: 0.5em;
+        }
         input {
-            background-color: white;
-            color: black;
-            font-weight: 700;
-            width: 100%;
+            flex-grow: 1;
+            min-width: 0;
+        }
+        * {
+            margin-bottom: 0;
         }
     }
 </style>

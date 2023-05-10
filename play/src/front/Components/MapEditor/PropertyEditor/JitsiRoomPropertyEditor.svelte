@@ -150,13 +150,6 @@
         }
     }
 
-    input {
-        background-color: white;
-        color: black;
-        font-weight: 700;
-        width: 100%;
-    }
-
     button {
         flex: 1 1 0px;
         border: 1px solid grey;

@@ -77,10 +77,8 @@
             margin-right: 0.5em;
         }
         input {
-            background-color: white;
-            color: black;
-            font-weight: 700;
-            width: 100%;
+            flex-grow: 1;
+            min-width: 0;
         }
         * {
             margin-bottom: 0;

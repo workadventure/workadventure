@@ -38,7 +38,7 @@
         {$LL.mapEditor.properties.linkProperties.label()}
     </span>
     <span slot="content">
-        <div class="value-input">
+        <div class="value-input tw-flex tw-flex-col">
             <label for="tabLink">{$LL.mapEditor.properties.linkProperties.linkLabel()}</label>
             <input
                 id="tabLink"
@@ -51,7 +51,7 @@
             />
         </div>
         {#if !property.hideButtonLabel}
-            <div class="value-input">
+            <div class="value-input tw-flex tw-flex-col">
                 <label for="linkButton">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
                 <input
                     id="linkButton"
@@ -74,7 +74,7 @@
             </select>
         </div>
         {#if triggerOnActionChoosen}
-            <div class="value-input">
+            <div class="value-input tw-flex tw-flex-col">
                 <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>
                 <input
                     id="triggerMessage"
@@ -132,7 +132,7 @@
                 on:change={onValueChange}
             />
         </div>
-        <div class="value-input">
+        <div class="value-input tw-flex tw-flex-col">
             <label for="policy">{$LL.mapEditor.properties.linkProperties.policy()}</label>
             <input
                 id="policy"
@@ -159,10 +159,8 @@
             margin-right: 0.5em;
         }
         input {
-            background-color: white;
-            color: black;
-            font-weight: 700;
-            width: 100%;
+            flex-grow: 1;
+            min-width: 0;
         }
         * {
             margin-bottom: 0;
