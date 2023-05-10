@@ -1,6 +1,6 @@
 <script lang="ts">
-    import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { Readable } from "svelte/store";
+    import SoundMeterWidget from "./SoundMeterWidget.svelte";
 
     export let volume: Readable<number[] | undefined> | undefined;
     export let classcss: string;

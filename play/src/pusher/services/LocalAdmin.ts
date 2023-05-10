@@ -10,14 +10,11 @@ import {
     OPID_WOKA_NAME_POLICY,
     ENABLE_CHAT_ONLINE_LIST,
     ENABLE_CHAT_DISCONNECTED_LIST,
-    ADMIN_API_URL,
-    ADMIN_API_TOKEN,
 } from "../enums/EnvironmentVariable";
 import type { AdminInterface } from "./AdminInterface";
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
-import axios from "axios";
 
 /**
  * A local class mocking a real admin if no admin is configured.

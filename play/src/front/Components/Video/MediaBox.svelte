@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {fly} from "svelte/transition";
+    import { fly } from "svelte/transition";
     import type { Readable } from "svelte/store";
     import { onMount } from "svelte";
     import { PeerStatus, VideoPeer } from "../../WebRtc/VideoPeer";

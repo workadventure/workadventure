@@ -1,5 +1,5 @@
 <script lang="ts">
-    import LL from "../../i18n/i18n-svelte";
+    import { LL } from "../../i18n/i18n-svelte";
 
     export let size = 6;
     export let color = "brand-blue";

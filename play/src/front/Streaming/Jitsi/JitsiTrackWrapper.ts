@@ -1,8 +1,8 @@
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import { Readable, Unsubscriber, writable, Writable, readable, get } from "svelte/store";
+import { v4 as uuid } from "uuid";
 import { SoundMeter } from "../../Phaser/Components/SoundMeter";
 import { SpaceUserExtended } from "../../Space/Space";
-import { v4 as uuid } from "uuid";
 
 export class JitsiTrackWrapper {
     private _spaceUser: SpaceUserExtended | undefined;

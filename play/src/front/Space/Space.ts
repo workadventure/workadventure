@@ -1,9 +1,9 @@
 import { SpaceFilterMessage, SpaceUser } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
 import { Subscription } from "rxjs";
-import { RoomConnection } from "../Connexion/RoomConnection";
 import { Readable } from "svelte/store";
 import Debug from "debug";
+import { RoomConnection } from "../Connexion/RoomConnection";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
 
 const debug = Debug("space");

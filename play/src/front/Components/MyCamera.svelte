@@ -12,12 +12,12 @@
     import { LL } from "../../i18n/i18n-svelte";
     import { localUserStore } from "../Connexion/LocalUserStore";
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
+    import { megaphoneEnabledStore } from "../Stores/MegaphoneStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
     import Woka from "./Woka/WokaFromUserId.svelte";
     import microphoneOffImg from "./images/microphone-off.png";
     import cameraOffImg from "./images/camera-off.png";
-    import { megaphoneEnabledStore } from "../Stores/MegaphoneStore";
 
     let stream: MediaStream | null;
     let userName = localUserStore.getName();

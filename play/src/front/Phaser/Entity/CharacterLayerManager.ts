@@ -1,9 +1,9 @@
+import { CharacterLayerMessage } from "@workadventure/messages";
 import type { GameScene } from "../Game/GameScene";
-import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
 import { TextureError } from "../../Exception/TextureError";
-import { CharacterLayerMessage } from "@workadventure/messages";
 import { gameManager } from "../Game/GameManager";
+import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 
 /**
  * Class that let you generate a base64 image from a CharacterLayer[]

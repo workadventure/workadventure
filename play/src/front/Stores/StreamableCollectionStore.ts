@@ -1,14 +1,14 @@
 import type { Readable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
+import { createNestedStore } from "@workadventure/store-utils";
 import type { RemotePeer } from "../WebRtc/SimplePeer";
+import { GameScene } from "../Phaser/Game/GameScene";
+import { JitsiTrackWrapper } from "../Streaming/Jitsi/JitsiTrackWrapper";
 import type { ScreenSharingLocalMedia } from "./ScreenSharingStore";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
 import { peerStore, screenSharingStreamStore } from "./PeerStore";
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
 import { gameSceneStore } from "./GameSceneStore";
-import { createNestedStore } from "@workadventure/store-utils";
-import { JitsiTrackWrapper } from "../Streaming/Jitsi/JitsiTrackWrapper";
-import { GameScene } from "../Phaser/Game/GameScene";
 
 export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackWrapper;
 

@@ -13,11 +13,11 @@ import {
     WokaDetail,
     ApplicationDefinitionInterface,
     SpaceFilterMessage,
+    SpaceUser,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import { v4 as uuid } from "uuid";
 import { JID } from "stanza";
-import { SpaceUser } from "@workadventure/messages";
 import { Color } from "@workadventure/shared-utils";
 import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
 import { PointInterface } from "../models/Websocket/PointInterface";

@@ -3,9 +3,10 @@ import { get, readable, Readable, Unsubscriber, Writable, writable } from "svelt
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 import JitsiConference from "lib-jitsi-meet/types/hand-crafted/JitsiConference";
-import { JitsiLocalTracks } from "./JitsiLocalTracks";
-import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
 import Debug from "debug";
+import { Result } from "@workadventure/map-editor";
+import JitsiLocalTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiLocalTrack";
+import { JitsiConferenceErrors } from "lib-jitsi-meet/types/hand-crafted/JitsiConferenceErrors";
 import {
     requestedCameraDeviceIdStore,
     requestedMicrophoneDeviceIdStore,
@@ -14,10 +15,9 @@ import {
     usedCameraDeviceIdStore,
     usedMicrophoneDeviceIdStore,
 } from "../../Stores/MediaStore";
-import { Result } from "@workadventure/map-editor";
-import JitsiLocalTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiLocalTrack";
-import { JitsiConferenceErrors } from "lib-jitsi-meet/types/hand-crafted/JitsiConferenceErrors";
 import { megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
+import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
+import { JitsiLocalTracks } from "./JitsiLocalTracks";
 
 export type DeviceType = "video" | "audio" | "desktop";
 
@@ -151,7 +151,6 @@ export class JitsiConferenceWrapper {
              * @param track JitsiTrackWrapper object
              */
             function onRemoteTrack(track: JitsiTrack) {
-
                 if (track.isLocal()) {
                     console.log("Received my remote track", track);
                 }
@@ -267,7 +266,7 @@ export class JitsiConferenceWrapper {
             if (this.tracks.audio) {
                 void this.handleTrack(this.tracks.audio, undefined);
             }
-            if(this.tracks.video) {
+            if (this.tracks.video) {
                 void this.handleTrack(this.tracks.video, undefined);
             }
         });

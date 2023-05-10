@@ -1,7 +1,7 @@
 import { get, writable } from "svelte/store";
+import { JitsiTrackWrapper } from "../Streaming/Jitsi/JitsiTrackWrapper";
 import type { Streamable } from "./StreamableCollectionStore";
 import { peerStore } from "./PeerStore";
-import { JitsiTrackWrapper } from "../Streaming/Jitsi/JitsiTrackWrapper";
 
 /**
  * A store that contains the peer / media that has currently the "importance" focus.

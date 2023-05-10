@@ -35,18 +35,18 @@
         {label}
     </label>
     <Select
-            id="selector"
-            on:filter={handleFilter}
-            bind:filterText
-            on:change={handleChange}
-            items={options}
-            bind:value
-            multiple={true}
-            placeholder="Select rights"
-            on:focus={onFocus}
-            on:blur={onBlur}
-            showChevron={true}
-            --icons-color="var(--brand-blue)"
+        id="selector"
+        on:filter={handleFilter}
+        bind:filterText
+        on:change={handleChange}
+        items={options}
+        bind:value
+        multiple={true}
+        placeholder="Select rights"
+        on:focus={onFocus}
+        on:blur={onBlur}
+        showChevron={true}
+        --icons-color="var(--brand-blue)"
     >
         <div slot="item" let:item>
             {item.created ? "Add new : " : ""}

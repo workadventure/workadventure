@@ -1,16 +1,16 @@
-import { RoomConnection } from "../Connexion/RoomConnection";
-import { libJitsiFactory } from "./Jitsi/LibJitsiFactory";
-import { JitsiConferenceWrapper } from "./Jitsi/JitsiConferenceWrapper";
-import { jitsiConferencesStore } from "./Jitsi/JitsiConferencesStore";
-import { megaphoneEnabledStore } from "../Stores/MegaphoneStore";
 import { derived, get, Readable, Unsubscriber, writable } from "svelte/store";
 import { ForwardableStore } from "@workadventure/store-utils";
-import { JitsiTrackWrapper } from "./Jitsi/JitsiTrackWrapper";
 import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
-import { Space } from "../Space/Space";
 import pLimit from "p-limit";
 import { SpaceFilterMessage } from "@workadventure/messages";
+import { megaphoneEnabledStore } from "../Stores/MegaphoneStore";
+import { RoomConnection } from "../Connexion/RoomConnection";
+import { Space } from "../Space/Space";
 import { gameManager } from "../Phaser/Game/GameManager";
+import { JitsiTrackWrapper } from "./Jitsi/JitsiTrackWrapper";
+import { jitsiConferencesStore } from "./Jitsi/JitsiConferencesStore";
+import { JitsiConferenceWrapper } from "./Jitsi/JitsiConferenceWrapper";
+import { libJitsiFactory } from "./Jitsi/LibJitsiFactory";
 
 export const jitsiLoadingStore = writable<boolean>(false);
 

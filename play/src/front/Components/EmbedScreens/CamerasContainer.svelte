@@ -2,7 +2,7 @@
     import { fly } from "svelte/transition";
     import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import MediaBox from "../Video/MediaBox.svelte";
-    import {EmbedScreen} from "../../Stores/HighlightedEmbedScreenStore";
+    import { EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 
     export let highlightedEmbedScreen: EmbedScreen | undefined;
     export let full = false;

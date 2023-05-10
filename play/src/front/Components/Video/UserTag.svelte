@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Color } from "@workadventure/shared-utils";
     import Woka from "../Woka/Woka.svelte";
-    import LL from "../../../i18n/i18n-svelte";
+    import { LL } from "../../../i18n/i18n-svelte";
 
     export let name: string;
     export let isMe = false;
