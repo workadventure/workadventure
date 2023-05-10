@@ -2,11 +2,11 @@ import {expect, Page} from "@playwright/test";
 
 class Megaphone {
     async toggleMegaphone(page: Page) {
-        await page.locator('.map-editor .modal input[type="checkbox"]').check();
+        await page.locator('.map-editor .configure-my-room input[type="checkbox"]').check();
     }
 
     async isMegaphoneEnabled(page: Page) {
-        await page.locator('.map-editor .modal input[type="checkbox"]').isChecked();
+        await page.locator('.map-editor .configure-my-room input[type="checkbox"]').isChecked();
     }
 
     async megaphoneInputNameSpace(page: Page) {
@@ -15,16 +15,16 @@ class Megaphone {
     }
 
     async megaphoneSelectScope(page: Page) {
-        await page.locator('.map-editor .modal select').first().selectOption('ROOM');
+        await page.locator('.map-editor .configure-my-room select').first().selectOption('ROOM');
     }
 
     async megaphoneAddNewRights(page: Page, tag = 'test') {
-        await page.locator(".map-editor .modal .content .input-tags .value-container input").fill(tag);
+        await page.locator(".map-editor .configure-my-room .content .input-tags .value-container input").fill(tag);
         await page.getByText(`Add new : ${tag.toLocaleUpperCase()}`).click();
     }
 
     async megaphoneRemoveRights(page: Page, tag = 'test') {
-        await page.locator(".map-editor .modal .content .value-container .multi-item", {hasText: tag.toLocaleUpperCase()}).locator('.multi-item-clear').click();
+        await page.locator(".map-editor .configure-my-room .content .value-container .multi-item", {hasText: tag.toLocaleUpperCase()}).locator('.multi-item-clear').click();
     }
 
     async megaphoneSave(page: Page) {
@@ -32,7 +32,7 @@ class Megaphone {
     }
 
     async isCorrectlySaved(page: Page) {
-        await expect(await page.locator('.map-editor .modal .content button:disabled')).toContainText('Successfully saved');
+        await expect(await page.locator('.map-editor .configure-my-room .content button:disabled')).toContainText('Successfully saved');
     }
 }
 
