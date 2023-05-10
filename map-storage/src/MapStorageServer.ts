@@ -10,6 +10,7 @@ import {
 } from "@workadventure/messages";
 import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
+import * as Sentry from "@sentry/node";
 import { mapsManager } from "./MapsManager";
 import { mapPathUsingDomain } from "./Services/PathMapper";
 
@@ -29,6 +30,7 @@ const mapStorageServer: MapStorageServer = {
             callback(null);
         } catch (e: unknown) {
             console.error("An error occured in handleClearAfterUpload", e);
+            Sentry.captureException(`An error occured in handleClearAfterUpload ${JSON.stringify(e)}`);
             let message: string;
             if (typeof e === "object" && e !== null) {
                 message = e.toString();
@@ -62,6 +64,7 @@ const mapStorageServer: MapStorageServer = {
             callback(null, editMapCommandsArrayMessage);
         } catch (e: unknown) {
             console.error("An error occured in handleClearAfterUpload", e);
+            Sentry.captureException(`An error occured in handleClearAfterUpload ${JSON.stringify(e)}`);
             let message: string;
             if (typeof e === "object" && e !== null) {
                 message = e.toString();

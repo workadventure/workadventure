@@ -1,4 +1,5 @@
 import axios from "axios";
+import * as Sentry from "@sentry/node";
 import { WEB_HOOK_API_TOKEN } from "../Enum/EnvironmentVariable";
 
 /**
@@ -46,6 +47,7 @@ export class WebHookService {
             })
             .catch((e: unknown) => {
                 console.error("Error while calling webhook:", e);
+                Sentry.captureException(`Error while calling webhook: ${JSON.stringify(e)}`);
             });
     }
 }

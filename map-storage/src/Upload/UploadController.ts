@@ -13,6 +13,7 @@ import { ZipFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/
 import { HttpFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/HttpFileFetcher";
 import { Operation } from "fast-json-patch";
 import { generateErrorMessage } from "zod-error";
+import * as Sentry from "@sentry/node";
 import { mapPath } from "../Services/PathMapper";
 import { MAX_UNCOMPRESSED_SIZE } from "../Enum/EnvironmentVariable";
 import { passportAuthenticator } from "../Services/Authentication";
@@ -201,11 +202,13 @@ export class UploadController {
                     fs.unlink(zipFile.path, (err) => {
                         if (err) {
                             console.error("Error deleting file:", err);
+                            Sentry.captureException(`Error deleting file: ${JSON.stringify(err)}`);
                         }
                     });
                     for (const wamUrl of wamToPurge) {
                         uploadDetector.refresh(wamUrl).catch((err) => {
                             console.error(err);
+                            Sentry.captureException(err);
                         });
                     }
                     await this.mapListService.generateCacheFile(req.hostname);
@@ -319,12 +322,14 @@ export class UploadController {
                     fs.unlink(file.path, (err) => {
                         if (err) {
                             console.error("Error deleting file:", err);
+                            Sentry.captureException(`Error deleting file: ${JSON.stringify(err)}`);
                         }
                     });
 
                     if (extension === ".wam" && wamFile) {
                         uploadDetector.refresh(this.getFullUrlFromRequest(req)).catch((err) => {
                             console.error(err);
+                            Sentry.captureException(err);
                         });
                         await this.mapListService.updateWAMFileInCache(req.hostname, filePath, wamFile);
                     }
@@ -407,6 +412,7 @@ export class UploadController {
 
                     uploadDetector.refresh(this.getFullUrlFromRequest(req)).catch((err) => {
                         console.error(err);
+                        Sentry.captureException(err);
                     });
 
                     await this.mapListService.updateWAMFileInCache(req.hostname, filePath, result.value);
@@ -493,12 +499,14 @@ export class UploadController {
                         console.warn("File not found: ", err);
                     } else {
                         console.error("A warning occurred while Zipping file: ", err);
+                        Sentry.captureException(`A warning occurred while Zipping file: ${JSON.stringify(err)}`);
                     }
                 });
 
                 // good practice to catch this error explicitly
                 archive.on("error", function (err) {
                     console.error("An error occurred while Zipping file: ", err);
+                    Sentry.captureException(`An error occurred while Zipping file: ${JSON.stringify(err)}`);
                     res.status(500).send("An error occurred");
                 });
 
@@ -555,6 +563,7 @@ export class UploadController {
                 if (filePath.endsWith(".wam")) {
                     uploadDetector.refresh(this.getFullUrlFromRequest(req)).catch((err) => {
                         console.error(err);
+                        Sentry.captureException(err);
                     });
                     await this.mapListService.deleteWAMFileInCache(req.hostname, filePath);
                 }
