@@ -1,5 +1,6 @@
 import { derived, get, Readable, Unsubscriber, writable } from "svelte/store";
 import { ForwardableStore } from "@workadventure/store-utils";
+// eslint-disable-next-line import/no-unresolved
 import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 import pLimit from "p-limit";
 import { SpaceFilterMessage } from "@workadventure/messages";

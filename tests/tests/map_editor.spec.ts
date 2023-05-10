@@ -43,7 +43,7 @@ test.describe('Map editor', () => {
 
     await page2.close();
 
-    
+
     // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
   });
 

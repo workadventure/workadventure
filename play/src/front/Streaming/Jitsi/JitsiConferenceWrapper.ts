@@ -1,11 +1,16 @@
 // eslint-disable @typescript-eslint/ban-ts-comment
 import { get, readable, Readable, Unsubscriber, Writable, writable } from "svelte/store";
+// eslint-disable-next-line import/no-unresolved
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
+// eslint-disable-next-line import/no-unresolved
 import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
+// eslint-disable-next-line import/no-unresolved
 import JitsiConference from "lib-jitsi-meet/types/hand-crafted/JitsiConference";
 import Debug from "debug";
 import { Result } from "@workadventure/map-editor";
+// eslint-disable-next-line import/no-unresolved
 import JitsiLocalTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiLocalTrack";
+// eslint-disable-next-line import/no-unresolved
 import { JitsiConferenceErrors } from "lib-jitsi-meet/types/hand-crafted/JitsiConferenceErrors";
 import {
     requestedCameraDeviceIdStore,

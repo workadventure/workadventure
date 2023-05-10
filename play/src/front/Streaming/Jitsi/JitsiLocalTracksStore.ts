@@ -4,6 +4,7 @@
 // - at least one Jitsi conference requires to be broadcast
 
 import { derived, Readable } from "svelte/store";
+// eslint-disable-next-line import/no-unresolved
 import { CreateLocalTracksOptions } from "lib-jitsi-meet/types/hand-crafted/JitsiMeetJS";
 import { failure, Result, success } from "@workadventure/map-editor";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";

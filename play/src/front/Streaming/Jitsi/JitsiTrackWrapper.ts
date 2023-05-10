@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-unresolved
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import { Readable, Unsubscriber, writable, Writable, readable, get } from "svelte/store";
 import { v4 as uuid } from "uuid";

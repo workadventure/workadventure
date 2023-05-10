@@ -277,7 +277,7 @@ services:
             - "traefik.http.services.uploader.loadbalancer.server.port=8080"
 
     messages:
-        image: thecodingmachine/nodejs:v2-18-bullseye
+        image: thecodingmachine/nodejs:v2-18-bullseye-build
         platform:
           linux/amd64
         environment:

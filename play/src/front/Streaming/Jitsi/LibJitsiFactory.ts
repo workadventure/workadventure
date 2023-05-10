@@ -1,5 +1,7 @@
 import CancelablePromise from "cancelable-promise";
+// eslint-disable-next-line import/no-unresolved
 import { InitOptions, JitsiMeetJSType } from "lib-jitsi-meet/types/hand-crafted/JitsiMeetJS";
+// eslint-disable-next-line import/no-unresolved
 import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 
 class LibJitsiFactory {
