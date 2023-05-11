@@ -96,8 +96,8 @@ jobs:
           COVERAGE_CURRENT=$(jq '.total' ./coverage/coverage-summary.json)
           COVERAGE_MAIN=$(jq '.total' ./develop/coverage/coverage-summary.json)
           echo $COVERAGE_CURRENT
-          echo $COVERAGE_MAIN
-          COVERAGE_DIFF=$(node -pe "JSON.stringify(JSON.parse('$COVERAGE_CURRENT') - JSON.parse('$COVERAGE_MAIN'))")
+          echo JSON.parse('$COVERAGE_CURRENT')
+          COVERAGE_DIFF=$(node -pe "JSON.stringify(JSON.parse('$COVERAGE_CURRENT') - JSON.parse('$COVERAGE_CURRENT'))")
           echo "Coverage difference: $COVERAGE_DIFF"
 
   continuous-integration-chat:
