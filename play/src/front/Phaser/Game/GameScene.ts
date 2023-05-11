@@ -367,7 +367,7 @@ export class GameScene extends DirtyScene {
                 // In this case, we check in the cache to see if the map is here and trigger the event manually.
                 if (this.cache.tilemap.exists(this.mapUrlFile)) {
                     const data = this.cache.tilemap.get(this.mapUrlFile);
-                    this.onMapLoad(data).catch((e) => console.error(e));
+                    this.onMapLoad(data.data).catch((e) => console.error(e));
                 }
                 return;
             }
@@ -439,7 +439,7 @@ export class GameScene extends DirtyScene {
         // In this case, we check in the cache to see if the map is here and trigger the event manually.
         if (this.cache.tilemap.exists(mapUrlFile)) {
             const data = this.cache.tilemap.get(mapUrlFile);
-            this.onMapLoad(data).catch((e) => console.error(e));
+            this.onMapLoad(data.data).catch((e) => console.error(e));
         }
     }
 
