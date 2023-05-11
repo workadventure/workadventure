@@ -92,6 +92,7 @@ jobs:
       - name: "Coverage difference from main"
         working-directory: "play"
         run: |
+          cat ./coverage/coverage-summary.json
           COVERAGE_CURRENT=$(jq '.total' ./coverage/coverage-summary.json)
           COVERAGE_MAIN=$(jq '.total' ./develop/coverage/coverage-summary.json)
           COVERAGE_DIFF=$(node -pe "JSON.stringify(JSON.parse('$COVERAGE_CURRENT') - JSON.parse('$COVERAGE_MAIN'))")
