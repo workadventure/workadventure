@@ -83,11 +83,16 @@ jobs:
         run: npm run test:coverage
         working-directory: "play"
 
+      - name: "Fake main coverage"
+        run: |
+          mkdir -p main/coverage
+          touch main/coverage/coverage-final.json
+        working-directory: "play"
+
       - name: "Coverage difference from main"
-        uses: GreatWizard/coverage-diff-action@v1.0.8
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          coverage-filename: play/coverage/coverage-final.json
+        working-directory: "play/coverage"
+        run: |
+          jq -s '.[0] - .[1]' coverage-final.json ../main/coverage-final.json
 
   continuous-integration-chat:
     name: "Continuous Integration Chat"
