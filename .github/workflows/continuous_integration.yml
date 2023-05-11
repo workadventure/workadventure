@@ -85,14 +85,14 @@ jobs:
 
       - name: "Fake main coverage"
         run: |
-          mkdir -p main/coverage
-          touch main/coverage/coverage-final.json
+          mkdir -p ./main/coverage
+          touch ./main/coverage/coverage-final.json
         working-directory: "play"
 
       - name: "Coverage difference from main"
-        working-directory: "play/coverage"
+        working-directory: "play"
         run: |
-          jq -s '.[0] - .[1]' coverage-final.json ../main/coverage-final.json
+          jq -s '.[0] - .[1]' ./coverage/coverage-final.json ../main/coverage/coverage-final.json
 
   continuous-integration-chat:
     name: "Continuous Integration Chat"
