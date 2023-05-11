@@ -27,7 +27,7 @@ export class EntityEditorTool extends MapEditorTool {
     private entityPrefabPreview: Phaser.GameObjects.Image | undefined;
     private entityOldPositionPreview: Phaser.GameObjects.Image | undefined;
 
-    private shiftKey: Phaser.Input.Keyboard.Key;
+    private shiftKey?: Phaser.Input.Keyboard.Key;
 
     private mapEditorSelectedEntityPrefabStoreUnsubscriber!: Unsubscriber;
     private mapEntityEditorModeStoreUnsubscriber!: Unsubscriber;
@@ -45,7 +45,7 @@ export class EntityEditorTool extends MapEditorTool {
         this.mapEditorModeManager = mapEditorModeManager;
         this.scene = this.mapEditorModeManager.getScene();
 
-        this.shiftKey = this.scene.input.keyboard.addKey("SHIFT");
+        this.shiftKey = this.scene.input.keyboard?.addKey("SHIFT");
 
         this.entitiesManager = this.scene.getGameMapFrontWrapper().getEntitiesManager();
 
@@ -354,7 +354,7 @@ export class EntityEditorTool extends MapEditorTool {
         if (!this.entityPrefabPreview || !this.entityPrefab) {
             return;
         }
-        if (this.entityPrefab.collisionGrid || this.shiftKey.isDown) {
+        if (this.entityPrefab.collisionGrid || this.shiftKey?.isDown) {
             const offset = this.getEntityPrefabAlignWithGridOffset();
             this.entityPrefabPreview.setPosition(
                 Math.floor(pointer.worldX / 32) * 32 + offset.x,
@@ -412,7 +412,7 @@ export class EntityEditorTool extends MapEditorTool {
         let x = Math.floor(pointer.worldX);
         let y = Math.floor(pointer.worldY);
 
-        if (this.entityPrefab.collisionGrid || this.shiftKey.isDown) {
+        if (this.entityPrefab.collisionGrid || this.shiftKey?.isDown) {
             const offsets = this.getEntityPrefabAlignWithGridOffset();
             x = Math.floor(pointer.worldX / 32) * 32 + offsets.x;
             y = Math.floor(pointer.worldY / 32) * 32 + offsets.y;

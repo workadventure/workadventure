@@ -140,7 +140,7 @@
     "openapi3-ts": "^3.0.2",
     "openid-client": "^5.1.10",
     "p-limit": "^4.0.0",
-    "phaser": "3.55.1",
+    "phaser": "3.60.0",
     "phaser-animated-tiles": "workadventure/phaser-animated-tiles#7e02ce91a100338a27f75f7b443bacd12459fd0f",
     "phaser3-rex-plugins": "^1.1.42",
     "posthog-js": "^1.14.1",
