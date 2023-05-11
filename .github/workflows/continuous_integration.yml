@@ -84,10 +84,10 @@ jobs:
         working-directory: "play"
 
       - name: "Coverage difference from main"
-        working-directory: "play"
-        uses: greatwizard/coverage-diff-action@v1
+        uses: GreatWizard/coverage-diff-action@v1.0.8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          coverage-filename: play/coverage/coverage-final.json
 
   continuous-integration-chat:
     name: "Continuous Integration Chat"
