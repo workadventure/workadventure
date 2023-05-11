@@ -145,7 +145,6 @@ import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
-import GameObject = Phaser.GameObjects.GameObject;
 import DOMElement = Phaser.GameObjects.DOMElement;
 import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
@@ -438,10 +437,7 @@ export class GameScene extends DirtyScene {
         // Load tiles attached to the map recursively
         // The map file can be modified by the scripting API and we don't want to tamper the Phaser cache (in case we come back on the map after visiting other maps)
         // So we are doing a deep copy
-
-        console.log(data.data);
-
-        this.mapFile = structuredClone(data.data);
+        this.mapFile = structuredClone(data);
 
         // Safe parse can take up to 600ms on a 17MB map.
         // TODO: move safeParse to a "map" page and display details of what is going wrong there.
@@ -583,16 +579,19 @@ export class GameScene extends DirtyScene {
                     `Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.mapUrlFile}".`
                 );
             }
-            this.Terrains.push(
-                this.Map.addTilesetImage(
-                    tileset.name,
-                    `${mapDirUrl}/${tileset.image}`,
-                    tileset.tilewidth,
-                    tileset.tileheight,
-                    tileset.margin,
-                    tileset.spacing /*, tileset.firstgid*/
-                )
+            const tilesetImage = this.Map.addTilesetImage(
+                tileset.name,
+                `${mapDirUrl}/${tileset.image}`,
+                tileset.tilewidth,
+                tileset.tileheight,
+                tileset.margin,
+                tileset.spacing /*, tileset.firstgid*/
             );
+            if (tilesetImage) {
+                this.Terrains.push(tilesetImage);
+            } else {
+                console.warn(`Failed to add TilesetImage ${tileset.name}: ${`${mapDirUrl}/${tileset.image}`}`);
+            }
         });
 
         this.throttledSendViewportToServer = throttle(200, () => {
@@ -1340,7 +1339,12 @@ export class GameScene extends DirtyScene {
         }
 
         //create white circle canvas use to create sprite
-        this.circleTexture = this.textures.createCanvas("circleSprite-white", 96, 96);
+        let texture = this.textures.createCanvas("circleSprite-white", 96, 96);
+        if (!texture) {
+            console.warn("Failed to create white circle texture");
+            return;
+        }
+        this.circleTexture = texture;
         const context = this.circleTexture.context;
         context.beginPath();
         context.arc(48, 48, 48, 0, 2 * Math.PI, false);
@@ -1352,7 +1356,12 @@ export class GameScene extends DirtyScene {
         this.circleTexture.refresh();
 
         //create red circle canvas use to create sprite
-        this.circleRedTexture = this.textures.createCanvas("circleSprite-red", 96, 96);
+        texture = this.textures.createCanvas("circleSprite-red", 96, 96);
+        if (!texture) {
+            console.warn("Failed to create red circle texture");
+            return;
+        }
+        this.circleRedTexture = texture;
         const contextRed = this.circleRedTexture.context;
         contextRed.beginPath();
         contextRed.arc(48, 48, 48, 0, 2 * Math.PI, false);
@@ -1902,16 +1911,19 @@ ${escapedMessage}
                                     jsonTileset.tiles
                                 )
                             );
-                            this.Terrains.push(
-                                this.Map.addTilesetImage(
-                                    jsonTileset.name,
-                                    imageUrl,
-                                    jsonTileset.tilewidth,
-                                    jsonTileset.tileheight,
-                                    jsonTileset.margin,
-                                    jsonTileset.spacing
-                                )
+                            const tilesetImage = this.Map.addTilesetImage(
+                                jsonTileset.name,
+                                imageUrl,
+                                jsonTileset.tilewidth,
+                                jsonTileset.tileheight,
+                                jsonTileset.margin,
+                                jsonTileset.spacing
                             );
+                            if (tilesetImage) {
+                                this.Terrains.push(tilesetImage);
+                            } else {
+                                console.warn(`Failed to add TilesetImage ${jsonTileset.name}: ${imageUrl}`);
+                            }
                             //destroy the tilemapayer because they are unique and we need to reuse their key and layerdData
                             for (const layer of this.Map.layers) {
                                 layer.tilemapLayer.destroy(false);
@@ -2320,7 +2332,10 @@ ${escapedMessage}
             this.physics.add.collider(
                 this.CurrentPlayer,
                 phaserLayer,
-                (object1: GameObject, object2: GameObject) => {}
+                (
+                    object1: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile,
+                    object2: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile
+                ) => {}
             );
             phaserLayer.setCollisionByProperty({ collides: true });
             if (DEBUG_MODE) {

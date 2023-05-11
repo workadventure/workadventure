@@ -60,10 +60,10 @@ export class SelectCompanionScene extends ResizableScene {
         }
 
         // input events
-        this.input.keyboard.on("keyup-ENTER", this.selectCompanion.bind(this));
+        this.input.keyboard?.on("keyup-ENTER", this.selectCompanion.bind(this));
 
-        this.input.keyboard.on("keydown-RIGHT", this.moveToRight.bind(this));
-        this.input.keyboard.on("keydown-LEFT", this.moveToLeft.bind(this));
+        this.input.keyboard?.on("keydown-RIGHT", this.moveToRight.bind(this));
+        this.input.keyboard?.on("keydown-LEFT", this.moveToLeft.bind(this));
 
         if (localUserStore.getCompanion()) {
             const companionIndex = this.companionModels.findIndex(
