@@ -80,8 +80,14 @@ jobs:
         working-directory: "play"
 
       - name: "Unit tests"
-        run: npm test
+        run: npm test:coverage
         working-directory: "play"
+
+      - name: "Coverage difference from main"
+        working-directory: "play"
+        uses: greatwizard/coverage-diff-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   continuous-integration-chat:
     name: "Continuous Integration Chat"
