@@ -21,9 +21,7 @@ export class SelectCompanionScene extends ResizableScene {
     private companions: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
     private companionModels!: CompanionResourceDescriptionInterface[];
     private companionCurrentCollection!: CompanionResourceDescriptionInterface[];
-    private companionCollection: Array<CompanionCollectionList> = [];
-
-    private selectedGridItemIndex?: number;
+    private currentCompanionId!: string | null;
 
     private gridRowsCount = 1;
     private selectedCollectionIndex!: number;
@@ -68,7 +66,25 @@ export class SelectCompanionScene extends ResizableScene {
         if (touchScreenManager.supportTouchScreen) {
             new PinchManager(this);
         }
-
+        if (localUserStore.getCompanion()) {
+            this.currentCompanionId = localUserStore.getCompanion();
+            if (this.currentCompanionId) {
+                const resource = this.companionTextures.getCompanionResourceById(this.currentCompanionId);
+                if (resource) {
+                    if (resource.collection != null) {
+                        this.selectedCollectionIndex = this.companionCollectionKeys.indexOf(resource.collection);
+                        const companionIndex = this.companionTextures
+                            .getCompanionCollectionTextures(this.getSelectedCollectionName())
+                            .findIndex((companionResource) => companionResource.id === localUserStore.getCompanion());
+                        if (companionIndex > -1 || companionIndex < this.companions.length) {
+                            this.currentCompanion = companionIndex;
+                            // this.selectedCompanion = this.companions[companionIndex];
+                        }
+                        selectedCollection.set(this.getSelectedCollectionName());
+                    }
+                }
+            }
+        }
         // input events
         this.input.keyboard.on("keyup-ENTER", this.selectCompanion.bind(this));
 
@@ -114,6 +130,7 @@ export class SelectCompanionScene extends ResizableScene {
         this.companionCurrentCollection = this.companionTextures.getCompanionCollectionTextures(
             this.getSelectedCollectionName()
         );
+
         this.companionCurrentCollection.forEach((companionResource, index) => {
             const [middleX, middleY] = this.getCompanionPosition();
             const companion = this.physics.add.sprite(middleX, middleY, companionResource.id, 0);
@@ -134,10 +151,11 @@ export class SelectCompanionScene extends ResizableScene {
                 // We set a timer that we decrease in update function to not trigger the pointerdown events twice
                 this.pointerClicked = true;
                 this.pointerTimer = 250;
-                this.currentCompanion = index;
+                if (!localUserStore.getCompanion()) {
+                    this.currentCompanion = index;
+                }
                 this.moveCompanion();
             });
-
             this.companions.push(companion);
         });
         this.selectedCompanion = this.companions[this.currentCompanion];
