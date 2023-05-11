@@ -6,16 +6,19 @@ import Megaphone from "./utils/map-editor/megaphone";
 import Map from "./utils/map";
 import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 
+const protocol = process.env.MAP_STORAGE_PROTOCOL ?? 'http';
+const mapUrl = `${protocol}://play.workadventure.localhost/~/maps/areas.wam`;
+
 test.describe('Map editor', () => {
   test('Successfully set the megaphone feature', async ({ page, browser }) => {
-    await page.goto('http://play.workadventure.localhost/~/maps/areas.wam');
+    await page.goto(mapUrl);
     await login(page, "test", 3);
     await Map.walkTo(page, 'ArrowLeft', 1_500);
 
     // Second browser
     const newBrowser = await browser.browserType().launch();
     const page2 = await newBrowser.newPage();
-    await page2.goto('http://play.workadventure.localhost/~/maps/areas.wam');
+    await page2.goto(mapUrl);
     await login(page2, "test2", 5);
 
     await Menu.openMapEditor(page);
@@ -48,14 +51,14 @@ test.describe('Map editor', () => {
   });
 
   test('Successfully use the megaphone', async ({ page, browser }) => {
-    await page.goto('http://play.workadventure.localhost/~/maps/areas.wam');
+    await page.goto(mapUrl);
     await login(page, "test", 3);
     await Map.walkTo(page, 'ArrowLeft', 1_500);
 
     // Second browser
     const newBrowser = await browser.browserType().launch();
     const page2 = await newBrowser.newPage();
-    await page2.goto('http://play.workadventure.localhost/~/maps/areas.wam');
+    await page2.goto(mapUrl);
     await login(page2, "test2", 5);
 
     await Menu.toggleMegaphoneButton(page);
