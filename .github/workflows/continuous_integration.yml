@@ -80,7 +80,7 @@ jobs:
         working-directory: "play"
 
       - name: "Unit tests"
-        run: npm test:coverage
+        run: npm run test:coverage
         working-directory: "play"
 
       - name: "Coverage difference from main"
