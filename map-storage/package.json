@@ -37,7 +37,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "upload-test-map": "rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip * && curl -F 'file=@../assets.zip' http://map-storage.workadventure.localhost/upload --basic -u john.doe:password",
-    "upload-test-map-single-domain": "rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip * && curl -k -F 'file=@../assets.zip' https://workadventure.localhost/map-storage/upload --basic -u john.doe:password"
+    "upload-test-map-single-domain": "rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip * && curl -k -F 'file=@../assets.zip' https://play.workadventure.localhost/map-storage/upload --basic -u john.doe:password"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.238.0",
