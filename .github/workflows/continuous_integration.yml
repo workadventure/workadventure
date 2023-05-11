@@ -92,7 +92,10 @@ jobs:
       - name: "Coverage difference from main"
         working-directory: "play"
         run: |
-          jq -s '.[0] - .[1]' ./coverage/coverage-summary.json ./develop/coverage/coverage-summary.json
+          COVERAGE_CURRENT=$(jq '.total' coverage/coverage-summary.json)
+          COVERAGE_MAIN=$(jq '.total' main/coverage/coverage-summary.json)
+          COVERAGE_DIFF=$(node -pe "JSON.stringify(JSON.parse('$COVERAGE_CURRENT') - JSON.parse('$COVERAGE_MAIN'))")
+          echo "Coverage difference: $COVERAGE_DIFF"
 
   continuous-integration-chat:
     name: "Continuous Integration Chat"
