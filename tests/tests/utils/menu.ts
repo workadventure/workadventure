@@ -19,12 +19,11 @@ class Menu {
     }
 
     async isThereMegaphoneButton(page: Page) {
-        await expect(await page.locator('.bottom-action-bar .bottom-action-button #megaphone')).toBeDefined();
+        await expect(await page.locator('.bottom-action-bar .bottom-action-button #megaphone')).toBeVisible({timeout: 30_000});
     }
 
     async isNotThereMegaphoneButton(page: Page) {
-        await page.locator('.bottom-action-bar .bottom-action-button #megaphone').highlight();
-        await expect(await page.locator('.bottom-action-bar .bottom-action-button #megaphone')).toBeHidden();
+        await expect(await page.locator('.bottom-action-bar .bottom-action-button #megaphone')).toBeHidden({timeout: 30_000});
     }
 }
 
