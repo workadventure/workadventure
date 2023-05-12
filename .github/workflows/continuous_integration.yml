@@ -88,12 +88,11 @@ jobs:
         run: |
           echo '{"lines":{"total":0,"covered":0,"skipped":0,"pct":0},"statements":{"total":0,"covered":0,"skipped":0,"pct":0},"functions":{"total":0,"covered":0,"skipped":0,"pct":0},"branches":{"total":0,"covered":0,"skipped":0,"pct":0},"branchesTrue":{"total":0,"covered":0,"skipped":0,"pct":"Unknown"}}' > main-coverage-summary.json
 
-      - name: Coverage Compare
-        working-directory: "play"
+      - name: "Coverage Compare"
         uses: iKadmium/json-summary-reporter@1.0.0
         with:
-          base-coverage-file: main-coverage-summary.json
-          current-coverage-file: coverage/coverage-summary.json
+          base-coverage-file: play/main-coverage-summary.json
+          current-coverage-file: play/coverage/coverage-summary.json
           comment-header: "Coverage Comparison for play container"
 
   continuous-integration-chat:
