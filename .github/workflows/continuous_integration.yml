@@ -89,6 +89,10 @@ jobs:
           echo '{"lines":{"total":0,"covered":0,"skipped":0,"pct":0},"statements":{"total":0,"covered":0,"skipped":0,"pct":0},"functions":{"total":0,"covered":0,"skipped":0,"pct":0},"branches":{"total":0,"covered":0,"skipped":0,"pct":0},"branchesTrue":{"total":0,"covered":0,"skipped":0,"pct":"Unknown"}}' > main-coverage-summary.json
           echo '$GITHUB_HEAD_REF'
 
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
       - name: Compare coverage
         run: |
           curl -s https://codecov.io/bash | bash -s -- -Z \
