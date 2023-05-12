@@ -83,52 +83,29 @@ jobs:
         run: npm run test:coverage
         working-directory: "play"
 
-      - name: "Coverage difference from main"
+      - name: "Generate fake main coverage"
         working-directory: "play"
         run: |
-          COVERAGE_CURRENT=$(jq -c '.total' ./coverage/coverage-summary.json)
-          COVERAGE_MAIN='{"lines":{"total":0,"covered":0,"skipped":0,"pct":0},"statements":{"total":0,"covered":0,"skipped":0,"pct":0},"functions":{"total":0,"covered":0,"skipped":0,"pct":0},"branches":{"total":0,"covered":0,"skipped":0,"pct":0},"branchesTrue":{"total":0,"covered":0,"skipped":0,"pct":"Unknown"}}'
-          COVERAGE_DIFF=$(jq -s '
-            [
-              .[0] as $prev |
-              .[1] as $curr |
-              (
-                [
-                  $prev | keys[] as $k | {
-                    file: $k,
-                    statements: $prev[$k].statements - $curr[$k].statements,
-                    branches: $prev[$k].branches - $curr[$k].branches,
-                    functions: $prev[$k].functions - $curr[$k].functions,
-                    lines: $prev[$k].lines - $curr[$k].lines
-                  }
-                ]
-                +
-                [
-                  $curr | keys[] as $k | select(.[$k]) | {
-                    file: $k,
-                    statements: $curr[$k].statements,
-                    branches: $curr[$k].branches,
-                    functions: $curr[$k].functions,
-                    lines: $curr[$k].lines
-                  }
-                ]
-              )
-              | group_by(.file)
-              | map(add | {file: .[0].file, statements: .[0].statements, branches: .[0].branches, functions: .[0].functions, lines: .[0].lines})
-            ]' <(echo "$COVERAGE_CURRENT") <(echo "$COVERAGE_MAIN") | jq -c '.' | node -pe "JSON.stringify($COVERAGE_DIFF)")
-          echo "Coverage difference: $COVERAGE_DIFF"
-          echo "::set-output name=coverage-diff::$COVERAGE_DIFF"
+          echo '{"lines":{"total":0,"covered":0,"skipped":0,"pct":0},"statements":{"total":0,"covered":0,"skipped":0,"pct":0},"functions":{"total":0,"covered":0,"skipped":0,"pct":0},"branches":{"total":0,"covered":0,"skipped":0,"pct":0},"branchesTrue":{"total":0,"covered":0,"skipped":0,"pct":"Unknown"}}' > main-coverage-summary.json
 
-      - name: "Generate table from coverage diff"
-        id: coverage-table
-        run: |
-          TABLE=$(echo "${{ steps.coverage-diff.outputs.coverage-diff }}" | npx markdown-table-generator --headers='File, Statements, Branches, Functions, Lines')
-          echo "::set-output name=coverage-table::$TABLE"
+      - name: Compare coverage reports
+        uses: codecov/compare-url-action@v1
+        working-directory: "play"
+        with:
+          base: main-coverage-summary.json
+          head: coverage/coverage-summary.json
+          output_format: table
+          output_file: coverage_diff.txt
 
-      - name: "Add a comment in PR"
+      # Post a comment on the PR with the coverage difference
+      - name: Comment on PR
         uses: unsplash/comment-on-pr@master
         with:
-          message: ${{ steps.coverage-table.outputs.coverage-table }}
+          message: |
+            ## Coverage difference:
+            ```
+            $(cat coverage_diff.txt)
+            ```
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
