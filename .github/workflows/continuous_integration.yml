@@ -88,26 +88,12 @@ jobs:
         run: |
           echo '{"lines":{"total":0,"covered":0,"skipped":0,"pct":0},"statements":{"total":0,"covered":0,"skipped":0,"pct":0},"functions":{"total":0,"covered":0,"skipped":0,"pct":0},"branches":{"total":0,"covered":0,"skipped":0,"pct":0},"branchesTrue":{"total":0,"covered":0,"skipped":0,"pct":"Unknown"}}' > main-coverage-summary.json
 
-      - name: Compare coverage reports
-        uses: codecov/compare-url-action@v1
-        working-directory: "play"
+      - name: Coverage Compare
+        uses: iKadmium/json-summary-reporter@1.0.0
         with:
-          base: main-coverage-summary.json
-          head: coverage/coverage-summary.json
-          output_format: table
-          output_file: coverage_diff.txt
-
-      # Post a comment on the PR with the coverage difference
-      - name: Comment on PR
-        uses: unsplash/comment-on-pr@master
-        with:
-          message: |
-            ## Coverage difference:
-            ```
-            $(cat coverage_diff.txt)
-            ```
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          base-coverage-file: main-coverage-summary.json
+          current-coverage-file: coverage/coverage-summary.json
+          comment-header: "Coverage Comparison for play container"
 
   continuous-integration-chat:
     name: "Continuous Integration Chat"
