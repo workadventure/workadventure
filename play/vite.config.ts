@@ -42,4 +42,12 @@ export default defineConfig({
             modernPolyfills: ["web.structured-clone"],
         }),
     ],
+    test: {
+        globals: true,
+        coverage: {
+            all: true,
+            include: ["src/*.ts", "src/**/*.ts"],
+            exclude: ["src/i18n", "src/enum"],
+        },
+    },
 });
