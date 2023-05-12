@@ -83,20 +83,54 @@ jobs:
         run: npm run test:coverage
         working-directory: "play"
 
-      - name: "Fake develop coverage"
-        run: |
-          mkdir -p ./develop/coverage
-          touch ./develop/coverage/coverage-summary.json
-          echo '{"lines":{"total":12,"covered":12,"skipped":0,"pct":100},"statements":{"total":12,"covered":12,"skipped":0,"pct":100},"functions":{"total":1,"covered":1,"skipped":0,"pct":100},"branches":{"total":1,"covered":1,"skipped":0,"pct":100},"branchesTrue":{"total":0,"covered":0,"skipped":0,"pct":"Unknown"}}' > ./develop/coverage/coverage-summary.json
-        working-directory: "play"
-
       - name: "Coverage difference from main"
         working-directory: "play"
         run: |
           COVERAGE_CURRENT=$(jq -c '.total' ./coverage/coverage-summary.json)
-          COVERAGE_MAIN=$(jq -c '.total' ./develop/coverage/coverage-summary.json)
-          COVERAGE_DIFF=$(node -pe "JSON.stringify(JSON.parse('$COVERAGE_CURRENT') - JSON.parse('$COVERAGE_CURRENT'))")
+          COVERAGE_MAIN='{"lines":{"total":0,"covered":0,"skipped":0,"pct":0},"statements":{"total":0,"covered":0,"skipped":0,"pct":0},"functions":{"total":0,"covered":0,"skipped":0,"pct":0},"branches":{"total":0,"covered":0,"skipped":0,"pct":0},"branchesTrue":{"total":0,"covered":0,"skipped":0,"pct":"Unknown"}}'
+          COVERAGE_DIFF=$(jq -s '
+            [
+              .[0] as $prev |
+              .[1] as $curr |
+              (
+                [
+                  $prev | keys[] as $k | {
+                    file: $k,
+                    statements: $prev[$k].statements - $curr[$k].statements,
+                    branches: $prev[$k].branches - $curr[$k].branches,
+                    functions: $prev[$k].functions - $curr[$k].functions,
+                    lines: $prev[$k].lines - $curr[$k].lines
+                  }
+                ]
+                +
+                [
+                  $curr | keys[] as $k | select(.[$k]) | {
+                    file: $k,
+                    statements: $curr[$k].statements,
+                    branches: $curr[$k].branches,
+                    functions: $curr[$k].functions,
+                    lines: $curr[$k].lines
+                  }
+                ]
+              )
+              | group_by(.file)
+              | map(add | {file: .[0].file, statements: .[0].statements, branches: .[0].branches, functions: .[0].functions, lines: .[0].lines})
+            ]' <(echo "$COVERAGE_CURRENT") <(echo "$COVERAGE_MAIN") | jq -c '.' | node -pe "JSON.stringify($COVERAGE_DIFF)")
           echo "Coverage difference: $COVERAGE_DIFF"
+          echo "::set-output name=coverage-diff::$COVERAGE_DIFF"
+
+      - name: "Generate table from coverage diff"
+        id: coverage-table
+        run: |
+          TABLE=$(echo "${{ steps.coverage-diff.outputs.coverage-diff }}" | npx markdown-table-generator --headers='File, Statements, Branches, Functions, Lines')
+          echo "::set-output name=coverage-table::$TABLE"
+
+      - name: "Add a comment in PR"
+        uses: unsplash/comment-on-pr@master
+        with:
+          message: ${{ steps.coverage-table.outputs.coverage-table }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   continuous-integration-chat:
     name: "Continuous Integration Chat"
