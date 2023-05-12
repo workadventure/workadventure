@@ -79,10 +79,6 @@ jobs:
         run: npm run pretty-check
         working-directory: "play"
 
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
       - name: "Unit tests"
         run: npm run test:coverage
         working-directory: "play"
@@ -93,26 +89,13 @@ jobs:
           echo '{"lines":{"total":0,"covered":0,"skipped":0,"pct":0},"statements":{"total":0,"covered":0,"skipped":0,"pct":0},"functions":{"total":0,"covered":0,"skipped":0,"pct":0},"branches":{"total":0,"covered":0,"skipped":0,"pct":0},"branchesTrue":{"total":0,"covered":0,"skipped":0,"pct":"Unknown"}}' > main-coverage-summary.json
           echo '$GITHUB_HEAD_REF'
 
-      - name: Compare coverage
-        run: |
-          curl -s https://codecov.io/bash | bash -s -- -Z \
-            -f play/coverage/coverage-summary.json \
-            -F play/develop/coverage/coverage-summary.json \
-            -c \
-            -P \
-            -C ${GITHUB_EVENT_PATH} \
-            -B ${BASE_BRANCH} \
-            -t ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Comment on pull request with coverage diff
-        uses: unsplash/comment-on-pr@master
+      - name: Coverage Diff
+        uses: greatwizard/coverage-diff-action@v1
         with:
-          message: |
-            ```
-            $(cat coverage/codecov.diff)
-            ```
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          coverage-filename: play/coverage/coverage-summary.json
+          base-summary-filename: base-summary.json
+          badge-enabled: false
 
 #      - name: "Coverage Compare"
 #        uses: iKadmium/json-summary-reporter@1.0.0
