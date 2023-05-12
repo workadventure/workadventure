@@ -89,14 +89,15 @@ jobs:
           echo '{"lines":{"total":0,"covered":0,"skipped":0,"pct":0},"statements":{"total":0,"covered":0,"skipped":0,"pct":0},"functions":{"total":0,"covered":0,"skipped":0,"pct":0},"branches":{"total":0,"covered":0,"skipped":0,"pct":0},"branchesTrue":{"total":0,"covered":0,"skipped":0,"pct":"Unknown"}}' > main-coverage-summary.json
           echo '$GITHUB_HEAD_REF'
 
-      - name: "Compare coverage"
-        uses: greatwizard/coverage-diff-action@v1
+      - name: Compare coverage
+        uses: codecov/codecov-action@v2
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          coverage-filename: play/coverage/coverage-summary.json
-          base-summary-filename: play/main-coverage-summary.json
-          badge-enabled: false
-
+          files: play/coverage/coverage-summary.json,play/develop/coverage/coverage-summary.json
+          flags: a,d
+          comment: >
+            The coverage has improved by ${{ steps.compare-coverage.outputs.diff }}% between ${GITHUB_BASE_REF} and ${GITHUB_HEAD_REF}.
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 #      - name: "Coverage Compare"
 #        uses: iKadmium/json-summary-reporter@1.0.0
 #        with:
