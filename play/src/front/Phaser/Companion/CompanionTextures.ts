@@ -26,7 +26,6 @@ export class CompanionTextures {
     }
 
     public getCompanionCollectionTextures(key: string): CompanionResourceDescriptionInterface[] {
-        console.log("getCompanionCollectionTextures", key, this.companionCollections.get(key));
         return this.companionCollections.get(key) ?? [];
     }
 
@@ -36,7 +35,6 @@ export class CompanionTextures {
             return;
         }
         for (const collection of metadata.companion.collections) {
-            console.log(collection);
             const textures: CompanionResourceDescriptionInterface[] = [];
             for (const texture of collection.textures) {
                 textures.push({ id: texture.id, img: texture.url, collection: collection.name });
@@ -46,19 +44,6 @@ export class CompanionTextures {
         }
         this.companionResources = resources;
     }
-
-    // // @ts-ignore
-    // public getCompanionResourceById(id: string | null): CompanionResourceDescriptionInterface[] {
-    //     const currentResources = Object.values(this.companionResources);
-    //     // @ts-ignore
-    //     currentResources.forEach((companion)=>{
-    //         if(companion.id === id){
-    //             if(companion.collection){
-    //                 return this.getCompanionCollectionTextures(companion.collection);
-    //             }
-    //         }
-    //     })
-    // }
     public getCompanionResourceById(id: string): CompanionResourceDescriptionInterface {
         return this.companionResources[id];
     }

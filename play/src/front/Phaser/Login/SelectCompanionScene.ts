@@ -78,7 +78,7 @@ export class SelectCompanionScene extends ResizableScene {
                             .findIndex((companionResource) => companionResource.id === localUserStore.getCompanion());
                         if (companionIndex > -1 || companionIndex < this.companions.length) {
                             this.currentCompanion = companionIndex;
-                            // this.selectedCompanion = this.companions[companionIndex];
+                            this.selectedCompanion = this.companions[companionIndex];
                         }
                         selectedCollection.set(this.getSelectedCollectionName());
                     }
