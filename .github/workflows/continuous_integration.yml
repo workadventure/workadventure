@@ -90,14 +90,26 @@ jobs:
           echo '$GITHUB_HEAD_REF'
 
       - name: Compare coverage
-        uses: codecov/codecov-action@v2
+        run: |
+          curl -s https://codecov.io/bash | bash -s -- -Z \
+            -f play/coverage/coverage-summary.json \
+            -F play/develop/coverage/coverage-summary.json \
+            -c \
+            -P \
+            -C ${GITHUB_EVENT_PATH} \
+            -B ${BASE_BRANCH} \
+            -t ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Comment on pull request with coverage diff
+        uses: unsplash/comment-on-pr@master
         with:
-          files: play/coverage/coverage-summary.json,play/develop/coverage/coverage-summary.json
-          flags: a,d
-          comment: >
-            The coverage has improved by ${{ steps.compare-coverage.outputs.diff }}% between ${GITHUB_BASE_REF} and ${GITHUB_HEAD_REF}.
+          message: |
+            ```
+            $(cat coverage/codecov.diff)
+            ```
         env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 #      - name: "Coverage Compare"
 #        uses: iKadmium/json-summary-reporter@1.0.0
 #        with:
