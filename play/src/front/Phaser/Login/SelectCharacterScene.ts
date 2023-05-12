@@ -96,8 +96,15 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.selectedWoka = null;
         this.selectedCollectionIndex = 0;
         this.collectionKeys = this.playerTextures.getCollectionsKeys();
-        console.log("collectionKeys", this.collectionKeys);
-        console.log(this.getSelectedCollectionName());
+        if (localUserStore.getCharacterLayers()![0] != null) {
+            this.playerTextures.wokaCollections.forEach((collection, index) => {
+                collection.forEach((woka) => {
+                    if (woka.id === localUserStore.getCharacterLayers()![0]) {
+                        this.selectedCollectionIndex = this.collectionKeys.indexOf(index);
+                    }
+                });
+            });
+        }
         selectedCollection.set(this.getSelectedCollectionName());
 
         customizeAvailableStore.set(this.isCustomizationAvailable());
@@ -231,7 +238,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
             //ini current Select Item to the first
             if (i === 0) currentSelectedItem = slot;
-
+            if (localUserStore.getCharacterLayers()![0] === textures[i].id) currentSelectedItem = slot;
             this.charactersDraggableGrid.addItem(slot);
         }
         this.charactersDraggableGrid.moveContentToBeginning();
