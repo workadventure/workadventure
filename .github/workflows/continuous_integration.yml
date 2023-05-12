@@ -94,7 +94,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           coverage-filename: play/coverage/coverage-summary.json
-          base-summary-filename: base_summary.json
+          base-summary-filename: base-summary.json
           badge-enabled: false
 
 #      - name: "Coverage Compare"
