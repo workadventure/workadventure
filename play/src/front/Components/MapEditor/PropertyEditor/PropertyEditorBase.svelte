@@ -14,20 +14,29 @@
             }}
         />
     </div>
-    <slot name="content" />
+    <div class="content tw-p-2">
+        <slot name="content">No content</slot>
+    </div>
 </div>
 
 <style lang="scss">
-    .header {
-        display: flex;
-        font-size: 25px;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-    }
     .property-settings-container {
-        border: 1px solid grey;
         border-radius: 5px;
         padding: 5px;
+
+        .header {
+            display: flex;
+            font-size: 25px;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content {
+            border-left-width: 1px;
+            border-left-style: solid;
+            --tw-border-opacity: 1;
+            border-color: rgb(77 75 103 / var(--tw-border-opacity));
+        }
     }
 </style>

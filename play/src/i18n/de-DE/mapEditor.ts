@@ -34,6 +34,7 @@ const mapEditor: BaseTranslation = {
             newTabLabel: "In neuen Tab öffnen",
             linkPlaceholder: "https://example.com",
             defaultButtonLabel: "Link öffnen",
+            errorEmbeddableLink: "Der Link ist nicht einbettbar",
         },
     },
     entityEditor: {

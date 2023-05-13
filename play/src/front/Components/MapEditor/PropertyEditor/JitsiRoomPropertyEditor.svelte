@@ -8,6 +8,7 @@
 
     export let property: JitsiRoomPropertyData;
     export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
+    let optionAdvencedActivated = false;
 
     const dispatch = createEventDispatcher();
 
@@ -50,83 +51,96 @@
             />
         </div>
         <div class="value-switch">
-            <label for="closable">{$LL.mapEditor.properties.jitsiProperties.closable()}</label>
-            <input
-                id="closable"
-                type="checkbox"
-                class="input-switch"
-                bind:checked={property.closable}
-                on:change={onValueChange}
-            />
+            <label for="advancedOption">Advenced options</label>
+            <input id="advancedOption" type="checkbox" class="input-switch" bind:checked={optionAdvencedActivated} />
         </div>
-        <div class="value-switch">
-            <label for="noPrefix">{$LL.mapEditor.properties.jitsiProperties.noPrefix()}</label>
-            <input
-                id="noPrefix"
-                type="checkbox"
-                class="input-switch"
-                bind:checked={property.noPrefix}
-                on:change={onValueChange}
-            />
-        </div>
-        <div class="value-input">
-            <label for="jitsiUrl">{$LL.mapEditor.properties.jitsiProperties.jitsiUrl()}</label>
-            <input
-                id="jitsiUrl"
-                type="text"
-                placeholder={$LL.mapEditor.properties.jitsiProperties.jitsiUrlPlaceholder()}
-                bind:value={property.jitsiUrl}
-                on:change={onValueChange}
-                on:focus={onMapEditorInputFocus}
-                on:blur={onMapEditorInputUnfocus}
-            />
-        </div>
-        {#if !property.hideButtonLabel}
-            <div class="value-input">
-                <label for="jitsiButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
+        <div class:active={optionAdvencedActivated} class="advenced-option tw-px-2">
+            <div class="value-switch">
+                <label for="closable">{$LL.mapEditor.properties.jitsiProperties.closable()}</label>
                 <input
-                    id="jitsiButtonLabel"
+                    id="closable"
+                    type="checkbox"
+                    class="input-switch"
+                    bind:checked={property.closable}
+                    on:change={onValueChange}
+                />
+            </div>
+            <div class="value-switch">
+                <label for="noPrefix">{$LL.mapEditor.properties.jitsiProperties.noPrefix()}</label>
+                <input
+                    id="noPrefix"
+                    type="checkbox"
+                    class="input-switch"
+                    bind:checked={property.noPrefix}
+                    on:change={onValueChange}
+                />
+            </div>
+            <div class="value-input">
+                <label for="jitsiUrl">{$LL.mapEditor.properties.jitsiProperties.jitsiUrl()}</label>
+                <input
+                    id="jitsiUrl"
                     type="text"
-                    bind:value={property.buttonLabel}
+                    placeholder={$LL.mapEditor.properties.jitsiProperties.jitsiUrlPlaceholder()}
+                    bind:value={property.jitsiUrl}
                     on:change={onValueChange}
                     on:focus={onMapEditorInputFocus}
                     on:blur={onMapEditorInputUnfocus}
                 />
             </div>
-        {/if}
-        <div>
-            <label for="trigger">{$LL.mapEditor.properties.jitsiProperties.trigger()}</label>
-            <select id="trigger" class="tw-w-full" bind:value={property.trigger} on:change={onTriggerValueChange}>
-                <option value={undefined}>{$LL.mapEditor.properties.jitsiProperties.triggerShowImmediately()}</option>
-                <option value="onicon">{$LL.mapEditor.properties.jitsiProperties.triggerOnClick()}</option>
-                <option value="onaction">{$LL.mapEditor.properties.jitsiProperties.triggerOnAction()}</option>
-            </select>
-        </div>
-        {#if triggerOnActionChoosen}
-            <div class="value-input">
-                <label for="triggerMessage">{$LL.mapEditor.properties.jitsiProperties.triggerMessage()}</label>
-                <input
-                    id="triggerMessage"
-                    type="text"
-                    bind:value={property.triggerMessage}
-                    on:change={onValueChange}
-                    on:focus={onMapEditorInputFocus}
-                    on:blur={onMapEditorInputUnfocus}
-                />
+            {#if !property.hideButtonLabel}
+                <div class="value-input">
+                    <label for="jitsiButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
+                    <input
+                        id="jitsiButtonLabel"
+                        type="text"
+                        bind:value={property.buttonLabel}
+                        on:change={onValueChange}
+                        on:focus={onMapEditorInputFocus}
+                        on:blur={onMapEditorInputUnfocus}
+                    />
+                </div>
+            {/if}
+            <div>
+                <label class="tw-m-0" for="trigger">{$LL.mapEditor.properties.jitsiProperties.trigger()}</label>
+                <select
+                    id="trigger"
+                    class=" tw-m-0 tw-w-full"
+                    bind:value={property.trigger}
+                    on:change={onTriggerValueChange}
+                >
+                    <option value={undefined}
+                        >{$LL.mapEditor.properties.jitsiProperties.triggerShowImmediately()}</option
+                    >
+                    <option value="onicon">{$LL.mapEditor.properties.jitsiProperties.triggerOnClick()}</option>
+                    <option value="onaction">{$LL.mapEditor.properties.jitsiProperties.triggerOnAction()}</option>
+                </select>
             </div>
-        {/if}
-        <button
-            on:click={() => {
-                jitsiConfigModalOpened = true;
-            }}>{$LL.mapEditor.properties.jitsiProperties.moreOptionsLabel()}</button
-        >
-        {#if jitsiConfigModalOpened}
-            <JitsiRoomConfigEditor
-                bind:visibilityValue={jitsiConfigModalOpened}
-                on:change={onConfigChange}
-                bind:config={property.jitsiRoomConfig}
-            />
-        {/if}
+            {#if triggerOnActionChoosen}
+                <div class="value-input">
+                    <label for="triggerMessage">{$LL.mapEditor.properties.jitsiProperties.triggerMessage()}</label>
+                    <input
+                        id="triggerMessage"
+                        type="text"
+                        bind:value={property.triggerMessage}
+                        on:change={onValueChange}
+                        on:focus={onMapEditorInputFocus}
+                        on:blur={onMapEditorInputUnfocus}
+                    />
+                </div>
+            {/if}
+            <button
+                on:click={() => {
+                    jitsiConfigModalOpened = true;
+                }}>{$LL.mapEditor.properties.jitsiProperties.moreOptionsLabel()}</button
+            >
+            {#if jitsiConfigModalOpened}
+                <JitsiRoomConfigEditor
+                    bind:visibilityValue={jitsiConfigModalOpened}
+                    on:change={onConfigChange}
+                    bind:config={property.jitsiRoomConfig}
+                />
+            {/if}
+        </div>
     </span>
 </PropertyEditorBase>
 
@@ -158,7 +172,6 @@
     button:hover {
         background-color: rgb(77 75 103);
     }
-
     .value-switch {
         display: flex;
         width: 100%;
@@ -178,7 +191,6 @@
             margin-bottom: 0;
         }
     }
-
     .input-switch {
         position: relative;
         top: 0px;
@@ -206,7 +218,6 @@
         outline-offset: 2px;
         cursor: url(/src/front/style/images/cursor_pointer.png), pointer;
     }
-
     .input-switch::before {
         position: absolute;
         left: -3px;
@@ -222,12 +233,10 @@
         --tw-content: "";
         content: var(--tw-content);
     }
-
     .input-switch:checked {
         --tw-border-opacity: 1;
         border-color: rgb(146 142 187 / var(--tw-border-opacity));
     }
-
     .input-switch:checked::before {
         left: 13px;
         top: -3px;
@@ -238,9 +247,14 @@
         --tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
         box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
     }
-
     .input-switch:disabled {
         cursor: not-allowed;
         opacity: 0.4;
+    }
+    .advenced-option {
+        display: none;
+        &.active {
+            display: block;
+        }
     }
 </style>

@@ -1,6 +1,5 @@
 <script>
     import { createEventDispatcher } from "svelte";
-    import trashImg from "../../images/trash.svg";
 
     const dispatch = createEventDispatcher();
 </script>
@@ -11,13 +10,12 @@
         dispatch("click");
     }}
 >
-    <img src={trashImg} alt="" />
+    x
 </button>
 
 <style lang="scss">
     .close-button {
         float: right;
-        background-color: #e96c52;
         padding: 3px;
         border-radius: 8px;
         cursor: pointer;

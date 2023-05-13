@@ -61,19 +61,19 @@ export const JitsiRoomPropertyData = PropertyBase.extend({
 export const PlayAudioPropertyData = PropertyBase.extend({
     type: z.literal("playAudio"),
     audioLink: z.string(),
-    volume: z.number().optional(),
+    volume: z.number().default(1).optional(),
 });
 
 export const OpenWebsitePropertyData = PropertyBase.extend({
     type: z.literal("openWebsite"),
-    link: z.string(),
-    newTab: z.boolean().optional(),
+    link: z.string().default("https://workadventu.re"),
+    newTab: z.boolean().optional().default(false),
     closable: z.boolean().optional(),
     allowAPI: z.boolean().optional(),
     trigger: z.union([z.literal("onaction"), z.literal("onicon")]).optional(),
     triggerMessage: z.string().optional(),
-    width: z.number().optional(),
-    policy: z.string().optional(),
+    width: z.number().default(50).optional(),
+    policy: z.string().default("fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture").optional(),
     position: z.number().optional(),
 });
 

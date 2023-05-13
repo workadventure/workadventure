@@ -74,6 +74,7 @@ const mapEditor: BaseTranslation = {
             width: "Width",
             policy: "iFrame Allow",
             policyPlaceholder: "fullscreen",
+            errorEmbeddableLink: "The link is not embeddable",
         },
     },
     areaEditor: {

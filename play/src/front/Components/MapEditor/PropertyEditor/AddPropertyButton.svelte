@@ -3,13 +3,13 @@
     import plusImg from "../../images/plus.svg";
 
     export let headerText;
-    export let descriptionText;
+    //export let descriptionText;
 
     const dispatch = createEventDispatcher();
 </script>
 
 <button
-    class="add-property-button"
+    class="add-property-button tw-p-4"
     on:click={() => {
         dispatch("click");
     }}
@@ -18,16 +18,22 @@
         {headerText}
         <img src={plusImg} alt="" />
     </div>
-    <div class="description">
-        {descriptionText}
-    </div>
+    <!-- TODO add description
+        <div class="description">
+            {descriptionText}
+        </div>
+    -->
 </button>
 
 <style lang="scss">
     .add-property-button {
+        --tw-border-opacity: 1;
+        border-color: rgb(77 75 103 / var(--tw-border-opacity));
+        --tw-bg-opacity: 1;
+        background-color: rgb(27 27 41 / var(--tw-bg-opacity));
+        --tw-text-opacity: 1;
         color: gray;
         width: 100%;
-        border: 1px solid grey;
         border-radius: 10px;
         position: relative;
         display: flex;

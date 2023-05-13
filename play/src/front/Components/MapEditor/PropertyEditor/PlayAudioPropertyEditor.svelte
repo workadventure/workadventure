@@ -6,6 +6,7 @@
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: PlayAudioPropertyData;
+    let optionAdvencedActivated = false;
 
     const dispatch = createEventDispatcher();
 
@@ -35,33 +36,39 @@
                 on:blur={onMapEditorInputUnfocus}
             />
         </div>
-        <div class="value-input">
-            <label for="volume">{$LL.mapEditor.properties.audioProperties.volumeLabel()}</label>
-            <input
-                id="volume"
-                type="number"
-                min="0"
-                max="1"
-                step="0.05"
-                bind:value={property.volume}
-                on:change={onValueChange}
-                on:focus={onMapEditorInputFocus}
-                on:blur={onMapEditorInputUnfocus}
-            />
+        <div class="value-switch">
+            <label for="advancedOption">Advenced options</label>
+            <input id="advancedOption" type="checkbox" class="input-switch" bind:checked={optionAdvencedActivated} />
         </div>
-        {#if !property.hideButtonLabel}
+        <div class:active={optionAdvencedActivated} class="advenced-option tw-px-2">
             <div class="value-input">
-                <label for="audioButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
+                <label for="volume">{$LL.mapEditor.properties.audioProperties.volumeLabel()}</label>
                 <input
-                    id="audioButtonLabel"
-                    type="text"
-                    bind:value={property.buttonLabel}
+                    id="volume"
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    bind:value={property.volume}
                     on:change={onValueChange}
                     on:focus={onMapEditorInputFocus}
                     on:blur={onMapEditorInputUnfocus}
                 />
             </div>
-        {/if}
+            {#if !property.hideButtonLabel}
+                <div class="value-input">
+                    <label for="audioButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
+                    <input
+                        id="audioButtonLabel"
+                        type="text"
+                        bind:value={property.buttonLabel}
+                        on:change={onValueChange}
+                        on:focus={onMapEditorInputFocus}
+                        on:blur={onMapEditorInputUnfocus}
+                    />
+                </div>
+            {/if}
+        </div>
     </span>
 </PropertyEditorBase>
 
@@ -82,6 +89,91 @@
         }
         * {
             margin-bottom: 0;
+        }
+    }
+    .value-switch {
+        display: flex;
+        width: 100%;
+        margin-bottom: 0.5em;
+        margin-top: 0.5em;
+        align-items: center;
+        height: 2.5em;
+        label {
+            min-width: fit-content;
+            margin-right: 0.5em;
+            flex-grow: 1;
+        }
+        input {
+            min-width: 0;
+        }
+        * {
+            margin-bottom: 0;
+        }
+    }
+    .input-switch {
+        position: relative;
+        top: 0px;
+        right: 0px;
+        bottom: 0px;
+        left: 0px;
+        display: inline-block;
+        height: 1rem;
+        width: 2rem;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border-radius: 9999px;
+        border-width: 1px;
+        border-style: solid;
+        --tw-border-opacity: 1;
+        border-color: rgb(77 75 103 / var(--tw-border-opacity));
+        --tw-bg-opacity: 1;
+        background-color: rgb(15 31 45 / var(--tw-bg-opacity));
+        background-image: none;
+        padding: 0px;
+        --tw-text-opacity: 1;
+        color: rgb(242 253 255 / var(--tw-text-opacity));
+        outline: 2px solid transparent;
+        outline-offset: 2px;
+        cursor: url(/src/front/style/images/cursor_pointer.png), pointer;
+    }
+    .input-switch::before {
+        position: absolute;
+        left: -3px;
+        top: -3px;
+        height: 1.25rem;
+        width: 1.25rem;
+        border-radius: 9999px;
+        --tw-bg-opacity: 1;
+        background-color: rgb(146 142 187 / var(--tw-bg-opacity));
+        transition-property: all;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-duration: 150ms;
+        --tw-content: "";
+        content: var(--tw-content);
+    }
+    .input-switch:checked {
+        --tw-border-opacity: 1;
+        border-color: rgb(146 142 187 / var(--tw-border-opacity));
+    }
+    .input-switch:checked::before {
+        left: 13px;
+        top: -3px;
+        --tw-bg-opacity: 1;
+        background-color: rgb(65 86 246 / var(--tw-bg-opacity));
+        content: var(--tw-content);
+        /*--tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
+        --tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
+        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
+    }
+    .input-switch:disabled {
+        cursor: not-allowed;
+        opacity: 0.4;
+    }
+    .advenced-option {
+        display: none;
+        &.active {
+            display: block;
         }
     }
 </style>

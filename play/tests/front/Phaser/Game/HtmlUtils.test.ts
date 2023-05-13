@@ -4,8 +4,8 @@ import { HtmlUtils } from "../../../../src/front/WebRtc/HtmlUtils";
 
 describe("urlify()", () => {
     it("should transform an url into a link", () => {
-        const text = HtmlUtils.urlify("foo https://google.com bar");
-        expect(text).toEqual('foo <a href="https://google.com" target="_blank" style="">https://google.com</a> bar');
+        const text = HtmlUtils.urlify("foo https://workadventu.re bar");
+        expect(text).toEqual('foo <a href="https://workadventu.re" target="_blank" style="">https://workadventu.re</a> bar');
     });
 
     it("should not transform a normal text into a link", () => {

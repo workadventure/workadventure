@@ -59,8 +59,8 @@
                     id,
                     type,
                     buttonLabel: "Open Website",
-                    link: "https://google.com",
-                    newTab: true,
+                    link: "https://workadventu.re",
+                    newTab: false,
                 };
             case "playAudio":
                 return {

@@ -61,7 +61,7 @@
                 return {
                     id,
                     type,
-                    link: "https://google.com",
+                    link: "https://workadventu.re",
                     newTab: false,
                     hideButtonLabel: true,
                     trigger: undefined,

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import axios from "axios";
     import { createEventDispatcher } from "svelte";
     import { OpenWebsitePropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
@@ -7,6 +8,8 @@
 
     export let property: OpenWebsitePropertyData;
     export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
+    let optionAdvencedActivated = false;
+    let embedable = true;
 
     const dispatch = createEventDispatcher();
 
@@ -27,6 +30,18 @@
     function onValueChange() {
         dispatch("change");
     }
+
+    async function checkEmbedableWebsite() {
+        await axios
+            .get(property.link)
+            .then((data) => {
+                embedable = data.headers["x-frame-options"] && data.headers["x-frame-options"] != "sameorigin";
+            })
+            .catch((e) => {
+                embedable = false;
+                console.info("Error to check embedable website", e);
+            });
+    }
 </script>
 
 <PropertyEditorBase
@@ -38,6 +53,21 @@
         {$LL.mapEditor.properties.linkProperties.label()}
     </span>
     <span slot="content">
+        <div>
+            <label class="tw-m-0" for="trigger">{$LL.mapEditor.properties.linkProperties.trigger()}</label>
+            <select
+                id="trigger"
+                class="tw-w-full tw-m-0"
+                bind:value={property.trigger}
+                on:change={onTriggerValueChange}
+            >
+                <option value={undefined}>{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option>
+                {#if !property.newTab}
+                    <option value="onicon">{$LL.mapEditor.properties.linkProperties.triggerOnClick()}</option>
+                {/if}
+                <option value="onaction">{$LL.mapEditor.properties.linkProperties.triggerOnAction()}</option>
+            </select>
+        </div>
         <div class="value-input tw-flex tw-flex-col">
             <label for="tabLink">{$LL.mapEditor.properties.linkProperties.linkLabel()}</label>
             <input
@@ -48,7 +78,13 @@
                 on:change={onValueChange}
                 on:focus={onMapEditorInputFocus}
                 on:blur={onMapEditorInputUnfocus}
+                on:blur={checkEmbedableWebsite}
             />
+            {#if !embedable}
+                <span class="err tw-text-pop-red tw-text-xs tw-italic"
+                    >{$LL.mapEditor.properties.linkProperties.errorEmbeddableLink()}</span
+                >
+            {/if}
         </div>
         {#if !property.hideButtonLabel}
             <div class="value-input tw-flex tw-flex-col">
@@ -63,86 +99,82 @@
                 />
             </div>
         {/if}
-        <div>
-            <label for="trigger">{$LL.mapEditor.properties.linkProperties.trigger()}</label>
-            <select id="trigger" class="tw-w-full" bind:value={property.trigger} on:change={onTriggerValueChange}>
-                <option value={undefined}>{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option>
-                {#if !property.newTab}
-                    <option value="onicon">{$LL.mapEditor.properties.linkProperties.triggerOnClick()}</option>
-                {/if}
-                <option value="onaction">{$LL.mapEditor.properties.linkProperties.triggerOnAction()}</option>
-            </select>
+        <div class="value-switch">
+            <label for="advancedOption">Advenced options</label>
+            <input id="advancedOption" type="checkbox" class="input-switch" bind:checked={optionAdvencedActivated} />
         </div>
-        {#if triggerOnActionChoosen}
-            <div class="value-input tw-flex tw-flex-col">
-                <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>
+        <div class:active={optionAdvencedActivated} class="advenced-option tw-px-2">
+            {#if triggerOnActionChoosen}
+                <div class="value-input tw-flex tw-flex-col">
+                    <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>
+                    <input
+                        id="triggerMessage"
+                        type="text"
+                        bind:value={property.triggerMessage}
+                        on:change={onValueChange}
+                        on:focus={onMapEditorInputFocus}
+                        on:blur={onMapEditorInputUnfocus}
+                    />
+                </div>
+            {/if}
+            <div class="value-switch">
+                <label for="newTab">{$LL.mapEditor.properties.linkProperties.newTabLabel()}</label>
                 <input
-                    id="triggerMessage"
+                    id="newTab"
+                    type="checkbox"
+                    class="input-switch"
+                    bind:checked={property.newTab}
+                    on:change={onNewTabValueChange}
+                />
+            </div>
+            {#if !property.newTab}
+                <div class="">
+                    <label for="websiteWidth"
+                        >{$LL.mapEditor.properties.linkProperties.width()}: {property.width ?? 50}%</label
+                    >
+                    <input
+                        id="websiteWidth"
+                        type="range"
+                        min="0"
+                        max="100"
+                        placeholder="50"
+                        bind:value={property.width}
+                        on:change={onValueChange}
+                    />
+                </div>
+            {/if}
+            <div class="value-switch">
+                <label for="closable">{$LL.mapEditor.properties.linkProperties.closable()}</label>
+                <input
+                    id="closable"
+                    type="checkbox"
+                    class="input-switch"
+                    bind:checked={property.closable}
+                    on:change={onValueChange}
+                />
+            </div>
+            <div class="value-switch">
+                <label for="allowAPI">{$LL.mapEditor.properties.linkProperties.allowAPI()}</label>
+                <input
+                    id="allowAPI"
+                    type="checkbox"
+                    class="input-switch"
+                    bind:checked={property.allowAPI}
+                    on:change={onValueChange}
+                />
+            </div>
+            <div class="value-input tw-flex tw-flex-col">
+                <label for="policy">{$LL.mapEditor.properties.linkProperties.policy()}</label>
+                <input
+                    id="policy"
                     type="text"
-                    bind:value={property.triggerMessage}
+                    placeholder={$LL.mapEditor.properties.linkProperties.policyPlaceholder()}
+                    bind:value={property.policy}
                     on:change={onValueChange}
                     on:focus={onMapEditorInputFocus}
                     on:blur={onMapEditorInputUnfocus}
                 />
             </div>
-        {/if}
-        <div class="value-switch">
-            <label for="newTab">{$LL.mapEditor.properties.linkProperties.newTabLabel()}</label>
-            <input
-                id="newTab"
-                type="checkbox"
-                class="input-switch"
-                bind:checked={property.newTab}
-                on:change={onNewTabValueChange}
-            />
-        </div>
-        {#if !property.newTab}
-            <div class="">
-                <label for="websiteWidth"
-                    >{$LL.mapEditor.properties.linkProperties.width()}: {property.width ?? 50}%</label
-                >
-                <input
-                    id="websiteWidth"
-                    type="range"
-                    min="0"
-                    max="100"
-                    placeholder="50"
-                    bind:value={property.width}
-                    on:change={onValueChange}
-                />
-            </div>
-        {/if}
-        <div class="value-switch">
-            <label for="closable">{$LL.mapEditor.properties.linkProperties.closable()}</label>
-            <input
-                id="closable"
-                type="checkbox"
-                class="input-switch"
-                bind:checked={property.closable}
-                on:change={onValueChange}
-            />
-        </div>
-        <div class="value-switch">
-            <label for="allowAPI">{$LL.mapEditor.properties.linkProperties.allowAPI()}</label>
-            <input
-                id="allowAPI"
-                type="checkbox"
-                class="input-switch"
-                bind:checked={property.allowAPI}
-                on:change={onValueChange}
-            />
-        </div>
-        <div class="value-input tw-flex tw-flex-col">
-            <label for="policy">{$LL.mapEditor.properties.linkProperties.policy()}</label>
-            <input
-                id="policy"
-                type="text"
-                placeholder={$LL.mapEditor.properties.linkProperties.policyPlaceholder()}
-                bind:value={property.policy}
-                on:change={onValueChange}
-                on:focus={onMapEditorInputFocus}
-                on:blur={onMapEditorInputUnfocus}
-            />
         </div>
     </span>
 </PropertyEditorBase>
@@ -166,7 +198,6 @@
             margin-bottom: 0;
         }
     }
-
     .value-switch {
         display: flex;
         width: 100%;
@@ -177,6 +208,7 @@
         label {
             min-width: fit-content;
             margin-right: 0.5em;
+            flex-grow: 1;
         }
         input {
             min-width: 0;
@@ -185,7 +217,25 @@
             margin-bottom: 0;
         }
     }
-
+    .value-switch {
+        display: flex;
+        width: 100%;
+        margin-bottom: 0.5em;
+        margin-top: 0.5em;
+        align-items: center;
+        height: 2.5em;
+        label {
+            min-width: fit-content;
+            margin-right: 0.5em;
+            flex-grow: 1;
+        }
+        input {
+            min-width: 0;
+        }
+        * {
+            margin-bottom: 0;
+        }
+    }
     .input-switch {
         position: relative;
         top: 0px;
@@ -213,7 +263,6 @@
         outline-offset: 2px;
         cursor: url(/src/front/style/images/cursor_pointer.png), pointer;
     }
-
     .input-switch::before {
         position: absolute;
         left: -3px;
@@ -229,12 +278,10 @@
         --tw-content: "";
         content: var(--tw-content);
     }
-
     .input-switch:checked {
         --tw-border-opacity: 1;
         border-color: rgb(146 142 187 / var(--tw-border-opacity));
     }
-
     .input-switch:checked::before {
         left: 13px;
         top: -3px;
@@ -245,9 +292,14 @@
         --tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
         box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
     }
-
     .input-switch:disabled {
         cursor: not-allowed;
         opacity: 0.4;
+    }
+    .advenced-option {
+        display: none;
+        &.active {
+            display: block;
+        }
     }
 </style>
