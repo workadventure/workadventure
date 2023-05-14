@@ -6,7 +6,9 @@ export default defineConfig({
         coverage: {
             all: true,
             include: ["src/*.ts", "src/**/*.ts"],
-            exclude: ["src/i18n", "src/enum"],
+            exclude: ["src/i18n", "src/enum", "src/messages"],
+            reporter: ["json-summary"],
         },
+        reporters: ['json'],
     },
 });
