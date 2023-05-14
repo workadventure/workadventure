@@ -18,8 +18,11 @@ import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { fileSystem } from "./fileSystem";
 
 // TODO: dynamic imports?
-import furnitureCollection from "./entities/collections/FurnitureCollection.json";
-import officeCollection from "./entities/collections/OfficeCollection.json";
+//import furnitureCollection from "./entities/collections/FurnitureCollection.json";
+//import officeCollection from "./entities/collections/OfficeCollection.json";
+import limezuMICollection from "./entities/collections/LimeZu_Modern_Interior.json";
+import limezuMECollection from "./entities/collections/LimeZu_Modern_Exterior.json";
+import limezuMOCollection from "./entities/collections/LimeZu_Modern_Office.json";
 
 class MapsManager {
     private loadedMaps: Map<string, GameMap>;
@@ -50,7 +53,7 @@ class MapsManager {
 
         this.loadedCollections = new Map<string, EntityCollection>();
 
-        for (const collection of [furnitureCollection, officeCollection]) {
+        for (const collection of [limezuMICollection, limezuMECollection, limezuMOCollection]) {
             const parsedCollectionPrefabs: EntityPrefab[] = [];
             for (const rawPrefab of collection.collection) {
                 parsedCollectionPrefabs.push(

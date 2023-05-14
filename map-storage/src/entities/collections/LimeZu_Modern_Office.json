@@ -1,0 +1,671 @@
+{
+    "collectionName": "LimeZu Modern Office",
+    "tags": [
+        "LimeZu",
+        "Modern",
+        "Office"
+    ],
+    "collection": [
+        {
+            "name": "Aloe Vera",
+            "tags": [
+                "\ud83e\udeb4 Plants",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Aloe_Vera__Down__568D61__\ud83e\udeb4 Plants_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#568D61"
+        },
+        {
+            "name": "Coffee machine (cups)",
+            "tags": [
+                "\ud83e\uddf7 Office",
+                "\ud83d\udcbb Electronics"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Coffee_machine_(cups)__Down__82829F__\ud83e\uddf7 Office_\ud83d\udcbb Electronics.png",
+            "direction": "Down",
+            "color": "#82829F"
+        },
+        {
+            "name": "Desk (small)",
+            "tags": [
+                "\ud83d\udfeb Table",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Desk_(small)__Down__BB8051__\ud83d\udfeb Table_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#BB8051"
+        },
+        {
+            "name": "Desk (small)",
+            "tags": [
+                "\ud83d\udfeb Table",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Desk_(small)__Down__C1B092__\ud83d\udfeb Table_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#C1B092"
+        },
+        {
+            "name": "Desk (small)",
+            "tags": [
+                "\ud83d\udfeb Table",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Desk_(small)__Down__CFAB6A__\ud83d\udfeb Table_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#CFAB6A"
+        },
+        {
+            "name": "Desk lamp",
+            "tags": [
+                "\ud83d\udca1 Lighting",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Desk_lamp__Left__83849F__\ud83d\udca1 Lighting_\ud83e\uddf7 Office.png",
+            "direction": "Left",
+            "color": "#83849F"
+        },
+        {
+            "name": "Desk lamp",
+            "tags": [
+                "\ud83d\udca1 Lighting",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Desk_lamp__Left__99AEC5__\ud83d\udca1 Lighting_\ud83e\uddf7 Office.png",
+            "direction": "Left",
+            "color": "#99AEC5"
+        },
+        {
+            "name": "Desk lamp",
+            "tags": [
+                "\ud83d\udca1 Lighting",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Desk_lamp__Left__9C9EAD__\ud83d\udca1 Lighting_\ud83e\uddf7 Office.png",
+            "direction": "Left",
+            "color": "#9C9EAD"
+        },
+        {
+            "name": "Desk lamp",
+            "tags": [
+                "\ud83d\udca1 Lighting",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Desk_lamp__Right__83849F__\ud83d\udca1 Lighting_\ud83e\uddf7 Office.png",
+            "direction": "Right",
+            "color": "#83849F"
+        },
+        {
+            "name": "Desk lamp",
+            "tags": [
+                "\ud83d\udca1 Lighting",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Desk_lamp__Right__99AEC5__\ud83d\udca1 Lighting_\ud83e\uddf7 Office.png",
+            "direction": "Right",
+            "color": "#99AEC5"
+        },
+        {
+            "name": "Desk lamp",
+            "tags": [
+                "\ud83d\udca1 Lighting",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Desk_lamp__Right__9C9EAD__\ud83d\udca1 Lighting_\ud83e\uddf7 Office.png",
+            "direction": "Right",
+            "color": "#9C9EAD"
+        },
+        {
+            "name": "Desk",
+            "tags": [
+                "\ud83d\udfeb Table",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Desk__Down__787878__\ud83d\udfeb Table_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#787878"
+        },
+        {
+            "name": "Desk",
+            "tags": [
+                "\ud83d\udfeb Table",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Desk__Down__C1B092__\ud83d\udfeb Table_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#C1B092"
+        },
+        {
+            "name": "Monitor",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Monitor__Right__53556C__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Right",
+            "color": "#53556C"
+        },
+        {
+            "name": "Monitor",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Monitor__Right__C4CDD5__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Right",
+            "color": "#C4CDD5"
+        },
+        {
+            "name": "Monitor",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Monitor__Up__53556C__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Up",
+            "color": "#53556C"
+        },
+        {
+            "name": "Monitor",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Monitor__Up__C4CDD5__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Up",
+            "color": "#C4CDD5"
+        },
+        {
+            "name": "Office armchair",
+            "tags": [
+                "\ud83d\udcba Seat",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Office_armchair__Down__54576D__\ud83d\udcba Seat_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#54576D"
+        },
+        {
+            "name": "Office armchair",
+            "tags": [
+                "\ud83d\udcba Seat",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Office_armchair__Down__B86E48__\ud83d\udcba Seat_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#B86E48"
+        },
+        {
+            "name": "Office armchair",
+            "tags": [
+                "\ud83d\udcba Seat",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Office_armchair__Left__54576D__\ud83d\udcba Seat_\ud83e\uddf7 Office.png",
+            "direction": "Left",
+            "color": "#54576D"
+        },
+        {
+            "name": "Office armchair",
+            "tags": [
+                "\ud83d\udcba Seat",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Office_armchair__Left__B86E48__\ud83d\udcba Seat_\ud83e\uddf7 Office.png",
+            "direction": "Left",
+            "color": "#B86E48"
+        },
+        {
+            "name": "Office armchair",
+            "tags": [
+                "\ud83d\udcba Seat",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Office_armchair__Right__54576D__\ud83d\udcba Seat_\ud83e\uddf7 Office.png",
+            "direction": "Right",
+            "color": "#54576D"
+        },
+        {
+            "name": "Office armchair",
+            "tags": [
+                "\ud83d\udcba Seat",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Office_armchair__Right__B86E48__\ud83d\udcba Seat_\ud83e\uddf7 Office.png",
+            "direction": "Right",
+            "color": "#B86E48"
+        },
+        {
+            "name": "Office armchair",
+            "tags": [
+                "\ud83d\udcba Seat",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Office_armchair__Up__54576D__\ud83d\udcba Seat_\ud83e\uddf7 Office.png",
+            "direction": "Up",
+            "color": "#54576D"
+        },
+        {
+            "name": "Office armchair",
+            "tags": [
+                "\ud83d\udcba Seat",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Office_armchair__Up__B86E48__\ud83d\udcba Seat_\ud83e\uddf7 Office.png",
+            "direction": "Up",
+            "color": "#B86E48"
+        },
+        {
+            "name": "Office couch",
+            "tags": [
+                "\ud83d\udcba Seat",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Office_couch__Down__66677C__\ud83d\udcba Seat_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#66677C"
+        },
+        {
+            "name": "Potted ficus",
+            "tags": [
+                "\ud83e\udeb4 Plants",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Potted_ficus__Down__568D61__\ud83e\udeb4 Plants_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#568D61"
+        },
+        {
+            "name": "Printer",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Printer__Down__82829F__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#82829F"
+        },
+        {
+            "name": "Printer",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Printer__Down__C4CDD5__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#C4CDD5"
+        },
+        {
+            "name": "Printer",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Printer__Right__82829F__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Right",
+            "color": "#82829F"
+        },
+        {
+            "name": "Printer",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Printer__Right__C4CDD5__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Right",
+            "color": "#C4CDD5"
+        },
+        {
+            "name": "Waiting Room chair",
+            "tags": [
+                "\ud83d\udcba Seat",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Waiting_Room_chair__Down__9398AA__\ud83d\udcba Seat_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#9398AA"
+        },
+        {
+            "name": "Waiting Room chair",
+            "tags": [
+                "\ud83d\udcba Seat",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Waiting_Room_chair__Down__B09C61__\ud83d\udcba Seat_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#B09C61"
+        },
+        {
+            "name": "Waiting Room chair",
+            "tags": [
+                "\ud83d\udcba Seat",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Waiting_Room_chair__Down__BDD5DA__\ud83d\udcba Seat_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#BDD5DA"
+        },
+        {
+            "name": "Waiting Room chair",
+            "tags": [
+                "\ud83d\udcba Seat",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Waiting_Room_chair__Down__C8C1CF__\ud83d\udcba Seat_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#C8C1CF"
+        },
+        {
+            "name": "Waste bin (full)",
+            "tags": [
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Waste_bin_(full)__Down__A0A3B1__\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#A0A3B1"
+        },
+        {
+            "name": "Waste bin (open)",
+            "tags": [
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Waste_bin_(open)__Down__A0A3B1__\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#A0A3B1"
+        },
+        {
+            "name": "Waste bin",
+            "tags": [
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Waste_bin__Down__A0A3B1__\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#A0A3B1"
+        },
+        {
+            "name": "Water dispenser",
+            "tags": [
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Water_dispenser__Down__66677C__\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#66677C"
+        },
+        {
+            "name": "Whiteboard",
+            "tags": [
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Whiteboard__Down__4D9CD6__\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#4D9CD6"
+        },
+        {
+            "name": "Whiteboard",
+            "tags": [
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Whiteboard__Down__D8D2DE__\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#D8D2DE"
+        },
+        {
+            "name": "Whiteboard",
+            "tags": [
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Whiteboard__Down__E85D4A__\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#E85D4A"
+        },
+        {
+            "name": "Desk",
+            "tags": [
+                "\ud83d\udfeb Table",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Desk__Down__D1CBDD__\ud83d\udfeb Table_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#D1CBDD"
+        },
+        {
+            "name": "Desk",
+            "tags": [
+                "\ud83d\udfeb Table",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Desk__Down__DBCAA9__\ud83d\udfeb Table_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#DBCAA9"
+        },
+        {
+            "name": "Desk",
+            "tags": [
+                "\ud83d\udfeb Table",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Desk__Right__787878__\ud83d\udfeb Table_\ud83e\uddf7 Office.png",
+            "direction": "Right",
+            "color": "#787878"
+        },
+        {
+            "name": "Desk",
+            "tags": [
+                "\ud83d\udfeb Table",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Desk__Right__C1B092__\ud83d\udfeb Table_\ud83e\uddf7 Office.png",
+            "direction": "Right",
+            "color": "#C1B092"
+        },
+        {
+            "name": "Desk",
+            "tags": [
+                "\ud83d\udfeb Table",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Desk__Right__CAAB8B__\ud83d\udfeb Table_\ud83e\uddf7 Office.png",
+            "direction": "Right",
+            "color": "#CAAB8B"
+        },
+        {
+            "name": "Desk",
+            "tags": [
+                "\ud83d\udfeb Table",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Desk__Right__D1CBDD__\ud83d\udfeb Table_\ud83e\uddf7 Office.png",
+            "direction": "Right",
+            "color": "#D1CBDD"
+        },
+        {
+            "name": "Desk",
+            "tags": [
+                "\ud83d\udfeb Table",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Desk__Right__DBCAA9__\ud83d\udfeb Table_\ud83e\uddf7 Office.png",
+            "direction": "Right",
+            "color": "#DBCAA9"
+        },
+        {
+            "name": "Documents",
+            "tags": [
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Documents__Down__C3BBCC__\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#C3BBCC"
+        },
+        {
+            "name": "Document",
+            "tags": [
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Document__Down__C3BBCC__\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#C3BBCC"
+        },
+        {
+            "name": "Laptop",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Laptop__Down__C4CDD5__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#C4CDD5"
+        },
+        {
+            "name": "Laptop",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Laptop__Left__53556C__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Left",
+            "color": "#53556C"
+        },
+        {
+            "name": "Laptop",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Laptop__Left__C4CDD5__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Left",
+            "color": "#C4CDD5"
+        },
+        {
+            "name": "Laptop",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Laptop__Right__53556C__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Right",
+            "color": "#53556C"
+        },
+        {
+            "name": "Laptop",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Laptop__Right__C4CDD5__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Right",
+            "color": "#C4CDD5"
+        },
+        {
+            "name": "Monitor (back)",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Monitor_(back)__Left__53556C__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Left",
+            "color": "#53556C"
+        },
+        {
+            "name": "Monitor (back)",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Monitor_(back)__Left__C4CDD5__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Left",
+            "color": "#C4CDD5"
+        },
+        {
+            "name": "Monitor (back)",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Monitor_(back)__Right__53556C__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Right",
+            "color": "#53556C"
+        },
+        {
+            "name": "Monitor (back)",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Monitor_(back)__Right__C4CDD5__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Right",
+            "color": "#C4CDD5"
+        },
+        {
+            "name": "Monitor",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Monitor__Down__53556C__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#53556C"
+        },
+        {
+            "name": "Monitor",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Monitor__Down__C4CDD5__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#C4CDD5"
+        },
+        {
+            "name": "Monitor",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Monitor__Left__53556C__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Left",
+            "color": "#53556C"
+        },
+        {
+            "name": "Desk",
+            "tags": [
+                "\ud83d\udfeb Table",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Desk__Down__CAAB8B__\ud83d\udfeb Table_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#CAAB8B"
+        },
+        {
+            "name": "Laptop",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Laptop__Down__53556C__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#53556C"
+        },
+        {
+            "name": "Monitor",
+            "tags": [
+                "\ud83d\udcbb Electronics",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Monitor__Left__C4CDD5__\ud83d\udcbb Electronics_\ud83e\uddf7 Office.png",
+            "direction": "Left",
+            "color": "#C4CDD5"
+        },
+        {
+            "name": "Ox tongue",
+            "tags": [
+                "\ud83e\udeb4 Plants",
+                "\ud83e\uddf7 Office"
+            ],
+            "imagePath": "LimeZu_Modern_Office/Ox_tongue__Down__568D61__\ud83e\udeb4 Plants_\ud83e\uddf7 Office.png",
+            "direction": "Down",
+            "color": "#568D61"
+        }
+    ]
+}
