@@ -83,6 +83,12 @@ jobs:
         run: npm run test:coverage
         working-directory: "play"
 
+      - name: "Upload coverage"
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-play
+          path: play/coverage/coverage-summary.json
+
   continuous-integration-chat:
     name: "Continuous Integration Chat"
 
@@ -200,6 +206,12 @@ jobs:
       - name: "Unit tests"
         run: npm run test:coverage
         working-directory: "back"
+
+      - name: "Upload coverage"
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-back
+          path: back/coverage/coverage-summary.json
 
       - name: "Prettier"
         run: npm run pretty-check
@@ -570,16 +582,22 @@ jobs:
 #      - continuous-integration-desktop
 #      - continuous-integration-desktop-local-app
     steps:
-      - name: "Copy play coverage"
-        run: cp play/coverage/coverage-summary.json play_coverage.json
+      - name: "Download play coverage"
+        uses: actions/download-artifact@v2
+        with:
+          name: coverage-play
+          path: coverage-play.json
 
-      - name: "Copy back coverage"
-        run: cp back/coverage/coverage-summary.json back_coverage.json
+      - name: "Download back coverage"
+        uses: actions/download-artifact@v2
+        with:
+          name: coverage-back
+          path: coverage-back.json
 
       - name: "Parse JSON and Write New File"
         run: |
           # Parse input JSON file
-          input=$(cat play_coverage.json | jq '.')
+          input=$(cat coverage-play.json | jq '.')
           echo "Input: $input"
 
           # Modify JSON object
@@ -593,6 +611,6 @@ jobs:
         uses: greatwizard/coverage-diff-action@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          coverage-filename: play/coverage/coverage-summary.json
+          coverage-filename: coverage-play.json
           base-summary-filename: coverage_develop.json
           badge-enabled: false
