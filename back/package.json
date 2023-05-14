@@ -10,7 +10,7 @@
     "profile": "tsc && node --prof ./dist/server.js",
     "typecheck": "tsc --noEmit",
     "test": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest --config vitest.config.ts ",
-    "test:coverage": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest --config vitest.config.ts --coverage -- --verbose=true",
+    "test:coverage": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= c8 --reporter=json vitest run --config ./vitest.config.ts --coverage",
     "lint": "DEBUG= eslint src/ . --ext .ts",
     "fix": "DEBUG= eslint --fix src/ . --ext .ts",
     "precommit": "lint-staged",

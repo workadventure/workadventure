@@ -83,21 +83,6 @@ jobs:
         run: npm run test:coverage
         working-directory: "play"
 
-      - name: Coverage Diff
-        uses: greatwizard/coverage-diff-action@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          coverage-filename: play/coverage/coverage-summary.json
-          base-summary-filename: coverage_develop.json
-          badge-enabled: false
-
-#      - name: "Coverage Compare"
-#        uses: iKadmium/json-summary-reporter@1.0.0
-#        with:
-#          base-coverage-file: play/main-coverage-summary.json
-#          current-coverage-file: play/coverage/coverage-summary.json
-#          comment-header: "Coverage Comparison for play container"
-
   continuous-integration-chat:
     name: "Continuous Integration Chat"
 
@@ -213,7 +198,7 @@ jobs:
         working-directory: "back"
 
       - name: "Unit tests"
-        run: npm test
+        run: npm test:coverage
         working-directory: "back"
 
       - name: "Prettier"
@@ -568,3 +553,46 @@ jobs:
       - name: "Lint"
         run: npm run lint
         working-directory: "tests"
+
+
+  diff_coverage:
+    name: "Coverage difference"
+    runs-on: "ubuntu-latest"
+    needs:
+      - continuous-integration-play
+#      - continuous-integration-chat
+      - continuous-integration-back
+#      - continuous-integration-uploader
+#      - continuous-integration-lib-map-editor
+#      - continuous-integration-shared-utils
+#      - continuous-integration-map-storage
+#      - continuous-integration-room-api-client
+#      - continuous-integration-desktop
+#      - continuous-integration-desktop-local-app
+    steps:
+      - name: "Copy play coverage"
+        run: cp play/coverage/coverage-summary.json play_coverage.json
+
+      - name: "Copy back coverage"
+        run: cp back/coverage/coverage-summary.json back_coverage.json
+
+      - name: "Parse JSON and Write New File"
+        run: |
+          # Parse input JSON file
+          input=$(cat play_coverage.json | jq '.')
+          echo "Input: $input"
+
+          # Modify JSON object
+          output=$(echo $input | jq '.total = "bar"')
+          echo "Output: $output"
+
+          # Write output to file
+          echo $output > output.json
+
+      - name: "Calculate coverage difference and add comment to PR"
+        uses: greatwizard/coverage-diff-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          coverage-filename: play/coverage/coverage-summary.json
+          base-summary-filename: coverage_develop.json
+          badge-enabled: false
