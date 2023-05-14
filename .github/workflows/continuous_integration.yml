@@ -198,7 +198,7 @@ jobs:
         working-directory: "back"
 
       - name: "Unit tests"
-        run: npm test:coverage
+        run: npm run test:coverage
         working-directory: "back"
 
       - name: "Prettier"
