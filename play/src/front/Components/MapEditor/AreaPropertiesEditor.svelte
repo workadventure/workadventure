@@ -7,6 +7,11 @@
         onMapEditorInputFocus,
         onMapEditorInputUnfocus,
     } from "../../Stores/MapEditorStore";
+    import visioSvg from "../images/visio-white.svg";
+    import audioSvg from "../images/audio-white.svg";
+    import webSvg from "../images/web-white.svg";
+    import silentSvg from "../images/silent-white.svg";
+    import focusSvg from "../images/focus-white.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
@@ -123,11 +128,13 @@
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
     {$LL.mapEditor.areaEditor.editInstructions()}
 {:else}
-    <div class="properties-buttons">
+    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
         {#if !hasFocusableProperty}
             <AddPropertyButton
                 headerText={$LL.mapEditor.properties.focusableProperties.label()}
                 descriptionText={$LL.mapEditor.properties.focusableProperties.description()}
+                img={focusSvg}
+                style="z-index: 5;"
                 on:click={() => {
                     onAddProperty("focusable");
                 }}
@@ -137,6 +144,8 @@
             <AddPropertyButton
                 headerText={$LL.mapEditor.properties.silentProperty.label()}
                 descriptionText={$LL.mapEditor.properties.silentProperty.description()}
+                img={silentSvg}
+                style="z-index: 4;"
                 on:click={() => {
                     onAddProperty("silent");
                 }}
@@ -146,6 +155,8 @@
             <AddPropertyButton
                 headerText={$LL.mapEditor.properties.jitsiProperties.label()}
                 descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
+                img={visioSvg}
+                style="z-index: 3;"
                 on:click={() => {
                     onAddProperty("jitsiRoomProperty");
                 }}
@@ -154,6 +165,8 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.audioProperties.label()}
             descriptionText={$LL.mapEditor.properties.audioProperties.description()}
+            img={audioSvg}
+            style="z-index: 2;"
             on:click={() => {
                 onAddProperty("playAudio");
             }}
@@ -161,6 +174,8 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.linkProperties.label()}
             descriptionText={$LL.mapEditor.properties.linkProperties.description()}
+            img={webSvg}
+            style="z-index: 1;"
             on:click={() => {
                 onAddProperty("openWebsite");
             }}

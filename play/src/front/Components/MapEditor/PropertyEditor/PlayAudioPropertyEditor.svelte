@@ -3,6 +3,7 @@
     import { PlayAudioPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
+    import audioSvg from "../../images/audio-white.svg";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: PlayAudioPropertyData;
@@ -20,7 +21,8 @@
         dispatch("close");
     }}
 >
-    <span slot="header">
+    <span slot="header" class="tw-flex tw-justify-center tw-items-center">
+        <img class="tw-w-6 tw-mr-1" src={audioSvg} alt={$LL.mapEditor.properties.audioProperties.description()} />
         {$LL.mapEditor.properties.audioProperties.label()}
     </span>
     <span slot="content">

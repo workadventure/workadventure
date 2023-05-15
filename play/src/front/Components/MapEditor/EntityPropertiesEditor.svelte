@@ -7,6 +7,9 @@
         onMapEditorInputFocus,
         onMapEditorInputUnfocus,
     } from "../../Stores/MapEditorStore";
+    import visioSvg from "../images/visio-white.svg";
+    import audioSvg from "../images/audio-white.svg";
+    import webSvg from "../images/web-white.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
@@ -94,24 +97,30 @@
     <div class="header-container">
         <h2>Editing {$mapEditorSelectedEntityStore.getEntityData().prefab.name}</h2>
     </div>
-    <div class="properties-buttons">
+    <div class="properties-buttons tw-flex tw-flex-row">
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.jitsiProperties.label()}
-            descriptionText="Lorem ipsum dolor sit amet"
+            descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
+            img={visioSvg}
+            style="z-index: 5;"
             on:click={() => {
                 onAddProperty("jitsiRoomProperty");
             }}
         />
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.audioProperties.label()}
-            descriptionText="Lorem ipsum dolor sit amet"
+            descriptionText={$LL.mapEditor.properties.audioProperties.description()}
+            img={audioSvg}
+            style="z-index: 4;"
             on:click={() => {
                 onAddProperty("playAudio");
             }}
         />
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.linkProperties.label()}
-            descriptionText="Lorem ipsum dolor sit amet"
+            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
+            img={webSvg}
+            style="z-index: 3;"
             on:click={() => {
                 onAddProperty("openWebsite");
             }}

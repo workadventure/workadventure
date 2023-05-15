@@ -3,6 +3,7 @@
     import { JitsiRoomConfigData, JitsiRoomPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
+    import visioSvg from "../../images/visio-white.svg";
     import JitsiRoomConfigEditor from "./JitsiRoomConfigEditor.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
@@ -34,7 +35,8 @@
         dispatch("close");
     }}
 >
-    <span slot="header">
+    <span slot="header" class="tw-flex tw-justify-center tw-items-center">
+        <img class="tw-w-6 tw-mr-1" src={visioSvg} alt={$LL.mapEditor.properties.jitsiProperties.description()} />
         {$LL.mapEditor.properties.jitsiProperties.label()}
     </span>
     <span slot="content">
