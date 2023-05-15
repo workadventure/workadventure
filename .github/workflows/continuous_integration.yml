@@ -586,13 +586,13 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: coverage-play
-          path: coverage-play.json
+          path: ./
 
       - name: "Download back coverage"
         uses: actions/download-artifact@v2
         with:
           name: coverage-back
-          path: coverage-back.json
+          path: ./
 
       - name: "Parse JSON and Write New File"
         run: |
