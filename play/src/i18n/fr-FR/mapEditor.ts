@@ -41,6 +41,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "Ouvrir le lien",
             errorEmbeddableLink: "Le lien ne peut pas être intégré",
         },
+        advancedOptions: "Options avancées",
     },
     entityEditor: {
         itemPicker: {

@@ -9,7 +9,7 @@
 
     export let property: OpenWebsitePropertyData;
     export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
-    let optionAdvencedActivated = false;
+    let optionAdvancedActivated = false;
     let embedable = true;
 
     const dispatch = createEventDispatcher();
@@ -102,10 +102,10 @@
             </div>
         {/if}
         <div class="value-switch">
-            <label for="advancedOption">Advenced options</label>
-            <input id="advancedOption" type="checkbox" class="input-switch" bind:checked={optionAdvencedActivated} />
+            <label for="advancedOption">{$LL.mapEditor.properties.advancedOptions()}</label>
+            <input id="advancedOption" type="checkbox" class="input-switch" bind:checked={optionAdvancedActivated} />
         </div>
-        <div class:active={optionAdvencedActivated} class="advenced-option tw-px-2">
+        <div class:active={optionAdvancedActivated} class="advanced-option tw-px-2">
             {#if triggerOnActionChoosen}
                 <div class="value-input tw-flex tw-flex-col">
                     <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>
@@ -298,7 +298,7 @@
         cursor: not-allowed;
         opacity: 0.4;
     }
-    .advenced-option {
+    .advanced-option {
         display: none;
         &.active {
             display: block;

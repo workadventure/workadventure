@@ -7,7 +7,7 @@
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: PlayAudioPropertyData;
-    let optionAdvencedActivated = false;
+    let optionAdvancedActivated = false;
 
     const dispatch = createEventDispatcher();
 
@@ -39,10 +39,10 @@
             />
         </div>
         <div class="value-switch">
-            <label for="advancedOption">Advenced options</label>
-            <input id="advancedOption" type="checkbox" class="input-switch" bind:checked={optionAdvencedActivated} />
+            <label for="advancedOption">{$LL.mapEditor.properties.advancedOptions()}</label>
+            <input id="advancedOption" type="checkbox" class="input-switch" bind:checked={optionAdvancedActivated} />
         </div>
-        <div class:active={optionAdvencedActivated} class="advenced-option tw-px-2">
+        <div class:active={optionAdvancedActivated} class="advanced-option tw-px-2">
             <div class="value-input">
                 <label for="volume">{$LL.mapEditor.properties.audioProperties.volumeLabel()}</label>
                 <input
@@ -172,7 +172,7 @@
         cursor: not-allowed;
         opacity: 0.4;
     }
-    .advenced-option {
+    .advanced-option {
         display: none;
         &.active {
             display: block;
