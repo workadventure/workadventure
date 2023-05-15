@@ -86,6 +86,7 @@ export class EntityEditorTool extends MapEditorTool {
                 mapEditorEntityModeStore.set("ADD");
                 break;
             }
+            case "backspace":
             case "delete": {
                 get(mapEditorSelectedEntityStore)?.delete();
                 mapEditorSelectedEntityStore.set(undefined);

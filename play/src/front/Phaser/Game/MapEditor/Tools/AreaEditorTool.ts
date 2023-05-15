@@ -189,6 +189,7 @@ export class AreaEditorTool extends MapEditorTool {
 
     public handleKeyDownEvent(event: KeyboardEvent): void {
         switch (event.key.toLowerCase()) {
+            case "backspace":
             case "delete": {
                 const areaPreview = get(mapEditorSelectedAreaPreviewStore);
                 if (!areaPreview) {
