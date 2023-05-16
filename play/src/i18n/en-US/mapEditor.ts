@@ -78,6 +78,13 @@ const mapEditor: BaseTranslation = {
                 rights: "Rights",
                 rightsHelper:
                     "The rights define who can use the megaphone. If you leave it empty, anyone can use it. If you set it, only users that have one of those 'tag' can use it.",
+                error: {
+                    title: "Please enter a title",
+                    save: {
+                        success: "Megaphone settings saved",
+                        fail: "Error while saving megaphone settings",
+                    }
+                },
             },
         },
     },

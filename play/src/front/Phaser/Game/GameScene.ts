@@ -113,7 +113,7 @@ import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import {
-    WAM_SETTINGS_EDITOR_TOOL_ME,
+    WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
     mapEditorWamSettingsEditorToolCurrentMenuItemStore,
     mapEditorModeStore,
     mapEditorSelectedToolStore,
@@ -2275,7 +2275,7 @@ ${escapedMessage}
                 setTimeout(() => layoutManagerActionStore.removeAction("mapEditorNotEnabled"), 6_000);
             } else {
                 switch (toolEditorParam) {
-                    case "configureMyRoom": {
+                    case "wamSettingsEditorTool": {
                         mapEditorModeStore.switchMode(true);
                         mapEditorSelectedToolStore.set(EditorToolName.WAMSettingsEditor);
                         const menuItem = urlManager.getHashParameter("menuItem");
@@ -2283,7 +2283,7 @@ ${escapedMessage}
                             switch (menuItem) {
                                 case "megaphone": {
                                     mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(
-                                        WAM_SETTINGS_EDITOR_TOOL_ME.Megaphone
+                                        WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone
                                     );
                                     break;
                                 }

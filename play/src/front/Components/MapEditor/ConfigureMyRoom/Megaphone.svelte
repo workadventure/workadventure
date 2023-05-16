@@ -54,8 +54,8 @@
             if (loading) return;
             loading = true;
             if (!title) {
-                dynamicStrings.error.title = "Please enter a title";
-                reject("Something went wrong !");
+                dynamicStrings.error.title = $LL.mapEditor.settings.megaphone.inputs.error.title();
+                reject($LL.mapEditor.settings.megaphone.inputs.error.fail());
             } else {
                 dynamicStrings.error.title = "";
             }
@@ -66,7 +66,7 @@
                 rights: (rights || []).map((right) => right.value),
             });
             loading = false;
-            resolve("Successfully saved !");
+            resolve($LL.mapEditor.settings.megaphone.inputs.error.success());
         });
     }
 
