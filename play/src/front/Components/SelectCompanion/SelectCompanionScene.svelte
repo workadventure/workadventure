@@ -32,7 +32,6 @@
     function selectRightCollection() {
         selectCompanionScene.selectNextCompanionCollection();
     }
-    console.log(selectedCollection);
 </script>
 
 <form class="selectCompanionScene">

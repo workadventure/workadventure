@@ -35,8 +35,7 @@ export function validateWebsocketQuery<T extends ZodObject<ZodRawShape>>(
     validator: T
 ): z.infer<T> | undefined {
     const urlSearchParams = new URLSearchParams(req.getQuery());
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const params: any = {};
+    const params: Record<string, string | string[]> = {};
     for (const key of [...new Set(urlSearchParams.keys())]) {
         const values = urlSearchParams.getAll(key);
         params[key] = values.length > 1 ? values : values[0];
