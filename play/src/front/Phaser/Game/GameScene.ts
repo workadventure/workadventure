@@ -2277,7 +2277,7 @@ ${escapedMessage}
                 switch (toolEditorParam) {
                     case "configureMyRoom": {
                         mapEditorModeStore.switchMode(true);
-                        mapEditorSelectedToolStore.set(EditorToolName.ConfigureMyRoom);
+                        mapEditorSelectedToolStore.set(EditorToolName.WAMSettingsEditor);
                         const menuItem = urlManager.getHashParameter("menuItem");
                         if (menuItem) {
                             switch (menuItem) {

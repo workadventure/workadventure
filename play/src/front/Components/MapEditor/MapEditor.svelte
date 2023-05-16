@@ -10,7 +10,7 @@
 
 <MapEditorSideBar />
 <div class="map-editor tw-bg-dark-blue/95">
-    {#if $mapEditorSelectedToolStore === EditorToolName.ConfigureMyRoom}
+    {#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
         <ConfigureMyRoom />
     {:else}
         <div class="sidebar" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>

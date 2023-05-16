@@ -31,7 +31,7 @@
         // { toolName: EditorToolName.FloorEditor, img: FloorToolImg, tooltiptext: $LL.mapEditor.sideBar.tileEditor() }
     );
     availableTools.push({
-        toolName: EditorToolName.ConfigureMyRoom,
+        toolName: EditorToolName.WAMSettingsEditor,
         img: ConfigureImg,
         tooltiptext: $LL.mapEditor.sideBar.configureMyRoom(),
     });

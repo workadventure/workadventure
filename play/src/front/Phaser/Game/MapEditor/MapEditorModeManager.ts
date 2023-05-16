@@ -19,13 +19,13 @@ import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
 import { EntityEditorTool } from "./Tools/EntityEditorTool";
-import { WAMEditorTool } from "./Tools/WAMEditorTool";
+import { WAMSettingsEditorTool } from "./Tools/WAMSettingsEditorTool";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
     FloorEditor = "FloorEditor",
     EntityEditor = "EntityEditor",
-    ConfigureMyRoom = "ConfigureMyRoom",
+    WAMSettingsEditor = "WAMSettingsEditor",
 }
 
 export class MapEditorModeManager {
@@ -81,7 +81,7 @@ export class MapEditorModeManager {
             [EditorToolName.AreaEditor]: new AreaEditorTool(this),
             [EditorToolName.EntityEditor]: new EntityEditorTool(this),
             [EditorToolName.FloorEditor]: new FloorEditorTool(this),
-            [EditorToolName.ConfigureMyRoom]: new WAMEditorTool(this),
+            [EditorToolName.WAMSettingsEditor]: new WAMSettingsEditorTool(this),
         };
         this.activeTool = undefined;
 
