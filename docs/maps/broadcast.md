@@ -1,7 +1,7 @@
 {.section-title.accent.text-primary}
 # Broadcasting / Megaphone
 
-Use the broadcast feature to stream you video / audio / screen to anyone within the **broadcast zone**.
+Use the broadcast feature to stream your video / audio / screen to anyone within the **broadcast zone**.
 
 To use the broadcast feature, you must first define a broadcast zone and a trigger:
 
