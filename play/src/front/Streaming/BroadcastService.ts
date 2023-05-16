@@ -65,6 +65,16 @@ class BroadcastSpace extends Space {
         );
     }
     destroy() {
+        limit(() => this.jitsiConference?.leave("I want to lave this space ..."))
+            .then(() => {
+                this.jitsiConference = undefined;
+            })
+            .catch((e) => {
+                console.error(e);
+            })
+            .finally(() => {
+                this.broadcastService.checkIfCanDisconnect();
+            });
         this.unsubscribes.forEach((unsubscribe) => unsubscribe());
         super.destroy();
     }
@@ -111,6 +121,14 @@ export class BroadcastService {
         const spaceFilter = this.connection.emitWatchSpaceLiveStreaming(spaceName);
         const broadcastSpace = new BroadcastSpace(this.connection, spaceName, spaceFilter, this);
         this.broadcastSpaces.push(broadcastSpace);
+    }
+
+    public leaveSpace(spaceName: string){
+        const space = this.broadcastSpaces.find((space) => space.name === spaceName);
+        if(space){
+            space.destroy();
+            this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.name !== spaceName);
+        }
     }
 
     private async connect() {
@@ -196,10 +214,9 @@ export class BroadcastService {
     }
 
     public checkIfCanDisconnect() {
-        if (this.canDisconnect()) {
+        if (this.canDisconnect() && this.jitsiConnection !== undefined) {
             console.log("Disconnecting from Jitsi");
-            this.jitsiConnection
-                ?.disconnect()
+            this.jitsiConnection.disconnect()
                 .then(() => {
                     this.jitsiConnection = undefined;
                 })

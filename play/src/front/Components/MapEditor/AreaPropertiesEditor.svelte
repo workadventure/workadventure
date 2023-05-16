@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
     import { slide } from "svelte/transition";
-    import { AreaDataProperties, AreaDataPropertiesKeys } from "@workadventure/map-editor";
+    import {AreaDataProperties, AreaDataPropertiesKeys} from "@workadventure/map-editor";
     import { LL } from "../../../i18n/i18n-svelte";
     import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
     import crossImg from "../images/cross-icon.svg";
@@ -9,6 +9,8 @@
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
     import FocusablePropertyEditor from "./PropertyEditor/FocusablePropertyEditor.svelte";
+    import SpeakerMegaphonePropertyEditor from "./PropertyEditor/SpeakerMegaphonePropertyEditor.svelte";
+    import ListenerMegaphonePropertyEditor from "./PropertyEditor/ListenerMegaphonePropertyEditor.svelte";
 
     interface AreaPropertyDescription<K extends AreaDataPropertiesKeys> {
         key: K;
@@ -64,6 +66,26 @@
                 link: "",
                 hideButtonLabel: true,
                 newTab: true,
+            },
+        },
+        {
+            key: "speakerMegaphone",
+            name: $LL.mapEditor.properties.speakerMegaphoneProperties.label(),
+            active: false,
+            currentValue: undefined,
+            component: SpeakerMegaphonePropertyEditor,
+            defaultValue: {
+                name: ""
+            },
+        },
+        {
+            key: "listenerMegaphone",
+            name: $LL.mapEditor.properties.listenerMegaphoneProperties.label(),
+            active: false,
+            currentValue: undefined,
+            component: ListenerMegaphonePropertyEditor,
+            defaultValue: {
+                speakerZoneName: ""
             },
         },
     ];

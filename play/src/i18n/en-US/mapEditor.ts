@@ -48,6 +48,16 @@ const mapEditor: BaseTranslation = {
             linkPlaceholder: "https://example.com",
             defaultButtonLabel: "Open Link",
         },
+        speakerMegaphoneProperties: {
+            label: "SpeakerZone for megaphone",
+            nameLabel: "Name",
+            namePlaceholder: "MySpeakerZone"
+        },
+        listenerMegaphoneProperties: {
+            label: "ListenerZone for megaphone",
+            nameLabel: "SpeakerZone Name",
+            namePlaceholder: "MySpeakerZone"
+        }
     },
     areaEditor: {
         nameLabel: "Name",

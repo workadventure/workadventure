@@ -59,6 +59,13 @@ export class GameMapAreas {
         if (areaProperties.silent) {
             flattenedProperties[GameMapProperties.SILENT] = areaProperties.silent;
         }
+        if (areaProperties.speakerMegaphone) {
+            flattenedProperties[GameMapProperties.SPEAKER_MEGAPHONE] = areaProperties.speakerMegaphone.name;
+        }
+        if (areaProperties.listenerMegaphone) {
+            flattenedProperties[GameMapProperties.LISTENER_MEGAPHONE] =
+                areaProperties.listenerMegaphone.speakerZoneName;
+        }
         return flattenedProperties;
     }
 

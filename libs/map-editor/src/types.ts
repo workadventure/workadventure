@@ -59,12 +59,22 @@ export const OpenWebsitePropertyData = ActionsMenuData.extend({
     newTab: z.boolean().optional(),
 });
 
+export const SpeakerMegaphonePropertyData = ActionsMenuData.extend({
+    name: z.string(),
+});
+
+export const ListenerMegaphonePropertyData = ActionsMenuData.extend({
+    speakerZoneName: z.string(),
+});
+
 // TODO: Can they vary between Entity and Area or should it be the same type?
 export const AreaDataProperties = z.object({
     start: StartPropertyData.optional().nullable(),
     silent: SilentPropertyData.optional().nullable(),
     focusable: FocusablePropertyData.optional().nullable(),
     jitsiRoom: JitsiRoomPropertyData.optional().nullable(),
+    speakerMegaphone: SpeakerMegaphonePropertyData.optional().nullable(),
+    listenerMegaphone: ListenerMegaphonePropertyData.optional().nullable(),
     playAudio: PlayAudioPropertyData.optional().nullable(),
     openWebsite: OpenWebsitePropertyData.optional().nullable(),
 });
@@ -222,6 +232,7 @@ export enum GameMapProperties {
     JITSI_URL = "jitsiUrl",
     JITSI_WIDTH = "jitsiWidth",
     JITSI_NO_PREFIX = "jitsiNoPrefix",
+    LISTENER_MEGAPHONE = "listenerMegaphone",
     NAME = "name",
     OPEN_TAB = "openTab",
     OPEN_WEBSITE = "openWebsite",
@@ -239,6 +250,7 @@ export enum GameMapProperties {
     SCRIPT = "script",
     SCRIPT_DISABLE_MODULE_SUPPORT = "scriptDisableModuleSupport",
     SILENT = "silent",
+    SPEAKER_MEGAPHONE = "speakerMegaphone",
     START = "start",
     START_LAYER = "startLayer",
     URL = "url",

@@ -862,6 +862,20 @@ export class GameMapFrontWrapper {
                 value: areaProperties.silent,
             });
         }
+        if(areaProperties.speakerMegaphone?.name) {
+            properties.push({
+                name: GameMapProperties.SPEAKER_MEGAPHONE,
+                type: "string",
+                value: areaProperties.speakerMegaphone.name,
+            });
+        }
+        if(areaProperties.listenerMegaphone?.speakerZoneName) {
+            properties.push({
+                name: GameMapProperties.LISTENER_MEGAPHONE,
+                type: "string",
+                value: areaProperties.listenerMegaphone.speakerZoneName,
+            });
+        }
 
         return properties;
     }
