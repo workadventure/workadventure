@@ -3,6 +3,7 @@
     import { createEventDispatcher } from "svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
+    import focusSvg from "../../images/focus-white.svg";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: FocusablePropertyData;
@@ -19,7 +20,8 @@
         dispatch("close");
     }}
 >
-    <span slot="header">
+    <span slot="header" class="tw-flex tw-justify-center tw-items-center">
+        <img class="tw-w-6 tw-mr-1" src={focusSvg} alt={$LL.mapEditor.properties.focusableProperties.description()} />
         {$LL.mapEditor.properties.focusableProperties.label()}
     </span>
     <span slot="content">

@@ -1,28 +1,26 @@
 <script>
     import { createEventDispatcher } from "svelte";
-    import plusImg from "../../images/plus.svg";
 
     export let headerText;
-    //export let descriptionText;
+    export let descriptionText;
+    export let img;
+    export let style;
 
     const dispatch = createEventDispatcher();
 </script>
 
 <button
-    class="add-property-button tw-p-4"
+    class="add-property-button tooltip tw-p-4 tw-flex tw-justify-center tw-items-center"
+    {style}
     on:click={() => {
         dispatch("click");
     }}
 >
-    <div class="header">
-        {headerText}
-        <img src={plusImg} alt="" />
-    </div>
-    <!-- TODO add description
-        <div class="description">
-            {descriptionText}
-        </div>
-    -->
+    <img draggable="false" class="tw-w-10" src={img} alt="info icon" />
+    <span class="tooltiptext tw-text-xs">
+        <p class="tw-text-sm tw-mb-2">{headerText}</p>
+        {descriptionText}
+    </span>
 </button>
 
 <style lang="scss">
@@ -33,29 +31,21 @@
         background-color: rgb(27 27 41 / var(--tw-bg-opacity));
         --tw-text-opacity: 1;
         color: gray;
-        width: 100%;
         border-radius: 10px;
         position: relative;
         display: flex;
-        flex-grow: 1;
         flex-direction: column;
-        .header {
-            color: white;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            img {
-                object-fit: contain;
-                max-width: 2em;
-                max-height: 2em;
+
+        .tooltiptext {
+            top: 100%;
+            bottom: 0;
+            padding: 0.5rem 0.25rem;
+            height: fit-content;
+            &::after {
+                bottom: 100%;
+                top: auto;
+                transform: rotate(180deg);
             }
-        }
-        .description {
-            color: gray;
-            width: 100%;
-            font-size: 15px;
-            color: #918ebb;
-            text-align: left;
         }
     }
 </style>

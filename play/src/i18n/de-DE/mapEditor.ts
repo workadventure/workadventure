@@ -36,6 +36,7 @@ const mapEditor: BaseTranslation = {
             defaultButtonLabel: "Link öffnen",
             errorEmbeddableLink: "Der Link ist nicht einbettbar",
         },
+        advancedOptions: "Erweiterte Optionen",
     },
     entityEditor: {
         itemPicker: {

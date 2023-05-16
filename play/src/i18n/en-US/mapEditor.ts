@@ -76,6 +76,7 @@ const mapEditor: BaseTranslation = {
             policyPlaceholder: "fullscreen",
             errorEmbeddableLink: "The link is not embeddable",
         },
+        advancedOptions: "Advanced Options",
     },
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",

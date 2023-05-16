@@ -110,7 +110,8 @@
                           "type": "string"
                         },
                         "volume": {
-                          "type": "number"
+                          "type": "number",
+                          "default": 1
                         }
                       },
                       "required": [
@@ -137,10 +138,12 @@
                           "const": "openWebsite"
                         },
                         "link": {
-                          "type": "string"
+                          "type": "string",
+                          "default": "https://workadventu.re"
                         },
                         "newTab": {
-                          "type": "boolean"
+                          "type": "boolean",
+                          "default": false
                         },
                         "closable": {
                           "type": "boolean"
@@ -159,10 +162,12 @@
                           "type": "string"
                         },
                         "width": {
-                          "type": "number"
+                          "type": "number",
+                          "default": 50
                         },
                         "policy": {
-                          "type": "string"
+                          "type": "string",
+                          "default": "fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         },
                         "position": {
                           "type": "number"
@@ -170,8 +175,7 @@
                       },
                       "required": [
                         "id",
-                        "type",
-                        "link"
+                        "type"
                       ],
                       "additionalProperties": false
                     }

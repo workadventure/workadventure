@@ -19,8 +19,5 @@
         padding: 3px;
         border-radius: 8px;
         cursor: pointer;
-        img {
-            object-fit: contain;
-        }
     }
 </style>

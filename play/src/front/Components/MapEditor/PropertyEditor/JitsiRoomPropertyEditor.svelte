@@ -3,12 +3,13 @@
     import { JitsiRoomConfigData, JitsiRoomPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
+    import visioSvg from "../../images/visio-white.svg";
     import JitsiRoomConfigEditor from "./JitsiRoomConfigEditor.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: JitsiRoomPropertyData;
     export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
-    let optionAdvencedActivated = false;
+    let optionAdvancedActivated = false;
 
     const dispatch = createEventDispatcher();
 
@@ -34,7 +35,8 @@
         dispatch("close");
     }}
 >
-    <span slot="header">
+    <span slot="header" class="tw-flex tw-justify-center tw-items-center">
+        <img class="tw-w-6 tw-mr-1" src={visioSvg} alt={$LL.mapEditor.properties.jitsiProperties.description()} />
         {$LL.mapEditor.properties.jitsiProperties.label()}
     </span>
     <span slot="content">
@@ -51,10 +53,10 @@
             />
         </div>
         <div class="value-switch">
-            <label for="advancedOption">Advenced options</label>
-            <input id="advancedOption" type="checkbox" class="input-switch" bind:checked={optionAdvencedActivated} />
+            <label for="advancedOption">{$LL.mapEditor.properties.advancedOptions()}</label>
+            <input id="advancedOption" type="checkbox" class="input-switch" bind:checked={optionAdvancedActivated} />
         </div>
-        <div class:active={optionAdvencedActivated} class="advenced-option tw-px-2">
+        <div class:active={optionAdvancedActivated} class="advanced-option tw-px-2">
             <div class="value-switch">
                 <label for="closable">{$LL.mapEditor.properties.jitsiProperties.closable()}</label>
                 <input
@@ -251,7 +253,7 @@
         cursor: not-allowed;
         opacity: 0.4;
     }
-    .advenced-option {
+    .advanced-option {
         display: none;
         &.active {
             display: block;

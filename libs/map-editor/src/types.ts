@@ -73,7 +73,10 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
     trigger: z.union([z.literal("onaction"), z.literal("onicon")]).optional(),
     triggerMessage: z.string().optional(),
     width: z.number().default(50).optional(),
-    policy: z.string().default("fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture").optional(),
+    policy: z
+        .string()
+        .default("fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture")
+        .optional(),
     position: z.number().optional(),
 });
 
