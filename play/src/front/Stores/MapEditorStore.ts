@@ -73,10 +73,10 @@ export const mapEditorCopiedEntityDataPropertiesStore = writable<EntityDataPrope
 
 export const mapEditorEntityModeStore = writable<MapEditorEntityToolMode>("ADD");
 
-export enum CONFIGURE_MY_ROOM_MENU_ITEM {
+export enum WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM {
     Megaphone = "Megaphone",
 }
 
-export const mapEditorConfigureMyRoomCurrentMenuItemStore = writable<CONFIGURE_MY_ROOM_MENU_ITEM | undefined>(
-    undefined
-);
+export const mapEditorWamSettingsEditorToolCurrentMenuItemStore = writable<
+    WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM | undefined
+>(undefined);

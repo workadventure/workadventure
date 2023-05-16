@@ -5,7 +5,7 @@
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import EntityEditor from "./EntityEditor.svelte";
     import AreaEditor from "./AreaEditor.svelte";
-    import ConfigureMyRoom from "./ConfigureMyRoom.svelte";
+    import ConfigureMyRoom from "./WAMSettingsEditor.svelte";
 </script>
 
 <MapEditorSideBar />

@@ -5,14 +5,14 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import {
-        CONFIGURE_MY_ROOM_MENU_ITEM,
-        mapEditorConfigureMyRoomCurrentMenuItemStore,
+        WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
+        mapEditorWamSettingsEditorToolCurrentMenuItemStore,
     } from "../../Stores/MapEditorStore";
     import Megaphone from "./ConfigureMyRoom/Megaphone.svelte";
 
     function getCurrentComponent() {
-        switch ($mapEditorConfigureMyRoomCurrentMenuItemStore) {
-            case CONFIGURE_MY_ROOM_MENU_ITEM.Megaphone: {
+        switch ($mapEditorWamSettingsEditorToolCurrentMenuItemStore) {
+            case WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone: {
                 return Megaphone;
             }
             default: {
@@ -22,7 +22,7 @@
     }
 
     function close() {
-        mapEditorConfigureMyRoomCurrentMenuItemStore.set(undefined);
+        mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(undefined);
         gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.EntityEditor);
     }
 </script>
@@ -33,8 +33,12 @@
         <h3>{$LL.mapEditor.sideBar.configureMyRoom()}</h3>
         <ul>
             <li
-                class:selected={$mapEditorConfigureMyRoomCurrentMenuItemStore === CONFIGURE_MY_ROOM_MENU_ITEM.Megaphone}
-                on:click={() => mapEditorConfigureMyRoomCurrentMenuItemStore.set(CONFIGURE_MY_ROOM_MENU_ITEM.Megaphone)}
+                class:selected={$mapEditorWamSettingsEditorToolCurrentMenuItemStore ===
+                    WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone}
+                on:click={() =>
+                    mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(
+                        WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone
+                    )}
             >
                 <span>Megaphone</span>
                 <ChevronRightIcon class={`tw--mr-2`} />
@@ -42,7 +46,7 @@
         </ul>
     </div>
     <div class="content">
-        {#if $mapEditorConfigureMyRoomCurrentMenuItemStore !== undefined}
+        {#if $mapEditorWamSettingsEditorToolCurrentMenuItemStore !== undefined}
             <svelte:component this={getCurrentComponent()} />
         {/if}
     </div>

@@ -113,8 +113,8 @@ import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import {
-    CONFIGURE_MY_ROOM_MENU_ITEM,
-    mapEditorConfigureMyRoomCurrentMenuItemStore,
+    WAM_SETTINGS_EDITOR_TOOL_ME,
+    mapEditorWamSettingsEditorToolCurrentMenuItemStore,
     mapEditorModeStore,
     mapEditorSelectedToolStore,
 } from "../../Stores/MapEditorStore";
@@ -2282,13 +2282,13 @@ ${escapedMessage}
                         if (menuItem) {
                             switch (menuItem) {
                                 case "megaphone": {
-                                    mapEditorConfigureMyRoomCurrentMenuItemStore.set(
-                                        CONFIGURE_MY_ROOM_MENU_ITEM.Megaphone
+                                    mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(
+                                        WAM_SETTINGS_EDITOR_TOOL_ME.Megaphone
                                     );
                                     break;
                                 }
                                 default: {
-                                    mapEditorConfigureMyRoomCurrentMenuItemStore.set(undefined);
+                                    mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(undefined);
                                     break;
                                 }
                             }
