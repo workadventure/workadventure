@@ -27,7 +27,7 @@
     let tags = entitiesCollectionsManager.getTags();
 
     onMount(() => {
-        entitiesCollectionsManager.setNameFilter(filter);
+        entitiesCollectionsManager.setFilter(filter);
         updateVisiblePrefabs();
     });
 
@@ -75,12 +75,17 @@
         if (selectedTag !== "") {
             filter = selectedTag;
             selectedTag = "";
-            onFilterChange();
+            onTagChange();
         }
     }
 
-    function onFilterChange() {
-        entitiesCollectionsManager.setNameFilter(filter);
+    function onNameChange() {
+        entitiesCollectionsManager.setFilter(filter);
+        updateVisiblePrefabs();
+    }
+
+    function onTagChange() {
+        entitiesCollectionsManager.setFilter(filter, true);
         updateVisiblePrefabs();
     }
 
@@ -110,7 +115,7 @@
             class="filter-input"
             type="search"
             bind:value={filter}
-            on:input={onFilterChange}
+            on:input={onNameChange}
             on:focus={onMapEditorInputFocus}
             on:blur={onMapEditorInputUnfocus}
             placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}
