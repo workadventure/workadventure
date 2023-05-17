@@ -114,7 +114,7 @@ const mapEditor: BaseTranslation = {
                     save: {
                         success: "Megaphone settings saved",
                         fail: "Error while saving megaphone settings",
-                    }
+                    },
                 },
             },
         },

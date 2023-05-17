@@ -75,7 +75,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                     save: {
                         success: "Paramètres enregstrés avec succès",
                         fail: "Une erreur est survenue lors de l'enregistrement des paramètres",
-                    }
+                    },
                 },
             },
         },
