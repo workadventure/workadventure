@@ -126,7 +126,6 @@
             {/each}
         </select>
     </div>
-    <div class="item-name">{pickedItem?.name ?? "no entity selected"}</div>
     <div class="item-picker-container">
         {#each rootItem as item (item.name)}
             <div
@@ -137,28 +136,30 @@
             </div>
         {/each}
     </div>
-    <div class="separator">{$LL.mapEditor.entityEditor.itemPicker.selectVariationInstructions()}</div>
-    {#if pickedItem !== null}
-        <div class="item-variant-picker-container">
-            {#each currentVariants as item}
-                <div
-                    class="pickable-item {item.imagePath === pickedVariant?.imagePath ? 'active' : ''}"
-                    on:click={() => onPickItemVariant(item)}
-                >
-                    <img class="item-image" src={item.imagePath} alt={item.name} />
-                </div>
-            {/each}
-        </div>
-        <div class="color-container">
-            {#each variantColors as color}
-                <div class={currentColor === color ? "active" : ""}>
-                    <button
-                        class="color-selector"
-                        style="background-color: {color};"
-                        on:click={() => onColorChange(color)}
-                    />
-                </div>
-            {/each}
+    {#if pickedItem}
+        <div class="item-variations">
+            <div class="item-name">{pickedItem?.name ?? "this entity"}</div>
+            <div class="item-variant-picker-container">
+                {#each currentVariants as item}
+                    <div
+                        class="pickable-item {item.imagePath === pickedVariant?.imagePath ? 'active' : ''}"
+                        on:click={() => onPickItemVariant(item)}
+                    >
+                        <img class="item-image" src={item.imagePath} alt={item.name} />
+                    </div>
+                {/each}
+            </div>
+            <div class="color-container">
+                {#each variantColors as color}
+                    <div class={currentColor === color ? "active" : ""}>
+                        <button
+                            class="color-selector"
+                            style="background-color: {color};"
+                            on:click={() => onColorChange(color)}
+                        />
+                    </div>
+                {/each}
+            </div>
         </div>
     {/if}
 </div>
@@ -178,6 +179,12 @@
                 margin-bottom: 0;
                 position: absolute;
                 overflow-y: auto;
+            }
+        }
+        .item-variations {
+            margin-top: 30px;
+            .item-name {
+                font-weight: bold;
             }
         }
         .item-picker-container,

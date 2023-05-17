@@ -45,8 +45,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     entityEditor: {
         itemPicker: {
-            searchPlaceholder: "Rechercher nom ou tag",
-            selectVariationInstructions: "Sélectionnez une variation",
+            searchPlaceholder: "Rechercher",
         },
         deleteButton: "Supprimer",
         testInteractionButton: "Tester interaction",
