@@ -1,272 +1,276 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
-    import { slide } from "svelte/transition";
-    import { AreaDataProperties, AreaDataPropertiesKeys } from "@workadventure/map-editor";
+    import { AreaDataProperty, AreaDataPropertiesKeys, AreaDataProperties } from "@workadventure/map-editor";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
-    import crossImg from "../images/cross-icon.svg";
+    import {
+        mapEditorSelectedAreaPreviewStore,
+        onMapEditorInputFocus,
+        onMapEditorInputUnfocus,
+    } from "../../Stores/MapEditorStore";
+    import visioSvg from "../images/visio-white.svg";
+    import audioSvg from "../images/audio-white.svg";
+    import webSvg from "../images/web-white.svg";
+    import silentSvg from "../images/silent-white.svg";
+    import focusSvg from "../images/focus-white.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
     import FocusablePropertyEditor from "./PropertyEditor/FocusablePropertyEditor.svelte";
+    import SilentPropertyEditor from "./PropertyEditor/SilentPropertyEditor.svelte";
+    import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
 
-    interface AreaPropertyDescription<K extends AreaDataPropertiesKeys> {
-        key: K;
-        name: string;
-        active: boolean;
-        currentValue: AreaDataProperties[K];
-        component: unknown;
-        defaultValue: AreaDataProperties[K];
-    }
-
-    let possibleProperties: AreaPropertyDescription<AreaDataPropertiesKeys>[] = [
-        {
-            key: "focusable",
-            name: $LL.mapEditor.properties.focusableProperties.label(),
-            active: false,
-            currentValue: undefined,
-            component: FocusablePropertyEditor,
-            defaultValue: {
-                zoom_margin: 0,
-                hideButtonLabel: true,
-            },
-        },
-        {
-            key: "jitsiRoom",
-            name: $LL.mapEditor.properties.jitsiProperties.label(),
-            active: false,
-            currentValue: undefined,
-            component: JitsiRoomPropertyEditor,
-            defaultValue: {
-                roomName: "",
-                hideButtonLabel: true,
-                jitsiRoomConfig: {},
-            },
-        },
-        {
-            key: "playAudio",
-            name: $LL.mapEditor.properties.audioProperties.label(),
-            active: false,
-            currentValue: undefined,
-            component: PlayAudioPropertyEditor,
-            defaultValue: {
-                audioLink: "",
-                hideButtonLabel: true,
-            },
-        },
-        {
-            key: "openWebsite",
-            name: $LL.mapEditor.properties.linkProperties.label(),
-            active: false,
-            currentValue: undefined,
-            component: OpenWebsitePropertyEditor,
-            defaultValue: {
-                link: "",
-                hideButtonLabel: true,
-                newTab: true,
-            },
-        },
-    ];
+    let properties: AreaDataProperties = [];
+    let areaName = "";
+    let hasJitsiRoomProperty: boolean;
+    let hasFocusableProperty: boolean;
+    let hasSilentProperty: boolean;
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
         if (currentAreaPreview) {
-            for (let property of possibleProperties) {
-                property.active =
-                    currentAreaPreview.getAreaData().properties[property.key] !== undefined &&
-                    currentAreaPreview.getAreaData().properties[property.key] !== null;
-                property.currentValue = currentAreaPreview.getAreaData().properties[property.key];
-                if (!property.currentValue) {
-                    property.currentValue = structuredClone(property.defaultValue);
-                }
-            }
+            properties = currentAreaPreview.getProperties() ?? [];
+            areaName = currentAreaPreview.getAreaData().name;
+            refreshFlags();
         }
-        possibleProperties = possibleProperties;
     });
+
+    function getPropertyFromType(type: AreaDataPropertiesKeys): AreaDataProperty {
+        const id = crypto.randomUUID();
+        switch (type) {
+            case "start":
+                return {
+                    id,
+                    type,
+                };
+            case "silent":
+                return {
+                    id,
+                    type,
+                    hideButtonLabel: true,
+                };
+            case "focusable":
+                return {
+                    id,
+                    type,
+                    zoom_margin: 0.5,
+                    hideButtonLabel: true,
+                };
+            case "jitsiRoomProperty":
+                return {
+                    id,
+                    type,
+                    jitsiRoomConfig: {},
+                    hideButtonLabel: true,
+                    roomName: "JITSI ROOM",
+                };
+            case "openWebsite":
+                return {
+                    id,
+                    type,
+                    link: "https://workadventu.re",
+                    newTab: false,
+                    hideButtonLabel: true,
+                    trigger: undefined,
+                };
+            case "playAudio":
+                return {
+                    id,
+                    type,
+                    audioLink: "",
+                };
+        }
+    }
 
     onDestroy(() => {
         selectedAreaPreviewUnsubscriber();
     });
 
-    function onPropertyChecked(property: AreaPropertyDescription<AreaDataPropertiesKeys>) {
+    function onAddProperty(type: AreaDataPropertiesKeys) {
         if ($mapEditorSelectedAreaPreviewStore) {
-            if (property.active) {
-                if (!property.currentValue) {
-                    property.currentValue = possibleProperties.find((v) => v.key === property.key)?.defaultValue; //initialize here the property value
-                }
-                $mapEditorSelectedAreaPreviewStore.setProperty(property.key, property.currentValue);
-            } else {
-                $mapEditorSelectedAreaPreviewStore.setProperty(property.key, null);
-            }
+            $mapEditorSelectedAreaPreviewStore.addProperty(getPropertyFromType(type));
+            // refresh properties
+            properties = $mapEditorSelectedAreaPreviewStore?.getProperties();
+            refreshFlags();
         }
     }
 
-    function onUpdateProperty(property: AreaPropertyDescription<AreaDataPropertiesKeys>) {
+    function onDeleteProperty(id: string) {
         if ($mapEditorSelectedAreaPreviewStore) {
-            $mapEditorSelectedAreaPreviewStore.setProperty(property.key, property.currentValue);
+            $mapEditorSelectedAreaPreviewStore.deleteProperty(id);
+            // refresh properties
+            properties = $mapEditorSelectedAreaPreviewStore?.getProperties();
+            refreshFlags();
         }
     }
 
-    function onDeleteAreaPreview() {
+    function onUpdateName() {
         if ($mapEditorSelectedAreaPreviewStore) {
-            $mapEditorSelectedAreaPreviewStore.delete();
-            mapEditorSelectedAreaPreviewStore.set(undefined);
+            $mapEditorSelectedAreaPreviewStore.setAreaName(areaName);
         }
+    }
+
+    function onUpdateProperty(property: AreaDataProperty) {
+        if ($mapEditorSelectedAreaPreviewStore) {
+            $mapEditorSelectedAreaPreviewStore.updateProperty(property);
+        }
+    }
+
+    function hasProperty(propertyType: AreaDataPropertiesKeys): boolean {
+        return properties.find((property) => property.type === propertyType) !== undefined;
+    }
+
+    function refreshFlags(): void {
+        hasJitsiRoomProperty = hasProperty("jitsiRoomProperty");
+        hasFocusableProperty = hasProperty("focusable");
+        hasSilentProperty = hasProperty("silent");
     }
 </script>
 
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
-    {$LL.mapEditor.entityEditor.editInstructions()}
+    {$LL.mapEditor.areaEditor.editInstructions()}
 {:else}
-    <div class="area-properties">
-        {#each possibleProperties as property (property.key)}
-            <div class="property-enabler">
-                <label for={property.key}>{property.name}</label>
-                <input
-                    id={property.key}
-                    type="checkbox"
-                    class="input-switch"
-                    bind:checked={property.active}
-                    on:change={() => onPropertyChecked(property)}
-                />
-            </div>
-            {#if property.active}
-                <div class="property-container" transition:slide|local>
-                    <svelte:component
-                        this={property.component}
-                        bind:property={property.currentValue}
+    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
+        {#if !hasFocusableProperty}
+            <AddPropertyButton
+                headerText={$LL.mapEditor.properties.focusableProperties.label()}
+                descriptionText={$LL.mapEditor.properties.focusableProperties.description()}
+                img={focusSvg}
+                style="z-index: 5;"
+                on:click={() => {
+                    onAddProperty("focusable");
+                }}
+            />
+        {/if}
+        {#if !hasSilentProperty}
+            <AddPropertyButton
+                headerText={$LL.mapEditor.properties.silentProperty.label()}
+                descriptionText={$LL.mapEditor.properties.silentProperty.description()}
+                img={silentSvg}
+                style="z-index: 4;"
+                on:click={() => {
+                    onAddProperty("silent");
+                }}
+            />
+        {/if}
+        {#if !hasJitsiRoomProperty}
+            <AddPropertyButton
+                headerText={$LL.mapEditor.properties.jitsiProperties.label()}
+                descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
+                img={visioSvg}
+                style="z-index: 3;"
+                on:click={() => {
+                    onAddProperty("jitsiRoomProperty");
+                }}
+            />
+        {/if}
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.audioProperties.label()}
+            descriptionText={$LL.mapEditor.properties.audioProperties.description()}
+            img={audioSvg}
+            style="z-index: 2;"
+            on:click={() => {
+                onAddProperty("playAudio");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.linkProperties.label()}
+            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
+            img={webSvg}
+            style="z-index: 1;"
+            on:click={() => {
+                onAddProperty("openWebsite");
+            }}
+        />
+    </div>
+    <div class="area-name-container">
+        <label for="objectName">Area name</label>
+        <input
+            id="objectName"
+            type="text"
+            placeholder="Value"
+            bind:value={areaName}
+            on:focus={onMapEditorInputFocus}
+            on:blur={onMapEditorInputUnfocus}
+            on:change={onUpdateName}
+        />
+    </div>
+    <div class="properties-container">
+        {#each properties as property}
+            <div class="property-box">
+                {#if property.type === "focusable"}
+                    <FocusablePropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
                         on:change={() => onUpdateProperty(property)}
                     />
-                </div>
-            {/if}
+                {:else if property.type === "silent"}
+                    <SilentPropertyEditor
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                        on:change={() => onUpdateProperty(property)}
+                    />
+                {:else if property.type === "jitsiRoomProperty"}
+                    <JitsiRoomPropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                        on:change={() => onUpdateProperty(property)}
+                    />
+                {:else if property.type === "playAudio"}
+                    <PlayAudioPropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                        on:change={() => onUpdateProperty(property)}
+                    />
+                {:else if property.type === "openWebsite"}
+                    <OpenWebsitePropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                        on:change={() => onUpdateProperty(property)}
+                    />
+                {/if}
+            </div>
         {/each}
-    </div>
-    <div class="action-button">
-        <button class="delete-button" on:click={onDeleteAreaPreview}
-            ><div>{$LL.mapEditor.entityEditor.deleteButton()}</div>
-            <img src={crossImg} alt="" /></button
-        >
     </div>
 {/if}
 
 <style lang="scss">
-    .area-properties {
+    .properties-container {
         overflow-y: auto;
         overflow-x: hidden;
-        .property-enabler {
-            border-radius: 0.1em;
-            display: flex;
-            background-color: rgb(77 75 103);
-            margin-top: 1px;
-            margin-top: 1px;
-            align-items: center;
-            padding-right: 1em;
-            label {
-                padding-top: 1em;
-                padding-bottom: 1em;
-                padding-left: 1em;
-                flex-grow: 1;
-                margin: 0;
-            }
-        }
-        .property-enabler:hover {
-            background-color: rgb(85 85 113);
-        }
-        .property-container {
-            padding-left: 1em;
-        }
     }
 
-    .action-button {
-        margin-top: 1em;
+    .property-box {
+        margin-top: 5px;
+    }
+
+    .properties-container::-webkit-scrollbar {
+        display: none;
+    }
+
+    .area-name-container {
         display: flex;
-        button {
-            flex: 1 1 0px;
-            border: 1px solid grey;
+        width: 100%;
+        margin-bottom: 0.5em;
+        margin-top: 0.5em;
+        flex-direction: column;
+        label {
+            min-width: fit-content;
+            margin-right: 0.5em;
         }
-        button:hover {
-            background-color: rgb(77 75 103);
+        input {
+            flex-grow: 1;
+            min-width: 0;
         }
-        .delete-button {
-            border-color: red;
-            color: red;
-            display: flex;
-            div {
-                text-align: left;
-                flex-grow: 1;
-            }
-            img {
-                object-fit: contain;
-                max-width: 2em;
-                max-height: 2em;
-            }
+        * {
+            margin-bottom: 0;
         }
-        .delete-button:hover {
-            background-color: rgb(103 75 75);
-        }
-    }
-
-    .input-switch {
-        position: relative;
-        top: 0px;
-        right: 0px;
-        bottom: 0px;
-        left: 0px;
-        display: inline-block;
-        height: 1rem;
-        width: 2rem;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        border-radius: 9999px;
-        border-width: 1px;
-        border-style: solid;
-        --tw-border-opacity: 1;
-        border-color: rgb(77 75 103 / var(--tw-border-opacity));
-        --tw-bg-opacity: 1;
-        background-color: rgb(15 31 45 / var(--tw-bg-opacity));
-        background-image: none;
-        padding: 0px;
-        --tw-text-opacity: 1;
-        color: rgb(242 253 255 / var(--tw-text-opacity));
-        outline: 2px solid transparent;
-        outline-offset: 2px;
-        cursor: url(/src/front/style/images/cursor_pointer.png), pointer;
-    }
-
-    .input-switch::before {
-        position: absolute;
-        left: -3px;
-        top: -3px;
-        height: 1.25rem;
-        width: 1.25rem;
-        border-radius: 9999px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(146 142 187 / var(--tw-bg-opacity));
-        transition-property: all;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        transition-duration: 150ms;
-        --tw-content: "";
-        content: var(--tw-content);
-    }
-
-    .input-switch:checked {
-        --tw-border-opacity: 1;
-        border-color: rgb(146 142 187 / var(--tw-border-opacity));
-    }
-
-    .input-switch:checked::before {
-        left: 13px;
-        top: -3px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(65 86 246 / var(--tw-bg-opacity));
-        content: var(--tw-content);
-        /*--tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
-        --tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
-        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
-    }
-
-    .input-switch:disabled {
-        cursor: not-allowed;
-        opacity: 0.4;
     }
 </style>

@@ -186,11 +186,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 this.gameMapFrontWrapper.handleEntityActionTrigger();
             }
         );
-        entity.on(EntityEvent.PropertiesUpdated, (key: string, value: unknown) => {
-            const data: AtLeast<EntityData, "id"> = {
-                id: entity.getEntityData().id,
-                properties: { [key]: value },
-            };
+        entity.on(EntityEvent.Updated, (data: AtLeast<EntityData, "id">) => {
             this.emit(EntitiesManagerEvent.UpdateEntity, data);
         });
         entity.on(Phaser.Input.Events.DRAG_START, () => {
