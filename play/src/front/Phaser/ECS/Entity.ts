@@ -2,8 +2,8 @@ import {
     AtLeast,
     EntityData,
     EntityDataProperties,
+    EntityDataProperty,
     GameMapProperties,
-    TextHeaderPropertyData,
 } from "@workadventure/map-editor";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { get, Unsubscriber } from "svelte/store";
@@ -19,8 +19,12 @@ import { OutlineableInterface } from "../Game/OutlineableInterface";
 
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
+    Updated = "EntityEvent:Updated",
     Delete = "EntityEvent:Delete",
-    PropertiesUpdated = "EntityEvent:PropertiesUpdated",
+    /**
+     * Any change done to this Entity properties. Adding new one, deleting or modifying existing one.
+     * We send whole array of properties with this event.
+     */
     PropertyActivated = "EntityEvent:PropertyActivated",
 }
 
@@ -43,7 +47,8 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
         this.entityData = {
             ...data,
-            properties: data.properties ?? {},
+            name: data.name ?? "",
+            properties: data.properties ?? [],
         };
 
         this.activatable = this.hasAnyPropertiesSet();
@@ -75,8 +80,15 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.scene.add.existing(this);
     }
 
+    /**
+     * This method is being used after command execution from outside and it will not trigger any emits
+     */
     public updateEntity(dataToModify: AtLeast<EntityData, "id">): void {
         _.merge(this.entityData, dataToModify);
+        // TODO: Find a way to update it without need of using conditions
+        if (dataToModify.properties !== undefined) {
+            this.entityData.properties = dataToModify.properties;
+        }
 
         this.setPosition(this.entityData.x, this.entityData.y);
         this.oldPosition = this.getPosition();
@@ -102,10 +114,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         if (!(get(mapEditorModeStore) && get(mapEditorEntityModeStore) === "EDIT")) {
             this.toggleActionsMenu();
         }
-    }
-
-    public TestActivation(): void {
-        this.toggleActionsMenu();
     }
 
     public deactivate(): void {
@@ -194,7 +202,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             actionsMenuStore.clear();
             return;
         }
-        actionsMenuStore.initialize(TextHeaderPropertyData.parse(this.entityData.properties.textHeader ?? ""));
+        actionsMenuStore.initialize(this.entityData.name ?? "");
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
         }
@@ -207,67 +215,71 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         const actions: ActionsMenuAction[] = [];
         const properties = this.entityData.properties;
 
-        if (properties.jitsiRoom) {
-            const roomName = properties.jitsiRoom.roomName;
-            const roomConfig = properties.jitsiRoom.jitsiRoomConfig;
-            actions.push({
-                actionName: properties.jitsiRoom.buttonLabel ?? "",
-                protected: true,
-                priority: 1,
-                callback: () => {
-                    this.emit(
-                        EntityEvent.PropertyActivated,
-                        {
-                            propertyName: GameMapProperties.JITSI_ROOM,
-                            propertyValue: roomName,
+        for (const property of properties) {
+            switch (property.type) {
+                case "jitsiRoomProperty": {
+                    const roomName = property.roomName;
+                    const roomConfig = property.jitsiRoomConfig;
+                    actions.push({
+                        actionName: property.buttonLabel ?? "",
+                        protected: true,
+                        priority: 1,
+                        callback: () => {
+                            this.emit(
+                                EntityEvent.PropertyActivated,
+                                {
+                                    propertyName: GameMapProperties.JITSI_ROOM,
+                                    propertyValue: roomName,
+                                },
+                                {
+                                    propertyName: GameMapProperties.JITSI_CONFIG,
+                                    propertyValue: JSON.stringify(roomConfig),
+                                }
+                            );
                         },
-                        {
-                            propertyName: GameMapProperties.JITSI_CONFIG,
-                            propertyValue: JSON.stringify(roomConfig),
-                        }
-                    );
-                },
-            });
-        }
-        if (properties.openWebsite) {
-            const link = properties.openWebsite.link;
-            const newTab = properties.openWebsite.newTab;
-            actions.push({
-                actionName: properties.openWebsite.buttonLabel ?? "",
-                protected: true,
-                priority: 1,
-                callback: () => {
-                    if (newTab) {
-                        this.emit(EntityEvent.PropertyActivated, {
-                            propertyName: GameMapProperties.OPEN_TAB,
-                            propertyValue: link,
-                        });
-                    } else {
-                        const coWebsite = new SimpleCoWebsite(new URL(link));
-                        coWebsiteManager.addCoWebsiteToStore(coWebsite, undefined);
-                        coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
-                            console.error("Error during loading a co-website: " + coWebsite.getUrl());
-                        });
-                    }
-                },
-            });
-        }
-        if (properties.playAudio) {
-            const audioLink = properties.playAudio.audioLink;
-            actions.push({
-                actionName: properties.playAudio.buttonLabel ?? "",
-                protected: true,
-                priority: 1,
-                callback: () => {
-                    this.emit(EntityEvent.PropertyActivated, {
-                        propertyName: GameMapProperties.PLAY_AUDIO,
-                        propertyValue: audioLink,
                     });
-                },
-            });
-        }
-        if (properties.textHeader) {
-            //
+                    break;
+                }
+                case "openWebsite": {
+                    const link = property.link;
+                    const newTab = property.newTab;
+                    actions.push({
+                        actionName: property.buttonLabel ?? "",
+                        protected: true,
+                        priority: 1,
+                        callback: () => {
+                            if (newTab) {
+                                this.emit(EntityEvent.PropertyActivated, {
+                                    propertyName: GameMapProperties.OPEN_TAB,
+                                    propertyValue: link,
+                                });
+                            } else {
+                                const coWebsite = new SimpleCoWebsite(new URL(link));
+                                coWebsiteManager.addCoWebsiteToStore(coWebsite, undefined);
+                                coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
+                                    console.error("Error during loading a co-website: " + coWebsite.getUrl());
+                                });
+                            }
+                        },
+                    });
+                    break;
+                }
+                case "playAudio": {
+                    const audioLink = property.audioLink;
+                    actions.push({
+                        actionName: property.buttonLabel ?? "",
+                        protected: true,
+                        priority: 1,
+                        callback: () => {
+                            this.emit(EntityEvent.PropertyActivated, {
+                                propertyName: GameMapProperties.PLAY_AUDIO,
+                                propertyValue: audioLink,
+                            });
+                        },
+                    });
+                    break;
+                }
+            }
         }
         return actions;
     }
@@ -284,12 +296,43 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         return this.entityData.properties;
     }
 
-    public setProperty<K extends keyof EntityDataProperties>(key: K, value: EntityDataProperties[K]): void {
-        this.entityData.properties[key] = value;
-        this.emit(EntityEvent.PropertiesUpdated, key, value);
+    public addProperty(property: EntityDataProperty): void {
+        this.entityData.properties.push(property);
+        this.emit(EntityEvent.Updated, this.appendId({ properties: this.entityData.properties }));
+    }
+
+    public setEntityName(name: string): void {
+        this.entityData.name = name;
+        this.emit(EntityEvent.Updated, this.appendId({ name }));
+    }
+
+    public updateProperty(changes: AtLeast<EntityDataProperty, "id">): void {
+        const property = this.entityData.properties.find((property) => property.id === changes.id);
+        if (property) {
+            _.merge(property, changes);
+        }
+        this.emit(EntityEvent.Updated, this.appendId({ properties: this.entityData.properties }));
+    }
+
+    public deleteProperty(id: string): boolean {
+        const index = this.entityData.properties.findIndex((property) => property.id === id);
+        if (index !== -1) {
+            this.entityData.properties.splice(index, 1);
+            this.emit(EntityEvent.Updated, this.appendId({ properties: this.entityData.properties }));
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public getOldPosition(): { x: number; y: number } {
         return this.oldPosition;
+    }
+
+    private appendId(data: Partial<EntityData>): AtLeast<EntityData, "id"> {
+        return {
+            ...data,
+            id: this.entityData.id,
+        };
     }
 }

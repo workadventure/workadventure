@@ -6,7 +6,7 @@ import {
     Json,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
-import type { AreaData, AreaDataProperties, WAMFileFormat } from "../types";
+import type { WAMFileFormat } from "../types";
 import { GameMapProperties } from "../types";
 import type { AreaChangeCallback } from "./GameMapAreas";
 import { GameMapAreas } from "./GameMapAreas";
@@ -150,14 +150,6 @@ export class GameMap {
         property.value = propertyValue;
     }
 
-    public setAreaProperty<K extends keyof AreaDataProperties>(
-        area: AreaData,
-        key: K,
-        value: AreaDataProperties[K]
-    ): void {
-        this.gameMapAreas?.setProperty(area, key, value);
-    }
-
     public getTiledObjectProperty(
         object: { properties?: ITiledMapProperty[] },
         propertyName: string
@@ -184,6 +176,13 @@ export class GameMap {
      */
     public onEnterArea(callback: AreaChangeCallback) {
         this.gameMapAreas?.onEnterArea(callback);
+    }
+
+    /**
+     * Registers a callback called when the user moves outside another area.
+     */
+    public onLeaveArea(callback: AreaChangeCallback) {
+        this.gameMapAreas?.onLeaveArea(callback);
     }
 
     public getTileProperty(index: number): Array<ITiledMapProperty> {

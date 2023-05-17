@@ -1,4 +1,4 @@
-import type { AreaData, AreaDataProperties, AtLeast } from "@workadventure/map-editor";
+import type { AreaData, AreaDataProperties, AreaDataProperty, AtLeast } from "@workadventure/map-editor";
 import _ from "lodash";
 import { GameScene } from "../../Game/GameScene";
 import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
@@ -7,7 +7,7 @@ export enum AreaPreviewEvent {
     Clicked = "AreaPreview:Clicked",
     Released = "AreaPreview:Released",
     DoubleClicked = "AreaPreview:DoubleClicked",
-    Update = "AreaPreview:Update",
+    Updated = "AreaPreview:Updated",
     Delete = "AreaPreview:Delete",
 }
 
@@ -96,6 +96,9 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
 
     public updatePreview(dataToModify: AtLeast<AreaData, "id">): void {
         _.merge(this.areaData, dataToModify);
+        if (dataToModify.properties !== undefined) {
+            this.areaData.properties = dataToModify.properties;
+        }
         this.x = this.areaData.x + this.areaData.width * 0.5;
         this.y = this.areaData.y + this.areaData.height * 0.5;
         this.displayWidth = this.areaData.width;
@@ -107,13 +110,32 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         return this.displayWidth * this.displayHeight;
     }
 
-    public setProperty<K extends keyof AreaDataProperties>(key: K, value: AreaDataProperties[K]): void {
-        this.areaData.properties[key] = value;
-        const data: AtLeast<AreaData, "id"> = {
-            id: this.getAreaData().id,
-            properties: { [key]: value },
-        };
-        this.emit(AreaPreviewEvent.Update, data);
+    public addProperty(property: AreaDataProperty): void {
+        this.areaData.properties.push(property);
+        this.emit(AreaPreviewEvent.Updated, this.areaData);
+    }
+
+    public updateProperty(changes: AtLeast<AreaDataProperty, "id">): void {
+        const property = this.areaData.properties.find((property) => property.id === changes.id);
+        if (property) {
+            _.merge(property, changes);
+        }
+        this.emit(AreaPreviewEvent.Updated, this.areaData);
+    }
+
+    public deleteProperty(id: string): boolean {
+        const index = this.areaData.properties.findIndex((property) => property.id === id);
+        if (index !== -1) {
+            this.areaData.properties.splice(index, 1);
+            this.emit(AreaPreviewEvent.Updated, this.areaData);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public getProperties(): AreaDataProperties {
+        return this.areaData.properties;
     }
 
     public destroy(): void {
@@ -124,7 +146,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     public updateAreaData(dataToChange: Partial<AreaData>): void {
         const data = { id: this.areaData.id, ...dataToChange };
         this.updatePreview(data);
-        this.emit(AreaPreviewEvent.Update, data);
+        this.emit(AreaPreviewEvent.Updated, data);
     }
 
     private showSizeAlteringSquares(show = true): void {
@@ -184,7 +206,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     width: this.displayWidth,
                     height: this.displayHeight,
                 };
-                this.emit(AreaPreviewEvent.Update, data);
+                this.emit(AreaPreviewEvent.Updated, data);
             }
         });
         this.squares.forEach((square, index) => {
@@ -288,7 +310,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     width: this.displayWidth,
                     height: this.displayHeight,
                 };
-                this.emit(AreaPreviewEvent.Update, data);
+                this.emit(AreaPreviewEvent.Updated, data);
             });
         });
     }
@@ -318,8 +340,10 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         return this.areaData;
     }
 
-    public getName(): string {
-        return this.areaData.name;
+    public setAreaName(name: string): void {
+        this.areaData.name = name;
+        const data = { id: this.areaData.id, name };
+        this.emit(AreaPreviewEvent.Updated, data);
     }
 
     public getId(): string {
