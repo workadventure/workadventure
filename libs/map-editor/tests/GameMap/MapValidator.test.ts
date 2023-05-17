@@ -1,7 +1,7 @@
-import { describe, expect, it } from "@jest/globals";
-import { ErrorType, isFailure, MapValidation, MapValidator } from "../../src/GameMap/MapValidator";
 import * as fs from "fs";
 import path from "node:path";
+import { describe, expect, it } from "@jest/globals";
+import { ErrorType, isFailure, MapValidation, MapValidator } from "../../src/GameMap/MapValidator";
 import { ZipFileFetcher } from "../../src/GameMap/Validator/ZipFileFetcher";
 
 async function loadMap(mapPath: string, logLevel: ErrorType = "info"): Promise<MapValidation> {

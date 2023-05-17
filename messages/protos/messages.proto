@@ -154,7 +154,8 @@ message ModifyAreaMessage {
   optional uint32 y = 4;
   optional uint32 width = 5;
   optional uint32 height = 6;
-  map<string, google.protobuf.Value> properties = 7;
+  repeated google.protobuf.Value properties = 7;
+  optional bool modifyProperties = 8;
 }
 
 message DeleteAreaMessage {
@@ -168,7 +169,7 @@ message CreateAreaMessage {
   uint32 width = 4;
   uint32 height = 5;
   string name = 6;
-  map<string, google.protobuf.Value> properties = 7;
+  repeated google.protobuf.Value properties = 7;
 }
 
 message CreateEntityMessage {
@@ -177,7 +178,8 @@ message CreateEntityMessage {
   uint32 y = 3;
   string collectionName = 4;
   string prefabId = 5;
-  map<string, google.protobuf.Value> properties = 6;
+  repeated google.protobuf.Value properties = 6;
+  optional string name = 7;
 }
 
 message DeleteEntityMessage {
@@ -188,7 +190,9 @@ message ModifyEntityMessage {
   string id = 1;
   optional uint32 x = 2;
   optional uint32 y = 3;
-  map<string, google.protobuf.Value> properties = 4;
+  repeated google.protobuf.Value properties = 4;
+  optional bool modifyProperties = 5;
+  optional string name = 6;
 }
 
 message ClientToServerMessage {

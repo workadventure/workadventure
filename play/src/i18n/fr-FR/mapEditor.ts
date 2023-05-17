@@ -39,7 +39,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             newTabLabel: "Ouvrir dans un nouvel onglet",
             linkPlaceholder: "https://example.com",
             defaultButtonLabel: "Ouvrir le lien",
+            errorEmbeddableLink: "Le lien ne peut pas être intégré",
         },
+        advancedOptions: "Options avancées",
     },
     entityEditor: {
         itemPicker: {

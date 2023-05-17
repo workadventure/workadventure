@@ -57,7 +57,7 @@ export class StartPositionCalculator {
 
         if (areas) {
             for (const area of Array.from(areas.values())) {
-                if (area.name === "start" || area.properties[GameMapProperties.START]) {
+                if (area.name === "start" || area.properties.find((property) => property.type === "start")) {
                     names.push(area.name);
                 }
             }
@@ -132,7 +132,7 @@ export class StartPositionCalculator {
         const area = this.gameMapFrontWrapper.getAreaByName(startPositionName);
         if (area) {
             if (needStartProperty) {
-                if (!area.properties["start"]) {
+                if (!area.properties.find((property) => property.type === "start")) {
                     return false;
                 }
             }
