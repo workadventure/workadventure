@@ -411,7 +411,7 @@
         {
             "name": "WC",
             "tags": [
-                "\ud83d\udec1Bathroom"
+                "Bathroom"
             ],
             "imagePath": "LimeZu_Modern_Interior/WC__Down__8B829E__Bathroom.png",
             "direction": "Down",
