@@ -14,7 +14,12 @@
             ],
             "imagePath": "LimeZu_Modern_Exterior/Folding_table__Down__B48F54__Table_Outdoor.png",
             "direction": "Down",
-            "color": "#B48F54"
+            "color": "#B48F54",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Folding table",
@@ -24,7 +29,12 @@
             ],
             "imagePath": "LimeZu_Modern_Exterior/Folding_table__Right__5085B4__Table_Outdoor.png",
             "direction": "Right",
-            "color": "#5085B4"
+            "color": "#5085B4",
+            "collisionGrid": [
+                [ 1 ],
+                [ 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Folding table",
@@ -34,7 +44,12 @@
             ],
             "imagePath": "LimeZu_Modern_Exterior/Folding_table__Right__529760__Table_Outdoor.png",
             "direction": "Right",
-            "color": "#529760"
+            "color": "#529760",
+            "collisionGrid": [
+                [ 1 ],
+                [ 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Folding table",
@@ -44,7 +59,12 @@
             ],
             "imagePath": "LimeZu_Modern_Exterior/Folding_table__Right__7D7F99__Table_Outdoor.png",
             "direction": "Right",
-            "color": "#7D7F99"
+            "color": "#7D7F99",
+            "collisionGrid": [
+                [ 1 ],
+                [ 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Folding table",
@@ -54,7 +74,12 @@
             ],
             "imagePath": "LimeZu_Modern_Exterior/Folding_table__Right__B48F54__Table_Outdoor.png",
             "direction": "Right",
-            "color": "#B48F54"
+            "color": "#B48F54",
+            "collisionGrid": [
+                [ 1 ],
+                [ 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Lawn chair",
@@ -135,7 +160,12 @@
             ],
             "imagePath": "LimeZu_Modern_Exterior/Wooden_bench_table_(large)__Down__A4816D__Seat_Table_Outdoor.png",
             "direction": "Down",
-            "color": "#A4816D"
+            "color": "#A4816D",
+            "collisionGrid": [
+                [ 1, 1, 1 ],
+                [ 0, 0, 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Wooden bench",
@@ -205,7 +235,12 @@
             ],
             "imagePath": "LimeZu_Modern_Exterior/Wooden_table__Down__CDA968__Table_Outdoor.png",
             "direction": "Down",
-            "color": "#CDA968"
+            "color": "#CDA968",
+            "collisionGrid": [
+                [ 0, 0, 0 ],
+                [ 1, 1, 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Folding chair",
@@ -225,7 +260,12 @@
             ],
             "imagePath": "LimeZu_Modern_Exterior/Folding_table__Down__7D7F99__Table_Outdoor.png",
             "direction": "Down",
-            "color": "#7D7F99"
+            "color": "#7D7F99",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Wooden bench table",
@@ -236,7 +276,12 @@
             ],
             "imagePath": "LimeZu_Modern_Exterior/Wooden_bench_table__Down__A4816D__Seat_Table_Outdoor.png",
             "direction": "Down",
-            "color": "#A4816D"
+            "color": "#A4816D",
+            "collisionGrid": [
+                [ 1, 1 ],
+                [ 0, 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Folding chair",
@@ -336,7 +381,12 @@
             ],
             "imagePath": "LimeZu_Modern_Exterior/Folding_table__Down__5085B4__Table_Outdoor.png",
             "direction": "Down",
-            "color": "#5085B4"
+            "color": "#5085B4",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Folding table",
@@ -346,7 +396,12 @@
             ],
             "imagePath": "LimeZu_Modern_Exterior/Folding_table__Down__529760__Table_Outdoor.png",
             "direction": "Down",
-            "color": "#529760"
+            "color": "#529760",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Deckchair",
