@@ -17,9 +17,10 @@ To use the broadcast feature, you must first define a speaker zone and a listene
   - or by using the Scripting API.
 -->
 
-### Settings map editor (Configure my room)
-You can configure the general megaphone in the "Configure my room" menu.
-It will affect the entire map.
+### Configuring the global megaphone
+To configure the global megaphone feature in WorkAdventure, follow the steps below. Please note that access to the map editor is required to perform these configurations.
+
+Microphone settings will affect the entire map.
 
 <div class="row">
     <div class="col">
@@ -28,9 +29,9 @@ It will affect the entire map.
 </div>
 
 1. Open the map editor.
-2. Open the "configure my room" modal.
-3. Open the megaphone tab.
-4. Switch on/off the general megaphone.
-5. Give a unique name to your megaphone.
-6. Define the scope of your megaphone, if you want to only broadcast to this map or to all maps that have the same megaphone settings (spaceName and scope).
-7. To be able to manage who can use the megaphone you can add some rights restrictions. You can restrict the megaphone to a specific user or to a specific group of users by using tags.
+2. Access the "configure my room" modal.
+3. Navigate to the megaphone tab.
+4. Toggle the the general megaphone on or off.
+5. Assign a unique name to your megaphone.
+6. Define the scope of your megaphone. The scope can be set as "room" or "world". If you choose "room", the megaphone's range will be limited to the current room. If you select "world", the megaphone's reach will extend across multiple rooms. Individuals in any room configured with the same "space name" will be able to hear you when the megaphone is enabled.
+7. Manage the megaphone's usage by applying rights restrictions. You can limit the megaphone's access to specific users or user groups using tags.
