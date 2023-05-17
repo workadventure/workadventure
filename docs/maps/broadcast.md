@@ -2,6 +2,9 @@
 # Broadcasting / Megaphone
 Use the broadcast feature to stream your video / audio / screen to anyone.
 
+Let's comment this part as it is not implemented yet
+
+<!--
 ### Area map editor
 Use the broadcast feature to stream your video / audio / screen to anyone within the **broadcast zone**.
 
@@ -12,6 +15,7 @@ To use the broadcast feature, you must first define a speaker zone and a listene
   - either clicking the "megaphone" icon (if the megaphone is authorized in that zone).
   - or by walking on the "stage". The "stage" is a special zone that will stream to the listener zones.
   - or by using the Scripting API.
+-->
 
 ### Settings map editor (Configure my room)
 You can configure the general megaphone in the "Configure my room" menu.
