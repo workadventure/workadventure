@@ -55,24 +55,13 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.setDepth(this.y + this.displayHeight + (this.entityData.prefab.depthOffset ?? 0));
 
         this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
-            if (color === undefined) {
-                this.getOutlinePlugin()?.remove(this);
-            } else {
-                this.getOutlinePlugin()?.remove(this);
-                this.getOutlinePlugin()?.add(this, {
-                    thickness: 2,
-                    outlineColor: color,
-                });
-            }
-
-            if (this.scene instanceof GameScene) {
-                this.scene.markDirty();
-            } else {
-                throw new Error("Not the Game Scene");
-            }
+            this.setOutline(color);
         });
 
         this.scene.add.existing(this);
+        scene.getOutlineManager().add(this, () => {
+            return this.getCurrentOutline();
+        });
     }
 
     public updateEntity(dataToModify: AtLeast<EntityData, "id">): void {
@@ -168,6 +157,10 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.outlineColorStore.characterFarAway();
     }
 
+    public getCurrentOutline(): { thickness: number; color?: number } {
+        return { thickness: 2, color: get(this.outlineColorStore) };
+    }
+
     public delete() {
         this.emit(EntityEvent.Delete);
     }
@@ -197,6 +190,23 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         actionsMenuStore.initialize(TextHeaderPropertyData.parse(this.entityData.properties.textHeader ?? ""));
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
+        }
+    }
+
+    private setOutline(color: number | undefined) {
+        if (color === undefined) {
+            this.getOutlinePlugin()?.remove(this);
+        } else {
+            this.getOutlinePlugin()?.remove(this);
+            this.getOutlinePlugin()?.add(this, {
+                thickness: 2,
+                outlineColor: color,
+            });
+        }
+        if (this.scene instanceof GameScene) {
+            this.scene.markDirty();
+        } else {
+            throw new Error("Not the Game Scene");
         }
     }
 

@@ -117,6 +117,7 @@ import { checkCoturnServer } from "../../Components/Video/utils";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
+import { OutlineManager } from "./UI/OutlineManager";
 import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
@@ -230,6 +231,7 @@ export class GameScene extends DirtyScene {
     private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
+    private outlineManager!: OutlineManager;
     private mapTransitioning = false; //used to prevent transitions happening at the same time.
     private emoteManager!: EmoteManager;
     private cameraManager!: CameraManager;
@@ -554,6 +556,7 @@ export class GameScene extends DirtyScene {
 
         this.trackDirtyAnims();
 
+        this.outlineManager = new OutlineManager(this);
         gameManager.gameSceneIsCreated(this);
         urlManager.pushRoomIdToUrl(this.room);
         analyticsClient.enteredRoom(this.room.id, this.room.group);
@@ -2170,6 +2173,7 @@ ${escapedMessage}
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
+        this.outlineManager?.clear();
         this.userInputManager?.destroy();
         this.pinchManager?.destroy();
         this.emoteManager?.destroy();
@@ -2962,5 +2966,9 @@ ${escapedMessage}
 
     public getActivatablesManager(): ActivatablesManager {
         return this.activatablesManager;
+    }
+
+    public getOutlineManager(): OutlineManager {
+        return this.outlineManager;
     }
 }
