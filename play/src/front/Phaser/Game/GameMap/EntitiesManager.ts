@@ -9,10 +9,12 @@ import {
     mapEditorSelectedEntityStore,
     mapEditorEntityModeStore,
     mapEditorSelectedEntityDraggedStore,
+    mapEditorSelectedToolStore,
 } from "../../../Stores/MapEditorStore";
 import { Entity, EntityEvent } from "../../ECS/Entity";
 import { TexturesHelper } from "../../Helpers/TexturesHelper";
 import type { GameScene } from "../GameScene";
+import { EditorToolName } from "../MapEditor/MapEditorModeManager";
 import type { GameMapFrontWrapper } from "./GameMapFrontWrapper";
 
 export const CopyEntityEventData = z.object({
@@ -190,12 +192,20 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             this.emit(EntitiesManagerEvent.UpdateEntity, data);
         });
         entity.on(Phaser.Input.Events.DRAG_START, () => {
-            if (get(mapEditorModeStore) && get(mapEditorEntityModeStore) === "EDIT") {
+            if (
+                get(mapEditorModeStore) &&
+                this.isEntityEditorToolActive() &&
+                get(mapEditorEntityModeStore) === "EDIT"
+            ) {
                 mapEditorSelectedEntityDraggedStore.set(true);
             }
         });
         entity.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore) && get(mapEditorEntityModeStore) === "EDIT") {
+            if (
+                get(mapEditorModeStore) &&
+                this.isEntityEditorToolActive() &&
+                get(mapEditorEntityModeStore) === "EDIT"
+            ) {
                 const collisitonGrid = entity.getEntityData().prefab.collisionGrid;
                 const depthOffset = entity.getEntityData().prefab.depthOffset ?? 0;
                 const tileDim = this.scene.getGameMapFrontWrapper().getTileDimensions();
@@ -229,7 +239,11 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             }
         });
         entity.on(Phaser.Input.Events.DRAG_END, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (get(mapEditorModeStore) && get(mapEditorEntityModeStore) === "EDIT") {
+            if (
+                get(mapEditorModeStore) &&
+                this.isEntityEditorToolActive() &&
+                get(mapEditorEntityModeStore) === "EDIT"
+            ) {
                 mapEditorSelectedEntityDraggedStore.set(false);
                 if (
                     !this.scene
@@ -260,7 +274,11 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             }
         });
         entity.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
-            if (get(mapEditorModeStore) && !get(mapEditorSelectedEntityPrefabStore)) {
+            if (
+                get(mapEditorModeStore) &&
+                this.isEntityEditorToolActive() &&
+                !get(mapEditorSelectedEntityPrefabStore)
+            ) {
                 mapEditorEntityModeStore.set("EDIT");
                 mapEditorSelectedEntityStore.set(entity);
             }
@@ -268,7 +286,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         entity.on(Phaser.Input.Events.POINTER_OVER, () => {
             this.pointerOverEntitySubject.next(entity);
 
-            if (get(mapEditorModeStore)) {
+            if (get(mapEditorModeStore) && this.isEntityEditorToolActive()) {
                 entity.setPointedToEditColor(0x00ff00);
                 this.scene.markDirty();
             }
@@ -276,7 +294,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         entity.on(Phaser.Input.Events.POINTER_OUT, () => {
             this.pointerOutEntitySubject.next(entity);
 
-            if (get(mapEditorModeStore)) {
+            if (get(mapEditorModeStore) && this.isEntityEditorToolActive()) {
                 entity.removePointedToEditColor();
                 this.scene.markDirty();
             }
@@ -294,6 +312,10 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             properties: entity.getEntityData().properties,
         };
         this.emit(EntitiesManagerEvent.CopyEntity, eventData);
+    }
+
+    private isEntityEditorToolActive(): boolean {
+        return get(mapEditorSelectedToolStore) === EditorToolName.EntityEditor;
     }
 
     public getEntities(): Map<string, Entity> {
