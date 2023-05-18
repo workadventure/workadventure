@@ -223,7 +223,7 @@ class MapsManager {
         return {
             ...rawPrefab,
             collectionName,
-            id: `${rawPrefab.name}:${rawPrefab.color}:${rawPrefab.direction}`,
+            id: `${collectionName}:${rawPrefab.name}:${rawPrefab.color}:${rawPrefab.direction}`,
         };
     }
 }

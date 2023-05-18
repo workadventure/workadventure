@@ -43,7 +43,10 @@
         }
         itemVariants = entitiesCollectionsManager
             .getEntitiesPrefabs()
-            .filter((item: EntityPrefab) => item.name == pickedItem?.name);
+            .filter(
+                (item: EntityPrefab) =>
+                    item.name === pickedItem?.name && item.collectionName === pickedItem?.collectionName
+            );
         itemVariants = itemVariants.sort(
             (a, b) =>
                 a.direction.localeCompare(b.direction) +
@@ -91,8 +94,8 @@
         rootItem = [];
         for (let entityPrefab of prefabs) {
             entityPrefab.tags.forEach((v: string) => tags.add(v));
-            if (!uniqId.has(entityPrefab.name)) {
-                uniqId.add(entityPrefab.name);
+            if (!uniqId.has(`${entityPrefab.collectionName}:${entityPrefab.name}`)) {
+                uniqId.add(`${entityPrefab.collectionName}:${entityPrefab.name}`);
                 rootItem.push(entityPrefab);
             }
         }
@@ -123,11 +126,8 @@
     </div>
     <div class="item-name">{pickedItem?.name ?? "no entity selected"}</div>
     <div class="item-picker-container">
-        {#each rootItem as item (item.name)}
-            <div
-                class="pickable-item {item.name === pickedItem?.name ? 'active' : ''}"
-                on:click={() => onPickItem(item)}
-            >
+        {#each rootItem as item (item.id)}
+            <div class="pickable-item {item.id === pickedItem?.id ? 'active' : ''}" on:click={() => onPickItem(item)}>
                 <img class="item-image" src={item.imagePath} alt={item.name} />
             </div>
         {/each}
