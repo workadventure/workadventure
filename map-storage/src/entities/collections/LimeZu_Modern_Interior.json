@@ -123,7 +123,14 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Tennis_table__Down__478BD2__Activities.png",
             "direction": "Down",
-            "color": "#478BD2"
+            "color": "#478BD2",
+            "collisionGrid": [
+                [ 1, 1, 1 ],
+                [ 1, 1, 1 ],
+                [ 1, 1, 1 ],
+                [ 0, 0, 0 ]
+            ],
+            "depthOffset": -128
         },
         {
             "name": "Coffee table (round edges small)",
@@ -132,7 +139,11 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Coffee_table_(round_edges_small)__Down__8B829E__Table.png",
             "direction": "Down",
-            "color": "#8B829E"
+            "color": "#8B829E",
+            "collisionGrid": [
+                [ 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Coffee table",
@@ -141,7 +152,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Coffee_table__Down__BA7F50__Table.png",
             "direction": "Down",
-            "color": "#BA7F50"
+            "color": "#BA7F50",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Coffee table",
@@ -150,7 +166,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Coffee_table__Down__CEAA69__Table.png",
             "direction": "Down",
-            "color": "#CEAA69"
+            "color": "#CEAA69",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Coffee vending machine",
@@ -160,7 +181,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Coffee_vending_machine__Down__9297A9__Electronics_Office.png",
             "direction": "Down",
-            "color": "#9297A9"
+            "color": "#9297A9",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 0, 0 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Coffee vending machine",
@@ -170,7 +197,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Coffee_vending_machine__Down__D8D0E0__Electronics_Office.png",
             "direction": "Down",
-            "color": "#D8D0E0"
+            "color": "#D8D0E0",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 0, 0 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Computer (off)",
@@ -199,7 +232,14 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Conference_hall_stage__Down__C49E62__Office.png",
             "direction": "Down",
-            "color": "#C49E62"
+            "color": "#C49E62",
+            "collisionGrid": [
+                [ 1, 1, 1, 1, 1, 1, 1 ],
+                [ 1, 0, 0, 0, 0, 0, 1 ],
+                [ 0, 0, 0, 0, 0, 0, 1 ],
+                [ 1, 1, 1, 1, 1, 1, 1 ]
+            ],
+            "depthOffset": -96
         },
         {
             "name": "Couch",
@@ -271,7 +311,14 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Pool_table__Right__478BD2__Activities.png",
             "direction": "Right",
-            "color": "#478BD2"
+            "color": "#478BD2",
+            "collisionGrid": [
+                [ 0, 0, 0 ],
+                [ 1, 1, 1 ],
+                [ 1, 1, 1 ],
+                [ 0, 0, 0 ]
+            ],
+            "depthOffset": -96
         },
         {
             "name": "Pool table",
@@ -280,7 +327,14 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Pool_table__Right__5A8B97__Activities.png",
             "direction": "Right",
-            "color": "#5A8B97"
+            "color": "#5A8B97",
+            "collisionGrid": [
+                [ 0, 0, 0 ],
+                [ 1, 1, 1 ],
+                [ 1, 1, 1 ],
+                [ 0, 0, 0 ]
+            ],
+            "depthOffset": -96
         },
         {
             "name": "Pool table",
@@ -289,7 +343,14 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Pool_table__Right__6C957E__Activities.png",
             "direction": "Right",
-            "color": "#6C957E"
+            "color": "#6C957E",
+            "collisionGrid": [
+                [ 0, 0, 0 ],
+                [ 1, 1, 1 ],
+                [ 1, 1, 1 ],
+                [ 0, 0, 0 ]
+            ],
+            "depthOffset": -96
         },
         {
             "name": "Pygmy date palm",
@@ -298,7 +359,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Pygmy_date_palm__Down__5D994C__Plants.png",
             "direction": "Down",
-            "color": "#5D994C"
+            "color": "#5D994C",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Rug",
@@ -328,22 +394,33 @@
             "color": "#E3E3E3"
         },
         {
-            "name": "Sonance speaker (big)",
+            "name": "Speaker (big)",
             "tags": [
                 "Electronics"
             ],
-            "imagePath": "LimeZu_Modern_Interior/Sonance_speaker_(big)__Down__565972__Electronics.png",
+            "imagePath": "LimeZu_Modern_Interior/Speaker_(big)__Down__565972__Electronics.png",
             "direction": "Down",
-            "color": "#565972"
+            "color": "#565972",
+            "collisionGrid": [
+                [ 0 ],
+                [ 1 ],
+                [ 1 ]
+            ],
+            "depthOffset": -64
         },
         {
-            "name": "Sonance speaker",
+            "name": "Speaker",
             "tags": [
                 "Electronics"
             ],
-            "imagePath": "LimeZu_Modern_Interior/Sonance_speaker__Down__565972__Electronics.png",
+            "imagePath": "LimeZu_Modern_Interior/Speaker__Down__565972__Electronics.png",
             "direction": "Down",
-            "color": "#565972"
+            "color": "#565972",
+            "collisionGrid": [
+                [ 0 ],
+                [ 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Strelitzia (big)",
@@ -352,7 +429,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Strelitzia_(big)__Down__5D994C__Plants.png",
             "direction": "Down",
-            "color": "#5D994C"
+            "color": "#5D994C",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ],
+                [ 0, 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Strelitzia (small)",
@@ -361,7 +444,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Strelitzia_(small)__Down__5D994C__Plants.png",
             "direction": "Down",
-            "color": "#5D994C"
+            "color": "#5D994C",
+            "collisionGrid": [
+                [ 0 ],
+                [ 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "WC (open)",
@@ -460,7 +548,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Wooden_floor_lamp__Down__468BD1__Lighting.png",
             "direction": "Down",
-            "color": "#468BD1"
+            "color": "#468BD1",
+            "collisionGrid": [
+                [ 0 ],
+                [ 1 ],
+                [ 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Wooden floor lamp",
@@ -469,7 +563,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Wooden_floor_lamp__Down__D23B36__Lighting.png",
             "direction": "Down",
-            "color": "#D23B36"
+            "color": "#D23B36",
+            "collisionGrid": [
+                [ 0 ],
+                [ 1 ],
+                [ 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Wooden table (round)",
@@ -478,7 +578,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Wooden_table_(round)__Down__B35E3F__Table.png",
             "direction": "Down",
-            "color": "#B35E3F"
+            "color": "#B35E3F",
+            "collisionGrid": [
+                [ 1, 1 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Wooden table (round)",
@@ -487,7 +592,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Wooden_table_(round)__Down__D0BE9C__Table.png",
             "direction": "Down",
-            "color": "#D0BE9C"
+            "color": "#D0BE9C",
+            "collisionGrid": [
+                [ 1, 1 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Wooden table (round)",
@@ -496,7 +606,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Wooden_table_(round)__Down__D7A968__Table.png",
             "direction": "Down",
-            "color": "#D7A968"
+            "color": "#D7A968",
+            "collisionGrid": [
+                [ 1, 1 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Synthetiser",
@@ -506,7 +621,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Synthetiser__Down__7C86CC__Activities_Electronics.png",
             "direction": "Down",
-            "color": "#7C86CC"
+            "color": "#7C86CC",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Synthetiser",
@@ -516,7 +636,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Synthetiser__Down__9DA3B7__Activities_Electronics.png",
             "direction": "Down",
-            "color": "#9DA3B7"
+            "color": "#9DA3B7",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Synthetiser",
@@ -526,7 +651,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Synthetiser__Down__B53E40__Activities_Electronics.png",
             "direction": "Down",
-            "color": "#B53E40"
+            "color": "#B53E40",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Table lamp",
@@ -553,7 +683,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Table__Down__BCB986__Table.png",
             "direction": "Down",
-            "color": "#BCB986"
+            "color": "#BCB986",
+            "collisionGrid": [
+                [ 1, 1 ],
+                [ 0, 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Table",
@@ -562,7 +697,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Table__Down__BDA88A__Table.png",
             "direction": "Down",
-            "color": "#BDA88A"
+            "color": "#BDA88A",
+            "collisionGrid": [
+                [ 1, 1 ],
+                [ 0, 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Table",
@@ -571,7 +711,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Table__Down__C7C0CE__Table.png",
             "direction": "Down",
-            "color": "#C7C0CE"
+            "color": "#C7C0CE",
+            "collisionGrid": [
+                [ 1, 1 ],
+                [ 0, 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Table",
@@ -580,7 +725,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Table__Down__D5B375__Table.png",
             "direction": "Down",
-            "color": "#D5B375"
+            "color": "#D5B375",
+            "collisionGrid": [
+                [ 1, 1 ],
+                [ 0, 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Task chair",
@@ -664,7 +814,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Upright_piano__Down__C8B394__Activities.png",
             "direction": "Down",
-            "color": "#C8B394"
+            "color": "#C8B394",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Upright piano",
@@ -673,7 +829,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Upright_piano__Down__CA8854__Activities.png",
             "direction": "Down",
-            "color": "#CA8854"
+            "color": "#CA8854",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Upright piano",
@@ -682,7 +844,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Upright_piano__Down__DAA463__Activities.png",
             "direction": "Down",
-            "color": "#DAA463"
+            "color": "#DAA463",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Wardrobe",
@@ -691,7 +859,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Wardrobe__Down__8B829E__Storage.png",
             "direction": "Down",
-            "color": "#8B829E"
+            "color": "#8B829E",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "WC (open)",
@@ -718,7 +892,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Bookshelf__Down__EBE4F2__Storage.png",
             "direction": "Down",
-            "color": "#EBE4F2"
+            "color": "#EBE4F2",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 0, 0 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Coffee table (round edges large)",
@@ -727,7 +907,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Coffee_table_(round_edges_large)__Down__8B829E__Table.png",
             "direction": "Down",
-            "color": "#8B829E"
+            "color": "#8B829E",
+            "collisionGrid": [
+                [ 1, 1 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Couch",
@@ -747,7 +932,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Fridge__Down__B8B0C5__Storage_Kitchen_Electronics.png",
             "direction": "Down",
-            "color": "#B8B0C5"
+            "color": "#B8B0C5",
+            "collisionGrid": [
+                [ 0 ],
+                [ 0 ],
+                [ 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Lounge chair",
@@ -774,7 +965,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Strelitzia__Down__5D994C__Plants.png",
             "direction": "Down",
-            "color": "#5D994C"
+            "color": "#5D994C",
+            "collisionGrid": [
+                [ 0 ],
+                [ 1 ],
+                [ 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Task chair",
@@ -793,7 +990,14 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Tennis_table__Down__5A8B97__Activities.png",
             "direction": "Down",
-            "color": "#5A8B97"
+            "color": "#5A8B97",
+            "collisionGrid": [
+                [ 1, 1, 1 ],
+                [ 1, 1, 1 ],
+                [ 1, 1, 1 ],
+                [ 0, 0, 0 ]
+            ],
+            "depthOffset": -128
         },
         {
             "name": "TV",
@@ -830,7 +1034,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Cabinet_(large)__Down__B5794F__Table_Storage.png",
             "direction": "Down",
-            "color": "#B5794F"
+            "color": "#B5794F",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Cabinet (large)",
@@ -840,7 +1049,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Cabinet_(large)__Down__C9985D__Table_Storage.png",
             "direction": "Down",
-            "color": "#C9985D"
+            "color": "#C9985D",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Cabinet",
@@ -850,7 +1064,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Cabinet__Down__B5794F__Table_Storage.png",
             "direction": "Down",
-            "color": "#B5794F"
+            "color": "#B5794F",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Cabinet",
@@ -860,7 +1079,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Cabinet__Down__C9985D__Table_Storage.png",
             "direction": "Down",
-            "color": "#C9985D"
+            "color": "#C9985D",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Canteen chair",
@@ -980,7 +1204,11 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Coffee_table_(round_edges)__Down__8B829E__Table.png",
             "direction": "Down",
-            "color": "#8B829E"
+            "color": "#8B829E",
+            "collisionGrid": [
+                [ 1, 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Coffee table (round edges)",
@@ -989,7 +1217,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Coffee_table_(round_edges)__Right__8B829E__Table.png",
             "direction": "Right",
-            "color": "#8B829E"
+            "color": "#8B829E",
+            "collisionGrid": [
+                [ 1 ],
+                [ 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Arcade machine",
@@ -999,7 +1232,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Arcade_machine__Down__9DA3B7__Activities_Electronics.png",
             "direction": "Down",
-            "color": "#9DA3B7"
+            "color": "#9DA3B7",
+            "collisionGrid": [
+                [ 0 ],
+                [ 0 ],
+                [ 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Arcade machine",
@@ -1009,7 +1248,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Arcade_machine__Left__9DA3B7__Activities_Electronics.png",
             "direction": "Left",
-            "color": "#9DA3B7"
+            "color": "#9DA3B7",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 0, 0 ],
+                [ 0, 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Arcade machine",
@@ -1019,7 +1264,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Arcade_machine__Right__9DA3B7__Activities_Electronics.png",
             "direction": "Right",
-            "color": "#9DA3B7"
+            "color": "#9DA3B7",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 0, 0 ],
+                [ 1, 0 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Arcade machine",
@@ -1029,7 +1280,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Arcade_machine__Up__9DA3B7__Activities_Electronics.png",
             "direction": "Up",
-            "color": "#9DA3B7"
+            "color": "#9DA3B7",
+            "collisionGrid": [
+                [ 0 ],
+                [ 0 ],
+                [ 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Armchair",
@@ -1128,7 +1385,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Bathtub__Down__C7C0CE__Bathroom.png",
             "direction": "Down",
-            "color": "#C7C0CE"
+            "color": "#C7C0CE",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ],
+                [ 0, 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Bedside table",
@@ -1138,7 +1401,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Bedside_table__Down__B5794F__Table_Storage.png",
             "direction": "Down",
-            "color": "#B5794F"
+            "color": "#B5794F",
+            "collisionGrid": [
+                [ 0 ],
+                [ 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Bedside table",
@@ -1148,7 +1416,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Bedside_table__Down__BAA78B__Table_Storage.png",
             "direction": "Down",
-            "color": "#BAA78B"
+            "color": "#BAA78B",
+            "collisionGrid": [
+                [ 0 ],
+                [ 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Bedside table",
@@ -1158,7 +1431,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Bedside_table__Down__C9985D__Table_Storage.png",
             "direction": "Down",
-            "color": "#C9985D"
+            "color": "#C9985D",
+            "collisionGrid": [
+                [ 0 ],
+                [ 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Wooden table lamp",
@@ -1176,7 +1454,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Yucca_palm_(Big)__Down__5D994C__Plants.png",
             "direction": "Down",
-            "color": "#5D994C"
+            "color": "#5D994C",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ],
+                [ 0, 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Yucca palm (small)",
@@ -1194,7 +1478,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Yucca_palm__Down__5D994C__Plants.png",
             "direction": "Down",
-            "color": "#5D994C"
+            "color": "#5D994C",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ],
+                [ 0, 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Lounge chair",
@@ -1425,7 +1715,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Bookshelf_(empty)__Down__EBE4F2__Storage.png",
             "direction": "Down",
-            "color": "#EBE4F2"
+            "color": "#EBE4F2",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 0, 0 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Couch",
@@ -1560,7 +1856,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Dining_table__Down__B6774B__Table.png",
             "direction": "Down",
-            "color": "#B6774B"
+            "color": "#B6774B",
+            "collisionGrid": [
+                [ 1, 1 ],
+                [ 0, 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Dining table",
@@ -1569,7 +1870,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Dining_table__Down__BAA88B__Table.png",
             "direction": "Down",
-            "color": "#BAA88B"
+            "color": "#BAA88B",
+            "collisionGrid": [
+                [ 1, 1 ],
+                [ 0, 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Dining table",
@@ -1578,7 +1884,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Dining_table__Down__C9A165__Table.png",
             "direction": "Down",
-            "color": "#C9A165"
+            "color": "#C9A165",
+            "collisionGrid": [
+                [ 1, 1 ],
+                [ 0, 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Ficus",
@@ -1596,7 +1907,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Floor_lamp__Down__468BD1__Lighting.png",
             "direction": "Down",
-            "color": "#468BD1"
+            "color": "#468BD1",
+            "collisionGrid": [
+                [ 0 ],
+                [ 1 ],
+                [ 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Floor lamp",
@@ -1605,7 +1922,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Floor_lamp__Down__D23B36__Lighting.png",
             "direction": "Down",
-            "color": "#D23B36"
+            "color": "#D23B36",
+            "collisionGrid": [
+                [ 0 ],
+                [ 1 ],
+                [ 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Footstool",
@@ -1634,7 +1957,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Fridge_(open)__Down__B8B0C5__Storage_Kitchen_Electronics.png",
             "direction": "Down",
-            "color": "#B8B0C5"
+            "color": "#B8B0C5",
+            "collisionGrid": [
+                [ 0 ],
+                [ 0 ],
+                [ 1 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "Glass dining table",
@@ -1643,7 +1972,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Glass_dining_table__Down__B6774B__Table.png",
             "direction": "Down",
-            "color": "#B6774B"
+            "color": "#B6774B",
+            "collisionGrid": [
+                [ 1, 1 ],
+                [ 0, 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Glass dining table",
@@ -1652,7 +1986,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Glass_dining_table__Down__BAA88B__Table.png",
             "direction": "Down",
-            "color": "#BAA88B"
+            "color": "#BAA88B",
+            "collisionGrid": [
+                [ 1, 1 ],
+                [ 0, 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Glass dining table",
@@ -1661,7 +2000,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Glass_dining_table__Down__C9A165__Table.png",
             "direction": "Down",
-            "color": "#C9A165"
+            "color": "#C9A165",
+            "collisionGrid": [
+                [ 1, 1 ],
+                [ 0, 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Glass dining table",
@@ -1670,7 +2014,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Glass_dining_table__Right__B6774B__Table.png",
             "direction": "Right",
-            "color": "#B6774B"
+            "color": "#B6774B",
+            "collisionGrid": [
+                [ 1 ],
+                [ 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Glass dining table",
@@ -1679,7 +2028,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Glass_dining_table__Right__BAA88B__Table.png",
             "direction": "Right",
-            "color": "#BAA88B"
+            "color": "#BAA88B",
+            "collisionGrid": [
+                [ 1 ],
+                [ 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Glass dining table",
@@ -1688,7 +2042,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Glass_dining_table__Right__C9A165__Table.png",
             "direction": "Right",
-            "color": "#C9A165"
+            "color": "#C9A165",
+            "collisionGrid": [
+                [ 1 ],
+                [ 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Grand piano",
@@ -1697,7 +2056,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Grand_piano__Down__C8B394__Activities.png",
             "direction": "Down",
-            "color": "#C8B394"
+            "color": "#C8B394",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Grand piano",
@@ -1706,7 +2071,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Grand_piano__Down__CA8854__Activities.png",
             "direction": "Down",
-            "color": "#CA8854"
+            "color": "#CA8854",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Grand piano",
@@ -1715,7 +2086,13 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Grand_piano__Down__DAA463__Activities.png",
             "direction": "Down",
-            "color": "#DAA463"
+            "color": "#DAA463",
+            "collisionGrid": [
+                [ 0, 0 ],
+                [ 1, 1 ],
+                [ 1, 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Guitar",
@@ -1769,7 +2146,14 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Tennis_table__Down__6C957E__Activities.png",
             "direction": "Down",
-            "color": "#6C957E"
+            "color": "#6C957E",
+            "collisionGrid": [
+                [ 1, 1, 1 ],
+                [ 1, 1, 1 ],
+                [ 1, 1, 1 ],
+                [ 0, 0, 0 ]
+            ],
+            "depthOffset": -128
         },
         {
             "name": "Trash can",
@@ -1829,7 +2213,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/TV_table__Down__99979B__Table_Storage.png",
             "direction": "Down",
-            "color": "#99979B"
+            "color": "#99979B",
+            "collisionGrid": [
+                [ 0, 1, 1, 0 ],
+                [ 0, 1, 1, 0 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "TV table",
@@ -1839,7 +2228,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/TV_table__Down__CAD2E0__Table_Storage.png",
             "direction": "Down",
-            "color": "#CAD2E0"
+            "color": "#CAD2E0",
+            "collisionGrid": [
+                [ 0, 1, 1, 0 ],
+                [ 0, 1, 1, 0 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "TV table",
@@ -1849,7 +2243,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/TV_table__Down__D8D2DE__Table_Storage.png",
             "direction": "Down",
-            "color": "#D8D2DE"
+            "color": "#D8D2DE",
+            "collisionGrid": [
+                [ 0, 1, 1, 0 ],
+                [ 0, 1, 1, 0 ]
+            ],
+            "depthOffset": -32
         },
         {
             "name": "TV table",
@@ -1859,7 +2258,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/TV_table__Right__99979B__Table_Storage.png",
             "direction": "Right",
-            "color": "#99979B"
+            "color": "#99979B",
+            "collisionGrid": [
+                [ 1 ],
+                [ 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "TV table",
@@ -1869,7 +2273,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/TV_table__Right__CAD2E0__Table_Storage.png",
             "direction": "Right",
-            "color": "#CAD2E0"
+            "color": "#CAD2E0",
+            "collisionGrid": [
+                [ 1 ],
+                [ 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "TV table",
@@ -1879,7 +2288,12 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/TV_table__Right__D8D2DE__Table_Storage.png",
             "direction": "Right",
-            "color": "#D8D2DE"
+            "color": "#D8D2DE",
+            "collisionGrid": [
+                [ 1 ],
+                [ 1 ]
+            ],
+            "depthOffset": -64
         }
     ]
 }
