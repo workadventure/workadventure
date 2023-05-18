@@ -373,7 +373,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Rug__Down__AC985F__Decoration.png",
             "direction": "Down",
-            "color": "#AC985F"
+            "color": "#AC985F",
+            "depthOffset": -64
         },
         {
             "name": "Rug",
@@ -382,7 +383,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Rug__Down__D684A1__Decoration.png",
             "direction": "Down",
-            "color": "#D684A1"
+            "color": "#D684A1",
+            "depthOffset": -64
         },
         {
             "name": "Rug",
@@ -391,7 +393,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Rug__Down__E3E3E3__Decoration.png",
             "direction": "Down",
-            "color": "#E3E3E3"
+            "color": "#E3E3E3",
+            "depthOffset": -64
         },
         {
             "name": "Speaker (big)",
@@ -1748,7 +1751,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Couch__Left__A47A5E__Seat.png",
             "direction": "Left",
-            "color": "#A47A5E"
+            "color": "#A47A5E",
+            "depthOffset": -64
         },
         {
             "name": "Couch",

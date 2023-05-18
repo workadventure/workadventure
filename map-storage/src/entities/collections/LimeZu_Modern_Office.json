@@ -14,7 +14,13 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Aloe_Vera__Down__568D61__Plants_Office.png",
             "direction": "Down",
-            "color": "#568D61"
+            "color": "#568D61",
+            "collisionGrid": [
+                [ 0 ],
+                [ 1 ],
+                [ 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Coffee machine (cups)",
@@ -34,7 +40,12 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Desk_(small)__Down__BB8051__Table_Office.png",
             "direction": "Down",
-            "color": "#BB8051"
+            "color": "#BB8051",
+            "collisionGrid": [
+                [ 1, 1 ],
+                [ 0, 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Desk (small)",
@@ -44,7 +55,12 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Desk_(small)__Down__C1B092__Table_Office.png",
             "direction": "Down",
-            "color": "#C1B092"
+            "color": "#C1B092",
+            "collisionGrid": [
+                [ 1, 1 ],
+                [ 0, 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Desk (small)",
@@ -54,7 +70,12 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Desk_(small)__Down__CFAB6A__Table_Office.png",
             "direction": "Down",
-            "color": "#CFAB6A"
+            "color": "#CFAB6A",
+            "collisionGrid": [
+                [ 1, 1 ],
+                [ 0, 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Desk lamp",
@@ -124,7 +145,12 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Desk__Down__787878__Table_Office.png",
             "direction": "Down",
-            "color": "#787878"
+            "color": "#787878",
+            "collisionGrid": [
+                [ 1, 1, 1 ],
+                [ 1, 1, 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Desk",
@@ -134,7 +160,12 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Desk__Down__C1B092__Table_Office.png",
             "direction": "Down",
-            "color": "#C1B092"
+            "color": "#C1B092",
+            "collisionGrid": [
+                [ 1, 1, 1 ],
+                [ 1, 1, 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Desk",
@@ -144,7 +175,12 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Desk__Down__CAAB8B__Table_Office.png",
             "direction": "Down",
-            "color": "#CAAB8B"
+            "color": "#CAAB8B",
+            "collisionGrid": [
+                [ 1, 1, 1 ],
+                [ 1, 1, 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Desk",
@@ -154,7 +190,12 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Desk__Down__D1CBDD__Table_Office.png",
             "direction": "Down",
-            "color": "#D1CBDD"
+            "color": "#D1CBDD",
+            "collisionGrid": [
+                [ 1, 1, 1 ],
+                [ 1, 1, 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Desk",
@@ -164,7 +205,12 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Desk__Down__DBCAA9__Table_Office.png",
             "direction": "Down",
-            "color": "#DBCAA9"
+            "color": "#DBCAA9",
+            "collisionGrid": [
+                [ 1, 1, 1 ],
+                [ 1, 1, 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Desk",
@@ -174,7 +220,13 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Desk__Right__787878__Table_Office.png",
             "direction": "Right",
-            "color": "#787878"
+            "color": "#787878",
+            "collisionGrid": [
+                [ 0 ],
+                [ 1 ],
+                [ 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Desk",
@@ -184,7 +236,13 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Desk__Right__C1B092__Table_Office.png",
             "direction": "Right",
-            "color": "#C1B092"
+            "color": "#C1B092",
+            "collisionGrid": [
+                [ 0 ],
+                [ 1 ],
+                [ 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Desk",
@@ -194,7 +252,13 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Desk__Right__CAAB8B__Table_Office.png",
             "direction": "Right",
-            "color": "#CAAB8B"
+            "color": "#CAAB8B",
+            "collisionGrid": [
+                [ 0 ],
+                [ 1 ],
+                [ 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Desk",
@@ -204,7 +268,13 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Desk__Right__D1CBDD__Table_Office.png",
             "direction": "Right",
-            "color": "#D1CBDD"
+            "color": "#D1CBDD",
+            "collisionGrid": [
+                [ 0 ],
+                [ 1 ],
+                [ 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Desk",
@@ -214,7 +284,13 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Desk__Right__DBCAA9__Table_Office.png",
             "direction": "Right",
-            "color": "#DBCAA9"
+            "color": "#DBCAA9",
+            "collisionGrid": [
+                [ 0 ],
+                [ 1 ],
+                [ 1 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Documents",
@@ -273,7 +349,13 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Potted_ficus__Down__568D61__Plants_Office.png",
             "direction": "Down",
-            "color": "#568D61"
+            "color": "#568D61",
+            "collisionGrid": [
+                [ 0 ],
+                [ 1 ],
+                [ 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Printer",
@@ -380,7 +462,13 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Water_dispenser__Down__66677C__Office.png",
             "direction": "Down",
-            "color": "#66677C"
+            "color": "#66677C",
+            "collisionGrid": [
+                [ 0 ],
+                [ 1 ],
+                [ 0 ]
+            ],
+            "depthOffset": -64
         },
         {
             "name": "Whiteboard",
