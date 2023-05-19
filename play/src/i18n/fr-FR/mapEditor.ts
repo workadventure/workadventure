@@ -6,6 +6,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaEditor: "Outil d'édition de zone",
         entityEditor: "Outil d'édition d'entités",
         tileEditor: "Outil d'édition de tuiles",
+        configureMyRoom: "Configurer la salle",
     },
     properties: {
         textProperties: {
@@ -51,6 +52,32 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         testInteractionButton: "Tester interaction",
         buttonLabel: "Texte du bouton",
         editInstructions: "Sélectionnez un objet pour modifier ses propriétés.",
+    },
+    settings: {
+        loading: "Chargement en cours",
+        megaphone: {
+            title: "Megaphone",
+            description:
+                "Le megaphone est un outil qui permet de diffuser un flux vidéo/audio à tous les joueurs dans la salle/monde.",
+            inputs: {
+                spaceName: "Nom de l'espace",
+                spaceNameHelper:
+                    "Si vous souhaitez diffuser un flux à tous les utilisateurs qui se trouvent dans différentes salles mais dans le même monde, vous devez définir le même nom d'espace pour tous les paramètres du megaphone dans chaque salle et définir la portée sur 'Monde'.",
+                scope: "Portée",
+                world: "Monde",
+                room: "Salle",
+                rights: "Droits",
+                rightsHelper:
+                    "Les droits définissent qui peut utiliser le megaphone. Si vous le laissez vide, tout le monde peut l'utiliser. Si vous le définissez, seuls les utilisateurs qui ont au moins l'un de ces 'tags' peuvent l'utiliser.",
+                error: {
+                    title: "Veuillez entrer un nom",
+                    save: {
+                        success: "Paramètres enregstrés avec succès",
+                        fail: "Une erreur est survenue lors de l'enregistrement des paramètres",
+                    },
+                },
+            },
+        },
     },
 };
 

@@ -5,6 +5,7 @@ import {
     UpdateAreaCommand,
     CreateAreaCommand,
     DeleteAreaCommand,
+    UpdateWAMSettingCommand,
 } from "@workadventure/map-editor";
 import { Unsubscriber, get } from "svelte/store";
 import { CreateEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/CreateEntityCommand";
@@ -18,11 +19,13 @@ import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
 import { EntityEditorTool } from "./Tools/EntityEditorTool";
+import { WAMSettingsEditorTool } from "./Tools/WAMSettingsEditorTool";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
     FloorEditor = "FloorEditor",
     EntityEditor = "EntityEditor",
+    WAMSettingsEditor = "WAMSettingsEditor",
 }
 
 export class MapEditorModeManager {
@@ -82,6 +85,7 @@ export class MapEditorModeManager {
             [EditorToolName.AreaEditor]: new AreaEditorTool(this),
             [EditorToolName.EntityEditor]: new EntityEditorTool(this),
             [EditorToolName.FloorEditor]: new FloorEditorTool(this),
+            [EditorToolName.WAMSettingsEditor]: new WAMSettingsEditorTool(this),
         };
         this.activeTool = undefined;
         this.lastlyUsedTool = undefined;
@@ -135,6 +139,10 @@ export class MapEditorModeManager {
                     command = new DeleteEntityCommand(this.scene.getGameMap(), commandConfig, commandId);
                     break;
                 }
+                case "UpdateWAMSettingCommand": {
+                    command = new UpdateWAMSettingCommand(this.scene.wamFile, commandConfig, commandId);
+                    break;
+                }
                 default: {
                     const _exhaustiveCheck: never = commandConfig;
                     return false;
@@ -153,7 +161,7 @@ export class MapEditorModeManager {
                 this.emitMapEditorUpdate(command.id, commandConfig, delay);
             }
 
-            if (addToLocalCommandsHistory) {
+            if (addToLocalCommandsHistory && !(command instanceof UpdateWAMSettingCommand)) {
                 // if we are not at the end of commands history and perform an action, get rid of commands later in history than our current point in time
                 if (this.currentCommandIndex !== this.localCommandsHistory.length - 1) {
                     this.localCommandsHistory.splice(this.currentCommandIndex + 1);

@@ -380,6 +380,36 @@
         "lastCommandId": {
           "type": "string"
         },
+        "settings": {
+          "type": "object",
+          "properties": {
+            "megaphone": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "scope": {
+                  "type": "string"
+                },
+                "rights": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "enabled"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
         "metadata": {
           "type": "object",
           "properties": {

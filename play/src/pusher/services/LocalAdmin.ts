@@ -177,6 +177,10 @@ class LocalAdmin implements AdminInterface {
     ): Promise<boolean> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
+
+    getTagsList(roomUrl: string): Promise<string[]> {
+        return Promise.reject(new Error("No admin backoffice set!"));
+    }
 }
 
 export const localAdmin = new LocalAdmin();

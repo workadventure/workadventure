@@ -17,6 +17,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLostSubtitle: "Reconnexion",
     waitingConnectionTitle: "En attente du serveur",
     waitingConnectionSubtitle: "Connexion",
+    megaphoneNeeds: "Pour utiliser le megaphone, vous devez activer votre caméra ou votre microphone.",
 };
 
 export default warning;

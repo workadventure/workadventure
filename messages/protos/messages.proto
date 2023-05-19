@@ -130,7 +130,15 @@ message EditMapMessage {
     ModifyEntityMessage modifyEntityMessage = 4;
     CreateEntityMessage createEntityMessage = 5;
     DeleteEntityMessage deleteEntityMessage = 6;
+    UpdateMegaphoneSettingMessage updateMegaphoneSettingMessage = 7;
   }
+}
+
+message UpdateMegaphoneSettingMessage {
+  bool enabled = 1;
+  optional string title = 2;
+  optional string scope = 3;
+  repeated string rights = 4;
 }
 
 message EditMapCommandMessage {
@@ -219,6 +227,12 @@ message ClientToServerMessage {
     AddSpaceFilterMessage addSpaceFilterMessage = 25;
     RemoveSpaceFilterMessage removeSpaceFilterMessage = 26;
     UpdateSpaceFilterMessage updateSpaceFilterMessage = 27;
+    WatchSpaceMessage watchSpaceMessage = 28;
+    UnwatchSpaceMessage unwatchSpaceMessage = 29;
+    CameraStateMessage cameraStateMessage = 30;
+    MicrophoneStateMessage microphoneStateMessage = 31;
+    MegaphoneStateMessage megaphoneStateMessage = 32;
+    JitsiParticipantIdSpaceMessage  jitsiParticipantIdSpaceMessage = 33;
   }
 }
 
@@ -280,6 +294,7 @@ message QueryMessage {
   oneof query {
     JitsiJwtQuery jitsiJwtQuery = 2;
     JoinBBBMeetingQuery joinBBBMeetingQuery = 20;
+    RoomTagsQuery roomTagsQuery = 3;
   }
 }
 
@@ -295,12 +310,16 @@ message JoinBBBMeetingQuery {
   // map<string, string> userdata = 3;
 }
 
+message RoomTagsQuery {
+}
+
 message AnswerMessage {
   int32 id = 1;
   oneof answer {
     ErrorMessage error = 2;
     JitsiJwtAnswer jitsiJwtAnswer = 3;
     JoinBBBMeetingAnswer joinBBBMeetingAnswer = 4;
+    RoomTagsAnswer roomTagsAnswer = 5;
   }
 }
 
@@ -312,6 +331,10 @@ message JitsiJwtAnswer {
 message JoinBBBMeetingAnswer {
   string meetingId = 1;
   string clientURL = 2;
+}
+
+message RoomTagsAnswer {
+  repeated string tags = 1;
 }
 
 /*********** SERVER TO CLIENT MESSAGES *************/
@@ -344,6 +367,7 @@ message SubMessage {
     AddSpaceUserMessage addSpaceUserMessage = 16;
     UpdateSpaceUserMessage updateSpaceUserMessage = 17;
     RemoveSpaceUserMessage removeSpaceUserMessage = 18;
+    MegaphoneSettings megaphoneSettingsMessage = 19;
   }
 }
 
@@ -433,6 +457,12 @@ message RoomJoinedMessage {
   string webrtcUserName = 14;
   string webrtcPassword = 15;
   bool canEdit = 16;
+  MegaphoneSettings megaphoneSettings = 17;
+}
+
+message MegaphoneSettings{
+  bool enabled = 1;
+  optional string url = 2;
 }
 
 message WebRtcStartMessage {
@@ -495,6 +525,27 @@ message BanUserMessage{
 message AskPositionMessage{
   string userIdentifier = 1;
   string playUri = 2;
+}
+
+message CameraStateMessage {
+  bool value = 1;
+}
+
+message MicrophoneStateMessage {
+  bool value = 1;
+}
+
+message MegaphoneStateMessage {
+  bool value = 1;
+}
+
+message JitsiParticipantIdSpaceMessage {
+  string spaceName = 1;
+  string value = 2;
+}
+
+message MegaphoneEnabledMessage {
+  bool value = 1;
 }
 
 
@@ -711,6 +762,12 @@ message MapStorageRefreshMessage {
   string comment = 1;
 }
 
+message MapStorageToBackMessage {
+  oneof message {
+    MapStorageRefreshMessage mapStorageRefreshMessage = 1;
+  }
+}
+
 message MapStorageUrlMessage {
   string mapUrl = 1;
   string roomId = 2;
@@ -830,6 +887,7 @@ message BackToPusherSpaceMessage{
 message WatchSpaceMessage{
   string spaceName = 1;
   SpaceUser user = 2;
+  SpaceFilterMessage spaceFilter = 3;
 }
 message UnwatchSpaceMessage{
   string spaceName = 1;
@@ -837,19 +895,21 @@ message UnwatchSpaceMessage{
 }
 
 message SpaceUser{
-  string uuid = 1;
-  string name = 2;
+  string uuid = 1; // used
+  string name = 2; // used
   string playUri = 3;
-  string color = 4;
+  string color = 4; // TO DELETE
   repeated CharacterLayerMessage characterLayers = 5;
   bool isLogged = 6;
   int32 availabilityStatus = 7;
   google.protobuf.StringValue roomName = 8;
   google.protobuf.StringValue visitCardUrl = 9;
   repeated string tags = 10;
-  bool videoSharing = 11;
-  bool audioSharing = 12;
+  bool cameraState = 11; // used
+  bool microphoneState = 12; // used
   bool screenSharing = 13;
+  bool megaphoneState = 14; // used
+  google.protobuf.StringValue jitsiParticipantId = 15; // used
 }
 
 message PartialSpaceUser{
@@ -863,9 +923,11 @@ message PartialSpaceUser{
   google.protobuf.StringValue roomName = 8;
   google.protobuf.StringValue visitCardUrl = 9;
   repeated string tags = 10;
-  google.protobuf.BoolValue videoSharing = 11;
-  google.protobuf.BoolValue audioSharing = 12;
+  google.protobuf.BoolValue cameraState = 11;
+  google.protobuf.BoolValue microphoneState = 12;
   google.protobuf.BoolValue screenSharing = 13;
+  google.protobuf.BoolValue megaphoneState = 14;
+  google.protobuf.StringValue jitsiParticipantId = 15;
 }
 
 message AddSpaceUserMessage{
@@ -902,10 +964,14 @@ message SpaceFilterMessage{
   oneof filter {
     SpaceFilterEverybody spaceFilterEverybody = 3;
     SpaceFilterContainName spaceFilterContainName = 4;
+    SpaceFilterLiveStreaming spaceFilterLiveStreaming = 5;
   }
 }
 message SpaceFilterContainName{
   string value = 1;
+}
+
+message SpaceFilterLiveStreaming{
 }
 
 message SpaceFilterEverybody{

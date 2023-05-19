@@ -9,7 +9,7 @@
     import EntityToolImg from "../images/icon-tool-entity.svg";
     import Tooltip from "../Util/Tooltip.svelte";
     import { ENABLE_MAP_EDITOR_AREAS_TOOL } from "../../Enum/EnvironmentVariable";
-
+    import ConfigureImg from "../images/configure.svg";
     const gameScene = gameManager.getCurrentGameScene();
 
     const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
@@ -30,6 +30,11 @@
         // NOTE: Hide it untill FloorEditing is done
         // { toolName: EditorToolName.FloorEditor, img: FloorToolImg, tooltiptext: $LL.mapEditor.sideBar.tileEditor() }
     );
+    availableTools.push({
+        toolName: EditorToolName.WAMSettingsEditor,
+        img: ConfigureImg,
+        tooltiptext: $LL.mapEditor.sideBar.configureMyRoom(),
+    });
 
     function switchTool(newTool: EditorToolName) {
         gameScene.getMapEditorModeManager().equipTool(newTool);

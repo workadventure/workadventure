@@ -598,6 +598,9 @@ jobs:
         run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml up -d
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+      - name: Upload test-map
+        run: sleep 10 && npm run upload-test-map
+        working-directory: map-storage
       - name: Run Playwright tests
         run: npm run test-prod-like -- --project=${{ matrix.browser }}
         working-directory: tests
@@ -683,6 +686,9 @@ jobs:
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         working-directory: contrib/docker
+      - name: Upload test-map
+        run: sleep 10 && npm run upload-test-map-single-domain
+        working-directory: map-storage
       - name: Run Playwright tests
         # Run all tests, except the ones needing to restart Docker and the ones relying on an OIDC server
         run: npm run test-single-domain-install

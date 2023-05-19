@@ -1,6 +1,6 @@
 import path from "node:path";
 import { Request } from "express";
-import { USE_DOMAIN_NAME_IN_PATH } from "../Enum/EnvironmentVariable";
+import { PATH_PREFIX, USE_DOMAIN_NAME_IN_PATH } from "../Enum/EnvironmentVariable";
 
 /**
  * Maps a path to the storage path.
@@ -8,6 +8,15 @@ import { USE_DOMAIN_NAME_IN_PATH } from "../Enum/EnvironmentVariable";
  */
 export function mapPath(filePath: string, req: Request): string {
     return mapPathUsingDomain(filePath, req.headers["x-forwarded-host"]?.toString() ?? req.hostname);
+}
+
+export function mapPathUsingDomainWithPrefix(filePath: string, domain: string): string {
+    if (PATH_PREFIX) {
+        if (filePath.startsWith(PATH_PREFIX)) {
+            filePath = filePath.replace(PATH_PREFIX, "");
+        }
+    }
+    return mapPathUsingDomain(filePath, domain);
 }
 
 export function mapPathUsingDomain(filePath: string, domain: string): string {

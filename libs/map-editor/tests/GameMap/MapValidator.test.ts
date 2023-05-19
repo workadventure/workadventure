@@ -1,6 +1,6 @@
-import * as fs from "fs";
 import path from "node:path";
-import { describe, expect, it } from "@jest/globals";
+import * as fs from "fs";
+import { describe, expect, it } from "vitest";
 import { ErrorType, isFailure, MapValidation, MapValidator } from "../../src/GameMap/MapValidator";
 import { ZipFileFetcher } from "../../src/GameMap/Validator/ZipFileFetcher";
 

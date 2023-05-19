@@ -11,7 +11,7 @@ import {
 import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import { mapsManager } from "./MapsManager";
-import { mapPathUsingDomain } from "./Services/PathMapper";
+import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
 
 const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
@@ -24,7 +24,7 @@ const mapStorageServer: MapStorageServer = {
         try {
             const wamUrl = call.request.wamUrl;
             const url = new URL(wamUrl);
-            const wamKey = mapPathUsingDomain(url.pathname, url.hostname);
+            const wamKey = mapPathUsingDomainWithPrefix(url.pathname, url.hostname);
             mapsManager.clearAfterUpload(wamKey);
             callback(null);
         } catch (e: unknown) {
@@ -44,7 +44,7 @@ const mapStorageServer: MapStorageServer = {
     ): void {
         try {
             const mapUrl = new URL(call.request.mapKey);
-            const mapKey = mapPathUsingDomain(mapUrl.pathname, mapUrl.hostname);
+            const mapKey = mapPathUsingDomainWithPrefix(mapUrl.pathname, mapUrl.hostname);
             const updateMapToNewestMessage = call.request.updateMapToNewestMessage;
             if (!updateMapToNewestMessage) {
                 callback({ name: "MapStorageError", message: "UpdateMapToNewest message does not exist" }, null);
@@ -84,7 +84,7 @@ const mapStorageServer: MapStorageServer = {
         try {
             // The mapKey is the complete URL to the map. Let's map it to our virtual path.
             const mapUrl = new URL(call.request.mapKey);
-            const mapKey = mapPathUsingDomain(mapUrl.pathname, mapUrl.hostname);
+            const mapKey = mapPathUsingDomainWithPrefix(mapUrl.pathname, mapUrl.hostname);
 
             const gameMap = mapsManager.getGameMap(mapKey);
             if (!gameMap) {
@@ -203,6 +203,19 @@ const mapStorageServer: MapStorageServer = {
                         {
                             type: "DeleteEntityCommand",
                             id: message.id,
+                        },
+                        commandId
+                    );
+                    break;
+                }
+                case "updateMegaphoneSettingMessage": {
+                    const message = editMapMessage.updateMegaphoneSettingMessage;
+                    mapsManager.executeCommand(
+                        mapKey,
+                        {
+                            type: "UpdateWAMSettingCommand",
+                            name: "megaphone",
+                            dataToModify: message,
                         },
                         commandId
                     );

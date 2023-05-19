@@ -6,15 +6,16 @@
     import { Unsubscriber } from "svelte/store";
     import type { VideoPeer } from "../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
-    import { highlightedEmbedScreen, embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
-    import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+    import type { EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
 
-    import Woka from "../Woka/Woka.svelte";
+    import Woka from "../Woka/WokaFromUserId.svelte";
     import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import microphoneOffImg from "../images/microphone-off-blue.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { speakerSelectedStore } from "../../Stores/MediaStore";
+    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import BanReportBox from "./BanReportBox.svelte";
     import { srcObject } from "./utils";
 
@@ -116,10 +117,7 @@
             />
         {/if}
 
-        <div
-            class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height
-  "
-        >
+        <div class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height">
             <i class="tw-flex">
                 <span
                     style="background-color: {backGroundColor}; color: {textColor};"

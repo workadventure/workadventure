@@ -40,6 +40,10 @@ import {
     AddSpaceUserMessage,
     UpdateSpaceUserMessage,
     RemoveSpaceUserMessage,
+    WatchSpaceMessage,
+    SpaceFilterMessage,
+    UpdateMegaphoneSettingMessage,
+    MegaphoneSettings,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
@@ -186,6 +190,8 @@ export class RoomConnection implements RoomConnection {
     public readonly updateSpaceUserMessageStream = this._updateSpaceUserMessageStream.asObservable();
     private readonly _removeSpaceUserMessageStream = new Subject<RemoveSpaceUserMessage>();
     public readonly removeSpaceUserMessageStream = this._removeSpaceUserMessageStream.asObservable();
+    private readonly _megaphoneSettingsMessageStream = new BehaviorSubject<MegaphoneSettings | undefined>(undefined);
+    public readonly megaphoneSettingsMessageStream = this._megaphoneSettingsMessageStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -375,6 +381,10 @@ export class RoomConnection implements RoomConnection {
                                 this._removeSpaceUserMessageStream.next(subMessage.removeSpaceUserMessage);
                                 break;
                             }
+                            case "megaphoneSettingsMessage": {
+                                this._megaphoneSettingsMessageStream.next(subMessage.megaphoneSettingsMessage);
+                                break;
+                            }
                             default: {
                                 // Security check: if we forget a "case", the line below will catch the error at compile-time.
                                 //@ts-ignore
@@ -459,6 +469,10 @@ export class RoomConnection implements RoomConnection {
                             webrtcPassword: roomJoinedMessage.webrtcPassword,
                         } as RoomJoinedMessageInterface,
                     });
+
+                    if (roomJoinedMessage.megaphoneSettings) {
+                        this._megaphoneSettingsMessageStream.next(roomJoinedMessage.megaphoneSettings);
+                    }
 
                     break;
                 }
@@ -1083,6 +1097,26 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitUpdateMegaphoneSettingMessage(
+        commandId: string,
+        updateMegaphoneSettingMessage: UpdateMegaphoneSettingMessage
+    ) {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "updateMegaphoneSettingMessage",
+                            updateMegaphoneSettingMessage,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
     public emitMapEditorDeleteArea(commandId: string, id: string): void {
         this.send({
             message: {
@@ -1359,6 +1393,83 @@ export class RoomConnection implements RoomConnection {
                 }),
             },
         });
+    }
+
+    public emitWatchSpaceLiveStreaming(spaceName: string) {
+        const spaceFilter: SpaceFilterMessage = {
+            filterName: "testFilter",
+            spaceName,
+            filter: {
+                $case: "spaceFilterLiveStreaming",
+                spaceFilterLiveStreaming: {},
+            },
+        };
+        this.send({
+            message: {
+                $case: "watchSpaceMessage",
+                watchSpaceMessage: WatchSpaceMessage.fromPartial({
+                    spaceName,
+                    spaceFilter,
+                }),
+            },
+        });
+        return spaceFilter;
+    }
+
+    public emitCameraState(state: boolean) {
+        this.send({
+            message: {
+                $case: "cameraStateMessage",
+                cameraStateMessage: {
+                    value: state,
+                },
+            },
+        });
+    }
+
+    public emitMicrophoneState(state: boolean) {
+        this.send({
+            message: {
+                $case: "microphoneStateMessage",
+                microphoneStateMessage: {
+                    value: state,
+                },
+            },
+        });
+    }
+
+    public emitMegaphoneState(state: boolean) {
+        this.send({
+            message: {
+                $case: "megaphoneStateMessage",
+                megaphoneStateMessage: {
+                    value: state,
+                },
+            },
+        });
+    }
+
+    public emitJitsiParticipantIdSpace(spaceName: string, participantId: string) {
+        this.send({
+            message: {
+                $case: "jitsiParticipantIdSpaceMessage",
+                jitsiParticipantIdSpaceMessage: {
+                    spaceName,
+                    value: participantId,
+                },
+            },
+        });
+    }
+
+    public async queryRoomTags(): Promise<string[]> {
+        const answer = await this.query({
+            $case: "roomTagsQuery",
+            roomTagsQuery: {},
+        });
+        if (answer.$case !== "roomTagsAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.roomTagsAnswer.tags;
     }
 
     /**

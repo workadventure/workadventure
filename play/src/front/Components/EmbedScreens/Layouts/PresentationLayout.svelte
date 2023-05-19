@@ -1,13 +1,16 @@
 <script lang="ts">
     import { afterUpdate, onMount } from "svelte";
-    import { highlightedEmbedScreen } from "../../../Stores/EmbedScreensStore";
+    import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
     import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
     import { isMediaBreakpointDown, isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
-    import { peerStore } from "../../../Stores/PeerStore";
     import { myCameraStore } from "../../../Stores/MyMediaStore";
     import MyCamera from "../../MyCamera.svelte";
+    import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
+    import { megaphoneEnabledStore } from "../../../Stores/MegaphoneStore";
+    import Loading from "../../Video/Loading.svelte";
+    import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
 
     function closeCoWebsite() {
         if ($highlightedEmbedScreen?.type === "cowebsite") {
@@ -94,13 +97,15 @@
                 {/if}
             </div>
         </div>
-
-        {#if $peerStore.size > 0 || $myCameraStore}
+        {#if $streamableCollectionStore.size > 0 || $myCameraStore}
             <div class="tw-relative tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4">
-                {#if $peerStore.size > 0}
+                {#if $jitsiLoadingStore}
+                    <Loading />
+                {/if}
+                {#if $streamableCollectionStore.size > 0}
                     <CamerasContainer highlightedEmbedScreen={$highlightedEmbedScreen} />
                 {/if}
-                {#if $myCameraStore}
+                {#if $myCameraStore && !$megaphoneEnabledStore}
                     <MyCamera />
                 {/if}
             </div>

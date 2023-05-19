@@ -23,13 +23,12 @@ export class SpacesWatcher {
 
     private sendPing() {
         this.receivedPong();
-        const backToPusherSpaceMessage: BackToPusherSpaceMessage = {
+        this.socket.write({
             message: {
                 $case: "pingMessage",
                 pingMessage: {},
             },
-        };
-        this.socket.write(backToPusherSpaceMessage);
+        });
         this.pongTimeout = setTimeout(() => {
             debug("SpacesWatcher %s => killed => no ping received from Watcher", this.uuid);
             clearInterval(this.pingInterval);
