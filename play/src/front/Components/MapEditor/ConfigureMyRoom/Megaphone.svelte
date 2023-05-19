@@ -24,8 +24,8 @@
     let title: string = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.title ?? "";
     let scope: string = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.scope ?? "WORLD";
     let scopes = [
-        { value: "WORLD", label: $LL.mapEditor.settings.megaphone.inputs.world() },
         { value: "ROOM", label: $LL.mapEditor.settings.megaphone.inputs.room() },
+        { value: "WORLD", label: $LL.mapEditor.settings.megaphone.inputs.world() },
     ];
 
     let loading = false;
