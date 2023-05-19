@@ -87,6 +87,7 @@ export class AreaEditorTool extends MapEditorTool {
 
     public activate(): void {
         this.active = true;
+        this.scene.input.topOnly = false;
         this.updateAreaPreviews();
         this.setAreaPreviewsVisibility(true);
         this.bindEventHandlers();

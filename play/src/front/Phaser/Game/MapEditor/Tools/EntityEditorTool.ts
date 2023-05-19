@@ -59,6 +59,7 @@ export class EntityEditorTool extends MapEditorTool {
 
     public update(time: number, dt: number): void {}
     public clear(): void {
+        this.scene.input.topOnly = false;
         mapEditorEntityModeStore.set("ADD");
         this.entitiesManager.clearAllEntitiesTint();
         this.entitiesManager.clearAllEntitiesEditOutlines();
@@ -66,6 +67,7 @@ export class EntityEditorTool extends MapEditorTool {
         this.unbindEventHandlers();
     }
     public activate(): void {
+        this.scene.input.topOnly = true;
         this.entitiesManager.makeAllEntitiesInteractive();
         this.bindEventHandlers();
     }
