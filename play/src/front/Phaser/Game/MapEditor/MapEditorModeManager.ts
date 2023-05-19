@@ -6,7 +6,7 @@ import {
     CreateAreaCommand,
     DeleteAreaCommand,
 } from "@workadventure/map-editor";
-import type { Unsubscriber } from "svelte/store";
+import { Unsubscriber, get } from "svelte/store";
 import { CreateEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/CreateEntityCommand";
 import { DeleteEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/DeleteEntityCommand";
 import { EditMapCommandMessage } from "@workadventure/messages";
@@ -42,6 +42,10 @@ export class MapEditorModeManager {
      * What tool are we using right now
      */
     private activeTool?: EditorToolName;
+    /**
+     * Last tool used before closing map editor
+     */
+    private lastlyUsedTool?: EditorToolName;
 
     /**
      * We are making use of CommandPattern to implement an Undo-Redo mechanism
@@ -80,6 +84,7 @@ export class MapEditorModeManager {
             [EditorToolName.FloorEditor]: new FloorEditorTool(this),
         };
         this.activeTool = undefined;
+        this.lastlyUsedTool = undefined;
 
         this.subscribeToStores();
         this.subscribeToGameMapFrontWrapperEvents();
@@ -373,7 +378,12 @@ export class MapEditorModeManager {
     private subscribeToStores(): void {
         this.mapEditorModeUnsubscriber = mapEditorModeStore.subscribe((active) => {
             this.active = active;
-            this.equipTool(this.active ? EditorToolName.EntityEditor : undefined);
+            if (!this.active) {
+                this.lastlyUsedTool = get(mapEditorSelectedToolStore);
+                this.equipTool(undefined);
+                return;
+            }
+            this.equipTool(this.lastlyUsedTool ?? EditorToolName.EntityEditor);
         });
     }
 
