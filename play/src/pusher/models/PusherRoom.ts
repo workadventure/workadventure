@@ -127,7 +127,11 @@ export class PusherRoom implements CustomJsonReplacerInterface {
                                         $case: "megaphoneSettingsMessage",
                                         megaphoneSettingsMessage: {
                                             enabled: WAMSettingsUtils.canUseMegaphone(this._wamSettings, listener.tags),
-                                            url: WAMSettingsUtils.getMegaphoneUrl(this._wamSettings, "", this.roomUrl),
+                                            url: WAMSettingsUtils.getMegaphoneUrl(
+                                                this._wamSettings,
+                                                new URL(this.roomUrl).host,
+                                                this.roomUrl
+                                            ),
                                         },
                                     },
                                 });
