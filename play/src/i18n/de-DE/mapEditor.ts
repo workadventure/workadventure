@@ -40,8 +40,7 @@ const mapEditor: BaseTranslation = {
     },
     entityEditor: {
         itemPicker: {
-            searchPlaceholder: "Nach namen oder Tags suchen",
-            selectVariationInstructions: "Variante auswählen",
+            searchPlaceholder: "Forschen",
         },
         deleteButton: "Löschen",
         testInteractionButton: "Interaktion testen",

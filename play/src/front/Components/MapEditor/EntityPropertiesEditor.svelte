@@ -95,7 +95,7 @@
     {$LL.mapEditor.entityEditor.editInstructions()}
 {:else}
     <div class="header-container">
-        <h2>Editing {$mapEditorSelectedEntityStore.getEntityData().prefab.name}</h2>
+        <h2>Editing: {$mapEditorSelectedEntityStore.getEntityData().prefab.name}</h2>
     </div>
     <div class="properties-buttons tw-flex tw-flex-row">
         <AddPropertyButton
