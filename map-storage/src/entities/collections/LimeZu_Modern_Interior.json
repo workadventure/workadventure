@@ -14,7 +14,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Task_chair__Down__F6BF29__Seat_Office.png",
             "direction": "Down",
-            "color": "#F6BF29"
+            "color": "#F6BF29",
+            "depthOffset": -32
         },
         {
             "name": "Task chair",
@@ -24,7 +25,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Task_chair__Left__3C71DB__Seat_Office.png",
             "direction": "Left",
-            "color": "#3C71DB"
+            "color": "#3C71DB",
+            "depthOffset": -32
         },
         {
             "name": "Task chair",
@@ -34,7 +36,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Task_chair__Left__4EB235__Seat_Office.png",
             "direction": "Left",
-            "color": "#4EB235"
+            "color": "#4EB235",
+            "depthOffset": -32
         },
         {
             "name": "Task chair",
@@ -44,7 +47,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Task_chair__Left__C4BA71__Seat_Office.png",
             "direction": "Left",
-            "color": "#C4BA71"
+            "color": "#C4BA71",
+            "depthOffset": -32
         },
         {
             "name": "Task chair",
@@ -54,7 +58,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Task_chair__Left__D15E67__Seat_Office.png",
             "direction": "Left",
-            "color": "#D15E67"
+            "color": "#D15E67",
+            "depthOffset": -32
         },
         {
             "name": "Task chair",
@@ -64,7 +69,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Task_chair__Left__F6BF29__Seat_Office.png",
             "direction": "Left",
-            "color": "#F6BF29"
+            "color": "#F6BF29",
+            "depthOffset": -32
         },
         {
             "name": "Task chair",
@@ -74,7 +80,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Task_chair__Right__3C71DB__Seat_Office.png",
             "direction": "Right",
-            "color": "#3C71DB"
+            "color": "#3C71DB",
+            "depthOffset": -32
         },
         {
             "name": "Task chair",
@@ -84,7 +91,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Task_chair__Right__4EB235__Seat_Office.png",
             "direction": "Right",
-            "color": "#4EB235"
+            "color": "#4EB235",
+            "depthOffset": -32
         },
         {
             "name": "Task chair",
@@ -94,7 +102,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Task_chair__Right__C4BA71__Seat_Office.png",
             "direction": "Right",
-            "color": "#C4BA71"
+            "color": "#C4BA71",
+            "depthOffset": -32
         },
         {
             "name": "Task chair",
@@ -104,7 +113,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Task_chair__Right__D15E67__Seat_Office.png",
             "direction": "Right",
-            "color": "#D15E67"
+            "color": "#D15E67",
+            "depthOffset": -32
         },
         {
             "name": "Task chair",
@@ -114,7 +124,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Task_chair__Right__F6BF29__Seat_Office.png",
             "direction": "Right",
-            "color": "#F6BF29"
+            "color": "#F6BF29",
+            "depthOffset": -32
         },
         {
             "name": "Tennis table",
@@ -213,7 +224,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Computer_(off)__Down__B8B5CB__Electronics_Office.png",
             "direction": "Down",
-            "color": "#B8B5CB"
+            "color": "#B8B5CB",
+            "depthOffset": -32
         },
         {
             "name": "Computer",
@@ -223,7 +235,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Computer__Down__B8B5CB__Electronics_Office.png",
             "direction": "Down",
-            "color": "#B8B5CB"
+            "color": "#B8B5CB",
+            "depthOffset": -32
         },
         {
             "name": "Conference hall stage",
@@ -248,7 +261,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Couch__Down__868CA4__Seat.png",
             "direction": "Down",
-            "color": "#868CA4"
+            "color": "#868CA4",
+            "depthOffset": -32
         },
         {
             "name": "Couch",
@@ -257,7 +271,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Couch__Down__A47A5E__Seat.png",
             "direction": "Down",
-            "color": "#A47A5E"
+            "color": "#A47A5E",
+            "depthOffset": -32
         },
         {
             "name": "Painting",
@@ -266,7 +281,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Painting__Down__517B90__Decoration.png",
             "direction": "Down",
-            "color": "#517B90"
+            "color": "#517B90",
+            "depthOffset": -64
         },
         {
             "name": "Painting",
@@ -275,7 +291,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Painting__Down__92683F__Decoration.png",
             "direction": "Down",
-            "color": "#92683F"
+            "color": "#92683F",
+            "depthOffset": -64
         },
         {
             "name": "Painting",
@@ -284,7 +301,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Painting__Down__98A7B8__Decoration.png",
             "direction": "Down",
-            "color": "#98A7B8"
+            "color": "#98A7B8",
+            "depthOffset": -64
         },
         {
             "name": "Piano bench",
@@ -293,7 +311,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Piano_bench__Down__62647B__Seat.png",
             "direction": "Down",
-            "color": "#62647B"
+            "color": "#62647B",
+            "depthOffset": -64
         },
         {
             "name": "Piano bench",
@@ -302,7 +321,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Piano_bench__Down__93284B__Seat.png",
             "direction": "Down",
-            "color": "#93284B"
+            "color": "#93284B",
+            "depthOffset": -64
         },
         {
             "name": "Pool table",
@@ -461,7 +481,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/WC_(open)__Down__BDB987__Bathroom.png",
             "direction": "Down",
-            "color": "#BDB987"
+            "color": "#BDB987",
+            "depthOffset": -64
         },
         {
             "name": "WC (open)",
@@ -470,7 +491,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/WC_(open)__Down__CFC1A6__Bathroom.png",
             "direction": "Down",
-            "color": "#CFC1A6"
+            "color": "#CFC1A6",
+            "depthOffset": -64
         },
         {
             "name": "WC (open)",
@@ -479,7 +501,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/WC_(open)__Down__DEBF85__Bathroom.png",
             "direction": "Down",
-            "color": "#DEBF85"
+            "color": "#DEBF85",
+            "depthOffset": -64
         },
         {
             "name": "WC (open)",
@@ -488,7 +511,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/WC_(open)__Down__E4E4E4__Bathroom.png",
             "direction": "Down",
-            "color": "#E4E4E4"
+            "color": "#E4E4E4",
+            "depthOffset": -64
         },
         {
             "name": "WC",
@@ -497,7 +521,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/WC__Down__81AFB8__Bathroom.png",
             "direction": "Down",
-            "color": "#81AFB8"
+            "color": "#81AFB8",
+            "depthOffset": -64
         },
         {
             "name": "WC",
@@ -506,7 +531,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/WC__Down__8B829E__Bathroom.png",
             "direction": "Down",
-            "color": "#8B829E"
+            "color": "#8B829E",
+            "depthOffset": -64
         },
         {
             "name": "WC",
@@ -515,7 +541,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/WC__Down__BDB987__Bathroom.png",
             "direction": "Down",
-            "color": "#BDB987"
+            "color": "#BDB987",
+            "depthOffset": -64
         },
         {
             "name": "WC",
@@ -524,7 +551,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/WC__Down__CFC1A6__Bathroom.png",
             "direction": "Down",
-            "color": "#CFC1A6"
+            "color": "#CFC1A6",
+            "depthOffset": -64
         },
         {
             "name": "WC",
@@ -533,7 +561,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/WC__Down__DEBF85__Bathroom.png",
             "direction": "Down",
-            "color": "#DEBF85"
+            "color": "#DEBF85",
+            "depthOffset": -64
         },
         {
             "name": "WC",
@@ -542,7 +571,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/WC__Down__E4E4E4__Bathroom.png",
             "direction": "Down",
-            "color": "#E4E4E4"
+            "color": "#E4E4E4",
+            "depthOffset": -64
         },
         {
             "name": "Wooden floor lamp",
@@ -668,7 +698,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Table_lamp__Down__468BD1__Lighting.png",
             "direction": "Down",
-            "color": "#468BD1"
+            "color": "#468BD1",
+            "depthOffset": -32
         },
         {
             "name": "Table lamp",
@@ -677,7 +708,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Table_lamp__Down__D23B36__Lighting.png",
             "direction": "Down",
-            "color": "#D23B36"
+            "color": "#D23B36",
+            "depthOffset": -32
         },
         {
             "name": "Table",
@@ -743,7 +775,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Task_chair__Down__3C71DB__Seat_Office.png",
             "direction": "Down",
-            "color": "#3C71DB"
+            "color": "#3C71DB",
+            "depthOffset": -32
         },
         {
             "name": "Task chair",
@@ -753,7 +786,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Task_chair__Down__4EB235__Seat_Office.png",
             "direction": "Down",
-            "color": "#4EB235"
+            "color": "#4EB235",
+            "depthOffset": -32
         },
         {
             "name": "Task chair",
@@ -763,7 +797,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Task_chair__Down__C4BA71__Seat_Office.png",
             "direction": "Down",
-            "color": "#C4BA71"
+            "color": "#C4BA71",
+            "depthOffset": -32
         },
         {
             "name": "TV",
@@ -772,7 +807,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/TV__Down__A6A2BC__Electronics.png",
             "direction": "Down",
-            "color": "#A6A2BC"
+            "color": "#A6A2BC",
+            "depthOffset": -32
         },
         {
             "name": "TV",
@@ -781,7 +817,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/TV__Right__67687D__Electronics.png",
             "direction": "Right",
-            "color": "#67687D"
+            "color": "#67687D",
+            "depthOffset": -32
         },
         {
             "name": "TV",
@@ -790,7 +827,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/TV__Right__A6A2BC__Electronics.png",
             "direction": "Right",
-            "color": "#A6A2BC"
+            "color": "#A6A2BC",
+            "depthOffset": -32
         },
         {
             "name": "TV",
@@ -799,7 +837,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/TV__Up__67687D__Electronics.png",
             "direction": "Up",
-            "color": "#67687D"
+            "color": "#67687D",
+            "depthOffset": -32
         },
         {
             "name": "TV",
@@ -808,7 +847,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/TV__Up__A6A2BC__Electronics.png",
             "direction": "Up",
-            "color": "#A6A2BC"
+            "color": "#A6A2BC",
+            "depthOffset": -32
         },
         {
             "name": "Upright piano",
@@ -877,7 +917,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/WC_(open)__Down__81AFB8__Bathroom.png",
             "direction": "Down",
-            "color": "#81AFB8"
+            "color": "#81AFB8",
+            "depthOffset": -64
         },
         {
             "name": "Bed",
@@ -886,7 +927,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Bed__Left__61867A__Bed.png",
             "direction": "Left",
-            "color": "#61867A"
+            "color": "#61867A",
+            "depthOffset": -64
         },
         {
             "name": "Bookshelf",
@@ -924,7 +966,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Couch__Down__A7A7A7__Seat.png",
             "direction": "Down",
-            "color": "#A7A7A7"
+            "color": "#A7A7A7",
+            "depthOffset": -32
         },
         {
             "name": "Fridge",
@@ -950,7 +993,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Lounge_chair__Down__C8C1CF__Seat.png",
             "direction": "Down",
-            "color": "#C8C1CF"
+            "color": "#C8C1CF",
+            "depthOffset": -32
         },
         {
             "name": "Painting",
@@ -959,7 +1003,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Painting__Down__4A7778__Decoration.png",
             "direction": "Down",
-            "color": "#4A7778"
+            "color": "#4A7778",
+            "depthOffset": -64
         },
         {
             "name": "Strelitzia",
@@ -984,7 +1029,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Task_chair__Down__D15E67__Seat_Office.png",
             "direction": "Down",
-            "color": "#D15E67"
+            "color": "#D15E67",
+            "depthOffset": -32
         },
         {
             "name": "Tennis table",
@@ -1009,7 +1055,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/TV__Down__67687D__Electronics.png",
             "direction": "Down",
-            "color": "#67687D"
+            "color": "#67687D",
+            "depthOffset": -32
         },
         {
             "name": "WC (open)",
@@ -1018,7 +1065,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/WC_(open)__Down__8B829E__Bathroom.png",
             "direction": "Down",
-            "color": "#8B829E"
+            "color": "#8B829E",
+            "depthOffset": -64
         },
         {
             "name": "Wooden table lamp",
@@ -1027,7 +1075,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Wooden_table_lamp__Down__468BD1__Lighting.png",
             "direction": "Down",
-            "color": "#468BD1"
+            "color": "#468BD1",
+            "depthOffset": -32
         },
         {
             "name": "Cabinet (large)",
@@ -1096,7 +1145,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Canteen_chair__Down__BCD4D9__Seat.png",
             "direction": "Down",
-            "color": "#BCD4D9"
+            "color": "#BCD4D9",
+            "depthOffset": -32
         },
         {
             "name": "Canteen chair",
@@ -1105,7 +1155,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Canteen_chair__Down__E75743__Seat.png",
             "direction": "Down",
-            "color": "#E75743"
+            "color": "#E75743",
+            "depthOffset": -32
         },
         {
             "name": "Canteen chair",
@@ -1114,7 +1165,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Canteen_chair__Left__BCD4D9__Seat.png",
             "direction": "Left",
-            "color": "#BCD4D9"
+            "color": "#BCD4D9",
+            "depthOffset": -32
         },
         {
             "name": "Canteen chair",
@@ -1123,7 +1175,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Canteen_chair__Left__E75743__Seat.png",
             "direction": "Left",
-            "color": "#E75743"
+            "color": "#E75743",
+            "depthOffset": -32
         },
         {
             "name": "Canteen chair",
@@ -1132,7 +1185,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Canteen_chair__Right__BCD4D9__Seat.png",
             "direction": "Right",
-            "color": "#BCD4D9"
+            "color": "#BCD4D9",
+            "depthOffset": -32
         },
         {
             "name": "Canteen chair",
@@ -1141,7 +1195,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Canteen_chair__Right__E75743__Seat.png",
             "direction": "Right",
-            "color": "#E75743"
+            "color": "#E75743",
+            "depthOffset": -32
         },
         {
             "name": "Canteen chair",
@@ -1150,7 +1205,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Canteen_chair__Up__BCD4D9__Seat.png",
             "direction": "Up",
-            "color": "#BCD4D9"
+            "color": "#BCD4D9",
+            "depthOffset": -32
         },
         {
             "name": "Canteen chair",
@@ -1159,7 +1215,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Canteen_chair__Up__E75743__Seat.png",
             "direction": "Up",
-            "color": "#E75743"
+            "color": "#E75743",
+            "depthOffset": -32
         },
         {
             "name": "Chair",
@@ -1168,7 +1225,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Chair__Left__D8D0E0__Seat.png",
             "direction": "Left",
-            "color": "#D8D0E0"
+            "color": "#D8D0E0",
+            "depthOffset": -32
         },
         {
             "name": "Chair",
@@ -1177,7 +1235,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Chair__Right__D8D0E0__Seat.png",
             "direction": "Right",
-            "color": "#D8D0E0"
+            "color": "#D8D0E0",
+            "depthOffset": -32
         },
         {
             "name": "Coffee cup",
@@ -1187,7 +1246,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Coffee_cup__Down__A0A0B5__Kitchen_Office.png",
             "direction": "Down",
-            "color": "#A0A0B5"
+            "color": "#A0A0B5",
+            "depthOffset": -32
         },
         {
             "name": "Coffee machine",
@@ -1198,7 +1258,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Coffee_machine__Down__82829E__Kitchen_Office_Electronics.png",
             "direction": "Down",
-            "color": "#82829E"
+            "color": "#82829E",
+            "depthOffset": -32
         },
         {
             "name": "Coffee table (round edges)",
@@ -1298,7 +1359,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Armchair__Down__82829E__Seat.png",
             "direction": "Down",
-            "color": "#82829E"
+            "color": "#82829E",
+            "depthOffset": -32
         },
         {
             "name": "Armchair",
@@ -1307,7 +1369,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Armchair__Down__A5A1BB__Seat.png",
             "direction": "Down",
-            "color": "#A5A1BB"
+            "color": "#A5A1BB",
+            "depthOffset": -32
         },
         {
             "name": "Armchair",
@@ -1316,7 +1379,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Armchair__Down__AB937D__Seat.png",
             "direction": "Down",
-            "color": "#AB937D"
+            "color": "#AB937D",
+            "depthOffset": -32
         },
         {
             "name": "Armchair",
@@ -1325,7 +1389,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Armchair__Down__B88254__Seat.png",
             "direction": "Down",
-            "color": "#B88254"
+            "color": "#B88254",
+            "depthOffset": -32
         },
         {
             "name": "Bar stool",
@@ -1334,7 +1399,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Bar_stool__Down__4280dd__Seat.png",
             "direction": "Down",
-            "color": "#4280dd"
+            "color": "#4280dd",
+            "depthOffset": -32
         },
         {
             "name": "Bar stool",
@@ -1343,7 +1409,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Bar_stool__Down__B9A78B__Seat.png",
             "direction": "Down",
-            "color": "#B9A78B"
+            "color": "#B9A78B",
+            "depthOffset": -32
         },
         {
             "name": "Bar stool",
@@ -1352,7 +1419,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Bar_stool__Down__BA7F50__Seat.png",
             "direction": "Down",
-            "color": "#BA7F50"
+            "color": "#BA7F50",
+            "depthOffset": -32
         },
         {
             "name": "Bar stool",
@@ -1361,7 +1429,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Bar_stool__Down__C69D62__Seat.png",
             "direction": "Down",
-            "color": "#C69D62"
+            "color": "#C69D62",
+            "depthOffset": -32
         },
         {
             "name": "Bar stool",
@@ -1370,7 +1439,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Bar_stool__Down__d93232__Seat.png",
             "direction": "Down",
-            "color": "#d93232"
+            "color": "#d93232",
+            "depthOffset": -32
         },
         {
             "name": "Bar stool",
@@ -1379,7 +1449,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Bar_stool__Down__f2b22b__Seat.png",
             "direction": "Down",
-            "color": "#f2b22b"
+            "color": "#f2b22b",
+            "depthOffset": -32
         },
         {
             "name": "Bathtub",
@@ -1448,7 +1519,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Wooden_table_lamp__Down__D23B36__Lighting.png",
             "direction": "Down",
-            "color": "#D23B36"
+            "color": "#D23B36",
+            "depthOffset": -32
         },
         {
             "name": "Yucca palm (Big)",
@@ -1472,7 +1544,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Yucca_palm_(small)__Down__5D994C__Plants.png",
             "direction": "Down",
-            "color": "#5D994C"
+            "color": "#5D994C",
+            "depthOffset": -32
         },
         {
             "name": "Yucca palm",
@@ -1496,7 +1569,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Lounge_chair__Down__D4A23A__Seat.png",
             "direction": "Down",
-            "color": "#D4A23A"
+            "color": "#D4A23A",
+            "depthOffset": -32
         },
         {
             "name": "Lounge chair",
@@ -1505,7 +1579,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Lounge_chair__Left__ACC2CE__Seat.png",
             "direction": "Left",
-            "color": "#ACC2CE"
+            "color": "#ACC2CE",
+            "depthOffset": -32
         },
         {
             "name": "Lounge chair",
@@ -1514,7 +1589,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Lounge_chair__Left__C46262__Seat.png",
             "direction": "Left",
-            "color": "#C46262"
+            "color": "#C46262",
+            "depthOffset": -32
         },
         {
             "name": "Lounge chair",
@@ -1523,7 +1599,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Lounge_chair__Left__C8C1CF__Seat.png",
             "direction": "Left",
-            "color": "#C8C1CF"
+            "color": "#C8C1CF",
+            "depthOffset": -32
         },
         {
             "name": "Lounge chair",
@@ -1532,7 +1609,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Lounge_chair__Left__D4A23A__Seat.png",
             "direction": "Left",
-            "color": "#D4A23A"
+            "color": "#D4A23A",
+            "depthOffset": -32
         },
         {
             "name": "Lounge chair",
@@ -1541,7 +1619,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Lounge_chair__Right__ACC2CE__Seat.png",
             "direction": "Right",
-            "color": "#ACC2CE"
+            "color": "#ACC2CE",
+            "depthOffset": -32
         },
         {
             "name": "Lounge chair",
@@ -1550,7 +1629,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Lounge_chair__Right__C46262__Seat.png",
             "direction": "Right",
-            "color": "#C46262"
+            "color": "#C46262",
+            "depthOffset": -32
         },
         {
             "name": "Lounge chair",
@@ -1559,7 +1639,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Lounge_chair__Right__C8C1CF__Seat.png",
             "direction": "Right",
-            "color": "#C8C1CF"
+            "color": "#C8C1CF",
+            "depthOffset": -32
         },
         {
             "name": "Lounge chair",
@@ -1568,7 +1649,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Lounge_chair__Right__D4A23A__Seat.png",
             "direction": "Right",
-            "color": "#D4A23A"
+            "color": "#D4A23A",
+            "depthOffset": -32
         },
         {
             "name": "Lounge chair",
@@ -1577,7 +1659,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Lounge_chair__Up__ACC2CE__Seat.png",
             "direction": "Up",
-            "color": "#ACC2CE"
+            "color": "#ACC2CE",
+            "depthOffset": -32
         },
         {
             "name": "Lounge chair",
@@ -1586,7 +1669,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Lounge_chair__Up__C46262__Seat.png",
             "direction": "Up",
-            "color": "#C46262"
+            "color": "#C46262",
+            "depthOffset": -32
         },
         {
             "name": "Lounge chair",
@@ -1595,7 +1679,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Lounge_chair__Up__C8C1CF__Seat.png",
             "direction": "Up",
-            "color": "#C8C1CF"
+            "color": "#C8C1CF",
+            "depthOffset": -32
         },
         {
             "name": "Lounge chair",
@@ -1604,7 +1689,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Lounge_chair__Up__D4A23A__Seat.png",
             "direction": "Up",
-            "color": "#D4A23A"
+            "color": "#D4A23A",
+            "depthOffset": -32
         },
         {
             "name": "Office chair",
@@ -1614,7 +1700,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Office_chair__Down__4C7BA7__Seat_Office.png",
             "direction": "Down",
-            "color": "#4C7BA7"
+            "color": "#4C7BA7",
+            "depthOffset": -32
         },
         {
             "name": "Office chair",
@@ -1624,7 +1711,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Office_chair__Down__6FA74F__Seat_Office.png",
             "direction": "Down",
-            "color": "#6FA74F"
+            "color": "#6FA74F",
+            "depthOffset": -32
         },
         {
             "name": "Office chair",
@@ -1634,7 +1722,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Office_chair__Down__82829F__Seat_Office.png",
             "direction": "Down",
-            "color": "#82829F"
+            "color": "#82829F",
+            "depthOffset": -32
         },
         {
             "name": "Office chair",
@@ -1644,7 +1733,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Office_chair__Up__4C7BA7__Seat_Office.png",
             "direction": "Up",
-            "color": "#4C7BA7"
+            "color": "#4C7BA7",
+            "depthOffset": -32
         },
         {
             "name": "Office chair",
@@ -1654,7 +1744,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Office_chair__Up__6FA74F__Seat_Office.png",
             "direction": "Up",
-            "color": "#6FA74F"
+            "color": "#6FA74F",
+            "depthOffset": -32
         },
         {
             "name": "Office chair",
@@ -1664,7 +1755,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Office_chair__Up__82829F__Seat_Office.png",
             "direction": "Up",
-            "color": "#82829F"
+            "color": "#82829F",
+            "depthOffset": -32
         },
         {
             "name": "Painting",
@@ -1673,7 +1765,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Painting__Down__39394C__Decoration.png",
             "direction": "Down",
-            "color": "#39394C"
+            "color": "#39394C",
+            "depthOffset": -64
         },
         {
             "name": "Bed",
@@ -1682,7 +1775,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Bed__Left__776E95__Bed.png",
             "direction": "Left",
-            "color": "#776E95"
+            "color": "#776E95",
+            "depthOffset": -64
         },
         {
             "name": "Bed",
@@ -1691,7 +1785,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Bed__Left__A48873__Bed.png",
             "direction": "Left",
-            "color": "#A48873"
+            "color": "#A48873",
+            "depthOffset": -64
         },
         {
             "name": "Bed",
@@ -1700,7 +1795,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Bed__Left__ABC1CE__Bed.png",
             "direction": "Left",
-            "color": "#ABC1CE"
+            "color": "#ABC1CE",
+            "depthOffset": -64
         },
         {
             "name": "Bed",
@@ -1709,7 +1805,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Bed__Left__AF965D__Bed.png",
             "direction": "Left",
-            "color": "#AF965D"
+            "color": "#AF965D",
+            "depthOffset": -64
         },
         {
             "name": "Bookshelf (empty)",
@@ -1733,7 +1830,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Couch__Down__B7AFC4__Seat.png",
             "direction": "Down",
-            "color": "#B7AFC4"
+            "color": "#B7AFC4",
+            "depthOffset": -32
         },
         {
             "name": "Couch",
@@ -1742,7 +1840,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Couch__Left__868CA4__Seat.png",
             "direction": "Left",
-            "color": "#868CA4"
+            "color": "#868CA4",
+            "depthOffset": -64
         },
         {
             "name": "Couch",
@@ -1761,7 +1860,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Couch__Left__A7A7A7__Seat.png",
             "direction": "Left",
-            "color": "#A7A7A7"
+            "color": "#A7A7A7",
+            "depthOffset": -64
         },
         {
             "name": "Couch",
@@ -1770,7 +1870,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Couch__Left__B7AFC4__Seat.png",
             "direction": "Left",
-            "color": "#B7AFC4"
+            "color": "#B7AFC4",
+            "depthOffset": -64
         },
         {
             "name": "Couch",
@@ -1779,7 +1880,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Couch__Right__868CA4__Seat.png",
             "direction": "Right",
-            "color": "#868CA4"
+            "color": "#868CA4",
+            "depthOffset": -64
         },
         {
             "name": "Couch",
@@ -1788,7 +1890,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Couch__Right__A47A5E__Seat.png",
             "direction": "Right",
-            "color": "#A47A5E"
+            "color": "#A47A5E",
+            "depthOffset": -64
         },
         {
             "name": "Couch",
@@ -1797,7 +1900,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Couch__Right__A7A7A7__Seat.png",
             "direction": "Right",
-            "color": "#A7A7A7"
+            "color": "#A7A7A7",
+            "depthOffset": -64
         },
         {
             "name": "Couch",
@@ -1806,7 +1910,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Couch__Right__B7AFC4__Seat.png",
             "direction": "Right",
-            "color": "#B7AFC4"
+            "color": "#B7AFC4",
+            "depthOffset": -64
         },
         {
             "name": "Couch",
@@ -1815,7 +1920,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Couch__Up__868CA4__Seat.png",
             "direction": "Up",
-            "color": "#868CA4"
+            "color": "#868CA4",
+            "depthOffset": -64
         },
         {
             "name": "Couch",
@@ -1824,7 +1930,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Couch__Up__A7A7A7__Seat.png",
             "direction": "Up",
-            "color": "#A7A7A7"
+            "color": "#A7A7A7",
+            "depthOffset": -64
         },
         {
             "name": "Counter stool",
@@ -1833,7 +1940,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Counter_stool__Down__4078CC__Seat.png",
             "direction": "Down",
-            "color": "#4078CC"
+            "color": "#4078CC",
+            "depthOffset": -32
         },
         {
             "name": "Counter stool",
@@ -1842,7 +1950,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Counter_stool__Down__4E8C5B__Seat.png",
             "direction": "Down",
-            "color": "#4E8C5B"
+            "color": "#4E8C5B",
+            "depthOffset": -32
         },
         {
             "name": "Counter stool",
@@ -1851,7 +1960,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Counter_stool__Down__C83131__Seat.png",
             "direction": "Down",
-            "color": "#C83131"
+            "color": "#C83131",
+            "depthOffset": -32
         },
         {
             "name": "Dining table",
@@ -1902,7 +2012,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Ficus__Down__52855B__Plants.png",
             "direction": "Down",
-            "color": "#52855B"
+            "color": "#52855B",
+            "depthOffset": -64
         },
         {
             "name": "Floor lamp",
@@ -1941,7 +2052,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Footstool__Down__BCA787__Seat.png",
             "direction": "Down",
-            "color": "#BCA787"
+            "color": "#BCA787",
+            "depthOffset": -64
         },
         {
             "name": "Footstool",
@@ -1950,7 +2062,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Footstool__Down__C6C0B7__Seat.png",
             "direction": "Down",
-            "color": "#C6C0B7"
+            "color": "#C6C0B7",
+            "depthOffset": -64
         },
         {
             "name": "Fridge (open)",
@@ -2105,7 +2218,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Guitar__Down__C8B394__Activities.png",
             "direction": "Down",
-            "color": "#C8B394"
+            "color": "#C8B394",
+            "depthOffset": -64
         },
         {
             "name": "Guitar",
@@ -2114,7 +2228,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Guitar__Down__CA8854__Activities.png",
             "direction": "Down",
-            "color": "#CA8854"
+            "color": "#CA8854",
+            "depthOffset": -64
         },
         {
             "name": "Guitar",
@@ -2123,7 +2238,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Guitar__Down__DAA463__Activities.png",
             "direction": "Down",
-            "color": "#DAA463"
+            "color": "#DAA463",
+            "depthOffset": -64
         },
         {
             "name": "Lounge chair",
@@ -2132,7 +2248,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Lounge_chair__Down__ACC2CE__Seat.png",
             "direction": "Down",
-            "color": "#ACC2CE"
+            "color": "#ACC2CE",
+            "depthOffset": -32
         },
         {
             "name": "Lounge chair",
@@ -2141,7 +2258,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Lounge_chair__Down__C46262__Seat.png",
             "direction": "Down",
-            "color": "#C46262"
+            "color": "#C46262",
+            "depthOffset": -32
         },
         {
             "name": "Tennis table",
@@ -2167,7 +2285,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Trash_can__Down__5E9B4D__Bathroom_Other.png",
             "direction": "Down",
-            "color": "#5E9B4D"
+            "color": "#5E9B4D",
+            "depthOffset": -32
         },
         {
             "name": "Trash can",
@@ -2177,7 +2296,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Trash_can__Down__AC947E__Bathroom_Other.png",
             "direction": "Down",
-            "color": "#AC947E"
+            "color": "#AC947E",
+            "depthOffset": -32
         },
         {
             "name": "Trash can",
@@ -2187,7 +2307,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Trash_can__Down__ADC3CF__Bathroom_Other.png",
             "direction": "Down",
-            "color": "#ADC3CF"
+            "color": "#ADC3CF",
+            "depthOffset": -32
         },
         {
             "name": "Trash can",
@@ -2197,7 +2318,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Trash_can__Down__B8B0C5__Bathroom_Other.png",
             "direction": "Down",
-            "color": "#B8B0C5"
+            "color": "#B8B0C5",
+            "depthOffset": -32
         },
         {
             "name": "Trash can",
@@ -2207,7 +2329,8 @@
             ],
             "imagePath": "LimeZu_Modern_Interior/Trash_can__Down__D684A1__Bathroom_Other.png",
             "direction": "Down",
-            "color": "#D684A1"
+            "color": "#D684A1",
+            "depthOffset": -32
         },
         {
             "name": "TV table",

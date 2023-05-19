@@ -30,7 +30,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Coffee_machine_(cups)__Down__82829F__Office_Electronics.png",
             "direction": "Down",
-            "color": "#82829F"
+            "color": "#82829F",
+            "depthOffset": -32
         },
         {
             "name": "Desk (small)",
@@ -85,7 +86,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Desk_lamp__Left__83849F__Lighting_Office.png",
             "direction": "Left",
-            "color": "#83849F"
+            "color": "#83849F",
+            "depthOffset": -32
         },
         {
             "name": "Desk lamp",
@@ -95,7 +97,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Desk_lamp__Left__99AEC5__Lighting_Office.png",
             "direction": "Left",
-            "color": "#99AEC5"
+            "color": "#99AEC5",
+            "depthOffset": -32
         },
         {
             "name": "Desk lamp",
@@ -105,7 +108,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Desk_lamp__Left__9C9EAD__Lighting_Office.png",
             "direction": "Left",
-            "color": "#9C9EAD"
+            "color": "#9C9EAD",
+            "depthOffset": -32
         },
         {
             "name": "Desk lamp",
@@ -115,7 +119,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Desk_lamp__Right__83849F__Lighting_Office.png",
             "direction": "Right",
-            "color": "#83849F"
+            "color": "#83849F",
+            "depthOffset": -32
         },
         {
             "name": "Desk lamp",
@@ -125,7 +130,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Desk_lamp__Right__99AEC5__Lighting_Office.png",
             "direction": "Right",
-            "color": "#99AEC5"
+            "color": "#99AEC5",
+            "depthOffset": -32
         },
         {
             "name": "Desk lamp",
@@ -135,7 +141,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Desk_lamp__Right__9C9EAD__Lighting_Office.png",
             "direction": "Right",
-            "color": "#9C9EAD"
+            "color": "#9C9EAD",
+            "depthOffset": -32
         },
         {
             "name": "Desk",
@@ -299,7 +306,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Documents__Down__C3BBCC__Office.png",
             "direction": "Down",
-            "color": "#C3BBCC"
+            "color": "#C3BBCC",
+            "depthOffset": -32
         },
         {
             "name": "Office armchair",
@@ -309,7 +317,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Office_armchair__Up__54576D__Seat_Office.png",
             "direction": "Up",
-            "color": "#54576D"
+            "color": "#54576D",
+            "depthOffset": -32
         },
         {
             "name": "Office armchair",
@@ -319,7 +328,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Office_armchair__Up__B86E48__Seat_Office.png",
             "direction": "Up",
-            "color": "#B86E48"
+            "color": "#B86E48",
+            "depthOffset": -32
         },
         {
             "name": "Office couch",
@@ -329,7 +339,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Office_couch__Down__66677C__Seat_Office.png",
             "direction": "Down",
-            "color": "#66677C"
+            "color": "#66677C",
+            "depthOffset": -32
         },
         {
             "name": "Ox tongue",
@@ -339,7 +350,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Ox_tongue__Down__568D61__Plants_Office.png",
             "direction": "Down",
-            "color": "#568D61"
+            "color": "#568D61",
+            "depthOffset": -32
         },
         {
             "name": "Potted ficus",
@@ -365,7 +377,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Printer__Down__82829F__Electronics_Office.png",
             "direction": "Down",
-            "color": "#82829F"
+            "color": "#82829F",
+            "depthOffset": -32
         },
         {
             "name": "Printer",
@@ -375,7 +388,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Printer__Down__C4CDD5__Electronics_Office.png",
             "direction": "Down",
-            "color": "#C4CDD5"
+            "color": "#C4CDD5",
+            "depthOffset": -32
         },
         {
             "name": "Printer",
@@ -385,7 +399,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Printer__Right__82829F__Electronics_Office.png",
             "direction": "Right",
-            "color": "#82829F"
+            "color": "#82829F",
+            "depthOffset": -32
         },
         {
             "name": "Printer",
@@ -395,7 +410,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Printer__Right__C4CDD5__Electronics_Office.png",
             "direction": "Right",
-            "color": "#C4CDD5"
+            "color": "#C4CDD5",
+            "depthOffset": -32
         },
         {
             "name": "Waiting Room chair",
@@ -405,7 +421,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Waiting_Room_chair__Down__9398AA__Seat_Office.png",
             "direction": "Down",
-            "color": "#9398AA"
+            "color": "#9398AA",
+            "depthOffset": -32
         },
         {
             "name": "Waiting Room chair",
@@ -415,7 +432,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Waiting_Room_chair__Down__B09C61__Seat_Office.png",
             "direction": "Down",
-            "color": "#B09C61"
+            "color": "#B09C61",
+            "depthOffset": -32
         },
         {
             "name": "Waiting Room chair",
@@ -425,7 +443,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Waiting_Room_chair__Down__BDD5DA__Seat_Office.png",
             "direction": "Down",
-            "color": "#BDD5DA"
+            "color": "#BDD5DA",
+            "depthOffset": -32
         },
         {
             "name": "Waiting Room chair",
@@ -435,7 +454,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Waiting_Room_chair__Down__C8C1CF__Seat_Office.png",
             "direction": "Down",
-            "color": "#C8C1CF"
+            "color": "#C8C1CF",
+            "depthOffset": -32
         },
         {
             "name": "Waste bin (full)",
@@ -444,7 +464,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Waste_bin_(full)__Down__A0A3B1__Office.png",
             "direction": "Down",
-            "color": "#A0A3B1"
+            "color": "#A0A3B1",
+            "depthOffset": -32
         },
         {
             "name": "Waste bin (open)",
@@ -453,7 +474,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Waste_bin_(open)__Down__A0A3B1__Office.png",
             "direction": "Down",
-            "color": "#A0A3B1"
+            "color": "#A0A3B1",
+            "depthOffset": -32
         },
         {
             "name": "Water dispenser",
@@ -477,7 +499,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Whiteboard__Down__4D9CD6__Office.png",
             "direction": "Down",
-            "color": "#4D9CD6"
+            "color": "#4D9CD6",
+            "depthOffset": -64
         },
         {
             "name": "Whiteboard",
@@ -486,7 +509,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Whiteboard__Down__D8D2DE__Office.png",
             "direction": "Down",
-            "color": "#D8D2DE"
+            "color": "#D8D2DE",
+            "depthOffset": -64
         },
         {
             "name": "Whiteboard",
@@ -495,7 +519,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Whiteboard__Down__E85D4A__Office.png",
             "direction": "Down",
-            "color": "#E85D4A"
+            "color": "#E85D4A",
+            "depthOffset": -64
         },
         {
             "name": "Monitor",
@@ -505,7 +530,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Monitor__Left__53556C__Electronics_Office.png",
             "direction": "Left",
-            "color": "#53556C"
+            "color": "#53556C",
+            "depthOffset": -32
         },
         {
             "name": "Monitor",
@@ -515,7 +541,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Monitor__Left__C4CDD5__Electronics_Office.png",
             "direction": "Left",
-            "color": "#C4CDD5"
+            "color": "#C4CDD5",
+            "depthOffset": -32
         },
         {
             "name": "Monitor",
@@ -525,7 +552,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Monitor__Right__53556C__Electronics_Office.png",
             "direction": "Right",
-            "color": "#53556C"
+            "color": "#53556C",
+            "depthOffset": -32
         },
         {
             "name": "Monitor",
@@ -535,7 +563,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Monitor__Right__C4CDD5__Electronics_Office.png",
             "direction": "Right",
-            "color": "#C4CDD5"
+            "color": "#C4CDD5",
+            "depthOffset": -32
         },
         {
             "name": "Monitor",
@@ -545,7 +574,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Monitor__Up__53556C__Electronics_Office.png",
             "direction": "Up",
-            "color": "#53556C"
+            "color": "#53556C",
+            "depthOffset": -32
         },
         {
             "name": "Monitor",
@@ -555,7 +585,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Monitor__Up__C4CDD5__Electronics_Office.png",
             "direction": "Up",
-            "color": "#C4CDD5"
+            "color": "#C4CDD5",
+            "depthOffset": -32
         },
         {
             "name": "Office armchair",
@@ -565,7 +596,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Office_armchair__Down__54576D__Seat_Office.png",
             "direction": "Down",
-            "color": "#54576D"
+            "color": "#54576D",
+            "depthOffset": -32
         },
         {
             "name": "Office armchair",
@@ -575,7 +607,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Office_armchair__Down__B86E48__Seat_Office.png",
             "direction": "Down",
-            "color": "#B86E48"
+            "color": "#B86E48",
+            "depthOffset": -32
         },
         {
             "name": "Office armchair",
@@ -585,7 +618,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Office_armchair__Left__54576D__Seat_Office.png",
             "direction": "Left",
-            "color": "#54576D"
+            "color": "#54576D",
+            "depthOffset": -32
         },
         {
             "name": "Office armchair",
@@ -595,7 +629,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Office_armchair__Left__B86E48__Seat_Office.png",
             "direction": "Left",
-            "color": "#B86E48"
+            "color": "#B86E48",
+            "depthOffset": -32
         },
         {
             "name": "Office armchair",
@@ -605,7 +640,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Office_armchair__Right__54576D__Seat_Office.png",
             "direction": "Right",
-            "color": "#54576D"
+            "color": "#54576D",
+            "depthOffset": -32
         },
         {
             "name": "Laptop",
@@ -615,7 +651,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Laptop__Down__53556C__Electronics_Office.png",
             "direction": "Down",
-            "color": "#53556C"
+            "color": "#53556C",
+            "depthOffset": -32
         },
         {
             "name": "Laptop",
@@ -625,7 +662,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Laptop__Down__C4CDD5__Electronics_Office.png",
             "direction": "Down",
-            "color": "#C4CDD5"
+            "color": "#C4CDD5",
+            "depthOffset": -32
         },
         {
             "name": "Laptop",
@@ -635,7 +673,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Laptop__Left__53556C__Electronics_Office.png",
             "direction": "Left",
-            "color": "#53556C"
+            "color": "#53556C",
+            "depthOffset": -32
         },
         {
             "name": "Laptop",
@@ -645,7 +684,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Laptop__Left__C4CDD5__Electronics_Office.png",
             "direction": "Left",
-            "color": "#C4CDD5"
+            "color": "#C4CDD5",
+            "depthOffset": -32
         },
         {
             "name": "Laptop",
@@ -655,7 +695,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Laptop__Right__53556C__Electronics_Office.png",
             "direction": "Right",
-            "color": "#53556C"
+            "color": "#53556C",
+            "depthOffset": -32
         },
         {
             "name": "Laptop",
@@ -665,7 +706,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Laptop__Right__C4CDD5__Electronics_Office.png",
             "direction": "Right",
-            "color": "#C4CDD5"
+            "color": "#C4CDD5",
+            "depthOffset": -32
         },
         {
             "name": "Monitor (back)",
@@ -675,7 +717,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Monitor_(back)__Left__53556C__Electronics_Office.png",
             "direction": "Left",
-            "color": "#53556C"
+            "color": "#53556C",
+            "depthOffset": -32
         },
         {
             "name": "Monitor (back)",
@@ -685,7 +728,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Monitor_(back)__Left__C4CDD5__Electronics_Office.png",
             "direction": "Left",
-            "color": "#C4CDD5"
+            "color": "#C4CDD5",
+            "depthOffset": -32
         },
         {
             "name": "Monitor (back)",
@@ -695,7 +739,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Monitor_(back)__Right__53556C__Electronics_Office.png",
             "direction": "Right",
-            "color": "#53556C"
+            "color": "#53556C",
+            "depthOffset": -32
         },
         {
             "name": "Monitor (back)",
@@ -705,7 +750,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Monitor_(back)__Right__C4CDD5__Electronics_Office.png",
             "direction": "Right",
-            "color": "#C4CDD5"
+            "color": "#C4CDD5",
+            "depthOffset": -32
         },
         {
             "name": "Monitor",
@@ -715,7 +761,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Monitor__Down__53556C__Electronics_Office.png",
             "direction": "Down",
-            "color": "#53556C"
+            "color": "#53556C",
+            "depthOffset": -32
         },
         {
             "name": "Document",
@@ -724,7 +771,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Document__Down__C3BBCC__Office.png",
             "direction": "Down",
-            "color": "#C3BBCC"
+            "color": "#C3BBCC",
+            "depthOffset": -32
         },
         {
             "name": "Monitor",
@@ -734,7 +782,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Monitor__Down__C4CDD5__Electronics_Office.png",
             "direction": "Down",
-            "color": "#C4CDD5"
+            "color": "#C4CDD5",
+            "depthOffset": -32
         },
         {
             "name": "Office armchair",
@@ -744,7 +793,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Office_armchair__Right__B86E48__Seat_Office.png",
             "direction": "Right",
-            "color": "#B86E48"
+            "color": "#B86E48",
+            "depthOffset": -32
         },
         {
             "name": "Waste bin",
@@ -753,7 +803,8 @@
             ],
             "imagePath": "LimeZu_Modern_Office/Waste_bin__Down__A0A3B1__Office.png",
             "direction": "Down",
-            "color": "#A0A3B1"
+            "color": "#A0A3B1",
+            "depthOffset": -32
         }
     ]
 }
