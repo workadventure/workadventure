@@ -28,6 +28,11 @@ test.describe('Map editor', () => {
     // Enabling megaphone and settings default value
     await Megaphone.toggleMegaphone(page);
     await Megaphone.isMegaphoneEnabled(page);
+
+    // Testing if no input is set, megaphone should not be usable but WA should not crash
+    await Megaphone.megaphoneSave(page);
+    await Megaphone.isNotCorrectlySaved(page);
+
     await Megaphone.megaphoneInputNameSpace(page);
     await Megaphone.megaphoneSelectScope(page);
     await Megaphone.megaphoneAddNewRights(page, 'example');

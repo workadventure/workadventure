@@ -22,7 +22,7 @@
             .finally(() => {
                 setTimeout(() => {
                     state = "ready";
-                }, 5_000);
+                }, 3_500);
             });
     }
 </script>
