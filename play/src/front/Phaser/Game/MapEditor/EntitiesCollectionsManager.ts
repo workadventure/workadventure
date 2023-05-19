@@ -49,6 +49,7 @@ export class EntitiesCollectionsManager {
                     filters.every((word) => item.tags.some((tag) => tag.toLowerCase() === word.toLowerCase()))
             );
         }
+
         this.entitiesPrefabs = newCollection;
     }
 
