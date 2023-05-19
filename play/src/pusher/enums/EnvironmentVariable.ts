@@ -82,7 +82,7 @@ export const ROOM_API_SECRET_KEY = env.ROOM_API_SECRET_KEY;
 
 // Map editor
 export const ENABLE_MAP_EDITOR: boolean = env.ENABLE_MAP_EDITOR;
-export const USERS_ALLOWED_TO_MAP_EDITOR: string[] = env.USERS_ALLOWED_TO_MAP_EDITOR;
+export const MAP_EDITOR_ALLOWED_USERS: string[] = env.MAP_EDITOR_ALLOWED_USERS;
 
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {

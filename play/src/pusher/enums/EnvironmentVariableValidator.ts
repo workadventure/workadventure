@@ -84,7 +84,7 @@ export const EnvironmentVariables = z.object({
 
     // Map editor related environment variables
     ENABLE_MAP_EDITOR: BoolAsString.optional().transform((val) => toBool(val, false)),
-    USERS_ALLOWED_TO_MAP_EDITOR: z
+    MAP_EDITOR_ALLOWED_USERS: z
         .string()
         .optional()
         .transform((val) => toArray(val)),

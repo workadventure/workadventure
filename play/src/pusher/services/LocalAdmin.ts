@@ -11,7 +11,7 @@ import {
     OPID_WOKA_NAME_POLICY,
     ENABLE_CHAT_ONLINE_LIST,
     ENABLE_CHAT_DISCONNECTED_LIST,
-    USERS_ALLOWED_TO_MAP_EDITOR,
+    MAP_EDITOR_ALLOWED_USERS,
 } from "../enums/EnvironmentVariable";
 import type { AdminInterface } from "./AdminInterface";
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
@@ -33,7 +33,7 @@ class LocalAdmin implements AdminInterface {
         let canEdit = false;
         if (
             ENABLE_MAP_EDITOR &&
-            (USERS_ALLOWED_TO_MAP_EDITOR.length === 0 || USERS_ALLOWED_TO_MAP_EDITOR.includes(userIdentifier))
+            (MAP_EDITOR_ALLOWED_USERS.length === 0 || MAP_EDITOR_ALLOWED_USERS.includes(userIdentifier))
         ) {
             canEdit = true;
         }
