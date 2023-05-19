@@ -32,7 +32,7 @@
          "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
          "EJABBERD_USER": "admin",
          "EJABBERD_PASSWORD": "apideo",
-         "ENABLE_FEATURE_MAP_EDITOR":"true",
+         "ENABLE_MAP_EDITOR":"true",
          "ENABLE_MAP_EDITOR_AREAS_TOOL":"true",
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
@@ -68,7 +68,7 @@
               "INTERNAL_MAP_STORAGE_URL": "http://map-storage:3000",
               "EJABBERD_USER": "admin",
               "EJABBERD_PASSWORD": "apideo",
-              "ENABLE_FEATURE_MAP_EDITOR":"true",
+              "ENABLE_MAP_EDITOR":"true",
               "ENABLE_MAP_EDITOR_AREAS_TOOL":"true",
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
@@ -105,7 +105,7 @@
           "POSTHOG_URL": if namespace == "master" then env.POSTHOG_URL else "",
           "TURN_SERVER": "turn:coturn.workadventure.fr:443,turns:coturn.workadventure.fr:443",
           "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
-          "ENABLE_FEATURE_MAP_EDITOR":"true",
+          "ENABLE_MAP_EDITOR":"true",
           "ENABLE_MAP_EDITOR_AREAS_TOOL":"true",
           "ICON_URL": "https://icon-"+url,
           "CHAT_URL": "https://chat-"+url,

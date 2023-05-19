@@ -61,7 +61,7 @@ import {
 import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
 import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
-import { ENABLE_FEATURE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
+import { ENABLE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
@@ -427,7 +427,7 @@ export class RoomConnection implements RoomConnection {
                             ? roomJoinedMessage.activatedInviteUser
                             : true
                     );
-                    mapEditorActivated.set(ENABLE_FEATURE_MAP_EDITOR && roomJoinedMessage.canEdit);
+                    mapEditorActivated.set(ENABLE_MAP_EDITOR && roomJoinedMessage.canEdit);
 
                     // If there are scripts from the admin, run it
                     if (roomJoinedMessage.applications != undefined) {

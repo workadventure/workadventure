@@ -28,7 +28,7 @@ import { waScaleManager } from "../Services/WaScaleManager";
 import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoadingManager";
 import { CompanionTexturesLoadingManager } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
-import { DEBUG_MODE, ENABLE_FEATURE_MAP_EDITOR, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
+import { DEBUG_MODE, ENABLE_MAP_EDITOR, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
 import { Room } from "../../Connexion/Room";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
 import { TextureError } from "../../Exception/TextureError";
@@ -727,7 +727,7 @@ export class GameScene extends DirtyScene {
 
         biggestAvailableAreaStore.recompute();
         this.cameraManager.startFollowPlayer(this.CurrentPlayer);
-        if (ENABLE_FEATURE_MAP_EDITOR) {
+        if (ENABLE_MAP_EDITOR) {
             this.mapEditorModeManager = new MapEditorModeManager(this);
         }
 
