@@ -5,11 +5,13 @@ import {
     DISABLE_ANONYMOUS,
     ENABLE_CHAT,
     ENABLE_CHAT_UPLOAD,
+    ENABLE_MAP_EDITOR,
     PUBLIC_MAP_STORAGE_URL,
     START_ROOM_URL,
     OPID_WOKA_NAME_POLICY,
     ENABLE_CHAT_ONLINE_LIST,
     ENABLE_CHAT_DISCONNECTED_LIST,
+    MAP_EDITOR_ALLOWED_USERS,
 } from "../enums/EnvironmentVariable";
 import type { AdminInterface } from "./AdminInterface";
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
@@ -29,11 +31,13 @@ class LocalAdmin implements AdminInterface {
         locale?: string
     ): Promise<FetchMemberDataByUuidResponse> {
         let canEdit = false;
-        const roomUrl = new URL(playUri);
-        const match = /\/~\/(.+)/.exec(roomUrl.pathname);
-        if (match) {
+        if (
+            ENABLE_MAP_EDITOR &&
+            (MAP_EDITOR_ALLOWED_USERS.length === 0 || MAP_EDITOR_ALLOWED_USERS.includes(userIdentifier))
+        ) {
             canEdit = true;
         }
+
         const mucRooms = [{ name: "Connected users", url: playUri, type: "default", subscribe: false }];
         if (ENABLE_CHAT) {
             mucRooms.push({ name: "Welcome", url: `${playUri}/forum/welcome`, type: "forum", subscribe: false });

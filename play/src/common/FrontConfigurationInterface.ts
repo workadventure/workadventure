@@ -14,8 +14,7 @@ export interface FrontConfigurationInterface {
     TURN_PASSWORD: string | undefined;
     JITSI_URL: string | undefined;
     JITSI_PRIVATE_MODE: boolean;
-    ENABLE_FEATURE_MAP_EDITOR: boolean;
-    ENABLE_MAP_EDITOR_AREAS_TOOL: boolean;
+    ENABLE_MAP_EDITOR: boolean;
     MAX_USERNAME_LENGTH: number;
     MAX_PER_GROUP: number;
     NODE_ENV: string;

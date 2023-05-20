@@ -14,7 +14,6 @@ import { EditMapCommandMessage } from "@workadventure/messages";
 import type { RoomConnection } from "../../../Connexion/RoomConnection";
 import type { GameScene } from "../GameScene";
 import { mapEditorModeStore, mapEditorSelectedToolStore } from "../../../Stores/MapEditorStore";
-import { ENABLE_MAP_EDITOR_AREAS_TOOL } from "../../../Enum/EnvironmentVariable";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
@@ -260,9 +259,7 @@ export class MapEditorModeManager {
                 break;
             }
             case "1": {
-                if (ENABLE_MAP_EDITOR_AREAS_TOOL) {
-                    this.equipTool(EditorToolName.AreaEditor);
-                }
+                this.equipTool(EditorToolName.AreaEditor);
                 break;
             }
             case "2": {
