@@ -5,6 +5,7 @@ export enum PathTileType {
     Walkable = 0,
     Collider = 1,
     Exit = 2,
+    Start = 3,
 }
 
 export class PathfindingManager {
@@ -25,6 +26,7 @@ export class PathfindingManager {
         this.grid = collisionsGrid;
         this.tileDimensions = tileDimensions;
         this.setEasyStarGrid(collisionsGrid);
+        this.logGridToTheConsole(collisionsGrid);
     }
 
     public setCollisionGrid(collisionGrid: number[][]): void {
@@ -120,7 +122,7 @@ export class PathfindingManager {
 
     private setEasyStarGrid(grid: number[][]): void {
         this.easyStar.setGrid(grid);
-        this.easyStar.setAcceptableTiles([PathTileType.Walkable, PathTileType.Exit]);
+        this.easyStar.setAcceptableTiles([PathTileType.Walkable, PathTileType.Exit, PathTileType.Start]);
     }
 
     private logGridToTheConsole(grid: number[][]): void {
