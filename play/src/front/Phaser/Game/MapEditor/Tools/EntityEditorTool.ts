@@ -341,6 +341,14 @@ export class EntityEditorTool extends MapEditorTool {
             this.handlePointerDownEvent(pointer, gameObjects);
         };
 
+        this.shiftKey.on(Phaser.Input.Keyboard.Events.DOWN, () => {
+            this.changePreviewTint();
+        });
+
+        this.shiftKey.on(Phaser.Input.Keyboard.Events.UP, () => {
+            this.changePreviewTint();
+        });
+
         this.scene.input.on(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
         this.scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
     }
@@ -368,21 +376,7 @@ export class EntityEditorTool extends MapEditorTool {
                 this.entityPrefabPreview.displayHeight * 0.5 +
                 (this.entityPrefab.depthOffset ?? 0)
         );
-        if (
-            !this.scene
-                .getGameMapFrontWrapper()
-                .canEntityBePlaced(
-                    this.entityPrefabPreview.getTopLeft(),
-                    this.entityPrefabPreview.displayWidth,
-                    this.entityPrefabPreview.displayHeight,
-                    this.entityPrefab.collisionGrid
-                )
-        ) {
-            this.entityPrefabPreview.setTint(0xff0000);
-        } else {
-            this.entityPrefabPreview.clearTint();
-        }
-        this.scene.markDirty();
+        this.changePreviewTint();
     }
 
     private handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
@@ -400,7 +394,9 @@ export class EntityEditorTool extends MapEditorTool {
                     this.entityPrefabPreview.getTopLeft(),
                     this.entityPrefabPreview.displayWidth,
                     this.entityPrefabPreview.displayHeight,
-                    this.entityPrefab.collisionGrid
+                    this.entityPrefab.collisionGrid,
+                    undefined,
+                    this.shiftKey.isDown
                 )
         ) {
             return;
@@ -429,6 +425,29 @@ export class EntityEditorTool extends MapEditorTool {
             entityData,
             type: "CreateEntityCommand",
         });
+    }
+
+    private changePreviewTint(): void {
+        if (!this.entityPrefabPreview || !this.entityPrefab) {
+            return;
+        }
+        if (
+            !this.scene
+                .getGameMapFrontWrapper()
+                .canEntityBePlaced(
+                    this.entityPrefabPreview.getTopLeft(),
+                    this.entityPrefabPreview.displayWidth,
+                    this.entityPrefabPreview.displayHeight,
+                    this.entityPrefab.collisionGrid,
+                    undefined,
+                    this.shiftKey.isDown
+                )
+        ) {
+            this.entityPrefabPreview.setTint(0xff0000);
+        } else {
+            this.entityPrefabPreview.clearTint();
+        }
+        this.scene.markDirty();
     }
 
     private cleanPreview(): void {

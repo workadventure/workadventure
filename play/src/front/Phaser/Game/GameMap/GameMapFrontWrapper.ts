@@ -430,7 +430,8 @@ export class GameMapFrontWrapper {
         width: number,
         height: number,
         collisionGrid?: number[][],
-        oldTopLeftPos?: { x: number; y: number }
+        oldTopLeftPos?: { x: number; y: number },
+        ignoreCollisionGrid?: boolean
     ): boolean {
         const isOutOfBounds = this.scene
             .getGameMapFrontWrapper()
@@ -455,6 +456,9 @@ export class GameMapFrontWrapper {
                     }
                 }
             }
+        }
+        if (ignoreCollisionGrid) {
+            return true;
         }
         for (let y = 0; y < collisionGrid.length; y += 1) {
             for (let x = 0; x < collisionGrid[y].length; x += 1) {
