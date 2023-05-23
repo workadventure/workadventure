@@ -85,7 +85,15 @@ export class EntityEditorTool extends MapEditorTool {
     public handleKeyDownEvent(event: KeyboardEvent): void {
         switch (event.key.toLowerCase()) {
             case "escape": {
-                mapEditorEntityModeStore.set("ADD");
+                if (get(mapEditorEntityModeStore) === "EDIT") {
+                    mapEditorSelectedEntityStore.set(undefined);
+                    mapEditorEntityModeStore.set("ADD");
+                    return;
+                }
+                if (get(mapEditorEntityModeStore) === "ADD") {
+                    this.cleanPreview();
+                    return;
+                }
                 break;
             }
             case "backspace":
