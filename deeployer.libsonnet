@@ -36,7 +36,7 @@
          "ENABLE_MAP_EDITOR_AREAS_TOOL":"true",
         # Sentry integration
         "SENTRY_RELEASE": env.SENTRY_RELEASE,
-        "SENTRY_DSN": env.SENTRY_DSN_BACK,
+         "SENTRY_DSN": if namespace == "master" env.SENTRY_DSN_BACK then else if namespace == "develop" then env.SENTRY_DSN_BACK_DEV else "",
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -75,7 +75,7 @@
               "ENABLE_MAP_EDITOR_AREAS_TOOL":"true",
               # Sentry integration
               "SENTRY_RELEASE": env.SENTRY_RELEASE,
-              "SENTRY_DSN": env.SENTRY_DSN_BACK,
+              "SENTRY_DSN": if namespace == "master" env.SENTRY_DSN_BACK then else if namespace == "develop" then env.SENTRY_DSN_BACK_DEV else "",
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -119,8 +119,8 @@
           "ROOM_API_PORT": "50051",
           # Sentry integration
           "SENTRY_RELEASE": env.SENTRY_RELEASE,
-          "SENTRY_DSN_FRONT": env.SENTRY_DSN_FRONT,
-          "SENTRY_DSN_PUSHER": env.SENTRY_DSN_PUSHER,
+          "SENTRY_DSN_FRONT": if namespace == "master" then env.SENTRY_DSN_FRONT else if namespace == "develop" then env.SENTRY_DSN_FRONT_DEV else "",
+          "SENTRY_DSN_PUSHER": if namespace == "master" env.SENTRY_DSN_PUSHER else if namespace == "develop" then env.SENTRY_DSN_PUSHER_DEV else "",
         } + (if adminUrl != null then {
           # Admin
           "ADMIN_URL": adminUrl,
@@ -155,7 +155,7 @@
         "EJABBERD_DOMAIN": "xmpp-"+url,
         # Sentry integration
         "SENTRY_RELEASE": env.SENTRY_RELEASE,
-        "SENTRY_DSN": env.SENTRY_DSN_CHAT,
+        "SENTRY_DSN": if namespace == "master" then env.SENTRY_DSN_CHAT else if namespace == "develop" then env.SENTRY_DSN_CHAT_DEV else "",
       } + (if adminUrl != null then {
         # Admin
         "ENABLE_OPENID": "1",
@@ -177,7 +177,7 @@
              "AUTHENTICATION_TOKEN": "SomeSecretToken",
              "USE_DOMAIN_NAME_IN_PATH": if (adminUrl == null) then "false" else "true",
              "SENTRY_RELEASE": env.SENTRY_RELEASE,
-             "SENTRY_DSN": env.SENTRY_DSN_MAPSTORAGE,
+             "SENTRY_DSN": if namespace == "master" then env.SENTRY_DSN_MAPSTORAGE else if namespace == "develop" then env.SENTRY_DSN_MAPSTORAGE_DEV else "",
            }
          },
     "uploaderredis":{
