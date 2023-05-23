@@ -322,7 +322,8 @@ export class Zone implements CustomJsonReplacerInterface {
 
                 this.backConnection.on("error", (e) => {
                     if (!this.isClosing) {
-                        debug("Error on back connection");
+                        debug("Error on back connection" + this.listeners);
+                        Sentry.captureMessage("Error on back connection", "debug");
                         this.close();
                         this.onBackFailure(e, this);
                     }

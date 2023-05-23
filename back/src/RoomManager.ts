@@ -281,7 +281,7 @@ const roomManager = {
                 console.warn("Warning, emitting a new ping message before previous pong message was received.");
                 clearTimeout(pongTimeoutId);
             }
-
+            const today = new Date();
             pongTimeoutId = setTimeout(() => {
                 console.log(
                     "Connection lost with user ",
@@ -289,7 +289,21 @@ const roomManager = {
                     user?.name,
                     user?.userJid,
                     "in room",
-                    room?.roomUrl
+                    room?.roomUrl,
+                    "at : ",
+                    today.toLocaleString("en-GB", { timeZone: "Europe / Paris" })
+                );
+
+                Sentry.captureMessage(
+                    `Connection lost with user
+                    ${JSON.stringify(user?.uuid)}
+                    ${JSON.stringify(user?.name)}
+                    ${JSON.stringify(user?.userJid)} 
+                    in room 
+                    ${JSON.stringify(room?.roomUrl)} 
+                    at :  
+                    ${today.toLocaleString("en-GB", { timeZone: "Europe / Paris" })}`,
+                    "debug"
                 );
                 closeConnection();
             }, PONG_TIMEOUT);

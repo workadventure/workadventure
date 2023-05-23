@@ -168,18 +168,38 @@ export class PusherRoom implements CustomJsonReplacerInterface {
                     listener.disconnecting = true;
                     listener.end(1011, "Connection error between pusher and back server");
                     console.error("Connection error between pusher and back server", err);
-                    Sentry.captureException("Connection error between pusher and back server" + err);
+                    Sentry.captureException(
+                        "Connection error between pusher and back server : " +
+                            err +
+                            " " +
+                            this.roomUrl +
+                            " " +
+                            new Date().toLocaleString("en-GB", { timeZone: "Europe / Paris" })
+                    );
                 }
             }
         });
         this.backConnection.on("close", () => {
             if (!this.isClosing) {
-                debug("Close on back connection");
+                debug("Close on back connection", this.roomUrl);
+                Sentry.captureMessage(
+                    "Close on back connection" +
+                        this.roomUrl +
+                        " " +
+                        new Date().toLocaleString("en-GB", { timeZone: "Europe / Paris" }),
+                    "debug"
+                );
                 this.close();
                 // Let's close all connections linked to that room
                 for (const listener of this.listeners) {
                     listener.disconnecting = true;
-                    listener.end(1011, "Connection closed between pusher and back server");
+                    listener.end(
+                        1011,
+                        "Connection closed between pusher and back server" +
+                            this.roomUrl +
+                            " " +
+                            new Date().toLocaleString("en-GB", { timeZone: "Europe / Paris" })
+                    );
                 }
             }
         });

@@ -169,6 +169,14 @@ export class SocketManager implements ZoneEventListener {
                         "':",
                     err
                 );
+                Sentry.captureException(
+                    "Error in connection to back server '" +
+                        apiClient.getChannel().getTarget() +
+                        "' for room '" +
+                        roomId +
+                        "':" +
+                        err
+                );
                 if (!client.disconnecting) {
                     this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
                 }
