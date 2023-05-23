@@ -445,7 +445,11 @@ export class EntityEditorTool extends MapEditorTool {
         ) {
             this.entityPrefabPreview.setTint(0xff0000);
         } else {
-            this.entityPrefabPreview.clearTint();
+            if (this.shiftKey.isDown) {
+                this.entityPrefabPreview.setTint(0xffa500);
+            } else {
+                this.entityPrefabPreview.clearTint();
+            }
         }
         this.scene.markDirty();
     }

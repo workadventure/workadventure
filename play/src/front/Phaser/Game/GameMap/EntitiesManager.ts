@@ -259,6 +259,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 ) {
                     const oldPos = entity.getOldPosition();
                     entity.setPosition(oldPos.x, oldPos.y);
+                    entity.clearTint();
                 } else {
                     if (this.ctrlKey.isDown) {
                         this.copyEntity(entity);
@@ -330,7 +331,11 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         ) {
             entity.setTint(0xff0000);
         } else {
-            entity.clearTint();
+            if (this.shiftKey.isDown) {
+                entity.setTint(0xffa500);
+            } else {
+                entity.clearTint();
+            }
         }
         this.scene.markDirty();
     }
