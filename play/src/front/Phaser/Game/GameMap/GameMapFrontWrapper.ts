@@ -457,9 +457,6 @@ export class GameMapFrontWrapper {
                 }
             }
         }
-        if (ignoreCollisionGrid) {
-            return true;
-        }
         for (let y = 0; y < collisionGrid.length; y += 1) {
             for (let x = 0; x < collisionGrid[y].length; x += 1) {
                 // this tile in collisionGrid is non-collidible. We can skip calculations for it
@@ -476,7 +473,11 @@ export class GameMapFrontWrapper {
                 if (
                     !this.scene
                         .getGameMapFrontWrapper()
-                        .isSpaceAvailable(topLeftPos.x + x * tileDim.width, topLeftPos.y + y * tileDim.height)
+                        .isSpaceAvailable(
+                            topLeftPos.x + x * tileDim.width,
+                            topLeftPos.y + y * tileDim.height,
+                            ignoreCollisionGrid
+                        )
                 ) {
                     return false;
                 }
@@ -485,7 +486,7 @@ export class GameMapFrontWrapper {
         return true;
     }
 
-    public isSpaceAvailable(topLeftX: number, topLeftY: number): boolean {
+    public isSpaceAvailable(topLeftX: number, topLeftY: number, ignoreCollisionGrid?: boolean): boolean {
         if (this.collisionGrid.length === 0) {
             return false;
         }
@@ -514,7 +515,10 @@ export class GameMapFrontWrapper {
                 return false;
             }
         }
-        // TODO: Check if it's colliding with other players
+
+        if (ignoreCollisionGrid) {
+            return true;
+        }
 
         // Check if position is not colliding
         const height = this.collisionGrid.length;
