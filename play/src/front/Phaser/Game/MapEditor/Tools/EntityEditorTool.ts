@@ -107,7 +107,7 @@ export class EntityEditorTool extends MapEditorTool {
                 break;
             }
             case "CreateEntityCommand": {
-                this.handleEntityCreation(commandConfig.entityData, localCommand);
+                this.handleEntityCreation(commandConfig.entityData);
                 break;
             }
             case "DeleteEntityCommand": {
@@ -206,17 +206,8 @@ export class EntityEditorTool extends MapEditorTool {
         this.scene.markDirty();
     }
 
-    private handleEntityCreation(config: EntityData, localCommand: boolean): void {
-        const entity = this.entitiesManager.addEntity(
-            structuredClone(config),
-            undefined,
-            get(mapEditorEntityModeStore) === "EDIT"
-        );
-        if (localCommand) {
-            mapEditorSelectedEntityStore.set(entity);
-            mapEditorSelectedEntityPrefabStore.set(undefined);
-            mapEditorEntityModeStore.set("EDIT");
-        }
+    private handleEntityCreation(config: EntityData): void {
+        this.entitiesManager.addEntity(structuredClone(config), undefined, true);
     }
 
     private handleEntityDeletion(id: string): void {
@@ -437,6 +428,7 @@ export class EntityEditorTool extends MapEditorTool {
         this.entityPrefabPreview = undefined;
         this.entityPrefab = undefined;
         mapEditorCopiedEntityDataPropertiesStore.set(undefined);
+        mapEditorSelectedEntityPrefabStore.set(undefined);
         this.scene.markDirty();
     }
 

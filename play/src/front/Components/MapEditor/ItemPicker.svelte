@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { EntityPrefab } from "@workadventure/map-editor";
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import {
         mapEditorSelectedEntityPrefabStore,
@@ -30,6 +30,16 @@
         entitiesCollectionsManager.setFilter(filter);
         updateVisiblePrefabs();
     });
+
+    onDestroy(() => {
+        mapEditorSelectedEntityPrefabStoreUnsubscriber();
+    });
+
+    const mapEditorSelectedEntityPrefabStoreUnsubscriber = mapEditorSelectedEntityPrefabStore.subscribe(
+        (prefab?: EntityPrefab) => {
+            pickedItem = prefab;
+        }
+    );
 
     function onPickItemVariant(variant: EntityPrefab) {
         pickedVariant = variant;
