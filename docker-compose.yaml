@@ -109,6 +109,8 @@ services:
             SENTRY_DSN_FRONT: $SENTRY_DSN_FRONT
             SENTRY_DSN_PUSHER: $SENTRY_DSN_PUSHER
             SENTRY_RELEASE: $SENTRY_RELEASE
+            SENTRY_ORG: $SENTRY_ORG
+            SENTRY_PROJECT: $SENTRY_PROJECT
             # Room API
             ROOM_API_PORT: "50051"
             ROOM_API_SECRET_KEY: ${ROOM_API_SECRET_KEY}
@@ -146,8 +148,8 @@ services:
             ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
             # Sentry integration
             SENTRY_DSN: "$SENTRY_DSN_CHAT"
-            SENTRY_ORG: "workadventure"
-            SENTRY_PROJECT: "chat"
+            SENTRY_ORG: "$SENTRY_ORG"
+            SENTRY_PROJECT: "$SENTRY_PROJECT"
             SENTRY_AUTH_TOKEN: "$SENTRY_AUTH_TOKEN"
             SENTRY_RELEASE: "$SENTRY_RELEASE"
         volumes:

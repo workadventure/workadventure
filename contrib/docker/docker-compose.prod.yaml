@@ -81,6 +81,12 @@ services:
       - ROOM_API_SECRET_KEY=${ROOM_API_SECRET_KEY}
       - GRPC_VERBOSITY=DEBUG
       - GRPC_TRACE=all
+      - SENTRY_ORG=${SENTRY_ORG}
+      - SENTRY_PROJECT=${SENTRY_PROJECT}
+      - SENTRY_DSN_FRONT=${SENTRY_DSN_FRONT}
+      - SENTRY_DSN_PUSHER=${SENTRY_DSN_PUSHER}
+      - SENTRY_RELEASE=${SENTRY_RELEASE}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
     labels:
       traefik.enable: "true"
       traefik.http.routers.play.rule: "Host(`${DOMAIN}`) && PathPrefix(`/`)"
@@ -110,6 +116,12 @@ services:
       - ENABLE_CHAT_UPLOAD=${ENABLE_CHAT_UPLOAD}
       - EJABBERD_DOMAIN=${EJABBERD_DOMAIN}
       - EJABBERD_WS_URI=wss://${DOMAIN}/xmpp/ws
+      - SENTRY_DSN=${SENTRY_DSN_CHAT}
+      - SENTRY_ORG=${SENTRY_ORG}
+      - SENTRY_PROJECT=${SENTRY_PROJECT}
+      - SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
+      - SENTRY_RELEASE=${SENTRY_RELEASE}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
     labels:
       traefik.enable: "true"
       traefik.http.middlewares.strip-chat-prefix.stripprefix.prefixes: "/chat"
@@ -157,6 +169,9 @@ services:
       - EJABBERD_PASSWORD=${EJABBERD_PASSWORD}
       - ENABLE_CHAT
       - ENABLE_CHAT_UPLOAD
+      - SENTRY_DSN=${SENTRY_DSN_BACK}
+      - SENTRY_RELEASE=${SENTRY_RELEASE}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
     labels:
       traefik.enable: "true"
       traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes: "/api"
@@ -264,6 +279,9 @@ services:
       AUTHENTICATION_USER: "$MAP_STORAGE_AUTHENTICATION_USER"
       AUTHENTICATION_PASSWORD: "$MAP_STORAGE_AUTHENTICATION_PASSWORD"
       AUTHENTICATION_TOKEN: "$MAP_STORAGE_AUTHENTICATION_TOKEN"
+      SENTRY_DSN: $SENTRY_DSN_MAPSTORAGE
+      SENTRY_RELEASE: $SENTRY_RELEASE
+      SENTRY_TRACES_SAMPLE_RATE: $SENTRY_TRACES_SAMPLE_RATE
       PATH_PREFIX: "/map-storage"
     volumes:
       - map-storage-data:/maps
