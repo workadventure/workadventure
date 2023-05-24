@@ -28,7 +28,7 @@ COPY back ./back
 COPY --from=proto-builder /usr/src/generated ./back/src/Messages/generated
 WORKDIR /usr/src/back
 HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=10 CMD curl -f http://localhost:8080/ping || exit 1
-USER node
 RUN mkdir ./dist && chown -R node:node ./dist
+USER node
 CMD ["npm", "run", "runprod"]
 
