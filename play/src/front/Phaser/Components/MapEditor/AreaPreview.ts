@@ -1,10 +1,12 @@
 import type { AreaData, AreaDataProperties, AreaDataProperty, AtLeast } from "@workadventure/map-editor";
 import _ from "lodash";
 import { GameScene } from "../../Game/GameScene";
+import { CopyAreaEventData } from "../../Game/GameMap/EntitiesManager";
 import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
 
 export enum AreaPreviewEvent {
     Clicked = "AreaPreview:Clicked",
+    DragStart = "AreaPreview:DragStart",
     Released = "AreaPreview:Released",
     DoubleClicked = "AreaPreview:DoubleClicked",
     Copied = "AreaPreview:Copied",
@@ -19,6 +21,8 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     private selected: boolean;
     private moved: boolean;
     private squareSelected: boolean;
+
+    private oldPosition: { x: number; y: number };
 
     private shiftKey: Phaser.Input.Keyboard.Key;
     private ctrlKey: Phaser.Input.Keyboard.Key;
@@ -38,6 +42,8 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
             0x0000ff,
             0.5
         );
+
+        this.oldPosition = this.getPosition();
 
         this.shiftKey = shiftKey;
         this.ctrlKey = ctrlKey;
@@ -183,6 +189,10 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 this.emit(AreaPreviewEvent.Released);
             }
         );
+        this.on(Phaser.Input.Events.DRAG_START, () => {
+            this.oldPosition = this.getPosition();
+            this.emit(AreaPreviewEvent.DragStart);
+        });
         this.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             if (pointer.isDown && this.selected && !this.squareSelected) {
                 if (this.shiftKey?.isDown) {
@@ -203,14 +213,22 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 }
             }
         });
-        this.on(Phaser.Input.Events.DRAG_END, () => {
-            if (this.ctrlKey.isDown) {
-                this.emit(AreaPreviewEvent.Copied);
-            }
-        });
         this.on(Phaser.Input.Events.POINTER_UP, (pointer: Phaser.Input.Pointer) => {
             if (this.selected && this.moved) {
                 this.moved = false;
+                if (this.ctrlKey.isDown) {
+                    this.emit(AreaPreviewEvent.Copied, {
+                        position: {
+                            x: this.oldPosition.x - this.areaData.width * 0.5,
+                            y: this.oldPosition.y - this.areaData.height * 0.5,
+                        },
+                        width: this.areaData.width,
+                        height: this.areaData.height,
+                        name: this.areaData.name,
+                        properties: structuredClone(this.areaData.properties),
+                    } as CopyAreaEventData);
+                    return;
+                }
                 this.updateAreaDataWithSquaresAdjustments();
                 const data: AtLeast<AreaData, "id"> = {
                     id: this.getAreaData().id,
@@ -222,6 +240,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 this.emit(AreaPreviewEvent.Updated, data);
             }
         });
+
         this.squares.forEach((square, index) => {
             square.on(SizeAlteringSquareEvent.Selected, () => {
                 this.squareSelected = true;
@@ -347,6 +366,10 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
             width: this.displayWidth,
             height: this.displayHeight,
         };
+    }
+
+    public getPosition(): { x: number; y: number } {
+        return { x: this.x, y: this.y };
     }
 
     public getAreaData(): AreaData {

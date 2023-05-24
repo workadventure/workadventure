@@ -12,6 +12,7 @@ import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import type { GameScene } from "../../GameScene";
 import type { MapEditorModeManager } from "../MapEditorModeManager";
 import { SizeAlteringSquare } from "../../../Components/MapEditor/SizeAlteringSquare";
+import { CopyAreaEventData } from "../../GameMap/EntitiesManager";
 import { MapEditorTool } from "./MapEditorTool";
 
 export class AreaEditorTool extends MapEditorTool {
@@ -29,6 +30,7 @@ export class AreaEditorTool extends MapEditorTool {
     private drawingNewArea: boolean;
     private drawinNewAreaStartPos?: { x: number; y: number };
     private newAreaPreview!: Phaser.GameObjects.Graphics;
+    private areaOldPositionPreview!: Phaser.GameObjects.Graphics;
 
     private draggingdArea: boolean;
     private wasAreaMoved: boolean;
@@ -65,7 +67,9 @@ export class AreaEditorTool extends MapEditorTool {
         this.wasAreaMoved = false;
 
         this.drawinNewAreaStartPos = undefined;
+
         this.newAreaPreview = this.scene.add.graphics();
+        this.areaOldPositionPreview = this.scene.add.graphics();
 
         this.subscribeToStores();
     }
@@ -352,6 +356,13 @@ export class AreaEditorTool extends MapEditorTool {
         this.scene.markDirty();
     }
 
+    private drawAreaOldPositionPreview(x: number, y: number, width: number, height: number): void {
+        this.areaOldPositionPreview.clear();
+        this.areaOldPositionPreview.fillStyle(0x0000ff, 0.25);
+        this.areaOldPositionPreview.fillRect(x, y, width, height);
+        this.scene.markDirty();
+    }
+
     private getNewAreaDrawingData(pointer: Phaser.Input.Pointer): {
         x: number;
         y: number;
@@ -441,6 +452,23 @@ export class AreaEditorTool extends MapEditorTool {
         return areaPreview;
     }
 
+    private copyArea(data: CopyAreaEventData): void {
+        const id = crypto.randomUUID();
+        this.mapEditorModeManager.executeCommand({
+            type: "CreateAreaCommand",
+            areaObjectConfig: {
+                id,
+                name: data.name,
+                visible: true,
+                properties: data.properties ?? [],
+                width: data.width,
+                height: data.height,
+                x: data.position.x,
+                y: data.position.y,
+            },
+        });
+    }
+
     private createNewArea(x: number, y: number, width: number, height: number): void {
         const id = crypto.randomUUID();
         this.mapEditorModeManager.executeCommand({
@@ -481,14 +509,21 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {
-        areaPreview.on(AreaPreviewEvent.Clicked, () => {
+        areaPreview.on(AreaPreviewEvent.DragStart, () => {
             this.draggingdArea = true;
+            this.drawAreaOldPositionPreview(
+                areaPreview.x - areaPreview.width * 0.5,
+                areaPreview.y - areaPreview.height * 0.5,
+                areaPreview.width,
+                areaPreview.height
+            );
         });
         areaPreview.on(AreaPreviewEvent.Released, () => {
             this.draggingdArea = false;
+            this.areaOldPositionPreview.clear();
         });
-        areaPreview.on(AreaPreviewEvent.Copied, () => {
-            console.log("TRY TO COPY AREA PREVIEW");
+        areaPreview.on(AreaPreviewEvent.Copied, (data: CopyAreaEventData) => {
+            this.copyArea(data);
         });
         areaPreview.on(AreaPreviewEvent.Updated, (data: AtLeast<AreaData, "id">) => {
             this.mapEditorModeManager.executeCommand({
