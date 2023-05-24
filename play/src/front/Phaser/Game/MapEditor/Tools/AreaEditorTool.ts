@@ -243,6 +243,12 @@ export class AreaEditorTool extends MapEditorTool {
                 this.drawNewArea(this.scene.input.activePointer);
             }
         });
+        this.ctrlKey.on(Phaser.Input.Keyboard.Events.DOWN, () => {
+            this.scene.input.setDefaultCursor("copy");
+        });
+        this.ctrlKey.on(Phaser.Input.Keyboard.Events.UP, () => {
+            this.scene.input.setDefaultCursor("auto");
+        });
     }
 
     private unbindEventHandlers(): void {
