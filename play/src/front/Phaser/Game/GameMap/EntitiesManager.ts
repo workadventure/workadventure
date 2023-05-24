@@ -26,7 +26,19 @@ export const CopyEntityEventData = z.object({
     properties: EntityDataProperties.optional(),
 });
 
+export const CopyAreaEventData = z.object({
+    position: z.object({
+        x: z.number(),
+        y: z.number(),
+    }),
+    width: z.number(),
+    height: z.number(),
+    name: z.string(),
+    properties: EntityDataProperties.optional(),
+});
+
 export type CopyEntityEventData = z.infer<typeof CopyEntityEventData>;
+export type CopyAreaEventData = z.infer<typeof CopyAreaEventData>;
 
 export enum EntitiesManagerEvent {
     DeleteEntity = "EntitiesManagerEvent:DeleteEntity",
