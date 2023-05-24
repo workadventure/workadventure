@@ -33,7 +33,8 @@ export class AreaEditorTool extends MapEditorTool {
     private draggingdArea: boolean;
     private wasAreaMoved: boolean;
 
-    private shiftKey?: Phaser.Input.Keyboard.Key;
+    private shiftKey: Phaser.Input.Keyboard.Key;
+    private ctrlKey: Phaser.Input.Keyboard.Key;
 
     private selectedAreaPreviewStoreSubscriber!: Unsubscriber;
 
@@ -53,7 +54,8 @@ export class AreaEditorTool extends MapEditorTool {
         this.mapEditorModeManager = mapEditorModeManager;
         this.scene = this.mapEditorModeManager.getScene();
 
-        this.shiftKey = this.scene.input.keyboard?.addKey("SHIFT");
+        this.shiftKey = this.scene.input.keyboard.addKey("SHIFT");
+        this.ctrlKey = this.scene.input.keyboard.addKey("CTRL");
 
         this.areaPreviews = this.createAreaPreviews();
         this.active = false;
@@ -433,7 +435,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private createAreaPreview(areaConfig: AreaData): AreaPreview {
-        const areaPreview = new AreaPreview(this.scene, structuredClone(areaConfig), this.shiftKey);
+        const areaPreview = new AreaPreview(this.scene, structuredClone(areaConfig), this.shiftKey, this.ctrlKey);
         this.bindAreaPreviewEventHandlers(areaPreview);
         this.areaPreviews.push(areaPreview);
         return areaPreview;
@@ -479,11 +481,14 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {
-        areaPreview.on(AreaPreviewEvent.Clicked, (data: AtLeast<AreaData, "id">) => {
+        areaPreview.on(AreaPreviewEvent.Clicked, () => {
             this.draggingdArea = true;
         });
-        areaPreview.on(AreaPreviewEvent.Released, (data: AtLeast<AreaData, "id">) => {
+        areaPreview.on(AreaPreviewEvent.Released, () => {
             this.draggingdArea = false;
+        });
+        areaPreview.on(AreaPreviewEvent.Copied, () => {
+            console.log("TRY TO COPY AREA PREVIEW");
         });
         areaPreview.on(AreaPreviewEvent.Updated, (data: AtLeast<AreaData, "id">) => {
             this.mapEditorModeManager.executeCommand({

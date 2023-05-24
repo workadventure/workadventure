@@ -7,6 +7,7 @@ export enum AreaPreviewEvent {
     Clicked = "AreaPreview:Clicked",
     Released = "AreaPreview:Released",
     DoubleClicked = "AreaPreview:DoubleClicked",
+    Copied = "AreaPreview:Copied",
     Updated = "AreaPreview:Updated",
     Delete = "AreaPreview:Delete",
 }
@@ -19,9 +20,15 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     private moved: boolean;
     private squareSelected: boolean;
 
-    private shiftKey?: Phaser.Input.Keyboard.Key;
+    private shiftKey: Phaser.Input.Keyboard.Key;
+    private ctrlKey: Phaser.Input.Keyboard.Key;
 
-    constructor(scene: Phaser.Scene, areaData: AreaData, shiftKey?: Phaser.Input.Keyboard.Key) {
+    constructor(
+        scene: Phaser.Scene,
+        areaData: AreaData,
+        shiftKey: Phaser.Input.Keyboard.Key,
+        ctrlKey: Phaser.Input.Keyboard.Key
+    ) {
         super(
             scene,
             areaData.x + areaData.width * 0.5,
@@ -33,6 +40,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         );
 
         this.shiftKey = shiftKey;
+        this.ctrlKey = ctrlKey;
 
         this.areaData = areaData;
         this.selected = false;
@@ -193,6 +201,11 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 } else {
                     throw new Error("Not the Game Scene");
                 }
+            }
+        });
+        this.on(Phaser.Input.Events.DRAG_END, () => {
+            if (this.ctrlKey.isDown) {
+                this.emit(AreaPreviewEvent.Copied);
             }
         });
         this.on(Phaser.Input.Events.POINTER_UP, (pointer: Phaser.Input.Pointer) => {
