@@ -322,8 +322,17 @@ export class Zone implements CustomJsonReplacerInterface {
 
                 this.backConnection.on("error", (e) => {
                     if (!this.isClosing) {
-                        debug("Error on back connection" + this.listeners);
-                        Sentry.captureMessage("Error on back connection", "debug");
+                        const date = new Date();
+                        for (const listener of this.listeners) {
+                            debug(
+                                "Error on back connection" +
+                                    listener.userUuid +
+                                    "at : " +
+                                    date.toLocaleString("en-GB", { timeZone: "Europe / Paris" })
+                            );
+                            Sentry.captureMessage("Error on back connection" + listener.userUuid, "debug");
+                        }
+
                         this.close();
                         this.onBackFailure(e, this);
                     }

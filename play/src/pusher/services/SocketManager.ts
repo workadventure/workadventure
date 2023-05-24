@@ -169,13 +169,14 @@ export class SocketManager implements ZoneEventListener {
                         "':",
                     err
                 );
-                Sentry.captureException(
+
+                Sentry.captureMessage(
                     "Error in connection to back server '" +
                         apiClient.getChannel().getTarget() +
                         "' for room '" +
                         roomId +
-                        "':" +
-                        err
+                        err,
+                    "debug"
                 );
                 if (!client.disconnecting) {
                     this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
@@ -293,21 +294,25 @@ export class SocketManager implements ZoneEventListener {
                     }
                 })
                 .on("error", (err: Error) => {
+                    const date = new Date();
                     console.error(
                         "Error in connection to back server '" +
                             apiClient.getChannel().getTarget() +
                             "' for room '" +
                             client.roomId +
-                            "':",
+                            "'at :" +
+                            date.toLocaleString("en-GB", { timeZone: "Europe / Paris" }),
                         err
                     );
-                    Sentry.captureException(
+                    Sentry.captureMessage(
                         "Error in connection to back server '" +
                             apiClient.getChannel().getTarget() +
                             "' for room '" +
                             client.roomId +
                             "': " +
-                            err
+                            client.userUuid +
+                            err,
+                        "debug"
                     );
                     if (!client.disconnecting) {
                         this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");

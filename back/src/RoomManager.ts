@@ -300,9 +300,7 @@ const roomManager = {
                     ${JSON.stringify(user?.name)}
                     ${JSON.stringify(user?.userJid)} 
                     in room 
-                    ${JSON.stringify(room?.roomUrl)} 
-                    at :  
-                    ${today.toLocaleString("en-GB", { timeZone: "Europe / Paris" })}`,
+                    ${JSON.stringify(room?.roomUrl)}`,
                     "debug"
                 );
                 closeConnection();
