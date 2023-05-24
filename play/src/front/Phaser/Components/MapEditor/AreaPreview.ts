@@ -213,6 +213,11 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 }
             }
         });
+        this.on(Phaser.Input.Events.DRAG_END, () => {
+            if (this.ctrlKey.isDown) {
+                this.emit(AreaPreviewEvent.Copied);
+            }
+        });
         this.on(Phaser.Input.Events.POINTER_UP, (pointer: Phaser.Input.Pointer) => {
             if (this.selected && this.moved) {
                 this.moved = false;

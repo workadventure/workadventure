@@ -531,6 +531,9 @@ export class AreaEditorTool extends MapEditorTool {
         areaPreview.on(AreaPreviewEvent.Copied, (data: CopyAreaEventData) => {
             this.copyArea(data);
         });
+        areaPreview.on(AreaPreviewEvent.Copied, () => {
+            console.log("TRY TO COPY AREA PREVIEW");
+        });
         areaPreview.on(AreaPreviewEvent.Updated, (data: AtLeast<AreaData, "id">) => {
             this.mapEditorModeManager.executeCommand({
                 type: "UpdateAreaCommand",
