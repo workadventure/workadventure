@@ -87,6 +87,7 @@ export class AreaEditorTool extends MapEditorTool {
 
     public activate(): void {
         this.active = true;
+        this.scene.input.topOnly = false;
         this.updateAreaPreviews();
         this.setAreaPreviewsVisibility(true);
         this.bindEventHandlers();
@@ -111,7 +112,10 @@ export class AreaEditorTool extends MapEditorTool {
                 this.mapEditorModeManager.executeCommand(
                     {
                         type: "UpdateAreaCommand",
-                        dataToModify: data as AreaData,
+                        dataToModify: {
+                            ...data,
+                            properties: data.modifyProperties ? data.properties : undefined,
+                        },
                     },
                     false,
                     false,
@@ -186,6 +190,7 @@ export class AreaEditorTool extends MapEditorTool {
 
     public handleKeyDownEvent(event: KeyboardEvent): void {
         switch (event.key.toLowerCase()) {
+            case "backspace":
             case "delete": {
                 const areaPreview = get(mapEditorSelectedAreaPreviewStore);
                 if (!areaPreview) {
@@ -405,7 +410,6 @@ export class AreaEditorTool extends MapEditorTool {
 
     private handleAreaPreviewUpdate(config: AtLeast<AreaData, "id">): void {
         this.areaPreviews.find((area) => area.getAreaData().id === config.id)?.updatePreview(config);
-        this.scene.getGameMapFrontWrapper().updateArea(config.id, config);
         this.scene.markDirty();
     }
 
@@ -443,7 +447,7 @@ export class AreaEditorTool extends MapEditorTool {
                 id,
                 name: "",
                 visible: true,
-                properties: {},
+                properties: [],
                 width,
                 height,
                 x,
@@ -481,7 +485,7 @@ export class AreaEditorTool extends MapEditorTool {
         areaPreview.on(AreaPreviewEvent.Released, (data: AtLeast<AreaData, "id">) => {
             this.draggingdArea = false;
         });
-        areaPreview.on(AreaPreviewEvent.Update, (data: AtLeast<AreaData, "id">) => {
+        areaPreview.on(AreaPreviewEvent.Updated, (data: AtLeast<AreaData, "id">) => {
             this.mapEditorModeManager.executeCommand({
                 type: "UpdateAreaCommand",
                 dataToModify: data,

@@ -1,282 +1,206 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
-    import { slide } from "svelte/transition";
-    import { EntityDataProperties, EntityDataPropertiesKeys } from "@workadventure/map-editor";
+    import { EntityDataProperties, EntityDataPropertiesKeys, EntityDataProperty } from "@workadventure/map-editor";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { mapEditorEntityModeStore, mapEditorSelectedEntityStore } from "../../Stores/MapEditorStore";
-    import crossImg from "../images/cross-icon.svg";
+    import {
+        mapEditorSelectedEntityStore,
+        onMapEditorInputFocus,
+        onMapEditorInputUnfocus,
+    } from "../../Stores/MapEditorStore";
+    import visioSvg from "../images/visio-white.svg";
+    import audioSvg from "../images/audio-white.svg";
+    import webSvg from "../images/web-white.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
-    import TextPropertyEditor from "./PropertyEditor/TextPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
+    import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
 
-    interface EntityPropertyDescription<K extends EntityDataPropertiesKeys> {
-        key: K;
-        name: string;
-        active: boolean;
-        currentValue: EntityDataProperties[K];
-        component: unknown;
-        defaultValue: EntityDataProperties[K];
-    }
-
-    let possibleProperties: EntityPropertyDescription<EntityDataPropertiesKeys>[] = [
-        {
-            key: "textHeader",
-            name: $LL.mapEditor.properties.textProperties.label(),
-            active: false,
-            currentValue: undefined,
-            component: TextPropertyEditor,
-            defaultValue: "",
-        },
-        {
-            key: "jitsiRoom",
-            name: $LL.mapEditor.properties.jitsiProperties.label(),
-            active: false,
-            currentValue: undefined,
-            component: JitsiRoomPropertyEditor,
-            defaultValue: {
-                buttonLabel: $LL.mapEditor.properties.jitsiProperties.defaultButtonLabel(),
-                roomName: "",
-                jitsiRoomConfig: {},
-            },
-        },
-        {
-            key: "playAudio",
-            name: $LL.mapEditor.properties.audioProperties.label(),
-            active: false,
-            currentValue: undefined,
-            component: PlayAudioPropertyEditor,
-            defaultValue: {
-                buttonLabel: $LL.mapEditor.properties.audioProperties.defaultButtonLabel(),
-                audioLink: "",
-            },
-        },
-        {
-            key: "openWebsite",
-            name: $LL.mapEditor.properties.linkProperties.label(),
-            active: false,
-            currentValue: undefined,
-            component: OpenWebsitePropertyEditor,
-            defaultValue: {
-                buttonLabel: $LL.mapEditor.properties.linkProperties.defaultButtonLabel(),
-                link: "",
-                newTab: true,
-            },
-        },
-    ];
+    let properties: EntityDataProperties = [];
+    let entityName = "";
 
     let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((currentEntity) => {
         if (currentEntity) {
             currentEntity.setEditColor(0x00ffff);
-            for (let property of possibleProperties) {
-                property.active =
-                    currentEntity.getProperties()[property.key] !== undefined &&
-                    currentEntity.getProperties()[property.key] !== null;
-                property.currentValue = currentEntity.getProperties()[property.key];
-                if (!property.currentValue) {
-                    property.currentValue = structuredClone(property.defaultValue);
-                }
-            }
+            properties = currentEntity.getProperties() ?? [];
+            entityName = currentEntity.getEntityData().name ?? "";
         }
-        possibleProperties = possibleProperties;
     });
+
+    function onAddProperty(type: EntityDataPropertiesKeys) {
+        if ($mapEditorSelectedEntityStore) {
+            $mapEditorSelectedEntityStore.addProperty(getPropertyFromType(type));
+            // refresh properties
+            properties = $mapEditorSelectedEntityStore?.getProperties();
+        }
+    }
+
+    function onUpdateName() {
+        if ($mapEditorSelectedEntityStore) {
+            $mapEditorSelectedEntityStore.setEntityName(entityName);
+        }
+    }
+
+    function onUpdateProperty(property: EntityDataProperty) {
+        if ($mapEditorSelectedEntityStore) {
+            $mapEditorSelectedEntityStore.updateProperty(property);
+        }
+    }
+
+    function getPropertyFromType(type: EntityDataPropertiesKeys): EntityDataProperty {
+        const id = crypto.randomUUID();
+        switch (type) {
+            case "jitsiRoomProperty":
+                return {
+                    id,
+                    type,
+                    jitsiRoomConfig: {},
+                    roomName: "JITSI ROOM",
+                    buttonLabel: "Connect to Jitsi",
+                };
+            case "openWebsite":
+                return {
+                    id,
+                    type,
+                    buttonLabel: "Open Website",
+                    link: "https://workadventu.re",
+                    newTab: false,
+                };
+            case "playAudio":
+                return {
+                    id,
+                    type,
+                    buttonLabel: "Play audio",
+                    audioLink: "",
+                };
+        }
+    }
+
+    function onDeleteProperty(id: string) {
+        if ($mapEditorSelectedEntityStore) {
+            $mapEditorSelectedEntityStore.deleteProperty(id);
+            // refresh properties
+            properties = $mapEditorSelectedEntityStore?.getProperties();
+            // $mapEditorSelectedEntityStore.delete();
+            // mapEditorSelectedEntityStore.set(undefined);
+            // mapEditorEntityModeStore.set("ADD");
+        }
+    }
 
     onDestroy(() => {
         selectedEntityUnsubscriber();
     });
-
-    function onPropertyChecked(property: EntityPropertyDescription<EntityDataPropertiesKeys>) {
-        console.log(property);
-        if ($mapEditorSelectedEntityStore) {
-            if (property.active) {
-                if (!property.currentValue) {
-                    property.currentValue = possibleProperties.find((v) => v.key === property.key)?.defaultValue; //initialize here the property value
-                }
-                $mapEditorSelectedEntityStore.setProperty(property.key, property.currentValue);
-            } else {
-                $mapEditorSelectedEntityStore.setProperty(property.key, null);
-            }
-        }
-    }
-
-    function onUpdateProperty(property: EntityPropertyDescription<EntityDataPropertiesKeys>) {
-        if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.setProperty(property.key, property.currentValue);
-        }
-    }
-
-    function onTestInteraction() {
-        if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.TestActivation();
-        }
-    }
-
-    function onDeleteEntity() {
-        if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.delete();
-            mapEditorSelectedEntityStore.set(undefined);
-            mapEditorEntityModeStore.set("ADD");
-        }
-    }
 </script>
 
 {#if $mapEditorSelectedEntityStore === undefined}
     {$LL.mapEditor.entityEditor.editInstructions()}
 {:else}
-    <div class="entity-properties">
-        {#each possibleProperties as property (property.key)}
-            <div class="property-enabler tw-bg-dark-purple tw-rounded-lg">
-                <label for={property.key}>{property.name}</label>
-                <input
-                    id={property.key}
-                    type="checkbox"
-                    class="input-switch"
-                    bind:checked={property.active}
-                    on:change={() => onPropertyChecked(property)}
-                />
-            </div>
-            {#if property.active}
-                <div class="property-container tw-flex tw-flex-col" transition:slide|local>
-                    <svelte:component
-                        this={property.component}
-                        bind:property={property.currentValue}
+    <div class="header-container">
+        <h2>Editing: {$mapEditorSelectedEntityStore.getEntityData().prefab.name}</h2>
+    </div>
+    <div class="properties-buttons tw-flex tw-flex-row">
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.jitsiProperties.label()}
+            descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
+            img={visioSvg}
+            style="z-index: 5;"
+            on:click={() => {
+                onAddProperty("jitsiRoomProperty");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.audioProperties.label()}
+            descriptionText={$LL.mapEditor.properties.audioProperties.description()}
+            img={audioSvg}
+            style="z-index: 4;"
+            on:click={() => {
+                onAddProperty("playAudio");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.linkProperties.label()}
+            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
+            img={webSvg}
+            style="z-index: 3;"
+            on:click={() => {
+                onAddProperty("openWebsite");
+            }}
+        />
+    </div>
+    <div class="entity-name-container">
+        <label for="objectName">Object name</label>
+        <input
+            id="objectName"
+            type="text"
+            placeholder="Value"
+            bind:value={entityName}
+            on:focus={onMapEditorInputFocus}
+            on:blur={onMapEditorInputUnfocus}
+            on:change={onUpdateName}
+        />
+    </div>
+    <div class="properties-container">
+        {#each properties as property}
+            <div class="property-box">
+                {#if property.type === "jitsiRoomProperty"}
+                    <JitsiRoomPropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
                         on:change={() => onUpdateProperty(property)}
                     />
-                </div>
-            {/if}
+                {:else if property.type === "playAudio"}
+                    <PlayAudioPropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                        on:change={() => onUpdateProperty(property)}
+                    />
+                {:else if property.type === "openWebsite"}
+                    <OpenWebsitePropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                        on:change={() => onUpdateProperty(property)}
+                    />
+                {/if}
+            </div>
         {/each}
-    </div>
-    <div class="action-button">
-        <button on:click={onTestInteraction}>{$LL.mapEditor.entityEditor.testInteractionButton()}</button>
-        <button class="delete-button" on:click={onDeleteEntity}
-            ><div>{$LL.mapEditor.entityEditor.deleteButton()}</div>
-            <img src={crossImg} alt="" /></button
-        >
     </div>
 {/if}
 
 <style lang="scss">
-    .entity-properties {
+    .properties-container {
         overflow-y: auto;
         overflow-x: hidden;
-        .property-enabler {
-            display: flex;
-            margin-top: 1px;
-            margin-top: 1px;
-            align-items: center;
-            padding-right: 1em;
-            cursor: url(/src/front/style/images/cursor_pointer.png), pointer;
-            label {
-                padding-top: 1em;
-                padding-bottom: 1em;
-                padding-left: 1em;
-                flex-grow: 1;
-                margin: 0;
-            }
-        }
-        .property-enabler:hover {
-            background-color: rgb(85 85 113);
-        }
-        .property-container {
-            padding-left: 1em;
-            border-left-style: solid;
-            border-left-color: #4d4b67;
-            border-left-width: 1px;
-            margin: 20px 0px;
-        }
     }
 
-    .action-button {
-        margin-top: 1em;
+    .properties-container::-webkit-scrollbar {
+        display: none;
+    }
+
+    .property-box {
+        margin-top: 5px;
+    }
+
+    .entity-name-container {
         display: flex;
-        button {
-            flex: 1 1 0px;
-            border: 1px solid grey;
+        width: 100%;
+        margin-bottom: 0.5em;
+        margin-top: 0.5em;
+        flex-direction: column;
+        label {
+            min-width: fit-content;
+            margin-right: 0.5em;
         }
-        button:hover {
-            background-color: rgb(77 75 103);
+        input {
+            flex-grow: 1;
+            min-width: 0;
         }
-        .delete-button {
-            border-color: red;
-            color: red;
-            display: flex;
-            div {
-                text-align: left;
-                flex-grow: 1;
-            }
-            img {
-                object-fit: contain;
-                max-width: 2em;
-                max-height: 2em;
-            }
+        * {
+            margin-bottom: 0;
         }
-        .delete-button:hover {
-            background-color: rgb(103 75 75);
-        }
-    }
-
-    .input-switch {
-        position: relative;
-        top: 0px;
-        right: 0px;
-        bottom: 0px;
-        left: 0px;
-        display: inline-block;
-        height: 1rem;
-        width: 2rem;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        border-radius: 9999px;
-        border-width: 1px;
-        border-style: solid;
-        --tw-border-opacity: 1;
-        border-color: rgb(77 75 103 / var(--tw-border-opacity));
-        --tw-bg-opacity: 1;
-        background-color: rgb(15 31 45 / var(--tw-bg-opacity));
-        background-image: none;
-        padding: 0px;
-        --tw-text-opacity: 1;
-        color: rgb(242 253 255 / var(--tw-text-opacity));
-        outline: 2px solid transparent;
-        outline-offset: 2px;
-        cursor: url(/src/front/style/images/cursor_pointer.png), pointer;
-    }
-
-    .input-switch::before {
-        position: absolute;
-        left: -3px;
-        top: -3px;
-        height: 1.25rem;
-        width: 1.25rem;
-        border-radius: 9999px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(146 142 187 / var(--tw-bg-opacity));
-        transition-property: all;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        transition-duration: 150ms;
-        --tw-content: "";
-        content: var(--tw-content);
-    }
-
-    .input-switch:checked {
-        --tw-border-opacity: 1;
-        border-color: rgb(146 142 187 / var(--tw-border-opacity));
-    }
-
-    .input-switch:checked::before {
-        left: 13px;
-        top: -3px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(65 86 246 / var(--tw-bg-opacity));
-        content: var(--tw-content);
-        /*--tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
-        --tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
-        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
-    }
-
-    .input-switch:disabled {
-        cursor: not-allowed;
-        opacity: 0.4;
     }
 </style>

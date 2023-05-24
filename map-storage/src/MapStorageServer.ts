@@ -1,5 +1,5 @@
 import { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
-import { AreaData, EntityDataProperties } from "@workadventure/map-editor";
+import { AreaData, AtLeast, EntityData, EntityDataProperties } from "@workadventure/map-editor";
 import {
     EditMapCommandMessage,
     EditMapCommandsArrayMessage,
@@ -11,7 +11,7 @@ import {
 import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import { mapsManager } from "./MapsManager";
-import { mapPathUsingDomain } from "./Services/PathMapper";
+import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
 
 const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
@@ -24,7 +24,7 @@ const mapStorageServer: MapStorageServer = {
         try {
             const wamUrl = call.request.wamUrl;
             const url = new URL(wamUrl);
-            const wamKey = mapPathUsingDomain(url.pathname, url.hostname);
+            const wamKey = mapPathUsingDomainWithPrefix(url.pathname, url.hostname);
             mapsManager.clearAfterUpload(wamKey);
             callback(null);
         } catch (e: unknown) {
@@ -44,7 +44,7 @@ const mapStorageServer: MapStorageServer = {
     ): void {
         try {
             const mapUrl = new URL(call.request.mapKey);
-            const mapKey = mapPathUsingDomain(mapUrl.pathname, mapUrl.hostname);
+            const mapKey = mapPathUsingDomainWithPrefix(mapUrl.pathname, mapUrl.hostname);
             const updateMapToNewestMessage = call.request.updateMapToNewestMessage;
             if (!updateMapToNewestMessage) {
                 callback({ name: "MapStorageError", message: "UpdateMapToNewest message does not exist" }, null);
@@ -84,7 +84,7 @@ const mapStorageServer: MapStorageServer = {
         try {
             // The mapKey is the complete URL to the map. Let's map it to our virtual path.
             const mapUrl = new URL(call.request.mapKey);
-            const mapKey = mapPathUsingDomain(mapUrl.pathname, mapUrl.hostname);
+            const mapKey = mapPathUsingDomainWithPrefix(mapUrl.pathname, mapUrl.hostname);
 
             const gameMap = mapsManager.getGameMap(mapKey);
             if (!gameMap) {
@@ -99,13 +99,20 @@ const mapStorageServer: MapStorageServer = {
             switch (editMapMessage.$case) {
                 case "modifyAreaMessage": {
                     const message = editMapMessage.modifyAreaMessage;
+                    // NOTE: protobuf does not distinguish between null and empty array, we cannot create optional repeated value.
+                    //       Because of that, we send additional "modifyProperties" flag set properties value as "undefined" so they won't get erased
+                    //       by [] value which was supposed to be null.
+                    const dataToModify: AtLeast<EntityData, "id"> = structuredClone(message);
+                    if (!message.modifyProperties) {
+                        dataToModify.properties = undefined;
+                    }
                     const area = gameMap.getGameMapAreas()?.getArea(message.id);
                     if (area) {
                         mapsManager.executeCommand(
                             mapKey,
                             {
                                 type: "UpdateAreaCommand",
-                                dataToModify: message,
+                                dataToModify,
                             },
                             commandId
                         );
@@ -144,13 +151,21 @@ const mapStorageServer: MapStorageServer = {
                 }
                 case "modifyEntityMessage": {
                     const message = editMapMessage.modifyEntityMessage;
+
+                    // NOTE: protobuf does not distinguish between null and empty array, we cannot create optional repeated value.
+                    //       Because of that, we send additional "modifyProperties" flag set properties value as "undefined" so they won't get erased
+                    //       by [] value which was supposed to be null.
+                    const dataToModify: AtLeast<EntityData, "id"> = structuredClone(message);
+                    if (!message.modifyProperties) {
+                        dataToModify.properties = undefined;
+                    }
                     const entity = gameMap.getGameMapEntities()?.getEntity(message.id);
                     if (entity) {
                         mapsManager.executeCommand(
                             mapKey,
                             {
                                 type: "UpdateEntityCommand",
-                                dataToModify: message,
+                                dataToModify,
                             },
                             commandId
                         );
@@ -188,6 +203,19 @@ const mapStorageServer: MapStorageServer = {
                         {
                             type: "DeleteEntityCommand",
                             id: message.id,
+                        },
+                        commandId
+                    );
+                    break;
+                }
+                case "updateMegaphoneSettingMessage": {
+                    const message = editMapMessage.updateMegaphoneSettingMessage;
+                    mapsManager.executeCommand(
+                        mapKey,
+                        {
+                            type: "UpdateWAMSettingCommand",
+                            name: "megaphone",
+                            dataToModify: message,
                         },
                         commandId
                     );

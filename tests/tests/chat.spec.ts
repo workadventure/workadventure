@@ -1,10 +1,10 @@
 import {expect, test} from '@playwright/test';
 import {hideNoCamera, login} from './utils/roles';
-import {openChat} from "./utils/menu";
 import Chat from './utils/chat';
 import Map from './utils/map';
 import {findContainer, startContainer, stopContainer} from "./utils/containers";
 import {createFileOfSize, deleteFile, fileExist} from "./utils/file";
+import Menu from "./utils/menu";
 
 const TIMEOUT_TO_GET_LIST = 60_000;
 
@@ -31,7 +31,7 @@ test.describe('Chat', () => {
       await hideNoCamera(page);
     }
 
-    await openChat(page);
+    await Menu.openChat(page);
     const ejabberd = await findContainer('ejabberd');
 
     await test.step('all tests of chat', async () => {
@@ -52,7 +52,7 @@ test.describe('Chat', () => {
         await hideNoCamera(page2);
       }
       
-      await openChat(page2);
+      await Menu.openChat(page2);
       await Chat.slideToUsers(page2);
       await Chat.checkNameInChat(page2, nickname, TIMEOUT_TO_GET_LIST);
       await Chat.checkNameInChat(page2, nickname2, TIMEOUT_TO_GET_LIST);
@@ -168,7 +168,7 @@ test.describe('Chat', () => {
 
     await test.step('default forum exist', async () => {
       await page.reload();
-      await openChat(page);
+      await Menu.openChat(page);
       await Chat.slideToUsers(page);
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
 

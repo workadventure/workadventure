@@ -70,11 +70,17 @@ export class Space implements CustomJsonReplacerInterface {
             if (spaceUser.screenSharing !== undefined) {
                 user.screenSharing = spaceUser.screenSharing;
             }
-            if (spaceUser.audioSharing !== undefined) {
-                user.audioSharing = spaceUser.audioSharing;
+            if (spaceUser.microphoneState !== undefined) {
+                user.microphoneState = spaceUser.microphoneState;
             }
-            if (spaceUser.videoSharing !== undefined) {
-                user.videoSharing = spaceUser.videoSharing;
+            if (spaceUser.cameraState !== undefined) {
+                user.cameraState = spaceUser.cameraState;
+            }
+            if (spaceUser.megaphoneState !== undefined) {
+                user.megaphoneState = spaceUser.megaphoneState;
+            }
+            if (spaceUser.jitsiParticipantId) {
+                user.jitsiParticipantId = spaceUser.jitsiParticipantId;
             }
             usersList.set(spaceUser.uuid, user);
             this.notifyWatchers(watcher, {

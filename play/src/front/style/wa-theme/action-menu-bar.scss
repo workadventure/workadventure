@@ -19,8 +19,10 @@
 
                     &.focus,
                     &.hover,
-                    &:hover {
+                    &:hover,
+                    &:has(+ *:hover){
                         @apply tw-bg-medium-purple/95;
+                        filter: brightness(1.25);
                     }
 
                     img {
@@ -63,6 +65,11 @@
 
             .border-top-light {
                 border-top: 4px solid theme("colors.light-blue");
+                @apply tw-pt-0;
+            }
+
+            .border-top-orange {
+                border-top: 4px solid theme("colors.orange");
                 @apply tw-pt-0;
             }
         }

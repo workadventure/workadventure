@@ -4,6 +4,7 @@ import { gameManager } from "../Game/GameManager";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import type { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
+import { CompanionResourceDescriptionInterface, CompanionTextures } from "./CompanionTextures";
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 
 export function companionListMetakey() {
@@ -11,6 +12,7 @@ export function companionListMetakey() {
 }
 
 let companionTextureList: CompanionCollectionList | null = null;
+
 export class CompanionTexturesLoadingManager {
     constructor(private superLoad: SuperLoaderPlugin, private loader: LoaderPlugin) {}
 
@@ -63,6 +65,14 @@ export class CompanionTexturesLoadingManager {
                 this.loader.start(); // It's only automatically started during the Scene preload.
             });
         });
+    }
+
+    loadModels(load: LoaderPlugin, companionTextures: CompanionTextures): CompanionResourceDescriptionInterface[] {
+        const returnArray = Object.values(companionTextures.getCompanionResources());
+        returnArray.forEach((companionResource) => {
+            load.spritesheet(companionResource.id, companionResource.img, { frameWidth: 32, frameHeight: 32 });
+        });
+        return returnArray;
     }
 
     public loadByTexture(texture: CompanionTexture, onLoaded: (_textureId: string) => void = () => {}) {

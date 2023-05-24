@@ -9,6 +9,8 @@ const actionbar: BaseTranslation = {
     camera: "Activer / Couper la caméra",
     microphone: "Activer / Couper le microphone",
     emoji: "Ouvrir / Fermer les émoticônes",
+    enableMegaphone: "Activer le mégaphone",
+    disableMegaphone: "Couper le mégaphone",
     menu: "Ouvrir / Fermer le menu",
     mapEditor: "Ouvrir / Fermer l'éditeur de carte",
     bo: "Ouvrir le back office",

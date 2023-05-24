@@ -97,4 +97,6 @@ export interface AdminInterface {
         message: string,
         byUserEmail: string
     ): Promise<boolean>;
+
+    getTagsList(roomUrl: string): Promise<string[]>;
 }

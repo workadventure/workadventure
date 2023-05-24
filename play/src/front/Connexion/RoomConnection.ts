@@ -40,6 +40,10 @@ import {
     AddSpaceUserMessage,
     UpdateSpaceUserMessage,
     RemoveSpaceUserMessage,
+    WatchSpaceMessage,
+    SpaceFilterMessage,
+    UpdateMegaphoneSettingMessage,
+    MegaphoneSettings,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
@@ -57,10 +61,9 @@ import {
 import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
 import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
-import { ENABLE_FEATURE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
+import { ENABLE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
-import { assertObjectKeys } from "../Utils/CustomTypeGuards";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { localUserStore } from "./LocalUserStore";
 import { connectionManager } from "./ConnectionManager";
@@ -187,6 +190,8 @@ export class RoomConnection implements RoomConnection {
     public readonly updateSpaceUserMessageStream = this._updateSpaceUserMessageStream.asObservable();
     private readonly _removeSpaceUserMessageStream = new Subject<RemoveSpaceUserMessage>();
     public readonly removeSpaceUserMessageStream = this._removeSpaceUserMessageStream.asObservable();
+    private readonly _megaphoneSettingsMessageStream = new BehaviorSubject<MegaphoneSettings | undefined>(undefined);
+    public readonly megaphoneSettingsMessageStream = this._megaphoneSettingsMessageStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -376,6 +381,10 @@ export class RoomConnection implements RoomConnection {
                                 this._removeSpaceUserMessageStream.next(subMessage.removeSpaceUserMessage);
                                 break;
                             }
+                            case "megaphoneSettingsMessage": {
+                                this._megaphoneSettingsMessageStream.next(subMessage.megaphoneSettingsMessage);
+                                break;
+                            }
                             default: {
                                 // Security check: if we forget a "case", the line below will catch the error at compile-time.
                                 //@ts-ignore
@@ -418,7 +427,7 @@ export class RoomConnection implements RoomConnection {
                             ? roomJoinedMessage.activatedInviteUser
                             : true
                     );
-                    mapEditorActivated.set(ENABLE_FEATURE_MAP_EDITOR && roomJoinedMessage.canEdit);
+                    mapEditorActivated.set(ENABLE_MAP_EDITOR && roomJoinedMessage.canEdit);
 
                     // If there are scripts from the admin, run it
                     if (roomJoinedMessage.applications != undefined) {
@@ -460,6 +469,10 @@ export class RoomConnection implements RoomConnection {
                             webrtcPassword: roomJoinedMessage.webrtcPassword,
                         } as RoomJoinedMessageInterface,
                     });
+
+                    if (roomJoinedMessage.megaphoneSettings) {
+                        this._megaphoneSettingsMessageStream.next(roomJoinedMessage.megaphoneSettings);
+                    }
 
                     break;
                 }
@@ -1064,14 +1077,6 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitMapEditorModifyArea(commandId: string, config: AtLeast<AreaData, "id">): void {
-        // NOTE: THIS IS CHANGING VALUE IN ALL PLACES BY REFERENCE!
-        if (config.properties) {
-            for (const key of assertObjectKeys(config.properties)) {
-                if (config.properties[key] === undefined) {
-                    config.properties[key] = null;
-                }
-            }
-        }
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1082,8 +1087,29 @@ export class RoomConnection implements RoomConnection {
                             $case: "modifyAreaMessage",
                             modifyAreaMessage: {
                                 ...config,
-                                properties: config.properties ?? {},
+                                properties: config.properties ?? [],
+                                modifyProperties: config.properties !== undefined,
                             },
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitUpdateMegaphoneSettingMessage(
+        commandId: string,
+        updateMegaphoneSettingMessage: UpdateMegaphoneSettingMessage
+    ) {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "updateMegaphoneSettingMessage",
+                            updateMegaphoneSettingMessage,
                         },
                     },
                 },
@@ -1128,14 +1154,6 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitMapEditorModifyEntity(commandId: string, config: AtLeast<EntityData, "id">): void {
-        // NOTE: THIS IS CHANGING VALUE IN ALL PLACES BY REFERENCE!
-        if (config.properties) {
-            for (const key of assertObjectKeys(config.properties)) {
-                if (config.properties[key] === undefined) {
-                    config.properties[key] = null;
-                }
-            }
-        }
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1146,8 +1164,8 @@ export class RoomConnection implements RoomConnection {
                             $case: "modifyEntityMessage",
                             modifyEntityMessage: {
                                 ...config,
-                                // We need to declare properties due to the protobuf limitations - make new custom type to use optional flag?
-                                properties: config.properties ?? {},
+                                properties: config.properties ?? [],
+                                modifyProperties: config.properties !== undefined,
                             },
                         },
                     },
@@ -1171,7 +1189,7 @@ export class RoomConnection implements RoomConnection {
                                 y: config.y,
                                 collectionName: config.prefab.collectionName,
                                 prefabId: config.prefab.id,
-                                properties: config.properties ?? {},
+                                properties: config.properties ?? [],
                             },
                         },
                     },
@@ -1375,6 +1393,83 @@ export class RoomConnection implements RoomConnection {
                 }),
             },
         });
+    }
+
+    public emitWatchSpaceLiveStreaming(spaceName: string) {
+        const spaceFilter: SpaceFilterMessage = {
+            filterName: "testFilter",
+            spaceName,
+            filter: {
+                $case: "spaceFilterLiveStreaming",
+                spaceFilterLiveStreaming: {},
+            },
+        };
+        this.send({
+            message: {
+                $case: "watchSpaceMessage",
+                watchSpaceMessage: WatchSpaceMessage.fromPartial({
+                    spaceName,
+                    spaceFilter,
+                }),
+            },
+        });
+        return spaceFilter;
+    }
+
+    public emitCameraState(state: boolean) {
+        this.send({
+            message: {
+                $case: "cameraStateMessage",
+                cameraStateMessage: {
+                    value: state,
+                },
+            },
+        });
+    }
+
+    public emitMicrophoneState(state: boolean) {
+        this.send({
+            message: {
+                $case: "microphoneStateMessage",
+                microphoneStateMessage: {
+                    value: state,
+                },
+            },
+        });
+    }
+
+    public emitMegaphoneState(state: boolean) {
+        this.send({
+            message: {
+                $case: "megaphoneStateMessage",
+                megaphoneStateMessage: {
+                    value: state,
+                },
+            },
+        });
+    }
+
+    public emitJitsiParticipantIdSpace(spaceName: string, participantId: string) {
+        this.send({
+            message: {
+                $case: "jitsiParticipantIdSpaceMessage",
+                jitsiParticipantIdSpaceMessage: {
+                    spaceName,
+                    value: participantId,
+                },
+            },
+        });
+    }
+
+    public async queryRoomTags(): Promise<string[]> {
+        const answer = await this.query({
+            $case: "roomTagsQuery",
+            roomTagsQuery: {},
+        });
+        if (answer.$case !== "roomTagsAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.roomTagsAnswer.tags;
     }
 
     /**

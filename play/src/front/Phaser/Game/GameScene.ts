@@ -28,7 +28,7 @@ import { waScaleManager } from "../Services/WaScaleManager";
 import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoadingManager";
 import { CompanionTexturesLoadingManager } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
-import { DEBUG_MODE, ENABLE_FEATURE_MAP_EDITOR, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
+import { DEBUG_MODE, ENABLE_MAP_EDITOR, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
 import { Room } from "../../Connexion/Room";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
 import { TextureError } from "../../Exception/TextureError";
@@ -72,6 +72,7 @@ import type { MenuItem, TranslatedMenu } from "../../Stores/MenuStore";
 import {
     activeSubMenuStore,
     contactPageStore,
+    mapEditorActivated,
     menuVisiblilityStore,
     SubMenusInterface,
     subMenusStore,
@@ -80,13 +81,6 @@ import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEve
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
 import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
-import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
-import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
-import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
-import type { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
-import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
-import { StringUtils } from "../../Utils/StringUtils";
-import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connexion/AxiosUtils";
 import {
     availabilityStatusStore,
     localVolumeStore,
@@ -96,7 +90,15 @@ import {
 import { LL, locale } from "../../../i18n/i18n-svelte";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
-import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
+import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connexion/AxiosUtils";
+import { StringUtils } from "../../Utils/StringUtils";
+import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
+import type { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
+import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
+import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
+import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
+import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import type { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
 import {
@@ -105,15 +107,22 @@ import {
     _newChatMessageWritingStatusSubject,
 } from "../../Stores/ChatStore";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
-import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
+import { gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import { mapEditorModeStore } from "../../Stores/MapEditorStore";
+import {
+    WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
+    mapEditorWamSettingsEditorToolCurrentMenuItemStore,
+    mapEditorModeStore,
+    mapEditorSelectedToolStore,
+} from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
 import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
+import { BroadcastService } from "../../Streaming/BroadcastService";
+import { megaphoneCanBeUsedStore, megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -133,7 +142,7 @@ import type { AddPlayerInterface } from "./AddPlayerInterface";
 import type { CameraManagerEventCameraUpdateData } from "./CameraManager";
 import { CameraManager, CameraManagerEvent } from "./CameraManager";
 
-import { MapEditorModeManager } from "./MapEditor/MapEditorModeManager";
+import { EditorToolName, MapEditorModeManager } from "./MapEditor/MapEditorModeManager";
 import { RemotePlayersRepository } from "./RemotePlayersRepository";
 import type { PlayerDetailsUpdate } from "./RemotePlayersRepository";
 import { IframeEventDispatcher } from "./IframeEventDispatcher";
@@ -261,6 +270,7 @@ export class GameScene extends DirtyScene {
     private companionLoadingManager: CompanionTexturesLoadingManager | undefined;
     private throttledSendViewportToServer!: () => void;
     private playersDebugLogAlreadyDisplayed = false;
+    private _broadcastService: BroadcastService | undefined;
 
     constructor(private room: Room, customKey?: string | undefined) {
         super({
@@ -310,6 +320,7 @@ export class GameScene extends DirtyScene {
         this.load.audio("audio-webrtc-in", "/resources/objects/webrtc-in.mp3");
         this.load.audio("audio-webrtc-out", "/resources/objects/webrtc-out.mp3");
         this.load.audio("audio-report-message", "/resources/objects/report-message.mp3");
+        this.load.audio("audio-megaphone", "/resources/objects/megaphone.mp3");
         this.sound.pauseOnBlur = false;
 
         this.load.on(FILE_LOAD_ERROR, (file: { src: string }) => {
@@ -395,6 +406,7 @@ export class GameScene extends DirtyScene {
                     undefined,
                     undefined,
                     (key: string, type: string, wamFile: unknown) => {
+                        console.log(wamFile);
                         this.wamFile = WAMFileFormat.parse(wamFile);
                         this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
                         this.doLoadTMJFile(this.mapUrlFile);
@@ -717,7 +729,7 @@ export class GameScene extends DirtyScene {
 
         biggestAvailableAreaStore.recompute();
         this.cameraManager.startFollowPlayer(this.CurrentPlayer);
-        if (ENABLE_FEATURE_MAP_EDITOR) {
+        if (ENABLE_MAP_EDITOR) {
             this.mapEditorModeManager = new MapEditorModeManager(this);
         }
 
@@ -872,6 +884,8 @@ export class GameScene extends DirtyScene {
                 if (commandsToApply) {
                     this.mapEditorModeManager?.updateMapToNewest(commandsToApply);
                 }
+
+                this.tryOpenMapEditorWithToolEditorParameter();
 
                 this.subscribeToStores();
 
@@ -1075,6 +1089,18 @@ export class GameScene extends DirtyScene {
                     }
                 });
 
+                const broadcastService = new BroadcastService(this.connection);
+                this._broadcastService = broadcastService;
+
+                this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
+                    if (megaphoneSettingsMessage) {
+                        megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
+                        if (megaphoneSettingsMessage.url) {
+                            broadcastService.joinSpace(megaphoneSettingsMessage.url);
+                        }
+                    }
+                });
+
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
 
@@ -1129,6 +1155,8 @@ export class GameScene extends DirtyScene {
 
                 // Get position from UUID only after the connection to the pusher is established
                 this.tryMovePlayerWithMoveToUserParameter();
+
+                gameSceneStore.set(this);
                 gameSceneIsLoadedStore.set(true);
             })
             .catch((e) => console.error(e));
@@ -1220,6 +1248,18 @@ export class GameScene extends DirtyScene {
 
         this.embedScreenLayoutStoreUnsubscriber = embedScreenLayoutStore.subscribe((layout) => {
             //this.reposition();
+        });
+
+        requestedCameraState.subscribe((state) => {
+            this.connection?.emitCameraState(state);
+        });
+
+        requestedMicrophoneState.subscribe((state) => {
+            this.connection?.emitMicrophoneState(state);
+        });
+
+        megaphoneEnabledStore.subscribe((state) => {
+            this.connection?.emitMegaphoneState(state);
         });
 
         const talkIconVolumeTreshold = 10;
@@ -2179,6 +2219,7 @@ ${escapedMessage}
         this.emoteManager?.destroy();
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
+        this._broadcastService?.destroy();
         this.peerStoreUnsubscriber?.();
         this.mapEditorModeStoreUnsubscriber?.();
         this.refreshPromptStoreStoreUnsubscriber?.();
@@ -2222,6 +2263,7 @@ ${escapedMessage}
         this.gameMapChangedSubscription?.unsubscribe();
         this.messageSubscription?.unsubscribe();
         gameSceneIsLoadedStore.set(false);
+        gameSceneStore.set(undefined);
         this.cleanupDone = true;
     }
 
@@ -2234,6 +2276,72 @@ ${escapedMessage}
             }
         });
         this.MapPlayersByKey.clear();
+    }
+
+    private tryOpenMapEditorWithToolEditorParameter(): void {
+        const toolEditorParam = urlManager.getHashParameter("mapEditor");
+        if (toolEditorParam) {
+            if (!get(mapEditorActivated)) {
+                layoutManagerActionStore.addAction({
+                    uuid: "mapEditorNotEnabled",
+                    type: "warning",
+                    message: get(LL).warning.mapEditorNotEnabled(),
+                    callback: () => layoutManagerActionStore.removeAction("mapEditorNotEnabled"),
+                    userInputManager: this.userInputManager,
+                });
+                setTimeout(() => layoutManagerActionStore.removeAction("mapEditorNotEnabled"), 6_000);
+            } else {
+                switch (toolEditorParam) {
+                    case "wamSettingsEditorTool": {
+                        mapEditorModeStore.switchMode(true);
+                        mapEditorSelectedToolStore.set(EditorToolName.WAMSettingsEditor);
+                        const menuItem = urlManager.getHashParameter("menuItem");
+                        if (menuItem) {
+                            switch (menuItem) {
+                                case "megaphone": {
+                                    mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(
+                                        WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone
+                                    );
+                                    break;
+                                }
+                                default: {
+                                    mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(undefined);
+                                    break;
+                                }
+                            }
+                        }
+                        break;
+                    }
+                    case "floor": {
+                        mapEditorModeStore.switchMode(true);
+                        mapEditorSelectedToolStore.set(EditorToolName.FloorEditor);
+                        break;
+                    }
+                    case "entity": {
+                        mapEditorModeStore.switchMode(true);
+                        mapEditorSelectedToolStore.set(EditorToolName.EntityEditor);
+                        break;
+                    }
+                    case "area": {
+                        mapEditorModeStore.switchMode(true);
+                        mapEditorSelectedToolStore.set(EditorToolName.AreaEditor);
+                        break;
+                    }
+                    default: {
+                        layoutManagerActionStore.addAction({
+                            uuid: "mapEditorShortCut",
+                            type: "warning",
+                            message: get(LL).warning.mapEditorShortCut(),
+                            callback: () => layoutManagerActionStore.removeAction("mapEditorShortCut"),
+                            userInputManager: this.userInputManager,
+                        });
+                        setTimeout(() => layoutManagerActionStore.removeAction("mapEditorShortCut"), 6_000);
+                        break;
+                    }
+                }
+            }
+            urlManager.clearHashParameter();
+        }
     }
 
     private tryMovePlayerWithMoveToParameter(): void {
@@ -2970,5 +3078,12 @@ ${escapedMessage}
 
     public getOutlineManager(): OutlineManager {
         return this.outlineManager;
+    }
+
+    public get broadcastService(): BroadcastService {
+        if (this._broadcastService === undefined) {
+            throw new Error("BroadcastService not initialized yet.");
+        }
+        return this._broadcastService;
     }
 }

@@ -45,7 +45,7 @@ export class PlayerTextures {
     private accessoriesResources: BodyResourceDescriptionListInterface = {};
     private layers: BodyResourceDescriptionListInterface[] = [];
 
-    private wokaCollections = new Map<string, BodyResourceDescriptionInterface[]>();
+    wokaCollections = new Map<string, BodyResourceDescriptionInterface[]>();
 
     public loadPlayerTexturesMetadata(metadata: WokaList): void {
         this.mapTexturesMetadataIntoResources(metadata);

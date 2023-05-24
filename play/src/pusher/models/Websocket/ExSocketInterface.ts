@@ -70,4 +70,7 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable,
     spaceUser: SpaceUser;
     spaces: Space[];
     spacesFilters: Map<string, SpaceFilterMessage[]>;
+    cameraState: boolean;
+    microphoneState: boolean;
+    megaphoneState: boolean;
 }

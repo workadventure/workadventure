@@ -38,6 +38,7 @@ export const AWS_ENDPOINT = env.AWS_ENDPOINT;
 export const S3_UPLOAD_CONCURRENCY_LIMIT = env.S3_UPLOAD_CONCURRENCY_LIMIT;
 export const MAX_UNCOMPRESSED_SIZE = env.MAX_UNCOMPRESSED_SIZE;
 export const USE_DOMAIN_NAME_IN_PATH = env.USE_DOMAIN_NAME_IN_PATH;
+export const PATH_PREFIX = env.PATH_PREFIX;
 export const STORAGE_DIRECTORY = env.STORAGE_DIRECTORY;
 // By default, cache only 10 seconds in the CDN
 export const CACHE_CONTROL = env.CACHE_CONTROL;

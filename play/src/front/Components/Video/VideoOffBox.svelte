@@ -6,13 +6,14 @@
     import { Color } from "@workadventure/shared-utils";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import type { VideoPeer } from "../../WebRtc/VideoPeer";
-    import Woka from "../Woka/Woka.svelte";
+    import Woka from "../Woka/WokaFromUserId.svelte";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
-    import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
-    import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
+    import type { EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import microphoneOffImg from "../images/microphone-off.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { speakerSelectedStore } from "../../Stores/MediaStore";
+    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import BanReportBox from "./BanReportBox.svelte";
     import { srcObject } from "./utils";
 

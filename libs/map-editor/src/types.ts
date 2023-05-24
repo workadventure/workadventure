@@ -5,6 +5,7 @@ import type { UpdateAreaCommandConfig } from "./Commands/Area/UpdateAreaCommand"
 import type { CreateEntityCommandConfig } from "./Commands/Entity/CreateEntityCommand";
 import type { DeleteEntityCommandConfig } from "./Commands/Entity/DeleteEntityCommand";
 import { UpdateEntityCommandConfig } from "./Commands/Entity/UpdateEntityCommand";
+import { UpdateWAMSettingCommandConfig } from "./Commands/WAM/UpdateWAMSettingCommand";
 
 export type CommandConfig =
     | UpdateAreaCommandConfig
@@ -12,7 +13,8 @@ export type CommandConfig =
     | CreateAreaCommandConfig
     | UpdateEntityCommandConfig
     | CreateEntityCommandConfig
-    | DeleteEntityCommandConfig;
+    | DeleteEntityCommandConfig
+    | UpdateWAMSettingCommandConfig;
 
 export type AtLeast<T, K extends keyof T> = Partial<T> & Pick<T, K>;
 
@@ -23,14 +25,14 @@ export enum Direction {
     Right = "Right",
 }
 
-export const TextHeaderPropertyData = z.string();
-
-export const ActionsMenuData = z.object({
+export const PropertyBase = z.object({
+    id: z.string(),
     buttonLabel: z.string().optional(),
     hideButtonLabel: z.boolean().optional(),
 });
 
-export const FocusablePropertyData = ActionsMenuData.extend({
+export const FocusablePropertyData = PropertyBase.extend({
+    type: z.literal("focusable"),
     zoom_margin: z.number().optional(),
 });
 
@@ -39,33 +41,57 @@ export const JitsiRoomConfigData = z.object({
     startWithVideoMuted: z.boolean().optional(),
 });
 
-export const StartPropertyData = z.boolean();
+export const SilentPropertyData = PropertyBase.extend({
+    type: z.literal("silent"),
+});
 
-export const SilentPropertyData = z.boolean();
+export const StartPropertyData = PropertyBase.extend({
+    type: z.literal("start"),
+});
 
-export const JitsiRoomPropertyData = ActionsMenuData.extend({
+export const JitsiRoomPropertyData = PropertyBase.extend({
+    type: z.literal("jitsiRoomProperty"),
     roomName: z.string(),
+    jitsiUrl: z.string().optional(),
+    closable: z.boolean().optional(),
+    trigger: z.union([z.literal("onaction"), z.literal("onicon")]).optional(),
+    triggerMessage: z.string().optional(),
+    noPrefix: z.boolean().optional(),
     jitsiRoomConfig: JitsiRoomConfigData,
 });
 
-export const PlayAudioPropertyData = ActionsMenuData.extend({
+export const PlayAudioPropertyData = PropertyBase.extend({
+    type: z.literal("playAudio"),
     audioLink: z.string(),
+    volume: z.number().default(1).optional(),
 });
 
-export const OpenWebsitePropertyData = ActionsMenuData.extend({
-    link: z.string(),
-    newTab: z.boolean().optional(),
+export const OpenWebsitePropertyData = PropertyBase.extend({
+    type: z.literal("openWebsite"),
+    link: z.string().default("https://workadventu.re"),
+    newTab: z.boolean().optional().default(false),
+    closable: z.boolean().optional(),
+    allowAPI: z.boolean().optional(),
+    trigger: z.union([z.literal("onaction"), z.literal("onicon")]).optional(),
+    triggerMessage: z.string().optional(),
+    width: z.number().default(50).optional(),
+    policy: z
+        .string()
+        .default("fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture")
+        .optional(),
+    position: z.number().optional(),
 });
 
-// TODO: Can they vary between Entity and Area or should it be the same type?
-export const AreaDataProperties = z.object({
-    start: StartPropertyData.optional().nullable(),
-    silent: SilentPropertyData.optional().nullable(),
-    focusable: FocusablePropertyData.optional().nullable(),
-    jitsiRoom: JitsiRoomPropertyData.optional().nullable(),
-    playAudio: PlayAudioPropertyData.optional().nullable(),
-    openWebsite: OpenWebsitePropertyData.optional().nullable(),
-});
+export const AreaDataProperty = z.union([
+    StartPropertyData,
+    FocusablePropertyData,
+    SilentPropertyData,
+    JitsiRoomPropertyData,
+    PlayAudioPropertyData,
+    OpenWebsitePropertyData,
+]);
+
+export const AreaDataProperties = z.array(AreaDataProperty);
 
 export const AreaData = z.object({
     id: z.string(),
@@ -78,12 +104,9 @@ export const AreaData = z.object({
     properties: AreaDataProperties,
 });
 
-export const EntityDataProperties = z.object({
-    textHeader: TextHeaderPropertyData.optional().nullable(),
-    jitsiRoom: JitsiRoomPropertyData.optional().nullable(),
-    playAudio: PlayAudioPropertyData.optional().nullable(),
-    openWebsite: OpenWebsitePropertyData.optional().nullable(),
-});
+export const EntityDataProperty = z.union([JitsiRoomPropertyData, PlayAudioPropertyData, OpenWebsitePropertyData]);
+
+export const EntityDataProperties = z.array(EntityDataProperty);
 
 export const EntityRawPrefab = z.object({
     name: z.string(),
@@ -110,6 +133,7 @@ export const EntityData = z.object({
     id: z.string(),
     x: z.number(),
     y: z.number(),
+    name: z.string().optional(),
     properties: EntityDataProperties.optional(),
     prefab: EntityPrefab,
 });
@@ -141,12 +165,26 @@ export const WAMVendor = z
             "This is a good place to store data generated by an admin (like access rights)"
     );
 
+export const MegaphoneSettings = z.object({
+    enabled: z.boolean(),
+    title: z.string().optional(),
+    scope: z.string().optional(),
+    rights: z.array(z.string()).optional(),
+});
+
+export type MegaphoneSettings = z.infer<typeof MegaphoneSettings>;
+
 export const WAMFileFormat = z.object({
     version: z.string(),
     mapUrl: z.string(),
     entities: z.array(EntityData),
     areas: z.array(AreaData),
     lastCommandId: z.string().optional(),
+    settings: z
+        .object({
+            megaphone: MegaphoneSettings.optional(),
+        })
+        .optional(),
     metadata: WAMMetadata.optional().describe("Contains metadata about the map (name, description, copyright, etc.)"),
     vendor: WAMVendor.optional(),
 });
@@ -168,12 +206,13 @@ export type EntityPrefab = z.infer<typeof EntityPrefab>;
 export type EntityCollection = z.infer<typeof EntityCollection>;
 export type EntityData = z.infer<typeof EntityData>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
-export type EntityDataPropertiesKeys = keyof z.infer<typeof EntityDataProperties>;
+export type EntityDataProperty = z.infer<typeof EntityDataProperty>;
+export type EntityDataPropertiesKeys = "jitsiRoomProperty" | "playAudio" | "openWebsite";
 export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;
-export type AreaDataPropertiesKeys = keyof z.infer<typeof AreaDataProperties>;
-export type TextHeaderPropertyData = z.infer<typeof TextHeaderPropertyData>;
-export type ActionsMenuData = z.infer<typeof ActionsMenuData>;
+export type AreaDataProperty = z.infer<typeof AreaDataProperty>;
+export type AreaDataPropertiesKeys = AreaDataProperty["type"];
+export type ActionsMenuData = z.infer<typeof PropertyBase>;
 export type StartPropertyData = z.infer<typeof StartPropertyData>;
 export type SilentPropertyData = z.infer<typeof SilentPropertyData>;
 export type FocusablePropertyData = z.infer<typeof FocusablePropertyData>;

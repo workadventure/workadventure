@@ -47,6 +47,7 @@ import {
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
 import Debug from "debug";
+import { WAMSettingsUtils } from "@workadventure/map-editor";
 import { GameRoom } from "../Model/GameRoom";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -188,6 +189,14 @@ export class SocketManager {
             activatedInviteUser: user.activatedInviteUser != undefined ? user.activatedInviteUser : true,
             applications: user.applications ?? [],
             playerVariable: playerVariablesMessage,
+            megaphoneSettings: {
+                enabled: WAMSettingsUtils.canUseMegaphone(room.wamSettings, user.tags),
+                url: WAMSettingsUtils.getMegaphoneUrl(
+                    room.wamSettings,
+                    room.roomGroup ?? new URL(room.roomUrl).host,
+                    room.roomUrl
+                ),
+            },
         };
 
         if (TURN_STATIC_AUTH_SECRET) {
@@ -756,6 +765,10 @@ export class SocketManager {
                     };
                     break;
                 }
+                case "roomTagsQuery": {
+                    // Nothing to do, the message will never be received in the back
+                    break;
+                }
                 default: {
                     const _exhaustiveCheck: never = queryCase;
                 }
@@ -1240,31 +1253,6 @@ export class SocketManager {
         }
         group.lock(message.lock);
         room.emitLockGroupEvent(user, group.getId());
-    }
-
-    handleEditMapCommandMessage(room: GameRoom, user: User, message: EditMapCommandMessage) {
-        if (!room.wamUrl) {
-            emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
-            return;
-        }
-        getMapStorageClient().handleEditMapCommandWithKeyMessage(
-            {
-                mapKey: room.wamUrl,
-                editMapCommandMessage: message,
-            },
-            (err: unknown, editMapCommandMessage: EditMapCommandMessage) => {
-                if (err) {
-                    emitError(user.socket, err);
-                    return;
-                }
-                room.dispatchRoomMessage({
-                    message: {
-                        $case: "editMapCommandMessage",
-                        editMapCommandMessage,
-                    },
-                });
-            }
-        );
     }
 
     handleUpdateMapToNewestMessage(room: GameRoom, user: User, message: UpdateMapToNewestWithKeyMessage) {
