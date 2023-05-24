@@ -21,7 +21,6 @@ COPY libs/tailwind/package.json libs/tailwind/package.json
 COPY libs/store-utils/package.json libs/store-utils/package.json
 COPY libs/shared-utils/package.json libs/shared-utils/package.json
 ENV NODE_ENV=production
-USER node
 RUN npm ci --omit=dev --workspace workadventureback
 COPY libs ./libs
 COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
@@ -29,7 +28,7 @@ COPY back ./back
 COPY --from=proto-builder /usr/src/generated ./back/src/Messages/generated
 WORKDIR /usr/src/back
 HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=10 CMD curl -f http://localhost:8080/ping || exit 1
-
+USER node
 RUN mkdir ./dist && chown -R node:node ./dist
 CMD ["npm", "run", "runprod"]
 

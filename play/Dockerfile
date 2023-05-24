@@ -55,7 +55,6 @@ COPY libs/tailwind/package.json libs/tailwind/package.json
 COPY libs/store-utils/package.json libs/store-utils/package.json
 COPY libs/shared-utils/package.json libs/shared-utils/package.json
 ENV NODE_ENV=production
-USER node
 RUN npm ci --omit=dev --workspace workadventure-play
 COPY --from=builder /usr/src/libs /usr/src/libs
 COPY --from=builder --chown=node:node /usr/src/play /usr/src/play
@@ -63,5 +62,5 @@ WORKDIR /usr/src/play
 
 HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=10 CMD curl -f http://localhost:3000 || exit 1
 
-
+USER node
 CMD ["npm", "run", "start"]

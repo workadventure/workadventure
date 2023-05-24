@@ -27,7 +27,6 @@ COPY libs/math-utils/package.json libs/math-utils/package.json
 COPY libs/tailwind/package.json libs/tailwind/package.json
 COPY libs/store-utils/package.json libs/store-utils/package.json
 COPY libs/shared-utils/package.json libs/shared-utils/package.json
-USER node
 RUN npm ci --omit=dev --workspace map-storage
 COPY libs ./libs
 COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
@@ -36,5 +35,5 @@ WORKDIR /usr/src/map-storage
 RUN mkdir ./dist && chown -R node:node ./dist
 
 HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=10 CMD curl -f http://localhost:3000/ping || exit 1
-
+USER node
 CMD ["npm", "run", "start"]
