@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { fly } from "svelte/transition";
     import type { Readable } from "svelte/store";
     import { onMount } from "svelte";
     import { PeerStatus, VideoPeer } from "../../WebRtc/VideoPeer";
@@ -6,10 +7,12 @@
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import type { ObtainedMediaStreamConstraints } from "../../WebRtc/P2PMessages/ConstraintMessage";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { JitsiTrackWrapper } from "../../Streaming/Jitsi/JitsiTrackWrapper";
     import VideoMediaBox from "./VideoMediaBox.svelte";
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import VideoOffBox from "./VideoOffBox.svelte";
+    import JitsiMediaBox from "./JitsiMediaBox.svelte";
 
     export let streamable: Streamable;
     export let isHightlighted = false;
@@ -78,6 +81,21 @@
     >
         <div class="{isHightlighted ? 'tw-h-[41vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-h-full tw-flex screen-blocker">
             <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
+        </div>
+    </div>
+{:else if streamable instanceof JitsiTrackWrapper}
+    <div
+        class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
+     media-box-shape-color tw-pointer-events-auto screen-blocker
+"
+        class:clickable={isClickable}
+        class:mozaic-duo={mozaicDuo}
+        class:mozaic-full-width={mozaicSolo}
+        class:mozaic-quarter={mozaicQuarter}
+        transition:fly={{ x: 200, duration: 250 }}
+    >
+        <div class="{isHightlighted ? 'tw-h-[32vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-flex screen-blocker">
+            <JitsiMediaBox peer={streamable} clickable={isClickable} />
         </div>
     </div>
 {:else}

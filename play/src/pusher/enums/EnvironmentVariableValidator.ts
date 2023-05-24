@@ -6,6 +6,7 @@ import {
     PositiveIntAsString,
     toBool,
     toNumber,
+    toArray,
 } from "@workadventure/shared-utils/src/EnvironmentVariables/EnvironmentVariableUtils";
 
 export const EnvironmentVariables = z.object({
@@ -63,8 +64,6 @@ export const EnvironmentVariables = z.object({
     TURN_PASSWORD: z.string().optional(),
     JITSI_URL: z.string().optional(),
     JITSI_PRIVATE_MODE: BoolAsString.optional().transform((val) => toBool(val, false)),
-    ENABLE_FEATURE_MAP_EDITOR: BoolAsString.optional().transform((val) => toBool(val, false)),
-    ENABLE_MAP_EDITOR_AREAS_TOOL: BoolAsString.optional().transform((val) => toBool(val, false)),
     MAX_USERNAME_LENGTH: PositiveIntAsString.optional().transform((val) => toNumber(val, 10)),
     MAX_PER_GROUP: PositiveIntAsString.optional().transform((val) => toNumber(val, 4)),
     NODE_ENV: z.string().optional(),
@@ -85,6 +84,13 @@ export const EnvironmentVariables = z.object({
     // RoomAPI related environment variables
     ROOM_API_PORT: PositiveIntAsString.optional().transform((val) => toNumber(val, 50051)),
     ROOM_API_SECRET_KEY: z.string().optional(),
+
+    // Map editor related environment variables
+    ENABLE_MAP_EDITOR: BoolAsString.optional().transform((val) => toBool(val, false)),
+    MAP_EDITOR_ALLOWED_USERS: z
+        .string()
+        .optional()
+        .transform((val) => toArray(val)),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

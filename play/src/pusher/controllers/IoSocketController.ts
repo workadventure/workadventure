@@ -13,11 +13,13 @@ import {
     WokaDetail,
     ApplicationDefinitionInterface,
     SpaceFilterMessage,
+    SpaceUser,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import { v4 as uuid } from "uuid";
 import { JID } from "stanza";
 import * as Sentry from "@sentry/node";
+import { Color } from "@workadventure/shared-utils";
 import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
 import { PointInterface } from "../models/Websocket/PointInterface";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
@@ -78,6 +80,7 @@ type UpgradeData = {
     activatedInviteUser?: boolean;
     isLogged: boolean;
     canEdit: boolean;
+    spaceUser: SpaceUser;
 };
 
 type UpgradeFailedInvalidData = {
@@ -194,9 +197,10 @@ export class IoSocketController {
                         }
 
                         for (const roomId of message.roomIds) {
-                            socketManager
-                                .handleAdminRoom(ws as ExAdminSocketInterface, roomId)
-                                .catch((e) => Sentry.captureException(e));
+                            socketManager.handleAdminRoom(ws as ExAdminSocketInterface, roomId).catch((e) => {
+                                console.error(e);
+                                Sentry.captureException(e);
+                            });
                         }
                     } else if (message.event === "user-message") {
                         const messageToEmit = message.message;
@@ -526,6 +530,27 @@ export class IoSocketController {
                             },
                             isLogged,
                             messages: [],
+                            spaceUser: SpaceUser.fromPartial({
+                                uuid: userData.userUuid,
+                                name,
+                                playUri: roomId,
+                                // FIXME : Get room name from admin
+                                roomName: "",
+                                availabilityStatus,
+                                isLogged,
+                                color: Color.getColorByString(name),
+                                tags: memberTags,
+                                cameraState: false,
+                                screenSharing: false,
+                                microphoneState: false,
+                                megaphoneState: false,
+                                characterLayers: characterLayerObjs.map((characterLayer) => ({
+                                    url: characterLayer.url ?? "",
+                                    name: characterLayer.id,
+                                    layer: characterLayer.layer ?? "",
+                                })),
+                                visitCardUrl: memberVisitCardUrl ?? undefined,
+                            }),
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */
@@ -612,6 +637,7 @@ export class IoSocketController {
                     // Let's join the room
                     const client = this.initClient(ws);
                     await socketManager.handleJoinRoom(client);
+                    /*
                     // TODO : Get prefix from Admin and joinSpace prefixed
                     const spaceName = client.roomId + "/space";
                     await socketManager.handleJoinSpace(client, spaceName, {
@@ -622,6 +648,7 @@ export class IoSocketController {
                             spaceFilterEverybody: {},
                         },
                     });
+                     */
                     socketManager.emitXMPPSettings(client);
 
                     //get data information and show messages
@@ -764,11 +791,50 @@ export class IoSocketController {
                             socketManager.handleSetPlayerDetails(client, message.message.setPlayerDetailsMessage);
                             break;
                         }
+                        case "watchSpaceMessage": {
+                            void socketManager.handleJoinSpace(
+                                client,
+                                message.message.watchSpaceMessage.spaceName,
+                                message.message.watchSpaceMessage.spaceFilter
+                            );
+                            break;
+                        }
+                        case "unwatchSpaceMessage": {
+                            // TODO : Implement
+                            break;
+                        }
+                        case "cameraStateMessage": {
+                            socketManager.handleCameraState(client, message.message.cameraStateMessage.value);
+                            break;
+                        }
+                        case "microphoneStateMessage": {
+                            socketManager.handleMicrophoneState(client, message.message.microphoneStateMessage.value);
+                            break;
+                        }
+                        case "megaphoneStateMessage": {
+                            socketManager.handleMegaphoneState(client, message.message.megaphoneStateMessage.value);
+                            break;
+                        }
+                        case "jitsiParticipantIdSpaceMessage": {
+                            socketManager.handleJitsiParticipantIdSpace(
+                                client,
+                                message.message.jitsiParticipantIdSpaceMessage.spaceName,
+                                message.message.jitsiParticipantIdSpaceMessage.value
+                            );
+                            break;
+                        }
+                        case "queryMessage": {
+                            if (message.message.queryMessage.query?.$case === "roomTagsQuery") {
+                                void socketManager.handleRoomTagsQuery(client, message.message.queryMessage);
+                            } else {
+                                socketManager.forwardMessageToBack(client, message.message);
+                            }
+                            break;
+                        }
                         case "itemEventMessage":
                         case "variableMessage":
                         case "webRtcSignalToServerMessage":
                         case "webRtcScreenSharingSignalToServerMessage":
-                        case "queryMessage":
                         case "emotePromptMessage":
                         case "followRequestMessage":
                         case "followConfirmationMessage":
@@ -861,6 +927,9 @@ export class IoSocketController {
         };
         client.spaces = [];
         client.spacesFilters = new Map<string, SpaceFilterMessage[]>();
+        client.spaceUser = ws.spaceUser;
+        client.cameraState = ws.cameraState;
+        client.microphoneState = ws.microphoneState;
         return client;
     }
 }

@@ -577,6 +577,9 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.input.keyboard.on("keyup-BACKSPACE", () => {
             this.backToPreviousScene();
         });
+        this.input.keyboard.on("keyup-DELETE", () => {
+            this.backToPreviousScene();
+        });
         this.input.keyboard.on("keydown-LEFT", () => {
             this.selectNextGridItem(true);
         });

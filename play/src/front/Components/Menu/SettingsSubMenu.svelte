@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { localUserStore } from "../../Connexion/LocalUserStore";
-    import { videoConstraintStore } from "../../Stores/MediaStore";
+    import { frameRateStore } from "../../Stores/MediaStore";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { menuVisiblilityStore } from "../../Stores/MenuStore";
     import { LL, locale } from "../../../i18n/i18n-svelte";
@@ -42,7 +42,8 @@
 
         if (valueVideo !== previewValueVideo) {
             previewValueVideo = valueVideo;
-            videoConstraintStore.setFrameRate(valueVideo);
+            frameRateStore.set(valueVideo);
+            localUserStore.setVideoQualityValue(valueVideo);
         }
 
         if (valueCameraPrivacySettings !== previewCameraPrivacySettings) {

@@ -3,15 +3,15 @@
     import type { EnableCameraScene } from "../../Phaser/Login/EnableCameraScene";
     import { EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
     import {
-        audioConstraintStore,
+        requestedCameraDeviceIdStore,
         batchGetUserMediaStore,
         cameraListStore,
         localStreamStore,
         localVolumeStore,
+        requestedMicrophoneDeviceIdStore,
         microphoneListStore,
         requestedCameraState,
         requestedMicrophoneState,
-        videoConstraintStore,
     } from "../../Stores/MediaStore";
     import type { Game } from "../../Phaser/Game/Game";
     import cinemaCloseImg from "../images/no-video.svg";
@@ -86,7 +86,7 @@
             return;
         }
         requestedCameraState.enableWebcam();
-        videoConstraintStore.setDeviceId(selectedCamera);
+        requestedCameraDeviceIdStore.set(selectedCamera);
     }
 
     function selectMicrophone() {
@@ -95,7 +95,7 @@
             return;
         }
         requestedMicrophoneState.enableMicrophone();
-        audioConstraintStore.setDeviceId(selectedMicrophone);
+        requestedMicrophoneDeviceIdStore.set(selectedMicrophone);
     }
 </script>
 

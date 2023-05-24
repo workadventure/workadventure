@@ -2,6 +2,7 @@ import type { BatchToPusherRoomMessage } from "@workadventure/messages";
 import Debug from "debug";
 import type { ClientReadableStream } from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
+import { WAMFileFormat, WAMSettingsUtils } from "@workadventure/map-editor";
 import { apiClientRepository } from "../services/ApiClientRepository";
 import type { ExSocketInterface } from "./Websocket/ExSocketInterface";
 import { PositionDispatcher } from "./PositionDispatcher";
@@ -20,6 +21,8 @@ export class PusherRoom implements CustomJsonReplacerInterface {
     private backConnection!: ClientReadableStream<BatchToPusherRoomMessage>;
     private isClosing = false;
     private listeners: Set<ExSocketInterface> = new Set<ExSocketInterface>();
+
+    private _wamSettings: WAMFileFormat["settings"] = {};
 
     constructor(public readonly roomUrl: string, private socketListener: ZoneEventListener) {
         // A zone is 10 sprites wide.
@@ -112,6 +115,29 @@ export class PusherRoom implements CustomJsonReplacerInterface {
                                     editMapCommandMessage: message.message.editMapCommandMessage,
                                 },
                             });
+                            if (
+                                message.message.editMapCommandMessage.editMapMessage?.message?.$case ===
+                                "updateMegaphoneSettingMessage"
+                            ) {
+                                if (!this._wamSettings) {
+                                    this._wamSettings = {};
+                                }
+                                this._wamSettings.megaphone =
+                                    message.message.editMapCommandMessage.editMapMessage.message.updateMegaphoneSettingMessage;
+                                listener.emitInBatch({
+                                    message: {
+                                        $case: "megaphoneSettingsMessage",
+                                        megaphoneSettingsMessage: {
+                                            enabled: WAMSettingsUtils.canUseMegaphone(this._wamSettings, listener.tags),
+                                            url: WAMSettingsUtils.getMegaphoneUrl(
+                                                this._wamSettings,
+                                                new URL(this.roomUrl).host,
+                                                this.roomUrl
+                                            ),
+                                        },
+                                    },
+                                });
+                            }
                         }
                         break;
                     }

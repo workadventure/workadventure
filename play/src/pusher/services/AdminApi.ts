@@ -637,6 +637,13 @@ class AdminApi implements AdminInterface {
             });
         }
     }
+
+    async getTagsList(roomUrl: string) {
+        const response = await axios.get(ADMIN_API_URL + "/api/room/tags" + "?roomUrl=" + encodeURIComponent(roomUrl), {
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+        });
+        return response.data ? response.data : [];
+    }
 }
 
 export const adminApi = new AdminApi();

@@ -2,8 +2,8 @@
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
     import { Color } from "@workadventure/shared-utils";
-    import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
-    import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+    import type { EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
 
     import type { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";

@@ -20,7 +20,7 @@ export const EnvironmentVariables = z.object({
     SECRET_JITSI_KEY: z.string().optional().transform(emptyStringToUndefined),
     BBB_URL: z.string().url().or(z.literal("")).optional().transform(emptyStringToUndefined),
     BBB_SECRET: z.string().optional().transform(emptyStringToUndefined),
-    ENABLE_FEATURE_MAP_EDITOR: BoolAsString.optional().transform((val) => toBool(val, false)),
+    ENABLE_MAP_EDITOR: BoolAsString.optional().transform((val) => toBool(val, false)),
     HTTP_PORT: PositiveIntAsString.optional().transform((val) => toNumber(val, 8080)),
     GRPC_PORT: PositiveIntAsString.optional().transform((val) => toNumber(val, 50051)),
     TURN_STATIC_AUTH_SECRET: z.string().optional().transform(emptyStringToUndefined),

@@ -12,6 +12,7 @@ import {
     MapBbbData,
     MapJitsiData,
     RefreshRoomMessage,
+    EditMapCommandMessage,
 } from "@workadventure/messages";
 import { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import { Jitsi } from "@workadventure/shared-utils";
@@ -19,6 +20,7 @@ import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
 import { Value } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/struct";
 import * as Sentry from "@sentry/node";
+import { GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
 import { PositionInterface } from "../Model/PositionInterface";
 import {
     EmoteCallback,
@@ -48,11 +50,12 @@ import {
     SECRET_JITSI_KEY,
     STORE_VARIABLES_FOR_LOCAL_MAPS,
 } from "../Enum/EnvironmentVariable";
-import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
+import { emitError, emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { MapLoadingError } from "../Services/MapLoadingError";
 import { MucManager } from "../Services/MucManager";
+import { getMapStorageClient } from "../Services/MapStorageClient";
 import { BrothersFinder } from "./BrothersFinder";
 import { PositionNotifier } from "./PositionNotifier";
 import { User, UserSocket } from "./User";
@@ -79,8 +82,8 @@ export class GameRoom implements BrothersFinder {
     private variableListeners: Set<VariableSocket> = new Set<VariableSocket>();
 
     private constructor(
-        public readonly roomUrl: string,
-        private roomGroup: string | null,
+        public readonly _roomUrl: string,
+        private _roomGroup: string | null,
         private readonly connectCallback: ConnectCallback,
         private readonly disconnectCallback: DisconnectCallback,
         private readonly minDistance: number,
@@ -94,7 +97,8 @@ export class GameRoom implements BrothersFinder {
         private thirdParty: MapThirdPartyData | undefined,
         private editable: boolean,
         private _mapUrl: string,
-        private _wamUrl?: string
+        private _wamUrl?: string,
+        private _wamSettings: WAMFileFormat["settings"] = {}
     ) {
         // A zone is 10 sprites wide.
         this.positionNotifier = new PositionNotifier(
@@ -124,12 +128,18 @@ export class GameRoom implements BrothersFinder {
     ): Promise<GameRoom> {
         const mapDetails = await GameRoom.getMapDetails(roomUrl);
         const wamUrl = mapDetails.wamUrl;
-        const mapUrl = await mapFetcher.getMapUrl(
-            mapDetails.mapUrl,
-            mapDetails.wamUrl,
-            INTERNAL_MAP_STORAGE_URL,
-            PUBLIC_MAP_STORAGE_PREFIX
-        );
+
+        let mapUrl: string;
+        let wamFile: WAMFileFormat | undefined = undefined;
+
+        if (!wamUrl && mapDetails.mapUrl) {
+            mapUrl = mapDetails.mapUrl;
+        } else if (wamUrl) {
+            wamFile = await mapFetcher.fetchWamFile(wamUrl, INTERNAL_MAP_STORAGE_URL, PUBLIC_MAP_STORAGE_PREFIX);
+            mapUrl = mapFetcher.normalizeMapUrl(wamUrl, wamFile.mapUrl);
+        } else {
+            throw new Error("No mapUrl or wamUrl");
+        }
 
         const gameRoom = new GameRoom(
             roomUrl,
@@ -147,7 +157,8 @@ export class GameRoom implements BrothersFinder {
             mapDetails.thirdParty ?? undefined,
             mapDetails.editable ?? false,
             mapUrl,
-            wamUrl
+            wamUrl,
+            wamFile ? wamFile.settings : undefined
         );
 
         gameRoom
@@ -184,7 +195,7 @@ export class GameRoom implements BrothersFinder {
                 message: {
                     $case: "refreshRoomMessage",
                     refreshRoomMessage: RefreshRoomMessage.fromPartial({
-                        roomId: this.roomUrl,
+                        roomId: this._roomUrl,
                         timeToRefresh: 30,
                     }),
                 },
@@ -228,8 +239,8 @@ export class GameRoom implements BrothersFinder {
             joinRoomMessage.visitCardUrl ?? null,
             joinRoomMessage.name,
             ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.characterLayer),
-            this.roomUrl,
-            this.roomGroup ?? undefined,
+            this._roomUrl,
+            this._roomGroup ?? undefined,
             this,
             joinRoomMessage.companion,
             undefined,
@@ -339,7 +350,7 @@ export class GameRoom implements BrothersFinder {
                 } else {
                     const closestUser: User = closestItem;
                     const group: Group = new Group(
-                        this.roomUrl,
+                        this._roomUrl,
                         [user, closestUser],
                         this.groupRadius,
                         this.connectCallback,
@@ -423,7 +434,7 @@ export class GameRoom implements BrothersFinder {
 
                     // Re-create a group with the followers
                     const newGroup: Group = new Group(
-                        this.roomUrl,
+                        this._roomUrl,
                         [user, ...followingMembers],
                         this.groupRadius,
                         this.connectCallback,
@@ -632,7 +643,7 @@ export class GameRoom implements BrothersFinder {
 
     public async incrementVersion(): Promise<number> {
         // Let's check if the mapUrl has changed
-        const mapDetails = await GameRoom.getMapDetails(this.roomUrl);
+        const mapDetails = await GameRoom.getMapDetails(this._roomUrl);
         const mapUrl = await mapFetcher.getMapUrl(
             mapDetails.mapUrl,
             mapDetails.wamUrl,
@@ -764,7 +775,7 @@ export class GameRoom implements BrothersFinder {
             this.variableManagerLastLoad = new Date();
             this.variableManagerPromise = this.getMap()
                 .then(async (map) => {
-                    const variablesManager = await VariablesManager.create(this.roomUrl, map);
+                    const variablesManager = await VariablesManager.create(this._roomUrl, map);
                     return variablesManager.init();
                 })
                 .catch(async (e) => {
@@ -782,7 +793,7 @@ export class GameRoom implements BrothersFinder {
                             }
                         }, 1000);
 
-                        const variablesManager = await VariablesManager.create(this.roomUrl, null);
+                        const variablesManager = await VariablesManager.create(this._roomUrl, null);
                         return variablesManager.init();
                     } else {
                         // An error occurred while loading the map
@@ -799,7 +810,7 @@ export class GameRoom implements BrothersFinder {
                             }
                         }, 1000);
 
-                        const variablesManager = await VariablesManager.create(this.roomUrl, null);
+                        const variablesManager = await VariablesManager.create(this._roomUrl, null);
                         return variablesManager.init();
                     }
                 });
@@ -851,7 +862,11 @@ export class GameRoom implements BrothersFinder {
                                     }
                                 }
                                 return {
-                                    mainValue: Jitsi.slugifyJitsiRoomName(mainValue, this.roomUrl, allProps),
+                                    mainValue: Jitsi.slugifyJitsiRoomName(
+                                        mainValue,
+                                        this._roomUrl,
+                                        allProps.has(GameMapProperties.JITSI_NO_PREFIX)
+                                    ),
                                     tagValue,
                                 };
                             }
@@ -1027,7 +1042,7 @@ export class GameRoom implements BrothersFinder {
             this.mucManagerLastLoad = new Date();
             this.mucManagerPromise = this.getMap(true)
                 .then((map) => {
-                    return new MucManager(this.roomUrl, map);
+                    return new MucManager(this._roomUrl, map);
                 })
                 .catch((e) => {
                     if (e instanceof LocalUrlError) {
@@ -1058,7 +1073,7 @@ export class GameRoom implements BrothersFinder {
                             }
                         }, 1000);
                     }
-                    return new MucManager(this.roomUrl, null);
+                    return new MucManager(this._roomUrl, null);
                 });
         }
         this._mapUrl = lastMapUrl;
@@ -1074,11 +1089,55 @@ export class GameRoom implements BrothersFinder {
         }
     }
 
+    forwardEditMapCommandMessage(user: User, message: EditMapCommandMessage) {
+        if (!this._wamUrl) {
+            emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
+            return;
+        }
+        getMapStorageClient().handleEditMapCommandWithKeyMessage(
+            {
+                mapKey: this._wamUrl,
+                editMapCommandMessage: message,
+            },
+            (err: unknown, editMapCommandMessage: EditMapCommandMessage) => {
+                if (err) {
+                    emitError(user.socket, err);
+                    return;
+                }
+                if (editMapCommandMessage.editMapMessage?.message?.$case === "updateMegaphoneSettingMessage") {
+                    if (!this._wamSettings) {
+                        this._wamSettings = {};
+                    }
+                    this._wamSettings.megaphone =
+                        editMapCommandMessage.editMapMessage.message.updateMegaphoneSettingMessage;
+                }
+                this.dispatchRoomMessage({
+                    message: {
+                        $case: "editMapCommandMessage",
+                        editMapCommandMessage,
+                    },
+                });
+            }
+        );
+    }
+
     get mapUrl(): string {
         return this._mapUrl;
     }
 
     get wamUrl(): string | undefined {
         return this._wamUrl;
+    }
+
+    get roomUrl(): string {
+        return this._roomUrl;
+    }
+
+    get roomGroup(): string | null {
+        return this._roomGroup;
+    }
+
+    get wamSettings(): WAMFileFormat["settings"] {
+        return this._wamSettings;
     }
 }

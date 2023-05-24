@@ -1,20 +1,30 @@
 import type { Readable } from "svelte/store";
-import { derived, get } from "svelte/store";
+import { derived, get, writable } from "svelte/store";
+import { createNestedStore } from "@workadventure/store-utils";
 import type { RemotePeer } from "../WebRtc/SimplePeer";
+import { GameScene } from "../Phaser/Game/GameScene";
+import { JitsiTrackWrapper } from "../Streaming/Jitsi/JitsiTrackWrapper";
 import type { ScreenSharingLocalMedia } from "./ScreenSharingStore";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
 import { peerStore, screenSharingStreamStore } from "./PeerStore";
-import { highlightedEmbedScreen } from "./EmbedScreensStore";
+import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
+import { gameSceneStore } from "./GameSceneStore";
 
-export type Streamable = RemotePeer | ScreenSharingLocalMedia;
+export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackWrapper;
+
+const jitsiTracksStore = createNestedStore<GameScene | undefined, Map<string, JitsiTrackWrapper>>(
+    gameSceneStore,
+    (gameScene) =>
+        gameScene ? gameScene.broadcastService.jitsiTracks : writable<Map<string, JitsiTrackWrapper>>(new Map())
+);
 
 /**
  * A store that contains everything that can produce a stream (so the peers + the local screen sharing stream)
  */
 function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
     return derived(
-        [screenSharingStreamStore, peerStore, screenSharingLocalMedia],
-        ([$screenSharingStreamStore, $peerStore, $screenSharingLocalMedia], set) => {
+        [jitsiTracksStore, screenSharingStreamStore, peerStore, screenSharingLocalMedia],
+        ([$jitsiTracksStore, $screenSharingStreamStore, $peerStore, $screenSharingLocalMedia] /*, set*/) => {
             const peers = new Map<string, Streamable>();
 
             const addPeer = (peer: Streamable) => {
@@ -23,6 +33,7 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 
             $screenSharingStreamStore.forEach(addPeer);
             $peerStore.forEach(addPeer);
+            $jitsiTracksStore.forEach((jitsiTrackStore) => addPeer(jitsiTrackStore));
 
             if ($screenSharingLocalMedia?.stream) {
                 addPeer($screenSharingLocalMedia);
@@ -34,7 +45,8 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
                 highlightedEmbedScreen.removeHighlight();
             }
 
-            set(peers);
+            //set(peers);
+            return peers;
         }
     );
 }

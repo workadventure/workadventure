@@ -3,6 +3,8 @@
     import { createEventDispatcher } from "svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
+    import focusSvg from "../../images/focus-white.svg";
+    import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: FocusablePropertyData;
 
@@ -13,33 +15,45 @@
     }
 </script>
 
-<div class="value-input">
-    <label for="zoomMarginName">{$LL.mapEditor.properties.focusableProperties.zoomMarginLabel()}</label>
-    <input
-        id="zoomMarginName"
-        type="number"
-        min="0"
-        max="2"
-        step="0.1"
-        bind:value={property.zoom_margin}
-        on:change={onValueChange}
-        on:focus={onMapEditorInputFocus}
-        on:blur={onMapEditorInputUnfocus}
-    />
-</div>
-{#if !property.hideButtonLabel}
-    <div class="value-input">
-        <label for="focusableButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
-        <input
-            id="focusableButtonLabel"
-            type="text"
-            bind:value={property.buttonLabel}
-            on:change={onValueChange}
-            on:focus={onMapEditorInputFocus}
-            on:blur={onMapEditorInputUnfocus}
-        />
-    </div>
-{/if}
+<PropertyEditorBase
+    on:close={() => {
+        dispatch("close");
+    }}
+>
+    <span slot="header" class="tw-flex tw-justify-center tw-items-center">
+        <img class="tw-w-6 tw-mr-1" src={focusSvg} alt={$LL.mapEditor.properties.focusableProperties.description()} />
+        {$LL.mapEditor.properties.focusableProperties.label()}
+    </span>
+    <span slot="content">
+        <div class="value-input">
+            <label for="zoomMarginName">{$LL.mapEditor.properties.focusableProperties.zoomMarginLabel()}</label>
+            <input
+                id="zoomMarginName"
+                type="number"
+                min="0"
+                max="2"
+                step="0.1"
+                bind:value={property.zoom_margin}
+                on:change={onValueChange}
+                on:focus={onMapEditorInputFocus}
+                on:blur={onMapEditorInputUnfocus}
+            />
+        </div>
+        {#if !property.hideButtonLabel}
+            <div class="value-input">
+                <label for="focusableButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
+                <input
+                    id="focusableButtonLabel"
+                    type="text"
+                    bind:value={property.buttonLabel}
+                    on:change={onValueChange}
+                    on:focus={onMapEditorInputFocus}
+                    on:blur={onMapEditorInputUnfocus}
+                />
+            </div>
+        {/if}
+    </span>
+</PropertyEditorBase>
 
 <style lang="scss">
     .value-input {
@@ -47,7 +61,7 @@
         width: 100%;
         margin-bottom: 0.5em;
         margin-top: 0.5em;
-        align-items: center;
+        flex-direction: column;
         label {
             min-width: fit-content;
             margin-right: 0.5em;

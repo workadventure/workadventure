@@ -32,11 +32,7 @@
          "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
          "EJABBERD_USER": "admin",
          "EJABBERD_PASSWORD": "apideo",
-         "ENABLE_FEATURE_MAP_EDITOR":"true",
-         "ENABLE_MAP_EDITOR_AREAS_TOOL":"true",
-        # Sentry integration
-        "SENTRY_RELEASE": env.SENTRY_RELEASE,
-         "SENTRY_DSN": if namespace == "master" env.SENTRY_DSN_BACK then else if namespace == "develop" then env.SENTRY_DSN_BACK_DEV else "",
+         "ENABLE_MAP_EDITOR":"true",
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -71,11 +67,7 @@
               "INTERNAL_MAP_STORAGE_URL": "http://map-storage:3000",
               "EJABBERD_USER": "admin",
               "EJABBERD_PASSWORD": "apideo",
-              "ENABLE_FEATURE_MAP_EDITOR":"true",
-              "ENABLE_MAP_EDITOR_AREAS_TOOL":"true",
-              # Sentry integration
-              "SENTRY_RELEASE": env.SENTRY_RELEASE,
-              "SENTRY_DSN": if namespace == "master" env.SENTRY_DSN_BACK then else if namespace == "develop" then env.SENTRY_DSN_BACK_DEV else "",
+              "ENABLE_MAP_EDITOR":"true",
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -111,16 +103,11 @@
           "POSTHOG_URL": if namespace == "master" then env.POSTHOG_URL else "",
           "TURN_SERVER": "turn:coturn.workadventure.fr:443,turns:coturn.workadventure.fr:443",
           "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
-          "ENABLE_FEATURE_MAP_EDITOR":"true",
-          "ENABLE_MAP_EDITOR_AREAS_TOOL":"true",
+          "ENABLE_MAP_EDITOR":"true",
           "ICON_URL": "https://icon-"+url,
           "CHAT_URL": "https://chat-"+url,
           "LOGROCKET_ID": env.LOGROCKET_ID,
           "ROOM_API_PORT": "50051",
-          # Sentry integration
-          "SENTRY_RELEASE": env.SENTRY_RELEASE,
-          "SENTRY_DSN_FRONT": if namespace == "master" then env.SENTRY_DSN_FRONT else if namespace == "develop" then env.SENTRY_DSN_FRONT_DEV else "",
-          "SENTRY_DSN_PUSHER": if namespace == "master" env.SENTRY_DSN_PUSHER else if namespace == "develop" then env.SENTRY_DSN_PUSHER_DEV else "",
         } + (if adminUrl != null then {
           # Admin
           "ADMIN_URL": adminUrl,
@@ -153,9 +140,6 @@
         "ICON_URL": "//icon-"+url,
         "EJABBERD_WS_URI": "wss://xmpp-"+url+"/ws",
         "EJABBERD_DOMAIN": "xmpp-"+url,
-        # Sentry integration
-        "SENTRY_RELEASE": env.SENTRY_RELEASE,
-        "SENTRY_DSN": if namespace == "master" then env.SENTRY_DSN_CHAT else if namespace == "develop" then env.SENTRY_DSN_CHAT_DEV else "",
       } + (if adminUrl != null then {
         # Admin
         "ENABLE_OPENID": "1",
@@ -176,8 +160,6 @@
              "AUTHENTICATION_PASSWORD": "password",
              "AUTHENTICATION_TOKEN": "SomeSecretToken",
              "USE_DOMAIN_NAME_IN_PATH": if (adminUrl == null) then "false" else "true",
-             "SENTRY_RELEASE": env.SENTRY_RELEASE,
-             "SENTRY_DSN": if namespace == "master" then env.SENTRY_DSN_MAPSTORAGE else if namespace == "develop" then env.SENTRY_DSN_MAPSTORAGE_DEV else "",
            }
          },
     "uploaderredis":{

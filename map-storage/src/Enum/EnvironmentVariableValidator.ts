@@ -24,6 +24,12 @@ const BasicEnvironmentVariables = z.object({
     USE_DOMAIN_NAME_IN_PATH: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe("If true, the domain name will be used as a top level directory when fetching/storing files"),
+    PATH_PREFIX: z
+        .string()
+        .optional()
+        .describe(
+            "The prefix to strip if a reverse proxy is proxying calls to the map-storage from a path, e.g. /map-storage"
+        ),
     STORAGE_DIRECTORY: z
         .string()
         .optional()

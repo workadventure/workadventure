@@ -170,11 +170,7 @@ const roomManager = {
                                 break;
                             }
                             case "editMapCommandMessage": {
-                                socketManager.handleEditMapCommandMessage(
-                                    room,
-                                    user,
-                                    message.message.editMapCommandMessage
-                                );
+                                room.forwardEditMapCommandMessage(user, message.message.editMapCommandMessage);
                                 break;
                             }
                             case "sendUserMessage": {

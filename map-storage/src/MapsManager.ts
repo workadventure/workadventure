@@ -8,6 +8,7 @@ import {
     CreateAreaCommand,
     CreateEntityCommand,
     DeleteEntityCommand,
+    UpdateWAMSettingCommand,
     EntityCollection,
     EntityPrefab,
     EntityRawPrefab,
@@ -41,7 +42,7 @@ class MapsManager {
     /**
      * Kill saving map interval after given time of no changes done to the map
      */
-    private readonly NO_CHANGE_DETECTED_MS: number = 1 * 60 * 1000; // 1 minute
+    private readonly NO_CHANGE_DETECTED_MS: number = 1 * 20 * 1000; // 20 seconds
 
     constructor() {
         this.loadedMaps = new Map<string, GameMap>();
@@ -102,6 +103,15 @@ class MapsManager {
             }
             case "DeleteEntityCommand": {
                 command = new DeleteEntityCommand(gameMap, commandConfig, commandId);
+                command.execute();
+                break;
+            }
+            case "UpdateWAMSettingCommand": {
+                const wam = gameMap.getWam();
+                if (!wam) {
+                    throw new Error("WAM is not defined");
+                }
+                command = new UpdateWAMSettingCommand(wam, commandConfig, commandId);
                 command.execute();
                 break;
             }
@@ -227,7 +237,7 @@ class MapsManager {
         return {
             ...rawPrefab,
             collectionName,
-            id: `${rawPrefab.name}:${rawPrefab.color}:${rawPrefab.direction}`,
+            id: `${collectionName}:${rawPrefab.name}:${rawPrefab.color}:${rawPrefab.direction}`,
         };
     }
 }

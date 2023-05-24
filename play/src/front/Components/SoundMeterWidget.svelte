@@ -8,12 +8,14 @@
 
     let barClass: string;
 
-    if (barColor && barColor === "blue") {
-        barClass = "tw-bg-light-blue";
-    } else if (barColor && barColor === "black") {
-        barClass = "tw-bg-black";
-    } else {
-        barClass = "tw-bg-white";
+    $: {
+        if (barColor && barColor === "blue") {
+            barClass = "tw-bg-light-blue";
+        } else if (barColor && barColor === "black") {
+            barClass = "tw-bg-black";
+        } else {
+            barClass = "tw-bg-white";
+        }
     }
 </script>
 
