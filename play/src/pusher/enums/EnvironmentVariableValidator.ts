@@ -80,6 +80,7 @@ export const EnvironmentVariables = z.object({
     SENTRY_DSN_FRONT: z.string().optional(),
     SENTRY_DSN_PUSHER: z.string().optional(),
     SENTRY_RELEASE: z.string().optional(),
+    SENTRY_TRACES_SAMPLE_RATE: z.number().optional(),
 
     // RoomAPI related environment variables
     ROOM_API_PORT: PositiveIntAsString.optional().transform((val) => toNumber(val, 50051)),

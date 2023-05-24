@@ -16,6 +16,7 @@ const EJABBERD_WS_URI: string = getEnvConfig("EJABBERD_WS_URI") || "";
 
 const SENTRY_DSN = getEnvConfig("SENTRY_DSN");
 const SENTRY_RELEASE = getEnvConfig("SENTRY_RELEASE");
+const SENTRY_TRACES_SAMPLE_RATE = getEnvConfig("SENTRY_TRACES_SAMPLE_RATE");
 
 export {
     PUSHER_URL,
@@ -30,4 +31,5 @@ export {
     EJABBERD_WS_URI,
     SENTRY_DSN,
     SENTRY_RELEASE,
+    SENTRY_TRACES_SAMPLE_RATE,
 };

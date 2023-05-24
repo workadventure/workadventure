@@ -35,4 +35,5 @@ export interface FrontConfigurationInterface {
     SENTRY_DSN_FRONT: string | undefined;
     SENTRY_DSN_PUSHER: string | undefined;
     SENTRY_RELEASE: string | undefined;
+    SENTRY_TRACES_SAMPLE_RATE: number | undefined;
 }

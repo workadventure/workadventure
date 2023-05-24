@@ -53,6 +53,11 @@ const BasicEnvironmentVariables = z.object({
         .string()
         .optional()
         .describe("The Sentry release we target. Only used if SENTRY_DSN is configured."),
+    SENTRY_TRACES_SAMPLE_RATE: z
+        .number()
+        .optional()
+        .default(0.1)
+        .describe("The sampling rate for Sentry traces. Only used if SENTRY_DSN is configured."),
 });
 
 const BearerAuthEnvVariables = z.object({

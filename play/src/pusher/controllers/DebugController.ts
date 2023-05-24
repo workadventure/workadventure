@@ -1,5 +1,4 @@
 import { stringify } from "circular-json";
-import * as Sentry from "@sentry/node";
 import { ADMIN_API_TOKEN } from "../enums/EnvironmentVariable";
 import { socketManager } from "../services/SocketManager";
 import { CustomJsonReplacerInterface } from "../models/CustomJsonReplacerInterface";
@@ -54,14 +53,6 @@ export class DebugController extends BaseHttpController {
                 })
             );
             return;
-        });
-
-        this.app.get("/test-sentry", (req, res) => {
-            try {
-                throw new Error("Test Sentry");
-            } catch (e) {
-                Sentry.captureException(e);
-            }
         });
     }
 }

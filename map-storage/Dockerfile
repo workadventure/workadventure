@@ -15,6 +15,7 @@ RUN npm run tag-version && npm run ts-proto
 FROM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d
 EXPOSE 3000 50053
 WORKDIR /usr/src
+USER node
 ENV STORAGE_DIRECTORY=/maps
 RUN mkdir /maps && chown node:node /maps
 RUN apt-get update && apt-get install -y git
@@ -30,14 +31,10 @@ RUN npm ci --omit=dev --workspace map-storage
 COPY libs ./libs
 COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
 COPY --chown=node:node map-storage map-storage
-RUN chown -R node:node /usr/src/node_modules
-RUN chown -R node:node /usr/src/map-storage/node_modules
-RUN chown -R node:node /usr/src/package-lock.json
 WORKDIR /usr/src/map-storage
 RUN mkdir ./dist && chown -R node:node ./dist
 
 RUN apt-get update && apt-get install -y curl
 HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=10 CMD curl -f http://localhost:3000/ping || exit 1
 
-USER node
 CMD ["npm", "run", "start"]

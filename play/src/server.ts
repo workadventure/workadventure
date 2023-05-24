@@ -3,6 +3,7 @@ import process from "process";
 import * as Sentry from "@sentry/node";
 import * as grpc from "@grpc/grpc-js";
 import { RoomApiService } from "@workadventure/messages/src/ts-proto-generated/room-api";
+import { SENTRY_TRACES_SAMPLE_RATE } from "workadventurechat/src/Enum/EnvironmentVariable";
 import app from "./pusher/app";
 import {
     PUSHER_HTTP_PORT,
@@ -28,12 +29,15 @@ if (SENTRY_DSN != undefined) {
     try {
         const sentryOptions: Sentry.NodeOptions = {
             dsn: SENTRY_DSN,
+        };
+
+        if (SENTRY_TRACES_SAMPLE_RATE != undefined) {
             // Set tracesSampleRate to 1.0 to capture 100%
             // of transactions for performance monitoring.
             // We recommend adjusting this value in production
-            // To set a uniform sample rate
-            tracesSampleRate: 0.2,
-        };
+            sentryOptions.tracesSampleRate = parseFloat(SENTRY_TRACES_SAMPLE_RATE);
+        }
+
         if (SENTRY_RELEASE != undefined) {
             // Make sure this value is identical to the name you give the release that you
             // create below using Sentry CLI
