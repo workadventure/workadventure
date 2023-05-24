@@ -11,7 +11,6 @@ RUN npm run tag-version && npm run ts-proto
 FROM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d
 EXPOSE 8080 50051
 WORKDIR /usr/src
-USER node
 RUN apt-get update && apt-get install -y git
 COPY package.json package-lock.json ./
 COPY back/package.json back/package.json
@@ -23,6 +22,7 @@ COPY libs/store-utils/package.json libs/store-utils/package.json
 COPY libs/shared-utils/package.json libs/shared-utils/package.json
 ENV NODE_ENV=production
 RUN npm ci --omit=dev --workspace workadventureback
+USER node
 COPY libs ./libs
 COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
 COPY back ./back
