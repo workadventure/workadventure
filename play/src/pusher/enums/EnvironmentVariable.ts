@@ -80,6 +80,10 @@ export const LOGROCKET_ID: string | undefined = env.LOGROCKET_ID;
 export const ROOM_API_PORT = env.ROOM_API_PORT;
 export const ROOM_API_SECRET_KEY = env.ROOM_API_SECRET_KEY;
 
+// Map editor
+export const ENABLE_MAP_EDITOR: boolean = env.ENABLE_MAP_EDITOR;
+export const MAP_EDITOR_ALLOWED_USERS: string[] = env.MAP_EDITOR_ALLOWED_USERS;
+
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     DEBUG_MODE: env.DEBUG_MODE,
@@ -95,8 +99,7 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     TURN_PASSWORD: env.TURN_PASSWORD,
     JITSI_URL: env.JITSI_URL,
     JITSI_PRIVATE_MODE: env.JITSI_PRIVATE_MODE,
-    ENABLE_FEATURE_MAP_EDITOR: env.ENABLE_FEATURE_MAP_EDITOR,
-    ENABLE_MAP_EDITOR_AREAS_TOOL: env.ENABLE_MAP_EDITOR_AREAS_TOOL,
+    ENABLE_MAP_EDITOR: env.ENABLE_MAP_EDITOR,
     MAX_USERNAME_LENGTH: env.MAX_USERNAME_LENGTH,
     MAX_PER_GROUP: env.MAX_PER_GROUP,
     NODE_ENV: env.NODE_ENV || "development",

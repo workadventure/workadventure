@@ -5,12 +5,12 @@
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import EntityEditor from "./EntityEditor.svelte";
     import AreaEditor from "./AreaEditor.svelte";
-    import ConfigureMyRoom from "./ConfigureMyRoom.svelte";
+    import ConfigureMyRoom from "./WAMSettingsEditor.svelte";
 </script>
 
 <MapEditorSideBar />
 <div class="map-editor tw-bg-dark-blue/95">
-    {#if $mapEditorSelectedToolStore === EditorToolName.ConfigureMyRoom}
+    {#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
         <ConfigureMyRoom />
     {:else}
         <div class="sidebar" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>

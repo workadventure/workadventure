@@ -96,6 +96,16 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.selectedWoka = null;
         this.selectedCollectionIndex = 0;
         this.collectionKeys = this.playerTextures.getCollectionsKeys();
+        if (localUserStore.getCharacterLayers()) {
+            this.playerTextures.wokaCollections.forEach((collection, index) => {
+                collection.forEach((woka) => {
+                    const wokaCurrentId = localUserStore.getCharacterLayers()?.find((wokaId) => wokaId === woka.id);
+                    if (wokaCurrentId) {
+                        this.selectedCollectionIndex = this.collectionKeys.indexOf(index);
+                    }
+                });
+            });
+        }
         selectedCollection.set(this.getSelectedCollectionName());
 
         customizeAvailableStore.set(this.isCustomizationAvailable());
@@ -224,12 +234,14 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         const textures = this.playerTextures.getWokaCollectionTextures(this.getSelectedCollectionName());
 
         let currentSelectedItem = null;
+
         for (let i = 0; i < textures.length; i += 1) {
             const slot = new WokaSlot(this, textures[i].id).setDisplaySize(wokaDimension, wokaDimension);
 
             //ini current Select Item to the first
             if (i === 0) currentSelectedItem = slot;
-
+            if (localUserStore.getCharacterLayers() && localUserStore.getCharacterLayers()![0] === textures[i].id)
+                currentSelectedItem = slot;
             this.charactersDraggableGrid.addItem(slot);
         }
         this.charactersDraggableGrid.moveContentToBeginning();

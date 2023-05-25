@@ -7,25 +7,24 @@ import {
     DeleteAreaCommand,
     UpdateWAMSettingCommand,
 } from "@workadventure/map-editor";
-import type { Unsubscriber } from "svelte/store";
+import { Unsubscriber, get } from "svelte/store";
 import { CreateEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/CreateEntityCommand";
 import { DeleteEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/DeleteEntityCommand";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import type { RoomConnection } from "../../../Connexion/RoomConnection";
 import type { GameScene } from "../GameScene";
 import { mapEditorModeStore, mapEditorSelectedToolStore } from "../../../Stores/MapEditorStore";
-import { ENABLE_MAP_EDITOR_AREAS_TOOL } from "../../../Enum/EnvironmentVariable";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
 import { EntityEditorTool } from "./Tools/EntityEditorTool";
-import { WAMEditorTool } from "./Tools/WAMEditorTool";
+import { WAMSettingsEditorTool } from "./Tools/WAMSettingsEditorTool";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
     FloorEditor = "FloorEditor",
     EntityEditor = "EntityEditor",
-    ConfigureMyRoom = "ConfigureMyRoom",
+    WAMSettingsEditor = "WAMSettingsEditor",
 }
 
 export class MapEditorModeManager {
@@ -45,6 +44,10 @@ export class MapEditorModeManager {
      * What tool are we using right now
      */
     private activeTool?: EditorToolName;
+    /**
+     * Last tool used before closing map editor
+     */
+    private lastlyUsedTool?: EditorToolName;
 
     /**
      * We are making use of CommandPattern to implement an Undo-Redo mechanism
@@ -81,9 +84,10 @@ export class MapEditorModeManager {
             [EditorToolName.AreaEditor]: new AreaEditorTool(this),
             [EditorToolName.EntityEditor]: new EntityEditorTool(this),
             [EditorToolName.FloorEditor]: new FloorEditorTool(this),
-            [EditorToolName.ConfigureMyRoom]: new WAMEditorTool(this),
+            [EditorToolName.WAMSettingsEditor]: new WAMSettingsEditorTool(this),
         };
         this.activeTool = undefined;
+        this.lastlyUsedTool = undefined;
 
         this.subscribeToStores();
         this.subscribeToGameMapFrontWrapperEvents();
@@ -255,9 +259,7 @@ export class MapEditorModeManager {
                 break;
             }
             case "1": {
-                if (ENABLE_MAP_EDITOR_AREAS_TOOL) {
-                    this.equipTool(EditorToolName.AreaEditor);
-                }
+                this.equipTool(EditorToolName.AreaEditor);
                 break;
             }
             case "2": {
@@ -381,7 +383,12 @@ export class MapEditorModeManager {
     private subscribeToStores(): void {
         this.mapEditorModeUnsubscriber = mapEditorModeStore.subscribe((active) => {
             this.active = active;
-            this.equipTool(this.active ? EditorToolName.EntityEditor : undefined);
+            if (!this.active) {
+                this.lastlyUsedTool = get(mapEditorSelectedToolStore);
+                this.equipTool(undefined);
+                return;
+            }
+            this.equipTool(this.lastlyUsedTool ?? EditorToolName.EntityEditor);
         });
     }
 

@@ -24,8 +24,8 @@
     let title: string = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.title ?? "";
     let scope: string = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.scope ?? "WORLD";
     let scopes = [
-        { value: "WORLD", label: $LL.mapEditor.settings.megaphone.inputs.world() },
         { value: "ROOM", label: $LL.mapEditor.settings.megaphone.inputs.room() },
+        { value: "WORLD", label: $LL.mapEditor.settings.megaphone.inputs.world() },
     ];
 
     let loading = false;
@@ -54,8 +54,8 @@
             if (loading) return;
             loading = true;
             if (!title) {
-                dynamicStrings.error.title = "Please enter a title";
-                reject("Something went wrong !");
+                dynamicStrings.error.title = $LL.mapEditor.settings.megaphone.inputs.error.title();
+                reject($LL.mapEditor.settings.megaphone.inputs.error.save.fail());
             } else {
                 dynamicStrings.error.title = "";
             }
@@ -66,7 +66,7 @@
                 rights: (rights || []).map((right) => right.value),
             });
             loading = false;
-            resolve("Successfully saved !");
+            resolve($LL.mapEditor.settings.megaphone.inputs.error.save.success());
         });
     }
 

@@ -27,48 +27,6 @@ export class GameMapAreas {
         }
     }
 
-    private flattenAreaProperties(areaProperties: AreaDataProperties): Record<string, string | boolean | number> {
-        const flattenedProperties: Record<string, string | boolean | number> = {};
-        if (areaProperties.focusable) {
-            flattenedProperties[GameMapProperties.FOCUSABLE] = true;
-            if (areaProperties.focusable.zoom_margin) {
-                flattenedProperties[GameMapProperties.ZOOM_MARGIN] = areaProperties.focusable.zoom_margin;
-            }
-        }
-        if (areaProperties.jitsiRoom) {
-            flattenedProperties[GameMapProperties.JITSI_ROOM] = areaProperties.jitsiRoom.roomName ?? "";
-            if (areaProperties.jitsiRoom.jitsiRoomConfig) {
-                flattenedProperties[GameMapProperties.JITSI_CONFIG] = JSON.stringify(
-                    areaProperties.jitsiRoom.jitsiRoomConfig
-                );
-            }
-        }
-        if (areaProperties.openWebsite) {
-            if (areaProperties.openWebsite.newTab) {
-                flattenedProperties[GameMapProperties.OPEN_TAB] = areaProperties.openWebsite.link;
-            } else {
-                flattenedProperties[GameMapProperties.OPEN_WEBSITE] = areaProperties.openWebsite.link;
-            }
-        }
-        if (areaProperties.playAudio) {
-            flattenedProperties[GameMapProperties.PLAY_AUDIO] = areaProperties.playAudio.audioLink;
-        }
-        if (areaProperties.start) {
-            flattenedProperties[GameMapProperties.START] = areaProperties.start;
-        }
-        if (areaProperties.silent) {
-            flattenedProperties[GameMapProperties.SILENT] = areaProperties.silent;
-        }
-        if (areaProperties.speakerMegaphone) {
-            flattenedProperties[GameMapProperties.SPEAKER_MEGAPHONE] = areaProperties.speakerMegaphone.name;
-        }
-        if (areaProperties.listenerMegaphone) {
-            flattenedProperties[GameMapProperties.LISTENER_MEGAPHONE] =
-                areaProperties.listenerMegaphone.speakerZoneName;
-        }
-        return flattenedProperties;
-    }
-
     /**
      * @returns If there were any areas changes
      */
@@ -144,6 +102,10 @@ export class GameMapAreas {
             throw new Error(`Area to update does not exist!`);
         }
         _.merge(area, config);
+        // TODO: Find a way to update it without need of using conditions
+        if (config.properties !== undefined) {
+            area.properties = config.properties;
+        }
         this.updateAreaWAM(area);
         return area;
     }
@@ -248,8 +210,55 @@ export class GameMapAreas {
         return properties;
     }
 
-    public setProperty<K extends keyof AreaDataProperties>(area: AreaData, key: K, value: AreaDataProperties[K]): void {
-        area.properties[key] = value;
+    private flattenAreaProperties(areaProperties: AreaDataProperties): Record<string, string | boolean | number> {
+        const flattenedProperties: Record<string, string | boolean | number> = {};
+        for (const property of areaProperties) {
+            switch (property.type) {
+                case "focusable": {
+                    flattenedProperties[GameMapProperties.FOCUSABLE] = true;
+                    if (property.zoom_margin) {
+                        flattenedProperties[GameMapProperties.ZOOM_MARGIN] = property.zoom_margin;
+                    }
+                    break;
+                }
+                case "jitsiRoomProperty": {
+                    flattenedProperties[GameMapProperties.JITSI_ROOM] = property.roomName ?? "";
+                    if (property.jitsiRoomConfig) {
+                        flattenedProperties[GameMapProperties.JITSI_CONFIG] = JSON.stringify(property.jitsiRoomConfig);
+                    }
+                    break;
+                }
+                case "openWebsite": {
+                    if (property.newTab) {
+                        flattenedProperties[GameMapProperties.OPEN_TAB] = property.link;
+                    } else {
+                        flattenedProperties[GameMapProperties.OPEN_WEBSITE] = property.link;
+                    }
+                    break;
+                }
+                case "playAudio": {
+                    flattenedProperties[GameMapProperties.PLAY_AUDIO] = property.audioLink;
+                    break;
+                }
+                case "start": {
+                    flattenedProperties[GameMapProperties.START] = true;
+                    break;
+                }
+                case "silent": {
+                    flattenedProperties[GameMapProperties.SILENT] = true;
+                    break;
+                }
+                case "speakerMegaphone": {
+                    flattenedProperties[GameMapProperties.SPEAKER_MEGAPHONE] = property.name;
+                    break;
+                }
+                case "listenerMegaphone": {
+                    flattenedProperties[GameMapProperties.LISTENER_MEGAPHONE] = property.speakerZoneName;
+                    break;
+                }
+            }
+        }
+        return flattenedProperties;
     }
 
     private getAreasOnPosition(position: { x: number; y: number }, offsetY = 0): AreaData[] {

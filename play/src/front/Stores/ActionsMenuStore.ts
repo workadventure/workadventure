@@ -9,7 +9,7 @@ export type ActionsMenuAction = {
 };
 export interface ActionsMenuData {
     menuName: string;
-    actions: Map<string, ActionsMenuAction>;
+    actions: ActionsMenuAction[];
 }
 
 function createActionsMenuStore() {
@@ -20,18 +20,21 @@ function createActionsMenuStore() {
         initialize: (menuName: string) => {
             set({
                 menuName,
-                actions: new Map<string, ActionsMenuAction>(),
+                actions: new Array<ActionsMenuAction>(),
             });
         },
         addAction: (action: ActionsMenuAction) => {
             update((data) => {
-                data?.actions.set(action.actionName, action);
+                data?.actions.push(action);
                 return data;
             });
         },
         removeAction: (actionName: string) => {
             update((data) => {
-                data?.actions.delete(actionName);
+                const index = data?.actions.findIndex((action) => (action.actionName = actionName));
+                if (index && index !== -1) {
+                    data?.actions.splice(index, 1);
+                }
                 return data;
             });
         },

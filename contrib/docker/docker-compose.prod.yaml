@@ -34,8 +34,8 @@ services:
       - DEBUG_MODE
       - JITSI_URL
       - JITSI_PRIVATE_MODE
-      - ENABLE_FEATURE_MAP_EDITOR
-      - ENABLE_MAP_EDITOR_AREAS_TOOL
+      - ENABLE_MAP_EDITOR
+      - MAP_EDITOR_ALLOWED_USERS
       - PUSHER_URL=/
       - ICON_URL=/icon
       - TURN_SERVER
@@ -130,7 +130,7 @@ services:
     environment:
       - PLAY_URL=https://${DOMAIN}
       - SECRET_JITSI_KEY
-      - ENABLE_FEATURE_MAP_EDITOR
+      - ENABLE_MAP_EDITOR
       - SECRET_KEY
       - ADMIN_API_TOKEN
       - ADMIN_API_URL

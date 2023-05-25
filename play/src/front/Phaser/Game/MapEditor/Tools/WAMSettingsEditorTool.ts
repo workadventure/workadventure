@@ -5,7 +5,7 @@ import { GameScene } from "../../GameScene";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { MapEditorTool } from "./MapEditorTool";
 
-export class WAMEditorTool extends MapEditorTool {
+export class WAMSettingsEditorTool extends MapEditorTool {
     private scene: GameScene;
     private mapEditorModeManager: MapEditorModeManager;
 
@@ -16,34 +16,34 @@ export class WAMEditorTool extends MapEditorTool {
     }
 
     public update(time: number, dt: number): void {
-        console.log("WAMEditorTool update");
+        console.log("WAMSettingsEditorTool update");
     }
     public clear(): void {
-        console.log("WAMEditorTool clear");
+        console.log("WAMSettingsEditorTool clear");
     }
     public activate(): void {
-        console.log("WAMEditorTool activate");
+        console.log("WAMSettingsEditorTool activate");
     }
     public destroy(): void {
-        console.log("WAMEditorTool destroy");
+        console.log("WAMSettingsEditorTool destroy");
     }
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
-        console.log("WAMEditorTool subscribeToGameMapFrontWrapperEvents");
+        console.log("WAMSettingsEditorTool subscribeToGameMapFrontWrapperEvents");
     }
     public handleKeyDownEvent(event: KeyboardEvent): void {
-        console.log("WAMEditorTool handleKeyDownEvent");
+        console.log("WAMSettingsEditorTool handleKeyDownEvent");
     }
     /**
      * Perform actions needed to see the changes instantly
      */
     public handleCommandExecution(commandConfig: CommandConfig, localCommand: boolean): void {
-        console.log("WAMEditorTool handleCommandExecution");
+        console.log("WAMSettingsEditorTool handleCommandExecution");
     }
     /**
      * React on commands coming from the outside
      */
     public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): void {
-        console.log("WAMEditorTool handleIncomingCommandMessage");
+        console.log("WAMSettingsEditorTool handleIncomingCommandMessage");
         if (editMapCommandMessage.editMapMessage?.message?.$case === "updateMegaphoneSettingMessage") {
             if (this.scene.wamFile.settings === undefined) {
                 this.scene.wamFile.settings = {};

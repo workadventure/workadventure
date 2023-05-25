@@ -16,6 +16,7 @@ import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeet
 import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
+import { createSilentStore } from "./SilentStore";
 
 import { megaphoneEnabledStore } from "./MegaphoneStore";
 
@@ -263,7 +264,7 @@ export const inCowebsiteZone = derived(
     false
 );
 
-export const silentStore = writable(false);
+export const silentStore = createSilentStore();
 
 export const availabilityStatusStore = derived(
     [inJitsiStore, inBbbStore, silentStore, privacyShutdownStore, proximityMeetingStore, isSpeakerStore],

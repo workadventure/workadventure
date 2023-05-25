@@ -26,22 +26,30 @@ export class EntitiesCollectionsManager {
         );
     }
 
-    public setNameFilter(filter: string) {
+    public setFilter(filter: string, isTag = false) {
         this.filter = filter;
-        this.applyFilters();
+        this.applyFilters(isTag);
     }
 
-    private applyFilters() {
+    private applyFilters(isTag: boolean) {
         const filters = this.filter
             .toLowerCase()
             .split(" ")
             .filter((v) => v.trim() !== "");
         let newCollection = this.currentCollection.collection;
-        newCollection = newCollection.filter(
-            (item) =>
-                filters.every((word) => item.name.toLowerCase().includes(word)) ||
-                filters.every((word) => item.tags.includes(word))
-        );
+
+        if (isTag) {
+            newCollection = newCollection.filter((item) =>
+                filters.every((word) => item.tags.some((tag) => tag.toLowerCase() === word.toLowerCase()))
+            );
+        } else {
+            newCollection = newCollection.filter(
+                (item) =>
+                    filters.every((word) => item.name.toLowerCase().includes(word.toLowerCase())) ||
+                    filters.every((word) => item.tags.some((tag) => tag.toLowerCase() === word.toLowerCase()))
+            );
+        }
+
         this.entitiesPrefabs = newCollection;
     }
 

@@ -1,4 +1,4 @@
-import type { AtLeast, AreaData } from "../../types";
+import { AtLeast, AreaData, AreaDataProperties, AreaDataPropertiesKeys, AreaDataProperty } from "../../types";
 import type { GameMap } from "../../GameMap/GameMap";
 import { Command } from "../Command";
 
@@ -20,8 +20,12 @@ export class UpdateAreaCommand extends Command {
         if (!oldConfig) {
             throw new Error("Trying to update a non existing Area!");
         }
-        this.newConfig = structuredClone(config.dataToModify);
-        this.oldConfig = structuredClone(oldConfig);
+        try {
+            this.newConfig = structuredClone(this.parseDataToModify(config.dataToModify));
+            this.oldConfig = structuredClone(oldConfig);
+        } catch (e) {
+            throw new Error(String(e));
+        }
     }
 
     public execute(): UpdateAreaCommandConfig {
@@ -36,5 +40,38 @@ export class UpdateAreaCommand extends Command {
             throw new Error(`MapEditorError: Could not undo UpdateArea Command. Area ID: ${this.newConfig.id}`);
         }
         return { type: "UpdateAreaCommand", dataToModify: this.oldConfig };
+    }
+
+    private parseDataToModify(data: AtLeast<AreaData, "id">): AtLeast<AreaData, "id"> {
+        if (!data) {
+            throw new Error(`Data to modify Area ID: ${this.newConfig.id} is undefined!`);
+        }
+        const parsedData = structuredClone(data);
+        if (parsedData.properties) {
+            parsedData.properties = this.validateProperties(parsedData.properties, data.id);
+        }
+        return parsedData;
+    }
+
+    /**
+     * There are certain properties that can be only used as singletons, for instance the "focusable" property.
+     * or "jitsi" property. If we somehow try to pass properties array which is not valid, we will catch it here.
+     */
+    private validateProperties(data: AreaDataProperties, areaId: string): AreaDataProperties {
+        const singleOnly: AreaDataPropertiesKeys[] = ["start", "focusable", "silent", "jitsiRoomProperty"];
+        const foundKeys: AreaDataPropertiesKeys[] = [];
+        const propertiesToRemove: string[] = [];
+        for (const property of data) {
+            if (!foundKeys.includes(property.type)) {
+                foundKeys.push(property.type);
+            } else if (singleOnly.includes(property.type)) {
+                console.warn(
+                    `MapEditorError: Area ID: ${areaId} has multiple properties of type ${property.type}. Removing to single property.`
+                );
+                propertiesToRemove.push(property.id);
+            }
+        }
+        const validData = structuredClone(data);
+        return validData.filter((property: AreaDataProperty) => !propertiesToRemove.includes(property.id));
     }
 }

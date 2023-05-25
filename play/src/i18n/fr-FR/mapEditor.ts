@@ -40,12 +40,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             newTabLabel: "Ouvrir dans un nouvel onglet",
             linkPlaceholder: "https://example.com",
             defaultButtonLabel: "Ouvrir le lien",
+            errorEmbeddableLink: "Le lien ne peut pas être intégré",
         },
+        advancedOptions: "Options avancées",
     },
     entityEditor: {
         itemPicker: {
-            searchPlaceholder: "Rechercher nom ou tag",
-            selectVariationInstructions: "Sélectionnez une variation",
+            searchPlaceholder: "Rechercher",
         },
         deleteButton: "Supprimer",
         testInteractionButton: "Tester interaction",
@@ -68,6 +69,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "Droits",
                 rightsHelper:
                     "Les droits définissent qui peut utiliser le megaphone. Si vous le laissez vide, tout le monde peut l'utiliser. Si vous le définissez, seuls les utilisateurs qui ont au moins l'un de ces 'tags' peuvent l'utiliser.",
+                error: {
+                    title: "Veuillez entrer un nom",
+                    save: {
+                        success: "Paramètres enregstrés avec succès",
+                        fail: "Une erreur est survenue lors de l'enregistrement des paramètres",
+                    },
+                },
             },
         },
     },

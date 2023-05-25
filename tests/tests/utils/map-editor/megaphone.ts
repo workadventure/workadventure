@@ -32,7 +32,11 @@ class Megaphone {
     }
 
     async isCorrectlySaved(page: Page) {
-        await expect(await page.locator('.map-editor .configure-my-room .content button:disabled')).toContainText('Successfully saved');
+        await expect(await page.locator('.map-editor .configure-my-room .content button:disabled')).toContainText('Megaphone settings saved');
+    }
+
+    async isNotCorrectlySaved(page: Page) {
+        await expect(await page.locator('.map-editor .configure-my-room .content button:disabled')).toContainText('Error while saving megaphone settings');
     }
 }
 

@@ -61,10 +61,9 @@ import {
 import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
 import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
-import { ENABLE_FEATURE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
+import { ENABLE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
-import { assertObjectKeys } from "../Utils/CustomTypeGuards";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { localUserStore } from "./LocalUserStore";
 import { connectionManager } from "./ConnectionManager";
@@ -428,7 +427,7 @@ export class RoomConnection implements RoomConnection {
                             ? roomJoinedMessage.activatedInviteUser
                             : true
                     );
-                    mapEditorActivated.set(ENABLE_FEATURE_MAP_EDITOR && roomJoinedMessage.canEdit);
+                    mapEditorActivated.set(ENABLE_MAP_EDITOR && roomJoinedMessage.canEdit);
 
                     // If there are scripts from the admin, run it
                     if (roomJoinedMessage.applications != undefined) {
@@ -1079,14 +1078,6 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitMapEditorModifyArea(commandId: string, config: AtLeast<AreaData, "id">): void {
-        // NOTE: THIS IS CHANGING VALUE IN ALL PLACES BY REFERENCE!
-        if (config.properties) {
-            for (const key of assertObjectKeys(config.properties)) {
-                if (config.properties[key] === undefined) {
-                    config.properties[key] = null;
-                }
-            }
-        }
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1097,7 +1088,8 @@ export class RoomConnection implements RoomConnection {
                             $case: "modifyAreaMessage",
                             modifyAreaMessage: {
                                 ...config,
-                                properties: config.properties ?? {},
+                                properties: config.properties ?? [],
+                                modifyProperties: config.properties !== undefined,
                             },
                         },
                     },
@@ -1163,14 +1155,6 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitMapEditorModifyEntity(commandId: string, config: AtLeast<EntityData, "id">): void {
-        // NOTE: THIS IS CHANGING VALUE IN ALL PLACES BY REFERENCE!
-        if (config.properties) {
-            for (const key of assertObjectKeys(config.properties)) {
-                if (config.properties[key] === undefined) {
-                    config.properties[key] = null;
-                }
-            }
-        }
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1181,8 +1165,8 @@ export class RoomConnection implements RoomConnection {
                             $case: "modifyEntityMessage",
                             modifyEntityMessage: {
                                 ...config,
-                                // We need to declare properties due to the protobuf limitations - make new custom type to use optional flag?
-                                properties: config.properties ?? {},
+                                properties: config.properties ?? [],
+                                modifyProperties: config.properties !== undefined,
                             },
                         },
                     },
@@ -1206,7 +1190,7 @@ export class RoomConnection implements RoomConnection {
                                 y: config.y,
                                 collectionName: config.prefab.collectionName,
                                 prefabId: config.prefab.id,
-                                properties: config.properties ?? {},
+                                properties: config.properties ?? [],
                             },
                         },
                     },

@@ -21,6 +21,13 @@ export function toNumber(value: string | undefined, defaultValue: number): numbe
     return Number(value);
 }
 
+export function toArray(value: string | undefined): Array<string> {
+    if (value === undefined || value === "") {
+        return [];
+    }
+    return value.split(",");
+}
+
 export function toBool(value: BoolAsString | undefined, defaultValue: boolean): boolean {
     if (value === undefined || value === "") {
         return defaultValue;

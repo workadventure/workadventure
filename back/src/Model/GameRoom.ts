@@ -19,7 +19,7 @@ import { Jitsi } from "@workadventure/shared-utils";
 import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
 import { Value } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/struct";
-import { WAMFileFormat } from "@workadventure/map-editor";
+import { GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
 import { PositionInterface } from "../Model/PositionInterface";
 import {
     EmoteCallback,
@@ -850,7 +850,11 @@ export class GameRoom implements BrothersFinder {
                                     }
                                 }
                                 return {
-                                    mainValue: Jitsi.slugifyJitsiRoomName(mainValue, this._roomUrl, allProps),
+                                    mainValue: Jitsi.slugifyJitsiRoomName(
+                                        mainValue,
+                                        this._roomUrl,
+                                        allProps.has(GameMapProperties.JITSI_NO_PREFIX)
+                                    ),
                                     tagValue,
                                 };
                             }

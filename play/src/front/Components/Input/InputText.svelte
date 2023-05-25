@@ -23,7 +23,7 @@
         class:error={errorHelperText}
     />
     {#if errorHelperText}
-        <span>
+        <span class="error">
             {errorHelperText}
         </span>
     {/if}

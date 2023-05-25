@@ -364,6 +364,20 @@ export class GameMapFrontWrapper {
         this.leaveDynamicAreaCallbacks.push(callback);
     }
 
+    /**
+     * Registers a callback called when the user moves inside another area.
+     */
+    public onEnterArea(callback: AreaChangeCallback) {
+        this.gameMap.onEnterArea(callback);
+    }
+
+    /**
+     * Registers a callback called when the user moves outside another area.
+     */
+    public onLeaveArea(callback: AreaChangeCallback) {
+        this.gameMap.getGameMapAreas()?.onLeaveArea(callback);
+    }
+
     public findLayer(layerName: string): ITiledMapLayer | undefined {
         return this.gameMap.findLayer(layerName);
     }
@@ -583,35 +597,6 @@ export class GameMapFrontWrapper {
         return this.gameMap.getObjectWithName(name);
     }
 
-    /**
-     * Registers a callback called when the user moves inside another area.
-     */
-    public onEnterArea(callback: AreaChangeCallback) {
-        this.gameMap.onEnterArea(callback);
-    }
-
-    /**
-     * Registers a callback called when the user moves outside another area.
-     */
-    public onLeaveArea(callback: AreaChangeCallback) {
-        this.gameMap.getGameMapAreas()?.onLeaveArea(callback);
-    }
-
-    public setAreaProperty<K extends keyof AreaDataProperties>(
-        id: string,
-        propertyName: K,
-        propertyValue: AreaDataProperties[K]
-    ): void {
-        const area = this.getArea(id);
-        if (area === undefined) {
-            console.warn('Could not find area "' + id + '" when calling setProperty');
-            return;
-        }
-        this.gameMap.setAreaProperty(area, propertyName, propertyValue);
-        this.triggerAllProperties();
-        this.gameMap.getGameMapAreas()?.triggerAreasChange(this.oldPosition, this.position);
-    }
-
     public setDynamicAreaProperty(areaName: string, propertyName: string, propertyValue: unknown): void {
         const area = this.dynamicAreas.get(areaName);
         if (area === undefined) {
@@ -802,81 +787,91 @@ export class GameMapFrontWrapper {
     private mapAreaPropertiesToTiledProperties(areaProperties: AreaDataProperties): ITiledMapProperty[] {
         const properties: ITiledMapProperty[] = [];
 
-        if (areaProperties.focusable) {
-            properties.push({ name: GameMapProperties.FOCUSABLE, type: "bool", value: true });
-            if (areaProperties.focusable.zoom_margin) {
-                properties.push({
-                    name: GameMapProperties.ZOOM_MARGIN,
-                    type: "float",
-                    value: areaProperties.focusable.zoom_margin,
-                });
+        for (const property of areaProperties) {
+            switch (property.type) {
+                case "focusable": {
+                    properties.push({ name: GameMapProperties.FOCUSABLE, type: "bool", value: true });
+                    if (property.zoom_margin) {
+                        properties.push({
+                            name: GameMapProperties.ZOOM_MARGIN,
+                            type: "float",
+                            value: property.zoom_margin,
+                        });
+                    }
+                    break;
+                }
+                case "jitsiRoomProperty": {
+                    properties.push({
+                        name: GameMapProperties.JITSI_ROOM,
+                        type: "string",
+                        value: property.roomName ?? "",
+                    });
+                    if (property.jitsiRoomConfig) {
+                        properties.push({
+                            name: GameMapProperties.JITSI_CONFIG,
+                            type: "class",
+                            value: property.jitsiRoomConfig,
+                        });
+                    }
+                    break;
+                }
+                case "openWebsite": {
+                    if (property.newTab) {
+                        properties.push({
+                            name: GameMapProperties.OPEN_TAB,
+                            type: "string",
+                            value: property.link,
+                        });
+                    } else {
+                        properties.push({
+                            name: GameMapProperties.OPEN_WEBSITE,
+                            type: "string",
+                            value: property.link,
+                        });
+                    }
+                    break;
+                }
+                case "playAudio": {
+                    properties.push({
+                        name: GameMapProperties.PLAY_AUDIO,
+                        type: "string",
+                        value: property.audioLink,
+                    });
+                    break;
+                }
+                case "silent": {
+                    properties.push({
+                        name: GameMapProperties.SILENT,
+                        type: "bool",
+                        value: true,
+                    });
+                    break;
+                }
+                case "start": {
+                    properties.push({
+                        name: GameMapProperties.START,
+                        type: "bool",
+                        value: true,
+                    });
+                    break;
+                }
+                case "speakerMegaphone": {
+                    properties.push({
+                        name: GameMapProperties.SPEAKER_MEGAPHONE,
+                        type: "string",
+                        value: property.name,
+                    });
+                    break;
+                }
+                case "listenerMegaphone": {
+                    properties.push({
+                        name: GameMapProperties.LISTENER_MEGAPHONE,
+                        type: "string",
+                        value: property.speakerZoneName,
+                    });
+                }
             }
         }
-        if (areaProperties.jitsiRoom) {
-            properties.push({
-                name: GameMapProperties.JITSI_ROOM,
-                type: "string",
-                value: areaProperties.jitsiRoom.roomName ?? "",
-            });
-            if (areaProperties.jitsiRoom.jitsiRoomConfig) {
-                properties.push({
-                    name: GameMapProperties.JITSI_CONFIG,
-                    type: "class",
-                    value: areaProperties.jitsiRoom.jitsiRoomConfig,
-                });
-            }
-        }
-        if (areaProperties.openWebsite) {
-            if (areaProperties.openWebsite.newTab) {
-                properties.push({
-                    name: GameMapProperties.OPEN_TAB,
-                    type: "string",
-                    value: areaProperties.openWebsite.link,
-                });
-            } else {
-                properties.push({
-                    name: GameMapProperties.OPEN_WEBSITE,
-                    type: "string",
-                    value: areaProperties.openWebsite.link,
-                });
-            }
-        }
-        if (areaProperties.playAudio) {
-            properties.push({
-                name: GameMapProperties.PLAY_AUDIO,
-                type: "string",
-                value: areaProperties.playAudio.audioLink,
-            });
-        }
-        if (areaProperties.start) {
-            properties.push({
-                name: GameMapProperties.START,
-                type: "bool",
-                value: areaProperties.start,
-            });
-        }
-        if (areaProperties.silent) {
-            properties.push({
-                name: GameMapProperties.SILENT,
-                type: "bool",
-                value: areaProperties.silent,
-            });
-        }
-        if (areaProperties.speakerMegaphone?.name) {
-            properties.push({
-                name: GameMapProperties.SPEAKER_MEGAPHONE,
-                type: "string",
-                value: areaProperties.speakerMegaphone.name,
-            });
-        }
-        if (areaProperties.listenerMegaphone?.speakerZoneName) {
-            properties.push({
-                name: GameMapProperties.LISTENER_MEGAPHONE,
-                type: "string",
-                value: areaProperties.listenerMegaphone.speakerZoneName,
-            });
-        }
-
         return properties;
     }
 
@@ -924,14 +919,15 @@ export class GameMapFrontWrapper {
     }
 
     private getProperties(key: number): Map<string, string | boolean | number> {
-        let properties = new Map<string, string | boolean | number>();
+        const properties = new Map<string, string | boolean | number>();
+        // NOTE: WE DO NOT WANT AREAS TO BE THE PART OF THE OLD PROPERTIES CHANGE SYSTEM
         // CHECK FOR AREAS PROPERTIES
-        if (this.position) {
-            const areasProperties = this.gameMap.getGameMapAreas()?.getProperties(this.position);
-            if (areasProperties) {
-                properties = areasProperties;
-            }
-        }
+        // if (this.position) {
+        //     const areasProperties = this.gameMap.getGameMapAreas()?.getProperties(this.position);
+        //     if (areasProperties) {
+        //         properties = areasProperties;
+        //     }
+        // }
 
         // CHECK FOR DYNAMIC AREAS PROPERTIES
         if (this.position) {
@@ -1000,7 +996,6 @@ export class GameMapFrontWrapper {
                 });
             }
         }
-
         return properties;
     }
 

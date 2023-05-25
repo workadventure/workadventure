@@ -8,19 +8,16 @@
     // import FloorToolImg from "../images/icon-tool-floor.png";
     import EntityToolImg from "../images/icon-tool-entity.svg";
     import Tooltip from "../Util/Tooltip.svelte";
-    import { ENABLE_MAP_EDITOR_AREAS_TOOL } from "../../Enum/EnvironmentVariable";
     import ConfigureImg from "../images/configure.svg";
     const gameScene = gameManager.getCurrentGameScene();
 
     const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
 
-    if (ENABLE_MAP_EDITOR_AREAS_TOOL) {
-        availableTools.push({
-            toolName: EditorToolName.AreaEditor,
-            img: AreaToolImg,
-            tooltiptext: $LL.mapEditor.sideBar.areaEditor(),
-        });
-    }
+    availableTools.push({
+        toolName: EditorToolName.AreaEditor,
+        img: AreaToolImg,
+        tooltiptext: $LL.mapEditor.sideBar.areaEditor(),
+    });
     availableTools.push(
         {
             toolName: EditorToolName.EntityEditor,
@@ -31,7 +28,7 @@
         // { toolName: EditorToolName.FloorEditor, img: FloorToolImg, tooltiptext: $LL.mapEditor.sideBar.tileEditor() }
     );
     availableTools.push({
-        toolName: EditorToolName.ConfigureMyRoom,
+        toolName: EditorToolName.WAMSettingsEditor,
         img: ConfigureImg,
         tooltiptext: $LL.mapEditor.sideBar.configureMyRoom(),
     });

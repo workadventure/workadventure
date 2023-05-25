@@ -1,6 +1,6 @@
 import { get } from "svelte/store";
 import type { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
-import { GameMapProperties } from "@workadventure/map-editor";
+import { AreaData, GameMapProperties } from "@workadventure/map-editor";
 import { Jitsi } from "@workadventure/shared-utils";
 import { scriptUtils } from "../../Api/ScriptUtils";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
@@ -32,8 +32,9 @@ import { megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
+import { AreasPropertiesListener } from "./MapEditor/AreasPropertiesListener";
 
-interface OpenCoWebsite {
+export interface OpenCoWebsite {
     actionId: string;
     coWebsite?: CoWebsite;
 }
@@ -42,10 +43,14 @@ interface OpenCoWebsite {
 export type ITiledPlace = Omit<ITiledMapLayer | ITiledMapObject, "id"> & { id?: string | number };
 
 export class GameMapPropertiesListener {
+    private areasPropertiesListener: AreasPropertiesListener;
+
     private coWebsitesOpenByPlace = new Map<string, OpenCoWebsite>();
     private coWebsitesActionTriggerByPlace = new Map<string, string>();
 
-    constructor(private scene: GameScene, private gameMapFrontWrapper: GameMapFrontWrapper) {}
+    constructor(private scene: GameScene, private gameMapFrontWrapper: GameMapFrontWrapper) {
+        this.areasPropertiesListener = new AreasPropertiesListener(scene);
+    }
 
     register() {
         // Website on new tab
@@ -89,7 +94,11 @@ export class GameMapPropertiesListener {
                 }
             }
             const openJitsiRoomFunction = async () => {
-                const roomName = Jitsi.slugifyJitsiRoomName(newValue.toString(), this.scene.roomUrl, allProps);
+                const roomName = Jitsi.slugifyJitsiRoomName(
+                    newValue.toString(),
+                    this.scene.roomUrl,
+                    allProps.has(GameMapProperties.JITSI_NO_PREFIX)
+                );
                 let jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
 
                 let jwt: string | undefined;
@@ -212,9 +221,9 @@ export class GameMapPropertiesListener {
 
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.SILENT, (newValue) => {
             if (newValue === undefined || newValue === false || newValue === "") {
-                silentStore.set(false);
+                silentStore.setOthersSilent(false);
             } else {
-                silentStore.set(true);
+                silentStore.setOthersSilent(true);
             }
         });
 
@@ -282,11 +291,11 @@ export class GameMapPropertiesListener {
         });
 
         this.gameMapFrontWrapper.onEnterArea((newAreas) => {
-            this.onEnterPlaceHandler(newAreas.map((area) => this.gameMapFrontWrapper.mapAreaToTiledObject(area)));
+            this.onEnterAreasHandler(newAreas);
         });
 
         this.gameMapFrontWrapper.onLeaveArea((oldAreas) => {
-            this.onLeavePlaceHandler(oldAreas.map((area) => this.gameMapFrontWrapper.mapAreaToTiledObject(area)));
+            this.onLeaveAreasHandler(oldAreas);
         });
 
         this.gameMapFrontWrapper.onEnterDynamicArea((newAreas) => {
@@ -322,6 +331,14 @@ export class GameMapPropertiesListener {
             this.handleSpeakerMegaphonePropertiesOnLeave(place);
             this.handleListenerMegaphonePropertiesOnLeave(place);
         });
+    }
+
+    private onEnterAreasHandler(areas: AreaData[]): void {
+        this.areasPropertiesListener.onEnterAreasHandler(areas);
+    }
+
+    private onLeaveAreasHandler(areas: AreaData[]): void {
+        this.areasPropertiesListener.onLeaveAreasHandler(areas);
     }
 
     private handleOpenWebsitePropertiesOnEnter(place: ITiledPlace): void {

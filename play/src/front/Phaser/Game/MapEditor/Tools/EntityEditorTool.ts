@@ -59,6 +59,7 @@ export class EntityEditorTool extends MapEditorTool {
 
     public update(time: number, dt: number): void {}
     public clear(): void {
+        this.scene.input.topOnly = false;
         mapEditorEntityModeStore.set("ADD");
         this.entitiesManager.clearAllEntitiesTint();
         this.entitiesManager.clearAllEntitiesEditOutlines();
@@ -66,6 +67,7 @@ export class EntityEditorTool extends MapEditorTool {
         this.unbindEventHandlers();
     }
     public activate(): void {
+        this.scene.input.topOnly = true;
         this.entitiesManager.makeAllEntitiesInteractive();
         this.bindEventHandlers();
     }
@@ -86,6 +88,7 @@ export class EntityEditorTool extends MapEditorTool {
                 mapEditorEntityModeStore.set("ADD");
                 break;
             }
+            case "backspace":
             case "delete": {
                 get(mapEditorSelectedEntityStore)?.delete();
                 mapEditorSelectedEntityStore.set(undefined);
@@ -178,7 +181,10 @@ export class EntityEditorTool extends MapEditorTool {
                 this.mapEditorModeManager.executeCommand(
                     {
                         type: "UpdateEntityCommand",
-                        dataToModify: data as EntityData,
+                        dataToModify: {
+                            ...data,
+                            properties: data.modifyProperties ? data.properties : undefined,
+                        },
                     },
                     false,
                     false,
@@ -315,7 +321,7 @@ export class EntityEditorTool extends MapEditorTool {
                 y: data.position.y,
                 id: crypto.randomUUID(),
                 prefab: data.prefab,
-                properties: data.properties ?? {},
+                properties: data.properties ?? [],
             };
             this.mapEditorModeManager.executeCommand({
                 type: "CreateEntityCommand",
@@ -418,7 +424,7 @@ export class EntityEditorTool extends MapEditorTool {
             y: y - this.entityPrefabPreview.displayHeight * 0.5,
             id: crypto.randomUUID(),
             prefab: this.entityPrefab,
-            properties: get(mapEditorCopiedEntityDataPropertiesStore) ?? {},
+            properties: get(mapEditorCopiedEntityDataPropertiesStore) ?? [],
         };
         this.mapEditorModeManager.executeCommand({
             entityData,

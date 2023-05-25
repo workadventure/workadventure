@@ -191,7 +191,11 @@ export class SocketManager {
             playerVariable: playerVariablesMessage,
             megaphoneSettings: {
                 enabled: WAMSettingsUtils.canUseMegaphone(room.wamSettings, user.tags),
-                url: WAMSettingsUtils.getMegaphoneUrl(room.wamSettings, room.roomGroup, room.roomUrl),
+                url: WAMSettingsUtils.getMegaphoneUrl(
+                    room.wamSettings,
+                    room.roomGroup ?? new URL(room.roomUrl).host,
+                    room.roomUrl
+                ),
             },
         };
 

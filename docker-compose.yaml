@@ -54,8 +54,7 @@ services:
             DEBUG_MODE: "$DEBUG_MODE"
             JITSI_URL: $JITSI_URL
             JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
-            ENABLE_FEATURE_MAP_EDITOR: "$ENABLE_FEATURE_MAP_EDITOR"
-            ENABLE_MAP_EDITOR_AREAS_TOOL: "$ENABLE_MAP_EDITOR_AREAS_TOOL"
+            ENABLE_MAP_EDITOR: "$ENABLE_MAP_EDITOR"
             HOST: "0.0.0.0"
             NODE_ENV: development
             ALLOWED_CORS_ORIGIN: "http://play.workadventure.localhost"
@@ -185,8 +184,7 @@ services:
             #STARTUP_COMMAND_2: while [ -f /usr/src/app/back/src/Messages/generate_request/need_regenerate ]; do sleep 1; done
             SECRET_KEY: "$SECRET_KEY"
             SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
-            ENABLE_FEATURE_MAP_EDITOR: "$ENABLE_FEATURE_MAP_EDITOR"
-            ENABLE_MAP_EDITOR_AREAS_TOOL: "$ENABLE_MAP_EDITOR_AREAS_TOOL"
+            ENABLE_MAP_EDITOR: "$ENABLE_MAP_EDITOR"
             ALLOW_ARTILLERY: "true"
             ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
             JITSI_URL: $JITSI_URL

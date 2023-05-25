@@ -9,6 +9,7 @@ import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 const protocol = process.env.MAP_STORAGE_PROTOCOL ?? 'http';
 const mapUrl = `${protocol}://play.workadventure.localhost/~/maps/areas.wam`;
 
+test.setTimeout(120_000); // Fix Webkit that can take more than 60s
 test.describe('Map editor', () => {
   test('Successfully set the megaphone feature', async ({ page, browser }) => {
     await page.goto(mapUrl);
@@ -28,6 +29,11 @@ test.describe('Map editor', () => {
     // Enabling megaphone and settings default value
     await Megaphone.toggleMegaphone(page);
     await Megaphone.isMegaphoneEnabled(page);
+
+    // Testing if no input is set, megaphone should not be usable but WA should not crash
+    await Megaphone.megaphoneSave(page);
+    await Megaphone.isNotCorrectlySaved(page);
+
     await Megaphone.megaphoneInputNameSpace(page);
     await Megaphone.megaphoneSelectScope(page);
     await Megaphone.megaphoneAddNewRights(page, 'example');

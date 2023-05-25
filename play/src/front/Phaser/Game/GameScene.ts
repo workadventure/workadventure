@@ -28,7 +28,7 @@ import { waScaleManager } from "../Services/WaScaleManager";
 import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoadingManager";
 import { CompanionTexturesLoadingManager } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
-import { DEBUG_MODE, ENABLE_FEATURE_MAP_EDITOR, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
+import { DEBUG_MODE, ENABLE_MAP_EDITOR, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
 import { Room } from "../../Connexion/Room";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
 import { TextureError } from "../../Exception/TextureError";
@@ -113,8 +113,8 @@ import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import {
-    CONFIGURE_MY_ROOM_MENU_ITEM,
-    mapEditorConfigureMyRoomCurrentMenuItemStore,
+    WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
+    mapEditorWamSettingsEditorToolCurrentMenuItemStore,
     mapEditorModeStore,
     mapEditorSelectedToolStore,
 } from "../../Stores/MapEditorStore";
@@ -407,6 +407,7 @@ export class GameScene extends DirtyScene {
                     undefined,
                     undefined,
                     (key: string, type: string, wamFile: unknown) => {
+                        console.log(wamFile);
                         this.wamFile = WAMFileFormat.parse(wamFile);
                         this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
                         this.doLoadTMJFile(this.mapUrlFile);
@@ -728,7 +729,7 @@ export class GameScene extends DirtyScene {
 
         biggestAvailableAreaStore.recompute();
         this.cameraManager.startFollowPlayer(this.CurrentPlayer);
-        if (ENABLE_FEATURE_MAP_EDITOR) {
+        if (ENABLE_MAP_EDITOR) {
             this.mapEditorModeManager = new MapEditorModeManager(this);
         }
 
@@ -2277,20 +2278,20 @@ ${escapedMessage}
                 setTimeout(() => layoutManagerActionStore.removeAction("mapEditorNotEnabled"), 6_000);
             } else {
                 switch (toolEditorParam) {
-                    case "configureMyRoom": {
+                    case "wamSettingsEditorTool": {
                         mapEditorModeStore.switchMode(true);
-                        mapEditorSelectedToolStore.set(EditorToolName.ConfigureMyRoom);
+                        mapEditorSelectedToolStore.set(EditorToolName.WAMSettingsEditor);
                         const menuItem = urlManager.getHashParameter("menuItem");
                         if (menuItem) {
                             switch (menuItem) {
                                 case "megaphone": {
-                                    mapEditorConfigureMyRoomCurrentMenuItemStore.set(
-                                        CONFIGURE_MY_ROOM_MENU_ITEM.Megaphone
+                                    mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(
+                                        WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone
                                     );
                                     break;
                                 }
                                 default: {
-                                    mapEditorConfigureMyRoomCurrentMenuItemStore.set(undefined);
+                                    mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(undefined);
                                     break;
                                 }
                             }

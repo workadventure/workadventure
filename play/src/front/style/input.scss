@@ -50,10 +50,18 @@ button.button-state {
   label {
     @apply tw-font-medium tw-mb-1.5;
   }
-  span {
+  span.error {
     @apply tw-text-xs tw-text-pop-red;
   }
+  .svelte-select .value-container input {
+    @apply tw-border-0 tw-outline-0 tw-ring-0 tw-rounded-none;
+    color: rgb(20 48 76 / var(--tw-text-opacity)) !important;
+  }
+  .svelte-select .svelte-select-list, .value-container .multi-item :is(.multi-item-clear, .multi-item-text), .svelte-select .indicators svg {
+    @apply tw-text-brand-blue;
+  }
 }
+
 :global(.svelte-select) {
   border-radius: 8px !important;
   padding-left: 0.75rem !important;
@@ -65,19 +73,6 @@ button.button-state {
 }
 :global(.svelte-select .value-container) {
   padding: 0 5px !important;
-}
-:global(.svelte-select .value-container input) {
-  @apply tw-border-0 tw-outline-0 tw-ring-0 tw-rounded-none;
-  color: rgb(20 48 76 / var(--tw-text-opacity)) !important;
-}
-:global(.svelte-select .svelte-select-list) {
-  @apply tw-text-brand-blue;
-}
-:global(.value-container .multi-item :is(.multi-item-clear, .multi-item-text)) {
-  @apply tw-text-brand-blue;
-}
-:global(.svelte-select .indicators svg) {
-  @apply tw-text-brand-blue;
 }
 
 
