@@ -49,6 +49,7 @@ class MapsManager {
         this.saveMapIntervals = new Map<string, NodeJS.Timer>();
         this.mapLastChangeTimestamp = new Map<string, number>();
 
+        // TODO: Can we somehow remove this?
         this.loadedCollections = new Map<string, EntityCollection>();
 
         for (const collection of [furnitureCollection, officeCollection]) {
@@ -145,10 +146,6 @@ class MapsManager {
 
     public loadWAMToMemory(key: string, wam: WAMFileFormat): void {
         this.loadedMaps.set(key, new GameMap(this.getMockITiledMap(), wam));
-    }
-
-    public getEntityCollections(): EntityCollection[] {
-        return Array.from(this.loadedCollections.values());
     }
 
     public getEntityPrefab(collectionName: string, entityId: string): EntityPrefab | undefined {

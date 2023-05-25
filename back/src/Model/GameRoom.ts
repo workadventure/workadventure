@@ -689,7 +689,6 @@ export class GameRoom implements BrothersFinder {
             let mapUrl = undefined;
             let wamUrl = undefined;
             let canEdit = false;
-            const entityCollectionsUrls = [];
             const match = /\/~\/(.+)/.exec(roomUrlObj.pathname);
             if (match && PUBLIC_MAP_STORAGE_URL) {
                 if (path.extname(roomUrlObj.pathname) === ".tmj") {
@@ -698,7 +697,6 @@ export class GameRoom implements BrothersFinder {
                     wamUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
                 }
                 canEdit = true;
-                entityCollectionsUrls.push(`${PUBLIC_MAP_STORAGE_URL}/entityCollections`);
             } else {
                 const match = /\/_\/[^/]+\/(.+)/.exec(roomUrlObj.pathname);
                 if (!match) {
@@ -712,7 +710,6 @@ export class GameRoom implements BrothersFinder {
                 mapUrl,
                 wamUrl,
                 editable: canEdit,
-                entityCollectionsUrls,
                 authenticationMandatory: null,
                 group: null,
                 mucRooms: null,
