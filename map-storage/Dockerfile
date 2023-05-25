@@ -31,7 +31,7 @@ COPY libs ./libs
 COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
 COPY --chown=node:node map-storage map-storage
 WORKDIR /usr/src/map-storage
-RUN mkdir ./dist && chown -R node:node ./dist
+RUN mkdir ./dist
 
 HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=10 CMD curl -f http://localhost:3000/ping || exit 1
 USER node
