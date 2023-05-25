@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { SpeakerMegaphonePropertyData} from "@workadventure/map-editor";
+    import { SpeakerMegaphonePropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
 

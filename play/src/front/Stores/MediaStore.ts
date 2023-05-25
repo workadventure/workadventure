@@ -253,6 +253,7 @@ export const audioConstraintStore = derived(requestedMicrophoneDeviceIdStore, ($
 
 export const inJitsiStore = writable(false);
 export const inBbbStore = writable(false);
+export const isSpeakerStore = writable(false);
 
 export const inCowebsiteZone = derived(
     [inJitsiStore, inBbbStore, inOpenWebsite],
@@ -265,11 +266,12 @@ export const inCowebsiteZone = derived(
 export const silentStore = writable(false);
 
 export const availabilityStatusStore = derived(
-    [inJitsiStore, inBbbStore, silentStore, privacyShutdownStore, proximityMeetingStore],
-    ([$inJitsiStore, $inBbbStore, $silentStore, $privacyShutdownStore, $proximityMeetingStore]) => {
+    [inJitsiStore, inBbbStore, silentStore, privacyShutdownStore, proximityMeetingStore, isSpeakerStore],
+    ([$inJitsiStore, $inBbbStore, $silentStore, $privacyShutdownStore, $proximityMeetingStore, $isSpeakerStore]) => {
         if ($inJitsiStore) return AvailabilityStatus.JITSI;
         if ($inBbbStore) return AvailabilityStatus.BBB;
         if (!$proximityMeetingStore) return AvailabilityStatus.DENY_PROXIMITY_MEETING;
+        if ($isSpeakerStore) return AvailabilityStatus.SPEAKER;
         if ($silentStore) return AvailabilityStatus.SILENT;
         if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
         return AvailabilityStatus.ONLINE;

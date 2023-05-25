@@ -123,9 +123,9 @@ export class BroadcastService {
         this.broadcastSpaces.push(broadcastSpace);
     }
 
-    public leaveSpace(spaceName: string){
+    public leaveSpace(spaceName: string) {
         const space = this.broadcastSpaces.find((space) => space.name === spaceName);
-        if(space){
+        if (space) {
             space.destroy();
             this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.name !== spaceName);
         }
@@ -216,7 +216,8 @@ export class BroadcastService {
     public checkIfCanDisconnect() {
         if (this.canDisconnect() && this.jitsiConnection !== undefined) {
             console.log("Disconnecting from Jitsi");
-            this.jitsiConnection.disconnect()
+            this.jitsiConnection
+                .disconnect()
                 .then(() => {
                     this.jitsiConnection = undefined;
                 })

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
     import { slide } from "svelte/transition";
-    import {AreaDataProperties, AreaDataPropertiesKeys} from "@workadventure/map-editor";
+    import { AreaDataProperties, AreaDataPropertiesKeys } from "@workadventure/map-editor";
     import { LL } from "../../../i18n/i18n-svelte";
     import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
     import crossImg from "../images/cross-icon.svg";
@@ -75,7 +75,7 @@
             currentValue: undefined,
             component: SpeakerMegaphonePropertyEditor,
             defaultValue: {
-                name: ""
+                name: "",
             },
         },
         {
@@ -85,7 +85,7 @@
             currentValue: undefined,
             component: ListenerMegaphonePropertyEditor,
             defaultValue: {
-                speakerZoneName: ""
+                speakerZoneName: "",
             },
         },
     ];

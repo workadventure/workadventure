@@ -51,13 +51,13 @@ const mapEditor: BaseTranslation = {
         speakerMegaphoneProperties: {
             label: "SpeakerZone for megaphone",
             nameLabel: "Name",
-            namePlaceholder: "MySpeakerZone"
+            namePlaceholder: "MySpeakerZone",
         },
         listenerMegaphoneProperties: {
             label: "ListenerZone for megaphone",
             nameLabel: "SpeakerZone Name",
-            namePlaceholder: "MySpeakerZone"
-        }
+            namePlaceholder: "MySpeakerZone",
+        },
     },
     areaEditor: {
         nameLabel: "Name",

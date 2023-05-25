@@ -22,15 +22,16 @@ import {
     silentStore,
     inOpenWebsite,
     requestedCameraState,
-    requestedMicrophoneState
+    requestedMicrophoneState,
+    isSpeakerStore,
 } from "../../Stores/MediaStore";
 import { urlManager } from "../../Url/UrlManager";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { connectionManager } from "../../Connexion/ConnectionManager";
+import { megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
-import {megaphoneEnabledStore} from "../../Stores/MegaphoneStore";
 
 interface OpenCoWebsite {
     actionId: string;
@@ -448,47 +449,51 @@ export class GameMapPropertiesListener {
     }
 
     private handleSpeakerMegaphonePropertiesOnEnter(place: ITiledPlace): void {
-        if(!place.properties) {
+        if (!place.properties) {
             return;
         }
         const speakerZone = place.properties.find((property) => property.name === GameMapProperties.SPEAKER_MEGAPHONE);
-        if(speakerZone && speakerZone.type === "string" && speakerZone.value !== undefined) {
+        if (speakerZone && speakerZone.type === "string" && speakerZone.value !== undefined) {
             this.scene.broadcastService.joinSpace(speakerZone.value);
-            if(get(requestedCameraState) || get(requestedMicrophoneState)) {
+            isSpeakerStore.set(true);
+            if (get(requestedCameraState) || get(requestedMicrophoneState)) {
                 megaphoneEnabledStore.set(true);
             }
         }
     }
 
     private handleSpeakerMegaphonePropertiesOnLeave(place: ITiledPlace): void {
-        if(!place.properties) {
+        if (!place.properties) {
             return;
         }
         const speakerZone = place.properties.find((property) => property.name === GameMapProperties.SPEAKER_MEGAPHONE);
-        if(speakerZone && speakerZone.type === "string" && speakerZone.value !== undefined) {
+        if (speakerZone && speakerZone.type === "string" && speakerZone.value !== undefined) {
             this.scene.broadcastService.leaveSpace(speakerZone.value);
             megaphoneEnabledStore.set(false);
+            isSpeakerStore.set(false);
         }
     }
 
     private handleListenerMegaphonePropertiesOnEnter(place: ITiledPlace): void {
-        if(!place.properties) {
+        if (!place.properties) {
             return;
         }
-        console.log("handleListenerMegaphonePropertiesOnEnter", place.properties);
-        const listenerZone = place.properties.find((property) => property.name === GameMapProperties.LISTENER_MEGAPHONE);
-        if(listenerZone && listenerZone.type === "string" && listenerZone.value !== undefined) {
+        const listenerZone = place.properties.find(
+            (property) => property.name === GameMapProperties.LISTENER_MEGAPHONE
+        );
+        if (listenerZone && listenerZone.type === "string" && listenerZone.value !== undefined) {
             this.scene.broadcastService.joinSpace(listenerZone.value);
         }
     }
 
     private handleListenerMegaphonePropertiesOnLeave(place: ITiledPlace): void {
-        if(!place.properties) {
+        if (!place.properties) {
             return;
         }
-        console.log("handleListenerMegaphonePropertiesOnLeave", place.properties);
-        const listenerZone = place.properties.find((property) => property.name === GameMapProperties.LISTENER_MEGAPHONE);
-        if(listenerZone && listenerZone.type === "string" && listenerZone.value !== undefined) {
+        const listenerZone = place.properties.find(
+            (property) => property.name === GameMapProperties.LISTENER_MEGAPHONE
+        );
+        if (listenerZone && listenerZone.type === "string" && listenerZone.value !== undefined) {
             this.scene.broadcastService.leaveSpace(listenerZone.value);
         }
     }

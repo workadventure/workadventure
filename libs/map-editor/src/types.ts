@@ -210,6 +210,8 @@ export type OpenWebsitePropertyData = z.infer<typeof OpenWebsitePropertyData>;
 export type WAMFileFormat = z.infer<typeof WAMFileFormat>;
 export type MapsCacheSingleMapFormat = z.infer<typeof MapsCacheSingleMapFormat>;
 export type MapsCacheFileFormat = z.infer<typeof MapsCacheFileFormat>;
+export type SpeakerMegaphonePropertyData = z.infer<typeof SpeakerMegaphonePropertyData>;
+export type ListenerMegaphonePropertyData = z.infer<typeof ListenerMegaphonePropertyData>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",

@@ -309,6 +309,8 @@ export class GameScene extends DirtyScene {
         this.listenToIframeEvents();
 
         this.load.image("iconTalk", "/resources/icons/icon_talking.png");
+        this.load.image("iconSpeaker", "/resources/icons/icon_speaking.png");
+        this.load.image("iconMegaphone", "/resources/icons/icon_megaphone.png");
         this.load.image("iconStatusIndicatorInside", "/resources/icons/icon_status_indicator_inside.png");
         this.load.image("iconStatusIndicatorOutline", "/resources/icons/icon_status_indicator_outline.png");
 
@@ -1203,7 +1205,7 @@ export class GameScene extends DirtyScene {
             this.connection?.emitPlayerStatusChange(availabilityStatus);
             this.CurrentPlayer.setAvailabilityStatus(availabilityStatus);
             if (availabilityStatus === AvailabilityStatus.SILENT) {
-                this.CurrentPlayer.showTalkIcon(false, true);
+                this.CurrentPlayer.toggleTalk(false, true);
             }
         });
 
@@ -1314,7 +1316,7 @@ export class GameScene extends DirtyScene {
                 if (!this.localVolumeStoreUnsubscriber) {
                     this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((spectrum) => {
                         if (spectrum === undefined) {
-                            this.CurrentPlayer.showTalkIcon(false, true);
+                            this.CurrentPlayer.toggleTalk(false, true);
                             return;
                         }
                         const volume = spectrum.reduce((a, b) => a + b, 0);
@@ -1323,10 +1325,10 @@ export class GameScene extends DirtyScene {
                 }
                 //this.reposition();
             } else {
-                this.CurrentPlayer.showTalkIcon(false, true);
+                this.CurrentPlayer.toggleTalk(false, true);
                 this.connection?.emitPlayerShowVoiceIndicator(false);
                 this.showVoiceIndicatorChangeMessageSent = false;
-                this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.showTalkIcon(false, true));
+                this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.toggleTalk(false, true));
                 if (this.localVolumeStoreUnsubscriber) {
                     this.localVolumeStoreUnsubscriber();
                     this.localVolumeStoreUnsubscriber = undefined;
@@ -2693,7 +2695,7 @@ ${escapedMessage}
     }
 
     private tryChangeShowVoiceIndicatorState(show: boolean): void {
-        this.CurrentPlayer.showTalkIcon(show);
+        this.CurrentPlayer.toggleTalk(show);
         if (this.showVoiceIndicatorChangeMessageSent && !show) {
             this.connection?.emitPlayerShowVoiceIndicator(false);
             this.showVoiceIndicatorChangeMessageSent = false;
@@ -2866,7 +2868,7 @@ ${escapedMessage}
             }
         }
         if (update.updated.showVoiceIndicator) {
-            character.showTalkIcon(update.player.showVoiceIndicator);
+            character.toggleTalk(update.player.showVoiceIndicator);
         }
     }
 

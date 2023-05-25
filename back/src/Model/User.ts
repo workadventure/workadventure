@@ -167,7 +167,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
             this.availabilityStatus === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
             this.availabilityStatus === AvailabilityStatus.SILENT ||
             this.availabilityStatus === AvailabilityStatus.JITSI ||
-            this.availabilityStatus === AvailabilityStatus.BBB
+            this.availabilityStatus === AvailabilityStatus.BBB ||
+            this.availabilityStatus === AvailabilityStatus.SPEAKER
         );
     }
 

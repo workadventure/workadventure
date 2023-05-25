@@ -13,6 +13,7 @@ enum AvailabilityStatus {
   JITSI = 4;
   BBB = 5;
   DENY_PROXIMITY_MEETING = 6;
+  SPEAKER = 7;
 }
 
 message PositionMessage {
