@@ -222,7 +222,7 @@ export class PusherRoom implements CustomJsonReplacerInterface {
                         "Connection closed between pusher and back server" +
                             this.roomUrl +
                             " " +
-                            new Date().toLocaleString("en-GB", { timeZone: "Europe / Paris" })
+                            new Date().toLocaleString("en-GB")
                     );
                 }
             }

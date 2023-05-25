@@ -287,7 +287,7 @@ const roomManager = {
                     "in room",
                     room?.roomUrl,
                     "at : ",
-                    today.toLocaleString("en-GB", { timeZone: "Europe / Paris" })
+                    today.toLocaleString("en-GB")
                 );
 
                 Sentry.captureMessage(

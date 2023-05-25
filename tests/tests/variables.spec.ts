@@ -78,7 +78,8 @@ test.describe('Variables', () => {
       ]
     ).toBe(undefined);
 
-    await page.goto(
+    await gotoWait200(
+        page,
       'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json'
     );
     // Redis will reconnect automatically and will store the variable on reconnect!
@@ -90,7 +91,8 @@ test.describe('Variables', () => {
     // Now, let's try to kill / reboot the back
     await rebootBack();
 
-    await page.goto(
+    await gotoWait200(
+        page,
       'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json'
     );
     await expect(textField).toHaveValue('value set while Redis stopped', {

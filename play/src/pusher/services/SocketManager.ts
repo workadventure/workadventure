@@ -301,7 +301,7 @@ export class SocketManager implements ZoneEventListener {
                             "' for room '" +
                             client.roomId +
                             "'at :" +
-                            date.toLocaleString("en-GB", { timeZone: "Europe / Paris" }),
+                            date.toLocaleString("en-GB"),
                         err
                     );
                     Sentry.captureMessage(

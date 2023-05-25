@@ -14,7 +14,7 @@
   "scripts": {
     "start": "TS_NODE_PROJECT=tsconfig-pusher.json ts-node --transpileOnly ./src/server.ts",
     "old_start": "node -r source-map-support/register --max-old-space-size=4096 ./dist/server.js",
-    "dev": "cross-env concurrently \"npm:dev-front\" \"npm:typesafe-i18n-watch\" \"npm:watch-iframe-api\" \"npm:svelte-check-watch\" \"npm:dev-pusher\"",
+    "dev": "cross-env concurrently --kill-others-on-fail \"npm:dev-front\" \"npm:typesafe-i18n-watch\" \"npm:watch-iframe-api\" \"npm:svelte-check-watch\" \"npm:dev-pusher\"",
     "dev-front": "cross-env vite",
     "dev-pusher": "TS_NODE_PROJECT=tsconfig-pusher.json ts-node-dev --inspect=0.0.0.0:9229 --exit-child --respawn ./src/server.ts",
     "build": "cross-env vite build",
