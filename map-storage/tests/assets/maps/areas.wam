@@ -1,1 +1,4 @@
-{"version":"1.0.0","mapUrl":"./areas.tmj","areas":[],"entities":[]}
+{"version":"1.0.0","mapUrl":"./areas.tmj","areas":[],"entities":[], "entityCollections": [
+    "http://map-storage.workadventure.localhost/collections/FurnitureCollection.json",
+    "http://map-storage.workadventure.localhost/collections/OfficeCollection.json"
+] }

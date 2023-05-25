@@ -1,10 +1,16 @@
-import { EntityPrefab } from "@workadventure/map-editor";
+import { EntityPrefab, EntityRawPrefab } from "@workadventure/map-editor";
 import { TexturesHelper } from "../../Helpers/TexturesHelper";
 
 export interface EntityCollection {
     collectionName: string;
     tags: string[];
     collection: EntityPrefab[];
+}
+
+export interface EntityCollectionRaw {
+    collectionName: string;
+    tags: string[];
+    collection: EntityRawPrefab[];
 }
 
 export class EntitiesCollectionsManager {
@@ -53,31 +59,32 @@ export class EntitiesCollectionsManager {
         this.entitiesPrefabs = newCollection;
     }
 
-    public async loadCollections(url: string): Promise<void> {
-        const entityCollections = await this.fetchCollections(url);
-
-        for (const entityCollection of entityCollections) {
-            const tagSet = new Set<string>();
-            entityCollection.collection.forEach((entity: EntityPrefab) => {
-                this.currentCollection.collection.push({
-                    name: entity.name,
-                    id: entity.id,
-                    collectionName: entity.collectionName,
-                    depthOffset: entity.depthOffset ?? 0,
-                    // TODO: Merge tags on map-storage side?
-                    tags: [...entity.tags, ...entityCollection.tags],
-                    imagePath: `${TexturesHelper.ENTITIES_TEXTURES_DIRECTORY}${entity.imagePath}`,
-                    direction: entity.direction,
-                    color: entity.color,
-                    collisionGrid: entity.collisionGrid,
+    public async loadCollections(urls: string[]): Promise<void> {
+        const entityCollections: EntityCollection[] = [];
+        for (const url of urls) {
+            entityCollections.push(this.parseRawCollection(await this.fetchRawCollection(url)));
+            for (const entityCollection of entityCollections) {
+                const tagSet = new Set<string>();
+                entityCollection.collection.forEach((entity: EntityPrefab) => {
+                    this.currentCollection.collection.push({
+                        name: entity.name,
+                        id: entity.id,
+                        collectionName: entity.collectionName,
+                        depthOffset: entity.depthOffset ?? 0,
+                        tags: [...entity.tags, ...entityCollection.tags],
+                        imagePath: `${TexturesHelper.ENTITIES_TEXTURES_DIRECTORY}${entity.imagePath}`,
+                        direction: entity.direction,
+                        color: entity.color,
+                        collisionGrid: entity.collisionGrid,
+                    });
+                    entity.tags.forEach((tag: string) => tagSet.add(tag));
                 });
-                entity.tags.forEach((tag: string) => tagSet.add(tag));
-            });
 
-            const tags = [...new Set([...tagSet, ...this.tags])];
-            tags.sort();
-            this.tags = tags;
-            this.entitiesPrefabs = this.currentCollection.collection;
+                const tags = [...new Set([...tagSet, ...this.tags])];
+                tags.sort();
+                this.tags = tags;
+                this.entitiesPrefabs = this.currentCollection.collection;
+            }
         }
     }
 
@@ -85,7 +92,25 @@ export class EntitiesCollectionsManager {
         return this.tags;
     }
 
-    private async fetchCollections(url: string): Promise<EntityCollection[]> {
+    private async fetchRawCollection(url: string): Promise<EntityCollectionRaw> {
         return (await fetch(url)).json();
+    }
+
+    private parseRawCollection(rawCollection: EntityCollectionRaw): EntityCollection {
+        return {
+            collectionName: rawCollection.collectionName,
+            tags: [...rawCollection.tags],
+            collection: rawCollection.collection.map((rawPrefab) =>
+                this.parseRawEntityPrefab(rawCollection.collectionName, rawPrefab)
+            ),
+        };
+    }
+
+    private parseRawEntityPrefab(collectionName: string, rawPrefab: EntityRawPrefab): EntityPrefab {
+        return {
+            ...rawPrefab,
+            collectionName,
+            id: `${collectionName}:${rawPrefab.name}:${rawPrefab.color}:${rawPrefab.direction}`,
+        };
     }
 }

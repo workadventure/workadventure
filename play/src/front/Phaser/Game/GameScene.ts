@@ -289,14 +289,6 @@ export class GameScene extends DirtyScene {
 
         this.entitiesCollectionsManager = new EntitiesCollectionsManager();
 
-        if (this.room.entityCollectionsUrls) {
-            for (const url of this.room.entityCollectionsUrls) {
-                this.entitiesCollectionsManager.loadCollections(url).catch((reason) => {
-                    console.warn(reason);
-                });
-            }
-        }
-
         this.createPromiseDeferred = new Deferred<void>();
         this.connectionAnswerPromiseDeferred = new Deferred<RoomJoinedMessageInterface>();
         this.loader = new Loader(this);
@@ -406,10 +398,12 @@ export class GameScene extends DirtyScene {
                     undefined,
                     undefined,
                     (key: string, type: string, wamFile: unknown) => {
-                        console.log(wamFile);
                         this.wamFile = WAMFileFormat.parse(wamFile);
                         this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
                         this.doLoadTMJFile(this.mapUrlFile);
+                        this.entitiesCollectionsManager
+                            .loadCollections(this.wamFile.entityCollections)
+                            .catch((error) => console.warn(error));
                     }
                 )
                 .catch((e) => {

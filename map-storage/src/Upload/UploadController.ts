@@ -443,6 +443,7 @@ export class UploadController {
             mapUrl: tmjFilePath,
             areas: [],
             entities: [],
+            entityCollections: [],
             settings: undefined,
         };
     }

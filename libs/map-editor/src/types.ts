@@ -179,6 +179,7 @@ export const WAMFileFormat = z.object({
     mapUrl: z.string(),
     entities: z.array(EntityData),
     areas: z.array(AreaData),
+    entityCollections: z.array(z.string()),
     lastCommandId: z.string().optional(),
     settings: z
         .object({
