@@ -2,10 +2,16 @@
 import * as grpc from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
 import { RoomManagerService, SpaceManagerService } from "@workadventure/messages/src/ts-proto-generated/services";
-import { SENTRY_TRACES_SAMPLE_RATE } from "workadventurechat/src/Enum/EnvironmentVariable";
 import App from "./src/App";
 import { roomManager } from "./src/RoomManager";
-import { HTTP_PORT, GRPC_PORT, ENABLE_TELEMETRY, SENTRY_DSN, SENTRY_RELEASE } from "./src/Enum/EnvironmentVariable";
+import {
+    HTTP_PORT,
+    GRPC_PORT,
+    ENABLE_TELEMETRY,
+    SENTRY_DSN,
+    SENTRY_RELEASE,
+    SENTRY_TRACES_SAMPLE_RATE,
+} from "./src/Enum/EnvironmentVariable";
 import { telemetryService } from "./src/Services/TelemetryService";
 import { spaceManager } from "./src/SpaceManager";
 
@@ -24,7 +30,7 @@ if (SENTRY_DSN != undefined) {
             // Set tracesSampleRate to 1.0 to capture 100%
             // of transactions for performance monitoring.
             // We recommend adjusting this value in production
-            sentryOptions.tracesSampleRate = parseFloat(SENTRY_TRACES_SAMPLE_RATE);
+            sentryOptions.tracesSampleRate = SENTRY_TRACES_SAMPLE_RATE;
         }
         if (SENTRY_RELEASE != undefined) {
             // Make sure this value is identical to the name you give the release that you

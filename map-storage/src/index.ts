@@ -6,7 +6,6 @@ import { MapStorageService } from "@workadventure/messages/src/ts-proto-generate
 import passport from "passport";
 import bodyParser from "body-parser";
 import { WAMFileFormat } from "@workadventure/map-editor";
-import { SENTRY_TRACES_SAMPLE_RATE } from "workadventurechat/src/Enum/EnvironmentVariable";
 import { mapStorageServer } from "./MapStorageServer";
 import { mapsManager } from "./MapsManager";
 import { proxyFiles } from "./FileFetcher/FileFetcher";
@@ -15,7 +14,7 @@ import { fileSystem } from "./fileSystem";
 import { passportStrategy } from "./Services/Authentication";
 import { mapPathUsingDomain } from "./Services/PathMapper";
 import { ValidatorController } from "./Upload/ValidatorController";
-import { SENTRY_DSN, SENTRY_RELEASE, WEB_HOOK_URL } from "./Enum/EnvironmentVariable";
+import { SENTRY_DSN, SENTRY_RELEASE, WEB_HOOK_URL, SENTRY_TRACES_SAMPLE_RATE } from "./Enum/EnvironmentVariable";
 
 // Sentry integration
 if (SENTRY_DSN != undefined) {
@@ -28,14 +27,7 @@ if (SENTRY_DSN != undefined) {
             // Set tracesSampleRate to 1.0 to capture 100%
             // of transactions for performance monitoring.
             // We recommend adjusting this value in production
-            sentryOptions.tracesSampleRate = parseFloat(SENTRY_TRACES_SAMPLE_RATE);
-        }
-
-        if (SENTRY_TRACES_SAMPLE_RATE != undefined) {
-            // Set tracesSampleRate to 1.0 to capture 100%
-            // of transactions for performance monitoring.
-            // We recommend adjusting this value in production
-            sentryOptions.tracesSampleRate = parseFloat(SENTRY_TRACES_SAMPLE_RATE);
+            sentryOptions.tracesSampleRate = SENTRY_TRACES_SAMPLE_RATE;
         }
 
         if (SENTRY_RELEASE != undefined) {
