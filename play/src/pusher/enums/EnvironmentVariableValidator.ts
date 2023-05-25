@@ -79,7 +79,11 @@ export const EnvironmentVariables = z.object({
     SENTRY_DSN_FRONT: z.string().optional(),
     SENTRY_DSN_PUSHER: z.string().optional(),
     SENTRY_RELEASE: z.string().optional(),
-    SENTRY_TRACES_SAMPLE_RATE: z.number().optional(),
+    SENTRY_TRACES_SAMPLE_RATE: z
+        .string()
+        .optional()
+        .transform((val) => toNumber(val, 0.1))
+        .describe("The sampling rate for Sentry traces. Only used if SENTRY_DSN is configured. Defaults to 0.1"),
 
     // RoomAPI related environment variables
     ROOM_API_PORT: PositiveIntAsString.optional().transform((val) => toNumber(val, 50051)),
