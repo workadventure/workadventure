@@ -15,7 +15,6 @@ import { PathTileType } from "../../../Utils/PathfindingManager";
 import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
 import type { GameScene } from "../GameScene";
 import { Entity } from "../../ECS/Entity";
-import { TexturesHelper } from "../../Helpers/TexturesHelper";
 import { ITiledPlace } from "../GameMapPropertiesListener";
 
 export type DynamicArea = {
@@ -146,7 +145,7 @@ export class GameMapFrontWrapper {
 
         this.entitiesManager = new EntitiesManager(this.scene, this);
         for (const entityData of this.gameMap.getGameMapEntities()?.getEntities() ?? []) {
-            this.entitiesManager.addEntity(entityData, TexturesHelper.ENTITIES_TEXTURES_DIRECTORY);
+            this.entitiesManager.addEntity(entityData);
         }
 
         this.updateCollisionGrid(undefined, false);

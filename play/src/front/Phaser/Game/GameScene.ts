@@ -613,7 +613,7 @@ export class GameScene extends DirtyScene {
         //add layer on map
         this.gameMapFrontWrapper = new GameMapFrontWrapper(
             this,
-            new GameMap(this.mapFile, this.wamFile),
+            new GameMap(this.mapFile, this.wamFile, this.entitiesCollectionsManager.getEntitiesPrefabsMap()),
             this.Map,
             this.Terrains
         );
@@ -1953,7 +1953,11 @@ ${escapedMessage}
                             //Create a new GameMap with the changed file
                             this.gameMapFrontWrapper = new GameMapFrontWrapper(
                                 this,
-                                new GameMap(this.mapFile, this.wamFile),
+                                new GameMap(
+                                    this.mapFile,
+                                    this.wamFile,
+                                    this.entitiesCollectionsManager.getEntitiesPrefabsMap()
+                                ),
                                 this.Map,
                                 this.Terrains
                             );

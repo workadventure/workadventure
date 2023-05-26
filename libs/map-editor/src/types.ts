@@ -138,6 +138,9 @@ export const EntityData = z.object({
     prefab: EntityPrefab,
 });
 
+export const WAMEntityData = EntityData.omit({ prefab: true }).extend({ prefabId: z.string() });
+export type WAMEntityData = z.infer<typeof WAMEntityData>;
+
 export const WAMMetadata = z.object({
     name: z.string().optional().describe("The name of the map."),
     description: z
@@ -177,7 +180,7 @@ export type MegaphoneSettings = z.infer<typeof MegaphoneSettings>;
 export const WAMFileFormat = z.object({
     version: z.string(),
     mapUrl: z.string(),
-    entities: z.array(EntityData),
+    entities: z.array(WAMEntityData),
     areas: z.array(AreaData),
     entityCollections: z.array(z.string()),
     lastCommandId: z.string().optional(),

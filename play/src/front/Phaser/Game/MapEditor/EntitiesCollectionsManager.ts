@@ -1,5 +1,4 @@
 import { EntityPrefab, EntityRawPrefab } from "@workadventure/map-editor";
-import { TexturesHelper } from "../../Helpers/TexturesHelper";
 
 export interface EntityCollection {
     collectionName: string;
@@ -15,6 +14,7 @@ export interface EntityCollectionRaw {
 
 export class EntitiesCollectionsManager {
     private entitiesPrefabs: EntityPrefab[] = [];
+    private entitiesPrefabsMap: Map<string, EntityPrefab> = new Map<string, EntityPrefab>();
     private tags: string[] = [];
 
     private filter = "";
@@ -24,6 +24,10 @@ export class EntitiesCollectionsManager {
 
     public getEntitiesPrefabs(): EntityPrefab[] {
         return this.entitiesPrefabs;
+    }
+
+    public getEntitiesPrefabsMap(): Map<string, EntityPrefab> {
+        return this.entitiesPrefabsMap;
     }
 
     public getEntityPrefab(collectionName: string, entityPrefabId: string): EntityPrefab | undefined {
@@ -63,6 +67,7 @@ export class EntitiesCollectionsManager {
         const entityCollections: EntityCollection[] = [];
         for (const url of urls) {
             entityCollections.push(this.parseRawCollection(await this.fetchRawCollection(url)));
+
             for (const entityCollection of entityCollections) {
                 const tagSet = new Set<string>();
                 entityCollection.collection.forEach((entity: EntityPrefab) => {
@@ -72,7 +77,7 @@ export class EntitiesCollectionsManager {
                         collectionName: entity.collectionName,
                         depthOffset: entity.depthOffset ?? 0,
                         tags: [...entity.tags, ...entityCollection.tags],
-                        imagePath: `${TexturesHelper.ENTITIES_TEXTURES_DIRECTORY}${entity.imagePath}`,
+                        imagePath: new URL(entity.imagePath, url).toString(),
                         direction: entity.direction,
                         color: entity.color,
                         collisionGrid: entity.collisionGrid,
@@ -85,6 +90,9 @@ export class EntitiesCollectionsManager {
                 this.tags = tags;
                 this.entitiesPrefabs = this.currentCollection.collection;
             }
+        }
+        for (const prefab of this.entitiesPrefabs) {
+            this.entitiesPrefabsMap.set(prefab.id, prefab);
         }
     }
 

@@ -19,8 +19,8 @@ import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { fileSystem } from "./fileSystem";
 
 // TODO: dynamic imports?
-import furnitureCollection from "./entities/collections/FurnitureCollection.json";
-import officeCollection from "./entities/collections/OfficeCollection.json";
+import furnitureCollection from "./../assets/collections/FurnitureCollection.json";
+import officeCollection from "./../assets/collections/OfficeCollection.json";
 
 class MapsManager {
     private loadedMaps: Map<string, GameMap>;
