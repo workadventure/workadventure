@@ -19,7 +19,7 @@ const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subj
 const enterLayerStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();
 const leaveLayerStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();
 
-interface TileDescriptor {
+export interface TileDescriptor {
     x: number;
     y: number;
     tile: number | string | null;
