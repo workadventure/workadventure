@@ -65,14 +65,14 @@ export class MapEditorModeManager {
 
     private mapEditorModeUnsubscriber!: Unsubscriber;
 
-    private ctrlKey: Phaser.Input.Keyboard.Key;
-    private shiftKey: Phaser.Input.Keyboard.Key;
+    private ctrlKey?: Phaser.Input.Keyboard.Key;
+    private shiftKey?: Phaser.Input.Keyboard.Key;
 
     constructor(scene: GameScene) {
         this.scene = scene;
 
-        this.ctrlKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL);
-        this.shiftKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+        this.ctrlKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL);
+        this.shiftKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
         this.localCommandsHistory = [];
         this.pendingCommands = [];
@@ -272,8 +272,8 @@ export class MapEditorModeManager {
                 break;
             }
             case "z": {
-                if (this.ctrlKey.isDown) {
-                    this.shiftKey.isDown ? this.redoCommand() : this.undoCommand();
+                if (this.ctrlKey?.isDown) {
+                    this.shiftKey?.isDown ? this.redoCommand() : this.undoCommand();
                 }
                 break;
             }

@@ -126,6 +126,7 @@ import { megaphoneCanBeUsedStore, megaphoneEnabledStore } from "../../Stores/Meg
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
+import { OutlineManager } from "./UI/OutlineManager";
 import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
@@ -154,7 +155,6 @@ import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
-import GameObject = Phaser.GameObjects.GameObject;
 import DOMElement = Phaser.GameObjects.DOMElement;
 import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
@@ -240,6 +240,7 @@ export class GameScene extends DirtyScene {
     private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
+    private outlineManager!: OutlineManager;
     private mapTransitioning = false; //used to prevent transitions happening at the same time.
     private emoteManager!: EmoteManager;
     private cameraManager!: CameraManager;
@@ -368,7 +369,7 @@ export class GameScene extends DirtyScene {
                 // In this case, we check in the cache to see if the map is here and trigger the event manually.
                 if (this.cache.tilemap.exists(this.mapUrlFile)) {
                     const data = this.cache.tilemap.get(this.mapUrlFile);
-                    this.onMapLoad(data).catch((e) => console.error(e));
+                    this.onMapLoad(data.data).catch((e) => console.error(e));
                 }
                 return;
             }
@@ -440,7 +441,7 @@ export class GameScene extends DirtyScene {
         // In this case, we check in the cache to see if the map is here and trigger the event manually.
         if (this.cache.tilemap.exists(mapUrlFile)) {
             const data = this.cache.tilemap.get(mapUrlFile);
-            this.onMapLoad(data).catch((e) => console.error(e));
+            this.onMapLoad(data.data).catch((e) => console.error(e));
         }
     }
 
@@ -451,10 +452,7 @@ export class GameScene extends DirtyScene {
         // Load tiles attached to the map recursively
         // The map file can be modified by the scripting API and we don't want to tamper the Phaser cache (in case we come back on the map after visiting other maps)
         // So we are doing a deep copy
-
-        console.log(data.data);
-
-        this.mapFile = structuredClone(data.data);
+        this.mapFile = structuredClone(data);
 
         // Safe parse can take up to 600ms on a 17MB map.
         // TODO: move safeParse to a "map" page and display details of what is going wrong there.
@@ -571,6 +569,7 @@ export class GameScene extends DirtyScene {
 
         this.trackDirtyAnims();
 
+        this.outlineManager = new OutlineManager(this);
         gameManager.gameSceneIsCreated(this);
         urlManager.pushRoomIdToUrl(this.room);
         analyticsClient.enteredRoom(this.room.id, this.room.group);
@@ -596,16 +595,19 @@ export class GameScene extends DirtyScene {
                     `Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.mapUrlFile}".`
                 );
             }
-            this.Terrains.push(
-                this.Map.addTilesetImage(
-                    tileset.name,
-                    `${mapDirUrl}/${tileset.image}`,
-                    tileset.tilewidth,
-                    tileset.tileheight,
-                    tileset.margin,
-                    tileset.spacing /*, tileset.firstgid*/
-                )
+            const tilesetImage = this.Map.addTilesetImage(
+                tileset.name,
+                `${mapDirUrl}/${tileset.image}`,
+                tileset.tilewidth,
+                tileset.tileheight,
+                tileset.margin,
+                tileset.spacing /*, tileset.firstgid*/
             );
+            if (tilesetImage) {
+                this.Terrains.push(tilesetImage);
+            } else {
+                console.warn(`Failed to add TilesetImage ${tileset.name}: ${`${mapDirUrl}/${tileset.image}`}`);
+            }
         });
 
         this.throttledSendViewportToServer = throttle(200, () => {
@@ -1381,7 +1383,12 @@ export class GameScene extends DirtyScene {
         }
 
         //create white circle canvas use to create sprite
-        this.circleTexture = this.textures.createCanvas("circleSprite-white", 96, 96);
+        let texture = this.textures.createCanvas("circleSprite-white", 96, 96);
+        if (!texture) {
+            console.warn("Failed to create white circle texture");
+            return;
+        }
+        this.circleTexture = texture;
         const context = this.circleTexture.context;
         context.beginPath();
         context.arc(48, 48, 48, 0, 2 * Math.PI, false);
@@ -1393,7 +1400,12 @@ export class GameScene extends DirtyScene {
         this.circleTexture.refresh();
 
         //create red circle canvas use to create sprite
-        this.circleRedTexture = this.textures.createCanvas("circleSprite-red", 96, 96);
+        texture = this.textures.createCanvas("circleSprite-red", 96, 96);
+        if (!texture) {
+            console.warn("Failed to create red circle texture");
+            return;
+        }
+        this.circleRedTexture = texture;
         const contextRed = this.circleRedTexture.context;
         contextRed.beginPath();
         contextRed.arc(48, 48, 48, 0, 2 * Math.PI, false);
@@ -1943,16 +1955,19 @@ ${escapedMessage}
                                     jsonTileset.tiles
                                 )
                             );
-                            this.Terrains.push(
-                                this.Map.addTilesetImage(
-                                    jsonTileset.name,
-                                    imageUrl,
-                                    jsonTileset.tilewidth,
-                                    jsonTileset.tileheight,
-                                    jsonTileset.margin,
-                                    jsonTileset.spacing
-                                )
+                            const tilesetImage = this.Map.addTilesetImage(
+                                jsonTileset.name,
+                                imageUrl,
+                                jsonTileset.tilewidth,
+                                jsonTileset.tileheight,
+                                jsonTileset.margin,
+                                jsonTileset.spacing
                             );
+                            if (tilesetImage) {
+                                this.Terrains.push(tilesetImage);
+                            } else {
+                                console.warn(`Failed to add TilesetImage ${jsonTileset.name}: ${imageUrl}`);
+                            }
                             //destroy the tilemapayer because they are unique and we need to reuse their key and layerdData
                             for (const layer of this.Map.layers) {
                                 layer.tilemapLayer.destroy(false);
@@ -2199,6 +2214,7 @@ ${escapedMessage}
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
+        this.outlineManager?.clear();
         this.userInputManager?.destroy();
         this.pinchManager?.destroy();
         this.emoteManager?.destroy();
@@ -2429,7 +2445,10 @@ ${escapedMessage}
             this.physics.add.collider(
                 this.CurrentPlayer,
                 phaserLayer,
-                (object1: GameObject, object2: GameObject) => {}
+                (
+                    object1: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile,
+                    object2: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile
+                ) => {}
             );
             phaserLayer.setCollisionByProperty({ collides: true });
             if (DEBUG_MODE) {
@@ -3056,6 +3075,10 @@ ${escapedMessage}
 
     public getActivatablesManager(): ActivatablesManager {
         return this.activatablesManager;
+    }
+
+    public getOutlineManager(): OutlineManager {
+        return this.outlineManager;
     }
 
     public get broadcastService(): BroadcastService {
