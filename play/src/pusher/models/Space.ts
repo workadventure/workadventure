@@ -8,6 +8,7 @@ import {
     UpdateSpaceFilterMessage,
 } from "@workadventure/messages";
 import Debug from "debug";
+import * as Sentry from "@sentry/node";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import { BackSpaceConnection, ExSocketInterface } from "./Websocket/ExSocketInterface";
 
@@ -204,6 +205,7 @@ export class Space implements CustomJsonReplacerInterface {
             this.notifyAll(subMessage, user);
         } else {
             console.error(`Space => ${this.name} : user not found ${userId}`);
+            Sentry.captureException(`Space => ${this.name} : user not found ${userId}`);
         }
     }
 
@@ -271,15 +273,16 @@ export class Space implements CustomJsonReplacerInterface {
         return usersFiltered;
     }
 
-    private filterOneUser(spaceFilter: SpaceFilterMessage, user: SpaceUserExtended): boolean {
-        if (!spaceFilter.filter) {
+    private filterOneUser(spaceFilters: SpaceFilterMessage, user: SpaceUserExtended): boolean {
+        if (!spaceFilters.filter) {
+            Sentry.captureException("Empty filter received" + spaceFilters.spaceName);
             console.error("Empty filter received");
             return false;
         }
 
-        switch (spaceFilter.filter.$case) {
+        switch (spaceFilters.filter.$case) {
             case "spaceFilterContainName": {
-                const spaceFilterContainName = spaceFilter.filter.spaceFilterContainName;
+                const spaceFilterContainName = spaceFilters.filter.spaceFilterContainName;
                 return user.lowercaseName.includes(spaceFilterContainName.value.toLowerCase());
             }
             case "spaceFilterEverybody": {
@@ -289,7 +292,7 @@ export class Space implements CustomJsonReplacerInterface {
                 return (user.screenSharing || user.microphoneState || user.cameraState) && user.megaphoneState;
             }
             default: {
-                const _exhaustiveCheck: never = spaceFilter.filter;
+                const _exhaustiveCheck: never = spaceFilters.filter;
             }
         }
         return false;

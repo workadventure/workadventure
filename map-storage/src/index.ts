@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import * as grpc from "@grpc/grpc-js";
 import express from "express";
 import cors from "cors";
@@ -13,9 +14,35 @@ import { fileSystem } from "./fileSystem";
 import { passportStrategy } from "./Services/Authentication";
 import { mapPathUsingDomain } from "./Services/PathMapper";
 import { ValidatorController } from "./Upload/ValidatorController";
+import { SENTRY_DSN, SENTRY_RELEASE, WEB_HOOK_URL, SENTRY_TRACES_SAMPLE_RATE } from "./Enum/EnvironmentVariable";
+
+// Sentry integration
+if (SENTRY_DSN != undefined) {
+    try {
+        const sentryOptions: Sentry.NodeOptions = {
+            dsn: SENTRY_DSN,
+        };
+
+        if (SENTRY_TRACES_SAMPLE_RATE != undefined) {
+            // Set tracesSampleRate to 1.0 to capture 100%
+            // of transactions for performance monitoring.
+            // We recommend adjusting this value in production
+            sentryOptions.tracesSampleRate = SENTRY_TRACES_SAMPLE_RATE;
+        }
+
+        if (SENTRY_RELEASE != undefined) {
+            // Make sure this value is identical to the name you give the release that you
+            // create below using Sentry CLI
+            sentryOptions.release = SENTRY_RELEASE;
+        }
+        Sentry.init(sentryOptions);
+        console.info("Sentry initialized");
+    } catch (e) {
+        console.error("Error while initializing Sentry", e);
+    }
+}
 import { MapListService } from "./Services/MapListService";
 import { WebHookService } from "./Services/WebHookService";
-import { WEB_HOOK_URL } from "./Enum/EnvironmentVariable";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment

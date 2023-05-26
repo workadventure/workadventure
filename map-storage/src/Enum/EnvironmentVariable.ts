@@ -45,3 +45,7 @@ export const CACHE_CONTROL = env.CACHE_CONTROL;
 export const WEB_HOOK_URL = env.WEB_HOOK_URL;
 export const WEB_HOOK_API_TOKEN = env.WEB_HOOK_API_TOKEN;
 export const ENV_VARS = env;
+
+export const SENTRY_DSN = env.SENTRY_DSN;
+export const SENTRY_RELEASE = env.SENTRY_RELEASE;
+export const SENTRY_TRACES_SAMPLE_RATE = env.SENTRY_TRACES_SAMPLE_RATE;

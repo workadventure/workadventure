@@ -54,6 +54,16 @@ const BasicEnvironmentVariables = z.object({
         .describe(
             "The (optional) API token to use when calling the webhook. The token will be sent in the Authorization header of the POST request."
         ),
+    SENTRY_DSN: z.string().optional().describe("If set, WorkAdventure will send errors to Sentry"),
+    SENTRY_RELEASE: z
+        .string()
+        .optional()
+        .describe("The Sentry release we target. Only used if SENTRY_DSN is configured."),
+    SENTRY_TRACES_SAMPLE_RATE: z
+        .string()
+        .optional()
+        .transform((val) => toNumber(val, 0.1))
+        .describe("The sampling rate for Sentry traces. Only used if SENTRY_DSN is configured. Defaults to 0.1"),
 });
 
 const BearerAuthEnvVariables = z.object({

@@ -116,15 +116,22 @@ export class GameMapFrontWrapper {
         let depth = -2;
         for (const layer of this.gameMap.flatLayers) {
             if (layer.type === "tilelayer") {
-                this.phaserLayers.push(
-                    phaserMap
-                        .createLayer(layer.name, terrains, (layer.x || 0) * 32, (layer.y || 0) * 32)
-                        .setDepth(depth)
-                        .setScrollFactor(layer.parallaxx ?? 1, layer.parallaxy ?? 1)
-                        .setAlpha(layer.opacity)
-                        .setVisible(layer.visible)
-                        .setSize(layer.width, layer.height)
+                const phaserLayer = phaserMap.createLayer(
+                    layer.name,
+                    terrains,
+                    (layer.x || 0) * 32,
+                    (layer.y || 0) * 32
                 );
+                if (phaserLayer) {
+                    this.phaserLayers.push(
+                        phaserLayer
+                            .setDepth(depth)
+                            .setScrollFactor(layer.parallaxx ?? 1, layer.parallaxy ?? 1)
+                            .setAlpha(layer.opacity)
+                            .setVisible(layer.visible)
+                            .setSize(layer.width, layer.height)
+                    );
+                }
             }
             if (layer.type === "objectgroup" && layer.name === "floorLayer") {
                 depth = DEPTH_OVERLAY_INDEX;
@@ -139,7 +146,12 @@ export class GameMapFrontWrapper {
             });
 
         this.collisionGrid = [];
-        this.entitiesCollisionLayer = phaserMap.createBlankLayer("__entitiesCollisionLayer", terrains);
+        // NOTE: We cannot really proceed without it
+        const phaserBlankCollisionsLayer = phaserMap.createBlankLayer("__entitiesCollisionLayer", terrains);
+        if (!phaserBlankCollisionsLayer) {
+            throw new Error("Could not create collision layer");
+        }
+        this.entitiesCollisionLayer = phaserBlankCollisionsLayer;
         this.entitiesCollisionLayer.setDepth(-2).setCollisionByProperty({ collides: true });
 
         this.phaserLayers.push(this.entitiesCollisionLayer);

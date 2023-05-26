@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import {createNestedStore} from "@workadventure/store-utils";
+import { createNestedStore } from "@workadventure/store-utils";
 import { get, writable } from "svelte/store";
 
 describe("Nested store", () => {
     it("generates stores with getStoreByAccessor", () => {
         const rootStore = writable({
-            "foo": 12,
-            "store": writable("baz")
+            foo: 12,
+            store: writable("baz"),
         });
 
         const nestedStore = createNestedStore(rootStore, (root) => root.store);

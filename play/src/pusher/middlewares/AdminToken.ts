@@ -1,4 +1,5 @@
 import type { MiddlewareNext, MiddlewarePromise, Request, Response } from "hyper-express";
+import * as Sentry from "@sentry/node";
 import { ADMIN_API_TOKEN } from "../enums/EnvironmentVariable";
 
 export function adminToken(req: Request, res: Response, next: MiddlewareNext): MiddlewarePromise | void {
@@ -11,6 +12,7 @@ export function adminToken(req: Request, res: Response, next: MiddlewareNext): M
     }
     if (token !== ADMIN_API_TOKEN) {
         console.error("Admin access refused for token: " + token);
+        Sentry.captureException("Admin access refused for token: " + token);
         res.status(401).end("Incorrect token");
         return;
     }

@@ -18,6 +18,7 @@ import {
 import Jwt from "jsonwebtoken";
 import { v4 as uuid } from "uuid";
 import { JID } from "stanza";
+import * as Sentry from "@sentry/node";
 import { Color } from "@workadventure/shared-utils";
 import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
 import { PointInterface } from "../models/Websocket/PointInterface";
@@ -133,7 +134,9 @@ export class IoSocketController {
                     } catch (err) {
                         if (err instanceof z.ZodError) {
                             console.error(err.issues);
+                            Sentry.captureException(err.issues);
                         }
+                        Sentry.captureException(`Invalid message received. ${message}`);
                         console.error("Invalid message received.", message);
                         ws.send(
                             JSON.stringify({
@@ -154,6 +157,7 @@ export class IoSocketController {
                     try {
                         data = jwtTokenManager.verifyAdminSocketToken(token);
                     } catch (e) {
+                        Sentry.captureException(`Admin socket access refused for token: ${token} ${e}`);
                         console.error("Admin socket access refused for token: " + token, e);
                         ws.send(
                             JSON.stringify({
@@ -178,6 +182,7 @@ export class IoSocketController {
                             const errorMessage = `Admin socket refused for client on ${Buffer.from(
                                 ws.getRemoteAddressAsText()
                             ).toString()} listening of : \n${JSON.stringify(notAuthorizedRoom)}`;
+                            Sentry.captureException(errorMessage);
                             console.error(errorMessage);
                             ws.send(
                                 JSON.stringify({
@@ -192,9 +197,10 @@ export class IoSocketController {
                         }
 
                         for (const roomId of message.roomIds) {
-                            socketManager
-                                .handleAdminRoom(ws as ExAdminSocketInterface, roomId)
-                                .catch((e) => console.error(e));
+                            socketManager.handleAdminRoom(ws as ExAdminSocketInterface, roomId).catch((e) => {
+                                console.error(e);
+                                Sentry.captureException(e);
+                            });
                         }
                     } else if (message.event === "user-message") {
                         const messageToEmit = message.message;
@@ -207,7 +213,10 @@ export class IoSocketController {
                             if (messageToEmit.type === "banned") {
                                 socketManager
                                     .emitBan(messageToEmit.userUuid, messageToEmit.message, messageToEmit.type, roomId)
-                                    .catch((error) => console.error(error));
+                                    .catch((error) => {
+                                        Sentry.captureException(error);
+                                        console.error(error);
+                                    });
                             } else if (messageToEmit.type === "ban") {
                                 socketManager
                                     .emitSendUserMessage(
@@ -216,11 +225,15 @@ export class IoSocketController {
                                         messageToEmit.type,
                                         roomId
                                     )
-                                    .catch((error) => console.error(error));
+                                    .catch((error) => {
+                                        Sentry.captureException(error);
+                                        console.error(error);
+                                    });
                             }
                         }
                     }
                 } catch (err) {
+                    Sentry.captureException(err);
                     console.error(err);
                 }
             },
@@ -230,8 +243,8 @@ export class IoSocketController {
                     Client.disconnecting = true;
                     socketManager.leaveAdminRoom(Client);
                 } catch (e) {
-                    console.error('An error occurred on admin "disconnect"');
-                    console.error(e);
+                    Sentry.captureException(`An error occurred on admin "disconnect" ${e}`);
+                    console.error(`An error occurred on admin "disconnect" ${e}`);
                 }
             },
         });
@@ -391,6 +404,9 @@ export class IoSocketController {
                                             return;
                                         }
 
+                                        Sentry.captureException(
+                                            `Axios error on room connection ${err?.response?.status} ${errorType.data}`
+                                        );
                                         console.error(
                                             "Axios error on room connection",
                                             err?.response?.status,
@@ -410,6 +426,7 @@ export class IoSocketController {
                                             context
                                         );
                                     } else {
+                                        Sentry.captureException(`Unknown error on room connection ${err}`);
                                         console.error("Unknown error on room connection", err);
                                         if (upgradeAborted.aborted) {
                                             // If the response points to nowhere, don't attempt an upgrade
@@ -441,6 +458,7 @@ export class IoSocketController {
                             console.log(
                                 "access not granted for user " + (userIdentifier || "anonymous") + " and room " + roomId
                             );
+                            Sentry.captureException(e);
                             console.error(e);
                             throw new Error("User cannot access this world");
                         }
@@ -548,6 +566,7 @@ export class IoSocketController {
                     } catch (e) {
                         if (e instanceof Error) {
                             if (!(e instanceof InvalidTokenError)) {
+                                Sentry.captureException(e);
                                 console.error(e);
                             }
                             if (upgradeAborted.aborted) {
@@ -587,7 +606,10 @@ export class IoSocketController {
                             );
                         }
                     }
-                })().catch((e) => console.error(e));
+                })().catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
             },
             /* Handlers */
             open: (_ws: WebSocket) => {
@@ -715,7 +737,10 @@ export class IoSocketController {
                     const endTimestamp = Date.now();
                     console.log("Time taken: " + (endTimestamp - startTimestamp) + "ms");
                     */
-                })().catch((e) => console.error(e));
+                })().catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
             },
             message: (ws, arrayBuffer): void => {
                 (async () => {
@@ -829,7 +854,10 @@ export class IoSocketController {
 
                     /* Ok is false if backpressure was built up, wait for drain */
                     //let ok = ws.send(message, isBinary);
-                })().catch((e) => console.error(e));
+                })().catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
             },
             drain: (ws) => {
                 console.log("WebSocket backpressure: " + ws.getBufferedAmount());
@@ -841,7 +869,7 @@ export class IoSocketController {
                     socketManager.leaveRoom(client);
                     socketManager.leaveSpaces(client);
                 } catch (e) {
-                    console.error('An error occurred on "disconnect"');
+                    Sentry.captureException(`An error occurred on "disconnect" ${e}`);
                     console.error(e);
                 } finally {
                     if (client.pingIntervalId) {

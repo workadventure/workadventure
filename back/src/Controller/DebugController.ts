@@ -1,6 +1,7 @@
 import { stringify } from "circular-json";
 import { HttpRequest, HttpResponse } from "uWebSockets.js";
 import { parse } from "query-string";
+import * as Sentry from "@sentry/node";
 import { ADMIN_API_TOKEN } from "../Enum/EnvironmentVariable";
 import { App } from "../Server/sifrr.server";
 import { socketManager } from "../Services/SocketManager";
@@ -66,6 +67,7 @@ export class DebugController {
                     );
             })().catch((e) => {
                 console.error(e);
+                Sentry.captureException(e);
                 res.writeStatus("500");
                 res.end("An error occurred");
             });

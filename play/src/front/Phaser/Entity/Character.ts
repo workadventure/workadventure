@@ -1,6 +1,5 @@
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
-import type { Unsubscriber, Writable } from "svelte/store";
-import { writable } from "svelte/store";
+import { Unsubscriber, Writable, get, writable } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import type { AvailabilityStatus as AvailabilityStatusType } from "@workadventure/messages";
@@ -141,32 +140,26 @@ export abstract class Character extends Container implements OutlineableInterfac
 
         if (isClickable) {
             this.setInteractive({
-                hitArea: new Phaser.Geom.Circle(0, 0, interactiveRadius),
+                hitArea: new Phaser.Geom.Circle(8, 8, interactiveRadius),
                 hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
                 useHandCursor: true,
             });
         }
         this.playerNameText.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
-        this.statusDot = new PlayerStatusDot(scene, this.playerNameText.getLeftCenter().x - 6, playerNameY - 1);
-        this.megaphoneIcon = new MegaphoneIcon(scene, this.playerNameText.getRightCenter().x + 10, playerNameY - 1);
+        this.statusDot = new PlayerStatusDot(scene, (this.playerNameText.getLeftCenter().x ?? 0) - 6, playerNameY - 1);
+        this.megaphoneIcon = new MegaphoneIcon(scene, (this.playerNameText.getLeftCenter().x ?? 0) + 10, playerNameY - 1);
         this.add([this.playerNameText, this.statusDot, this.megaphoneIcon]);
 
         this.setClickable(isClickable);
 
         this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
-            if (color === undefined) {
-                this.getOutlinePlugin()?.remove(this.playerNameText);
-            } else {
-                this.getOutlinePlugin()?.remove(this.playerNameText);
-                this.getOutlinePlugin()?.add(this.playerNameText, {
-                    thickness: 2,
-                    outlineColor: color,
-                });
-            }
-            this.scene.markDirty();
+            this.setOutline(color);
         });
 
         scene.add.existing(this);
+        scene.getOutlineManager().add(this.getObjectToOutline(), () => {
+            return this.getCurrentOutline();
+        });
 
         this.scene.physics.world.enableBody(this);
         this.getBody().setImmovable(true);
@@ -448,6 +441,19 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
+    private setOutline(color: number | undefined) {
+        if (color === undefined) {
+            this.getOutlinePlugin()?.remove(this.playerNameText);
+        } else {
+            this.getOutlinePlugin()?.remove(this.playerNameText);
+            this.getOutlinePlugin()?.add(this.playerNameText, {
+                thickness: 2,
+                outlineColor: color,
+            });
+        }
+        this.scene.markDirty();
+    }
+
     cancelPreviousEmote() {
         if (!this.emote) return;
 
@@ -495,6 +501,10 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     public characterFarAwayOutline(): void {
         this.outlineColorStore.characterFarAway();
+    }
+
+    public getCurrentOutline(): { thickness: number; color?: number } {
+        return { thickness: 2, color: get(this.outlineColorStore) };
     }
 
     /**

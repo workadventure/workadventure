@@ -1,6 +1,7 @@
 import { MapsCacheFileFormat, WAMFileFormat } from "@workadventure/map-editor";
 import { WAMVersionHash } from "@workadventure/map-editor/src/WAMVersionHash";
 import pLimit from "p-limit";
+import * as Sentry from "@sentry/node";
 import { fileSystem } from "../fileSystem";
 import { FileSystemInterface } from "../Upload/FileSystemInterface";
 import { mapPathUsingDomain } from "./PathMapper";
@@ -126,6 +127,7 @@ export class MapListService {
             return cacheFile;
         } catch (e: unknown) {
             console.error("Error while trying to read a cache file:", e);
+            Sentry.captureException(`Error while trying to read a cache file: ${JSON.stringify(e)}`);
             if (nbTry === 0) {
                 console.log("Trying to regenerate the cache file");
                 // The file does not exist. Let's generate it

@@ -56,6 +56,11 @@ jobs:
             type=registry,ref=thecodingmachine/workadventure-play:develop
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
+          secrets: |
+            "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
+            "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
+            "SENTRY_PROJECT=play"
+            "SENTRY_RELEASE=${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}"
 
       - name: Build test image
         uses: docker/build-push-action@v3
@@ -71,6 +76,23 @@ jobs:
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/play.tar
+
+      - name: Sentry push source maps
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: play
+          SENTRY_RELEASE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        run: |
+          docker run --rm \
+            --user 0       \
+            -e SENTRY_AUTH_TOKEN \
+            -e SENTRY_ORG \
+            -e SENTRY_PROJECT \
+            -e SENTRY_RELEASE \
+            thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} \
+            /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
+      
 
       - name: Zip image
         run: gzip play.tar
@@ -125,6 +147,11 @@ jobs:
             type=registry,ref=thecodingmachine/workadventure-chat:develop
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
+          secrets: |
+            "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
+            "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
+            "SENTRY_PROJECT=chat"
+            "SENTRY_RELEASE=${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}"
 
       - name: Build test image
         uses: docker/build-push-action@v3
@@ -215,6 +242,23 @@ jobs:
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/back.tar
+
+      - name: Sentry push source maps
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: back
+          SENTRY_RELEASE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        run: |
+            docker run --rm \
+              --user 0       \
+              -e SENTRY_AUTH_TOKEN \
+              -e SENTRY_ORG \
+              -e SENTRY_PROJECT \
+              -e SENTRY_RELEASE \
+              thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} \
+              /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
+
 
       - name: Zip image
         run: gzip back.tar
@@ -412,6 +456,22 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/map-storage.tar
 
+      - name: Sentry push source maps
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: map-storage
+          SENTRY_RELEASE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        run: |
+          docker run --rm \
+            --user 0       \
+            -e SENTRY_AUTH_TOKEN \
+            -e SENTRY_ORG \
+            -e SENTRY_PROJECT \
+            -e SENTRY_RELEASE \
+            thecodingmachine/workadventure-map-storage:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} \
+            /bin/sh -c 'cd /usr/src && npm ci -w map-storage && cd /usr/src/map-storage && npm run push-sentry-sourcemaps'
+
       - name: Zip image
         run: gzip map-storage.tar
         working-directory: /tmp
@@ -589,11 +649,6 @@ jobs:
           docker load --input /tmp/uploader.tar.gz
           docker load --input /tmp/ejabberd.tar.gz
           docker image ls -a
-
-#      - name: Download images
-#        run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml pull
-#        env:
-#s          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
       - name: Start WorkAdventure
         run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml up -d
         env:
@@ -822,3 +877,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           msg: "Environment deployed at https://play-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re \nTests available at https://maps-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re/tests"
+

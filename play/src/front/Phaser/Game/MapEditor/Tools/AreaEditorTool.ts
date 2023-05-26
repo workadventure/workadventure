@@ -33,7 +33,7 @@ export class AreaEditorTool extends MapEditorTool {
     private draggingdArea: boolean;
     private wasAreaMoved: boolean;
 
-    private shiftKey: Phaser.Input.Keyboard.Key;
+    private shiftKey?: Phaser.Input.Keyboard.Key;
 
     private selectedAreaPreviewStoreSubscriber!: Unsubscriber;
 
@@ -53,7 +53,7 @@ export class AreaEditorTool extends MapEditorTool {
         this.mapEditorModeManager = mapEditorModeManager;
         this.scene = this.mapEditorModeManager.getScene();
 
-        this.shiftKey = this.scene.input.keyboard.addKey("SHIFT");
+        this.shiftKey = this.scene.input.keyboard?.addKey("SHIFT");
 
         this.areaPreviews = this.createAreaPreviews();
         this.active = false;
@@ -226,13 +226,13 @@ export class AreaEditorTool extends MapEditorTool {
         this.scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
         this.scene.input.on(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
 
-        this.shiftKey.on(Phaser.Input.Keyboard.Events.DOWN, () => {
+        this.shiftKey?.on(Phaser.Input.Keyboard.Events.DOWN, () => {
             if (this.drawingNewArea && this.drawinNewAreaStartPos) {
                 this.drawNewArea(this.scene.input.activePointer);
             }
         });
 
-        this.shiftKey.on(Phaser.Input.Keyboard.Events.UP, () => {
+        this.shiftKey?.on(Phaser.Input.Keyboard.Events.UP, () => {
             if (this.drawingNewArea && this.drawinNewAreaStartPos) {
                 this.drawNewArea(this.scene.input.activePointer);
             }
@@ -363,7 +363,7 @@ export class AreaEditorTool extends MapEditorTool {
         const height = Math.abs(pointer.worldY - this.drawinNewAreaStartPos.y);
         const x = Math.min(this.drawinNewAreaStartPos.x, pointer.worldX);
         const y = Math.min(this.drawinNewAreaStartPos.y, pointer.worldY);
-        if (this.shiftKey.isDown) {
+        if (this.shiftKey?.isDown) {
             return {
                 x: Math.floor(x / 32) * 32,
                 y: Math.floor(y / 32) * 32,

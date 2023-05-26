@@ -27,7 +27,7 @@ export class EntityEditorTool extends MapEditorTool {
     private entityPrefabPreview: Phaser.GameObjects.Image | undefined;
     private entityOldPositionPreview: Phaser.GameObjects.Image | undefined;
 
-    private shiftKey: Phaser.Input.Keyboard.Key;
+    private shiftKey?: Phaser.Input.Keyboard.Key;
 
     private mapEditorSelectedEntityPrefabStoreUnsubscriber!: Unsubscriber;
     private mapEntityEditorModeStoreUnsubscriber!: Unsubscriber;
@@ -45,7 +45,7 @@ export class EntityEditorTool extends MapEditorTool {
         this.mapEditorModeManager = mapEditorModeManager;
         this.scene = this.mapEditorModeManager.getScene();
 
-        this.shiftKey = this.scene.input.keyboard.addKey("SHIFT");
+        this.shiftKey = this.scene.input.keyboard?.addKey("SHIFT");
 
         this.entitiesManager = this.scene.getGameMapFrontWrapper().getEntitiesManager();
 
@@ -85,7 +85,15 @@ export class EntityEditorTool extends MapEditorTool {
     public handleKeyDownEvent(event: KeyboardEvent): void {
         switch (event.key.toLowerCase()) {
             case "escape": {
-                mapEditorEntityModeStore.set("ADD");
+                if (get(mapEditorEntityModeStore) === "EDIT") {
+                    mapEditorSelectedEntityStore.set(undefined);
+                    mapEditorEntityModeStore.set("ADD");
+                    return;
+                }
+                if (get(mapEditorEntityModeStore) === "ADD") {
+                    this.cleanPreview();
+                    return;
+                }
                 break;
             }
             case "backspace":
@@ -107,7 +115,7 @@ export class EntityEditorTool extends MapEditorTool {
                 break;
             }
             case "CreateEntityCommand": {
-                this.handleEntityCreation(commandConfig.entityData, localCommand);
+                this.handleEntityCreation(commandConfig.entityData);
                 break;
             }
             case "DeleteEntityCommand": {
@@ -206,17 +214,8 @@ export class EntityEditorTool extends MapEditorTool {
         this.scene.markDirty();
     }
 
-    private handleEntityCreation(config: EntityData, localCommand: boolean): void {
-        const entity = this.entitiesManager.addEntity(
-            structuredClone(config),
-            undefined,
-            get(mapEditorEntityModeStore) === "EDIT"
-        );
-        if (localCommand) {
-            mapEditorSelectedEntityStore.set(entity);
-            mapEditorSelectedEntityPrefabStore.set(undefined);
-            mapEditorEntityModeStore.set("EDIT");
-        }
+    private handleEntityCreation(config: EntityData): void {
+        this.entitiesManager.addEntity(structuredClone(config), undefined, true);
     }
 
     private handleEntityDeletion(id: string): void {
@@ -355,7 +354,7 @@ export class EntityEditorTool extends MapEditorTool {
         if (!this.entityPrefabPreview || !this.entityPrefab) {
             return;
         }
-        if (this.entityPrefab.collisionGrid || this.shiftKey.isDown) {
+        if (this.entityPrefab.collisionGrid || this.shiftKey?.isDown) {
             const offset = this.getEntityPrefabAlignWithGridOffset();
             this.entityPrefabPreview.setPosition(
                 Math.floor(pointer.worldX / 32) * 32 + offset.x,
@@ -413,7 +412,7 @@ export class EntityEditorTool extends MapEditorTool {
         let x = Math.floor(pointer.worldX);
         let y = Math.floor(pointer.worldY);
 
-        if (this.entityPrefab.collisionGrid || this.shiftKey.isDown) {
+        if (this.entityPrefab.collisionGrid || this.shiftKey?.isDown) {
             const offsets = this.getEntityPrefabAlignWithGridOffset();
             x = Math.floor(pointer.worldX / 32) * 32 + offsets.x;
             y = Math.floor(pointer.worldY / 32) * 32 + offsets.y;
@@ -437,6 +436,7 @@ export class EntityEditorTool extends MapEditorTool {
         this.entityPrefabPreview = undefined;
         this.entityPrefab = undefined;
         mapEditorCopiedEntityDataPropertiesStore.set(undefined);
+        mapEditorSelectedEntityPrefabStore.set(undefined);
         this.scene.markDirty();
     }
 

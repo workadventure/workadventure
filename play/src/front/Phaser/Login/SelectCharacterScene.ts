@@ -256,7 +256,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             selectCharacterSceneVisibleStore.set(true);
         });
 
-        this.input.keyboard.on("keyup-ENTER", () => {
+        this.input.keyboard?.on("keyup-ENTER", () => {
             return this.nextSceneToCameraScene();
         });
 
@@ -284,31 +284,31 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     private bindKeyboardEventHandlers(): void {
-        this.input.keyboard.on("keyup-SPACE", () => {
+        this.input.keyboard?.on("keyup-SPACE", () => {
             this.selectNextCollection();
         });
-        this.input.keyboard.on("keydown-LEFT", () => {
+        this.input.keyboard?.on("keydown-LEFT", () => {
             this.selectNextGridItem(true, true);
         });
-        this.input.keyboard.on("keydown-RIGHT", () => {
+        this.input.keyboard?.on("keydown-RIGHT", () => {
             this.selectNextGridItem(false, true);
         });
-        this.input.keyboard.on("keydown-UP", () => {
+        this.input.keyboard?.on("keydown-UP", () => {
             this.selectNextGridItem(true, false);
         });
-        this.input.keyboard.on("keydown-DOWN", () => {
+        this.input.keyboard?.on("keydown-DOWN", () => {
             this.selectNextGridItem(false, false);
         });
-        this.input.keyboard.on("keydown-W", () => {
+        this.input.keyboard?.on("keydown-W", () => {
             this.selectNextGridItem(true, false);
         });
-        this.input.keyboard.on("keydown-S", () => {
+        this.input.keyboard?.on("keydown-S", () => {
             this.selectNextGridItem(false, false);
         });
-        this.input.keyboard.on("keydown-A", () => {
+        this.input.keyboard?.on("keydown-A", () => {
             this.selectNextGridItem(true, true);
         });
-        this.input.keyboard.on("keydown-D", () => {
+        this.input.keyboard?.on("keydown-D", () => {
             this.selectNextGridItem(false, true);
         });
     }

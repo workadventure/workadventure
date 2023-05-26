@@ -33,6 +33,7 @@ import {
     WatchSpaceMessage,
     QueryMessage,
 } from "@workadventure/messages";
+import * as Sentry from "@sentry/node";
 import { PusherRoom } from "../models/PusherRoom";
 import type { ExSocketInterface, BackSpaceConnection } from "../models/Websocket/ExSocketInterface";
 
@@ -128,6 +129,7 @@ export class SocketManager implements ZoneEventListener {
                     case "errorMessage": {
                         const errorMessage = message.message.errorMessage;
                         console.error("Error message received from adminRoomStream: " + errorMessage.message);
+                        Sentry.captureException("Error message received from adminRoomStream: " + errorMessage.message);
                         if (!client.disconnecting) {
                             client.send(
                                 JSON.stringify({
@@ -166,6 +168,15 @@ export class SocketManager implements ZoneEventListener {
                         roomId +
                         "':",
                     err
+                );
+
+                Sentry.captureMessage(
+                    "Error in connection to back server '" +
+                        apiClient.getChannel().getTarget() +
+                        "' for room '" +
+                        roomId +
+                        err,
+                    "debug"
                 );
                 if (!client.disconnecting) {
                     this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
@@ -283,13 +294,25 @@ export class SocketManager implements ZoneEventListener {
                     }
                 })
                 .on("error", (err: Error) => {
+                    const date = new Date();
                     console.error(
                         "Error in connection to back server '" +
                             apiClient.getChannel().getTarget() +
                             "' for room '" +
                             client.roomId +
-                            "':",
+                            "'at :" +
+                            date.toLocaleString("en-GB"),
                         err
+                    );
+                    Sentry.captureMessage(
+                        "Error in connection to back server '" +
+                            apiClient.getChannel().getTarget() +
+                            "' for room '" +
+                            client.roomId +
+                            "': " +
+                            client.userUuid +
+                            err,
+                        "debug"
                     );
                     if (!client.disconnecting) {
                         this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
@@ -308,8 +331,8 @@ export class SocketManager implements ZoneEventListener {
             pusherRoom.mucRooms = client.mucRooms;
             pusherRoom.join(client);
         } catch (e) {
-            console.error('An error occurred on "join_room" event');
-            console.error(e);
+            Sentry.captureException(`An error occurred on "join_room" event ${e}`);
+            console.error(`An error occurred on "join_room" event ${e}`);
         }
     }
 
@@ -399,6 +422,14 @@ export class SocketManager implements ZoneEventListener {
                                 "':",
                             err
                         );
+                        Sentry.captureException(
+                            "Error in connection to back server '" +
+                                apiSpaceClient.getChannel().getTarget() +
+                                "' for space '" +
+                                spaceName +
+                                "':" +
+                                err
+                        );
                     });
             }
 
@@ -438,8 +469,8 @@ export class SocketManager implements ZoneEventListener {
                 space.localAddUser(client.spaceUser);
             }
         } catch (e) {
-            console.error('An error occurred on "join_space" event');
-            console.error(e);
+            Sentry.captureException(`An error occurred on "join_space" event ${e}`);
+            console.error(`An error occurred on "join_space" event ${e}`);
         }
     }
 
@@ -461,12 +492,13 @@ export class SocketManager implements ZoneEventListener {
             const room = this.rooms.get(client.roomId);
             if (!room) {
                 console.error("In SET_VIEWPORT, could not find world with id '", client.roomId, "'");
+                Sentry.captureException("In SET_VIEWPORT, could not find world with id ' " + client.roomId);
                 return;
             }
             room.setViewport(client, client.viewport);
         } catch (e) {
-            console.error('An error occurred on "SET_VIEWPORT" event');
-            console.error(e);
+            Sentry.captureException(`An error occurred on "SET_VIEWPORT" event ${e}`);
+            console.error(`An error occurred on "SET_VIEWPORT" event ${e}`);
         }
     }
 
@@ -547,8 +579,8 @@ export class SocketManager implements ZoneEventListener {
                 "en"
             );
         } catch (e) {
-            console.error('An error occurred on "handleReportMessage"');
-            console.error(e);
+            Sentry.captureException(`An error occurred on "handleReportMessage" ${e}`);
+            console.error(`An error occurred on "handleReportMessage" ${e}`);
         }
     }
 
@@ -566,6 +598,7 @@ export class SocketManager implements ZoneEventListener {
                         this.deleteRoomIfEmpty(room);
                     } else {
                         console.error("Could not find the GameRoom the user is leaving!");
+                        Sentry.captureException("Could not find the GameRoom the user is leaving!");
                     }
                     //user leave previous room
                     //Client.leave(Client.roomId);
@@ -658,7 +691,8 @@ export class SocketManager implements ZoneEventListener {
         };
         backConnection.sendAdminMessage(backAdminMessage, (error: unknown) => {
             if (error !== null) {
-                console.error("Error while sending admin message", error);
+                Sentry.captureException(`Error while sending admin message ${error}`);
+                console.error(`Error while sending admin message ${error}`);
             }
         });
     }
@@ -684,6 +718,7 @@ export class SocketManager implements ZoneEventListener {
         };
         backConnection.ban(banMessage, (error: unknown) => {
             if (error !== null) {
+                Sentry.captureException("Error while sending admin message", error);
                 console.error("Error while sending admin message", error);
             }
         });
@@ -915,8 +950,8 @@ export class SocketManager implements ZoneEventListener {
                     console.info("handleBanUserByUuidMessage => err", err);
                 });
         } catch (e) {
-            console.error('An error occurred on "handleBanUserByUuidMessage"');
-            console.error(e);
+            Sentry.captureException(`An error occurred on "handleBanUserByUuidMessage" ${e}`);
+            console.error(`An error occurred on "handleBanUserByUuidMessage" ${e}`);
         }
     }
 

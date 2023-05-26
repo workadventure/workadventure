@@ -5,6 +5,7 @@
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import type { GameScene } from "../Game/GameScene";
 import type { ActivatableInterface } from "../Game/ActivatableInterface";
+import { gameManager } from "../Game/GameManager";
 import Sprite = Phaser.GameObjects.Sprite;
 
 type EventCallback = (state: unknown, parameters: unknown) => void;
@@ -22,6 +23,13 @@ export class ActionableItem implements ActivatableInterface {
         private onActivateCallback: (item: ActionableItem) => void
     ) {
         this.activationRadiusSquared = activationRadius * activationRadius;
+
+        gameManager
+            .getCurrentGameScene()
+            .getOutlineManager()
+            .add(this.sprite, () => {
+                return { thickness: 2, outlineColor: 0xf9e81e };
+            });
     }
 
     public getId(): number {

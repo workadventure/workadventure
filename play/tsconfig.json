@@ -6,6 +6,7 @@
     "module": "ES2020",
     "allowJs": true,
     "sourceMap": true,
+    "inlineSources": true,
     "outDir": "./dist/public",
     "strict": true,
     "noImplicitThis": false,
@@ -22,7 +23,11 @@
     "alwaysStrict": true,
     "preserveValueImports": false,
     "importsNotUsedAsValues": "remove",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    // Set `sourceRoot` to  `/` to strip the build path prefix from
+    // generated source code references. This allows Sentry to match source files
+    // relative to your source root folder.
+    "sourceRoot": "/"
   },
   "exclude": [
     "dist",

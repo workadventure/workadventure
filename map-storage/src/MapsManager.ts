@@ -16,6 +16,7 @@ import {
 } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
+import * as Sentry from "@sentry/node";
 import { fileSystem } from "./fileSystem";
 
 // TODO: dynamic imports?
@@ -224,7 +225,10 @@ class MapsManager {
                         console.log(`NO CHANGES ON THE MAP ${key} DETECTED. STOP AUTOSAVING`);
                         this.clearSaveMapInterval(key);
                     }
-                })().catch((e) => console.error(e));
+                })().catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
             }, intervalMS)
         );
     }
