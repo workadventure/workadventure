@@ -1,6 +1,7 @@
 import type { BatchToPusherRoomMessage } from "@workadventure/messages";
 import Debug from "debug";
 import type { ClientReadableStream } from "@grpc/grpc-js";
+import * as Sentry from "@sentry/node";
 import { WAMFileFormat, WAMSettingsUtils } from "@workadventure/map-editor";
 import { apiClientRepository } from "../services/ApiClientRepository";
 import type { ExSocketInterface } from "./Websocket/ExSocketInterface";
@@ -81,6 +82,7 @@ export class PusherRoom implements CustomJsonReplacerInterface {
         this.backConnection.on("data", (batch: BatchToPusherRoomMessage) => {
             for (const message of batch.payload) {
                 if (!message.message) {
+                    Sentry.captureException("Message is undefined for backConnection in PusherRoom" + this.roomUrl);
                     console.error("Message is undefined for backConnection in PusherRoom");
                     continue;
                 }
@@ -192,17 +194,36 @@ export class PusherRoom implements CustomJsonReplacerInterface {
                     listener.disconnecting = true;
                     listener.end(1011, "Connection error between pusher and back server");
                     console.error("Connection error between pusher and back server", err);
+                    Sentry.captureMessage(
+                        "Connection error between pusher and back server : " +
+                            err +
+                            " " +
+                            this.roomUrl +
+                            " " +
+                            listener.userUuid,
+                        "debug"
+                    );
                 }
             }
         });
         this.backConnection.on("close", () => {
             if (!this.isClosing) {
-                debug("Close on back connection");
+                debug("Close on back connection", this.roomUrl);
                 this.close();
                 // Let's close all connections linked to that room
                 for (const listener of this.listeners) {
                     listener.disconnecting = true;
-                    listener.end(1011, "Connection closed between pusher and back server");
+                    Sentry.captureMessage(
+                        "Close on back connection " + this.roomUrl + " " + listener.userUuid,
+                        "debug"
+                    );
+                    listener.end(
+                        1011,
+                        "Connection closed between pusher and back server" +
+                            this.roomUrl +
+                            " " +
+                            new Date().toLocaleString("en-GB")
+                    );
                 }
             }
         });

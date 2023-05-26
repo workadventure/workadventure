@@ -41,3 +41,7 @@ export const REPORT_ISSUES_URL = env.REPORT_ISSUES_URL;
 
 export const POSITION_DELAY = 200; // Wait 200ms between sending position events
 export const MAX_EXTRAPOLATION_TIME = 100; // Extrapolate a maximum of 250ms if no new movement is sent by the player
+
+export const SENTRY_DSN_FRONT = env.SENTRY_DSN_FRONT;
+export const SENTRY_RELEASE = env.SENTRY_RELEASE;
+export const SENTRY_TRACES_SAMPLE_RATE = env.SENTRY_TRACES_SAMPLE_RATE;

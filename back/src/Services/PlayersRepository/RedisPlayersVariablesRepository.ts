@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import { RedisClient } from "../RedisClient";
 import {
     LoadVariablesReturn,
@@ -39,6 +40,10 @@ export class RedisPlayersVariablesRepository implements PlayersVariablesReposito
                     'Invalid value stored in Redis. Expecting the value to be in the "ttl:0|1:value" format. Got: ',
                     entry[1]
                 );
+                Sentry.captureException(
+                    `Invalid value stored in Redis. Expecting the value to be in the "ttl:0|1:value" format. Got: 
+                    ${entry[1]}`
+                );
                 continue;
             }
             let isPublic: boolean;
@@ -48,6 +53,7 @@ export class RedisPlayersVariablesRepository implements PlayersVariablesReposito
                 isPublic = true;
             } else {
                 console.error('Invalid value stored in Redis for isPublic. Expecting "0" or "1"');
+                Sentry.captureException('Invalid value stored in Redis for isPublic. Expecting "0" or "1"');
                 continue;
             }
             let expire: number | undefined;
@@ -58,12 +64,16 @@ export class RedisPlayersVariablesRepository implements PlayersVariablesReposito
                 expire = parseInt(expireStr);
                 if (isNaN(expire)) {
                     console.error("Invalid value stored in Redis. The TTL is not a number");
+                    Sentry.captureException("Invalid value stored in Redis. The TTL is not a number");
                     continue;
                 }
 
                 // Let's check the TTL. If it is less than current date, let's remove the key.
                 if (expire < now) {
-                    this.redisClient.hDel(hashKey, key).catch((e) => console.error(e));
+                    this.redisClient.hDel(hashKey, key).catch((e) => {
+                        console.error(e);
+                        Sentry.captureException(e);
+                    });
                     continue;
                 }
 
@@ -110,9 +120,10 @@ export class RedisPlayersVariablesRepository implements PlayersVariablesReposito
         await this.redisClient.hSet(redisKey, key, storedValue);
         console.log("Saved variable to Redis: ", redisKey, key, storedValue);
         if (maxExpire !== undefined) {
-            this.redisClient
-                .expire(redisKey, Math.floor((maxExpire - new Date().getTime()) / 1000))
-                .catch((e) => console.error("Failed calling EXPIRE", e));
+            this.redisClient.expire(redisKey, Math.floor((maxExpire - new Date().getTime()) / 1000)).catch((e) => {
+                console.error("Failed calling EXPIRE", e);
+                Sentry.captureException(`Failed calling EXPIRE ${JSON.stringify(e)}`);
+            });
         }
     }
 }

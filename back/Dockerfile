@@ -11,7 +11,7 @@ RUN npm run tag-version && npm run ts-proto
 FROM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d
 EXPOSE 8080 50051
 WORKDIR /usr/src
-RUN apt-get update && apt-get install -y git
+RUN apt-get update && apt-get install -y git curl
 COPY package.json package-lock.json ./
 COPY back/package.json back/package.json
 COPY libs/messages/package.json libs/messages/package.json
@@ -26,11 +26,9 @@ COPY libs ./libs
 COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
 COPY back ./back
 COPY --from=proto-builder /usr/src/generated ./back/src/Messages/generated
-
 WORKDIR /usr/src/back
-
-RUN apt-get update && apt-get install -y curl
 HEALTHCHECK --interval=10s --timeout=7s --start-period=10s --retries=15 CMD curl -f http://localhost:8080/ping || exit 1
-
+RUN mkdir ./dist
 USER node
 CMD ["npm", "run", "runprod"]
+

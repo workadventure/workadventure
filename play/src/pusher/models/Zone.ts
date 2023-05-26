@@ -18,6 +18,7 @@ import {
     UserMovedMessage,
     ZoneMessage,
 } from "@workadventure/messages";
+import * as Sentry from "@sentry/node";
 import { apiClientRepository } from "../services/ApiClientRepository";
 import type { PositionDispatcher } from "../models/PositionDispatcher";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
@@ -263,6 +264,9 @@ export class Zone implements CustomJsonReplacerInterface {
                                 const userDescriptor = this.users.get(userId);
 
                                 if (userDescriptor === undefined) {
+                                    Sentry.captureException(
+                                        'Unexpected move message received for unknown user "' + userId + '"'
+                                    );
                                     console.error('Unexpected move message received for unknown user "' + userId + '"');
                                     return;
                                 }
@@ -318,7 +322,14 @@ export class Zone implements CustomJsonReplacerInterface {
 
                 this.backConnection.on("error", (e) => {
                     if (!this.isClosing) {
-                        debug("Error on back connection");
+                        const date = new Date();
+                        for (const listener of this.listeners) {
+                            debug(
+                                "Error on back connection" + listener.userUuid + "at : " + date.toLocaleString("en-GB")
+                            );
+                            Sentry.captureMessage("Error on back connection" + listener.userUuid, "debug");
+                        }
+
                         this.close();
                         this.onBackFailure(e, this);
                     }
@@ -337,7 +348,10 @@ export class Zone implements CustomJsonReplacerInterface {
                     throw e;
                 }
             }
-        })().catch((e) => console.error(e));
+        })().catch((e) => {
+            Sentry.captureException(e);
+            console.error(e);
+        });
     }
 
     public close(): void {

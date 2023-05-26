@@ -3,6 +3,7 @@ import { v4 as uuid } from "uuid";
 import { BackToPusherSpaceMessage, PusherToBackSpaceMessage } from "@workadventure/messages";
 import Debug from "debug";
 import { ServerDuplexStream } from "@grpc/grpc-js";
+import * as Sentry from "@sentry/node";
 import { socketManager } from "./Services/SocketManager";
 import { SpacesWatcher } from "./Model/SpacesWatcher";
 
@@ -19,6 +20,7 @@ const spaceManager = {
         call.on("data", (message: PusherToBackSpaceMessage) => {
             if (!message.message) {
                 console.error("Empty message received");
+                Sentry.captureException("Empty message received");
                 return;
             }
             try {
@@ -57,11 +59,17 @@ const spaceManager = {
                         message.message.$case,
                     e
                 );
+                Sentry.captureException(
+                    "An error occurred while managing a message of type PusherToBackSpaceMessage:" +
+                        message.message.$case +
+                        JSON.stringify(e)
+                );
                 call.end();
             }
         })
             .on("error", (e) => {
                 console.error("Error on watchSpace", e);
+                Sentry.captureException(`Error on watchSpace ${JSON.stringify(e)}`);
                 socketManager.handleUnwatchAllSpaces(pusher);
             })
             .on("end", () => {

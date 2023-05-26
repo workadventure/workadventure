@@ -114,8 +114,10 @@ describe("Main store", () => {
             store: writable(24),
         });
 
-        const sumStore = mapStore.getAggregatedStore((value) => value.store,
-            stores => stores.reduce((partialSum, a) => partialSum + a, 0));
+        const sumStore = mapStore.getAggregatedStore(
+            (value) => value.store,
+            (stores) => stores.reduce((partialSum, a) => partialSum + a, 0)
+        );
 
         let value: number | undefined;
 

@@ -1,5 +1,6 @@
 import axios from "axios";
 import { isMapDetailsData, MapDetailsData, isRoomRedirect, RoomRedirect } from "@workadventure/messages";
+import * as Sentry from "@sentry/node";
 import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 
 class AdminApi {
@@ -31,6 +32,9 @@ class AdminApi {
         console.error(mapDetailData.error.issues);
         console.error(roomRedirect.error.issues);
         console.error("Unexpected answer from the /api/map admin endpoint.", res.data);
+        Sentry.captureException(mapDetailData.error.issues);
+        Sentry.captureException(roomRedirect.error.issues);
+        Sentry.captureException(`Unexpected answer from the /api/map admin endpoint. ${JSON.stringify(res.data)}`);
         throw new Error("Unexpected answer from the /api/map admin endpoint.");
     }
 }

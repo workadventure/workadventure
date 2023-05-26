@@ -17,7 +17,7 @@ EXPOSE 3000 50053
 WORKDIR /usr/src
 ENV STORAGE_DIRECTORY=/maps
 RUN mkdir /maps && chown node:node /maps
-RUN apt-get update && apt-get install -y git
+RUN apt-get update && apt-get install -y git curl
 COPY package.json package-lock.json ./
 COPY map-storage/package.json map-storage/package.json
 COPY libs/messages/package.json libs/messages/package.json
@@ -30,11 +30,9 @@ RUN npm ci --omit=dev --workspace map-storage
 COPY libs ./libs
 COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
 COPY --chown=node:node map-storage map-storage
-
 WORKDIR /usr/src/map-storage
+RUN mkdir ./dist
 
-RUN apt-get update && apt-get install -y curl
 HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=10 CMD curl -f http://localhost:3000/ping || exit 1
-
 USER node
 CMD ["npm", "run", "start"]

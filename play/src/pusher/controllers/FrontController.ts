@@ -2,6 +2,7 @@ import fs from "fs";
 import type { Request, Response, Server } from "hyper-express";
 import Mustache from "mustache";
 import { uuid } from "stanza/Utils";
+import * as Sentry from "@sentry/node";
 import { MetaTagsBuilder } from "../services/MetaTagsBuilder";
 import type { LiveDirectory } from "../models/LiveDirectory";
 import { adminService } from "../services/AdminService";
@@ -152,6 +153,7 @@ export class FrontController extends BaseHttpController {
                     const response = await adminService.fetchWellKnownChallenge(req.hostname);
                     return res.status(200).send(response);
                 } catch (e) {
+                    Sentry.captureException(e);
                     console.error(e);
                     return res.status(526).send("Fail on challenging hostname");
                 }

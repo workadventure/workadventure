@@ -1,6 +1,7 @@
 import type { Request, Response } from "hyper-express";
 import { isAxiosError } from "axios";
 import { ErrorApiData } from "@workadventure/messages";
+import * as Sentry from "@sentry/node";
 import { DEBUG_ERROR_MESSAGES } from "../enums/EnvironmentVariable";
 
 export function globalErrorHandler(request: Request, response: Response, error: unknown) {
@@ -16,9 +17,12 @@ export function globalErrorHandler(request: Request, response: Response, error: 
         }
 
         console.error("ERROR: " + error.message + url);
+        Sentry.captureException("ERROR: " + error.message + url);
         console.error(error.stack);
+        Sentry.captureException(error.stack);
     } else if (typeof error === "string") {
         console.error(error);
+        Sentry.captureException(error);
     }
 
     if (isAxiosError(error) && error.response) {

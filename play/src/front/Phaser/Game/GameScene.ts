@@ -275,6 +275,7 @@ export class GameScene extends DirtyScene {
         super({
             key: customKey ?? room.key,
         });
+
         this.Terrains = [];
         this.groups = new Map<number, Sprite>();
 

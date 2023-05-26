@@ -1,4 +1,5 @@
 import { ApiClientRepository } from "@workadventure/shared-utils/src/ApiClientRepository";
+import * as Sentry from "@sentry/node";
 import { API_URL } from "../Enum/EnvironmentVariable";
 
 class UploadDetector {
@@ -18,6 +19,7 @@ class UploadDetector {
                 },
                 (err) => {
                     console.error(err);
+                    Sentry.captureException(err);
                 }
             );
         }

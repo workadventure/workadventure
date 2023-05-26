@@ -10,6 +10,7 @@ import {
     ErrorApiData,
 } from "@workadventure/messages";
 import { AxiosResponse } from "axios";
+import * as Sentry from "@sentry/node";
 import { ADMIN_API_URL } from "../enums/EnvironmentVariable";
 import { adminService } from "./AdminService";
 
@@ -254,7 +255,8 @@ export class MetaTagsBuilder {
             }
             return mapDetails.metatags ?? undefined;
         } catch (e) {
-            console.error("Error on getting map details", e);
+            Sentry.captureException(`Error on getting map details ${e}`);
+            console.error(`Error on getting map details ${e}`);
             return undefined;
         }
     }
@@ -333,7 +335,8 @@ export class MetaTagsBuilder {
         try {
             mapFile = await this.fetchMapFile(this.url);
         } catch (e) {
-            console.error("Error on getting map file", e);
+            Sentry.captureException(`Error on getting map file ${e}`);
+            console.error(`Error on getting map file ${e}`);
         }
 
         if (!mapFile) {
