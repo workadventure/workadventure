@@ -359,6 +359,60 @@
                     },
                     {
                       "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/2"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/id"
+                        },
+                        "buttonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/buttonLabel"
+                        },
+                        "hideButtonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "type": {
+                          "type": "string",
+                          "const": "speakerMegaphone"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type",
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/id"
+                        },
+                        "buttonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/buttonLabel"
+                        },
+                        "hideButtonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "type": {
+                          "type": "string",
+                          "const": "listenerMegaphone"
+                        },
+                        "speakerZoneName": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type",
+                        "speakerZoneName"
+                      ],
+                      "additionalProperties": false
                     }
                   ]
                 }
