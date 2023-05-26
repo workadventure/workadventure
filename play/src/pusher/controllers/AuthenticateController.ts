@@ -101,7 +101,7 @@ export class AuthenticateController extends BaseHttpController {
             }
 
             // Let's validate the playUri (we don't want a hacker to forge a URL that will redirect to a malicious URL)
-            const verifyDomainService = VerifyDomainService.get(adminApi.getAdminCapabilities());
+            const verifyDomainService = VerifyDomainService.get(adminApi.getCapabilities());
             const verifyDomainResult = await verifyDomainService.verifyDomain(query.playUri);
             if (!verifyDomainResult) {
                 res.status(403);

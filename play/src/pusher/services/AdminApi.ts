@@ -22,9 +22,6 @@ import type { AdminInterface } from "./AdminInterface";
 import { jwtTokenManager } from "./JWTTokenManager";
 import type { AuthTokenData } from "./JWTTokenManager";
 import { extendApi } from "@anatine/zod-openapi";
-import type { AdminCapabilities } from "./adminApi/AdminCapabilities";
-import { RemoteCapabilities } from "./adminApi/RemoteCapabilities";
-import { LocalCapabilities } from "./adminApi/LocalCapabilities";
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -89,7 +86,7 @@ export const isFetchMemberDataByUuidResponse = z.object({
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
 
 class AdminApi implements AdminInterface {
-    private capabilities: AdminCapabilities = new LocalCapabilities();
+    private capabilities: Capabilities = {};
 
     /**
      * Checks whether admin api is enabled
@@ -98,7 +95,7 @@ class AdminApi implements AdminInterface {
         return !!ADMIN_API_URL;
     }
 
-    async initialise(): Promise<AdminCapabilities> {
+    async initialise(): Promise<Capabilities> {
         if (!this.isEnabled()) {
             console.info("Admin API not configured. Will use local implementations");
             return this.capabilities;
@@ -108,15 +105,19 @@ class AdminApi implements AdminInterface {
         let warnIssued = false;
         const queryCapabilities = async (resolve: (_v: unknown) => void): Promise<void> => {
             try {
-                const capabilities = await this.fetchCapabilities();
-                this.capabilities = new RemoteCapabilities(new Map<string, string>(Object.entries(capabilities)));
-                console.info(`Capabilities query successful. Found capabilities: ${this.capabilities.info()}`);
+                this.capabilities = await this.fetchCapabilities();
+                console.info(`Capabilities query successful. Found capabilities: ${JSON.stringify(this.capabilities)}`);
                 resolve(0);
             } catch (ex) {
                 // ignore errors when querying capabilities
                 const status = (ex as { response: { status: number } })?.response?.status;
                 if (status === 404) {
                     // 404 probably means and older api version
+
+                    this.capabilities = {
+                        "api/woka/list": "v1",
+                    };
+
                     resolve(0);
                     console.warn(`Admin API server does not implement capabilities, default to basic capabilities`);
                     return;
@@ -625,7 +626,7 @@ class AdminApi implements AdminInterface {
         }
     }
 
-    public getAdminCapabilities(): AdminCapabilities {
+    public getCapabilities(): Capabilities {
         return this.capabilities;
     }
 }

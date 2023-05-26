@@ -1,15 +1,14 @@
 import { AdminCompanionService } from "./AdminCompanionService";
 import { LocalCompanionSevice } from "./LocalCompanionSevice";
 import type { CompanionServiceInterface } from "./CompanionServiceInterface";
-import type { AdminCapabilities } from "./adminApi/AdminCapabilities";
+import { Capabilities } from "@workadventure/messages";
 
 export class CompanionService {
     private static instance: CompanionServiceInterface | undefined;
-    static get(capabilities: AdminCapabilities): CompanionServiceInterface {
+    static get(capabilities: Capabilities): CompanionServiceInterface {
         if (!CompanionService.instance)
-            CompanionService.instance = AdminCompanionService.isEnabled(capabilities)
-                ? new AdminCompanionService()
-                : new LocalCompanionSevice();
+            CompanionService.instance =
+                capabilities["api/companion/list"] === "v1" ? new AdminCompanionService() : new LocalCompanionSevice();
         return CompanionService.instance;
     }
 }

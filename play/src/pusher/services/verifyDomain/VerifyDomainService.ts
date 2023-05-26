@@ -1,15 +1,16 @@
-import { AdminCapabilities } from "../adminApi/AdminCapabilities";
 import { VerifyDomainInterface } from "./VerifyDomainInterface";
 import { AdminVerifyDomainService } from "./AdminVerifyDomainService";
 import { LocalVerifyDomainService } from "./LocalVerifyDomainService";
+import { Capabilities } from "@workadventure/messages";
 
 export class VerifyDomainService {
     private static instance: VerifyDomainInterface | undefined;
-    static get(capabilities: AdminCapabilities): VerifyDomainInterface {
+    static get(capabilities: Capabilities): VerifyDomainInterface {
         if (!VerifyDomainService.instance)
-            VerifyDomainService.instance = AdminVerifyDomainService.isEnabled(capabilities)
-                ? new AdminVerifyDomainService()
-                : new LocalVerifyDomainService();
+            VerifyDomainService.instance =
+                capabilities["api/domain/verify"] === "v1"
+                    ? new AdminVerifyDomainService()
+                    : new LocalVerifyDomainService();
         return VerifyDomainService.instance;
     }
 }

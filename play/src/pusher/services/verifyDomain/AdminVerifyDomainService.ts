@@ -1,14 +1,9 @@
 import axios from "axios";
 import type { AxiosResponse } from "axios";
-import { AdminCapabilities, AdminCapability } from "../adminApi/AdminCapabilities";
 import { VerifyDomainInterface } from "./VerifyDomainInterface";
 import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../../enums/EnvironmentVariable";
 
 export class AdminVerifyDomainService implements VerifyDomainInterface {
-    static isEnabled(capabilities: AdminCapabilities): boolean {
-        return capabilities.has(AdminCapability.DomainsVerify);
-    }
-
     verifyDomain(uri: string): Promise<boolean> {
         /**
          * @openapi

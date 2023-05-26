@@ -1,13 +1,13 @@
 import { adminWokaService } from "./AdminWokaService";
 import { localWokaService } from "./LocalWokaService";
-import type { AdminCapabilities } from "./adminApi/AdminCapabilities";
+import { Capabilities } from "@workadventure/messages";
 import type { WokaServiceInterface } from "./WokaServiceInterface";
 
 export class WokaService {
     private static instance: WokaServiceInterface | undefined;
-    static get(capabilities: AdminCapabilities): WokaServiceInterface {
+    static get(capabilities: Capabilities): WokaServiceInterface {
         if (!WokaService.instance)
-            WokaService.instance = adminWokaService.isEnabled(capabilities) ? adminWokaService : localWokaService;
+            WokaService.instance = capabilities["api/woka/list"] === "v1" ? adminWokaService : localWokaService;
         return WokaService.instance;
     }
 }
