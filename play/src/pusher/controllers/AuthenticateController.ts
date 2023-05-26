@@ -9,6 +9,8 @@ import { openIDClient } from "../services/OpenIDClient";
 import { DISABLE_ANONYMOUS } from "../enums/EnvironmentVariable";
 import { adminService } from "../services/AdminService";
 import { validateQuery } from "../services/QueryValidator";
+import { VerifyDomainService } from "../services/verifyDomain/VerifyDomainService";
+import { adminApi } from "../services/AdminApi";
 import { BaseHttpController } from "./BaseHttpController";
 
 export class AuthenticateController extends BaseHttpController {
@@ -95,6 +97,15 @@ export class AuthenticateController extends BaseHttpController {
                 })
             );
             if (query === undefined) {
+                return;
+            }
+
+            // Let's validate the playUri (we don't want a hacker to forge a URL that will redirect to a malicious URL)
+            const verifyDomainService = VerifyDomainService.get(adminApi.getCapabilities());
+            const verifyDomainResult = await verifyDomainService.verifyDomain(query.playUri);
+            if (!verifyDomainResult) {
+                res.status(403);
+                res.send("Unauthorized domain in playUri");
                 return;
             }
 

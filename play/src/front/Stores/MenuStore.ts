@@ -33,13 +33,15 @@ function createWarningContainerStore() {
     return {
         subscribe,
         set,
-        activateWarningContainer() {
+        activateWarningContainer(timeToClose = 120000) {
             set(true);
             if (warningContainerTimeout) clearTimeout(warningContainerTimeout);
-            warningContainerTimeout = setTimeout(() => {
-                set(false);
-                warningContainerTimeout = null;
-            }, 120000);
+            if (timeToClose !== 0) {
+                warningContainerTimeout = setTimeout(() => {
+                    set(false);
+                    warningContainerTimeout = null;
+                }, timeToClose);
+            }
         },
     };
 }

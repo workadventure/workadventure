@@ -50,6 +50,7 @@ export type { ActionMessage } from "./front/Api/Iframe/Ui/ActionMessage";
 export type { EmbeddedWebsite } from "./front/Api/Iframe/Room/EmbeddedWebsite";
 export type { Area } from "./front/Api/Iframe/Area/Area";
 export type { ActionsMenuAction } from "./front/Api/Iframe/ui";
+export type { TileDescriptor } from "./front/Api/Iframe/room";
 
 const globalState = createState();
 

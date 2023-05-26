@@ -3,14 +3,9 @@ import type { AxiosResponse } from "axios";
 import { companionCollectionList, CompanionCollectionList } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../enums/EnvironmentVariable";
-import type { AdminCapabilities } from "./adminApi/AdminCapabilities";
-import { AdminCapability } from "./adminApi/AdminCapabilities";
 import type { CompanionServiceInterface } from "./CompanionServiceInterface";
 
 export class AdminCompanionService implements CompanionServiceInterface {
-    static isEnabled(capabilities: AdminCapabilities): boolean {
-        return capabilities.has(AdminCapability.CompanionsList);
-    }
     /**
      * Returns the list of all companions for the current user.
      */
