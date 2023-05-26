@@ -3077,14 +3077,14 @@ ${escapedMessage}
         return this.activatablesManager;
     }
 
+    public getOutlineManager(): OutlineManager {
+        return this.outlineManager;
+    }
+
     public get broadcastService(): BroadcastService {
         if (this._broadcastService === undefined) {
             throw new Error("BroadcastService not initialized yet.");
         }
         return this._broadcastService;
-    }
-    
-    public getOutlineManager(): OutlineManager {
-        return this.outlineManager;
     }
 }
