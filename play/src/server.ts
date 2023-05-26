@@ -8,6 +8,10 @@ if (fs.existsSync("dist") && !fs.existsSync("src")) {
     process.chdir("dist");
 }
 
-app.listen(PUSHER_HTTP_PORT)
-    .then(() => console.log(`WorkAdventure starting on port ${PUSHER_HTTP_PORT}!`))
-    .catch((e) => console.error(e));
+(async () => {
+    await app.init();
+
+    app.listen(PUSHER_HTTP_PORT)
+        .then(() => console.log(`WorkAdventure starting on port ${PUSHER_HTTP_PORT}!`))
+        .catch((e) => console.error(e));
+})().catch((e) => console.error(e));

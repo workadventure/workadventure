@@ -1,4 +1,5 @@
 export enum AdminCapability {
+    DomainsVerify = "api/domain/verify",
     CompanionsList = "api/companion/list",
     WokaList = "api/woka/list",
 }

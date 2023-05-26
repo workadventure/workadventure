@@ -624,6 +624,10 @@ class AdminApi implements AdminInterface {
             });
         }
     }
+
+    public getAdminCapabilities(): AdminCapabilities {
+        return this.capabilities;
+    }
 }
 
 export const adminApi = new AdminApi();
