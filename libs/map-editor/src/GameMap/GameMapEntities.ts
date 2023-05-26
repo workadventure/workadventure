@@ -6,11 +6,10 @@ export class GameMapEntities {
 
     private entities: Map<string, EntityData> = new Map<string, EntityData>();
 
-    constructor(wam: WAMFileFormat, entitiesPrefabsMap: Map<string, EntityPrefab>) {
+    constructor(wam: WAMFileFormat, entitiesPrefabsMap?: Map<string, EntityPrefab>) {
         this.wam = wam;
 
         for (const wamEntityData of this.wam.entities) {
-            console.log(wamEntityData.prefabId);
             const entityData = this.wamEntityDataToEntityData(wamEntityData, entitiesPrefabsMap);
             if (entityData) {
                 this.addEntity(entityData, false);
@@ -105,9 +104,9 @@ export class GameMapEntities {
 
     private wamEntityDataToEntityData(
         wamEntityData: WAMEntityData,
-        prefabs: Map<string, EntityPrefab>
+        prefabs?: Map<string, EntityPrefab>
     ): EntityData | undefined {
-        const entityPrefab = prefabs.get(wamEntityData.prefabId);
+        const entityPrefab = prefabs?.get(wamEntityData.prefabId);
         console.log(entityPrefab);
         if (entityPrefab) {
             return {
@@ -116,5 +115,23 @@ export class GameMapEntities {
             };
         }
         return undefined;
+    }
+
+    /**
+     * Mock Prefab is being used only on map-storage side where we do not have access to Entity Prefabs data.
+     * Currently we are not validating anything against entityPrefab data so it is safe for now.
+     */
+    private getMockPrefab(id: string): EntityPrefab {
+        return {
+            id,
+            collectionName: "MockCollection",
+            color: "mock",
+            direction: "Down",
+            imagePath: "",
+            name: "MockPrefab",
+            tags: ["mock"],
+            collisionGrid: [],
+            depthOffset: 0,
+        };
     }
 }

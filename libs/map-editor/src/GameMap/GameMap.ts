@@ -47,7 +47,7 @@ export class GameMap {
 
         if (this.wam) {
             this.gameMapAreas = new GameMapAreas(this.wam);
-            this.gameMapEntities = new GameMapEntities(this.wam, entitiesPrefabs ?? new Map<string, EntityPrefab>());
+            this.gameMapEntities = new GameMapEntities(this.wam, entitiesPrefabs);
         }
 
         for (const tileset of this.map.tilesets) {
