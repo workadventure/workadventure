@@ -693,7 +693,6 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitPlayerStatusChange(availabilityStatus: AvailabilityStatus): void {
-        console.log("emitPlayerStatusChange", availabilityStatus);
         const message = SetPlayerDetailsMessageTsProto.fromPartial({
             availabilityStatus,
         });

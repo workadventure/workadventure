@@ -260,7 +260,6 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     public setAvailabilityStatus(availabilityStatus: AvailabilityStatusType, instant = false): void {
-        console.log("Character => setAvailabilityStatus", availabilityStatus);
         this.statusDot.setAvailabilityStatus(availabilityStatus, instant);
         if (this.getAvailabilityStatus() === AvailabilityStatus.SPEAKER) {
             this.megaphoneIcon.show(true, false);
