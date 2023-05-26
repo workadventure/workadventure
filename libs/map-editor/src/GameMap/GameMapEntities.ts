@@ -1,18 +1,22 @@
 import _ from "lodash";
-import { EntityData, WAMFileFormat } from "../types";
+import { EntityData, EntityPrefab, WAMEntityData, WAMFileFormat } from "../types";
 
 export class GameMapEntities {
     private wam: WAMFileFormat;
 
     private entities: Map<string, EntityData> = new Map<string, EntityData>();
 
-    private readonly MAP_PROPERTY_ENTITIES_NAME: string = "entities";
-
-    constructor(wam: WAMFileFormat) {
+    constructor(wam: WAMFileFormat, entitiesPrefabsMap: Map<string, EntityPrefab>) {
         this.wam = wam;
 
-        for (const entityData of this.wam.entities) {
-            this.addEntity(entityData, false);
+        for (const wamEntityData of this.wam.entities) {
+            console.log(wamEntityData.prefabId);
+            const entityData = this.wamEntityDataToEntityData(wamEntityData, entitiesPrefabsMap);
+            if (entityData) {
+                this.addEntity(entityData, false);
+            } else {
+                console.warn("COULD NOT FIND ENTITY DATA FROM GIVEN ID");
+            }
         }
     }
 
@@ -55,7 +59,11 @@ export class GameMapEntities {
 
     private addEntityToWAM(entityData: EntityData): boolean {
         if (!this.wam.entities.find((entity) => entity.id === entityData.id)) {
-            this.wam.entities.push(entityData);
+            const wamEntityData: WAMEntityData = {
+                ...structuredClone(entityData),
+                prefabId: entityData.prefab.id,
+            };
+            this.wam.entities.push(wamEntityData);
         } else {
             console.warn(`ADD ENTITY FAIL: ENTITY OF ID ${entityData.id} ALREADY EXISTS WITHIN WAM FILE!`);
             return false;
@@ -80,11 +88,33 @@ export class GameMapEntities {
             return false;
         }
 
-        this.wam.entities[entityIndex] = entityData;
+        this.wam.entities[entityIndex] = this.entityDataToWAMEntityData(entityData);
         return true;
     }
 
     public getEntities(): EntityData[] {
         return Array.from(this.entities.values());
+    }
+
+    private entityDataToWAMEntityData(entityData: EntityData): WAMEntityData {
+        return {
+            ...structuredClone(entityData),
+            prefabId: entityData.prefab.id,
+        };
+    }
+
+    private wamEntityDataToEntityData(
+        wamEntityData: WAMEntityData,
+        prefabs: Map<string, EntityPrefab>
+    ): EntityData | undefined {
+        const entityPrefab = prefabs.get(wamEntityData.prefabId);
+        console.log(entityPrefab);
+        if (entityPrefab) {
+            return {
+                ...structuredClone(wamEntityData),
+                prefab: entityPrefab,
+            };
+        }
+        return undefined;
     }
 }

@@ -6,8 +6,7 @@ import {
     Json,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
-import type { WAMFileFormat } from "../types";
-import { GameMapProperties } from "../types";
+import { EntityPrefab, WAMFileFormat, GameMapProperties } from "../types";
 import type { AreaChangeCallback } from "./GameMapAreas";
 import { GameMapAreas } from "./GameMapAreas";
 import { flattenGroupLayersMap } from "./LayersFlattener";
@@ -40,7 +39,7 @@ export class GameMap {
 
     public hasStartTile = false;
 
-    public constructor(map: ITiledMap, wam?: WAMFileFormat) {
+    public constructor(map: ITiledMap, wam?: WAMFileFormat, entitiesPrefabs?: Map<string, EntityPrefab>) {
         this.map = upgradeMapToNewest(map);
         this.wam = wam; // upgrade if necessary
         this.flatLayers = flattenGroupLayersMap(this.map);
@@ -48,7 +47,7 @@ export class GameMap {
 
         if (this.wam) {
             this.gameMapAreas = new GameMapAreas(this.wam);
-            this.gameMapEntities = new GameMapEntities(this.wam);
+            this.gameMapEntities = new GameMapEntities(this.wam, entitiesPrefabs ?? new Map<string, EntityPrefab>());
         }
 
         for (const tileset of this.map.tilesets) {
