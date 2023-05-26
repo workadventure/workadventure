@@ -351,7 +351,7 @@ export class SocketManager implements ZoneEventListener {
                                 const removeSpaceUserMessage = message.message.removeSpaceUserMessage;
                                 const space = this.spaces.get(removeSpaceUserMessage.spaceName);
                                 if (space) {
-                                    space.localRemoveUser(removeSpaceUserMessage.userUuid);
+                                    space.localRemoveUser(removeSpaceUserMessage.userId);
                                 }
                                 break;
                             }
@@ -529,7 +529,7 @@ export class SocketManager implements ZoneEventListener {
             client.spaceUser.availabilityStatus = playerDetailsMessage.availabilityStatus;
             const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
                 availabilityStatus: playerDetailsMessage.availabilityStatus,
-                uuid: client.userUuid,
+                id: client.userId,
             });
             client.spaces.forEach((space) => {
                 space.updateUser(partialSpaceUser);
@@ -586,7 +586,7 @@ export class SocketManager implements ZoneEventListener {
         socket.spacesFilters = new Map<string, SpaceFilterMessage[]>();
         socket.spaces.forEach((space) => {
             space.removeClientWatcher(socket);
-            space.removeUser(socket.spaceUser.uuid);
+            space.removeUser(socket.spaceUser.id);
             this.deleteSpaceIfEmpty(space);
         });
         socket.spaces = [];
@@ -1015,7 +1015,7 @@ export class SocketManager implements ZoneEventListener {
         client.spaceUser.cameraState = state;
         const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
             cameraState: state,
-            uuid: client.userUuid,
+            id: client.userId,
         });
         client.spaces.forEach((space) => {
             space.updateUser(partialSpaceUser);
@@ -1027,7 +1027,7 @@ export class SocketManager implements ZoneEventListener {
         client.spaceUser.microphoneState = state;
         const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
             microphoneState: state,
-            uuid: client.userUuid,
+            id: client.userId,
         });
         client.spaces.forEach((space) => {
             space.updateUser(partialSpaceUser);
@@ -1039,7 +1039,7 @@ export class SocketManager implements ZoneEventListener {
         client.spaceUser.megaphoneState = state;
         const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
             megaphoneState: state,
-            uuid: client.userUuid,
+            id: client.userId,
         });
         client.spaces.forEach((space) => {
             space.updateUser(partialSpaceUser);
@@ -1051,7 +1051,7 @@ export class SocketManager implements ZoneEventListener {
         if (space) {
             const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
                 jitsiParticipantId,
-                uuid: client.userUuid,
+                id: client.userId,
             });
             space.updateUser(partialSpaceUser);
         }
@@ -1083,6 +1083,15 @@ export class SocketManager implements ZoneEventListener {
             }).finish(),
             true
         );
+    }
+
+    handleLeaveSpace(client: ExSocketInterface, spaceName: string) {
+        const space = this.spaces.get(spaceName);
+        if (space) {
+            space.removeClientWatcher(client);
+            space.removeUser(client.spaceUser.id);
+            this.deleteSpaceIfEmpty(space);
+        }
     }
 }
 

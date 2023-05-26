@@ -1392,7 +1392,7 @@ export class SocketManager {
     handleRemoveSpaceUserMessage(pusher: SpacesWatcher, removeSpaceUserMessage: RemoveSpaceUserMessage) {
         const space = this.spaces.get(removeSpaceUserMessage.spaceName);
         if (space) {
-            space.removeUser(pusher, removeSpaceUserMessage.userUuid);
+            space.removeUser(pusher, removeSpaceUserMessage.userId);
         }
     }
 }

@@ -44,6 +44,7 @@ import {
     SpaceFilterMessage,
     UpdateMegaphoneSettingMessage,
     MegaphoneSettings,
+    UnwatchSpaceMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
@@ -1414,6 +1415,17 @@ export class RoomConnection implements RoomConnection {
             },
         });
         return spaceFilter;
+    }
+
+    public emitUnwatchSpaceLiveStreaming(spaceName: string) {
+        this.send({
+            message: {
+                $case: "unwatchSpaceMessage",
+                unwatchSpaceMessage: UnwatchSpaceMessage.fromPartial({
+                    spaceName,
+                }),
+            },
+        });
     }
 
     public emitCameraState(state: boolean) {

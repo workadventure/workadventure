@@ -513,6 +513,7 @@ export class IoSocketController {
                             isLogged,
                             messages: [],
                             spaceUser: SpaceUser.fromPartial({
+                                id: 0,
                                 uuid: userData.userUuid,
                                 name,
                                 playUri: roomId,
@@ -775,7 +776,7 @@ export class IoSocketController {
                             break;
                         }
                         case "unwatchSpaceMessage": {
-                            // TODO : Implement
+                            void socketManager.handleLeaveSpace(client, message.message.unwatchSpaceMessage.spaceName);
                             break;
                         }
                         case "cameraStateMessage": {
@@ -899,7 +900,7 @@ export class IoSocketController {
         };
         client.spaces = [];
         client.spacesFilters = new Map<string, SpaceFilterMessage[]>();
-        client.spaceUser = ws.spaceUser;
+        client.spaceUser = { ...ws.spaceUser, id: client.userId };
         client.cameraState = ws.cameraState;
         client.microphoneState = ws.microphoneState;
         return client;

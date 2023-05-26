@@ -121,13 +121,16 @@ export class BroadcastService {
         const spaceFilter = this.connection.emitWatchSpaceLiveStreaming(spaceName);
         const broadcastSpace = new BroadcastSpace(this.connection, spaceName, spaceFilter, this);
         this.broadcastSpaces.push(broadcastSpace);
+        console.log("BroadcastService => joinSpace", spaceName);
     }
 
     public leaveSpace(spaceName: string) {
         const space = this.broadcastSpaces.find((space) => space.name === spaceName);
         if (space) {
+            this.connection.emitUnwatchSpaceLiveStreaming(spaceName);
             space.destroy();
             this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.name !== spaceName);
+            console.log("BroadcastService => leaveSpace", spaceName);
         }
     }
 
@@ -168,7 +171,7 @@ export class BroadcastService {
                 for (const [participantId, stream] of $streamStore) {
                     let found = false;
                     if (stream.spaceUser !== undefined) {
-                        if ($users.has(stream.spaceUser.uuid)) {
+                        if ($users.has(stream.spaceUser.id)) {
                             filtered.set(participantId, stream);
                         }
                         continue;
@@ -184,7 +187,8 @@ export class BroadcastService {
                     if (!found) {
                         console.warn(
                             "BroadcastService => joinJitsiConference => No associated spaceUser found for participantId",
-                            stream.uniqueId
+                            stream.uniqueId,
+                            $users.values()
                         );
                     }
                 }
