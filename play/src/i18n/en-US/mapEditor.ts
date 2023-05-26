@@ -80,11 +80,13 @@ const mapEditor: BaseTranslation = {
         advancedOptions: "Advanced Options",
         speakerMegaphoneProperties: {
             label: "SpeakerZone for megaphone",
+            description: "",
             nameLabel: "Name",
             namePlaceholder: "MySpeakerZone",
         },
         listenerMegaphoneProperties: {
             label: "ListenerZone for megaphone",
+            description: "",
             nameLabel: "SpeakerZone Name",
             namePlaceholder: "MySpeakerZone",
         },

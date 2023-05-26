@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
     import { AreaDataProperty, AreaDataPropertiesKeys, AreaDataProperties } from "@workadventure/map-editor";
+    import { HeadphonesIcon, SpeakerIcon, LinkIcon, MicOffIcon } from "svelte-feather-icons";
     import { LL } from "../../../i18n/i18n-svelte";
     import {
         mapEditorSelectedAreaPreviewStore,
@@ -9,8 +10,6 @@
     } from "../../Stores/MapEditorStore";
     import visioSvg from "../images/visio-white.svg";
     import audioSvg from "../images/audio-white.svg";
-    import webSvg from "../images/web-white.svg";
-    import silentSvg from "../images/silent-white.svg";
     import focusSvg from "../images/focus-white.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
@@ -18,12 +17,16 @@
     import FocusablePropertyEditor from "./PropertyEditor/FocusablePropertyEditor.svelte";
     import SilentPropertyEditor from "./PropertyEditor/SilentPropertyEditor.svelte";
     import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
+    import SpeakerMegaphonePropertyEditor from "./PropertyEditor/SpeakerMegaphonePropertyEditor.svelte";
+    import ListenerMegaphonePropertyEditor from "./PropertyEditor/ListenerMegaphonePropertyEditor.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
     let hasJitsiRoomProperty: boolean;
     let hasFocusableProperty: boolean;
     let hasSilentProperty: boolean;
+    let hasSpeakerMegaphoneProperty: boolean;
+    let hasListenerMegaphoneProperty: boolean;
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
         if (currentAreaPreview) {
@@ -133,6 +136,8 @@
         hasJitsiRoomProperty = hasProperty("jitsiRoomProperty");
         hasFocusableProperty = hasProperty("focusable");
         hasSilentProperty = hasProperty("silent");
+        hasSpeakerMegaphoneProperty = hasProperty("speakerMegaphone");
+        hasListenerMegaphoneProperty = hasProperty("listenerMegaphone");
     }
 </script>
 
@@ -155,7 +160,7 @@
             <AddPropertyButton
                 headerText={$LL.mapEditor.properties.silentProperty.label()}
                 descriptionText={$LL.mapEditor.properties.silentProperty.description()}
-                img={silentSvg}
+                img={MicOffIcon}
                 style="z-index: 4;"
                 on:click={() => {
                     onAddProperty("silent");
@@ -173,6 +178,28 @@
                 }}
             />
         {/if}
+        {#if !hasSpeakerMegaphoneProperty}
+            <AddPropertyButton
+                headerText={$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
+                descriptionText={$LL.mapEditor.properties.speakerMegaphoneProperties.description()}
+                img={SpeakerIcon}
+                style="z-index: 3;"
+                on:click={() => {
+                    onAddProperty("speakerMegaphone");
+                }}
+            />
+        {/if}
+        {#if !hasListenerMegaphoneProperty}
+            <AddPropertyButton
+                headerText={$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
+                descriptionText={$LL.mapEditor.properties.listenerMegaphoneProperties.description()}
+                img={HeadphonesIcon}
+                style="z-index: 3;"
+                on:click={() => {
+                    onAddProperty("listenerMegaphone");
+                }}
+            />
+        {/if}
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.audioProperties.label()}
             descriptionText={$LL.mapEditor.properties.audioProperties.description()}
@@ -185,7 +212,7 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.linkProperties.label()}
             descriptionText={$LL.mapEditor.properties.linkProperties.description()}
-            img={webSvg}
+            img={LinkIcon}
             style="z-index: 1;"
             on:click={() => {
                 onAddProperty("openWebsite");
@@ -240,6 +267,22 @@
                     />
                 {:else if property.type === "openWebsite"}
                     <OpenWebsitePropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                        on:change={() => onUpdateProperty(property)}
+                    />
+                {:else if property.type === "speakerMegaphone"}
+                    <SpeakerMegaphonePropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                        on:change={() => onUpdateProperty(property)}
+                    />
+                {:else if property.type === "listenerMegaphone"}
+                    <ListenerMegaphonePropertyEditor
                         {property}
                         on:close={() => {
                             onDeleteProperty(property.id);

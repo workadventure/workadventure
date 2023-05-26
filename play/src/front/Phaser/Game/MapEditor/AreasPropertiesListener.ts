@@ -3,8 +3,10 @@ import {
     AreaData,
     FocusablePropertyData,
     JitsiRoomPropertyData,
+    ListenerMegaphonePropertyData,
     OpenWebsitePropertyData,
     PlayAudioPropertyData,
+    SpeakerMegaphonePropertyData,
 } from "@workadventure/map-editor";
 import { Jitsi } from "@workadventure/shared-utils";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
@@ -17,11 +19,19 @@ import { localUserStore } from "../../../Connexion/LocalUserStore";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../../WebRtc/LayoutManager";
 import { LL } from "../../../../i18n/i18n-svelte";
 import { GameScene } from "../GameScene";
-import { inJitsiStore, inOpenWebsite, silentStore } from "../../../Stores/MediaStore";
+import {
+    inJitsiStore,
+    inOpenWebsite,
+    isSpeakerStore,
+    requestedCameraState,
+    requestedMicrophoneState,
+    silentStore,
+} from "../../../Stores/MediaStore";
 import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
 import { scriptUtils } from "../../../Api/ScriptUtils";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
+import { megaphoneEnabledStore } from "../../../Stores/MegaphoneStore";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -52,7 +62,7 @@ export class AreasPropertiesListener {
                         break;
                     }
                     case "focusable": {
-                        this.handleFocusablePropertysOnEnter(area.x, area.y, area.width, area.height, property);
+                        this.handleFocusablePropertiesOnEnter(area.x, area.y, area.width, area.height, property);
                         break;
                     }
                     case "jitsiRoomProperty": {
@@ -61,6 +71,14 @@ export class AreasPropertiesListener {
                     }
                     case "silent": {
                         this.handleSilentPropertyOnEnter();
+                        break;
+                    }
+                    case "speakerMegaphone": {
+                        this.handleSpeakerMegaphonePropertyOnEnter(property);
+                        break;
+                    }
+                    case "listenerMegaphone": {
+                        this.handleListenerMegaphonePropertyOnEnter(property);
                         break;
                     }
                     default: {
@@ -96,6 +114,14 @@ export class AreasPropertiesListener {
                     }
                     case "silent": {
                         this.handleSilentPropertyOnLeave();
+                        break;
+                    }
+                    case "speakerMegaphone": {
+                        this.handleSpeakerMegaphonePropertyOnLeave(property);
+                        break;
+                    }
+                    case "listenerMegaphone": {
+                        this.handleListenerMegaphonePropertyOnLeave(property);
                         break;
                     }
                     default: {
@@ -183,7 +209,7 @@ export class AreasPropertiesListener {
         }
     }
 
-    private handleFocusablePropertysOnEnter(
+    private handleFocusablePropertiesOnEnter(
         x: number,
         y: number,
         width: number,
@@ -378,5 +404,35 @@ export class AreasPropertiesListener {
         });
 
         layoutManagerActionStore.removeAction(actionId);
+    }
+
+    private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {
+        if (property.name !== undefined) {
+            this.scene.broadcastService.joinSpace(property.name);
+            isSpeakerStore.set(true);
+            if (get(requestedCameraState) || get(requestedMicrophoneState)) {
+                megaphoneEnabledStore.set(true);
+            }
+        }
+    }
+
+    private handleSpeakerMegaphonePropertyOnLeave(property: SpeakerMegaphonePropertyData): void {
+        if (property.name !== undefined) {
+            this.scene.broadcastService.leaveSpace(property.name);
+            megaphoneEnabledStore.set(false);
+            isSpeakerStore.set(false);
+        }
+    }
+
+    private handleListenerMegaphonePropertyOnEnter(property: ListenerMegaphonePropertyData): void {
+        if (property.speakerZoneName !== undefined) {
+            this.scene.broadcastService.joinSpace(property.speakerZoneName);
+        }
+    }
+
+    private handleListenerMegaphonePropertyOnLeave(property: ListenerMegaphonePropertyData): void {
+        if (property.speakerZoneName !== undefined) {
+            this.scene.broadcastService.leaveSpace(property.speakerZoneName);
+        }
     }
 }

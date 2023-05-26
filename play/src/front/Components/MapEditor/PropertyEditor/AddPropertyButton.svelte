@@ -16,7 +16,11 @@
         dispatch("click");
     }}
 >
-    <img draggable="false" class="tw-w-10" src={img} alt="info icon" />
+    {#if typeof img !== "string"}
+        <svelte:component this={img} class="tw-w-10 tw-h-9 tw-text-white" />
+    {:else}
+        <img draggable="false" class="tw-w-10" src={img} alt="info icon" />
+    {/if}
     <span class="tooltiptext tw-text-xs">
         <p class="tw-text-sm tw-mb-2">{headerText}</p>
         {descriptionText}

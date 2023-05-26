@@ -309,17 +309,23 @@ export class JitsiConferenceWrapper {
         if (oldTrack && track) {
             console.warn(`REPLACING LOCAL ${oldTrack.getType()} TRACK`);
             await this.jitsiConference.replaceTrack(oldTrack, track);
-            this.trackVolumeLocalAudioTrack(track.getOriginalStream());
+            if (track.isAudioTrack()) {
+                this.trackVolumeLocalAudioTrack(track.getOriginalStream());
+            }
         } else if (oldTrack && !track) {
             console.warn(`REMOVING LOCAL ${oldTrack.getType()} TRACK`);
             await oldTrack.dispose();
-            this.trackVolumeLocalAudioTrack(undefined);
+            if (oldTrack.isAudioTrack()) {
+                this.trackVolumeLocalAudioTrack(undefined);
+            }
             //room.removeTrack(oldTrack);
             //await oldTrack.dispose();
         } else if (!oldTrack && track) {
             console.warn(`ADDING LOCAL ${track.getType()} TRACK`);
             await this.jitsiConference.addTrack(track);
-            this.trackVolumeLocalAudioTrack(track.getOriginalStream());
+            if (track.isAudioTrack()) {
+                this.trackVolumeLocalAudioTrack(track.getOriginalStream());
+            }
         }
     }
 
@@ -392,7 +398,7 @@ export class JitsiConferenceWrapper {
             clearInterval(this.audioTrackInterval);
             this.audioTrackInterval = undefined;
         }
-        if (stream) {
+        if (stream && stream.getAudioTracks().length > 0) {
             const audioContext = new AudioContext();
             const source = audioContext.createMediaStreamSource(stream);
             const analyser = audioContext.createAnalyser();

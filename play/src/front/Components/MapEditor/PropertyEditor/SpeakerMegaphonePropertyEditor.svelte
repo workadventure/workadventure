@@ -1,8 +1,10 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { SpeakerMegaphonePropertyData } from "@workadventure/map-editor";
+    import { SpeakerIcon } from "svelte-feather-icons";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
+    import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: SpeakerMegaphonePropertyData;
 
@@ -13,18 +15,30 @@
     }
 </script>
 
-<div class="value-input">
-    <label for="tabLink">{$LL.mapEditor.properties.speakerMegaphoneProperties.nameLabel()}</label>
-    <input
-        id="tabLink"
-        type="text"
-        placeholder={$LL.mapEditor.properties.speakerMegaphoneProperties.namePlaceholder()}
-        bind:value={property.name}
-        on:change={onValueChange}
-        on:focus={onMapEditorInputFocus}
-        on:blur={onMapEditorInputUnfocus}
-    />
-</div>
+<PropertyEditorBase
+    on:close={() => {
+        dispatch("close");
+    }}
+>
+    <span slot="header" class="tw-flex tw-justify-center tw-items-center">
+        <SpeakerIcon class="tw-w-6 tw-mr-1" />
+        {$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
+    </span>
+    <span slot="content">
+        <div class="value-input">
+            <label for="tabLink">{$LL.mapEditor.properties.speakerMegaphoneProperties.nameLabel()}</label>
+            <input
+                id="tabLink"
+                type="text"
+                placeholder={$LL.mapEditor.properties.speakerMegaphoneProperties.namePlaceholder()}
+                bind:value={property.name}
+                on:change={onValueChange}
+                on:focus={onMapEditorInputFocus}
+                on:blur={onMapEditorInputUnfocus}
+            />
+        </div>
+    </span>
+</PropertyEditorBase>
 
 <style lang="scss">
     .value-input {
