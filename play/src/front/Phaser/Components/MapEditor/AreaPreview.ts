@@ -24,14 +24,14 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
 
     private oldPosition: { x: number; y: number };
 
-    private shiftKey: Phaser.Input.Keyboard.Key;
-    private ctrlKey: Phaser.Input.Keyboard.Key;
+    private shiftKey?: Phaser.Input.Keyboard.Key;
+    private ctrlKey?: Phaser.Input.Keyboard.Key;
 
     constructor(
         scene: Phaser.Scene,
         areaData: AreaData,
-        shiftKey: Phaser.Input.Keyboard.Key,
-        ctrlKey: Phaser.Input.Keyboard.Key
+        shiftKey?: Phaser.Input.Keyboard.Key,
+        ctrlKey?: Phaser.Input.Keyboard.Key
     ) {
         super(
             scene,
@@ -216,7 +216,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         this.on(Phaser.Input.Events.POINTER_UP, (pointer: Phaser.Input.Pointer) => {
             if (this.selected && this.moved) {
                 this.moved = false;
-                if (this.ctrlKey.isDown) {
+                if (this.ctrlKey?.isDown) {
                     this.emit(AreaPreviewEvent.Copied, {
                         position: {
                             x: this.oldPosition.x - this.areaData.width * 0.5,

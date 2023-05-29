@@ -35,8 +35,8 @@ export class AreaEditorTool extends MapEditorTool {
     private draggingdArea: boolean;
     private wasAreaMoved: boolean;
 
-    private shiftKey: Phaser.Input.Keyboard.Key;
-    private ctrlKey: Phaser.Input.Keyboard.Key;
+    private shiftKey?: Phaser.Input.Keyboard.Key;
+    private ctrlKey?: Phaser.Input.Keyboard.Key;
 
     private selectedAreaPreviewStoreSubscriber!: Unsubscriber;
 
@@ -56,8 +56,8 @@ export class AreaEditorTool extends MapEditorTool {
         this.mapEditorModeManager = mapEditorModeManager;
         this.scene = this.mapEditorModeManager.getScene();
 
-        this.shiftKey = this.scene.input.keyboard.addKey("SHIFT");
-        this.ctrlKey = this.scene.input.keyboard.addKey("CTRL");
+        this.shiftKey = this.scene.input.keyboard?.addKey("SHIFT");
+        this.ctrlKey = this.scene.input.keyboard?.addKey("CTRL");
 
         this.areaPreviews = this.createAreaPreviews();
         this.active = false;
@@ -243,10 +243,10 @@ export class AreaEditorTool extends MapEditorTool {
                 this.drawNewArea(this.scene.input.activePointer);
             }
         });
-        this.ctrlKey.on(Phaser.Input.Keyboard.Events.DOWN, () => {
+        this.ctrlKey?.on(Phaser.Input.Keyboard.Events.DOWN, () => {
             this.scene.input.setDefaultCursor("copy");
         });
-        this.ctrlKey.on(Phaser.Input.Keyboard.Events.UP, () => {
+        this.ctrlKey?.on(Phaser.Input.Keyboard.Events.UP, () => {
             this.scene.input.setDefaultCursor("auto");
         });
     }
