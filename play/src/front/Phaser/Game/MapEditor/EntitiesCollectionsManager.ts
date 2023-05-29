@@ -64,10 +64,9 @@ export class EntitiesCollectionsManager {
     }
 
     public async loadCollections(urls: string[]): Promise<void> {
-        const entityCollections: EntityCollection[] = [];
         for (const url of urls) {
+            const entityCollections: EntityCollection[] = [];
             entityCollections.push(this.parseRawCollection(await this.fetchRawCollection(url)));
-
             for (const entityCollection of entityCollections) {
                 const tagSet = new Set<string>();
                 entityCollection.collection.forEach((entity: EntityPrefab) => {
