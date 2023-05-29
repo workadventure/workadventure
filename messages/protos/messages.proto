@@ -892,11 +892,11 @@ message WatchSpaceMessage{
 }
 message UnwatchSpaceMessage{
   string spaceName = 1;
-  string userId = 2;
+  int32 userId = 2;
 }
 
 message SpaceUser{
-  int64 id = 1; // used
+  int32 id = 1; // used
   string name = 2; // used
   string playUri = 3;
   string color = 4; // TO DELETE
@@ -915,7 +915,7 @@ message SpaceUser{
 }
 
 message PartialSpaceUser{
-  int64 id = 1;
+  int32 id = 1;
   google.protobuf.StringValue name = 2;
   google.protobuf.StringValue playUri = 3;
   google.protobuf.StringValue color = 4;
@@ -945,7 +945,7 @@ message UpdateSpaceUserMessage{
 }
 message RemoveSpaceUserMessage{
   string spaceName = 1;
-  int64 userId = 2;
+  int32 userId = 2;
   google.protobuf.StringValue filterName = 3;
 }
 
