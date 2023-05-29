@@ -7,6 +7,6 @@ export const requestedMegaphoneStore = writable<boolean>(false);
 export const megaphoneEnabledStore = derived(
     [requestedMegaphoneStore, requestedCameraState, requestedMicrophoneState],
     ([$requestedMegaphoneStore, $requestedCameraState, $requestedMicrophoneState], set) => {
-        set($requestedMegaphoneStore && $requestedCameraState && $requestedMicrophoneState);
+        set($requestedMegaphoneStore && ($requestedCameraState || $requestedMicrophoneState));
     }
 );

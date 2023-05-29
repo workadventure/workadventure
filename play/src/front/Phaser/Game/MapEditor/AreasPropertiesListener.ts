@@ -19,19 +19,12 @@ import { localUserStore } from "../../../Connexion/LocalUserStore";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../../WebRtc/LayoutManager";
 import { LL } from "../../../../i18n/i18n-svelte";
 import { GameScene } from "../GameScene";
-import {
-    inJitsiStore,
-    inOpenWebsite,
-    isSpeakerStore,
-    requestedCameraState,
-    requestedMicrophoneState,
-    silentStore,
-} from "../../../Stores/MediaStore";
+import { inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../../Stores/MediaStore";
 import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
 import { scriptUtils } from "../../../Api/ScriptUtils";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
-import { megaphoneEnabledStore } from "../../../Stores/MegaphoneStore";
+import { requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -410,16 +403,14 @@ export class AreasPropertiesListener {
         if (property.name !== undefined) {
             this.scene.broadcastService.joinSpace(property.name);
             isSpeakerStore.set(true);
-            if (get(requestedCameraState) || get(requestedMicrophoneState)) {
-                megaphoneEnabledStore.set(true);
-            }
+            requestedMegaphoneStore.set(true);
         }
     }
 
     private handleSpeakerMegaphonePropertyOnLeave(property: SpeakerMegaphonePropertyData): void {
         if (property.name !== undefined) {
             this.scene.broadcastService.leaveSpace(property.name);
-            megaphoneEnabledStore.set(false);
+            requestedMegaphoneStore.set(false);
             isSpeakerStore.set(false);
         }
     }

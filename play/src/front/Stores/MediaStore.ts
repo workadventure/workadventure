@@ -837,15 +837,3 @@ speakerSelectedStore.subscribe((value) => {
     )
         speakerSelectedStore.set(oldDevice.deviceId);
 });
-
-requestedCameraState.subscribe((requestedCameraState) => {
-    if (!requestedCameraState && !get(requestedMicrophoneState)) {
-        megaphoneEnabledStore.set(false);
-    }
-});
-
-requestedMicrophoneState.subscribe((requestedMicrophoneState) => {
-    if (!requestedMicrophoneState && !get(requestedCameraState)) {
-        megaphoneEnabledStore.set(false);
-    }
-});

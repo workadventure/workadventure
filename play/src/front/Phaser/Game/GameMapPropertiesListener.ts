@@ -28,7 +28,7 @@ import {
 import { urlManager } from "../../Url/UrlManager";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { connectionManager } from "../../Connexion/ConnectionManager";
-import { megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
+import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
@@ -474,7 +474,7 @@ export class GameMapPropertiesListener {
             this.scene.broadcastService.joinSpace(speakerZone.value);
             isSpeakerStore.set(true);
             if (get(requestedCameraState) || get(requestedMicrophoneState)) {
-                megaphoneEnabledStore.set(true);
+                requestedMegaphoneStore.set(true);
             }
         }
     }
@@ -486,7 +486,7 @@ export class GameMapPropertiesListener {
         const speakerZone = place.properties.find((property) => property.name === GameMapProperties.SPEAKER_MEGAPHONE);
         if (speakerZone && speakerZone.type === "string" && speakerZone.value !== undefined) {
             this.scene.broadcastService.leaveSpace(speakerZone.value);
-            megaphoneEnabledStore.set(false);
+            requestedMegaphoneStore.set(false);
             isSpeakerStore.set(false);
         }
     }
