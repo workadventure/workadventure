@@ -18,8 +18,6 @@ import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { createSilentStore } from "./SilentStore";
 
-import { megaphoneEnabledStore } from "./MegaphoneStore";
-
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
@@ -299,7 +297,6 @@ export const mediaStreamConstraintsStore = derived(
         privacyShutdownStore,
         cameraEnergySavingStore,
         availabilityStatusStore,
-        megaphoneEnabledStore,
         batchGetUserMediaStore,
     ],
     (
@@ -315,7 +312,6 @@ export const mediaStreamConstraintsStore = derived(
             $privacyShutdownStore,
             $cameraEnergySavingStore,
             $availabilityStatusStore,
-            $megaphoneEnabledStore,
             $batchGetUserMediaStore,
         ],
         set
@@ -373,13 +369,9 @@ export const mediaStreamConstraintsStore = derived(
 
         if (
             $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
-            $availabilityStatusStore === AvailabilityStatus.SILENT
+            $availabilityStatusStore === AvailabilityStatus.SILENT ||
+            $availabilityStatusStore === AvailabilityStatus.SPEAKER
         ) {
-            currentVideoConstraint = false;
-            currentAudioConstraint = false;
-        }
-
-        if ($megaphoneEnabledStore) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
