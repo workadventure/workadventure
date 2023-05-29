@@ -5,6 +5,7 @@ import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 import pLimit from "p-limit";
 import { SpaceFilterMessage } from "@workadventure/messages";
 import debug from "debug";
+import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { megaphoneEnabledStore } from "../Stores/MegaphoneStore";
 import { RoomConnection } from "../Connexion/RoomConnection";
 import { Space } from "../Space/Space";
@@ -120,14 +121,16 @@ export class BroadcastService {
         //libJitsiFactory.createConnection("jitsi.test.workadventu.re", "prosody.test.workadventu.re", "muc.prosody.test.workadventu.re").then((connection) => {
     }
 
-    public joinSpace(spaceName: string) {
+    public joinSpace(spaceName_: string) {
+        const spaceName = slugify(spaceName_);
         const spaceFilter = this.connection.emitWatchSpaceLiveStreaming(spaceName);
         const broadcastSpace = new BroadcastSpace(this.connection, spaceName, spaceFilter, this);
         this.broadcastSpaces.push(broadcastSpace);
         broadcastServiceLogger("BroadcastService => joinSpace", spaceName);
     }
 
-    public leaveSpace(spaceName: string) {
+    public leaveSpace(spaceName_: string) {
+        const spaceName = slugify(spaceName_);
         const space = this.broadcastSpaces.find((space) => space.name === spaceName);
         if (space) {
             this.connection.emitUnwatchSpaceLiveStreaming(spaceName);
