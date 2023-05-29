@@ -98,7 +98,7 @@ export class Game extends Phaser.Game {
                 // @ts-ignore
                 if (typeof scene.isDirty === "function") {
                     // @ts-ignore
-                    const isDirty = scene.isDirty() || scene.tweens.getAllTweens().length > 0;
+                    const isDirty = scene.isDirty() || scene.tweens.getTweens().length > 0;
                     if (isDirty) {
                         return true;
                     }

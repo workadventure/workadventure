@@ -20,10 +20,6 @@ if (fs.existsSync("dist") && !fs.existsSync("src")) {
     process.chdir("dist");
 }
 
-app.listen(PUSHER_HTTP_PORT)
-    .then(() => console.log(`WorkAdventure Pusher started on port ${PUSHER_HTTP_PORT}!`))
-    .catch((e) => console.error(e));
-
 // Sentry integration
 if (SENTRY_DSN != undefined) {
     try {
@@ -49,6 +45,20 @@ if (SENTRY_DSN != undefined) {
         console.error("Error while initializing Sentry", e);
     }
 }
+
+(async () => {
+    await app.init();
+
+    app.listen(PUSHER_HTTP_PORT)
+        .then(() => console.log(`WorkAdventure Pusher started on port ${PUSHER_HTTP_PORT}!`))
+        .catch((e) => {
+            console.error(e);
+            Sentry.captureException(e);
+        });
+})().catch((e) => {
+    console.error(e);
+    Sentry.captureException(e);
+});
 
 // Room API
 if (!ADMIN_API_URL && !ROOM_API_SECRET_KEY) {

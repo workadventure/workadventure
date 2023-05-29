@@ -92,19 +92,20 @@ class App {
             new SwaggerController(this.webserver);
         }
         new FrontController(this.webserver, liveAssets);
+    }
+
+    public async init() {
         const companionListController = new CompanionListController(this.webserver, jwtTokenManager);
         const wokaListController = new WokaListController(this.webserver, jwtTokenManager);
-        adminApi
-            .initialise()
-            .then((capabilities) => {
-                companionListController.setCompanionService(CompanionService.get(capabilities));
-                wokaListController.setWokaService(WokaService.get(capabilities));
-                console.debug("Initialized companion and woka services");
-            })
-            .catch((reason) => {
-                Sentry.captureException(`Failed to initialized companion and woka services : ${reason}`);
-                console.error(`Failed to initialized companion and woka services : ${reason}`);
-            });
+
+        try {
+            const capabilities = await adminApi.initialise();
+            companionListController.setCompanionService(CompanionService.get(capabilities));
+            wokaListController.setWokaService(WokaService.get(capabilities));
+        } catch (error) {
+            console.error("Failed to initialize: problem getting AdminAPI capabilities", error);
+            Sentry.captureException(`Failed to initialized companion and woka services : ${error}`);
+        }
     }
 
     public listen(port: number, host?: string): Promise<HyperExpress.compressors.us_listen_socket | string> {

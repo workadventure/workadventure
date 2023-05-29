@@ -38,8 +38,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
     private scene: GameScene;
     private gameMapFrontWrapper: GameMapFrontWrapper;
 
-    private shiftKey: Phaser.Input.Keyboard.Key;
-    private ctrlKey: Phaser.Input.Keyboard.Key;
+    private shiftKey?: Phaser.Input.Keyboard.Key;
+    private ctrlKey?: Phaser.Input.Keyboard.Key;
 
     private entities: Map<string, Entity>;
     private activatableEntities: Entity[];
@@ -56,8 +56,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         super();
         this.scene = scene;
         this.gameMapFrontWrapper = gameMapFrontWrapper;
-        this.shiftKey = this.scene.input.keyboard.addKey("SHIFT");
-        this.ctrlKey = this.scene.input.keyboard.addKey("CTRL");
+        this.shiftKey = this.scene.input.keyboard?.addKey("SHIFT");
+        this.ctrlKey = this.scene.input.keyboard?.addKey("CTRL");
         this.entities = new Map<string, Entity>();
         this.activatableEntities = [];
         this.properties = new Map<string, string | boolean | number>();
@@ -161,7 +161,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
     }
 
     private bindEventHandlers(): void {
-        this.ctrlKey.on("down", () => {
+        this.ctrlKey?.on("down", () => {
             if (!this.scene.input.activePointer.leftButtonDown()) {
                 return;
             }
@@ -171,7 +171,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             }
             this.scene.input.setDefaultCursor("copy");
         });
-        this.ctrlKey.on("up", () => {
+        this.ctrlKey?.on("up", () => {
             this.scene.input.setDefaultCursor("auto");
         });
     }
@@ -210,11 +210,11 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 const depthOffset = entity.getEntityData().prefab.depthOffset ?? 0;
                 const tileDim = this.scene.getGameMapFrontWrapper().getTileDimensions();
                 entity.x =
-                    collisitonGrid || this.shiftKey.isDown
+                    collisitonGrid || this.shiftKey?.isDown
                         ? Math.floor(dragX / tileDim.width) * tileDim.width
                         : Math.floor(dragX);
                 entity.y =
-                    collisitonGrid || this.shiftKey.isDown
+                    collisitonGrid || this.shiftKey?.isDown
                         ? Math.floor(dragY / tileDim.height) * tileDim.height
                         : Math.floor(dragY);
                 entity.setDepth(entity.y + entity.displayHeight + depthOffset);
@@ -259,7 +259,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                     const oldPos = entity.getOldPosition();
                     entity.setPosition(oldPos.x, oldPos.y);
                 } else {
-                    if (this.ctrlKey.isDown) {
+                    if (this.ctrlKey?.isDown) {
                         this.copyEntity(entity);
                     } else {
                         const data: AtLeast<EntityData, "id"> = {

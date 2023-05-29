@@ -19,9 +19,9 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     private moved: boolean;
     private squareSelected: boolean;
 
-    private shiftKey: Phaser.Input.Keyboard.Key;
+    private shiftKey?: Phaser.Input.Keyboard.Key;
 
-    constructor(scene: Phaser.Scene, areaData: AreaData, shiftKey: Phaser.Input.Keyboard.Key) {
+    constructor(scene: Phaser.Scene, areaData: AreaData, shiftKey?: Phaser.Input.Keyboard.Key) {
         super(
             scene,
             areaData.x + areaData.width * 0.5,
@@ -177,7 +177,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         );
         this.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             if (pointer.isDown && this.selected && !this.squareSelected) {
-                if (this.shiftKey.isDown) {
+                if (this.shiftKey?.isDown) {
                     const topLeftX = Math.floor((dragX - this.displayWidth * 0.5) / 32) * 32;
                     const topLeftY = Math.floor((dragY - this.displayHeight * 0.5) / 32) * 32;
                     this.x = topLeftX + this.displayWidth * 0.5;
@@ -218,7 +218,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 const oldX = square.x;
                 const oldY = square.y;
 
-                if (this.shiftKey.isDown) {
+                if (this.shiftKey?.isDown) {
                     square.x = Math.floor(dragX / 32) * 32;
                     square.y = Math.floor(dragY / 32) * 32;
                 } else {
@@ -250,29 +250,29 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 } else {
                     switch (index) {
                         case Edge.TopLeft: {
-                            newWidth = this.getRightCenter().x - square.x;
-                            newHeight = this.getBottomCenter().y - square.y;
+                            newWidth = (this.getRightCenter().x ?? 0) - square.x;
+                            newHeight = (this.getBottomCenter().y ?? 0) - square.y;
                             newCenterX = square.x + newWidth * 0.5;
                             newCenterY = square.y + newHeight * 0.5;
                             break;
                         }
                         case Edge.TopRight: {
-                            newWidth = square.x - this.getLeftCenter().x;
-                            newHeight = this.getBottomCenter().y - square.y;
+                            newWidth = square.x - (this.getLeftCenter().x ?? 0);
+                            newHeight = (this.getBottomCenter().y ?? 0) - square.y;
                             newCenterX = square.x - newWidth * 0.5;
                             newCenterY = square.y + newHeight * 0.5;
                             break;
                         }
                         case Edge.BottomLeft: {
-                            newWidth = this.getRightCenter().x - square.x;
-                            newHeight = square.y - this.getTopCenter().y;
+                            newWidth = (this.getRightCenter().x ?? 0) - square.x;
+                            newHeight = square.y - (this.getTopCenter().y ?? 0);
                             newCenterX = square.x + newWidth * 0.5;
                             newCenterY = square.y - newHeight * 0.5;
                             break;
                         }
                         case Edge.BottomRight: {
-                            newWidth = square.x - this.getLeftCenter().x;
-                            newHeight = square.y - this.getTopCenter().y;
+                            newWidth = square.x - (this.getLeftCenter().x ?? 0);
+                            newHeight = square.y - (this.getTopCenter().y ?? 0);
                             newCenterX = square.x - newWidth * 0.5;
                             newCenterY = square.y - newHeight * 0.5;
                             break;
