@@ -402,7 +402,7 @@ export class GameScene extends DirtyScene {
                         this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
                         this.doLoadTMJFile(this.mapUrlFile);
                         this.entitiesCollectionsManager
-                            .loadCollections(this.wamFile.entityCollections)
+                            .loadCollections(this.wamFile.entityCollections.map((collectionUrl) => collectionUrl.url))
                             .catch((error) => console.warn(error));
                     }
                 )

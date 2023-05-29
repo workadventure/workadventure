@@ -25,6 +25,11 @@ export enum Direction {
     Right = "Right",
 }
 
+export const CollectionUrl = z.object({
+    url: z.string(),
+    type: z.union([z.literal("file"), z.literal("marketplace")]),
+});
+
 export const PropertyBase = z.object({
     id: z.string(),
     buttonLabel: z.string().optional(),
@@ -182,7 +187,7 @@ export const WAMFileFormat = z.object({
     mapUrl: z.string(),
     entities: z.array(WAMEntityData),
     areas: z.array(AreaData),
-    entityCollections: z.array(z.string()),
+    entityCollections: z.array(CollectionUrl),
     lastCommandId: z.string().optional(),
     settings: z
         .object({
@@ -208,6 +213,7 @@ export const MapsCacheFileFormat = z.object({
 export type EntityRawPrefab = z.infer<typeof EntityRawPrefab>;
 export type EntityPrefab = z.infer<typeof EntityPrefab>;
 export type EntityCollection = z.infer<typeof EntityCollection>;
+export type CollectionUrl = z.infer<typeof CollectionUrl>;
 export type EntityData = z.infer<typeof EntityData>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
 export type EntityDataProperty = z.infer<typeof EntityDataProperty>;
