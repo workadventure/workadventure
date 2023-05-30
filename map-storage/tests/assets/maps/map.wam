@@ -1,10 +1,10 @@
 {"version":"1.0.0","mapUrl":"./areas.tmj","areas":[],"entities":[], "entityCollections": [
     {
-        "url": "http://map-storage.workadventure.localhost/collections/FurnitureCollection.json",
+        "url": "http://play.workadventure.localhost/collections/FurnitureCollection.json",
         "type": "file"
     },
     {
-        "url": "http://map-storage.workadventure.localhost/collections/OfficeCollection.json",
+        "url": "http://play.workadventure.localhost/collections/OfficeCollection.json",
         "type": "file"
     }
 ] }

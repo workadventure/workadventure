@@ -179,17 +179,25 @@ const mapStorageServer: MapStorageServer = {
                 }
                 case "createEntityMessage": {
                     const message = editMapMessage.createEntityMessage;
-                    const entityPrefab = mapsManager.getEntityPrefab(message.collectionName, message.prefabId);
-                    if (!entityPrefab) {
-                        throw new Error(`CANNOT FIND PREFAB FOR: ${message.collectionName} ${message.prefabId}`);
-                    }
                     mapsManager.executeCommand(
                         mapKey,
                         {
                             type: "CreateEntityCommand",
                             entityData: {
                                 id: message.id,
-                                prefab: entityPrefab,
+                                // Mock Prefab is being used only on map-storage side where we do not have access to Entity Prefabs data.
+                                // Currently we are not validating anything against entityPrefab data so it is safe for now.
+                                prefab: {
+                                    id: message.prefabId,
+                                    collectionName: message.collectionName,
+                                    color: "mock",
+                                    direction: "Down",
+                                    imagePath: "",
+                                    name: "MockPrefab",
+                                    tags: ["mock"],
+                                    collisionGrid: [],
+                                    depthOffset: 0,
+                                },
                                 x: message.x,
                                 y: message.y,
                                 properties: message.properties as EntityDataProperties,

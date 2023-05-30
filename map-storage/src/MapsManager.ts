@@ -9,9 +9,6 @@ import {
     CreateEntityCommand,
     DeleteEntityCommand,
     UpdateWAMSettingCommand,
-    EntityCollection,
-    EntityPrefab,
-    EntityRawPrefab,
     WAMFileFormat,
 } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
@@ -19,14 +16,9 @@ import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import * as Sentry from "@sentry/node";
 import { fileSystem } from "./fileSystem";
 
-// TODO: dynamic imports?
-import furnitureCollection from "./../assets/collections/FurnitureCollection.json";
-import officeCollection from "./../assets/collections/OfficeCollection.json";
-
 class MapsManager {
     private loadedMaps: Map<string, GameMap>;
     private loadedMapsCommandsQueue: Map<string, EditMapCommandMessage[]>;
-    private loadedCollections: Map<string, EntityCollection>;
 
     private saveMapIntervals: Map<string, NodeJS.Timer>;
     private mapLastChangeTimestamp: Map<string, number>;
@@ -49,21 +41,6 @@ class MapsManager {
         this.loadedMapsCommandsQueue = new Map<string, EditMapCommandMessage[]>();
         this.saveMapIntervals = new Map<string, NodeJS.Timer>();
         this.mapLastChangeTimestamp = new Map<string, number>();
-
-        // TODO: Can we somehow remove this?
-        this.loadedCollections = new Map<string, EntityCollection>();
-
-        for (const collection of [furnitureCollection, officeCollection]) {
-            const parsedCollectionPrefabs: EntityPrefab[] = [];
-            for (const rawPrefab of collection.collection) {
-                parsedCollectionPrefabs.push(
-                    this.parseRawEntityPrefab(collection.collectionName, rawPrefab as EntityRawPrefab)
-                );
-            }
-            const parsedCollection: EntityCollection = structuredClone(collection) as EntityCollection;
-            parsedCollection.collection = parsedCollectionPrefabs;
-            this.loadedCollections.set(parsedCollection.collectionName, parsedCollection);
-        }
     }
 
     public executeCommand(mapKey: string, commandConfig: CommandConfig, commandId?: string): void {
@@ -149,10 +126,6 @@ class MapsManager {
         this.loadedMaps.set(key, new GameMap(this.getMockITiledMap(), wam));
     }
 
-    public getEntityPrefab(collectionName: string, entityId: string): EntityPrefab | undefined {
-        return this.loadedCollections.get(collectionName)?.collection.find((entity) => entity.id === entityId);
-    }
-
     public clearAfterUpload(key: string): void {
         console.log(`UPLOAD DETECTED. CLEAR CACHE FOR: ${key}`);
         this.loadedMaps.delete(key);
@@ -228,14 +201,6 @@ class MapsManager {
                 });
             }, intervalMS)
         );
-    }
-
-    private parseRawEntityPrefab(collectionName: string, rawPrefab: EntityRawPrefab): EntityPrefab {
-        return {
-            ...rawPrefab,
-            collectionName,
-            id: `${collectionName}:${rawPrefab.name}:${rawPrefab.color}:${rawPrefab.direction}`,
-        };
     }
 }
 

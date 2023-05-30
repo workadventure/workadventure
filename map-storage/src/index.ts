@@ -62,7 +62,6 @@ const app = express();
 // We need to trust the proxy in order to be able to bind the "X-Forwarded-Host" header to the hostname.
 app.set("trust proxy", true);
 app.use(cors());
-app.use(express.static("assets"));
 app.use(
     bodyParser.json({
         type: ["application/json", "application/json-patch+json"],

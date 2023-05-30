@@ -116,22 +116,4 @@ export class GameMapEntities {
         }
         return undefined;
     }
-
-    /**
-     * Mock Prefab is being used only on map-storage side where we do not have access to Entity Prefabs data.
-     * Currently we are not validating anything against entityPrefab data so it is safe for now.
-     */
-    private getMockPrefab(id: string): EntityPrefab {
-        return {
-            id,
-            collectionName: "MockCollection",
-            color: "mock",
-            direction: "Down",
-            imagePath: "",
-            name: "MockPrefab",
-            tags: ["mock"],
-            collisionGrid: [],
-            depthOffset: 0,
-        };
-    }
 }
