@@ -36,6 +36,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
                     return;
                 }
 
+                remotePlayer.setVariable(payloadData.key, payloadData.value);
                 const stream = sharedPlayersVariableStream.get(payloadData.key);
                 if (stream) {
                     stream.next({
@@ -43,7 +44,6 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
                         value: payloadData.value,
                     });
                 }
-                remotePlayer.setVariable(payloadData.key, payloadData.value);
             },
         }),
         apiCallback({
