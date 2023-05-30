@@ -1125,6 +1125,7 @@ export class SocketManager implements ZoneEventListener {
         if (space) {
             space.removeClientWatcher(client);
             space.removeUser(client.spaceUser.id);
+            client.spaces = client.spaces.filter((space) => space.name !== spaceName);
             this.deleteSpaceIfEmpty(space);
         }
     }

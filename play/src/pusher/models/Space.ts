@@ -186,7 +186,6 @@ export class Space implements CustomJsonReplacerInterface {
         this.localRemoveUser(userId);
     }
     public localRemoveUser(userId: number) {
-        console.log("Space => localRemoveUser", userId);
         const user = this.users.get(userId);
         if (user) {
             this.users.delete(userId);
