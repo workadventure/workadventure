@@ -7,6 +7,7 @@ describe("WAM Setting", () => {
         mapUrl: "testMapUrl",
         entities: [],
         areas: [],
+        entityCollections: [],
     };
     const commandConfig: UpdateWAMSettingCommandConfig = {
         type: "UpdateWAMSettingCommand",
