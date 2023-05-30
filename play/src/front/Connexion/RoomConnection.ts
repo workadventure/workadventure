@@ -371,10 +371,12 @@ export class RoomConnection implements RoomConnection {
                                 break;
                             }
                             case "addSpaceUserMessage": {
+                                console.log("addSpaceUserMessage received", subMessage.addSpaceUserMessage);
                                 this._addSpaceUserMessageStream.next(subMessage.addSpaceUserMessage);
                                 break;
                             }
                             case "updateSpaceUserMessage": {
+                                console.log("updateSpaceUserMessage received", subMessage.updateSpaceUserMessage);
                                 this._updateSpaceUserMessageStream.next(subMessage.updateSpaceUserMessage);
                                 break;
                             }
