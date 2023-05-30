@@ -182,69 +182,15 @@
                   ]
                 }
               },
-              "prefab": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "tags": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "imagePath": {
-                    "type": "string"
-                  },
-                  "direction": {
-                    "type": "string",
-                    "enum": [
-                      "Left",
-                      "Up",
-                      "Down",
-                      "Right"
-                    ]
-                  },
-                  "color": {
-                    "type": "string"
-                  },
-                  "collisionGrid": {
-                    "type": "array",
-                    "items": {
-                      "type": "array",
-                      "items": {
-                        "type": "number"
-                      }
-                    }
-                  },
-                  "depthOffset": {
-                    "type": "number"
-                  },
-                  "collectionName": {
-                    "type": "string"
-                  },
-                  "id": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "name",
-                  "tags",
-                  "imagePath",
-                  "direction",
-                  "color",
-                  "collectionName",
-                  "id"
-                ],
-                "additionalProperties": false
+              "prefabId": {
+                "type": "string"
               }
             },
             "required": [
               "id",
               "x",
               "y",
-              "prefab"
+              "prefabId"
             ],
             "additionalProperties": false
           }
@@ -377,6 +323,29 @@
             "additionalProperties": false
           }
         },
+        "entityCollections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "file",
+                  "marketplace"
+                ]
+              }
+            },
+            "required": [
+              "url",
+              "type"
+            ],
+            "additionalProperties": false
+          }
+        },
         "lastCommandId": {
           "type": "string"
         },
@@ -441,7 +410,8 @@
         "version",
         "mapUrl",
         "entities",
-        "areas"
+        "areas",
+        "entityCollections"
       ],
       "additionalProperties": false
     }
