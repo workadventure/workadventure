@@ -21,7 +21,7 @@
     let enabled: boolean = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.enabled ?? false;
     const oldRights: string[] = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.rights ?? [];
     let rights: Option[] = [];
-    let title: string = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.title ?? "";
+    let title: string = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.title ?? "MyMegaphone";
     let scope: string = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.scope ?? "WORLD";
     let scopes = [
         { value: "ROOM", label: $LL.mapEditor.settings.megaphone.inputs.room() },
