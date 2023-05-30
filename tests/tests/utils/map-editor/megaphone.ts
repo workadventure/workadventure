@@ -9,9 +9,9 @@ class Megaphone {
         await page.locator('.map-editor .configure-my-room input[type="checkbox"]').isChecked();
     }
 
-    async megaphoneInputNameSpace(page: Page) {
+    async megaphoneInputNameSpace(page: Page, name = 'MySpace') {
         await page.getByPlaceholder('MySpace').click();
-        await page.getByPlaceholder('MySpace').fill('Test');
+        await page.getByPlaceholder('MySpace').fill(name);
     }
 
     async megaphoneSelectScope(page: Page) {

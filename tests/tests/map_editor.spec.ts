@@ -32,6 +32,7 @@ test.describe('Map editor', () => {
 
     // Testing if no input is set, megaphone should not be usable but WA should not crash
     await Megaphone.megaphoneSave(page);
+    await Megaphone.megaphoneInputNameSpace(page, '');
     await Megaphone.isNotCorrectlySaved(page);
 
     await Megaphone.megaphoneInputNameSpace(page);
