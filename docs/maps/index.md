@@ -20,7 +20,7 @@ If you are looking to host your maps on your own webserver, be sure to read the 
 
 Start by [creating a GitHub account](https://github.com/join) if you don't already have one.
 
-Then, go to the [Github map starter kit repository page](https://github.com/thecodingmachine/workadventure-map-starter-kit) and click the **"Use this template"** button.
+Then, go to the [Github map starter kit repository page](https://github.com/workadventure/map-starter-kit) and click the **"Use this template"** button.
 
 <figure class="figure my-5">
     <img src="images/use_this_template.png" class="figure-img img-fluid rounded" alt="" style="width: 70%" />
