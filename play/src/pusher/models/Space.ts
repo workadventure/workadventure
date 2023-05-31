@@ -153,7 +153,6 @@ export class Space implements CustomJsonReplacerInterface {
             if (spaceUser.uuid) {
                 user.uuid = spaceUser.uuid;
             }
-            //this.users.set(spaceUser.uuid, user);
             debug(`${this.name} : user updated ${spaceUser.id}`);
 
             const subMessage: SubMessage = {
@@ -167,6 +166,8 @@ export class Space implements CustomJsonReplacerInterface {
                 },
             };
             this.notifyAll(subMessage, user, oldUser);
+        } else {
+            console.error("User not found in this space", spaceUser);
         }
     }
 

@@ -1,9 +1,9 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { ListenerMegaphonePropertyData } from "@workadventure/map-editor";
+    import { ListenerMegaphonePropertyData, SpeakerMegaphonePropertyData } from "@workadventure/map-editor";
     import { HeadphonesIcon } from "svelte-feather-icons";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: ListenerMegaphonePropertyData;
@@ -12,6 +12,27 @@
 
     function onValueChange() {
         dispatch("change");
+    }
+    function getSpeakerZoneNames() {
+        let areasName = new Map<string, string>();
+        gameManager
+            .getCurrentGameScene()
+            .getGameMap()
+            .getGameMapAreas()
+            ?.getAreas()
+            .forEach((area) => {
+                const speakerMegaphonePropertyRaw = area.properties?.find(
+                    (property) => property.type === "speakerMegaphone"
+                );
+                if (speakerMegaphonePropertyRaw) {
+                    const speakerMegaphoneProperty =
+                        SpeakerMegaphonePropertyData.safeParse(speakerMegaphonePropertyRaw);
+                    if (speakerMegaphoneProperty.success) {
+                        areasName.set(area.id, speakerMegaphoneProperty.data.name);
+                    }
+                }
+            });
+        return areasName;
     }
 </script>
 
@@ -25,17 +46,20 @@
         {$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
     </span>
     <span slot="content">
-        <div class="value-input">
-            <label for="tabLink">{$LL.mapEditor.properties.listenerMegaphoneProperties.nameLabel()}</label>
-            <input
-                id="tabLink"
-                type="text"
-                placeholder={$LL.mapEditor.properties.listenerMegaphoneProperties.namePlaceholder()}
+        <div>
+            <label class="tw-m-0" for="trigger"
+                >{$LL.mapEditor.properties.listenerMegaphoneProperties.nameLabel()}</label
+            >
+            <select
+                id="trigger"
+                class=" tw-m-0 tw-w-full"
                 bind:value={property.speakerZoneName}
                 on:change={onValueChange}
-                on:focus={onMapEditorInputFocus}
-                on:blur={onMapEditorInputUnfocus}
-            />
+            >
+                {#each [...getSpeakerZoneNames()] as [id, speakerZoneName]}
+                    <option value={id}>{speakerZoneName}</option>
+                {/each}
+            </select>
         </div>
     </span>
 </PropertyEditorBase>

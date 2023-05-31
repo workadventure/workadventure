@@ -263,6 +263,7 @@ export class SocketManager implements ZoneEventListener {
                     switch (message.message.$case) {
                         case "roomJoinedMessage": {
                             client.userId = message.message.roomJoinedMessage.currentUserId;
+                            client.spaceUser.id = message.message.roomJoinedMessage.currentUserId;
 
                             // If this is the first message sent, send back the viewport.
                             this.handleViewport(client, viewport);
