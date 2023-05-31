@@ -103,6 +103,13 @@ export class GameMapFrontWrapper {
      */
     private mapChangedSubject = new Subject<number[][]>();
 
+    /**
+     * HACK: We need to make sure we are using an existing Tile index in order to place it inside entitieCollisionLayer.
+     * This is needed since 3.60.0. For some reason, index of -1 value is no longer working properly with default collision system
+     * for tiles. To make it work as intended, we also need to make entitiesCollisionLayer invisible.
+     */
+    private readonly existingTileIndex;
+
     constructor(
         scene: GameScene,
         gameMap: GameMap,
@@ -112,6 +119,8 @@ export class GameMapFrontWrapper {
         this.scene = scene;
         this.gameMap = gameMap;
         this.phaserMap = phaserMap;
+
+        this.existingTileIndex = terrains.length > 0 ? terrains[0].firstgid : -1;
 
         let depth = -2;
         for (const layer of this.gameMap.flatLayers) {
@@ -152,7 +161,7 @@ export class GameMapFrontWrapper {
             throw new Error("Could not create collision layer");
         }
         this.entitiesCollisionLayer = phaserBlankCollisionsLayer;
-        this.entitiesCollisionLayer.setDepth(-2).setCollisionByProperty({ collides: true });
+        this.entitiesCollisionLayer.setDepth(-2).setCollisionByProperty({ collides: true }).setVisible(false);
 
         this.phaserLayers.push(this.entitiesCollisionLayer);
 
@@ -202,7 +211,11 @@ export class GameMapFrontWrapper {
             for (let x = 0; x < collisionGrid[y].length; x += 1) {
                 // add tiles
                 if (collisionGrid[y][x] === 1) {
-                    const tile = this.entitiesCollisionLayer.putTileAt(-1, coords.x + x, coords.y + y);
+                    const tile = this.entitiesCollisionLayer.putTileAt(
+                        this.existingTileIndex,
+                        coords.x + x,
+                        coords.y + y
+                    );
                     tile.properties["collides"] = true;
                     continue;
                 }
