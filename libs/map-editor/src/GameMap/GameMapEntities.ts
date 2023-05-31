@@ -107,7 +107,6 @@ export class GameMapEntities {
         prefabs?: Map<string, EntityPrefab>
     ): EntityData | undefined {
         const entityPrefab = prefabs?.get(wamEntityData.prefabId);
-        console.log(entityPrefab);
         if (entityPrefab) {
             return {
                 ...structuredClone(wamEntityData),

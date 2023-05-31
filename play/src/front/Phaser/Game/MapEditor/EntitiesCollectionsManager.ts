@@ -64,32 +64,34 @@ export class EntitiesCollectionsManager {
     }
 
     public async loadCollections(urls: string[]): Promise<void> {
+        const entityCollections: { collection: EntityCollection; url: string }[] = [];
         for (const url of urls) {
-            const entityCollections: EntityCollection[] = [];
-            entityCollections.push(this.parseRawCollection(await this.fetchRawCollection(url)));
-            for (const entityCollection of entityCollections) {
-                const tagSet = new Set<string>();
-                entityCollection.collection.forEach((entity: EntityPrefab) => {
-                    this.currentCollection.collection.push({
-                        name: entity.name,
-                        id: entity.id,
-                        collectionName: entity.collectionName,
-                        depthOffset: entity.depthOffset ?? 0,
-                        tags: [...entity.tags, ...entityCollection.tags],
-                        imagePath: new URL(entity.imagePath, url).toString(),
-                        direction: entity.direction,
-                        color: entity.color,
-                        collisionGrid: entity.collisionGrid,
-                    });
-                    entity.tags.forEach((tag: string) => tagSet.add(tag));
-                });
-
-                const tags = [...new Set([...tagSet, ...this.tags])];
-                tags.sort();
-                this.tags = tags;
-                this.entitiesPrefabs = this.currentCollection.collection;
-            }
+            entityCollections.push({ collection: this.parseRawCollection(await this.fetchRawCollection(url)), url });
         }
+
+        for (const { collection, url } of entityCollections) {
+            const tagSet = new Set<string>();
+            collection.collection.forEach((entity: EntityPrefab) => {
+                this.currentCollection.collection.push({
+                    name: entity.name,
+                    id: entity.id,
+                    collectionName: entity.collectionName,
+                    depthOffset: entity.depthOffset ?? 0,
+                    tags: [...entity.tags, ...collection.tags],
+                    imagePath: new URL(entity.imagePath, url).toString(),
+                    direction: entity.direction,
+                    color: entity.color,
+                    collisionGrid: entity.collisionGrid,
+                });
+                entity.tags.forEach((tag: string) => tagSet.add(tag));
+            });
+
+            const tags = [...new Set([...tagSet, ...this.tags])];
+            tags.sort();
+            this.tags = tags;
+            this.entitiesPrefabs = this.currentCollection.collection;
+        }
+
         for (const prefab of this.entitiesPrefabs) {
             this.entitiesPrefabsMap.set(prefab.id, prefab);
         }
