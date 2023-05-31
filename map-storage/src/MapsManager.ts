@@ -123,7 +123,11 @@ class MapsManager {
     }
 
     public loadWAMToMemory(key: string, wam: WAMFileFormat): void {
-        this.loadedMaps.set(key, new GameMap(this.getMockITiledMap(), wam));
+        const gameMap = new GameMap(this.getMockITiledMap(), wam);
+        gameMap.initialize().catch((err) => {
+            console.log(err);
+        });
+        this.loadedMaps.set(key, gameMap);
     }
 
     public clearAfterUpload(key: string): void {

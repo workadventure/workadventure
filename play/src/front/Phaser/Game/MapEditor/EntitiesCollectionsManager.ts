@@ -14,7 +14,7 @@ export interface EntityCollectionRaw {
 
 export class EntitiesCollectionsManager {
     private entitiesPrefabs: EntityPrefab[] = [];
-    private entitiesPrefabsMap: Map<string, EntityPrefab> = new Map<string, EntityPrefab>();
+    private entitiesPrefabsMapPromise!: Promise<Map<string, EntityPrefab>>;
     private tags: string[] = [];
 
     private filter = "";
@@ -26,8 +26,8 @@ export class EntitiesCollectionsManager {
         return this.entitiesPrefabs;
     }
 
-    public getEntitiesPrefabsMap(): Map<string, EntityPrefab> {
-        return this.entitiesPrefabsMap;
+    public getEntitiesPrefabsMap(): Promise<Map<string, EntityPrefab>> {
+        return this.entitiesPrefabsMapPromise;
     }
 
     public getEntityPrefab(collectionName: string, entityPrefabId: string): EntityPrefab | undefined {
@@ -63,38 +63,58 @@ export class EntitiesCollectionsManager {
         this.entitiesPrefabs = newCollection;
     }
 
-    public async loadCollections(urls: string[]): Promise<void> {
-        const entityCollections: { collection: EntityCollection; url: string }[] = [];
-        for (const url of urls) {
-            entityCollections.push({ collection: this.parseRawCollection(await this.fetchRawCollection(url)), url });
-        }
+    public loadCollections(urls: string[]): void {
+        this.entitiesPrefabsMapPromise = new Promise<Map<string, EntityPrefab>>((resolve, reject) => {
+            const entityCollections: { collection: EntityCollection; url: string }[] = [];
+            const fetchUrlPromises: Promise<EntityCollectionRaw>[] = [];
+            for (const url of urls) {
+                const promise = this.fetchRawCollection(url);
+                fetchUrlPromises.push(promise);
+                promise
+                    .then((entityCollectionRaw) => {
+                        entityCollections.push({
+                            collection: this.parseRawCollection(entityCollectionRaw),
+                            url,
+                        });
+                    })
+                    .catch((error) => console.error(error));
+            }
 
-        for (const { collection, url } of entityCollections) {
-            const tagSet = new Set<string>();
-            collection.collection.forEach((entity: EntityPrefab) => {
-                this.currentCollection.collection.push({
-                    name: entity.name,
-                    id: entity.id,
-                    collectionName: entity.collectionName,
-                    depthOffset: entity.depthOffset ?? 0,
-                    tags: [...entity.tags, ...collection.tags],
-                    imagePath: new URL(entity.imagePath, url).toString(),
-                    direction: entity.direction,
-                    color: entity.color,
-                    collisionGrid: entity.collisionGrid,
+            Promise.all(fetchUrlPromises)
+                .then(() => {
+                    for (const { collection, url } of entityCollections) {
+                        const tagSet = new Set<string>();
+                        collection.collection.forEach((entity: EntityPrefab) => {
+                            this.currentCollection.collection.push({
+                                name: entity.name,
+                                id: entity.id,
+                                collectionName: entity.collectionName,
+                                depthOffset: entity.depthOffset ?? 0,
+                                tags: [...entity.tags, ...collection.tags],
+                                imagePath: new URL(entity.imagePath, url).toString(),
+                                direction: entity.direction,
+                                color: entity.color,
+                                collisionGrid: entity.collisionGrid,
+                            });
+                            entity.tags.forEach((tag: string) => tagSet.add(tag));
+                        });
+
+                        const tags = [...new Set([...tagSet, ...this.tags])];
+                        tags.sort();
+                        this.tags = tags;
+                        this.entitiesPrefabs = this.currentCollection.collection;
+                    }
+
+                    const prefabsMap = new Map<string, EntityPrefab>();
+                    for (const prefab of this.entitiesPrefabs) {
+                        prefabsMap.set(prefab.id, prefab);
+                    }
+                    resolve(prefabsMap);
+                })
+                .catch((err) => {
+                    console.error(err);
                 });
-                entity.tags.forEach((tag: string) => tagSet.add(tag));
-            });
-
-            const tags = [...new Set([...tagSet, ...this.tags])];
-            tags.sort();
-            this.tags = tags;
-            this.entitiesPrefabs = this.currentCollection.collection;
-        }
-
-        for (const prefab of this.entitiesPrefabs) {
-            this.entitiesPrefabsMap.set(prefab.id, prefab);
-        }
+        });
     }
 
     public getTags(): string[] {

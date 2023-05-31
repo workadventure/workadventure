@@ -6,11 +6,14 @@ export class GameMapEntities {
 
     private entities: Map<string, EntityData> = new Map<string, EntityData>();
 
-    constructor(wam: WAMFileFormat, entitiesPrefabsMap?: Map<string, EntityPrefab>) {
+    constructor(wam: WAMFileFormat) {
         this.wam = wam;
+    }
 
+    public async initialize(entitiesPrefabsMapPromise: Promise<Map<string, EntityPrefab>>): Promise<void> {
+        const prefabsMap = await entitiesPrefabsMapPromise;
         for (const wamEntityData of this.wam.entities) {
-            const entityData = this.wamEntityDataToEntityData(wamEntityData, entitiesPrefabsMap);
+            const entityData = this.wamEntityDataToEntityData(wamEntityData, prefabsMap);
             if (entityData) {
                 this.addEntity(entityData, false);
             } else {

@@ -6,5 +6,17 @@
     {
         "url": "http://play.workadventure.localhost/collections/OfficeCollection.json",
         "type": "file"
+    },
+    {
+        "url": "https://limezu.workadventu.re/LimeZu_Modern_Exterior.json",
+        "type": "file"
+    },
+    {
+        "url": "https://limezu.workadventu.re/LimeZu_Modern_Interior.json",
+        "type": "file"
+    },
+    {
+        "url": "https://limezu.workadventu.re/LimeZu_Modern_Office.json",
+        "type": "file"
     }
 ] }

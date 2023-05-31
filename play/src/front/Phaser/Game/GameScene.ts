@@ -402,9 +402,9 @@ export class GameScene extends DirtyScene {
                         this.wamFile = WAMFileFormat.parse(wamFile);
                         this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
                         this.doLoadTMJFile(this.mapUrlFile);
-                        this.entitiesCollectionsManager
-                            .loadCollections(this.wamFile.entityCollections.map((collectionUrl) => collectionUrl.url))
-                            .catch((error) => console.warn(error));
+                        this.entitiesCollectionsManager.loadCollections(
+                            this.wamFile.entityCollections.map((collectionUrl) => collectionUrl.url)
+                        );
                     }
                 )
                 .catch((e) => {
@@ -616,9 +616,10 @@ export class GameScene extends DirtyScene {
         //add layer on map
         this.gameMapFrontWrapper = new GameMapFrontWrapper(
             this,
-            new GameMap(this.mapFile, this.wamFile, this.entitiesCollectionsManager.getEntitiesPrefabsMap()),
+            new GameMap(this.mapFile, this.wamFile),
             this.Map,
-            this.Terrains
+            this.Terrains,
+            this.entitiesCollectionsManager.getEntitiesPrefabsMap()
         );
         for (const layer of this.gameMapFrontWrapper.getFlatLayers()) {
             if (layer.type === "tilelayer") {
@@ -1969,13 +1970,10 @@ ${escapedMessage}
                             //Create a new GameMap with the changed file
                             this.gameMapFrontWrapper = new GameMapFrontWrapper(
                                 this,
-                                new GameMap(
-                                    this.mapFile,
-                                    this.wamFile,
-                                    this.entitiesCollectionsManager.getEntitiesPrefabsMap()
-                                ),
+                                new GameMap(this.mapFile, this.wamFile),
                                 this.Map,
-                                this.Terrains
+                                this.Terrains,
+                                this.entitiesCollectionsManager.getEntitiesPrefabsMap()
                             );
                             // Unsubscribe if needed and subscribe to GameMapChanged event again
                             this.subscribeToGameMapChanged();

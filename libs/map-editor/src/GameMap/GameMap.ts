@@ -39,16 +39,11 @@ export class GameMap {
 
     public hasStartTile = false;
 
-    public constructor(map: ITiledMap, wam?: WAMFileFormat, entitiesPrefabs?: Map<string, EntityPrefab>) {
+    public constructor(map: ITiledMap, wam?: WAMFileFormat) {
         this.map = upgradeMapToNewest(map);
         this.wam = wam; // upgrade if necessary
         this.flatLayers = flattenGroupLayersMap(this.map);
         this.tiledObjects = GameMap.getObjectsFromLayers(this.flatLayers);
-
-        if (this.wam) {
-            this.gameMapAreas = new GameMapAreas(this.wam);
-            this.gameMapEntities = new GameMapEntities(this.wam, entitiesPrefabs);
-        }
 
         for (const tileset of this.map.tilesets) {
             if ("tiles" in tileset) {
@@ -71,6 +66,16 @@ export class GameMap {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    public async initialize(entitiesPrefabsPromise?: Promise<Map<string, EntityPrefab>>): Promise<void> {
+        if (this.wam) {
+            this.gameMapAreas = new GameMapAreas(this.wam);
+            this.gameMapEntities = new GameMapEntities(this.wam);
+            if (entitiesPrefabsPromise) {
+                await this.gameMapEntities.initialize(entitiesPrefabsPromise);
             }
         }
     }
