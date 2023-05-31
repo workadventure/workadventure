@@ -401,7 +401,7 @@ export class AreasPropertiesListener {
 
     private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {
         if (property.name !== undefined) {
-            this.scene.broadcastService.joinSpace(property.name);
+            this.scene.broadcastService.joinSpace(property.name, false);
             isSpeakerStore.set(true);
             requestedMegaphoneStore.set(true);
         }
@@ -417,7 +417,7 @@ export class AreasPropertiesListener {
 
     private handleListenerMegaphonePropertyOnEnter(property: ListenerMegaphonePropertyData): void {
         if (property.speakerZoneName !== undefined) {
-            this.scene.broadcastService.joinSpace(property.speakerZoneName);
+            this.scene.broadcastService.joinSpace(property.speakerZoneName, false);
         }
     }
 

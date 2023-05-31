@@ -10,8 +10,9 @@ class Megaphone {
     }
 
     async megaphoneInputNameSpace(page: Page, name = 'MySpace') {
+        await page.getByPlaceholder('MySpace').focus();
         await page.getByPlaceholder('MySpace').click();
-        if(!!name === false){
+        if(name === ''){
             await page.getByPlaceholder('MySpace').press("Meta+A");
             await page.getByPlaceholder('MySpace').press("Backspace");
         } else {

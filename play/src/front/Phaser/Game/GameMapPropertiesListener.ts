@@ -471,7 +471,7 @@ export class GameMapPropertiesListener {
         }
         const speakerZone = place.properties.find((property) => property.name === GameMapProperties.SPEAKER_MEGAPHONE);
         if (speakerZone && speakerZone.type === "string" && speakerZone.value !== undefined) {
-            this.scene.broadcastService.joinSpace(speakerZone.value);
+            this.scene.broadcastService.joinSpace(speakerZone.value, false);
             isSpeakerStore.set(true);
             if (get(requestedCameraState) || get(requestedMicrophoneState)) {
                 requestedMegaphoneStore.set(true);
@@ -499,7 +499,7 @@ export class GameMapPropertiesListener {
             (property) => property.name === GameMapProperties.LISTENER_MEGAPHONE
         );
         if (listenerZone && listenerZone.type === "string" && listenerZone.value !== undefined) {
-            this.scene.broadcastService.joinSpace(listenerZone.value);
+            this.scene.broadcastService.joinSpace(listenerZone.value, false);
         }
     }
 

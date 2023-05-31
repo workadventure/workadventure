@@ -28,7 +28,8 @@ class BroadcastSpace extends Space {
         connection: RoomConnection,
         spaceName: string,
         spaceFilter: SpaceFilterMessage,
-        private broadcastService: BroadcastService
+        private broadcastService: BroadcastService,
+        public playSound: boolean
     ) {
         super(connection, spaceName, spaceFilter);
         this.unsubscribes.push(
@@ -121,10 +122,10 @@ export class BroadcastService {
         //libJitsiFactory.createConnection("jitsi.test.workadventu.re", "prosody.test.workadventu.re", "muc.prosody.test.workadventu.re").then((connection) => {
     }
 
-    public joinSpace(spaceName_: string) {
+    public joinSpace(spaceName_: string, playSound = true) {
         const spaceName = slugify(spaceName_);
         const spaceFilter = this.connection.emitWatchSpaceLiveStreaming(spaceName);
-        const broadcastSpace = new BroadcastSpace(this.connection, spaceName, spaceFilter, this);
+        const broadcastSpace = new BroadcastSpace(this.connection, spaceName, spaceFilter, this, playSound);
         this.broadcastSpaces.push(broadcastSpace);
         broadcastServiceLogger("BroadcastService => joinSpace", spaceName);
     }
@@ -166,7 +167,7 @@ export class BroadcastService {
 
         if (get(megaphoneEnabledStore)) {
             jitsiConference.broadcast(["video", "audio"]);
-        } else {
+        } else if (broadcastSpace.playSound) {
             gameManager.getCurrentGameScene().playSound("audio-megaphone");
         }
 
