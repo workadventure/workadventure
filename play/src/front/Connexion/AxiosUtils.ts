@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosRequestConfig } from "axios";
+import axios, { AxiosError, AxiosRequestConfig, isAxiosError } from "axios";
 import axiosRetry, { isNetworkOrIdempotentRequestError, exponentialDelay } from "axios-retry";
 import { get } from "svelte/store";
 import { errorStore } from "../Stores/ErrorStore";
@@ -44,7 +44,7 @@ axiosWithRetry.interceptors.response.use(
     },
     (error) => {
         // Do not clear error message if the status code is being retried.
-        if ((error.status >= 500 && error.status <= 599) || error.status === 429) {
+        if (isAxiosError(error) && error.status !== undefined && ((error.status >= 500 && error.status <= 599) || error.status === 429)) {
             return Promise.reject(error);
         }
 
