@@ -1,4 +1,4 @@
-import { AreaDataProperties, EntityPrefab, GameMapProperties } from "@workadventure/map-editor";
+import { AreaDataProperties, GameMapProperties } from "@workadventure/map-editor";
 import type { AreaChangeCallback, AreaData, GameMap } from "@workadventure/map-editor";
 import type {
     ITiledMap,
@@ -25,6 +25,7 @@ export type DynamicArea = {
     height: number;
     properties: { [key: string]: unknown };
 };
+import { EntitiesCollectionsManager } from "../MapEditor/EntitiesCollectionsManager";
 import { EntitiesManager } from "./EntitiesManager";
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 
@@ -114,7 +115,7 @@ export class GameMapFrontWrapper {
         gameMap: GameMap,
         phaserMap: Phaser.Tilemaps.Tilemap,
         terrains: Array<Phaser.Tilemaps.Tileset>,
-        entitiesPrefabsPromise: Promise<Map<string, EntityPrefab>>
+        entitiesCollectionsManager: EntitiesCollectionsManager
     ) {
         this.scene = scene;
         this.gameMap = gameMap;
@@ -124,17 +125,14 @@ export class GameMapFrontWrapper {
 
         this.entitiesManager = new EntitiesManager(this.scene, this);
 
-        this.gameMap
-            .initialize(entitiesPrefabsPromise)
-            .then(() => {
-                // Spawn first entities from WAM file on the map
-                for (const entityData of this.gameMap.getGameMapEntities()?.getEntities() ?? []) {
-                    this.entitiesManager.addEntity(entityData);
-                }
+        this.gameMap.initialize();
 
-                this.updateCollisionGrid(undefined, false);
-            })
-            .catch(() => {});
+        // Spawn first entities from WAM file on the map
+        for (const entityData of this.gameMap.getGameMapEntities()?.getEntities() ?? []) {
+            this.entitiesManager.addEntity(entityData).catch((e) => console.error(e));
+        }
+
+        this.updateCollisionGrid(undefined, false);
 
         let depth = -2;
         for (const layer of this.gameMap.flatLayers) {

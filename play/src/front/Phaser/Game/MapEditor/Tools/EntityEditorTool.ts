@@ -1,4 +1,4 @@
-import { AtLeast, CommandConfig, EntityData, EntityPrefab } from "@workadventure/map-editor";
+import { AtLeast, CommandConfig, EntityData, EntityPrefab, WAMEntityData } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { get, Unsubscriber } from "svelte/store";
 import {
@@ -115,10 +115,11 @@ export class EntityEditorTool extends MapEditorTool {
                 break;
             }
             case "CreateEntityCommand": {
-                this.handleEntityCreation(commandConfig.entityData);
+                this.handleEntityCreation(commandConfig.entityData).catch((e) => console.error(e));
                 break;
             }
             case "DeleteEntityCommand": {
+                console.log("Handle DeleteEntityCommand");
                 this.handleEntityDeletion(commandConfig.id);
                 break;
             }
@@ -134,44 +135,50 @@ export class EntityEditorTool extends MapEditorTool {
         const commandId = editMapCommandMessage.id;
         switch (editMapCommandMessage.editMapMessage?.message?.$case) {
             case "createEntityMessage": {
-                const data = editMapCommandMessage.editMapMessage?.message.createEntityMessage;
-                const entityPrefab = this.scene
-                    .getEntitiesCollectionsManager()
-                    .getEntityPrefab(data.collectionName, data.prefabId);
+                (async () => {
+                    const data = editMapCommandMessage.editMapMessage?.message.createEntityMessage;
+                    const entityPrefab = await this.scene
+                        .getEntitiesCollectionsManager()
+                        .getEntityPrefab(data.collectionName, data.prefabId);
 
-                if (!entityPrefab) {
-                    console.warn(`NO PREFAB WAS FOUND FOR: ${data.collectionName} ${data.prefabId}`);
-                    return;
-                }
+                    if (!entityPrefab) {
+                        console.warn(`NO PREFAB WAS FOUND FOR: ${data.collectionName} ${data.prefabId}`);
+                        return;
+                    }
 
-                TexturesHelper.loadEntityImage(this.scene, entityPrefab.imagePath, entityPrefab.imagePath)
-                    .then(() => {
-                        this.entitiesManager.getEntities().get(data.id)?.setTexture(entityPrefab.imagePath);
-                    })
-                    .catch((reason) => {
-                        console.warn(reason);
-                    });
+                    TexturesHelper.loadEntityImage(this.scene, entityPrefab.imagePath, entityPrefab.imagePath)
+                        .then(() => {
+                            this.entitiesManager.getEntities().get(data.id)?.setTexture(entityPrefab.imagePath);
+                        })
+                        .catch((reason) => {
+                            console.warn(reason);
+                        });
 
-                const entityData: EntityData = {
-                    x: data.x,
-                    y: data.y,
-                    id: data.id,
-                    prefab: entityPrefab,
-                    properties: data.properties,
-                };
-                // execute command locally
-                this.mapEditorModeManager.executeCommand(
-                    {
-                        type: "CreateEntityCommand",
-                        entityData,
-                    },
-                    false,
-                    false,
-                    commandId
-                );
+                    const entityData: WAMEntityData = {
+                        x: data.x,
+                        y: data.y,
+                        id: data.id,
+                        prefabRef: {
+                            id: entityPrefab.id,
+                            collectionName: entityPrefab.collectionName,
+                        },
+                        properties: data.properties,
+                    };
+                    // execute command locally
+                    this.mapEditorModeManager.executeCommand(
+                        {
+                            type: "CreateEntityCommand",
+                            entityData,
+                        },
+                        false,
+                        false,
+                        commandId
+                    );
+                })().catch((e) => console.error(e));
                 break;
             }
             case "deleteEntityMessage": {
+                console.log("Handle deleteEntityMessage");
                 const id = editMapCommandMessage.editMapMessage?.message.deleteEntityMessage.id;
                 this.mapEditorModeManager.executeCommand(
                     {
@@ -214,8 +221,9 @@ export class EntityEditorTool extends MapEditorTool {
         this.scene.markDirty();
     }
 
-    private handleEntityCreation(config: EntityData): void {
-        this.entitiesManager.addEntity(structuredClone(config), undefined, true);
+    private async handleEntityCreation(config: WAMEntityData): Promise<void> {
+        await this.entitiesManager.addEntity(structuredClone(config), undefined, true);
+        return;
     }
 
     private handleEntityDeletion(id: string): void {
@@ -315,11 +323,11 @@ export class EntityEditorTool extends MapEditorTool {
             if (!CopyEntityEventData.parse(data)) {
                 return;
             }
-            const entityData: EntityData = {
+            const entityData: WAMEntityData = {
                 x: data.position.x,
                 y: data.position.y,
                 id: crypto.randomUUID(),
-                prefab: data.prefab,
+                prefabRef: data.prefabRef,
                 properties: data.properties ?? [],
             };
             this.mapEditorModeManager.executeCommand({
@@ -418,11 +426,11 @@ export class EntityEditorTool extends MapEditorTool {
             y = Math.floor(pointer.worldY / 32) * 32 + offsets.y;
         }
 
-        const entityData: EntityData = {
+        const entityData: WAMEntityData = {
             x: x - this.entityPrefabPreview.displayWidth * 0.5,
             y: y - this.entityPrefabPreview.displayHeight * 0.5,
             id: crypto.randomUUID(),
-            prefab: this.entityPrefab,
+            prefabRef: this.entityPrefab,
             properties: get(mapEditorCopiedEntityDataPropertiesStore) ?? [],
         };
         this.mapEditorModeManager.executeCommand({

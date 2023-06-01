@@ -1,15 +1,15 @@
-import type { EntityData } from "../../types";
 import type { GameMap } from "../../GameMap/GameMap";
 import { Command } from "../Command";
+import { WAMEntityData } from "../../types";
 import type { DeleteEntityCommandConfig } from "./DeleteEntityCommand";
 
 export interface CreateEntityCommandConfig {
     type: "CreateEntityCommand";
-    entityData: EntityData;
+    entityData: WAMEntityData;
 }
 
 export class CreateEntityCommand extends Command {
-    private entityData: EntityData;
+    private entityData: WAMEntityData;
 
     private gameMap: GameMap;
 

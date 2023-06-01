@@ -128,6 +128,11 @@ export const EntityPrefab = EntityRawPrefab.extend({
     id: z.string(),
 });
 
+export const EntityPrefabRef = z.object({
+    collectionName: z.string(),
+    id: z.string(),
+});
+
 export const EntityCollection = z.object({
     collectionName: z.string(),
     tags: z.array(z.string()),
@@ -140,10 +145,11 @@ export const EntityData = z.object({
     y: z.number(),
     name: z.string().optional(),
     properties: EntityDataProperties.optional(),
-    prefab: EntityPrefab,
+    prefab: EntityRawPrefab,
+    prefabRef: EntityPrefabRef,
 });
 
-export const WAMEntityData = EntityData.omit({ prefab: true }).extend({ prefabId: z.string() });
+export const WAMEntityData = EntityData.omit({ prefab: true });
 export type WAMEntityData = z.infer<typeof WAMEntityData>;
 
 export const WAMMetadata = z.object({

@@ -153,6 +153,9 @@ export class MapEditorModeManager {
             // We do an execution instantly so there will be no lag from user's perspective
             const executedCommandConfig = command.execute();
 
+            // FIXME: in case of delete, command.execute removes the ID BEFORE handleCommandExecutionByTools is triggered. That's bad.
+            // TODO: maybe the tools should be passed in parameter of the command being created.
+
             // do any necessary changes for active tool interface
             this.handleCommandExecutionByTools(executedCommandConfig, emitMapEditorUpdate);
 

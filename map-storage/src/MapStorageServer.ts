@@ -185,18 +185,9 @@ const mapStorageServer: MapStorageServer = {
                             type: "CreateEntityCommand",
                             entityData: {
                                 id: message.id,
-                                // Mock Prefab is being used only on map-storage side where we do not have access to Entity Prefabs data.
-                                // Currently we are not validating anything against entityPrefab data so it is safe for now.
-                                prefab: {
+                                prefabRef: {
                                     id: message.prefabId,
                                     collectionName: message.collectionName,
-                                    color: "mock",
-                                    direction: "Down",
-                                    imagePath: "",
-                                    name: "MockPrefab",
-                                    tags: ["mock"],
-                                    collisionGrid: [],
-                                    depthOffset: 0,
                                 },
                                 x: message.x,
                                 y: message.y,

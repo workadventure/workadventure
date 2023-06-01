@@ -399,7 +399,25 @@ export class GameScene extends DirtyScene {
                     undefined,
                     undefined,
                     (key: string, type: string, wamFile: unknown) => {
-                        this.wamFile = WAMFileFormat.parse(wamFile);
+                        const wamFileResult = WAMFileFormat.safeParse(wamFile);
+                        if (!wamFileResult.success) {
+                            this.loader.removeLoader();
+                            errorScreenStore.setError(
+                                ErrorScreenMessage.fromPartial({
+                                    type: "error",
+                                    code: "WAM_FORMAT_ERROR",
+                                    title: "Format error",
+                                    subtitle: "Invalid format while loading a WAM file",
+                                    details: wamFileResult.error.toString(),
+                                })
+                            );
+                            this.cleanupClosingScene();
+
+                            this.scene.stop(this.scene.key);
+                            this.scene.remove(this.scene.key);
+                            return;
+                        }
+                        this.wamFile = wamFileResult.data;
                         this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
                         this.doLoadTMJFile(this.mapUrlFile);
                         this.entitiesCollectionsManager.loadCollections(
@@ -409,6 +427,7 @@ export class GameScene extends DirtyScene {
                 )
                 .catch((e) => {
                     console.error(e);
+                    throw e;
                 });
         } else {
             this.doLoadTMJFile(this.mapUrlFile);
@@ -619,7 +638,7 @@ export class GameScene extends DirtyScene {
             new GameMap(this.mapFile, this.wamFile),
             this.Map,
             this.Terrains,
-            this.entitiesCollectionsManager.getEntitiesPrefabsMap()
+            this.entitiesCollectionsManager
         );
         for (const layer of this.gameMapFrontWrapper.getFlatLayers()) {
             if (layer.type === "tilelayer") {

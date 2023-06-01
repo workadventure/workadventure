@@ -124,9 +124,7 @@ class MapsManager {
 
     public loadWAMToMemory(key: string, wam: WAMFileFormat): void {
         const gameMap = new GameMap(this.getMockITiledMap(), wam);
-        gameMap.initialize().catch((err) => {
-            console.log(err);
-        });
+        gameMap.initialize();
         this.loadedMaps.set(key, gameMap);
     }
 
