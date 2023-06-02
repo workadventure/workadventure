@@ -1,7 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { ListenerMegaphonePropertyData, SpeakerMegaphonePropertyData } from "@workadventure/map-editor";
-    import { HeadphonesIcon } from "svelte-feather-icons";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
@@ -42,7 +41,11 @@
     }}
 >
     <span slot="header" class="tw-flex tw-justify-center tw-items-center">
-        <HeadphonesIcon class="tw-w-6 tw-mr-1" />
+        <img
+            class="tw-w-6 tw-mr-1"
+            src="resources/icons/icon_listener.png"
+            alt={$LL.mapEditor.properties.listenerMegaphoneProperties.description()}
+        />
         {$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
     </span>
     <span slot="content">

@@ -316,6 +316,13 @@ export class GameScene extends DirtyScene {
         this.load.image("iconStatusIndicatorInside", "/resources/icons/icon_status_indicator_inside.png");
         this.load.image("iconStatusIndicatorOutline", "/resources/icons/icon_status_indicator_outline.png");
 
+        this.load.image("iconFocus", "/resources/icons/icon_focus.png");
+        this.load.image("iconLink", "/resources/icons/icon_link.png");
+        this.load.image("iconListenerMegaphone", "/resources/icons/icon_listener.png");
+        this.load.image("iconSpeakerMegaphone", "/resources/icons/icon_speaker.png");
+        this.load.image("iconSilent", "/resources/icons/icon_silent.png");
+        this.load.image("iconMeeting", "/resources/icons/icon_meeting.png");
+
         if (touchScreenManager.supportTouchScreen) {
             this.load.image(joystickBaseKey, joystickBaseImg);
             this.load.image(joystickThumbKey, joystickThumbImg);

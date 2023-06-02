@@ -1,5 +1,6 @@
 import type { AreaData, AreaDataProperties, AreaDataProperty, AtLeast } from "@workadventure/map-editor";
 import _ from "lodash";
+import { GameObjects } from "phaser";
 import { GameScene } from "../../Game/GameScene";
 import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
 
@@ -20,6 +21,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     private squareSelected: boolean;
 
     private shiftKey?: Phaser.Input.Keyboard.Key;
+    private propertiesIcon: GameObjects.Image[] = [];
 
     constructor(scene: Phaser.Scene, areaData: AreaData, shiftKey?: Phaser.Input.Keyboard.Key) {
         super(
@@ -86,8 +88,13 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         this.showSizeAlteringSquares(value);
     }
 
+    private showPropertiesIcon(value: boolean) {
+        this.propertiesIcon.forEach((icon: GameObjects.Image) => icon.setVisible(value));
+    }
+
     public setVisible(value: boolean): this {
         this.visible = value;
+        this.showPropertiesIcon(value);
         if (!value) {
             this.showSizeAlteringSquares(false);
         }
@@ -96,8 +103,36 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
 
     public updatePreview(dataToModify: AtLeast<AreaData, "id">): void {
         _.merge(this.areaData, dataToModify);
+        //let lastColor = null;
         if (dataToModify.properties !== undefined) {
             this.areaData.properties = dataToModify.properties;
+
+            this.propertiesIcon.forEach((icon: GameObjects.Image) => icon.destroy());
+            let counter = 0;
+            for (const property of this.areaData.properties) {
+                const iconProperties = this.getPropertyIcons(property.type);
+
+                const icon = new GameObjects.Image(
+                    this.scene,
+                    (this.getTopLeft().x ?? 0) + 10 + counter * 15,
+                    (this.getTopLeft().y ?? 0) + 10,
+                    `icon${iconProperties.name}`
+                );
+                icon.setScale(0.12);
+                icon.setDepth(this.depth + 1);
+                icon.setVisible(true);
+                this.scene.add.existing(icon);
+                this.propertiesIcon.push(icon);
+
+                /*
+                const color: string = lastColor ? colorMixer(lastColor, iconProperties.color, 0.5) : iconProperties.color;
+                lastColor = color;
+                this.setFillStyle(Phaser.Display.Color.ValueToColor(color).color, 0.75);
+                 */
+                this.setFillStyle(Phaser.Display.Color.ValueToColor(iconProperties.color).color, 0.75);
+
+                counter++;
+            }
         }
         this.x = this.areaData.x + this.areaData.width * 0.5;
         this.y = this.areaData.y + this.areaData.height * 0.5;
@@ -348,5 +383,50 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
 
     public getId(): string {
         return this.areaData.id;
+    }
+
+    private getPropertyIcons(name: string) {
+        switch (name) {
+            case "focusable":
+                return {
+                    name: "Focus",
+                    color: "00F0B5",
+                };
+            case "speakerMegaphone":
+                return {
+                    name: "SpeakerMegaphone",
+                    color: "ff9f45",
+                };
+            case "listenerMegaphone":
+                return {
+                    name: "ListenerMegaphone",
+                    color: "EEEBD0",
+                };
+            case "jitsiRoomProperty":
+                return {
+                    name: "Meeting",
+                    color: "86BBD8",
+                };
+            case "openWebsite":
+                return {
+                    name: "Link",
+                    color: "758E4F",
+                };
+            case "playAudio":
+                return {
+                    name: "Link",
+                    color: "31AFD4",
+                };
+            case "silent":
+                return {
+                    name: "Silent",
+                    color: "FF5A5F",
+                };
+            default:
+                return {
+                    name: "",
+                    color: "FFFFFF",
+                };
+        }
     }
 }

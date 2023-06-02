@@ -4,7 +4,6 @@
     import { OpenWebsitePropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
-    import webSvg from "../../images/web-white.svg";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: OpenWebsitePropertyData;
@@ -51,7 +50,11 @@
     }}
 >
     <span slot="header" class="tw-flex tw-justify-center tw-items-center">
-        <img class="tw-w-6 tw-mr-1" src={webSvg} alt={$LL.mapEditor.properties.linkProperties.description()} />
+        <img
+            class="tw-w-6 tw-mr-1"
+            src="resources/icons/icon_link.png"
+            alt={$LL.mapEditor.properties.linkProperties.description()}
+        />
         {$LL.mapEditor.properties.linkProperties.label()}
     </span>
     <span slot="content">

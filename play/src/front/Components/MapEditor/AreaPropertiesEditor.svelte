@@ -1,16 +1,13 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
     import { AreaDataProperty, AreaDataPropertiesKeys, AreaDataProperties } from "@workadventure/map-editor";
-    import { HeadphonesIcon, SpeakerIcon, LinkIcon, MicOffIcon } from "svelte-feather-icons";
     import { LL } from "../../../i18n/i18n-svelte";
     import {
         mapEditorSelectedAreaPreviewStore,
         onMapEditorInputFocus,
         onMapEditorInputUnfocus,
     } from "../../Stores/MapEditorStore";
-    import visioSvg from "../images/visio-white.svg";
     import audioSvg from "../images/audio-white.svg";
-    import focusSvg from "../images/focus-white.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
@@ -149,7 +146,7 @@
             <AddPropertyButton
                 headerText={$LL.mapEditor.properties.focusableProperties.label()}
                 descriptionText={$LL.mapEditor.properties.focusableProperties.description()}
-                img={focusSvg}
+                img={"resources/icons/icon_focus.png"}
                 style="z-index: 5;"
                 on:click={() => {
                     onAddProperty("focusable");
@@ -160,7 +157,7 @@
             <AddPropertyButton
                 headerText={$LL.mapEditor.properties.silentProperty.label()}
                 descriptionText={$LL.mapEditor.properties.silentProperty.description()}
-                img={MicOffIcon}
+                img={"resources/icons/icon_silent.png"}
                 style="z-index: 4;"
                 on:click={() => {
                     onAddProperty("silent");
@@ -171,7 +168,7 @@
             <AddPropertyButton
                 headerText={$LL.mapEditor.properties.jitsiProperties.label()}
                 descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
-                img={visioSvg}
+                img={"resources/icons/icon_meeting.png"}
                 style="z-index: 3;"
                 on:click={() => {
                     onAddProperty("jitsiRoomProperty");
@@ -182,7 +179,7 @@
             <AddPropertyButton
                 headerText={$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
                 descriptionText={$LL.mapEditor.properties.speakerMegaphoneProperties.description()}
-                img={SpeakerIcon}
+                img={"resources/icons/icon_speaker.png"}
                 style="z-index: 3;"
                 on:click={() => {
                     onAddProperty("speakerMegaphone");
@@ -193,7 +190,7 @@
             <AddPropertyButton
                 headerText={$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
                 descriptionText={$LL.mapEditor.properties.listenerMegaphoneProperties.description()}
-                img={HeadphonesIcon}
+                img={"resources/icons/icon_listener.png"}
                 style="z-index: 3;"
                 on:click={() => {
                     onAddProperty("listenerMegaphone");
@@ -212,14 +209,14 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.linkProperties.label()}
             descriptionText={$LL.mapEditor.properties.linkProperties.description()}
-            img={LinkIcon}
+            img={"resources/icons/icon_link.png"}
             style="z-index: 1;"
             on:click={() => {
                 onAddProperty("openWebsite");
             }}
         />
     </div>
-    <div class="area-name-container">
+    <div class="area-name-container" style="display: none;">
         <label for="objectName">Area name</label>
         <input
             id="objectName"
