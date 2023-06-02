@@ -13,8 +13,10 @@ class Megaphone {
         await page.getByPlaceholder('MySpace').focus();
         await page.getByPlaceholder('MySpace').click();
         if(name === ''){
-            await page.getByPlaceholder('MySpace').press("Meta+A");
-            await page.getByPlaceholder('MySpace').press("Backspace");
+            const count = (await page.getByPlaceholder('MySpace').inputValue()).length;
+            for(let i = 0; i < count; i++) {
+                await page.getByPlaceholder('MySpace').press("Backspace");
+            }
         } else {
             await page.getByPlaceholder('MySpace').fill(name);
         }
