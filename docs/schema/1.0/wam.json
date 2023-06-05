@@ -182,15 +182,28 @@
                   ]
                 }
               },
-              "prefabId": {
-                "type": "string"
+              "prefabRef": {
+                "type": "object",
+                "properties": {
+                  "collectionName": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "collectionName",
+                  "id"
+                ],
+                "additionalProperties": false
               }
             },
             "required": [
               "id",
               "x",
               "y",
-              "prefabId"
+              "prefabRef"
             ],
             "additionalProperties": false
           }

@@ -1101,12 +1101,17 @@ export class GameRoom implements BrothersFinder {
                     emitError(user.socket, err);
                     return;
                 }
-                if (editMapCommandMessage.editMapMessage?.message?.$case === "updateMegaphoneSettingMessage") {
+                if (editMapCommandMessage.editMapMessage?.message?.$case === "updateWAMSettingsMessage") {
                     if (!this._wamSettings) {
                         this._wamSettings = {};
                     }
-                    this._wamSettings.megaphone =
-                        editMapCommandMessage.editMapMessage.message.updateMegaphoneSettingMessage;
+                    if (
+                        editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message?.$case ===
+                        "updateMegaphoneSettingMessage"
+                    ) {
+                        this._wamSettings.megaphone =
+                            editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message.updateMegaphoneSettingMessage;
+                    }
                 }
                 this.dispatchRoomMessage({
                     message: {

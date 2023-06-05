@@ -1,16 +1,4 @@
-import {
-    Command,
-    CommandConfig,
-    GameMap,
-    UpdateAreaCommand,
-    DeleteAreaCommand,
-    UpdateEntityCommand,
-    CreateAreaCommand,
-    CreateEntityCommand,
-    DeleteEntityCommand,
-    UpdateWAMSettingCommand,
-    WAMFileFormat,
-} from "@workadventure/map-editor";
+import { Command, GameMap, WAMFileFormat } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import * as Sentry from "@sentry/node";
@@ -43,7 +31,7 @@ class MapsManager {
         this.mapLastChangeTimestamp = new Map<string, number>();
     }
 
-    public executeCommand(mapKey: string, commandConfig: CommandConfig, commandId?: string): void {
+    public async executeCommand(mapKey: string, command: Command): Promise<void> {
         const gameMap = this.getGameMap(mapKey);
         if (!gameMap) {
             throw new Error('Could not find GameMap with key "' + mapKey + '"');
@@ -52,52 +40,7 @@ class MapsManager {
         if (!this.saveMapIntervals.has(mapKey)) {
             this.startSavingMapInterval(mapKey, this.AUTO_SAVE_INTERVAL_MS);
         }
-        let command: Command | undefined;
-        switch (commandConfig.type) {
-            case "UpdateAreaCommand": {
-                command = new UpdateAreaCommand(gameMap, commandConfig, commandId);
-                command.execute();
-                break;
-            }
-            case "CreateAreaCommand": {
-                command = new CreateAreaCommand(gameMap, commandConfig, commandId);
-                command.execute();
-                break;
-            }
-            case "DeleteAreaCommand": {
-                command = new DeleteAreaCommand(gameMap, commandConfig, commandId);
-                command.execute();
-                break;
-            }
-            case "UpdateEntityCommand": {
-                command = new UpdateEntityCommand(gameMap, commandConfig, commandId);
-                command.execute();
-                break;
-            }
-            case "CreateEntityCommand": {
-                command = new CreateEntityCommand(gameMap, commandConfig, commandId);
-                command.execute();
-                break;
-            }
-            case "DeleteEntityCommand": {
-                command = new DeleteEntityCommand(gameMap, commandConfig, commandId);
-                command.execute();
-                break;
-            }
-            case "UpdateWAMSettingCommand": {
-                const wam = gameMap.getWam();
-                if (!wam) {
-                    throw new Error("WAM is not defined");
-                }
-                command = new UpdateWAMSettingCommand(wam, commandConfig, commandId);
-                command.execute();
-                break;
-            }
-            default: {
-                const _exhaustiveCheck: never = commandConfig;
-                break;
-            }
-        }
+        await command.execute();
     }
 
     public getCommandsNewerThan(mapKey: string, commandId: string): EditMapCommandMessage[] {

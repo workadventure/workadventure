@@ -130,7 +130,13 @@ message EditMapMessage {
     ModifyEntityMessage modifyEntityMessage = 4;
     CreateEntityMessage createEntityMessage = 5;
     DeleteEntityMessage deleteEntityMessage = 6;
-    UpdateMegaphoneSettingMessage updateMegaphoneSettingMessage = 7;
+    UpdateWAMSettingsMessage updateWAMSettingsMessage = 7;
+  }
+}
+
+message UpdateWAMSettingsMessage {
+  oneof message {
+    UpdateMegaphoneSettingMessage updateMegaphoneSettingMessage = 1;
   }
 }
 

@@ -1,8 +1,8 @@
-import { CommandConfig } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { GameScene } from "../../GameScene";
 import { MapEditorModeManager } from "../MapEditorModeManager";
+import { UpdateWAMSettingFrontCommand } from "../Commands/WAM/UpdateWAMSettingFrontCommand";
 import { MapEditorTool } from "./MapEditorTool";
 
 export class WAMSettingsEditorTool extends MapEditorTool {
@@ -34,22 +34,25 @@ export class WAMSettingsEditorTool extends MapEditorTool {
         console.log("WAMSettingsEditorTool handleKeyDownEvent");
     }
     /**
-     * Perform actions needed to see the changes instantly
-     */
-    public handleCommandExecution(commandConfig: CommandConfig, localCommand: boolean): void {
-        console.log("WAMSettingsEditorTool handleCommandExecution");
-    }
-    /**
      * React on commands coming from the outside
      */
-    public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): void {
-        console.log("WAMSettingsEditorTool handleIncomingCommandMessage");
-        if (editMapCommandMessage.editMapMessage?.message?.$case === "updateMegaphoneSettingMessage") {
-            if (this.scene.wamFile.settings === undefined) {
-                this.scene.wamFile.settings = {};
+    public async handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
+        const commandId = editMapCommandMessage.id;
+        if (editMapCommandMessage.editMapMessage?.message?.$case === "updateWAMSettingsMessage") {
+            const data = editMapCommandMessage.editMapMessage?.message.updateWAMSettingsMessage;
+
+            const wam = this.scene.getGameMap().getWam();
+            if (wam === undefined) {
+                throw new Error("WAM file is undefined");
             }
-            this.scene.wamFile.settings.megaphone =
-                editMapCommandMessage.editMapMessage.message.updateMegaphoneSettingMessage;
+
+            // execute command locally
+            await this.mapEditorModeManager.executeCommand(
+                new UpdateWAMSettingFrontCommand(wam, data, commandId),
+                false,
+                false
+            );
         }
+        return Promise.resolve();
     }
 }

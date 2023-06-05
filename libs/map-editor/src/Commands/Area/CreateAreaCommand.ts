@@ -1,35 +1,22 @@
 import type { AreaData } from "../../types";
 import type { GameMap } from "../../GameMap/GameMap";
 import { Command } from "../Command";
-import type { DeleteAreaCommandConfig } from "./DeleteAreaCommand";
-
-export interface CreateAreaCommandConfig {
-    type: "CreateAreaCommand";
-    areaObjectConfig: AreaData;
-}
 
 export class CreateAreaCommand extends Command {
-    private readonly areaConfig: AreaData;
+    protected readonly areaConfig: AreaData;
 
-    private gameMap: GameMap;
+    protected gameMap: GameMap;
 
-    constructor(gameMap: GameMap, config: CreateAreaCommandConfig, commandId?: string) {
+    constructor(gameMap: GameMap, areaObjectConfig: AreaData, commandId?: string) {
         super(commandId);
         this.gameMap = gameMap;
-        this.areaConfig = structuredClone<AreaData>(config.areaObjectConfig);
+        this.areaConfig = structuredClone<AreaData>(areaObjectConfig);
     }
 
-    public execute(): CreateAreaCommandConfig {
+    public execute(): Promise<void> {
         if (!this.gameMap.getGameMapAreas()?.addArea(this.areaConfig)) {
             throw new Error(`MapEditorError: Could not execute CreateArea Command. Area ID: ${this.areaConfig.id}`);
         }
-        return { type: "CreateAreaCommand", areaObjectConfig: this.areaConfig };
-    }
-
-    public undo(): DeleteAreaCommandConfig {
-        if (!this.gameMap.getGameMapAreas()?.deleteArea(this.areaConfig.id)) {
-            throw new Error(`MapEditorError: Could not undo CreateArea Command. Area ID: ${this.areaConfig.id}`);
-        }
-        return { type: "DeleteAreaCommand", id: this.areaConfig.id };
+        return Promise.resolve();
     }
 }

@@ -637,9 +637,9 @@ export class GameScene extends DirtyScene {
             this,
             new GameMap(this.mapFile, this.wamFile),
             this.Map,
-            this.Terrains,
-            this.entitiesCollectionsManager
+            this.Terrains
         );
+        const entitiesInitializedPromise = this.gameMapFrontWrapper.initialize();
         for (const layer of this.gameMapFrontWrapper.getFlatLayers()) {
             if (layer.type === "tilelayer") {
                 const exitSceneUrl = this.getExitSceneUrl(layer);
@@ -847,6 +847,7 @@ export class GameScene extends DirtyScene {
             this.connectionAnswerPromiseDeferred.promise as Promise<unknown>,
             ...scriptPromises,
             this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
+            entitiesInitializedPromise,
         ])
             .then(() => {
                 this.hide(false);
@@ -892,12 +893,12 @@ export class GameScene extends DirtyScene {
                 get(availabilityStatusStore),
                 this.getGameMap().getLastCommandId()
             )
-            .then((onConnect: OnConnectInterface) => {
+            .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
                 const commandsToApply = onConnect.room.commandsToApply;
                 if (commandsToApply) {
-                    this.mapEditorModeManager?.updateMapToNewest(commandsToApply);
+                    await this.mapEditorModeManager?.updateMapToNewest(commandsToApply);
                 }
 
                 this.tryOpenMapEditorWithToolEditorParameter();
@@ -1991,8 +1992,7 @@ ${escapedMessage}
                                 this,
                                 new GameMap(this.mapFile, this.wamFile),
                                 this.Map,
-                                this.Terrains,
-                                this.entitiesCollectionsManager.getEntitiesPrefabsMap()
+                                this.Terrains
                             );
                             // Unsubscribe if needed and subscribe to GameMapChanged event again
                             this.subscribeToGameMapChanged();
