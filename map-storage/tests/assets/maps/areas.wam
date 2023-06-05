@@ -1,4 +1,4 @@
-{"version":"1.0.0","mapUrl":"./areas.tmj","areas":[],"entities":[], "entityCollections": [
+{"version":"1.0.0","mapUrl":"./areas.tmj","areas":[],"entities":{}, "entityCollections": [
     {
         "url": "http://play.workadventure.localhost/collections/FurnitureCollection.json",
         "type": "file"

@@ -178,8 +178,8 @@ export class GameMapFrontWrapper {
     public initialize(): Promise<void> {
         // Spawn first entities from WAM file on the map
         const addEntityPromises: Promise<Entity>[] = [];
-        for (const entityData of this.gameMap.getGameMapEntities()?.getEntities() ?? []) {
-            addEntityPromises.push(this.entitiesManager.addEntity(entityData));
+        for (const [entityId, entityData] of Object.entries(this.gameMap.getGameMapEntities()?.getEntities() ?? {})) {
+            addEntityPromises.push(this.entitiesManager.addEntity(entityId, entityData));
             // We need to AWAIT for all entities to be created.
             // OTHERWISE, delete commands might pass FIRST!
         }

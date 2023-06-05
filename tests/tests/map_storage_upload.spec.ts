@@ -431,7 +431,7 @@ test.describe('Map-storage Upload API', () => {
                         version: "1.0.0",
                         mapUrl: "https://example.com/map.tmj",
                         areas: [],
-                        entities: [],
+                        entities: {},
                         entityCollections: [],
                     })),
                 }
@@ -484,7 +484,7 @@ test.describe('Map-storage Upload API', () => {
                         version: "1.0.0",
                         mapUrl: `${(process.env.MAP_STORAGE_PROTOCOL ?? "http")}://maps.workadventure.localhost/tests/E2E/empty.json`,
                         areas: [],
-                        entities: [],
+                        entities: {},
                         entityCollections: [],
                     })),
                 }
@@ -501,7 +501,7 @@ test.describe('Map-storage Upload API', () => {
                         version: "1.0.0",
                         mapUrl: `${(process.env.MAP_STORAGE_PROTOCOL ?? "http")}://maps.workadventure.localhost/tests/E2E/empty.json`,
                         areas: [],
-                        entities: [],
+                        entities: {},
                         entityCollections: [],
                     })),
                 }
@@ -533,7 +533,7 @@ test.describe('Map-storage Upload API', () => {
                         version: "1.0.0",
                         mapUrl: "http://maps.workadventure.localhost/tests/E2E/empty.json",
                         areas: [],
-                        entities: [],
+                        entities: {},
                         entityCollections: [],
                     })),
                 }

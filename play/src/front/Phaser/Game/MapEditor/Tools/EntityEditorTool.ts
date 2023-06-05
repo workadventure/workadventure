@@ -1,4 +1,4 @@
-import { AtLeast, EntityData, EntityPrefab, WAMEntityData } from "@workadventure/map-editor";
+import { EntityData, EntityPrefab, WAMEntityData } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { get, Unsubscriber } from "svelte/store";
 import {
@@ -136,7 +136,6 @@ export class EntityEditorTool extends MapEditorTool {
                 const entityData: WAMEntityData = {
                     x: data.x,
                     y: data.y,
-                    id: data.id,
                     prefabRef: {
                         id: entityPrefab.id,
                         collectionName: entityPrefab.collectionName,
@@ -145,7 +144,13 @@ export class EntityEditorTool extends MapEditorTool {
                 };
                 // execute command locally
                 await this.mapEditorModeManager.executeCommand(
-                    new CreateEntityFrontCommand(this.scene.getGameMap(), entityData, commandId, this.entitiesManager),
+                    new CreateEntityFrontCommand(
+                        this.scene.getGameMap(),
+                        data.id,
+                        entityData,
+                        commandId,
+                        this.entitiesManager
+                    ),
                     false,
                     false
                 );
@@ -166,6 +171,7 @@ export class EntityEditorTool extends MapEditorTool {
                 await this.mapEditorModeManager.executeCommand(
                     new UpdateEntityFrontCommand(
                         this.scene.getGameMap(),
+                        data.id,
                         {
                             ...data,
                             properties: data.modifyProperties ? data.properties : undefined,
@@ -256,18 +262,19 @@ export class EntityEditorTool extends MapEditorTool {
                 .executeCommand(
                     new DeleteEntityFrontCommand(
                         this.scene.getGameMap(),
-                        entity.getEntityData().id,
+                        entity.entityId,
                         undefined,
                         this.entitiesManager
                     )
                 )
                 .catch((e) => console.error(e));
         });
-        this.entitiesManager.on(EntitiesManagerEvent.UpdateEntity, (entityData: AtLeast<EntityData, "id">) => {
+        this.entitiesManager.on(EntitiesManagerEvent.UpdateEntity, (entityData: EntityData) => {
             this.mapEditorModeManager
                 .executeCommand(
                     new UpdateEntityFrontCommand(
                         this.scene.getGameMap(),
+                        entityData.id,
                         entityData,
                         undefined,
                         undefined,
@@ -284,13 +291,18 @@ export class EntityEditorTool extends MapEditorTool {
             const entityData: WAMEntityData = {
                 x: data.position.x,
                 y: data.position.y,
-                id: crypto.randomUUID(),
                 prefabRef: data.prefabRef,
                 properties: data.properties ?? [],
             };
             this.mapEditorModeManager
                 .executeCommand(
-                    new CreateEntityFrontCommand(this.scene.getGameMap(), entityData, undefined, this.entitiesManager)
+                    new CreateEntityFrontCommand(
+                        this.scene.getGameMap(),
+                        undefined,
+                        entityData,
+                        undefined,
+                        this.entitiesManager
+                    )
                 )
                 .catch((e) => console.error(e));
             this.cleanPreview();
@@ -388,13 +400,18 @@ export class EntityEditorTool extends MapEditorTool {
         const entityData: WAMEntityData = {
             x: x - this.entityPrefabPreview.displayWidth * 0.5,
             y: y - this.entityPrefabPreview.displayHeight * 0.5,
-            id: crypto.randomUUID(),
             prefabRef: this.entityPrefab,
             properties: get(mapEditorCopiedEntityDataPropertiesStore) ?? [],
         };
         this.mapEditorModeManager
             .executeCommand(
-                new CreateEntityFrontCommand(this.scene.getGameMap(), entityData, undefined, this.entitiesManager)
+                new CreateEntityFrontCommand(
+                    this.scene.getGameMap(),
+                    undefined,
+                    entityData,
+                    undefined,
+                    this.entitiesManager
+                )
             )
             .catch((e) => console.error(e));
     }

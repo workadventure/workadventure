@@ -1,23 +1,24 @@
-import type { AtLeast, EntityData } from "../../types";
+import type { WAMEntityData } from "../../types";
 import type { GameMap } from "../../GameMap/GameMap";
 import { Command } from "../Command";
 
 export class UpdateEntityCommand extends Command {
-    protected oldConfig: AtLeast<EntityData, "id">;
-    protected newConfig: AtLeast<EntityData, "id">;
+    protected oldConfig: Partial<WAMEntityData>;
+    protected newConfig: Partial<WAMEntityData>;
 
     protected gameMap: GameMap;
 
     constructor(
         gameMap: GameMap,
-        dataToModify: AtLeast<EntityData, "id">,
+        protected entityId: string,
+        dataToModify: Partial<WAMEntityData>,
         commandId?: string,
-        oldConfig?: AtLeast<EntityData, "id">
+        oldConfig?: Partial<WAMEntityData>
     ) {
         super(commandId);
         this.gameMap = gameMap;
         if (!oldConfig) {
-            const oldConfig = gameMap.getGameMapEntities()?.getEntity(dataToModify.id);
+            const oldConfig = gameMap.getGameMapEntities()?.getEntity(entityId);
             if (!oldConfig) {
                 throw new Error("Trying to update a non existing Entity!");
             }
@@ -29,8 +30,8 @@ export class UpdateEntityCommand extends Command {
     }
 
     public execute(): Promise<void> {
-        if (!this.gameMap.getGameMapEntities()?.updateEntity(this.newConfig.id, this.newConfig)) {
-            throw new Error(`MapEditorError: Could not execute UpdateEntity Command. Entity ID: ${this.newConfig.id}`);
+        if (!this.gameMap.getGameMapEntities()?.updateEntity(this.entityId, this.newConfig)) {
+            throw new Error(`MapEditorError: Could not execute UpdateEntity Command. Entity ID: ${this.entityId}`);
         }
         return Promise.resolve();
     }

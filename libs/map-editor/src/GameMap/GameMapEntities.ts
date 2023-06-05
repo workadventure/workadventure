@@ -1,39 +1,31 @@
 import _ from "lodash";
-import { EntityData, EntityPrefab, WAMEntityData, WAMFileFormat } from "../types";
+import { WAMEntityData, WAMFileFormat } from "../types";
 
 export class GameMapEntities {
     private wam: WAMFileFormat;
 
-    private entities: Map<string, WAMEntityData> = new Map<string, WAMEntityData>();
-
     constructor(wam: WAMFileFormat) {
         this.wam = wam;
-        for (const wamEntityData of this.wam.entities) {
-            this.addEntity(wamEntityData, false);
-        }
     }
 
-    public addEntity(entityData: WAMEntityData, addToMapProperties = true): boolean {
-        if (this.entities.has(entityData.id)) {
+    public addEntity(entityId: string, entityData: WAMEntityData): boolean {
+        if (this.wam.entities[entityId] !== undefined) {
             return false;
         }
-        this.entities.set(entityData.id, entityData);
-        if (addToMapProperties) {
-            return this.addEntityToWAM(entityData);
-        }
+        this.wam.entities[entityId] = entityData;
         return true;
     }
 
     public getEntity(id: string): WAMEntityData | undefined {
-        return this.entities.get(id);
+        return this.wam.entities[id];
     }
 
     public deleteEntity(id: string): boolean {
-        const deleted = this.entities.delete(id);
-        if (deleted) {
-            return this.deleteEntityFromWAM(id);
+        if (this.wam.entities[id] === undefined) {
+            return false;
         }
-        return false;
+        delete this.wam.entities[id];
+        return true;
     }
 
     public updateEntity(id: string, config: Partial<WAMEntityData>): WAMEntityData {
@@ -46,63 +38,11 @@ export class GameMapEntities {
         if (config.properties !== undefined) {
             entity.properties = config.properties;
         }
-        this.updateEntityInWAM(entity);
+
         return entity;
     }
 
-    private addEntityToWAM(entityData: WAMEntityData): boolean {
-        if (!this.wam.entities.find((entity) => entity.id === entityData.id)) {
-            /*const wamEntityData: WAMEntityData = {
-                ...structuredClone(entityData),
-                prefabRef: {
-                    id: entityData.prefab.id,
-                    collectionName: entityData.prefab.collectionName,
-                }
-            };*/
-            this.wam.entities.push(entityData);
-        } else {
-            console.warn(`ADD ENTITY FAIL: ENTITY OF ID ${entityData.id} ALREADY EXISTS WITHIN WAM FILE!`);
-            return false;
-        }
-        return true;
-    }
-
-    private deleteEntityFromWAM(id: string): boolean {
-        const indexToRemove = this.wam.entities.findIndex((entityData) => entityData.id === id);
-        if (indexToRemove !== -1) {
-            this.wam.entities.splice(indexToRemove, 1);
-            return true;
-        }
-        return false;
-    }
-
-    private updateEntityInWAM(entityData: WAMEntityData): boolean {
-        const entityIndex = this.wam.entities.findIndex((entity) => entity.id === entityData.id);
-
-        if (entityIndex === -1) {
-            console.warn(`CANNOT FIND ENTITY WITH ID: ${entityData.id} IN WAM FILE!`);
-            return false;
-        }
-
-        this.wam.entities[entityIndex] = entityData;
-        return true;
-    }
-
-    public getEntities(): WAMEntityData[] {
-        return Array.from(this.entities.values());
-    }
-
-    private wamEntityDataToEntityData(
-        wamEntityData: WAMEntityData,
-        prefabs?: Map<string, EntityPrefab>
-    ): EntityData | undefined {
-        const entityPrefab = prefabs?.get(wamEntityData.prefabRef.id);
-        if (entityPrefab) {
-            return {
-                ...structuredClone(wamEntityData),
-                prefab: entityPrefab,
-            };
-        }
-        return undefined;
+    public getEntities(): Record<string, WAMEntityData> {
+        return this.wam.entities;
     }
 }

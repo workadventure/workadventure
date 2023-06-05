@@ -42,7 +42,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     private activatable: boolean;
     private oldPosition: { x: number; y: number };
 
-    constructor(scene: GameScene, data: WAMEntityData, prefab: EntityPrefab) {
+    constructor(scene: GameScene, public readonly entityId: string, data: WAMEntityData, prefab: EntityPrefab) {
         super(scene, data.x, data.y, prefab.imagePath);
         this.setOrigin(0);
 
@@ -76,7 +76,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     /**
      * This method is being used after command execution from outside and it will not trigger any emits
      */
-    public updateEntity(dataToModify: AtLeast<EntityData, "id">): void {
+    public updateEntity(dataToModify: Partial<WAMEntityData>): void {
         _.merge(this.entityData, dataToModify);
         // TODO: Find a way to update it without need of using conditions
         if (dataToModify.properties !== undefined) {
@@ -347,10 +347,10 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         return this.oldPosition;
     }
 
-    private appendId(data: Partial<EntityData>): AtLeast<EntityData, "id"> {
+    private appendId(data: Partial<WAMEntityData>): Partial<EntityData> {
         return {
             ...data,
-            id: this.entityData.id,
+            id: this.entityId,
         };
     }
 }

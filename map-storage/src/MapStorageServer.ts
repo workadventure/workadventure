@@ -11,6 +11,7 @@ import {
     UpdateAreaCommand,
     UpdateEntityCommand,
     UpdateWAMSettingCommand,
+    WAMEntityData,
 } from "@workadventure/map-editor";
 import {
     EditMapCommandMessage,
@@ -155,7 +156,7 @@ const mapStorageServer: MapStorageServer = {
                     // NOTE: protobuf does not distinguish between null and empty array, we cannot create optional repeated value.
                     //       Because of that, we send additional "modifyProperties" flag set properties value as "undefined" so they won't get erased
                     //       by [] value which was supposed to be null.
-                    const dataToModify: AtLeast<EntityData, "id"> = structuredClone(message);
+                    const dataToModify: Partial<WAMEntityData> = structuredClone(message);
                     if (!message.modifyProperties) {
                         dataToModify.properties = undefined;
                     }
@@ -163,7 +164,7 @@ const mapStorageServer: MapStorageServer = {
                     if (entity) {
                         await mapsManager.executeCommand(
                             mapKey,
-                            new UpdateEntityCommand(gameMap, dataToModify, commandId)
+                            new UpdateEntityCommand(gameMap, message.id, dataToModify, commandId)
                         );
                     } else {
                         console.log(`Could not find entity with id: ${message.id}`);
@@ -176,8 +177,8 @@ const mapStorageServer: MapStorageServer = {
                         mapKey,
                         new CreateEntityCommand(
                             gameMap,
+                            message.id,
                             {
-                                id: message.id,
                                 prefabRef: {
                                     id: message.prefabId,
                                     collectionName: message.collectionName,
@@ -197,11 +198,13 @@ const mapStorageServer: MapStorageServer = {
                     break;
                 }
                 case "updateWAMSettingsMessage": {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                     const message = editMapMessage.updateWAMSettingsMessage;
                     const wam = gameMap.getWam();
                     if (!wam) {
                         throw new Error("WAM is not defined");
                     }
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                     await mapsManager.executeCommand(mapKey, new UpdateWAMSettingCommand(wam, message, commandId));
                     break;
                 }
