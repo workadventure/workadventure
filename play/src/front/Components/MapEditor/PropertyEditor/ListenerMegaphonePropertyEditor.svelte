@@ -50,11 +50,11 @@
     </span>
     <span slot="content">
         <div>
-            <label class="tw-m-0" for="trigger"
+            <label class="tw-m-0" for="speakerZoneSelector"
                 >{$LL.mapEditor.properties.listenerMegaphoneProperties.nameLabel()}</label
             >
             <select
-                id="trigger"
+                id="speakerZoneSelector"
                 class=" tw-m-0 tw-w-full"
                 bind:value={property.speakerZoneName}
                 on:change={onValueChange}
