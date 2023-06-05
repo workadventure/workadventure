@@ -3,7 +3,9 @@ import {
     EntityData,
     EntityDataProperties,
     EntityDataProperty,
+    EntityPrefab,
     GameMapProperties,
+    WAMEntityData,
 } from "@workadventure/map-editor";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { get, Unsubscriber } from "svelte/store";
@@ -34,13 +36,14 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     private readonly outlineColorStore = createColorStore();
     private readonly outlineColorStoreUnsubscribe: Unsubscriber;
 
-    private entityData: Required<EntityData>;
+    private entityData: Required<WAMEntityData>;
+    private prefab: EntityPrefab;
 
     private activatable: boolean;
     private oldPosition: { x: number; y: number };
 
-    constructor(scene: GameScene, data: EntityData) {
-        super(scene, data.x, data.y, data.prefab.imagePath);
+    constructor(scene: GameScene, data: WAMEntityData, prefab: EntityPrefab) {
+        super(scene, data.x, data.y, prefab.imagePath);
         this.setOrigin(0);
 
         this.oldPosition = this.getPosition();
@@ -50,6 +53,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             name: data.name ?? "",
             properties: data.properties ?? [],
         };
+        this.prefab = prefab;
 
         this.activatable = this.hasAnyPropertiesSet();
         if (this.activatable) {
@@ -57,7 +61,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             this.scene.input.setDraggable(this);
         }
 
-        this.setDepth(this.y + this.displayHeight + (this.entityData.prefab.depthOffset ?? 0));
+        this.setDepth(this.y + this.displayHeight + (this.prefab.depthOffset ?? 0));
 
         this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
             this.setOutline(color);
@@ -110,11 +114,11 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public getCollisionGrid(): number[][] | undefined {
-        return this.entityData.prefab.collisionGrid;
+        return this.prefab.collisionGrid;
     }
 
     public getReversedCollisionGrid(): number[][] | undefined {
-        return this.entityData.prefab.collisionGrid?.map((row) => row.map((value) => (value === 1 ? -1 : value)));
+        return this.prefab.collisionGrid?.map((row) => row.map((value) => (value === 1 ? -1 : value)));
     }
 
     public setFollowOutlineColor(color: number): void {
@@ -298,8 +302,12 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         return this.activatable;
     }
 
-    public getEntityData(): Required<EntityData> {
+    public getEntityData(): Required<WAMEntityData> {
         return this.entityData;
+    }
+
+    public getPrefab(): EntityPrefab {
+        return this.prefab;
     }
 
     public getProperties(): EntityDataProperties {

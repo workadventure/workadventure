@@ -6,7 +6,7 @@ import {
     Json,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
-import { EntityPrefab, WAMFileFormat, GameMapProperties } from "../types";
+import { WAMFileFormat, GameMapProperties } from "../types";
 import type { AreaChangeCallback } from "./GameMapAreas";
 import { GameMapAreas } from "./GameMapAreas";
 import { flattenGroupLayersMap } from "./LayersFlattener";
@@ -70,13 +70,10 @@ export class GameMap {
         }
     }
 
-    public async initialize(entitiesPrefabsPromise?: Promise<Map<string, EntityPrefab>>): Promise<void> {
+    public initialize(): void {
         if (this.wam) {
             this.gameMapAreas = new GameMapAreas(this.wam);
             this.gameMapEntities = new GameMapEntities(this.wam);
-            if (entitiesPrefabsPromise) {
-                await this.gameMapEntities.initialize(entitiesPrefabsPromise);
-            }
         }
     }
 

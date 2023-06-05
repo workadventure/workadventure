@@ -1,5 +1,4 @@
 import { v4 as uuidv4 } from "uuid";
-import type { CommandConfig } from "../types";
 
 export abstract class Command {
     public readonly id: string;
@@ -8,6 +7,6 @@ export abstract class Command {
         this.id = id ?? uuidv4();
     }
 
-    public abstract execute(): CommandConfig;
-    public abstract undo(): CommandConfig;
+    public abstract execute(): Promise<void>;
+    //public abstract undo(): Promise<void>;
 }

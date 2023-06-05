@@ -30,10 +30,14 @@ export class EntitiesCollectionsManager {
         return this.entitiesPrefabsMapPromise;
     }
 
-    public getEntityPrefab(collectionName: string, entityPrefabId: string): EntityPrefab | undefined {
-        return this.entitiesPrefabs.find(
+    public async getEntityPrefab(collectionName: string, entityPrefabId: string): Promise<EntityPrefab | undefined> {
+        const prefabsMap = await this.entitiesPrefabsMapPromise;
+        return prefabsMap.get(entityPrefabId);
+
+        // FIXME: remove the find from here. Too slow
+        /*return this.entitiesPrefabs.find(
             (prefab) => prefab.collectionName === collectionName && prefab.id === entityPrefabId
-        );
+        );*/
     }
 
     public setFilter(filter: string, isTag = false) {

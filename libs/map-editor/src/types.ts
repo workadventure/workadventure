@@ -1,20 +1,4 @@
 import { z } from "zod";
-import type { CreateAreaCommandConfig } from "./Commands/Area/CreateAreaCommand";
-import type { DeleteAreaCommandConfig } from "./Commands/Area/DeleteAreaCommand";
-import type { UpdateAreaCommandConfig } from "./Commands/Area/UpdateAreaCommand";
-import type { CreateEntityCommandConfig } from "./Commands/Entity/CreateEntityCommand";
-import type { DeleteEntityCommandConfig } from "./Commands/Entity/DeleteEntityCommand";
-import { UpdateEntityCommandConfig } from "./Commands/Entity/UpdateEntityCommand";
-import { UpdateWAMSettingCommandConfig } from "./Commands/WAM/UpdateWAMSettingCommand";
-
-export type CommandConfig =
-    | UpdateAreaCommandConfig
-    | DeleteAreaCommandConfig
-    | CreateAreaCommandConfig
-    | UpdateEntityCommandConfig
-    | CreateEntityCommandConfig
-    | DeleteEntityCommandConfig
-    | UpdateWAMSettingCommandConfig;
 
 export type AtLeast<T, K extends keyof T> = Partial<T> & Pick<T, K>;
 
@@ -128,6 +112,11 @@ export const EntityPrefab = EntityRawPrefab.extend({
     id: z.string(),
 });
 
+export const EntityPrefabRef = z.object({
+    collectionName: z.string(),
+    id: z.string(),
+});
+
 export const EntityCollection = z.object({
     collectionName: z.string(),
     tags: z.array(z.string()),
@@ -140,10 +129,11 @@ export const EntityData = z.object({
     y: z.number(),
     name: z.string().optional(),
     properties: EntityDataProperties.optional(),
-    prefab: EntityPrefab,
+    prefab: EntityRawPrefab,
+    prefabRef: EntityPrefabRef,
 });
 
-export const WAMEntityData = EntityData.omit({ prefab: true }).extend({ prefabId: z.string() });
+export const WAMEntityData = EntityData.omit({ prefab: true });
 export type WAMEntityData = z.infer<typeof WAMEntityData>;
 
 export const WAMMetadata = z.object({
@@ -182,6 +172,10 @@ export const MegaphoneSettings = z.object({
 
 export type MegaphoneSettings = z.infer<typeof MegaphoneSettings>;
 
+export const WAMSettings = z.object({
+    megaphone: MegaphoneSettings.optional(),
+});
+
 export const WAMFileFormat = z.object({
     version: z.string(),
     mapUrl: z.string(),
@@ -189,11 +183,7 @@ export const WAMFileFormat = z.object({
     areas: z.array(AreaData),
     entityCollections: z.array(CollectionUrl),
     lastCommandId: z.string().optional(),
-    settings: z
-        .object({
-            megaphone: MegaphoneSettings.optional(),
-        })
-        .optional(),
+    settings: WAMSettings.optional(),
     metadata: WAMMetadata.optional().describe("Contains metadata about the map (name, description, copyright, etc.)"),
     vendor: WAMVendor.optional(),
 });
@@ -230,6 +220,7 @@ export type JitsiRoomConfigData = z.infer<typeof JitsiRoomConfigData>;
 export type JitsiRoomPropertyData = z.infer<typeof JitsiRoomPropertyData>;
 export type PlayAudioPropertyData = z.infer<typeof PlayAudioPropertyData>;
 export type OpenWebsitePropertyData = z.infer<typeof OpenWebsitePropertyData>;
+export type WAMSettings = z.infer<typeof WAMSettings>;
 export type WAMFileFormat = z.infer<typeof WAMFileFormat>;
 export type MapsCacheSingleMapFormat = z.infer<typeof MapsCacheSingleMapFormat>;
 export type MapsCacheFileFormat = z.infer<typeof MapsCacheFileFormat>;

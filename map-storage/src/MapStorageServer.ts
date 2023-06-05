@@ -1,5 +1,17 @@
 import { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
-import { AreaData, AtLeast, EntityData, EntityDataProperties } from "@workadventure/map-editor";
+import {
+    AreaData,
+    AtLeast,
+    CreateAreaCommand,
+    CreateEntityCommand,
+    DeleteAreaCommand,
+    DeleteEntityCommand,
+    EntityData,
+    EntityDataProperties,
+    UpdateAreaCommand,
+    UpdateEntityCommand,
+    UpdateWAMSettingCommand,
+} from "@workadventure/map-editor";
 import {
     EditMapCommandMessage,
     EditMapCommandsArrayMessage,
@@ -79,12 +91,12 @@ const mapStorageServer: MapStorageServer = {
         call: ServerUnaryCall<EditMapCommandWithKeyMessage, Empty>,
         callback: sendUnaryData<EditMapCommandMessage>
     ): void {
-        const editMapCommandMessage = call.request.editMapCommandMessage;
-        if (!editMapCommandMessage || !editMapCommandMessage.editMapMessage?.message) {
-            callback({ name: "MapStorageError", message: "EditMapCommand message does not exist" }, null);
-            return;
-        }
-        try {
+        (async () => {
+            const editMapCommandMessage = call.request.editMapCommandMessage;
+            if (!editMapCommandMessage || !editMapCommandMessage.editMapMessage?.message) {
+                callback({ name: "MapStorageError", message: "EditMapCommand message does not exist" }, null);
+                return;
+            }
             // The mapKey is the complete URL to the map. Let's map it to our virtual path.
             const mapUrl = new URL(call.request.mapKey);
             const mapKey = mapPathUsingDomainWithPrefix(mapUrl.pathname, mapUrl.hostname);
@@ -111,13 +123,9 @@ const mapStorageServer: MapStorageServer = {
                     }
                     const area = gameMap.getGameMapAreas()?.getArea(message.id);
                     if (area) {
-                        mapsManager.executeCommand(
+                        await mapsManager.executeCommand(
                             mapKey,
-                            {
-                                type: "UpdateAreaCommand",
-                                dataToModify,
-                            },
-                            commandId
+                            new UpdateAreaCommand(gameMap, dataToModify, commandId)
                         );
                     } else {
                         console.log(`Could not find area with id: ${message.id}`);
@@ -130,26 +138,15 @@ const mapStorageServer: MapStorageServer = {
                         ...message,
                         visible: true,
                     };
-                    mapsManager.executeCommand(
+                    await mapsManager.executeCommand(
                         mapKey,
-                        {
-                            areaObjectConfig,
-                            type: "CreateAreaCommand",
-                        },
-                        commandId
+                        new CreateAreaCommand(gameMap, areaObjectConfig, commandId)
                     );
                     break;
                 }
                 case "deleteAreaMessage": {
                     const message = editMapMessage.deleteAreaMessage;
-                    mapsManager.executeCommand(
-                        mapKey,
-                        {
-                            type: "DeleteAreaCommand",
-                            id: message.id,
-                        },
-                        commandId
-                    );
+                    await mapsManager.executeCommand(mapKey, new DeleteAreaCommand(gameMap, message.id, commandId));
                     break;
                 }
                 case "modifyEntityMessage": {
@@ -164,13 +161,9 @@ const mapStorageServer: MapStorageServer = {
                     }
                     const entity = gameMap.getGameMapEntities()?.getEntity(message.id);
                     if (entity) {
-                        mapsManager.executeCommand(
+                        await mapsManager.executeCommand(
                             mapKey,
-                            {
-                                type: "UpdateEntityCommand",
-                                dataToModify,
-                            },
-                            commandId
+                            new UpdateEntityCommand(gameMap, dataToModify, commandId)
                         );
                     } else {
                         console.log(`Could not find entity with id: ${message.id}`);
@@ -179,57 +172,37 @@ const mapStorageServer: MapStorageServer = {
                 }
                 case "createEntityMessage": {
                     const message = editMapMessage.createEntityMessage;
-                    mapsManager.executeCommand(
+                    await mapsManager.executeCommand(
                         mapKey,
-                        {
-                            type: "CreateEntityCommand",
-                            entityData: {
+                        new CreateEntityCommand(
+                            gameMap,
+                            {
                                 id: message.id,
-                                // Mock Prefab is being used only on map-storage side where we do not have access to Entity Prefabs data.
-                                // Currently we are not validating anything against entityPrefab data so it is safe for now.
-                                prefab: {
+                                prefabRef: {
                                     id: message.prefabId,
                                     collectionName: message.collectionName,
-                                    color: "mock",
-                                    direction: "Down",
-                                    imagePath: "",
-                                    name: "MockPrefab",
-                                    tags: ["mock"],
-                                    collisionGrid: [],
-                                    depthOffset: 0,
                                 },
                                 x: message.x,
                                 y: message.y,
                                 properties: message.properties as EntityDataProperties,
                             },
-                        },
-                        commandId
+                            commandId
+                        )
                     );
                     break;
                 }
                 case "deleteEntityMessage": {
                     const message = editMapMessage.deleteEntityMessage;
-                    mapsManager.executeCommand(
-                        mapKey,
-                        {
-                            type: "DeleteEntityCommand",
-                            id: message.id,
-                        },
-                        commandId
-                    );
+                    await mapsManager.executeCommand(mapKey, new DeleteEntityCommand(gameMap, message.id, commandId));
                     break;
                 }
-                case "updateMegaphoneSettingMessage": {
-                    const message = editMapMessage.updateMegaphoneSettingMessage;
-                    mapsManager.executeCommand(
-                        mapKey,
-                        {
-                            type: "UpdateWAMSettingCommand",
-                            name: "megaphone",
-                            dataToModify: message,
-                        },
-                        commandId
-                    );
+                case "updateWAMSettingsMessage": {
+                    const message = editMapMessage.updateWAMSettingsMessage;
+                    const wam = gameMap.getWam();
+                    if (!wam) {
+                        throw new Error("WAM is not defined");
+                    }
+                    await mapsManager.executeCommand(mapKey, new UpdateWAMSettingCommand(wam, message, commandId));
                     break;
                 }
                 default: {
@@ -239,7 +212,7 @@ const mapStorageServer: MapStorageServer = {
             // send edit map message back as a valid one
             mapsManager.addCommandToQueue(mapKey, editMapCommandMessage);
             callback(null, editMapCommandMessage);
-        } catch (e) {
+        })().catch((e: unknown) => {
             console.log(e);
             let message: string;
             if (typeof e === "object" && e !== null) {
@@ -248,7 +221,7 @@ const mapStorageServer: MapStorageServer = {
                 message = "Unknown error";
             }
             callback({ name: "MapStorageError", message }, null);
-        }
+        });
     },
 };
 

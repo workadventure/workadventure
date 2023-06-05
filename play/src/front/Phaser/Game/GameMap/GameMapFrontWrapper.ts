@@ -1,4 +1,4 @@
-import { AreaDataProperties, EntityPrefab, GameMapProperties } from "@workadventure/map-editor";
+import { AreaDataProperties, GameMapProperties } from "@workadventure/map-editor";
 import type { AreaChangeCallback, AreaData, GameMap } from "@workadventure/map-editor";
 import type {
     ITiledMap,
@@ -11,6 +11,7 @@ import type {
 import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
 import { MathUtils } from "@workadventure/math-utils";
+import { Deferred } from "ts-deferred";
 import { PathTileType } from "../../../Utils/PathfindingManager";
 import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
 import type { GameScene } from "../GameScene";
@@ -109,12 +110,13 @@ export class GameMapFrontWrapper {
      */
     private readonly existingTileIndex;
 
+    public readonly initializedPromise = new Deferred<void>();
+
     constructor(
         scene: GameScene,
         gameMap: GameMap,
         phaserMap: Phaser.Tilemaps.Tilemap,
-        terrains: Array<Phaser.Tilemaps.Tileset>,
-        entitiesPrefabsPromise: Promise<Map<string, EntityPrefab>>
+        terrains: Array<Phaser.Tilemaps.Tileset>
     ) {
         this.scene = scene;
         this.gameMap = gameMap;
@@ -124,17 +126,9 @@ export class GameMapFrontWrapper {
 
         this.entitiesManager = new EntitiesManager(this.scene, this);
 
-        this.gameMap
-            .initialize(entitiesPrefabsPromise)
-            .then(() => {
-                // Spawn first entities from WAM file on the map
-                for (const entityData of this.gameMap.getGameMapEntities()?.getEntities() ?? []) {
-                    this.entitiesManager.addEntity(entityData);
-                }
+        this.gameMap.initialize();
 
-                this.updateCollisionGrid(undefined, false);
-            })
-            .catch(() => {});
+        this.updateCollisionGrid(undefined, false);
 
         let depth = -2;
         for (const layer of this.gameMap.flatLayers) {
@@ -179,6 +173,20 @@ export class GameMapFrontWrapper {
 
         this.phaserLayers.push(this.entitiesCollisionLayer);
         this.updateCollisionGrid(undefined, false);
+    }
+
+    public initialize(): Promise<void> {
+        // Spawn first entities from WAM file on the map
+        const addEntityPromises: Promise<Entity>[] = [];
+        for (const entityData of this.gameMap.getGameMapEntities()?.getEntities() ?? []) {
+            addEntityPromises.push(this.entitiesManager.addEntity(entityData));
+            // We need to AWAIT for all entities to be created.
+            // OTHERWISE, delete commands might pass FIRST!
+        }
+
+        return Promise.all(addEntityPromises).then(() => {
+            this.initializedPromise.resolve();
+        });
     }
 
     public setLayerVisibility(layerName: string, visible: boolean): void {

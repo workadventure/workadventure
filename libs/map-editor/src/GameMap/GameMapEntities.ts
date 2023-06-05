@@ -4,25 +4,16 @@ import { EntityData, EntityPrefab, WAMEntityData, WAMFileFormat } from "../types
 export class GameMapEntities {
     private wam: WAMFileFormat;
 
-    private entities: Map<string, EntityData> = new Map<string, EntityData>();
+    private entities: Map<string, WAMEntityData> = new Map<string, WAMEntityData>();
 
     constructor(wam: WAMFileFormat) {
         this.wam = wam;
-    }
-
-    public async initialize(entitiesPrefabsMapPromise: Promise<Map<string, EntityPrefab>>): Promise<void> {
-        const prefabsMap = await entitiesPrefabsMapPromise;
         for (const wamEntityData of this.wam.entities) {
-            const entityData = this.wamEntityDataToEntityData(wamEntityData, prefabsMap);
-            if (entityData) {
-                this.addEntity(entityData, false);
-            } else {
-                console.warn("COULD NOT FIND ENTITY DATA FROM GIVEN ID");
-            }
+            this.addEntity(wamEntityData, false);
         }
     }
 
-    public addEntity(entityData: EntityData, addToMapProperties = true): boolean {
+    public addEntity(entityData: WAMEntityData, addToMapProperties = true): boolean {
         if (this.entities.has(entityData.id)) {
             return false;
         }
@@ -33,7 +24,7 @@ export class GameMapEntities {
         return true;
     }
 
-    public getEntity(id: string): EntityData | undefined {
+    public getEntity(id: string): WAMEntityData | undefined {
         return this.entities.get(id);
     }
 
@@ -45,7 +36,7 @@ export class GameMapEntities {
         return false;
     }
 
-    public updateEntity(id: string, config: Partial<EntityData>): EntityData {
+    public updateEntity(id: string, config: Partial<WAMEntityData>): WAMEntityData {
         const entity = this.getEntity(id);
         if (!entity) {
             throw new Error(`Entity of id: ${id} does not exist!`);
@@ -59,13 +50,16 @@ export class GameMapEntities {
         return entity;
     }
 
-    private addEntityToWAM(entityData: EntityData): boolean {
+    private addEntityToWAM(entityData: WAMEntityData): boolean {
         if (!this.wam.entities.find((entity) => entity.id === entityData.id)) {
-            const wamEntityData: WAMEntityData = {
+            /*const wamEntityData: WAMEntityData = {
                 ...structuredClone(entityData),
-                prefabId: entityData.prefab.id,
-            };
-            this.wam.entities.push(wamEntityData);
+                prefabRef: {
+                    id: entityData.prefab.id,
+                    collectionName: entityData.prefab.collectionName,
+                }
+            };*/
+            this.wam.entities.push(entityData);
         } else {
             console.warn(`ADD ENTITY FAIL: ENTITY OF ID ${entityData.id} ALREADY EXISTS WITHIN WAM FILE!`);
             return false;
@@ -82,7 +76,7 @@ export class GameMapEntities {
         return false;
     }
 
-    private updateEntityInWAM(entityData: EntityData): boolean {
+    private updateEntityInWAM(entityData: WAMEntityData): boolean {
         const entityIndex = this.wam.entities.findIndex((entity) => entity.id === entityData.id);
 
         if (entityIndex === -1) {
@@ -90,26 +84,19 @@ export class GameMapEntities {
             return false;
         }
 
-        this.wam.entities[entityIndex] = this.entityDataToWAMEntityData(entityData);
+        this.wam.entities[entityIndex] = entityData;
         return true;
     }
 
-    public getEntities(): EntityData[] {
+    public getEntities(): WAMEntityData[] {
         return Array.from(this.entities.values());
-    }
-
-    private entityDataToWAMEntityData(entityData: EntityData): WAMEntityData {
-        return {
-            ...structuredClone(entityData),
-            prefabId: entityData.prefab.id,
-        };
     }
 
     private wamEntityDataToEntityData(
         wamEntityData: WAMEntityData,
         prefabs?: Map<string, EntityPrefab>
     ): EntityData | undefined {
-        const entityPrefab = prefabs?.get(wamEntityData.prefabId);
+        const entityPrefab = prefabs?.get(wamEntityData.prefabRef.id);
         if (entityPrefab) {
             return {
                 ...structuredClone(wamEntityData),
