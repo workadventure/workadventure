@@ -502,7 +502,7 @@ export class GameMapPropertiesListener {
         );
         if (listenerZone && listenerZone.type === "string" && listenerZone.value !== undefined) {
             const speakerZoneName = getSpeakerMegaphoneAreaName(
-                gameManager.getCurrentGameScene().getGameMap().getGameMapAreas(),
+                gameManager.getCurrentGameScene().getGameMap().getGameMapAreas()?.getAreas(),
                 listenerZone.value
             );
             if (speakerZoneName) {
@@ -520,7 +520,7 @@ export class GameMapPropertiesListener {
         );
         if (listenerZone && listenerZone.type === "string" && listenerZone.value !== undefined) {
             const speakerZoneName = getSpeakerMegaphoneAreaName(
-                gameManager.getCurrentGameScene().getGameMap().getGameMapAreas(),
+                gameManager.getCurrentGameScene().getGameMap().getGameMapAreas()?.getAreas(),
                 listenerZone.value
             );
             if (speakerZoneName) {

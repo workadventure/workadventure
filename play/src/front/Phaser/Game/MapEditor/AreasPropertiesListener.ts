@@ -420,7 +420,7 @@ export class AreasPropertiesListener {
     private handleListenerMegaphonePropertyOnEnter(property: ListenerMegaphonePropertyData): void {
         if (property.speakerZoneName !== undefined) {
             const speakerZoneName = getSpeakerMegaphoneAreaName(
-                gameManager.getCurrentGameScene().getGameMap().getGameMapAreas(),
+                gameManager.getCurrentGameScene().getGameMap().getGameMapAreas()?.getAreas(),
                 property.speakerZoneName
             );
             if (speakerZoneName) {
@@ -432,7 +432,7 @@ export class AreasPropertiesListener {
     private handleListenerMegaphonePropertyOnLeave(property: ListenerMegaphonePropertyData): void {
         if (property.speakerZoneName !== undefined) {
             const speakerZoneName = getSpeakerMegaphoneAreaName(
-                gameManager.getCurrentGameScene().getGameMap().getGameMapAreas(),
+                gameManager.getCurrentGameScene().getGameMap().getGameMapAreas()?.getAreas(),
                 property.speakerZoneName
             );
             if (speakerZoneName) {
