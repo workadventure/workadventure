@@ -2,6 +2,7 @@ import { get } from "svelte/store";
 import type { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 import { AreaData, GameMapProperties } from "@workadventure/map-editor";
 import { Jitsi } from "@workadventure/shared-utils";
+import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { scriptUtils } from "../../Api/ScriptUtils";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
@@ -33,6 +34,7 @@ import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
 import { AreasPropertiesListener } from "./MapEditor/AreasPropertiesListener";
+import { gameManager } from "./GameManager";
 
 export interface OpenCoWebsite {
     actionId: string;
@@ -499,7 +501,13 @@ export class GameMapPropertiesListener {
             (property) => property.name === GameMapProperties.LISTENER_MEGAPHONE
         );
         if (listenerZone && listenerZone.type === "string" && listenerZone.value !== undefined) {
-            this.scene.broadcastService.joinSpace(listenerZone.value, false);
+            const speakerZoneName = getSpeakerMegaphoneAreaName(
+                gameManager.getCurrentGameScene().getGameMap().getGameMapAreas(),
+                listenerZone.value
+            );
+            if (speakerZoneName) {
+                this.scene.broadcastService.joinSpace(speakerZoneName, false);
+            }
         }
     }
 
@@ -511,7 +519,13 @@ export class GameMapPropertiesListener {
             (property) => property.name === GameMapProperties.LISTENER_MEGAPHONE
         );
         if (listenerZone && listenerZone.type === "string" && listenerZone.value !== undefined) {
-            this.scene.broadcastService.leaveSpace(listenerZone.value);
+            const speakerZoneName = getSpeakerMegaphoneAreaName(
+                gameManager.getCurrentGameScene().getGameMap().getGameMapAreas(),
+                listenerZone.value
+            );
+            if (speakerZoneName) {
+                this.scene.broadcastService.leaveSpace(speakerZoneName);
+            }
         }
     }
 

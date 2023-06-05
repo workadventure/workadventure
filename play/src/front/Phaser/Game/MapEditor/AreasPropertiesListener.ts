@@ -9,6 +9,7 @@ import {
     SpeakerMegaphonePropertyData,
 } from "@workadventure/map-editor";
 import { Jitsi } from "@workadventure/shared-utils";
+import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWesbite";
 import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
@@ -25,6 +26,7 @@ import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable
 import { scriptUtils } from "../../../Api/ScriptUtils";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
 import { requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
+import { gameManager } from "../GameManager";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -417,13 +419,25 @@ export class AreasPropertiesListener {
 
     private handleListenerMegaphonePropertyOnEnter(property: ListenerMegaphonePropertyData): void {
         if (property.speakerZoneName !== undefined) {
-            this.scene.broadcastService.joinSpace(property.speakerZoneName, false);
+            const speakerZoneName = getSpeakerMegaphoneAreaName(
+                gameManager.getCurrentGameScene().getGameMap().getGameMapAreas(),
+                property.speakerZoneName
+            );
+            if (speakerZoneName) {
+                this.scene.broadcastService.joinSpace(speakerZoneName, false);
+            }
         }
     }
 
     private handleListenerMegaphonePropertyOnLeave(property: ListenerMegaphonePropertyData): void {
         if (property.speakerZoneName !== undefined) {
-            this.scene.broadcastService.leaveSpace(property.speakerZoneName);
+            const speakerZoneName = getSpeakerMegaphoneAreaName(
+                gameManager.getCurrentGameScene().getGameMap().getGameMapAreas(),
+                property.speakerZoneName
+            );
+            if (speakerZoneName) {
+                this.scene.broadcastService.leaveSpace(speakerZoneName);
+            }
         }
     }
 }
