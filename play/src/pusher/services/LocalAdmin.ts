@@ -101,6 +101,7 @@ class LocalAdmin implements AdminInterface {
             miniLogo: null,
             loadingLogo: null,
             loginSceneLogo: null,
+            errorSceneLogo: null,
             showPoweredBy: true,
             loadingCowebsiteLogo: null,
             enableChat: ENABLE_CHAT,

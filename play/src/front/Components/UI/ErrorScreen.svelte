@@ -11,7 +11,11 @@
     import error from "./images/error.gif";
 
     let errorScreen = get(errorScreenStore);
-    let logo = errorScreen?.image ?? gameManager?.currentStartedRoom?.loginSceneLogo ?? logoImg;
+    let logo =
+        errorScreen?.image ??
+        gameManager?.currentStartedRoom?.errorSceneLogo ??
+        gameManager?.currentStartedRoom?.loginSceneLogo ??
+        logoImg;
 
     function click() {
         if (errorScreen?.type === "unauthorized") void connectionManager.logout();

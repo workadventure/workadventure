@@ -241,6 +241,11 @@ export const isMapDetailsData = z.object({
     entityCollectionsUrls: extendApi(z.array(z.string()).optional().nullable(), {
         description: "What entity collections are available for this map",
     }),
+    // The URL of the error image on "ErrorScene"
+    errorSceneLogo: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the error image to be used on the ErrorScene",
+        example: "https://example.com/error_logo_login.png",
+    }),
 });
 
 export type MapDetailsData = z.infer<typeof isMapDetailsData>;
