@@ -72,10 +72,8 @@ export class JitsiConferenceWrapper {
             //let isJoined = false;
             //const localTracks: any[] = [];
             room.on(JitsiMeetJS.events.conference.CONFERENCE_JOINED, () => {
-                //isJoined = true;
-                void jitsiConferenceWrapper.firstLocalTrackInit();
+                debug("CONFERENCE_JOINED");
                 resolve(jitsiConferenceWrapper);
-                debug("conference joined");
             });
             room.on(JitsiMeetJS.events.conference.CONFERENCE_FAILED, (e) => {
                 reject(e);
@@ -83,6 +81,7 @@ export class JitsiConferenceWrapper {
             });
             room.on(JitsiMeetJS.events.conference.CONNECTION_ESTABLISHED, () => {
                 debug("CONNECTION_ESTABLISHED");
+                void jitsiConferenceWrapper.firstLocalTrackInit();
             });
             room.on(JitsiMeetJS.events.conference.CONNECTION_INTERRUPTED, () => {
                 console.error("CONNECTION_INTERRUPTED");
