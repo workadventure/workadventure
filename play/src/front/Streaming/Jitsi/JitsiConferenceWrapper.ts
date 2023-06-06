@@ -307,13 +307,13 @@ export class JitsiConferenceWrapper {
 
     private async handleTrack(oldTrack: JitsiLocalTrack | undefined, track: JitsiLocalTrack | undefined) {
         if (oldTrack && track) {
-            console.warn(`REPLACING LOCAL ${oldTrack.getType()} TRACK`);
+            debug(`REPLACING LOCAL ${oldTrack.getType()} TRACK`);
             await this.jitsiConference.replaceTrack(oldTrack, track);
             if (track.isAudioTrack()) {
                 this.trackVolumeLocalAudioTrack(track.getOriginalStream());
             }
         } else if (oldTrack && !track) {
-            console.warn(`REMOVING LOCAL ${oldTrack.getType()} TRACK`);
+            debug(`REMOVING LOCAL ${oldTrack.getType()} TRACK`);
             await oldTrack.dispose();
             if (oldTrack.isAudioTrack()) {
                 this.trackVolumeLocalAudioTrack(undefined);
@@ -321,7 +321,7 @@ export class JitsiConferenceWrapper {
             //room.removeTrack(oldTrack);
             //await oldTrack.dispose();
         } else if (!oldTrack && track) {
-            console.warn(`ADDING LOCAL ${track.getType()} TRACK`);
+            debug(`ADDING LOCAL ${track.getType()} TRACK`);
             await this.jitsiConference.addTrack(track);
             if (track.isAudioTrack()) {
                 this.trackVolumeLocalAudioTrack(track.getOriginalStream());
@@ -330,6 +330,7 @@ export class JitsiConferenceWrapper {
     }
 
     public async firstLocalTrackInit() {
+        debug("JitsiConferenceWrapper => firstLocalTrackInit");
         if (get(megaphoneEnabledStore)) {
             const requestedDevices: DeviceType[] = [];
             if (get(requestedCameraState)) {

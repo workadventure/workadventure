@@ -162,6 +162,8 @@ export class BroadcastService {
             }
         }
 
+        debug("Joining Jitsi conference, jitsiConnecton is defined" + roomName);
+
         const jitsiConference = await JitsiConferenceWrapper.join(this.jitsiConnection, roomName);
         jitsiConferencesStore.set(roomName, jitsiConference);
 
