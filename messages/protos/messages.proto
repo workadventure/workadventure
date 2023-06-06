@@ -63,7 +63,7 @@ message PingMessage {
 }
 
 message UpdateMapToNewestMessage {
-  string commandId = 1;
+  optional string commandId = 1;
 }
 
 message UpdateMapToNewestWithKeyMessage {

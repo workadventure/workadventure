@@ -19,7 +19,7 @@ test.use({
 test.describe('Map editor', () => {
   test('Successfully set the megaphone feature', async ({ page, browser }) => {
     await page.goto(mapUrl);
-    await page.evaluate(() => localStorage.setItem('debug', '*'));
+    //await page.evaluate(() => localStorage.setItem('debug', '*'));
     await login(page, "test", 3);
     await Map.walkTo(page, 'ArrowLeft', 1_500);
 
@@ -67,7 +67,7 @@ test.describe('Map editor', () => {
 
   test('Successfully use the megaphone', async ({ page, browser }) => {
     await page.goto(mapUrl);
-    await page.evaluate(() => localStorage.setItem('debug', '*'));
+    //await page.evaluate(() => localStorage.setItem('debug', '*'));
     await login(page, "test", 3);
     await Map.walkTo(page, 'ArrowLeft', 1_500);
 
@@ -96,8 +96,8 @@ test.describe('Map editor', () => {
     await expect(uploadFile1.ok()).toBeTruthy();
 
     await page.goto(mapUrl);
-    await page.evaluate(() => { localStorage.setItem('debug', '*'); });
-    await page.reload();
+    //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
+    //await page.reload();
     await login(page, "test", 3);
 
     await Menu.openMapEditor(page);
@@ -109,7 +109,7 @@ test.describe('Map editor', () => {
     await AreaEditor.addProperty(page, 'ListenerZone for megaphone');
     await AreaEditor.setListenerZoneProperty(page);
     await Menu.closeMapEditor(page);
-    await Map.walkToPosition(page, 380, 450);
+    await Map.walkToPosition(page, 200, 450);
     await expect(await page.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible();
 
 
@@ -117,10 +117,10 @@ test.describe('Map editor', () => {
     const newBrowser = await browser.browserType().launch();
     const page2 = await newBrowser.newPage();
     await page2.goto(mapUrl);
-    await page2.evaluate(() => { localStorage.setItem('debug', '*'); });
-    await page2.reload();
+    //await page2.evaluate(() => { localStorage.setItem('debug', '*'); });
+    //await page2.reload();
     await login(page2, "test2", 5);
-    await Map.walkToPosition(page2, 200, 450);
+    await Map.walkToPosition(page2, 360, 450);
 
     await expect(await page2.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible();
   });
