@@ -95,6 +95,7 @@ export const EnvironmentVariables = z.object({
         .string()
         .optional()
         .transform((val) => toArray(val)),
+    WOKA_SPEED: PositiveIntAsString.optional().transform((val) => toNumber(val, 9)),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
