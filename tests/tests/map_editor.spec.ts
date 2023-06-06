@@ -96,7 +96,10 @@ test.describe('Map editor', () => {
     await expect(uploadFile1.ok()).toBeTruthy();
 
     await page.goto(mapUrl);
-    await page.evaluate(() => { localStorage.setItem('debug', '*'); });
+    await page.evaluate(() => {
+      localStorage.setItem('debug', '*');
+      console.log(localStorage.getItem('debug'));
+    });
     await login(page, "test", 3);
 
     await Menu.openMapEditor(page);
