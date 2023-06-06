@@ -109,7 +109,7 @@ test.describe('Map editor', () => {
     await AreaEditor.addProperty(page, 'ListenerZone for megaphone');
     await AreaEditor.setListenerZoneProperty(page);
     await Menu.closeMapEditor(page);
-    await Map.walkToPosition(page, 400, 450);
+    await Map.walkToPosition(page, 380, 450);
     await expect(await page.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible();
 
 
