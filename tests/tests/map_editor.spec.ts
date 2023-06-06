@@ -110,6 +110,7 @@ test.describe('Map editor', () => {
     await AreaEditor.setListenerZoneProperty(page);
     await Menu.closeMapEditor(page);
     await Map.walkToPosition(page, 400, 450);
+    await expect(await page.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible();
 
 
     // Second browser
@@ -122,6 +123,5 @@ test.describe('Map editor', () => {
     await Map.walkToPosition(page2, 200, 450);
 
     await expect(await page2.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible();
-    await expect(await page.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible();
   });
 });

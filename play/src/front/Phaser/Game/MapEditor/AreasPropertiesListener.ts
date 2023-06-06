@@ -46,6 +46,7 @@ export class AreasPropertiesListener {
             if (!area.properties) {
                 continue;
             }
+            console.log("Entering area", area);
             for (const property of area.properties) {
                 switch (property.type) {
                     case "openWebsite": {
@@ -69,6 +70,7 @@ export class AreasPropertiesListener {
                         break;
                     }
                     case "speakerMegaphone": {
+                        console.log("Entering speaker megaphone zone");
                         this.handleSpeakerMegaphonePropertyOnEnter(property);
                         break;
                     }
