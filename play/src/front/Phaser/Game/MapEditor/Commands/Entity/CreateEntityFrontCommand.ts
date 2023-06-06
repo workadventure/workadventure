@@ -7,25 +7,26 @@ import { DeleteEntityFrontCommand } from "./DeleteEntityFrontCommand";
 export class CreateEntityFrontCommand extends CreateEntityCommand implements FrontCommandInterface {
     constructor(
         gameMap: GameMap,
+        entityId: string | undefined,
         entityData: WAMEntityData,
         commandId: string | undefined,
         private entitiesManager: EntitiesManager
     ) {
-        super(gameMap, entityData, commandId);
+        super(gameMap, entityId, entityData, commandId);
     }
 
     public async execute(): Promise<void> {
         const returnVal = super.execute();
-        await this.entitiesManager.addEntity(structuredClone(this.entityData), undefined, true);
+        await this.entitiesManager.addEntity(this.entityId, structuredClone(this.entityData), undefined, true);
 
         return returnVal;
     }
 
     public getUndoCommand(): Command & DeleteEntityFrontCommand {
-        return new DeleteEntityFrontCommand(this.gameMap, this.entityData.id, undefined, this.entitiesManager);
+        return new DeleteEntityFrontCommand(this.gameMap, this.entityId, undefined, this.entitiesManager);
     }
 
     public emitEvent(roomConnection: RoomConnection): void {
-        roomConnection.emitMapEditorCreateEntity(this.id, this.entityData);
+        roomConnection.emitMapEditorCreateEntity(this.id, this.entityId, this.entityData);
     }
 }

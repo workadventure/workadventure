@@ -6,7 +6,7 @@ describe("Test UpdateWAMSettingFrontCommand", () => {
     const defaultWamFile: WAMFileFormat = {
         version: "1.0.0",
         mapUrl: "testMapUrl",
-        entities: [],
+        entities: {},
         areas: [],
         entityCollections: [],
     };

@@ -1,4 +1,4 @@
-import { AtLeast, EntityData, EntityDataProperties, EntityPrefabRef, WAMEntityData } from "@workadventure/map-editor";
+import { EntityData, EntityDataProperties, EntityPrefabRef, WAMEntityData } from "@workadventure/map-editor";
 import { Observable, Subject } from "rxjs";
 import { get } from "svelte/store";
 import { z } from "zod";
@@ -83,7 +83,12 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         this.bindEventHandlers();
     }
 
-    public async addEntity(data: WAMEntityData, imagePathPrefix?: string, interactive?: boolean): Promise<Entity> {
+    public async addEntity(
+        entityId: string,
+        data: WAMEntityData,
+        imagePathPrefix?: string,
+        interactive?: boolean
+    ): Promise<Entity> {
         const prefab = await this.scene
             .getEntitiesCollectionsManager()
             .getEntityPrefab(data.prefabRef.collectionName, data.prefabRef.id);
@@ -94,7 +99,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         }
         TexturesHelper.loadEntityImage(this.scene, prefab.imagePath, `${imagePathPrefix ?? ""}${prefab.imagePath}`)
             .then(() => {
-                const entity = this.entities.get(data.id);
+                const entity = this.entities.get(entityId);
                 if (entity) {
                     entity
                         .setTexture(prefab.imagePath)
@@ -102,7 +107,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 }
             })
             .catch((e) => console.error(e));
-        const entity = new Entity(this.scene, data, prefab);
+        const entity = new Entity(this.scene, entityId, data, prefab);
 
         if (interactive) {
             entity.setInteractive({ pixelPerfect: true, cursor: "pointer" });
@@ -116,7 +121,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             this.gameMapFrontWrapper.modifyToCollisionsLayer(entity.x, entity.y, "0", colGrid);
         }
 
-        this.entities.set(data.id, entity);
+        this.entities.set(entityId, entity);
         if (entity.isActivatable()) {
             this.activatableEntities.push(entity);
         }
@@ -132,7 +137,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         }
 
         if (entity.isActivatable()) {
-            const index = this.activatableEntities.findIndex((entity) => entity.getEntityData().id === id);
+            const index = this.activatableEntities.findIndex((entity) => entity.entityId === id);
             if (index !== -1) {
                 this.activatableEntities.splice(index, 1);
             }
@@ -205,7 +210,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 this.gameMapFrontWrapper.handleEntityActionTrigger();
             }
         );
-        entity.on(EntityEvent.Updated, (data: AtLeast<EntityData, "id">) => {
+        entity.on(EntityEvent.Updated, (data: EntityData) => {
             this.emit(EntitiesManagerEvent.UpdateEntity, data);
         });
         entity.on(Phaser.Input.Events.DRAG_START, () => {
@@ -279,8 +284,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                     if (this.ctrlKey?.isDown) {
                         this.copyEntity(entity);
                     } else {
-                        const data: AtLeast<EntityData, "id"> = {
-                            id: entity.getEntityData().id,
+                        const data: Partial<EntityData> = {
+                            id: entity.entityId,
                             x: entity.x,
                             y: entity.y,
                         };

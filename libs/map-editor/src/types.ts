@@ -123,6 +123,7 @@ export const EntityCollection = z.object({
     collection: z.array(EntityPrefab),
 });
 
+// TODO: get rid of this type and use only WAMEntityData
 export const EntityData = z.object({
     id: z.string(),
     x: z.number(),
@@ -133,7 +134,7 @@ export const EntityData = z.object({
     prefabRef: EntityPrefabRef,
 });
 
-export const WAMEntityData = EntityData.omit({ prefab: true });
+export const WAMEntityData = EntityData.omit({ prefab: true, id: true });
 export type WAMEntityData = z.infer<typeof WAMEntityData>;
 
 export const WAMMetadata = z.object({
@@ -179,7 +180,7 @@ export const WAMSettings = z.object({
 export const WAMFileFormat = z.object({
     version: z.string(),
     mapUrl: z.string(),
-    entities: z.array(WAMEntityData),
+    entities: z.record(z.string(), WAMEntityData),
     areas: z.array(AreaData),
     entityCollections: z.array(CollectionUrl),
     lastCommandId: z.string().optional(),
