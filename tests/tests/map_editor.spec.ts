@@ -96,7 +96,7 @@ test.describe('Map editor', () => {
     await expect(uploadFile1.ok()).toBeTruthy();
 
     await page.goto(mapUrl);
-    await page.evaluate(() => localStorage.setItem('debug', '*'));
+    await page.evaluate(() => { localStorage.setItem('debug', '*'); });
     await login(page, "test", 3);
 
     await Menu.openMapEditor(page);
@@ -115,7 +115,7 @@ test.describe('Map editor', () => {
     const newBrowser = await browser.browserType().launch();
     const page2 = await newBrowser.newPage();
     await page2.goto(mapUrl);
-    await page2.evaluate(() => localStorage.setItem('debug', '*'));
+    await page2.evaluate(() => { localStorage.setItem('debug', '*'); });
     await login(page2, "test2", 5);
     await Map.walkToPosition(page2, 200, 450);
 
