@@ -7,12 +7,11 @@
     import { onDestroy } from "svelte";
 
     import logoImg from "../images/logo-min-white.png";
-    let logo = gameManager?.currentStartedRoom?.loginSceneLogo ?? logoImg;
     import reload from "../images/reload.png";
-    let errorScreen = get(errorScreenStore);
+    import error from "./images/error.gif";
 
-    import error from "./images/error.png";
-    let errorLogo = errorScreen?.image || error;
+    let errorScreen = get(errorScreenStore);
+    let logo = errorScreen?.image ?? gameManager?.currentStartedRoom?.loginSceneLogo ?? logoImg;
 
     function click() {
         if (errorScreen?.type === "unauthorized") void connectionManager.logout();
@@ -45,7 +44,7 @@
     >
         <div class="tw-flex tw-flex-col tw-items-center" style="width: 90%;">
             <div class="logo"><img src={logo} alt="WorkAdventure" /></div>
-            <div class="icon"><img src={errorLogo} alt="Error logo" /></div>
+            <div class="icon"><img src={error} alt="Error logo" /></div>
             {#if $errorScreenStore.type !== "retry"}<h2>{$errorScreenStore.title}</h2>{/if}
             {#if $errorScreenStore.subtitle}<p>{$errorScreenStore.subtitle}</p>{/if}
             {#if $errorScreenStore.type !== "retry"}<p class="code">Code : {$errorScreenStore.code}</p>{/if}
