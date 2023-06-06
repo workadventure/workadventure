@@ -1,4 +1,4 @@
-import { AtLeast, Command, EntityData, GameMap, UpdateEntityCommand } from "@workadventure/map-editor";
+import { Command, GameMap, UpdateEntityCommand, WAMEntityData } from "@workadventure/map-editor";
 import { EntitiesManager } from "../../../GameMap/EntitiesManager";
 import { Entity } from "../../../../ECS/Entity";
 import { GameScene } from "../../../GameScene";
@@ -8,13 +8,14 @@ import { RoomConnection } from "../../../../../Connexion/RoomConnection";
 export class UpdateEntityFrontCommand extends UpdateEntityCommand implements FrontCommandInterface {
     constructor(
         gameMap: GameMap,
-        dataToModify: AtLeast<EntityData, "id">,
+        entityId: string,
+        dataToModify: Partial<WAMEntityData>,
         commandId: string | undefined,
-        oldConfig: AtLeast<EntityData, "id"> | undefined,
+        oldConfig: Partial<WAMEntityData> | undefined,
         private entitiesManager: EntitiesManager,
         private scene: GameScene
     ) {
-        super(gameMap, dataToModify, commandId, oldConfig);
+        super(gameMap, entityId, dataToModify, commandId, oldConfig);
     }
 
     public execute(): Promise<void> {
@@ -24,8 +25,8 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
         return returnVal;
     }
 
-    private handleEntityUpdate(config: AtLeast<EntityData, "id">): void {
-        const entity = this.entitiesManager.getEntities().get(config.id);
+    private handleEntityUpdate(config: Partial<WAMEntityData>): void {
+        const entity = this.entitiesManager.getEntities().get(this.entityId);
         if (!entity) {
             return;
         }
@@ -47,6 +48,7 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
     public getUndoCommand(): Command & FrontCommandInterface {
         return new UpdateEntityFrontCommand(
             this.gameMap,
+            this.entityId,
             this.oldConfig,
             undefined,
             this.newConfig,
@@ -55,6 +57,6 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
         );
     }
     public emitEvent(roomConnection: RoomConnection): void {
-        roomConnection.emitMapEditorModifyEntity(this.id, this.newConfig);
+        roomConnection.emitMapEditorModifyEntity(this.id, this.entityId, this.newConfig);
     }
 }
