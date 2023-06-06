@@ -553,11 +553,32 @@ jobs:
           path: /tmp/ejabberd.tar.gz
 
   end-to-end-tests:
-    name: "End to end tests with ${{ matrix.browser }}"
+    name: "End to end tests with ${{ matrix.browser }} (${{ matrix.shard }}/${{ matrix.nbShards }})"
     strategy:
       fail-fast: false
       matrix:
-        browser: [ 'chromium', 'firefox', 'webkit' ]
+        include:
+          - browser: chromium
+            shard: 1
+            nbShards: 2
+          - browser: chromium
+            shard: 2
+            nbShards: 2
+          - browser: firefox
+            shard: 1
+            nbShards: 2
+          - browser: firefox
+            shard: 2
+            nbShards: 2
+          - browser: webkit
+            shard: 1
+            nbShards: 3
+          - browser: webkit
+            shard: 2
+            nbShards: 3
+          - browser: webkit
+            shard: 3
+            nbShards: 3
     needs:
       - build-play
       - build-chat
@@ -660,7 +681,7 @@ jobs:
         run: sleep 10 && npm run upload-test-map
         working-directory: map-storage
       - name: Run Playwright tests
-        run: npm run test-prod-like -- --project=${{ matrix.browser }}
+        run: npm run test-prod-like -- --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }}
         working-directory: tests
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
@@ -682,16 +703,20 @@ jobs:
       - uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: playwright-report-${{ matrix.browser }}
+          name: playwright-report-${{ matrix.browser }}-${{ matrix.shard }}-${{ matrix.nbShards }}
           path: tests/playwright-report/
           retention-days: 30
 
   prod-single-domain-deploy-tests:
-    name: "Test production docker-compose"
+    name: "Test production docker-compose (${{ matrix.shard }}/${{ matrix.nbShards }})"
     strategy:
       fail-fast: false
       matrix:
-        browser: [ 'chromium' ]
+        include:
+          - shard: 1
+            nbShards: 2
+          - shard: 2
+            nbShards: 2
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     needs:
       - build-play
@@ -749,7 +774,7 @@ jobs:
         working-directory: map-storage
       - name: Run Playwright tests
         # Run all tests, except the ones needing to restart Docker and the ones relying on an OIDC server
-        run: npm run test-single-domain-install
+        run: npm run test-single-domain-install -- --shard ${{ matrix.shard }}/${{ matrix.nbShards }}
         working-directory: tests
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
@@ -774,7 +799,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: playwright-report-single-domain
+          name: playwright-report-single-domain-${{ matrix.shard }}-${{ matrix.nbShards }}
           path: tests/playwright-report/
           retention-days: 30
 
