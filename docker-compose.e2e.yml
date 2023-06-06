@@ -11,12 +11,12 @@ services:
         condition: service_healthy
 
   play:
-    image: ghcr.io/workadventure/play:${DOCKER_TAG:-develop}
+    image: thecodingmachine/workadventure-play:${DOCKER_TAG:-develop}
     build:
       context: ./
       dockerfile: play/Dockerfile
       cache_from:
-        - ghcr.io/workadventure/play:${DOCKER_TAG:-develop}
+        - thecodingmachine/workadventure-play:${DOCKER_TAG:-develop}
       args:
         BUILDKIT_INLINE_CACHE: 1
     working_dir: /usr/src/play
@@ -38,12 +38,12 @@ services:
       - "traefik.http.services.play.loadbalancer.server.port=3000"
 
   chat:
-    image: ghcr.io/workadventure/chat:${DOCKER_TAG:-develop}
+    image: thecodingmachine/workadventure-chat:${DOCKER_TAG:-develop}
     build:
       context: ./
       dockerfile: chat/Dockerfile
       cache_from:
-        - ghcr.io/workadventure/chat:${DOCKER_TAG:-develop}
+        - thecodingmachine/workadventure-chat:${DOCKER_TAG:-develop}
       args:
         BUILDKIT_INLINE_CACHE: 1
     command: /start_nginx.sh
@@ -59,12 +59,12 @@ services:
       - "traefik.http.services.chat.loadbalancer.server.port=80"
 
   back:
-    image: ghcr.io/workadventure/back:${DOCKER_TAG:-develop}
+    image: thecodingmachine/workadventure-back:${DOCKER_TAG:-develop}
     build:
       context: ./
       dockerfile: back/Dockerfile
       cache_from:
-        - ghcr.io/workadventure/back:${DOCKER_TAG:-develop}
+        - thecodingmachine/workadventure-back:${DOCKER_TAG:-develop}
       args:
         BUILDKIT_INLINE_CACHE: 1
     command: npm run runprod
@@ -77,12 +77,12 @@ services:
       STARTUP_COMMAND_2: ""
 
   map-storage:
-    image: ghcr.io/workadventure/map-storage:${DOCKER_TAG:-develop}
+    image: thecodingmachine/workadventure-map-storage:${DOCKER_TAG:-develop}
     build:
       context: ./
       dockerfile: map-storage/Dockerfile
       cache_from:
-        - ghcr.io/workadventure/map-storage:${DOCKER_TAG:-develop}
+        - thecodingmachine/workadventure-map-storage:${DOCKER_TAG:-develop}
       args:
         BUILDKIT_INLINE_CACHE: 1
     working_dir: /usr/src/map-storage
@@ -93,11 +93,11 @@ services:
       STARTUP_COMMAND_2: ""
 
   maps:
-    image: ghcr.io/workadventure/maps:${DOCKER_TAG:-develop}
+    image: thecodingmachine/workadventure-maps:${DOCKER_TAG:-develop}
     build:
       context: maps/
       cache_from:
-        - ghcr.io/workadventure/maps:${DOCKER_TAG:-develop}
+        - thecodingmachine/workadventure-maps:${DOCKER_TAG:-develop}
       args:
         BUILDKIT_INLINE_CACHE: 1
     volumes: []
@@ -106,12 +106,12 @@ services:
       STARTUP_COMMAND_1: ""
 
   uploader:
-    image: ghcr.io/workadventure/uploader:${DOCKER_TAG:-develop}
+    image: thecodingmachine/workadventure-uploader:${DOCKER_TAG:-develop}
     build:
       context: ./
       dockerfile: uploader/Dockerfile
       cache_from:
-        - ghcr.io/workadventure/uploader:${DOCKER_TAG:-develop}
+        - thecodingmachine/workadventure-uploader:${DOCKER_TAG:-develop}
       args:
         BUILDKIT_INLINE_CACHE: 1
     working_dir: /usr/src/uploader
@@ -122,11 +122,11 @@ services:
       STARTUP_COMMAND_1: ""
 
   ejabberd:
-    image: ghcr.io/workadventure/ejabberd:${DOCKER_TAG:-develop}
+    image: thecodingmachine/workadventure-ejabberd:${DOCKER_TAG:-develop}
     build:
       context: ./xmpp
       cache_from:
-        - ghcr.io/workadventure/ejabberd:${DOCKER_TAG:-develop}
+        - thecodingmachine/workadventure-ejabberd:${DOCKER_TAG:-develop}
       args:
         BUILDKIT_INLINE_CACHE: 1
     volumes: []
