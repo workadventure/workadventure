@@ -1,20 +1,4 @@
 import { z } from "zod";
-import type { CreateAreaCommandConfig } from "./Commands/Area/CreateAreaCommand";
-import type { DeleteAreaCommandConfig } from "./Commands/Area/DeleteAreaCommand";
-import type { UpdateAreaCommandConfig } from "./Commands/Area/UpdateAreaCommand";
-import type { CreateEntityCommandConfig } from "./Commands/Entity/CreateEntityCommand";
-import type { DeleteEntityCommandConfig } from "./Commands/Entity/DeleteEntityCommand";
-import { UpdateEntityCommandConfig } from "./Commands/Entity/UpdateEntityCommand";
-import { UpdateWAMSettingCommandConfig } from "./Commands/WAM/UpdateWAMSettingCommand";
-
-export type CommandConfig =
-    | UpdateAreaCommandConfig
-    | DeleteAreaCommandConfig
-    | CreateAreaCommandConfig
-    | UpdateEntityCommandConfig
-    | CreateEntityCommandConfig
-    | DeleteEntityCommandConfig
-    | UpdateWAMSettingCommandConfig;
 
 export type AtLeast<T, K extends keyof T> = Partial<T> & Pick<T, K>;
 
@@ -24,6 +8,11 @@ export enum Direction {
     Down = "Down",
     Right = "Right",
 }
+
+export const CollectionUrl = z.object({
+    url: z.string(),
+    type: z.union([z.literal("file"), z.literal("marketplace")]),
+});
 
 export const PropertyBase = z.object({
     id: z.string(),
@@ -135,20 +124,30 @@ export const EntityPrefab = EntityRawPrefab.extend({
     id: z.string(),
 });
 
+export const EntityPrefabRef = z.object({
+    collectionName: z.string(),
+    id: z.string(),
+});
+
 export const EntityCollection = z.object({
     collectionName: z.string(),
     tags: z.array(z.string()),
     collection: z.array(EntityPrefab),
 });
 
+// TODO: get rid of this type and use only WAMEntityData
 export const EntityData = z.object({
     id: z.string(),
     x: z.number(),
     y: z.number(),
     name: z.string().optional(),
     properties: EntityDataProperties.optional(),
-    prefab: EntityPrefab,
+    prefab: EntityRawPrefab,
+    prefabRef: EntityPrefabRef,
 });
+
+export const WAMEntityData = EntityData.omit({ prefab: true, id: true });
+export type WAMEntityData = z.infer<typeof WAMEntityData>;
 
 export const WAMMetadata = z.object({
     name: z.string().optional().describe("The name of the map."),
@@ -186,17 +185,18 @@ export const MegaphoneSettings = z.object({
 
 export type MegaphoneSettings = z.infer<typeof MegaphoneSettings>;
 
+export const WAMSettings = z.object({
+    megaphone: MegaphoneSettings.optional(),
+});
+
 export const WAMFileFormat = z.object({
     version: z.string(),
     mapUrl: z.string(),
-    entities: z.array(EntityData),
+    entities: z.record(z.string(), WAMEntityData),
     areas: z.array(AreaData),
+    entityCollections: z.array(CollectionUrl),
     lastCommandId: z.string().optional(),
-    settings: z
-        .object({
-            megaphone: MegaphoneSettings.optional(),
-        })
-        .optional(),
+    settings: WAMSettings.optional(),
     metadata: WAMMetadata.optional().describe("Contains metadata about the map (name, description, copyright, etc.)"),
     vendor: WAMVendor.optional(),
 });
@@ -216,6 +216,7 @@ export const MapsCacheFileFormat = z.object({
 export type EntityRawPrefab = z.infer<typeof EntityRawPrefab>;
 export type EntityPrefab = z.infer<typeof EntityPrefab>;
 export type EntityCollection = z.infer<typeof EntityCollection>;
+export type CollectionUrl = z.infer<typeof CollectionUrl>;
 export type EntityData = z.infer<typeof EntityData>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
 export type EntityDataProperty = z.infer<typeof EntityDataProperty>;
@@ -232,6 +233,7 @@ export type JitsiRoomConfigData = z.infer<typeof JitsiRoomConfigData>;
 export type JitsiRoomPropertyData = z.infer<typeof JitsiRoomPropertyData>;
 export type PlayAudioPropertyData = z.infer<typeof PlayAudioPropertyData>;
 export type OpenWebsitePropertyData = z.infer<typeof OpenWebsitePropertyData>;
+export type WAMSettings = z.infer<typeof WAMSettings>;
 export type WAMFileFormat = z.infer<typeof WAMFileFormat>;
 export type MapsCacheSingleMapFormat = z.infer<typeof MapsCacheSingleMapFormat>;
 export type MapsCacheFileFormat = z.infer<typeof MapsCacheFileFormat>;

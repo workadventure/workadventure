@@ -90,10 +90,6 @@ app.get("*.wam", (req, res, next) => {
     })().catch((e) => next());
 });
 
-app.get("/entityCollections", (req, res) => {
-    res.send(mapsManager.getEntityCollections());
-});
-
 app.get("/ping", (req, res) => {
     res.send("pong");
 });

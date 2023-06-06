@@ -1,40 +1,38 @@
-import type { AtLeast, EntityData } from "../../types";
+import type { WAMEntityData } from "../../types";
 import type { GameMap } from "../../GameMap/GameMap";
 import { Command } from "../Command";
 
-export interface UpdateEntityCommandConfig {
-    type: "UpdateEntityCommand";
-    dataToModify: AtLeast<EntityData, "id">;
-}
-
 export class UpdateEntityCommand extends Command {
-    private oldConfig: AtLeast<EntityData, "id">;
-    private newConfig: AtLeast<EntityData, "id">;
+    protected oldConfig: Partial<WAMEntityData>;
+    protected newConfig: Partial<WAMEntityData>;
 
-    private gameMap: GameMap;
+    protected gameMap: GameMap;
 
-    constructor(gameMap: GameMap, config: UpdateEntityCommandConfig, commandId?: string) {
+    constructor(
+        gameMap: GameMap,
+        protected entityId: string,
+        dataToModify: Partial<WAMEntityData>,
+        commandId?: string,
+        oldConfig?: Partial<WAMEntityData>
+    ) {
         super(commandId);
         this.gameMap = gameMap;
-        const oldConfig = gameMap.getGameMapEntities()?.getEntity(config.dataToModify.id);
         if (!oldConfig) {
-            throw new Error("Trying to update a non existing Entity!");
+            const oldConfig = gameMap.getGameMapEntities()?.getEntity(entityId);
+            if (!oldConfig) {
+                throw new Error("Trying to update a non existing Entity!");
+            }
+            this.oldConfig = structuredClone(oldConfig);
+        } else {
+            this.oldConfig = structuredClone(oldConfig);
         }
-        this.newConfig = structuredClone(config.dataToModify);
-        this.oldConfig = structuredClone(oldConfig);
+        this.newConfig = structuredClone(dataToModify);
     }
 
-    public execute(): UpdateEntityCommandConfig {
-        if (!this.gameMap.getGameMapEntities()?.updateEntity(this.newConfig.id, this.newConfig)) {
-            throw new Error(`MapEditorError: Could not execute UpdateEntity Command. Entity ID: ${this.newConfig.id}`);
+    public execute(): Promise<void> {
+        if (!this.gameMap.getGameMapEntities()?.updateEntity(this.entityId, this.newConfig)) {
+            throw new Error(`MapEditorError: Could not execute UpdateEntity Command. Entity ID: ${this.entityId}`);
         }
-        return { type: "UpdateEntityCommand", dataToModify: this.newConfig };
-    }
-
-    public undo(): UpdateEntityCommandConfig {
-        if (!this.gameMap.getGameMapEntities()?.updateEntity(this.oldConfig.id, this.oldConfig)) {
-            throw new Error(`MapEditorError: Could not undo UpdateEntity Command. Entity ID: ${this.newConfig.id}`);
-        }
-        return { type: "UpdateEntityCommand", dataToModify: this.oldConfig };
+        return Promise.resolve();
     }
 }

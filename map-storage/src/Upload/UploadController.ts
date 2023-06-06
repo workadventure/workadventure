@@ -442,7 +442,8 @@ export class UploadController {
             version: "1.0.0",
             mapUrl: tmjFilePath,
             areas: [],
-            entities: [],
+            entities: {},
+            entityCollections: [],
             settings: undefined,
         };
     }

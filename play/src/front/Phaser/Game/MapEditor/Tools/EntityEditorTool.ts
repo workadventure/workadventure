@@ -1,4 +1,4 @@
-import { AtLeast, CommandConfig, EntityData, EntityPrefab } from "@workadventure/map-editor";
+import { EntityData, EntityPrefab, WAMEntityData } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { get, Unsubscriber } from "svelte/store";
 import {
@@ -15,6 +15,9 @@ import { CopyEntityEventData, EntitiesManager, EntitiesManagerEvent } from "../.
 import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { GameScene } from "../../GameScene";
 import { MapEditorModeManager } from "../MapEditorModeManager";
+import { CreateEntityFrontCommand } from "../Commands/Entity/CreateEntityFrontCommand";
+import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCommand";
+import { UpdateEntityFrontCommand } from "../Commands/Entity/UpdateEntityFrontCommand";
 import { MapEditorTool } from "./MapEditorTool";
 
 export class EntityEditorTool extends MapEditorTool {
@@ -106,36 +109,14 @@ export class EntityEditorTool extends MapEditorTool {
         }
     }
     /**
-     * Perform actions needed to see the changes instantly
-     */
-    public handleCommandExecution(commandConfig: CommandConfig, localCommand: boolean): void {
-        switch (commandConfig.type) {
-            case "UpdateEntityCommand": {
-                this.handleEntityUpdate(commandConfig.dataToModify);
-                break;
-            }
-            case "CreateEntityCommand": {
-                this.handleEntityCreation(commandConfig.entityData);
-                break;
-            }
-            case "DeleteEntityCommand": {
-                this.handleEntityDeletion(commandConfig.id);
-                break;
-            }
-            default: {
-                break;
-            }
-        }
-    }
-    /**
      * React on commands coming from the outside
      */
-    public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): void {
+    public async handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
         const commandId = editMapCommandMessage.id;
         switch (editMapCommandMessage.editMapMessage?.message?.$case) {
             case "createEntityMessage": {
                 const data = editMapCommandMessage.editMapMessage?.message.createEntityMessage;
-                const entityPrefab = this.scene
+                const entityPrefab = await this.scene
                     .getEntitiesCollectionsManager()
                     .getEntityPrefab(data.collectionName, data.prefabId);
 
@@ -152,82 +133,59 @@ export class EntityEditorTool extends MapEditorTool {
                         console.warn(reason);
                     });
 
-                const entityData: EntityData = {
+                const entityData: WAMEntityData = {
                     x: data.x,
                     y: data.y,
-                    id: data.id,
-                    prefab: entityPrefab,
+                    prefabRef: {
+                        id: entityPrefab.id,
+                        collectionName: entityPrefab.collectionName,
+                    },
                     properties: data.properties,
                 };
                 // execute command locally
-                this.mapEditorModeManager.executeCommand(
-                    {
-                        type: "CreateEntityCommand",
+                await this.mapEditorModeManager.executeCommand(
+                    new CreateEntityFrontCommand(
+                        this.scene.getGameMap(),
+                        data.id,
                         entityData,
-                    },
+                        commandId,
+                        this.entitiesManager
+                    ),
                     false,
-                    false,
-                    commandId
+                    false
                 );
                 break;
             }
             case "deleteEntityMessage": {
+                console.log("Handle deleteEntityMessage");
                 const id = editMapCommandMessage.editMapMessage?.message.deleteEntityMessage.id;
-                this.mapEditorModeManager.executeCommand(
-                    {
-                        type: "DeleteEntityCommand",
-                        id,
-                    },
+                await this.mapEditorModeManager.executeCommand(
+                    new DeleteEntityFrontCommand(this.scene.getGameMap(), id, commandId, this.entitiesManager),
                     false,
-                    false,
-                    commandId
+                    false
                 );
                 break;
             }
             case "modifyEntityMessage": {
                 const data = editMapCommandMessage.editMapMessage?.message.modifyEntityMessage;
-                this.mapEditorModeManager.executeCommand(
-                    {
-                        type: "UpdateEntityCommand",
-                        dataToModify: {
+                await this.mapEditorModeManager.executeCommand(
+                    new UpdateEntityFrontCommand(
+                        this.scene.getGameMap(),
+                        data.id,
+                        {
                             ...data,
                             properties: data.modifyProperties ? data.properties : undefined,
                         },
-                    },
+                        commandId,
+                        undefined,
+                        this.entitiesManager,
+                        this.scene
+                    ),
                     false,
-                    false,
-                    commandId
+                    false
                 );
                 break;
             }
-        }
-    }
-
-    private handleEntityUpdate(config: AtLeast<EntityData, "id">): void {
-        const entity = this.entitiesManager.getEntities().get(config.id);
-        if (!entity) {
-            return;
-        }
-        const { x: oldX, y: oldY } = entity.getOldPosition();
-        entity?.updateEntity(config);
-        this.updateCollisionGrid(entity, oldX, oldY);
-        this.scene.markDirty();
-    }
-
-    private handleEntityCreation(config: EntityData): void {
-        this.entitiesManager.addEntity(structuredClone(config), undefined, true);
-    }
-
-    private handleEntityDeletion(id: string): void {
-        this.entitiesManager.deleteEntity(id);
-    }
-
-    private updateCollisionGrid(entity: Entity, oldX: number, oldY: number): void {
-        const reversedGrid = entity.getReversedCollisionGrid();
-        const grid = entity.getCollisionGrid();
-        if (reversedGrid && grid) {
-            this.scene.getGameMapFrontWrapper().modifyToCollisionsLayer(oldX, oldY, "0", reversedGrid);
-            this.scene.getGameMapFrontWrapper().modifyToCollisionsLayer(entity.x, entity.y, "0", grid);
         }
     }
 
@@ -300,32 +258,53 @@ export class EntityEditorTool extends MapEditorTool {
 
     private bindEntitiesManagerEventHandlers(): void {
         this.entitiesManager.on(EntitiesManagerEvent.DeleteEntity, (entity: Entity) => {
-            this.mapEditorModeManager.executeCommand({
-                type: "DeleteEntityCommand",
-                id: entity.getEntityData().id,
-            });
+            this.mapEditorModeManager
+                .executeCommand(
+                    new DeleteEntityFrontCommand(
+                        this.scene.getGameMap(),
+                        entity.entityId,
+                        undefined,
+                        this.entitiesManager
+                    )
+                )
+                .catch((e) => console.error(e));
         });
-        this.entitiesManager.on(EntitiesManagerEvent.UpdateEntity, (entityData: AtLeast<EntityData, "id">) => {
-            this.mapEditorModeManager.executeCommand({
-                type: "UpdateEntityCommand",
-                dataToModify: entityData,
-            });
+        this.entitiesManager.on(EntitiesManagerEvent.UpdateEntity, (entityData: EntityData) => {
+            this.mapEditorModeManager
+                .executeCommand(
+                    new UpdateEntityFrontCommand(
+                        this.scene.getGameMap(),
+                        entityData.id,
+                        entityData,
+                        undefined,
+                        undefined,
+                        this.entitiesManager,
+                        this.scene
+                    )
+                )
+                .catch((e) => console.error(e));
         });
         this.entitiesManager.on(EntitiesManagerEvent.CopyEntity, (data: CopyEntityEventData) => {
             if (!CopyEntityEventData.parse(data)) {
                 return;
             }
-            const entityData: EntityData = {
+            const entityData: WAMEntityData = {
                 x: data.position.x,
                 y: data.position.y,
-                id: crypto.randomUUID(),
-                prefab: data.prefab,
+                prefabRef: data.prefabRef,
                 properties: data.properties ?? [],
             };
-            this.mapEditorModeManager.executeCommand({
-                type: "CreateEntityCommand",
-                entityData,
-            });
+            this.mapEditorModeManager
+                .executeCommand(
+                    new CreateEntityFrontCommand(
+                        this.scene.getGameMap(),
+                        undefined,
+                        entityData,
+                        undefined,
+                        this.entitiesManager
+                    )
+                )
+                .catch((e) => console.error(e));
             this.cleanPreview();
         });
     }
@@ -418,17 +397,23 @@ export class EntityEditorTool extends MapEditorTool {
             y = Math.floor(pointer.worldY / 32) * 32 + offsets.y;
         }
 
-        const entityData: EntityData = {
+        const entityData: WAMEntityData = {
             x: x - this.entityPrefabPreview.displayWidth * 0.5,
             y: y - this.entityPrefabPreview.displayHeight * 0.5,
-            id: crypto.randomUUID(),
-            prefab: this.entityPrefab,
+            prefabRef: this.entityPrefab,
             properties: get(mapEditorCopiedEntityDataPropertiesStore) ?? [],
         };
-        this.mapEditorModeManager.executeCommand({
-            entityData,
-            type: "CreateEntityCommand",
-        });
+        this.mapEditorModeManager
+            .executeCommand(
+                new CreateEntityFrontCommand(
+                    this.scene.getGameMap(),
+                    undefined,
+                    entityData,
+                    undefined,
+                    this.entitiesManager
+                )
+            )
+            .catch((e) => console.error(e));
     }
 
     private cleanPreview(): void {

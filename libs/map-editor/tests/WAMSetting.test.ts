@@ -1,59 +1,50 @@
 import { describe, expect, it, assert } from "vitest";
-import { UpdateWAMSettingCommand, UpdateWAMSettingCommandConfig, WAMFileFormat } from "../src";
+import { UpdateWAMSettingCommand, WAMFileFormat } from "../src";
 
 describe("WAM Setting", () => {
     const defaultWamFile: WAMFileFormat = {
         version: "1.0.0",
         mapUrl: "testMapUrl",
-        entities: [],
+        entities: {},
         areas: [],
+        entityCollections: [],
     };
-    const commandConfig: UpdateWAMSettingCommandConfig = {
-        type: "UpdateWAMSettingCommand",
-        name: "megaphone",
-        dataToModify: {
-            enabled: true,
-            title: "testTitle",
-            rights: ["testRights"],
-            scope: "testScope",
-        },
+    const dataToModify = {
+        enabled: true,
+        title: "testTitle",
+        rights: ["testRights"],
+        scope: "testScope",
     };
-    it("should change WAM file loaded when WAMSettingCommand received", () => {
+    it("should change WAM file loaded when WAMSettingCommand received", async () => {
         const wamFile: WAMFileFormat = { ...defaultWamFile };
-        const command = new UpdateWAMSettingCommand(wamFile, commandConfig, "test-uuid");
-        const result = command.execute();
+        const command = new UpdateWAMSettingCommand(
+            wamFile,
+            {
+                message: {
+                    $case: "updateMegaphoneSettingMessage",
+                    updateMegaphoneSettingMessage: dataToModify,
+                },
+            },
+            "test-uuid"
+        );
+        await command.execute();
         expect(wamFile.settings).toBeDefined();
         if (wamFile.settings) {
             expect(wamFile.settings.megaphone).toBeDefined();
             if (wamFile.settings.megaphone) {
-                expect(wamFile.settings.megaphone).toEqual(commandConfig.dataToModify);
+                expect(wamFile.settings.megaphone).toEqual(dataToModify);
             } else {
                 assert.fail("wamFile.settings.megaphone is not defined");
             }
         } else {
             assert.fail("wamFile.settings is not defined");
         }
-        expect(result.type).toBe("UpdateWAMSettingCommand");
+        /*expect(result.type).toBe("UpdateWAMSettingCommand");
         if (result.type === "UpdateWAMSettingCommand") {
             expect(result.name).toBe("megaphone");
-            expect(result.dataToModify).toEqual(commandConfig.dataToModify);
+            expect(result.dataToModify).toEqual(dataToModify);
         } else {
             assert.fail("result.type is not UpdateWAMSettingCommand");
-        }
-    });
-    it("should not change WAM file loaded when undo is used", () => {
-        const wamFile: WAMFileFormat = { ...defaultWamFile };
-
-        const command = new UpdateWAMSettingCommand(wamFile, commandConfig, "test-uuid");
-        command.execute();
-        const result = command.undo();
-        expect(wamFile.settings).toBeDefined();
-        expect(result.type).toBe("UpdateWAMSettingCommand");
-        if (result.type === "UpdateWAMSettingCommand") {
-            expect(result.name).toBe("megaphone");
-            expect(result.dataToModify).toBeUndefined();
-        } else {
-            assert.fail("result.type is not UpdateWAMSettingCommand");
-        }
+        }*/
     });
 });

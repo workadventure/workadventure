@@ -17,7 +17,7 @@
             })
             .catch((result) => {
                 state = "error";
-                finalText = result;
+                finalText = result.toString();
             })
             .finally(() => {
                 setTimeout(() => {

@@ -89,7 +89,7 @@
     "tailwindcss": "^3.1.8",
     "ts-node-dev": "^2.0.0",
     "tslib": "^2.4.1",
-    "vite": "^3.1.4",
+    "vite": "^3.2.7",
     "vite-tsconfig-paths": "^3.5.1",
     "vitest": "^0.29.1",
     "vitest-mock-extended": "^1.0.9"

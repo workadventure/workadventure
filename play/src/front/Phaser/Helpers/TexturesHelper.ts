@@ -1,6 +1,4 @@
 export class TexturesHelper {
-    public static readonly ENTITIES_TEXTURES_DIRECTORY = "/resources/entities/";
-
     public static async getSnapshot(
         scene: Phaser.Scene,
         ...sprites: { sprite: Phaser.GameObjects.Sprite; frame?: string | number }[]

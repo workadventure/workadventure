@@ -6,8 +6,7 @@ import {
     Json,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
-import type { WAMFileFormat } from "../types";
-import { GameMapProperties } from "../types";
+import { WAMFileFormat, GameMapProperties } from "../types";
 import type { AreaChangeCallback } from "./GameMapAreas";
 import { GameMapAreas } from "./GameMapAreas";
 import { flattenGroupLayersMap } from "./LayersFlattener";
@@ -46,11 +45,6 @@ export class GameMap {
         this.flatLayers = flattenGroupLayersMap(this.map);
         this.tiledObjects = GameMap.getObjectsFromLayers(this.flatLayers);
 
-        if (this.wam) {
-            this.gameMapAreas = new GameMapAreas(this.wam);
-            this.gameMapEntities = new GameMapEntities(this.wam);
-        }
-
         for (const tileset of this.map.tilesets) {
             if ("tiles" in tileset) {
                 for (const tile of tileset.tiles ?? []) {
@@ -73,6 +67,13 @@ export class GameMap {
                     }
                 }
             }
+        }
+    }
+
+    public initialize(): void {
+        if (this.wam) {
+            this.gameMapAreas = new GameMapAreas(this.wam);
+            this.gameMapEntities = new GameMapEntities(this.wam);
         }
     }
 
