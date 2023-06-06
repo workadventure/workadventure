@@ -1,10 +1,10 @@
 import {expect, Page} from '@playwright/test';
 
 export async function login(
-  page: Page,
-  userName = 'Alice',
-  characterNumber = 2,
-  browserLanguage: string | null = 'en-US'
+    page: Page,
+    userName = 'Alice',
+    characterNumber = 2,
+    browserLanguage: string | null = 'en-US'
 ) {
   // window.localStorage.setItem('language', browserLanguage)
 

@@ -1,3 +1,4 @@
+import fs from "fs";
 import {expect, test} from '@playwright/test';
 import Menu from "./utils/menu";
 import {login} from "./utils/roles";
@@ -7,10 +8,14 @@ import AreaEditor from "./utils/map-editor/areaEditor";
 import Map from "./utils/map";
 import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 
+
 const protocol = process.env.MAP_STORAGE_PROTOCOL ?? 'http';
 const mapUrl = `${protocol}://play.workadventure.localhost/~/maps/areas.wam`;
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
+test.use({
+  baseURL: (process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://john.doe:password@" + (process.env.MAP_STORAGE_ENDPOINT ?? 'map-storage.workadventure.localhost'),
+})
 test.describe('Map editor', () => {
   test('Successfully set the megaphone feature', async ({ page, browser }) => {
     await page.goto(mapUrl);
@@ -81,7 +86,15 @@ test.describe('Map editor', () => {
     await Menu.toggleMegaphoneButton(page);
   });
 
-  test('Successfully set areas in the map editor', async ({ page, browser }) => {
+  test('Successfully set areas in the map editor', async ({ page, browser, request }) => {
+
+    const uploadFile1 = await request.post("upload", {
+      multipart: {
+        file: fs.createReadStream("../map-storage/tests/assets.zip"),
+      }
+    });
+    await expect(uploadFile1.ok()).toBeTruthy();
+
     await page.goto(mapUrl);
     await page.evaluate(() => localStorage.setItem('debug', '*'));
     await login(page, "test", 3);
