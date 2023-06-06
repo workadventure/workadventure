@@ -115,15 +115,20 @@ export class PusherRoom implements CustomJsonReplacerInterface {
                                     editMapCommandMessage: message.message.editMapCommandMessage,
                                 },
                             });
+                            // In case the message is updating the megaphone settings, we need to send an additional
+                            // message to update the display of the megaphone button. The Megaphone button is displayed
+                            // based on roles so we need to do this in the pusher.
                             if (
                                 message.message.editMapCommandMessage.editMapMessage?.message?.$case ===
-                                "updateMegaphoneSettingMessage"
+                                    "updateWAMSettingsMessage" &&
+                                message.message.editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage
+                                    .message?.$case === "updateMegaphoneSettingMessage"
                             ) {
                                 if (!this._wamSettings) {
                                     this._wamSettings = {};
                                 }
                                 this._wamSettings.megaphone =
-                                    message.message.editMapCommandMessage.editMapMessage.message.updateMegaphoneSettingMessage;
+                                    message.message.editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message.updateMegaphoneSettingMessage;
                                 listener.emitInBatch({
                                     message: {
                                         $case: "megaphoneSettingsMessage",

@@ -37,14 +37,19 @@ export class MapListService {
         };
 
         for (const wamFilePath of files) {
-            const virtualPath = mapPathUsingDomain(wamFilePath, domain);
-            const wamFileString = await this.fileSystem.readFileAsString(virtualPath);
-            const wamFile = WAMFileFormat.parse(JSON.parse(wamFileString));
-            wamFiles.maps[wamFilePath] = {
-                mapUrl: wamFile.mapUrl,
-                metadata: wamFile.metadata,
-                vendor: wamFile.vendor,
-            };
+            try {
+                const virtualPath = mapPathUsingDomain(wamFilePath, domain);
+                const wamFileString = await this.fileSystem.readFileAsString(virtualPath);
+                const wamFile = WAMFileFormat.parse(JSON.parse(wamFileString));
+                wamFiles.maps[wamFilePath] = {
+                    mapUrl: wamFile.mapUrl,
+                    metadata: wamFile.metadata,
+                    vendor: wamFile.vendor,
+                };
+            } catch (err) {
+                console.log(`Parsing error for ${wamFilePath}`);
+                throw err;
+            }
         }
 
         await this.writeCacheFileNoLimit(domain, wamFiles);

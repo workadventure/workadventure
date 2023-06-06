@@ -42,11 +42,11 @@ import {
     RemoveSpaceUserMessage,
     WatchSpaceMessage,
     SpaceFilterMessage,
-    UpdateMegaphoneSettingMessage,
     MegaphoneSettings,
+    UpdateWAMSettingsMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
-import type { AreaData, AtLeast, EntityData } from "@workadventure/map-editor";
+import type { AreaData, AtLeast, WAMEntityData } from "@workadventure/map-editor";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
@@ -1097,10 +1097,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitUpdateMegaphoneSettingMessage(
-        commandId: string,
-        updateMegaphoneSettingMessage: UpdateMegaphoneSettingMessage
-    ) {
+    public emitUpdateWAMSettingMessage(commandId: string, updateWAMSettingsMessage: UpdateWAMSettingsMessage) {
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1108,8 +1105,8 @@ export class RoomConnection implements RoomConnection {
                     id: commandId,
                     editMapMessage: {
                         message: {
-                            $case: "updateMegaphoneSettingMessage",
-                            updateMegaphoneSettingMessage,
+                            $case: "updateWAMSettingsMessage",
+                            updateWAMSettingsMessage,
                         },
                     },
                 },
@@ -1153,7 +1150,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorModifyEntity(commandId: string, config: AtLeast<EntityData, "id">): void {
+    public emitMapEditorModifyEntity(commandId: string, entityId: string, config: Partial<WAMEntityData>): void {
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1164,6 +1161,7 @@ export class RoomConnection implements RoomConnection {
                             $case: "modifyEntityMessage",
                             modifyEntityMessage: {
                                 ...config,
+                                id: entityId,
                                 properties: config.properties ?? [],
                                 modifyProperties: config.properties !== undefined,
                             },
@@ -1174,7 +1172,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorCreateEntity(commandId: string, config: EntityData): void {
+    public emitMapEditorCreateEntity(commandId: string, entityId: string, config: WAMEntityData): void {
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1184,11 +1182,11 @@ export class RoomConnection implements RoomConnection {
                         message: {
                             $case: "createEntityMessage",
                             createEntityMessage: {
-                                id: config.id,
+                                id: entityId,
                                 x: config.x,
                                 y: config.y,
-                                collectionName: config.prefab.collectionName,
-                                prefabId: config.prefab.id,
+                                collectionName: config.prefabRef.collectionName,
+                                prefabId: config.prefabRef.id,
                                 properties: config.properties ?? [],
                             },
                         },

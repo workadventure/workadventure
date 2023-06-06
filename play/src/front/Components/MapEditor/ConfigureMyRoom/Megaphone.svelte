@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { v4 as uuid } from "uuid";
     import { fade } from "svelte/transition";
     import { UpdateMegaphoneSettingMessage } from "@workadventure/messages";
     import { InfoIcon } from "svelte-feather-icons";
@@ -11,6 +10,7 @@
     import InputTags from "../../Input/InputTags.svelte";
     import PureLoader from "../../PureLoader.svelte";
     import ButtonState from "../../Input/ButtonState.svelte";
+    import { executeUpdateWAMSettings } from "../../../Phaser/Game/MapEditor/Commands/Facades";
 
     type Option = {
         value: string;
@@ -36,38 +36,50 @@
         },
     };
 
-    function partialSave() {
+    async function partialSave() {
         if (!enabled) {
             loading = true;
-            gameManager.getCurrentGameScene().connection?.emitUpdateMegaphoneSettingMessage(
-                uuid(),
-                UpdateMegaphoneSettingMessage.fromJSON({
+            await executeUpdateWAMSettings({
+                $case: "updateMegaphoneSettingMessage",
+                updateMegaphoneSettingMessage: UpdateMegaphoneSettingMessage.fromJSON({
                     enabled,
-                })
-            );
+                }),
+            });
             loading = false;
         }
     }
 
-    function save(): Promise<string> {
-        return new Promise((resolve, reject) => {
-            if (loading) return;
+    async function save(): Promise<string> {
+        if (loading) {
+            throw new Error("Already loading");
+        }
+        try {
             loading = true;
             if (!title) {
                 dynamicStrings.error.title = $LL.mapEditor.settings.megaphone.inputs.error.title();
-                reject($LL.mapEditor.settings.megaphone.inputs.error.save.fail());
+                throw $LL.mapEditor.settings.megaphone.inputs.error.save.fail();
             } else {
                 dynamicStrings.error.title = "";
             }
-            gameManager.getCurrentGameScene().connection?.emitUpdateMegaphoneSettingMessage(uuid(), {
-                enabled,
-                scope,
-                title,
-                rights: (rights || []).map((right) => right.value),
+
+            const wamFile = gameManager.getCurrentGameScene().getGameMap().getWam();
+            if (!wamFile) {
+                throw new Error("Error, no wam file");
+            }
+            await executeUpdateWAMSettings({
+                $case: "updateMegaphoneSettingMessage",
+                updateMegaphoneSettingMessage: UpdateMegaphoneSettingMessage.fromJSON({
+                    enabled,
+                    scope,
+                    title,
+                    rights: (rights || []).map((right) => right.value),
+                }),
             });
+
+            return $LL.mapEditor.settings.megaphone.inputs.error.save.success();
+        } finally {
             loading = false;
-            resolve($LL.mapEditor.settings.megaphone.inputs.error.save.success());
-        });
+        }
     }
 
     async function getTags(): Promise<Option[]> {

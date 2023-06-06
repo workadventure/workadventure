@@ -1,4 +1,4 @@
-import type { AreaData, AtLeast, CommandConfig } from "@workadventure/map-editor";
+import type { AreaData, AtLeast } from "@workadventure/map-editor";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import type { EditMapCommandMessage } from "@workadventure/messages";
@@ -13,6 +13,9 @@ import type { GameScene } from "../../GameScene";
 import type { MapEditorModeManager } from "../MapEditorModeManager";
 import { SizeAlteringSquare } from "../../../Components/MapEditor/SizeAlteringSquare";
 import { CopyAreaEventData } from "../../GameMap/EntitiesManager";
+import { UpdateAreaFrontCommand } from "../Commands/Area/UpdateAreaFrontCommand";
+import { DeleteAreaFrontCommand } from "../Commands/Area/DeleteAreaFrontCommand";
+import { CreateAreaFrontCommand } from "../Commands/Area/CreateAreaFrontCommand";
 import { MapEditorTool } from "./MapEditorTool";
 
 export class AreaEditorTool extends MapEditorTool {
@@ -109,23 +112,25 @@ export class AreaEditorTool extends MapEditorTool {
         this.scene.input.setDefaultCursor("auto");
     }
 
-    public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): void {
+    public async handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
         const commandId = editMapCommandMessage.id;
         switch (editMapCommandMessage.editMapMessage?.message?.$case) {
             case "modifyAreaMessage": {
                 const data = editMapCommandMessage.editMapMessage?.message.modifyAreaMessage;
                 // execute command locally
-                this.mapEditorModeManager.executeCommand(
-                    {
-                        type: "UpdateAreaCommand",
-                        dataToModify: {
+                await this.mapEditorModeManager.executeCommand(
+                    new UpdateAreaFrontCommand(
+                        this.scene.getGameMap(),
+                        {
                             ...data,
                             properties: data.modifyProperties ? data.properties : undefined,
                         },
-                    },
+                        commandId,
+                        undefined,
+                        this
+                    ),
                     false,
-                    false,
-                    commandId
+                    false
                 );
                 break;
             }
@@ -136,53 +141,21 @@ export class AreaEditorTool extends MapEditorTool {
                     visible: true,
                 };
                 // execute command locally
-                this.mapEditorModeManager.executeCommand(
-                    {
-                        type: "CreateAreaCommand",
-                        areaObjectConfig: config,
-                    },
+                await this.mapEditorModeManager.executeCommand(
+                    new CreateAreaFrontCommand(this.scene.getGameMap(), config, commandId, this, false),
                     false,
-                    false,
-                    commandId
+                    false
                 );
                 break;
             }
             case "deleteAreaMessage": {
                 const data = editMapCommandMessage.editMapMessage?.message.deleteAreaMessage;
                 // execute command locally
-                this.mapEditorModeManager.executeCommand(
-                    {
-                        type: "DeleteAreaCommand",
-                        id: data.id,
-                    },
+                await this.mapEditorModeManager.executeCommand(
+                    new DeleteAreaFrontCommand(this.scene.getGameMap(), data.id, commandId, this, false),
                     false,
-                    false,
-                    commandId
+                    false
                 );
-                break;
-            }
-        }
-    }
-
-    public handleCommandExecution(commandConfig: CommandConfig, localCommand: boolean): void {
-        // We do not need to make any visual changes if AreaEditorTool is not active
-        if (!this.active) {
-            return;
-        }
-        switch (commandConfig.type) {
-            case "CreateAreaCommand": {
-                this.handleAreaPreviewCreation(commandConfig.areaObjectConfig, localCommand);
-                break;
-            }
-            case "DeleteAreaCommand": {
-                this.handleAreaPreviewDeletion(commandConfig.id);
-                break;
-            }
-            case "UpdateAreaCommand": {
-                this.handleAreaPreviewUpdate(commandConfig.dataToModify);
-                break;
-            }
-            default: {
                 break;
             }
         }
@@ -202,10 +175,11 @@ export class AreaEditorTool extends MapEditorTool {
                 if (!areaPreview) {
                     break;
                 }
-                this.mapEditorModeManager.executeCommand({
-                    type: "DeleteAreaCommand",
-                    id: areaPreview.getId(),
-                });
+                this.mapEditorModeManager
+                    .executeCommand(
+                        new DeleteAreaFrontCommand(this.scene.getGameMap(), areaPreview.getId(), undefined, this, true)
+                    )
+                    .catch((e) => console.error(e));
                 break;
             }
             default: {
@@ -412,13 +386,21 @@ export class AreaEditorTool extends MapEditorTool {
         mapEditorSelectedAreaPreviewStore.set(areaPreview);
     }
 
-    private handleAreaPreviewDeletion(id: string): void {
+    public handleAreaPreviewDeletion(id: string): void {
+        if (!this.active) {
+            return;
+        }
+
         this.deleteAreaPreview(id);
         this.scene.markDirty();
         mapEditorSelectedAreaPreviewStore.set(undefined);
     }
 
-    private handleAreaPreviewCreation(config: AreaData, localCommand: boolean): void {
+    public handleAreaPreviewCreation(config: AreaData, localCommand: boolean): void {
+        if (!this.active) {
+            return;
+        }
+
         const areaPreview = this.createAreaPreview(config);
         this.scene.markDirty();
 
@@ -427,7 +409,11 @@ export class AreaEditorTool extends MapEditorTool {
         }
     }
 
-    private handleAreaPreviewUpdate(config: AtLeast<AreaData, "id">): void {
+    public handleAreaPreviewUpdate(config: AtLeast<AreaData, "id">): void {
+        if (!this.active) {
+            return;
+        }
+
         this.areaPreviews.find((area) => area.getAreaData().id === config.id)?.updatePreview(config);
         this.scene.markDirty();
     }
@@ -460,36 +446,50 @@ export class AreaEditorTool extends MapEditorTool {
 
     private copyArea(data: CopyAreaEventData): void {
         const id = crypto.randomUUID();
-        this.mapEditorModeManager.executeCommand({
-            type: "CreateAreaCommand",
-            areaObjectConfig: {
-                id,
-                name: data.name,
-                visible: true,
-                properties: data.properties ?? [],
-                width: data.width,
-                height: data.height,
-                x: data.position.x,
-                y: data.position.y,
-            },
-        });
+        this.mapEditorModeManager
+            .executeCommand(
+                new CreateAreaFrontCommand(
+                    this.scene.getGameMap(),
+                    {
+                        id,
+                        name: data.name,
+                        visible: true,
+                        properties: data.properties ?? [],
+                        width: data.width,
+                        height: data.height,
+                        x: data.position.x,
+                        y: data.position.y,
+                    },
+                    undefined,
+                    this,
+                    true
+                )
+            )
+            .catch((e) => console.error(e));
     }
 
     private createNewArea(x: number, y: number, width: number, height: number): void {
         const id = crypto.randomUUID();
-        this.mapEditorModeManager.executeCommand({
-            type: "CreateAreaCommand",
-            areaObjectConfig: {
-                id,
-                name: "",
-                visible: true,
-                properties: [],
-                width,
-                height,
-                x,
-                y,
-            },
-        });
+        this.mapEditorModeManager
+            .executeCommand(
+                new CreateAreaFrontCommand(
+                    this.scene.getGameMap(),
+                    {
+                        id,
+                        name: "",
+                        visible: true,
+                        properties: [],
+                        width,
+                        height,
+                        x,
+                        y,
+                    },
+                    undefined,
+                    this,
+                    true
+                )
+            )
+            .catch((e) => console.error(e));
     }
 
     private deleteAreaPreview(id: string): boolean {
@@ -532,16 +532,22 @@ export class AreaEditorTool extends MapEditorTool {
             this.copyArea(data);
         });
         areaPreview.on(AreaPreviewEvent.Updated, (data: AtLeast<AreaData, "id">) => {
-            this.mapEditorModeManager.executeCommand({
-                type: "UpdateAreaCommand",
-                dataToModify: data,
-            });
+            this.mapEditorModeManager
+                .executeCommand(new UpdateAreaFrontCommand(this.scene.getGameMap(), data, undefined, undefined, this))
+                .catch((e) => console.error(e));
         });
         areaPreview.on(AreaPreviewEvent.Delete, () => {
-            this.mapEditorModeManager.executeCommand({
-                type: "DeleteAreaCommand",
-                id: areaPreview.getAreaData().id,
-            });
+            this.mapEditorModeManager
+                .executeCommand(
+                    new DeleteAreaFrontCommand(
+                        this.scene.getGameMap(),
+                        areaPreview.getAreaData().id,
+                        undefined,
+                        this,
+                        true
+                    )
+                )
+                .catch((e) => console.error(e));
         });
     }
 

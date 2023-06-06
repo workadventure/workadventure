@@ -1,32 +1,12 @@
-import {
-    Command,
-    CommandConfig,
-    GameMap,
-    UpdateAreaCommand,
-    DeleteAreaCommand,
-    UpdateEntityCommand,
-    CreateAreaCommand,
-    CreateEntityCommand,
-    DeleteEntityCommand,
-    UpdateWAMSettingCommand,
-    EntityCollection,
-    EntityPrefab,
-    EntityRawPrefab,
-    WAMFileFormat,
-} from "@workadventure/map-editor";
+import { Command, GameMap, WAMFileFormat } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import * as Sentry from "@sentry/node";
 import { fileSystem } from "./fileSystem";
 
-// TODO: dynamic imports?
-import furnitureCollection from "./entities/collections/FurnitureCollection.json";
-import officeCollection from "./entities/collections/OfficeCollection.json";
-
 class MapsManager {
     private loadedMaps: Map<string, GameMap>;
     private loadedMapsCommandsQueue: Map<string, EditMapCommandMessage[]>;
-    private loadedCollections: Map<string, EntityCollection>;
 
     private saveMapIntervals: Map<string, NodeJS.Timer>;
     private mapLastChangeTimestamp: Map<string, number>;
@@ -49,23 +29,9 @@ class MapsManager {
         this.loadedMapsCommandsQueue = new Map<string, EditMapCommandMessage[]>();
         this.saveMapIntervals = new Map<string, NodeJS.Timer>();
         this.mapLastChangeTimestamp = new Map<string, number>();
-
-        this.loadedCollections = new Map<string, EntityCollection>();
-
-        for (const collection of [furnitureCollection, officeCollection]) {
-            const parsedCollectionPrefabs: EntityPrefab[] = [];
-            for (const rawPrefab of collection.collection) {
-                parsedCollectionPrefabs.push(
-                    this.parseRawEntityPrefab(collection.collectionName, rawPrefab as EntityRawPrefab)
-                );
-            }
-            const parsedCollection: EntityCollection = structuredClone(collection) as EntityCollection;
-            parsedCollection.collection = parsedCollectionPrefabs;
-            this.loadedCollections.set(parsedCollection.collectionName, parsedCollection);
-        }
     }
 
-    public executeCommand(mapKey: string, commandConfig: CommandConfig, commandId?: string): void {
+    public async executeCommand(mapKey: string, command: Command): Promise<void> {
         const gameMap = this.getGameMap(mapKey);
         if (!gameMap) {
             throw new Error('Could not find GameMap with key "' + mapKey + '"');
@@ -74,52 +40,7 @@ class MapsManager {
         if (!this.saveMapIntervals.has(mapKey)) {
             this.startSavingMapInterval(mapKey, this.AUTO_SAVE_INTERVAL_MS);
         }
-        let command: Command | undefined;
-        switch (commandConfig.type) {
-            case "UpdateAreaCommand": {
-                command = new UpdateAreaCommand(gameMap, commandConfig, commandId);
-                command.execute();
-                break;
-            }
-            case "CreateAreaCommand": {
-                command = new CreateAreaCommand(gameMap, commandConfig, commandId);
-                command.execute();
-                break;
-            }
-            case "DeleteAreaCommand": {
-                command = new DeleteAreaCommand(gameMap, commandConfig, commandId);
-                command.execute();
-                break;
-            }
-            case "UpdateEntityCommand": {
-                command = new UpdateEntityCommand(gameMap, commandConfig, commandId);
-                command.execute();
-                break;
-            }
-            case "CreateEntityCommand": {
-                command = new CreateEntityCommand(gameMap, commandConfig, commandId);
-                command.execute();
-                break;
-            }
-            case "DeleteEntityCommand": {
-                command = new DeleteEntityCommand(gameMap, commandConfig, commandId);
-                command.execute();
-                break;
-            }
-            case "UpdateWAMSettingCommand": {
-                const wam = gameMap.getWam();
-                if (!wam) {
-                    throw new Error("WAM is not defined");
-                }
-                command = new UpdateWAMSettingCommand(wam, commandConfig, commandId);
-                command.execute();
-                break;
-            }
-            default: {
-                const _exhaustiveCheck: never = commandConfig;
-                break;
-            }
-        }
+        await command.execute();
     }
 
     public getCommandsNewerThan(mapKey: string, commandId: string): EditMapCommandMessage[] {
@@ -145,15 +66,9 @@ class MapsManager {
     }
 
     public loadWAMToMemory(key: string, wam: WAMFileFormat): void {
-        this.loadedMaps.set(key, new GameMap(this.getMockITiledMap(), wam));
-    }
-
-    public getEntityCollections(): EntityCollection[] {
-        return Array.from(this.loadedCollections.values());
-    }
-
-    public getEntityPrefab(collectionName: string, entityId: string): EntityPrefab | undefined {
-        return this.loadedCollections.get(collectionName)?.collection.find((entity) => entity.id === entityId);
+        const gameMap = new GameMap(this.getMockITiledMap(), wam);
+        gameMap.initialize();
+        this.loadedMaps.set(key, gameMap);
     }
 
     public clearAfterUpload(key: string): void {
@@ -231,14 +146,6 @@ class MapsManager {
                 });
             }, intervalMS)
         );
-    }
-
-    private parseRawEntityPrefab(collectionName: string, rawPrefab: EntityRawPrefab): EntityPrefab {
-        return {
-            ...rawPrefab,
-            collectionName,
-            id: `${collectionName}:${rawPrefab.name}:${rawPrefab.color}:${rawPrefab.direction}`,
-        };
     }
 }
 

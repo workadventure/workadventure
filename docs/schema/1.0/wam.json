@@ -11,13 +11,10 @@
           "type": "string"
         },
         "entities": {
-          "type": "array",
-          "items": {
+          "type": "object",
+          "additionalProperties": {
             "type": "object",
             "properties": {
-              "id": {
-                "type": "string"
-              },
               "x": {
                 "type": "number"
               },
@@ -94,13 +91,13 @@
                       "type": "object",
                       "properties": {
                         "id": {
-                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/id"
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/id"
                         },
                         "buttonLabel": {
-                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/buttonLabel"
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/buttonLabel"
                         },
                         "hideButtonLabel": {
-                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
                         },
                         "type": {
                           "type": "string",
@@ -125,13 +122,13 @@
                       "type": "object",
                       "properties": {
                         "id": {
-                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/id"
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/id"
                         },
                         "buttonLabel": {
-                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/buttonLabel"
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/buttonLabel"
                         },
                         "hideButtonLabel": {
-                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
                         },
                         "type": {
                           "type": "string",
@@ -182,45 +179,9 @@
                   ]
                 }
               },
-              "prefab": {
+              "prefabRef": {
                 "type": "object",
                 "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "tags": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "imagePath": {
-                    "type": "string"
-                  },
-                  "direction": {
-                    "type": "string",
-                    "enum": [
-                      "Left",
-                      "Up",
-                      "Down",
-                      "Right"
-                    ]
-                  },
-                  "color": {
-                    "type": "string"
-                  },
-                  "collisionGrid": {
-                    "type": "array",
-                    "items": {
-                      "type": "array",
-                      "items": {
-                        "type": "number"
-                      }
-                    }
-                  },
-                  "depthOffset": {
-                    "type": "number"
-                  },
                   "collectionName": {
                     "type": "string"
                   },
@@ -229,11 +190,6 @@
                   }
                 },
                 "required": [
-                  "name",
-                  "tags",
-                  "imagePath",
-                  "direction",
-                  "color",
                   "collectionName",
                   "id"
                 ],
@@ -241,10 +197,9 @@
               }
             },
             "required": [
-              "id",
               "x",
               "y",
-              "prefab"
+              "prefabRef"
             ],
             "additionalProperties": false
           }
@@ -283,13 +238,13 @@
                       "type": "object",
                       "properties": {
                         "id": {
-                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/id"
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/id"
                         },
                         "buttonLabel": {
-                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/buttonLabel"
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/buttonLabel"
                         },
                         "hideButtonLabel": {
-                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
                         },
                         "type": {
                           "type": "string",
@@ -306,13 +261,13 @@
                       "type": "object",
                       "properties": {
                         "id": {
-                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/id"
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/id"
                         },
                         "buttonLabel": {
-                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/buttonLabel"
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/buttonLabel"
                         },
                         "hideButtonLabel": {
-                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
                         },
                         "type": {
                           "type": "string",
@@ -332,13 +287,13 @@
                       "type": "object",
                       "properties": {
                         "id": {
-                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/id"
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/id"
                         },
                         "buttonLabel": {
-                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/buttonLabel"
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/buttonLabel"
                         },
                         "hideButtonLabel": {
-                          "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
                         },
                         "type": {
                           "type": "string",
@@ -352,13 +307,13 @@
                       "additionalProperties": false
                     },
                     {
-                      "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/0"
+                      "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0"
                     },
                     {
-                      "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/1"
+                      "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/1"
                     },
                     {
-                      "$ref": "#/definitions/WAMFileFormat/properties/entities/items/properties/properties/items/anyOf/2"
+                      "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/2"
                     }
                   ]
                 }
@@ -373,6 +328,29 @@
               "visible",
               "name",
               "properties"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "entityCollections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "file",
+                  "marketplace"
+                ]
+              }
+            },
+            "required": [
+              "url",
+              "type"
             ],
             "additionalProperties": false
           }
@@ -441,7 +419,8 @@
         "version",
         "mapUrl",
         "entities",
-        "areas"
+        "areas",
+        "entityCollections"
       ],
       "additionalProperties": false
     }

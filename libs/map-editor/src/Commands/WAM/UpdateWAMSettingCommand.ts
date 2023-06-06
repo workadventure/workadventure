@@ -1,45 +1,60 @@
-import { CommandConfig, MegaphoneSettings, WAMFileFormat } from "../../types";
+import type { UpdateWAMSettingsMessage } from "@workadventure/messages";
+import { WAMFileFormat, WAMSettings } from "../../types";
 import { Command } from "../Command";
 
-export interface UpdateWAMSettingCommandConfig {
-    type: "UpdateWAMSettingCommand";
-    name: string;
-    dataToModify: MegaphoneSettings | undefined;
-}
-
 export class UpdateWAMSettingCommand extends Command {
-    private readonly oldConfig: MegaphoneSettings | undefined;
-    constructor(private wam: WAMFileFormat, private command: UpdateWAMSettingCommandConfig, id?: string) {
+    private readonly oldConfig: WAMSettings | undefined;
+    constructor(
+        protected wam: WAMFileFormat,
+        protected updateWAMSettingsMessage: UpdateWAMSettingsMessage,
+        id?: string
+    ) {
         super(id);
-        if (this.command.name === "megaphone") {
-            this.oldConfig = this.wam.settings?.megaphone;
-        }
+        this.oldConfig = structuredClone(this.wam.settings);
     }
 
-    execute(): CommandConfig {
+    execute(): Promise<void> {
         if (this.wam.settings === undefined) {
             this.wam.settings = {};
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-assignment
+        const message: UpdateWAMSettingsMessage["message"] = this.updateWAMSettingsMessage.message;
+        if (message === undefined) {
+            console.warn("Empty settings message received");
+            return Promise.resolve();
         }
         // NOTE : Override the old config with the new config even if the new one is partially defined
-        const newSettings: MegaphoneSettings = {
-            scope: this.command.dataToModify?.scope ?? this.oldConfig?.scope,
-            title: this.command.dataToModify?.title ?? this.oldConfig?.title,
-            rights: this.command.dataToModify?.rights ?? this.oldConfig?.rights,
-            enabled: this.command.dataToModify?.enabled ?? this.oldConfig?.enabled ?? false,
+
+        // TODO: add the switch when we have several message types on which we can discriminate
+        //switch (message.$case) {
+        //    case "updateMegaphoneSettingMessage": {
+        this.wam.settings.megaphone = {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-assignment
+            scope: message.updateMegaphoneSettingMessage.scope ?? this.oldConfig?.megaphone?.scope,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-assignment
+            title: message.updateMegaphoneSettingMessage.title ?? this.oldConfig?.megaphone?.title,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-assignment
+            rights: message.updateMegaphoneSettingMessage.rights ?? this.oldConfig?.megaphone?.rights,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-assignment
+            enabled: message.updateMegaphoneSettingMessage.enabled ?? this.oldConfig?.megaphone?.enabled ?? false,
         };
-        if (this.command.name === "megaphone") {
-            this.wam.settings.megaphone = newSettings;
-        }
-        return { type: "UpdateWAMSettingCommand", name: this.command.name, dataToModify: newSettings };
+        /*        break;
+            }
+            default: {
+                const _exhaustiveCheck: never = message;
+            }
+        }*/
+        return Promise.resolve();
     }
 
-    undo(): CommandConfig {
+    /*undo(): Promise<void> {
         if (this.wam.settings === undefined) {
             this.wam.settings = {};
         }
-        if (this.command.name === "megaphone") {
+        if (this.name === "megaphone") {
             this.wam.settings.megaphone = this.oldConfig;
         }
-        return { type: "UpdateWAMSettingCommand", name: this.command.name, dataToModify: this.oldConfig };
-    }
+        return Promise.resolve();
+    }*/
 }
