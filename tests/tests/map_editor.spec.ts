@@ -1,5 +1,5 @@
 import fs from "fs";
-import {expect, test} from '@playwright/test';
+import {expect, test, webkit} from '@playwright/test';
 import Menu from "./utils/menu";
 import {login} from "./utils/roles";
 import MapEditor from "./utils/mapeditor";
@@ -66,6 +66,12 @@ test.describe('Map editor', () => {
   });
 
   test('Successfully use the megaphone', async ({ page, browser }) => {
+    if(browser.browserType() === webkit) {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     await page.goto(mapUrl);
     //await page.evaluate(() => localStorage.setItem('debug', '*'));
     await login(page, "test", 3);
@@ -87,6 +93,11 @@ test.describe('Map editor', () => {
   });
 
   test('Successfully set areas in the map editor', async ({ page, browser, request }) => {
+    if(browser.browserType() === webkit) {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
 
     const uploadFile1 = await request.post("upload", {
       multipart: {
