@@ -315,6 +315,7 @@
                     style="margin: auto"
                     class="tw-bg-lighter-purple tw-rounded-xl tw-h-5 tw-px-2 tw-w-fit tw-text-xs tw-flex tw-justify-center tw-items-center tw-shadow-grey"
                     role="button"
+                    tabindex="0"
                     on:click={scrollDownAndRead}
                 >
                     <ArrowDownIcon size="14" />

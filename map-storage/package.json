@@ -25,7 +25,7 @@
   "license": "SEE LICENSE IN LICENSE.txt",
   "scripts": {
     "prebuild": "rimraf dist",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --project tsconfig-node.json --noEmit",
     "format": "prettier --write \"src/**/*.ts\" vite.config.ts",
     "start": "TS_NODE_PROJECT=tsconfig-node.json ts-node --transpileOnly ./src/index.ts",
     "back:start:dev": "TS_NODE_PROJECT=tsconfig-node.json ts-node-dev --inspect=0.0.0.0:9229 --exit-child --respawn ./src/index.ts",
