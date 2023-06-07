@@ -4,7 +4,7 @@ import "./front/style/index.scss";
 
 import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
 import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
-import { DEBUG_MODE, SENTRY_DSN_FRONT, SENTRY_RELEASE } from "./front/Enum/EnvironmentVariable";
+import { DEBUG_MODE, SENTRY_DSN_FRONT, SENTRY_RELEASE, SENTRY_ENVIRONMENT } from "./front/Enum/EnvironmentVariable";
 import { LoginScene } from "./front/Phaser/Login/LoginScene";
 import { ReconnectingScene } from "./front/Phaser/Reconnecting/ReconnectingScene";
 import { SelectCharacterScene } from "./front/Phaser/Login/SelectCharacterScene";
@@ -27,6 +27,7 @@ if (SENTRY_DSN_FRONT != undefined) {
     try {
         const sentryOptions: Sentry.BrowserOptions = {
             dsn: SENTRY_DSN_FRONT,
+            environment: SENTRY_ENVIRONMENT,
             integrations: [new Sentry.BrowserTracing()],
             // Set tracesSampleRate to 1.0 to capture 100%
             // of transactions for performance monitoring.

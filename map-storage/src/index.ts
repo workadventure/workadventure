@@ -14,13 +14,20 @@ import { fileSystem } from "./fileSystem";
 import { passportStrategy } from "./Services/Authentication";
 import { mapPathUsingDomain } from "./Services/PathMapper";
 import { ValidatorController } from "./Upload/ValidatorController";
-import { SENTRY_DSN, SENTRY_RELEASE, WEB_HOOK_URL, SENTRY_TRACES_SAMPLE_RATE } from "./Enum/EnvironmentVariable";
+import {
+    SENTRY_DSN,
+    SENTRY_RELEASE,
+    WEB_HOOK_URL,
+    SENTRY_TRACES_SAMPLE_RATE,
+    SENTRY_ENVIRONMENT,
+} from "./Enum/EnvironmentVariable";
 
 // Sentry integration
 if (SENTRY_DSN != undefined) {
     try {
         const sentryOptions: Sentry.NodeOptions = {
             dsn: SENTRY_DSN,
+            environment: SENTRY_ENVIRONMENT,
         };
 
         if (SENTRY_TRACES_SAMPLE_RATE != undefined) {

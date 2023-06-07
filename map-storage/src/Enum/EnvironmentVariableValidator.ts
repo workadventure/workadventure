@@ -59,6 +59,10 @@ const BasicEnvironmentVariables = z.object({
         .string()
         .optional()
         .describe("The Sentry release we target. Only used if SENTRY_DSN is configured."),
+    SENTRY_ENVIRONMENT: z
+        .string()
+        .optional()
+        .describe("The Sentry environment we target. Only used if SENTRY_DSN is configured."),
     SENTRY_TRACES_SAMPLE_RATE: z
         .string()
         .optional()

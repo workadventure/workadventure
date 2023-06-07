@@ -85,6 +85,10 @@ Note that anonymous players don't have any TTL limit because their data is store
         .optional()
         .transform((val) => toNumber(val, 0.1))
         .describe("The Sentry traces sample rate. Only used if SENTRY_DSN is configured. Defaults to 0.1"),
+    SENTRY_ENVIRONMENT: z
+        .string()
+        .optional()
+        .describe("The Sentry environnement we target. Only used if SENTRY_DSN is configured."),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
