@@ -20,7 +20,7 @@ class Menu {
     }
 
     async toggleMegaphoneButton(page: Page) {
-        await page.locator('.bottom-action-bar .bottom-action-button #megaphone').click();
+        await page.locator('.bottom-action-bar .bottom-action-button #megaphone').click({timeout: 5_000});
     }
 
     async isThereMegaphoneButton(page: Page) {
