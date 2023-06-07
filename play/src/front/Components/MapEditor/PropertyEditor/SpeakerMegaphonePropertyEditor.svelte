@@ -2,7 +2,6 @@
     import { createEventDispatcher } from "svelte";
     import { SpeakerMegaphonePropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: SpeakerMegaphonePropertyData;
@@ -36,8 +35,6 @@
                 placeholder={$LL.mapEditor.properties.speakerMegaphoneProperties.namePlaceholder()}
                 bind:value={property.name}
                 on:change={onValueChange}
-                on:focus={onMapEditorInputFocus}
-                on:blur={onMapEditorInputUnfocus}
             />
         </div>
     </span>

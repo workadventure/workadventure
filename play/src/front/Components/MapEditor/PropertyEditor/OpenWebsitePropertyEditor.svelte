@@ -3,7 +3,6 @@
     import { createEventDispatcher } from "svelte";
     import { OpenWebsitePropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: OpenWebsitePropertyData;
@@ -81,8 +80,6 @@
                 placeholder={$LL.mapEditor.properties.linkProperties.linkPlaceholder()}
                 bind:value={property.link}
                 on:change={onValueChange}
-                on:focus={onMapEditorInputFocus}
-                on:blur={onMapEditorInputUnfocus}
                 on:blur={checkEmbedableWebsite}
             />
             {#if !embedable}
@@ -94,14 +91,7 @@
         {#if !property.hideButtonLabel}
             <div class="value-input tw-flex tw-flex-col">
                 <label for="linkButton">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
-                <input
-                    id="linkButton"
-                    type="text"
-                    bind:value={property.buttonLabel}
-                    on:change={onValueChange}
-                    on:focus={onMapEditorInputFocus}
-                    on:blur={onMapEditorInputUnfocus}
-                />
+                <input id="linkButton" type="text" bind:value={property.buttonLabel} on:change={onValueChange} />
             </div>
         {/if}
         <div class="value-switch">
@@ -117,8 +107,6 @@
                         type="text"
                         bind:value={property.triggerMessage}
                         on:change={onValueChange}
-                        on:focus={onMapEditorInputFocus}
-                        on:blur={onMapEditorInputUnfocus}
                     />
                 </div>
             {/if}
@@ -176,8 +164,6 @@
                     placeholder={$LL.mapEditor.properties.linkProperties.policyPlaceholder()}
                     bind:value={property.policy}
                     on:change={onValueChange}
-                    on:focus={onMapEditorInputFocus}
-                    on:blur={onMapEditorInputUnfocus}
                 />
             </div>
         </div>

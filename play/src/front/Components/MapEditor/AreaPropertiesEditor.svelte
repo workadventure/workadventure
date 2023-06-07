@@ -2,11 +2,7 @@
     import { onDestroy } from "svelte";
     import { AreaDataProperty, AreaDataPropertiesKeys, AreaDataProperties } from "@workadventure/map-editor";
     import { LL } from "../../../i18n/i18n-svelte";
-    import {
-        mapEditorSelectedAreaPreviewStore,
-        onMapEditorInputFocus,
-        onMapEditorInputUnfocus,
-    } from "../../Stores/MapEditorStore";
+    import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
     import audioSvg from "../images/audio-white.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
@@ -218,15 +214,7 @@
     </div>
     <div class="area-name-container" style="display: none;">
         <label for="objectName">Area name</label>
-        <input
-            id="objectName"
-            type="text"
-            placeholder="Value"
-            bind:value={areaName}
-            on:focus={onMapEditorInputFocus}
-            on:blur={onMapEditorInputUnfocus}
-            on:change={onUpdateName}
-        />
+        <input id="objectName" type="text" placeholder="Value" bind:value={areaName} on:change={onUpdateName} />
     </div>
     <div class="properties-container">
         {#each properties as property}

@@ -2,7 +2,6 @@
     import { createEventDispatcher } from "svelte";
     import { JitsiRoomConfigData, JitsiRoomPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
     import JitsiRoomConfigEditor from "./JitsiRoomConfigEditor.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
@@ -51,8 +50,6 @@
                 placeholder={$LL.mapEditor.properties.jitsiProperties.roomNamePlaceholder()}
                 bind:value={property.roomName}
                 on:change={onValueChange}
-                on:focus={onMapEditorInputFocus}
-                on:blur={onMapEditorInputUnfocus}
             />
         </div>
         <div class="value-switch">
@@ -88,8 +85,6 @@
                     placeholder={$LL.mapEditor.properties.jitsiProperties.jitsiUrlPlaceholder()}
                     bind:value={property.jitsiUrl}
                     on:change={onValueChange}
-                    on:focus={onMapEditorInputFocus}
-                    on:blur={onMapEditorInputUnfocus}
                 />
             </div>
             {#if !property.hideButtonLabel}
@@ -100,8 +95,6 @@
                         type="text"
                         bind:value={property.buttonLabel}
                         on:change={onValueChange}
-                        on:focus={onMapEditorInputFocus}
-                        on:blur={onMapEditorInputUnfocus}
                     />
                 </div>
             {/if}
@@ -128,8 +121,6 @@
                         type="text"
                         bind:value={property.triggerMessage}
                         on:change={onValueChange}
-                        on:focus={onMapEditorInputFocus}
-                        on:blur={onMapEditorInputUnfocus}
                     />
                 </div>
             {/if}

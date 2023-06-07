@@ -2,7 +2,6 @@
     import { createEventDispatcher } from "svelte";
     import { PlayAudioPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
     import audioSvg from "../../images/audio-white.svg";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
@@ -34,8 +33,6 @@
                 placeholder={$LL.mapEditor.properties.audioProperties.audioLinkPlaceholder()}
                 bind:value={property.audioLink}
                 on:change={onValueChange}
-                on:focus={onMapEditorInputFocus}
-                on:blur={onMapEditorInputUnfocus}
             />
         </div>
         <div class="value-switch">
@@ -53,8 +50,6 @@
                     step="0.05"
                     bind:value={property.volume}
                     on:change={onValueChange}
-                    on:focus={onMapEditorInputFocus}
-                    on:blur={onMapEditorInputUnfocus}
                 />
             </div>
             {#if !property.hideButtonLabel}
@@ -65,8 +60,6 @@
                         type="text"
                         bind:value={property.buttonLabel}
                         on:change={onValueChange}
-                        on:focus={onMapEditorInputFocus}
-                        on:blur={onMapEditorInputUnfocus}
                     />
                 </div>
             {/if}
