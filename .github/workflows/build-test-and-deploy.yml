@@ -619,6 +619,9 @@ jobs:
       - name: Fill .env file
         run: |
           sed -i "s/ROOM_API_SECRET_KEY=/ROOM_API_SECRET_KEY=MYAWESOMEKEY/g" .env
+          sed -i "s/JITSI_DOMAIN=/JITSI_DOMAIN=coremeet.workadventu.re/g" .env
+          sed -i "s/JITSI_MUC_DOMAIN=/JITSI_MUC_DOMAIN=prosody.workadventu.re/g" .env
+          sed -i "s/JITSI_XMPP_DOMAIN=/JITSI_XMPP_DOMAIN=muc.prosody.workadventu.re/g" .env
 
       -
         name: Download artifact
@@ -761,6 +764,9 @@ jobs:
           sed -i "s/MAP_STORAGE_AUTHENTICATION_PASSWORD=/MAP_STORAGE_AUTHENTICATION_PASSWORD=password/g" .env
           sed -i "s/ADMIN_API_TOKEN=/ADMIN_API_TOKEN=123/g" .env
           sed -i "s/ROOM_API_SECRET_KEY=/ROOM_API_SECRET_KEY=MYAWESOMEKEY/g" .env
+          sed -i "s/JITSI_DOMAIN=/JITSI_DOMAIN=coremeet.workadventu.re/g" .env
+          sed -i "s/JITSI_MUC_DOMAIN=/JITSI_MUC_DOMAIN=prosody.workadventu.re/g" .env
+          sed -i "s/JITSI_XMPP_DOMAIN=/JITSI_XMPP_DOMAIN=muc.prosody.workadventu.re/g" .env
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         working-directory: contrib/docker
