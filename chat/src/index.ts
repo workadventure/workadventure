@@ -1,7 +1,7 @@
 import "../style/index.scss";
 
 import * as Sentry from "@sentry/browser";
-import { SENTRY_DSN, SENTRY_RELEASE, SENTRY_TRACES_SAMPLE_RATE } from "./Enum/EnvironmentVariable";
+import { SENTRY_DSN, SENTRY_RELEASE, SENTRY_ENVIRONMENT, SENTRY_TRACES_SAMPLE_RATE } from "./Enum/EnvironmentVariable";
 import { HtmlUtils } from "./Utils/HtmlUtils";
 import App from "./Components/App.svelte";
 import { iframeListener } from "./IframeListener";
@@ -10,6 +10,7 @@ if (SENTRY_DSN != undefined) {
     try {
         const sentryOptions: Sentry.BrowserOptions = {
             dsn: SENTRY_DSN,
+            environment: SENTRY_ENVIRONMENT,
             integrations: [new Sentry.BrowserTracing()],
         };
         if (SENTRY_TRACES_SAMPLE_RATE != undefined) {

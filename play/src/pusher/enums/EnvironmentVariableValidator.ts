@@ -79,6 +79,7 @@ export const EnvironmentVariables = z.object({
     SENTRY_DSN_FRONT: z.string().optional(),
     SENTRY_DSN_PUSHER: z.string().optional(),
     SENTRY_RELEASE: z.string().optional(),
+    SENTRY_ENVIRONMENT: z.string().optional(),
     SENTRY_TRACES_SAMPLE_RATE: z
         .string()
         .optional()

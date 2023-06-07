@@ -12,6 +12,7 @@ import {
     SENTRY_DSN,
     SENTRY_RELEASE,
     SENTRY_TRACES_SAMPLE_RATE,
+    SENTRY_ENVIRONMENT,
 } from "./pusher/enums/EnvironmentVariable";
 import RoomApiServer from "./room-api/RoomApiServer";
 
@@ -25,6 +26,7 @@ if (SENTRY_DSN != undefined) {
     try {
         const sentryOptions: Sentry.NodeOptions = {
             dsn: SENTRY_DSN,
+            environment: SENTRY_ENVIRONMENT,
         };
 
         if (SENTRY_TRACES_SAMPLE_RATE != undefined) {
