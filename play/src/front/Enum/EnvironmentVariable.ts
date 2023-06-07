@@ -45,5 +45,8 @@ export const MAX_EXTRAPOLATION_TIME = 100; // Extrapolate a maximum of 250ms if 
 export const SENTRY_DSN_FRONT = env.SENTRY_DSN_FRONT;
 export const SENTRY_RELEASE = env.SENTRY_RELEASE;
 export const SENTRY_TRACES_SAMPLE_RATE = env.SENTRY_TRACES_SAMPLE_RATE;
-
 export const WOKA_SPEED = env.WOKA_SPEED;
+
+export const JITSI_DOMAIN = env.JITSI_DOMAIN;
+export const JITSI_XMPP_DOMAIN = env.JITSI_XMPP_DOMAIN;
+export const JITSI_MUC_DOMAIN = env.JITSI_MUC_DOMAIN;

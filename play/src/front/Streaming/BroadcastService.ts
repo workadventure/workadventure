@@ -10,6 +10,7 @@ import { megaphoneEnabledStore } from "../Stores/MegaphoneStore";
 import { RoomConnection } from "../Connexion/RoomConnection";
 import { Space } from "../Space/Space";
 import { gameManager } from "../Phaser/Game/GameManager";
+import { JITSI_DOMAIN, JITSI_MUC_DOMAIN, JITSI_XMPP_DOMAIN } from "../Enum/EnvironmentVariable";
 import { JitsiTrackWrapper } from "./Jitsi/JitsiTrackWrapper";
 import { jitsiConferencesStore } from "./Jitsi/JitsiConferencesStore";
 import { JitsiConferenceWrapper } from "./Jitsi/JitsiConferenceWrapper";
@@ -142,10 +143,13 @@ export class BroadcastService {
     }
 
     private async connect() {
+        if (!JITSI_DOMAIN || !JITSI_XMPP_DOMAIN || !JITSI_MUC_DOMAIN) {
+            throw new Error("Cannot use Jitsi with a no domain defined, please check your environment variables");
+        }
         this.jitsiConnection = await libJitsiFactory.createConnection(
-            "coremeet.workadventu.re",
-            "prosody.workadventu.re",
-            "muc.prosody.workadventu.re"
+            JITSI_DOMAIN,
+            JITSI_XMPP_DOMAIN,
+            JITSI_MUC_DOMAIN
         );
     }
 
