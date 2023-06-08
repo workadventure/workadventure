@@ -196,6 +196,22 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         this.ctrlKey?.on("up", () => {
             this.scene.input.setDefaultCursor("auto");
         });
+
+        this.shiftKey.on(Phaser.Input.Keyboard.Events.DOWN, () => {
+            const entity = get(mapEditorSelectedEntityStore);
+            if (!entity) {
+                return;
+            }
+            this.changeEntityTint(entity);
+        });
+
+        this.shiftKey.on(Phaser.Input.Keyboard.Events.UP, () => {
+            const entity = get(mapEditorSelectedEntityStore);
+            if (!entity) {
+                return;
+            }
+            this.changeEntityTint(entity);
+        });
     }
 
     private bindEntityEventHandlers(entity: Entity): void {
@@ -241,23 +257,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                         : Math.floor(dragY);
                 entity.setDepth(entity.y + entity.displayHeight + depthOffset);
 
-                if (
-                    !this.scene
-                        .getGameMapFrontWrapper()
-                        .canEntityBePlaced(
-                            entity.getPosition(),
-                            entity.displayWidth,
-                            entity.displayHeight,
-                            entity.getCollisionGrid(),
-                            entity.getOldPosition()
-                        )
-                ) {
-                    entity.setTint(0xff0000);
-                } else {
-                    entity.clearTint();
-                }
-
-                this.scene.markDirty();
+                this.changeEntityTint(entity);
             }
         });
         entity.on(Phaser.Input.Events.DRAG_END, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
@@ -275,11 +275,13 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                             entity.displayWidth,
                             entity.displayHeight,
                             entity.getCollisionGrid(),
-                            entity.getOldPosition()
+                            entity.getOldPosition(),
+                            this.shiftKey.isDown
                         )
                 ) {
                     const oldPos = entity.getOldPosition();
                     entity.setPosition(oldPos.x, oldPos.y);
+                    entity.clearTint();
                 } else {
                     if (this.ctrlKey?.isDown) {
                         this.copyEntity(entity);
@@ -335,6 +337,30 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             properties: entity.getEntityData().properties,
         };
         this.emit(EntitiesManagerEvent.CopyEntity, eventData);
+    }
+
+    private changeEntityTint(entity: Entity): void {
+        if (
+            !this.scene
+                .getGameMapFrontWrapper()
+                .canEntityBePlaced(
+                    entity.getPosition(),
+                    entity.displayWidth,
+                    entity.displayHeight,
+                    entity.getCollisionGrid(),
+                    entity.getOldPosition(),
+                    this.shiftKey.isDown
+                )
+        ) {
+            entity.setTint(0xff0000);
+        } else {
+            if (this.shiftKey.isDown) {
+                entity.setTint(0xffa500);
+            } else {
+                entity.clearTint();
+            }
+        }
+        this.scene.markDirty();
     }
 
     private isEntityEditorToolActive(): boolean {
