@@ -154,7 +154,6 @@ export class BroadcastService {
     }
 
     async joinJitsiConference(roomName: string, broadcastSpace: BroadcastSpace): Promise<JitsiConferenceWrapper> {
-        console.log({ JITSI_DOMAIN, JITSI_XMPP_DOMAIN, JITSI_MUC_DOMAIN });
         if (!this.jitsiConnection) {
             try {
                 await this.connect();

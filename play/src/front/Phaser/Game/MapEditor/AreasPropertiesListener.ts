@@ -43,7 +43,6 @@ export class AreasPropertiesListener {
 
     public onEnterAreasHandler(areas: AreaData[]): void {
         for (const area of areas) {
-            console.log("Entering area", area);
             if (!area.properties) {
                 continue;
             }
@@ -70,7 +69,6 @@ export class AreasPropertiesListener {
                         break;
                     }
                     case "speakerMegaphone": {
-                        console.log("Entering speaker megaphone zone");
                         this.handleSpeakerMegaphonePropertyOnEnter(property);
                         break;
                     }

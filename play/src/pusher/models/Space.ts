@@ -210,16 +210,8 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     private notifyAll(subMessage: SubMessage, youngUser: SpaceUserExtended, oldUser: SpaceUserExtended | null = null) {
-        console.log("notifyAll => clientWatcher count => ", this.clientWatchers.size, subMessage.message?.$case);
         this.clientWatchers.forEach((watcher) => {
-            console.log(
-                "notifyAll => clientWatcher => ",
-                watcher.spaceUser,
-                this.isWatcherTargeted(watcher, youngUser),
-                oldUser && this.isWatcherTargeted(watcher, oldUser)
-            );
             if (this.isWatcherTargeted(watcher, youngUser) || (oldUser && this.isWatcherTargeted(watcher, oldUser))) {
-                console.log("notifyAll => clientWatcher targeted => ", watcher.id);
                 const filterOfThisSpace = watcher.spacesFilters.get(this.name) ?? [];
                 const filtersTargeted = filterOfThisSpace.filter(
                     (spaceFilter) =>
@@ -248,7 +240,6 @@ export class Space implements CustomJsonReplacerInterface {
                                 subMessage.message.updateSpaceUserMessage.filterName = spaceFilter.filterName;
                                 watcher.emitInBatch(subMessage);
                             }
-                            console.log("updateSpaceUserMessage", subMessage.message.updateSpaceUserMessage);
                         } else if (subMessage.message?.$case === "removeSpaceUserMessage") {
                             subMessage.message.removeSpaceUserMessage.filterName = spaceFilter.filterName;
                             watcher.emitInBatch(subMessage);
