@@ -88,6 +88,10 @@ services:
       - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT}
       - SENTRY_RELEASE=${SENTRY_RELEASE}
       - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
+      - JITSI_DOMAIN
+      - JITSI_XMPP_DOMAIN
+      - JITSI_MUC_DOMAIN
+
     labels:
       traefik.enable: "true"
       traefik.http.routers.play.rule: "Host(`${DOMAIN}`) && PathPrefix(`/`)"

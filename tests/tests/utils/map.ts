@@ -1,12 +1,23 @@
 import {Page} from "@playwright/test";
+import {evaluateScript} from "./scripting";
 
 class Map {
     async walkTo(page: Page, key: string, delay = 0){
         await page.keyboard.press(key, {delay});
     }
 
-    async walkToPosition(page: Page, x: number, y: number, delay = 0){
+    async rightClickToPosition(page: Page, x: number, y: number, delay = 0){
         await page.mouse.click(x, y, {delay, button: 'right'});
+    }
+
+    async walkToPosition(page: Page, x: number, y: number){
+        await evaluateScript(page, async ({x, y}) => {
+            await WA.player.moveTo(x, y, 3);
+            return;
+        }, {
+            x,
+            y,
+        });
     }
 }
 
