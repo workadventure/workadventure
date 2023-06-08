@@ -120,7 +120,7 @@ test.describe('Map editor', () => {
     await AreaEditor.addProperty(page, 'ListenerZone for megaphone');
     await AreaEditor.setListenerZoneProperty(page);
     await Menu.closeMapEditor(page);
-    await Map.rightClickToPosition(page, 200, 450);
+    await Map.walkToPosition(page, 7*32, 10*32);
     await expect(await page.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 20_000});
 
 
@@ -131,7 +131,7 @@ test.describe('Map editor', () => {
     //await page2.evaluate(() => { localStorage.setItem('debug', '*'); });
     //await page2.reload();
     await login(page2, "test2", 5);
-    await Map.rightClickToPosition(page2, 360, 450);
+    await Map.walkToPosition(page2, 10*32, 10*32);
 
     await expect(await page2.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 20_000});
   });
