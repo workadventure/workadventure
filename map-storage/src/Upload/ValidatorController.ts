@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { Express } from "express";
-import { MapValidator } from "@workadventure/map-editor/src/GameMap/MapValidator";
+import { MapValidation, MapValidator } from "@workadventure/map-editor/src/GameMap/MapValidator";
 import { HttpFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/HttpFileFetcher";
 import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
+import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
 import { passportAuthenticator } from "../Services/Authentication";
 import { validateQuery } from "./ValidateQuery";
 
@@ -22,13 +23,33 @@ export class ValidatorController {
 
                 const mapValidator = new MapValidator("info", new HttpFileFetcher(mapUrl));
 
-                const response = await mapFetcher.fetchFile(mapUrl, false, false);
+                try {
+                    const response = await mapFetcher.fetchFile(mapUrl, false, false);
 
-                const mapValidation = await mapValidator.validateMap(response.data);
-                if (mapValidation.ok) {
-                    res.status(200).json({ ok: true });
-                } else {
-                    res.status(400).json(mapValidation);
+                    const mapValidation = await mapValidator.validateMap(response.data);
+
+                    if (mapValidation.ok) {
+                        res.status(200).json({ ok: true });
+                    } else {
+                        res.status(400).json(mapValidation);
+                    }
+                } catch (error) {
+                    if (error instanceof LocalUrlError) {
+                        res.status(400).json({
+                            ok: false,
+                            error: {
+                                map: [
+                                    {
+                                        message: "Unable to validate map: Cannot access local URL.",
+                                        details: error.message,
+                                        type: "warning",
+                                    },
+                                ],
+                            },
+                        } satisfies MapValidation);
+                        return;
+                    }
+                    throw error;
                 }
             })().catch((e) => next(e));
         });
