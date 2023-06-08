@@ -42,6 +42,11 @@ const BasicEnvironmentVariables = z.object({
         .describe(
             'The cache-control HTTP header to be used for "normal" resources. Note: resources containing a hash in the name will be set to "immutable", whatever this setting is.'
         ),
+    ENABLE_WEB_HOOK: z
+        .boolean()
+        .optional()
+        .default(true)
+        .describe("If true, the webhook will be called when a WAM file is created"),
     WEB_HOOK_URL: z
         .string()
         .optional()
