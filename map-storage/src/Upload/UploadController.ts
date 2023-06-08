@@ -14,6 +14,7 @@ import { HttpFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator
 import { Operation } from "fast-json-patch";
 import { generateErrorMessage } from "zod-error";
 import * as Sentry from "@sentry/node";
+import bodyParser from "body-parser";
 import { mapPath } from "../Services/PathMapper";
 import { MAX_UNCOMPRESSED_SIZE } from "../Enum/EnvironmentVariable";
 import { passportAuthenticator } from "../Services/Authentication";
@@ -224,124 +225,151 @@ export class UploadController {
     }
 
     private putUpload() {
-        this.app.put("/*", passportAuthenticator, upload.single("file"), (req, res, next) => {
-            (async () => {
-                // Make sure a file was uploaded
-                if (!req.file) {
-                    res.status(400).send({
-                        request: [
-                            {
-                                type: "error",
-                                message: "No file was uploaded",
-                                details: "",
-                            },
-                        ],
-                    });
-                    return;
-                }
-
-                // Get the uploaded file
-                const file = req.file;
-
-                const filePath = req.path;
-
-                if (filePath.includes("..")) {
-                    // Attempt to override filesystem. That' a hack!
-                    res.status(400).send("Invalid path");
-                    return;
-                }
-
-                // Let's explicitly forbid 2 uploads from running at the same time using a p-limit of 1.
-                // Uploads will be serialized.
-                const virtualPath = mapPath(filePath, req);
-                let limiter = this.uploadLimiter.get(filePath);
-                if (limiter === undefined) {
-                    limiter = pLimit(1);
-                    this.uploadLimiter.set(virtualPath, limiter);
-                }
-
-                await limiter(async () => {
-                    if (file.size > MAX_UNCOMPRESSED_SIZE) {
-                        res.status(413).send(
-                            `File too large. Files should be less than ${MAX_UNCOMPRESSED_SIZE} bytes.`
-                        );
-                        return;
-                    }
-
-                    // Let's validate the archive
-                    const mapValidator = new MapValidator("error", new HttpFileFetcher(req.url));
-
-                    let errors: Partial<OrganizedErrors> = {};
-
-                    const content = await fs.promises.readFile(file.path, "utf8");
-
-                    const extension = path.extname(filePath);
-                    let wamFile: WAMFileFormat | undefined;
-                    if (extension === ".json" && mapValidator.doesStringLooksLikeMap(content)) {
-                        // We forbid Maps in JSON format.
-                        errors = {
-                            map: [
+        this.app.put(
+            "/*",
+            passportAuthenticator,
+            upload.single("file"),
+            bodyParser.raw({
+                inflate: true,
+                limit: MAX_UNCOMPRESSED_SIZE,
+                type: "application/octet-stream",
+            }),
+            (req, res, next) => {
+                (async () => {
+                    // Make sure a file was uploaded
+                    if (req.is("multipart/form-data") && !req.file) {
+                        res.status(400).send({
+                            request: [
                                 {
                                     type: "error",
-                                    message: 'Invalid file extension. Maps should end with the ".tmj" extension.',
+                                    message: "No file was uploaded",
                                     details: "",
                                 },
                             ],
-                        };
-                    } else if (extension === ".wam") {
-                        const result = mapValidator.validateWAMFile(content);
-                        if (!result.ok) {
+                        });
+                        return;
+                    }
+                    /*if (!req.is("multipart/form-data")) {
+                        // If there is no "file", maybe the user tried to upload the file by passing everything in the body directly.
+                        const buffer = req.body;
+                    }*/
+
+                    // Get the uploaded file
+                    const file = req.file;
+
+                    const filePath = req.path;
+
+                    if (filePath.includes("..")) {
+                        // Attempt to override filesystem. That' a hack!
+                        res.status(400).send("Invalid path");
+                        return;
+                    }
+
+                    // Let's explicitly forbid 2 uploads from running at the same time using a p-limit of 1.
+                    // Uploads will be serialized.
+                    const virtualPath = mapPath(filePath, req);
+                    let limiter = this.uploadLimiter.get(filePath);
+                    if (limiter === undefined) {
+                        limiter = pLimit(1);
+                        this.uploadLimiter.set(virtualPath, limiter);
+                    }
+
+                    await limiter(async () => {
+                        if (file && file.size > MAX_UNCOMPRESSED_SIZE) {
+                            res.status(413).send(
+                                `File too large. Files should be less than ${MAX_UNCOMPRESSED_SIZE} bytes.`
+                            );
+                            return;
+                        }
+
+                        // Let's validate the archive
+                        const mapValidator = new MapValidator("error", new HttpFileFetcher(req.url));
+
+                        let errors: Partial<OrganizedErrors> = {};
+
+                        let content: string;
+                        if (file) {
+                            content = await fs.promises.readFile(file.path, "utf8");
+                        } else {
+                            if (typeof req.body === "object") {
+                                content = JSON.stringify(req.body);
+                            } else {
+                                throw new Error(
+                                    "Unsupported mime-type. Allowed types are application/json and multipart/form-data."
+                                );
+                            }
+                        }
+
+                        const extension = path.extname(filePath);
+                        let wamFile: WAMFileFormat | undefined;
+                        if (extension === ".json" && mapValidator.doesStringLooksLikeMap(content)) {
+                            // We forbid Maps in JSON format.
                             errors = {
                                 map: [
                                     {
                                         type: "error",
-                                        message: "Invalid WAM file format.",
-                                        details: generateErrorMessage(result.error.issues ?? []),
+                                        message: 'Invalid file extension. Maps should end with the ".tmj" extension.',
+                                        details: "",
                                     },
                                 ],
                             };
-                        } else {
-                            wamFile = result.value;
+                        } else if (extension === ".wam") {
+                            const result = mapValidator.validateWAMFile(content);
+                            if (!result.ok) {
+                                errors = {
+                                    map: [
+                                        {
+                                            type: "error",
+                                            message: "Invalid WAM file format.",
+                                            details: generateErrorMessage(result.error.issues ?? []),
+                                        },
+                                    ],
+                                };
+                            } else {
+                                wamFile = result.value;
+                            }
+                        } else if (extension === ".tmj") {
+                            const result = await mapValidator.validateStringMap(content);
+                            if (!result.ok) {
+                                errors = result.error;
+                            }
                         }
-                    } else if (extension === ".tmj") {
-                        const result = await mapValidator.validateStringMap(content);
-                        if (!result.ok) {
-                            errors = result.error;
+
+                        if (Object.keys(errors).length > 0) {
+                            res.status(400).json(errors);
+                            return;
                         }
-                    }
 
-                    if (Object.keys(errors).length > 0) {
-                        res.status(400).json(errors);
-                        return;
-                    }
+                        // TODO: create a "stream" version of this method to avoid loading the whole file in memory
+                        await this.fileSystem.writeStringAsFile(virtualPath, content);
 
-                    // TODO: create a "stream" version of this method to avoid loading the whole file in memory
-                    await this.fileSystem.writeStringAsFile(virtualPath, content);
-
-                    // Delete the uploaded file from the disk
-                    fs.unlink(file.path, (err) => {
-                        if (err) {
-                            console.error("Error deleting file:", err);
-                            Sentry.captureException(`Error deleting file: ${JSON.stringify(err)}`);
+                        // Delete the uploaded file from the disk
+                        if (file) {
+                            fs.unlink(file.path, (err) => {
+                                if (err) {
+                                    console.error("Error deleting file:", err);
+                                    Sentry.captureException(`Error deleting file: ${JSON.stringify(err)}`);
+                                }
+                            });
                         }
+
+                        if (extension === ".wam" && wamFile) {
+                            uploadDetector.refresh(this.getFullUrlFromRequest(req)).catch((err) => {
+                                console.error(err);
+                                Sentry.captureException(err);
+                            });
+                            await this.mapListService.updateWAMFileInCache(req.hostname, filePath, wamFile);
+                        }
+
+                        res.send("File successfully uploaded.");
                     });
 
-                    if (extension === ".wam" && wamFile) {
-                        uploadDetector.refresh(this.getFullUrlFromRequest(req)).catch((err) => {
-                            console.error(err);
-                            Sentry.captureException(err);
-                        });
-                        await this.mapListService.updateWAMFileInCache(req.hostname, filePath, wamFile);
+                    if (limiter.activeCount === 0 && limiter.pendingCount === 0) {
+                        this.uploadLimiter.delete(virtualPath);
                     }
-
-                    res.send("File successfully uploaded.");
-                });
-
-                if (limiter.activeCount === 0 && limiter.pendingCount === 0) {
-                    this.uploadLimiter.delete(virtualPath);
-                }
-            })().catch((e) => next(e));
-        });
+                })().catch((e) => next(e));
+            }
+        );
     }
 
     private patch() {
