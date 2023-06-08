@@ -91,6 +91,7 @@ services:
       - JITSI_DOMAIN
       - JITSI_XMPP_DOMAIN
       - JITSI_MUC_DOMAIN
+      - WOKA_SPEED
 
     labels:
       traefik.enable: "true"
