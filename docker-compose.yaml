@@ -108,6 +108,7 @@ services:
             # Sentry integration
             SENTRY_DSN_FRONT: $SENTRY_DSN_FRONT
             SENTRY_DSN_PUSHER: $SENTRY_DSN_PUSHER
+            SENTRY_ENVIRONMENT: $SENTRY_ENVIRONMENT
             SENTRY_RELEASE: $SENTRY_RELEASE
             SENTRY_ORG: $SENTRY_ORG
             SENTRY_PROJECT: $SENTRY_PROJECT
@@ -151,6 +152,7 @@ services:
             ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
             # Sentry integration
             SENTRY_DSN: "$SENTRY_DSN_CHAT"
+            SENTRY_ENVIRONMENT: $SENTRY_ENVIRONMENT
             SENTRY_ORG: "$SENTRY_ORG"
             SENTRY_PROJECT: "$SENTRY_PROJECT"
             SENTRY_AUTH_TOKEN: "$SENTRY_AUTH_TOKEN"
@@ -224,6 +226,7 @@ services:
             ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
             # Sentry integration
             SENTRY_DSN: $SENTRY_DSN_BACK
+            SENTRY_ENVIRONMENT: $SENTRY_ENVIRONMENT
             SENTRY_RELEASE: $SENTRY_RELEASE
         volumes:
             - .:/usr/src/app
@@ -252,6 +255,7 @@ services:
             API_URL: back:50051
             # Sentry integration
             SENTRY_DSN: $SENTRY_DSN_MAPSTORAGE
+            SENTRY_ENVIRONMENT: $SENTRY_ENVIRONMENT
             SENTRY_RELEASE: $SENTRY_RELEASE
         volumes:
             - .:/usr/src/app

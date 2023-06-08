@@ -4,6 +4,7 @@ import pLimit from "p-limit";
 import * as Sentry from "@sentry/node";
 import { fileSystem } from "../fileSystem";
 import { FileSystemInterface } from "../Upload/FileSystemInterface";
+import { ENABLE_WEB_HOOK } from "../Enum/EnvironmentVariable";
 import { mapPathUsingDomain } from "./PathMapper";
 import { WebHookService } from "./WebHookService";
 
@@ -53,7 +54,9 @@ export class MapListService {
         }
 
         await this.writeCacheFileNoLimit(domain, wamFiles);
-        this.webHookService.callWebHook(domain, undefined, "update");
+        if (ENABLE_WEB_HOOK) {
+            this.webHookService.callWebHook(domain, undefined, "update");
+        }
     }
 
     private getLimiter(domain: string): pLimit.Limit {
@@ -94,7 +97,9 @@ export class MapListService {
                 vendor: wamFile.vendor,
             };
             await this.writeCacheFileNoLimit(domain, cacheFile);
-            this.webHookService.callWebHook(domain, wamFilePath, "update");
+            if (ENABLE_WEB_HOOK) {
+                this.webHookService.callWebHook(domain, wamFilePath, "update");
+            }
         });
     }
 
@@ -106,7 +111,9 @@ export class MapListService {
             }
             delete cacheFile.maps[wamFilePath];
             await this.writeCacheFileNoLimit(domain, cacheFile);
-            this.webHookService.callWebHook(domain, wamFilePath, "delete");
+            if (ENABLE_WEB_HOOK) {
+                this.webHookService.callWebHook(domain, wamFilePath, "delete");
+            }
         });
     }
 

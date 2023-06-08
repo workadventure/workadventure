@@ -10,6 +10,7 @@ import {
     ENABLE_TELEMETRY,
     SENTRY_DSN,
     SENTRY_RELEASE,
+    SENTRY_ENVIRONMENT,
     SENTRY_TRACES_SAMPLE_RATE,
 } from "./src/Enum/EnvironmentVariable";
 import { telemetryService } from "./src/Services/TelemetryService";
@@ -25,6 +26,7 @@ if (SENTRY_DSN != undefined) {
     try {
         const sentryOptions: Sentry.NodeOptions = {
             dsn: SENTRY_DSN,
+            environment: SENTRY_ENVIRONMENT,
         };
         if (SENTRY_TRACES_SAMPLE_RATE != undefined) {
             // Set tracesSampleRate to 1.0 to capture 100%
