@@ -117,7 +117,6 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
 
     public updatePreview(dataToModify: AtLeast<AreaData, "id">): void {
         _.merge(this.areaData, dataToModify);
-        //let lastColor = null;
         if (dataToModify.properties !== undefined) {
             this.areaData.properties = dataToModify.properties;
 
@@ -135,14 +134,9 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 icon.setScale(0.12);
                 icon.setDepth(this.depth + 1);
                 icon.setVisible(true);
-                this.scene.add.existing(icon);
-                this.propertiesIcon.push(icon);
+                //this.scene.add.existing(icon);
+                //this.propertiesIcon.push(icon);
 
-                /*
-                const color: string = lastColor ? colorMixer(lastColor, iconProperties.color, 0.5) : iconProperties.color;
-                lastColor = color;
-                this.setFillStyle(Phaser.Display.Color.ValueToColor(color).color, 0.75);
-                 */
                 this.setFillStyle(Phaser.Display.Color.ValueToColor(iconProperties.color).color, 0.75);
 
                 counter++;
