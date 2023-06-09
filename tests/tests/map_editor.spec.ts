@@ -44,7 +44,7 @@ test.describe('Map editor', () => {
     await Megaphone.megaphoneSave(page);
     await Megaphone.isNotCorrectlySaved(page);
 
-    await Megaphone.megaphoneInputNameSpace(page);
+    await Megaphone.megaphoneInputNameSpace(page, `${browser.browserType().name()}MySpace`);
     await Megaphone.megaphoneSelectScope(page);
     await Megaphone.megaphoneAddNewRights(page, 'example');
     await Megaphone.megaphoneSave(page);
@@ -101,10 +101,10 @@ test.describe('Map editor', () => {
     await MapEditor.openAreaEditor(page);
     await AreaEditor.drawArea(page, {x: 1*32*1.5, y: 5}, {x: 9*32*1.5, y: 4*32*1.5});
     await AreaEditor.addProperty(page, 'SpeakerZone for megaphone');
-    await AreaEditor.setSpeakerMegaphoneProperty(page);
+    await AreaEditor.setSpeakerMegaphoneProperty(page, `${browser.browserType().name()}SpeakerZone`);
     await AreaEditor.drawArea(page, {x: 1*32*1.5, y: 6*32*1.5}, {x: 9*32*1.5, y: 9*32*1.5});
     await AreaEditor.addProperty(page, 'ListenerZone for megaphone');
-    await AreaEditor.setListenerZoneProperty(page);
+    await AreaEditor.setListenerZoneProperty(page, `${browser.browserType().name()}SpeakerZone`);
     await Menu.closeMapEditor(page);
     await Map.walkToPosition(page, 4*32, 2*32);
     await expect(await page.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 20_000});

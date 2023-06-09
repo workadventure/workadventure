@@ -15,13 +15,13 @@ class AreaEditor {
         await page.locator('.map-editor .sidebar .properties-buttons .add-property-button', {hasText: property}).click();
     }
 
-    async setSpeakerMegaphoneProperty(page: Page, name = "MySpeakerZone") {
+    async setSpeakerMegaphoneProperty(page: Page, name: string) {
         await page.getByPlaceholder('MySpeakerZone').click();
         await page.getByPlaceholder('MySpeakerZone').fill(name);
         await page.getByPlaceholder('MySpeakerZone').press('Enter');
     }
 
-    async setListenerZoneProperty(page: Page, name = "MySpeakerZone"){
+    async setListenerZoneProperty(page: Page, name: string){
         await page.locator('.map-editor .sidebar .properties-container select#speakerZoneSelector').selectOption({label: name});
     }
 }
