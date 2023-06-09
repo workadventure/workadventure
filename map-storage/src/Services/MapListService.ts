@@ -48,8 +48,12 @@ export class MapListService {
                     vendor: wamFile.vendor,
                 };
             } catch (err) {
-                console.log(`Parsing error for ${wamFilePath}`);
-                throw err;
+                Sentry.captureException(
+                    `Error while trying to read a WAM file to generate cache: ${JSON.stringify(
+                        err
+                    )}. Skipping this file for cache generation.`
+                );
+                console.log(`Parsing error for ${wamFilePath}. Skipping this file for cache generation.`);
             }
         }
 
