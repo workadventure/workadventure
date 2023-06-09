@@ -39,3 +39,4 @@ lerna-debug.log*
 
 /public/*
 !/public/.gitkeep
+/dist-ui/*

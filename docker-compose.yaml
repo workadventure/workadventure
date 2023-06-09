@@ -265,7 +265,12 @@ services:
             - "traefik.enable=true"
             - "traefik.http.routers.map-storage.rule=Host(`map-storage.workadventure.localhost`)"
             - "traefik.http.routers.map-storage.entryPoints=web"
+            - "traefik.http.routers.map-storage.service=map-storage"
             - "traefik.http.services.map-storage.loadbalancer.server.port=3000"
+            - "traefik.http.routers.map-storage-ui.rule=Host(`map-storage.workadventure.localhost`) && PathPrefix(`/ui/`)"
+            - "traefik.http.routers.map-storage-ui.entryPoints=web"
+            - "traefik.http.routers.map-storage-ui.service=map-storage-ui"
+            - "traefik.http.services.map-storage-ui.loadbalancer.server.port=8080"
 
     uploader:
         image: thecodingmachine/nodejs:v2-18-bullseye

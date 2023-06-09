@@ -1,3 +1,4 @@
+import * as fs from "fs";
 import * as Sentry from "@sentry/node";
 import * as grpc from "@grpc/grpc-js";
 import express from "express";
@@ -106,6 +107,14 @@ new UploadController(app, fileSystem, mapListService);
 new ValidatorController(app);
 
 app.use(proxyFiles(fileSystem));
+
+// Check that the dist-ui directory exists
+if (fs.existsSync("dist-ui")) {
+    app.use("/ui", express.static("dist-ui"));
+    app.get("/ui/*", (req, res) => {
+        res.sendFile("index.html", { root: "dist-ui" });
+    });
+}
 
 app.listen(3000, () => {
     console.log("Application is running on port 3000");

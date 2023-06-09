@@ -78,6 +78,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/play.tar
 
+      - name: Load image (for sentry)
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+        run: docker load --input /tmp/play.tar
+
       - name: Sentry push source maps
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         env:
@@ -246,6 +250,10 @@ jobs:
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/back.tar
+
+      - name: Load image (for sentry)
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+        run: docker load --input /tmp/back.tar
 
       - name: Sentry push source maps
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
@@ -461,6 +469,10 @@ jobs:
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/map-storage.tar
+
+      - name: Load image (for sentry)
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+        run: docker load --input /tmp/map-storage.tar
 
       - name: Sentry push source maps
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}

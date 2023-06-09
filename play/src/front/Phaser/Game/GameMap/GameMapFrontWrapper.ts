@@ -471,7 +471,8 @@ export class GameMapFrontWrapper {
         width: number,
         height: number,
         collisionGrid?: number[][],
-        oldTopLeftPos?: { x: number; y: number }
+        oldTopLeftPos?: { x: number; y: number },
+        ignoreCollisionGrid?: boolean
     ): boolean {
         const isOutOfBounds = this.scene
             .getGameMapFrontWrapper()
@@ -513,7 +514,11 @@ export class GameMapFrontWrapper {
                 if (
                     !this.scene
                         .getGameMapFrontWrapper()
-                        .isSpaceAvailable(topLeftPos.x + x * tileDim.width, topLeftPos.y + y * tileDim.height)
+                        .isSpaceAvailable(
+                            topLeftPos.x + x * tileDim.width,
+                            topLeftPos.y + y * tileDim.height,
+                            ignoreCollisionGrid
+                        )
                 ) {
                     return false;
                 }
@@ -522,7 +527,7 @@ export class GameMapFrontWrapper {
         return true;
     }
 
-    public isSpaceAvailable(topLeftX: number, topLeftY: number): boolean {
+    public isSpaceAvailable(topLeftX: number, topLeftY: number, ignoreCollisionGrid?: boolean): boolean {
         if (this.collisionGrid.length === 0) {
             return false;
         }
@@ -551,7 +556,10 @@ export class GameMapFrontWrapper {
                 return false;
             }
         }
-        // TODO: Check if it's colliding with other players
+
+        if (ignoreCollisionGrid) {
+            return true;
+        }
 
         // Check if position is not colliding
         const height = this.collisionGrid.length;
