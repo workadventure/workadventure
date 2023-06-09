@@ -745,7 +745,7 @@ jobs:
         run: npm ci
         working-directory: tests
       - name: Install Playwright
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps firefox
         working-directory: tests
       - name: 'Setup .env file'
         run: cp .env.prod.template .env
