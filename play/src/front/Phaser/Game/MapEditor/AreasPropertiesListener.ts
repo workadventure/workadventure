@@ -10,6 +10,7 @@ import {
 } from "@workadventure/map-editor";
 import { Jitsi } from "@workadventure/shared-utils";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
+import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWesbite";
 import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
@@ -27,6 +28,8 @@ import { scriptUtils } from "../../../Api/ScriptUtils";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
 import { requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
 import { gameManager } from "../GameManager";
+import { iframeListener } from "../../../Api/IframeListener";
+import { chatZoneLiveStore } from "../../../Stores/ChatStore";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -406,6 +409,9 @@ export class AreasPropertiesListener {
             this.scene.broadcastService.joinSpace(property.name, false);
             isSpeakerStore.set(true);
             requestedMegaphoneStore.set(true);
+            if (property.chatEnabled) {
+                this.handleJoinMucRoom(property.name, "live");
+            }
         }
     }
 
@@ -414,6 +420,9 @@ export class AreasPropertiesListener {
             this.scene.broadcastService.leaveSpace(property.name);
             requestedMegaphoneStore.set(false);
             isSpeakerStore.set(false);
+            if (property.chatEnabled) {
+                this.handleLeaveMucRoom(property.name);
+            }
         }
     }
 
@@ -425,6 +434,9 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 this.scene.broadcastService.joinSpace(speakerZoneName, false);
+                if (property.chatEnabled) {
+                    this.handleJoinMucRoom(speakerZoneName, "live");
+                }
             }
         }
     }
@@ -437,7 +449,25 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 this.scene.broadcastService.leaveSpace(speakerZoneName);
+                if (property.chatEnabled) {
+                    this.handleLeaveMucRoom(speakerZoneName);
+                }
             }
         }
+    }
+
+    private handleJoinMucRoom(name: string, type: string) {
+        iframeListener.sendJoinMucEventToChatIframe(
+            `${gameManager.getCurrentGameScene().roomUrl}/${slugify(name)}`,
+            name,
+            type,
+            false
+        );
+        chatZoneLiveStore.set(true);
+    }
+
+    private handleLeaveMucRoom(name: string) {
+        iframeListener.sendLeaveMucEventToChatIframe(`${gameManager.getCurrentGameScene().roomUrl}/${slugify(name)}`);
+        chatZoneLiveStore.set(false);
     }
 }

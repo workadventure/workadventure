@@ -37,26 +37,15 @@
                 on:change={onValueChange}
             />
         </div>
+        <div class="value-switch">
+            <label for="chatEnabled">{$LL.mapEditor.properties.chatEnabled()}</label>
+            <input
+                id="chatEnabled"
+                type="checkbox"
+                class="input-switch"
+                bind:checked={property.chatEnabled}
+                on:change={onValueChange}
+            />
+        </div>
     </span>
 </PropertyEditorBase>
-
-<style lang="scss">
-    .value-input {
-        display: flex;
-        width: 100%;
-        margin-bottom: 0.5em;
-        margin-top: 0.5em;
-        flex-direction: column;
-        label {
-            min-width: fit-content;
-            margin-right: 0.5em;
-        }
-        input {
-            flex-grow: 1;
-            min-width: 0;
-        }
-        * {
-            margin-bottom: 0;
-        }
-    }
-</style>

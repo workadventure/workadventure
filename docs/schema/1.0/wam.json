@@ -333,6 +333,10 @@
                         },
                         "name": {
                           "type": "string"
+                        },
+                        "chatEnabled": {
+                          "type": "boolean",
+                          "default": false
                         }
                       },
                       "required": [
@@ -360,6 +364,10 @@
                         },
                         "speakerZoneName": {
                           "type": "string"
+                        },
+                        "chatEnabled": {
+                          "type": "boolean",
+                          "default": false
                         }
                       },
                       "required": [

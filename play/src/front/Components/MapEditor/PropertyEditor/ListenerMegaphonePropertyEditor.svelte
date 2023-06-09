@@ -50,12 +50,10 @@
     </span>
     <span slot="content">
         <div>
-            <label class="tw-m-0" for="speakerZoneSelector"
-                >{$LL.mapEditor.properties.listenerMegaphoneProperties.nameLabel()}</label
-            >
+            <label for="speakerZoneSelector">{$LL.mapEditor.properties.listenerMegaphoneProperties.nameLabel()}</label>
             <select
                 id="speakerZoneSelector"
-                class=" tw-m-0 tw-w-full"
+                class="tw-w-full"
                 bind:value={property.speakerZoneName}
                 on:change={onValueChange}
             >
@@ -63,6 +61,16 @@
                     <option value={id}>{speakerZoneName}</option>
                 {/each}
             </select>
+        </div>
+        <div class="value-switch">
+            <label for="chatEnabled">{$LL.mapEditor.properties.chatEnabled()}</label>
+            <input
+                id="chatEnabled"
+                type="checkbox"
+                class="input-switch"
+                bind:checked={property.chatEnabled}
+                on:change={onValueChange}
+            />
         </div>
     </span>
 </PropertyEditorBase>

@@ -90,6 +90,7 @@ const mapEditor: BaseTranslation = {
             nameLabel: "SpeakerZone Name",
             namePlaceholder: "MySpeakerZone",
         },
+        chatEnabled: "Associate a dedicated chat channel",
     },
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",

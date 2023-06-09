@@ -74,11 +74,13 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
 export const SpeakerMegaphonePropertyData = PropertyBase.extend({
     type: z.literal("speakerMegaphone"),
     name: z.string(),
+    chatEnabled: z.boolean().default(false),
 });
 
 export const ListenerMegaphonePropertyData = PropertyBase.extend({
     type: z.literal("listenerMegaphone"),
     speakerZoneName: z.string(),
+    chatEnabled: z.boolean().default(false),
 });
 
 export const AreaDataProperty = z.union([
