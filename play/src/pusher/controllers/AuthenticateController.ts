@@ -109,15 +109,6 @@ export class AuthenticateController extends BaseHttpController {
                 return;
             }
 
-            // Let's validate the playUri (we don't want a hacker to forge a URL that will redirect to a malicious URL)
-            const verifyDomainService = VerifyDomainService.get(adminApi.getCapabilities());
-            const verifyDomainResult = await verifyDomainService.verifyDomain(query.playUri);
-            if (!verifyDomainResult) {
-                res.status(403);
-                res.send("Unauthorized domain in playUri");
-                return;
-            }
-
             const loginUri = await openIDClient.authorizationUrl(res, query.redirect, query.playUri);
             res.cookie("playUri", query.playUri, undefined, {
                 httpOnly: true,
