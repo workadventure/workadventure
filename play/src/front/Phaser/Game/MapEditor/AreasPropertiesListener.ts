@@ -10,6 +10,7 @@ import {
 } from "@workadventure/map-editor";
 import { Jitsi } from "@workadventure/shared-utils";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
+import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWesbite";
 import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
@@ -29,7 +30,6 @@ import { requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
 import { gameManager } from "../GameManager";
 import { iframeListener } from "../../../Api/IframeListener";
 import { chatZoneLiveStore } from "../../../Stores/ChatStore";
-import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
