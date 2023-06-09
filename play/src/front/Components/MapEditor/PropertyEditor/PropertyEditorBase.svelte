@@ -69,6 +69,7 @@
         margin-top: 0.5em;
         align-items: center;
         height: 2.5em;
+        justify-content: space-between;
         label {
             min-width: fit-content;
             margin-right: 0.5em;
