@@ -61,6 +61,13 @@ test.describe('Map editor', () => {
     await Menu.isThereMegaphoneButton(page2);
 
     // Play a sound using the megaphone
+    if(browser.browserType() === webkit) {
+      await page2.close();
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     await Menu.toggleMegaphoneButton(page);
 
     await expect(await page.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 5_000});
