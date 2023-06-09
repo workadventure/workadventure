@@ -197,7 +197,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             this.scene.input.setDefaultCursor("auto");
         });
 
-        this.shiftKey.on(Phaser.Input.Keyboard.Events.DOWN, () => {
+        this.shiftKey?.on(Phaser.Input.Keyboard.Events.DOWN, () => {
             const entity = get(mapEditorSelectedEntityStore);
             if (!entity) {
                 return;
@@ -205,7 +205,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             this.changeEntityTint(entity);
         });
 
-        this.shiftKey.on(Phaser.Input.Keyboard.Events.UP, () => {
+        this.shiftKey?.on(Phaser.Input.Keyboard.Events.UP, () => {
             const entity = get(mapEditorSelectedEntityStore);
             if (!entity) {
                 return;
@@ -276,7 +276,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                             entity.displayHeight,
                             entity.getCollisionGrid(),
                             entity.getOldPosition(),
-                            this.shiftKey.isDown
+                            this.shiftKey?.isDown
                         )
                 ) {
                     const oldPos = entity.getOldPosition();
@@ -349,12 +349,12 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                     entity.displayHeight,
                     entity.getCollisionGrid(),
                     entity.getOldPosition(),
-                    this.shiftKey.isDown
+                    this.shiftKey?.isDown
                 )
         ) {
             entity.setTint(0xff0000);
         } else {
-            if (this.shiftKey.isDown) {
+            if (this.shiftKey?.isDown) {
                 entity.setTint(0xffa500);
             } else {
                 entity.clearTint();
