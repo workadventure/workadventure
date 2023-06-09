@@ -639,15 +639,15 @@ class AdminApi implements AdminInterface {
         }
     }
 
+    public getCapabilities(): Capabilities {
+        return this.capabilities;
+    }
+
     async getTagsList(roomUrl: string) {
         const response = await axios.get(ADMIN_API_URL + "/api/room/tags" + "?roomUrl=" + encodeURIComponent(roomUrl), {
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
         });
         return response.data ? response.data : [];
-    }
-
-    public getCapabilities(): Capabilities {
-        return this.capabilities;
     }
 }
 
