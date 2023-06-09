@@ -59,6 +59,7 @@ test.describe('Map editor', () => {
     // Megaphone should be displayed and usable by all the current users
     await Menu.isThereMegaphoneButton(page);
     await Menu.isThereMegaphoneButton(page2);
+    await Menu.closeMapEditor(page);
 
     // Play a sound using the megaphone
     if(browser.browserType() === webkit) {
