@@ -367,7 +367,11 @@ export class UploadController {
                     if (limiter.activeCount === 0 && limiter.pendingCount === 0) {
                         this.uploadLimiter.delete(virtualPath);
                     }
-                })().catch((e) => next(e));
+                })().catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                    next(e);
+                });
             }
         );
     }
@@ -451,7 +455,11 @@ export class UploadController {
                 if (limiter.activeCount === 0 && limiter.pendingCount === 0) {
                     this.uploadLimiter.delete(virtualPath);
                 }
-            })().catch((e) => next(e));
+            })().catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+                next(e);
+            });
         });
     }
 
@@ -546,7 +554,11 @@ export class UploadController {
                 await this.fileSystem.archiveDirectory(archive, virtualDirectory);
 
                 await archive.finalize();
-            })().catch((e) => next(e));
+            })().catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+                next(e);
+            });
         });
     }
 
@@ -571,7 +583,11 @@ export class UploadController {
                 await this.mapListService.generateCacheFile(req.hostname);
 
                 res.sendStatus(204);
-            })().catch((e) => next(e));
+            })().catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+                next(e);
+            });
         });
     }
 
@@ -599,7 +615,11 @@ export class UploadController {
                 }
 
                 res.sendStatus(204);
-            })().catch((e) => next(e));
+            })().catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+                next(e);
+            });
         });
     }
 
@@ -641,7 +661,11 @@ export class UploadController {
                 await this.fileSystem.move(virtualPath, newVirtualPath);
                 await this.mapListService.generateCacheFile(req.hostname);
                 res.sendStatus(200);
-            })().catch((e) => next(e));
+            })().catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+                next(e);
+            });
         });
     }
 
@@ -679,7 +703,11 @@ export class UploadController {
                 await this.fileSystem.copy(virtualPath, newVirtualPath);
                 await this.mapListService.generateCacheFile(req.hostname);
                 res.sendStatus(201);
-            })().catch((e) => next(e));
+            })().catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+                next(e);
+            });
         });
     }
 
@@ -701,7 +729,11 @@ export class UploadController {
                     }
                     throw e;
                 }
-            })().catch((e) => next(e));
+            })().catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+                next(e);
+            });
         });
     }
 }
