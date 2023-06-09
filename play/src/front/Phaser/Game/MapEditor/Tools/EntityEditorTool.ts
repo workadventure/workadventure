@@ -320,11 +320,11 @@ export class EntityEditorTool extends MapEditorTool {
             this.handlePointerDownEvent(pointer, gameObjects);
         };
 
-        this.shiftKey.on(Phaser.Input.Keyboard.Events.DOWN, () => {
+        this.shiftKey?.on(Phaser.Input.Keyboard.Events.DOWN, () => {
             this.changePreviewTint();
         });
 
-        this.shiftKey.on(Phaser.Input.Keyboard.Events.UP, () => {
+        this.shiftKey?.on(Phaser.Input.Keyboard.Events.UP, () => {
             this.changePreviewTint();
         });
 
@@ -375,7 +375,7 @@ export class EntityEditorTool extends MapEditorTool {
                     this.entityPrefabPreview.displayHeight,
                     this.entityPrefab.collisionGrid,
                     undefined,
-                    this.shiftKey.isDown
+                    this.shiftKey?.isDown
                 )
         ) {
             return;
@@ -425,12 +425,12 @@ export class EntityEditorTool extends MapEditorTool {
                     this.entityPrefabPreview.displayHeight,
                     this.entityPrefab.collisionGrid,
                     undefined,
-                    this.shiftKey.isDown
+                    this.shiftKey?.isDown
                 )
         ) {
             this.entityPrefabPreview.setTint(0xff0000);
         } else {
-            if (this.shiftKey.isDown) {
+            if (this.shiftKey?.isDown) {
                 this.entityPrefabPreview.setTint(0xffa500);
             } else {
                 this.entityPrefabPreview.clearTint();
