@@ -13,6 +13,7 @@ enum AvailabilityStatus {
   JITSI = 4;
   BBB = 5;
   DENY_PROXIMITY_MEETING = 6;
+  SPEAKER = 7;
 }
 
 message PositionMessage {
@@ -62,7 +63,7 @@ message PingMessage {
 }
 
 message UpdateMapToNewestMessage {
-  string commandId = 1;
+  optional string commandId = 1;
 }
 
 message UpdateMapToNewestWithKeyMessage {
@@ -897,11 +898,11 @@ message WatchSpaceMessage{
 }
 message UnwatchSpaceMessage{
   string spaceName = 1;
-  string userUuid = 2;
+  int32 userId = 2;
 }
 
 message SpaceUser{
-  string uuid = 1; // used
+  int32 id = 1; // used
   string name = 2; // used
   string playUri = 3;
   string color = 4; // TO DELETE
@@ -916,10 +917,11 @@ message SpaceUser{
   bool screenSharing = 13;
   bool megaphoneState = 14; // used
   google.protobuf.StringValue jitsiParticipantId = 15; // used
+  string uuid = 16; // used
 }
 
 message PartialSpaceUser{
-  string uuid = 1;
+  int32 id = 1;
   google.protobuf.StringValue name = 2;
   google.protobuf.StringValue playUri = 3;
   google.protobuf.StringValue color = 4;
@@ -934,6 +936,7 @@ message PartialSpaceUser{
   google.protobuf.BoolValue screenSharing = 13;
   google.protobuf.BoolValue megaphoneState = 14;
   google.protobuf.StringValue jitsiParticipantId = 15;
+  string uuid = 16;
 }
 
 message AddSpaceUserMessage{
@@ -948,7 +951,7 @@ message UpdateSpaceUserMessage{
 }
 message RemoveSpaceUserMessage{
   string spaceName = 1;
-  string userUuid = 2;
+  int32 userId = 2;
   google.protobuf.StringValue filterName = 3;
 }
 

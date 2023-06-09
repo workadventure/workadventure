@@ -248,6 +248,14 @@ export class GameMapAreas {
                     flattenedProperties[GameMapProperties.SILENT] = true;
                     break;
                 }
+                case "speakerMegaphone": {
+                    flattenedProperties[GameMapProperties.SPEAKER_MEGAPHONE] = property.name;
+                    break;
+                }
+                case "listenerMegaphone": {
+                    flattenedProperties[GameMapProperties.LISTENER_MEGAPHONE] = property.speakerZoneName;
+                    break;
+                }
             }
         }
         return flattenedProperties;

@@ -45,6 +45,7 @@ describe("Space", () => {
         space.addWatcher(watcher2);
 
         const spaceUser: SpaceUser = SpaceUser.fromPartial({
+            id: 1,
             uuid: "uuid-test",
             name: "test",
             playUri: "test",
@@ -82,6 +83,7 @@ describe("Space", () => {
         space.addWatcher(watcher3);
 
         const spaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
+            id: 1,
             uuid: "uuid-test",
             name: "test2",
             playUri: "test2",
@@ -126,7 +128,7 @@ describe("Space", () => {
         const watcher3 = new SpacesWatcher("uuid-watcher-3", spaceSocketToPusher3);
         space.addWatcher(watcher3);
 
-        space.removeUser(watcher1, "uuid-test");
+        space.removeUser(watcher1, 1);
 
         // should have received the removeUser event
         expect(eventsWatcher3.some((message) => message.message?.$case === "removeSpaceUserMessage")).toBe(true);

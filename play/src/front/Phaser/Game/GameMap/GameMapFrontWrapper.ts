@@ -904,6 +904,21 @@ export class GameMapFrontWrapper {
                     });
                     break;
                 }
+                case "speakerMegaphone": {
+                    properties.push({
+                        name: GameMapProperties.SPEAKER_MEGAPHONE,
+                        type: "string",
+                        value: property.name,
+                    });
+                    break;
+                }
+                case "listenerMegaphone": {
+                    properties.push({
+                        name: GameMapProperties.LISTENER_MEGAPHONE,
+                        type: "string",
+                        value: property.speakerZoneName,
+                    });
+                }
             }
         }
         return properties;

@@ -2,28 +2,24 @@
     import { onDestroy } from "svelte";
     import { AreaDataProperty, AreaDataPropertiesKeys, AreaDataProperties } from "@workadventure/map-editor";
     import { LL } from "../../../i18n/i18n-svelte";
-    import {
-        mapEditorSelectedAreaPreviewStore,
-        onMapEditorInputFocus,
-        onMapEditorInputUnfocus,
-    } from "../../Stores/MapEditorStore";
-    import visioSvg from "../images/visio-white.svg";
+    import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
     import audioSvg from "../images/audio-white.svg";
-    import webSvg from "../images/web-white.svg";
-    import silentSvg from "../images/silent-white.svg";
-    import focusSvg from "../images/focus-white.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
     import FocusablePropertyEditor from "./PropertyEditor/FocusablePropertyEditor.svelte";
     import SilentPropertyEditor from "./PropertyEditor/SilentPropertyEditor.svelte";
     import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
+    import SpeakerMegaphonePropertyEditor from "./PropertyEditor/SpeakerMegaphonePropertyEditor.svelte";
+    import ListenerMegaphonePropertyEditor from "./PropertyEditor/ListenerMegaphonePropertyEditor.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
     let hasJitsiRoomProperty: boolean;
     let hasFocusableProperty: boolean;
     let hasSilentProperty: boolean;
+    let hasSpeakerMegaphoneProperty: boolean;
+    let hasListenerMegaphoneProperty: boolean;
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
         if (currentAreaPreview) {
@@ -69,13 +65,24 @@
                     link: "https://workadventu.re",
                     newTab: false,
                     hideButtonLabel: true,
-                    trigger: undefined,
                 };
             case "playAudio":
                 return {
                     id,
                     type,
                     audioLink: "",
+                };
+            case "speakerMegaphone":
+                return {
+                    id,
+                    type,
+                    name: "",
+                };
+            case "listenerMegaphone":
+                return {
+                    id,
+                    type,
+                    speakerZoneName: "",
                 };
         }
     }
@@ -88,7 +95,7 @@
         if ($mapEditorSelectedAreaPreviewStore) {
             $mapEditorSelectedAreaPreviewStore.addProperty(getPropertyFromType(type));
             // refresh properties
-            properties = $mapEditorSelectedAreaPreviewStore?.getProperties();
+            properties = $mapEditorSelectedAreaPreviewStore.getProperties();
             refreshFlags();
         }
     }
@@ -97,7 +104,7 @@
         if ($mapEditorSelectedAreaPreviewStore) {
             $mapEditorSelectedAreaPreviewStore.deleteProperty(id);
             // refresh properties
-            properties = $mapEditorSelectedAreaPreviewStore?.getProperties();
+            properties = $mapEditorSelectedAreaPreviewStore.getProperties();
             refreshFlags();
         }
     }
@@ -122,6 +129,8 @@
         hasJitsiRoomProperty = hasProperty("jitsiRoomProperty");
         hasFocusableProperty = hasProperty("focusable");
         hasSilentProperty = hasProperty("silent");
+        hasSpeakerMegaphoneProperty = hasProperty("speakerMegaphone");
+        hasListenerMegaphoneProperty = hasProperty("listenerMegaphone");
     }
 </script>
 
@@ -133,7 +142,7 @@
             <AddPropertyButton
                 headerText={$LL.mapEditor.properties.focusableProperties.label()}
                 descriptionText={$LL.mapEditor.properties.focusableProperties.description()}
-                img={focusSvg}
+                img={"resources/icons/icon_focus.png"}
                 style="z-index: 5;"
                 on:click={() => {
                     onAddProperty("focusable");
@@ -144,7 +153,7 @@
             <AddPropertyButton
                 headerText={$LL.mapEditor.properties.silentProperty.label()}
                 descriptionText={$LL.mapEditor.properties.silentProperty.description()}
-                img={silentSvg}
+                img={"resources/icons/icon_silent.png"}
                 style="z-index: 4;"
                 on:click={() => {
                     onAddProperty("silent");
@@ -155,10 +164,32 @@
             <AddPropertyButton
                 headerText={$LL.mapEditor.properties.jitsiProperties.label()}
                 descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
-                img={visioSvg}
+                img={"resources/icons/icon_meeting.png"}
                 style="z-index: 3;"
                 on:click={() => {
                     onAddProperty("jitsiRoomProperty");
+                }}
+            />
+        {/if}
+        {#if !hasSpeakerMegaphoneProperty}
+            <AddPropertyButton
+                headerText={$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
+                descriptionText={$LL.mapEditor.properties.speakerMegaphoneProperties.description()}
+                img={"resources/icons/icon_speaker.png"}
+                style="z-index: 3;"
+                on:click={() => {
+                    onAddProperty("speakerMegaphone");
+                }}
+            />
+        {/if}
+        {#if !hasListenerMegaphoneProperty}
+            <AddPropertyButton
+                headerText={$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
+                descriptionText={$LL.mapEditor.properties.listenerMegaphoneProperties.description()}
+                img={"resources/icons/icon_listener.png"}
+                style="z-index: 3;"
+                on:click={() => {
+                    onAddProperty("listenerMegaphone");
                 }}
             />
         {/if}
@@ -174,24 +205,16 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.linkProperties.label()}
             descriptionText={$LL.mapEditor.properties.linkProperties.description()}
-            img={webSvg}
+            img={"resources/icons/icon_link.png"}
             style="z-index: 1;"
             on:click={() => {
                 onAddProperty("openWebsite");
             }}
         />
     </div>
-    <div class="area-name-container">
+    <div class="area-name-container" style="display: none;">
         <label for="objectName">Area name</label>
-        <input
-            id="objectName"
-            type="text"
-            placeholder="Value"
-            bind:value={areaName}
-            on:focus={onMapEditorInputFocus}
-            on:blur={onMapEditorInputUnfocus}
-            on:change={onUpdateName}
-        />
+        <input id="objectName" type="text" placeholder="Value" bind:value={areaName} on:change={onUpdateName} />
     </div>
     <div class="properties-container">
         {#each properties as property}
@@ -229,6 +252,22 @@
                     />
                 {:else if property.type === "openWebsite"}
                     <OpenWebsitePropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                        on:change={() => onUpdateProperty(property)}
+                    />
+                {:else if property.type === "speakerMegaphone"}
+                    <SpeakerMegaphonePropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                        on:change={() => onUpdateProperty(property)}
+                    />
+                {:else if property.type === "listenerMegaphone"}
+                    <ListenerMegaphonePropertyEditor
                         {property}
                         on:close={() => {
                             onDeleteProperty(property.id);

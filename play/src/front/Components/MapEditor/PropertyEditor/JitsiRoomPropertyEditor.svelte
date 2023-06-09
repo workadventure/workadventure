@@ -2,8 +2,6 @@
     import { createEventDispatcher } from "svelte";
     import { JitsiRoomConfigData, JitsiRoomPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
-    import visioSvg from "../../images/visio-white.svg";
     import JitsiRoomConfigEditor from "./JitsiRoomConfigEditor.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
@@ -36,7 +34,11 @@
     }}
 >
     <span slot="header" class="tw-flex tw-justify-center tw-items-center">
-        <img class="tw-w-6 tw-mr-1" src={visioSvg} alt={$LL.mapEditor.properties.jitsiProperties.description()} />
+        <img
+            class="tw-w-6 tw-mr-1"
+            src="resources/icons/icon_meeting.png"
+            alt={$LL.mapEditor.properties.jitsiProperties.description()}
+        />
         {$LL.mapEditor.properties.jitsiProperties.label()}
     </span>
     <span slot="content">
@@ -48,8 +50,6 @@
                 placeholder={$LL.mapEditor.properties.jitsiProperties.roomNamePlaceholder()}
                 bind:value={property.roomName}
                 on:change={onValueChange}
-                on:focus={onMapEditorInputFocus}
-                on:blur={onMapEditorInputUnfocus}
             />
         </div>
         <div class="value-switch">
@@ -85,8 +85,6 @@
                     placeholder={$LL.mapEditor.properties.jitsiProperties.jitsiUrlPlaceholder()}
                     bind:value={property.jitsiUrl}
                     on:change={onValueChange}
-                    on:focus={onMapEditorInputFocus}
-                    on:blur={onMapEditorInputUnfocus}
                 />
             </div>
             {#if !property.hideButtonLabel}
@@ -97,8 +95,6 @@
                         type="text"
                         bind:value={property.buttonLabel}
                         on:change={onValueChange}
-                        on:focus={onMapEditorInputFocus}
-                        on:blur={onMapEditorInputUnfocus}
                     />
                 </div>
             {/if}
@@ -125,8 +121,6 @@
                         type="text"
                         bind:value={property.triggerMessage}
                         on:change={onValueChange}
-                        on:focus={onMapEditorInputFocus}
-                        on:blur={onMapEditorInputUnfocus}
                     />
                 </div>
             {/if}

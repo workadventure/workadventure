@@ -44,6 +44,7 @@ import {
     SpaceFilterMessage,
     MegaphoneSettings,
     UpdateWAMSettingsMessage,
+    UnwatchSpaceMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { AreaData, AtLeast, WAMEntityData } from "@workadventure/map-editor";
@@ -358,14 +359,12 @@ export class RoomConnection implements RoomConnection {
                                 break;
                             }
                             case "joinMucRoomMessage": {
-                                console.info("[sendChatMessagePrompt] RoomConnection => joinMucRoomMessage received");
                                 this._joinMucRoomMessageStream.next(
                                     subMessage.joinMucRoomMessage.mucRoomDefinitionMessage
                                 );
                                 break;
                             }
                             case "leaveMucRoomMessage": {
-                                console.info("[sendChatMessagePrompt] RoomConnection => leaveMucRoomMessage received");
                                 this._leaveMucRoomMessageStream.next(subMessage.leaveMucRoomMessage);
                                 break;
                             }
@@ -1412,6 +1411,17 @@ export class RoomConnection implements RoomConnection {
             },
         });
         return spaceFilter;
+    }
+
+    public emitUnwatchSpaceLiveStreaming(spaceName: string) {
+        this.send({
+            message: {
+                $case: "unwatchSpaceMessage",
+                unwatchSpaceMessage: UnwatchSpaceMessage.fromPartial({
+                    spaceName,
+                }),
+            },
+        });
     }
 
     public emitCameraState(state: boolean) {

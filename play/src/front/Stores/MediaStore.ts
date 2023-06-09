@@ -18,8 +18,6 @@ import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { createSilentStore } from "./SilentStore";
 
-import { megaphoneEnabledStore } from "./MegaphoneStore";
-
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
@@ -254,6 +252,7 @@ export const audioConstraintStore = derived(requestedMicrophoneDeviceIdStore, ($
 
 export const inJitsiStore = writable(false);
 export const inBbbStore = writable(false);
+export const isSpeakerStore = writable(false);
 
 export const inCowebsiteZone = derived(
     [inJitsiStore, inBbbStore, inOpenWebsite],
@@ -266,11 +265,12 @@ export const inCowebsiteZone = derived(
 export const silentStore = createSilentStore();
 
 export const availabilityStatusStore = derived(
-    [inJitsiStore, inBbbStore, silentStore, privacyShutdownStore, proximityMeetingStore],
-    ([$inJitsiStore, $inBbbStore, $silentStore, $privacyShutdownStore, $proximityMeetingStore]) => {
+    [inJitsiStore, inBbbStore, silentStore, privacyShutdownStore, proximityMeetingStore, isSpeakerStore],
+    ([$inJitsiStore, $inBbbStore, $silentStore, $privacyShutdownStore, $proximityMeetingStore, $isSpeakerStore]) => {
         if ($inJitsiStore) return AvailabilityStatus.JITSI;
         if ($inBbbStore) return AvailabilityStatus.BBB;
         if (!$proximityMeetingStore) return AvailabilityStatus.DENY_PROXIMITY_MEETING;
+        if ($isSpeakerStore) return AvailabilityStatus.SPEAKER;
         if ($silentStore) return AvailabilityStatus.SILENT;
         if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
         return AvailabilityStatus.ONLINE;
@@ -297,7 +297,6 @@ export const mediaStreamConstraintsStore = derived(
         privacyShutdownStore,
         cameraEnergySavingStore,
         availabilityStatusStore,
-        megaphoneEnabledStore,
         batchGetUserMediaStore,
     ],
     (
@@ -313,7 +312,6 @@ export const mediaStreamConstraintsStore = derived(
             $privacyShutdownStore,
             $cameraEnergySavingStore,
             $availabilityStatusStore,
-            $megaphoneEnabledStore,
             $batchGetUserMediaStore,
         ],
         set
@@ -371,13 +369,9 @@ export const mediaStreamConstraintsStore = derived(
 
         if (
             $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
-            $availabilityStatusStore === AvailabilityStatus.SILENT
+            $availabilityStatusStore === AvailabilityStatus.SILENT ||
+            $availabilityStatusStore === AvailabilityStatus.SPEAKER
         ) {
-            currentVideoConstraint = false;
-            currentAudioConstraint = false;
-        }
-
-        if ($megaphoneEnabledStore) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
@@ -834,16 +828,4 @@ speakerSelectedStore.subscribe((value) => {
         get(speakerListStore).find((value) => value.deviceId == oldValue)
     )
         speakerSelectedStore.set(oldDevice.deviceId);
-});
-
-requestedCameraState.subscribe((requestedCameraState) => {
-    if (!requestedCameraState && !get(requestedMicrophoneState)) {
-        megaphoneEnabledStore.set(false);
-    }
-});
-
-requestedMicrophoneState.subscribe((requestedMicrophoneState) => {
-    if (!requestedMicrophoneState && !get(requestedCameraState)) {
-        megaphoneEnabledStore.set(false);
-    }
 });

@@ -2,8 +2,8 @@
     export let label: string;
     export let placeHolder = "";
     export let value: string;
-    export let onFocus: () => void;
-    export let onBlur: () => void;
+    export let onFocus = () => {};
+    export let onBlur = () => {};
     export let onKeyPress: () => void;
     export let errorHelperText: string | undefined = undefined;
 </script>

@@ -9,9 +9,17 @@ class Megaphone {
         await page.locator('.map-editor .configure-my-room input[type="checkbox"]').isChecked();
     }
 
-    async megaphoneInputNameSpace(page: Page) {
+    async megaphoneInputNameSpace(page: Page, name = 'MySpace') {
+        await page.getByPlaceholder('MySpace').focus();
         await page.getByPlaceholder('MySpace').click();
-        await page.getByPlaceholder('MySpace').fill('Test');
+        if(name === ''){
+            const count = (await page.getByPlaceholder('MySpace').inputValue()).length;
+            for(let i = 0; i < count; i++) {
+                await page.getByPlaceholder('MySpace').press("Backspace");
+            }
+        } else {
+            await page.getByPlaceholder('MySpace').fill(name);
+        }
     }
 
     async megaphoneSelectScope(page: Page) {

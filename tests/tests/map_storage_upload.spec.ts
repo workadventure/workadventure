@@ -1,4 +1,4 @@
-import fs from "fs";
+import *  as fs from "fs";
 import { APIResponse, expect, test } from '@playwright/test';
 import { login } from './utils/roles';
 import {createZipFromDirectory} from "./utils/zip";

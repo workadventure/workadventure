@@ -3,8 +3,6 @@
     import { createEventDispatcher } from "svelte";
     import { OpenWebsitePropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
-    import webSvg from "../../images/web-white.svg";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: OpenWebsitePropertyData;
@@ -51,7 +49,11 @@
     }}
 >
     <span slot="header" class="tw-flex tw-justify-center tw-items-center">
-        <img class="tw-w-6 tw-mr-1" src={webSvg} alt={$LL.mapEditor.properties.linkProperties.description()} />
+        <img
+            class="tw-w-6 tw-mr-1"
+            src="resources/icons/icon_link.png"
+            alt={$LL.mapEditor.properties.linkProperties.description()}
+        />
         {$LL.mapEditor.properties.linkProperties.label()}
     </span>
     <span slot="content">
@@ -78,8 +80,6 @@
                 placeholder={$LL.mapEditor.properties.linkProperties.linkPlaceholder()}
                 bind:value={property.link}
                 on:change={onValueChange}
-                on:focus={onMapEditorInputFocus}
-                on:blur={onMapEditorInputUnfocus}
                 on:blur={checkEmbedableWebsite}
             />
             {#if !embedable}
@@ -91,14 +91,7 @@
         {#if !property.hideButtonLabel}
             <div class="value-input tw-flex tw-flex-col">
                 <label for="linkButton">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
-                <input
-                    id="linkButton"
-                    type="text"
-                    bind:value={property.buttonLabel}
-                    on:change={onValueChange}
-                    on:focus={onMapEditorInputFocus}
-                    on:blur={onMapEditorInputUnfocus}
-                />
+                <input id="linkButton" type="text" bind:value={property.buttonLabel} on:change={onValueChange} />
             </div>
         {/if}
         <div class="value-switch">
@@ -114,8 +107,6 @@
                         type="text"
                         bind:value={property.triggerMessage}
                         on:change={onValueChange}
-                        on:focus={onMapEditorInputFocus}
-                        on:blur={onMapEditorInputUnfocus}
                     />
                 </div>
             {/if}
@@ -173,8 +164,6 @@
                     placeholder={$LL.mapEditor.properties.linkProperties.policyPlaceholder()}
                     bind:value={property.policy}
                     on:change={onValueChange}
-                    on:focus={onMapEditorInputFocus}
-                    on:blur={onMapEditorInputUnfocus}
                 />
             </div>
         </div>

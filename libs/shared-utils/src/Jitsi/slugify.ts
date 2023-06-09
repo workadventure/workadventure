@@ -1,6 +1,6 @@
 import { shortHash } from "../String/shortHash";
 
-const slugify = (...args: (string | number)[]): string => {
+export const slugify = (...args: (string | number)[]): string => {
     const value = args.join(" ");
 
     return value

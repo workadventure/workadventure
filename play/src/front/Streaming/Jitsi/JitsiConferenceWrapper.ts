@@ -21,6 +21,7 @@ import {
     usedMicrophoneDeviceIdStore,
 } from "../../Stores/MediaStore";
 import { megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
+import { gameManager } from "../../Phaser/Game/GameManager";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
 import { JitsiLocalTracks } from "./JitsiLocalTracks";
 
@@ -43,6 +44,9 @@ export class JitsiConferenceWrapper {
     private microphoneDeviceIdStoreUnsubscriber: Unsubscriber | undefined;
     private cameraDeviceId: string | undefined = undefined;
     private microphoneDeviceId: string | undefined = undefined;
+
+    private audioTrackInterval: NodeJS.Timeout | undefined;
+    private lastSentTalkingState = false;
 
     private tracks: JitsiLocalTracks = {
         audio: undefined,
@@ -68,10 +72,9 @@ export class JitsiConferenceWrapper {
             //let isJoined = false;
             //const localTracks: any[] = [];
             room.on(JitsiMeetJS.events.conference.CONFERENCE_JOINED, () => {
-                //isJoined = true;
+                debug("CONFERENCE_JOINED");
                 void jitsiConferenceWrapper.firstLocalTrackInit();
                 resolve(jitsiConferenceWrapper);
-                debug("conference joined");
             });
             room.on(JitsiMeetJS.events.conference.CONFERENCE_FAILED, (e) => {
                 reject(e);
@@ -303,20 +306,30 @@ export class JitsiConferenceWrapper {
 
     private async handleTrack(oldTrack: JitsiLocalTrack | undefined, track: JitsiLocalTrack | undefined) {
         if (oldTrack && track) {
-            console.warn(`REPLACING LOCAL ${oldTrack.getType()} TRACK`);
+            debug(`REPLACING LOCAL ${oldTrack.getType()} TRACK`);
             await this.jitsiConference.replaceTrack(oldTrack, track);
+            if (track.isAudioTrack()) {
+                this.trackVolumeLocalAudioTrack(track.getOriginalStream());
+            }
         } else if (oldTrack && !track) {
-            console.warn(`REMOVING LOCAL ${oldTrack.getType()} TRACK`);
+            debug(`REMOVING LOCAL ${oldTrack.getType()} TRACK`);
             await oldTrack.dispose();
+            if (oldTrack.isAudioTrack()) {
+                this.trackVolumeLocalAudioTrack(undefined);
+            }
             //room.removeTrack(oldTrack);
             //await oldTrack.dispose();
         } else if (!oldTrack && track) {
-            console.warn(`ADDING LOCAL ${track.getType()} TRACK`);
+            debug(`ADDING LOCAL ${track.getType()} TRACK`);
             await this.jitsiConference.addTrack(track);
+            if (track.isAudioTrack()) {
+                this.trackVolumeLocalAudioTrack(track.getOriginalStream());
+            }
         }
     }
 
     public async firstLocalTrackInit() {
+        debug("JitsiConferenceWrapper => firstLocalTrackInit");
         if (get(megaphoneEnabledStore)) {
             const requestedDevices: DeviceType[] = [];
             if (get(requestedCameraState)) {
@@ -378,6 +391,41 @@ export class JitsiConferenceWrapper {
         }
 
         return this.tracks;
+    }
+
+    private trackVolumeLocalAudioTrack(stream: MediaStream | undefined) {
+        if (this.audioTrackInterval) {
+            clearInterval(this.audioTrackInterval);
+            this.audioTrackInterval = undefined;
+        }
+        if (stream && stream.getAudioTracks().length > 0) {
+            const audioContext = new AudioContext();
+            const source = audioContext.createMediaStreamSource(stream);
+            const analyser = audioContext.createAnalyser();
+            source.connect(analyser);
+
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+            this.audioTrackInterval = setInterval(() => {
+                analyser.getByteFrequencyData(dataArray);
+
+                let sum = 0;
+                for (let i = 0; i < dataArray.length; i++) {
+                    sum += dataArray[i];
+                }
+                const volume = sum / dataArray.length / 255;
+
+                const talkingState = volume > 0.05;
+
+                if (this.lastSentTalkingState !== talkingState) {
+                    gameManager.getCurrentGameScene().connection?.emitPlayerShowVoiceIndicator(talkingState);
+                    gameManager.getCurrentGameScene().CurrentPlayer.toggleTalk(talkingState);
+                    this.lastSentTalkingState = talkingState;
+                }
+            }, 100);
+        } else if (this.lastSentTalkingState) {
+            gameManager.getCurrentGameScene().connection?.emitPlayerShowVoiceIndicator(false);
+            gameManager.getCurrentGameScene().CurrentPlayer.toggleTalk(false, true);
+        }
     }
 
     private addRemoteTrack(track: JitsiTrack, allowOverride: boolean) {

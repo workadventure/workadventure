@@ -1,8 +1,13 @@
 <script>
-    import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher, onDestroy } from "svelte";
+    import { inputFormFocusStore } from "../../../Stores/UserInputStore";
     import CloseButton from "./CloseButton.svelte";
 
     const dispatch = createEventDispatcher();
+
+    onDestroy(() => {
+        inputFormFocusStore.set(false);
+    });
 </script>
 
 <div class="property-settings-container">

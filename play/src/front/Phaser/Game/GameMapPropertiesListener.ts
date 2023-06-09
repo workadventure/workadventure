@@ -2,6 +2,7 @@ import { get } from "svelte/store";
 import type { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 import { AreaData, GameMapProperties } from "@workadventure/map-editor";
 import { Jitsi } from "@workadventure/shared-utils";
+import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { scriptUtils } from "../../Api/ScriptUtils";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
@@ -16,14 +17,24 @@ import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores
 import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
 import { LL } from "../../../i18n/i18n-svelte";
-import { inJitsiStore, inBbbStore, silentStore, inOpenWebsite } from "../../Stores/MediaStore";
+import {
+    inJitsiStore,
+    inBbbStore,
+    silentStore,
+    inOpenWebsite,
+    requestedCameraState,
+    requestedMicrophoneState,
+    isSpeakerStore,
+} from "../../Stores/MediaStore";
 import { urlManager } from "../../Url/UrlManager";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { connectionManager } from "../../Connexion/ConnectionManager";
+import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
 import { AreasPropertiesListener } from "./MapEditor/AreasPropertiesListener";
+import { gameManager } from "./GameManager";
 
 export interface OpenCoWebsite {
     actionId: string;
@@ -306,6 +317,8 @@ export class GameMapPropertiesListener {
         places.forEach((place) => {
             this.handleOpenWebsitePropertiesOnEnter(place);
             this.handleFocusablePropertiesOnEnter(place);
+            this.handleSpeakerMegaphonePropertiesOnEnter(place);
+            this.handleListenerMegaphonePropertiesOnEnter(place);
         });
     }
 
@@ -317,6 +330,8 @@ export class GameMapPropertiesListener {
 
             this.handleOpenWebsitePropertiesOnLeave(place);
             this.handleFocusablePropertiesOnLeave(place);
+            this.handleSpeakerMegaphonePropertiesOnLeave(place);
+            this.handleListenerMegaphonePropertiesOnLeave(place);
         });
     }
 
@@ -449,6 +464,68 @@ export class GameMapPropertiesListener {
 
         if (!websiteTriggerProperty) {
             openCoWebsiteFunction();
+        }
+    }
+
+    private handleSpeakerMegaphonePropertiesOnEnter(place: ITiledPlace): void {
+        if (!place.properties) {
+            return;
+        }
+        const speakerZone = place.properties.find((property) => property.name === GameMapProperties.SPEAKER_MEGAPHONE);
+        if (speakerZone && speakerZone.type === "string" && speakerZone.value !== undefined) {
+            this.scene.broadcastService.joinSpace(speakerZone.value, false);
+            isSpeakerStore.set(true);
+            if (get(requestedCameraState) || get(requestedMicrophoneState)) {
+                requestedMegaphoneStore.set(true);
+            }
+        }
+    }
+
+    private handleSpeakerMegaphonePropertiesOnLeave(place: ITiledPlace): void {
+        if (!place.properties) {
+            return;
+        }
+        const speakerZone = place.properties.find((property) => property.name === GameMapProperties.SPEAKER_MEGAPHONE);
+        if (speakerZone && speakerZone.type === "string" && speakerZone.value !== undefined) {
+            this.scene.broadcastService.leaveSpace(speakerZone.value);
+            requestedMegaphoneStore.set(false);
+            isSpeakerStore.set(false);
+        }
+    }
+
+    private handleListenerMegaphonePropertiesOnEnter(place: ITiledPlace): void {
+        if (!place.properties) {
+            return;
+        }
+        const listenerZone = place.properties.find(
+            (property) => property.name === GameMapProperties.LISTENER_MEGAPHONE
+        );
+        if (listenerZone && listenerZone.type === "string" && listenerZone.value !== undefined) {
+            const speakerZoneName = getSpeakerMegaphoneAreaName(
+                gameManager.getCurrentGameScene().getGameMap().getGameMapAreas()?.getAreas(),
+                listenerZone.value
+            );
+            if (speakerZoneName) {
+                this.scene.broadcastService.joinSpace(speakerZoneName, false);
+            }
+        }
+    }
+
+    private handleListenerMegaphonePropertiesOnLeave(place: ITiledPlace): void {
+        if (!place.properties) {
+            return;
+        }
+        const listenerZone = place.properties.find(
+            (property) => property.name === GameMapProperties.LISTENER_MEGAPHONE
+        );
+        if (listenerZone && listenerZone.type === "string" && listenerZone.value !== undefined) {
+            const speakerZoneName = getSpeakerMegaphoneAreaName(
+                gameManager.getCurrentGameScene().getGameMap().getGameMapAreas()?.getAreas(),
+                listenerZone.value
+            );
+            if (speakerZoneName) {
+                this.scene.broadcastService.leaveSpace(speakerZoneName);
+            }
         }
     }
 

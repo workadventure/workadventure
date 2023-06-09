@@ -33,6 +33,7 @@
          "EJABBERD_USER": "admin",
          "EJABBERD_PASSWORD": "apideo",
          "ENABLE_MAP_EDITOR":"true",
+         "DEBUG": "*",
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -68,6 +69,7 @@
               "EJABBERD_USER": "admin",
               "EJABBERD_PASSWORD": "apideo",
               "ENABLE_MAP_EDITOR":"true",
+              "DEBUG": "*",
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -108,6 +110,7 @@
           "CHAT_URL": "https://chat-"+url,
           "LOGROCKET_ID": env.LOGROCKET_ID,
           "ROOM_API_PORT": "50051",
+          "DEBUG": "*",
         } + (if adminUrl != null then {
           # Admin
           "ADMIN_URL": adminUrl,
@@ -160,6 +163,7 @@
              "AUTHENTICATION_PASSWORD": "password",
              "AUTHENTICATION_TOKEN": "SomeSecretToken",
              "USE_DOMAIN_NAME_IN_PATH": if (adminUrl == null) then "false" else "true",
+             "DEBUG": "*",
            }
          },
     "uploaderredis":{

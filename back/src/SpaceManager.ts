@@ -74,7 +74,7 @@ const spaceManager = {
             })
             .on("end", () => {
                 socketManager.handleUnwatchAllSpaces(pusher);
-                debug("watchSpace => ended %s", pusher.uuid);
+                debug("watchSpace => ended %s", pusher.id);
                 call.end();
             });
     },
