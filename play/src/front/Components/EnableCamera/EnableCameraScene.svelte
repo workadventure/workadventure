@@ -1,26 +1,26 @@
 <script lang="ts">
-    import type { Game } from "../../Phaser/Game/Game";
+    import { onDestroy, onMount } from "svelte";
     import type { EnableCameraScene } from "../../Phaser/Login/EnableCameraScene";
     import { EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
     import {
-        audioConstraintStore,
+        requestedCameraDeviceIdStore,
         batchGetUserMediaStore,
         cameraListStore,
         localStreamStore,
         localVolumeStore,
+        requestedMicrophoneDeviceIdStore,
         microphoneListStore,
         requestedCameraState,
         requestedMicrophoneState,
-        videoConstraintStore,
     } from "../../Stores/MediaStore";
-    import { onDestroy, onMount } from "svelte";
-    import HorizontalSoundMeterWidget from "./HorizontalSoundMeterWidget.svelte";
+    import type { Game } from "../../Phaser/Game/Game";
     import cinemaCloseImg from "../images/no-video.svg";
     import cinemaImg from "../images/cinema.svg";
     import microphoneImg from "../images/microphone.svg";
-    import LL from "../../../i18n/i18n-svelte";
+    import { LL } from "../../../i18n/i18n-svelte";
     import { StringUtils } from "../../Utils/StringUtils";
     import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
+    import HorizontalSoundMeterWidget from "./HorizontalSoundMeterWidget.svelte";
 
     export let game: Game;
     let selectedCamera: string | undefined = undefined;
@@ -86,7 +86,7 @@
             return;
         }
         requestedCameraState.enableWebcam();
-        videoConstraintStore.setDeviceId(selectedCamera);
+        requestedCameraDeviceIdStore.set(selectedCamera);
     }
 
     function selectMicrophone() {
@@ -95,7 +95,7 @@
             return;
         }
         requestedMicrophoneState.enableMicrophone();
-        audioConstraintStore.setDeviceId(selectedMicrophone);
+        requestedMicrophoneDeviceIdStore.set(selectedMicrophone);
     }
 </script>
 

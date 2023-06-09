@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import LL from "../../i18n/i18n-svelte";
+    import { LL } from "../../i18n/i18n-svelte";
     import { chatPeerConnectionInProgress, timelineMessagesToSee, showTimelineStore } from "../../Stores/ChatStore";
 
     const dispatch = createEventDispatcher();
@@ -36,7 +36,7 @@
     <div>
         <div class="wa-chat-item">
             <div id="openTimeline" class="tw-relative" on:click|stopPropagation={open}>
-                <img src="/static/images/logo-wa-2.png" alt="Send" width="35" />
+                <img src="./static/images/logo-wa-2.png" alt="Send" width="35" />
 
                 <!-- use chat store and get new notification -->
                 {#if $chatPeerConnectionInProgress}

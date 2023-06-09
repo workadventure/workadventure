@@ -1,16 +1,18 @@
-import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import CancelablePromise from "cancelable-promise";
 import { CompanionTexture, CompanionCollectionList, companionCollectionList } from "@workadventure/messages";
-import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
 import { gameManager } from "../Game/GameManager";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import type { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
+import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
+import { CompanionResourceDescriptionInterface, CompanionTextures } from "./CompanionTextures";
+import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 
 export function companionListMetakey() {
     return "companion-list" + gameManager.currentStartedRoom.href;
 }
 
 let companionTextureList: CompanionCollectionList | null = null;
+
 export class CompanionTexturesLoadingManager {
     constructor(private superLoad: SuperLoaderPlugin, private loader: LoaderPlugin) {}
 
@@ -20,7 +22,10 @@ export class CompanionTexturesLoadingManager {
         this.superLoad
             .json(
                 companionListMetakey(),
-                `${PUSHER_URL}/companion/list?roomUrl=` + encodeURIComponent(gameManager.currentStartedRoom.href),
+                new URL(
+                    `companion/list?roomUrl=` + encodeURIComponent(gameManager.currentStartedRoom.href),
+                    ABSOLUTE_PUSHER_URL
+                ).toString(),
                 undefined,
                 {
                     responseType: "text",
@@ -39,21 +44,20 @@ export class CompanionTexturesLoadingManager {
             });
     }
 
-    public lazyLoadByName(textureName: string | null): CancelablePromise<string> | undefined {
-        if (!textureName) return undefined;
+    public lazyLoadById(textureId: string | null): CancelablePromise<string> | undefined {
+        if (!textureId) return undefined;
         return new CancelablePromise((resolve, reject, cancel) => {
             cancel(() => {
                 return;
             });
 
             this.loadTextures((companionList) => {
-                const texture = companionList
+                const texture = companionList.companion.collections
                     .flatMap((collection) => collection.textures)
-                    .find((t) => t.name === textureName);
-
+                    .find((t) => t.id === textureId);
                 if (!texture) {
-                    console.error(`Companion texture ${textureName} not found`);
-                    return reject(`Companion texture '${textureName}' not found!`);
+                    console.error(`Companion texture ${textureId} not found`);
+                    return reject(`Companion texture '${textureId}' not found!`);
                 }
 
                 this.loadByTexture(texture, resolve);
@@ -63,10 +67,18 @@ export class CompanionTexturesLoadingManager {
         });
     }
 
-    public loadByTexture(texture: CompanionTexture, onLoaded: (_textureName: string) => void = () => {}) {
-        if (this.loader.textureManager.exists(texture.name)) return onLoaded(texture.name);
+    loadModels(load: LoaderPlugin, companionTextures: CompanionTextures): CompanionResourceDescriptionInterface[] {
+        const returnArray = Object.values(companionTextures.getCompanionResources());
+        returnArray.forEach((companionResource) => {
+            load.spritesheet(companionResource.id, companionResource.img, { frameWidth: 32, frameHeight: 32 });
+        });
+        return returnArray;
+    }
 
-        this.loader.spritesheet(texture.name, texture.img, { frameWidth: 32, frameHeight: 32, endFrame: 12 });
-        this.loader.once(`filecomplete-spritesheet-${texture.name}`, () => onLoaded(texture.name));
+    public loadByTexture(texture: CompanionTexture, onLoaded: (_textureId: string) => void = () => {}) {
+        if (this.loader.textureManager.exists(texture.id)) return onLoaded(texture.id);
+
+        this.loader.spritesheet(texture.id, texture.url, { frameWidth: 32, frameHeight: 32, endFrame: 12 });
+        this.loader.once(`filecomplete-spritesheet-${texture.id}`, () => onLoaded(texture.id));
     }
 }

@@ -1,8 +1,8 @@
-import { AuthenticatedProviderController } from "./AuthenticatedProviderController";
 import { CompanionCollectionList } from "@workadventure/messages";
-import type { CompanionServiceInterface } from "../services/CompanionServiceInterface";
 import type { Server } from "hyper-express";
+import type { CompanionServiceInterface } from "../services/CompanionServiceInterface";
 import type { JWTTokenManager } from "../services/JWTTokenManager";
+import { AuthenticatedProviderController } from "./AuthenticatedProviderController";
 
 /**
  * A controller to expose the companion list

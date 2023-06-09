@@ -1,3 +1,7 @@
+import fs from "fs";
+import type { Server } from "hyper-express";
+import HyperExpress from "hyper-express";
+import * as Sentry from "@sentry/node";
 import { IoSocketController } from "./controllers/IoSocketController";
 import { AuthenticateController } from "./controllers/AuthenticateController";
 import { MapController } from "./controllers/MapController";
@@ -7,14 +11,11 @@ import { AdminController } from "./controllers/AdminController";
 import { OpenIdProfileController } from "./controllers/OpenIdProfileController";
 import { WokaListController } from "./controllers/WokaListController";
 import { SwaggerController } from "./controllers/SwaggerController";
-import type { Server } from "hyper-express";
-import HyperExpress from "hyper-express";
 import { cors } from "./middlewares/Cors";
 import { ENABLE_OPENAPI_ENDPOINT } from "./enums/EnvironmentVariable";
 import { PingController } from "./controllers/PingController";
 import { CompanionListController } from "./controllers/CompanionListController";
 import { FrontController } from "./controllers/FrontController";
-import fs from "fs";
 import { globalErrorHandler } from "./services/GlobalErrorHandler";
 import { adminApi } from "./services/AdminApi";
 import { jwtTokenManager } from "./services/JWTTokenManager";
@@ -103,6 +104,7 @@ class App {
             wokaListController.setWokaService(WokaService.get(capabilities));
         } catch (error) {
             console.error("Failed to initialize: problem getting AdminAPI capabilities", error);
+            Sentry.captureException(`Failed to initialized companion and woka services : ${error}`);
         }
     }
 

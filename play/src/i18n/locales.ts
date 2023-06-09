@@ -1,22 +1,27 @@
-import { detectLocale, navigatorDetector, initLocalStorageDetector } from "typesafe-i18n/detectors";
+import { detectLocale, navigatorDetector, initLocalStorageDetector } from "typesafe-i18n/detectors"; // eslint-disable-line import/no-unresolved
 import { setLocale } from "./i18n-svelte";
 import type { Locales } from "./i18n-types";
-import { baseLocale, locales } from "./i18n-util";
+import { baseLocale, isLocale, locales } from "./i18n-util";
 import { loadLocaleAsync } from "./i18n-util.async";
 
-let fallbackLocale: Locales | undefined;
+let fallbackLocale: Locales = baseLocale;
 const localStorageProperty = "language";
 
 async function getFallbackLocale(): Promise<Locales> {
-    if (fallbackLocale !== undefined) {
-        return fallbackLocale;
-    }
     if (window) {
         const envVars = await import("../front/Enum/EnvironmentVariable");
-        fallbackLocale = (envVars.FALLBACK_LOCALE || baseLocale) as Locales;
+        const envFallbackLocale = envVars.FALLBACK_LOCALE ?? "";
+
+        if (isLocale(envFallbackLocale)) {
+            fallbackLocale = envFallbackLocale;
+        }
     } else {
         const envVars = await import("../pusher/enums/EnvironmentVariable");
-        fallbackLocale = (envVars.FALLBACK_LOCALE || baseLocale) as Locales;
+        const envFallbackLocale = envVars.FALLBACK_LOCALE ?? "";
+
+        if (isLocale(envFallbackLocale)) {
+            fallbackLocale = envFallbackLocale;
+        }
     }
     return fallbackLocale;
 }

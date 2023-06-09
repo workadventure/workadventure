@@ -1,8 +1,9 @@
 <script lang="ts">
-    import LL from "../../../i18n/i18n-svelte";
+    import { LL } from "../../../i18n/i18n-svelte";
     import type { Game } from "../../Phaser/Game/Game";
     import type { SelectCompanionScene } from "../../Phaser/Login/SelectCompanionScene";
     import { SelectCompanionSceneName } from "../../Phaser/Login/SelectCompanionScene";
+    import { collectionsSizeStore, selectedCollection } from "../../Stores/SelectCharacterSceneStore";
 
     export let game: Game;
 
@@ -23,11 +24,34 @@
     function selectCompanion() {
         selectCompanionScene.selectCompanion();
     }
+
+    function selectLeftCollection() {
+        selectCompanionScene.selectPreviousCompanionCollection();
+    }
+
+    function selectRightCollection() {
+        selectCompanionScene.selectNextCompanionCollection();
+    }
 </script>
 
 <form class="selectCompanionScene">
     <section class="text-center">
         <h2 class="tw-text-white tw-text-2xl">{$LL.companion.select.title()}</h2>
+        {#if $collectionsSizeStore > 1 && $selectedCollection}
+            <button
+                class="outline tw-mr-2 selectCompanionCollectionButton selectCharacterButtonLeft"
+                on:click|preventDefault={selectLeftCollection}
+            >
+                &lt;
+            </button>
+            <strong class="category-text">{$selectedCollection}</strong>
+            <button
+                class="outline tw-ml-2 selectCompanionCollectionButton selectCompanionButtonRight"
+                on:click|preventDefault={selectRightCollection}
+            >
+                &gt;
+            </button>
+        {/if}
         <button class="outline selectCharacterButton selectCharacterButtonLeft" on:click|preventDefault={selectLeft}>
             &lt;
         </button>
@@ -75,6 +99,11 @@
                 top: 33vh;
                 margin: 0;
             }
+
+            button.selectCompanionCollectionButton {
+                position: absolute;
+                margin: 0;
+            }
         }
 
         button.selectCharacterButtonLeft {
@@ -83,6 +112,11 @@
 
         button.selectCharacterButtonRight {
             right: 33vw;
+        }
+
+        button.selectCompanionButtonRight {
+            right: 33vw;
+            top: 4.5vh;
         }
     }
 

@@ -1,72 +1,106 @@
-import { sendUnaryData, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
-import * as _ from "lodash";
-import { AreaData, AreaType } from "@workadventure/map-editor";
-import { mapsManager } from "./MapsManager";
+import { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
+import {
+    AreaData,
+    AtLeast,
+    CreateAreaCommand,
+    CreateEntityCommand,
+    DeleteAreaCommand,
+    DeleteEntityCommand,
+    EntityData,
+    EntityDataProperties,
+    UpdateAreaCommand,
+    UpdateEntityCommand,
+    UpdateWAMSettingCommand,
+    WAMEntityData,
+} from "@workadventure/map-editor";
 import {
     EditMapCommandMessage,
     EditMapCommandsArrayMessage,
     EditMapCommandWithKeyMessage,
-    EmptyMessage,
-    MapStorageToBackMessage,
-    MapStorageUrlMessage,
+    MapStorageClearAfterUploadMessage,
     PingMessage,
     UpdateMapToNewestWithKeyMessage,
 } from "@workadventure/messages";
-
 import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
-import { mapPathUsingDomain } from "./Services/PathMapper";
-import { uploadDetector } from "./Services/UploadDetector";
-
-export type MapStorageStream = ServerWritableStream<MapStorageUrlMessage, MapStorageToBackMessage>;
+import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
+import * as Sentry from "@sentry/node";
+import { mapsManager } from "./MapsManager";
+import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
 
 const mapStorageServer: MapStorageServer = {
-    ping(call: ServerUnaryCall<PingMessage, EmptyMessage>, callback: sendUnaryData<PingMessage>): void {
+    ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
         callback(null, call.request);
     },
-    listenToMessages(call: MapStorageStream): void {
-        const url = new URL(call.request.mapUrl);
-        const mapKey = mapPathUsingDomain(url.pathname, url.hostname);
-        uploadDetector.registerStream(mapKey, call);
-        call.on("close", () => {
-            uploadDetector.clearStream(mapKey, call);
-        });
+    handleClearAfterUpload(
+        call: ServerUnaryCall<MapStorageClearAfterUploadMessage, Empty>,
+        callback: sendUnaryData<Empty>
+    ): void {
+        try {
+            const wamUrl = call.request.wamUrl;
+            const url = new URL(wamUrl);
+            const wamKey = mapPathUsingDomainWithPrefix(url.pathname, url.hostname);
+            mapsManager.clearAfterUpload(wamKey);
+            callback(null);
+        } catch (e: unknown) {
+            console.error("An error occured in handleClearAfterUpload", e);
+            Sentry.captureException(`An error occured in handleClearAfterUpload ${JSON.stringify(e)}`);
+            let message: string;
+            if (typeof e === "object" && e !== null) {
+                message = e.toString();
+            } else {
+                message = "Unknown error";
+            }
+            callback({ name: "MapStorageError", message }, null);
+        }
     },
     handleUpdateMapToNewestMessage(
-        call: ServerUnaryCall<UpdateMapToNewestWithKeyMessage, EmptyMessage>,
+        call: ServerUnaryCall<UpdateMapToNewestWithKeyMessage, Empty>,
         callback: sendUnaryData<EditMapCommandsArrayMessage>
     ): void {
-        const mapUrl = new URL(call.request.mapKey);
-        const mapKey = mapPathUsingDomain(mapUrl.pathname, mapUrl.hostname);
-        const updateMapToNewestMessage = call.request.updateMapToNewestMessage;
-        if (!updateMapToNewestMessage) {
-            callback({ name: "MapStorageError", message: "UpdateMapToNewest message does not exist" }, null);
-            return;
+        try {
+            const mapUrl = new URL(call.request.mapKey);
+            const mapKey = mapPathUsingDomainWithPrefix(mapUrl.pathname, mapUrl.hostname);
+            const updateMapToNewestMessage = call.request.updateMapToNewestMessage;
+            if (!updateMapToNewestMessage) {
+                callback({ name: "MapStorageError", message: "UpdateMapToNewest message does not exist" }, null);
+                return;
+            }
+            const clientCommandId = updateMapToNewestMessage.commandId;
+            const lastCommandId = mapsManager.getGameMap(mapKey)?.getLastCommandId();
+            let commandsToApply: EditMapCommandMessage[] = [];
+            if (clientCommandId !== lastCommandId) {
+                commandsToApply = mapsManager.getCommandsNewerThan(mapKey, updateMapToNewestMessage.commandId);
+            }
+            const editMapCommandsArrayMessage: EditMapCommandsArrayMessage = {
+                editMapCommands: commandsToApply,
+            };
+            callback(null, editMapCommandsArrayMessage);
+        } catch (e: unknown) {
+            console.error("An error occurred in handleClearAfterUpload", e);
+            Sentry.captureException(`An error occurred in handleClearAfterUpload ${JSON.stringify(e)}`);
+            let message: string;
+            if (typeof e === "object" && e !== null) {
+                message = e.toString();
+            } else {
+                message = "Unknown error";
+            }
+            callback({ name: "MapStorageError", message }, null);
         }
-        const clientCommandId = updateMapToNewestMessage.commandId;
-        const lastCommandId = mapsManager.getGameMap(mapKey)?.getLastCommandId();
-        let commandsToApply: EditMapCommandMessage[] = [];
-        if (clientCommandId !== lastCommandId) {
-            commandsToApply = mapsManager.getCommandsNewerThan(mapKey, updateMapToNewestMessage.commandId);
-        }
-        const editMapCommandsArrayMessage: EditMapCommandsArrayMessage = {
-            editMapCommands: commandsToApply,
-        };
-        callback(null, editMapCommandsArrayMessage);
     },
 
     handleEditMapCommandWithKeyMessage(
-        call: ServerUnaryCall<EditMapCommandWithKeyMessage, EmptyMessage>,
+        call: ServerUnaryCall<EditMapCommandWithKeyMessage, Empty>,
         callback: sendUnaryData<EditMapCommandMessage>
     ): void {
-        const editMapCommandMessage = call.request.editMapCommandMessage;
-        if (!editMapCommandMessage || !editMapCommandMessage.editMapMessage?.message) {
-            callback({ name: "MapStorageError", message: "EditMapCommand message does not exist" }, null);
-            return;
-        }
-        try {
+        (async () => {
+            const editMapCommandMessage = call.request.editMapCommandMessage;
+            if (!editMapCommandMessage || !editMapCommandMessage.editMapMessage?.message) {
+                callback({ name: "MapStorageError", message: "EditMapCommand message does not exist" }, null);
+                return;
+            }
             // The mapKey is the complete URL to the map. Let's map it to our virtual path.
             const mapUrl = new URL(call.request.mapKey);
-            const mapKey = mapPathUsingDomain(mapUrl.pathname, mapUrl.hostname);
+            const mapKey = mapPathUsingDomainWithPrefix(mapUrl.pathname, mapUrl.hostname);
 
             const gameMap = mapsManager.getGameMap(mapKey);
             if (!gameMap) {
@@ -81,17 +115,18 @@ const mapStorageServer: MapStorageServer = {
             switch (editMapMessage.$case) {
                 case "modifyAreaMessage": {
                     const message = editMapMessage.modifyAreaMessage;
-                    const area = gameMap.getGameMapAreas().getArea(message.id, AreaType.Static);
+                    // NOTE: protobuf does not distinguish between null and empty array, we cannot create optional repeated value.
+                    //       Because of that, we send additional "modifyProperties" flag set properties value as "undefined" so they won't get erased
+                    //       by [] value which was supposed to be null.
+                    const dataToModify: AtLeast<EntityData, "id"> = structuredClone(message);
+                    if (!message.modifyProperties) {
+                        dataToModify.properties = undefined;
+                    }
+                    const area = gameMap.getGameMapAreas()?.getArea(message.id);
                     if (area) {
-                        const areaObjectConfig: AreaData = structuredClone(area);
-                        _.merge(areaObjectConfig, message);
-                        mapsManager.executeCommand(
+                        await mapsManager.executeCommand(
                             mapKey,
-                            {
-                                type: "UpdateAreaCommand",
-                                areaObjectConfig,
-                            },
-                            commandId
+                            new UpdateAreaCommand(gameMap, dataToModify, commandId)
                         );
                     } else {
                         console.log(`Could not find area with id: ${message.id}`);
@@ -102,44 +137,34 @@ const mapStorageServer: MapStorageServer = {
                     const message = editMapMessage.createAreaMessage;
                     const areaObjectConfig: AreaData = {
                         ...message,
-                        properties: {
-                            customProperties: {},
-                        },
                         visible: true,
                     };
-                    mapsManager.executeCommand(
+                    await mapsManager.executeCommand(
                         mapKey,
-                        {
-                            areaObjectConfig,
-                            type: "CreateAreaCommand",
-                        },
-                        commandId
+                        new CreateAreaCommand(gameMap, areaObjectConfig, commandId)
                     );
                     break;
                 }
                 case "deleteAreaMessage": {
                     const message = editMapMessage.deleteAreaMessage;
-                    mapsManager.executeCommand(
-                        mapKey,
-                        {
-                            type: "DeleteAreaCommand",
-                            id: message.id,
-                        },
-                        commandId
-                    );
+                    await mapsManager.executeCommand(mapKey, new DeleteAreaCommand(gameMap, message.id, commandId));
                     break;
                 }
                 case "modifyEntityMessage": {
                     const message = editMapMessage.modifyEntityMessage;
-                    const entity = gameMap.getGameMapEntities().getEntity(message.id);
+
+                    // NOTE: protobuf does not distinguish between null and empty array, we cannot create optional repeated value.
+                    //       Because of that, we send additional "modifyProperties" flag set properties value as "undefined" so they won't get erased
+                    //       by [] value which was supposed to be null.
+                    const dataToModify: Partial<WAMEntityData> = structuredClone(message);
+                    if (!message.modifyProperties) {
+                        dataToModify.properties = undefined;
+                    }
+                    const entity = gameMap.getGameMapEntities()?.getEntity(message.id);
                     if (entity) {
-                        mapsManager.executeCommand(
+                        await mapsManager.executeCommand(
                             mapKey,
-                            {
-                                type: "UpdateEntityCommand",
-                                dataToModify: message,
-                            },
-                            commandId
+                            new UpdateEntityCommand(gameMap, message.id, dataToModify, commandId)
                         );
                     } else {
                         console.log(`Could not find entity with id: ${message.id}`);
@@ -148,35 +173,39 @@ const mapStorageServer: MapStorageServer = {
                 }
                 case "createEntityMessage": {
                     const message = editMapMessage.createEntityMessage;
-                    const entityPrefab = mapsManager.getEntityPrefab(message.collectionName, message.prefabId);
-                    if (!entityPrefab) {
-                        throw new Error(`CANNOT FIND PREFAB FOR: ${message.collectionName} ${message.prefabId}`);
-                    }
-                    mapsManager.executeCommand(
+                    await mapsManager.executeCommand(
                         mapKey,
-                        {
-                            type: "CreateEntityCommand",
-                            entityData: {
-                                id: message.id,
-                                prefab: entityPrefab,
+                        new CreateEntityCommand(
+                            gameMap,
+                            message.id,
+                            {
+                                prefabRef: {
+                                    id: message.prefabId,
+                                    collectionName: message.collectionName,
+                                },
                                 x: message.x,
                                 y: message.y,
+                                properties: message.properties as EntityDataProperties,
                             },
-                        },
-                        commandId
+                            commandId
+                        )
                     );
                     break;
                 }
                 case "deleteEntityMessage": {
                     const message = editMapMessage.deleteEntityMessage;
-                    mapsManager.executeCommand(
-                        mapKey,
-                        {
-                            type: "DeleteEntityCommand",
-                            id: message.id,
-                        },
-                        commandId
-                    );
+                    await mapsManager.executeCommand(mapKey, new DeleteEntityCommand(gameMap, message.id, commandId));
+                    break;
+                }
+                case "updateWAMSettingsMessage": {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                    const message = editMapMessage.updateWAMSettingsMessage;
+                    const wam = gameMap.getWam();
+                    if (!wam) {
+                        throw new Error("WAM is not defined");
+                    }
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+                    await mapsManager.executeCommand(mapKey, new UpdateWAMSettingCommand(wam, message, commandId));
                     break;
                 }
                 default: {
@@ -186,7 +215,7 @@ const mapStorageServer: MapStorageServer = {
             // send edit map message back as a valid one
             mapsManager.addCommandToQueue(mapKey, editMapCommandMessage);
             callback(null, editMapCommandMessage);
-        } catch (e) {
+        })().catch((e: unknown) => {
             console.log(e);
             let message: string;
             if (typeof e === "object" && e !== null) {
@@ -195,7 +224,7 @@ const mapStorageServer: MapStorageServer = {
                 message = "Unknown error";
             }
             callback({ name: "MapStorageError", message }, null);
-        }
+        });
     },
 };
 

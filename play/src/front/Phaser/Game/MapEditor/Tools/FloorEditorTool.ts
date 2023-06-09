@@ -1,4 +1,3 @@
-import { CommandConfig } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { GameScene } from "../../GameScene";
@@ -34,15 +33,10 @@ export class FloorEditorTool extends MapEditorTool {
         console.log("FloorEditorTool handleKeyDownEvent");
     }
     /**
-     * Perform actions needed to see the changes instantly
-     */
-    public handleCommandExecution(commandConfig: CommandConfig): void {
-        console.log("FloorEditorTool handleCommandExecution");
-    }
-    /**
      * React on commands coming from the outside
      */
-    public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): void {
+    public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
         console.log("FloorEditorTool handleIncomingCommandMessage");
+        return Promise.resolve();
     }
 }

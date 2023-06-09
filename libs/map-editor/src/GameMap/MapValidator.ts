@@ -1,13 +1,11 @@
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
-import { z } from "zod";
-import path from "node:path";
-import { EntityData } from "../types";
-
-export type Success<T> = { ok: true; value: T };
-export type Failure<E> = { ok: false; error: E };
-export type Result<T, E> = Success<T> | Failure<E>;
+import { z, ZodError } from "zod";
+import { EntityData, WAMFileFormat } from "../types";
+import { Failure, Result } from "../FunctionalTypes/Result";
+import { FileFetcherInterface } from "./Validator/FileFetcherInterface";
 
 export type MapValidation = Result<ITiledMap, Partial<OrganizedErrors>>;
+export type WamValidation = Result<WAMFileFormat, Partial<ZodError>>;
 
 export const isFailure = <T, E>(Y: Result<T, E>): Y is Failure<E> => {
     return !Y.ok;
@@ -36,7 +34,7 @@ export type OrganizedErrors = z.infer<typeof OrganizedErrors>;
 export class MapValidator {
     private logLevel: number;
 
-    constructor(level: ErrorType) {
+    constructor(level: ErrorType, private fileFetcher: FileFetcherInterface) {
         this.logLevel = this.toLogNumber(level);
     }
 
@@ -58,13 +56,13 @@ export class MapValidator {
         }
     }
 
-    public validateStringMap(data: string, mapPath: string, availableFiles: string[]): MapValidation {
+    public validateStringMap(data: string): Promise<MapValidation> {
         let map: unknown;
         try {
             map = JSON.parse(data);
         } catch (err) {
             if (err instanceof Error) {
-                return {
+                return Promise.resolve({
                     ok: false,
                     error: {
                         map: [
@@ -75,11 +73,11 @@ export class MapValidator {
                             },
                         ],
                     },
-                };
+                });
             }
             throw err;
         }
-        return this.validateMap(map, mapPath, availableFiles);
+        return this.validateMap(map);
     }
 
     /**
@@ -93,7 +91,7 @@ export class MapValidator {
      * details : A text that give details on why the parameter failed the validation
      * link : A link on the documentation that indicate the rules to follow to have a valid parameter
      */
-    public validateMap(data: unknown, mapPath: string, availableFiles: string[]): MapValidation {
+    public async validateMap(data: unknown): Promise<MapValidation> {
         // Let's start by a check on "infinite maps" because the Zod validator does not validate infinite maps.
         const isInfiniteMap = z.object({
             infinite: z.literal(true),
@@ -142,9 +140,9 @@ export class MapValidator {
         const errors: Partial<Record<SectionType, ValidationError[]>> = {};
 
         errors.map = this.removeWarnings(this.validateRootProperties(map));
-        errors.layers = this.removeWarnings(this.validateLayers(map, mapPath, availableFiles));
-        errors.tilesets = this.removeWarnings(this.validateTileset(map, mapPath, availableFiles));
-        errors.entities = this.removeWarnings(this.validateEntitiesProperty(map, mapPath, availableFiles));
+        errors.layers = this.removeWarnings(await this.validateLayers(map));
+        errors.tilesets = this.removeWarnings(await this.validateTileset(map));
+        errors.entities = this.removeWarnings(this.validateEntitiesProperty(map));
 
         let hasError = false;
 
@@ -166,6 +164,22 @@ export class MapValidator {
             ok: true,
             value: map,
         };
+    }
+
+    // TODO: More detailed validation later on
+    public validateWAMFile(data: string): WamValidation {
+        const parsedWAM = WAMFileFormat.safeParse(JSON.parse(data));
+        if (!parsedWAM.success) {
+            return {
+                ok: false,
+                error: parsedWAM.error,
+            };
+        } else {
+            return {
+                ok: true,
+                value: parsedWAM.data,
+            };
+        }
     }
 
     private removeWarnings(errors: ValidationError[]) {
@@ -204,7 +218,7 @@ export class MapValidator {
         return errors;
     }
 
-    private validateLayers(map: ITiledMap, mapPath: string, availableFiles: string[]): ValidationError[] {
+    private async validateLayers(map: ITiledMap): Promise<ValidationError[]> {
         const errors: ValidationError[] = [];
 
         //test of floorLayer existence : ERRORS
@@ -227,9 +241,9 @@ export class MapValidator {
             });
         }
         //test of layers properties : Warnings
-        map.layers.forEach((layer) => {
+        for (const layer of map.layers) {
             if (!(layer.properties == undefined)) {
-                layer.properties.forEach((property) => {
+                for (const property of layer.properties) {
                     //exitUrl property or openWebsite property or playAudio
                     switch (property.name) {
                         case "exitUrl":
@@ -285,8 +299,8 @@ export class MapValidator {
                             }
                             break;
                         case "playAudio":
-                            if (property.type === "string") {
-                                if (!this.doesFileExist(property.value, mapPath, availableFiles)) {
+                            if (property.type === "string" && property.value) {
+                                if (!(await this.fileFetcher.fileExists(property.value))) {
                                     errors.push({
                                         type: "warning",
                                         message: `The layer named "${layer.name}" has a property "${
@@ -339,14 +353,14 @@ export class MapValidator {
                             });
                             break;
                     }
-                });
+                }
             }
-        });
+        }
 
         return errors;
     }
 
-    private validateEntitiesProperty(map: ITiledMap, mapPath: string, availableFiles: string[]): ValidationError[] {
+    private validateEntitiesProperty(map: ITiledMap): ValidationError[] {
         const errors: ValidationError[] = [];
 
         const mapProperties = map.properties;
@@ -377,18 +391,18 @@ export class MapValidator {
         return errors;
     }
 
-    private validateTileset(map: ITiledMap, mapPath: string, availableFiles: string[]): ValidationError[] {
+    private async validateTileset(map: ITiledMap): Promise<ValidationError[]> {
         const errors: ValidationError[] = [];
 
         //test of embed tilseset : ERRORS
         const tilesetTsx: string[] = [];
-        map.tilesets.forEach((tileset) => {
+        for (const tileset of map.tilesets) {
             if ("source" in tileset) {
                 tilesetTsx.push(tileset.source);
-                return;
+                continue;
             }
             //test of tileset image existence : ERRORS
-            if (!this.doesFileExist(tileset.image, mapPath, availableFiles)) {
+            if (!(await this.fileFetcher.fileExists(tileset.image))) {
                 errors.push({
                     type: "error",
                     message: `Image of the tileset "${tileset.name}": "${tileset.image}" is not loadable.`,
@@ -458,7 +472,7 @@ export class MapValidator {
                     details: "The tiles concerned are : " + tilesUnknownProps.join(", ") + ".",
                 });
             }
-        });
+        }
         if (tilesetTsx.length > 0) {
             errors.push({
                 type: "error",
@@ -484,15 +498,5 @@ export class MapValidator {
             return false;
         }
         return ITiledMap.safeParse(map).success;
-    }
-
-    private doesFileExist(filePath: string | undefined, mapPath: string, availableFiles: string[]): boolean {
-        if (filePath === undefined) {
-            return false;
-        }
-
-        const resolvedPath = path.normalize(`${path.dirname(mapPath)}/${filePath}`);
-
-        return availableFiles.includes(resolvedPath);
     }
 }

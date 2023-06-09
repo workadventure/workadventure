@@ -1,13 +1,13 @@
-import Sprite = Phaser.GameObjects.Sprite;
-import Container = Phaser.GameObjects.Container;
-import { PlayerAnimationTypes } from "../Player/Animation";
-import { TexturesHelper } from "../Helpers/TexturesHelper";
 import type { Writable } from "svelte/store";
 import { writable } from "svelte/store";
-import type { PictureStore } from "../../Stores/PictureStore";
 import type CancelablePromise from "cancelable-promise";
 import { PositionMessage_Direction } from "@workadventure/messages";
+import type { PictureStore } from "../../Stores/PictureStore";
+import { TexturesHelper } from "../Helpers/TexturesHelper";
+import { PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
+import Sprite = Phaser.GameObjects.Sprite;
+import Container = Phaser.GameObjects.Container;
 
 export interface CompanionStatus {
     x: number;
@@ -25,13 +25,13 @@ export class Companion extends Container {
     private updateListener: (time: number, delta: number) => void;
     private target: { x: number; y: number; direction: PositionMessage_Direction };
 
-    private companionName: string;
+    private companionId: string;
     private direction: PositionMessage_Direction;
     private animationType: PlayerAnimationTypes;
     private readonly _pictureStore: Writable<string | undefined>;
     private texturePromise: CancelablePromise<string | void> | undefined;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, name: string, texturePromise: CancelablePromise<string>) {
+    constructor(scene: Phaser.Scene, x: number, y: number, id: string, texturePromise: CancelablePromise<string>) {
         super(scene, x + 14, y + 4);
 
         this.sprites = new Map<string, Sprite>();
@@ -43,11 +43,12 @@ export class Companion extends Container {
         this.direction = PositionMessage_Direction.DOWN;
         this.animationType = PlayerAnimationTypes.Idle;
 
-        this.companionName = name;
+        this.companionId = id;
         this._pictureStore = writable(undefined);
 
         this.texturePromise = texturePromise
             .then((resource) => {
+                console.log(resource);
                 this.addResource(resource);
                 this.invisible = false;
                 return this.getSnapshot().then((htmlImageElementSrc) => {
@@ -127,14 +128,14 @@ export class Companion extends Container {
     }
 
     public getStatus(): CompanionStatus {
-        const { x, y, direction, animationType, companionName } = this;
+        const { x, y, direction, animationType, companionId } = this;
 
         return {
             x,
             y,
             direction,
             moving: animationType === PlayerAnimationTypes.Walk,
-            name: companionName,
+            name: companionId,
         };
     }
 

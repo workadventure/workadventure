@@ -1,19 +1,13 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
+    import { Unsubscriber, derived } from "svelte/store";
     import { HtmlUtils } from "../Utils/HtmlUtils";
-    import Loader from "./Loader.svelte";
     import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
-    import UsersList from "./UsersList.svelte";
     import { MucRoom } from "../Xmpp/MucRoom";
     import { userStore } from "../Stores/LocalUserStore";
-    import LL from "../i18n/i18n-svelte";
+    import { LL, locale } from "../i18n/i18n-svelte";
     import { localeDetector } from "../i18n/locales";
-    import { locale } from "../i18n/i18n-svelte";
-    import ChatZones from "./ChatZones.svelte";
     import { activeThreadStore } from "../Stores/ActiveThreadStore";
-    import ChatActiveThread from "./ChatActiveThread.svelte";
-    import ChatActiveThreadTimeLine from "./Timeline/ChatActiveThreadTimeline.svelte";
-    import Timeline from "./Timeline/Timeline.svelte";
     import {
         availabilityStatusStore,
         connectionEstablishedStore,
@@ -27,9 +21,14 @@
         timelineActiveStore,
         timelineMessagesToSee,
     } from "../Stores/ChatStore";
-    import { Unsubscriber, derived } from "svelte/store";
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
     import { iframeListener } from "../IframeListener";
+    import ChatZones from "./ChatZones.svelte";
+    import ChatActiveThread from "./ChatActiveThread.svelte";
+    import ChatActiveThreadTimeLine from "./Timeline/ChatActiveThreadTimeline.svelte";
+    import Timeline from "./Timeline/Timeline.svelte";
+    import UsersList from "./UsersList.svelte";
+    import Loader from "./Loader.svelte";
     import NeedRefresh from "./NeedRefresh.svelte";
     import Forums from "./Forums.svelte";
 
@@ -248,7 +247,7 @@
     </section>
 </aside>
 
-<audio id="newMessageSound" src="/static/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
+<audio id="newMessageSound" src="./static/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
 
 <style lang="scss">
     aside.chatWindow {

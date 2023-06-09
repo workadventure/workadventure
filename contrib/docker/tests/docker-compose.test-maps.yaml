@@ -1,0 +1,29 @@
+version: "3.6"
+services:
+  reverse-proxy:
+    depends_on:
+      play:
+        condition: service_healthy
+      back:
+        condition: service_healthy
+  maps:
+    image: thecodingmachine/php:8.1-v4-apache-node12
+    environment:
+      FRONT_URL: https://play.workadventure.localhost
+      #APACHE_DOCUMENT_ROOT: dist/
+      #APACHE_EXTENSIONS: headers
+      #APACHE_EXTENSION_HEADERS: 1
+      STARTUP_COMMAND_0: sudo a2enmod headers
+      STARTUP_COMMAND_1: yarn install
+    volumes:
+      - ../../maps:/var/www/html
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.maps.rule: "Host(`maps.workadventure.localhost`)"
+      traefik.http.routers.maps.entryPoints: "web,traefik"
+      traefik.http.services.maps.loadbalancer.server.port: "80"
+      traefik.http.routers.maps-ssl.rule: "Host(`maps.workadventure.localhost`)"
+      traefik.http.routers.maps-ssl.entryPoints: "websecure"
+      traefik.http.routers.maps-ssl.service: "maps"
+      traefik.http.routers.maps-ssl.tls: "true"
+      traefik.http.routers.maps-ssl.tls.certresolver: "myresolver"

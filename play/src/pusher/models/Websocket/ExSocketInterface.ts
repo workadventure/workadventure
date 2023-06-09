@@ -1,22 +1,34 @@
-import type { PointInterface } from "./PointInterface";
-import type { Identificable } from "./Identificable";
-import type { ViewportInterface } from "./ViewportMessage";
+import type { ClientDuplexStream } from "@grpc/grpc-js";
+import type { compressors } from "hyper-express";
 import type {
-    AvailabilityStatus,
-    BatchMessage,
+    WokaDetail,
+    MucRoomDefinition,
+    ApplicationDefinitionInterface,
     CompanionMessage,
+    SubMessage,
+    BatchMessage,
     PusherToBackMessage,
     ServerToClientMessage,
-    SubMessage,
-} from "../../../messages/generated/messages_pb";
-import type { ClientDuplexStream } from "@grpc/grpc-js";
+    BackToPusherSpaceMessage,
+    PusherToBackSpaceMessage,
+    SpaceFilterMessage,
+    SpaceUser,
+} from "@workadventure/messages";
+import { AvailabilityStatus } from "@workadventure/messages";
 import type { Zone } from "../Zone";
-import type { compressors } from "hyper-express";
-import type { WokaDetail, MucRoomDefinitionInterface, ApplicationDefinitionInterface } from "@workadventure/messages";
 import type { PusherRoom } from "../PusherRoom";
 import { CustomJsonReplacerInterface } from "../CustomJsonReplacerInterface";
+import { Space } from "../Space";
+import type { ViewportInterface } from "./ViewportMessage";
+import type { Identificable } from "./Identificable";
+import type { PointInterface } from "./PointInterface";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
+export type BackSpaceConnection_ = ClientDuplexStream<PusherToBackSpaceMessage, BackToPusherSpaceMessage>;
+
+export interface BackSpaceConnection extends BackSpaceConnection_ {
+    pingTimeout: NodeJS.Timeout | undefined;
+}
 
 export interface ExSocketInterface extends compressors.WebSocket, Identificable, CustomJsonReplacerInterface {
     token: string;
@@ -52,7 +64,13 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable,
     jabberId: string;
     jabberPassword: string;
     activatedInviteUser: boolean | undefined;
-    mucRooms: Array<MucRoomDefinitionInterface>;
+    mucRooms: Array<MucRoomDefinition>;
     applications: Array<ApplicationDefinitionInterface> | undefined;
     canEdit: boolean;
+    spaceUser: SpaceUser;
+    spaces: Space[];
+    spacesFilters: Map<string, SpaceFilterMessage[]>;
+    cameraState: boolean;
+    microphoneState: boolean;
+    megaphoneState: boolean;
 }

@@ -2,26 +2,31 @@ import {
     AtLeast,
     EntityData,
     EntityDataProperties,
+    EntityDataProperty,
+    EntityPrefab,
     GameMapProperties,
-    TextHeaderPropertyData,
+    WAMEntityData,
 } from "@workadventure/map-editor";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
+import { get, Unsubscriber } from "svelte/store";
+import * as _ from "lodash";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
-import { get, Unsubscriber } from "svelte/store";
 import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
-import { mapEditorModeStore, MapEntityEditorMode, mapEntityEditorModeStore } from "../../Stores/MapEditorStore";
+import { mapEditorModeStore, mapEditorEntityModeStore } from "../../Stores/MapEditorStore";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import { ActivatableInterface } from "../Game/ActivatableInterface";
-import type { GameScene } from "../Game/GameScene";
+import { GameScene } from "../Game/GameScene";
 import { OutlineableInterface } from "../Game/OutlineableInterface";
-
-import * as _ from "lodash";
 
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
-    Remove = "EntityEvent:Removed",
-    PropertiesUpdated = "EntityEvent:PropertiesUpdated",
+    Updated = "EntityEvent:Updated",
+    Delete = "EntityEvent:Delete",
+    /**
+     * Any change done to this Entity properties. Adding new one, deleting or modifying existing one.
+     * We send whole array of properties with this event.
+     */
     PropertyActivated = "EntityEvent:PropertyActivated",
 }
 
@@ -31,21 +36,24 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     private readonly outlineColorStore = createColorStore();
     private readonly outlineColorStoreUnsubscribe: Unsubscriber;
 
-    private entityData: Required<EntityData>;
+    private entityData: Required<WAMEntityData>;
+    private prefab: EntityPrefab;
 
     private activatable: boolean;
     private oldPosition: { x: number; y: number };
 
-    constructor(scene: GameScene, data: EntityData) {
-        super(scene, data.x, data.y, data.prefab.imagePath);
+    constructor(scene: GameScene, public readonly entityId: string, data: WAMEntityData, prefab: EntityPrefab) {
+        super(scene, data.x, data.y, prefab.imagePath);
         this.setOrigin(0);
 
         this.oldPosition = this.getPosition();
 
         this.entityData = {
             ...data,
-            properties: data.properties ?? {},
+            name: data.name ?? "",
+            properties: data.properties ?? [],
         };
+        this.prefab = prefab;
 
         this.activatable = this.hasAnyPropertiesSet();
         if (this.activatable) {
@@ -53,26 +61,27 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             this.scene.input.setDraggable(this);
         }
 
-        this.setDepth(this.y + this.displayHeight + (this.entityData.prefab.depthOffset ?? 0));
+        this.setDepth(this.y + this.displayHeight + (this.prefab.depthOffset ?? 0));
 
         this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
-            if (color === undefined) {
-                this.getOutlinePlugin()?.remove(this);
-            } else {
-                this.getOutlinePlugin()?.remove(this);
-                this.getOutlinePlugin()?.add(this, {
-                    thickness: 2,
-                    outlineColor: color,
-                });
-            }
-            (this.scene as GameScene).markDirty();
+            this.setOutline(color);
         });
 
         this.scene.add.existing(this);
+        scene.getOutlineManager().add(this, () => {
+            return this.getCurrentOutline();
+        });
     }
 
-    public updateEntity(dataToModify: AtLeast<EntityData, "id">): void {
+    /**
+     * This method is being used after command execution from outside and it will not trigger any emits
+     */
+    public updateEntity(dataToModify: Partial<WAMEntityData>): void {
         _.merge(this.entityData, dataToModify);
+        // TODO: Find a way to update it without need of using conditions
+        if (dataToModify.properties !== undefined) {
+            this.entityData.properties = dataToModify.properties;
+        }
 
         this.setPosition(this.entityData.x, this.entityData.y);
         this.oldPosition = this.getPosition();
@@ -85,7 +94,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         }
     }
 
-    public destroy(fromScene?: boolean | undefined): void {
+    public destroy(): void {
         this.outlineColorStoreUnsubscribe();
         super.destroy();
     }
@@ -95,13 +104,9 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public activate(): void {
-        if (!(get(mapEditorModeStore) && get(mapEntityEditorModeStore) == MapEntityEditorMode.EditMode)) {
+        if (!(get(mapEditorModeStore) && get(mapEditorEntityModeStore) === "EDIT")) {
             this.toggleActionsMenu();
         }
-    }
-
-    public TestActivation(): void {
-        this.toggleActionsMenu();
     }
 
     public deactivate(): void {
@@ -109,11 +114,11 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public getCollisionGrid(): number[][] | undefined {
-        return this.entityData.prefab.collisionGrid;
+        return this.prefab.collisionGrid;
     }
 
     public getReversedCollisionGrid(): number[][] | undefined {
-        return this.entityData.prefab.collisionGrid?.map((row) => row.map((value) => (value === 1 ? -1 : value)));
+        return this.prefab.collisionGrid?.map((row) => row.map((value) => (value === 1 ? -1 : value)));
     }
 
     public setFollowOutlineColor(color: number): void {
@@ -132,6 +137,22 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.outlineColorStore.removeApiColor();
     }
 
+    public setEditColor(color: number): void {
+        this.outlineColorStore.setEditColor(color);
+    }
+
+    public removeEditColor(): void {
+        this.outlineColorStore.removeEditColor();
+    }
+
+    public setPointedToEditColor(color: number): void {
+        this.outlineColorStore.setPointedToEditColor(color);
+    }
+
+    public removePointedToEditColor(): void {
+        this.outlineColorStore.removePointedToEditColor();
+    }
+
     public pointerOverOutline(color: number): void {
         this.outlineColorStore.pointerOver(color);
     }
@@ -148,8 +169,12 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.outlineColorStore.characterFarAway();
     }
 
+    public getCurrentOutline(): { thickness: number; color?: number } {
+        return { thickness: 2, color: get(this.outlineColorStore) };
+    }
+
     public delete() {
-        this.emit(EntityEvent.Remove);
+        this.emit(EntityEvent.Delete);
     }
 
     private getOutlinePlugin(): OutlinePipelinePlugin | undefined {
@@ -174,9 +199,26 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             actionsMenuStore.clear();
             return;
         }
-        actionsMenuStore.initialize(TextHeaderPropertyData.parse(this.entityData.properties.textHeader ?? ""));
+        actionsMenuStore.initialize(this.entityData.name ?? "");
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
+        }
+    }
+
+    private setOutline(color: number | undefined) {
+        if (color === undefined) {
+            this.getOutlinePlugin()?.remove(this);
+        } else {
+            this.getOutlinePlugin()?.remove(this);
+            this.getOutlinePlugin()?.add(this, {
+                thickness: 2,
+                outlineColor: color,
+            });
+        }
+        if (this.scene instanceof GameScene) {
+            this.scene.markDirty();
+        } else {
+            throw new Error("Not the Game Scene");
         }
     }
 
@@ -187,67 +229,71 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         const actions: ActionsMenuAction[] = [];
         const properties = this.entityData.properties;
 
-        if (properties.jitsiRoom) {
-            const roomName = properties.jitsiRoom.roomName;
-            const roomConfig = properties.jitsiRoom.jitsiRoomConfig;
-            actions.push({
-                actionName: properties.jitsiRoom.buttonLabel,
-                protected: true,
-                priority: 1,
-                callback: () => {
-                    this.emit(
-                        EntityEvent.PropertyActivated,
-                        {
-                            propertyName: GameMapProperties.JITSI_ROOM,
-                            propertyValue: roomName,
+        for (const property of properties) {
+            switch (property.type) {
+                case "jitsiRoomProperty": {
+                    const roomName = property.roomName;
+                    const roomConfig = property.jitsiRoomConfig;
+                    actions.push({
+                        actionName: property.buttonLabel ?? "",
+                        protected: true,
+                        priority: 1,
+                        callback: () => {
+                            this.emit(
+                                EntityEvent.PropertyActivated,
+                                {
+                                    propertyName: GameMapProperties.JITSI_ROOM,
+                                    propertyValue: roomName,
+                                },
+                                {
+                                    propertyName: GameMapProperties.JITSI_CONFIG,
+                                    propertyValue: JSON.stringify(roomConfig),
+                                }
+                            );
                         },
-                        {
-                            propertyName: GameMapProperties.JITSI_CONFIG,
-                            propertyValue: JSON.stringify(roomConfig),
-                        }
-                    );
-                },
-            });
-        }
-        if (properties.openTab) {
-            const link = properties.openTab.link;
-            const inNewTab = properties.openTab.inNewTab;
-            actions.push({
-                actionName: properties.openTab.buttonLabel,
-                protected: true,
-                priority: 1,
-                callback: () => {
-                    if (inNewTab) {
-                        this.emit(EntityEvent.PropertyActivated, {
-                            propertyName: GameMapProperties.OPEN_TAB,
-                            propertyValue: link,
-                        });
-                    } else {
-                        const coWebsite = new SimpleCoWebsite(new URL(link));
-                        coWebsiteManager.addCoWebsiteToStore(coWebsite, undefined);
-                        coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
-                            console.error("Error during loading a co-website: " + coWebsite.getUrl());
-                        });
-                    }
-                },
-            });
-        }
-        if (properties.playAudio) {
-            const audioLink = properties.playAudio.audioLink;
-            actions.push({
-                actionName: properties.playAudio.buttonLabel,
-                protected: true,
-                priority: 1,
-                callback: () => {
-                    this.emit(EntityEvent.PropertyActivated, {
-                        propertyName: GameMapProperties.PLAY_AUDIO,
-                        propertyValue: audioLink,
                     });
-                },
-            });
-        }
-        if (properties.textHeader) {
-            //
+                    break;
+                }
+                case "openWebsite": {
+                    const link = property.link;
+                    const newTab = property.newTab;
+                    actions.push({
+                        actionName: property.buttonLabel ?? "",
+                        protected: true,
+                        priority: 1,
+                        callback: () => {
+                            if (newTab) {
+                                this.emit(EntityEvent.PropertyActivated, {
+                                    propertyName: GameMapProperties.OPEN_TAB,
+                                    propertyValue: link,
+                                });
+                            } else {
+                                const coWebsite = new SimpleCoWebsite(new URL(link));
+                                coWebsiteManager.addCoWebsiteToStore(coWebsite, undefined);
+                                coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
+                                    console.error("Error during loading a co-website: " + coWebsite.getUrl());
+                                });
+                            }
+                        },
+                    });
+                    break;
+                }
+                case "playAudio": {
+                    const audioLink = property.audioLink;
+                    actions.push({
+                        actionName: property.buttonLabel ?? "",
+                        protected: true,
+                        priority: 1,
+                        callback: () => {
+                            this.emit(EntityEvent.PropertyActivated, {
+                                propertyName: GameMapProperties.PLAY_AUDIO,
+                                propertyValue: audioLink,
+                            });
+                        },
+                    });
+                    break;
+                }
+            }
         }
         return actions;
     }
@@ -256,24 +302,55 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         return this.activatable;
     }
 
-    public getEntityData(): Required<EntityData> {
+    public getEntityData(): Required<WAMEntityData> {
         return this.entityData;
+    }
+
+    public getPrefab(): EntityPrefab {
+        return this.prefab;
     }
 
     public getProperties(): EntityDataProperties {
         return this.entityData.properties;
     }
 
-    public setProperty<K extends keyof EntityDataProperties>(key: K, value: EntityDataProperties[K]): void {
-        this.entityData.properties[key] = value;
-        this.emit(EntityEvent.PropertiesUpdated, key, value);
+    public addProperty(property: EntityDataProperty): void {
+        this.entityData.properties.push(property);
+        this.emit(EntityEvent.Updated, this.appendId({ properties: this.entityData.properties }));
+    }
+
+    public setEntityName(name: string): void {
+        this.entityData.name = name;
+        this.emit(EntityEvent.Updated, this.appendId({ name }));
+    }
+
+    public updateProperty(changes: AtLeast<EntityDataProperty, "id">): void {
+        const property = this.entityData.properties.find((property) => property.id === changes.id);
+        if (property) {
+            _.merge(property, changes);
+        }
+        this.emit(EntityEvent.Updated, this.appendId({ properties: this.entityData.properties }));
+    }
+
+    public deleteProperty(id: string): boolean {
+        const index = this.entityData.properties.findIndex((property) => property.id === id);
+        if (index !== -1) {
+            this.entityData.properties.splice(index, 1);
+            this.emit(EntityEvent.Updated, this.appendId({ properties: this.entityData.properties }));
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public getOldPosition(): { x: number; y: number } {
         return this.oldPosition;
     }
 
-    public setOldPosition(x: number, y: number): void {
-        this.oldPosition = { x, y };
+    private appendId(data: Partial<WAMEntityData>): Partial<EntityData> {
+        return {
+            ...data,
+            id: this.entityId,
+        };
     }
 }

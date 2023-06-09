@@ -1,4 +1,5 @@
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
+import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 import {
     MetaTagsData,
     RequiredMetaTagsData,
@@ -8,9 +9,10 @@ import {
     isRoomRedirect,
     ErrorApiData,
 } from "@workadventure/messages";
-import { adminService } from "./AdminService";
-import axios, { AxiosResponse } from "axios";
+import { AxiosResponse } from "axios";
+import * as Sentry from "@sentry/node";
 import { ADMIN_API_URL } from "../enums/EnvironmentVariable";
+import { adminService } from "./AdminService";
 
 export const MetaTagsDefaultValue: RequiredMetaTagsData = {
     title: "WorkAdventure",
@@ -253,7 +255,8 @@ export class MetaTagsBuilder {
             }
             return mapDetails.metatags ?? undefined;
         } catch (e) {
-            console.error("Error on getting map details", e);
+            Sentry.captureException(`Error on getting map details ${e}`);
+            console.error(`Error on getting map details ${e}`);
             return undefined;
         }
     }
@@ -280,10 +283,10 @@ export class MetaTagsBuilder {
             return undefined;
         }
 
-        const mapUrl = mapDetails.data.mapUrl;
+        const mapUrl = await mapFetcher.getMapUrl(mapDetails.data.mapUrl, mapDetails.data.wamUrl);
         let fetchedData: AxiosResponse;
         try {
-            fetchedData = await axios.get(mapUrl);
+            fetchedData = await mapFetcher.fetchFile(mapUrl);
         } catch (e) {
             console.log(
                 "Error on getting map file",
@@ -332,7 +335,8 @@ export class MetaTagsBuilder {
         try {
             mapFile = await this.fetchMapFile(this.url);
         } catch (e) {
-            console.error("Error on getting map file", e);
+            Sentry.captureException(`Error on getting map file ${e}`);
+            console.error(`Error on getting map file ${e}`);
         }
 
         if (!mapFile) {

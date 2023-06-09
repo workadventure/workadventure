@@ -1,12 +1,12 @@
 /**
  * The list of variables attached to a user
  */
+import { PLAYER_VARIABLES_MAX_TTL } from "../../Enum/EnvironmentVariable";
 import {
     LoadVariablesReturn,
     PlayersVariablesRepositoryInterface,
     VariableWithScope,
 } from "./PlayersVariablesRepositoryInterface";
-import { PLAYER_VARIABLES_MAX_TTL } from "../../Enum/EnvironmentVariable";
 
 export class PlayerVariables {
     private roomVariables!: Map<string, VariableWithScope>;

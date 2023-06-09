@@ -24,9 +24,11 @@ const config: PlaywrightTestConfig = {
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 1 : 0,
   /* Opt out of parallel tests. */
   workers: 1,
+  /* Limit failures to 9 in CI (to finish early) */
+  maxFailures: process.env.CI ? 9 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
     ['html'],
@@ -40,8 +42,7 @@ const config: PlaywrightTestConfig = {
     // baseURL: 'http://localhost:3000',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'retain-on-failure',
-    // process.env.CI ? 'on-first-retry' : 'retain-on-failure'
+    trace: process.env.CI ? 'on-first-retry' : 'retain-on-failure',
     navigationTimeout: 60_000,
   },
 
@@ -52,6 +53,7 @@ const config: PlaywrightTestConfig = {
       use: {
         ...devices['Desktop Chrome'],
         permissions: ["microphone","camera"],
+        ignoreHTTPSErrors: true,
         launchOptions: {
           args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
         },
@@ -69,6 +71,7 @@ const config: PlaywrightTestConfig = {
             "permissions.default.camera": 1,
           },
         },
+        ignoreHTTPSErrors: true,
         ...devices['Desktop Firefox'],
       },
     },
@@ -76,6 +79,7 @@ const config: PlaywrightTestConfig = {
     {
       name: 'webkit',
       use: {
+        ignoreHTTPSErrors: true,
         ...devices['Desktop Safari'],
       },
     },

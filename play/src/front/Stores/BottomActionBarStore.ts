@@ -1,8 +1,8 @@
+import { derived } from "svelte/store";
 import { peerStore } from "./PeerStore";
 import { followStateStore } from "./FollowStore";
 import { silentStore } from "./MediaStore";
 import { screenSharingAvailableStore } from "./ScreenSharingStore";
-import { derived } from "svelte/store";
 
 export const bottomActionBarVisibilityStore = derived(
     [peerStore, followStateStore, silentStore, screenSharingAvailableStore],

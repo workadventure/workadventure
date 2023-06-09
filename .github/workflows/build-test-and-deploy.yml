@@ -56,6 +56,12 @@ jobs:
             type=registry,ref=thecodingmachine/workadventure-play:develop
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
+          secrets: |
+            "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
+            "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
+            "SENTRY_PROJECT=play"
+            "SENTRY_ENVIRONMENT=testing"
+            "SENTRY_RELEASE=${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}"
 
       - name: Build test image
         uses: docker/build-push-action@v3
@@ -71,6 +77,29 @@ jobs:
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/play.tar
+
+      - name: Load image (for sentry)
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+        run: docker load --input /tmp/play.tar
+
+      - name: Sentry push source maps
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: play
+          SENTRY_ENVIRONMENT: testing
+          SENTRY_RELEASE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        run: |
+          docker run --rm \
+            --user 0       \
+            -e SENTRY_AUTH_TOKEN \
+            -e SENTRY_ORG \
+            -e SENTRY_PROJECT \
+            -e SENTRY_RELEASE \
+            thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} \
+            /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
+
 
       - name: Zip image
         run: gzip play.tar
@@ -125,6 +154,12 @@ jobs:
             type=registry,ref=thecodingmachine/workadventure-chat:develop
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
+          secrets: |
+            "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
+            "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
+            "SENTRY_PROJECT=chat"
+            "SENTRY_ENVIRONMENT=testing"
+            "SENTRY_RELEASE=${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}"
 
       - name: Build test image
         uses: docker/build-push-action@v3
@@ -215,6 +250,29 @@ jobs:
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/back.tar
+
+      - name: Load image (for sentry)
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+        run: docker load --input /tmp/back.tar
+
+      - name: Sentry push source maps
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: back
+          SENTRY_ENVIRONMENT: testing
+          SENTRY_RELEASE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        run: |
+            docker run --rm \
+              --user 0       \
+              -e SENTRY_AUTH_TOKEN \
+              -e SENTRY_ORG \
+              -e SENTRY_PROJECT \
+              -e SENTRY_RELEASE \
+              thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} \
+              /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
+
 
       - name: Zip image
         run: gzip back.tar
@@ -412,6 +470,28 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/map-storage.tar
 
+      - name: Load image (for sentry)
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+        run: docker load --input /tmp/map-storage.tar
+
+      - name: Sentry push source maps
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: map-storage
+          SENTRY_ENVIRONMENT: testing
+          SENTRY_RELEASE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        run: |
+          docker run --rm \
+            --user 0       \
+            -e SENTRY_AUTH_TOKEN \
+            -e SENTRY_ORG \
+            -e SENTRY_PROJECT \
+            -e SENTRY_RELEASE \
+            thecodingmachine/workadventure-map-storage:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} \
+            /bin/sh -c 'cd /usr/src && npm ci -w map-storage && cd /usr/src/map-storage && npm run push-sentry-sourcemaps'
+
       - name: Zip image
         run: gzip map-storage.tar
         working-directory: /tmp
@@ -490,11 +570,32 @@ jobs:
           path: /tmp/ejabberd.tar.gz
 
   end-to-end-tests:
-    name: "End to end tests with ${{ matrix.browser }}"
+    name: "End to end tests with ${{ matrix.browser }} (${{ matrix.shard }}/${{ matrix.nbShards }})"
     strategy:
       fail-fast: false
       matrix:
-        browser: [ 'chromium', 'firefox', 'webkit' ]
+        include:
+          - browser: chromium
+            shard: 1
+            nbShards: 2
+          - browser: chromium
+            shard: 2
+            nbShards: 2
+          - browser: firefox
+            shard: 1
+            nbShards: 2
+          - browser: firefox
+            shard: 2
+            nbShards: 2
+          - browser: webkit
+            shard: 1
+            nbShards: 3
+          - browser: webkit
+            shard: 2
+            nbShards: 3
+          - browser: webkit
+            shard: 3
+            nbShards: 3
     needs:
       - build-play
       - build-chat
@@ -509,7 +610,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
       - name: Install dependencies
         run: npm ci
         working-directory: tests
@@ -523,6 +624,21 @@ jobs:
         run: echo "Pulling images with tag ${DOCKER_TAG}"
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+
+      - name: "Install Room Api client dependencies"
+        run: npm ci
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: "Build Room Api client proto files"
+        run: npm run ts-proto
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: Fill .env file
+        run: |
+          sed -i "s/ROOM_API_SECRET_KEY=/ROOM_API_SECRET_KEY=MYAWESOMEKEY/g" .env
+          sed -i "s/JITSI_DOMAIN=/JITSI_DOMAIN=coremeet.workadventu.re/g" .env
+          sed -i "s/JITSI_MUC_DOMAIN=/JITSI_MUC_DOMAIN=muc.prosody.workadventu.re/g" .env
+          sed -i "s/JITSI_XMPP_DOMAIN=/JITSI_XMPP_DOMAIN=prosody.workadventu.re/g" .env
 
       -
         name: Download artifact
@@ -577,19 +693,15 @@ jobs:
           docker load --input /tmp/uploader.tar.gz
           docker load --input /tmp/ejabberd.tar.gz
           docker image ls -a
-
-#      - name: Download images
-#        run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml pull
-#        env:
-#s          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
       - name: Start WorkAdventure
         run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml up -d
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-      - name: Wait for environment to Start
-        run: sleep 30
+      - name: Upload test-map
+        run: sleep 10 && npm run upload-test-map
+        working-directory: map-storage
       - name: Run Playwright tests
-        run: npm run test-prod-like -- --project=${{ matrix.browser }}
+        run: npm run test-prod-like -- --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }}
         working-directory: tests
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
@@ -611,9 +723,110 @@ jobs:
       - uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: playwright-report-${{ matrix.browser }}
+          name: playwright-report-${{ matrix.browser }}-${{ matrix.shard }}-${{ matrix.nbShards }}
           path: tests/playwright-report/
           retention-days: 30
+
+  prod-single-domain-deploy-tests:
+    name: "Test production docker-compose (${{ matrix.shard }}/${{ matrix.nbShards }})"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: 1
+            nbShards: 2
+          - shard: 2
+            nbShards: 2
+    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
+    needs:
+      - build-play
+      - build-chat
+      - build-back
+      - build-maps
+      - build-uploader
+      - build-map-storage
+      - build-ejabberd
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: npm ci
+        working-directory: tests
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+        working-directory: tests
+      - name: 'Setup .env file'
+        run: cp .env.prod.template .env
+        working-directory: contrib/docker
+      - uses: rlespinasse/github-slug-action@3.1.0
+
+      - name: "Install Room Api client dependencies"
+        run: npm ci
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: "Build Room Api client proto files"
+        run: npm run ts-proto
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: Fill .env file
+        run: |
+          sed -i "s/SECRET_KEY=/SECRET_KEY=someSecret/g" .env
+          sed -i "s/VERSION=master/VERSION=${DOCKER_TAG}/g" .env
+          sed -i "s/DOMAIN=workadventure.localhost/DOMAIN=play.workadventure.localhost/g" .env
+          sed -i "s/MAP_STORAGE_AUTHENTICATION_USER=/MAP_STORAGE_AUTHENTICATION_USER=john.doe/g" .env
+          sed -i "s/MAP_STORAGE_AUTHENTICATION_PASSWORD=/MAP_STORAGE_AUTHENTICATION_PASSWORD=password/g" .env
+          sed -i "s/ADMIN_API_TOKEN=/ADMIN_API_TOKEN=123/g" .env
+          sed -i "s/ROOM_API_SECRET_KEY=/ROOM_API_SECRET_KEY=MYAWESOMEKEY/g" .env
+          sed -i "s/JITSI_DOMAIN=/JITSI_DOMAIN=coremeet.workadventu.re/g" .env
+          sed -i "s/JITSI_MUC_DOMAIN=/JITSI_MUC_DOMAIN=muc.prosody.workadventu.re/g" .env
+          sed -i "s/JITSI_XMPP_DOMAIN=/JITSI_XMPP_DOMAIN=prosody.workadventu.re/g" .env
+          echo "WOKA_SPEED=3" >> .env
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        working-directory: contrib/docker
+      - name: Start WorkAdventure
+        run: docker-compose -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml up -d
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        working-directory: contrib/docker
+      - name: Upload test-map
+        run: sleep 10 && npm run upload-test-map-single-domain
+        working-directory: map-storage
+      - name: Run Playwright tests
+        # Run all tests, except the ones needing to restart Docker and the ones relying on an OIDC server
+        run: npm run test-single-domain-install -- --shard ${{ matrix.shard }}/${{ matrix.nbShards }}
+        working-directory: tests
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+      - name: Display docker-compose logs on failure
+        run: docker-compose  -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml logs
+        if: failure()
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        working-directory: contrib/docker
+      - name: Display containers state
+        run: docker-compose  -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml ps
+        if: failure()
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        working-directory: contrib/docker
+      - name: Side-load docker-compose logs in the playwright report
+        run: docker-compose  -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml logs > ../../tests/playwright-report/docker-compose.log
+        if: failure()
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        working-directory: contrib/docker
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: playwright-report-single-domain-${{ matrix.shard }}-${{ matrix.nbShards }}
+          path: tests/playwright-report/
+          retention-days: 30
+
 
   deeploy:
     needs:
@@ -716,3 +929,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           msg: "Environment deployed at https://play-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re \nTests available at https://maps-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re/tests"
+

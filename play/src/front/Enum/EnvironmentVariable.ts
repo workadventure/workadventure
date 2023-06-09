@@ -21,8 +21,7 @@ export const TURN_USER = env.TURN_USER;
 export const TURN_PASSWORD = env.TURN_PASSWORD;
 export const JITSI_URL = env.JITSI_URL;
 export const JITSI_PRIVATE_MODE = env.JITSI_PRIVATE_MODE;
-export const ENABLE_FEATURE_MAP_EDITOR = env.ENABLE_FEATURE_MAP_EDITOR;
-export const ENABLE_MAP_EDITOR_AREAS_TOOL = env.ENABLE_MAP_EDITOR_AREAS_TOOL;
+export const ENABLE_MAP_EDITOR = env.ENABLE_MAP_EDITOR;
 export const MAX_USERNAME_LENGTH = env.MAX_USERNAME_LENGTH;
 export const MAX_PER_GROUP = env.MAX_PER_GROUP;
 export const NODE_ENV = env.NODE_ENV;
@@ -42,3 +41,13 @@ export const REPORT_ISSUES_URL = env.REPORT_ISSUES_URL;
 
 export const POSITION_DELAY = 200; // Wait 200ms between sending position events
 export const MAX_EXTRAPOLATION_TIME = 100; // Extrapolate a maximum of 250ms if no new movement is sent by the player
+
+export const SENTRY_DSN_FRONT = env.SENTRY_DSN_FRONT;
+export const SENTRY_ENVIRONMENT = env.SENTRY_ENVIRONMENT;
+export const SENTRY_RELEASE = env.SENTRY_RELEASE;
+export const SENTRY_TRACES_SAMPLE_RATE = env.SENTRY_TRACES_SAMPLE_RATE;
+export const WOKA_SPEED = env.WOKA_SPEED;
+
+export const JITSI_DOMAIN = env.JITSI_DOMAIN;
+export const JITSI_XMPP_DOMAIN = env.JITSI_XMPP_DOMAIN;
+export const JITSI_MUC_DOMAIN = env.JITSI_MUC_DOMAIN;

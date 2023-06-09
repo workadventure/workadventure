@@ -1,7 +1,8 @@
 import axios from "axios";
 import type { AxiosResponse } from "axios";
-import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../enums/EnvironmentVariable";
 import { companionCollectionList, CompanionCollectionList } from "@workadventure/messages";
+import * as Sentry from "@sentry/node";
+import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../enums/EnvironmentVariable";
 import type { CompanionServiceInterface } from "./CompanionServiceInterface";
 
 export class AdminCompanionService implements CompanionServiceInterface {
@@ -57,6 +58,7 @@ export class AdminCompanionService implements CompanionServiceInterface {
             })
             .catch((err) => {
                 console.error(`Cannot get companion list from admin API with token: ${token}`, err);
+                Sentry.captureException(`Cannot get companion list from admin API with token: ${token}`, err);
                 return undefined;
             });
     }

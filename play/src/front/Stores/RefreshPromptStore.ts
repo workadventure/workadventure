@@ -1,7 +1,6 @@
 import { writable } from "svelte/store";
 
 export interface RefreshPromptConfig {
-    comment?: string;
     timeToRefresh?: number;
 }
 

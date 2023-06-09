@@ -1,13 +1,13 @@
 <script lang="ts">
-    import { showReportScreenStore, userReportEmpty } from "../../Stores/ShowReportScreenStore";
-    import BlockSubMenu from "./BlockSubMenu.svelte";
-    import ReportSubMenu from "./ReportSubMenu.svelte";
     import { onDestroy, onMount } from "svelte";
     import type { Unsubscriber } from "svelte/store";
+    import { get } from "svelte/store";
     import { playersStore } from "../../Stores/PlayersStore";
     import { connectionManager } from "../../Connexion/ConnectionManager";
-    import { get } from "svelte/store";
-    import LL from "../../../i18n/i18n-svelte";
+    import { showReportScreenStore, userReportEmpty } from "../../Stores/ShowReportScreenStore";
+    import { LL } from "../../../i18n/i18n-svelte";
+    import ReportSubMenu from "./ReportSubMenu.svelte";
+    import BlockSubMenu from "./BlockSubMenu.svelte";
 
     let blockActive = true;
     let disableReport = false;

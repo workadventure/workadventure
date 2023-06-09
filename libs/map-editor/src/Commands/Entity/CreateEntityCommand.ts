@@ -1,35 +1,23 @@
-import type { EntityData } from "../../types";
+import { v4 } from "uuid";
 import type { GameMap } from "../../GameMap/GameMap";
 import { Command } from "../Command";
-import type { DeleteEntityCommandConfig } from "./DeleteEntityCommand";
-
-export interface CreateEntityCommandConfig {
-    type: "CreateEntityCommand";
-    entityData: EntityData;
-}
+import { WAMEntityData } from "../../types";
 
 export class CreateEntityCommand extends Command {
-    private entityData: EntityData;
+    protected entityId: string;
+    protected entityData: WAMEntityData;
 
-    private gameMap: GameMap;
+    protected gameMap: GameMap;
 
-    constructor(gameMap: GameMap, config: CreateEntityCommandConfig, commandId?: string) {
+    constructor(gameMap: GameMap, entityId: string | undefined, entityData: WAMEntityData, commandId?: string) {
         super(commandId);
         this.gameMap = gameMap;
-        this.entityData = structuredClone(config.entityData);
+        this.entityData = structuredClone(entityData);
+        this.entityId = entityId ?? v4();
     }
 
-    public execute(): CreateEntityCommandConfig {
-        if (!this.gameMap.getGameMapEntities().addEntity(this.entityData)) {
-            throw new Error(`MapEditorError: Could not execute CreateEntity Command. Entity ID: ${this.entityData.id}`);
-        }
-        return { type: "CreateEntityCommand", entityData: this.entityData };
-    }
-
-    public undo(): DeleteEntityCommandConfig {
-        if (!this.gameMap.getGameMapEntities().deleteEntity(this.entityData.id)) {
-            throw new Error(`MapEditorError: Could not undo CreateEntity Command. Entity ID: ${this.entityData.id}`);
-        }
-        return { type: "DeleteEntityCommand", id: this.entityData.id };
+    public execute(): Promise<void> {
+        this.gameMap.getGameMapEntities()?.addEntity(this.entityId, this.entityData);
+        return Promise.resolve();
     }
 }

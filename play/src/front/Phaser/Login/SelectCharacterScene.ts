@@ -1,31 +1,31 @@
-import { gameManager } from "../Game/GameManager";
-import { EnableCameraSceneName } from "./EnableCameraScene";
-import { CustomizeSceneName } from "./CustomizeScene";
+import { DraggableGrid } from "@home-based-studio/phaser3-utils";
+import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
+import { wokaList } from "@workadventure/messages";
+import { get } from "svelte/store";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { loadAllDefaultModels } from "../Entity/PlayerTexturesLoadingManager";
 import { Loader } from "../Components/Loader";
 import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
 import { PlayerTextures } from "../Entity/PlayerTextures";
-import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { areCharacterLayersValid } from "../../Connexion/LocalUser";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
 import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
-import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
 import {
     collectionsSizeStore,
     customizeAvailableStore,
     selectedCollection,
 } from "../../Stores/SelectCharacterSceneStore";
-import { DraggableGrid } from "@home-based-studio/phaser3-utils";
 import { WokaSlot } from "../Components/SelectWoka/WokaSlot";
-import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
-import { wokaList } from "@workadventure/messages";
 import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
-import { get } from "svelte/store";
+import { gameManager } from "../Game/GameManager";
+import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
 import { batchGetUserMediaStore } from "../../Stores/MediaStore";
+import { AbstractCharacterScene } from "./AbstractCharacterScene";
+import { CustomizeSceneName } from "./CustomizeScene";
+import { EnableCameraSceneName } from "./EnableCameraScene";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
@@ -59,7 +59,10 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.superLoad
             .json(
                 wokaMetadataKey,
-                `${PUSHER_URL}/woka/list?roomUrl=` + encodeURIComponent(gameManager.currentStartedRoom.href),
+                new URL(
+                    "woka/list?roomUrl=" + encodeURIComponent(gameManager.currentStartedRoom.href),
+                    ABSOLUTE_PUSHER_URL
+                ).toString(),
                 undefined,
                 {
                     responseType: "text",
@@ -93,6 +96,16 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.selectedWoka = null;
         this.selectedCollectionIndex = 0;
         this.collectionKeys = this.playerTextures.getCollectionsKeys();
+        if (localUserStore.getCharacterLayers()) {
+            this.playerTextures.wokaCollections.forEach((collection, index) => {
+                collection.forEach((woka) => {
+                    const wokaCurrentId = localUserStore.getCharacterLayers()?.find((wokaId) => wokaId === woka.id);
+                    if (wokaCurrentId) {
+                        this.selectedCollectionIndex = this.collectionKeys.indexOf(index);
+                    }
+                });
+            });
+        }
         selectedCollection.set(this.getSelectedCollectionName());
 
         customizeAvailableStore.set(this.isCustomizationAvailable());
@@ -221,12 +234,14 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         const textures = this.playerTextures.getWokaCollectionTextures(this.getSelectedCollectionName());
 
         let currentSelectedItem = null;
+
         for (let i = 0; i < textures.length; i += 1) {
             const slot = new WokaSlot(this, textures[i].id).setDisplaySize(wokaDimension, wokaDimension);
 
             //ini current Select Item to the first
             if (i === 0) currentSelectedItem = slot;
-
+            if (localUserStore.getCharacterLayers() && localUserStore.getCharacterLayers()![0] === textures[i].id)
+                currentSelectedItem = slot;
             this.charactersDraggableGrid.addItem(slot);
         }
         this.charactersDraggableGrid.moveContentToBeginning();
@@ -241,7 +256,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             selectCharacterSceneVisibleStore.set(true);
         });
 
-        this.input.keyboard.on("keyup-ENTER", () => {
+        this.input.keyboard?.on("keyup-ENTER", () => {
             return this.nextSceneToCameraScene();
         });
 
@@ -269,31 +284,31 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     private bindKeyboardEventHandlers(): void {
-        this.input.keyboard.on("keyup-SPACE", () => {
+        this.input.keyboard?.on("keyup-SPACE", () => {
             this.selectNextCollection();
         });
-        this.input.keyboard.on("keydown-LEFT", () => {
+        this.input.keyboard?.on("keydown-LEFT", () => {
             this.selectNextGridItem(true, true);
         });
-        this.input.keyboard.on("keydown-RIGHT", () => {
+        this.input.keyboard?.on("keydown-RIGHT", () => {
             this.selectNextGridItem(false, true);
         });
-        this.input.keyboard.on("keydown-UP", () => {
+        this.input.keyboard?.on("keydown-UP", () => {
             this.selectNextGridItem(true, false);
         });
-        this.input.keyboard.on("keydown-DOWN", () => {
+        this.input.keyboard?.on("keydown-DOWN", () => {
             this.selectNextGridItem(false, false);
         });
-        this.input.keyboard.on("keydown-W", () => {
+        this.input.keyboard?.on("keydown-W", () => {
             this.selectNextGridItem(true, false);
         });
-        this.input.keyboard.on("keydown-S", () => {
+        this.input.keyboard?.on("keydown-S", () => {
             this.selectNextGridItem(false, false);
         });
-        this.input.keyboard.on("keydown-A", () => {
+        this.input.keyboard?.on("keydown-A", () => {
             this.selectNextGridItem(true, true);
         });
-        this.input.keyboard.on("keydown-D", () => {
+        this.input.keyboard?.on("keydown-D", () => {
             this.selectNextGridItem(false, true);
         });
     }

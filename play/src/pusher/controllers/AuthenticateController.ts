@@ -1,17 +1,17 @@
 import { v4 } from "uuid";
-import { BaseHttpController } from "./BaseHttpController";
+import { ErrorApiData, RegisterData } from "@workadventure/messages";
+import { isAxiosError } from "axios";
+import { z } from "zod";
+import * as Sentry from "@sentry/node";
 import type { AuthTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager } from "../services/JWTTokenManager";
 import { openIDClient } from "../services/OpenIDClient";
 import { DISABLE_ANONYMOUS } from "../enums/EnvironmentVariable";
-import { isErrorApiData } from "@workadventure/messages";
-import type { RegisterData } from "@workadventure/messages";
 import { adminService } from "../services/AdminService";
-import Axios from "axios";
-import { z } from "zod";
 import { validateQuery } from "../services/QueryValidator";
 import { VerifyDomainService } from "../services/verifyDomain/VerifyDomainService";
 import { adminApi } from "../services/AdminApi";
+import { BaseHttpController } from "./BaseHttpController";
 
 export class AuthenticateController extends BaseHttpController {
     routes(): void {
@@ -101,8 +101,8 @@ export class AuthenticateController extends BaseHttpController {
             }
 
             // Let's validate the playUri (we don't want a hacker to forge a URL that will redirect to a malicious URL)
-            const verifyDomainService = VerifyDomainService.get(adminApi.getCapabilities());
-            const verifyDomainResult = await verifyDomainService.verifyDomain(query.playUri);
+            const verifyDomainService_ = VerifyDomainService.get(adminApi.getCapabilities());
+            const verifyDomainResult = await verifyDomainService_.verifyDomain(query.playUri);
             if (!verifyDomainResult) {
                 res.status(403);
                 res.send("Unauthorized domain in playUri");
@@ -247,8 +247,8 @@ export class AuthenticateController extends BaseHttpController {
                 });
                 return;
             } catch (err) {
-                if (Axios.isAxiosError(err)) {
-                    const errorType = isErrorApiData.safeParse(err?.response?.data);
+                if (isAxiosError(err)) {
+                    const errorType = ErrorApiData.safeParse(err?.response?.data);
                     if (errorType.success) {
                         res.sendStatus(err?.response?.status ?? 500);
                         res.json(errorType.data);
@@ -296,6 +296,7 @@ export class AuthenticateController extends BaseHttpController {
                 }
                 await openIDClient.logoutUser(authTokenData.accessToken);
             } catch (error) {
+                Sentry.captureException(`openIDCallback => logout-callback: ${error}`);
                 console.error("openIDCallback => logout-callback", error);
             }
 
@@ -327,7 +328,7 @@ export class AuthenticateController extends BaseHttpController {
          */
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/openid-callback", async (req, res) => {
-            const playUri = (req.cookies as Record<string, string>).playUri;
+            const playUri = req.cookies.playUri;
             if (!playUri) {
                 throw new Error("Missing playUri in cookies");
             }
@@ -337,6 +338,7 @@ export class AuthenticateController extends BaseHttpController {
                 userInfo = await openIDClient.getUserInfo(req, res);
             } catch (err) {
                 //if no access on openid provider, return error
+                Sentry.captureException("An error occurred while connecting to OpenID Provider => " + err);
                 console.error("An error occurred while connecting to OpenID Provider => ", err);
                 res.status(500);
                 res.send("An error occurred while connecting to OpenID Provider");
@@ -438,7 +440,7 @@ export class AuthenticateController extends BaseHttpController {
                 roomUrl,
                 mapUrlStart,
                 organizationMemberToken,
-            } as RegisterData);
+            } satisfies RegisterData);
         });
     }
 

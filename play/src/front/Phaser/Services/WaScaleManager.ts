@@ -1,9 +1,9 @@
-import { HdpiManager } from "./HdpiManager";
-import ScaleManager = Phaser.Scale.ScaleManager;
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import type { Game } from "../Game/Game";
 import { ResizableScene } from "../Login/ResizableScene";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
+import { HdpiManager } from "./HdpiManager";
+import ScaleManager = Phaser.Scale.ScaleManager;
 
 export enum WaScaleManagerEvent {
     RefreshFocusOnTarget = "wa-scale-manager:refresh-focus-on-target",

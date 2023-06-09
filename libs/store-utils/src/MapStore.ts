@@ -1,5 +1,6 @@
 import type { Readable, Subscriber, Unsubscriber, Writable } from "svelte/store";
-import { get, readable, writable } from "svelte/store";
+import {derived, get, readable, writable} from "svelte/store";
+import {ForwardableStore} from "./ForwardableStore";
 
 /**
  * Is it a Map? Is it a Store? No! It's a MapStore!
@@ -123,6 +124,60 @@ export class MapStore<K, V> extends Map<K, V> implements Readable<Map<K, V>> {
                     unsubscribeDeepStore = undefined;
                 }
             };
+        });
+    }
+
+    /**
+     * Builds a store by "reducing" stores in keys.
+     *
+     * An example of a store containing the SUM of all values stored into the field "mySubStore":
+     *
+     * this.getAggregatedStore(
+     *   (value) => value.mySubStore, // Accessor to access the sub stores
+     *   (subStores) => subStores.reduce((partialSum, a) => partialSum + a, 0)) // Reduces the value
+     *
+     * @param accessor
+     * @param reducer
+     */
+    getAggregatedStore<T, U>(accessor: (value: V) => Readable<T> | undefined, reducer: (stores: T[]) => U): Readable<U | undefined> {
+        const initArray = new Array<T>();
+
+        for (const [key, value] of this.entries()) {
+            const store = accessor(value);
+            if (store) {
+                initArray.push(get(store));
+            }
+        }
+
+        const initStoreValue = reducer(initArray);
+
+        let unsubscriber: Unsubscriber | undefined;
+
+        return readable(initStoreValue, (set) => {
+
+            const globalUnsubscriber = this.subscribe((map) => {
+                if (unsubscriber) {
+                    unsubscriber();
+                }
+                const stores: Array<Readable<T>> = [];
+                for (const value of this.values()) {
+                    const store = accessor(value);
+                    if (store) {
+                        stores.push(store);
+                    }
+                }
+                const derivedStore = derived(stores, reducer);
+                derivedStore.subscribe((value) => {
+                    set(value);
+                });
+            });
+
+            return () => {
+                globalUnsubscriber();
+                if (unsubscriber) {
+                    unsubscriber();
+                }
+            }
         });
     }
 }

@@ -1,9 +1,9 @@
 import axios from "axios";
+import { v4 as uuid } from "uuid";
+import { get } from "svelte/store";
 import { EMBEDLY_KEY } from "../Enum/EnvironmentVariable";
 import { HtmlUtils } from "../Utils/HtmlUtils";
-import { v4 as uuid } from "uuid";
-import LL from "../i18n/i18n-svelte";
-import { get } from "svelte/store";
+import { LL } from "../i18n/i18n-svelte";
 import { FileMessageManager } from "./FileMessageManager";
 
 const webLinkCaches = new Map();
@@ -106,7 +106,7 @@ export class WebLink {
         return video.outerHTML;
     }
     private audioRendererHtml(id: string, name: string) {
-        const audio = document.createElement("video") as HTMLAudioElement;
+        const audio = document.createElement("video");
         audio.setAttribute("width", "100%");
         audio.setAttribute("height", "100%");
         audio.setAttribute("alt", name);

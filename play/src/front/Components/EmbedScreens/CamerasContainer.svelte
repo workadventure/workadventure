@@ -1,8 +1,8 @@
 <script lang="ts">
-    import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
+    import { fly } from "svelte/transition";
     import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import MediaBox from "../Video/MediaBox.svelte";
-    import { fly } from "svelte/transition";
+    import { EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 
     export let highlightedEmbedScreen: EmbedScreen | undefined;
     export let full = false;

@@ -1,4 +1,5 @@
 import { S3, S3ClientConfig } from "@aws-sdk/client-s3";
+import pLimit from "p-limit";
 import {
     AWS_ACCESS_KEY_ID,
     AWS_BUCKET,
@@ -7,7 +8,6 @@ import {
     AWS_URL,
     S3_UPLOAD_CONCURRENCY_LIMIT,
 } from "../Enum/EnvironmentVariable";
-import pLimit from "p-limit";
 
 let s3: S3 | undefined;
 

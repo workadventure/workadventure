@@ -1,17 +1,20 @@
-import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
-import type { AdminInterface } from "./AdminInterface";
+import path from "path";
 import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData } from "@workadventure/messages";
 import { OpidWokaNamePolicy } from "@workadventure/messages";
 import {
     DISABLE_ANONYMOUS,
     ENABLE_CHAT,
     ENABLE_CHAT_UPLOAD,
+    ENABLE_MAP_EDITOR,
     PUBLIC_MAP_STORAGE_URL,
     START_ROOM_URL,
     OPID_WOKA_NAME_POLICY,
     ENABLE_CHAT_ONLINE_LIST,
     ENABLE_CHAT_DISCONNECTED_LIST,
+    MAP_EDITOR_ALLOWED_USERS,
 } from "../enums/EnvironmentVariable";
+import type { AdminInterface } from "./AdminInterface";
+import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
 
@@ -30,9 +33,15 @@ class LocalAdmin implements AdminInterface {
         let canEdit = false;
         const roomUrl = new URL(playUri);
         const match = /\/~\/(.+)/.exec(roomUrl.pathname);
-        if (match) {
+
+        if (
+            match &&
+            ENABLE_MAP_EDITOR &&
+            (MAP_EDITOR_ALLOWED_USERS.length === 0 || MAP_EDITOR_ALLOWED_USERS.includes(userIdentifier))
+        ) {
             canEdit = true;
         }
+
         const mucRooms = [{ name: "Connected users", url: playUri, type: "default", subscribe: false }];
         if (ENABLE_CHAT) {
             mucRooms.push({ name: "Welcome", url: `${playUri}/forum/welcome`, type: "forum", subscribe: false });
@@ -65,12 +74,18 @@ class LocalAdmin implements AdminInterface {
             });
         }
 
-        let mapUrl = "";
-        const entityCollectionsUrls = [];
+        let mapUrl = undefined;
+        let wamUrl = undefined;
+        const canEdit = false;
+
         let match = /\/~\/(.+)/.exec(roomUrl.pathname);
         if (match) {
-            mapUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
-            entityCollectionsUrls.push(`${PUBLIC_MAP_STORAGE_URL}/entityCollections`);
+            if (path.extname(roomUrl.pathname) === ".tmj") {
+                return Promise.resolve({
+                    redirectUrl: roomUrl.toString().replace(".tmj", ".wam"),
+                });
+            }
+            wamUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
         } else {
             match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);
             if (!match) {
@@ -90,7 +105,8 @@ class LocalAdmin implements AdminInterface {
 
         return Promise.resolve({
             mapUrl,
-            entityCollectionsUrls,
+            wamUrl,
+            canEdit,
             authenticationMandatory: DISABLE_ANONYMOUS,
             contactPage: null,
             mucRooms: null,
@@ -164,6 +180,10 @@ class LocalAdmin implements AdminInterface {
         message: string,
         byUserEmail: string
     ): Promise<boolean> {
+        return Promise.reject(new Error("No admin backoffice set!"));
+    }
+
+    getTagsList(roomUrl: string): Promise<string[]> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 }

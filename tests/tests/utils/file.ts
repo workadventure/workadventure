@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import fs from 'fs';
 
 export async function createFileOfSize(filePath: string, size: number): Promise<boolean>{
     return new Promise((resolve, reject) => {

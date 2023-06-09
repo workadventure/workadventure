@@ -98,4 +98,53 @@ describe("Main store", () => {
 
         expect(get(fooStore)).toBeUndefined();
     });
+
+    it("can aggregate stores", () => {
+        const mapStore = new MapStore<
+            string,
+            {
+                store: Writable<number>;
+            }
+        >();
+
+        mapStore.set("foo", {
+            store: writable(12),
+        });
+        mapStore.set("bar", {
+            store: writable(24),
+        });
+
+        const sumStore = mapStore.getAggregatedStore(
+            (value) => value.store,
+            (stores) => stores.reduce((partialSum, a) => partialSum + a, 0)
+        );
+
+        let value: number | undefined;
+
+        sumStore.subscribe((val) => {
+            value = val;
+        });
+
+        expect(get(sumStore)).toBe(36);
+
+        mapStore.get("foo")?.store.set(24);
+
+        expect(value).toBe(48);
+
+        mapStore.set("baz", {
+            store: writable(1),
+        });
+
+        expect(value).toBe(49);
+
+        mapStore.set("baz", {
+            store: writable(2),
+        });
+
+        expect(value).toBe(50);
+
+        mapStore.delete("baz");
+
+        expect(value).toBe(48);
+    });
 });

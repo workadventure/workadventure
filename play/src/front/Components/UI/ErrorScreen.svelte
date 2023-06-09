@@ -1,10 +1,10 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
+    import { get } from "svelte/store";
+    import { onDestroy } from "svelte";
     import { errorScreenStore } from "../../Stores/ErrorScreenStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { connectionManager } from "../../Connexion/ConnectionManager";
-    import { get } from "svelte/store";
-    import { onDestroy } from "svelte";
 
     import logoImg from "../images/logo-min-white.png";
     let logo = gameManager?.currentStartedRoom?.loginSceneLogo ?? logoImg;

@@ -1,5 +1,3 @@
-import { SelectCharacterSceneName } from "./SelectCharacterScene";
-import { ResizableScene } from "./ResizableScene";
 import { loginSceneVisibleIframeStore, loginSceneVisibleStore } from "../../Stores/LoginSceneStore";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { connectionManager } from "../../Connexion/ConnectionManager";
@@ -7,6 +5,8 @@ import { gameManager } from "../Game/GameManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { isUserNameTooLong, isUserNameValid } from "../../Connexion/LocalUser";
 import { NameNotValidError, NameTooLongError } from "../../Exception/NameError";
+import { ResizableScene } from "./ResizableScene";
+import { SelectCharacterSceneName } from "./SelectCharacterScene";
 
 export const LoginSceneName = "LoginScene";
 

@@ -3,7 +3,7 @@ import { login } from './utils/roles';
 import {oidcLogin, oidcLogout} from "./utils/oidc";
 import {evaluateScript} from "./utils/scripting";
 
-test.describe('OpenID connect', () => {
+test.describe('OpenID connect @oidc', () => {
   test('can login and logout', async ({
     page,
   }) => {

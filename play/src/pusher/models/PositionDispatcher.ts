@@ -8,11 +8,11 @@
  * The PositionNotifier is important for performance. It allows us to send the position of players only to a restricted
  * number of players around the current player.
  */
+import Debug from "debug";
 import { Zone } from "./Zone";
 import type { ZoneEventListener } from "./Zone";
 import type { ViewportInterface } from "./Websocket/ViewportMessage";
 import type { ExSocketInterface } from "./Websocket/ExSocketInterface";
-import Debug from "debug";
 
 const debug = Debug("positiondispatcher");
 

@@ -1,26 +1,28 @@
 <script lang="ts">
+    import { onDestroy, onMount } from "svelte";
+    import { Color } from "@workadventure/shared-utils";
     import {
         cameraEnergySavingStore,
         localVolumeStore,
         mediaStreamConstraintsStore,
         requestedCameraState,
         silentStore,
+        localStreamStore,
     } from "../Stores/MediaStore";
-    import { localStreamStore } from "../Stores/MediaStore";
-    import SoundMeterWidget from "./SoundMeterWidget.svelte";
-    import { onDestroy, onMount } from "svelte";
-    import { getColorByString, getTextColorByBackgroundColor, srcObject } from "./Video/utils";
-    import LL from "../../i18n/i18n-svelte";
-    import Woka from "./Woka/Woka.svelte";
+    import { LL } from "../../i18n/i18n-svelte";
     import { localUserStore } from "../Connexion/LocalUserStore";
+    import { inExternalServiceStore } from "../Stores/MyMediaStore";
+    import { megaphoneEnabledStore } from "../Stores/MegaphoneStore";
+    import SoundMeterWidget from "./SoundMeterWidget.svelte";
+    import { srcObject } from "./Video/utils";
+    import Woka from "./Woka/WokaFromUserId.svelte";
     import microphoneOffImg from "./images/microphone-off.png";
     import cameraOffImg from "./images/camera-off.png";
-    import { inExternalServiceStore } from "../Stores/MyMediaStore";
 
     let stream: MediaStream | null;
     let userName = localUserStore.getName();
-    let backgroundColor = getColorByString(userName ?? "default");
-    let textColor = getTextColorByBackgroundColor(backgroundColor);
+    let backgroundColor = Color.getColorByString(userName ?? "default");
+    let textColor = Color.getTextColorByBackgroundColor(backgroundColor);
 
     const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
         if (value.type === "success") {
@@ -90,7 +92,9 @@
             </div>
             <div class="my-webcam-container tw-z-[250] tw-bg-dark-blue/50 tw-rounded tw-transition-all">
                 <video
-                    class="tw-h-full tw-w-full tw-rounded md:tw-object-cover"
+                    class="tw-h-full tw-w-full tw-rounded md:tw-object-cover {$megaphoneEnabledStore
+                        ? 'tw-border-orange tw-border-3 tw-border-solid'
+                        : ''}"
                     style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}
                     autoplay

@@ -5,15 +5,37 @@ export function createColorStore() {
 
     let followColor: number | undefined = undefined;
     let apiColor: number | undefined = undefined;
+    let editColor: number | undefined = undefined;
+    let pointedToEditColor: number | undefined = undefined;
     let pointedByPointer: number | undefined = undefined;
     let pointedByCharacter: number | undefined = undefined;
 
     const updateColor = () => {
-        set(pointedByPointer ?? pointedByCharacter ?? followColor ?? apiColor);
+        set(editColor ?? pointedToEditColor ?? pointedByPointer ?? pointedByCharacter ?? followColor ?? apiColor);
     };
 
     return {
         subscribe,
+
+        setEditColor(color: number) {
+            editColor = color;
+            updateColor();
+        },
+
+        removeEditColor() {
+            editColor = undefined;
+            updateColor();
+        },
+
+        setPointedToEditColor(color: number) {
+            pointedToEditColor = color;
+            updateColor();
+        },
+
+        removePointedToEditColor() {
+            pointedToEditColor = undefined;
+            updateColor();
+        },
 
         pointerOver(color: number) {
             pointedByPointer = color;

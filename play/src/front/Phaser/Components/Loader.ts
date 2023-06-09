@@ -1,7 +1,7 @@
+import type CancelablePromise from "cancelable-promise";
 import { DirtyScene } from "../Game/DirtyScene";
 import { gameManager } from "../Game/GameManager";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
-import type CancelablePromise from "cancelable-promise";
 import Texture = Phaser.Textures.Texture;
 
 const TextName = "Loading...";

@@ -1,15 +1,18 @@
 <script lang="ts">
-    import { VideoPeer } from "../../WebRtc/VideoPeer";
+    import { fly } from "svelte/transition";
+    import type { Readable } from "svelte/store";
+    import { onMount } from "svelte";
+    import { PeerStatus, VideoPeer } from "../../WebRtc/VideoPeer";
+    import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
+    import type { Streamable } from "../../Stores/StreamableCollectionStore";
+    import type { ObtainedMediaStreamConstraints } from "../../WebRtc/P2PMessages/ConstraintMessage";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+    import { JitsiTrackWrapper } from "../../Streaming/Jitsi/JitsiTrackWrapper";
     import VideoMediaBox from "./VideoMediaBox.svelte";
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
-    import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
-    import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import VideoOffBox from "./VideoOffBox.svelte";
-    import type { ObtainedMediaStreamConstraints } from "../../Stores/MediaStore";
-    import type { Readable } from "svelte/store";
-    import { gameManager } from "../../Phaser/Game/GameManager";
-    import { onMount } from "svelte";
+    import JitsiMediaBox from "./JitsiMediaBox.svelte";
 
     export let streamable: Streamable;
     export let isHightlighted = false;
@@ -21,6 +24,10 @@
     let constraintStore: Readable<ObtainedMediaStreamConstraints | null>;
     if (streamable instanceof VideoPeer) {
         constraintStore = streamable.constraintsStore;
+    }
+    let statusStore: Readable<PeerStatus> | null;
+    if (streamable instanceof VideoPeer || streamable instanceof ScreenSharingPeer) {
+        statusStore = streamable.statusStore;
     }
 
     const gameScene = gameManager.getCurrentGameScene();
@@ -47,7 +54,7 @@
                 <VideoOffBox peer={streamable} clickable={false} />
             </div>
         </div>
-    {:else if $constraintStore && $constraintStore.video}
+    {:else if ($constraintStore && $constraintStore.video) || $statusStore === "error" || $statusStore === "connecting"}
         <div
             class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
      media-box-shape-color tw-pointer-events-auto screen-blocker
@@ -74,6 +81,21 @@
     >
         <div class="{isHightlighted ? 'tw-h-[41vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-h-full tw-flex screen-blocker">
             <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
+        </div>
+    </div>
+{:else if streamable instanceof JitsiTrackWrapper}
+    <div
+        class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
+     media-box-shape-color tw-pointer-events-auto screen-blocker
+"
+        class:clickable={isClickable}
+        class:mozaic-duo={mozaicDuo}
+        class:mozaic-full-width={mozaicSolo}
+        class:mozaic-quarter={mozaicQuarter}
+        transition:fly={{ x: 200, duration: 250 }}
+    >
+        <div class="{isHightlighted ? 'tw-h-[32vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-flex screen-blocker">
+            <JitsiMediaBox peer={streamable} clickable={isClickable} />
         </div>
     </div>
 {:else}
@@ -109,7 +131,7 @@
         }
 
         &.clickable {
-            cursor: url("../../style/images/cursor_pointer.png"), pointer;
+            cursor: pointer;
         }
     }
 </style>

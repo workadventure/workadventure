@@ -1,18 +1,18 @@
+import { get } from "svelte/store";
+import type { Subscription } from "rxjs";
 import type {
     WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "../Connexion/ConnexionModels";
-import { mediaManager, NotificationType } from "./MediaManager";
-import { ScreenSharingPeer } from "./ScreenSharingPeer";
-import { VideoPeer } from "./VideoPeer";
 import type { RoomConnection } from "../Connexion/RoomConnection";
-import { blackListManager } from "./BlackListManager";
-import { get } from "svelte/store";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { playersStore } from "../Stores/PlayersStore";
 import { peerStore, screenSharingPeerStore } from "../Stores/PeerStore";
-import type { Subscription } from "rxjs";
 import { batchGetUserMediaStore } from "../Stores/MediaStore";
+import { mediaManager, NotificationType } from "./MediaManager";
+import { ScreenSharingPeer } from "./ScreenSharingPeer";
+import { VideoPeer } from "./VideoPeer";
+import { blackListManager } from "./BlackListManager";
 
 export interface UserSimplePeerInterface {
     userId: number;
@@ -428,7 +428,9 @@ export class SimplePeer {
         PeerConnectionScreenSharing.stopPushingScreenSharingToRemoteUser(stream);
 
         if (!PeerConnectionScreenSharing.isReceivingScreenSharingStream()) {
+            PeerConnectionScreenSharing.toClose = true;
             PeerConnectionScreenSharing.destroy();
+            this.PeerScreenSharingConnectionArray.delete(PeerConnectionScreenSharing.userId);
         }
     }
 }

@@ -14,8 +14,7 @@ export interface FrontConfigurationInterface {
     TURN_PASSWORD: string | undefined;
     JITSI_URL: string | undefined;
     JITSI_PRIVATE_MODE: boolean;
-    ENABLE_FEATURE_MAP_EDITOR: boolean;
-    ENABLE_MAP_EDITOR_AREAS_TOOL: boolean;
+    ENABLE_MAP_EDITOR: boolean;
     MAX_USERNAME_LENGTH: number;
     MAX_PER_GROUP: number;
     NODE_ENV: string;
@@ -32,4 +31,13 @@ export interface FrontConfigurationInterface {
     OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy | undefined;
     ENABLE_REPORT_ISSUES_MENU: boolean | undefined;
     REPORT_ISSUES_URL: string | undefined;
+    SENTRY_DSN_FRONT: string | undefined;
+    SENTRY_DSN_PUSHER: string | undefined;
+    SENTRY_ENVIRONMENT: string | undefined;
+    SENTRY_RELEASE: string | undefined;
+    SENTRY_TRACES_SAMPLE_RATE: number | undefined;
+    WOKA_SPEED: number;
+    JITSI_DOMAIN: string | undefined;
+    JITSI_XMPP_DOMAIN: string | undefined;
+    JITSI_MUC_DOMAIN: string | undefined;
 }

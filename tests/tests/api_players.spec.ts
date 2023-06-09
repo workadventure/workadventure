@@ -1,6 +1,5 @@
 
 import {} from "../../play/packages/iframe-api-typings/iframe_api";
-//import {} from "../../front/src/iframe_api";
 import {expect, test, Browser, Page} from '@playwright/test';
 import { login } from './utils/roles';
 import {getCoWebsiteIframe} from "./utils/iframe";
@@ -285,7 +284,7 @@ test.describe('API WA.players', () => {
     await runPersistenceTest(page, browser);
   });
 
-  test('Test variable persistence for logged users.', async ({ page, browser }) => {
+  test('Test variable persistence for logged users. @oidc', async ({ page, browser }) => {
     test.setTimeout(120_000); // Fix Webkit that can take more than 60s
     await page.goto(
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'

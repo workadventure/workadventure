@@ -4,7 +4,7 @@
     import { AdminMessageEventTypes } from "../../Connexion/AdminMessagesService";
     import uploadFile from "../images/music-file.svg";
     import type { PlayGlobalMessageInterface } from "../../Connexion/ConnexionModels";
-    import LL from "../../../i18n/i18n-svelte";
+    import { LL } from "../../../i18n/i18n-svelte";
 
     interface EventTargetFiles extends EventTarget {
         files: Array<File>;

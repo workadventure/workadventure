@@ -8,10 +8,10 @@ import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
 import { EnableCameraSceneName } from "../Login/EnableCameraScene";
 import { LoginSceneName } from "../Login/LoginScene";
 import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
-import { GameScene } from "./GameScene";
 import { EmptySceneName } from "../Login/EmptyScene";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraStore } from "../../Stores/MyMediaStore";
+import { GameScene } from "./GameScene";
 
 /**
  * This class should be responsible for any scene starting/stopping
@@ -105,7 +105,7 @@ export class GameManager {
 
         const gameIndex = this.scenePlugin.getIndex(roomID);
         if (gameIndex === -1) {
-            const game: Phaser.Scene = new GameScene(room, room.mapUrl);
+            const game: Phaser.Scene = new GameScene(room);
             this.scenePlugin.add(roomID, game, false);
         }
     }
@@ -147,7 +147,12 @@ export class GameManager {
         if (this.currentGameSceneName === null) throw new Error("No current scene id set!");
         gameSceneIsLoadedStore.set(false);
 
-        const gameScene: GameScene = this.scenePlugin.get(this.currentGameSceneName) as GameScene;
+        const gameScene = this.scenePlugin.get(this.currentGameSceneName);
+
+        if (!(gameScene instanceof GameScene)) {
+            throw new Error("Not the Game Scene");
+        }
+
         gameScene.cleanupClosingScene();
         gameScene.createSuccessorGameScene(false, false);
         menuIconVisiblilityStore.set(false);
@@ -171,7 +176,11 @@ export class GameManager {
 
     public getCurrentGameScene(): GameScene {
         if (this.currentGameSceneName === null) throw new Error("No current scene id set!");
-        return this.scenePlugin.get(this.currentGameSceneName) as GameScene;
+        const gameScene = this.scenePlugin.get(this.currentGameSceneName);
+        if (!(gameScene instanceof GameScene)) {
+            throw new Error("Not the Game Scene");
+        }
+        return gameScene;
     }
 
     public get currentStartedRoom() {

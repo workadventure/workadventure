@@ -19,9 +19,9 @@
     import btnProfileSubMenuCamera from "../images/btn-menu-profile-camera.svg";
     import btnProfileSubMenuIdentity from "../images/btn-menu-profile-identity.svg";
     import btnProfileSubMenuCompanion from "../images/btn-menu-profile-companion.svg";
-    import Woka from "../Woka/Woka.svelte";
+    import Woka from "../Woka/WokaFromUserId.svelte";
     import Companion from "../Companion/Companion.svelte";
-    import LL from "../../../i18n/i18n-svelte";
+    import { LL } from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
 

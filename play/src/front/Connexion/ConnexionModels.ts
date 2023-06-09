@@ -1,7 +1,7 @@
 import type { SignalData } from "simple-peer";
-import type { RoomConnection } from "./RoomConnection";
-import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
 import type { AvailabilityStatus, EditMapCommandMessage, PositionMessage } from "@workadventure/messages";
+import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
+import type { RoomConnection } from "./RoomConnection";
 
 export interface MessageUserMovedInterface {
     userId: number;

@@ -28,9 +28,21 @@ COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
 COPY chat ./chat
 
 # upgrade RAM available to 6G
-RUN cd chat && npm run typesafe-i18n && NODE_OPTIONS="--max-old-space-size=6144" npm run build
+RUN --mount=type=secret,id=SENTRY_RELEASE \
+    --mount=type=secret,id=SENTRY_AUTH_TOKEN \
+    --mount=type=secret,id=SENTRY_ORG \
+    --mount=type=secret,id=SENTRY_PROJECT \
+    export SENTRY_RELEASE=$(cat /run/secrets/SENTRY_RELEASE) && \
+    export SENTRY_AUTH_TOKEN=$(cat /run/secrets/SENTRY_AUTH_TOKEN) && \
+    export SENTRY_ORG=$(cat /run/secrets/SENTRY_ORG) && \
+    export SENTRY_PROJECT=$(cat /run/secrets/SENTRY_PROJECT) && \
+    cd chat && \
+    npm run typesafe-i18n && \
+    SENTRY_RELEASE=$SENTRY_RELEASE SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN SENTRY_ORG=$SENTRY_ORG SENTRY_PROJECT=$SENTRY_PROJECT NODE_OPTIONS="--max-old-space-size=6144" npm run build
 
 RUN mv /usr/src/chat/dist/index.html /usr/src/chat/dist/index.tpl.html
+# Bypassing a bug in envconfig generation that does not take into account relative base.
+RUN sed -i 's|src="/env-config|src="./env-config|g' /usr/src/chat/dist/index.tpl.html
 
 # final production image
 FROM nginx:1.21.6-alpine
@@ -41,6 +53,8 @@ COPY chat/templater.sh /
 COPY chat/start_nginx.sh /start_nginx.sh
 
 COPY --from=builder /usr/src/chat/dist /usr/share/nginx/html
+
+HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=10 CMD curl -f http://localhost || exit 1
 
 EXPOSE 80
 CMD ["/start_nginx.sh"]

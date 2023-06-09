@@ -1,5 +1,5 @@
-import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData } from "@workadventure/messages";
+import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 
 export interface AdminInterface {
     /**
@@ -97,4 +97,6 @@ export interface AdminInterface {
         message: string,
         byUserEmail: string
     ): Promise<boolean>;
+
+    getTagsList(roomUrl: string): Promise<string[]>;
 }

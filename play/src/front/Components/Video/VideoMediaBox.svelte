@@ -1,22 +1,23 @@
 <script lang="ts">
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
+    import { Color } from "@workadventure/shared-utils";
+    import { onDestroy, onMount } from "svelte";
+    import { Unsubscriber } from "svelte/store";
     import type { VideoPeer } from "../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
-    import { getColorByString, getTextColorByBackgroundColor, srcObject } from "./utils";
-    import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
-    import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+    import type { EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
-    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 
-    import Woka from "../Woka/Woka.svelte";
-    import { onDestroy, onMount } from "svelte";
+    import Woka from "../Woka/WokaFromUserId.svelte";
     import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import BanReportBox from "./BanReportBox.svelte";
     import microphoneOffImg from "../images/microphone-off-blue.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { speakerSelectedStore } from "../../Stores/MediaStore";
-    import { Unsubscriber } from "svelte/store";
+    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+    import BanReportBox from "./BanReportBox.svelte";
+    import { srcObject } from "./utils";
 
     export let clickable = false;
 
@@ -24,8 +25,8 @@
     let streamStore = peer.streamStore;
     let volumeStore = peer.volumeStore;
     let name = peer.userName;
-    let backGroundColor = getColorByString(peer.userName);
-    let textColor = getTextColorByBackgroundColor(backGroundColor);
+    let backGroundColor = Color.getColorByString(peer.userName);
+    let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
     let constraintStore = peer.constraintsStore;
     let subscribeChangeOutput: Unsubscriber;
@@ -116,10 +117,7 @@
             />
         {/if}
 
-        <div
-            class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height
-  "
-        >
+        <div class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height">
             <i class="tw-flex">
                 <span
                     style="background-color: {backGroundColor}; color: {textColor};"

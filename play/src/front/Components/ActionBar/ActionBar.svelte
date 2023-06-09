@@ -1,7 +1,11 @@
 <script lang="ts">
+    import type { Unsubscriber } from "svelte/store";
+    import { ChevronDownIcon, ChevronUpIcon, CheckIcon } from "svelte-feather-icons";
+    import { fly } from "svelte/transition";
+    import { onDestroy, onMount } from "svelte";
+    import { writable } from "svelte/store";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
-        audioConstraintStore,
         cameraListStore,
         localStreamStore,
         microphoneListStore,
@@ -9,10 +13,12 @@
         requestedCameraState,
         requestedMicrophoneState,
         silentStore,
-        videoConstraintStore,
         speakerSelectedStore,
+        requestedMicrophoneDeviceIdStore,
+        requestedCameraDeviceIdStore,
+        usedCameraDeviceIdStore,
+        usedMicrophoneDeviceIdStore,
     } from "../../Stores/MediaStore";
-    import { ChevronDownIcon, ChevronUpIcon, CheckIcon } from "svelte-feather-icons";
     import cameraImg from "../images/camera.png";
     import cameraOffImg from "../images/camera-off.png";
     import microphoneImg from "../images/microphone.png";
@@ -23,13 +29,14 @@
     import followImg from "../images/follow.png";
     import lockOpenImg from "../images/lock-opened.png";
     import lockCloseImg from "../images/lock-closed.png";
-    import logoRegister from "../images/logo-register-pixel.png";
+    import mapBuilder from "../images/maps-builder.png";
     import screenshareOn from "../images/screenshare-on.png";
     import screenshareOff from "../images/screenshare-off.png";
     import emojiPickOn from "../images/emoji-on.png";
     import closeImg from "../images/close.png";
     import penImg from "../images/pen.png";
     import hammerImg from "../images/hammer.png";
+    import megaphoneImg from "../images/megaphone.svg";
     import WorkAdventureImg from "../images/icon-workadventure-white.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
@@ -38,7 +45,12 @@
     import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { chatVisibilityStore, chatZoneLiveStore } from "../../Stores/ChatStore";
-    import { proximityMeetingStore } from "../../Stores/MyMediaStore";
+    import {
+        proximityMeetingStore,
+        inExternalServiceStore,
+        myCameraStore,
+        myMicrophoneStore,
+    } from "../../Stores/MyMediaStore";
     import type { MenuItem, TranslatedMenu } from "../../Stores/MenuStore";
     import {
         activeSubMenuStore,
@@ -59,16 +71,11 @@
         emoteMenuSubStore,
         emoteStore,
     } from "../../Stores/EmoteStore";
-    import LL from "../../../i18n/i18n-svelte";
+    import { LL } from "../../../i18n/i18n-svelte";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
-    import { fly } from "svelte/transition";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import { mapEditorModeStore } from "../../Stores/MapEditorStore";
     import { iframeListener } from "../../Api/IframeListener";
-    import { onDestroy, onMount } from "svelte";
-    import type { Unsubscriber } from "svelte/store";
-    import { writable } from "svelte/store";
     import { peerStore } from "../../Stores/PeerStore";
     import { StringUtils } from "../../Utils/StringUtils";
     import Tooltip from "../Util/Tooltip.svelte";
@@ -77,13 +84,23 @@
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
+    import {
+        megaphoneCanBeUsedStore,
+        megaphoneEnabledStore,
+        requestedMegaphoneStore,
+    } from "../../Stores/MegaphoneStore";
+    import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
     let cameraActive = false;
     let microphoneActive = false;
-    let selectedCamera: string | undefined = undefined;
-    let selectedMicrophone: string | undefined = undefined;
+
+    let microphoneButton: HTMLButtonElement;
+    let cameraButton: HTMLButtonElement;
+
+    // eslint-disable-next-line no-undef
+    let megaphoneWarningTimeOut: NodeJS.Timeout | undefined = undefined;
 
     function screenSharingClick(): void {
         if ($silentStore) return;
@@ -100,6 +117,7 @@
             requestedCameraState.disableWebcam();
         } else {
             requestedCameraState.enableWebcam();
+            layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone");
         }
     }
 
@@ -109,6 +127,7 @@
             requestedMicrophoneState.disableMicrophone();
         } else {
             requestedMicrophoneState.enableMicrophone();
+            layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone");
         }
     }
 
@@ -150,6 +169,33 @@
 
     function toggleEmojiPicker() {
         $emoteMenuSubStore == true ? emoteMenuSubStore.closeEmoteMenu() : emoteMenuSubStore.openEmoteMenu();
+    }
+
+    function toggleMegaphone() {
+        if (!$requestedMegaphoneStore && !$requestedCameraState && !$requestedMicrophoneState) {
+            if (cameraButton) {
+                cameraButton.firstElementChild?.classList.add("tw-animate-shaking");
+                setTimeout(() => cameraButton.firstElementChild?.classList.remove("tw-animate-shaking"), 600);
+            }
+            if (microphoneButton) {
+                microphoneButton.firstElementChild?.classList.add("tw-animate-shaking");
+                setTimeout(() => microphoneButton.firstElementChild?.classList.remove("tw-animate-shaking"), 600);
+            }
+            if (megaphoneWarningTimeOut) {
+                clearTimeout(megaphoneWarningTimeOut);
+                megaphoneWarningTimeOut = undefined;
+            }
+            layoutManagerActionStore.addAction({
+                uuid: "megaphoneNeedCameraOrMicrophone",
+                type: "warning",
+                message: $LL.warning.megaphoneNeeds(),
+                callback: () => layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone"),
+                userInputManager: this.userInputManager,
+            });
+            setTimeout(() => layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone"), 10_000);
+            return;
+        }
+        $requestedMegaphoneStore = !$requestedMegaphoneStore;
     }
 
     function toggleMapEditorMode() {
@@ -281,21 +327,21 @@
     }
 
     /*function register() {
-        modalIframeStore.set(
-            {
-                src: https://workadventu.re/funnel/connection?roomUrl=${window.location.toString()},
-                allow: "fullscreen",
-                allowApi: true,
-                position: "center",
-                title: $LL.menu.icon.open.register()
-            }
-        );
+		modalIframeStore.set(
+			{
+				src: https://workadventu.re/funnel/connection?roomUrl=${window.location.toString()},
+				allow: "fullscreen",
+				allowApi: true,
+				position: "center",
+				title: $LL.menu.icon.open.register()
+			}
+		);
 
-        //resetMenuVisibility();
-        //resetChatVisibility();
+		//resetMenuVisibility();
+		//resetChatVisibility();
 
-        window.open("https://workadventu.re/getting-started", "_blank");
-    }*/
+		window.open("https://workadventu.re/getting-started", "_blank");
+	}*/
 
     function resetModalVisibility() {
         modalVisibilityStore.set(false);
@@ -303,9 +349,9 @@
     }
 
     /*function resetMenuVisibility() {
-        menuVisiblilityStore.set(false);
-        activeSubMenuStore.set(0);
-    }*/
+		menuVisiblilityStore.set(false);
+		activeSubMenuStore.set(0);
+	}*/
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
@@ -316,12 +362,12 @@
     }
 
     function selectCamera(deviceId: string) {
-        videoConstraintStore.setDeviceId(deviceId);
+        requestedCameraDeviceIdStore.set(deviceId);
         cameraActive = false;
     }
 
     function selectMicrophone(deviceId: string) {
-        audioConstraintStore.setDeviceId(deviceId);
+        requestedMicrophoneDeviceIdStore.set(deviceId);
         microphoneActive = false;
     }
 
@@ -347,15 +393,8 @@
             stream = value.stream;
 
             if (stream !== null) {
-                const videoTracks = stream.getVideoTracks();
-                if (videoTracks.length > 0) {
-                    selectedCamera = videoTracks[0].getSettings().deviceId;
-                }
                 const audioTracks = stream.getAudioTracks();
                 if (audioTracks.length > 0) {
-                    // set first track
-                    selectedMicrophone = audioTracks[0].getSettings().deviceId;
-
                     // set default speaker selected
                     if ($speakerListStore.length > 0) {
                         speakerSelectedStore.set($speakerListStore[0].deviceId);
@@ -364,8 +403,6 @@
             }
         } else {
             stream = null;
-            selectedCamera = undefined;
-            selectedMicrophone = undefined;
         }
     });
 
@@ -498,6 +535,7 @@
                             <button
                                 class="tooltiptext sm:tw-w-56 md:tw-w-96"
                                 class:border-top-light={$requestedCameraState}
+                                bind:this={cameraButton}
                             >
                                 {#if $requestedCameraState && !$silentStore}
                                     <img
@@ -544,7 +582,7 @@
                                                 selectCamera(camera.deviceId)}
                                         >
                                             {StringUtils.normalizeDeviceName(camera.label)}
-                                            {#if selectedCamera === camera.deviceId}
+                                            {#if $usedCameraDeviceIdStore === camera.deviceId}
                                                 <CheckIcon size="13" class="tw-ml-1" />
                                             {/if}
                                         </span>
@@ -563,7 +601,7 @@
                         >
                             <Tooltip text={$LL.actionbar.microphone()} />
 
-                            <button class:border-top-light={$requestedMicrophoneState}>
+                            <button class:border-top-light={$requestedMicrophoneState} bind:this={microphoneButton}>
                                 {#if $requestedMicrophoneState && !$silentStore}
                                     <img
                                         draggable="false"
@@ -614,7 +652,7 @@
                                                     selectMicrophone(microphone.deviceId)}
                                             >
                                                 {StringUtils.normalizeDeviceName(microphone.label)}
-                                                {#if selectedMicrophone === microphone.deviceId}
+                                                {#if $usedMicrophoneDeviceIdStore === microphone.deviceId}
                                                     <CheckIcon size="13" />
                                                 {/if}
                                             </span>
@@ -686,6 +724,29 @@
                         <img draggable="false" src={emojiPickOn} style="padding: 2px" alt="Toggle emoji picker" />
                     </button>
                 </div>
+                {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
+                    <div on:click={toggleMegaphone} class="bottom-action-button tw-relative">
+                        <Tooltip
+                            text={$megaphoneEnabledStore
+                                ? $LL.actionbar.disableMegaphone()
+                                : $LL.actionbar.enableMegaphone()}
+                        />
+
+                        <button class:border-top-orange={$megaphoneEnabledStore} id="megaphone">
+                            <img draggable="false" src={megaphoneImg} style="padding: 2px" alt="Toggle megaphone" />
+                        </button>
+                        {#if $megaphoneEnabledStore}
+                            <div class="tw-absolute tw-top-[1.05rem] tw-right-1">
+                                <span
+                                    class="tw-w-3 tw-h-3 tw-bg-orange tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping tw-cursor-pointer"
+                                />
+                                <span
+                                    class="tw-w-2 tw-h-2 tw-bg-orange tw-block tw-rounded-full tw-absolute tw-top-0.5 tw-right-0.5 tw-cursor-pointer"
+                                />
+                            </div>
+                        {/if}
+                    </div>
+                {/if}
             </div>
 
             <div class="bottom-action-section tw-flex tw-flex-initial">
@@ -709,7 +770,7 @@
                     >
                         <Tooltip text={$LL.actionbar.mapEditor()} />
                         <button id="mapEditorIcon" class:border-top-light={$mapEditorModeStore}>
-                            <img draggable="false" src={logoRegister} style="padding: 2px" alt="toggle-map-editor" />
+                            <img draggable="false" src={mapBuilder} style="padding: 2px" alt="toggle-map-editor" />
                         </button>
                     </div>
                 {/if}
@@ -783,24 +844,24 @@
 
             <!-- TODO button must displayed by scripting API -->
             <!--
-            {#if ENABLE_OPENID && !$userIsConnected && }
-                <div
-                    class="bottom-action-section tw-flex tw-flex-initial"
-                    in:fly={{}}
-                    on:dragstart|preventDefault={noDrag}
-                    on:click={() => analyticsClient.openRegister()}
-                    on:click={register}
-                >
-                    <button
-                        class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base"
-                        id="register-btn"
-                        class:border-top-light={$menuVisiblilityStore}
-                    >
-                        {$LL.menu.icon.open.register()}
-                    </button>
-                </div>
-            {/if}
-            -->
+			{#if ENABLE_OPENID && !$userIsConnected && }
+				<div
+					class="bottom-action-section tw-flex tw-flex-initial"
+					in:fly={{}}
+					on:dragstart|preventDefault={noDrag}
+					on:click={() => analyticsClient.openRegister()}
+					on:click={register}
+				>
+					<button
+						class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base"
+						id="register-btn"
+						class:border-top-light={$menuVisiblilityStore}
+					>
+						{$LL.menu.icon.open.register()}
+					</button>
+				</div>
+			{/if}
+			-->
             {#each $addClassicButtonActionBarEvent as button}
                 <div
                     class="bottom-action-section tw-flex tw-flex-initial"

@@ -147,11 +147,11 @@ export const isErrorApiUnauthorizedData = extendApi(
   }
 );
 
-export const isErrorApiData = z.discriminatedUnion("type", [
+export const ErrorApiData = z.discriminatedUnion("type", [
   isErrorApiErrorData,
   isErrorApiRetryData,
   isErrorApiRedirectData,
   isErrorApiUnauthorizedData,
 ]);
 
-export type ErrorApiData = z.infer<typeof isErrorApiData>;
+export type ErrorApiData = z.infer<typeof ErrorApiData>;

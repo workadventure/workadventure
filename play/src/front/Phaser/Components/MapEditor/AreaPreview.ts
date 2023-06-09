@@ -1,47 +1,77 @@
-import type { AreaData } from "@workadventure/map-editor";
-import type { GameScene } from "../../Game/GameScene";
+import type { AreaData, AreaDataProperties, AreaDataProperty, AtLeast } from "@workadventure/map-editor";
+import _ from "lodash";
+import { GameObjects } from "phaser";
+import { GameScene } from "../../Game/GameScene";
+import { CopyAreaEventData } from "../../Game/GameMap/EntitiesManager";
 import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
 
 export enum AreaPreviewEvent {
     Clicked = "AreaPreview:Clicked",
+    DragStart = "AreaPreview:DragStart",
+    Released = "AreaPreview:Released",
     DoubleClicked = "AreaPreview:DoubleClicked",
-    Changed = "AreaPreview:Changed",
+    Copied = "AreaPreview:Copied",
+    Updated = "AreaPreview:Updated",
+    Delete = "AreaPreview:Delete",
 }
 
-export class AreaPreview extends Phaser.GameObjects.Container {
-    private config: AreaData;
-
-    private preview: Phaser.GameObjects.Rectangle;
+export class AreaPreview extends Phaser.GameObjects.Rectangle {
     private squares: SizeAlteringSquare[];
 
+    private areaData: AreaData;
     private selected: boolean;
     private moved: boolean;
     private squareSelected: boolean;
 
-    constructor(scene: Phaser.Scene, config: AreaData) {
-        super(scene, 0, 0);
+    private oldPosition: { x: number; y: number };
 
-        this.config = config;
+    private shiftKey?: Phaser.Input.Keyboard.Key;
+    private ctrlKey?: Phaser.Input.Keyboard.Key;
+    private propertiesIcon: GameObjects.Image[] = [];
+
+    constructor(
+        scene: Phaser.Scene,
+        areaData: AreaData,
+        shiftKey?: Phaser.Input.Keyboard.Key,
+        ctrlKey?: Phaser.Input.Keyboard.Key
+    ) {
+        super(
+            scene,
+            areaData.x + areaData.width * 0.5,
+            areaData.y + areaData.height * 0.5,
+            areaData.width,
+            areaData.height,
+            0x0000ff,
+            0.5
+        );
+
+        this.oldPosition = this.getPosition();
+
+        this.shiftKey = shiftKey;
+        this.ctrlKey = ctrlKey;
+
+        this.areaData = areaData;
         this.selected = false;
         this.moved = false;
         this.squareSelected = false;
 
-        this.preview = this.createPreview(config);
         this.squares = [
-            new SizeAlteringSquare(this.scene, this.preview.getTopLeft()),
-            new SizeAlteringSquare(this.scene, this.preview.getTopCenter()),
-            new SizeAlteringSquare(this.scene, this.preview.getTopRight()),
-            new SizeAlteringSquare(this.scene, this.preview.getLeftCenter()),
-            new SizeAlteringSquare(this.scene, this.preview.getRightCenter()),
-            new SizeAlteringSquare(this.scene, this.preview.getBottomLeft()),
-            new SizeAlteringSquare(this.scene, this.preview.getBottomCenter()),
-            new SizeAlteringSquare(this.scene, this.preview.getBottomRight()),
+            new SizeAlteringSquare(this.scene, this.getTopLeft()),
+            new SizeAlteringSquare(this.scene, this.getTopCenter()),
+            new SizeAlteringSquare(this.scene, this.getTopRight()),
+            new SizeAlteringSquare(this.scene, this.getLeftCenter()),
+            new SizeAlteringSquare(this.scene, this.getRightCenter()),
+            new SizeAlteringSquare(this.scene, this.getBottomLeft()),
+            new SizeAlteringSquare(this.scene, this.getBottomCenter()),
+            new SizeAlteringSquare(this.scene, this.getBottomRight()),
         ];
 
-        this.add([this.preview, ...this.squares]);
+        this.squares.forEach((square) => square.setDepth(this.depth + 1));
 
         const bounds = this.getBounds();
         this.setSize(bounds.width, bounds.height);
+        this.setInteractive({ cursor: "pointer" });
+        this.scene.input.setDraggable(this);
 
         this.showSizeAlteringSquares(false);
 
@@ -60,6 +90,10 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         }
     }
 
+    public delete(): void {
+        this.emit(AreaPreviewEvent.Delete);
+    }
+
     public select(value: boolean): void {
         if (this.selected === value) {
             return;
@@ -68,72 +102,174 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         this.showSizeAlteringSquares(value);
     }
 
+    private showPropertiesIcon(value: boolean) {
+        this.propertiesIcon.forEach((icon: GameObjects.Image) => icon.setVisible(value));
+    }
+
     public setVisible(value: boolean): this {
-        this.preview.setVisible(value);
+        this.visible = value;
+        this.showPropertiesIcon(value);
         if (!value) {
             this.showSizeAlteringSquares(false);
         }
         return this;
     }
 
-    public updatePreview(config: AreaData): void {
-        this.config = {
-            ...this.config,
-            ...structuredClone(config),
-        };
-        // this.setPosition(config.x + config.width * 0.5, config.y + config.height * 0.5);
-        this.preview.x = config.x + config.width * 0.5;
-        this.preview.y = config.y + config.height * 0.5;
-        this.preview.displayWidth = config.width;
-        this.preview.displayHeight = config.height;
+    public updatePreview(dataToModify: AtLeast<AreaData, "id">): void {
+        _.merge(this.areaData, dataToModify);
+        if (dataToModify.properties !== undefined) {
+            this.areaData.properties = dataToModify.properties;
+
+            this.propertiesIcon.forEach((icon: GameObjects.Image) => icon.destroy());
+            let counter = 0;
+            for (const property of this.areaData.properties) {
+                const iconProperties = this.getPropertyIcons(property.type);
+
+                const icon = new GameObjects.Image(
+                    this.scene,
+                    (this.getTopLeft().x ?? 0) + 10 + counter * 15,
+                    (this.getTopLeft().y ?? 0) + 10,
+                    `icon${iconProperties.name}`
+                );
+                icon.setScale(0.12);
+                icon.setDepth(this.depth + 1);
+                icon.setVisible(true);
+                //this.scene.add.existing(icon);
+                //this.propertiesIcon.push(icon);
+
+                this.setFillStyle(Phaser.Display.Color.ValueToColor(iconProperties.color).color, 0.75);
+
+                counter++;
+            }
+        }
+        this.x = this.areaData.x + this.areaData.width * 0.5;
+        this.y = this.areaData.y + this.areaData.height * 0.5;
+        this.displayWidth = this.areaData.width;
+        this.displayHeight = this.areaData.height;
         this.updateSquaresPositions();
     }
 
-    private createPreview(config: AreaData): Phaser.GameObjects.Rectangle {
-        const preview = this.scene.add
-            .rectangle(
-                config.x + config.width * 0.5,
-                config.y + config.height * 0.5,
-                config.width,
-                config.height,
-                0x0000ff,
-                0.5
-            )
-            .setInteractive({ cursor: "pointer" });
-        this.scene.input.setDraggable(preview);
-        return preview;
+    public getSize(): number {
+        return this.displayWidth * this.displayHeight;
+    }
+
+    public addProperty(property: AreaDataProperty): void {
+        this.areaData.properties.push(property);
+        this.emit(AreaPreviewEvent.Updated, this.areaData);
+    }
+
+    public updateProperty(changes: AtLeast<AreaDataProperty, "id">): void {
+        const property = this.areaData.properties.find((property) => property.id === changes.id);
+        if (property) {
+            _.merge(property, changes);
+        }
+        this.emit(AreaPreviewEvent.Updated, this.areaData);
+    }
+
+    public deleteProperty(id: string): boolean {
+        const index = this.areaData.properties.findIndex((property) => property.id === id);
+        if (index !== -1) {
+            this.areaData.properties.splice(index, 1);
+            this.emit(AreaPreviewEvent.Updated, this.areaData);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public getProperties(): AreaDataProperties {
+        return this.areaData.properties;
+    }
+
+    public destroy(): void {
+        super.destroy();
+        this.squares.forEach((square) => square.destroy());
+    }
+
+    public updateAreaData(dataToChange: Partial<AreaData>): void {
+        const data = { id: this.areaData.id, ...dataToChange };
+        this.updatePreview(data);
+        this.emit(AreaPreviewEvent.Updated, data);
     }
 
     private showSizeAlteringSquares(show = true): void {
-        if (show && !this.preview.visible) {
+        if (show && !this.visible) {
             return;
         }
         this.squares.forEach((square) => square.setVisible(show));
     }
 
     private bindEventHandlers(): void {
-        this.preview.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
-            if ((pointer.event.target as Element)?.localName !== "canvas") {
-                return;
+        this.on(
+            Phaser.Input.Events.POINTER_DOWN,
+            (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
+                if ((pointer.event.target as Element)?.localName !== "canvas") {
+                    return;
+                }
+                this.emit(AreaPreviewEvent.Clicked);
             }
-            this.emit(AreaPreviewEvent.Clicked);
+        );
+        this.on(
+            Phaser.Input.Events.POINTER_UP,
+            (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
+                if ((pointer.event.target as Element)?.localName !== "canvas") {
+                    return;
+                }
+                this.emit(AreaPreviewEvent.Released);
+            }
+        );
+        this.on(Phaser.Input.Events.DRAG_START, () => {
+            this.oldPosition = this.getPosition();
+            this.emit(AreaPreviewEvent.DragStart);
         });
-        this.preview.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+        this.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             if (pointer.isDown && this.selected && !this.squareSelected) {
-                this.preview.x = dragX;
-                this.preview.y = dragY;
+                if (this.shiftKey?.isDown) {
+                    const topLeftX = Math.floor((dragX - this.displayWidth * 0.5) / 32) * 32;
+                    const topLeftY = Math.floor((dragY - this.displayHeight * 0.5) / 32) * 32;
+                    this.x = topLeftX + this.displayWidth * 0.5;
+                    this.y = topLeftY + this.displayHeight * 0.5;
+                } else {
+                    this.x = dragX;
+                    this.y = dragY;
+                }
                 this.updateSquaresPositions();
                 this.moved = true;
-                (this.scene as GameScene).markDirty();
+                if (this.scene instanceof GameScene) {
+                    this.scene.markDirty();
+                } else {
+                    throw new Error("Not the Game Scene");
+                }
             }
         });
-        this.preview.on(Phaser.Input.Events.POINTER_UP, (pointer: Phaser.Input.Pointer) => {
+        this.on(Phaser.Input.Events.POINTER_UP, (pointer: Phaser.Input.Pointer) => {
             if (this.selected && this.moved) {
                 this.moved = false;
-                this.updateConfigWithSquaresAdjustments();
-                this.emit(AreaPreviewEvent.Changed);
+                if (this.ctrlKey?.isDown) {
+                    this.emit(AreaPreviewEvent.Copied, {
+                        position: {
+                            x: this.oldPosition.x - this.areaData.width * 0.5,
+                            y: this.oldPosition.y - this.areaData.height * 0.5,
+                        },
+                        width: this.areaData.width,
+                        height: this.areaData.height,
+                        name: this.areaData.name,
+                        properties: structuredClone(this.areaData.properties),
+                    } as CopyAreaEventData);
+                    return;
+                }
+                this.updateAreaDataWithSquaresAdjustments();
+                const data: AtLeast<AreaData, "id"> = {
+                    id: this.getAreaData().id,
+                    x: this.x - this.displayWidth * 0.5,
+                    y: this.y - this.displayHeight * 0.5,
+                    width: this.displayWidth,
+                    height: this.displayHeight,
+                };
+                this.emit(AreaPreviewEvent.Updated, data);
             }
         });
+
         this.squares.forEach((square, index) => {
             square.on(SizeAlteringSquareEvent.Selected, () => {
                 this.squareSelected = true;
@@ -143,8 +279,13 @@ export class AreaPreview extends Phaser.GameObjects.Container {
                 const oldX = square.x;
                 const oldY = square.y;
 
-                square.x = dragX;
-                square.y = dragY;
+                if (this.shiftKey?.isDown) {
+                    square.x = Math.floor(dragX / 32) * 32;
+                    square.y = Math.floor(dragY / 32) * 32;
+                } else {
+                    square.x = dragX;
+                    square.y = dragY;
+                }
 
                 let newWidth = 0;
                 let newHeight = 0;
@@ -155,44 +296,44 @@ export class AreaPreview extends Phaser.GameObjects.Container {
                     const newWidth = this.squares[Edge.RightCenter].x - this.squares[Edge.LeftCenter].x;
                     const newHeight = this.squares[Edge.BottomCenter].y - this.squares[Edge.TopCenter].y;
 
-                    if (newWidth >= 32) {
-                        this.preview.displayWidth = newWidth;
-                        this.preview.x = this.squares[Edge.LeftCenter].x + this.preview.displayWidth * 0.5;
+                    if (newWidth >= 10) {
+                        this.displayWidth = newWidth;
+                        this.x = this.squares[Edge.LeftCenter].x + this.displayWidth * 0.5;
                     } else {
                         square.x = oldX;
                     }
-                    if (newHeight >= 32) {
-                        this.preview.displayHeight = newHeight;
-                        this.preview.y = this.squares[Edge.TopCenter].y + this.preview.displayHeight * 0.5;
+                    if (newHeight >= 10) {
+                        this.displayHeight = newHeight;
+                        this.y = this.squares[Edge.TopCenter].y + this.displayHeight * 0.5;
                     } else {
                         square.y = oldY;
                     }
                 } else {
                     switch (index) {
                         case Edge.TopLeft: {
-                            newWidth = this.preview.getRightCenter().x - square.x;
-                            newHeight = this.preview.getBottomCenter().y - square.y;
+                            newWidth = (this.getRightCenter().x ?? 0) - square.x;
+                            newHeight = (this.getBottomCenter().y ?? 0) - square.y;
                             newCenterX = square.x + newWidth * 0.5;
                             newCenterY = square.y + newHeight * 0.5;
                             break;
                         }
                         case Edge.TopRight: {
-                            newWidth = square.x - this.preview.getLeftCenter().x;
-                            newHeight = this.preview.getBottomCenter().y - square.y;
+                            newWidth = square.x - (this.getLeftCenter().x ?? 0);
+                            newHeight = (this.getBottomCenter().y ?? 0) - square.y;
                             newCenterX = square.x - newWidth * 0.5;
                             newCenterY = square.y + newHeight * 0.5;
                             break;
                         }
                         case Edge.BottomLeft: {
-                            newWidth = this.preview.getRightCenter().x - square.x;
-                            newHeight = square.y - this.preview.getTopCenter().y;
+                            newWidth = (this.getRightCenter().x ?? 0) - square.x;
+                            newHeight = square.y - (this.getTopCenter().y ?? 0);
                             newCenterX = square.x + newWidth * 0.5;
                             newCenterY = square.y - newHeight * 0.5;
                             break;
                         }
                         case Edge.BottomRight: {
-                            newWidth = square.x - this.preview.getLeftCenter().x;
-                            newHeight = square.y - this.preview.getTopCenter().y;
+                            newWidth = square.x - (this.getLeftCenter().x ?? 0);
+                            newHeight = square.y - (this.getTopCenter().y ?? 0);
                             newCenterX = square.x - newWidth * 0.5;
                             newCenterY = square.y - newHeight * 0.5;
                             break;
@@ -200,60 +341,122 @@ export class AreaPreview extends Phaser.GameObjects.Container {
                     }
                 }
 
-                if (newWidth >= 32) {
-                    this.preview.displayWidth = newWidth;
-                    this.preview.x = newCenterX;
+                if (newWidth >= 10) {
+                    this.displayWidth = newWidth;
+                    this.x = newCenterX;
                 } else {
                     square.x = oldX;
                 }
-                if (newHeight >= 32) {
-                    this.preview.displayHeight = newHeight;
-                    this.preview.y = newCenterY;
+                if (newHeight >= 10) {
+                    this.displayHeight = newHeight;
+                    this.y = newCenterY;
                 } else {
                     square.y = oldY;
                 }
                 this.updateSquaresPositions();
-                (this.scene as GameScene).markDirty();
+                if (this.scene instanceof GameScene) {
+                    this.scene.markDirty();
+                } else {
+                    throw new Error("Not the Game Scene");
+                }
             });
 
             square.on(SizeAlteringSquareEvent.Released, () => {
                 this.squareSelected = false;
-                this.updateConfigWithSquaresAdjustments();
-                this.emit(AreaPreviewEvent.Changed);
+                this.updateAreaDataWithSquaresAdjustments();
+                const data: AtLeast<AreaData, "id"> = {
+                    id: this.getAreaData().id,
+                    x: this.x - this.displayWidth * 0.5,
+                    y: this.y - this.displayHeight * 0.5,
+                    width: this.displayWidth,
+                    height: this.displayHeight,
+                };
+                this.emit(AreaPreviewEvent.Updated, data);
             });
         });
     }
 
     private updateSquaresPositions(): void {
-        this.squares[0].setPosition(this.preview.getTopLeft().x, this.preview.getTopLeft().y);
-        this.squares[1].setPosition(this.preview.getTopCenter().x, this.preview.getTopCenter().y);
-        this.squares[2].setPosition(this.preview.getTopRight().x, this.preview.getTopRight().y);
-        this.squares[3].setPosition(this.preview.getLeftCenter().x, this.preview.getLeftCenter().y);
-        this.squares[4].setPosition(this.preview.getRightCenter().x, this.preview.getRightCenter().y);
-        this.squares[5].setPosition(this.preview.getBottomLeft().x, this.preview.getBottomLeft().y);
-        this.squares[6].setPosition(this.preview.getBottomCenter().x, this.preview.getBottomCenter().y);
-        this.squares[7].setPosition(this.preview.getBottomRight().x, this.preview.getBottomRight().y);
+        this.squares[0].setPosition(this.getTopLeft().x, this.getTopLeft().y);
+        this.squares[1].setPosition(this.getTopCenter().x, this.getTopCenter().y);
+        this.squares[2].setPosition(this.getTopRight().x, this.getTopRight().y);
+        this.squares[3].setPosition(this.getLeftCenter().x, this.getLeftCenter().y);
+        this.squares[4].setPosition(this.getRightCenter().x, this.getRightCenter().y);
+        this.squares[5].setPosition(this.getBottomLeft().x, this.getBottomLeft().y);
+        this.squares[6].setPosition(this.getBottomCenter().x, this.getBottomCenter().y);
+        this.squares[7].setPosition(this.getBottomRight().x, this.getBottomRight().y);
     }
 
-    private updateConfigWithSquaresAdjustments(): void {
-        this.config = {
-            ...this.config,
-            x: this.preview.x - this.preview.displayWidth * 0.5,
-            y: this.preview.y - this.preview.displayHeight * 0.5,
-            width: this.preview.displayWidth,
-            height: this.preview.displayHeight,
+    private updateAreaDataWithSquaresAdjustments(): void {
+        this.areaData = {
+            ...this.areaData,
+            x: this.x - this.displayWidth * 0.5,
+            y: this.y - this.displayHeight * 0.5,
+            width: this.displayWidth,
+            height: this.displayHeight,
         };
     }
 
-    public getConfig(): AreaData {
-        return this.config;
+    public getPosition(): { x: number; y: number } {
+        return { x: this.x, y: this.y };
     }
 
-    public getName(): string {
-        return this.config.name;
+    public getAreaData(): AreaData {
+        return this.areaData;
     }
 
-    public getId(): number {
-        return this.config.id;
+    public setAreaName(name: string): void {
+        this.areaData.name = name;
+        const data = { id: this.areaData.id, name };
+        this.emit(AreaPreviewEvent.Updated, data);
+    }
+
+    public getId(): string {
+        return this.areaData.id;
+    }
+
+    private getPropertyIcons(name: string) {
+        switch (name) {
+            case "focusable":
+                return {
+                    name: "Focus",
+                    color: "00F0B5",
+                };
+            case "speakerMegaphone":
+                return {
+                    name: "SpeakerMegaphone",
+                    color: "ff9f45",
+                };
+            case "listenerMegaphone":
+                return {
+                    name: "ListenerMegaphone",
+                    color: "EEEBD0",
+                };
+            case "jitsiRoomProperty":
+                return {
+                    name: "Meeting",
+                    color: "86BBD8",
+                };
+            case "openWebsite":
+                return {
+                    name: "Link",
+                    color: "758E4F",
+                };
+            case "playAudio":
+                return {
+                    name: "Link",
+                    color: "31AFD4",
+                };
+            case "silent":
+                return {
+                    name: "Silent",
+                    color: "FF5A5F",
+                };
+            default:
+                return {
+                    name: "",
+                    color: "FFFFFF",
+                };
+        }
     }
 }

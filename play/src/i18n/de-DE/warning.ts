@@ -13,9 +13,9 @@ const warning: DeepPartial<Translation["warning"]> = {
         teleport: "Sie dürfen sich nicht zu diesem Benutzer beamen.",
     },
     importantMessage: "Wichtige Nachricht",
-    connectionLost: "Verbindungen unterbrochen. Wiederverbinden...",
+    connectionLost: "Verbindungen unterbrochen. Verbindung wiederherstellen...",
     connectionLostTitle: "Verbindungen unterbrochen",
-    connectionLostSubtitle: "Wiederverbinden",
+    connectionLostSubtitle: "Verbindung wiederherstellen...",
     waitingConnectionTitle: "Auf Verbindung warten",
     waitingConnectionSubtitle: "Verbinden",
 };

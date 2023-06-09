@@ -1,17 +1,19 @@
-import type { Request, Response, Server } from "hyper-express";
 import fs from "fs";
-import { BaseHttpController } from "./BaseHttpController";
-import { FRONT_ENVIRONMENT_VARIABLES, VITE_URL, LOGROCKET_ID } from "../enums/EnvironmentVariable";
-import { MetaTagsBuilder } from "../services/MetaTagsBuilder";
+import type { Request, Response, Server } from "hyper-express";
 import Mustache from "mustache";
+import { uuid } from "stanza/Utils";
+import * as Sentry from "@sentry/node";
+import { MetaTagsBuilder } from "../services/MetaTagsBuilder";
 import type { LiveDirectory } from "../models/LiveDirectory";
 import { adminService } from "../services/AdminService";
 import { notWaHost } from "../middlewares/NotWaHost";
 import { version } from "../../../package.json";
-import { uuid } from "stanza/Utils";
+import { FRONT_ENVIRONMENT_VARIABLES, VITE_URL, LOGROCKET_ID, ADMIN_URL } from "../enums/EnvironmentVariable";
+import { BaseHttpController } from "./BaseHttpController";
 
 export class FrontController extends BaseHttpController {
     private indexFile: string;
+    private redirectToAdminFile: string;
     private script: string;
 
     constructor(protected app: Server, protected liveAssets: LiveDirectory) {
@@ -28,7 +30,19 @@ export class FrontController extends BaseHttpController {
             throw new Error("Could not find index.html file");
         }
 
+        let redirectToAdminPath: string;
+        if (fs.existsSync("dist/public/redirectToAdmin.html")) {
+            // In prod mode
+            redirectToAdminPath = "dist/public/redirectToAdmin.html";
+        } else if (fs.existsSync("redirectToAdmin.html")) {
+            // In dev mode
+            redirectToAdminPath = "redirectToAdmin.html";
+        } else {
+            throw new Error("Could not find redirectToAdmin.html file");
+        }
+
         this.indexFile = fs.readFileSync(indexPath, "utf8");
+        this.redirectToAdminFile = fs.readFileSync(redirectToAdminPath, "utf8");
 
         // Pre-parse the index file for speed (and validation)
         Mustache.parse(this.indexFile);
@@ -139,6 +153,7 @@ export class FrontController extends BaseHttpController {
                     const response = await adminService.fetchWellKnownChallenge(req.hostname);
                     return res.status(200).send(response);
                 } catch (e) {
+                    Sentry.captureException(e);
                     console.error(e);
                     return res.status(526).send("Fail on challenging hostname");
                 }
@@ -202,6 +217,19 @@ export class FrontController extends BaseHttpController {
 
         if (redirectUrl) {
             return res.redirect(redirectUrl);
+        }
+
+        // Read the access_key from the query parameter. If it is set, redirect to the admin to attempt a login.
+        const accessKey = req.query.access_key;
+        if (accessKey && typeof accessKey === "string" && accessKey.length > 0) {
+            if (!ADMIN_URL) {
+                return res.status(400).send("ADMIN_URL is not configured.");
+            }
+            const html = Mustache.render(this.redirectToAdminFile, {
+                accessKey,
+                ADMIN_URL,
+            });
+            return res.type("html").send(html);
         }
 
         // get auth token from post /authToken

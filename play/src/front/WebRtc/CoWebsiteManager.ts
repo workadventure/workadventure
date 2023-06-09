@@ -1,17 +1,18 @@
-import { HtmlUtils } from "./HtmlUtils";
 import { Subject } from "rxjs";
-import { waScaleManager } from "../Phaser/Services/WaScaleManager";
-import { coWebsites, coWebsitesNotAsleep, mainCoWebsite } from "../Stores/CoWebsiteStore";
 import type { Readable, Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
-import { embedScreenLayoutStore, highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
-import { isMediaBreakpointDown } from "../Utils/BreakpointsUtils";
-import { LayoutMode } from "./LayoutManager";
-import type { CoWebsite } from "./CoWebsite/CoWesbite";
 import type CancelablePromise from "cancelable-promise";
+import { waScaleManager } from "../Phaser/Services/WaScaleManager";
+import { coWebsites, coWebsitesNotAsleep, mainCoWebsite } from "../Stores/CoWebsiteStore";
+import { embedScreenLayoutStore } from "../Stores/EmbedScreensStore";
+import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
+import { isMediaBreakpointDown } from "../Utils/BreakpointsUtils";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { inCowebsiteZone } from "../Stores/MediaStore";
+import { LayoutMode } from "./LayoutManager";
+import type { CoWebsite } from "./CoWebsite/CoWesbite";
+import { HtmlUtils } from "./HtmlUtils";
 
 export enum iframeStates {
     closed = 1,
@@ -213,9 +214,9 @@ class CoWebsiteManager {
     private holderListeners() {
         const movecallback = (event: MouseEvent | TouchEvent) => {
             let x, y;
-            if (event.type === "mousemove") {
-                x = (event as MouseEvent).movementX / this.getDevicePixelRatio();
-                y = (event as MouseEvent).movementY / this.getDevicePixelRatio();
+            if (event.type === "mousemove" && event instanceof MouseEvent) {
+                x = event.movementX / this.getDevicePixelRatio();
+                y = event.movementY / this.getDevicePixelRatio();
             } else {
                 const touchEvent = (event as TouchEvent).touches[0];
                 const last = { x: touchEvent.pageX, y: touchEvent.pageY };

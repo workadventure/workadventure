@@ -1,10 +1,10 @@
+import { get } from "svelte/store";
 import { Player } from "../Player/Player";
 import { RemotePlayer } from "../Entity/RemotePlayer";
 
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
 import type { GameScene } from "../Game/GameScene";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
-import { get } from "svelte/store";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
@@ -72,6 +72,10 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 mapEditorModeStore.switchMode(!get(mapEditorModeStore));
                 break;
             }
+            case "KeyR": {
+                this.gameScene.CurrentPlayer.rotate();
+                break;
+            }
             default: {
                 break;
             }
@@ -98,11 +102,11 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public addSpaceEventListener(callback: () => void): void {
-        this.gameScene.input.keyboard.addListener("keyup-SPACE", callback);
+        this.gameScene.input.keyboard?.addListener("keyup-SPACE", callback);
         this.gameScene.getActivatablesManager().disableSelectingByDistance();
     }
     public removeSpaceEventListener(callback: () => void): void {
-        this.gameScene.input.keyboard.removeListener("keyup-SPACE", callback);
+        this.gameScene.input.keyboard?.removeListener("keyup-SPACE", callback);
         this.gameScene.getActivatablesManager().enableSelectingByDistance();
     }
 }

@@ -1,5 +1,4 @@
-import type { IframeEvent, IframeQuery, IframeQueryMap } from "../Events/IframeEvent";
-import type { IframeQueryWrapper } from "../Events/IframeEvent";
+import type { IframeEvent, IframeQuery, IframeQueryMap, IframeQueryWrapper } from "../Events/IframeEvent";
 
 export function sendToWorkadventure(content: IframeEvent) {
     window.parent.postMessage(content, "*");

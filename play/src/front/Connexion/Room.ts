@@ -1,33 +1,32 @@
+import { isAxiosError } from "axios";
+import type { MucRoomDefinition, LegalsData } from "@workadventure/messages";
+import { isMapDetailsData, isRoomRedirect, ErrorApiData, OpidWokaNamePolicy } from "@workadventure/messages";
 import {
     CONTACT_URL,
     DISABLE_ANONYMOUS,
     OPID_LOGOUT_REDIRECT_URL,
     OPID_WOKA_NAME_POLICY,
-    PUSHER_URL,
 } from "../Enum/EnvironmentVariable";
-import { localUserStore } from "./LocalUserStore";
-import axios from "axios";
-import { axiosWithRetry } from "./AxiosUtils";
-import type { MucRoomDefinitionInterface, MapDetailsData, LegalsData } from "@workadventure/messages";
-import { isMapDetailsData, isRoomRedirect, isErrorApiData, OpidWokaNamePolicy } from "@workadventure/messages";
 import { ApiError } from "../Stores/Errors/ApiError";
+import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
+import { axiosWithRetry } from "./AxiosUtils";
+import { localUserStore } from "./LocalUserStore";
 export class MapDetail {
-    constructor(public readonly mapUrl: string) {}
+    constructor(public readonly mapUrl?: string, public readonly wamUrl?: string) {}
 }
 
 export interface RoomRedirect {
     redirectUrl: string;
 }
 
-console.log("pusher url !", PUSHER_URL);
-
 export class Room {
     public readonly id: string;
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
-    private _iframeAuthentication?: string = PUSHER_URL + "/login-screen";
+    private _iframeAuthentication?: string = new URL("login-screen", ABSOLUTE_PUSHER_URL).toString();
     private _opidLogoutRedirectUrl = "/";
     private _opidWokaNamePolicy: OpidWokaNamePolicy | undefined;
     private _mapUrl: string | undefined;
+    private _wamUrl: string | undefined;
     private readonly _search: URLSearchParams;
     private _contactPage: string | undefined;
     private _group: string | null = null;
@@ -38,7 +37,7 @@ export class Room {
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
     private _metadata: unknown | undefined;
-    private _mucRooms: Array<MucRoomDefinitionInterface> | undefined;
+    private _mucRooms: Array<MucRoomDefinition> | undefined;
     private _showPoweredBy: boolean | undefined = true;
     private _roomName: string | undefined;
     private _pricingUrl: string | undefined;
@@ -56,7 +55,6 @@ export class Room {
     private _iconBody: string | undefined;
     private _iconTurn: string | undefined;
     private _reportIssuesUrl: string | undefined;
-    private _entityCollectionsUrls: string[] | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -118,27 +116,18 @@ export class Room {
 
     private async getMapDetail(): Promise<MapDetail | RoomRedirect> {
         try {
-            const result = await axiosWithRetry.get<unknown>(
-                new URL("/map", new URL(PUSHER_URL, window.location.href)).toString(),
-                {
-                    params: {
-                        playUri: this.roomUrl.toString(),
-                        authToken: localUserStore.getAuthToken(),
-                    },
-                }
-            );
+            const result = await axiosWithRetry.get<unknown>("map", {
+                params: {
+                    playUri: this.roomUrl.toString(),
+                    authToken: localUserStore.getAuthToken(),
+                },
+            });
 
             const data = result.data;
 
-            if ((data as MapDetailsData).authenticationMandatory !== undefined) {
-                (data as MapDetailsData).authenticationMandatory = Boolean(
-                    (data as MapDetailsData).authenticationMandatory
-                );
-            }
-
             const roomRedirectChecking = isRoomRedirect.safeParse(data);
             const mapDetailsDataChecking = isMapDetailsData.safeParse(data);
-            const errorApiDataChecking = isErrorApiData.safeParse(data);
+            const errorApiDataChecking = ErrorApiData.safeParse(data);
 
             if (roomRedirectChecking.success) {
                 const data = roomRedirectChecking.data;
@@ -147,12 +136,19 @@ export class Room {
                 };
             } else if (mapDetailsDataChecking.success) {
                 const data = mapDetailsDataChecking.data;
+
+                if (data.authenticationMandatory !== undefined) {
+                    data.authenticationMandatory = Boolean(data.authenticationMandatory);
+                }
+
                 console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
                 this._mapUrl = data.mapUrl;
+                this._wamUrl = data.wamUrl;
                 this._group = data.group;
                 this._authenticationMandatory =
                     data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
-                this._iframeAuthentication = data.iframeAuthentication || PUSHER_URL + "/login-screen";
+                this._iframeAuthentication =
+                    data.iframeAuthentication || new URL("login-screen", ABSOLUTE_PUSHER_URL).toString();
                 this._opidLogoutRedirectUrl = data.opidLogoutRedirectUrl || OPID_LOGOUT_REDIRECT_URL || "/";
                 this._contactPage = data.contactPage || CONTACT_URL;
                 if (data.expireOn) {
@@ -188,9 +184,7 @@ export class Room {
                 this._iconTurn = data.customizeWokaScene?.turnIcon ?? undefined;
                 this._reportIssuesUrl = data.reportIssuesUrl ?? undefined;
 
-                this._entityCollectionsUrls = data.entityCollectionsUrls ?? undefined;
-
-                return new MapDetail(data.mapUrl);
+                return new MapDetail(data.mapUrl, data.wamUrl);
             } else if (errorApiDataChecking.success) {
                 const error = errorApiDataChecking.data;
                 throw new ApiError(error);
@@ -202,11 +196,11 @@ export class Room {
                 throw new Error("Data received by the /map endpoint of the Pusher is not in a valid format.");
             }
         } catch (e) {
-            if (axios.isAxiosError(e) && e.response?.status == 401 && e.response?.data === "The Token is invalid") {
+            if (isAxiosError(e) && e.response?.status == 401 && e.response?.data === "The Token is invalid") {
                 console.warn("JWT token sent could not be decrypted. Maybe it expired?");
                 localUserStore.setAuthToken(null);
                 window.location.reload();
-            } else if (axios.isAxiosError(e)) {
+            } else if (isAxiosError(e)) {
                 console.error("Error => getMapDetail", e, e.response);
             } else {
                 console.error("Error => getMapDetail", e);
@@ -249,11 +243,12 @@ export class Room {
         return this.roomUrl.toString();
     }
 
-    get mapUrl(): string {
-        if (!this._mapUrl) {
-            throw new Error("Map URL not fetched yet");
-        }
+    get mapUrl(): string | undefined {
         return this._mapUrl;
+    }
+
+    get wamUrl(): string | undefined {
+        return this._wamUrl;
     }
 
     get authenticationMandatory(): boolean {
@@ -308,7 +303,7 @@ export class Room {
         return this._metadata;
     }
 
-    get mucRooms(): Array<MucRoomDefinitionInterface> | undefined {
+    get mucRooms(): Array<MucRoomDefinition> | undefined {
         return this._mucRooms;
     }
 
@@ -390,9 +385,5 @@ export class Room {
 
     get reportIssuesUrl(): string | undefined {
         return this._reportIssuesUrl;
-    }
-
-    get entityCollectionsUrls(): string[] | undefined {
-        return this._entityCollectionsUrls;
     }
 }

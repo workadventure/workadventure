@@ -1,11 +1,11 @@
-import { DISABLE_ANONYMOUS } from "../enums/EnvironmentVariable";
 import { isMapDetailsData } from "@workadventure/messages";
-import { BaseHttpController } from "./BaseHttpController";
-import { adminService } from "../services/AdminService";
-import { InvalidTokenError } from "./InvalidTokenError";
-import { validateQuery } from "../services/QueryValidator";
 import { z } from "zod";
 import type { Request, Response } from "hyper-express";
+import { DISABLE_ANONYMOUS } from "../enums/EnvironmentVariable";
+import { adminService } from "../services/AdminService";
+import { validateQuery } from "../services/QueryValidator";
+import { BaseHttpController } from "./BaseHttpController";
+import { InvalidTokenError } from "./InvalidTokenError";
 
 export class MapController extends BaseHttpController {
     // Returns a map mapping map name to file name of the map

@@ -1,7 +1,7 @@
 <script lang="ts">
+    import { LL } from "../../../i18n/i18n-svelte";
     import TextGlobalMessage from "./TextGlobalMessage.svelte";
     import AudioGlobalMessage from "./AudioGlobalMessage.svelte";
-    import LL from "../../../i18n/i18n-svelte";
 
     let handleSendText: { sendTextMessage(broadcast: boolean): void };
     let handleSendAudio: { sendAudioMessage(broadcast: boolean): Promise<void> };

@@ -1,8 +1,9 @@
-import { BaseHttpController } from "./BaseHttpController";
-import { parse } from "query-string";
+import type { Request, Response, Server } from "hyper-express";
+import { z } from "zod";
+import * as Sentry from "@sentry/node";
+import { validateQuery } from "../services/QueryValidator";
 import type { JWTTokenManager } from "../services/JWTTokenManager";
-import type { Request, Response } from "hyper-express";
-import type { Server } from "hyper-express";
+import { BaseHttpController } from "./BaseHttpController";
 
 /*
  * Base class to expose authenticated pusher endpoints that will provide data based on room url
@@ -34,19 +35,26 @@ export abstract class AuthenticatedProviderController<T> extends BaseHttpControl
                 // Let's set the "uuid" param
                 uuid = jwtData.identifier;
             } catch (e) {
+                Sentry.captureException(`Connection refused for token: ${token} ${e}`);
                 console.error("Connection refused for token: " + token, e);
+
                 res.status(401).send("Invalid token sent");
                 return;
             }
 
-            let { roomUrl } = parse(req.path_query);
+            const query = validateQuery(
+                req,
+                res,
+                z.object({
+                    roomUrl: z.string(),
+                })
+            );
 
-            if (typeof roomUrl !== "string") {
-                return res.status(400).send("missing roomUrl URL parameter");
+            if (query === undefined) {
+                return res.status(400).send("bad roomUrl URL parameter");
             }
 
-            roomUrl = decodeURIComponent(roomUrl);
-            const data = await this.getData(roomUrl, uuid);
+            const data = await this.getData(decodeURIComponent(query.roomUrl), uuid);
 
             if (!data) {
                 return res.status(500).send("Error on getting data");

@@ -1,15 +1,15 @@
+import { get } from "svelte/store";
+import type CancelablePromise from "cancelable-promise";
+import type { PositionMessage, PositionMessage_Direction } from "@workadventure/messages";
 import { requestVisitCardsStore } from "../../Stores/GameStore";
 import type { ActionsMenuAction } from "../../Stores/ActionsMenuStore";
 import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
 import { Character } from "../Entity/Character";
 import type { GameScene } from "../Game/GameScene";
-import { get } from "svelte/store";
 import type { ActivatableInterface } from "../Game/ActivatableInterface";
-import type CancelablePromise from "cancelable-promise";
-import LL from "../../../i18n/i18n-svelte";
+import { LL } from "../../../i18n/i18n-svelte";
 import { blackListManager } from "../../WebRtc/BlackListManager";
 import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
-import type { PositionMessage, PositionMessage_Direction } from "@workadventure/messages";
 
 export enum RemotePlayerEvent {
     Clicked = "Clicked",

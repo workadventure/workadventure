@@ -8,6 +8,11 @@
  * The PositionNotifier is important for performance. It allows us to send the position of players only to a restricted
  * number of players around the current player.
  */
+import { EmoteEventMessage, SetPlayerDetailsMessage } from "@workadventure/messages";
+import { Movable } from "../Model/Movable";
+import { PositionInterface } from "../Model/PositionInterface";
+import { ZoneSocket } from "../RoomManager";
+import { User } from "../Model/User";
 import {
     EmoteCallback,
     EntersCallback,
@@ -17,11 +22,6 @@ import {
     PlayerDetailsUpdatedCallback,
     Zone,
 } from "./Zone";
-import { Movable } from "../Model/Movable";
-import { PositionInterface } from "../Model/PositionInterface";
-import { ZoneSocket } from "../RoomManager";
-import { User } from "../Model/User";
-import { EmoteEventMessage, SetPlayerDetailsMessage } from "../Messages/generated/messages_pb";
 
 interface ZoneDescriptor {
     i: number;

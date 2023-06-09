@@ -28,11 +28,12 @@
          "BBB_URL": "https://test-install.blindsidenetworks.com/bigbluebutton/",
          "MAP_STORAGE_URL": "map-storage:50053",
          "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
+         "INTERNAL_MAP_STORAGE_URL": "http://map-storage:3000",
          "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
          "EJABBERD_USER": "admin",
          "EJABBERD_PASSWORD": "apideo",
-         "ENABLE_FEATURE_MAP_EDITOR":"true",
-         "ENABLE_MAP_EDITOR_AREAS_TOOL":"false",
+         "ENABLE_MAP_EDITOR":"true",
+         "DEBUG": "*",
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -64,10 +65,11 @@
               "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
               "MAP_STORAGE_URL": "map-storage:50053",
               "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
+              "INTERNAL_MAP_STORAGE_URL": "http://map-storage:3000",
               "EJABBERD_USER": "admin",
               "EJABBERD_PASSWORD": "apideo",
-              "ENABLE_FEATURE_MAP_EDITOR":"true",
-              "ENABLE_MAP_EDITOR_AREAS_TOOL":"false",
+              "ENABLE_MAP_EDITOR":"true",
+              "DEBUG": "*",
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -83,6 +85,7 @@
         "image": "thecodingmachine/workadventure-play:"+tag,
         "host": {
           "url": "play-"+url,
+          "containerPort": 3000
         },
         "ports": [3000],
         "env": {
@@ -102,11 +105,12 @@
           "POSTHOG_URL": if namespace == "master" then env.POSTHOG_URL else "",
           "TURN_SERVER": "turn:coturn.workadventure.fr:443,turns:coturn.workadventure.fr:443",
           "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
-          "ENABLE_FEATURE_MAP_EDITOR":"true",
-          "ENABLE_MAP_EDITOR_AREAS_TOOL":"false",
+          "ENABLE_MAP_EDITOR":"true",
           "ICON_URL": "https://icon-"+url,
           "CHAT_URL": "https://chat-"+url,
           "LOGROCKET_ID": env.LOGROCKET_ID,
+          "ROOM_API_PORT": "50051",
+          "DEBUG": "*",
         } + (if adminUrl != null then {
           # Admin
           "ADMIN_URL": adminUrl,
@@ -122,6 +126,8 @@
           # Ejabberd
           "EJABBERD_DOMAIN": "xmpp-"+url,
           "EJABBERD_JWT_SECRET": env.EJABBERD_JWT_SECRET,
+          # Room API
+          "ROOM_API_SECRET_KEY": "ROOM_API_SECRET_KEY",
         })
       },
     "chat": {
@@ -150,12 +156,14 @@
            },
            "ports": [3000, 50053],
            "env": {
+             "API_URL": "back1:50051,back2:50051",
              "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
              "AUTHENTICATION_STRATEGY": if (adminUrl == null) then "Basic" else "Bearer",
              "AUTHENTICATION_USER": "john.doe",
              "AUTHENTICATION_PASSWORD": "password",
              "AUTHENTICATION_TOKEN": "SomeSecretToken",
              "USE_DOMAIN_NAME_IN_PATH": if (adminUrl == null) then "false" else "true",
+             "DEBUG": "*",
            }
          },
     "uploaderredis":{
@@ -283,10 +291,54 @@
                 }
               }
             },
+            serviceroomapi: {
+                "apiVersion": "v1",
+                "kind": "Service",
+                "metadata": {
+                    "annotations": {
+                        "traefik.ingress.kubernetes.io/service.serversscheme": "h2c"
+                    },
+                    "name": "room-api"
+                },
+                "spec": {
+                    "ports": [
+                        {
+                            "name": "room-api-p50051",
+                            "port": 50051,
+                            "protocol": "TCP",
+                            "targetPort": 50051
+                        }
+                    ],
+                    "selector": {
+                        "name": "play"
+                    },
+                    "type": "ClusterIP"
+                }
+            },
             ingress+: {
               spec+: {
+                rules+:[
+                  {
+                    host: "room-api-"+url,
+                    http: {
+                      paths: [
+                        {
+                          backend: {
+                            service: {
+                              name: "room-api",
+                              port: {
+                                number: 50051
+                              }
+                            }
+                          },
+                          pathType: "ImplementationSpecific"
+                        }
+                      ]
+                    }
+                  }
+                ],
                 tls+: [{
-                  hosts: ["play-"+url],
+                  hosts: ["play-"+url, "room-api-"+url],
                   secretName: "certificate-tls"
                 }]
               }

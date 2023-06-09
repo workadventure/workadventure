@@ -44,8 +44,8 @@ export function getRoomId(): string {
 
 export function updateInputFieldValue() {
     const input = document.getElementById("input-share-link");
-    if (input) {
-        (input as HTMLInputElement).value = getLink();
+    if (input && input instanceof HTMLInputElement) {
+        input.value = getLink();
     }
 }
 

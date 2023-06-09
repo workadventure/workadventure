@@ -1,7 +1,7 @@
+import { Capabilities } from "@workadventure/messages";
 import { AdminCompanionService } from "./AdminCompanionService";
 import { LocalCompanionSevice } from "./LocalCompanionSevice";
 import type { CompanionServiceInterface } from "./CompanionServiceInterface";
-import { Capabilities } from "@workadventure/messages";
 
 export class CompanionService {
     private static instance: CompanionServiceInterface | undefined;

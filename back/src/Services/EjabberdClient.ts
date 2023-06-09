@@ -1,4 +1,5 @@
-import Axios, { AxiosError, AxiosInstance } from "axios";
+import axios, { AxiosError, AxiosInstance } from "axios";
+import * as Sentry from "@sentry/node";
 import { EJABBERD_DOMAIN, EJABBERD_PASSWORD, EJABBERD_API_URI, EJABBERD_USER } from "../Enum/EnvironmentVariable";
 import { ChatZone } from "./MucManager";
 import { ChatClient } from "./ChatClient";
@@ -21,7 +22,7 @@ export class EjabberdClient implements ChatClient {
             const auth = Buffer.from(EJABBERD_USER + "@" + EJABBERD_DOMAIN + ":" + EJABBERD_PASSWORD).toString(
                 "base64"
             );
-            this.axios = Axios.create({
+            this.axios = axios.create({
                 baseURL: EJABBERD_API_URI + "/",
                 headers: {
                     Authorization: "Basic " + auth,
@@ -42,7 +43,10 @@ export class EjabberdClient implements ChatClient {
     async destroyMucRoom(name: string) {
         await this.getAxios()
             .post("destroy_room", { name: EjabberdClient.encode(name), service: this.conferenceDomain })
-            .catch((error) => console.error(error));
+            .catch((error) => {
+                console.error(error);
+                Sentry.captureException(error);
+            });
     }
 
     async createMucRoom(chatZone: ChatZone) {
@@ -52,7 +56,10 @@ export class EjabberdClient implements ChatClient {
                 host: EJABBERD_DOMAIN,
                 service: this.conferenceDomain,
             })
-            .catch((error) => console.error(error));
+            .catch((error) => {
+                console.error(error);
+                Sentry.captureException(error);
+            });
     }
 
     public static decode(name: string | null | undefined) {
