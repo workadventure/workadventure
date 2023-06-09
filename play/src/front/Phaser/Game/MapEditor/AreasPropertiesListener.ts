@@ -22,6 +22,9 @@ import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
 import { scriptUtils } from "../../../Api/ScriptUtils";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
+import { iframeListener } from "../../../Api/IframeListener";
+import { chatZoneLiveStore } from "../../../Stores/ChatStore";
+import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -378,5 +381,72 @@ export class AreasPropertiesListener {
         });
 
         layoutManagerActionStore.removeAction(actionId);
+    }
+
+    private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {
+        if (property.name !== undefined) {
+            this.scene.broadcastService.joinSpace(property.name, false);
+            isSpeakerStore.set(true);
+            requestedMegaphoneStore.set(true);
+            if (property.chatEnabled) {
+                this.handleJoinMucRoom(property.name, "live");
+            }
+        }
+    }
+
+    private handleSpeakerMegaphonePropertyOnLeave(property: SpeakerMegaphonePropertyData): void {
+        if (property.name !== undefined) {
+            this.scene.broadcastService.leaveSpace(property.name);
+            requestedMegaphoneStore.set(false);
+            isSpeakerStore.set(false);
+            if (property.chatEnabled) {
+                this.handleLeaveMucRoom(property.name);
+            }
+        }
+    }
+
+    private handleListenerMegaphonePropertyOnEnter(property: ListenerMegaphonePropertyData): void {
+        if (property.speakerZoneName !== undefined) {
+            const speakerZoneName = getSpeakerMegaphoneAreaName(
+                gameManager.getCurrentGameScene().getGameMap().getGameMapAreas()?.getAreas(),
+                property.speakerZoneName
+            );
+            if (speakerZoneName) {
+                this.scene.broadcastService.joinSpace(speakerZoneName, false);
+                if (property.chatEnabled) {
+                    this.handleJoinMucRoom(speakerZoneName, "live");
+                }
+            }
+        }
+    }
+
+    private handleListenerMegaphonePropertyOnLeave(property: ListenerMegaphonePropertyData): void {
+        if (property.speakerZoneName !== undefined) {
+            const speakerZoneName = getSpeakerMegaphoneAreaName(
+                gameManager.getCurrentGameScene().getGameMap().getGameMapAreas()?.getAreas(),
+                property.speakerZoneName
+            );
+            if (speakerZoneName) {
+                this.scene.broadcastService.leaveSpace(speakerZoneName);
+                if (property.chatEnabled) {
+                    this.handleLeaveMucRoom(speakerZoneName);
+                }
+            }
+        }
+    }
+
+    private handleJoinMucRoom(name: string, type: string) {
+        iframeListener.sendJoinMucEventToChatIframe(
+            `${gameManager.getCurrentGameScene().roomUrl}/${slugify(name)}`,
+            name,
+            type,
+            false
+        );
+        chatZoneLiveStore.set(true);
+    }
+
+    private handleLeaveMucRoom(name: string) {
+        iframeListener.sendLeaveMucEventToChatIframe(`${gameManager.getCurrentGameScene().roomUrl}/${slugify(name)}`);
+        chatZoneLiveStore.set(false);
     }
 }
