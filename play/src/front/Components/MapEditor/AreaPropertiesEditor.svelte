@@ -77,12 +77,14 @@
                     id,
                     type,
                     name: "",
+                    chatEnabled: false,
                 };
             case "listenerMegaphone":
                 return {
                     id,
                     type,
                     speakerZoneName: "",
+                    chatEnabled: false,
                 };
         }
     }
