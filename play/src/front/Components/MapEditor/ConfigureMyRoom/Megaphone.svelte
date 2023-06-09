@@ -3,7 +3,6 @@
     import { UpdateMegaphoneSettingMessage } from "@workadventure/messages";
     import { InfoIcon } from "svelte-feather-icons";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { onMapEditorInputFocus, onMapEditorInputUnfocus } from "../../../Stores/MapEditorStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import InputText from "../../Input/InputText.svelte";
     import InputSelect from "../../Input/InputSelect.svelte";
@@ -21,7 +20,7 @@
     let enabled: boolean = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.enabled ?? false;
     const oldRights: string[] = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.rights ?? [];
     let rights: Option[] = [];
-    let title: string = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.title ?? "";
+    let title: string = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.title ?? "MyMegaphone";
     let scope: string = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.scope ?? "WORLD";
     let scopes = [
         { value: "ROOM", label: $LL.mapEditor.settings.megaphone.inputs.room() },
@@ -111,8 +110,6 @@
                 placeHolder="MySpace"
                 bind:value={title}
                 onKeyPress={() => (dynamicStrings.error.title = "")}
-                onFocus={onMapEditorInputFocus}
-                onBlur={onMapEditorInputUnfocus}
             />
             <InputSelect label={$LL.mapEditor.settings.megaphone.inputs.scope()} options={scopes} bind:value={scope} />
             <p class="help-text"><InfoIcon size="18" /> {$LL.mapEditor.settings.megaphone.inputs.spaceNameHelper()}</p>
@@ -120,8 +117,6 @@
                 label={$LL.mapEditor.settings.megaphone.inputs.rights()}
                 options={tags ?? []}
                 bind:value={rights}
-                onFocus={onMapEditorInputFocus}
-                onBlur={onMapEditorInputUnfocus}
             />
             <p class="help-text"><InfoIcon size="18" /> {$LL.mapEditor.settings.megaphone.inputs.rightsHelper()}</p>
             <ButtonState promise={save} initialText={$LL.menu.settings.save.button()} loadingText="Saving" />

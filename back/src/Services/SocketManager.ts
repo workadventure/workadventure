@@ -107,31 +107,29 @@ export class SocketManager {
         const lastCommandId = joinRoomMessage.lastCommandId;
         let commandsToApply: EditMapCommandMessage[] | undefined = undefined;
 
-        if (lastCommandId) {
-            if (room.wamUrl) {
-                const updateMapToNewestWithKeyMessage: UpdateMapToNewestWithKeyMessage = {
-                    mapKey: room.wamUrl,
-                    updateMapToNewestMessage: {
-                        commandId: lastCommandId,
-                    },
-                };
+        if (room.wamUrl) {
+            const updateMapToNewestWithKeyMessage: UpdateMapToNewestWithKeyMessage = {
+                mapKey: room.wamUrl,
+                updateMapToNewestMessage: {
+                    commandId: lastCommandId,
+                },
+            };
 
-                commandsToApply = await new Promise<EditMapCommandMessage[]>((resolve, reject) => {
-                    getMapStorageClient().handleUpdateMapToNewestMessage(
-                        updateMapToNewestWithKeyMessage,
-                        (err: unknown, message: EditMapCommandsArrayMessage) => {
-                            if (err) {
-                                emitError(user.socket, err);
-                                reject(err);
-                                return;
-                            }
-                            resolve(message.editMapCommands);
+            commandsToApply = await new Promise<EditMapCommandMessage[]>((resolve, reject) => {
+                getMapStorageClient().handleUpdateMapToNewestMessage(
+                    updateMapToNewestWithKeyMessage,
+                    (err: unknown, message: EditMapCommandsArrayMessage) => {
+                        if (err) {
+                            emitError(user.socket, err);
+                            reject(err);
+                            return;
                         }
-                    );
-                });
-            } else {
-                emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
-            }
+                        resolve(message.editMapCommands);
+                    }
+                );
+            });
+        } else {
+            emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
         }
 
         if (!socket.writable) {
@@ -1430,7 +1428,7 @@ export class SocketManager {
     handleRemoveSpaceUserMessage(pusher: SpacesWatcher, removeSpaceUserMessage: RemoveSpaceUserMessage) {
         const space = this.spaces.get(removeSpaceUserMessage.spaceName);
         if (space) {
-            space.removeUser(pusher, removeSpaceUserMessage.userUuid);
+            space.removeUser(pusher, removeSpaceUserMessage.userId);
         }
     }
 }

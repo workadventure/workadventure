@@ -71,6 +71,16 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
     position: z.number().optional(),
 });
 
+export const SpeakerMegaphonePropertyData = PropertyBase.extend({
+    type: z.literal("speakerMegaphone"),
+    name: z.string(),
+});
+
+export const ListenerMegaphonePropertyData = PropertyBase.extend({
+    type: z.literal("listenerMegaphone"),
+    speakerZoneName: z.string(),
+});
+
 export const AreaDataProperty = z.union([
     StartPropertyData,
     FocusablePropertyData,
@@ -78,6 +88,8 @@ export const AreaDataProperty = z.union([
     JitsiRoomPropertyData,
     PlayAudioPropertyData,
     OpenWebsitePropertyData,
+    SpeakerMegaphonePropertyData,
+    ListenerMegaphonePropertyData,
 ]);
 
 export const AreaDataProperties = z.array(AreaDataProperty);
@@ -225,6 +237,8 @@ export type WAMSettings = z.infer<typeof WAMSettings>;
 export type WAMFileFormat = z.infer<typeof WAMFileFormat>;
 export type MapsCacheSingleMapFormat = z.infer<typeof MapsCacheSingleMapFormat>;
 export type MapsCacheFileFormat = z.infer<typeof MapsCacheFileFormat>;
+export type SpeakerMegaphonePropertyData = z.infer<typeof SpeakerMegaphonePropertyData>;
+export type ListenerMegaphonePropertyData = z.infer<typeof ListenerMegaphonePropertyData>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",
@@ -247,6 +261,7 @@ export enum GameMapProperties {
     JITSI_URL = "jitsiUrl",
     JITSI_WIDTH = "jitsiWidth",
     JITSI_NO_PREFIX = "jitsiNoPrefix",
+    LISTENER_MEGAPHONE = "listenerMegaphone",
     NAME = "name",
     OPEN_TAB = "openTab",
     OPEN_WEBSITE = "openWebsite",
@@ -264,6 +279,7 @@ export enum GameMapProperties {
     SCRIPT = "script",
     SCRIPT_DISABLE_MODULE_SUPPORT = "scriptDisableModuleSupport",
     SILENT = "silent",
+    SPEAKER_MEGAPHONE = "speakerMegaphone",
     START = "start",
     START_LAYER = "startLayer",
     URL = "url",

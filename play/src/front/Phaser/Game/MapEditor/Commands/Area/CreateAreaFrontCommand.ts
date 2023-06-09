@@ -16,10 +16,8 @@ export class CreateAreaFrontCommand extends CreateAreaCommand implements FrontCo
     }
 
     public async execute(): Promise<void> {
-        const returnVal = super.execute();
+        await super.execute();
         this.areaEditorTool.handleAreaPreviewCreation(this.areaConfig, this.localCommand);
-
-        return returnVal;
     }
 
     public getUndoCommand(): DeleteAreaFrontCommand {

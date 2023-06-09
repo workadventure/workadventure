@@ -84,7 +84,11 @@
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
-    import { megaphoneCanBeUsedStore, megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
+    import {
+        megaphoneCanBeUsedStore,
+        megaphoneEnabledStore,
+        requestedMegaphoneStore,
+    } from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
@@ -168,7 +172,7 @@
     }
 
     function toggleMegaphone() {
-        if (!$megaphoneEnabledStore && !$requestedCameraState && !$requestedMicrophoneState) {
+        if (!$requestedMegaphoneStore && !$requestedCameraState && !$requestedMicrophoneState) {
             if (cameraButton) {
                 cameraButton.firstElementChild?.classList.add("tw-animate-shaking");
                 setTimeout(() => cameraButton.firstElementChild?.classList.remove("tw-animate-shaking"), 600);
@@ -191,7 +195,7 @@
             setTimeout(() => layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone"), 10_000);
             return;
         }
-        $megaphoneEnabledStore = !$megaphoneEnabledStore;
+        $requestedMegaphoneStore = !$requestedMegaphoneStore;
     }
 
     function toggleMapEditorMode() {

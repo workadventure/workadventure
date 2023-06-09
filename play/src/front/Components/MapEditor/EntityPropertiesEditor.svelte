@@ -2,11 +2,7 @@
     import { onDestroy } from "svelte";
     import { EntityDataProperties, EntityDataPropertiesKeys, EntityDataProperty } from "@workadventure/map-editor";
     import { LL } from "../../../i18n/i18n-svelte";
-    import {
-        mapEditorSelectedEntityStore,
-        onMapEditorInputFocus,
-        onMapEditorInputUnfocus,
-    } from "../../Stores/MapEditorStore";
+    import { mapEditorSelectedEntityStore } from "../../Stores/MapEditorStore";
     import visioSvg from "../images/visio-white.svg";
     import audioSvg from "../images/audio-white.svg";
     import webSvg from "../images/web-white.svg";
@@ -128,15 +124,7 @@
     </div>
     <div class="entity-name-container">
         <label for="objectName">Object name</label>
-        <input
-            id="objectName"
-            type="text"
-            placeholder="Value"
-            bind:value={entityName}
-            on:focus={onMapEditorInputFocus}
-            on:blur={onMapEditorInputUnfocus}
-            on:change={onUpdateName}
-        />
+        <input id="objectName" type="text" placeholder="Value" bind:value={entityName} on:change={onUpdateName} />
     </div>
     <div class="properties-container">
         {#each properties as property}

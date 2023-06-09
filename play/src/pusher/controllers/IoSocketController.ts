@@ -101,8 +101,6 @@ type UpgradeFailedErrorData = {
 export type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData;
 
 export class IoSocketController {
-    private nextUserId = 1;
-
     constructor(private readonly app: HyperExpress.compressors.TemplatedApp) {
         this.ioConnection();
         if (ADMIN_SOCKETS_TOKEN) {
@@ -531,6 +529,7 @@ export class IoSocketController {
                             isLogged,
                             messages: [],
                             spaceUser: SpaceUser.fromPartial({
+                                id: 0,
                                 uuid: userData.userUuid,
                                 name,
                                 playUri: roomId,
@@ -800,7 +799,7 @@ export class IoSocketController {
                             break;
                         }
                         case "unwatchSpaceMessage": {
-                            // TODO : Implement
+                            void socketManager.handleLeaveSpace(client, message.message.unwatchSpaceMessage.spaceName);
                             break;
                         }
                         case "cameraStateMessage": {
@@ -885,8 +884,6 @@ export class IoSocketController {
     //eslint-disable-next-line @typescript-eslint/no-explicit-any
     private initClient(ws: any): ExSocketInterface {
         const client: ExSocketInterface = ws;
-        client.userId = this.nextUserId;
-        this.nextUserId++;
         client.userJid = ws.userJid;
         client.userUuid = ws.userUuid;
         client.IPAddress = ws.IPAddress;
@@ -927,7 +924,6 @@ export class IoSocketController {
         };
         client.spaces = [];
         client.spacesFilters = new Map<string, SpaceFilterMessage[]>();
-        client.spaceUser = ws.spaceUser;
         client.cameraState = ws.cameraState;
         client.microphoneState = ws.microphoneState;
         return client;

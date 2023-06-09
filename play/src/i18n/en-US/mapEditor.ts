@@ -78,6 +78,18 @@ const mapEditor: BaseTranslation = {
             errorEmbeddableLink: "The link is not embeddable",
         },
         advancedOptions: "Advanced Options",
+        speakerMegaphoneProperties: {
+            label: "SpeakerZone for megaphone",
+            description: "",
+            nameLabel: "Name",
+            namePlaceholder: "MySpeakerZone",
+        },
+        listenerMegaphoneProperties: {
+            label: "ListenerZone for megaphone",
+            description: "",
+            nameLabel: "SpeakerZone Name",
+            namePlaceholder: "MySpeakerZone",
+        },
     },
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",

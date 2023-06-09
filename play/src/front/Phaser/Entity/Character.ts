@@ -2,8 +2,8 @@ import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipel
 import { Unsubscriber, Writable, get, writable } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
-import type { AvailabilityStatus } from "@workadventure/messages";
-import { PositionMessage_Direction } from "@workadventure/messages";
+import type { AvailabilityStatus as AvailabilityStatusType } from "@workadventure/messages";
+import { AvailabilityStatus, PositionMessage_Direction } from "@workadventure/messages";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import { PlayerStatusDot } from "../Components/PlayerStatusDot";
 import { TalkIcon } from "../Components/TalkIcon";
@@ -17,6 +17,8 @@ import { Companion } from "../Companion/Companion";
 import { TextureError } from "../../Exception/TextureError";
 import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
+import { SpeakerIcon } from "../Components/SpeakerIcon";
+import { MegaphoneIcon } from "../Components/MegaphoneIcon";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { SpeechBubble } from "./SpeechBubble";
 import Text = Phaser.GameObjects.Text;
@@ -32,6 +34,8 @@ export abstract class Character extends Container implements OutlineableInterfac
     private readonly playerNameText: Text;
     private readonly talkIcon: TalkIcon;
     protected readonly statusDot: PlayerStatusDot;
+    protected readonly speakerIcon: SpeakerIcon;
+    protected readonly megaphoneIcon: MegaphoneIcon;
     public playerName: string;
     public sprites: Map<string, Sprite>;
     protected lastDirection: PositionMessage_Direction = PositionMessage_Direction.DOWN;
@@ -131,7 +135,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
 
         this.talkIcon = new TalkIcon(scene, 0, -45);
-        this.add(this.talkIcon);
+        this.speakerIcon = new SpeakerIcon(scene, 0, -45);
+        this.add([this.talkIcon, this.speakerIcon]);
 
         if (isClickable) {
             this.setInteractive({
@@ -142,7 +147,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         }
         this.playerNameText.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
         this.statusDot = new PlayerStatusDot(scene, (this.playerNameText.getLeftCenter().x ?? 0) - 6, playerNameY - 1);
-        this.add([this.playerNameText, this.statusDot]);
+        this.megaphoneIcon = new MegaphoneIcon(scene, this.playerNameText.width - 10, playerNameY - 1);
+        this.add([this.playerNameText, this.statusDot, this.megaphoneIcon]);
 
         this.setClickable(isClickable);
 
@@ -236,12 +242,23 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
-    public showTalkIcon(show = true, forceClose = false): void {
-        this.talkIcon.show(show, forceClose);
+    public toggleTalk(show = true, forceClose = false): void {
+        if (this.getAvailabilityStatus() === AvailabilityStatus.SPEAKER) {
+            this.talkIcon.show(false, forceClose);
+            this.speakerIcon.show(show, forceClose);
+        } else {
+            this.talkIcon.show(show, forceClose);
+            this.speakerIcon.show(false, forceClose);
+        }
     }
 
-    public setAvailabilityStatus(availabilityStatus: AvailabilityStatus, instant = false): void {
+    public setAvailabilityStatus(availabilityStatus: AvailabilityStatusType, instant = false): void {
         this.statusDot.setAvailabilityStatus(availabilityStatus, instant);
+        if (this.getAvailabilityStatus() === AvailabilityStatus.SPEAKER) {
+            this.megaphoneIcon.show(true, false);
+        } else {
+            this.megaphoneIcon.show(false, false);
+        }
     }
 
     public getAvailabilityStatus() {

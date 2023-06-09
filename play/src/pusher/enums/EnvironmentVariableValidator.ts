@@ -96,6 +96,12 @@ export const EnvironmentVariables = z.object({
         .string()
         .optional()
         .transform((val) => toArray(val)),
+    WOKA_SPEED: PositiveIntAsString.optional().transform((val) => toNumber(val, 9)),
+
+    // Jitsi related environment variables
+    JITSI_DOMAIN: z.string().optional(),
+    JITSI_XMPP_DOMAIN: z.string().optional(),
+    JITSI_MUC_DOMAIN: z.string().optional(),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

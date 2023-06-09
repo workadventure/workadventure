@@ -127,7 +127,7 @@ export class RemotePlayersRepository {
             player.showVoiceIndicator = details.showVoiceIndicator;
             updateStruct.updated.showVoiceIndicator = true;
         }
-        if (details.availabilityStatus !== undefined) {
+        if (details.availabilityStatus !== 0) {
             player.availabilityStatus = details.availabilityStatus;
             updateStruct.updated.availabilityStatus = true;
         }

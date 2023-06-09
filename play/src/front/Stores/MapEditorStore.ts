@@ -45,21 +45,11 @@ const MAP_EDITOR_AREA_TOOL_MODE = {
 export type MapEditorEntityToolMode = ObjectValues<typeof MAP_EDITOR_ENTITY_TOOL_MODE>;
 export type MapEditorAreaToolMode = ObjectValues<typeof MAP_EDITOR_AREA_TOOL_MODE>;
 
-export function onMapEditorInputFocus() {
-    mapEditorInputStore.set(true);
-}
-
-export function onMapEditorInputUnfocus() {
-    mapEditorInputStore.set(false);
-}
-
 export const mapEditorModeStore = createMapEditorModeStore();
 
 export const mapEditorSelectedEntityStore = createMapEditorSelectedEntityStore();
 
 export const mapEditorSelectedEntityDraggedStore = writable<boolean>(false);
-
-export const mapEditorInputStore = writable(false);
 
 export const mapEditorSelectedAreaPreviewStore = writable<AreaPreview | undefined>(undefined);
 

@@ -31,7 +31,11 @@ class LocalAdmin implements AdminInterface {
         locale?: string
     ): Promise<FetchMemberDataByUuidResponse> {
         let canEdit = false;
+        const roomUrl = new URL(playUri);
+        const match = /\/~\/(.+)/.exec(roomUrl.pathname);
+
         if (
+            match &&
             ENABLE_MAP_EDITOR &&
             (MAP_EDITOR_ALLOWED_USERS.length === 0 || MAP_EDITOR_ALLOWED_USERS.includes(userIdentifier))
         ) {

@@ -43,10 +43,13 @@ class MapsManager {
         await command.execute();
     }
 
-    public getCommandsNewerThan(mapKey: string, commandId: string): EditMapCommandMessage[] {
+    public getCommandsNewerThan(mapKey: string, commandId: string | undefined): EditMapCommandMessage[] {
         // shouldn't we just apply every command on this list to the new client?
         const queue = this.loadedMapsCommandsQueue.get(mapKey);
         if (queue) {
+            if (commandId === undefined) {
+                return queue;
+            }
             const commandIndex = queue.findIndex((command) => command.id === commandId);
             return queue.slice(commandIndex !== -1 ? commandIndex + 1 : 0);
         }

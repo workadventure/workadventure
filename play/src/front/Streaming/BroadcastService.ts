@@ -4,10 +4,13 @@ import { ForwardableStore } from "@workadventure/store-utils";
 import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 import pLimit from "p-limit";
 import { SpaceFilterMessage } from "@workadventure/messages";
+import debug from "debug";
+import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { megaphoneEnabledStore } from "../Stores/MegaphoneStore";
 import { RoomConnection } from "../Connexion/RoomConnection";
 import { Space } from "../Space/Space";
 import { gameManager } from "../Phaser/Game/GameManager";
+import { JITSI_DOMAIN, JITSI_MUC_DOMAIN, JITSI_XMPP_DOMAIN } from "../Enum/EnvironmentVariable";
 import { JitsiTrackWrapper } from "./Jitsi/JitsiTrackWrapper";
 import { jitsiConferencesStore } from "./Jitsi/JitsiConferencesStore";
 import { JitsiConferenceWrapper } from "./Jitsi/JitsiConferenceWrapper";
@@ -17,6 +20,8 @@ export const jitsiLoadingStore = writable<boolean>(false);
 
 const limit = pLimit(1);
 
+const broadcastServiceLogger = debug("jitsi");
+
 class BroadcastSpace extends Space {
     public jitsiConference: JitsiConferenceWrapper | undefined;
     public unsubscribes: Unsubscriber[] = [];
@@ -24,7 +29,8 @@ class BroadcastSpace extends Space {
         connection: RoomConnection,
         spaceName: string,
         spaceFilter: SpaceFilterMessage,
-        private broadcastService: BroadcastService
+        private broadcastService: BroadcastService,
+        public playSound: boolean
     ) {
         super(connection, spaceName, spaceFilter);
         this.unsubscribes.push(
@@ -65,6 +71,16 @@ class BroadcastSpace extends Space {
         );
     }
     destroy() {
+        limit(() => this.jitsiConference?.leave("I want to leave this space ..."))
+            .then(() => {
+                this.jitsiConference = undefined;
+            })
+            .catch((e) => {
+                console.error(e);
+            })
+            .finally(() => {
+                this.broadcastService.checkIfCanDisconnect();
+            });
         this.unsubscribes.forEach((unsubscribe) => unsubscribe());
         super.destroy();
     }
@@ -107,17 +123,33 @@ export class BroadcastService {
         //libJitsiFactory.createConnection("jitsi.test.workadventu.re", "prosody.test.workadventu.re", "muc.prosody.test.workadventu.re").then((connection) => {
     }
 
-    public joinSpace(spaceName: string) {
+    public joinSpace(spaceName_: string, playSound = true) {
+        const spaceName = slugify(spaceName_);
         const spaceFilter = this.connection.emitWatchSpaceLiveStreaming(spaceName);
-        const broadcastSpace = new BroadcastSpace(this.connection, spaceName, spaceFilter, this);
+        const broadcastSpace = new BroadcastSpace(this.connection, spaceName, spaceFilter, this, playSound);
         this.broadcastSpaces.push(broadcastSpace);
+        broadcastServiceLogger("BroadcastService => joinSpace", spaceName);
+    }
+
+    public leaveSpace(spaceName_: string) {
+        const spaceName = slugify(spaceName_);
+        const space = this.broadcastSpaces.find((space) => space.name === spaceName);
+        if (space) {
+            this.connection.emitUnwatchSpaceLiveStreaming(spaceName);
+            space.destroy();
+            this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.name !== spaceName);
+            broadcastServiceLogger("BroadcastService => leaveSpace", spaceName);
+        }
     }
 
     private async connect() {
+        if (!JITSI_DOMAIN || !JITSI_XMPP_DOMAIN || !JITSI_MUC_DOMAIN) {
+            throw new Error("Cannot use Jitsi with a no domain defined, please check your environment variables");
+        }
         this.jitsiConnection = await libJitsiFactory.createConnection(
-            "coremeet.workadventu.re",
-            "prosody.workadventu.re",
-            "muc.prosody.workadventu.re"
+            JITSI_DOMAIN,
+            JITSI_XMPP_DOMAIN,
+            JITSI_MUC_DOMAIN
         );
     }
 
@@ -126,7 +158,7 @@ export class BroadcastService {
             try {
                 await this.connect();
             } catch (e) {
-                console.log("Error while connecting to Jitsi", e);
+                broadcastServiceLogger("Error while connecting to Jitsi", e);
             }
             if (!this.jitsiConnection) {
                 jitsiLoadingStore.set(false);
@@ -134,12 +166,14 @@ export class BroadcastService {
             }
         }
 
+        debug("Joining Jitsi conference, jitsiConnecton is defined" + roomName);
+
         const jitsiConference = await JitsiConferenceWrapper.join(this.jitsiConnection, roomName);
         jitsiConferencesStore.set(roomName, jitsiConference);
 
         if (get(megaphoneEnabledStore)) {
             jitsiConference.broadcast(["video", "audio"]);
-        } else {
+        } else if (broadcastSpace.playSound) {
             gameManager.getCurrentGameScene().playSound("audio-megaphone");
         }
 
@@ -150,7 +184,7 @@ export class BroadcastService {
                 for (const [participantId, stream] of $streamStore) {
                     let found = false;
                     if (stream.spaceUser !== undefined) {
-                        if ($users.has(stream.spaceUser.uuid)) {
+                        if ($users.has(stream.spaceUser.id)) {
                             filtered.set(participantId, stream);
                         }
                         continue;
@@ -164,9 +198,10 @@ export class BroadcastService {
                         }
                     }
                     if (!found) {
-                        console.warn(
-                            "BroadcastService => joinJitsiConference => No associated spaceUser found for participantId",
-                            stream.uniqueId
+                        broadcastServiceLogger(
+                            "BroadcastService => joinJitsiConference => No associated spaceUser found for participantId" +
+                                stream.uniqueId +
+                                $users.values()
                         );
                     }
                 }
@@ -196,10 +231,10 @@ export class BroadcastService {
     }
 
     public checkIfCanDisconnect() {
-        if (this.canDisconnect()) {
-            console.log("Disconnecting from Jitsi");
+        if (this.canDisconnect() && this.jitsiConnection !== undefined) {
+            broadcastServiceLogger("Disconnecting from Jitsi");
             this.jitsiConnection
-                ?.disconnect()
+                .disconnect()
                 .then(() => {
                     this.jitsiConnection = undefined;
                 })

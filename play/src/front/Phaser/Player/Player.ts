@@ -8,6 +8,7 @@ import { Character } from "../Entity/Character";
 
 import { userMovingStore } from "../../Stores/GameStore";
 import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
+import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
@@ -111,7 +112,7 @@ export class Player extends Character {
     }
 
     private deduceSpeed(speedUp: boolean, followMode: boolean): number {
-        return this.pathWalkingSpeed ? this.pathWalkingSpeed : speedUp && !followMode ? 25 : 9;
+        return this.pathWalkingSpeed ? this.pathWalkingSpeed : speedUp && !followMode ? 2.5 * WOKA_SPEED : WOKA_SPEED;
     }
 
     private adjustPathToFollowToColliderBounds(path: { x: number; y: number }[]): { x: number; y: number }[] {

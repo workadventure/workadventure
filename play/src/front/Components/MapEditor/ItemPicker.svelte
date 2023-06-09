@@ -2,11 +2,7 @@
     import type { EntityPrefab } from "@workadventure/map-editor";
     import { onDestroy, onMount } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
-    import {
-        mapEditorSelectedEntityPrefabStore,
-        onMapEditorInputFocus,
-        onMapEditorInputUnfocus,
-    } from "../../Stores/MapEditorStore";
+    import { mapEditorSelectedEntityPrefabStore } from "../../Stores/MapEditorStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
 
     const entitiesCollectionsManager = gameManager.getCurrentGameScene().getEntitiesCollectionsManager();
@@ -129,8 +125,6 @@
             type="search"
             bind:value={filter}
             on:input={onNameChange}
-            on:focus={onMapEditorInputFocus}
-            on:blur={onMapEditorInputUnfocus}
             placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}
         />
         <select class="tag-selector" bind:value={selectedTag} on:change={() => onTagPick()}>

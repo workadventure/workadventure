@@ -14,8 +14,13 @@ class Menu {
         await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).toHaveClass(/border-top-light/);
     }
 
+    async closeMapEditor(page: Page) {
+        await page.getByRole('button', {name: 'toggle-map-editor'}).click();
+        await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).not.toHaveClass(/border-top-light/);
+    }
+
     async toggleMegaphoneButton(page: Page) {
-        await page.locator('.bottom-action-bar .bottom-action-button #megaphone').click();
+        await page.locator('.bottom-action-bar .bottom-action-button #megaphone').click({timeout: 5_000});
     }
 
     async isThereMegaphoneButton(page: Page) {

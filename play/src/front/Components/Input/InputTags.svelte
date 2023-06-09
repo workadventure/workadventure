@@ -9,8 +9,8 @@
     export let label: string;
     export let value: Option[];
     export let options: Option[];
-    export let onFocus: () => void;
-    export let onBlur: () => void;
+    export let onFocus = () => {};
+    export let onBlur = () => {};
 
     let filterText = "";
 

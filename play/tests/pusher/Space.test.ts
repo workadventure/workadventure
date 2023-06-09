@@ -44,6 +44,7 @@ describe("Space", () => {
     });
     it("should notify client and back that a new user is added", () => {
         const spaceUser = SpaceUser.fromPartial({
+            id: 1,
             uuid: "uuid-test",
             name: "test",
             playUri: "test",
@@ -69,6 +70,7 @@ describe("Space", () => {
         eventsClient = [];
         eventsWatcher = [];
         const spaceUser = PartialSpaceUser.fromPartial({
+            id: 1,
             uuid: "uuid-test",
             name: "test2",
             playUri: "test2",
@@ -148,11 +150,12 @@ describe("Space", () => {
         }
         const removeSpaceUserMessage = subMessage.removeSpaceUserMessage;
         expect(removeSpaceUserMessage).toBeDefined();
-        expect(removeSpaceUserMessage?.userUuid).toBe("uuid-test");
+        expect(removeSpaceUserMessage?.userId).toBe(1);
     });
     it("should notify client that have filters that match the user", () => {
         eventsClient = [];
         const spaceUser = SpaceUser.fromPartial({
+            id: 2,
             uuid: "uuid-test2",
             name: "johnny",
             playUri: "test",
@@ -216,12 +219,12 @@ describe("Space", () => {
         expect(addSpaceUserMessage).toBeDefined();
         const user = addSpaceUserMessage.user;
         expect(user).toBeDefined();
-        expect(user?.uuid).toBe("uuid-test");
+        expect(user?.id).toBe(1);
     });
     it("should notify client and back that a user is removed", () => {
         eventsClient = [];
         eventsWatcher = [];
-        space.removeUser("uuid-test");
+        space.removeUser(1);
         expect(eventsClient.some((message) => message.message?.$case === "removeSpaceUserMessage")).toBe(true);
         expect(eventsWatcher.some((message) => message.message?.$case === "removeSpaceUserMessage")).toBe(true);
     });

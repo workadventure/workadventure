@@ -17,9 +17,9 @@ type SpaceUserExtended = { lowercaseName: string } & SpaceUser;
 const debug = Debug("space");
 
 export class Space implements CustomJsonReplacerInterface {
-    private readonly users: Map<string, SpaceUserExtended>;
+    private readonly users: Map<number, SpaceUserExtended>;
 
-    private clientWatchers: Map<string, ExSocketInterface>;
+    private clientWatchers: Map<number, ExSocketInterface>;
 
     constructor(
         public readonly name: string,
@@ -27,14 +27,14 @@ export class Space implements CustomJsonReplacerInterface {
         public backId: number,
         watcher: ExSocketInterface
     ) {
-        this.users = new Map<string, SpaceUserExtended>();
-        this.clientWatchers = new Map<string, ExSocketInterface>();
+        this.users = new Map<number, SpaceUserExtended>();
+        this.clientWatchers = new Map<number, ExSocketInterface>();
         this.addClientWatcher(watcher);
         debug(`created : ${name}`);
     }
 
     public addClientWatcher(watcher: ExSocketInterface) {
-        this.clientWatchers.set(watcher.userUuid, watcher);
+        this.clientWatchers.set(watcher.userId, watcher);
         this.users.forEach((user) => {
             if (this.isWatcherTargeted(watcher, user)) {
                 const filterOfThisSpace = watcher.spacesFilters.get(this.name) ?? [];
@@ -51,7 +51,7 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     public removeClientWatcher(watcher: ExSocketInterface) {
-        this.clientWatchers.delete(watcher.userUuid);
+        this.clientWatchers.delete(watcher.userId);
     }
 
     public addUser(spaceUser: SpaceUser) {
@@ -66,13 +66,13 @@ export class Space implements CustomJsonReplacerInterface {
             },
         };
         this.spaceStreamToPusher.write(pusherToBackSpaceMessage);
-        debug(`${this.name} : user add sent ${spaceUser.uuid}`);
+        debug(`${this.name} : user add sent ${spaceUser.id}`);
         this.localAddUser(spaceUser);
     }
     public localAddUser(spaceUser: SpaceUser) {
         const user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase() };
-        this.users.set(spaceUser.uuid, user);
-        debug(`${this.name} : user added ${spaceUser.uuid}`);
+        this.users.set(spaceUser.id, user);
+        debug(`${this.name} : user added ${spaceUser.id}`);
 
         const subMessage: SubMessage = {
             message: {
@@ -99,12 +99,12 @@ export class Space implements CustomJsonReplacerInterface {
             },
         };
         this.spaceStreamToPusher.write(pusherToBackSpaceMessage);
-        debug(`${this.name} : user update sent ${spaceUser.uuid}`);
+        debug(`${this.name} : user update sent ${spaceUser.id}`);
         this.localUpdateUser(spaceUser);
     }
     public localUpdateUser(spaceUser: PartialSpaceUser) {
         let oldUser: SpaceUserExtended | undefined;
-        const user = this.users.get(spaceUser.uuid);
+        const user = this.users.get(spaceUser.id);
         if (user) {
             oldUser = structuredClone(user);
             if (spaceUser.tags.length > 0) {
@@ -150,8 +150,10 @@ export class Space implements CustomJsonReplacerInterface {
             if (spaceUser.jitsiParticipantId) {
                 user.jitsiParticipantId = spaceUser.jitsiParticipantId;
             }
-            //this.users.set(spaceUser.uuid, user);
-            debug(`${this.name} : user updated ${spaceUser.uuid}`);
+            if (spaceUser.uuid) {
+                user.uuid = spaceUser.uuid;
+            }
+            debug(`${this.name} : user updated ${spaceUser.id}`);
 
             const subMessage: SubMessage = {
                 message: {
@@ -164,44 +166,46 @@ export class Space implements CustomJsonReplacerInterface {
                 },
             };
             this.notifyAll(subMessage, user, oldUser);
+        } else {
+            console.error("User not found in this space", spaceUser);
         }
     }
 
-    public removeUser(userUuid: string) {
+    public removeUser(userId: number) {
         const pusherToBackSpaceMessage: PusherToBackSpaceMessage = {
             message: {
                 $case: "removeSpaceUserMessage",
                 removeSpaceUserMessage: {
                     spaceName: this.name,
-                    userUuid,
+                    userId,
                     filterName: undefined,
                 },
             },
         };
         this.spaceStreamToPusher.write(pusherToBackSpaceMessage);
-        debug(`${this.name} : user remove sent ${userUuid}`);
-        this.localRemoveUser(userUuid);
+        debug(`${this.name} : user remove sent ${userId}`);
+        this.localRemoveUser(userId);
     }
-    public localRemoveUser(userUuid: string) {
-        const user = this.users.get(userUuid);
+    public localRemoveUser(userId: number) {
+        const user = this.users.get(userId);
         if (user) {
-            this.users.delete(userUuid);
-            debug(`${this.name} : user removed ${userUuid}`);
+            this.users.delete(userId);
+            debug(`${this.name} : user removed ${userId}`);
 
             const subMessage: SubMessage = {
                 message: {
                     $case: "removeSpaceUserMessage",
                     removeSpaceUserMessage: {
                         spaceName: this.name,
-                        userUuid,
+                        userId,
                         filterName: undefined,
                     },
                 },
             };
             this.notifyAll(subMessage, user);
         } else {
-            console.error(`Space => ${this.name} : user not found ${userUuid}`);
-            Sentry.captureException(`Space => ${this.name} : user not found ${userUuid}`);
+            console.error(`Space => ${this.name} : user not found ${userId}`);
+            Sentry.captureException(`Space => ${this.name} : user not found ${userId}`);
         }
     }
 
@@ -257,13 +261,13 @@ export class Space implements CustomJsonReplacerInterface {
 
     public filter(
         spaceFilter: SpaceFilterMessage,
-        users: Map<string, SpaceUserExtended> | null = null
-    ): Map<string, SpaceUserExtended> {
-        const usersFiltered = new Map<string, SpaceUserExtended>();
+        users: Map<number, SpaceUserExtended> | null = null
+    ): Map<number, SpaceUserExtended> {
+        const usersFiltered = new Map<number, SpaceUserExtended>();
         const usersToFilter = users ?? this.users;
         usersToFilter.forEach((user) => {
             if (this.filterOneUser(spaceFilter, user)) {
-                usersFiltered.set(user.uuid, user);
+                usersFiltered.set(user.id, user);
             }
         });
         return usersFiltered;
@@ -297,7 +301,7 @@ export class Space implements CustomJsonReplacerInterface {
     public handleAddFilter(watcher: ExSocketInterface, updateSpaceFilterMessage: UpdateSpaceFilterMessage) {
         const newFilter = updateSpaceFilterMessage.spaceFilterMessage;
         if (newFilter) {
-            debug(`${this.name} : filter added (${newFilter.filterName}) for ${watcher.userUuid}`);
+            debug(`${this.name} : filter added (${newFilter.filterName}) for ${watcher.userId}`);
             const newData = this.filter(newFilter);
             this.delta(watcher, this.users, newData, newFilter.filterName);
         }
@@ -310,7 +314,7 @@ export class Space implements CustomJsonReplacerInterface {
                 .get(this.name)
                 ?.find((filter) => filter.filterName === newFilter.filterName);
             if (oldFilter) {
-                debug(`${this.name} : filter updated (${newFilter.filterName}) for ${watcher.userUuid}`);
+                debug(`${this.name} : filter updated (${newFilter.filterName}) for ${watcher.userId}`);
                 const oldData = this.filter(oldFilter);
                 const newData = this.filter(newFilter);
                 this.delta(watcher, oldData, newData, newFilter.filterName);
@@ -321,7 +325,7 @@ export class Space implements CustomJsonReplacerInterface {
     public handleRemoveFilter(watcher: ExSocketInterface, removeSpaceFilterMessage: RemoveSpaceFilterMessage) {
         const oldFilter = removeSpaceFilterMessage.spaceFilterMessage;
         if (oldFilter) {
-            debug(`${this.name} : filter removed (${oldFilter.filterName}) for ${watcher.userUuid}`);
+            debug(`${this.name} : filter removed (${oldFilter.filterName}) for ${watcher.userId}`);
             const oldData = this.filter(oldFilter);
             this.delta(watcher, oldData, this.users, undefined);
         }
@@ -329,14 +333,14 @@ export class Space implements CustomJsonReplacerInterface {
 
     private delta(
         watcher: ExSocketInterface,
-        oldData: Map<string, SpaceUserExtended>,
-        newData: Map<string, SpaceUserExtended>,
+        oldData: Map<number, SpaceUserExtended>,
+        newData: Map<number, SpaceUserExtended>,
         filterName: string | undefined
     ) {
         let addedUsers = 0;
         // Check delta between responses by old and new filter
         newData.forEach((user) => {
-            if (!oldData.has(user.uuid)) {
+            if (!oldData.has(user.id)) {
                 this.notifyMeAddUser(watcher, user, filterName);
                 addedUsers++;
             }
@@ -344,15 +348,13 @@ export class Space implements CustomJsonReplacerInterface {
 
         let removedUsers = 0;
         oldData.forEach((user) => {
-            if (!newData.has(user.uuid)) {
+            if (!newData.has(user.id)) {
                 this.notifyMeRemoveUser(watcher, user, filterName);
                 removedUsers++;
             }
         });
 
-        debug(
-            `${this.name} : filter calculated for ${watcher.userUuid} (${addedUsers} added, ${removedUsers} removed)`
-        );
+        debug(`${this.name} : filter calculated for ${watcher.userId} (${addedUsers} added, ${removedUsers} removed)`);
     }
 
     private notifyMeAddUser(watcher: ExSocketInterface, user: SpaceUserExtended, filterName: string | undefined) {
@@ -375,7 +377,7 @@ export class Space implements CustomJsonReplacerInterface {
                 $case: "removeSpaceUserMessage",
                 removeSpaceUserMessage: {
                     spaceName: this.name,
-                    userUuid: user.uuid,
+                    userId: user.id,
                     filterName,
                 },
             },
