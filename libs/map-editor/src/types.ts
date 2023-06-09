@@ -36,6 +36,7 @@ export const SilentPropertyData = PropertyBase.extend({
 
 export const StartPropertyData = PropertyBase.extend({
     type: z.literal("start"),
+    name: z.string(),
 });
 
 export const JitsiRoomPropertyData = PropertyBase.extend({
@@ -83,8 +84,14 @@ export const ListenerMegaphonePropertyData = PropertyBase.extend({
     chatEnabled: z.boolean().default(false),
 });
 
+export const ExitPropertyData = PropertyBase.extend({
+    type: z.literal("exit"),
+    url: z.string(),
+});
+
 export const AreaDataProperty = z.union([
     StartPropertyData,
+    ExitPropertyData,
     FocusablePropertyData,
     SilentPropertyData,
     JitsiRoomPropertyData,
@@ -229,6 +236,7 @@ export type AreaDataProperty = z.infer<typeof AreaDataProperty>;
 export type AreaDataPropertiesKeys = AreaDataProperty["type"];
 export type ActionsMenuData = z.infer<typeof PropertyBase>;
 export type StartPropertyData = z.infer<typeof StartPropertyData>;
+export type ExitPropertyData = z.infer<typeof ExitPropertyData>;
 export type SilentPropertyData = z.infer<typeof SilentPropertyData>;
 export type FocusablePropertyData = z.infer<typeof FocusablePropertyData>;
 export type JitsiRoomConfigData = z.infer<typeof JitsiRoomConfigData>;

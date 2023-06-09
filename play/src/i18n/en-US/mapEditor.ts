@@ -90,6 +90,18 @@ const mapEditor: BaseTranslation = {
             nameLabel: "SpeakerZone Name",
             namePlaceholder: "MySpeakerZone",
         },
+        startProperties: {
+            label: "Start",
+            description: "",
+            nameLabel: "Start name",
+            namePlaceholder: "Enter1",
+        },
+        exitProperties: {
+            label: "Exit",
+            description: "",
+            exitMap: "Exit map",
+            exitMapStartAreaName: "Start area name",
+        },
         chatEnabled: "Associate a dedicated chat channel",
     },
     areaEditor: {

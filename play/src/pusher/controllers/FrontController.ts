@@ -3,12 +3,19 @@ import type { Request, Response, Server } from "hyper-express";
 import Mustache from "mustache";
 import { uuid } from "stanza/Utils";
 import * as Sentry from "@sentry/node";
+import axios from "axios";
 import { MetaTagsBuilder } from "../services/MetaTagsBuilder";
 import type { LiveDirectory } from "../models/LiveDirectory";
 import { adminService } from "../services/AdminService";
 import { notWaHost } from "../middlewares/NotWaHost";
 import { version } from "../../../package.json";
-import { FRONT_ENVIRONMENT_VARIABLES, VITE_URL, LOGROCKET_ID, ADMIN_URL } from "../enums/EnvironmentVariable";
+import {
+    FRONT_ENVIRONMENT_VARIABLES,
+    VITE_URL,
+    LOGROCKET_ID,
+    ADMIN_URL,
+    PUBLIC_MAP_STORAGE_URL,
+} from "../enums/EnvironmentVariable";
 import { BaseHttpController } from "./BaseHttpController";
 
 export class FrontController extends BaseHttpController {
@@ -168,6 +175,15 @@ export class FrontController extends BaseHttpController {
                 icon: process.env.SERVER_ICON || process.env.PUSHER_URL + "/static/images/favicons/icon-512x512.png",
                 version: version + (process.env.NODE_ENV !== "production" ? "-dev" : ""),
             });
+        });
+
+        this.app.get("/maps", async (req: Request, res: Response) => {
+            const response = await axios.get(`${PUBLIC_MAP_STORAGE_URL}/maps`);
+            let maps = [];
+            if (response.data && response.data.maps) {
+                maps = response.data.maps;
+            }
+            return res.json({ maps });
         });
 
         this.app.get("/*", (req: Request, res: Response) => {
