@@ -1,4 +1,3 @@
-import fs from "fs";
 import {expect, test, webkit} from '@playwright/test';
 import Menu from "./utils/menu";
 import {login} from "./utils/roles";
