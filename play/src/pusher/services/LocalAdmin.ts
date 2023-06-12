@@ -76,7 +76,7 @@ class LocalAdmin implements AdminInterface {
 
         let mapUrl = undefined;
         let wamUrl = undefined;
-        const canEdit = false;
+        const canEdit = ENABLE_MAP_EDITOR;
 
         let match = /\/~\/(.+)/.exec(roomUrl.pathname);
         if (match) {

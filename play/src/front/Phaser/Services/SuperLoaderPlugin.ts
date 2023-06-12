@@ -111,6 +111,9 @@ export class SuperLoaderPlugin {
 
             const resource = fromCache();
             if (resource !== undefined) {
+                if (immediateCallback) {
+                    immediateCallback(key, type, resource);
+                }
                 return res(resource);
             }
 
