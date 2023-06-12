@@ -54,6 +54,7 @@
                     id,
                     type,
                     jitsiRoomConfig: {},
+                    closable: true,
                     roomName: "JITSI ROOM",
                     buttonLabel: "Connect to Jitsi",
                 };

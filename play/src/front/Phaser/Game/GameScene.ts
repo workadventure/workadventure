@@ -56,7 +56,6 @@ import type {
 } from "../../Connexion/ConnexionModels";
 import type { RoomConnection } from "../../Connexion/RoomConnection";
 import type { ActionableItem } from "../Items/ActionableItem";
-import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import { peerStore } from "../../Stores/PeerStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
@@ -330,7 +329,7 @@ export class GameScene extends DirtyScene {
                 this.load.on(
                     "filecomplete-tilemapJSON-" + this.mapUrlFile,
                     (key: string, type: string, data: unknown) => {
-                        this.onMapLoad(data).catch((e) => console.error(e));
+                        this.onMapLoad(data);
                     }
                 );
                 return;
@@ -354,14 +353,14 @@ export class GameScene extends DirtyScene {
                 this.load.on(
                     "filecomplete-tilemapJSON-" + this.mapUrlFile,
                     (key: string, type: string, data: unknown) => {
-                        this.onMapLoad(data).catch((e) => console.error(e));
+                        this.onMapLoad(data);
                     }
                 );
                 // If the map has already been loaded as part of another GameScene, the "on load" event will not be triggered.
                 // In this case, we check in the cache to see if the map is here and trigger the event manually.
                 if (this.cache.tilemap.exists(this.mapUrlFile)) {
                     const data = this.cache.tilemap.get(this.mapUrlFile);
-                    this.onMapLoad(data.data).catch((e) => console.error(e));
+                    this.onMapLoad(data.data);
                 }
                 return;
             }
@@ -447,20 +446,20 @@ export class GameScene extends DirtyScene {
 
     private doLoadTMJFile(mapUrlFile: string): void {
         this.load.on("filecomplete-tilemapJSON-" + mapUrlFile, (key: string, type: string, data: unknown) => {
-            this.onMapLoad(data).catch((e) => console.error(e));
+            this.onMapLoad(data);
         });
         this.load.tilemapTiledJSON(mapUrlFile, mapUrlFile);
         // If the map has already been loaded as part of another GameScene, the "on load" event will not be triggered.
         // In this case, we check in the cache to see if the map is here and trigger the event manually.
         if (this.cache.tilemap.exists(mapUrlFile)) {
             const data = this.cache.tilemap.get(mapUrlFile);
-            this.onMapLoad(data.data).catch((e) => console.error(e));
+            this.onMapLoad(data.data);
         }
     }
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async onMapLoad(data: any): Promise<void> {
+    private onMapLoad(data: any): void {
         // Triggered when the map is loaded
         // Load tiles attached to the map recursively
         // The map file can be modified by the scripting API and we don't want to tamper the Phaser cache (in case we come back on the map after visiting other maps)
@@ -517,48 +516,6 @@ export class GameScene extends DirtyScene {
                     }
                 }
             }
-        }
-
-        for (const [itemType, objectsOfType] of this.objectsByType) {
-            // FIXME: we would ideally need for the loader to WAIT for the import to be performed, which means writing our own loader plugin.
-
-            let itemFactory: ItemFactoryInterface;
-
-            switch (itemType) {
-                case "computer": {
-                    const module = await import("../Items/Computer/computer");
-                    itemFactory = module.default;
-                    break;
-                }
-                default:
-                    continue;
-                //throw new Error('Unsupported object type: "'+ itemType +'"');
-            }
-
-            itemFactory.preload(this.load);
-            this.load.start(); // Let's manually start the loader because the import might be over AFTER the loading ends.
-
-            this.load.on("complete", () => {
-                // FIXME: the factory might fail because the resources might not be loaded yet...
-                // We would need to add a loader ended event in addition to the createPromise
-                this.createPromiseDeferred.promise
-                    .then(async () => {
-                        itemFactory.create(this);
-
-                        const roomJoinedAnswer = await this.connectionAnswerPromiseDeferred.promise;
-
-                        for (const object of objectsOfType) {
-                            // TODO: we should pass here a factory to create sprites (maybe?)
-
-                            // Do we have a state for this object?
-                            const state = roomJoinedAnswer.items[object.id];
-
-                            const actionableItem = itemFactory.factory(this, object, state);
-                            this.actionableItems.set(actionableItem.getId(), actionableItem);
-                        }
-                    })
-                    .catch((e) => console.error(e));
-            });
         }
     }
 
