@@ -2,9 +2,9 @@
     import axios from "axios";
     import { createEventDispatcher } from "svelte";
     import { OpenWebsitePropertyData } from "@workadventure/map-editor";
-    import {EmbeddableResponse} from "@workadventure/messages";
+    import { EmbeddableResponse } from "@workadventure/messages";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import {PUSHER_URL} from "../../../Enum/EnvironmentVariable";
+    import { PUSHER_URL } from "../../../Enum/EnvironmentVariable";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: OpenWebsitePropertyData;
@@ -37,50 +37,53 @@
     }
 
     async function checkEmbeddableWebsite() {
-        if(property.link === oldValue){
+        if (property.link === oldValue) {
             return;
         }
         embeddableLoading = true;
-        await axios.get(PUSHER_URL + '/embeddable?url=' + property.link)
-                .then((response) => {
-                    const data = EmbeddableResponse.parse(response.data);
-                    if(data.state === "success") {
-                        embeddable = data.embeddable;
-                        property.newTab = oldNewTabValue;
-                        if(!oldNewTabValue){
-                            optionAdvancedActivated = false;
-                        }
-                    } else {
-                        optionAdvancedActivated = true;
-                        property.newTab = true;
-                        embeddable = false;
+        await axios
+            .get(PUSHER_URL + "/embeddable?url=" + property.link)
+            .then((response) => {
+                const data = EmbeddableResponse.parse(response.data);
+                if (data.state === "success") {
+                    embeddable = data.embeddable;
+                    property.newTab = oldNewTabValue;
+                    if (!oldNewTabValue) {
+                        optionAdvancedActivated = false;
+                    }
+                } else {
+                    optionAdvancedActivated = true;
+                    property.newTab = true;
+                    embeddable = false;
+                    if (data.message) {
                         error = data.message;
                     }
-                })
-                .catch((e) => {
-                    embeddable = false;
-                    error = e.response.data.message ?? $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
-                    console.info("Error to check embeddable website", e);
-                    property.link = oldValue;
-                })
-                .finally(() => {
-                    embeddableLoading = false;
-                    oldValue = property.link;
-                    onValueChange();
-                });
+                }
+            })
+            .catch((e) => {
+                embeddable = false;
+                error = e.response.data.message ?? $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                console.info("Error to check embeddable website", e);
+                property.link = oldValue;
+            })
+            .finally(() => {
+                embeddableLoading = false;
+                oldValue = property.link;
+                onValueChange();
+            });
     }
 </script>
 
 <PropertyEditorBase
-        on:close={() => {
+    on:close={() => {
         dispatch("close");
     }}
 >
     <span slot="header" class="tw-flex tw-justify-center tw-items-center">
         <img
-                class="tw-w-6 tw-mr-1"
-                src="resources/icons/icon_link.png"
-                alt={$LL.mapEditor.properties.linkProperties.description()}
+            class="tw-w-6 tw-mr-1"
+            src="resources/icons/icon_link.png"
+            alt={$LL.mapEditor.properties.linkProperties.description()}
         />
         {$LL.mapEditor.properties.linkProperties.label()}
     </span>
@@ -88,10 +91,10 @@
         <div>
             <label class="tw-m-0" for="trigger">{$LL.mapEditor.properties.linkProperties.trigger()}</label>
             <select
-                    id="trigger"
-                    class="tw-w-full tw-m-0"
-                    bind:value={property.trigger}
-                    on:change={onTriggerValueChange}
+                id="trigger"
+                class="tw-w-full tw-m-0"
+                bind:value={property.trigger}
+                on:change={onTriggerValueChange}
             >
                 <option value={undefined}>{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option>
                 {#if !property.newTab}
@@ -103,18 +106,16 @@
         <div class="value-input tw-flex tw-flex-col">
             <label for="tabLink">{$LL.mapEditor.properties.linkProperties.linkLabel()}</label>
             <input
-                    id="tabLink"
-                    type="text"
-                    placeholder={$LL.mapEditor.properties.linkProperties.linkPlaceholder()}
-                    bind:value={property.link}
-                    on:change={onValueChange}
-                    on:blur={checkEmbeddableWebsite}
-                    disabled={embeddableLoading ? "disabled" : undefined}
+                id="tabLink"
+                type="text"
+                placeholder={$LL.mapEditor.properties.linkProperties.linkPlaceholder()}
+                bind:value={property.link}
+                on:change={onValueChange}
+                on:blur={checkEmbeddableWebsite}
+                disabled={embeddableLoading}
             />
             {#if !embeddable}
-                <span class="err tw-text-pop-red tw-text-xs tw-italic"
-                >{error}</span
-                >
+                <span class="err tw-text-pop-red tw-text-xs tw-italic">{error}</span>
             {/if}
         </div>
         {#if !property.hideButtonLabel}
@@ -132,68 +133,68 @@
                 <div class="value-input tw-flex tw-flex-col">
                     <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>
                     <input
-                            id="triggerMessage"
-                            type="text"
-                            bind:value={property.triggerMessage}
-                            on:change={onValueChange}
+                        id="triggerMessage"
+                        type="text"
+                        bind:value={property.triggerMessage}
+                        on:change={onValueChange}
                     />
                 </div>
             {/if}
             <div class="value-switch">
                 <label for="newTab">{$LL.mapEditor.properties.linkProperties.newTabLabel()}</label>
                 <input
-                        id="newTab"
-                        type="checkbox"
-                        class="input-switch"
-                        bind:checked={property.newTab}
-                        on:change={onNewTabValueChange}
-                        disabled={!embeddable}
+                    id="newTab"
+                    type="checkbox"
+                    class="input-switch"
+                    bind:checked={property.newTab}
+                    on:change={onNewTabValueChange}
+                    disabled={!embeddable}
                 />
             </div>
             {#if !property.newTab}
                 <div class="">
                     <label for="websiteWidth"
-                    >{$LL.mapEditor.properties.linkProperties.width()}: {property.width ?? 50}%</label
+                        >{$LL.mapEditor.properties.linkProperties.width()}: {property.width ?? 50}%</label
                     >
                     <input
-                            id="websiteWidth"
-                            type="range"
-                            min="0"
-                            max="100"
-                            placeholder="50"
-                            bind:value={property.width}
-                            on:change={onValueChange}
+                        id="websiteWidth"
+                        type="range"
+                        min="0"
+                        max="100"
+                        placeholder="50"
+                        bind:value={property.width}
+                        on:change={onValueChange}
                     />
                 </div>
             {/if}
             <div class="value-switch">
                 <label for="closable">{$LL.mapEditor.properties.linkProperties.closable()}</label>
                 <input
-                        id="closable"
-                        type="checkbox"
-                        class="input-switch"
-                        bind:checked={property.closable}
-                        on:change={onValueChange}
+                    id="closable"
+                    type="checkbox"
+                    class="input-switch"
+                    bind:checked={property.closable}
+                    on:change={onValueChange}
                 />
             </div>
             <div class="value-switch">
                 <label for="allowAPI">{$LL.mapEditor.properties.linkProperties.allowAPI()}</label>
                 <input
-                        id="allowAPI"
-                        type="checkbox"
-                        class="input-switch"
-                        bind:checked={property.allowAPI}
-                        on:change={onValueChange}
+                    id="allowAPI"
+                    type="checkbox"
+                    class="input-switch"
+                    bind:checked={property.allowAPI}
+                    on:change={onValueChange}
                 />
             </div>
             <div class="value-input tw-flex tw-flex-col">
                 <label for="policy">{$LL.mapEditor.properties.linkProperties.policy()}</label>
                 <input
-                        id="policy"
-                        type="text"
-                        placeholder={$LL.mapEditor.properties.linkProperties.policyPlaceholder()}
-                        bind:value={property.policy}
-                        on:change={onValueChange}
+                    id="policy"
+                    type="text"
+                    placeholder={$LL.mapEditor.properties.linkProperties.policyPlaceholder()}
+                    bind:value={property.policy}
+                    on:change={onValueChange}
                 />
             </div>
         </div>

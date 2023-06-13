@@ -618,7 +618,7 @@ export class SocketManager implements ZoneEventListener {
 
     leaveSpaces(socket: ExSocketInterface) {
         socket.spacesFilters = new Map<string, SpaceFilterMessage[]>();
-        socket.spaces.forEach((space) => {
+        (socket.spaces ?? []).forEach((space) => {
             space.removeClientWatcher(socket);
             space.removeUser(socket.spaceUser.id);
             this.deleteSpaceIfEmpty(space);
