@@ -55,7 +55,14 @@ export default defineConfig(({ mode }) => {
     };
 
     if (env.SENTRY_ORG && env.SENTRY_PROJECT && env.SENTRY_AUTH_TOKEN && env.SENTRY_RELEASE && env.SENTRY_ENVIRONMENT) {
-        console.log("Sentry plugin enabled");
+        console.log(
+            "Sentry plugin enabled",
+            env.SENTRY_ORG,
+            env.SENTRY_PROJECT,
+            env.SENTRY_AUTH_TOKEN,
+            env.SENTRY_RELEASE,
+            env.SENTRY_ENVIRONMENT
+        );
         config.plugins.push(
             sentryVitePlugin({
                 org: env.SENTRY_ORG,
