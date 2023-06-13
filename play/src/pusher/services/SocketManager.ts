@@ -1162,8 +1162,7 @@ export class SocketManager implements ZoneEventListener {
                 );
             })
             .catch((error) => {
-                console.error("ApiController => embeddableUrl", url, error.cause);
-                Sentry.captureException(`Error while checking if a website (${url}) is embeddable in an iframe`, error);
+                debug(`ApiController => embeddableUrl : ${url} ${error.cause}`);
                 client.send(
                     ServerToClientMessage.encode({
                         message: {
