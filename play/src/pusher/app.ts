@@ -21,7 +21,7 @@ import { adminApi } from "./services/AdminApi";
 import { jwtTokenManager } from "./services/JWTTokenManager";
 import { CompanionService } from "./services/CompanionService";
 import { WokaService } from "./services/WokaService";
-import {ApiController} from "./controllers/ApiController";
+import { ApiController } from "./controllers/ApiController";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LiveDirectory = require("live-directory");
 
