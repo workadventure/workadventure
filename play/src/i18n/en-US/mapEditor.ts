@@ -76,6 +76,8 @@ const mapEditor: BaseTranslation = {
             policy: "iFrame Allow",
             policyPlaceholder: "fullscreen",
             errorEmbeddableLink: "The link is not embeddable",
+            warningEmbeddableLink: "The link is not embeddable. It will open in a new tab",
+            findOutMoreHere: "Find out more here",
         },
         advancedOptions: "Advanced Options",
         speakerMegaphoneProperties: {

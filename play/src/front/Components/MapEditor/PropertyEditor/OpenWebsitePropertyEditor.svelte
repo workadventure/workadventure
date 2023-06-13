@@ -1,16 +1,25 @@
 <script lang="ts">
-    import axios from "axios";
-    import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher, onMount } from "svelte";
     import { OpenWebsitePropertyData } from "@workadventure/map-editor";
+    import { AlertTriangleIcon } from "svelte-feather-icons";
     import { LL } from "../../../../i18n/i18n-svelte";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: OpenWebsitePropertyData;
     export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
     let optionAdvancedActivated = false;
-    let embedable = true;
+    let embeddable = true;
+    let embeddableLoading = false;
+    let oldValue = property.link;
+    let error = "";
+    let oldNewTabValue = property.newTab;
 
     const dispatch = createEventDispatcher();
+
+    onMount(() => {
+        checkEmbeddableWebsite();
+    });
 
     function onTriggerValueChange() {
         triggerOnActionChoosen = property.trigger === "onaction";
@@ -30,15 +39,43 @@
         dispatch("change");
     }
 
-    async function checkEmbedableWebsite() {
-        await axios
-            .get(property.link)
-            .then((data) => {
-                embedable = data.headers["x-frame-options"] && data.headers["x-frame-options"] != "sameorigin";
+    function checkEmbeddableWebsite() {
+        embeddableLoading = true;
+        error = "";
+        gameManager
+            .getCurrentGameScene()
+            .connection?.queryEmbeddableWebsite(property.link)
+            .then((answer) => {
+                if (answer) {
+                    if (answer.message) {
+                        error = answer.message;
+                    }
+                    if (!answer.state) {
+                        throw new Error(answer.message);
+                    }
+                    embeddable = answer.embeddable;
+                    property.newTab = oldNewTabValue;
+                    if (answer.embeddable) {
+                        if (!oldNewTabValue) {
+                            optionAdvancedActivated = false;
+                        }
+                    } else {
+                        optionAdvancedActivated = true;
+                        property.newTab = true;
+                        embeddable = false;
+                    }
+                }
             })
             .catch((e) => {
-                embedable = false;
-                console.info("Error to check embedable website", e);
+                embeddable = false;
+                error = e.response?.data?.message ?? $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                console.info("Error to check embeddable website", e);
+                property.link = oldValue;
+            })
+            .finally(() => {
+                embeddableLoading = false;
+                oldValue = property.link;
+                onValueChange();
             });
     }
 </script>
@@ -80,11 +117,20 @@
                 placeholder={$LL.mapEditor.properties.linkProperties.linkPlaceholder()}
                 bind:value={property.link}
                 on:change={onValueChange}
-                on:blur={checkEmbedableWebsite}
+                on:blur={checkEmbeddableWebsite}
+                disabled={embeddableLoading}
             />
-            {#if !embedable}
-                <span class="err tw-text-pop-red tw-text-xs tw-italic"
-                    >{$LL.mapEditor.properties.linkProperties.errorEmbeddableLink()}</span
+            {#if !embeddable && error}
+                <span class="err tw-text-pop-red tw-text-xs tw-italic tw-mt-1">{error}</span>
+            {/if}
+            {#if !embeddable && !error}
+                <span class="err tw-text-orange tw-text-xs tw-italic tw-mt-1"
+                    ><AlertTriangleIcon size="12" />
+                    {$LL.mapEditor.properties.linkProperties.warningEmbeddableLink()}.
+                    <a
+                        href="https://workadventu.re/map-building/troubleshooting.md#content-issues-embedding-a-website"
+                        target="_blank">{$LL.mapEditor.properties.linkProperties.findOutMoreHere()}</a
+                    >.</span
                 >
             {/if}
         </div>
@@ -118,6 +164,7 @@
                     class="input-switch"
                     bind:checked={property.newTab}
                     on:change={onNewTabValueChange}
+                    disabled={!embeddable}
                 />
             </div>
             {#if !property.newTab}

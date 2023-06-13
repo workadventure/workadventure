@@ -34,6 +34,7 @@ import {
     QueryMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
+import axios from "axios";
 import { PusherRoom } from "../models/PusherRoom";
 import type { ExSocketInterface, BackSpaceConnection } from "../models/Websocket/ExSocketInterface";
 
@@ -618,7 +619,7 @@ export class SocketManager implements ZoneEventListener {
 
     leaveSpaces(socket: ExSocketInterface) {
         socket.spacesFilters = new Map<string, SpaceFilterMessage[]>();
-        socket.spaces.forEach((space) => {
+        (socket.spaces ?? []).forEach((space) => {
             space.removeClientWatcher(socket);
             space.removeUser(socket.spaceUser.id);
             this.deleteSpaceIfEmpty(space);
@@ -1129,6 +1130,60 @@ export class SocketManager implements ZoneEventListener {
             client.spaces = client.spaces.filter((space) => space.name !== spaceName);
             this.deleteSpaceIfEmpty(space);
         }
+    }
+
+    async handleEmbeddableWebsiteQuery(client: ExSocketInterface, queryMessage: QueryMessage) {
+        if (queryMessage.query?.$case !== "embeddableWebsiteQuery") {
+            return;
+        }
+        const url = queryMessage.query.embeddableWebsiteQuery.url;
+
+        await axios
+            .head(url, { timeout: 5_000 })
+            .then((response) => {
+                client.send(
+                    ServerToClientMessage.encode({
+                        message: {
+                            $case: "answerMessage",
+                            answerMessage: {
+                                id: queryMessage.id,
+                                answer: {
+                                    $case: "embeddableWebsiteAnswer",
+                                    embeddableWebsiteAnswer: {
+                                        url,
+                                        state: true,
+                                        embeddable: !response.headers["x-frame-options"],
+                                    },
+                                },
+                            },
+                        },
+                    }).finish(),
+                    true
+                );
+            })
+            .catch((error) => {
+                debug(`ApiController => embeddableUrl : ${url} ${error.cause}`);
+                client.send(
+                    ServerToClientMessage.encode({
+                        message: {
+                            $case: "answerMessage",
+                            answerMessage: {
+                                id: queryMessage.id,
+                                answer: {
+                                    $case: "embeddableWebsiteAnswer",
+                                    embeddableWebsiteAnswer: {
+                                        url,
+                                        state: false,
+                                        embeddable: false,
+                                        message: "URL is not reachable",
+                                    },
+                                },
+                            },
+                        },
+                    }).finish(),
+                    true
+                );
+            });
     }
 }
 

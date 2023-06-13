@@ -45,6 +45,7 @@ import {
     MegaphoneSettings,
     UpdateWAMSettingsMessage,
     UnwatchSpaceMessage,
+    EmbeddableWebsiteAnswer,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { AreaData, AtLeast, WAMEntityData } from "@workadventure/map-editor";
@@ -1478,6 +1479,19 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Unexpected answer");
         }
         return answer.roomTagsAnswer.tags;
+    }
+
+    public async queryEmbeddableWebsite(url: string): Promise<EmbeddableWebsiteAnswer> {
+        const answer = await this.query({
+            $case: "embeddableWebsiteQuery",
+            embeddableWebsiteQuery: {
+                url,
+            },
+        });
+        if (answer.$case !== "embeddableWebsiteAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.embeddableWebsiteAnswer;
     }
 
     /**
