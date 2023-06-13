@@ -44,24 +44,29 @@
             .getCurrentGameScene()
             .connection?.queryEmbeddableWebsite(property.link)
             .then((answer) => {
-                if (answer.state) {
-                    embeddable = answer.embeddable;
-                    property.newTab = oldNewTabValue;
-                    if (!oldNewTabValue) {
-                        optionAdvancedActivated = false;
-                    }
-                } else {
-                    optionAdvancedActivated = true;
-                    property.newTab = true;
-                    embeddable = false;
+                if (answer) {
                     if (answer.message) {
                         error = answer.message;
+                    }
+                    if (!answer.state) {
+                        throw new Error(answer.message);
+                    }
+                    embeddable = answer.embeddable;
+                    property.newTab = oldNewTabValue;
+                    if (answer.embeddable) {
+                        if (!oldNewTabValue) {
+                            optionAdvancedActivated = false;
+                        }
+                    } else {
+                        optionAdvancedActivated = true;
+                        property.newTab = true;
+                        embeddable = false;
                     }
                 }
             })
             .catch((e) => {
                 embeddable = false;
-                error = e.response.data.message ?? $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                error = e.response?.data?.message ?? $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
                 console.info("Error to check embeddable website", e);
                 property.link = oldValue;
             })
