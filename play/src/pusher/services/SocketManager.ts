@@ -34,6 +34,7 @@ import {
     QueryMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
+import axios from "axios";
 import { PusherRoom } from "../models/PusherRoom";
 import type { ExSocketInterface, BackSpaceConnection } from "../models/Websocket/ExSocketInterface";
 
@@ -1129,6 +1130,61 @@ export class SocketManager implements ZoneEventListener {
             client.spaces = client.spaces.filter((space) => space.name !== spaceName);
             this.deleteSpaceIfEmpty(space);
         }
+    }
+
+    async handleEmbeddableWebsiteQuery(client: ExSocketInterface, queryMessage: QueryMessage) {
+        if (queryMessage.query?.$case !== "embeddableWebsiteQuery") {
+            return;
+        }
+        const url = queryMessage.query.embeddableWebsiteQuery.url;
+
+        await axios
+            .head(url, { timeout: 5_000 })
+            .then((response) => {
+                client.send(
+                    ServerToClientMessage.encode({
+                        message: {
+                            $case: "answerMessage",
+                            answerMessage: {
+                                id: queryMessage.id,
+                                answer: {
+                                    $case: "embeddableWebsiteAnswer",
+                                    embeddableWebsiteAnswer: {
+                                        url,
+                                        state: true,
+                                        embeddable: !response.headers["x-frame-options"],
+                                    },
+                                },
+                            },
+                        },
+                    }).finish(),
+                    true
+                );
+            })
+            .catch((error) => {
+                console.error("ApiController => embeddableUrl", url, error.cause);
+                Sentry.captureException(`Error while checking if a website (${url}) is embeddable in an iframe`, error);
+                client.send(
+                    ServerToClientMessage.encode({
+                        message: {
+                            $case: "answerMessage",
+                            answerMessage: {
+                                id: queryMessage.id,
+                                answer: {
+                                    $case: "embeddableWebsiteAnswer",
+                                    embeddableWebsiteAnswer: {
+                                        url,
+                                        state: false,
+                                        embeddable: false,
+                                        message: "URL is not reachable",
+                                    },
+                                },
+                            },
+                        },
+                    }).finish(),
+                    true
+                );
+            });
     }
 }
 

@@ -1,10 +1,8 @@
 <script lang="ts">
-    import axios from "axios";
     import { createEventDispatcher } from "svelte";
     import { OpenWebsitePropertyData } from "@workadventure/map-editor";
-    import { EmbeddableResponse } from "@workadventure/messages";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { PUSHER_URL } from "../../../Enum/EnvironmentVariable";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: OpenWebsitePropertyData;
@@ -36,17 +34,18 @@
         dispatch("change");
     }
 
-    async function checkEmbeddableWebsite() {
+    function checkEmbeddableWebsite() {
         if (property.link === oldValue) {
             return;
         }
         embeddableLoading = true;
-        await axios
-            .get(PUSHER_URL + "/embeddable?url=" + property.link)
-            .then((response) => {
-                const data = EmbeddableResponse.parse(response.data);
-                if (data.state === "success") {
-                    embeddable = data.embeddable;
+        error = "";
+        gameManager
+            .getCurrentGameScene()
+            .connection?.queryEmbeddableWebsite(property.link)
+            .then((answer) => {
+                if (answer.state) {
+                    embeddable = answer.embeddable;
                     property.newTab = oldNewTabValue;
                     if (!oldNewTabValue) {
                         optionAdvancedActivated = false;
@@ -55,8 +54,8 @@
                     optionAdvancedActivated = true;
                     property.newTab = true;
                     embeddable = false;
-                    if (data.message) {
-                        error = data.message;
+                    if (answer.message) {
+                        error = answer.message;
                     }
                 }
             })
