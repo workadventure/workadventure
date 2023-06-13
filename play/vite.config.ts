@@ -27,7 +27,12 @@ export default defineConfig(({ mode }) => {
         },
         plugins: [
             svelte({
-                preprocess: sveltePreprocess(),
+                preprocess: sveltePreprocess({
+                    sourceMap: true,
+                }),
+                compilerOptions: {
+                    enableSourcemap: true,
+                },
                 onwarn(warning, defaultHandler) {
                     // don't warn on:
                     if (warning.code === "a11y-click-events-have-key-events") return;
@@ -49,7 +54,7 @@ export default defineConfig(({ mode }) => {
         ],
     };
 
-    if (env.SENTRY_ORG && env.SENTRY_PROJECT && env.SENTRY_AUTH_TOKEN && env.SENTRY_RELEASE) {
+    if (env.SENTRY_ORG && env.SENTRY_PROJECT && env.SENTRY_AUTH_TOKEN && env.SENTRY_RELEASE && env.SENTRY_ENVIRONMENT) {
         config.plugins.push(
             sentryVitePlugin({
                 org: env.SENTRY_ORG,
@@ -62,8 +67,9 @@ export default defineConfig(({ mode }) => {
                 // Optionally uncomment the line below to override automatic release name detection
                 release: env.SENTRY_RELEASE,
                 deploy: {
-                    env: "production",
+                    env: env.SENTRY_ENVIRONMENT,
                 },
+                uploadSourceMaps: true,
             })
         );
     }
