@@ -175,9 +175,8 @@ export class GameManager {
     }
 
     public getCurrentGameScene(): GameScene {
-        //if (this.currentGameSceneName === null) throw new Error("No current scene id set!");
-        console.log("this.currentGameSceneName", this.currentGameSceneName);
-        //@ts-ignore
+        if (this.currentGameSceneName === null) throw new Error("No current scene id set!");
+
         const gameScene = this.scenePlugin.get(
             this.currentGameSceneName == undefined ? "default" : this.currentGameSceneName
         );

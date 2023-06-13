@@ -49,6 +49,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         itemPicker: {
             searchPlaceholder: "Rechercher",
         },
+        trashTool: {
+            delete: "Supprimer un item en cliquant dessus !",
+        },
         deleteButton: "Supprimer",
         testInteractionButton: "Tester interaction",
         buttonLabel: "Texte du bouton",

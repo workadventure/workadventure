@@ -7,6 +7,7 @@
 
     let tooltipElement: HTMLDivElement;
     let textElement: HTMLSpanElement;
+    let toolTipPosition = "top-tooltip";
 
     function hide() {
         textElement?.style.setProperty("visibility", "hidden");
@@ -16,6 +17,11 @@
     }
 
     onMount(() => {
+        if (leftPosition === "true") {
+            toolTipPosition = "left-tooltip";
+        } else if (rightPosition === "true") {
+            toolTipPosition = "right-tooltip";
+        }
         tooltipElement?.parentElement?.addEventListener("mouseenter", () => show());
         tooltipElement?.parentElement?.addEventListener("mouseleave", () => hide());
     });
@@ -27,11 +33,7 @@
 </script>
 
 <div bind:this={tooltipElement} class="tooltip tw-w-fit">
-    <span
-        bind:this={textElement}
-        class="tooltiptext {rightPosition === 'true' ? 'right-tooltip' : leftPosition ? 'left-tooltip' : 'top-tooltip'}"
-        >{text}</span
-    >
+    <span bind:this={textElement} class="tooltiptext {toolTipPosition}">{text}</span>
 </div>
 
 <style lang="scss">
@@ -72,7 +74,8 @@
             transform: translate(0, 50%);
             &::after {
                 top: calc(50% - 5px);
-                right: -10px;
+                left: auto;
+                right: -12px;
                 border-color: theme("colors.transparent") theme("colors.medium-purple") theme("colors.transparent")
                     theme("colors.transparent");
                 content: "";

@@ -101,6 +101,9 @@ const mapEditor: BaseTranslation = {
         itemPicker: {
             searchPlaceholder: "Search",
         },
+        trashTool: {
+            delete: "Click on the object to delete it!",
+        },
         deleteButton: "Delete",
         testInteractionButton: "Test Interaction",
         buttonLabel: "Button Label",

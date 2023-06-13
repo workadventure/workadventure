@@ -47,6 +47,37 @@ export class TrashEditorTool extends EntityEditorTool {
         return areaPreview;
     }
 
+    private updateAreaPreviews(): void {
+        const areaConfigs = this.scene.getGameMapFrontWrapper().getAreas();
+
+        // find previews of areas that exist no longer
+        const areaPreviewsToDelete: string[] = [];
+        for (const preview of this.areaPreviews) {
+            if (!areaConfigs?.has(preview.getId())) {
+                areaPreviewsToDelete.push(preview.getId());
+            }
+        }
+        // destroy them
+        for (const id of areaPreviewsToDelete) {
+            const index = this.areaPreviews.findIndex((preview) => preview.getId() === id);
+            if (index !== -1) {
+                this.areaPreviews.splice(index, 1)[0]?.destroy();
+            }
+        }
+
+        // create previews for new areas that were created during our absence in editor mode
+        if (areaConfigs) {
+            for (const config of Array.from(areaConfigs.values())) {
+                const areaPreview = this.areaPreviews.find((areaPreview) => areaPreview.getId() === config.id);
+                if (areaPreview) {
+                    areaPreview.updatePreview(config);
+                } else {
+                    this.createAreaPreview(config);
+                }
+            }
+        }
+    }
+
     private setAreaPreviewsVisibility(visible: boolean): void {
         // NOTE: I would really like to use Phaser Layers here but it seems that there's a problem with Areas still being
         //       interactive when we hide whole Layer and thus forEach is needed.
@@ -79,12 +110,10 @@ export class TrashEditorTool extends EntityEditorTool {
     }
 
     private pointerUpEventHandler = (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
-        console.log("pointerUpEventHandler", this.active);
         if (!this.active) {
             return;
         }
         const areaEditorToolObjects = this.getAreaEditorToolObjectsFromGameObjects(gameObjects);
-        console.log("pointerUpEventHandler => areaEditorToolObjects", areaEditorToolObjects);
         if (areaEditorToolObjects.length === 1) {
             if (this.isAreaPreview(areaEditorToolObjects[0])) {
                 areaEditorToolObjects[0].delete();
@@ -96,29 +125,27 @@ export class TrashEditorTool extends EntityEditorTool {
         pointer: Phaser.Input.Pointer,
         gameObjects: Phaser.GameObjects.GameObject[]
     ) => {
-        console.log("pointerHoverEventHandler", this.active);
         if (!this.active) {
             return;
         }
         const areaEditorToolObjects = this.getAreaEditorToolObjectsFromGameObjects(gameObjects);
-        console.log("pointerHoverEventHandler => areaEditorToolObjects", areaEditorToolObjects);
         if (areaEditorToolObjects.length === 1) {
             if (this.isAreaPreview(areaEditorToolObjects[0])) {
                 areaEditorToolObjects[0].changeColor(0xff0000);
+                this.scene.markDirty();
             }
         }
     };
 
     private pointerOutEventHandler = (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
-        console.log("pointerOutEventHandler", this.active);
         if (!this.active) {
             return;
         }
         const areaEditorToolObjects = this.getAreaEditorToolObjectsFromGameObjects(gameObjects);
-        console.log("pointerHoverEventHandler => areaEditorToolObjects", areaEditorToolObjects);
         if (areaEditorToolObjects.length === 1) {
             if (this.isAreaPreview(areaEditorToolObjects[0])) {
                 areaEditorToolObjects[0].resetColor();
+                this.scene.markDirty();
             }
         }
     };
@@ -173,9 +200,8 @@ export class TrashEditorTool extends EntityEditorTool {
         this.active = true;
         this.setAreaPreviewsVisibility(true);
         this.bindEventHandlers();
-        // TODO: This is a hack to force update of the area preview when it's selected. It's needed because
-        //this.mapEditorSelectedAreaPreviewStoreSubscribe = mapEditorSelectedAreaPreviewStore.subscribe(() => {
-        //});
+        this.updateAreaPreviews();
+        this.scene.markDirty();
     }
 
     public clear() {
@@ -183,11 +209,5 @@ export class TrashEditorTool extends EntityEditorTool {
         this.setAreaPreviewsVisibility(false);
         this.unbindEventHandlers();
         this.scene.markDirty();
-        //this.mapEditorSelectedAreaPreviewStoreSubscribe();
-    }
-
-    public destroy(): void {
-        super.destroy();
-        //this.mapEditorSelectedAreaPreviewStoreSubscribe();
     }
 }
