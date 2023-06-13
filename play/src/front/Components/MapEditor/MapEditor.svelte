@@ -6,6 +6,7 @@
     import EntityEditor from "./EntityEditor.svelte";
     import AreaEditor from "./AreaEditor.svelte";
     import ConfigureMyRoom from "./WAMSettingsEditor.svelte";
+    import TrashEditor from "./TrashEditor.svelte";
 </script>
 
 <MapEditorSideBar />
@@ -14,6 +15,9 @@
         <ConfigureMyRoom />
     {:else}
         <div class="sidebar" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
+            {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
+                <TrashEditor />
+            {/if}
             {#if $mapEditorSelectedToolStore === EditorToolName.EntityEditor}
                 <EntityEditor />
             {/if}

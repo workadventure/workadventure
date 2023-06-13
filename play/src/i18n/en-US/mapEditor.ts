@@ -9,6 +9,7 @@ const mapEditor: BaseTranslation = {
         entityEditor: "Entity editor tool",
         tileEditor: "Tile editor tool",
         configureMyRoom: "Configure my room",
+        trashEditor: "Trash",
     },
     properties: {
         silentProperty: {

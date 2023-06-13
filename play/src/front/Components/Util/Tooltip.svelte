@@ -3,6 +3,7 @@
 
     export let text: string;
     export let rightPosition = "false";
+    export let leftPosition = "false";
 
     let tooltipElement: HTMLDivElement;
     let textElement: HTMLSpanElement;
@@ -26,7 +27,9 @@
 </script>
 
 <div bind:this={tooltipElement} class="tooltip tw-w-fit">
-    <span bind:this={textElement} class="tooltiptext {rightPosition === 'true' ? 'right-tooltip' : 'top-tooltip'}"
+    <span
+        bind:this={textElement}
+        class="tooltiptext {rightPosition === 'true' ? 'right-tooltip' : leftPosition ? 'left-tooltip' : 'top-tooltip'}"
         >{text}</span
     >
 </div>
@@ -62,6 +65,21 @@
                     theme("colors.transparent");
             }
         }
+
+        .left-tooltip {
+            right: 55px;
+            bottom: 50%;
+            transform: translate(0, 50%);
+            &::after {
+                top: calc(50% - 5px);
+                right: -10px;
+                border-color: theme("colors.transparent") theme("colors.medium-purple") theme("colors.transparent")
+                    theme("colors.transparent");
+                content: "";
+                transform: rotate(180deg);
+            }
+        }
+
         .top-tooltip {
             bottom: 10px;
             left: 0;

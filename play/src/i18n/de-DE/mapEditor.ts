@@ -5,6 +5,7 @@ const mapEditor: BaseTranslation = {
         areaEditor: "Fläche bearbeiten",
         entityEditor: "Entität bearbeiten",
         tileEditor: "Kachel bearbeiten",
+        trashEditor: "Papierkorb",
     },
     properties: {
         jitsiProperties: {

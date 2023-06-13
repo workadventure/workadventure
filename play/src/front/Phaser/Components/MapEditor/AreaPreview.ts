@@ -459,4 +459,30 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 };
         }
     }
+
+    public changeColor(color: string | number | Phaser.Types.Display.InputColorObject) {
+        this.setFillStyle(Phaser.Display.Color.ValueToColor(color).color, 0.75);
+    }
+
+    public resetColor() {
+        if (this.areaData != undefined) {
+            this.propertiesIcon.forEach((icon: GameObjects.Image) => icon.destroy());
+            let counter = 0;
+            for (const property of this.areaData.properties) {
+                const iconProperties = this.getPropertyIcons(property.type);
+
+                const icon = new GameObjects.Image(
+                    this.scene,
+                    (this.getTopLeft().x ?? 0) + 10 + counter * 15,
+                    (this.getTopLeft().y ?? 0) + 10,
+                    `icon${iconProperties.name}`
+                );
+                icon.setScale(0.12);
+                icon.setDepth(this.depth + 1);
+                icon.setVisible(true);
+                this.setFillStyle(Phaser.Display.Color.ValueToColor(iconProperties.color).color, 0.75);
+                counter++;
+            }
+        }
+    }
 }

@@ -9,6 +9,7 @@
     import EntityToolImg from "../images/icon-tool-entity.svg";
     import Tooltip from "../Util/Tooltip.svelte";
     import ConfigureImg from "../images/configure.svg";
+    import TrashImg from "../images/trash.svg";
     const gameScene = gameManager.getCurrentGameScene();
 
     const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
@@ -32,6 +33,11 @@
         img: ConfigureImg,
         tooltiptext: $LL.mapEditor.sideBar.configureMyRoom(),
     });
+    availableTools.push({
+        toolName: EditorToolName.TrashEditor,
+        img: TrashImg,
+        tooltiptext: $LL.mapEditor.sideBar.trashEditor(),
+    });
 
     function switchTool(newTool: EditorToolName) {
         gameScene.getMapEditorModeManager().equipTool(newTool);
@@ -48,7 +54,7 @@
                     on:click|preventDefault={() => switchTool(tool.toolName)}
                     type="button"><img src={tool.img} alt="open tool {tool.toolName}" /></button
                 >
-                <Tooltip text={tool.tooltiptext} rightPosition="true" />
+                <Tooltip text={tool.tooltiptext} leftPosition="true" />
             </div>
         {/each}
     </div>
@@ -58,7 +64,7 @@
     .side-bar-container {
         position: absolute;
         bottom: 0;
-        left: 0;
+        right: 28rem;
         pointer-events: auto;
     }
     .side-bar {
@@ -67,7 +73,7 @@
         width: fit-content;
         height: fit-content;
         position: absolute;
-        bottom: 10%;
+        top: 6%;
         left: 2rem;
         align-content: bottom;
         .tool-button {
