@@ -1,6 +1,7 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher, onMount } from "svelte";
     import { OpenWebsitePropertyData } from "@workadventure/map-editor";
+    import { AlertTriangleIcon } from "svelte-feather-icons";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
@@ -15,6 +16,10 @@
     let oldNewTabValue = property.newTab;
 
     const dispatch = createEventDispatcher();
+
+    onMount(() => {
+        checkEmbeddableWebsite();
+    });
 
     function onTriggerValueChange() {
         triggerOnActionChoosen = property.trigger === "onaction";
@@ -35,9 +40,6 @@
     }
 
     function checkEmbeddableWebsite() {
-        if (property.link === oldValue) {
-            return;
-        }
         embeddableLoading = true;
         error = "";
         gameManager
@@ -118,8 +120,18 @@
                 on:blur={checkEmbeddableWebsite}
                 disabled={embeddableLoading}
             />
-            {#if !embeddable}
-                <span class="err tw-text-pop-red tw-text-xs tw-italic">{error}</span>
+            {#if !embeddable && error}
+                <span class="err tw-text-pop-red tw-text-xs tw-italic tw-mt-1">{error}</span>
+            {/if}
+            {#if !embeddable && !error}
+                <span class="err tw-text-orange tw-text-xs tw-italic tw-mt-1"
+                    ><AlertTriangleIcon size="12" />
+                    {$LL.mapEditor.properties.linkProperties.warningEmbeddableLink()}.
+                    <a
+                        href="https://workadventu.re/map-building/troubleshooting.md#content-issues-embedding-a-website"
+                        target="_blank">{$LL.mapEditor.properties.linkProperties.findOutMoreHere()}</a
+                    >.</span
+                >
             {/if}
         </div>
         {#if !property.hideButtonLabel}
