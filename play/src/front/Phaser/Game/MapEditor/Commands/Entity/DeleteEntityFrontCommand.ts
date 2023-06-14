@@ -16,6 +16,7 @@ export class DeleteEntityFrontCommand extends DeleteEntityCommand implements Fro
         super(gameMap, entityId, commandId);
         const entityData = gameMap.getGameMapEntities()?.getEntity(entityId);
         if (!entityData) {
+            void this.execute();
             throw new Error("Trying to delete a non existing Entity!");
         }
         this.entityData = structuredClone(entityData);
