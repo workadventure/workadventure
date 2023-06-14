@@ -101,7 +101,7 @@ const roomManager = {
                                     Sentry.captureException(`message handleJoinRoom error: ${JSON.stringify(e)}`);
                                     emitError(call, e);
                                 });
-                        } else {
+                        } else if (message.message.$case !== "pingMessage") {
                             throw new Error("The first message sent MUST be of type JoinRoomMessage");
                         }
                     } else {
