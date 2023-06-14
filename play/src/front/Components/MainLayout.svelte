@@ -20,6 +20,7 @@
     import { coWebsites } from "../Stores/CoWebsiteStore";
     import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
+    import { streamingMegaphoneStore } from "../Stores/MegaphoneStore";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
@@ -40,6 +41,7 @@
     import Lazy from "./Lazy.svelte";
     import UiWebsiteContainer from "./UI/Website/UIWebsiteContainer.svelte";
     import Modal from "./Modal/Modal.svelte";
+    import Megaphone from "./Modal/Megaphone.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -129,6 +131,10 @@
 
         {#if $modalVisibilityStore}
             <Modal />
+        {/if}
+
+        {#if $streamingMegaphoneStore}
+            <Megaphone />
         {/if}
     </section>
 

@@ -88,6 +88,7 @@
         megaphoneCanBeUsedStore,
         megaphoneEnabledStore,
         requestedMegaphoneStore,
+        streamingMegaphoneStore,
     } from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 
@@ -172,6 +173,15 @@
     }
 
     function toggleMegaphone() {
+        if ($streamingMegaphoneStore) {
+            streamingMegaphoneStore.set(false);
+            return;
+        }
+        if ($requestedMegaphoneStore) {
+            analyticsClient.stopMegaphone();
+            requestedMegaphoneStore.set(false);
+            return;
+        }
         if (!$requestedMegaphoneStore && !$requestedCameraState && !$requestedMicrophoneState) {
             if (cameraButton) {
                 cameraButton.firstElementChild?.classList.add("tw-animate-shaking");
@@ -195,7 +205,8 @@
             setTimeout(() => layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone"), 10_000);
             return;
         }
-        $requestedMegaphoneStore = !$requestedMegaphoneStore;
+        analyticsClient.openMegaphone();
+        streamingMegaphoneStore.set(true);
     }
 
     function toggleMapEditorMode() {
