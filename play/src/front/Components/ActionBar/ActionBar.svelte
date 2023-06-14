@@ -178,6 +178,7 @@
             return;
         }
         if ($requestedMegaphoneStore) {
+            analyticsClient.stopMegaphone();
             requestedMegaphoneStore.set(false);
             return;
         }
@@ -204,6 +205,7 @@
             setTimeout(() => layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone"), 10_000);
             return;
         }
+        analyticsClient.openMegaphone();
         streamingMegaphoneStore.set(true);
     }
 

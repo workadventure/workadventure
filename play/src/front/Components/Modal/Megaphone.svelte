@@ -27,18 +27,9 @@
     import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import cinemaCloseImg from "../images/no-video.svg";
     import { LL } from "../../../i18n/i18n-svelte";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     let mainMegaphone: HTMLDivElement;
-
-    let stream: MediaStream | null;
-
-    const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
-        if (value.type === "success") {
-            stream = value.stream;
-        } else {
-            stream = null;
-        }
-    });
 
     function close() {
         streamingMegaphoneStore.set(false);
@@ -78,7 +69,6 @@
     onDestroy(() => {
         streamingMegaphoneStore.set(false);
         cameraNoEnergySavingStore.set(false);
-        unsubscribeLocalStreamStore();
     });
 
     let isMobile = isMediaBreakpointUp("md");
@@ -163,6 +153,9 @@
                     type="button"
                     id="start_megaphone"
                     class="light tw-m-auto tw-cursor-pointer tw-px-3"
+                    on:click={() => {
+                        analyticsClient.startMegaphone();
+                    }}
                     on:click={start}
                 >
                     {$LL.megaphone.modal.startMegaphone()}
