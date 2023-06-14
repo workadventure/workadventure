@@ -1,4 +1,4 @@
-import * as Sentry from "@sentry/browser";
+import * as Sentry from "@sentry/svelte";
 import "phaser";
 import "./front/style/index.scss";
 

@@ -179,17 +179,32 @@ const mouseInCameraTriggerArea = readable(false, function start(set) {
     };
 });
 
+export const cameraNoEnergySavingStore = writable<boolean>(false);
+
 /**
  * A store that contains "true" if the webcam should be stopped for energy efficiency reason - i.e. we are not moving and not in a conversation.
  */
 export const cameraEnergySavingStore = derived(
-    [userMoved5SecondsAgoStore, peerStore, enabledWebCam10secondsAgoStore, mouseInCameraTriggerArea],
-    ([$userMoved5SecondsAgoStore, $peerStore, $enabledWebCam10secondsAgoStore, $mouseInBottomRight]) => {
+    [
+        userMoved5SecondsAgoStore,
+        peerStore,
+        enabledWebCam10secondsAgoStore,
+        mouseInCameraTriggerArea,
+        cameraNoEnergySavingStore,
+    ],
+    ([
+        $userMoved5SecondsAgoStore,
+        $peerStore,
+        $enabledWebCam10secondsAgoStore,
+        $mouseInBottomRight,
+        $cameraNoEnergySavingStore,
+    ]) => {
         return (
             !$mouseInBottomRight &&
             !$userMoved5SecondsAgoStore &&
             $peerStore.size === 0 &&
-            !$enabledWebCam10secondsAgoStore
+            !$enabledWebCam10secondsAgoStore &&
+            !$cameraNoEnergySavingStore
         );
     }
 );

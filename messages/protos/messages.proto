@@ -302,6 +302,8 @@ message QueryMessage {
     JitsiJwtQuery jitsiJwtQuery = 2;
     JoinBBBMeetingQuery joinBBBMeetingQuery = 20;
     RoomTagsQuery roomTagsQuery = 3;
+    EmbeddableWebsiteQuery embeddableWebsiteQuery = 4;
+
   }
 }
 
@@ -320,6 +322,11 @@ message JoinBBBMeetingQuery {
 message RoomTagsQuery {
 }
 
+message EmbeddableWebsiteQuery {
+  string url = 1;
+}
+
+
 message AnswerMessage {
   int32 id = 1;
   oneof answer {
@@ -327,6 +334,7 @@ message AnswerMessage {
     JitsiJwtAnswer jitsiJwtAnswer = 3;
     JoinBBBMeetingAnswer joinBBBMeetingAnswer = 4;
     RoomTagsAnswer roomTagsAnswer = 5;
+    EmbeddableWebsiteAnswer embeddableWebsiteAnswer = 6;
   }
 }
 
@@ -342,6 +350,13 @@ message JoinBBBMeetingAnswer {
 
 message RoomTagsAnswer {
   repeated string tags = 1;
+}
+
+message EmbeddableWebsiteAnswer {
+  string url = 1;
+  bool state = 2;
+  bool embeddable = 3;
+  optional string message = 4;
 }
 
 /*********** SERVER TO CLIENT MESSAGES *************/

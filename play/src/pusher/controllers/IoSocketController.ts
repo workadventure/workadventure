@@ -825,6 +825,8 @@ export class IoSocketController {
                         case "queryMessage": {
                             if (message.message.queryMessage.query?.$case === "roomTagsQuery") {
                                 void socketManager.handleRoomTagsQuery(client, message.message.queryMessage);
+                            } else if (message.message.queryMessage.query?.$case === "embeddableWebsiteQuery") {
+                                void socketManager.handleEmbeddableWebsiteQuery(client, message.message.queryMessage);
                             } else {
                                 socketManager.forwardMessageToBack(client, message.message);
                             }
