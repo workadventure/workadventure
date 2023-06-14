@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
+import type { Translation } from "../i18n-types";
 
-const mapEditor: BaseTranslation = {
+const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     sideBar: {
         areaEditor: "Fläche bearbeiten",
         entityEditor: "Entität bearbeiten",
@@ -46,9 +47,31 @@ const mapEditor: BaseTranslation = {
         testInteractionButton: "Interaktion testen",
         buttonLabel: "Knopfbeschrifung",
         editInstructions: "Klicken Sie auf ein Objekt, um seine Eigenschaften zu ändern.",
-        textProperties: {
-            label: "Überschrift",
-            placeholder: "Geben Sie hier Text ein, der bei der Interaktion mit dem Objekt angezeigt wird",
+    },
+    settings: {
+        loading: "Laden...",
+        megaphone: {
+            title: "Megaphon",
+            description:
+                "Das Megaphon ist ein Werkzeug, mit dem Sie Ihre Stimme über die ganze Welt oder einen Raum hinweg übertragen können.",
+            inputs: {
+                spaceName: "Raumname",
+                spaceNameHelper:
+                    "Der Name des Raums, in dem das Megaphon verwendet werden kann. Wenn Sie es leer lassen, kann es in der gesamten Welt verwendet werden.",
+                scope: "Geltungsbereich",
+                world: "Welt",
+                room: "Raum",
+                rights: "Rechte",
+                rightsHelper:
+                    "Die Rechte, die ein Benutzer haben muss, um das Megaphon zu verwenden. Wenn Sie es leer lassen, kann jeder das Megaphon verwenden.",
+                error: {
+                    title: "Fehler",
+                    save: {
+                        success: "Megaphon-Einstellungen erfolgreich gespeichert",
+                        fail: "Fehler beim Speichern der Megaphon-Einstellungen",
+                    },
+                },
+            },
         },
     },
 };

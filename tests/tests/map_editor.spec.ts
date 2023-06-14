@@ -71,11 +71,14 @@ test.describe('Map editor', () => {
 
     await Menu.toggleMegaphoneButton(page);
 
-    await expect(await page.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 5_000});
+    // chack if the menu container is opened
+    await expect(await page.locator('.menu-container')).toBeVisible({timeout: 5_000});
+    // click on the megaphone button to start streaming session
+    await page.locator('.menu-container #start_megaphone').click({timeout: 5_000});
+
     await expect(await page2.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 5_000});
 
     await Menu.toggleMegaphoneButton(page);
-
 
     await page2.close();
 

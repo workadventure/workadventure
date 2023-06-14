@@ -18,6 +18,7 @@ import notification from "./notification";
 import cowebsite from "./cowebsite";
 import actionbar from "./actionbar";
 import mapEditor from "./mapEditor";
+import megaphone from "./megaphone";
 
 const en_US: BaseTranslation = {
     audio,
@@ -39,6 +40,7 @@ const en_US: BaseTranslation = {
     cowebsite,
     actionbar,
     mapEditor,
+    megaphone,
 };
 
 export default en_US;
