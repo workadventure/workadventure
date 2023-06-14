@@ -202,9 +202,9 @@
                 userInputManager: this.userInputManager,
             });
             setTimeout(() => layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone"), 10_000);
-            streamingMegaphoneStore.set(true);
             return;
         }
+        streamingMegaphoneStore.set(true);
     }
 
     function toggleMapEditorMode() {

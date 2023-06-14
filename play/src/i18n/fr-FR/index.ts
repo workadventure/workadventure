@@ -18,6 +18,7 @@ import notification from "./notification";
 import cowebsite from "./cowebsite";
 import actionbar from "./actionbar";
 import mapEditor from "./mapEditor";
+import megaphone from "./megaphone";
 
 const fr_FR = merge(en_US, {
     audio,
@@ -38,6 +39,7 @@ const fr_FR = merge(en_US, {
     cowebsite,
     actionbar,
     mapEditor,
+    megaphone,
 });
 
 export default fr_FR;

@@ -26,6 +26,7 @@
     import { StringUtils } from "../../Utils/StringUtils";
     import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import cinemaCloseImg from "../images/no-video.svg";
+    import { LL } from "../../../i18n/i18n-svelte";
 
     let mainMegaphone: HTMLDivElement;
 
@@ -61,7 +62,7 @@
 
     function start() {
         requestedMegaphoneStore.set(true);
-        this.close();
+        close();
     }
 
     function onKeyDown(e: KeyboardEvent) {
@@ -105,8 +106,14 @@
 
 <svelte:window on:keydown={onKeyDown} />
 
-<div class="menu-container tw-w-3/5 {isMobile ? 'mobile' : $modalIframeStore?.position}" bind:this={mainMegaphone}>
-    <div class="tw-w-full tw-bg-dark-purple/95 tw-rounded" transition:fly={{ x: 1000, duration: 500 }}>
+<div
+    class="menu-container tw-w-fit tw-h-fit {isMobile ? 'mobile' : $modalIframeStore?.position}"
+    bind:this={mainMegaphone}
+>
+    <div
+        class="tw-px-40 tw-py-20 tw-w-full tw-bg-dark-purple/95 tw-rounded"
+        transition:fly={{ x: 1000, duration: 500 }}
+    >
         <button type="button" class="close-window" on:click={close}>&times</button>
 
         <div class="tw-flex tw-flex-col tw-justify-center tw-items-center tw-h-full">
@@ -129,7 +136,7 @@
             </div>
 
             <div class="tw-mt-20 tw-flex tw-flex-col tw-w-96">
-                <label for="megaphone-camera">Select your camera</label>
+                <label for="megaphone-camera">{$LL.megaphone.modal.selectCamera()}</label>
                 <select id="megaphone-camera">
                     {#each $cameraListStore as camera}
                         <option
@@ -149,7 +156,7 @@
             </div>
 
             <div class="tw-mt-5 tw-flex tw-flex-col tw-w-96">
-                <label for="megaphone-microphone">Select your microphone</label>
+                <label for="megaphone-microphone">{$LL.megaphone.modal.selectMicrophone()}</label>
                 <select id="megaphone-microphone">
                     {#each $microphoneListStore as microphone}
                         <option
@@ -169,8 +176,13 @@
             </div>
 
             <div class="tw-mt-20 tw-flex tw-flex-col">
-                <button type="button" class="light tw-m-auto tw-cursor-pointer tw-px-3" on:click={start}>
-                    Start the megaphone
+                <button
+                    type="button"
+                    id="start_megaphone"
+                    class="light tw-m-auto tw-cursor-pointer tw-px-3"
+                    on:click={start}
+                >
+                    {$LL.megaphone.modal.startMegaphone()}
                 </button>
             </div>
         </div>
