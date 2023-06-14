@@ -31,27 +31,12 @@
     let mainMegaphone: HTMLDivElement;
 
     let stream: MediaStream | null;
-    let selectedCamera: string | undefined = undefined;
-    let selectedMicrophone: string | undefined = undefined;
 
     const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
         if (value.type === "success") {
             stream = value.stream;
-
-            if (stream !== null) {
-                const videoTracks = stream.getVideoTracks();
-                if (videoTracks.length > 0) {
-                    selectedCamera = videoTracks[0].getSettings().deviceId;
-                }
-                const audioTracks = stream.getAudioTracks();
-                if (audioTracks.length > 0) {
-                    selectedMicrophone = audioTracks[0].getSettings().deviceId;
-                }
-            }
         } else {
             stream = null;
-            selectedCamera = undefined;
-            selectedMicrophone = undefined;
         }
     });
 
@@ -72,12 +57,10 @@
     }
 
     function selectCamera(deviceId: string) {
-        selectedCamera = deviceId;
         requestedCameraDeviceIdStore.set(deviceId);
     }
 
     function selectMicrophone(deviceId: string) {
-        selectedMicrophone = deviceId;
         requestedMicrophoneDeviceIdStore.set(deviceId);
     }
 
@@ -118,9 +101,9 @@
 
         <div class="tw-flex tw-flex-col tw-justify-center tw-items-center tw-h-full">
             <div class="tw-z-[250] tw-bg-dark-blue/50 tw-rounded-3xl tw-transition-all tw-w-96 tw-h-fit">
-                {#if selectedCamera != undefined && $localStreamStore.type === "success" && $localStreamStore.stream}
+                {#if $usedCameraDeviceIdStore && $localStreamStore.type === "success" && $localStreamStore.stream}
                     <video
-                        class="tw-h-full tw-w-full tw-rounded-3xl md:tw-object-cover {$megaphoneEnabledStore
+                        class="tw-h-full tw-w-full tw-rounded-3xl md:tw-object-cover -tw-scale-x-100 {$megaphoneEnabledStore
                             ? 'tw-border-orange tw-border-3 tw-border-solid'
                             : ''}"
                         use:srcObject={$localStreamStore.stream}
