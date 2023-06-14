@@ -152,7 +152,11 @@
                 <button
                     type="button"
                     id="start_megaphone"
-                    class="light tw-m-auto tw-cursor-pointer tw-px-3"
+                    class="light tw-m-auto tw-cursor-pointer tw-px-3 {!$requestedCameraState ||
+                    !$requestedMicrophoneState
+                        ? 'disabled'
+                        : ''}"
+                    disabled={!$requestedCameraState || !$requestedMicrophoneState}
                     on:click={() => {
                         analyticsClient.startMegaphone();
                     }}
