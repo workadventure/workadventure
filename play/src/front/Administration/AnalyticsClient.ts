@@ -476,5 +476,29 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+
+    openMegaphone(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_action_megaphone");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    startMegaphone(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_start_megaphone");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    stopMegaphone(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_stop_megaphone");
+            })
+            .catch((e) => console.error(e));
+    }
 }
 export const analyticsClient = new AnalyticsClient();
