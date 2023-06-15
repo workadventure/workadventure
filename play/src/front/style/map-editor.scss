@@ -14,24 +14,23 @@ p.help-text{
 ////////////////////////////
 .configure-my-room {
   @apply tw-rounded-xl tw-bg-dark-blue/90 tw-backdrop-blur tw-flex tw-flex-wrap;
-  width: 70vw !important;
+  width: 100%;
   min-height: 50vh;
   height: fit-content !important;
-  top: 50%;
-  right: 50%;
-  transform: translate(-20%, -50%);
+  top: 0;
   transition: all 100ms ease-in-out;
+  margin-top: 25vh;
 
   .close-window {
     @apply tw-top-1.5 tw-right-2.5;
   }
 
   h3 {
-    @apply tw-text-light-blue tw-m-0;
+    @apply tw-text-light-blue tw-m-0 tw-text-lg;
   }
 
   .menu {
-    @apply tw-border-0 tw-border-r tw-border-solid tw-border-lighter-purple/50 tw-w-1/4;
+    @apply tw-border-0 tw-border-r tw-border-solid tw-border-lighter-purple/50 tw-w-1/4 tw-min-w-[25%];
     h3 {
       @apply tw-px-5 tw-py-3.5;
     }
