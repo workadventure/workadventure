@@ -34,7 +34,7 @@ import {
     QueryMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
 import { PusherRoom } from "../models/PusherRoom";
 import type { ExSocketInterface, BackSpaceConnection } from "../models/Websocket/ExSocketInterface";
 
@@ -1136,8 +1136,8 @@ export class SocketManager implements ZoneEventListener {
         if (queryMessage.query?.$case !== "embeddableWebsiteQuery") {
             return;
         }
-        const url = queryMessage.query.embeddableWebsiteQuery.url;
 
+        const url = queryMessage.query.embeddableWebsiteQuery.url;
         await axios
             .head(url, { timeout: 5_000 })
             .then((response) => {
@@ -1162,27 +1162,49 @@ export class SocketManager implements ZoneEventListener {
                 );
             })
             .catch((error) => {
-                debug(`ApiController => embeddableUrl : ${url} ${error.cause}`);
-                client.send(
-                    ServerToClientMessage.encode({
-                        message: {
-                            $case: "answerMessage",
-                            answerMessage: {
-                                id: queryMessage.id,
-                                answer: {
-                                    $case: "embeddableWebsiteAnswer",
-                                    embeddableWebsiteAnswer: {
-                                        url,
-                                        state: false,
-                                        embeddable: false,
-                                        message: "URL is not reachable",
+                if (isAxiosError(error) && error.response?.status === 999) {
+                    client.send(
+                        ServerToClientMessage.encode({
+                            message: {
+                                $case: "answerMessage",
+                                answerMessage: {
+                                    id: queryMessage.id,
+                                    answer: {
+                                        $case: "embeddableWebsiteAnswer",
+                                        embeddableWebsiteAnswer: {
+                                            url,
+                                            state: true,
+                                            embeddable: false,
+                                        },
                                     },
                                 },
                             },
-                        },
-                    }).finish(),
-                    true
-                );
+                        }).finish(),
+                        true
+                    );
+                } else {
+                    debug(`SocketManager => embeddableUrl : ${url} ${error}`);
+                    client.send(
+                        ServerToClientMessage.encode({
+                            message: {
+                                $case: "answerMessage",
+                                answerMessage: {
+                                    id: queryMessage.id,
+                                    answer: {
+                                        $case: "embeddableWebsiteAnswer",
+                                        embeddableWebsiteAnswer: {
+                                            url,
+                                            state: false,
+                                            embeddable: false,
+                                            message: "URL is not reachable",
+                                        },
+                                    },
+                                },
+                            },
+                        }).finish(),
+                        true
+                    );
+                }
             });
     }
 }
