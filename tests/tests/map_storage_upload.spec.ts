@@ -317,7 +317,7 @@ test.describe('Map-storage Upload API', () => {
         await expect(maps["maps"]["map.wam"]).toBeDefined();
         await expect(Object.keys(maps["maps"])).toHaveLength(1);
 
-        const deleteRoot = await request.delete(`delete?path=/`);
+        const deleteRoot = await request.delete(`/`);
 
         await expect(deleteRoot.status()).toBe(204);
 
@@ -342,7 +342,7 @@ test.describe('Map-storage Upload API', () => {
         let maps = await listOfMaps.json();
         await expect(maps["maps"]["toDelete/map.wam"]).toBeDefined();
 
-        const deleteRoot = await request.delete(`delete?path=/toDelete`);
+        const deleteRoot = await request.delete(`/toDelete`);
 
         await expect(deleteRoot.status() === 204).toBeTruthy();
 
@@ -586,5 +586,41 @@ test.describe('Map-storage Upload API', () => {
         const accessFileWithEmoji = await request.get(`🍕.txt`);
         await expect(accessFileWithEmoji.ok()).toBeTruthy();
         await expect(await accessFileWithEmoji.text()).toContain("ok");
+
+        const uploadFile2 = await request.put("🍕.wam", {
+            multipart: {
+                file: {
+                    name: "map1.wam",
+                    mimeType: "application/json",
+                    buffer: Buffer.from(JSON.stringify({
+                        version: "1.0.0",
+                        mapUrl: `${(process.env.MAP_STORAGE_PROTOCOL ?? "http")}://maps.workadventure.localhost/tests/E2E/empty.json`,
+                        areas: [],
+                        entities: {},
+                        entityCollections: [],
+                    })),
+                }
+            }
+        });
+        await expect(uploadFile2.ok()).toBeTruthy();
+
+        const accessFileWithEmoji2 = await request.get(`🍕.wam`);
+        await expect(accessFileWithEmoji2.ok()).toBeTruthy();
+
+        const patch = await request.patch(`🍕.wam`, {
+            headers: {
+                "Content-Type": "application/json-patch+json",
+            },
+            data: JSON.stringify([
+                { "op": "replace", "path": "/mapUrl", "value": "https://example.com/newmap.tmj" },
+            ])
+        });
+        await expect(patch.ok()).toBeTruthy();
+
+        const deleteFile = await request.delete(`🍕.wam`);
+        await expect(deleteFile.ok()).toBeTruthy();
+
+        const accessFileWithEmoji3 = await request.get(`🍕.wam`);
+        await expect(accessFileWithEmoji3.ok()).toBeFalsy();
     });
 });
