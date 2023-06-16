@@ -111,6 +111,9 @@
           "LOGROCKET_ID": env.LOGROCKET_ID,
           "ROOM_API_PORT": "50051",
           "DEBUG": "*",
+          "JITSI_DOMAIN": env.JITSI_DOMAIN,
+          "JITSI_XMPP_DOMAIN": env.JITSI_XMPP_DOMAIN,
+          "JITSI_MUC_DOMAIN": env.JITSI_MUC_DOMAIN,
         } + (if adminUrl != null then {
           # Admin
           "ADMIN_URL": adminUrl,
