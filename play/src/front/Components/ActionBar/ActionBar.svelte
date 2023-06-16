@@ -98,9 +98,6 @@
     let cameraActive = false;
     let microphoneActive = false;
 
-    let microphoneButton: HTMLButtonElement;
-    let cameraButton: HTMLButtonElement;
-
     function screenSharingClick(): void {
         if ($silentStore) return;
         if ($requestedScreenSharingState === true) {
@@ -521,7 +518,6 @@
                             <button
                                 class="tooltiptext sm:tw-w-56 md:tw-w-96"
                                 class:border-top-light={$requestedCameraState}
-                                bind:this={cameraButton}
                             >
                                 {#if $requestedCameraState && !$silentStore}
                                     <img
@@ -587,7 +583,7 @@
                         >
                             <Tooltip text={$LL.actionbar.microphone()} />
 
-                            <button class:border-top-light={$requestedMicrophoneState} bind:this={microphoneButton}>
+                            <button class:border-top-light={$requestedMicrophoneState}>
                                 {#if $requestedMicrophoneState && !$silentStore}
                                     <img
                                         draggable="false"
