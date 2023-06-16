@@ -1,7 +1,7 @@
 import { get } from "svelte/store";
-import { connectionManager } from "../../Connexion/ConnectionManager";
-import { localUserStore } from "../../Connexion/LocalUserStore";
-import type { Room } from "../../Connexion/Room";
+import { connectionManager } from "../../Connection/ConnectionManager";
+import { localUserStore } from "../../Connection/LocalUserStore";
+import type { Room } from "../../Connection/Room";
 import { helpCameraSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
@@ -29,8 +29,8 @@ export class GameManager {
 
     constructor() {
         this.playerName = localUserStore.getName();
-        this.characterTextureIds = localUserStore.getCharacterLayers();
-        this.companionTextureId = localUserStore.getCompanion();
+        this.characterTextureIds = localUserStore.getCharacterTextures();
+        this.companionTextureId = localUserStore.getCompanionTextureId();
         this.cameraSetup = localUserStore.getCameraSetup();
     }
 
@@ -73,7 +73,7 @@ export class GameManager {
 
     public setCharacterTextureIds(textureIds: string[]): void {
         this.characterTextureIds = textureIds;
-        localUserStore.setCharacterLayers(textureIds);
+        localUserStore.setCharacterTextures(textureIds);
     }
 
     getPlayerName(): string | null {
@@ -86,7 +86,7 @@ export class GameManager {
 
     getCharacterTextureIds(): string[] {
         if (!this.characterTextureIds) {
-            throw new Error("characterLayers are not set");
+            throw new Error("characterTextures are not set");
         }
         return this.characterTextureIds;
     }

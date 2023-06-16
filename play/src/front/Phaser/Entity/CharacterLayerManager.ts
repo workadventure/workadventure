@@ -13,7 +13,7 @@ export class CharacterLayerManager {
         const scene = gameManager.getCurrentGameScene();
         return lazyLoadPlayerCharacterTextures(
             scene.superLoad,
-            characterTextures.map((texture) => ({ id: texture.id, img: texture.url }))
+            characterTextures.map((texture) => ({ id: texture.id, url: texture.url }))
         )
             .then((textures) => {
                 return this.getSnapshot(scene, this.getSprites(scene, textures)).then((htmlImageElementSrc) => {
@@ -24,11 +24,11 @@ export class CharacterLayerManager {
                 return lazyLoadPlayerCharacterTextures(scene.superLoad, [
                     {
                         id: "color_22",
-                        img: "resources/customisation/character_color/character_color21.png",
+                        url: "resources/customisation/character_color/character_color21.png",
                     },
                     {
                         id: "eyes_23",
-                        img: "resources/customisation/character_eyes/character_eyes23.png",
+                        url: "resources/customisation/character_eyes/character_eyes23.png",
                     },
                 ])
                     .then((textures) => {

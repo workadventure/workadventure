@@ -238,7 +238,7 @@ export class GameRoom implements BrothersFinder {
             joinRoomMessage.tag,
             joinRoomMessage.visitCardUrl ?? null,
             joinRoomMessage.name,
-            ProtobufUtils.toCharacterTextureObjects(joinRoomMessage.characterTextures),
+            joinRoomMessage.characterTextures,
             this._roomUrl,
             this._roomGroup ?? undefined,
             this,

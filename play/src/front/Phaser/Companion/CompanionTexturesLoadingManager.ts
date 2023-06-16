@@ -1,23 +1,23 @@
 import CancelablePromise from "cancelable-promise";
-import { CompanionTexture, CompanionCollectionList, companionCollectionList } from "@workadventure/messages";
+import { CompanionTextureCollection, CompanionTexture } from "@workadventure/messages";
+import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { gameManager } from "../Game/GameManager";
-import { localUserStore } from "../../Connexion/LocalUserStore";
+import { localUserStore } from "../../Connection/LocalUserStore";
 import type { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
-import { CompanionResourceDescriptionInterface, CompanionTextures } from "./CompanionTextures";
+import { CompanionTextures } from "./CompanionTextures";
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
-import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 
 export function companionListMetakey() {
     return "companion-list" + gameManager.currentStartedRoom.href;
 }
 
-let companionTextureList: CompanionCollectionList | null = null;
+let companionTextureList: CompanionTextureCollection[] | null = null;
 
 export class CompanionTexturesLoadingManager {
     constructor(private superLoad: SuperLoaderPlugin, private loader: LoaderPlugin) {}
 
-    loadTextures(processListCallback: (_l: CompanionCollectionList) => void) {
+    loadTextures(processListCallback: (_l: CompanionTextureCollection[]) => void) {
         if (companionTextureList) return processListCallback(companionTextureList);
 
         this.superLoad
@@ -36,7 +36,7 @@ export class CompanionTexturesLoadingManager {
                     withCredentials: true,
                 },
                 (_key, _type, data) => {
-                    companionTextureList = companionCollectionList.parse(data);
+                    companionTextureList = CompanionTextureCollection.array().parse(data);
                     processListCallback(companionTextureList);
                 }
             )
@@ -52,8 +52,8 @@ export class CompanionTexturesLoadingManager {
                 return;
             });
 
-            this.loadTextures((companionList) => {
-                const texture = companionList.companion.collections
+            this.loadTextures((companionTextureCollections) => {
+                const texture = companionTextureCollections
                     .flatMap((collection) => collection.textures)
                     .find((t) => t.id === textureId);
                 if (!texture) {
@@ -67,10 +67,10 @@ export class CompanionTexturesLoadingManager {
         });
     }
 
-    loadModels(load: LoaderPlugin, companionTextures: CompanionTextures): CompanionResourceDescriptionInterface[] {
+    loadModels(load: LoaderPlugin, companionTextures: CompanionTextures): CompanionTexture[] {
         const returnArray = Object.values(companionTextures.getCompanionResources());
         returnArray.forEach((companionResource) => {
-            load.spritesheet(companionResource.id, companionResource.img, { frameWidth: 32, frameHeight: 32 });
+            load.spritesheet(companionResource.id, companionResource.url, { frameWidth: 32, frameHeight: 32 });
         });
         return returnArray;
     }

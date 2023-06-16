@@ -18,7 +18,7 @@ export function isUserNameTooLong(value: unknown): boolean {
     return typeof value === "string" && value.length > 0 && value.length > maxUserNameLength;
 }
 
-export function areCharacterLayersValid(value: string[] | null): boolean {
+export function areCharacterTexturesValid(value: string[] | null): boolean {
     if (!value || !value.length) {
         return false;
     }

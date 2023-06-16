@@ -117,7 +117,7 @@ export class UserDescriptor {
             position: this.position,
             availabilityStatus: this.availabilityStatus,
             visitCardUrl: this.visitCardUrl ?? "", // FIXME: improve the typing
-            companion: this.companionTexture,
+            companionTexture: this.companionTexture,
             userUuid: this.userUuid,
             outlineColor: this.outlineColor ?? 0, // FIXME: improve the typing
             hasOutline: this.outlineColor !== undefined,

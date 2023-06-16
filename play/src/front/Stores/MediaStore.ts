@@ -2,7 +2,7 @@ import type { Readable, Writable } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
 import deepEqual from "fast-deep-equal";
 import { AvailabilityStatus } from "@workadventure/messages";
-import { localUserStore } from "../Connexion/LocalUserStore";
+import { localUserStore } from "../Connection/LocalUserStore";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import { getNavigatorType, isIOS, NavigatorType } from "../WebRtc/DeviceUtils";
 import { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/ConstraintMessage";

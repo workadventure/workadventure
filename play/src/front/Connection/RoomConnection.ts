@@ -68,6 +68,9 @@ import { ENABLE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
+import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
+import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/SelectCompanionScene";
+import { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
 import { localUserStore } from "./LocalUserStore";
 import { connectionManager } from "./ConnectionManager";
 import { adminMessagesService } from "./AdminMessagesService";
@@ -81,8 +84,6 @@ import type {
     ViewportInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
-import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
-import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/SelectCompanionScene";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
@@ -208,10 +209,10 @@ export class RoomConnection implements RoomConnection {
      * @param token A JWT token containing the email of the user
      * @param roomUrl The URL of the room in the form "https://example.com/_/[instance]/[map_url]" or "https://example.com/@/[org]/[event]/[map]"
      * @param name
-     * @param characterLayers
+     * @param characterTextureIds
      * @param position
      * @param viewport
-     * @param companion
+     * @param companionTextureId
      * @param availabilityStatus
      * @param lastCommandId
      */
@@ -439,8 +440,8 @@ export class RoomConnection implements RoomConnection {
                         }
                     }
 
-                    const characterLayers = roomJoinedMessage.characterTextures.map(
-                        this.mapCharacterTextureToBodyResourceDescription.bind(this)
+                    const characterTextures = roomJoinedMessage.characterTextures.map(
+                        this.mapWokaTextureToResourceDescription.bind(this)
                     );
 
                     this._roomJoinedMessageStream.next({
@@ -448,7 +449,7 @@ export class RoomConnection implements RoomConnection {
                         room: {
                             items,
                             variables,
-                            characterLayers,
+                            characterTextures,
                             playerVariables,
                             commandsToApply,
                             webrtcUserName: roomJoinedMessage.webrtcUserName,
@@ -479,10 +480,10 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "invalidCompanionTextureMessage": {
                     console.info(
-                        "Your companion texture is invalid for this world, you will be redirect to the Woka selection screen",
+                        "Your companion texture is invalid for this world, you will be redirect to the companion selection screen",
                         message
                     );
-                    this.goToSelectYourWokaScene();
+                    this.goToSelectYourCompanionScene();
 
                     this.closeConnection();
                     break;
@@ -643,8 +644,6 @@ export class RoomConnection implements RoomConnection {
                 }
             }
         };
-
-
     }
 
     private resetPingTimeout(): void {
@@ -773,9 +772,16 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    private mapTextureToBodyResourceDescription(
-        texture: CharacterTextureMessage|CompanionTextureMessage
-    ): WokaTextureDescriptionInterface {
+    private mapWokaTextureToResourceDescription(texture: CharacterTextureMessage): WokaTextureDescriptionInterface {
+        return {
+            id: texture.id,
+            url: texture.url,
+        };
+    }
+
+    private mapCompanionTextureToResourceDescription(
+        texture: CompanionTextureMessage
+    ): CompanionTextureDescriptionInterface {
         return {
             id: texture.id,
             url: texture.url,
@@ -789,11 +795,12 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Invalid JOIN_ROOM message");
         }
 
-        const characterTextures = message.characterTextures.map(this.mapTextureToResourceDescription.bind(this));
-        const companionTexture = this.mapTextureToResourceDescription.bind(message.companionTexture);
+        const characterTextures = message.characterTextures.map(this.mapWokaTextureToResourceDescription.bind(this));
+        const companionTexture = message.companionTexture
+            ? this.mapCompanionTextureToResourceDescription(message.companionTexture)
+            : undefined;
 
         const variables = new Map<string, unknown>();
-        //console.warn('VARIABLES FOR USER: ', message.variables);
         for (const variable of Object.entries(message.variables)) {
             variables.set(variable[0], RoomConnection.unserializeVariable(variable[1]));
         }

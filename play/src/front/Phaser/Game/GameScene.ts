@@ -17,7 +17,7 @@ import { z } from "zod";
 import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
 import { GameMap, GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
 import { userMessageManager } from "../../Administration/UserMessageManager";
-import { connectionManager } from "../../Connexion/ConnectionManager";
+import { connectionManager } from "../../Connection/ConnectionManager";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { urlManager } from "../../Url/UrlManager";
 import { mediaManager } from "../../WebRtc/MediaManager";
@@ -29,10 +29,10 @@ import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoading
 import { CompanionTexturesLoadingManager } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
 import { DEBUG_MODE, ENABLE_MAP_EDITOR, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
-import { Room } from "../../Connexion/Room";
+import { Room } from "../../Connection/Room";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
 import { CharacterTextureError } from "../../Exception/CharacterTextureError";
-import { localUserStore } from "../../Connexion/LocalUserStore";
+import { localUserStore } from "../../Connection/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { Loader } from "../Components/Loader";
@@ -53,8 +53,8 @@ import type {
     OnConnectInterface,
     PositionInterface,
     RoomJoinedMessageInterface,
-} from "../../Connexion/ConnexionModels";
-import type { RoomConnection } from "../../Connexion/RoomConnection";
+} from "../../Connection/ConnexionModels";
+import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import { peerStore } from "../../Stores/PeerStore";
@@ -90,7 +90,7 @@ import {
 import { LL, locale } from "../../../i18n/i18n-svelte";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
-import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connexion/AxiosUtils";
+import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 import type { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
@@ -123,6 +123,8 @@ import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
 import { megaphoneCanBeUsedStore, megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
+import { CompanionTextureError } from "../../Exception/CompanionTextureError";
+import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -159,8 +161,6 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
-import { CompanionTextureError } from "../../Exception/CompanionTextureError";
-import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -916,7 +916,7 @@ export class GameScene extends DirtyScene {
 
                 this.subscribeToStores();
 
-                lazyLoadPlayerCharacterTextures(this.superLoad, onConnect.room.characterLayers)
+                lazyLoadPlayerCharacterTextures(this.superLoad, onConnect.room.characterTextures)
                     .then((layers) => {
                         this.currentPlayerTexturesResolve(layers);
                     })
@@ -2699,7 +2699,7 @@ ${escapedMessage}
         let player: RemotePlayer;
 
         try {
-            const texturesPromise = lazyLoadPlayerCharacterTextures(this.superLoad, addPlayerData.characterTextureIds);
+            const texturesPromise = lazyLoadPlayerCharacterTextures(this.superLoad, addPlayerData.characterTextures);
             player = new RemotePlayer(
                 addPlayerData.userId,
                 addPlayerData.userUuid,
@@ -2711,15 +2711,15 @@ ${escapedMessage}
                 addPlayerData.position.direction,
                 addPlayerData.position.moving,
                 addPlayerData.visitCardUrl,
-                this.companionLoadingManager?.lazyLoadById(addPlayerData.companionTextureId)
+                addPlayerData.companionTexture
+                    ? this.companionLoadingManager?.lazyLoadById(addPlayerData.companionTexture.id)
+                    : undefined
             );
         } catch (error) {
             if (error instanceof CharacterTextureError) {
                 console.warn("Error while loading remote player character texture", error.message);
-                gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
             } else if (error instanceof CompanionTextureError) {
                 console.warn("Error while loading remote player companion texture", error.message);
-                gameManager.leaveGame(SelectCompanionSceneName, new SelectCompanionScene());
             }
             throw error;
         }

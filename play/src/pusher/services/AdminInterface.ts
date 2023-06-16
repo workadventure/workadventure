@@ -14,8 +14,8 @@ export interface AdminInterface {
         accessToken: string | undefined,
         playUri: string,
         ipAddress: string,
-        characterTextures: string[],
-        companionTexture?: string,
+        characterTextureIds: string[],
+        companionTextureId?: string,
         locale?: string
     ): Promise<FetchMemberDataByUuidResponse>;
 

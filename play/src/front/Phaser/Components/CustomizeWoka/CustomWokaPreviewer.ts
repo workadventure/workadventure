@@ -3,21 +3,7 @@ import { Easing } from "../../../types";
 import { getPlayerAnimations, PlayerAnimationTypes } from "../../Player/Animation";
 import { ProtobufClientUtils } from "../../../Network/ProtobufClientUtils";
 
-export const WokaBodyPart = ["Body", "Eyes", "Hair", "Clothes", "Hat", "Accessory"] as const;
-
-export const WokaBodyPartOrder = {
-    Body: 0,
-    Eyes: 1,
-    Clothes: 2,
-    Hair: 3,
-    Hat: 4,
-    Accessory: 5,
-};
-
-/**
- * @deprecated Use WokaBodyPart instead
- */
-export enum CustomWokaBodyPart {
+export enum WokaBodyPart {
     Body = "Body",
     Eyes = "Eyes",
     Clothes = "Clothes",
@@ -26,10 +12,7 @@ export enum CustomWokaBodyPart {
     Accessory = "Accessory",
 }
 
-/**
- * @deprecated Use WokaBodyPartOrder instead
- */
-export enum CustomWokaBodyPartOrder {
+export enum WokaBodyPartOrder {
     Body,
     Eyes,
     Clothes,
@@ -48,7 +31,7 @@ export interface CustomWokaPreviewerConfig {
 export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
     private background: Phaser.GameObjects.Image;
     private frame: Phaser.GameObjects.Graphics;
-    private sprites: Record<CustomWokaBodyPart, Phaser.GameObjects.Sprite>;
+    private sprites: Record<WokaBodyPart, Phaser.GameObjects.Sprite>;
     private turnIcon: Phaser.GameObjects.Image;
 
     private animationDirection: PositionMessage_Direction = PositionMessage_Direction.DOWN;
@@ -66,14 +49,12 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
         this.config = config;
 
         this.sprites = {
-            [CustomWokaBodyPart.Accessory]: this.scene.add
-                .sprite(this.config.bodyPartsOffsetX, 0, "")
-                .setVisible(false),
-            [CustomWokaBodyPart.Body]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, "").setVisible(false),
-            [CustomWokaBodyPart.Clothes]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, "").setVisible(false),
-            [CustomWokaBodyPart.Eyes]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, "").setVisible(false),
-            [CustomWokaBodyPart.Hair]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, "").setVisible(false),
-            [CustomWokaBodyPart.Hat]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, "").setVisible(false),
+            [WokaBodyPart.Accessory]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, "").setVisible(false),
+            [WokaBodyPart.Body]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, "").setVisible(false),
+            [WokaBodyPart.Clothes]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, "").setVisible(false),
+            [WokaBodyPart.Eyes]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, "").setVisible(false),
+            [WokaBodyPart.Hair]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, "").setVisible(false),
+            [WokaBodyPart.Hat]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, "").setVisible(false),
         };
 
         this.background = this.scene.add.image(0, 0, "floorTexture0");
@@ -113,7 +94,7 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
         this.moving = moving;
     }
 
-    public updateSprite(textureKey: string, bodyPart: CustomWokaBodyPart): void {
+    public updateSprite(textureKey: string, bodyPart: WokaBodyPart): void {
         this.sprites[bodyPart].anims.stop();
         this.sprites[bodyPart].setTexture(textureKey).setVisible(textureKey !== "");
         if (textureKey === "") {
@@ -168,7 +149,7 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
     private animate(): void {
         const animationDirectionStr = ProtobufClientUtils.toDirectionString(this.animationDirection);
         for (const bodyPartKey in this.sprites) {
-            const sprite = this.sprites[bodyPartKey as CustomWokaBodyPart];
+            const sprite = this.sprites[bodyPartKey as WokaBodyPart];
             if (!sprite.anims) {
                 console.error("ANIMS IS NOT DEFINED!!!");
                 return;

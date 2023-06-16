@@ -8,7 +8,7 @@ export interface WokaTextureDescriptionInterface {
 export interface PlayerInterface {
     userId: number;
     name: string;
-    characterLayers: WokaTextureDescriptionInterface[];
+    characterTextures: WokaTextureDescriptionInterface[];
     visitCardUrl: string | null;
     companion: string | null;
     userUuid: string;

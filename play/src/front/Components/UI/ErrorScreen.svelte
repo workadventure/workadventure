@@ -4,7 +4,7 @@
     import { onDestroy } from "svelte";
     import { errorScreenStore } from "../../Stores/ErrorScreenStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { connectionManager } from "../../Connexion/ConnectionManager";
+    import { connectionManager } from "../../Connection/ConnectionManager";
 
     import logoImg from "../images/logo-min-white.png";
     let logo = gameManager?.currentStartedRoom?.loginSceneLogo ?? logoImg;

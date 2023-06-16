@@ -6,7 +6,7 @@ import type {
     ITiledMapObject,
     ITiledMapTileLayer,
 } from "@workadventure/tiled-map-type-guard";
-import type { PositionInterface } from "../../Connexion/ConnexionModels";
+import type { PositionInterface } from "../../Connection/ConnexionModels";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 export class StartPositionCalculator {
     public startPosition!: PositionInterface;

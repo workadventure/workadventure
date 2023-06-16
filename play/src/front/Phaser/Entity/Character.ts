@@ -96,11 +96,11 @@ export abstract class Character extends Container implements OutlineableInterfac
                 return lazyLoadPlayerCharacterTextures(scene.superLoad, [
                     {
                         id: "color_22",
-                        img: "resources/customisation/character_color/character_color21.png",
+                        url: "resources/customisation/character_color/character_color21.png",
                     },
                     {
                         id: "eyes_23",
-                        img: "resources/customisation/character_eyes/character_eyes23.png",
+                        url: "resources/customisation/character_eyes/character_eyes23.png",
                     },
                 ])
                     .then((textures) => {
@@ -121,9 +121,9 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.texturePromise = undefined;
             });
 
-            if (typeof companionTexturePromise !== "undefined") {
-                this.addCompanion(companionTexturePromise);
-            }
+        if (typeof companionTexturePromise !== "undefined") {
+            this.addCompanion(companionTexturePromise);
+        }
 
         // Todo: Replace the font family with a better one
         this.playerNameText = new Text(scene, 0, playerNameY, name, {

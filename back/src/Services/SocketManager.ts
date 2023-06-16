@@ -441,7 +441,7 @@ export class SocketManager {
             userUuid: user.uuid,
             name: user.name,
             availabilityStatus: user.getAvailabilityStatus(),
-            characterTextures: ProtobufUtils.toCharacterTextureMessages(user.characterTextures),
+            characterTextures: user.characterTextures,
             position: ProtobufUtils.toPositionMessage(user.getPosition()),
         };
         if (fromZone) {

@@ -97,7 +97,13 @@ type UpgradeFailedErrorData = {
     error: ErrorApiData;
 };
 
-export type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData;
+type UpgradeFailedInvalidTexture = {
+    rejected: true;
+    reason: "invalidTexture";
+    entityType: "character" | "companion";
+};
+
+export type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData | UpgradeFailedInvalidTexture;
 
 export class IoSocketController {
     constructor(private readonly app: HyperExpress.compressors.TemplatedApp) {
@@ -342,14 +348,12 @@ export class IoSocketController {
                             );
                         }
 
-                        const companion: CompanionTextureMessage | undefined = query.companionTextureId
-                            ? {
-                                  name: query.companionTextureId,
-                              }
-                            : undefined;
+                        const companionTextureId: string | undefined = query.companionTextureId;
 
-                        const characterLayers: string[] =
-                            typeof query.characterTextureIds === "string" ? [query.characterTextureIds] : query.characterTextureIds;
+                        const characterTextureIds: string[] =
+                            typeof query.characterTextureIds === "string"
+                                ? [query.characterTextureIds]
+                                : query.characterTextureIds;
 
                         const tokenData = token ? jwtTokenManager.verifyJWTToken(token) : null;
 
@@ -363,7 +367,6 @@ export class IoSocketController {
                         let memberTags: string[] = [];
                         let memberVisitCardUrl: string | null = null;
                         let memberUserRoomToken: string | undefined;
-                        let memberTextures: WokaDetail[] = [];
                         let userData: FetchMemberDataByUuidResponse = {
                             email: userIdentifier,
                             userUuid: userIdentifier,
@@ -381,6 +384,7 @@ export class IoSocketController {
                         };
 
                         let characterTextures: WokaDetail[];
+                        let companionTexture: { id: string; url: string } | undefined;
 
                         try {
                             try {
@@ -390,7 +394,7 @@ export class IoSocketController {
                                     roomId,
                                     IPAddress,
                                     characterTextureIds,
-                                    companionTexture,
+                                    companionTextureId,
                                     locale
                                 );
                             } catch (err) {
@@ -450,6 +454,7 @@ export class IoSocketController {
                             memberTags = userData.tags;
                             memberVisitCardUrl = userData.visitCardUrl;
                             characterTextures = userData.textures;
+                            companionTexture = userData.companionTexture;
                             memberUserRoomToken = userData.userRoomToken;
                         } catch (e) {
                             console.log(
@@ -479,17 +484,41 @@ export class IoSocketController {
                             userData.jabberId = `${userData.jabberId}/${uuid()}`;
                         }
 
-                        // Generate characterLayers objects from characterLayers string[]
-                        /*const characterLayerObjs: CharacterLayer[] =
-                                SocketManager.mergeCharacterLayersAndCustomTextures(characterLayers, memberTextures);*/
-
                         if (upgradeAborted.aborted) {
                             console.log("Ouch! Client disconnected before we could upgrade it!");
                             /* You must not upgrade now */
                             return;
                         }
 
-                        const responseData: UpgradeData = {
+                        if (characterTextureIds.length !== characterTextures.length) {
+                            return res.upgrade(
+                                {
+                                    rejected: true,
+                                    reason: "invalidTexture",
+                                    entityType: "character",
+                                } satisfies UpgradeFailedInvalidTexture,
+                                websocketKey,
+                                websocketProtocol,
+                                websocketExtensions,
+                                context
+                            );
+                        }
+
+                        if (companionTextureId && !companionTexture) {
+                            return res.upgrade(
+                                {
+                                    rejected: true,
+                                    reason: "invalidTexture",
+                                    entityType: "companion",
+                                } satisfies UpgradeFailedInvalidTexture,
+                                websocketKey,
+                                websocketProtocol,
+                                websocketExtensions,
+                                context
+                            );
+                        }
+
+                        const responseData = {
                             // Data passed here is accessible on the "websocket" socket object.
                             rejected: false,
                             token: token && typeof token === "string" ? token : "",
@@ -499,7 +528,7 @@ export class IoSocketController {
                             userIdentifier,
                             roomId,
                             name,
-                            companion,
+                            companionTexture,
                             availabilityStatus,
                             lastCommandId,
                             characterTextures,
@@ -541,14 +570,14 @@ export class IoSocketController {
                                 screenSharing: false,
                                 microphoneState: false,
                                 megaphoneState: false,
-                                characterLayers: characterTextures.map((characterLayer) => ({
-                                    url: characterLayer.url ?? "",
-                                    name: characterLayer.id,
-                                    layer: characterLayer.layer ?? "",
+                                characterTextures: characterTextures.map((characterTexture) => ({
+                                    url: characterTexture.url ?? "",
+                                    id: characterTexture.id,
+                                    layer: characterTexture.layer ?? "",
                                 })),
                                 visitCardUrl: memberVisitCardUrl ?? undefined,
                             }),
-                        };
+                        } satisfies UpgradeData;
 
                         /* This immediately calls open handler, you must not use res after this call */
                         res.upgrade(
@@ -617,13 +646,18 @@ export class IoSocketController {
                             socketManager.deleteRoomIfEmptyFromId(ws.roomId);
                         }
 
-                        //FIX ME to use status code
                         if (ws.reason === tokenInvalidException) {
                             socketManager.emitTokenExpiredMessage(ws);
                         } else if (ws.reason === "error") {
                             socketManager.emitErrorScreenMessage(ws, ws.error);
+                        } else if (ws.reason === "invalidTexture") {
+                            if (ws.entityType === "character") {
+                                socketManager.emitInvalidCharacterTextureMessage(ws);
+                            } else {
+                                socketManager.emitInvalidCompanionTextureMessage(ws);
+                            }
                         } else {
-                            socketManager.emitConnexionErrorMessage(ws, ws.message);
+                            socketManager.emitConnectionErrorMessage(ws, ws.message);
                         }
                         setTimeout(() => ws.close(), 0);
                         return;
@@ -632,18 +666,7 @@ export class IoSocketController {
                     // Let's join the room
                     const client = this.initClient(ws);
                     await socketManager.handleJoinRoom(client);
-                    /*
-                    // TODO : Get prefix from Admin and joinSpace prefixed
-                    const spaceName = client.roomId + "/space";
-                    await socketManager.handleJoinSpace(client, spaceName, {
-                        filterName: "default",
-                        spaceName,
-                        filter: {
-                            $case: "spaceFilterEverybody",
-                            spaceFilterEverybody: {},
-                        },
-                    });
-                     */
+
                     socketManager.emitXMPPSettings(client);
 
                     //get data information and show messages
@@ -901,7 +924,7 @@ export class IoSocketController {
         client.userIdentifier = ws.userIdentifier;
         client.tags = ws.tags;
         client.visitCardUrl = ws.visitCardUrl;
-        client.characterLayers = ws.characterLayers;
+        client.characterTextures = ws.characterTextures;
         client.companion = ws.companion;
         client.availabilityStatus = ws.availabilityStatus;
         client.lastCommandId = ws.lastCommandId;

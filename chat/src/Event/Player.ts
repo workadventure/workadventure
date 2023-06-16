@@ -3,7 +3,7 @@ import { z } from "zod";
 export const isPlayer = z.object({
     userId: z.optional(z.number()),
     name: z.optional(z.string()),
-    characterLayers: z.object({
+    characterTextures: z.object({
         id: z.optional(z.string()),
         img: z.optional(z.string()),
         level: z.optional(z.number()),

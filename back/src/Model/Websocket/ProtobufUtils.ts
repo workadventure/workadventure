@@ -1,11 +1,4 @@
-import {
-    CharacterTextureMessage,
-    ItemEventMessage,
-    PointMessage,
-    PositionMessage,
-    PositionMessage_Direction,
-} from "@workadventure/messages";
-import { CharacterTexture } from "./CharacterTexture";
+import { ItemEventMessage, PointMessage, PositionMessage, PositionMessage_Direction } from "@workadventure/messages";
 import { ItemEventMessageInterface } from "../../Model/Websocket/ItemEventMessage";
 import { PositionInterface } from "../../Model/PositionInterface";
 import { PointInterface } from "./PointInterface";
@@ -85,25 +78,5 @@ export class ProtobufUtils {
             parametersJson: JSON.stringify(itemEvent.parameters),
             stateJson: JSON.stringify(itemEvent.state),
         };
-    }
-
-    public static toCharacterTextureMessages(characterTextures: CharacterTexture[]): CharacterTextureMessage[] {
-        return characterTextures.map(function (characterTexture): CharacterTextureMessage {
-            return {
-                id: characterTexture.id,
-                url: characterTexture.url ?? "", // TODO: make characterLayer URL nullable
-                layer: "", // TODO: make characterLayer layer nullable
-            };
-        });
-    }
-
-    public static toCharacterLayerObjects(characterLayers: CharacterTextureMessage[]): CharacterTexture[] {
-        return characterLayers.map(function (characterTexture): CharacterTexture {
-            const url = characterTexture.url;
-            return {
-                id: characterTexture.id,
-                url: url ? url : undefined,
-            };
-        });
     }
 }
