@@ -10,5 +10,8 @@ export const megaphoneEnabledStore: Readable<boolean> = derived(
     [requestedMegaphoneStore, requestedCameraState, requestedMicrophoneState],
     ([$requestedMegaphoneStore, $requestedCameraState, $requestedMicrophoneState], set) => {
         set($requestedMegaphoneStore && ($requestedCameraState || $requestedMicrophoneState));
+        if ($requestedMegaphoneStore && !$requestedCameraState && !$requestedMicrophoneState) {
+            requestedMegaphoneStore.set(false);
+        }
     }
 );

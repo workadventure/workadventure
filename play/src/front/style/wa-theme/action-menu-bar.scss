@@ -72,6 +72,70 @@
                 border-top: 4px solid theme("colors.orange");
                 @apply tw-pt-0;
             }
+
+            .tool-confirm {
+                @apply tw-border-orange tw-border tw-border-solid;
+                transform: translateX(-38%);
+                bottom: calc(100% + 1rem);
+
+                &::before {
+                    @apply tw-border-dark-purple/95;
+                    width: 0;
+                    height: 0;
+                    border-style: solid;
+                    border-width: 10px 10px 0 10px;
+                    border-bottom-color: transparent;
+                    border-left-color: transparent;
+                    border-right-color: transparent;
+                    content: "";
+                    position: absolute;
+                    bottom: -8px;
+                    margin-left: calc(50% - 15px - 1rem);
+                    z-index: 1;
+                }
+                &::after {
+                    @apply tw-border-orange;
+                    width: 0;
+                    height: 0;
+                    border-style: solid;
+                    border-width: 10px 10px 0 10px;
+                    border-bottom-color: transparent;
+                    border-left-color: transparent;
+                    border-right-color: transparent;
+                    content: "";
+                    position: absolute;
+                    margin-top: 8px;
+                    margin-left: calc(50% - 15px - 1rem);
+                }
+
+                button[type="button"] {
+                    all: unset;
+                    @apply tw-m-auto tw-cursor-pointer tw-min-w-fit;
+                    border-radius: 0.25rem !important;
+                    padding: 0.2rem 0.8rem !important;
+                    height: initial !important;
+                    min-height: fit-content !important;
+
+                    &.light {
+                        @apply tw-bg-light-blue tw-text-brand-blue;
+                    }
+
+                    &.dark {
+                        @apply tw-text-white;
+                        &:hover {
+                            @apply tw-bg-light-purple;
+                        }
+                    }
+
+                    &:hover {
+                        filter: brightness(1.25);
+                    }
+
+                    &.disabled {
+                        @apply tw-cursor-not-allowed tw-opacity-50;
+                    }
+                }
+            }
         }
     }
 }

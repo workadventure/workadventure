@@ -5,6 +5,11 @@ const megaphone: BaseTranslation = {
         selectCamera: "Select a camera 📹",
         selectMicrophone: "Select a microphone 🎙️",
         startMegaphone: "Start megaphone",
+        goingToStream: "You are going to stream",
+        yourMicrophone: "your microphone",
+        yourCamera: "your camera",
+        and: "and",
+        toAll: "to all participants",
     },
 };
 

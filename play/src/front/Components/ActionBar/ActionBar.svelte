@@ -91,6 +91,7 @@
         streamingMegaphoneStore,
     } from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
+    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -99,9 +100,6 @@
 
     let microphoneButton: HTMLButtonElement;
     let cameraButton: HTMLButtonElement;
-
-    // eslint-disable-next-line no-undef
-    let megaphoneWarningTimeOut: NodeJS.Timeout | undefined = undefined;
 
     function screenSharingClick(): void {
         if ($silentStore) return;
@@ -182,30 +180,7 @@
             requestedMegaphoneStore.set(false);
             return;
         }
-        if (!$requestedMegaphoneStore && !$requestedCameraState && !$requestedMicrophoneState) {
-            if (cameraButton) {
-                cameraButton.firstElementChild?.classList.add("tw-animate-shaking");
-                setTimeout(() => cameraButton.firstElementChild?.classList.remove("tw-animate-shaking"), 600);
-            }
-            if (microphoneButton) {
-                microphoneButton.firstElementChild?.classList.add("tw-animate-shaking");
-                setTimeout(() => microphoneButton.firstElementChild?.classList.remove("tw-animate-shaking"), 600);
-            }
-            if (megaphoneWarningTimeOut) {
-                clearTimeout(megaphoneWarningTimeOut);
-                megaphoneWarningTimeOut = undefined;
-            }
-            layoutManagerActionStore.addAction({
-                uuid: "megaphoneNeedCameraOrMicrophone",
-                type: "warning",
-                message: $LL.warning.megaphoneNeeds(),
-                callback: () => layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone"),
-                userInputManager: this.userInputManager,
-            });
-            setTimeout(() => layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone"), 10_000);
-            return;
-        }
-        analyticsClient.openMegaphone();
+
         streamingMegaphoneStore.set(true);
     }
 
@@ -737,13 +712,20 @@
                 </div>
                 {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
                     <div on:click={toggleMegaphone} class="bottom-action-button tw-relative">
-                        <Tooltip
-                            text={$megaphoneEnabledStore
-                                ? $LL.actionbar.disableMegaphone()
-                                : $LL.actionbar.enableMegaphone()}
-                        />
+                        {#if $streamingMegaphoneStore}
+                            <MegaphoneConfirm />
+                        {:else}
+                            <Tooltip
+                                text={$megaphoneEnabledStore
+                                    ? $LL.actionbar.disableMegaphone()
+                                    : $LL.actionbar.enableMegaphone()}
+                            />
+                        {/if}
 
-                        <button class:border-top-orange={$megaphoneEnabledStore} id="megaphone">
+                        <button
+                            class:border-top-orange={$megaphoneEnabledStore || $streamingMegaphoneStore}
+                            id="megaphone"
+                        >
                             <img draggable="false" src={megaphoneImg} style="padding: 2px" alt="Toggle megaphone" />
                         </button>
                         {#if $megaphoneEnabledStore}
