@@ -18,6 +18,7 @@
         requestedCameraDeviceIdStore,
         usedCameraDeviceIdStore,
         usedMicrophoneDeviceIdStore,
+        streamingMegaphoneStore,
     } from "../../Stores/MediaStore";
     import cameraImg from "../images/camera.png";
     import cameraOffImg from "../images/camera-off.png";
@@ -88,7 +89,6 @@
         megaphoneCanBeUsedStore,
         megaphoneEnabledStore,
         requestedMegaphoneStore,
-        streamingMegaphoneStore,
     } from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";

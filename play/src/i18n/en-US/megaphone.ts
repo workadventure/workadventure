@@ -10,6 +10,8 @@ const megaphone: BaseTranslation = {
         yourCamera: "your camera",
         and: "and",
         toAll: "to all participants",
+        confirm: "Confirm",
+        cancel: "Cancel",
     },
 };
 
